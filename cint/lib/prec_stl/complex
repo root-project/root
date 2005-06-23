@@ -1,5 +1,8 @@
 // lib/prec_stl/complex
 
+#ifndef G__LIB_PREC_STL_COMPLEX_INCLUDED
+#define G__LIB_PREC_STL_COMPLEX_INCLUDED
+
 #pragma ifndef PREC_STL_COMPLEX
 #pragma define PREC_STL_COMPLEX
 #pragma link off global PREC_STL_COMPLEX;
@@ -76,6 +79,13 @@ template<class T> class complex {
   friend bool operator!=(const complex&, const T&);
   friend bool operator!=(const T&, const complex&);
 #endif
+#ifdef __CINT__
+  friend istream& operator>>(istream& istr, complex<T>& x);
+  friend ostream& operator<<(ostream& ostr, const complex<T>& x);
+#endif
+#ifdef __CINT__
+  //friend T abs(const complex& a);
+#endif
 };
 
 template<class T> complex<T> operator+(const complex<T>&, const complex<T>&);
@@ -105,6 +115,8 @@ template<class T> bool operator!=(const complex<T>&, const complex<T>&);
 template<class T> bool operator!=(const complex<T>&, const T&);
 template<class T> bool operator!=(const T&, const complex<T>&);
 
+//template<class T> T abs(const complex<T>& a);
+
 template<class T, class charT, class traits>
 basic_istream<charT, traits>&
 operator>>(basic_istream<charT, traits>&, complex<T>&);
@@ -115,3 +127,4 @@ operator<<(basic_ostream<charT, traits>&, const complex<T>&);
 
 
 #pragma endif
+#endif // G__LIB_PREC_STL_COMPLEX_INCLUDED

@@ -39,11 +39,7 @@ int tagnum;
   env->store_exec_memberfunc = G__exec_memberfunc;
   if(p) {
     G__store_struct_offset = (long)p;
-#ifndef G__OLDIMPLEMENTATION1995
     G__tagnum = tagnum; 
-#else
-    /* G__tagnum = G__tagnum; */ /* I think this is intentional */
-#endif
     G__memberfunc_tagnum = tagnum;
     G__exec_memberfunc = 1;
   }
@@ -53,9 +49,6 @@ int tagnum;
     G__memberfunc_tagnum = -1;
     G__exec_memberfunc = 0;
   }
-#ifndef G__OLDIMPLEMENTATION1986
-  G__stubcall=1;
-#endif
 }
 
 /**************************************************************************
@@ -141,18 +134,11 @@ int k;
   strcat(pbody,",");
 
   if(ifunc->para_reftype[ifn][k]) {
-#ifndef G__OLDIMPLEMENTATION401
     sprintf(temp,"*(%s*)(%%ld)"
 	    ,G__type2string(ifunc->para_type[ifn][k]
 			    ,ifunc->para_p_tagtable[ifn][k]
 			    ,ifunc->para_p_typetable[ifn][k] ,0
 			    ,ifunc->para_isconst[ifn][k]));
-#else
-    sprintf(temp,"*(%s*)%%ld"
-	    ,G__type2string(ifunc->para_type[ifn][k]
-			    ,ifunc->para_p_tagtable[ifn][k]
-			    ,ifunc->para_p_typetable[ifn][k] ,0));
-#endif
     strcat(pformat,temp);
     sprintf(temp,"(long)(&%s)",paraname);
     strcat(pbody,temp);
@@ -160,53 +146,32 @@ int k;
   else {
     switch(ifunc->para_type[ifn][k]) {
     case 'u':
-#ifndef G__OLDIMPLEMENTATION401
       sprintf(temp,"(%s)(%%ld)"
 	      ,G__type2string(ifunc->para_type[ifn][k]
 			      ,ifunc->para_p_tagtable[ifn][k]
 			      ,ifunc->para_p_typetable[ifn][k] ,0
 			      ,ifunc->para_isconst[ifn][k]));
-#else
-      sprintf(temp,"(%s)%%ld"
-	      ,G__type2string(ifunc->para_type[ifn][k]
-			      ,ifunc->para_p_tagtable[ifn][k]
-			      ,ifunc->para_p_typetable[ifn][k] ,0));
-#endif
       strcat(pformat,temp);
       sprintf(temp,"&%s",paraname);
       strcat(pbody,temp);
       break;
     case 'd':
     case 'f':
-#ifndef G__OLDIMPLEMENTATION401
       sprintf(temp,"(%s)%%g"
 	      ,G__type2string(ifunc->para_type[ifn][k]
 			      ,ifunc->para_p_tagtable[ifn][k]
 			      ,ifunc->para_p_typetable[ifn][k] ,0
 			      ,ifunc->para_isconst[ifn][k]));
-#else
-      sprintf(temp,"(%s)%%g"
-	      ,G__type2string(ifunc->para_type[ifn][k]
-			      ,ifunc->para_p_tagtable[ifn][k]
-			      ,ifunc->para_p_typetable[ifn][k] ,0));
-#endif
       strcat(pformat,temp);
       sprintf(temp,"%s",paraname);
       strcat(pbody,temp);
       break;
     default:
-#ifndef G__OLDIMPLEMENTATION401
       sprintf(temp,"(%s)(%%ld)"
 	      ,G__type2string(ifunc->para_type[ifn][k]
 			      ,ifunc->para_p_tagtable[ifn][k]
 			      ,ifunc->para_p_typetable[ifn][k] ,0
 			      ,ifunc->para_isconst[ifn][k]));
-#else
-      sprintf(temp,"(%s)%%ld"
-	      ,G__type2string(ifunc->para_type[ifn][k]
-			      ,ifunc->para_p_tagtable[ifn][k]
-			      ,ifunc->para_p_typetable[ifn][k] ,0));
-#endif
       strcat(pformat,temp);
       sprintf(temp,"(long)%s",paraname);
       strcat(pbody,temp);
@@ -251,18 +216,10 @@ struct G__ifunc_table *ifunc;
 * G__cppstub_genfunc()
 *
 **************************************************************************/
-#ifndef G__OLDIMPLEMENTATION1336
-void G__cppstub_genfunc(fp,tagnum,ifn,ifunc,flag)
-FILE *fp;
-int tagnum,ifn;
-struct G__ifunc_table *ifunc;
-int flag;
-#else
 static void G__cppstub_genfunc(fp,tagnum,ifn,ifunc)
 FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
-#endif
 {
   int k;
   char pformat[G__ONELINE];
@@ -272,9 +229,6 @@ struct G__ifunc_table *ifunc;
   * Function header
   *******************************************************************/
   if(-1==tagnum
-#ifndef G__OLDIMPLEMENTATION1336
-     || flag
-#endif
      ) {
     fprintf(fp,"%s %s(\n"
 	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
@@ -283,21 +237,12 @@ struct G__ifunc_table *ifunc;
 	    ,ifunc->funcname[ifn]);
   }
   else {
-#ifndef G__OLDIMPLEMENTATION1892
     fprintf(fp,"%s "
 	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
 			    ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
 			    ,ifunc->isconst[ifn])
 	    );
     fprintf(fp,"%s::%s(\n",G__fulltagname(tagnum,1),ifunc->funcname[ifn]);
-#else
-    fprintf(fp,"%s %s::%s(\n"
-	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
-			    ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
-			    ,ifunc->isconst[ifn])
-	    ,G__fulltagname(tagnum,1)
-	    ,ifunc->funcname[ifn]);
-#endif
   }
 
   if(G__clock) {
@@ -341,12 +286,8 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp," a%d",k);
       }
     }
-#ifndef G__OLDIMPLEMENTATION1809
     if(ifunc->isconst[ifn]&G__CONSTFUNC) fprintf(fp,") const {\n");
     else fprintf(fp,") {\n");
-#else
-    fprintf(fp,") {\n");
-#endif
   }
 
   /*******************************************************************
@@ -469,11 +410,7 @@ FILE *fp;
 	      G__cppstub_gendestructor(fp,i,j,ifunc);
 	    }
 	    else {
-#ifndef G__OLDIMPLEMENTATION1336
-	      G__cppstub_genfunc(fp,i,j,ifunc,0);
-#else
 	      G__cppstub_genfunc(fp,i,j,ifunc);
-#endif
 	    }
 	  } /* if(access) */
 	} /* for(j) */
@@ -506,11 +443,7 @@ FILE *fp;
       if((G__CPPSTUB==ifunc->globalcomp[j]||G__CSTUB==ifunc->globalcomp[j])&& 
 	 ifunc->hash[j]) {
 	
-#ifndef G__OLDIMPLEMENTATION1336
-	G__cppstub_genfunc(fp,-1,j,ifunc,0);
-#else
 	G__cppstub_genfunc(fp,-1,j,ifunc);
-#endif
 
       } /* if(access) */
     } /* for(j) */
@@ -547,7 +480,6 @@ struct G__dictposition *dictpos;
   }
 
   for(tagnum=dictpos->tagnum;tagnum<G__struct.alltag;tagnum++) {
-#ifndef G__OLDIMPLEMENTATION706
     struct G__ifunc_table *ifunc;
     ifunc=G__struct.memfunc[tagnum];
     while(ifunc) {
@@ -563,15 +495,8 @@ struct G__dictposition *dictpos;
       }
       ifunc=ifunc->next;
     }
-#else
-    if(G__dispmsg>=G__DISPWARN) {
-      G__fprinterr(G__serr,"Warning: class/struct/union %s specified in stub file\n"
-		   ,G__struct.name[tagnum]);
-    }
-#endif
   }
 
-#ifndef G__OLDIMPLEMENTATION2220
   if(dictpos->ifunc) {
     struct G__ifunc_table *ifunc = dictpos->ifunc;
     while(ifunc) {
@@ -588,18 +513,6 @@ struct G__dictposition *dictpos;
       ifunc = ifunc->next;
     }
   }
-#else
-  while(dictpos->ifunc) {
-    for(ifn=dictpos->ifn;ifn<dictpos->ifunc->allifunc;ifn++) {
-      switch(dictpos->ifunc->globalcomp[ifn]) {
-      case G__CPPLINK: dictpos->ifunc->globalcomp[ifn]=G__CPPSTUB; break;
-      case G__CLINK:   dictpos->ifunc->globalcomp[ifn]=G__CSTUB; break;
-      default: break;
-      }
-    }
-    dictpos->ifunc=dictpos->ifunc->next;
-  }
-#endif
 }
 
 

@@ -145,9 +145,7 @@ void G__shminit() {
 /******************************************************************/
 #endif /* G__SHMGLOBAL */
 
-#ifndef G__PHILIPPE21
 extern int G__const_noerror;
-#endif
 
 /******************************************************************
 * static long G__getstaticobject()
@@ -177,20 +175,10 @@ static long G__getstaticobject()
     }
     var = var->next;
   } while(var);
-#ifndef G__OLDIMPLEMENTATION1519
   if(0==G__const_noerror) {
     G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
     G__genericerror((char*)NULL);
   }
-#else
-#ifndef G__PHILIPPE21
-  if(0==G__const_noerror) 
-    G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
-#else
-  G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
-#endif
-  G__genericerror((char*)NULL);
-#endif
   return(0);
 }
 
@@ -216,14 +204,12 @@ char *item;
    ****************************************************/
   size = n*bsize;
 
-#ifndef G__OLDIMPLEMENTATION523
   /* experimental reference type in bytecode */
   if(G__globalvarpointer!=G__PVOID &&
      G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
     G__globalvarpointer=G__PVOID;
     size=G__LONGALLOC;
   }
-#endif
   
   if(G__globalvarpointer==G__PVOID) {
     /********************************************
@@ -240,9 +226,7 @@ char *item;
        * pre-RUN.
        *************************************/
       if((G__static_alloc==1)&&(G__prerun==0)
-#ifndef G__OLDIMPLEMENTATION858
 	 && 0<=G__func_now
-#endif
 	 ) {
 	return(G__getstaticobject());
       }
@@ -311,7 +295,6 @@ char *item;
 	}
 	return(0);
       }
-#ifndef G__OLDIMPLEMENTATION612
       /***********************************
        * In case of namespace
        ***********************************/
@@ -320,7 +303,6 @@ char *item;
 	if(allocmem==(long)NULL) G__malloc_error(item);
 	return(allocmem);
       }
-#endif
     }
   }
   else {

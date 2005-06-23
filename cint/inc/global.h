@@ -60,23 +60,17 @@ extern int G__typepdecl; /* to be commented */
 /********************************************************
 * whole function bytecode compilation flag
 *********************************************************/
-#ifndef G__OLDIMPLEMENTATION599
 extern int G__asm_cond_cp; /* avoid wrong bytecode optimization */
-#endif
 
 #ifdef G__ASM_WHOLEFUNC
 extern int G__asm_wholefunction;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION517
 extern int G__asm_wholefunc_default_cp;
-#endif
 
 #ifdef G__ASM_IFUNC
 extern long *G__asm_inst; /* p-code instruction buffer */
-#ifndef G__OLDIMPLEMENTATION2116
 extern int G__asm_instsize;
-#endif
 extern G__value *G__asm_stack; /* data stack */
 extern char *G__asm_name;
 extern long G__asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
@@ -97,9 +91,7 @@ extern struct G__param *G__asm_param; /* pointer of parameter buffer to
 extern int G__asm_exec; /* p-code execution flag */
 extern int G__asm_loopcompile; /* loop compilation mode. default on(1). 
 			   * This is set to 0 by -O0 */
-#ifndef G__OLDIMPLEMENTATION1155
 extern int G__asm_loopcompile_mode; 
-#endif
 extern int G__asm_noverflow; /* When this is set to 1, compilation starts. 
 			 * If any error found, reset */
 extern int G__asm_dbg; /* p-code debugging flag, only valid when compiled with
@@ -173,16 +165,10 @@ extern char *G__macro;
 extern struct G__Deffuncmacro G__deffuncmacro;
 extern char G__macros[G__LONGLINE];
 extern char G__ppopt[G__ONELINE];
-#ifndef G__OLDIMPLEMENTATION928
 extern char *G__allincludepath;
-#else
-extern char G__allincludepath[G__LONGLINE];
-#endif
 extern char *G__undeflist;
-#ifndef G__OLDIMPLEMENTATION941
 struct G__funcmacro_stackelt;
 extern struct G__funcmacro_stackelt* G__funcmacro_stack;
-#endif
 
 /**************************************************************************
 * Macro constant
@@ -214,9 +200,7 @@ extern int G__argn;
 **************************************************************************/
 extern struct G__var_array G__global ;
 extern struct G__var_array *G__p_local;
-#ifndef G__OLDIMPLEMENTATION686
 extern struct G__inheritance G__globalusingnamespace;
-#endif
 
 /**************************************************************************
 * structure for struct,union tag information
@@ -317,9 +301,7 @@ extern int G__def_struct_member;
 #ifdef G__FRIEND
 extern int G__friendtagnum;
 #endif
-#ifndef G__OLDIMPLEMENTATION440
 extern int G__tmplt_def_tagnum;
-#endif
 extern int G__def_tagnum;
 extern int G__tagdefining;
 extern int G__tagnum ; /* -1 */
@@ -328,9 +310,7 @@ extern short G__iscpp ;
 extern short G__cpplock ;
 extern short G__clock ;
 extern short G__constvar ;
-#ifndef G__OLDIMPLEMENTATION1250
 extern short G__isexplicit ;
-#endif
 extern short G__unsigned ;
 extern short G__ansiheader ;
 extern G__value G__ansipara;
@@ -346,11 +326,6 @@ extern int G__decl;
 extern G__SIGNEDCHAR_T G__isconst;
 #endif
 
-#ifdef G__OLDIMPLEMENTATION435
-extern char *G__conststring[G__MAXSTRING];
-extern int   G__conststringhash[G__MAXSTRING];
-extern short G__allstring;
-#endif
 
 extern char G__nam[G__MAXFILENAME];
 extern char G__assertion[G__ONELINE];
@@ -455,17 +430,11 @@ extern short G__allsl;
 *********************************************************************/
 #ifdef G__AUTOCOMPILE
 extern FILE *G__fpautocc;
-#ifndef G__OLDIMPLEMENTATION486
 extern char G__autocc_c[];
 extern char G__autocc_h[];
 extern char G__autocc_sl[];
 extern char G__autocc_mak[];
 extern int G__autoccfilenum;
-#else
-extern char *G__autocc_c;
-extern char *G__autocc_h;
-extern char *G__autocc_sl;
-#endif
 extern int G__compilemode;
 #endif
 
@@ -523,23 +492,17 @@ extern FILE *G__serr;
 extern FILE *G__sout;
 extern FILE *G__sin;
 
-#ifndef G__OLDIMPLEMENTATION713
 extern FILE *G__intp_serr;
 extern FILE *G__intp_sout;
 extern FILE *G__intp_sin;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION411
 extern FILE* G__fpundeftype;
-#endif
 
-#ifdef G__FONS_COMMENT
 /**************************************************************************
 * Class/struct comment title enhancement
 **************************************************************************/
 extern int G__fons_comment;
 extern char *G__setcomment;
-#endif
 
 extern int G__precomp_private;
 
@@ -548,8 +511,6 @@ extern int G__precomp_private;
 *********************************************************************/
 extern struct G__ConstStringList G__conststringlist ;
 extern struct G__ConstStringList *G__plastconststring ;
-#ifndef G__OLDIMPLEMENTATION1636
-#endif
 
 #ifdef G__SECURITY
 /**************************************************************************
@@ -596,152 +557,93 @@ extern struct G__AppPragma *G__paddpragma;
 extern short G__lang;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION563
 /**************************************************************************
 * A flag no notify cint ready status to embedding program
 * This flag is set by cint internal only, and read by G__getcintready() API
 **************************************************************************/
 extern int G__cintready;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION630
 /**************************************************************************
 * interactive return for undefined symbol and G__pause
 **************************************************************************/
 extern int G__interactive_undefined;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION734
 /**************************************************************************
 * STL Allocator workaround data
 **************************************************************************/
 extern char G__Allocator[];
-#endif
 
-#ifndef G__OLDIMPLEMENTATION754
 /**************************************************************************
 * Exception object buffer
 **************************************************************************/
 extern G__value G__exceptionbuffer;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION782
 /**************************************************************************
 * Exception object buffer
 **************************************************************************/
 extern int G__ispragmainclude;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1097
 /**************************************************************************
 * automatic variable on/off
 **************************************************************************/
 extern int G__automaticvar;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1164
 /**************************************************************************
 * Local variable , bytecode compiler workaround
 **************************************************************************/
 extern int G__xrefflag;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1273
 /**************************************************************************
 * Local variable , bytecode compiler workaround
 **************************************************************************/
 extern int G__do_smart_unload;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1278
 extern int G__autoload_stdheader;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1285
 extern int G__ignore_stdnamespace;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1349
 extern int G__decl_obj;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1451
 extern struct G__ConstStringList* G__SystemIncludeDir;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1476
 extern int G__command_eval ;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1525
 extern int G__multithreadlibcint ;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1548
 extern void (*G__emergencycallback)();
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1570
 extern int G__asm_clear_mask;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1593
 extern int G__boolflag;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1599
 extern int G__init;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1600
 extern int G__last_error;
-#endif
 
 extern int G__dispmsg;
 
-#ifndef G__OLDIMPLEMENTATION1700
 extern int G__default_link;
-#endif
 
 /* 1713 */
 extern int G__gettingspecial;
 
-#ifndef G__OLDIMPLEMENTATION1725
 extern int G__gcomplevellimit;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1726
 extern int G__catchexception;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1551
 extern int G__eval_localstatic;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1854
 extern int G__loadingDLL;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1986
-extern int G__stubcall;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2002
 extern int G__mask_error;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2005
 typedef void (*G__eolcallback_t) G__P((const char* fname,int linenum));
 extern G__eolcallback_t G__eolcallback;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2111
 extern int G__throwingexception;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2155
 extern int G__do_setmemfuncenv;
-#endif
 
 extern int G__scopelevel;
 extern int G__cintv6;

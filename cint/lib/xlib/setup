@@ -45,4 +45,4 @@ make clean
 make
 mv $DLL $CINTSYSDIR/include/X11/$DLL
 make clean
-rm $MKFILE
+# rm $MKFILE

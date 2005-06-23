@@ -25,7 +25,6 @@
 * Dynamic Link Library revision
 **************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION1169
 
 #ifdef G__VARIABLEFPOS
 #define G__VF 10000000
@@ -62,10 +61,5 @@
   #endif
 #endif
 
-#else
-
-#define G__DLLREV  51111
-
-#endif
 
 #endif

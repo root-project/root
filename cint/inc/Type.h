@@ -48,15 +48,9 @@ G__TypeInfo : public G__ClassInfo  {
     type    = buf.type; 
     typenum = buf.typenum; 
     tagnum  = buf.tagnum;
-#ifndef G__OLDIMPLEMENTATION2063
     if(type!='d' && type!='f') reftype=buf.obj.reftype.reftype;
     else              reftype=0;
     isconst = buf.isconst;
-#else
-    if(isupper((int)type)) reftype=buf.obj.reftype.reftype;
-    else              reftype=0;
-    isconst = 0;
-#endif
   }
   void Init(struct G__var_array *var,int ig15) {
     type    = var->type[ig15]; 
@@ -85,7 +79,7 @@ G__TypeInfo : public G__ClassInfo  {
     buf.type=type;
     buf.tagnum=tagnum;
     buf.typenum=typenum;
-    buf.isconst=isconst;
+    buf.isconst=(G__SIGNEDCHAR_T)isconst;
     buf.obj.reftype.reftype = reftype;
     buf.obj.i = 1;
     buf.ref = 0;
@@ -95,9 +89,7 @@ G__TypeInfo : public G__ClassInfo  {
   long type;
   long typenum;
   long reftype;
-#ifndef G__OLDIMPLEMENTATION401
   long isconst;
-#endif
 
  private:
   int Next() { return(0); } // prohibit use of next

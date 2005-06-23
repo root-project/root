@@ -34,29 +34,19 @@ static char G__buf[G__ONELINE];
 void G__ClassInfo::Init()
 {
   tagnum = -1;
-#ifndef G__OLDIMPLEMENTATION1218
   class_property = 0;
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Init(const char *classname)
 {
-#ifndef G__OLDIMPLEMENTATION770
   tagnum = G__defined_tagname(classname,1);
-#else
-  tagnum = G__defined_tagname(classname,2);
-#endif
-#ifndef G__OLDIMPLEMENTATION1218
   class_property = 0;
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Init(int tagnumin)
 {
   tagnum = tagnumin;
-#ifndef G__OLDIMPLEMENTATION1218
   class_property = 0;
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::operator==(const G__ClassInfo& a)
@@ -125,15 +115,9 @@ int G__ClassInfo::Size()
 ///////////////////////////////////////////////////////////////////////////
 long G__ClassInfo::Property()
 {
-#ifndef G__OLDIMPLEMENTATION1218
   if (class_property) return class_property;
-#else
-  long property=0;
-#endif
   if(IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1218
     long property=0;
-#endif
     switch(G__struct.type[tagnum]) {
     case 'e': property |= G__BIT_ISENUM; break;
     case 'c': property |= G__BIT_ISCLASS; break;
@@ -149,9 +133,7 @@ long G__ClassInfo::Property()
     case G__NOLINK: break;
     default: break;
     }
-#ifndef G__OLDIMPLEMENTATION1218
     class_property = property;
-#endif
     return(property);
   }
   else {
@@ -264,7 +246,6 @@ void G__ClassInfo::SetGlobalcomp(int globalcomp)
     G__struct.globalcomp[tagnum] = globalcomp;
   }
 }
-#ifndef G__OLDIMPLEMENTATION1334
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::SetProtectedAccess(int protectedaccess)
 {
@@ -272,7 +253,6 @@ void G__ClassInfo::SetProtectedAccess(int protectedaccess)
     G__struct.protectedaccess[tagnum] = protectedaccess;
   }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 #ifndef G__OLDIMPLEMENTATION1218_YET
 int G__ClassInfo::IsValid()
@@ -286,11 +266,9 @@ int G__ClassInfo::IsValid()
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION2118
 unsigned char G__ClassInfo::FuncFlag() { 
   return(IsValid()?G__struct.funcs[tagnum]:0); 
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::IsLoaded()
 {
@@ -308,18 +286,14 @@ int G__ClassInfo::SetFilePos(const char *fname)
   struct G__dictposition* dict=G__get_dictpos((char*)fname);
   if(!dict) return(0);
   tagnum=dict->tagnum-1;
-#ifndef G__OLDIMPLEMENTATION1218
   class_property = 0;
-#endif
   return(1);
 }
 ///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::Next()
 {
   ++tagnum;
-#ifndef G__OLDIMPLEMENTATION1218
   class_property = 0;
-#endif
   return(IsValid());
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -441,7 +415,6 @@ const char* G__ClassInfo::TmpltArg()
 }
 ///////////////////////////////////////////////////////////////////////////
 
-#ifdef G__ROOTSPECIAL
 /*********************************************************************
 * ROOT project special requirements
 *********************************************************************/
@@ -618,18 +591,12 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
   funcname = (char*)fname;
   param = (char*)arg;
   ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
-#ifndef G__OLDIMPLEMENTATION1989
 			      ,(mode==ConversionMatch)?1:0
-#endif
                               ,imode
 			      );
 
   if(
-#ifndef G__OLDIMPLEMENTATION2035
      ifunc && -1==ifunc->pentry[index]->size
-#else
-     ifunc && -1==ifunc->pentry[index]->filenum
-#endif
      ) {
     return((G__InterfaceMethod)ifunc->pentry[index]->p);
   }
@@ -654,7 +621,6 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   else           ifunc = G__struct.memfunc[tagnum];
   funcname = (char*)fname;
   param = (char*)arg;
-#ifndef G__OLDIMPLEMENTATION2177
   int convmode;
   switch(mode) {
   case ExactMatch:              convmode=0; break;
@@ -662,15 +628,8 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   case ConversionMatchBytecode: convmode=2; break;
   default:                      convmode=0; break;
   }
-#else
-  int convmode = (mode==ConversionMatch)?1:0;
-#endif
   ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
-#if !defined(G__OLDIMPLEMENTATION2177)
 			      ,convmode
-#elif !defined(G__OLDIMPLEMENTATION1989)
-			      ,(mode==ConversionMatch)?1:0
-#endif
 			      ,(imode==WithInheritance)?1:0
 			      );
 
@@ -704,7 +663,6 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
   method.Init((long)ifunc,index,this);
   return(method);
 }
-#ifndef G__OLDIMPLEMENTATION2059
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
   // TODO, reserve location for default ctor for tune up
@@ -752,7 +710,6 @@ G__MethodInfo G__ClassInfo::GetAssignOperator() {
   free((void*)arg);
   return(method);
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
 {
@@ -838,48 +795,28 @@ int G__ClassInfo::HasDataMember(const char *name)
 void* G__ClassInfo::New()
 {
   if(IsValid()) {
-#ifdef G__OLDIMPLEMENTATION1218
-    long property;
-#endif
     void *p;
     G__value buf=G__null;
-#ifndef G__OLDIMPLEMENTATION1218
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
-#else
-    property = Property();
-    if(property&G__BIT_ISCPPCOMPILED) {
-#endif
       // C++ precompiled class,struct
       struct G__param para;
       G__InterfaceMethod defaultconstructor;
       para.paran=0;
-#ifndef G__OLDIMPLEMENTATION1218
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
-#else
-      CheckValidRootInfo();
-#endif
       defaultconstructor
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
-#ifndef G__OLDIMPLEMENTATION1749
 	G__CurrentCall(G__DELETEFREE, this, tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
-#else
-	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
-#endif
 	p = (void*)G__int(buf);
       }
       else {
 	p = (void*)NULL;
       }
     }
-#ifndef G__OLDIMPLEMENTATION1218
     else if(class_property&G__BIT_ISCCOMPILED) {
-#else
-    else if(property&G__BIT_ISCCOMPILED) {
-#endif
       // C precompiled class,struct
       p = malloc(G__struct.size[tagnum]);
     }
@@ -892,9 +829,7 @@ void* G__ClassInfo::New()
       p = malloc(G__struct.size[tagnum]);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
-#ifndef G__PHILIPPE16
       G__tagnum = tagnum;
-#endif
       G__store_struct_offset = (long)p;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
@@ -911,38 +846,22 @@ void* G__ClassInfo::New()
 void* G__ClassInfo::New(int n)
 {
   if(IsValid() && n>0 ) {
-#ifdef G__OLDIMPLEMENTATION1218
-    long property;
-#endif
     void *p;
     G__value buf=G__null;
-#ifndef G__OLDIMPLEMENTATION1218
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
-#else
-    property = Property();
-    if(property&G__BIT_ISCPPCOMPILED) {
-#endif
       // C++ precompiled class,struct
       struct G__param para;
       G__InterfaceMethod defaultconstructor;
       para.paran=0;
-#ifndef G__OLDIMPLEMENTATION1218
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
-#else
-      CheckValidRootInfo();
-#endif
       defaultconstructor
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
 	if(n) G__cpp_aryconstruct = n;
-#ifndef G__OLDIMPLEMENTATION1749
 	G__CurrentCall(G__DELETEFREE, this, tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
-#else
-	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
-#endif
 	G__cpp_aryconstruct = 0;
 	p = (void*)G__int(buf);
       }
@@ -950,11 +869,7 @@ void* G__ClassInfo::New(int n)
 	p = (void*)NULL;
       }
     }
-#ifndef G__OLDIMPLEMENTATION1218
     else if(class_property&G__BIT_ISCCOMPILED) {
-#else
-    else if(property&G__BIT_ISCCOMPILED) {
-#endif
       // C precompiled class,struct
       p = malloc(G__struct.size[tagnum]*n);
     }
@@ -968,9 +883,7 @@ void* G__ClassInfo::New(int n)
       p = malloc(G__struct.size[tagnum]*n);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
-#ifndef G__PHILIPPE16
       G__tagnum = tagnum;
-#endif
       G__store_struct_offset = (long)p;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       for(i=0;i<n;i++) {
@@ -991,38 +904,22 @@ void* G__ClassInfo::New(int n)
 void* G__ClassInfo::New(void *arena)
 {
   if(IsValid()) {
-#ifdef G__OLDIMPLEMENTATION1218
-    long property;
-#endif
     void *p;
     G__value buf=G__null;
-#ifndef G__OLDIMPLEMENTATION1218
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
-#else
-    property = Property();
-    if(property&G__BIT_ISCPPCOMPILED) {
-#endif
       // C++ precompiled class,struct
       struct G__param para;
       G__InterfaceMethod defaultconstructor;
       para.paran=0;
-#ifndef G__OLDIMPLEMENTATION1218
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
-#else
-      CheckValidRootInfo();
-#endif
       defaultconstructor
 	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
       if(defaultconstructor) {
 	G__setgvp((long)arena);
-#ifndef G__OLDIMPLEMENTATION1749
 	G__CurrentCall(G__DELETEFREE, this, tagnum);
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 	G__CurrentCall(G__NOP, 0, 0);
-#else
-	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
-#endif
 	G__setgvp((long)G__PVOID);
 	p = (void*)G__int(buf);
       }
@@ -1030,11 +927,7 @@ void* G__ClassInfo::New(void *arena)
 	p = (void*)NULL;
       }
     }
-#ifndef G__OLDIMPLEMENTATION1218
     else if(class_property&G__BIT_ISCCOMPILED) {
-#else
-    else if(property&G__BIT_ISCCOMPILED) {
-#endif
       // C precompiled class,struct
       p = arena;
     }
@@ -1047,9 +940,7 @@ void* G__ClassInfo::New(void *arena)
       p = arena;
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
-#ifndef G__PHILIPPE16
       G__tagnum = tagnum;
-#endif
       G__store_struct_offset = (long)p;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
@@ -1062,12 +953,10 @@ void* G__ClassInfo::New(void *arena)
     return((void*)NULL);
   }
 }
-#ifndef G__OLDIMPLEMENTATION2043
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Delete(void* p) const { G__calldtor(p,tagnum,1); }
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Destruct(void* p) const { G__calldtor(p,tagnum,0); }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::CheckValidRootInfo()
 {
@@ -1087,9 +976,7 @@ void G__ClassInfo::CheckValidRootInfo()
     = (void*)GetInterfaceMethod(G__struct.name[tagnum],"",&offset);
 }
 ///////////////////////////////////////////////////////////////////////////
-#endif /* ROOTSPECIAL */
 
-#ifndef G__OLDIMPLEMENTATION644
 ///////////////////////////////////////////////////////////////////////////
 static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
 {
@@ -1190,9 +1077,7 @@ struct G__friendtag* G__ClassInfo::GetFriendInfo() {
   else return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-#endif /* ON644 */
 
-#ifndef G__OLDIMPLEMENTATION2076
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
 				     ,const char *arg
@@ -1217,12 +1102,6 @@ G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
     for(int ix=0;ix<G__MAXIFUNC;ix++) {
       ifunc->funcname[ix] = (char*)NULL;
       ifunc->userparam[ix] = 0;
-#ifndef G__OLDIMPLEMENTATION1706
-      ifunc->override_ifunc[ix] = (struct G__ifunc_table*)NULL;
-      ifunc->override_ifn[ix] = 0;
-      ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
-      ifunc->masking_ifn[ix] = 0;
-#endif
     }
     index=0;
   }
@@ -1239,7 +1118,7 @@ G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
   G__TypeInfo type(typenam);
   ifunc->type[index] =   type.Type();
   ifunc->p_typetable[index] =   type.Typenum();
-  ifunc->p_tagtable[index] =   type.Tagnum();
+  ifunc->p_tagtable[index] = (short)type.Tagnum();
   ifunc->reftype[index] =   type.Reftype();
   ifunc->isconst[index] =   type.Isconst();
 
@@ -1256,25 +1135,13 @@ G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
   ifunc->busy[index] = 0;
   ifunc->friendtag[index] = (struct G__friendtag*)NULL;
   ifunc->globalcomp[index] = G__NOLINK;
-#ifdef G__FONS_COMMENT
   ifunc->comment[index].p.com = (char*)NULL;
   ifunc->comment[index].filenum = -1;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1706
-  ifunc->override_ifunc[index] = (struct G__ifunc_table*)NULL;
-  ifunc->override_ifn[index] = 0;
-  ifunc->masking_ifunc[index] = (struct G__ifunc_table*)NULL;
-  ifunc->masking_ifn[index] = 0;
-#endif
 
   ifunc->userparam[index] = (void*)NULL;
-#ifndef G__OLDIMPLEMENTATION2073
   ifunc->vtblindex[index] = -1;
-#endif
-#ifndef G__OLDIMPLEMENTATION2084
   ifunc->vtblbasetagnum[index] = -1;
-#endif
 
   //////////////////////////////////////////////////
   // set argument infomation
@@ -1309,14 +1176,13 @@ G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
   ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
 
   //////////////////////////////////////////////////
-  G__memfunc_next();
+  ++ifunc->allifunc;
 
   /* Initialize method object */
   G__MethodInfo method;
   method.Init((long)ifunc,index,this);
   return(method);
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 

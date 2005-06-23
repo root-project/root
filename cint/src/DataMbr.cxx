@@ -58,9 +58,7 @@ void G__DataMemberInfo::Init(long handlein,long indexin
     handle = handlein;
     index = indexin;
     if(
-#ifndef G__OLDIMPLEMENTATION1163
        belongingclassin &&
-#endif
        belongingclassin->IsValid()) {
       belongingclass = belongingclassin;
     }
@@ -75,12 +73,8 @@ void G__DataMemberInfo::Init(long handlein,long indexin
     type.tagnum=var->p_tagtable[index];
     type.typenum=var->p_typetable[index];
     type.reftype=var->reftype[index];
-#ifndef G__OLDIMPLEMENTATION1227
     type.class_property=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION401
     type.isconst=var->constvar[index];
-#endif
   }
   else {
     handle=handlein;
@@ -107,11 +101,7 @@ const char* G__DataMemberInfo::Title()
   if(IsValid()) {
     struct G__var_array *var;
     var = (struct G__var_array*)handle;
-#ifndef G__FONS75
     G__getcomment(buf,&var->comment[index],var->tagnum);
-#else
-    G__getcomment(buf,&var->comment[index],var->p_tagtable[index]);
-#endif
     return(buf);
   }
   else {
@@ -140,7 +130,6 @@ long G__DataMemberInfo::Property()
     if(-1!=var->p_typetable[index]) property|=G__BIT_ISTYPEDEF;
     if(-1==var->p_tagtable[index]) property|=G__BIT_ISFUNDAMENTAL;
     else {
-#ifndef G__OLDIMPLEMENTATION1833
       if(strcmp(G__struct.name[var->p_tagtable[index]],"G__longlong")==0 ||
 	 strcmp(G__struct.name[var->p_tagtable[index]],"G__ulonglong")==0 ||
 	 strcmp(G__struct.name[var->p_tagtable[index]],"G__longdouble")==0) {
@@ -162,16 +151,6 @@ long G__DataMemberInfo::Property()
 	default:  break;
 	}
       }
-#else
-      switch(G__struct.type[var->p_tagtable[index]]) {
-      case 'c': property|=G__BIT_ISCLASS; break;
-      case 's': property|=G__BIT_ISSTRUCT; break;
-      case 'u': property|=G__BIT_ISUNION; break;
-      case 'e': property|=G__BIT_ISENUM; break;
-      case 'n': property|=G__BIT_ISNAMESPACE; break;
-      default:  break;
-      }
-#endif
     }
 #endif
     return(property);
@@ -277,14 +256,10 @@ int G__DataMemberInfo::Next()
     var = (struct G__var_array*)handle;
     ++index;
     if(var->allvar<=index) {
-#ifndef G__FONS75
       int t = var->tagnum;
-#endif
       var=var->next;
       if(var) {
-#ifndef G__FONS75
 	var->tagnum=t;
-#endif
 	index=0;
 	handle=(long)var;
       }
@@ -298,12 +273,8 @@ int G__DataMemberInfo::Next()
       type.tagnum=var->p_tagtable[index];
       type.typenum=var->p_typetable[index];
       type.reftype=var->reftype[index];
-#ifndef G__OLDIMPLEMENTATION1227
       type.class_property=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION401
       type.isconst=var->constvar[index];
-#endif
       return(1);
     }
     else {
@@ -316,14 +287,8 @@ int G__DataMemberInfo::Next()
 }
 ///////////////////////////////////////////////////////////////////////////
 #include <vector>
-#ifndef G__OLDIMPLEMENTATION2168
 namespace std { }
 using namespace std;
-#else
-#ifndef __hpux
-using namespace std;
-#endif
-#endif
 int G__DataMemberInfo::Prev()
 {
   struct G__var_array *var;
@@ -364,12 +329,8 @@ int G__DataMemberInfo::Prev()
       type.tagnum=var->p_tagtable[index];
       type.typenum=var->p_typetable[index];
       type.reftype=var->reftype[index];
-#ifndef G__OLDIMPLEMENTATION1227
       type.class_property=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION401
       type.isconst=var->constvar[index];
-#endif
       return(1);
     }
     else {
@@ -426,7 +387,6 @@ int G__DataMemberInfo::LineNumber() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-#ifdef G__ROOTSPECIAL
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -630,7 +590,6 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-#endif // G__ROOTSPECIAL
 		
 ///////////////////////////////////////////////////////////////////////////
 

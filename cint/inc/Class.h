@@ -26,9 +26,7 @@
 #include "Api.h"
 class G__MethodInfo;
 class G__DataMemberInfo;
-#ifndef G__OLDIMPLEMENTATION1020
 class G__FriendInfo;
-#endif
 
 /*********************************************************************
 * class G__ClassInfo
@@ -64,13 +62,9 @@ G__ClassInfo {
   long Tagnum() const { return(tagnum); }
   G__ClassInfo EnclosingClass() ;
   G__ClassInfo EnclosingSpace() ;
-#ifndef G__OLDIMPLEMENTATION1020
   struct G__friendtag* GetFriendInfo(); 
-#endif
   void SetGlobalcomp(int globalcomp);
-#ifndef G__OLDIMPLEMENTATION1334
   void SetProtectedAccess(int protectedaccess);
-#endif
 #ifdef G__OLDIMPLEMENTATION1218_YET
   int IsValid() { return 0<=tagnum && tagnum<G__struct.alltag ? 1 : 0; }
 #else
@@ -91,11 +85,8 @@ G__ClassInfo {
 
  protected:
   long tagnum;  // class,struct,union,enum key for cint dictionary
-#ifndef G__OLDIMPLEMENTATION1218
   long class_property;  // cache value (expensive to get)
-#endif
 
-#ifdef G__ROOTSPECIAL
  ///////////////////////////////////////////////////////////////
  // Following things have to be added for ROOT
  ///////////////////////////////////////////////////////////////
@@ -113,10 +104,8 @@ G__ClassInfo {
   void *New();
   void *New(int n);
   void *New(void *arena);
-#ifndef G__OLDIMPLEMENTATION2043
   void Delete(void* p) const ;
   void Destruct(void* p) const ;
-#endif
   int InstanceCount(); 
   void ResetInstanceCount();
   void IncInstanceCount();
@@ -140,16 +129,12 @@ G__ClassInfo {
 			  ,MatchMode mode=ConversionMatch
                           ,InheritanceMode imode=WithInheritance
                           );
-#ifndef G__OLDIMPLEMENTATION2059
   G__MethodInfo GetDefaultConstructor();
   G__MethodInfo GetCopyConstructor();
   G__MethodInfo GetDestructor();
   G__MethodInfo GetAssignOperator();
-#endif
-#ifndef G__OLDIMPLEMENTATION2076
   G__MethodInfo AddMethod(const char* typenam,const char* fname,const char *arg
                          ,int isstatic=0,int isvirtual=0);
-#endif
   G__DataMemberInfo GetDataMember(const char *name,long* poffset);
   int HasMethod(const char *fname);
   int HasDataMember(const char *name);
@@ -157,21 +142,15 @@ G__ClassInfo {
 
  private:
   void CheckValidRootInfo();
-#endif /* ROOTSPECIAL */
 
 
-#ifndef G__OLDIMPLEMENTATION644
  public:
   long ClassProperty();
-#endif
-#ifndef G__OLDIMPLEMENTATION2118
   unsigned char FuncFlag(); 
-#endif
 
 };
 
 
-#ifndef G__OLDIMPLEMENTATION1020
 /*********************************************************************
 * class G__FriendInfo
 *
@@ -207,6 +186,5 @@ G__FriendInfo {
   G__ClassInfo cls;
 };
 
-#endif
 
 #endif

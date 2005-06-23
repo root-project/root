@@ -155,6 +155,11 @@ typedef long __kernel_loff_t;  /* must be long long */
 typedef unsigned long __u64;
 typedef long __s64;
 
+//#if defined(G__APPLE) && !defined(G__64BIT)
+typedef	int int32_t;
+typedef int32_t time_t;
+//#endif
+
 
 #endif /* __CINT__ */
 #endif /* G__PLATFORM_H */

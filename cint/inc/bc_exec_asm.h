@@ -6,6 +6,10 @@
 *  Execute bytecode , compiled on-the-fly by interpreter.
 *
 ****************************************************************/
+#if  defined(G__ROOT)
+extern "C" void* G__new_interpreted_object G__P((int size));
+extern "C" void G__delete_interpreted_object G__P((void* p));
+#endif
 #ifdef __cplusplus
 int G__exec_asm(int start,int stack,G__value *presult,long localmem) {
 #else
@@ -21,10 +25,8 @@ long localmem;
   int sp;               /* data stack pointer */
   int strosp=0;           /* struct offset stack pointer */
   long struct_offset_stack[G__MAXSTRSTACK]; /*struct offset stack, was int */
-#ifndef G__OLDIMPLEMENTATION1659
   int gvpp=0;           /* struct offset stack pointer */
   long store_globalvarpointer[G__MAXSTRSTACK]; /**/
-#endif
   char *funcname;         /* function name */
   /*int (*pfunc)(); */
   G__InterfaceMethod pfunc;
@@ -51,27 +53,17 @@ long localmem;
   int pinc;
   int size;
   struct G__var_array *var;
-#ifndef G__OLDIMPLEMENTATION1974
   void (*p2fldst) G__P((G__value*,int*,long,struct G__var_array*,long));
   void (*p2fop2) G__P((G__value*,G__value*));
   void (*p2fop1) G__P((G__value*));
-#else
-  void (*p2f)();
-#endif
 #ifdef G__ASM_WHOLEFUNC
   long store_struct_offset_localmem;
   struct G__ifunc_table *ifunc;
 #endif
-#ifndef G__OLDIMPLEMENTATION1437
   int store_cpp_aryindex[10];
   int store_cpp_aryindexp=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION2133
   int store_step=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION2172
   long dtorfreeoffset=0;
-#endif
 
 
   G__no_exec_compile=0;
@@ -141,15 +133,9 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1974
       p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
       (*p2fldst)(G__asm_stack,&sp,0
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+2];
-      (*p2f)(G__asm_stack,&sp,0
-	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#endif
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
@@ -185,15 +171,9 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1974
       p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
       (*p2fldst)(G__asm_stack,&sp,localmem /* temprary */
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+2];
-      (*p2f)(G__asm_stack,&sp,localmem /* temprary */
-	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#endif
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
@@ -225,15 +205,9 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]],G__store_struct_offset);
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1974
       p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
       (*p2fldst)(G__asm_stack,&sp,G__store_struct_offset
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+2];
-      (*p2f)(G__asm_stack,&sp,G__store_struct_offset
-	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
-#endif
       pc+=5;
 #ifdef G__ASM_DBG
       break;
@@ -265,15 +239,9 @@ long localmem;
       G__asm_stack[sp].obj.i = (G__asm_inst[pc+5]&1) ? 
 	*(int*)(G__asm_inst[pc+1]+localmem) : *(int*)G__asm_inst[pc+1];
       G__asm_stack[sp++].type = 'i';
-#ifndef G__OLDIMPLEMENTATION1974
       p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
       (*p2fldst)(G__asm_stack,&sp, (G__asm_inst[pc+5]&2)?localmem:0 
 	     ,(struct G__var_array*)G__asm_inst[pc+6],G__asm_inst[pc+3]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+2];
-      (*p2f)(G__asm_stack,&sp, (G__asm_inst[pc+5]&2)?localmem:0 
-	     ,(struct G__var_array*)G__asm_inst[pc+6],G__asm_inst[pc+3]);
-#endif
       pc+=G__asm_inst[pc+4];
 #ifdef G__ASM_DBG
       break;
@@ -324,23 +292,10 @@ long localmem;
 	break;
       }
       G__asm_stack[sp++].type = 'i';
-#ifndef G__OLDIMPLEMENTATION1974
       p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+4];
       (*p2fldst)(G__asm_stack,&sp
 	     ,(G__asm_inst[pc+7]&4) ? localmem : 0
 	     ,(struct G__var_array*)G__asm_inst[pc+8],G__asm_inst[pc+5]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+4];
-#ifndef G__OLDIMPLEMENTATION822
-      (*p2f)(G__asm_stack,&sp
-	     ,(G__asm_inst[pc+7]&4) ? localmem : 0
-	     ,(struct G__var_array*)G__asm_inst[pc+8],G__asm_inst[pc+5]);
-#else
-      (*p2f)(G__asm_stack,&sp
-	     ,(G__asm_inst[pc+7]&3) ? localmem : 0
-	     ,(struct G__var_array*)G__asm_inst[pc+8],G__asm_inst[pc+5]);
-#endif
-#endif
       pc+=G__asm_inst[pc+6];
 #ifdef G__ASM_DBG
       break;
@@ -365,13 +320,8 @@ long localmem;
 		     ,G__asm_stack[sp-2].type,G__asm_stack[sp-2].obj.i
 		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
-#ifndef G__OLDIMPLEMENTATION1974
       p2fop2 = (void (*) G__P((G__value*,G__value*)))G__asm_inst[pc+1];
       (*p2fop2)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+1];
-      (*p2f)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
-#endif
       pc+=2;
       --sp;
 #ifdef G__ASM_DBG
@@ -398,13 +348,8 @@ long localmem;
 	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED %c:%d" ,pc,sp 
 		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
-#ifndef G__OLDIMPLEMENTATION1974
       p2fop1 = (void (*) G__P((G__value*)))G__asm_inst[pc+1];
       (*p2fop1)(&G__asm_stack[sp-1]);
-#else
-      p2f = (void (*)())G__asm_inst[pc+1];
-      (*p2f)(&G__asm_stack[sp-1]);
-#endif
       pc+=2;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
@@ -449,16 +394,14 @@ long localmem;
       * 0 CL
       *  clear stack pointer
       ***************************************/
-#ifndef G__OLDIMPLEMENTATION2132
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %s:%d\n",pc,sp
 		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
 				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
 #endif
-#ifndef G__OLDIMPLEMENTATION2133
       {
-	G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
-        G__ifile.filenum=G__asm_inst[pc+1]/G__CL_FILESHIFT;
+        G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
+        G__ifile.filenum=(short)(G__asm_inst[pc+1]/G__CL_FILESHIFT);
         if((G__srcfile[G__ifile.filenum].maxline>G__ifile.line_number &&
             G__TESTBREAK&G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]) ||
            G__step) {
@@ -467,9 +410,7 @@ long localmem;
           struct G__input_file store_ifile = G__ifile;
           if(G__ifile.filenum>=0) {
             strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
-#ifndef G__OLDIMPLEMENTATION2136
             G__bc_setlinenum(G__ifile.line_number);
-#endif
           }
           if(1 || G__istrace) {
             G__istrace |= 0x80;
@@ -480,32 +421,7 @@ long localmem;
 	  G__ifile=store_ifile;
         }
       }
-#else
-      if(G__breaksignal) {
-        struct G__input_file store_ifile = G__ifile;
-	G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
-        G__ifile.filenum=G__asm_inst[pc+1]/G__CL_FILESHIFT;
-        if(G__ifile.filenum>=0) 
-          strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
-        G__pr(G__serr,G__ifile);
-	G__pause();
-	G__ifile=store_ifile;
-      }
-#endif
-#else /* 2132 */
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %d\n",pc,sp,G__asm_inst[pc+1]);
-#endif
-      if(G__breaksignal) {
-	sp=G__ifile.line_number;
-	G__ifile.line_number=G__asm_inst[pc+1];
-	G__pause();
-	G__ifile.line_number=sp;
-      }
-#endif /* 2132 */
-#ifndef G__OLDIMPLEMENTATION2062
       G__delete_autoobjectstack(G__scopelevel);
-#endif /* 2062 */
       pc+=2;
       sp=0;
       strosp=0;
@@ -568,27 +484,14 @@ long localmem;
       * 4 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CMPJMP (0x%lx)%d (0x%lx)%d to %x\n"
 			     ,pc,sp
 			     ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
 			     ,G__asm_inst[pc+4]);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CMPJMP (0x%x)%d (0x%x)%d to %x\n"
-			     ,pc,sp
-			     ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
-			     ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
-			     ,G__asm_inst[pc+4]);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1974
       if(!(*(int (*) G__P((int*,int*)))G__asm_inst[pc+1])((int *)G__asm_inst[pc+2]
 					,(int *)G__asm_inst[pc+3])){
-#else
-      if(!(*(int (*)())G__asm_inst[pc+1])((int *)G__asm_inst[pc+2]
-					,(int *)G__asm_inst[pc+3])){
-#endif
 	pc=G__asm_inst[pc+4];
       }
       else {
@@ -717,9 +620,7 @@ long localmem;
       pfunc = (G__InterfaceMethod)G__asm_inst[pc+4] ;
       for(i=0;i<fpara.paran;i++) {
 	fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#ifndef G__OLDIMPLEMENTATION724
 	if(0==fpara.para[i].ref) {
-#ifndef G__OLDIMPLEMENTATION1726
 	  switch(fpara.para[i].type) {
 	  case 'f':
 	  case 'b':
@@ -731,58 +632,33 @@ long localmem;
 	    fpara.para[i].ref=(long)(&fpara.para[i].obj);
 	    break;
 	  }
-#else
-	  fpara.para[i].ref=(long)(&fpara.para[i].obj);
-#endif
 	}
-#endif
       }
       sp-=fpara.paran;
       result = &G__asm_stack[sp];
-#ifndef G__OLDIMPLEMENTATION907
       result->type = 0;
-#endif
       if(0>G__asm_inst[pc+2]) {
 	result->type = -G__asm_inst[pc+2];
 	result->tagnum = G__asm_inst[pc+1];
 	result->typenum = -1; /* This may have problem with pointer to
 			       * member function */
       }
-#ifndef G__OLDIMPLEMENTATION804
       result->ref = 0; 
-#endif
-#ifndef G__OLDIMPLEMENTATION2133
       if(G__stepover) {
         store_step=G__step;
         G__step=0;
       }
-#endif
 #ifdef G__EXCEPTIONWRAPPER
       G__asm_exec=0;
-#ifndef G__OLDIMPLEMENTATION2172
       dtorfreeoffset = 
 	G__ExceptionWrapper(pfunc,result,funcname,&fpara,G__asm_inst[pc+2]);
-#else
-      G__ExceptionWrapper(pfunc,result,funcname,&fpara,G__asm_inst[pc+2]);
-#endif
       G__asm_exec=1;
 #else
-#ifndef G__OLDIMPLEMENTATION2172
       dtorfreeoffset = (*pfunc)(result,funcname,&fpara,G__asm_inst[pc+2]);
-#else
-      (*pfunc)(result,funcname,&fpara,G__asm_inst[pc+2]);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION2133
       if(G__stepover) G__step |= store_step;
-#endif
       pc+=5;
-#ifndef G__OLDIMPLEMENTATION907
       if(result->type) ++sp;
-#else
-      ++sp;
-#endif
-#ifndef G__OLDIMPLEMENTATION1270
       if(G__return==G__RETURN_TRY) {
 	if(G__CATCH!=G__dasm(G__serr,1)) {
 	  G__asm_exec=0;
@@ -790,7 +666,6 @@ long localmem;
 	}
 	G__asm_exec=1;
       }
-#endif
       if(G__return!=G__RETURN_NON) {
 	G__asm_exec=0;
 	return(1);
@@ -976,7 +851,6 @@ long localmem;
       goto pcode_parse_start;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1399
     case G__BOOL:
       /***************************************
        * 0 BOOL
@@ -993,7 +867,6 @@ long localmem;
       break;
 #else
       goto pcode_parse_start;
-#endif
 #endif
 
 
@@ -1043,13 +916,7 @@ long localmem;
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
       G__asm_stack[sp]=G__getvariable("",&i
 				      ,(struct G__var_array*)G__asm_inst[pc+4]
@@ -1088,13 +955,7 @@ long localmem;
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
@@ -1125,26 +986,14 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_MSTR index=%d paran=%d 0x%lx"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_MSTR index=%d paran=%d 0x%x"
-			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
-			     ,G__store_struct_offset);
-#endif
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
       G__asm_stack[sp]=G__getvariable(""
 				      ,&i
@@ -1152,15 +1001,9 @@ long localmem;
 				      ,&G__global);
       pc+=5;
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr," return=%g , 0x%lx\n"
 			     ,G__double(G__asm_stack[sp])
 			     ,G__int(G__asm_stack[sp]));
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr," return=%g , 0x%x\n"
-			     ,G__double(G__asm_stack[sp])
-			     ,G__int(G__asm_stack[sp]));
-#endif
 #endif
       ++sp;
 #ifdef G__ASM_DBG
@@ -1184,26 +1027,14 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_MSTR index=%d paran=%d 0x%lx"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_MSTR index=%d paran=%d 0x%x"
-			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
-			     ,G__store_struct_offset);
-#endif
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
@@ -1245,13 +1076,7 @@ long localmem;
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
       store_struct_offset_localmem = G__store_struct_offset;
       G__store_struct_offset = (long)localmem;
@@ -1293,13 +1118,7 @@ long localmem;
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
       G__var_type=(char)G__asm_inst[pc+3];
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
@@ -1354,13 +1173,8 @@ long localmem;
       * sp           <- sp-paran
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHSTROS 0x%lx strosp=%ld\n"
 			     ,pc,sp,G__store_struct_offset,strosp);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHSTROS 0x%x strosp=%d\n"
-			     ,pc,sp,G__store_struct_offset,strosp);
-#endif
 #endif
       struct_offset_stack[strosp]=G__store_struct_offset;
       ++strosp;
@@ -1380,13 +1194,8 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETSTROS 0x%lx\n"
 			     ,pc,sp,G__int(G__asm_stack[sp-1]));
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETSTROS 0x%x\n"
-			     ,pc,sp,G__int(G__asm_stack[sp-1]));
-#endif
 #endif
       G__store_struct_offset=G__int(G__asm_stack[sp-1]);
       --sp;
@@ -1405,13 +1214,8 @@ long localmem;
       * sp           <- sp-paran
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPSTROS 0x%lx strosp=%ld\n"
 			     ,pc,sp,struct_offset_stack[strosp-1],strosp);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPSTROS 0x%x strosp=%d\n"
-			     ,pc,sp,struct_offset_stack[strosp-1],strosp);
-#endif
 #endif
       G__store_struct_offset=struct_offset_stack[strosp-1];
       --strosp;
@@ -1426,7 +1230,6 @@ long localmem;
       /***************************************
       * 0 SETTEMP
       ***************************************/
-#ifndef G__OLDIMPLEMENTATION1994
       store_p_tempbuf = G__p_tempbuf->prev;
       if(G__p_tempbuf) {
 #ifdef G__ASM_DBG
@@ -1440,19 +1243,6 @@ long localmem;
 	G__tagnum = G__p_tempbuf->obj.tagnum;
 	G__return=G__RETURN_NON;
       }
-#else /* 1994 */
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%lx\n"
-			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
-#endif
-      store_p_tempbuf = G__p_tempbuf->prev;
-      store_struct_offset = G__store_struct_offset;
-      store_tagnum = G__tagnum;
-      store_return=G__return;
-      G__store_struct_offset = G__p_tempbuf->obj.obj.i;
-      G__tagnum = G__p_tempbuf->obj.tagnum;
-      G__return=G__RETURN_NON;
-#endif /* 1994 */
       ++pc;
 #ifdef G__ASM_DBG
       break;
@@ -1471,7 +1261,6 @@ long localmem;
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       G__return=store_return;
-#ifndef G__OLDIMPLEMENTATION1994
       if(G__p_tempbuf && store_p_tempbuf) {
 #ifdef G__ASM_IFUNC
 	if(-1==G__p_tempbuf->obj.tagnum ||
@@ -1482,16 +1271,6 @@ long localmem;
 	free((void*)G__p_tempbuf);
 	G__p_tempbuf = store_p_tempbuf;
       }
-#else /* 1994 */
-#ifdef G__ASM_IFUNC
-      if(-1==G__p_tempbuf->obj.tagnum ||
-	 -1!=G__struct.iscpplink[G__p_tempbuf->obj.tagnum]) {
-	free((void*)G__p_tempbuf->obj.obj.i);
-      }
-#endif
-      free((void*)G__p_tempbuf);
-      G__p_tempbuf = store_p_tempbuf;
-#endif /* 1994 */
       ++pc;
 #ifdef G__ASM_DBG
       break;
@@ -1595,14 +1374,10 @@ long localmem;
 #endif
       G__asm_index = G__asm_inst[pc+7];
       ifunc = (struct G__ifunc_table*)G__asm_inst[pc+4];
-#ifndef G__OLDIMPLEMENTATION2066
       if(G__cintv6 && G__LD_IFUNC_optimize(ifunc,G__asm_index,G__asm_inst,pc)) goto ld_func;
-#endif
 #ifdef G__ASM_WHOLEFUNC
       if(ifunc->pentry[G__asm_index]->bytecode&&G__asm_inst[pc]==G__LD_IFUNC
-#ifndef G__OLDIMPLEMENTATION891
 	 && 0==ifunc->isvirtual[G__asm_index]
-#endif
 	 ) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) G__fprinterr(G__serr,"call G__exec_bytecode optimized\n");
@@ -1619,13 +1394,7 @@ long localmem;
       strcpy(funcnamebuf,(char*)G__asm_inst[pc+1]);
       fpara.paran=G__asm_inst[pc+3];
       pfunc = (G__InterfaceMethod)G__asm_inst[pc+4] ;
-#ifdef G__OLDIMPLEMENTATION483
-      if(fpara.paran)
-	memcpy(&fpara.para[0],&G__asm_stack[sp-fpara.paran]
-	       ,sizeof(G__value)*fpara.paran);
-#else
       for(i=0;i<fpara.paran;i++) fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
-#endif
       sp-=fpara.paran;
       store_exec_memberfunc = G__exec_memberfunc;
       store_memberfunc_tagnum = G__memberfunc_tagnum;
@@ -1637,12 +1406,7 @@ long localmem;
       G__memberfunc_struct_offset = store_memberfunc_struct_offset;
       G__exec_memberfunc = store_exec_memberfunc;
       pc+=8;
-#ifndef G__OLDIMPLEMENTATION907
       if('~'!=funcnamebuf[0]) ++sp;
-#else
-      ++sp;
-#endif
-#ifndef G__OLDIMPLEMENTATION1270
       if(G__return==G__RETURN_TRY) {
 	if(G__CATCH!=G__dasm(G__serr,1)) {
 	  G__asm_exec=0;
@@ -1650,7 +1414,6 @@ long localmem;
 	}
 	G__asm_exec=1;
       }
-#endif
       if(G__return!=G__RETURN_NON) {
 	G__asm_exec=0;
 	return(1);
@@ -1673,7 +1436,7 @@ long localmem;
       * sp
       ***************************************/
       if(G__asm_inst[pc+1]) {
-#if defined(G__ROOT) && !defined(G__OLDIMPLEMENTATION1229)
+#if  defined(G__ROOT)
 	G__store_struct_offset
 	  =(long)G__new_interpreted_object(G__asm_inst[pc+1]*G__asm_stack[sp-1].obj.i);
 #else
@@ -1693,19 +1456,11 @@ long localmem;
 			     ,G__store_struct_offset);
 #endif
       pinc=G__int(G__asm_stack[sp-1]);
-#ifndef G__OLDIMPLEMENTATION595
       if(G__asm_inst[pc+2]) {
-#else
-      if(G__asm_inst[pc+2]&&pinc>1) {
-#endif
 	G__alloc_newarraylist(G__store_struct_offset,pinc);
       }
-#ifndef G__OLDIMPLEMENTATION585
       if(G__asm_inst[pc+1]) --sp;
       else                  sp-=2;
-#else
-      --sp;
-#endif
       pc+=3;
 #ifdef G__ASM_DBG
       break;
@@ -1725,23 +1480,13 @@ long localmem;
       * sp+1   <-
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SET_NEWALLOC 0x%lx %d %d\n"
 				  ,pc,sp,G__store_struct_offset
 				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SET_NEWALLOC 0x%x %d %d\n"
-				  ,pc,sp,G__store_struct_offset
-				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
-#endif
 #endif
       ++sp; /* didn't understand meaning of cheating LD_IFUNC */
-#ifndef G__OLDIMPLEMENTATION2169
       G__asm_stack[sp-1].obj.reftype.reftype = (G__asm_inst[pc+2]>>8);
       G__asm_stack[sp-1].type = G__asm_inst[pc+2]&0xff;
-#else
-      G__asm_stack[sp-1].type = G__asm_inst[pc+2];
-#endif
       G__asm_stack[sp-1].obj.i=G__store_struct_offset;
       G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
       G__asm_stack[sp-1].typenum = -1;
@@ -1763,19 +1508,12 @@ long localmem;
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: DELETEFREE %lx\n"
 			     ,pc,sp,G__store_struct_offset);
 #endif
-#ifdef G__OLDIMPLEMENTATION1437 /* risk */
-      if(G__asm_inst[pc+1]) {
-	pinc=G__free_newarraylist(G__store_struct_offset);
-      }
-#endif
       if(G__store_struct_offset) {
-#ifndef G__OLDIMPLEMENTATION2172
 	if(G__asm_inst[pc+1]==2) {
 	  G__store_struct_offset += dtorfreeoffset;
 	  dtorfreeoffset = 0;
 	}
-#endif
-#if defined(G__ROOT) && !defined(G__OLDIMPLEMENTATION1229)
+#if  defined(G__ROOT)
 	G__delete_interpreted_object((void*)G__store_struct_offset);
 #else
 	free((void*)G__store_struct_offset);
@@ -1833,10 +1571,8 @@ long localmem;
 	G__asm_stack[sp-1].ref += G__asm_inst[pc+2];
       G__asm_stack[sp-1].obj.i += G__asm_inst[pc+2];
 /* #define G__OLDIMPLEMENTATION2077 */
-#ifndef G__OLDIMPLEMENTATION2077
       if(0==G__asm_stack[sp-1].ref && 'u'==G__asm_stack[sp-1].type)
 	G__asm_stack[sp-1].ref += G__asm_stack[sp-1].obj.i;
-#endif
       pc+=3;
 #ifdef G__ASM_DBG
       break;
@@ -1852,13 +1588,8 @@ long localmem;
       * sp       <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: STORETEMP 0x%lx\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: STORETEMP 0x%x\n"
-			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
-#endif
 #endif
       G__store_tempobject(G__asm_stack[sp-1]);
       ++pc;
@@ -1897,15 +1628,9 @@ long localmem;
       * sp      <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx %d\n"
 			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x %d\n"
-			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1500
       if(-1!=G__asm_inst[pc+1]) {
 	G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
 	G__asm_stack[sp-1].typenum = -1;
@@ -1913,13 +1638,6 @@ long localmem;
 	G__asm_stack[sp-1].obj.i = G__store_struct_offset;
 	G__asm_stack[sp-1].ref = G__store_struct_offset;
       }
-#else
-      G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
-      G__asm_stack[sp-1].typenum = -1;
-      G__asm_stack[sp-1].type = 'u';
-      G__asm_stack[sp-1].obj.i = G__store_struct_offset;
-      G__asm_stack[sp-1].ref = G__store_struct_offset;
-#endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       G__return=store_return;
@@ -1972,17 +1690,11 @@ long localmem;
       * sp+1   <-
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_THIS 0x%lx %s\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__struct.name[G__tagnum]);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_THIS 0x%x %s\n"
-			     ,pc,sp ,G__store_struct_offset
-			     ,G__struct.name[G__tagnum]);
 #endif
-#endif
-      G__var_type = G__asm_inst[pc+1];
+      G__var_type = (char)G__asm_inst[pc+1];
       G__getthis(&G__asm_stack[sp],"this","this");
       G__var_type = 'p';
       pc+=2;
@@ -2005,10 +1717,8 @@ long localmem;
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RTN_FUNC %d\n"
 			     ,pc,sp ,G__asm_inst[pc+1]);
 #endif
-#ifndef G__OLDIMPLEMENTATION2110
       /* return from   'try {  }' block */
       if(2==G__asm_inst[pc+1]) return(1); 
-#endif
       G__asm_exec = 0;
       G__return=G__RETURN_NORMAL;
       if(G__asm_inst[pc+1]) *presult = G__asm_stack[sp-1];
@@ -2029,17 +1739,10 @@ long localmem;
       * 0 SETMEMFUNCENV:
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETMEMFUNCENV %lx <- %lx %ld\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__memberfunc_struct_offset
 			     ,memfuncenv_p);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETMEMFUNCENV %x <- %x %d\n"
-			     ,pc,sp ,G__store_struct_offset
-			     ,G__memberfunc_struct_offset
-			     ,memfuncenv_p);
-#endif
 #endif
       store_memfuncenv_tagnum[memfuncenv_p] = G__tagnum;
       store_memfuncenv_struct_offset[memfuncenv_p] = G__store_struct_offset;
@@ -2060,17 +1763,10 @@ long localmem;
       * 0 RECMEMFUNCENV:
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RECMEMFUNCENV %lx <- %lx %ld\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,store_memfuncenv_struct_offset
 			     ,memfuncenv_p-1);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RECMEMFUNCENV %x <- %x %d\n"
-			     ,pc,sp ,G__store_struct_offset
-			     ,store_memfuncenv_struct_offset
-			     ,memfuncenv_p-1);
-#endif
 #endif
       --memfuncenv_p;
       G__var_type = store_memfuncenv_var_type[memfuncenv_p];
@@ -2146,7 +1842,6 @@ long localmem;
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       pc+=3;
-#ifndef G__OLDIMPLEMENTATION1270
       if(G__return==G__RETURN_TRY) {
 	if(G__CATCH!=G__dasm(G__serr,1)) {
 	  G__asm_exec=0;
@@ -2154,7 +1849,6 @@ long localmem;
 	}
 	G__asm_exec=1;
       }
-#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -2198,16 +1892,11 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: TOVALUE\n",pc,sp);
 #endif
-#ifndef G__OLDIMPLEMENTATION1401
       {
 	G__p2f_tovalue p2f_tovalue = (G__p2f_tovalue)G__asm_inst[pc+1];
 	(*p2f_tovalue)(&G__asm_stack[sp-1]);
 	pc+=2;
       }
-#else
-      G__asm_stack[sp-1]=G__tovalue(G__asm_stack[sp-1]);
-      ++pc;
-#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -2266,11 +1955,6 @@ long localmem;
       ++pc;
       G__asm_stack[sp]=G__asm_stack[sp-1];
 /* #define G__OLDIMPLEMENTATION2078 */
-#ifdef G__OLDIMPLEMENTATION2078
-      /* clear reference because this the value is modified by ++/-- opr */
-      /* 2004/6/16, following line may not be needed. */
-      G__asm_stack[sp-1].ref = 0;
-#endif
       ++sp;
 #ifdef G__ASM_DBG
       break;
@@ -2312,7 +1996,6 @@ long localmem;
       if(G__asm_dbg) 
 	G__fprinterr(G__serr,"%3x,%d: SETGVP %d %d\n",pc,sp,G__asm_inst[pc+1],gvpp);
 #endif
-#ifndef G__OLDIMPLEMENTATION1659
       switch(G__asm_inst[pc+1]) {
       case -1:
 	if(gvpp) G__globalvarpointer = store_globalvarpointer[--gvpp];
@@ -2321,26 +2004,15 @@ long localmem;
 	store_globalvarpointer[gvpp++] = G__globalvarpointer;
 	G__globalvarpointer = G__asm_stack[sp-1].obj.i;
 	break;
-#ifndef G__OLDIMPLEMENTATION2099
       case 1:
 	store_globalvarpointer[gvpp++] = G__globalvarpointer;
 	G__globalvarpointer = G__store_struct_offset;
 	break;
-#endif
       default: /* looks like this case is not used. 2004/7/19 */
 	store_globalvarpointer[gvpp++] = G__globalvarpointer;
 	G__globalvarpointer = G__asm_inst[pc+1];
 	break;
       }
-#else
-      if(G__asm_inst[pc+1]) {
-	G__globalvarpointer = G__asm_inst[pc+1];
-      }
-      else {
-	G__globalvarpointer = G__asm_stack[sp-1].obj.i;
-	/* --sp; */
-      }
-#endif
       pc+=2;
 #ifdef G__ASM_DBG
       break;
@@ -2357,11 +2029,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: TOPVALUE",pc,sp);
 #endif
-#ifndef G__OLDIMPLEMENTATION1400
       G__asm_toXvalue(&G__asm_stack[sp-1]);
-#else
-      G__asm_stack[sp-1]=G__toXvalue(G__asm_stack[sp-1],'P');
-#endif
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr," %x\n",G__asm_stack[sp-1].obj.i);
 #endif
@@ -2381,9 +2049,7 @@ long localmem;
       * 2 var_array pointer
       * 3 mode, 0 local block scope, 1 member offset, 2 static
       ***************************************/
-#ifndef G__OLDIMPLEMENTATION2054
       store_globalvarpointer[gvpp++] = G__globalvarpointer; /* ??? */
-#endif
       var=(struct G__var_array*)G__asm_inst[pc+2];
       switch(G__asm_inst[pc+3]) {
       case 0:
@@ -2410,7 +2076,6 @@ long localmem;
 #endif /* ON1073 */
 
 
-#ifndef G__OLDIMPLEMENTATION2109
     case G__TRY:
       /***************************************
       * inst
@@ -2513,9 +2178,7 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif /* 2109 */
 
-#ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:
       /***************************************
       * inst
@@ -2527,29 +2190,12 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: THROW\n",pc,sp);
 #endif
-#ifndef G__OLDIMPLEMENTATION2109
       // TODO, it is questionable to set G__exceptionbuffer here. 
       // Maybe better setting this in catch block in G__bc_try_bytecode()
       G__exceptionbuffer = G__asm_stack[sp-1]; 
 
       G__bc_exec_throw_bytecode(&G__asm_stack[sp-1]);
-#else
-      G__exceptionbuffer = G__asm_stack[sp-1];
-      /* TODO, Use true throw here, instead of following return operation */
-      if('U'==G__exceptionbuffer.type) G__exceptionbuffer.type='u';
-      G__return = G__RETURN_TRY;
-      --sp;
-      pc+=1;
-#endif
-#ifndef G__OLDIMPLEMENTATION1281
       return(1);
-#else
-#ifdef G__ASM_DBG
-      break;
-#else
-      goto pcode_parse_start;
-#endif
-#endif
 
     case G__CATCH:
       /***************************************
@@ -2567,9 +2213,7 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1437
     case G__SETARYINDEX:
       /***************************************
       * inst
@@ -2627,9 +2271,7 @@ long localmem;
       goto pcode_parse_start;
 #endif
 
-#endif /* 1437 */
 
-#ifndef G__OLDIMPLEMENTATION2042
     case G__ENTERSCOPE:
       /***************************************
       * inst
@@ -2685,7 +2327,6 @@ long localmem;
       goto pcode_parse_start;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2160
     case G__CASE:
       /***************************************
       * inst
@@ -2707,41 +2348,8 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif /* 2160 */
 
-#if 0
-    case G__SETARYCTOR:
-      /***************************************
-      * inst
-      * 0 SETARYCTOR
-      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
-      * stack
-      * sp-1         <- sp-paran
-      * sp
-      ***************************************/
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) 
-       G__fprinterr(G__serr,"%3x,%d: SETARYCTOR\n",pc,sp);
-#endif
-      switch(G__asm_inst[pc+1]) {
-      case -1:
-        G__cpp_aryconstruct = G__int(G__asm_stack[sp-1]);
-        --sp;
-        break;
-      default:
-        G__cpp_aryconstruct = G__asm_inst[pc+1];
-        break;
-      }
-      pc+=2;
-#ifdef G__ASM_DBG
-      break;
-#else
-      goto pcode_parse_start;
-#endif
-#endif /* 0 */
-#endif /* 2042 */
 
-#ifndef G__OLDIMPLEMENTATION2140
     case G__MEMCPY:
       /***************************************
       * inst
@@ -2770,9 +2378,7 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2147
     case G__MEMSETINT:
       /***************************************
       * inst
@@ -2836,10 +2442,8 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif /* 2147 */
 
 
-#ifndef G__OLDIMPLEMENTATION2152
     case G__VIRTUALADDSTROS:
       /***************************************
       * inst
@@ -2866,9 +2470,7 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
-#endif /* 2152 */
 
-#ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
       * inst
@@ -2889,7 +2491,6 @@ long localmem;
       break;
 #else
       goto pcode_parse_start;
-#endif
 #endif
 
 #ifdef G__NEVER_BUT_KEEP

@@ -57,7 +57,6 @@
 
 
 
-#ifndef G__OLDIMPLEMENTATION644
 
 /* ECF enhancement  ClassProperty() */
 
@@ -76,6 +75,5 @@
 #define G__CLS_HASVIRTUAL        0x00001000
 #define G__CLS_ISABSTRACT        0x00002000
 
-#endif /* ON644 */
 
 #endif /* G__PROPERTY_H */

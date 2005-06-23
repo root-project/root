@@ -20,11 +20,8 @@
 
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1078
 int G__quiet=0;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1937
 static int G__history_size_max = 51;
 static int G__history_size_min = 30;
 /************************************************************
@@ -41,7 +38,6 @@ int s;
     G__fprinterr(G__serr,"!!! %d ignored. You must set positive number\n",s);
   }
 }
-#endif
 
 #ifdef G__GNUREADLINE
 extern char *readline G__P((char* prompt));
@@ -66,9 +62,7 @@ char *string;
 #else
   char tname[L_tmpnam+10];
 #endif
-#ifndef G__OLDIMPLEMENTATION2092
   int istmpnam=0;
-#endif
   
   static char prevstring[G__LONGLINE];
   static char histfile[G__ONELINE];
@@ -109,11 +103,7 @@ char *string;
     fclose(fp);
     *state = (*state)+1;
     strcpy(prevstring,string);
-#ifndef G__OLDIMPLEMENTATION1937
     if(*state<G__history_size_max) return;
-#else
-    if(*state<51) return;
-#endif
   }
   else {
     return;
@@ -126,52 +116,30 @@ char *string;
    ********************************************************/
   fp=fopen(histfile,"r");
   do {
-#if !defined(G__OLDIMPLEMENTATION2092)
     tmp=tmpfile();
     if(!tmp) {
       G__tmpnam(tname); /* not used anymore */
       tmp=fopen(tname,"w");
       istmpnam=1;
     }
-#elif !defined(G__OLDIMPLEMENTATION1918)
-    tmp=tmpfile();
-#else
-    G__tmpnam(tname); /* not used anymore */
-    tmp=fopen(tname,"w");
-#endif
   } while((FILE*)NULL==tmp && G__setTMPDIR(tname));
   if(tmp&&fp) {
     while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
       ++line;
-#ifndef G__OLDIMPLEMENTATION1937
       if(line>G__history_size_max-G__history_size_min) fprintf(tmp,"%s\n",arg[0]);
-#else
-      if(line>30) fprintf(tmp,"%s\n",arg[0]);
-#endif
     }
   }
-#if !defined(G__OLDIMPLEMENTATION2092)
   if(!istmpnam) {
     if(tmp) fseek(tmp,0L,SEEK_SET);
   }
   else {
     if(tmp) fclose(tmp);
   }
-#elif !defined(G__OLDIMPLEMENTATION1918)
-  if(tmp) fseek(tmp,0L,SEEK_SET);
-#else
-  if(tmp) fclose(tmp);
-#endif
   if(fp) fclose(fp);
   
   /* copy back to history file */
   fp=fopen(histfile,"w");
-#if !defined(G__OLDIMPLEMENTATION2092)
   if(istmpnam) tmp=fopen(tname,"r");
-#elif !defined(G__OLDIMPLEMENTATION1918)
-#else
-  tmp=fopen(tname,"r");
-#endif
   if(tmp&&fp) {
     while(G__readline(tmp,G__oneline,G__argbuf,&argn,arg)!=0){
       fprintf(fp,"%s\n",arg[0]);
@@ -179,12 +147,7 @@ char *string;
   }
   if(tmp) fclose(tmp);
   if(fp) fclose(fp);
-#if !defined(G__OLDIMPLEMENTATION2092)
   if(istmpnam) remove(tname);
-#elif !defined(G__OLDIMPLEMENTATION1918)
-#else
-  remove(tname);
-#endif
 }
 #endif
 
@@ -202,9 +165,7 @@ char *prompt;
   static int state=0;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1078
   if(G__quiet) prompt="";
-#endif
   
   if(G__Xdumpreadline[0]) {
     pchar=G__xdumpinput(prompt);
@@ -282,14 +243,10 @@ char *prompt;
       G__dumpinput(line);
     }
   }
-#ifndef G__OLDIMPLEMENTATION2139
   if(feof(G__sin)) {
     G__return=G__RETURN_IMMEDIATE;
   }
-#endif
-#ifndef G__OLDIMPLEMENTATION447
   clearerr(G__sin);
-#endif
   return(line);
 }
 

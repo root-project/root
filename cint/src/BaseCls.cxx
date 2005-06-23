@@ -64,15 +64,9 @@ long G__BaseClassInfo::Property()
   if(IsValid()) {
     property = G__ClassInfo::Property();
     if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISVIRTUALBASE)
-#ifndef G__OLDIMPLEMENTATION2148
       property|=G__BIT_ISVIRTUALBASE;
-#else
-      property|=G__BIT_ISVIRTUAL;
-#endif
-#ifndef G__OLDIMPLEMENTATION1888
     if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)
       property|=G__BIT_ISDIRECTINHERIT;
-#endif
     switch(G__struct.baseclass[derivedtagnum]->baseaccess[basep]) {
     case G__PUBLIC:
       return(property|G__BIT_ISPUBLIC);
@@ -111,7 +105,6 @@ int G__BaseClassInfo::Next() {
 int G__BaseClassInfo::Next(int onlydirect)
 {
   ++basep;
-#ifndef G__FONS56
   if(onlydirect) {
     while (IsValid() &&
      !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
@@ -122,7 +115,6 @@ int G__BaseClassInfo::Next(int onlydirect)
      G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
      return 1;
   }
-#endif
   return(IsValid());
 }
 
@@ -136,7 +128,6 @@ int G__BaseClassInfo::Prev(int onlydirect)
 {
   if(-1==basep) basep = G__struct.baseclass[derivedtagnum]->basen-1;
   else --basep;
-#ifndef G__FONS56
   if(onlydirect) {
     while (IsValid() &&
      !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
@@ -147,7 +138,6 @@ int G__BaseClassInfo::Prev(int onlydirect)
      G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
      return 1;
   }
-#endif
   return(IsValid());
 }
 ///////////////////////////////////////////////////////////////////////////

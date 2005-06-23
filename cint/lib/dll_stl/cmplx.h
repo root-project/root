@@ -1,5 +1,6 @@
 // lib/dll_stl/cmplx.h
 
+#include <iostream>
 #include <complex>
 
 #ifndef __hpux
@@ -18,6 +19,7 @@ using namespace std;
 #pragma link C++ class complex<unsigned int> ;
 #pragma link C++ class complex<long> ;
 #pragma link C++ class complex<unsigned long> ;
+#pragma link C++ class complex<float> ;
 #pragma link C++ class complex<double> ;
 
 #ifdef G__NATIVELONGLONG
@@ -26,6 +28,15 @@ using namespace std;
 #pragma link C++ class complex<long double> ;
 #endif
 
+#ifdef __CINT__
+double abs(const complex<double>& a);
+//long abs(const complex<long>& a);
+
+#ifdef G__NATIVELONGLONG
+long double abs(const complex<long double>& a);
+//long long abs(const complex<long long>& a);
+#endif
+#endif
 
 
 #endif

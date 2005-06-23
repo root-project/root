@@ -23,9 +23,7 @@
 
 #include <stdio.h>
 
-#ifndef G__OLDIMPLEMENTATION463
 extern FILE *G__serr;
-#endif
 
 /***********************************************************************
 * getopt();

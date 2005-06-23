@@ -25,18 +25,12 @@
 #endif
 
 #ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1620
 #define G__NOPOWEROPR
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_noerror;
-#endif
-#ifndef G__OLDIMPLEMENTATION1119
 extern int G__initval_eval;
 extern int G__dynconst;
-#endif
 
 
 #ifndef G__OLDIMPLEMENTATION1825
@@ -53,15 +47,7 @@ char *str;
 	  ,(0==result->isconst)?'0':'1'
 	  ,result->tagnum
 	  ,(result->obj.i<0)?'M':'P'
-#ifndef G__OLDIMPLEMENTATION1981
-#ifndef G__OLDIMPLEMENTATION2069
 	  ,labs(result->obj.i)
-#else
-	  ,abs(result->obj.i)
-#endif
-#else
-	  ,result->obj.i
-#endif
 	  );
   return(str);
 }
@@ -83,11 +69,7 @@ char *item;
   *xx=0;
   result->tagnum = atoi(xtmp);
   *xx='_';
-#ifndef G__PHILIPPE36
   result->obj.i = atol(xx+2);
-#else
-  result->obj.i = atoi(xx+2);
-#endif
   if('M'==xx[1]) result->obj.i = -result->obj.i;
   result->ref = result->obj.i;
 }
@@ -177,19 +159,15 @@ char *exprwithspace;
       len=strlen(exprnospace);
       if((single_quote!=0)||(double_quote!=0)||
 	 (len>=3+ipunct&&strncmp(exprnospace+ipunct,"new",3)==0)
-#ifndef G__OLDIMPLEMENTATION1808
 	 || (len>=5+ipunct&&strncmp(exprnospace+ipunct,"const",5)==0)
-#endif
 	 ) {
 	exprnospace[iout++] = exprwithspace[iin] ;
       }
       else if(len>=8&&strncmp(exprnospace,"delete[]",8)==0) {
 	G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
 	G__delete_operator(exprnospace,1);
-#ifndef G__OLDIMPLEMENTATION1181
 	result = G__null;
 	goto deletereturn;
-#endif
       }
       else if(len>=6&&strncmp(exprnospace,"delete",6)==0) {
 	G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
@@ -199,18 +177,14 @@ char *exprwithspace;
 	else {
 	  G__delete_operator(exprnospace,0);
 	}
-#ifndef G__OLDIMPLEMENTATION1181
 	result = G__null;
 	goto deletereturn;
-#endif
       }
       iin++;
       break;
     case '=': 
     case '(': 
-#ifndef G__OLDIMPLEMENTATION994
     case ')': 
-#endif
     case ',': 
       ipunct = iout+1;
     default :
@@ -235,9 +209,7 @@ char *exprwithspace;
 #endif
 
   result=G__getexpr(exprnospace);
-#ifndef G__OLDIMPLEMENTATION1600
   G__last_error = G__security_error;
-#endif
 
 #ifdef G__EH_SIGNAL
   signal(SIGFPE,fpe);
@@ -256,9 +228,7 @@ char *exprwithspace;
   deletereturn:
 
   G__asm_exec = store_asm_exec;
-#ifndef G__OLDIMPLEMENTATION899
   G__asm_noverflow = store_asm_noverflow;
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1802
   free((void*)exprnospace);
@@ -277,36 +247,22 @@ G__value G__calc(exprwithspace)
 char *exprwithspace;
 {
   G__value result;
-#ifndef G__OLDIMPLEMENTATION1376
   int store_security_error; 
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1376
   store_security_error = G__security_error;
   G__security_error = G__NOERROR;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1031
   G__storerewindposition();
-#endif
 
   result = G__calc_internal(exprwithspace);
 
-#ifndef G__OLDIMPLEMENTATION895
   G__security_recover(G__serr);
-#endif
   
-#ifndef G__OLDIMPLEMENTATION1376
   G__security_error = store_security_error;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
-#endif
 
   return(result);
 }
@@ -326,11 +282,7 @@ int ig1;
 char *ebuf;
 {
   int tempop;
-#ifndef G__OLDIMPLEMENTATION713
   int ppointer=0;
-#else
-  int ppointer;
-#endif
   int store_no_exec_compile;
 
   tempop = G__int(defined); /* eval condition */
@@ -344,9 +296,7 @@ char *ebuf;
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__CNDJMP;
-#ifndef G__OLDIMPLEMENTATION1575
     G__asm_inst[G__asm_cp+1] = G__PVOID;
-#endif
     ppointer = G__asm_cp+1;
     G__inc_cp_asm(2,0);
   }
@@ -367,9 +317,7 @@ char *ebuf;
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
-#ifndef G__OLDIMPLEMENTATION1575
       G__asm_inst[G__asm_cp+1] = G__PVOID;
-#endif
       G__inc_cp_asm(2,0);
       G__asm_inst[ppointer]=G__asm_cp;
       ppointer=G__asm_cp-1;
@@ -398,9 +346,7 @@ char *ebuf;
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
-#ifndef G__OLDIMPLEMENTATION1575
       G__asm_inst[G__asm_cp+1] = G__PVOID;
-#endif
       G__inc_cp_asm(2,0);
       G__asm_inst[ppointer]=G__asm_cp;
       ppointer=G__asm_cp-1;
@@ -419,16 +365,13 @@ char *ebuf;
     if(G__asm_dbg) G__fprinterr(G__serr,"  JMP assigned %x,%x\n" ,G__asm_cp,ppointer-1);
 #endif
     G__asm_inst[ppointer] = G__asm_cp;
-#ifndef G__OLDIMPLEMENTATION599
     G__asm_cond_cp=G__asm_cp; /* avoid wrong optimization */
-#endif
   }
 #endif /* G__ASM */
 
   return(defined);
 }
 
-#ifndef G__OLDIMPLEMENTATION742
 /******************************************************************
 * G__iscastexpr_body()
 *
@@ -468,7 +411,6 @@ int lenbuf;
   (lenbuf>3 && '('==ebuf[0] && ')'==ebuf[lenbuf-1] &&                    \
    ('*'==ebuf[lenbuf-2] || '&'==ebuf[lenbuf-2] ||                        \
     G__iscastexpr_body(ebuf,lenbuf)))
-#endif
 
 /******************************************************************
 * ANSI compliant operator precedences,  smaller the higher
@@ -478,20 +420,21 @@ int lenbuf;
 
 #define G__PREC_UNARY     3
 #define G__PREC_P2MEM     4
-#define G__PREC_MULT      5
-#define G__PREC_ADD       6
-#define G__PREC_SHIFT     7
-#define G__PREC_RELATION  8
-#define G__PREC_EQUAL     9
-#define G__PREC_BITAND   10
-#define G__PREC_BITEXOR  11
-#define G__PREC_BITOR    12
-#define G__PREC_LOGICAND 13
-#define G__PREC_LOGICOR  14
-#define G__PREC_TEST     15
-#define G__PREC_ASSIGN   16
+#define G__PREC_PWR       5
+#define G__PREC_MULT      6
+#define G__PREC_ADD       7
+#define G__PREC_SHIFT     8
+#define G__PREC_RELATION  9
+#define G__PREC_EQUAL    10
+#define G__PREC_BITAND   11
+#define G__PREC_BITEXOR  12
+#define G__PREC_BITOR    13
+#define G__PREC_LOGICAND 14
+#define G__PREC_LOGICOR  15
+#define G__PREC_TEST     16
+#define G__PREC_ASSIGN   17
 
-#define G__PREC_COMMA    17
+#define G__PREC_COMMA    18
 
 #define G__PREC_NOOPR   100
 
@@ -506,7 +449,6 @@ int lenbuf;
 /******************************************************************
 * G__ASSIGN_CNDJMP
 ******************************************************************/
-#ifndef G__OLDIMPLEMENTATION1575
 #ifdef G__ASM_DBG 
 #define G__ASSIGN_CNDJMP                                             \
     if('O'==opr[op] && G__asm_noverflow) { /* 1575 begin */          \
@@ -532,110 +474,8 @@ int lenbuf;
       pp_and = store_pp_and;                                         \
     } /* 1575 end */ 
 #endif
-#else
-#define G__ASSIGN_CNDJMP
-#endif
 
 
-#ifndef G__OLDIMPLEMENTATION1942
-/******************************************************************
-* G__exec_evalall
-*
-* Evaluate all operators in stack and get result as vstack[0]
-* This macro contributes to execution speed. Don't implemented by
-* a function.
-******************************************************************/
-#define G__exec_evalall                                                \
-  /* Evaluate item */                                                  \
-  if(lenbuf) {                                                         \
-    ebuf[lenbuf] = '\0';                                               \
-    if(up && '&'==unaopr[up] && ')'!=ebuf[lenbuf-1]) {                 \
-      int store_var_type=G__var_type;                                  \
-      G__var_type = 'P';                                               \
-      vstack[sp++] = G__getitem(ebuf);                                 \
-      G__var_type=store_var_type;                                      \
-      --up;                                                            \
-    }                                                                  \
-    else                                                               \
-      vstack[sp++] = G__getitem(ebuf);                                 \
-    lenbuf=0;                                                          \
-    iscastexpr = 0; /* ON1342 */                                       \
-  }                                                                    \
-  /* process unary operator */                                         \
-  while(up && sp>=1) {                                                 \
-    --up;                                                              \
-    if('*'==unaopr[up]) {                                              \
-      vstack[sp-1] = G__tovalue(vstack[sp-1]);                         \
-    }                                                                  \
-    else if('&'==unaopr[up]) {    /* ON717 */                          \
-      vstack[sp-1] = G__toXvalue(vstack[sp-1],'P');                    \
-    }                                                                  \
-    else {                                                             \
-      vstack[sp] = vstack[sp-1];                                       \
-      vstack[sp-1] = G__null;                                          \
-      G__bstore(unaopr[up],vstack[sp],&vstack[sp-1]);                  \
-    }                                                                  \
-  }                                                                    \
-  /* process binary operator */                                        \
-  while(op /* && opr[op-1]<=G__PROC_NOOPR */ && sp>=2) {               \
-    --op;                                                              \
-    --sp;                                                              \
-    G__ASSIGN_CNDJMP /* 1575 */                                        \
-    G__bstore(opr[op],vstack[sp],&vstack[sp-1]);                       \
-  }                                                                    \
-  if(1!=sp || op!=0 || up!=0) { G__expr_error; }
-
-
-/******************************************************************
-* G__exec_binopr()
-*
-* Evaluate all operators in stack and get result as vstack[0]
-* then push binary operator to operator stack.
-* This macro contributes to execution speed. Don't implemented by
-* a function.
-******************************************************************/
-#define G__exec_binopr(oprin,precin)                                   \
-  /* evaluate left value */                                            \
-  ebuf[lenbuf] = '\0';                                                 \
-  if(up && '&'==unaopr[up] && ')'!=ebuf[lenbuf-1]) {                   \
-    int store_var_type=G__var_type;                                    \
-    G__var_type = 'P';                                                 \
-    vstack[sp++] = G__getitem(ebuf);                                   \
-    G__var_type=store_var_type;                                        \
-    --up;                                                              \
-  }                                                                    \
-  else                                                                 \
-    vstack[sp++] = G__getitem(ebuf);                                   \
-  lenbuf=0;                                                            \
-  iscastexpr = 0; /* ON1342 */                                         \
-  /* process unary operator */                                         \
-  while(up && sp>=1) {                                                 \
-    --up;                                                              \
-    if('*'==unaopr[up]) {                                              \
-      vstack[sp-1] = G__tovalue(vstack[sp-1]);                         \
-    }                                                                  \
-    else if('&'==unaopr[up]) {    /* ON717 */                          \
-      vstack[sp-1] = G__toXvalue(vstack[sp-1],'P');                    \
-    }                                                                  \
-    else {                                                             \
-      vstack[sp] = vstack[sp-1];                                       \
-      vstack[sp-1] = G__null;                                          \
-      G__bstore(unaopr[up],vstack[sp],&vstack[sp-1]);                  \
-    }                                                                  \
-  }                                                                    \
-  /* process higher precedence operator at left */                     \
-  while(op && prec[op-1]<=precin && sp>=2) {                           \
-    --op;                                                              \
-    --sp;                                                              \
-    G__ASSIGN_CNDJMP /* 1575 */                                        \
-    G__bstore(opr[op],vstack[sp],&vstack[sp-1]);                       \
-  }                                                                    \
-  /* set operator */                                                   \
-  opr[op] = oprin;                                                     \
-  if(G__PREC_NOOPR!=precin) prec[op++] = precin
-
-
-#else /* 1942 */
 /******************************************************************
 * G__exec_evalall
 *
@@ -716,7 +556,6 @@ int lenbuf;
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
-#endif /* 1942 */
 
 
 /******************************************************************
@@ -763,7 +602,6 @@ int lenbuf;
 *
 ******************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION2008
 
 #define G__wrap_plusminus(oprin,assignopr,preincopr,postincopr)       \
   if((nest==0)&&(single_quote==0)&&(double_quote==0)) {               \
@@ -855,97 +693,11 @@ int lenbuf;
   }                                                                   \
   else ebuf[lenbuf++]=c
 
-#else /* 2008 */
-
-#define G__wrap_plusminus(oprin,assignopr,preincopr,postincopr)       \
-  if((nest==0)&&(single_quote==0)&&(double_quote==0)) {               \
-    if(oprin==expression[ig1+1]                                       \
-       && (!lenbuf||(!isdigit(ebuf[0])&&'.'!=ebuf[0]))  /* 1831 */    \
-       ) {                                                            \
-      if(lenbuf) {                                                    \
-        if('='==expression[ig1+2] && 'v'==G__var_type) {              \
-          /* *a++=expr */                                             \
-          G__var_type='p';                                            \
-          ebuf[lenbuf++]=c;                                           \
-          ebuf[lenbuf++]=c;                                           \
-          ++ig1;                                                      \
-        }                                                             \
-        else if(iscastexpr) { /* added ON1342 */                      \
-          ebuf[lenbuf++]=c;                                           \
-          ebuf[lenbuf++]=c;                                           \
-          ++ig1;                                                      \
-        }                                                             \
-        else {                                                        \
-	  /* a++, a-- */                                              \
-          ++ig1;                                                      \
-          if('v'==G__var_type) {                                      \
-            G__exec_unaopr('*');                                      \
-            G__var_type = 'p';                                        \
-          }                                                           \
-          unaopr[up++] = postincopr;                                  \
-          /* G__exec_binopr(0,G__PREC_NOOPR); */                      \
-        }                                                             \
-      }                                                               \
-      else {                                                          \
-        /* *++a = expr should be handled at assignment oprerator */   \
-	/* ++a, --a */                                                \
-        ++ig1;                                                        \
-        if('v'==G__var_type) {                                        \
-          G__exec_unaopr('*');                                        \
-          G__var_type = 'p';                                          \
-        }                                                             \
-        G__exec_unaopr(preincopr);                                    \
-      }                                                               \
-    }                                                                 \
-    else if('='==expression[ig1+1]) {                                 \
-      /* +=, -= */                                                    \
-      if(0==lenbuf) { G__expr_error; }                                \
-      ++ig1;                                                          \
-      G__exec_oprassignopr(assignopr);                                \
-    }                                                                 \
-    else if('>'==expression[ig1+1]) {                                 \
-      /* a->b */                                                      \
-      ++ig1;                                                          \
-      ebuf[lenbuf++]=c;                                               \
-      ebuf[lenbuf++]=expression[ig1];                                 \
-    }                                                                 \
-    else if(lenbuf) {                                                 \
-      char *pebuf;                                                    \
-      if('e'==tolower(expression[ig1-1])&&                            \
-         (isdigit(ebuf[0])||'.'==ebuf[0]||                            \
-         ('('==ebuf[0]&&(pebuf=strchr(ebuf,')'))&&                    \
-          (isdigit(*++pebuf)||'.'==(*pebuf))))) {                     \
-	/* 1e+10, 1e-10, (double)1e+6 */                              \
-        ebuf[lenbuf++]=c;                                             \
-      }                                                               \
-      else {                                                          \
-	ebuf[lenbuf]=0; /* ON742 */                                   \
-	if(!G__iscastexpr(ebuf)) {                                    \
-	  /* a+b, a-b */                                              \
-          G__exec_binopr(c,G__PREC_ADD);                              \
-	}                                                             \
-	else {                                                        \
-	  /* (int)-abc */                                             \
-	  ebuf[lenbuf++]=c;                                           \
-	}                                                             \
-        /* G__exec_binopr(c,G__PREC_ADD); ON742 */                    \
-      }                                                               \
-    }                                                                 \
-    else if('-'==c) {                                                 \
-      /* -a */                                                        \
-      G__exec_unaopr(oprin);                                          \
-    }                                                                 \
-    /* else +a , ignored */                                           \
-  }                                                                   \
-  else ebuf[lenbuf++]=c
-
-#endif /* 2008 */
 
 /******************************************************************
 * G__wrap_shifts()
 *
 ******************************************************************/
-#ifndef G__OLDIMPLEMENTATION600
 
 #define G__wrap_shifts(oprin,assignopr,shiftopr,relationopr)          \
     if(oprin==expression[ig1+1]) {                                    \
@@ -970,37 +722,7 @@ int lenbuf;
       G__exec_binopr(c,G__PREC_RELATION);                             \
     }                                                                 \
  
-#else
 
-#define G__wrap_shifts(oprin,assignopr,shiftopr,relationopr)          \
-  if(nest==0&&single_quote==0&&double_quote==0&&explicitdtor==0) {    \
-    if(oprin==expression[ig1+1]) {                                    \
-      if('='==expression[ig1+2]) {                                    \
-        /* a<<=b */                                                   \
-        ig1+=2;                                                       \
-        G__exec_oprassignopr(assignopr);                              \
-      }                                                               \
-      else {                                                          \
-        /* a<<b */                                                    \
-        ++ig1;                                                        \
-        G__exec_binopr(shiftopr,G__PREC_SHIFT);                       \
-      }                                                               \
-    }                                                                 \
-    else if('='==expression[ig1+1]) {                                 \
-      /* a<=b */                                                      \
-      ++ig1;                                                          \
-      G__exec_binopr(relationopr,G__PREC_RELATION);                   \
-    }                                                                 \
-    else {                                                            \
-      /* a<b */                                                       \
-      G__exec_binopr(c,G__PREC_RELATION);                             \
-    }                                                                 \
-  }                                                                   \
-  else ebuf[lenbuf++]=c
-
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1340
 /******************************************************************
 * && || operator handling
 *
@@ -1179,7 +901,6 @@ int lenbuf;
 
 #endif /* G__ASM_DBG */
 
-#endif /* ON1340 */
 
 /******************************************************************
 * G__value G__getexpr(expression)
@@ -1217,21 +938,17 @@ char *expression;
   int nest=0; /* parenthesis nesting state variable */
   int single_quote=0,double_quote=0; /* quotation flags */
 
-#ifndef G__PHILIPPE19
   int iscastexpr = 0; /* whether this expression start with a cast */
-#endif
 
   G__value defined = G__null;
   int store_var_type = G__var_type;
   int explicitdtor = 0;
   int inew=0; /* ON994 */
-#ifndef G__OLDIMPLEMENTATION1340
   int pp_and = 0, pp_or = 0;
   int ppointer_and[G__STACKDEPTH], ppointer_or[G__STACKDEPTH];
   int store_no_exec_compile_and[G__STACKDEPTH];
   int store_no_exec_compile_or[G__STACKDEPTH];
   G__value vtmp_and,vtmp_or;
-#endif
 
   /******************************************************************
   * return null for no expression
@@ -1240,18 +957,6 @@ char *expression;
   if(0==length) return(G__null);
 
   
-#ifdef G__OLDIMPLEMENTATION852
-  /******************************************************************
-  * return string constant "xxx" "xxx"
-  ******************************************************************/
-  if('"'==expression[0]) {
-    defined=G__strip_quotation(expression);
-#ifdef G__ASM
-    if(G__asm_noverflow) G__asm_gen_strip_quotation(&defined);
-#endif
-    return(defined);
-  }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1802
   if(strlen(expression)>G__BUFLEN-2) {
@@ -1303,9 +1008,7 @@ char *expression;
       if((double_quote==0)&&(single_quote==0)) {
 	nest++;
 	ebuf[lenbuf++]=c;
-#ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
-#endif
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1316,15 +1019,11 @@ char *expression;
       if((double_quote==0)&&(single_quote==0)) {
 	nest--;
 	ebuf[lenbuf++]=c;
-#ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
-#endif
-#ifndef G__PHILIPPE19
         if (!iscastexpr && '('==ebuf[0]) {
           ebuf[lenbuf] = '\0';
           iscastexpr = G__iscastexpr(ebuf);
         }
-#endif
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1341,9 +1040,7 @@ char *expression;
 	  return(G__new_operator(expression+ig1+1));
 	}
 	/* else ignore c, shoud not happen, but not sure */
-#ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
-#endif
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1392,29 +1089,21 @@ char *expression;
 	ebuf[lenbuf]='\0'; 
 	if(G__defined_templateclass(ebuf)) {
 /* #define G__OLDIMPLEMENTATION790 */
-#ifndef G__OLDIMPLEMENTATION790
 	  ++ig1;
 	  ebuf[lenbuf++] = c;
-#endif
 	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
 	  lenbuf=strlen(ebuf);
 	  ebuf[lenbuf++] = c;
-#ifndef G__OLDIMPLEMENTATION790
 	  ebuf[lenbuf] = '\0';
 	  --ig1;
 	  /* try to instantiate the template */
 	  (void)G__defined_tagname(ebuf,1);
-#ifndef G__OLDIMPLEMENTATION810
 	  lenbuf=strlen(ebuf);
-#endif
-#endif
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1560
 	else if(G__defined_templatefunc(ebuf)
-#ifndef G__OLDIMPLEMENTATION1611
 		|| G__defined_templatememfunc(ebuf)
-#endif
 		) {
 	  ++ig1;
 	  ebuf[lenbuf++] = c;
@@ -1431,7 +1120,6 @@ char *expression;
 	  break;
 	}
 #endif
-#ifndef G__OLDIMPLEMENTATION855
 	else if(strcmp(ebuf,"dynamic_cast")==0 ||
 		strcmp(ebuf,"static_cast")==0 ||
 		strcmp(ebuf,"reinterpret_cast")==0 ||
@@ -1446,7 +1134,6 @@ char *expression;
 	  --ig1;
 	  break;
 	}
-#endif
 	G__wrap_shifts(c,G__OPR_LSFTASSIGN,G__OPR_LSFT,G__OPR_LE)
       }
       else ebuf[lenbuf++]=c;
@@ -1461,7 +1148,7 @@ char *expression;
     case '@': /* a@b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
 	if(0==lenbuf) { G__expr_error; }
-	G__exec_binopr(c,G__PREC_P2MEM);
+	G__exec_binopr(c,G__PREC_PWR);
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1477,7 +1164,7 @@ char *expression;
 #ifndef G__NOPOWEROPR
 	    /* a**b handle as power operator */
 	    ++ig1;
-	    G__exec_binopr('@',G__PREC_P2MEM);
+	    G__exec_binopr('@',G__PREC_PWR);
 #else
 	    /* a**b handle as a*(*b) */
 	    G__exec_binopr('*',G__PREC_MULT);
@@ -1491,71 +1178,27 @@ char *expression;
 	    G__exec_unaopr(c);
 	    /* it is questionable whether to change following to 
 	     * G__exec_unaopr(c); */
-#ifndef G__OLDIMPLEMENTATION747
 	     G__exec_unaopr(c);
-#else
-	    if('('==expression[ig1+1]) G__exec_unaopr(c);
-	    else                       G__var_type = 'v';
-#endif
 	  }
 	}
 	else if(lenbuf) {
-#ifndef G__OLDIMPLEMENTATION742
 	  ebuf[lenbuf]=0;
 #define G__OLDIMPLEMENTATION792 /* BAD CHANGE */
-#ifndef G__OLDIMPLEMENTATION792
-          if (lenbuf > 5 && strncmp (ebuf, "const", 5) == 0 &&
-              G__istypename (ebuf+5)) {
-            memmove (ebuf, ebuf+5, strlen (ebuf+5)+1);
-            lenbuf -= 5;
-          }
-	  if(!G__iscastexpr(ebuf) &&
-             /* Hack: try to allow things like `void*()'.
-                This isn't correct C++ (`void*' is not a
-                simple-type-specifier; cf. CD2 5.2.3 [expr.type.conv]
-                and 7.1.5.2 [dcl.type.simple]), but it can show
-                up in cint's template instantiation; for example,
-                template <class T> struct foo { foo (const T& = T()); };
-                What's really supposed to happen is that the
-                substituted parameter T gets treated as a type-name
-                (14.1 [temp.param] para 2), but that's a pain
-                the way cint is presently constructed. */
-             ! G__istypename (ebuf)) {
-	    /* a*b */
-	    G__exec_binopr(c,G__PREC_MULT);
-	  }
-#else /* ON792 */
 	  if(!G__iscastexpr(ebuf)) {
 	    /* a*b */
 	    G__exec_binopr(c,G__PREC_MULT);
 	  }
-#endif /* ON792 */
 	  else {
 	    /* (int)*abc */
 	    ebuf[lenbuf++]=c;
 	  }
-#else
-	  /* a*b */
-	  G__exec_binopr(c,G__PREC_MULT);
-#endif
 	}
 	else {
 	  /* *a */
 	  /* it is questionable whether to change following to 
 	   * G__exec_unaopr(c); */
 #define G__OLDIMPLEMENTATION1619
-#ifndef G__OLDIMPLEMENTATION1619
-	  /* This doesn't work for '*first++' */
-	  if('('==expression[ig1+1]) G__exec_unaopr(c);
-	  else ebuf[lenbuf++]=c;
-#else
-#ifndef G__OLDIMPLEMENTATION747
 	   G__exec_unaopr(c);
-#else
-	  if('('==expression[ig1+1]) G__exec_unaopr(c);
-	  else G__var_type = 'v';
-#endif
-#endif
 	}
       }
       else ebuf[lenbuf++]=c;
@@ -1566,9 +1209,7 @@ char *expression;
 	  /* a&&b */
 	  ++ig1;
 	  G__exec_binopr('A',G__PREC_LOGICAND);
-#ifndef G__OLDIMPLEMENTATION1340
 	  G__SUSPEND_ANDOPR;
-#endif /* 1340 */
 	}
 	else if('='==expression[ig1+1]) {
 	  /* a&=b */
@@ -1576,7 +1217,6 @@ char *expression;
 	  G__exec_oprassignopr(G__OPR_BANDASSIGN);
 	}
 	else if(lenbuf) {
-#ifndef G__OLDIMPLEMENTATION742
 	  ebuf[lenbuf]=0;
 	  if(!G__iscastexpr(ebuf)) {
 	    /* a&b */
@@ -1586,23 +1226,10 @@ char *expression;
 	    /* (int*)&abc */
 	    ebuf[lenbuf++]=c;
 	  }
-#else
-	  /* a&b */
-	  G__exec_binopr(c,G__PREC_BITAND);
-#endif
 	}
 	else {
 	  /* &a */
-#ifndef G__OLDIMPLEMENTATION717
 	  G__exec_unaopr(c); /* ON717 */
-#else
-	  G__var_type = 'P';
-	  if('('==expression[ig1+1]) {
-	    ig1+=2;
-	    G__getstream(expression,&ig1,ebuf,")");
-	    lenbuf = strlen(ebuf);
-	  }
-#endif
 	}
       }
       else ebuf[lenbuf++]=c;
@@ -1612,14 +1239,10 @@ char *expression;
 	if(c==expression[ig1+1]) {
 	  /* a||b */
 	  ++ig1;
-#ifndef G__OLDIMPLEMENTATION1340
-#endif
 	  G__exec_binopr('O',G__PREC_LOGICOR);
-#ifndef G__OLDIMPLEMENTATION1340
           G__RESTORE_NOEXEC_ANDOPR
           G__RESTORE_ANDOPR
 	  G__SUSPEND_OROPR;
-#endif
 	}
 	else if('='==expression[ig1+1]) {
 	  /* a|=b */
@@ -1663,21 +1286,17 @@ char *expression;
 	  return(G__letvariable(ebuf,defined,&G__global,G__p_local));
 #endif
 	}
-#ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
-#endif
       }
       else ebuf[lenbuf++]=c;
       break;
     case '?': /* a?b:c */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
 	G__exec_evalall;
-#ifndef G__OLDIMPLEMENTATION1392
 	G__RESTORE_NOEXEC_ANDOPR
         G__RESTORE_NOEXEC_OROPR
 	G__RESTORE_ANDOPR
 	G__RESTORE_OROPR
-#endif
 #ifndef G__OLDIMPLEMENTATION1802
         vstack[1]=G__conditionaloperator(vstack[0],expression,ig1,ebuf);
 	if(vv!=ebuf) free((void*)ebuf);
@@ -1689,12 +1308,10 @@ char *expression;
       else ebuf[lenbuf++]=c;
       break;
 
-#ifndef G__OLDIMPLEMENTATION852
     case '\\' : 
       ebuf[lenbuf++]=c;
       ebuf[lenbuf++]=expression[++ig1];
       break;
-#endif
 
     /***************************************************
     * non-operator characters
@@ -1708,16 +1325,12 @@ char *expression;
   /******************************************************************
   * Evaluate operators in stack
   ******************************************************************/
-#ifndef G__OLDIMPLEMENTATION1340
-#endif
   G__exec_evalall;
 
-#ifndef G__OLDIMPLEMENTATION1340
   G__RESTORE_NOEXEC_ANDOPR
   G__RESTORE_NOEXEC_OROPR
   G__RESTORE_ANDOPR
   G__RESTORE_OROPR
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1802
   if(vv!=ebuf) free((void*)ebuf);
@@ -1910,9 +1523,7 @@ char *expression2;
       ebuf2[lenbuf2++]=expression2[ig12];
       break;
     case '~': /* 1's complement */
-#ifndef G__OLDIMPLEMENTATION501
       /* explicit destructor handled in G__getexpr(), just go through here */
-#endif
     case '@':
       if((nest2==0)&&(single_quote==0)&&(double_quote==0)) {
 	switch(lenbuf2) {
@@ -1940,13 +1551,8 @@ char *expression2;
 	return(G__new_operator(expression2+ig12+1));
       }
       else {
-#ifndef G__FONS31
 	G__fprinterr(G__serr,"Error: G__power() expression %s ",expression2 );
 	G__genericerror((char*)NULL);
-#else
-	G__fprinterr(G__serr,"Error: G__power() expression %s FILE:%s LINE:%d\n"
-		,expression2 ,G__ifile.name,G__ifile.line_number);
-#endif
 	return(G__null);
       }
       /* break; */
@@ -2021,16 +1627,11 @@ G__value *presult;
     for(ifn=0;ifn<memfunc->allifunc;ifn++) {
       if(strcmp(item,memfunc->funcname[ifn])==0) {
 #ifndef G__OLDIMPLEMENTATION1289
-#ifndef G__OLDIMPLEMENTATION1653
 	/* For the time being, pointer to member function can only be handled
 	 * as function name */
 #ifndef G__OLDIMPLEMENTATION1993
 	if(('n'==G__struct.type[scope_tagnum] || memfunc->staticalloc[ifn])
-#ifndef G__OLDIMPLEMENTATION2012
 	   && memfunc->pentry[ifn]->size<0 
-#else
-	   && memfunc->pentry[ifn]->filenum<0 
-#endif
 	   && memfunc->pentry[ifn]->tp2f) {
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	}
@@ -2041,24 +1642,12 @@ G__value *presult;
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	/* 
 	if(
-#ifndef G__OLDIMPLEMENTATION2012
 	   memfunc->pentry[ifn]->size>=0
-#else
-	   memfunc->pentry[ifn]->filenum>=0
-#endif
           ) 
 	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	else 
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	*/
-#endif
-#else
-	if(memfunc->pentry[ifn]->tp2f) {
-	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
-	}
-	else {
-	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
-	}
 #endif
 #else
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
@@ -2076,27 +1665,6 @@ G__value *presult;
 #endif
 
 #define G__OLDIMPLEMENTATION1779
-#ifndef G__OLDIMPLEMENTATION1779
-/******************************************************************
- * G__value G__getstaticobject
- ******************************************************************/
-G__value G__getstaticobject(item,pknown)
-char *item;
-int* pknown;
-{
-  G__value result3;
-  char temp[G__ONELINE];
-  if(-1!=G__tagnum) /* questionable */
-    sprintf(temp,"%s\\%x\\%x\\%x",item,G__func_page,G__func_now
-	    ,G__memberfunc_tagnum);
-  else
-    sprintf(temp,"%s\\%x\\%x" ,item,G__func_page,G__func_now);
-
-  result3=G__getvariable(item,pknown,&G__global,G__p_local);
-
-  return(result3);
-}
-#endif
 
 /******************************************************************
 * G__value G__getitem(item)
@@ -2129,9 +1697,6 @@ char *item;
   case '0':
     c=item[1];
     if((c!='\0')&&(c!='.')&&
-#ifdef G__OLDIMPLEMENTATION426
-       (!isdigit(c))&&
-#endif
        ((c=tolower(c))!='f')&&(c!='e')&&
        (c!='l')&&(c!='u')&&(c!='s')) {
       result3=G__checkBase(item,&known);
@@ -2144,15 +1709,9 @@ char *item;
 	 * put result3
 	 **************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
 	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %ld from %x\n"
 			       ,G__asm_cp,G__int(result3)
 			       ,G__asm_dt);
-#else
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n"
-			       ,G__asm_cp,G__int(result3)
-			       ,G__asm_dt);
-#endif
 #endif
 	G__asm_inst[G__asm_cp]=G__LD;
 	G__asm_inst[G__asm_cp+1]=G__asm_dt;
@@ -2163,11 +1722,7 @@ char *item;
       result3.tagnum = -1;
       result3.typenum = -1;
       result3.ref = 0;
-#if !defined(G__OLDIMPLEMENTATION2156)
       result3.isconst = G__CONSTVAR + G__STATICCONST;
-#elif !defined(G__OLDIMPLEMENTATION1259)
-      result3.isconst = G__CONSTVAR;
-#endif
       return(result3);
     }
   case '1':
@@ -2185,22 +1740,13 @@ char *item;
       /* G__letdouble(&result3,c,G__atodouble(item)); */
     }
     else {
-#ifndef G__OLDIMPLEMENTATION2189
       unsigned long xxx;
        if('u'==c) { /* long long */
           c='n';
-#ifndef G__OLDIMPLEMENTATION2192
           G__letLonglong(&result3,c,G__expr_strtoll(item,NULL,10));
-#else
-          G__letLonglong(&result3,c,strtoll(item,NULL,10));
-#endif
        } else if('t'==c) {
           c='m';
-#ifndef G__OLDIMPLEMENTATION2192
           G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10));
-#else
-          G__letULonglong(&result3,c,strtoull(item,NULL,10));
-#endif
        } else {
  	 xxx=strtoul(item,NULL,10);
  	 if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
@@ -2216,65 +1762,8 @@ char *item;
           G__letint(&result3,c,xxx);
           result3.obj.i=xxx;
        }
-#else /* 2189 */
-#ifndef G__OLDIMPLEMENTATION918
-#ifndef G__OLDIMPLEMENTATION1874
-      unsigned long xxx=0;
-      char llbuf[100];
-      int lltagnum,lltypenum;
-      int match;
-      if('u'==c) { /* long long */
-	int store_tagnum = G__tagnum;
-	G__loadlonglong(&lltagnum,&lltypenum,G__LONGLONG);
-	G__tagnum=lltagnum;
-	sprintf(llbuf,"G__longlong(\"%s\")",item);
-	result3=G__getfunction(llbuf,&match,G__TRYIMPLICITCONSTRUCTOR);
-	G__store_tempobject(result3);
-	G__tagnum=store_tagnum;
-	c='u';
-      }
-      else if('t'==c) { /* unsigned long long */
-	int store_tagnum = G__tagnum;
-	G__loadlonglong(&lltagnum,&lltypenum,G__ULONGLONG);
-	G__tagnum=lltagnum;
-	sprintf(llbuf,"G__ulonglong(\"%s\")",item);
-	result3=G__getfunction(llbuf,&match,G__TRYIMPLICITCONSTRUCTOR);
-	G__store_tempobject(result3);
-	G__tagnum=store_tagnum;
-	c='u';
-      }
-      else {
-	xxx=strtoul(item,NULL,10);
-      }
-#else
-      unsigned long xxx=strtoul(item,NULL,10);
-#endif
-      if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
-      if(xxx==ULONG_MAX) {
-        char ulongmax[100];
-	int ulonglen = strlen(item);
-        sprintf(ulongmax,"%lu",ULONG_MAX);
-	while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
-	  item[--ulonglen]=0;
-        if(strcmp(ulongmax,item)!=0) 
-          G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
-      } 
-#ifndef G__OLDIMPLEMENTATION1874
-      if('u'!=c) {
-	G__letint(&result3,c,xxx);
-	result3.obj.i=xxx;
-      }
-#else
-      G__letint(&result3,c,xxx);
-      result3.obj.i=xxx;
-#endif
-      /* G__letint(&result3,c,strtoul(item,NULL,10)); */
-#else
-      G__letint(&result3,c,atol(item));
-#endif
-#endif /* 2189 */
     }
-#if !defined(G__OLDIMPLEMENTATION1874) || defined(G__OLDIMPLEMENTATION2189)
+#if  !defined(G__OLDIMPLEMENTATION1874)
     if('u'!=c) {
       result3.tagnum = -1;
       result3.typenum = -1;
@@ -2285,11 +1774,7 @@ char *item;
     result3.typenum = -1;
     result3.ref = 0;
 #endif
-#if !defined(G__OLDIMPLEMENTATION2156)
     result3.isconst = G__CONSTVAR + G__STATICCONST;
-#elif !defined(G__OLDIMPLEMENTATION1259)
-    result3.isconst = G__CONSTVAR;
-#endif
     
 #ifdef G__ASM
     if(G__asm_noverflow) {
@@ -2374,51 +1859,35 @@ char *item;
   default:
     store_var_typeB = G__var_type;
     known=0;
-#ifndef G__OLDIMPLEMENTATION1342
     G__var_type = 'p';
-#endif
     /* variable */
     result3=G__getvariable(item,&known,&G__global,G__p_local);
     /* function */
     if(known==0) {
       G__var_typeB = store_var_typeB;
       result3=G__getfunction(item,&known,G__TRYNORMAL);
-#ifndef G__OLDIMPLEMENTATION695
       if(known) {
 	result3 = G__toXvalue(result3,store_var_typeB);
-#ifndef G__OLDIMPLEMENTATION1119
 	if(G__initval_eval) G__dynconst=G__DYNCONST;
-#endif
       }
-#endif
       G__var_typeB = 'p';
     }
-#ifndef G__OLDIMPLEMENTATION1779
-    if(known==0 && G__decl && 0==G__p_local && -1!=G__func_now) {
-      result3=G__getstaticobject(item,&known);
-    }
-#endif
-#ifndef G__OLDIMPLEMENTATION1935
 #ifdef G__PTR2MEMFUNC
     if(known==0&&result3.obj.i==0) {
       known=G__getpointer2memberfunc(item,&result3);
     }
 #endif
-#endif /* 1935 */
     /* undefined */
     if(known==0) {
-#ifndef G__OLDIMPLEMENTATION1173
       if(strncmp(item,"__",2)==0) {
 	result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
         if(result3.type) known = 1;
       } else
-#endif
       if(
 #ifdef G__ROOT
 	 G__dispmsg < G__DISPROOTSTRICT &&
 #endif
 	 G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
-#ifndef G__FONS81
 	/* append $ to object and try to find it again */
 	if (!G__gettingspecial && item[0] != '$') {
 #ifndef G__OLDIMPLEMENTATION1802
@@ -2426,14 +1895,10 @@ char *item;
 #else
 	  char sbuf[G__LONGLINE];
 #endif
-#ifndef G__OLDIMPLEMENTATION1379
 	  int store_return = G__return;
 	  int store_security_error = G__security_error;
-#endif
-#ifndef G__OLDIMPLEMENTATION1505
 	  /* This fix should be verified very carefully */
 	  if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
-#endif
 #ifndef G__OLDIMPLEMENTATION1802
 	  sbuf = (char*)malloc(strlen(item)+2);
 	  if(!sbuf) {
@@ -2449,39 +1914,18 @@ char *item;
 	  free((void*)sbuf);
 #endif
 	  G__gettingspecial = 0;
-#ifndef G__OLDIMPLEMENTATION1379
-#ifndef G__OLDIMPLEMENTATION1420
 	  if(G__const_noerror) {
 	    G__return = store_return;
 	    G__security_error = store_security_error;
 	  }
-#else
-	  G__return = store_return;
-	  G__security_error = store_security_error;
-#endif
-#endif
 	  return result3;
 	}
-#endif
       }
-#ifdef G__OLDIMPLEMENTATION1173
-      else if(strncmp(item,"__",2)==0) {
-	result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
-      }
-#endif
-#ifdef G__OLDIMPLEMENTATION1935
-#ifdef G__PTR2MEMFUNC
-      if(known==0&&result3.obj.i==0) {
-	known=G__getpointer2memberfunc(item,&result3);
-      }
-#endif
-#endif /* 1935 */
       if (known == 0 && result3.obj.i == 0) {
 	result3=G__null;
 	if(G__noerr_defined==0) {
 	  
 	  if(G__definemacro==0) {
-#ifndef G__OLDIMPLEMENTATION1030
 	    char *pxx;
 	    G__warnundefined(item);
 	    pxx = strstr(item,"::");
@@ -2489,25 +1933,16 @@ char *item;
 	      pxx = strchr(item,'(');
 	      if(pxx) {
 		*pxx = 0;
-#ifndef G__OLDIMPLEMENTATION1103
 		if((0==G__const_noerror&&!G__asm_wholefunction)
-#ifndef G__OLDIMPLEMENTATION1505
 		   && (!G__no_exec_compile || G__asm_noverflow)
-#endif
 		   ) {
-#endif
 		  G__fprinterr(G__serr,"Possible candidates are...\n");
 		  if('$'==item[0]) G__display_proto(G__serr,item+1);
 		  else             G__display_proto(G__serr,item);
-#ifndef G__OLDIMPLEMENTATION1103
 		}
-#endif
 		*pxx = '(';
 	      }
 	    }
-#else
-	    G__warnundefined(item);
-#endif
 	    result3=G__interactivereturn();
 	  }
 	  else {
@@ -2548,10 +1983,8 @@ int newoperator,oldoperator;
       return('-');
     case '~':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_ADDASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2564,10 +1997,8 @@ int newoperator,oldoperator;
       return('D');
     case '~':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_SUBASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2592,10 +2023,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_RSFTASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2620,10 +2049,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_LSFTASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2636,10 +2063,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_BANDASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2652,10 +2077,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_BORASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2666,10 +2089,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_EXORASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2680,10 +2101,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_MODASSIGN);
-#endif
     default:
       return(oldoperator);
     }
@@ -2698,10 +2117,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_MULASSIGN);
-#endif
     default:
       return(newoperator);
     }
@@ -2716,10 +2133,8 @@ int newoperator,oldoperator;
     case '+':
     case '-':
       return(G__UNARYOP);
-#ifndef G__OLDIMPLEMENTATION470
     case '=':
       return(G__OPR_DIVASSIGN);
-#endif
     default:
       return(newoperator);
     }
@@ -2752,7 +2167,6 @@ int newoperator,oldoperator;
     default:
       return(newoperator);
     }
-#ifndef G__OLDIMPLEMENTATION470
   case 'A':
     switch(oldoperator) {
     case '=':
@@ -2767,13 +2181,11 @@ int newoperator,oldoperator;
     default:
       return(newoperator);
     }
-#endif
   }
   return(oldoperator);
 }
 
 
-#ifndef G__OLDIMPLEMENTATION1340
 /***********************************************************************
 * int *G__test(char *expression2)
 ***********************************************************************/
@@ -2783,7 +2195,6 @@ char *expression2;
   G__value result;
   result=G__getexpr(expression2);
   if('u'==result.type) return(G__iosrdstate(&result));
-#ifndef G__OLDIMPLEMENTATION1670
   if('f'==result.type||'d'==result.type) {
     /*
     printf("\n!!! %s type=%c  d=%g i=%ld",expression2
@@ -2796,536 +2207,8 @@ char *expression2;
     return(result.obj.i);
   }
    
-#else
-  return(G__int(result));
-#endif
 }
 
-#else /* 1340 */
-/***********************************************************************/
-/* int *G__test(char *expression2)                                     */
-/*                                                                     */
-/*  test <,>,<=,>=,==,!=,&&,||                                         */
-/***********************************************************************/
-
-/******************************************************************
-* G__testandor()
-*
-*  handling of &&,|| operator with loop compilation
-*
-* p-code:
-*   -x eval lexp (done before calling this function)
-*    0 PUSHCPY
-*    1 CNDJMP(and) CND1JMP(or)
-*    2 jump destination y
-*    3 POP
-*    4 eval rexp
-*    y
-*
-******************************************************************/
-int G__testandor(lresult,rexpression,operator2)
-int lresult;
-char *rexpression;
-int operator2;
-{
-  int store_no_exec_compile;
-  int result;
-  int fixed_result;
-  int eval_rexp;
-#ifndef G__OLDIMPLEMENTATION713
-  int ppointer=0;
-#else
-  int ppointer;
-#endif
-
-  if('A'==operator2) {
-    /* && operator */
-    eval_rexp = lresult;
-    fixed_result = 0;
-#ifdef G__ASM
-    if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp);
-	G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1);
-	G__fprinterr(G__serr,"%3x: POP\n",G__asm_cp+3);
-      }
-#endif
-      G__asm_inst[G__asm_cp]=G__PUSHCPY;
-      G__asm_inst[G__asm_cp+1]=G__CNDJMP;
-#ifndef G__OLDIMPLEMENTATION1575
-      G__asm_inst[G__asm_cp+2] = G__PVOID;
-#endif
-      ppointer = G__asm_cp+2;
-      G__asm_inst[G__asm_cp+3]=G__POP;
-      G__inc_cp_asm(4,0);
-    }
-#endif
-  }
-  else {
-    /* || operator */
-    eval_rexp = !lresult;
-    fixed_result = 1;
-#ifdef G__ASM
-    if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp);
-	G__fprinterr(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+1);
-	G__fprinterr(G__serr,"%3x: POP\n",G__asm_cp+2);
-      }
-#endif
-      G__asm_inst[G__asm_cp]=G__PUSHCPY;
-      G__asm_inst[G__asm_cp+1]=G__CND1JMP;
-#ifndef G__OLDIMPLEMENTATION1575
-      G__asm_inst[G__asm_cp+2] = G__PVOID;
-#endif
-      ppointer = G__asm_cp+2;
-      G__asm_inst[G__asm_cp+3]=G__POP;
-      G__inc_cp_asm(4,0);
-    }
-#endif
-  }
-
-  if(eval_rexp) {
-    result=G__test(rexpression);
-  }
-  else {
-    if(G__asm_noverflow) {
-      store_no_exec_compile=G__no_exec_compile;
-      G__no_exec_compile=1;
-#ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,
-			   "    G__no_exec_compile set(G__testandor) %d\n"
-			   ,store_no_exec_compile);
-#endif
-      result=G__test(rexpression);
-#ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile %d(G__testandor)\n"
-			   ,store_no_exec_compile);
-#endif
-      G__no_exec_compile=store_no_exec_compile;
-    }
-    result=fixed_result;
-  }
-
-#ifdef G__ASM
-  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"     CNDJMP/CND1JMP assigned %x,%x\n"
-			   ,G__asm_cp,ppointer-1);
-#endif
-    G__asm_inst[ppointer] = G__asm_cp;
-  }
-#endif
-
-  return(result);
-}
-
-/******************************************************************
-* int G__test(expression2)
-*
-*
-******************************************************************/
-int G__test(expression2)
-char *expression2;
-{
-  G__value lresult;
-  G__value rresult;
-  char lbuf[G__LONGLINE];
-  int c;
-  int operator2='\0';
-  int lenbuf2=0;
-  int ig12=0;
-  int nest2=0;
-  int single_quote=0,double_quote=0;
-  int result;
-#ifndef G__OLDIMPLEMENTATION837
-  char *pe = expression2;
-#endif
-  
-#ifdef G__ASM
-  if(G__asm_exec) {
-    G__asm_exec=0;
-    return(0);
-  }
-#endif
-  
-  
-  while((c=expression2[ig12])!='\0') {
-    switch(c) {
-    case '"' : /* double quote */
-      if(single_quote==0) {
-	double_quote ^= 1;
-      }
-      lbuf[lenbuf2++]=expression2[ig12];
-      break;
-    case '\'' : /* single quote */
-      if(double_quote==0) {
-	single_quote ^= 1;
-      }
-      lbuf[lenbuf2++]=expression2[ig12];
-      break;
-    case '&':
-      if((nest2==0)&&(single_quote==0)&&(double_quote==0)&&
-	 (expression2[ig12+1]=='&')) {
-	
-	ig12+=2;
-	lbuf[lenbuf2]='\0';
-	switch(operator2) {
-	case '\0':
-	  /**************************************
-	   * No operators left side of &&
-	   *   lbuf  expression2+ig12
-	   *     V     V
-	   * if(expr&&expr)
-	   **************************************/
-	  result=G__test(lbuf);
-	  return(G__testandor(result,expression2+ig12,'A'));
-#ifdef G__OLDIMPLEMENTATION767
-	case 'n':
-	  /**************************************
-	   *   lbuf  expression2+ig12
-	   *     V     V
-	   * if(!expr&&expr)
-	   **************************************/
-	  result=G__test(lbuf);
-#ifdef G__ASM
-	  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: NOT\n" ,G__asm_cp);
-#endif
-	    G__asm_inst[G__asm_cp]=G__NOT;
-	    G__inc_cp_asm(1,0);
-	  }
-#endif
-	  return(G__testandor(!result,expression2+ig12,'A'));
-#endif /* ON767 */
-
-	default:
-	  /********************************************
-	   *   lresult lbuf
-	   *     V     V
-	   * if(expr==expr&&expr...
-	   *                ^
-	   ********************************************/
-	  rresult=G__getexpr(lbuf);
-	  result=G__btest(operator2,lresult,rresult);
-	  return(G__testandor(result,expression2+ig12,'A'));
-	}
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      pe = expression2+ig12+1;
-#endif
-      break;
-
-    case '|':
-      if((nest2==0)&&(single_quote==0)&&(double_quote==0)&&
-	 (expression2[ig12+1]=='|')) {
-	
-	ig12+=2;
-	lbuf[lenbuf2]='\0';
-	switch(operator2) {
-	case '\0':
-	  /**************************************
-	   * No operators left side of ||
-	   *   lbuf  expression2+ig12
-	   *     V     V
-	   * if(expr||expr)
-	   **************************************/
-	  result=G__test(lbuf);
-	  return(G__testandor(result,expression2+ig12,'O'));
-	  
-#ifdef G__OLDIMPLEMENTATION767
-	case 'n':
-	  /**************************************
-	   *   lbuf  expression2+ig12
-	   *     V     V
-	   * if(!expr||expr)
-	   **************************************/
-	  result=G__test(lbuf);
-#ifdef G__ASM
-	  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: NOT\n" ,G__asm_cp);
-#endif
-	    G__asm_inst[G__asm_cp]=G__NOT;
-	    G__inc_cp_asm(1,0);
-	  }
-#endif
-	  return(G__testandor(result,expression2+ig12,'O'));
-#endif /* ON767 */
-
-	default:
-	  /********************************************
-	   *   lresult lbuf
-	   *     V     V
-	   * if(expr==expr||expr...
-	   *                ^
-	   ********************************************/
-	  rresult=G__getexpr(lbuf);
-	  result=G__btest(operator2,lresult,rresult);
-	  return(G__testandor(result,expression2+ig12,'O'));
-	  
-	}
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      pe = expression2+ig12+1;
-#endif
-      break;
-    case '=':
-      if((nest2==0)&&(single_quote==0)&&(double_quote==0)&&
-	 (expression2[ig12+1]=='=')) {
-	ig12++;
-	operator2 = 'E';
-	lbuf[lenbuf2]='\0';
-	lresult=G__getexpr(lbuf);
-	lenbuf2=0;
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      pe = expression2+ig12+1;
-#endif
-      break;
-    case '!':
-      if((nest2==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(expression2[ig12+1]=='=') {
-	  /* != */
-	  ig12++;
-	  operator2 = 'N';
-	  lbuf[lenbuf2]='\0';
-	  lresult=G__getexpr(lbuf);
-	  lenbuf2=0;
-	}
-#ifndef G__OLDIMPLEMENTATION767
-	else {
-	  lbuf[lenbuf2++]=expression2[ig12];
-	}
-#else
-	else {
-	  /* !  */
-	  operator2='n';
-	  lbuf[lenbuf2]='\0';
-	  lresult=G__getexpr(lbuf);
-	  lenbuf2=0;
-	}
-#endif
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      pe = expression2+ig12+1;
-#endif
-      break;
-    case '>':
-      if(((nest2==0)&&(single_quote==0)&&(double_quote==0))&&
-	 (expression2[ig12-1]!='-')&&
-	 (expression2[ig12+1]!='>')&&
-	 (expression2[ig12-1]!='>')){
-	
-	if(expression2[ig12+1]=='=') {
-	  /* >= */
-	  ig12++;
-	  operator2 = 'G';
-	}
-	else {
-	  /* >  */
-	  operator2='>';
-	}
-	
-	lbuf[lenbuf2]='\0';
-	
-	lresult=G__getexpr(lbuf);
-	
-	lenbuf2=0;
-	
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-      break;
-    case '<': /* G__TEMPLATECLASS case 4,5 not yet */
-      if(((nest2==0)&&(single_quote==0)&&(double_quote==0))&&
-	 (expression2[ig12+1]!='<')&& (expression2[ig12-1]!='<')){
-	
-	if(expression2[ig12+1]=='=') {
-	  /* <= */
-	  ig12++;
-	  operator2 = 'l';
-	}
-	else {
-	  /* <  */
-	  operator2='<';
-	}
-	
-	lbuf[lenbuf2]='\0';
-	
-	lresult=G__getexpr(lbuf);
-	
-	lenbuf2=0;
-	
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-      break;
-    case '(':
-    case '[':
-    case '{':
-      if((double_quote==0)&&(single_quote==0)) {
-	nest2++;
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      pe = expression2+ig12+1;
-#endif
-      break;
-    case ')':
-    case ']':
-    case '}':
-      if((double_quote==0)&&(single_quote==0)) {
-	lbuf[lenbuf2++]=expression2[ig12];
-	nest2--;
-      }
-      else {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-      break;
-    case ' ':
-    case '\t':
-    case '\n':
-    case '\r': 
-    case '\f':
-      if((double_quote!=0)||(single_quote!=0)) {
-	lbuf[lenbuf2++]=expression2[ig12];
-      }
-#ifndef G__OLDIMPLEMENTATION837
-      else if(strncmp(pe,"new",3)==0) {
-	lbuf[lenbuf2++]=expression2[ig12];
-	pe = expression2+ig12+1;
-      }
-#endif
-      break;
-    case '\\':
-      lbuf[lenbuf2++]=expression2[ig12++];
-      lbuf[lenbuf2++]=expression2[ig12];
-      break;
-    default:
-      lbuf[lenbuf2++]=expression2[ig12];
-      break;
-    }
-    ig12++;
-  }
-  
-  if((nest2!=0)||(single_quote!=0)||(double_quote!=0)) {
-#ifdef G__ASM
-    G__abortbytecode();
-#endif 
-    G__parenthesiserror(expression2,"G__test");
-    return(0);
-  }
-  
-  lbuf[lenbuf2]='\0';
-  
-  
-  /****************************************************
-   * No &&,|| operator
-   *  only ==,!=,!,<,>,<=,>= operator exists or no
-   * operators.
-   ****************************************************/
-  
-  switch(operator2) {
-    
-  case '\0':
-    /***************************
-     * no operator
-     ***************************/
-#ifdef G__OLDIMPLEMENTATION1338
-    if(lbuf[0]!='(' || lbuf[lenbuf2-1]!=')') {
-#endif
-      /***************************
-       * if(variable)
-       ***************************/
-      lresult=G__getexpr(lbuf);
-#ifdef G__VIRTUALBASE
-      /* if expression returns class object, eval rdstat() member func */
-      if('u'==lresult.type) return(G__iosrdstate(&lresult));
-#endif
-#ifndef G__OLDIMPLEMENTATION544
-      if(G__no_exec_compile||G__no_exec) return(1); /* avoid Alpha crash */
-#endif
-      if(G__double(lresult)!=0) return(1);
-      else return(0);
-#ifdef G__OLDIMPLEMENTATION1338
-    }
-    else {
-      /***************************
-       * if((condition))
-       ***************************/
-      for(ig12=1;ig12<strlen(lbuf)-1;ig12++)
-	lbuf[ig12-1]=expression2[ig12];
-      lbuf[ig12-1]='\0';
-      return(G__test(lbuf));
-    }
-#endif
-    /* break; */
-    
-#ifdef G__OLDIMPLEMENTATION767
-  case 'n':
-    /**************************
-     *       lbuf
-     *         V
-     *  if(!condition)
-     **************************/
-    rresult=G__getexpr(lbuf);
-    lresult=G__null;
-    if(rresult.type=='u') {
-      return(G__btest('!',lresult,rresult));
-    }
-    else {
-#ifdef G__ASM
-      if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: NOT  '%c'\n"
-			       ,G__asm_cp,operator2);
-#endif
-	G__asm_inst[G__asm_cp]=G__NOT;
-	G__inc_cp_asm(1,0);
-      }
-#endif
-      return(!G__int(rresult));
-    }
-#endif /* ON767 */
-    
-    /* break; */
-    
-  }
-
-  /***************************
-   * if(expr==expr)
-   * one of ==,!=,!,<,>,<=,>= 
-   * operator exists
-   ***************************/
-  rresult=G__getexpr(lbuf);
-  if(G__btest(operator2,lresult,rresult)) {
-    return(1);
-  }
-  return(0);
-
-}
-#endif /* 1340 */
 
 
 
@@ -3348,11 +2231,9 @@ G__value lresult,rresult;
     G__overloadopr(operator2,rresult,&lresult);
     return(G__int(lresult));
   }
-#ifndef G__OLDIMPLEMENTATION697
   else if(lresult.type=='U' || rresult.type=='U') {
     G__publicinheritance(&lresult,&rresult);
   }
-#endif
   
 #ifdef G__ASM
   if(G__asm_noverflow) {

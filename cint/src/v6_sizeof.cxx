@@ -30,9 +30,7 @@
 #define G__TYPEINFO_SIZE      5
 #define G__TYPEINFO_ISCONST   6
 
-#ifndef G__OLDIMPLEMENTATION849
 int G__rootCcomment=0;
-#endif
 
 /******************************************************************
 * int G__sizeof(G__value *object)
@@ -49,18 +47,6 @@ int G__sizeof(object)
 G__value *object;
 {
   if(isupper(object->type) && object->obj.reftype.reftype!=G__PARANORMAL) {
-#ifdef G__OLDIMPLEMENTATION707
-    switch(object->obj.reftype.reftype) {
-    case G__PARANORMAL:
-    case G__PARAP2P:
-    case G__PARAP2P2P:
-      break;
-    default:
-      G__fprinterr(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
-	     ,object->obj.reftype.reftype);
-      break;
-    }
-#endif
     return(G__LONGALLOC);
   }
   switch(toupper(object->type)) {
@@ -91,22 +77,18 @@ G__value *object;
     return(G__struct.size[object->tagnum]);
   case 'A': /* pointer to function */
     return(G__P2MFALLOC);
-#ifndef G__OLDIMPLEMENTATION1604
   case 'G': /* bool */
 #ifdef G__BOOL4BYTE
     return(G__INTALLOC);
 #else
     return(G__CHARALLOC);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
   case 'N':
   case 'M':
     return(G__LONGLONGALLOC);
 #ifndef G__OLDIMPLEMENTATION2191
   case 'Q':
     return(G__LONGDOUBLEALLOC);
-#endif
 #endif
   }
   return(1);
@@ -162,13 +144,11 @@ char *typename;
   G__value buf;
   int tagnum,typenum;
   int result;
-#ifndef G__OLDIMPLEMENTATION406
   int pointlevel=0;
   char namebody[G__MAXNAME+20];
   char *p;
   int i;
   int pinc;
-#endif
 
 
   /* return size of pointer if xxx* */
@@ -178,9 +158,7 @@ char *typename;
 
   /* searching for struct/union tagtable */
   if((strncmp(typename,"struct",6)==0)
-#ifndef G__OLDIMPLEMENTATION816
      || strncmp(typename,"signed",6)==0
-#endif
      ) {
     typename = typename+6;
   }
@@ -193,18 +171,13 @@ char *typename;
 
   tagnum = G__defined_tagname(typename,1); /* case 8) */
   if(-1 != tagnum) {
-#ifndef G__OLDIMPLEMENTATION1389
     if('e'!=G__struct.type[tagnum]) return(G__struct.size[tagnum]);
     else                            return(G__INTALLOC);
-#else
-    return(G__struct.size[tagnum]);
-#endif
   }
 
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {
     switch(G__newtype.type[typenum]) {
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n':
     case 'm':
       result = sizeof(G__int64);
@@ -212,13 +185,10 @@ char *typename;
     case 'q':
       result = sizeof(long double);
       break;
-#endif
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g':
 #ifdef G__BOOL4BYTE
       result = sizeof(int);
       break;
-#endif
 #endif
     case 'b':
     case 'c':
@@ -285,19 +255,13 @@ char *typename;
      (strcmp(typename,"float")==0))
     return(sizeof(float));
   if((strcmp(typename,"double")==0)
-#ifdef G__OLDIMPLEMENTATION1533
-     ||(strcmp(typename,"longdouble")==0)
-#endif
      )
     return(sizeof(double));
-#ifndef G__OLDIMPLEMENTATION1533
   if(strcmp(typename,"longdouble")==0) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__LONGDOUBLE);
     return(G__struct.size[tagnum]);
   }
-#endif
-#ifndef G__OLDIMPLEMENTATION1827
   if(strcmp(typename,"longlong")==0
      || strcmp(typename,"longlongint")==0
      ) {
@@ -305,8 +269,6 @@ char *typename;
     G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
     return(G__struct.size[tagnum]);
   }
-#endif
-#ifndef G__OLDIMPLEMENTATION1838
   if(strcmp(typename,"unsignedlonglong")==0
      || strcmp(typename,"unsignedlonglongint")==0
      ) {
@@ -314,24 +276,16 @@ char *typename;
     G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
     return(G__struct.size[tagnum]);
   }
-#endif
   if(strcmp(typename,"void")==0)
-#ifndef G__OLDIMPLEMENTATION930
     return(sizeof(void*));
-#else
-    return(-1);
-#endif
   if(strcmp(typename,"FILE")==0)
     return(sizeof(FILE));
-#ifndef G__OLDIMPLEMENTATION1604
 #ifdef G__BOOL4BYTE
   if(strcmp(typename,"bool")==0) return(sizeof(int));
 #else
   if(strcmp(typename,"bool")==0) return(sizeof(unsigned char));
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION406
   while('*'==typename[pointlevel]) ++pointlevel;
   strcpy(namebody,typename+pointlevel);
   while((char*)NULL!=(p=strrchr(namebody,'['))) {
@@ -340,11 +294,6 @@ char *typename;
   }
   G__hash(namebody,hash,ig15)
   var = G__getvarentry(namebody,hash,&ig15,&G__global,G__p_local);
-#else
-  G__hash(typename,hash,ig15)
-  var = G__getvarentry(typename,hash,&ig15,&G__global,G__p_local);
-#endif
-#ifndef G__OLDIMPLEMENTATION1948
   if(!var) {
     char temp[G__ONELINE];
     if(-1!=G__memberfunc_tagnum) /* questionable */
@@ -356,22 +305,15 @@ char *typename;
     G__hash(temp,hash,i)
     var = G__getvarentry(temp,hash,&ig15,&G__global,G__p_local);
   }
-#endif
   if(var) {
     if(INT_MAX==var->varlabel[ig15][1]) {
-#ifndef G__OLDIMPLEMENTATION1634
       if('c'==var->type[ig15]) return(strlen((char*)var->p[ig15]));
       else return(sizeof(void *));
-#else
-      return(sizeof(void *));
-#endif
     }
     buf.type=var->type[ig15];
     buf.tagnum = var->p_tagtable[ig15];
     buf.typenum = var->p_typetable[ig15];
-#ifndef G__OLDIMPLEMENTATION908
     if(isupper(buf.type)) buf.obj.reftype.reftype=var->reftype[ig15];
-#endif
     if(pointlevel<=var->paran[ig15]) {
       switch(pointlevel) {
       case 0: 
@@ -387,7 +329,6 @@ char *typename;
       }
     }
     else {
-#ifndef G__OLDIMPLEMENTATION908
       switch(pointlevel) {
       case 0: break;
       case 1:
@@ -409,22 +350,17 @@ char *typename;
 	else buf.obj.reftype.reftype-=2;
 	break;
       }
-#endif
       return(G__sizeof(&buf));
     }
     if(isupper(var->type[ig15])) return(pinc*sizeof(void *));
     return(pinc*G__sizeof(&buf));
   }
 
-#ifndef G__OLDIMPLEMENTATION649
   buf = G__getexpr(typename);
   if(buf.type) {
-#ifndef G__OLDIMPLEMENTATION1637
     if('C'==buf.type && '"'==typename[0]) return(strlen((char*)buf.obj.i)+1);
-#endif
     return(G__sizeof(&buf));
   }
-#endif
 
   return(-1);
 
@@ -450,9 +386,7 @@ char *typenamein;
   int tag_type_info;
   char typenamebuf[G__MAXNAME*2];
   char *typename;
-#ifndef G__OLDIMPLEMENTATION1895
   int isconst = 0;
-#endif
 
   /**********************************************************************
   * Get type_info tagname 
@@ -486,7 +420,6 @@ char *typenamein;
   /**********************************************************************
   * Search for typedef names
   **********************************************************************/
-#ifndef G__OLDIMPLEMENTATION1838
   if(strcmp(typename,"longlong")==0) {
     strcpy(typename,"G__longlong");
   }
@@ -496,7 +429,6 @@ char *typenamein;
   else if(strcmp(typename,"longdouble")==0) {
     strcpy(typename,"G__longdouble");
   }
-#endif
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {
     type    = G__newtype.type[typenum];
@@ -507,23 +439,14 @@ char *typenamein;
     }
     else {
       switch(tolower(type)) {
-#ifndef G__OLDIMPLEMENTATION2189
       case 'n':
       case 'm':
 	size = G__LONGLONGALLOC;
 	break;
-#if 0
-      case 'q':
-	size = G__LONGDOUBLEALLOC;
-	break;
-#endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1604
       case 'g':
 #ifdef G__BOOL4BYTE
 	size = G__INTALLOC;
 	break;
-#endif
 #endif
       case 'b':
       case 'c':
@@ -589,12 +512,10 @@ char *typenamein;
 	type = 'i';
 	size = G__INTALLOC;
 	break;
-#ifndef G__OLDIMPLEMENTATION612
       case 'n':
 	size = G__struct.size[tagnum];
 	G__genericerror("Error: can not get sizeof namespace");
 	break;
-#endif
       }
     }
 
@@ -647,20 +568,13 @@ char *typenamein;
 	size = G__FLOATALLOC;
       }
       if((strcmp(typename,"double")==0)
-#ifdef G__OLDIMPLEMENTATION1838
-	 ||(strcmp(typename,"longdouble")==0)
-#endif
 	 ) {
 	type = 'd';
 	size = G__DOUBLEALLOC;
       }
       if(strcmp(typename,"void")==0) {
         type = 'y';
-#ifndef G__OLDIMPLEMENTATION930
 	size = sizeof(void*);
-#else
-	size = -1;
-#endif
       }
       if(strcmp(typename,"FILE")==0) {
         type = 'e';
@@ -679,9 +593,7 @@ char *typenamein;
     tagnum = buf.tagnum;
     typenum = buf.typenum;
     isref = 0;
-#ifndef G__OLDIMPLEMENTATION1895
     isconst = buf.isconst;
-#endif
 
     if(-1!=tagnum && 'u'==tolower(type) && buf.ref && -1!=G__struct.virtual_offset[tagnum]) {
       /* In case of polymorphic object, get the actual tagnum from the hidden
@@ -735,9 +647,7 @@ char *typenamein;
   type_info[G__TYPEINFO_TYPENUM] = typenum;
   type_info[G__TYPEINFO_REFTYPE] = reftype;
   type_info[G__TYPEINFO_SIZE] = size;
-#ifndef G__OLDIMPLEMENTATION1895
   type_info[G__TYPEINFO_ISCONST] = isconst;
-#endif
 
   return( type_info ) ;
 
@@ -745,7 +655,6 @@ char *typenamein;
 #endif
 
 
-#ifdef G__FONS_TYPEINFO
 /******************************************************************
 * G__getcomment()
 *
@@ -759,45 +668,25 @@ int tagnum;
   FILE *fp;
   int filenum;
   char *p;
-#ifndef G__OLDIMPLEMENTATION469
   int flag=1;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION469
   if(-1!=pcomment->filenum) {
-#else
-  if( pcomment->p.pos ) {
-#endif
     if(-1!=tagnum && G__NOLINK==G__struct.iscpplink[tagnum] &&
        pcomment->filenum>=0) {
       pos = pcomment->p.pos;
       filenum = pcomment->filenum;
-#ifndef G__OLDIMPLEMENTATION1100
       if(filenum==G__MAXFILE) fp = G__mfp;
       else                    fp = G__srcfile[filenum].fp;
-#else
-      fp = G__srcfile[filenum].fp;
-#endif
       if((FILE*)NULL==fp) {
-#ifndef G__PHILIPPE0
 	/* Open the right file even in case where we use the preprocessor */
 	if ( 
-#ifndef G__OLDIMPLEMENTATION1100
 	    filenum<G__MAXFILE &&
-#endif
 	    G__srcfile[filenum].prepname ) {
 	  fp = fopen(G__srcfile[filenum].prepname,"r");
 	} else {
 	  fp = fopen(G__srcfile[filenum].filename,"r");
 	}
-#else
-	fp = fopen(G__srcfile[filenum].filename,"r");
-#endif
-#ifndef G__OLDIMPLEMENTATION469
 	flag=0;
-#else
-	store_pos = 0;
-#endif
       }
       else {
 	fgetpos(fp,&store_pos);
@@ -808,18 +697,12 @@ int tagnum;
       if(p) *p = '\0';
       p = strchr(buf,'\r');
       if(p) *p = '\0';
-#ifndef G__OLDIMPLEMENTATION849
       if(G__rootCcomment) {
 	p = G__strrstr(buf,"*/");
 	if(p) *p = '\0';
       }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION469
       if(flag) {
-#else
-      if(store_pos) {
-#endif
 	fsetpos(fp,&store_pos);
       }
       else {
@@ -852,44 +735,24 @@ int typenum;
   FILE *fp;
   int filenum;
   char *p;
-#ifndef G__OLDIMPLEMENTATION469
   int flag=1;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION469
   if(-1!=typenum && -1!=pcomment->filenum) {
-#else
-  if(-1!=typenum && pcomment->p.pos ) {
-#endif
     if(G__NOLINK==G__newtype.iscpplink[typenum] && pcomment->filenum>=0) {
       pos = pcomment->p.pos;
       filenum = pcomment->filenum;
-#ifndef G__OLDIMPLEMENTATION1100
       if(filenum==G__MAXFILE) fp = G__mfp;
       else                    fp = G__srcfile[filenum].fp;
-#else
-      fp = G__srcfile[filenum].fp;
-#endif
       if((FILE*)NULL==fp) {
-#ifndef G__PHILIPPE0
 	/* Open the right file even in case where we use the preprocessor */
 	if ( 
-#ifndef G__OLDIMPLEMENTATION1100
 	    filenum<G__MAXFILE &&
-#endif
 	    G__srcfile[filenum].prepname ) {
 	  fp = fopen(G__srcfile[filenum].prepname,"r");
 	} else {
 	  fp = fopen(G__srcfile[filenum].filename,"r");
 	}
-#else
-	fp = fopen(G__srcfile[filenum].filename,"r");
-#endif
-#ifndef G__OLDIMPLEMENTATION469
 	flag=0;
-#else
-	store_pos = 0;
-#endif
       }
       else {
 	fgetpos(fp,&store_pos);
@@ -900,16 +763,10 @@ int typenum;
       if(p) *p = '\0';
       p = strchr(buf,'\r');
       if(p) *p = '\0';
-#ifndef G__OLDIMPLEMENTATION1858
       p = strchr(buf,';');
       if(p) *(p+1) = '\0';
-#endif
 
-#ifndef G__OLDIMPLEMENTATION469
       if(flag) {
-#else
-      if(store_pos) {
-#endif
 	fsetpos(fp,&store_pos);
       }
       else {
@@ -1281,9 +1138,7 @@ int tagnum;
   }
   return(0);
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1473
 /**************************************************************************
  * G__va_arg_setalign()
  **************************************************************************/
@@ -1307,7 +1162,6 @@ void* p;
 G__value *pval;
 int objsize;
 {
-#ifndef G__OLDIMPLEMENTATION1696
 #ifdef G__VAARG_PASS_BY_REFERENCE
   if(objsize>G__VAARG_PASS_BY_REFERENCE) {
     if(pval->ref>0x1000) *(long*)(p) = pval->ref;
@@ -1316,20 +1170,15 @@ int objsize;
   }
 
 #endif
-#endif
   switch(t) {
-#ifndef G__OLDIMPLEMENTATION2189
   case 'n':
   case 'm':
     *(G__int64*)(p) = (G__int64)G__Longlong(*pval);
     break;
-#endif
-#ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #ifdef G__BOOL4BYTE
     *(int*)(p) = (int)G__int(*pval);
     break;
-#endif
 #endif
   case 'c':
   case 'b':
@@ -1356,7 +1205,12 @@ int objsize;
     *(long*)(p) = (long)G__int(*pval);
     break;
   case 'f':
+#define G__OLDIMPLEMENTATION2235
+#if defined(__GNUC__) 
+    *(double*)(p) = (double)G__double(*pval);
+#else
     *(float*)(p) = (float)G__double(*pval);
+#endif
     break;
   case 'd':
     *(double*)(p) = (double)G__double(*pval);
@@ -1404,6 +1258,12 @@ int n;
     type = libp->para[i].type;
     if(isupper(type)) objsize = G__LONGALLOC;
     else              objsize = G__sizeof(&libp->para[i]);
+#if defined(__GNUC__)
+    switch(libp->para[i].type) {
+    case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;
+    case 'f': objsize = sizeof(double); break;
+    }
+#endif
 
     /* Platform that decrements address */
 #if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
@@ -1563,9 +1423,7 @@ int ifn;
 }
 #endif
 
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2204
 /**************************************************************************
  * G__typeconversion
  **************************************************************************/
@@ -1614,7 +1472,7 @@ struct G__param *libp;
       switch(param_type) {
       case 'd':
       case 'f':
-	libp->para[i].obj.i = libp->para[i].obj.d;
+	libp->para[i].obj.i = (long)libp->para[i].obj.d;
 	libp->para[i].type = formal_type;
 	libp->para[i].ref = (long)(&libp->para[i].obj.i);
 	break;
@@ -1623,9 +1481,7 @@ struct G__param *libp;
     }
   }
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1908
 /**************************************************************************
  * G__DLL_direct_globalfunc
  **************************************************************************/
@@ -1643,9 +1499,7 @@ int G__DLL_direct_globalfunc(G__value *result7
 
   G__va_arg_buf G__va_arg_return;
   G__va_arg_buf G__va_arg_bufobj;
-#ifndef G__OLDIMPLEMENTATION2204
   G__typeconversion(ifunc,ifn,libp);
-#endif
   G__va_arg_put(&G__va_arg_bufobj,libp,0);
 
   switch(ifunc->type[ifn]) {
@@ -1677,7 +1531,6 @@ int G__DLL_direct_globalfunc(G__value *result7
 
   return 1;
 }
-#endif
 
 
 /*

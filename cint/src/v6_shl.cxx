@@ -122,7 +122,6 @@ void *G__shl_findsym G__P((G__SHLHANDLE *phandle,char *sym,short type));
 int G__dlclose G__P((G__SHLHANDLE handle));
 #endif
 
-#ifndef G__PHILIPPE1
 /****************************************************
 * OSF or SunOS
 ****************************************************/
@@ -163,7 +162,6 @@ static int G__RTLD_flag = G__RTLD_LAZY;
 #endif
 
 
-#ifndef G__OLDIMPLEMENTATION1207
 int G__ispermanentsl = 0;
 G__DLLINIT G__initpermanentsl ;
 
@@ -200,7 +198,6 @@ char *filename;
   G__ispermanentsl=0;
   return(result);
 }
-#endif
 
 
 /***********************************************************************
@@ -217,7 +214,6 @@ void G__Set_RTLD_LAZY() {
   G__RTLD_flag = G__RTLD_LAZY;
 #endif
 }
-#endif /* G__PHILIPPE1 */
 
 /***********************************************************************
 * G__dlopen()
@@ -229,7 +225,6 @@ char *path;
   G__SHLHANDLE handle;
 #ifdef G__SHAREDLIB
 
-#ifndef G__PHILIPPE1
 
 /****************************************************
 * OSF or SunOS
@@ -248,7 +243,6 @@ char *path;
 #  else
   handle = shl_load(path,G__RTLD_flag,0L);
 #  endif
-#ifndef G__OLDIMPLEMENTATION984
 #  if defined(__GNUC__)
   {
      /* find all _GLOBAL__FI_* functions to initialize global static objects */
@@ -272,7 +266,6 @@ TYPE_PROCEDURE);
      }
   }
 #  endif
-#endif
 /****************************************************
 * Win32
 ****************************************************/
@@ -290,75 +283,6 @@ TYPE_PROCEDURE);
   handle = (G__SHLHANDLE)NULL;
 # endif
 
-#else /* G__PHILIPPE1 */
-
-/****************************************************
-* OSF or SunOS
-****************************************************/
-#if defined(G__OSFDLL)
-#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
-  handle = dlopen(path,RTLD_LAZY);
-#else
-#ifndef RTLD_GLOBAL
-#define RTLD_GLOBAL 0
-#endif
-  handle = dlopen(path,RTLD_GLOBAL | RTLD_LAZY);
-#endif
-#ifndef G__OLDIMPLEMENTATION861
-  if(!handle) G__fprinterr(G__serr,"dlopen error: %s\n",dlerror());
-#endif
-/****************************************************
-* HP-UX
-****************************************************/
-# elif defined(__hpux) || defined(_HIUX_SOURCE)
-#  if defined(G__HPUXCPPDLL) && !defined(__STDCPP__)
-  handle = cxxshl_load(path,BIND_DEFERRED,0L);
-#  else
-  handle = shl_load(path,BIND_DEFERRED,0L);
-#  endif
-#ifndef G__OLDIMPLEMENTATION984
-#  if defined(__GNUC__)
-  {
-     /* find all _GLOBAL__FI_* functions to initialize global static objects */
-     struct shl_symbol *symbols;
-     int nsym;
-     nsym = shl_getsymbols(handle, TYPE_PROCEDURE, EXPORT_SYMBOLS|NO_VALUES,
-                           (void *(*)())malloc, &symbols);
-     if (nsym != -1) {
-        void (*ctor)();
-        int i;
-        for (i = 0; i < nsym; i++) {
-           if (symbols[i].type == TYPE_PROCEDURE) {
-              if (!strncmp(symbols[i].name, "_GLOBAL__FI_", 12)) {
-                 ctor = (void (*)())G__shl_findsym(&handle, symbols[i].name,
-TYPE_PROCEDURE);
-                 if (ctor) (*ctor)();
-              }
-           }
-        }
-        free(symbols);
-     }
-  }
-#  endif
-#endif
-/****************************************************
-* Win32
-****************************************************/
-# elif defined(G__WIN32)
-  handle = LoadLibrary(path);
-/****************************************************
-* VMS
-****************************************************/
-#elif defined(G__VMS)
-  handle = path;
-/****************************************************
-* Non of above
-****************************************************/
-# else /* non of above */
-  handle = (G__SHLHANDLE)NULL;
-# endif
-
-#endif /* G__PHILIPPE1 */
 
 #else /* G__SHAREDLIB */
   handle = (G__SHLHANDLE)NULL;
@@ -517,14 +441,6 @@ G__SHLHANDLE handle;
 * HP-UX
 ****************************************************/
 # elif defined(__hpux) || defined(_HIUX_SOURCE)
-#ifdef G__OLDIMPLEMENTATION1136
-#  if defined(G__HPUXCPPDLL) && !defined(__STDCPP__)
-  return(cxxshl_unload(handle));
-#  else
-  return(shl_unload(handle));
-#  endif
-#endif
-#ifndef G__OLDIMPLEMENTATION984
 #  if defined(__GNUC__)
   {
      /* find all _GLOBAL__FD_* functions to destruct global static objects */
@@ -548,14 +464,11 @@ TYPE_PROCEDURE);
      }
   }
 #  endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1136
 #  if defined(G__HPUXCPPDLL) && !defined(__STDCPP__)
   return(cxxshl_unload(handle));
 #  else
   return(shl_unload(handle));
 #  endif
-#endif
 /****************************************************
 * Win32
 ****************************************************/
@@ -573,7 +486,6 @@ TYPE_PROCEDURE);
 #endif /* G__SHAREDLIB */
 }
 
-#ifndef G__OLDIMPLEMENTATION1273
 /***********************************************************************
 * G__smart_shl_unload()
 ***********************************************************************/
@@ -587,7 +499,6 @@ int allsl;
     G__sl_handle[allsl]=0;
   }
 }
-#endif
 
 #ifdef G__SHAREDLIB
 /***********************************************************************
@@ -616,7 +527,6 @@ int allsl;
 
 #endif
 
-#ifndef G__OLDIMPLEMENTATION863
 /**************************************************************************
 * G__findsym()
 **************************************************************************/
@@ -633,7 +543,6 @@ char* fname;
 #endif
   return((void*)NULL);
 }
-#endif
 
 
 /**************************************************************************
@@ -678,7 +587,6 @@ int (*sharedlib_func)();
 	  ,G__CREATEDLLREV);
 }
 
-#ifndef G__OLDIMPLEMENTATION1525
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
@@ -869,7 +777,6 @@ char *fname;
 	);
 }
 
-#endif
 
 /**************************************************************************
 * G__shl_load()
@@ -888,30 +795,21 @@ char *shlfile;
   int (*sharedlib_func)();
   int error=0,cintdll=0;
   char dllidheader[G__ONELINE];
-#ifndef G__OLDIMPLEMENTATION885
   int allsl=G__allsl;
-#endif
 
   if(G__allsl==G__MAX_SL) {
     G__shl_load_error(shlfile ,"Too many DLL");
-#ifndef G__OLDIMPLEMENTATION1908
     return(-1);
-#else
-    return(EXIT_FAILURE);
-#endif
   }
   else ++G__allsl;
 
-#ifndef G__OLDIMPLEMENTATION1566
 #ifdef G__ROOT
   /* this pointer must be set before calling dlopen! */
   G__initpermanentsl = (void (*)())NULL;
 #endif
-#endif
 
   G__sl_handle[allsl] = G__dlopen(shlfile);
 
-#ifndef G__OLDIMPLEMENTATION1525
   if(G__sym_underscore) {
     G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCCintApiPointers");
     G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCppCintApiPointers");
@@ -920,7 +818,6 @@ char *shlfile;
     G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCCintApiPointers");
     G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCppCintApiPointers");
   }
-#endif
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
@@ -928,43 +825,25 @@ char *shlfile;
 	G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
 	G__printlinenum();
       }
-#ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
-#endif
-#ifndef G__OLDIMPLEMENTATION1908
       return(-1);
-#else
-      return(EXIT_FAILURE);
-#endif
     }
     else {
       G__shl_load_error(shlfile,"Load Error");
-#ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
-#endif
-#ifndef G__OLDIMPLEMENTATION1908
       return(-1);
-#else
-      return(EXIT_FAILURE);
-#endif
     }
   }
 
   /* set file name */
-#ifndef G__OLDIMPLEMENTATION1896
   if(G__ifile.name!=shlfile) strcpy(G__ifile.name,shlfile);
-#else
-  strcpy(G__ifile.name,shlfile);
-#endif
 
-#ifndef G__OLDIMPLEMENTATION670
 #ifdef G__WIN32
   p = shlfile;
   while(p) {
     p = strchr(p,'/');
     if(p) *p = '\\';
   }
-#endif
 #endif
 
   /* Split filename and get DLLID string */
@@ -1000,12 +879,8 @@ char *shlfile;
   sprintf(dllid,"G__cpp_dllrev");
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
-#ifndef G__OLDIMPLEMENTATION1169
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
-#else
-  if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
-#endif
     G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
@@ -1017,12 +892,8 @@ char *shlfile;
   sprintf(dllid,"G__cpp_dllrev%s",dllidheader);
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
-#ifndef G__OLDIMPLEMENTATION1169
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO 
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
-#else
-  if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
-#endif
     G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
@@ -1034,12 +905,8 @@ char *shlfile;
   sprintf(dllid,"G__c_dllrev");
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
-#ifndef G__OLDIMPLEMENTATION1169
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
-#else
-  if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
-#endif
     G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
@@ -1051,12 +918,8 @@ char *shlfile;
   sprintf(dllid,"G__c_dllrev%s",dllidheader);
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
-#ifndef G__OLDIMPLEMENTATION1169
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
-#else
-  if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
-#endif
     G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
@@ -1067,17 +930,8 @@ char *shlfile;
 
   if(error) {
     G__shl_load_error(shlfile ,"Revision mismatch");
-#ifdef G__OLDIMPLEMENTATION885
-    ++G__allsl;
-#endif
-#ifndef G__OLDIMPLEMENTATION936
     --G__allsl;
-#endif
-#ifndef G__OLDIMPLEMENTATION1908
     return(-1);
-#else
-    return(EXIT_FAILURE);
-#endif
   }
   if(G__asm_dbg&&0==cintdll) {
     if(G__dispmsg>=G__DISPWARN) {
@@ -1098,27 +952,17 @@ char *shlfile;
 
   sprintf(dllid,"G__cpp_setup%s",dllidheader);
   G__CALL_SETUP("G__set_cpp_environment");
-#ifndef G__OLDIMPLEMENTATION1053
   G__CALL_SETUP("G__cpp_setup_tagtable");
-#endif
   G__CALL_SETUP("G__cpp_setup_inheritance");
   G__CALL_SETUP("G__cpp_setup_typetable");
   /* G__CALL_SETUP("G__cpp_setup_memvar");
    * G__CALL_SETUP("G__cpp_setup_memfunc"); */
   G__CALL_SETUP("G__cpp_setup_global");
   G__CALL_SETUP("G__cpp_setup_func");
-#ifdef G__OLDIMPLEMENTATION1053
-  G__CALL_SETUP("G__cpp_setup_tagtable");
-#endif
   if(sharedlib_func==NULL) {
     G__CALL_SETUP(dllid);
   }
 #ifdef G__ROOT
-#ifdef G__OLDIMPLEMENTATION1566
-#ifndef G__OLDIMPLEMENTATION1207
-  G__initpermanentsl = (void (*)())NULL;
-#endif
-#endif
   if (sharedlib_func==NULL) G__call_setup_funcs();
 #endif
 
@@ -1150,7 +994,6 @@ char *shlfile;
   G__setdebugcond();
   G__globalcomp=store_globalcomp;
 
-#ifndef G__OLDIMPLEMENTATION1207
   if(G__ispermanentsl) {
     if(!G__initpermanentsl)
       G__initpermanentsl = 
@@ -1166,18 +1009,10 @@ char *shlfile;
   else {
     G__initpermanentsl = (void (*)())NULL;
   }
-#endif
 
-#ifdef G__OLDIMPLEMENTATION885
-  ++G__allsl; /* anyway increment this */
-#endif
 
   strcpy(G__ifile.name,"");
-#ifndef G__OLDIMPLEMENTATION1908
   return(EXIT_SUCCESS);
-#else
-  return(allsl);
-#endif
 }
 #endif
 
@@ -1220,20 +1055,16 @@ int* pindex;
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
       if(
-#ifndef G__OLDIMPLEMENTATION1478
 	 ifunc->pentry[ig15] && 
-#endif
 	 ifunc->pentry[ig15]->tp2f==p2f) {
 	*pindex = ig15;
 	return(ifunc);
       }
-#ifndef G__OLDIMPLEMENTATION1846
       if(ifunc->pentry[ig15] && 
 	 ifunc->pentry[ig15]->bytecode==p2f) {
 	*pindex = ig15;
 	return(ifunc);
       }
-#endif
     }
   } while((ifunc=ifunc->next)) ;
   *pindex = -1;
@@ -1246,10 +1077,20 @@ int* pindex;
 char* G__p2f2funcname(p2f)
 void *p2f;
 {
+  int tagnum;
   struct G__ifunc_table *ifunc;
   int ig15;
   ifunc=G__p2f2funchandle(p2f,G__p_ifunc,&ig15);
   if(ifunc) return(ifunc->funcname[ig15]);
+
+  for(tagnum=0;tagnum<G__struct.alltag;tagnum++) {
+    ifunc=G__p2f2funchandle(p2f,G__struct.memfunc[tagnum],&ig15);
+    if(ifunc) {
+      static char buf[G__LONGLINE];
+      sprintf(buf,"%s::%s",G__fulltagname(tagnum,1),ifunc->funcname[ig15]);
+      return(buf);
+    }
+  }
   return((char*)NULL);
 }
 
@@ -1264,11 +1105,7 @@ void *p2f;
   ifunc=G__p2f2funchandle(p2f,G__p_ifunc,&ig15);
   if(ifunc) {
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        -1 != ifunc->pentry[ig15]->size
-#else
-       -1 != ifunc->pentry[ig15]->filenum
-#endif
        ) {
       if(ifunc->pentry[ig15]->bytecode) {
 	return(G__BYTECODEFUNC);
@@ -1317,7 +1154,6 @@ int *known3;
   if(obj_p2f) result3 = *obj_p2f;
   else        result3 = G__getitem(parameter0+1);
 
-#ifndef G__OLDIMPLEMENTATION679
   /* operator overloading */
   if('U'==result3.type && G__PARANORMAL==result3.obj.reftype.reftype) {
     /* int store_tagnum = G__tagnum; */
@@ -1358,7 +1194,6 @@ int *known3;
 #endif
     return(result3);
   }
-#endif /* ON679 */
 
 #ifdef G__ASM
   G__abortbytecode();
@@ -1382,7 +1217,6 @@ int *known3;
   ifunc=G__p2f2funchandle((void*)result3.obj.i,G__p_ifunc,&ig15);
   if(ifunc) sprintf(result7,"%s%s",ifunc->funcname[ig15],parameter1);
 #ifdef G__PTR2MEMFUNC
-#ifndef G__OLDIMPLEMENTATION1654
   else {
     int itag;
     for(itag=0;itag<G__struct.alltag;itag++) {
@@ -1393,7 +1227,6 @@ int *known3;
       }
     }
   }
-#endif
 #endif
 #else
   ifunc=G__p_ifunc;
@@ -1449,7 +1282,6 @@ int *known3;
   return(G__getfunction(result7,known3,G__TRYNORMAL));
 }
 
-#ifndef G__OLDIMPLEMENTATION648
 /******************************************************************
 * G__removetagid()
 ******************************************************************/
@@ -1511,7 +1343,6 @@ int ifn;
 
   return(typenum);
 }
-#endif /* ON648 */
 
 /******************************************************************
 * G__search_func()
@@ -1542,17 +1373,11 @@ G__value *buf;
   do {
     for(i=0;i<ifunc->allifunc;i++) {
       if(
-#ifndef G__OLDIMPLEMENTATION1561
 	 ifunc->funcname[i] && funcname &&
-#endif
 	 strcmp(ifunc->funcname[i],funcname)==0) {
 #ifdef G__TRUEP2F
 	if(
-#ifndef G__OLDIMPLEMENTATION2012
 	   -1 == ifunc->pentry[i]->size
-#else
-	   -1 == ifunc->pentry[i]->filenum
-#endif
 	   ) { /* precompiled function */
 #ifndef G__OLDIMPLEMENTATION2191
 	  G__letint(buf,'1',(long)ifunc->pentry[i]->tp2f);
@@ -1563,11 +1388,7 @@ G__value *buf;
 	}
 #ifdef G__ASM_WHOLEFUNC
 	else if(ifunc->pentry[i]->bytecode) { /* bytecode function */
-#ifndef G__OLDIMPLEMENTATION821
 	  G__letint(buf,'Y',(long)ifunc->pentry[i]->tp2f);
-#else
-	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
-#endif
 	  buf->typenum = G__getp2ftype(ifunc,i);
 	}
 #endif
@@ -1593,9 +1414,7 @@ G__value *buf;
   i=0;
   while(G__completionlist[i].name!=NULL) {
     if(
-#ifndef G__OLDIMPLEMENTATION1561
        funcname &&
-#endif
        strcmp(G__completionlist[i].name,funcname)==0) {
       if((long)G__completionlist[i].pfunc!=0) {
 #ifndef G__OLDIMPLEMENTATION2191
@@ -2016,12 +1835,9 @@ int state;
   return((char *)NULL);
 }
 
-#ifndef G__OLDIMPLEMENTATION1908
 #ifdef G__SHAREDLIB
 G__SHLHANDLE G__ShlHandle=(G__SHLHANDLE)0;
-#ifndef G__OLDIMPLEMENTATION2012
 int G__Shlfilenum = -1;
-#endif
 #endif
 
 /**************************************************************************
@@ -2031,9 +1847,7 @@ void G__ResetShlHandle()
 {
 #ifdef G__SHAREDLIB
   G__ShlHandle = (G__SHLHANDLE)0;
-#ifndef G__OLDIMPLEMENTATION2012
   G__Shlfilenum = -1;
-#endif
 #endif
 }
 
@@ -2049,23 +1863,17 @@ void* G__GetShlHandle()
 #endif
 }
 
-#ifndef G__OLDIMPLEMENTATION2012
 /**************************************************************************
  * G__GetShlFilenum()
  **************************************************************************/
 int G__GetShlFilenum()
 {
 #ifdef G__SHAREDLIB
-#ifndef G__OLDIMPLEMENTATION2012
   return(G__Shlfilenum);
 #else
   return(0);
 #endif
-#else
-  return(0);
-#endif
 }
-#endif
 
 /**************************************************************************
  * G__SetShlHandle
@@ -2079,9 +1887,7 @@ char *filename;
     if(0==strcmp(G__srcfile[i].filename,filename)) {
       isl = G__srcfile[i].slindex;
       if(-1!=isl) {
-#ifndef G__OLDIMPLEMENTATION2012
 	G__Shlfilenum = i;
-#endif
 	G__ShlHandle = G__sl_handle[isl];
 	return((void*)G__ShlHandle);
       }
@@ -2106,7 +1912,7 @@ int ifn;
   char tmp[4];
   int i;
   tmp[1]=0;
-  sprintf(buf,"_Z%d%s",strlen(funcname),funcname);
+  sprintf(buf,"_Z%lu%s",(unsigned long)strlen(funcname),funcname);
 
   for(i=0;i<ifunc->para_nu[ifn];i++) {
     if(isupper(ifunc->para_type[ifn][i])) strcat(buf,"P");
@@ -2298,7 +2104,6 @@ char *funcname;
   return((void*)0);
 #endif
 }
-#endif
 
 /*
  * Local Variables:

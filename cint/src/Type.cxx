@@ -24,11 +24,7 @@
 
 #ifndef G__OLDIMPLEMENTATION1586
 // This length should match or exceed the length in G__type2string
-#ifndef G__OLDIMPLEMENTATION711
 static char G__buf[G__LONGLINE];
-#else
-static char G__buf[G__MAXNAME*2];
-#endif
 #endif
 
 /*********************************************************************
@@ -38,7 +34,6 @@ static char G__buf[G__MAXNAME*2];
 ///////////////////////////////////////////////////////////////////////////
 void G__TypeInfo::Init(const char *typenamein)
 {
-#ifndef G__OLDIMPLEMENTATION707
   G__value buf;
   buf = G__string2type_body(typenamein,2);
   type = buf.type;
@@ -46,37 +41,6 @@ void G__TypeInfo::Init(const char *typenamein)
   typenum = buf.typenum;
   reftype = buf.obj.reftype.reftype;
   isconst = buf.obj.i;
-#else /* ON707 */
-  typenum = G__defined_typename(typenamein);
-  if(-1!=typenum) {
-    tagnum = G__newtype.tagnum[typenum];
-    type = G__newtype.type[typenum];
-    reftype = G__newtype.reftype[typenum];
-    isconst = 0;
-  }
-  else {
-    tagnum = G__defined_tagname(typenamein,2);
-    if(-1!=tagnum) {
-      switch(G__struct.type[tagnum]) {
-      case 'e': type = 'i'; break;
-      default:  type = 'u'; break;
-      }
-#ifndef G__OLDIMPLEMENTATION602
-      reftype = 0;
-      isconst = 0;
-#endif
-    }
-    else {
-      G__value buf;
-      buf = G__castvalue(typenamein,G__null);
-      type = buf.type;
-      tagnum = buf.tagnum;
-      typenum = buf.typenum;
-      reftype = buf.ref;
-      isconst = 0;
-    }
-  }
-#endif /* ON707 */
   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -108,7 +72,7 @@ const char* G__TypeInfo::TrueName()
   strcpy(G__buf,
 	 G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
   return(G__buf);
-#elif !defind(G__OLDIMPLEMENTATION401)
+#elif  !defind(G__OLDIMPLEMENTATION401)
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
 #else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype));
@@ -121,7 +85,7 @@ const char* G__TypeInfo::Name()
   strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 			       ,(int)isconst));
   return(G__buf);
-#elif !defind(G__OLDIMPLEMENTATION401)
+#elif  !defind(G__OLDIMPLEMENTATION401)
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 	,(int)isconst));
 #else
@@ -136,12 +100,10 @@ int G__TypeInfo::Size() const
   buf.tagnum=(int)tagnum;
   buf.typenum=(int)typenum;
   buf.ref=reftype;
-#ifndef G__OLDIMPLEMENTATION2106
   if(isupper(type)) {
     buf.obj.reftype.reftype=reftype;
     return(sizeof(void*));
   }
-#endif
   return(G__sizeof(&buf));
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -150,7 +112,6 @@ long G__TypeInfo::Property()
   long property = 0;
   if(-1!=typenum) property|=G__BIT_ISTYPEDEF;
   if(-1==tagnum) property|=G__BIT_ISFUNDAMENTAL;
-#ifndef G__OLDIMPLEMENTATION1833
   else {
     if(strcmp(G__struct.name[tagnum],"G__longlong")==0 ||
        strcmp(G__struct.name[tagnum],"G__ulonglong")==0 ||
@@ -167,20 +128,11 @@ long G__TypeInfo::Property()
       if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
     }
   }
-#else
-  if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
-#endif
   if(isupper((int)type)) property|=G__BIT_ISPOINTER;
-#if !defined(G__OLDIMPLEMENTATION2228)
   if(reftype==G__PARAREFERENCE||reftype>G__PARAREF) 
     property|=G__BIT_ISREFERENCE;
-#elif !defined(G__OLDIMPLEMENTATION1453)
-  if (reftype) property |= G__BIT_ISREFERENCE;
-#endif
-#ifndef G__OLDIMPLEMENTATION401
   if(isconst&G__CONSTVAR)  property|=G__BIT_ISCONSTANT;
   if(isconst&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;
-#endif
   return(property);
 }
 ///////////////////////////////////////////////////////////////////////////

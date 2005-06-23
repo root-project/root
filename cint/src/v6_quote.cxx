@@ -46,7 +46,6 @@ G__value *pval;
   G__inc_cp_asm(2,1);
 }
 
-#ifndef G__OLDIMPLEMENTATION1636
 #ifdef G__CPPCONSTSTRING
 char* G__saveconststring G__P((char *string));
 #else
@@ -83,7 +82,6 @@ char* string;
   return(pconststring->string);
 }
 #endif
-#endif
 
 /******************************************************************
 * G__value G__strip_quotation(string)
@@ -96,43 +94,26 @@ G__value G__strip_quotation(string)
 char *string;
 {
   int itemp,itemp2=0,hash;
-#ifndef G__OLDIMPLEMENTATION1943
   int templen = G__LONGLINE;
   char *temp = (char*)malloc(G__LONGLINE);
-#else
-  char temp[G__LONGLINE];
-#endif
   G__value result;
-#ifdef G__OLDIMPLEMENTATION1636
-  struct G__ConstStringList *pconststring;
-#endif
-#ifndef G__OLDIMPLEMENTATION1631
   int lenm1 = strlen(string)-1;
-#endif
 
   result.tagnum = -1;
   result.typenum = -1;
   result.ref = 0;
-#ifndef G__OLDIMPLEMENTATION2068
   result.isconst = G__CONSTVAR;
-#endif
   if((string[0]=='"')||(string[0]=='\'')) {
     for(itemp=1;
-#ifndef G__OLDIMPLEMENTATION1631
 	itemp<lenm1;
-#else
-	itemp<strlen(string)-1;
-#endif
 	itemp++ ) {
       /*
       temp[itemp2++] = string[itemp];
       */
-#ifndef G__OLDIMPLEMENTATION1943
       if(itemp2+1>templen) {
         temp = (char*)realloc(temp,2*templen);
         templen = 2*templen;
       }
-#endif
       switch(string[itemp]) {
       case '\\' :
 	switch(string[++itemp]) {
@@ -224,10 +205,8 @@ char *string;
 	  temp[itemp2] = (char)G__int(G__checkBase(temp+itemp2 ,&hash));
 	  ++itemp2;
 	  break;
-#ifndef G__OLDIMPLEMENTATION1245
 	case '\n':
 	  break;
-#endif
 	default:
 	  temp[itemp2++] = string[itemp];
 	  break;
@@ -235,19 +214,11 @@ char *string;
 	break;
       case '"':
 	if('"'==string[itemp+1]) {
-#ifndef G__OLDIMPLEMENTATION1416
 	  ++itemp;
-#else
-	  itemp+=2;
-#endif
 	}
-#ifndef G__OLDIMPLEMENTATION998
 	else if(G__NOLINK==G__globalcomp) 
 	  G__genericerror("Error: String literal syntax error");
-#endif
-#ifndef G__OLDIMPLEMENTATION1416
 	continue;
-#endif
       default:
 	temp[itemp2++] = string[itemp];
 #ifdef G__MULTIBYTE
@@ -265,9 +236,7 @@ char *string;
     if(G__isvalue(string)) {
       /* string is a pointer */
       G__letint(&result,'C',atol(string));
-#ifndef G__OLDIMPLEMENTATION1943
       free((void*)temp);
-#endif
       return(result);
     }
     else {
@@ -277,41 +246,9 @@ char *string;
   }
 
 
-#ifndef G__OLDIMPLEMENTATION1636
   G__letint(&result,'C',(long)G__saveconststring(temp));
-#else
-  /* Search existing const string list */
-  G__hash(temp,hash,itemp);
-  pconststring = G__plastconststring;
-  while(pconststring) {
-    if(hash==pconststring->hash && strcmp(temp,pconststring->string)==0) {
-      G__letint(&result,'C',(long)pconststring->string);
-#ifndef G__OLDIMPLEMENTATION1943
-      free((void*)temp);
-#endif
-      return(result);
-    }
-    pconststring = pconststring->prev;
-  }
 
-  /* Create new conststring entry */
-  pconststring 
-    = (struct G__ConstStringList*)malloc(sizeof(struct G__ConstStringList));
-  pconststring->prev = G__plastconststring;
-  G__plastconststring = pconststring;
-  pconststring = G__plastconststring;
-
-  pconststring->string=(char*)malloc(strlen(temp)+2);
-  pconststring->string[strlen(temp)+1]='\0';
-  strcpy(pconststring->string,temp);
-  pconststring->hash = hash;
-
-  G__letint(&result,'C',(long)pconststring->string);
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1943
   free((void*)temp);
-#endif
   return(result);
 }
 
@@ -557,11 +494,7 @@ char *temp;
     sprintf(temp,"0b%s",temp1);
     break;
   default:
-#ifndef G__FONS31
     sprintf(temp,"%ld",buf.obj.i);
-#else
-    sprintf(temp,"%d",buf.obj.i);
-#endif
     break;
   }
   return(temp);

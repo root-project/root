@@ -32,9 +32,7 @@
 #include <setjmp.h>
 #include "newsos.h"
 
-#ifndef G__OLDIMPLEMENTATION463
 extern FILE *G__serr;
-#endif
 
 /************************************************************************
 * ANSI library implemented
@@ -71,16 +69,6 @@ char *funcname;
 /************************************************************************
 * Unsupported dummy function
 ************************************************************************/
-#if 0
-void *memmove(region1,region2,count)
-void *region1,*region2;
-size_t count;
-{
-	void *result;
-	G__newsos_nosupport("memmove");
-	return(result);
-}
-#endif
 
 
 int raise(signal)
@@ -123,15 +111,6 @@ int newtime,oldtime;
 	return(result);
 }
 
-#if 0
-int labs(n)
-long n;
-{
-	int result;
-	G__newsos_nosupport("labs");
-	return(result);
-}
-#endif
 
 unsigned long strtoul(sqrt,tailptr,base)
 char *sqrt;

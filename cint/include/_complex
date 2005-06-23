@@ -2,6 +2,9 @@
 #pragma include_noerr <complex.dll>
 #endif
 
+#ifndef G__COMPLEX_H
+#define G__COMPLEX_H
+
 #ifdef __MAKECINT__
 #include <prec_stl/complex>
 //#include <_complex.h>
@@ -24,4 +27,6 @@ int G__ateval(const complex<scalar>& x) {
   return(1);
 }
 #endif
+#endif
+
 #endif

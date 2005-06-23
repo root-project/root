@@ -133,7 +133,6 @@ typedef unsigned long long G__uint64;
 #endif
 
 
-#ifndef G__OLDIMPLEMENTATION1878
 #ifndef __CINT__
 /**************************************************************************
 * G__strtoll, G__strtoull
@@ -299,7 +298,6 @@ G__uint64 G__strtoull(const char *nptr, char **endptr, register int base) {
    return (acc);
 }
 #endif /* __CINT__ */
-#endif /* 1878 */
 
 /************************************************************************
 * long long definition
@@ -315,24 +313,14 @@ class G__longlong {
 #else
   G__longlong(long l=0) { dat = (G__int64)l; }
 #endif
-#if 0
-  G__longlong(long l) { dat = (G__int64)l; }
-  G__longlong(int l) { dat = (G__int64)l; }
-  G__longlong(short l) { dat = (G__int64)l; }
-  G__longlong(char l) { dat = (G__int64)l; }
-#endif
   G__longlong(const G__longlong& x) { dat=x.dat; }
   G__longlong(const G__ulonglong& x) ;
-#if 1
   G__longlong(const char* s) { dat=G__strtoll(s,NULL,10); }
-#endif
   ~G__longlong() {  }
 
   // conversion operator
-#ifndef G__OLDIMPLEMENTATION1144
   operator long() { return((long)dat); }
   operator int() { return((int)dat); }
-#endif
   operator double() { return((double)dat); }
 
   // unary operators
@@ -342,17 +330,11 @@ class G__longlong {
   G__longlong operator--(int) { G__longlong c(dat--); return(c); }
 
   // assignment operators
-#ifndef G__OLDIMPLEMENTATION1144
   G__longlong& operator=(long x) { dat=(G__int64)x; return(*this); }
-#endif
   G__longlong& operator=(const G__longlong& x) { dat=x.dat; return(*this); }
   G__longlong& operator+=(const G__longlong& x) { dat+=x.dat; return(*this); }
   G__longlong& operator-=(const G__longlong& x) { dat-=x.dat; return(*this); }
   G__longlong& operator*=(const G__longlong& x) { dat*=x.dat; return(*this); }
-#if 0
-  G__longlong& operator/=(const G__longlong& x) { dat/=x.dat; return(*this); }
-  G__longlong& operator%=(const G__longlong& x) { dat%=x.dat; return(*this); }
-#endif
   G__longlong& operator&=(const G__longlong& x) { dat&=x.dat; return(*this); }
   G__longlong& operator|=(const G__longlong& x) { dat|=x.dat; return(*this); }
   G__longlong& operator<<=(const G__longlong& x) { dat<<=x.dat; return(*this);}
@@ -464,28 +446,16 @@ inline int operator==(const G__longlong& a,const G__longlong& b){
 
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__longlong& a) {
-#ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
   sprintf(buf,"%lld",a.dat);
   ost << buf;
-#else
-  //long *upper = (long*)(&a+1);
-  long *lower = (long*)&a;
-  ost << *lower ;
-#endif
   return(ost);
 }
 
 inline istream& operator>>(istream& ist,G__longlong& a) {
-#ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
   ist >> buf;
   sscanf(buf,"%lld",&a.dat);
-#else
-  //long *upper = (long*)(&a+1);
-  long *lower = (long*)&a;
-  ist >> *lower;
-#endif
   return(ist);
 }
 #endif
@@ -505,24 +475,14 @@ class G__ulonglong {
 #else
   G__ulonglong(unsigned long l=0) { dat = (G__uint64)l; }
 #endif
-#if 0
-  G__ulonglong(long l) { dat = (G__uint64)l; }
-  G__ulonglong(int l) { dat = (G__uint64)l; }
-  G__ulonglong(short l) { dat = (G__uint64)l; }
-  G__ulonglong(char l) { dat = (G__uint64)l; }
-#endif
   G__ulonglong(const G__ulonglong& x) { dat=x.dat; }
-#if 1
   G__ulonglong(const G__longlong& x) { dat=(G__int64)x.dat; }
   G__ulonglong(const char* s) { dat=G__strtoull(s,NULL,10); }
-#endif
   ~G__ulonglong() {  }
 
   // conversion operator
-#ifndef G__OLDIMPLEMENTATION1144
   operator long() { return((long)dat); }
   operator int() { return((int)dat); }
-#endif
 #if defined(G__VISUAL)
 #else
   //operator double() { return((double)dat); }
@@ -535,17 +495,11 @@ class G__ulonglong {
   G__ulonglong operator--(int) { G__ulonglong c(dat--); return(c); }
 
   // assignment operators
-#ifndef G__OLDIMPLEMENTATION1144
   G__ulonglong& operator=(long x) { dat=(G__uint64)x; return(*this); }
-#endif
   G__ulonglong& operator=(const G__ulonglong& x) { dat=x.dat; return(*this); }
   G__ulonglong& operator+=(const G__ulonglong& x) { dat+=x.dat; return(*this); }
   G__ulonglong& operator-=(const G__ulonglong& x) { dat-=x.dat; return(*this); }
   G__ulonglong& operator*=(const G__ulonglong& x) { dat*=x.dat; return(*this); }
-#if 0
-  G__ulonglong& operator/=(const G__ulonglong& x) { dat/=x.dat; return(*this); }
-  G__ulonglong& operator%=(const G__ulonglong& x) { dat%=x.dat; return(*this); }
-#endif
   G__ulonglong& operator&=(const G__ulonglong& x) { dat&=x.dat; return(*this); }
   G__ulonglong& operator|=(const G__ulonglong& x) { dat|=x.dat; return(*this); }
   G__ulonglong& operator<<=(const G__ulonglong& x) { dat<<=x.dat; return(*this);}
@@ -659,28 +613,16 @@ inline G__longlong::G__longlong(const G__ulonglong& x) { dat=(G__int64)x.dat; }
 
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
-#ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
   sprintf(buf,"%llu",a.dat);
   ost << buf;
-#else
-  //long *upper = (long*)(&a+1);
-  long *lower = (long*)&a;
-  ost << *lower ;
-#endif
   return(ost);
 }
 
 inline istream& operator>>(istream& ist,G__ulonglong& a) {
-#ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
   ist >> buf;
   sscanf(buf,"%llu",&a.dat);
-#else
-  //long *upper = (long*)(&a+1);
-  long *lower = (long*)&a;
-  ist >> *lower;
-#endif
   return(ist);
 }
 #endif
@@ -706,28 +648,11 @@ inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
 }
-#if 0
-int G__ateval(const char* x) {return(0);}
-int G__ateval(const void* x) {return(0);}
-int G__ateval(double x) {return(0);}
-int G__ateval(float x) {return(0);}
-int G__ateval(char x) {return(0);}
-int G__ateval(short x) {return(0);}
-int G__ateval(int x) {return(0);}
-int G__ateval(long x) {return(0);}
-int G__ateval(unsigned char x) {return(0);}
-int G__ateval(unsigned short x) {return(0);}
-int G__ateval(unsigned int x) {return(0);}
-int G__ateval(unsigned long x) {return(0);}
-#endif
 
 #ifdef __MAKECINT__
 #ifndef G__LONGLONGTMP
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
-#endif
-#ifdef G__OLDIMPLEMENTATION1912
-#pragma link C++ function G__ateval;
 #endif
 #endif
 
@@ -841,19 +766,11 @@ class G__longdouble {
 #else
   G__longdouble(double l=0) { dat = (G__double92)l; }
 #endif
-#if 0
-  G__longdouble(float l) { dat = (G__double92)l; }
-  G__longdouble(double l) { dat = (G__double92)l; }
-#endif
   G__longdouble(const G__longdouble& x) { dat=x.dat; }
   //G__longdouble(long l=0) { dat = (G__double92)l; }
   G__longdouble(const G__longlong& x) { dat=x.dat; }
-#ifndef G__OLDIMPLEMENTATION2007
 #if defined(_MSC_VER)&&(_MSC_VER<1310)
   G__longdouble(const G__ulonglong& x) { dat=(G__int64)x.dat; }
-#else
-  G__longdouble(const G__ulonglong& x) { dat=x.dat; }
-#endif
 #else
   G__longdouble(const G__ulonglong& x) { dat=x.dat; }
 #endif
@@ -948,13 +865,11 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1913
 void G__printformatld(char* out,const char* fmt,void *p) {
   //long double*pll = (long double*)p;
   G__double92 *pld = (G__double92*)p;
   sprintf(out,fmt,*pld);
 }
-#endif
 
 inline int G__ateval(const G__longdouble& a) {
 #ifdef IOS
@@ -969,9 +884,6 @@ inline int G__ateval(const G__longdouble& a) {
 #ifndef G__LONGLONGTMP
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
-#endif
-#ifdef G__OLDIMPLEMENTATION1912
-#pragma link C++ function G__ateval;
 #endif
 #endif
 

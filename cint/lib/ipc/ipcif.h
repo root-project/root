@@ -39,7 +39,7 @@
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__KCC) && !defined(__sgi)
+#if !defined(__FreeBSD__) && !defined(__KCC) && !defined(__sgi)
 union semun {
   int val;                    /* value for SETVAL */
   struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
@@ -49,7 +49,11 @@ union semun {
 #endif
 #endif 
 
+/* sys/msg.h does not exist on macosx */
+#if defined(G__APPLE) || defined(__APPLE__)
+#else
 #include <sys/msg.h>
+#endif
 
 #else /* __MAKECINT__ */
 

@@ -40,35 +40,30 @@ G__CallFunc {
   G__CallFunc() ;
   void Init() ;
 
-#ifndef G__OLDIMPLEMENTATION2019
   enum MatchMode { ExactMatch=0, ConversionMatch=1 };
   void SetFunc(G__ClassInfo* cls,const char* fname,const char* args
 	       ,long* poffset,MatchMode mode=ConversionMatch);
-#else
-  void SetFunc(G__ClassInfo* cls,const char* fname,const char* args,long* poffset);
-#endif
-#ifndef G__OLDIMPLEMENTATION540
   void SetFuncProto(G__ClassInfo* cls,const char* fname,const char* argtype,long* poffset);
-#endif
   // begin old interface
   void SetFunc(G__InterfaceMethod f);
-#ifndef G__OLDIMPLEMENTATION1749
   void SetFunc(G__MethodInfo m);
-#endif
 #ifdef G__ASM_WHOLEFUNC
   void SetBytecode(struct G__bytecodefunc* bc);
 #endif
-#ifndef G__OLDIMPLEMENTATION533
   int IsValid() { /* return(pfunc?1:0l; */ return(method.IsValid());}
   void SetArgArray(long *p,int narg= -1);
-#endif
   void ResetArg() { para.paran=0; }
   void SetArg(long l) ;
   void SetArg(double d) ;
+  void SetArgRef(long& l) ;
+  void SetArgRef(double& d) ;
 #ifdef G__NATIVELONGLONG
   void SetArg(G__int64 ll);
   void SetArg(G__uint64 ull);
   void SetArg(long double ld);
+  void SetArgRef(G__int64& ll);
+  void SetArgRef(G__uint64& ull);
+  void SetArgRef(long double& ld);
 #endif
   // end old interface
 
@@ -77,25 +72,19 @@ G__CallFunc {
   long ExecInt(void *pobject) { return G__int(Execute(pobject)); }
   double ExecDouble(void *pobject) { return G__double(Execute(pobject)); }
 
-#ifndef G__FONS50
   G__InterfaceMethod InterfaceMethod() { return pfunc; }
   void SetArgs(const char* args);
   G__MethodInfo GetMethodInfo() { return method; }
-#endif
 
  private:
-#ifndef G__OLDIMPLEMENTATION1591
   void SetFuncType();
-#endif
 #ifndef __MAKECINT__
   G__InterfaceMethod pfunc;
   G__value result;
 #ifdef G__ASM_WHOLEFUNC
   struct G__bytecodefunc *bytecode;
 #endif
-#ifndef G__OLDIMPLEMENTATION533
   G__MethodInfo method;
-#endif
   struct G__param para;
   int ExecInterpretedFunc(G__value* presult);
 #endif /* __MAKECINT__ */

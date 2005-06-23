@@ -21,7 +21,6 @@
 #include "common.h"
 
 
-#ifndef G__OLDIMPLEMENTATION999
 /***********************************************************************
 * G__getoperatorstring()
 ***********************************************************************/
@@ -105,10 +104,8 @@ int operator;
     return("(unknown operator)");
   }
 }
-#endif
 
 
-#ifndef G__OLDIMPLEMENTATION470
 /***********************************************************************
 * G__doubleassignbyref()
 ***********************************************************************/
@@ -163,7 +160,6 @@ double val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION2189
   case 'n': /* long long */
     *(G__int64*)defined->ref = (G__int64)val;
     defined->obj.ll = (G__int64)val;
@@ -176,13 +172,10 @@ double val;
     *(long double*)defined->ref = (long double)val;
     defined->obj.ld = (long double)val;
     break;
-#endif
-#ifndef G__OLDIMPLEMENTATION1604
   case 'g': /* bool */
     *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
     defined->obj.i = (int)val?1:0;
     break;
-#endif
   default:
     G__genericerror("Invalid operation and assignment, G__doubleassignbyref");
     break;
@@ -235,7 +228,6 @@ long val;
     if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION2189
   case 'n': /* long long */
     if(defined->ref) *(G__int64*)defined->ref = (G__int64)val;
     defined->obj.ll = (G__int64)val;
@@ -248,13 +240,10 @@ long val;
     if(defined->ref) *(long double*)defined->ref = (long double)val;
     defined->obj.ld = (long double)val;
     break;
-#endif
-#ifndef G__OLDIMPLEMENTATION1604
   case 'g': /* bool */
     if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
     defined->obj.i = (int)val?1:0;
     break;
-#endif
   case 'd': /* double */
     if(defined->ref) *(double*)defined->ref = (double)val;
     defined->obj.d = (double)val;
@@ -268,7 +257,6 @@ long val;
     break;
   }
 }
-#endif
 
 
 /***********************************************************************
@@ -321,9 +309,7 @@ G__value *defined;
 	 * OP1 instruction
 	 ****************************/
 	switch(operator) {
-#ifndef G__OLDIMPLEMENTATION654
 	case '~':
-#endif
 	case '!':
 	case '-':
 	case G__OPR_POSTFIXINC:
@@ -385,9 +371,7 @@ G__value *defined;
   if((G__isdouble(expressionin))||(G__isdouble(*defined))) {
     fexpression=G__double(expressionin);
     fdefined=G__double(*defined);
-#ifndef G__OLDIMPLEMENTATION1132
     defined->typenum = -1;
-#endif
     switch(operator) {
     case '\0':
       defined->ref=expressionin.ref;
@@ -452,29 +436,17 @@ G__value *defined;
       break;
 #endif /* G__NONANSIOPR */
     case 'A': /* logic and */
-#ifndef G__OLDIMPLEMENTATION1674
       /* printf("\n!!! %g && %g\n"); */
       G__letint(defined,'i', 0.0!=fdefined&&0.0!=fexpression);
-#else
-      G__letint(defined,'i', (long)fdefined&&(long)fexpression);
-#endif
       defined->ref=0;
       break;
     case 'O': /* logic or */
-#ifndef G__OLDIMPLEMENTATION1674
       G__letint(defined,'i', 0.0!=fdefined||0.0!=fexpression);
-#else
-      G__letint(defined,'i', (long)fdefined||(long)fexpression);
-#endif
       defined->ref=0;
       break;
     case '>':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letdouble(defined,'i',0>fexpression);
-#else
-	G__letdouble(defined,'d',fexpression);
-#endif
       }
       else
 	G__letint(defined,'i',fdefined>fexpression);
@@ -482,11 +454,7 @@ G__value *defined;
       break;
     case '<':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letdouble(defined,'i',0<fexpression);
-#else
-	G__letdouble(defined,'d',fexpression);
-#endif
       }
       else
 	G__letint(defined,'i',fdefined<fexpression);
@@ -503,12 +471,10 @@ G__value *defined;
       break;
 #endif /* G__NONANSIOPR */
     case '@': /* power */
-#ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
 	G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
-#endif
       if(fdefined>0.0) {
 	/* G__letdouble(defined,'d' ,exp(fexpression*log(fdefined))); */
 	G__letdouble(defined,'d' ,pow(fdefined,fexpression));
@@ -539,50 +505,33 @@ G__value *defined;
       break;
 #endif /* G__NONANSIOPR */
     case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
 	G__letdouble(defined,'i',0==fexpression); 
       else
         G__letint(defined,'i',fdefined==fexpression);
-#else
-      G__letint(defined,'i',fdefined==fexpression);
-#endif
       defined->ref=0;
       break;
     case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
 	G__letdouble(defined,'i',0!=fexpression); 
       else
         G__letint(defined,'i',fdefined!=fexpression);
-#else
-      G__letint(defined,'i',fdefined!=fexpression);
-#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
 	G__letdouble(defined,'i',0>=fexpression); 
       else
         G__letint(defined,'i',fdefined>=fexpression);
-#else
-      G__letint(defined,'i',fdefined>=fexpression);
-#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
 	G__letdouble(defined,'i',0<=fexpression); 
       else
         G__letint(defined,'i',fdefined<=fexpression);
-#else
-      G__letint(defined,'i',fdefined<=fexpression);
-#endif
       defined->ref=0;
       break;
-#ifndef G__OLDIMPLEMENTATION470
     case G__OPR_ADDASSIGN:
       if(!G__no_exec_compile&&defined->ref) 
 	G__doubleassignbyref(defined,fdefined+fexpression);
@@ -614,24 +563,18 @@ G__value *defined;
 	G__doubleassignbyref(defined
 			     ,(double)((long)fdefined||(long)fexpression));
       break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
     case G__OPR_POSTFIXINC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__doubleassignbyref(&expressionin,fexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
 	defined->ref = 0;
-#endif
       }
       break;
     case G__OPR_POSTFIXDEC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__doubleassignbyref(&expressionin,fexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
 	defined->ref = 0;
-#endif
       }
       break;
     case G__OPR_PREFIXINC:
@@ -646,13 +589,8 @@ G__value *defined;
 	*defined = expressionin;
       }
       break;
-#endif
     default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for real number");
 	break;
     }
@@ -688,18 +626,14 @@ G__value *defined;
 	  defined->ref=0;
 	  break;
 	case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION697
 	  if('U'==defined->type && 'U'==expressionin.type)
 	    G__publicinheritance(defined,&expressionin);
-#endif
 	  G__letint(defined,'i',defined->obj.i==expressionin.obj.i);
 	  defined->ref=0;
 	  break;
 	case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION697
 	  if('U'==defined->type && 'U'==expressionin.type)
 	    G__publicinheritance(defined,&expressionin);
-#endif
 	  G__letint(defined,'i',defined->obj.i!=expressionin.obj.i);
 	  defined->ref=0;
 	  break;
@@ -711,7 +645,6 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<=expressionin.obj.i);
 	  defined->ref=0;
 	  break;
-#ifndef G__OLDIMPLEMENTATION1340
 	case '>': /* > */
 	  G__letint(defined,'i',defined->obj.i>expressionin.obj.i);
 	  defined->ref=0;
@@ -720,7 +653,6 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<expressionin.obj.i);
 	  defined->ref=0;
 	  break;
-#endif
 	case 'A': /* logical and */
 	  G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	  defined->ref=0;
@@ -729,14 +661,12 @@ G__value *defined;
       	  G__letint(defined,'i',defined->obj.i||expressionin.obj.i);
 	  defined->ref=0;
       	  break;
-#ifndef G__OLDIMPLEMENTATION470
 	case G__OPR_SUBASSIGN:
 	  if(!G__no_exec_compile&&defined->ref) 
 	    G__intassignbyref(defined
 			      ,(defined->obj.i-expressionin.obj.i)
 			       /G__sizeof(defined));
 	  break;
-#endif
 	default:
 	  if(G__ASM_FUNC_NOP==G__asm_wholefunction) {
 	    G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
@@ -752,9 +682,7 @@ G__value *defined;
 	switch(operator) {
 	case '\0': /* no op */
 	  defined->ref=expressionin.ref;
-#ifndef G__OLDIMPLEMENTATION456
 	  defined->obj.reftype.reftype = expressionin.obj.reftype.reftype;
-#endif
 	case '+': /* add */
 	  defined->obj.i=defined->obj.i+expressionin.obj.i*G__sizeof(defined);
 	  defined->ref=0;
@@ -783,7 +711,6 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<=expressionin.obj.i);
 	  defined->ref=0;
 	  break;
-#ifndef G__OLDIMPLEMENTATION1340
 	case '>': /* > */
 	  G__letint(defined,'i',defined->obj.i>expressionin.obj.i);
 	  defined->ref=0;
@@ -792,7 +719,6 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<expressionin.obj.i);
 	  defined->ref=0;
 	  break;
-#endif
 	case 'A': /* logical and */
 	  G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	  defined->ref=0;
@@ -801,7 +727,6 @@ G__value *defined;
       	  G__letint(defined,'i',defined->obj.i||expressionin.obj.i);
 	  defined->ref=0;
       	  break;
-#ifndef G__OLDIMPLEMENTATION470
 	case G__OPR_ADDASSIGN:
 	  if(!G__no_exec_compile&&defined->ref) 
 	    G__intassignbyref(defined
@@ -812,13 +737,8 @@ G__value *defined;
 	    G__intassignbyref(defined
 	          ,defined->obj.i-expressionin.obj.i*G__sizeof(defined));
 	  break;
-#endif
 	default:
-#ifndef G__OLDIMPLEMENTATION999
 	  G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	  G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	  G__genericerror("Illegal operator for pointer 2");
 	  break;
 	}
@@ -843,9 +763,7 @@ G__value *defined;
 	defined->type = expressionin.type;
 	defined->tagnum = expressionin.tagnum;
       	defined->typenum = expressionin.typenum;
-#ifndef G__OLDIMPLEMENTATION456
 	defined->obj.reftype.reftype = expressionin.obj.reftype.reftype;
-#endif
 	defined->ref=0;
 	break;
       case '-': /* subtract */
@@ -853,16 +771,13 @@ G__value *defined;
 	defined->type = expressionin.type;
 	defined->tagnum = expressionin.tagnum;
       	defined->typenum = expressionin.typenum;
-#ifndef G__OLDIMPLEMENTATION456
 	defined->obj.reftype.reftype = expressionin.obj.reftype.reftype;
-#endif
 	defined->ref=0;
 	break;
       case '!': 
 	G__letint(defined,'i',!expressionin.obj.i);
 	defined->ref=0;
 	break;
-#ifndef G__OLDIMPLEMENTATION1339
       case 'E': /* == */
 	G__letint(defined,'i',defined->obj.i==expressionin.obj.i);
 	defined->ref=0;
@@ -871,7 +786,6 @@ G__value *defined;
 	G__letint(defined,'i',defined->obj.i!=expressionin.obj.i);
 	defined->ref=0;
 	break;
-#endif
       case 'A': /* logical and */
 	G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	defined->ref=0;
@@ -880,7 +794,6 @@ G__value *defined;
 	G__letint(defined,'i',defined->obj.i||expressionin.obj.i);
 	defined->ref=0;
 	break;
-#ifndef G__OLDIMPLEMENTATION470
       case G__OPR_ADDASSIGN:
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined
@@ -891,16 +804,12 @@ G__value *defined;
 	  G__intassignbyref(defined
 		    ,defined->obj.i*G__sizeof(defined) -expressionin.obj.i);
 	break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
       case G__OPR_POSTFIXINC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin
 			    ,expressionin.obj.i+G__sizeof(&expressionin));
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_POSTFIXDEC:
@@ -908,9 +817,7 @@ G__value *defined;
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin
 			    ,expressionin.obj.i-G__sizeof(&expressionin));
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_PREFIXINC:
@@ -927,20 +834,14 @@ G__value *defined;
 	  *defined = expressionin;
 	}
 	break;
-#endif
       default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for pointer 3");
 	break;
       }
     }
   }
   
-#ifndef G__OLDIMPLEMENTATION2189
   /****************************************************************
    * long double operator long double
    * 
@@ -979,11 +880,7 @@ G__value *defined;
 
     case '>':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letLongdouble(defined,'i',0>ldexpression);
-#else
-	G__letLongdouble(defined,'q',ldexpression);
-#endif
       }
       else
 	G__letint(defined,'i',lddefined>ldexpression);
@@ -991,11 +888,7 @@ G__value *defined;
       break;
     case '<':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letdouble(defined,'i',0<ldexpression);
-#else
-	G__letdouble(defined,'q',ldexpression);
-#endif
       }
       else
 	G__letint(defined,'i',lddefined<ldexpression);
@@ -1007,47 +900,31 @@ G__value *defined;
       defined->ref=0;
       break;
     case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined==ldexpression);
-#else
-      G__letint(defined,'i',lddefined==ldexpression);
-#endif
       defined->ref=0;
       break;
     case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',1); /* Expression should be true wben the var is not defined */
       else
         G__letint(defined,'i',lddefined!=ldexpression);
-#else
-      G__letint(defined,'i',lddefined!=ldexpression);
-#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined>=ldexpression);
-#else
-      G__letint(defined,'i',lddefined>=ldexpression);
-#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined<=ldexpression);
-#else
-      G__letint(defined,'i',lddefined<=ldexpression);
-#endif
       defined->ref=0;
       break;
 
@@ -1164,11 +1041,7 @@ G__value *defined;
 	break;
       case '>':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letULonglong(defined,'m',0); 
-#else
-	  G__letULonglong(defined,'m',ullexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'i',ulldefined>ullexpression);
@@ -1176,11 +1049,7 @@ G__value *defined;
 	break;
       case '<':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letULonglong(defined,'m',0);
-#else
-	  G__letULonglong(defined,'m',ullexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'i',ulldefined<ullexpression);
@@ -1211,50 +1080,33 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined==ullexpression);
-#else
-	G__letint(defined,'i',ulldefined==ullexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',1); /* Expression should be true wben the var is not defined */
 	else
           G__letint(defined,'i',ulldefined!=ullexpression);
-#else
-	G__letint(defined,'i',ulldefined!=ullexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined>=ullexpression);
-#else
-	G__letint(defined,'i',ulldefined>=ullexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined<=ullexpression);
-#else
-	G__letint(defined,'i',ulldefined<=ullexpression);
-#endif
 	defined->ref=0;
 	break;
-#ifndef G__OLDIMPLEMENTATION470
       case G__OPR_ADDASSIGN:
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,ulldefined+ullexpression);
@@ -1303,24 +1155,18 @@ G__value *defined;
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,ulldefined||ullexpression);
 	break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
       case G__OPR_POSTFIXINC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,ullexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_POSTFIXDEC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,ullexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_PREFIXINC:
@@ -1335,13 +1181,8 @@ G__value *defined;
 	  *defined = expressionin;
 	}
 	break;
-#endif
       default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for integer");
 	break;
       }
@@ -1417,11 +1258,7 @@ G__value *defined;
 	break;
       case '>':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letLonglong(defined,'n',0);
-#else
-	  G__letLonglong(defined,'n',llexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'i',lldefined>llexpression);
@@ -1429,18 +1266,13 @@ G__value *defined;
 	break;
       case '<':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letLonglong(defined,'n',0);
-#else
-	  G__letLonglong(defined,'n',llexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'i',lldefined<llexpression);
 	defined->ref=0;
 	break;
       case 'R': /* right shift */
-#ifndef G__OLDIMPLEMENTATION977
 	switch(defined->type) {
 	case 'b':
 	case 'r':
@@ -1454,9 +1286,6 @@ G__value *defined;
 	  G__letLonglong(defined,'n',lldefined>>llexpression);
 	  break;
 	}
-#else
-	G__letLonglong(defined,'n',lldefined>>llexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'L': /* left shift */
@@ -1468,50 +1297,33 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined==llexpression);
-#else
-	G__letint(defined,'i',lldefined==llexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',1); /* Expression should be true wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined!=llexpression);
-#else
-	G__letint(defined,'i',lldefined!=llexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined>=llexpression);
-#else
-	G__letint(defined,'i',lldefined>=llexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined<=llexpression);
-#else
-	G__letint(defined,'i',lldefined<=llexpression);
-#endif
 	defined->ref=0;
 	break;
-#ifndef G__OLDIMPLEMENTATION470
       case G__OPR_ADDASSIGN:
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,lldefined+llexpression);
@@ -1560,24 +1372,18 @@ G__value *defined;
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,lldefined||llexpression);
 	break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
       case G__OPR_POSTFIXINC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,llexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_POSTFIXDEC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,llexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_PREFIXINC:
@@ -1592,26 +1398,19 @@ G__value *defined;
 	  *defined = expressionin;
 	}
 	break;
-#endif
       default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for integer");
 	break;
       }
     }
   }
-#endif
   
   /****************************************************************
    * int operator int
    * 
    ****************************************************************/
   else {
-#ifndef G__OLDIMPLEMENTATION918
     int unsignedresult=0;
     switch(defined->type) {
     case 'h':
@@ -1625,8 +1424,6 @@ G__value *defined;
       unsignedresult = -1;
       break;
     }
-#endif
-#ifndef G__OLDIMPLEMENTATION1491
     if(unsignedresult) {
       unsigned long udefined=(unsigned long)G__uint(*defined);
       unsigned long uexpression=(unsigned long)G__uint(expressionin);
@@ -1698,11 +1495,7 @@ G__value *defined;
 	break;
       case '>':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letint(defined,'h',0);
-#else
-	  G__letint(defined,'h',uexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'h',udefined>uexpression);
@@ -1710,18 +1503,13 @@ G__value *defined;
 	break;
       case '<':
 	if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	  G__letint(defined,'h',0);
-#else
-	  G__letint(defined,'h',uexpression);
-#endif
 	}
 	else
 	  G__letint(defined,'h',udefined<uexpression);
 	defined->ref=0;
 	break;
       case 'R': /* right shift */
-#ifndef G__OLDIMPLEMENTATION977
 	switch(defined->type) {
 	case 'b':
 	case 'r':
@@ -1736,9 +1524,6 @@ G__value *defined;
 	  G__letint(defined,'h',udefined>>uexpression);
 	  break;
 	}
-#else
-	G__letint(defined,'h',udefined>>uexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'L': /* left shift */
@@ -1746,23 +1531,16 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case '@': /* power */
-#ifndef G__OLDIMPLEMENTATION1123
 	if(G__asm_dbg) {
 	  G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
 	  G__printlinenum();
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION966
 	fdefined=1.0;
 	for(ig2=1;ig2<=(int)uexpression;ig2++) fdefined *= udefined;
 	if(fdefined>(double)LONG_MAX||fdefined<(double)LONG_MIN) {
 	  G__genericerror("Error: integer overflow. Use 'double' for power operator");
 	}
 	lresult = (long)fdefined;
-#else
-	lresult=1;
-	for(ig2=1;ig2<=(int)uexpression;ig2++) lresult *= udefined;
-#endif
 	G__letint(defined,'h',lresult);
 	defined->ref=0;
 	break;
@@ -1771,50 +1549,33 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined==uexpression);
-#else
-	G__letint(defined,'h',udefined==uexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',1); /* Expression should be true wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined!=uexpression);
-#else
-	G__letint(defined,'h',udefined!=uexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined>=uexpression);
-#else
-	G__letint(defined,'h',udefined>=uexpression);
-#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined<=uexpression);
-#else
-	G__letint(defined,'h',udefined<=uexpression);
-#endif
 	defined->ref=0;
 	break;
-#ifndef G__OLDIMPLEMENTATION470
       case G__OPR_ADDASSIGN:
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,udefined+uexpression);
@@ -1863,24 +1624,18 @@ G__value *defined;
 	if(!G__no_exec_compile&&defined->ref) 
 	  G__intassignbyref(defined,udefined||uexpression);
 	break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
       case G__OPR_POSTFIXINC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,uexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_POSTFIXDEC:
 	if(!G__no_exec_compile&&expressionin.ref) {
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin,uexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
 	  defined->ref = 0;
-#endif
 	}
 	break;
       case G__OPR_PREFIXINC:
@@ -1895,19 +1650,13 @@ G__value *defined;
 	  *defined = expressionin;
 	}
 	break;
-#endif
       default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for integer");
 	break;
       }
     }
     else {
-#endif
     long ldefined=G__int(*defined);
     long lexpression=G__int(expressionin);
     switch(operator) {
@@ -1978,11 +1727,7 @@ G__value *defined;
       break;
     case '>':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letint(defined,'i',0);
-#else
-	G__letint(defined,'i',lexpression);
-#endif
       }
       else
 	G__letint(defined,'i',ldefined>lexpression);
@@ -1990,18 +1735,13 @@ G__value *defined;
       break;
     case '<':
       if(defined->type==G__null.type) {
-#ifndef G__OLDIMPLEMENTATION2230
 	G__letint(defined,'i',0);
-#else
-	G__letint(defined,'i',lexpression);
-#endif
       }
       else
 	G__letint(defined,'i',ldefined<lexpression);
       defined->ref=0;
       break;
     case 'R': /* right shift */
-#if !defined(G__OLDIMPLEMENTATION2193)
         if(!G__prerun) {
 	  unsigned long udefined=(unsigned long)G__uint(*defined);
 	  unsigned long uexpression=(unsigned long)G__uint(expressionin);
@@ -2011,28 +1751,9 @@ G__value *defined;
 	else {
 	  G__letint(defined,'i',ldefined>>lexpression);
 	}
-#elif !defined(G__OLDIMPLEMENTATION977)
-      switch(defined->type) {
-      case 'b':
-      case 'r':
-      case 'h':
-      case 'k':
-	{
-	  unsigned long uldefined=ldefined;
-	  G__letint(defined,'l',uldefined>>lexpression);
-	}
-	break;
-      default: 
-	G__letint(defined,'h',ldefined>>lexpression);
-	break;
-      }
-#else
-      G__letint(defined,'i',ldefined>>lexpression);
-#endif
       defined->ref=0;
       break;
     case 'L': /* left shift */
-#if !defined(G__OLDIMPLEMENTATION2193)
         if(!G__prerun) {
 	  unsigned long udefined=(unsigned long)G__uint(*defined);
 	  unsigned long uexpression=(unsigned long)G__uint(expressionin);
@@ -2042,29 +1763,19 @@ G__value *defined;
 	else {
 	  G__letint(defined,'i',ldefined<<lexpression);
 	}
-#else
-      G__letint(defined,'i',ldefined<<lexpression);
-#endif
       defined->ref=0;
       break;
     case '@': /* power */
-#ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
 	G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
-#endif
-#ifndef G__OLDIMPLEMENTATION966
       fdefined=1.0;
       for(ig2=1;ig2<=lexpression;ig2++) fdefined *= ldefined;
       if(fdefined>(double)LONG_MAX||fdefined<(double)LONG_MIN) {
         G__genericerror("Error: integer overflow. Use 'double' for power operator");
       }
       lresult = (long)fdefined;
-#else
-      lresult=1;
-      for(ig2=1;ig2<=lexpression;ig2++) lresult *= ldefined;
-#endif
       G__letint(defined,'i',lresult);
       defined->ref=0;
       break;
@@ -2073,50 +1784,33 @@ G__value *defined;
       defined->ref=0;
       break;
     case 'E': /* == */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined==lexpression);
-#else
-      G__letint(defined,'i',ldefined==lexpression);
-#endif
       defined->ref=0;
       break;
     case 'N': /* != */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',1); /* Expression should be true wben the var is not defined */
       else
         G__letint(defined,'i',ldefined!=lexpression);
-#else
-      G__letint(defined,'i',ldefined!=lexpression);
-#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined>=lexpression);
-#else
-      G__letint(defined,'i',ldefined>=lexpression);
-#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
-#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined<=lexpression);
-#else
-      G__letint(defined,'i',ldefined<=lexpression);
-#endif
       defined->ref=0;
       break;
-#ifndef G__OLDIMPLEMENTATION470
     case G__OPR_ADDASSIGN:
       if(!G__no_exec_compile&&defined->ref) 
 	G__intassignbyref(defined,ldefined+lexpression);
@@ -2165,24 +1859,18 @@ G__value *defined;
       if(!G__no_exec_compile&&defined->ref) 
 	G__intassignbyref(defined,ldefined||lexpression);
       break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
     case G__OPR_POSTFIXINC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__intassignbyref(&expressionin,lexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
 	defined->ref = 0;
-#endif
       }
       break;
     case G__OPR_POSTFIXDEC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__intassignbyref(&expressionin,lexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
 	defined->ref = 0;
-#endif
       }
       break;
     case G__OPR_PREFIXINC:
@@ -2197,27 +1885,14 @@ G__value *defined;
 	*defined = expressionin;
       }
       break;
-#endif
     default:
-#ifndef G__OLDIMPLEMENTATION999
 	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
 	G__genericerror("Illegal operator for integer");
 	break;
     }
-#ifndef G__OLDIMPLEMENTATION1491
     }
-#else
-#ifndef G__OLDIMPLEMENTATION918
-    defined->type += unsignedresult;
-#endif
-#endif
   }
-#ifndef G__OLDIMPLEMENTATION726
   if(G__no_exec_compile&&0==defined->type) *defined = expressionin;
-#endif
 }
 
 /******************************************************************
@@ -2236,32 +1911,17 @@ int *ptagnum;
   int scopetagnum,offset,offset_sum;
   int i;
   char temp[G__MAXNAME*2];
-#ifndef G__OLDIMPLEMENTATION741
   char *pparen;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1926
     re_try_after_std:
-#endif
 
   /* search for pattern "::" */
-#ifndef G__OLDIMPLEMENTATION671
   pc = G__find_first_scope_operator(name);
-#else
-  pc=strstr(name,"::");
-#ifndef G__OLDIMPLEMENTATION622
-  while(pc&&strstr(pc+2,"::")) pc = strstr(pc+2,"::");
-#endif
-#endif
 
   /* no scope operator, return */
-#ifndef G__OLDIMPLEMENTATION741
    pparen = strchr(name,'(');
-#endif
   if(NULL==pc || strncmp(name,"operator ",9)==0 
-#ifndef G__OLDIMPLEMENTATION741
      || (pparen && pparen<pc)
-#endif
      ) {
     G__fixedscope=0;
     return(G__NOSCOPEOPR);
@@ -2278,31 +1938,21 @@ int *ptagnum;
     strcpy(temp,name+2);
     strcpy(name,temp);
     G__hash(name,(*phash),i)
-#ifndef G__OLDIMPLEMENTATION2179
     /* If we do no have anymore scope operator, we know the request of
        for the global name space */
     pc = G__find_first_scope_operator(name);
     if (pc==0) return(G__GLOBALSCOPE);
-#else    
-    return(G__GLOBALSCOPE);
-#endif
   }
 
 #ifndef G__STD_NAMESPACE /* ON667 */
   if (strncmp (name, "std::", 5) == 0
-#ifndef G__OLDIMPLEMENTATION1285
       && G__ignore_stdnamespace
-#endif
       ) {
     /* strip scope operator, set hash and return */
     strcpy(temp,name+5);
     strcpy(name,temp);
     G__hash(name,(*phash),i)
-#ifndef G__OLDIMPLEMENTATION1926
     goto re_try_after_std;
-#else
-    return(G__GLOBALSCOPE);
-#endif
   }
 #endif
   
@@ -2313,31 +1963,20 @@ int *ptagnum;
   else           scope=name;
   /* recursive scope operator is not allowed in compiler
    * but possible in cint */
-#ifndef G__OLDIMPLEMENTATION759
   scopetagnum = G__get_envtagnum();
-#endif
   do {
-#ifndef G__OLDIMPLEMENTATION759
     int save_tagdefining, save_def_tagnum;
     save_tagdefining = G__tagdefining;
     save_def_tagnum = G__def_tagnum;
     G__tagdefining = scopetagnum;
     G__def_tagnum = scopetagnum;
-#endif
     member=pc+2;
     *pc='\0';
-#ifndef G__OLDIMPLEMENTATION2181
     scopetagnum=G__defined_tagname(scope,1);
-#else
-    scopetagnum=G__defined_tagname(scope,0);
-#endif
-#ifndef G__OLDIMPLEMENTATION759
     G__tagdefining = save_tagdefining;
     G__def_tagnum = save_def_tagnum;
-#endif
     
 #ifdef G__VIRTUALBASE
-#ifndef G__OLDIMPLEMENTATION660
     if(-1==(offset=G__ispublicbase(scopetagnum,*ptagnum
 				   ,*pstruct_offset+offset_sum))) {
       int store_tagnum = G__tagnum;
@@ -2346,10 +1985,6 @@ int *ptagnum;
       G__tagnum = store_tagnum;
     }
 #else
-    if(-1==(offset=G__ispublicbase(scopetagnum,*ptagnum
-				   ,*pstruct_offset+offset_sum))) offset=0;
-#endif
-#else
     if(-1==(offset=G__ispublicbase(scopetagnum,*ptagnum))) offset=0;
 #endif
 
@@ -2357,11 +1992,7 @@ int *ptagnum;
     offset_sum += offset;
     
     scope=member;
-#ifndef G__OLDIMPLEMENTATION671
   } while((pc=G__find_first_scope_operator(scope)));
-#else
-  } while(pc=strstr(scope,"::")); 
-#endif
   
   *pstruct_offset += offset_sum;
   
@@ -2410,44 +2041,28 @@ int *piout,*pspaceflag,*pmparen;
     /* member function definition */
     if(1==G__prerun && -1==G__func_now && 
        (
-#ifndef G__OLDIMPLEMENTATION971
        (-1==G__def_tagnum||'n'==G__struct.type[G__def_tagnum])
-#else
-        -1==G__def_tagnum
-#endif
         ||memfunc_def_flag
 #define G__OLDIMPLEMENTATION694 /* Scott Snyder's patch */
-#ifndef G__OLDIMPLEMENTATION694
 	|| -1!=G__tmplt_def_tagnum
-#endif
 	)) {
-#ifndef G__OLDIMPLEMENTATION971
       int store_def_tagnum = G__def_tagnum;
       int store_def_struct_member = G__def_struct_member;
-#endif
 
       /* X<T>::TYPE X<T>::f() 
        *      ^             */
       fgetpos(G__ifile.fp,&pos);
       line = G__ifile.line_number;
       if(G__dispsource) G__disp_mask=1000;
-#ifndef G__OLDIMPLEMENTATION1064
       c=G__fgetname_template(temp,"(;&*");
       if(isspace(c) || c == '&' || c == '*') {
         do {
   	  c=G__fgetspace();
         } while (c == '&' || c == '*');
-#else
-      c=G__fgetname_template(temp,"(;");
-      if(isspace(c)) {
-	c=G__fgetspace();
-#endif
 #ifndef G__STD_NAMESPACE /* ON780 */
 	if((isalpha(c) && strcmp(temp,"operator")!=0) ||
 	   (strcmp(statement,"std:")==0
-#ifndef G__OLDIMPLEMENTATION1285
 	    && G__ignore_stdnamespace
-#endif
 	   )) {
 #else
 	if(isalpha(c) && strcmp(temp,"operator")!=0) {
@@ -2482,13 +2097,8 @@ int *piout,*pspaceflag,*pmparen;
       G__def_struct_member = 1;
       G__exec_statement(); /* basically, make_ifunctable */
       memfunc_def_flag=0;
-#ifndef G__OLDIMPLEMENTATION971
       G__def_tagnum = store_def_tagnum;
       G__def_struct_member = store_def_struct_member;
-#else
-      G__def_struct_member = 0;
-      G__def_tagnum = -1; /* store_tagnum ? */
-#endif
       G__tagdefining = store_tagdefining;
       *piout = 0;
       *pspaceflag=0;
@@ -2524,20 +2134,16 @@ int *piout,*pspaceflag,*pmparen;
        ***************************************/
       statement[*piout]='\0';
       if(0==G__switch && (char*)NULL==strchr(statement,'?')) {
-#ifndef G__OLDIMPLEMENTATION963
         int itmp=0,ctmp;
 	ctmp = G__getstream(statement,&itmp,temp,"+-*%/&|<>=^!");
         if(ctmp && 0!=strncmp(statement,"case",4)) {
           G__fprinterr(G__serr,"Error: illegal label name %s",statement) ;
           G__genericerror((char*)NULL);
         }
-#endif
 	*piout=0;
 	*pspaceflag=0;
-#ifndef G__OLDIMPLEMENTATION842
 	if(G__ASM_FUNC_COMPILE==G__asm_wholefunction)
 	  G__add_label_bytecode(statement);
-#endif
       }
       /* else ?: operator remains */
     }
@@ -2657,13 +2263,9 @@ G__value *pios;
   int ig2;
   long store_struct_offset;
   int store_tagnum;
-#ifndef G__OLDIMPLEMENTATION1355
   int rdstateflag=0;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION975
   if(-1!=pios->tagnum&&'e'==G__struct.type[pios->tagnum]) return(pios->obj.i);
-#endif
 
   /* store member function call environment */
   store_struct_offset = G__store_struct_offset;
@@ -2687,17 +2289,12 @@ G__value *pios;
   /* call ios::rdstate() */
   sprintf(buf,"rdstate()" /* ,pios->obj.i */ );
   result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
-#ifndef G__OLDIMPLEMENTATION1355
   if(ig2) rdstateflag=1;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1161
   if(0==ig2) {
     sprintf(buf,"operator int()" /* ,pios->obj.i */ );
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
-#endif
-#ifndef G__OLDIMPLEMENTATION1355
   if(0==ig2) {
     sprintf(buf,"operator bool()" /* ,pios->obj.i */ );
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
@@ -2710,8 +2307,6 @@ G__value *pios;
     sprintf(buf,"operator short()" /* ,pios->obj.i */ );
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
-#endif
-#ifndef G__OLDIMPLEMENTATION1585
   if(0==ig2) {
     sprintf(buf,"operator char*()" /* ,pios->obj.i */ );
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
@@ -2720,7 +2315,6 @@ G__value *pios;
     sprintf(buf,"operator const char*()" /* ,pios->obj.i */ );
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
-#endif
 
   /* restore environment */
   G__store_struct_offset = store_struct_offset;
@@ -2728,9 +2322,7 @@ G__value *pios;
 
 #ifdef G__ASM
   if(G__asm_noverflow
-#ifndef G__OLDIMPLEMENTATION1355
      && rdstateflag
-#endif
      ) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
@@ -2746,12 +2338,8 @@ G__value *pios;
 
   /* test result */
   if(ig2) {
-#ifndef G__OLDIMPLEMENTATION1355
     if(rdstateflag) return(!result.obj.i);
     else            return(result.obj.i);
-#else
-    return(!result.obj.i);
-#endif
   }
   else {
     G__genericerror("Limitation: Cint does not support full iostream functionality in this platform");
@@ -2776,15 +2364,11 @@ G__value *defined;
   char expr[G__LONGLINE],opr[12],arg1[G__LONGLINE],arg2[G__LONGLINE];
   long store_struct_offset; /* used to be int */
   int store_tagnum;
-#ifndef G__OLDIMPLEMENTATION1904
   int store_isconst;
-#endif
   G__value buffer;
   char *pos;
   int postfixflag=0;
-#ifndef G__OLDIMPLEMENTATION2195
-  int store_asm_cp;
-#endif
+  int store_asm_cp = 0;
   
   switch(operator) {
   case '+': /* add */
@@ -2912,16 +2496,14 @@ G__value *defined;
     G__oprovld=1;
 #ifdef G__ASM
     if(G__asm_noverflow) {
-#ifndef G__OLDIMPLEMENTATION2195
       store_asm_cp = G__asm_cp;
-#endif
       G__asm_inst[G__asm_cp] = G__PUSHSTROS;
       G__asm_inst[G__asm_cp+1] = G__SETSTROS;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+        G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -2937,14 +2519,14 @@ G__value *defined;
       sprintf(expr,"%s(1)",opr);
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	G__asm_inst[G__asm_cp] = G__LD;
-	G__asm_inst[G__asm_cp+1]=G__asm_dt;
-	G__asm_stack[G__asm_dt]=G__one;
-	G__inc_cp_asm(2,1);
-	postfixflag=1;
+        G__asm_inst[G__asm_cp] = G__LD;
+        G__asm_inst[G__asm_cp+1]=G__asm_dt;
+        G__asm_stack[G__asm_dt]=G__one;
+        G__inc_cp_asm(2,1);
+        postfixflag=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx from %lx\n"
-			       ,G__asm_cp ,1 ,G__asm_dt);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx from %lx\n"
+		                              ,G__asm_cp ,1 ,G__asm_dt);
 #endif
       }
 #endif
@@ -2960,11 +2542,7 @@ G__value *defined;
     G__store_struct_offset = expressionin.obj.i;
     G__tagnum = expressionin.tagnum;
     
-#ifndef G__OLDIMPLEMENTATION1427
     buffer = G__getfunction(expr,&ig2,G__TRYUNARYOPR);
-#else
-    buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
-#endif
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -2975,20 +2553,16 @@ G__value *defined;
     if(ig2==0) {
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	if(postfixflag) {
-	  G__inc_cp_asm(-2,-1);
-	  postfixflag=0;
+        if(postfixflag) {
+          G__inc_cp_asm(-2,-1);
+          postfixflag=0;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"LD cancelled\n");
+          if(G__asm_dbg) G__fprinterr(G__serr,"LD cancelled\n");
 #endif
-	}
-#ifndef G__OLDIMPLEMENTATION2195
-	G__inc_cp_asm(store_asm_cp-G__asm_cp,0);
-#else
-	G__inc_cp_asm(-2,0); 
-#endif
+        }
+        G__inc_cp_asm(store_asm_cp-G__asm_cp,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
+	     if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
 #endif
       }
 #endif /* G__ASM */
@@ -2996,22 +2570,15 @@ G__value *defined;
       case G__OPR_POSTFIXINC:
       case G__OPR_POSTFIXDEC:
 #if !defined(G__OLDIMPLEMENTATION1825)
-	sprintf(expr,"%s(%s,1)",opr 
-		,G__setiparseobject(&expressionin,arg1));
-#elif !defined(G__OLDIMPLEMENTATION719)
-	if(expressionin.obj.i<0)
-	  sprintf(expr,"%s((%s)(%ld),1)",opr 
-		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
-	else 
-	  sprintf(expr,"%s((%s)%ld,1)",opr 
-		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
+        sprintf(expr,"%s(%s,1)",opr 
+		          ,G__setiparseobject(&expressionin,arg1));
 #else
 	if(expressionin.obj.i<0)
 	  sprintf(expr,"%s((%s)(%ld),1)",opr 
-		  ,G__struct.name[expressionin.tagnum],expressionin.obj.i);
+		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
 	else 
 	  sprintf(expr,"%s((%s)%ld,1)",opr 
-		  ,G__struct.name[expressionin.tagnum] ,expressionin.obj.i);
+		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
 #endif
 #ifdef G__ASM
 	if(G__asm_noverflow) {
@@ -3030,20 +2597,13 @@ G__value *defined;
 #if !defined(G__OLDIMPLEMENTATION1825)
 	sprintf(expr,"%s(%s)",opr 
 		,G__setiparseobject(&expressionin,arg1));
-#elif !defined(G__OLDIMPLEMENTATION719)
-	if(expressionin.obj.i<0)
-	  sprintf(expr,"%s((%s)(%ld))",opr
-		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
-	else 
-	  sprintf(expr,"%s((%s)%ld)" ,opr 
-		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
 #else
 	if(expressionin.obj.i<0)
 	  sprintf(expr,"%s((%s)(%ld))",opr
-		  ,G__struct.name[expressionin.tagnum] ,expressionin.obj.i);
+		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
 	else 
 	  sprintf(expr,"%s((%s)%ld)" ,opr 
-		  ,G__struct.name[expressionin.tagnum] ,expressionin.obj.i);
+		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
 #endif
 	break;
       }
@@ -3072,9 +2632,7 @@ G__value *defined;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_IFUNC
-#ifndef G__OLDIMPLEMENTATION2195
       store_asm_cp = G__asm_cp;
-#endif
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SWAP\n",G__asm_cp);
 #endif
@@ -3101,19 +2659,12 @@ G__value *defined;
     if(expressionin.type=='u') {
 #if !defined(G__OLDIMPLEMENTATION1825)
       G__setiparseobject(&expressionin,arg2);
-#elif !defined(G__OLDIMPLEMENTATION719)
+#else
       if(expressionin.obj.i<0)
 	sprintf(arg2,"(%s)(%ld)" ,G__fulltagname(expressionin.tagnum,1)
 		,expressionin.obj.i);
       else
 	sprintf(arg2,"(%s)%ld" ,G__fulltagname(expressionin.tagnum,1)
-		,expressionin.obj.i);
-#else
-      if(expressionin.obj.i<0)
-	sprintf(arg2,"(%s)(%ld)" ,G__struct.name[expressionin.tagnum]
-		,expressionin.obj.i);
-      else
-	sprintf(arg2,"(%s)%ld" ,G__struct.name[expressionin.tagnum]
 		,expressionin.obj.i);
 #endif
     }
@@ -3121,11 +2672,7 @@ G__value *defined;
       G__valuemonitor(expressionin,arg2);
       /* This part must be fixed when reference to pointer type
        * is supported */
-#ifndef G__OLDIMPLEMENTATION1017
       if(expressionin.ref && 1!=expressionin.ref) {
-#else
-      if(expressionin.ref) {
-#endif
 	pos=strchr(arg2,')');
 	*pos = '\0';
 	if(expressionin.ref<0)
@@ -3143,20 +2690,12 @@ G__value *defined;
       store_tagnum = G__tagnum;
       G__store_struct_offset = defined->obj.i;
       G__tagnum = defined->tagnum; 
-#ifndef G__OLDIMPLEMENTATION1904
       store_isconst = G__isconst;
       G__isconst = defined->isconst;
-#endif
       
-#ifndef G__OLDIMPLEMENTATION1427
       buffer = G__getfunction(expr,&ig2,G__TRYBINARYOPR);
-#else
-      buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
-#endif
       
-#ifndef G__OLDIMPLEMENTATION1904
       G__isconst = store_isconst;
-#endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
     }
@@ -3167,18 +2706,8 @@ G__value *defined;
     if(ig2==0) {
 #ifdef G__ASM
       if(G__asm_noverflow) {
-#ifndef G__OLDIMPLEMENTATION2152
 	G__bc_cancel_VIRTUALADDSTROS();
-#endif
-#ifndef G__OLDIMPLEMENTATION2195
 	G__inc_cp_asm(store_asm_cp-G__asm_cp,0); 
-#else
-#ifdef G__ASM_IFUNC
-	G__inc_cp_asm(-3,0); 
-#else
-	G__inc_cp_asm(-2,0); 
-#endif
-#endif
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
 #endif
@@ -3188,31 +2717,20 @@ G__value *defined;
       if(defined->type=='u') {
 #if !defined(G__OLDIMPLEMENTATION1825)
 	G__setiparseobject(defined,arg1);
-#elif !defined(G__OLDIMPLEMENTATION719)
-	if(defined->obj.i<0)
-	  sprintf(arg1,"(%s)(%ld)"
-		  ,G__fulltagname(defined->tagnum,1),defined->obj.i);
-	else
-	  sprintf(arg1,"(%s)%ld"
-		  ,G__fulltagname(defined->tagnum,1),defined->obj.i);
 #else
 	if(defined->obj.i<0)
 	  sprintf(arg1,"(%s)(%ld)"
-		  ,G__struct.name[defined->tagnum],defined->obj.i);
+		  ,G__fulltagname(defined->tagnum,1),defined->obj.i);
 	else
 	  sprintf(arg1,"(%s)%ld"
-		  ,G__struct.name[defined->tagnum],defined->obj.i);
+		  ,G__fulltagname(defined->tagnum,1),defined->obj.i);
 #endif
       }
       else {
 	G__valuemonitor(*defined,arg1);
 	/* This part must be fixed when reference to pointer type
 	 * is supported */
-#ifndef G__OLDIMPLEMENTATION995
 	if(defined->ref) {
-#else
-	if(defined->ref && islower(defined->type)) {
-#endif
 	  pos=strchr(arg1,')');
 	  *pos = '\0';
 	  if(defined->ref<0)
@@ -3225,7 +2743,6 @@ G__value *defined;
       sprintf(expr,"%s(%s,%s)" ,opr ,arg1 ,arg2);
       buffer = G__getfunction(expr,&ig2,G__TRYNORMAL);
       /* #ifdef G__OLDIMPLEMENTATION1286_YET */
-#ifndef G__OLDIMPLEMENTATION1862
       /* Need to check ANSI/ISO standard. What happens if operator 
        * function defined in a namespace is used in other namespace */
       if(0==ig2 && -1!=expressionin.tagnum && 
@@ -3242,9 +2759,7 @@ G__value *defined;
 		,opr ,arg1 ,arg2);
 	buffer = G__getfunction(expr,&ig2,G__TRYNORMAL);
       }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1340
       if(0==ig2 && ('A'==operator||'O'==operator)) {
 	int lval,rval;
 	if('u'==defined->type) {
@@ -3295,11 +2810,8 @@ G__value *defined;
 	}
 	ig2=1;
       }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION865
       if(0==ig2) {
-#ifndef G__OLDIMPLEMENTATION1252
 	if(-1!=defined->tagnum) {
 	  G__fprinterr(G__serr,"Error: %s not defined for %s"
 		  ,opr,G__fulltagname(defined->tagnum,1));
@@ -3307,13 +2819,8 @@ G__value *defined;
 	else {
 	  G__fprinterr(G__serr,"Error: %s not defined",expr);
 	}
-#else
-	G__fprinterr(G__serr,"Error: %s not defined for %s"
-		,opr,G__fulltagname(defined->tagnum,1));
-#endif
 	G__genericerror((char*)NULL);
       }
-#endif
     }
 #ifdef G__ASM
     else if(G__asm_noverflow) {
@@ -3331,7 +2838,6 @@ G__value *defined;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1871
 /**************************************************************************
 * G__parenthesisovldobj()
 *
@@ -3367,9 +2873,7 @@ int flag; /* flag whether to generate PUSHSTROS, SETSTROS */
 
 #ifdef G__ASM
   if(G__asm_noverflow
-#ifndef G__OLDIMPLEMENTATION2120
      && !flag
-#endif
      ) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
@@ -3431,7 +2935,6 @@ int flag; /* flag whether to generate PUSHSTROS, SETSTROS */
   return(0);
 }
 
-#endif
 
 /**************************************************************************
 * G__parenthesisovld()
@@ -3454,17 +2957,13 @@ int flag;
   int store_memberfunc_tagnum;
   int store_memberfunc_struct_offset;
 
-#ifndef G__OLDIMPLEMENTATION745
   if(strncmp(funcname,"operator",8)==0 || strcmp(funcname,"G__ateval")==0) 
     return(0);
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1871
   if(0==funcname[0]) {
     result = *result3;
   }
   else 
-#endif
 
   if(flag==G__CALLMEMFUNC) {
     G__incsetup_memvar(G__tagnum);
@@ -3475,16 +2974,10 @@ int flag;
     result = G__getvariable(funcname,&known,&G__global,G__p_local);
   }
 
-#ifndef G__OLDIMPLEMENTATION1902
   /* resolve A::staticmethod(1)(2,3) */
-#endif
 
   if(
-#ifndef G__OLDIMPLEMENTATION1876
      1!=known 
-#else
-     0==known 
-#endif
      || -1 == result.tagnum) return(0);
 
   store_exec_memberfunc=G__exec_memberfunc;
@@ -3637,17 +3130,10 @@ int paran,ig25;
 #endif
 
 
-#ifdef G__OLDIMPLEMENTATION860
-  G__oprovld = 1;
-#endif
 
   while(ig25<paran) {
-#ifndef G__OLDIMPLEMENTATION860
     G__oprovld = 1;
-#endif
-#ifndef G__OLDIMPLEMENTATION492
     if('u'==result7->type) {
-#endif
       G__tagnum = result7->tagnum;
       G__typenum = result7->typenum;
       G__store_struct_offset = result7->obj.i;
@@ -3664,37 +3150,26 @@ int paran,ig25;
       if(para[ig25].type=='u') {
 #if !defined(G__OLDIMPLEMENTATION1825)
 	G__setiparseobject(&para[ig25],arg2);
-#elif !defined(G__OLDIMPLEMENTATION409)
+#else
 	if(para[ig25].obj.i<0)
 	  sprintf(arg2,"(%s)(%ld)",G__struct.name[para[ig25].tagnum]
 		  ,para[ig25].obj.i);
 	else
 	  sprintf(arg2,"(%s)%ld",G__struct.name[para[ig25].tagnum]
 		  ,para[ig25].obj.i);
-#else
-	sprintf(arg2,"(%s)%ld",G__struct.name[para[ig25].tagnum]
-		,para[ig25].obj.i);
 #endif
       }
       else {
 	G__valuemonitor(para[ig25],arg2);
 	/* This part must be fixed when reference to pointer type
 	 * is supported */
-#ifndef G__OLDIMPLEMENTATION995
 	if(para[ig25].ref) {
-#else
-	if(para[ig25].ref && islower(para[ig25].type)) {
-#endif
 	  pos=strchr(arg2,')');
 	  *pos = '\0';
-#ifndef G__OLDIMPLEMENTATION409
 	  if(para[ig25].ref<0)
 	    sprintf(expr,"*%s*)(%ld)",arg2,para[ig25].ref);  
 	  else
 	    sprintf(expr,"*%s*)%ld",arg2,para[ig25].ref);  
-#else
-	  sprintf(expr,"*%s*)%ld",arg2,para[ig25].ref);  
-#endif
 	  strcpy(arg2,expr);
 	}
       }
@@ -3704,7 +3179,6 @@ int paran,ig25;
       G__asm_exec=0;
       *result7 = G__getfunction(expr,&known,G__CALLMEMFUNC);
       G__asm_exec = store_asm_exec;
-#ifndef G__OLDIMPLEMENTATION492
     }
     /* in case 'T* operator[]' */
     else if(isupper(result7->type)) {
@@ -3721,7 +3195,6 @@ int paran,ig25;
 #endif
       *result7 = G__tovalue(*result7);
     }
-#endif
 
     ++ig25;
   }
@@ -3745,7 +3218,6 @@ int paran,ig25;
 
 
 
-#ifndef G__OLDIMPLEMENTATION572
 /**************************************************************************
 * G__op1_operator_detail()
 *
@@ -3843,24 +3315,18 @@ G__value *rval;
   /* don't optimze if optimize level is less than 3 */
   if(G__asm_loopcompile<3) return(opr);
 
-#ifndef G__OLDIMPLEMENTATION2189
   switch(lval->type) {
   case 'q': case 'n': case 'm': return(opr);
   }
   switch(rval->type) {
   case 'q': case 'n': case 'm': return(opr);
   }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1007
   if(0==rval->type
-#ifndef G__OLDIMPLEMENTATION1007
      && 0==G__xrefflag
-#endif
      ) {
     G__genericerror("Error: Binary operator oprand missing");
   }
-#endif
 
   lisdouble = G__isdouble(*lval);
   risdouble = G__isdouble(*rval);
@@ -3869,7 +3335,6 @@ G__value *rval;
     lispointer = isupper(lval->type);
     rispointer = isupper(rval->type);
     if(0==lispointer && 0==rispointer) {
-#ifndef G__OLDIMPLEMENTATION1491
       if('k'==lval->type || 'h'==lval->type ||
 	 'k'==rval->type || 'h'==rval->type) {
 	switch(opr) {
@@ -3891,7 +3356,6 @@ G__value *rval;
 	}
       }
       else {
-#endif
 	switch(opr) {
 	case G__OPR_ADD: return(G__OPR_ADD_II);
 	case G__OPR_SUB: return(G__OPR_SUB_II);
@@ -3909,9 +3373,7 @@ G__value *rval;
 	  }
 	  break;
 	}
-#ifndef G__OLDIMPLEMENTATION1491
       }
-#endif
     }
   }
   else if(lisdouble && risdouble) {
@@ -3942,7 +3404,6 @@ G__value *rval;
   }
   return(opr);
 }
-#endif
 
 /*
  * Local Variables:

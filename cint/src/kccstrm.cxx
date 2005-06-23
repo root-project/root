@@ -47,14 +47,6 @@ static void G__operator_delete(void *p) {
 #endif
 }
 
-#if 0
-static void operator delete(void *p)
-{
-   if ((long) p == G__getgvp() && G__PVOID != G__getgvp())
-      return;
-   free(p);
-}
-#endif
 
 #include "dllrev.h"
 extern "C" int G__cpp_dllrev()
@@ -3611,23 +3603,6 @@ static int G__reverse_iteratorlEcharmUgR_reverse_iteratorlEcharmUgR_0_0(G__value
    return (1 || funcname || hash || result7 || libp);
 }
 
-#if 0
-static int G__reverse_iteratorlEcharmUgR_base_2_0(G__value * result7, const char *funcname, struct G__param *libp, int hash)
-{
-   G__letint(result7, 67, (long) ((reverse_iterator < char *>*) (G__getstructoffset()))->base());
-   return (1 || funcname || hash || result7 || libp);
-}
-
-static int G__reverse_iteratorlEcharmUgR_operatormU_3_0(G__value * result7, const char *funcname, struct G__param *libp, int hash)
-{
-   {
-      char *&obj = ((reverse_iterator < char *>*) (G__getstructoffset()))->operator * ();
-      result7->ref = (long) (&obj);
-      result7->obj.i = (long) (obj);
-   }
-   return (1 || funcname || hash || result7 || libp);
-}
-#endif
 
 static int G__reverse_iteratorlEcharmUgR_operatormIgR_4_0(G__value * result7, const char *funcname, struct G__param *libp, int hash)
 {
@@ -4951,13 +4926,6 @@ static int G___operatorpL_6_1(G__value * result7, const char *funcname, struct G
    return (1 || funcname || hash || result7 || libp);
 }
 
-#if 0
-static int G___reverse_iteratorlEcharmUgRcLcLdifference_typeoperatormI_7_1(G__value * result7, const char *funcname, struct G__param *libp, int hash)
-{
-   G__letint(result7, 105, (long) reverse_iterator < char *>::difference_typeoperator - (*(reverse_iterator < char *>*) libp->para[0].ref, *(reverse_iterator < char *>*) libp->para[1].ref));
-   return (1 || funcname || hash || result7 || libp);
-}
-#endif
 
 static int G___localeconv_9_1(G__value * result7, const char *funcname, struct G__param *libp, int hash)
 {
@@ -8762,11 +8730,6 @@ static void G__setup_memfuncreverse_iteratorlEcharmUgR(void)
    /* reverse_iterator<char*> */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__LN_reverse_iteratorlEcharmUgR));
    G__memfunc_setup("reverse_iterator<char*>", 2311, G__reverse_iteratorlEcharmUgR_reverse_iteratorlEcharmUgR_0_0, 105, G__get_linked_tagnum(&G__LN_reverse_iteratorlEcharmUgR), -1, 0, 0, 1, 1, 0, "", (char *) NULL, (void *) NULL, 0);
-#if 0
-   G__memfunc_setup("reverse_iterator<char*>", 3177, G__reverse_iteratorlEcharmUgR_reverse_iteratorlEcharmUgR_1_0, 105, G__get_linked_tagnum(&G__LN_reverse_iteratorlEcharmUgR), -1, 0, 1, 1, 1, 0, "C - - 0 - x", (char *) NULL, (void *) NULL, 0);
-   G__memfunc_setup("base", 411, G__reverse_iteratorlEcharmUgR_base_2_0, 67, -1, -1, 0, 0, 1, 1, 8, "", (char *) NULL, (void *) NULL, 0);
-   G__memfunc_setup("operator*", 918, G__reverse_iteratorlEcharmUgR_operatormU_3_0, 67, -1, G__defined_typename("reverse_iterator<char*>::Reference"), 1, 0, 1, 1, 8, "", (char *) NULL, (void *) NULL, 0);
-#endif
    G__memfunc_setup("operator->", 983, G__reverse_iteratorlEcharmUgR_operatormIgR_4_0, 67, -1, G__defined_typename("reverse_iterator<char*>::Pointer"), 2, 0, 1, 1, 8, "", (char *) NULL, (void *) NULL, 0);
    G__memfunc_setup("operator++", 962, G__reverse_iteratorlEcharmUgR_operatorpLpL_5_0, 117, G__get_linked_tagnum(&G__LN_reverse_iteratorlEcharmUgR), -1, 1, 0, 1, 1, 0, "", (char *) NULL, (void *) NULL, 0);
    G__memfunc_setup("operator++", 962, G__reverse_iteratorlEcharmUgR_operatorpLpL_6_0, 117, G__get_linked_tagnum(&G__LN_reverse_iteratorlEcharmUgR), -1, 0, 1, 1, 1, 0, "i - - 0 - -", (char *) NULL, (void *) NULL, 0);

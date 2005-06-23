@@ -59,10 +59,8 @@ G__DataMemberInfo {
   int Next();
   int Prev();
 
-#ifdef G__ROOTSPECIAL
   enum error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
   const char *ValidArrayIndex(int *errnum = 0, char **errstr = 0);
-#endif
 
   const char *FileName();
   int LineNumber();

@@ -30,24 +30,18 @@
 *********************************************************************/
 
 #define G__API
-#ifndef G__OLDIMPLEMENTATION1840
 #ifndef G__DICTIONARY
 #define G__DICTIONARY
 #endif
-#endif
 #define G__CINTBODY /* may not be needed */
 #include "G__ci.h"
-#ifndef G__OLDIMPLEMENTATION1218
 #ifndef __MAKECINT__
 #include "common.h"
-#ifndef G__OLDIMPLEMENTATION1749
 extern "C" void G__CurrentCall(int, const void*, const int&);
-#endif
 #else
 struct G__friendtag ;
 typedef int (*G__InterfaceMethod)();
 #endif
-#endif /* 1218 */
 #ifdef __MAKECINT__
 #pragma link off all classes;
 #pragma link off all functions;
@@ -88,15 +82,8 @@ typedef int (*G__InterfaceMethod)();
 *  }
 *********************************************************************/
 extern "C" {
-#if !defined(G__OLDIMPLEMENTATION481)
 typedef void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo
 					 ,void** pptr,void** ppdict);
-#elif !defined(G__OLDIMPLEMENTATION455)
-typedef void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo
-					 ,void* ptr);
-#else
-typedef void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo);
-#endif
 void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
 }
 
@@ -104,22 +91,13 @@ void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
 * $xxx object resolution function, Generic
 *********************************************************************/
 extern "C" {
-#if !defined(G__OLDIMPLEMENTATION481)
 typedef void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo
 				       ,long *pl,double *pd,void** pptr
 				       ,void** ppdict);
-#elif !defined(G__OLDIMPLEMENTATION455)
-typedef void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo
-				        ,long *pl,double *pd,void* ptr);
-#else
-typedef void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo
-				        ,long *pl,double *pd);
-#endif
 void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
 }
 
 
-#ifndef G__OLDIMPLEMENTATION1207
 /*********************************************************************
 * Feedback routine in case tagnum for a class changes (in case the
 * dictionary of a shared lib is being re-initialized).
@@ -128,7 +106,6 @@ extern "C" {
 typedef void (*G__pMethodUpdateClassInfo)(char *item,long tagnum);
 void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
 }
-#endif
 
 /*********************************************************************
 * G__SourceFileInfo

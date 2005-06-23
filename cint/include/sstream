@@ -1,3 +1,4 @@
 namespace std {
 #include <iostream.h>
 }
+#include <string>

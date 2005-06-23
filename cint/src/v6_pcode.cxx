@@ -20,11 +20,9 @@
 
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1229
 #ifdef G__ROOT
 extern void* G__new_interpreted_object G__P((int size));
 extern void G__delete_interpreted_object G__P((void* p));
-#endif
 #endif
 
 #ifdef G__BORLANDCC5
@@ -44,6 +42,7 @@ int G__asm_optimize3 G__P((int *start));
 
 #ifdef G__ASM
 
+
 #ifdef G__ASM_DBG
 int G__asm_step=0;
 #endif
@@ -57,11 +56,9 @@ int G__asm_step=0;
 **************************************************************************
 *************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION2189
 #define G__longlongM(buf)                                               \
   (('f'==buf->type||'d'==buf->type) ? (long)buf->obj.d : buf->obj.i )
 
-#endif 
 
 /****************************************************************
 * G__intM()
@@ -81,15 +78,10 @@ double G__doubleM(buf)
 	  (double)(buf->obj.i) );
 }
 #else
-#ifndef G__OLDIMPLEMENTATION1494
 #define G__doubleM(buf)                                                \
   (('f'==buf->type||'d'==buf->type) ? buf->obj.d :                     \
    ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :         \
                                       (double)(buf->obj.i) )
-#else
-#define G__doubleM(buf)                                                \
-  (('f'==buf->type||'d'==buf->type) ? buf->obj.d : (double)(buf->obj.i) )
-#endif
 #endif
 
 /****************************************************************
@@ -97,12 +89,10 @@ double G__doubleM(buf)
 ****************************************************************/
 #define G__isdoubleM(buf) ('f'==buf->type||'d'==buf->type)
 
-#ifndef G__OLDIMPLEMENTATION1494
 /****************************************************************
 * G__isunsignedM()
 ****************************************************************/
 #define G__isunsignedM(buf) ('h'==buf->type||'k'==buf->type)
-#endif
 
 
 /*************************************************************************
@@ -153,7 +143,6 @@ int *a,*b;
 * TOPVALUE and TOVALUE optimization
 **************************************************************************
 *************************************************************************/
-#ifndef G__OLDIMPLEMENTATION1400
 /******************************************************************
 * G__value G__asm_toXvalue(G__value* p)
 *
@@ -174,9 +163,7 @@ G__value* result;
   if(result->ref) result->obj.i = result->ref;
   result->ref = 0;
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1401
 typedef void (*G__p2f_tovalue) G__P((G__value*));
 /******************************************************************
 * void G__asm_tovalue_p2p(G__value* p)
@@ -211,7 +198,6 @@ G__value *result;
   --result->obj.reftype.reftype;
 }
 
-#ifndef G__OLDIMPLEMENTATION2189
 /******************************************************************
 * void G__asm_tovalue_LL(G__value* p)
 ******************************************************************/
@@ -242,7 +228,6 @@ G__value *result;
   result->obj.ld = (*(long double*)(result->obj.i));
   result->type = tolower(result->type);
 }
-#endif
 
 /******************************************************************
 * void G__asm_tovalue_B(G__value* p)
@@ -355,7 +340,6 @@ G__value *result;
   result->type = tolower(result->type);
 }
 
-#endif
 
 
 /*************************************************************************
@@ -364,11 +348,6 @@ G__value *result;
 **************************************************************************
 *************************************************************************/
 
-#ifdef G__OLDIMPLEMENTATION2163
-
-#include "bc_exec_asm.h"
-
-#endif /* 2163 */
 
 
 /*************************************************************************
@@ -391,7 +370,6 @@ G__value *result;
   buf->ref = var->p[ig15]+offset;         \
   buf->obj.i = *(casttype*)buf->ref
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_p0_longlong()
 ****************************************************************/
@@ -443,7 +421,6 @@ long ig15;
   buf->ref = var->p[ig15]+offset;       
   buf->obj.ld = *(long double*)buf->ref;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_p0_bool()
@@ -629,13 +606,10 @@ long ig15;
   buf->obj.d = *(double*)buf->ref;
 }
 
-#ifndef G__OLDIMPLEMENTATION1969
 /*************************************************************************
 * G__nonintarrayindex
 *************************************************************************/
-#ifndef G__OLDIMPLEMENTATION1974
 void G__nonintarrayindex G__P((struct G__var_array*,int));
-#endif
 void G__nonintarrayindex(var,ig15)
 struct G__var_array *var; 
 int ig15;
@@ -644,7 +618,6 @@ int ig15;
 	       ,var->varnamebuf[ig15]);
   G__genericerror((char*)NULL);
 }
-#endif
 
 /*************************************************************************
 * G__LD_p1_xxx
@@ -675,7 +648,6 @@ int ig15;
   buf->obj.i = *(casttype*)buf->ref
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_p1_longlong()
 ****************************************************************/
@@ -739,7 +711,6 @@ long ig15;
   else                                                 
     buf->obj.ld = *(long double*)buf->ref;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_p1_bool()
@@ -867,9 +838,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
-#endif
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = var->type[ig15];
   buf->typenum = var->p_typetable[ig15];
@@ -893,9 +862,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
-#endif
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = 'u';
   buf->typenum = var->p_typetable[ig15];
@@ -918,9 +885,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
-#endif
   buf->tagnum = -1;
   buf->type = 'f';
   buf->typenum = var->p_typetable[ig15];
@@ -943,9 +908,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
-#endif
   buf->tagnum = -1;
   buf->type = 'd';
   buf->typenum = var->p_typetable[ig15];
@@ -958,7 +921,6 @@ long ig15;
     buf->obj.d = *(double*)buf->ref;
 }
 
-#ifndef G__OLDIMPLEMENTATION1405
 /*************************************************************************
 * G__LD_pn_xxx
 *************************************************************************/
@@ -1005,7 +967,6 @@ long ig15;
   buf->obj.i = *(casttype*)buf->ref
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_pn_longlong()
 ****************************************************************/
@@ -1094,7 +1055,6 @@ long ig15;
   else                                                 
     buf->obj.ld = *(long double*)buf->ref;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_pn_bool()
@@ -1231,11 +1191,7 @@ long ig15;
     p_inc += ary*G__int(buf[ig25]);
     ary /= var->varlabel[ig15][ig25+2];
   }
-#ifndef G__OLDIMPLEMENTATION1847
   buf->tagnum = var->p_tagtable[ig15];
-#else
-  buf->tagnum = -1;
-#endif
   buf->type = var->type[ig15];
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*sizeof(long);
@@ -1340,7 +1296,6 @@ long ig15;
 #endif
     buf->obj.d = *(double*)buf->ref;
 }
-#endif /* 1405 */
 
 
 /*************************************************************************
@@ -1358,7 +1313,6 @@ long ig15;
   buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(casttype); \
   buf->obj.i = *(casttype*)buf->ref
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_P10_longlong()
 ****************************************************************/
@@ -1374,7 +1328,7 @@ long ig15;
   buf->type = 'n';               
   buf->typenum = var->p_typetable[ig15];  
   buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__int64); 
-  buf->obj.i = *(G__int64*)buf->ref;
+  buf->obj.ll = *(G__int64*)buf->ref;
 }
 /****************************************************************
 * G__LD_P10_ulonglong()
@@ -1391,7 +1345,7 @@ long ig15;
   buf->type = 'm';               
   buf->typenum = var->p_typetable[ig15];  
   buf->ref=*(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__uint64);
-  buf->obj.i = *(G__uint64*)buf->ref;
+  buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
 * G__LD_P10_longdouble()
@@ -1408,9 +1362,8 @@ long ig15;
   buf->type = 'q';               
   buf->typenum = var->p_typetable[ig15];  
   buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(long double); 
-  buf->obj.i = *(long double*)buf->ref;
+  buf->obj.ld = *(long double*)buf->ref;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_P10_bool()
@@ -1616,7 +1569,6 @@ long ig15;
   G__value *val = &pbuf[*psp-1];                            \
   *(casttype*)(var->p[ig15]+offset)=(casttype)G__intM(val)
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__ST_p0_longlong()
 ****************************************************************/
@@ -1718,9 +1670,7 @@ long ig15;
   }  
   *(long double*)(var->p[ig15]+offset)=ldval;
 }
-#endif /* 2189 */
 
-#ifndef G__OLDIMPLEMENTATION1604
 /****************************************************************
 * G__ST_p0_bool()
 ****************************************************************/
@@ -1731,22 +1681,12 @@ long offset;
 struct G__var_array *var;
 long ig15;
 {
-#if 1
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT(int);
 #else
   G__ASM_ASSIGN_INT(unsigned char);
 #endif
-#else
-  G__value *val = &pbuf[*psp-1];
-#ifdef G__BOOL4BYTE
-  *(int*)(var->p[ig15]+offset)=(int)(G__intM(val)?1:0);
-#else
-  *(unsigned char*)(var->p[ig15]+offset)=(unsigned char)(G__intM(val)?1:0);
-#endif
-#endif
 }
-#endif
 /****************************************************************
 * G__ST_p0_char()
 ****************************************************************/
@@ -1932,7 +1872,6 @@ long ig15;
   --(*psp)
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__ST_p1_longlong()
 ****************************************************************/
@@ -1990,7 +1929,6 @@ long ig15;
             = (long double)G__Longdouble(pbuf[*psp-2]); 
   --(*psp);
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__ST_p1_bool()
@@ -2002,21 +1940,10 @@ long offset;
 struct G__var_array *var;
 long ig15;
 {
-#if 1
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT_P1(int);
 #else
   G__ASM_ASSIGN_INT_P1(unsigned char);
-#endif
-#else
-  G__value *val = &pbuf[*psp-1];
-#ifdef G__BOOL4BYTE
-  *(int*)(var->p[ig15]+offset+val->obj.i*sizeof(int))
-            = (int)G__int(pbuf[*psp-2])?1:0;
-#else
-  *(unsigned char*)(var->p[ig15]+offset+val->obj.i*sizeof(unsigned char))
-            = (unsigned char)G__int(pbuf[*psp-2])?1:0;
-#endif
 #endif
 }
 /****************************************************************
@@ -2128,9 +2055,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
-#endif
   if(val->obj.i>var->varlabel[ig15][1]) {
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   }
@@ -2160,9 +2085,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
-#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -2184,9 +2107,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
-#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -2207,9 +2128,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
-#ifndef G__OLDIMPLEMENTATION1969
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
-#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -2220,7 +2139,6 @@ long ig15;
   --(*psp);
 }
 
-#ifndef G__OLDIMPLEMENTATION1406
 /*************************************************************************
 * G__ST_pn_xxx
 *************************************************************************/
@@ -2259,7 +2177,6 @@ long ig15;
             = (casttype)G__int(pbuf[*psp-1])
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__ST_pn_longlong()
 ****************************************************************/
@@ -2337,7 +2254,6 @@ long ig15;
     *(long double*)(var->p[ig15]+offset+p_inc*sizeof(long double))   
       = (long double)G__Longdouble(pbuf[*psp-1]);
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__ST_pn_bool()
@@ -2572,7 +2488,6 @@ long ig15;
     *(double*)(var->p[ig15]+offset+p_inc*sizeof(double))
             = (double)G__double(pbuf[*psp-1]);
 }
-#endif /* 1406 */
 
 /*************************************************************************
 * G__ST_P10_xxx
@@ -2587,7 +2502,6 @@ long ig15;
             = (casttype)G__int(pbuf[*psp-2]);                             \
   --(*psp)
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__ST_p10_longlong()
 ****************************************************************/
@@ -2633,7 +2547,6 @@ long ig15;
             = (long double)G__Longdouble(pbuf[*psp-2]);
   --(*psp);
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__ST_p0_bool()
@@ -2645,22 +2558,10 @@ long offset;
 struct G__var_array *var;
 long ig15;
 {
-#if 1
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT_P10(int);
 #else
   G__ASM_ASSIGN_INT_P10(unsigned char);
-#endif
-#else
-  G__value *val = &pbuf[*psp-1];
-#ifdef G__BOOL4BYTE
-  *(int*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(int))
-            = (int)G__int(pbuf[*psp-2])?1:0;                  
-#else
-  *(unsigned char*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(unsigned char))
-            = (unsigned char)G__int(pbuf[*psp-2])?1:0;
-#endif
-  --(*psp);
 #endif
 }
 /****************************************************************
@@ -2838,7 +2739,6 @@ long ig15;
   buf->ref = *(long*)(var->p[ig15]+offset);  \
   buf->obj.i = *(casttype*)buf->ref
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_Rp0_longlong()
 ****************************************************************/
@@ -2854,7 +2754,7 @@ long ig15;
   buf->type = 'n';                      
   buf->typenum = var->p_typetable[ig15];  
   buf->ref = *(long*)(var->p[ig15]+offset);  
-  buf->obj.i = *(G__int64*)buf->ref;
+  buf->obj.ll = *(G__int64*)buf->ref;
 }
 /****************************************************************
 * G__LD_Rp0_ulonglong()
@@ -2871,7 +2771,7 @@ long ig15;
   buf->type = 'm';                      
   buf->typenum = var->p_typetable[ig15];  
   buf->ref = *(long*)(var->p[ig15]+offset);  
-  buf->obj.i = *(G__uint64*)buf->ref;
+  buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
 * G__LD_Rp0_longdouble()
@@ -2888,10 +2788,9 @@ long ig15;
   buf->type = 'q';                      
   buf->typenum = var->p_typetable[ig15];  
   buf->ref = *(long*)(var->p[ig15]+offset);  
-  buf->obj.i = *(long double*)buf->ref;
+  buf->obj.ld = *(long double*)buf->ref;
 }
 
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_Rp0_bool()
@@ -3093,7 +2992,6 @@ long ig15;
   *(casttype*)adr=(casttype)G__intM(val)
 
 
-#ifndef G__OLDIMPLEMENTATION2189 
 /****************************************************************
 * G__ST_Rp0_longlong()
 ****************************************************************/
@@ -3198,7 +3096,6 @@ long ig15;
   }  
   *(long double*)adr=ldval;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__ST_Rp0_bool()
@@ -3385,7 +3282,6 @@ long ig15;
   buf->ref = var->p[ig15]+offset;         \
   buf->obj.i = *(long*)buf->ref
 
-#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
 * G__LD_RP0_longlong()
 ****************************************************************/
@@ -3437,7 +3333,6 @@ long ig15;
   buf->ref = var->p[ig15]+offset;         
   buf->obj.ld = *(long*)buf->ref;
 }
-#endif /* 2189 */
 
 /****************************************************************
 * G__LD_RP0_bool()
@@ -3623,7 +3518,6 @@ long ig15;
   buf->obj.d = *(long*)buf->ref;
 }
 
-#ifndef G__OLDIMPLEMENTATION1491
 /****************************************************************
 * G__OP2_OPTIMIZED_UU
 ****************************************************************/
@@ -3725,9 +3619,7 @@ G__value *bufm2;
   *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
 }
 
-#endif
 
-#ifndef G__OLDIMPLEMENTATION572
 /****************************************************************
 * G__OP2_OPTIMIZED_II
 ****************************************************************/
@@ -3980,9 +3872,7 @@ G__value *bufm2;
   *(float*)bufm2->ref=(float)bufm2->obj.d;
 }
 
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2129
 /*************************************************************************
 * G__OP2_addvoidptr()
 *************************************************************************/
@@ -3992,7 +3882,6 @@ G__value *bufm2;
 {
   bufm2->obj.i += bufm1->obj.i;
 }
-#endif
 
 /****************************************************************
 * G__OP2_OPTIMIZED
@@ -4005,7 +3894,6 @@ void G__OP2_plus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4019,16 +3907,13 @@ G__value *bufm2;
     bufm2->type='m';
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
     else if(G__isunsignedM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.ulo;
     }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.i;
     }
@@ -4036,14 +3921,10 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.d = (double)bufm2->obj.ulo + bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
-#else
-    bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
-#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -4051,16 +3932,13 @@ G__value *bufm2;
     bufm2->obj.i = bufm2->obj.i + bufm1->obj.i*G__sizeof(bufm2);
   }
   else if(isupper(bufm1->type)) {
-#ifndef G__OLDIMPLEMENTATION859
     bufm2->obj.reftype.reftype = bufm1->obj.reftype.reftype;
-#endif
     bufm2->obj.i = bufm2->obj.i*G__sizeof(bufm1) + bufm1->obj.i;
     /* bufm2->obj.i=(bufm2->obj.i-bufm1->obj.i)/G__sizeof(bufm2); */
     bufm2->type = bufm1->type;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
-#ifndef G__OLDIMPLEMENTATION1494
   else if(G__isunsignedM(bufm1)) {
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
@@ -4069,7 +3947,6 @@ G__value *bufm2;
     bufm2->type = 'h';
     bufm2->tagnum = bufm2->typenum = -1;
   }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i + bufm1->obj.i;
     bufm2->type = 'i';
@@ -4085,7 +3962,6 @@ void G__OP2_minus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4099,16 +3975,13 @@ G__value *bufm2;
     bufm2->type='m';
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
     else if(G__isunsignedM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.ulo;
     }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.i;
     }
@@ -4116,14 +3989,10 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.d = (double)bufm2->obj.ulo - bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
-#else
-    bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
-#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -4138,15 +4007,12 @@ G__value *bufm2;
     }
   }
   else if(isupper(bufm1->type)) {
-#ifndef G__OLDIMPLEMENTATION859
     bufm2->obj.reftype.reftype = bufm1->obj.reftype.reftype;
-#endif
     bufm2->obj.i =bufm2->obj.i*G__sizeof(bufm2) -bufm1->obj.i;
     bufm2->type = bufm1->type;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
-#ifndef G__OLDIMPLEMENTATION1494
   else if(G__isunsignedM(bufm1)) {
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
@@ -4155,7 +4021,6 @@ G__value *bufm2;
     bufm2->type = 'h';
     bufm2->tagnum = bufm2->typenum = -1;
   }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i - bufm1->obj.i;
     bufm2->type = 'i';
@@ -4171,7 +4036,6 @@ void G__OP2_multiply(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4185,33 +4049,25 @@ G__value *bufm2;
     bufm2->type='m';
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
     else if(G__isunsignedM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.ulo;
     }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.i;
     }
     bufm2->type = 'd';
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.d = (double)bufm2->obj.ulo * bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
-#else
-    bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
-#endif
     bufm2->type = 'd';
   }
-#ifndef G__OLDIMPLEMENTATION1494
   else if(G__isunsignedM(bufm1)) {
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
@@ -4220,7 +4076,6 @@ G__value *bufm2;
     bufm2->type = 'h';
     bufm2->tagnum = bufm2->typenum = -1;
   }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i * bufm1->obj.i;
     bufm2->type = 'i';
@@ -4236,7 +4091,6 @@ void G__OP2_modulus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
     bufm2->type='n';
@@ -4246,14 +4100,12 @@ G__value *bufm2;
     bufm2->type='m';
   }
   else 
-#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
     return;
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
   if(G__isunsignedM(bufm1)) {
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.ulo;
@@ -4273,12 +4125,6 @@ G__value *bufm2;
   }
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
-#else
-  bufm2->obj.i = bufm2->obj.i % bufm1->obj.i;
-  bufm2->type = 'i';
-  bufm2->tagnum = bufm2->typenum = -1;
-  bufm2->ref = 0;
-#endif
 }
 
 /*************************************************************************
@@ -4288,7 +4134,6 @@ void G__OP2_divide(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4302,7 +4147,6 @@ G__value *bufm2;
     bufm2->type='m';
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -4320,14 +4164,10 @@ G__value *bufm2;
 	return;
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
       if(G__isunsignedM(bufm1)) 
 	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
       else
 	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
-#else
-      bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
-#endif
     }
     bufm2->type = 'd';
   }
@@ -4338,17 +4178,12 @@ G__value *bufm2;
       return;
     }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
     if(G__isunsignedM(bufm2)) 
       bufm2->obj.d = (double)bufm2->obj.ulo / bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
-#else
-    bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
-#endif
     bufm2->type = 'd';
   }
-#ifndef G__OLDIMPLEMENTATION1494
   else if(G__isunsignedM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
     if(0==bufm1->obj.i) {
@@ -4363,7 +4198,6 @@ G__value *bufm2;
     bufm2->type = 'h';
     bufm2->tagnum = bufm2->typenum = -1;
   }
-#endif
   else {
 #ifdef G__TUNEUP_W_SECURITY
     if(0==bufm1->obj.i) {
@@ -4385,7 +4219,6 @@ void G__OP2_logicaland(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.i=G__Longlong(*bufm2)&&G__Longlong(*bufm1);
     bufm2->type='i';
@@ -4395,7 +4228,6 @@ G__value *bufm2;
     bufm2->type='i';
   }
   else
-#endif
   {
     bufm2->obj.i = bufm2->obj.i && bufm1->obj.i;
     bufm2->type = 'i';
@@ -4411,7 +4243,6 @@ void G__OP2_logicalor(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.i=G__Longlong(*bufm2)||G__Longlong(*bufm1);
     bufm2->type='i';
@@ -4421,7 +4252,6 @@ G__value *bufm2;
     bufm2->type='i';
   }
   else
-#endif
   {
     bufm2->obj.i = bufm2->obj.i || bufm1->obj.i;
     bufm2->type = 'i';
@@ -4437,18 +4267,11 @@ void G__CMP2_equal(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
-#endif
-#ifndef G__OLDIMPLEMENTATION1511
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
     bufm2->obj.i = (G__doubleM(bufm2)==G__doubleM(bufm1));
   else
     bufm2->obj.i = (bufm2->obj.i == bufm1->obj.i);
-#else
-  if(G__doubleM(bufm2)==G__doubleM(bufm1)) bufm2->obj.i = 1;
-  else                                     bufm2->obj.i = 0;
-#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -4461,18 +4284,11 @@ void G__CMP2_notequal(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
-#endif
-#ifndef G__OLDIMPLEMENTATION1511
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
     bufm2->obj.i = (G__doubleM(bufm2)!=G__doubleM(bufm1));
   else
     bufm2->obj.i = (bufm2->obj.i != bufm1->obj.i);
-#else
-  if(G__doubleM(bufm2)!=G__doubleM(bufm1)) bufm2->obj.i = 1;
-  else                                     bufm2->obj.i = 0;
-#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -4534,43 +4350,42 @@ G__value *bufm2;
   bufm2->ref = 0;
 }
 
-#ifndef G__OLDIMPLEMENTATION552
 /*************************************************************************
 * G__realassign()
 *************************************************************************/
 #define G__realassign(p,v,t)      \
  switch(t) {                      \
- case 'd': *(double*)p=v; break;  \
- case 'f': *(float*)p=v;  break;  \
+ case 'd': *(double*)p=(double)v; break;  \
+ case 'f': *(float*)p=(float)v;  break;  \
  }
 /*************************************************************************
 * G__intassign()
 *************************************************************************/
 #ifdef G__BOOL4BYTE
-#define G__intassign(p,v,t)               \
- switch(t) {                              \
- case 'i': *(int*)p=v;            break;  \
- case 's': *(short*)p=v;          break;  \
- case 'c': *(char*)p=v;           break;  \
- case 'h': *(unsigned int*)p=v;   break;  \
- case 'r': *(unsigned short*)p=v; break;  \
- case 'b': *(unsigned char*)p=v;  break;  \
- case 'k': *(unsigned long*)p=v;  break;  \
- case 'g': *(int*)p=v?1:0;/*1604*/break;  \
- default:  *(long*)p=v;           break;  \
+#define G__intassign(p,v,t)                              \
+ switch(t) {                                             \
+ case 'i': *(int*)p=(int)v;                      break;  \
+ case 's': *(short*)p=(short)v;                  break;  \
+ case 'c': *(char*)p=(char)v;                    break;  \
+ case 'h': *(unsigned int*)p=(unsigned int)v;    break;  \
+ case 'r': *(unsigned short*)p=(unsigned short)v;break;  \
+ case 'b': *(unsigned char*)p=(unsigned char)v;  break;  \
+ case 'k': *(unsigned long*)p=(unsigned long)v;  break;  \
+ case 'g': *(int*)p=(int)(v?1:0);/*1604*/        break;  \
+ default:  *(long*)p=(long)v;                    break;  \
  }
 #else
-#define G__intassign(p,v,t)               \
- switch(t) {                              \
- case 'i': *(int*)p=v;            break;  \
- case 's': *(short*)p=v;          break;  \
- case 'c': *(char*)p=v;           break;  \
- case 'h': *(unsigned int*)p=v;   break;  \
- case 'r': *(unsigned short*)p=v; break;  \
- case 'b': *(unsigned char*)p=v;  break;  \
- case 'k': *(unsigned long*)p=v;  break;  \
- case 'g': *(unsigned char*)p=v?1:0;/*1604*/break;  \
- default:  *(long*)p=v;           break;  \
+#define G__intassign(p,v,t)                              \
+ switch(t) {                                             \
+ case 'i': *(int*)p=(int)v;                      break;  \
+ case 's': *(short*)p=(short)v;                  break;  \
+ case 'c': *(char*)p=(char)v;                    break;  \
+ case 'h': *(unsigned int*)p=(unsigned int)v;    break;  \
+ case 'r': *(unsigned short*)p=(unsigned short)v;break;  \
+ case 'b': *(unsigned char*)p=(unsigned char)v;  break;  \
+ case 'k': *(unsigned long*)p=(unsigned long)v;  break;  \
+ case 'g': *(unsigned char*)p=(unsigned char)v?1:0;/*1604*/break;  \
+ default:  *(long*)p=(long)v;                    break;  \
  }
 #endif
 /*************************************************************************
@@ -4580,7 +4395,6 @@ void G__OP2_addassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4597,7 +4411,6 @@ G__value *bufm2;
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d += bufm1->obj.d;
@@ -4609,7 +4422,7 @@ G__value *bufm2;
   }
   else {
     if(G__isdoubleM(bufm1)) {
-      bufm2->obj.i += bufm1->obj.d;
+      bufm2->obj.i += (long)bufm1->obj.d;
     }
     else if(isupper(bufm2->type)) {
       bufm2->obj.i += (bufm1->obj.i*G__sizeof(bufm2));
@@ -4632,7 +4445,6 @@ void G__OP2_subassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4649,7 +4461,6 @@ G__value *bufm2;
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d -= bufm1->obj.d;
@@ -4661,7 +4472,7 @@ G__value *bufm2;
   }
   else {
     if(G__isdoubleM(bufm1)) {
-      bufm2->obj.i -= bufm1->obj.d;
+      bufm2->obj.i -= (long)bufm1->obj.d;
     }
     else if(isupper(bufm2->type)) {
       if(isupper(bufm1->type)) {
@@ -4689,7 +4500,6 @@ void G__OP2_mulassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4706,7 +4516,6 @@ G__value *bufm2;
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d *= bufm1->obj.d;
@@ -4718,7 +4527,7 @@ G__value *bufm2;
   }
   else {
     if(G__isdoubleM(bufm1)) {
-      bufm2->obj.i *= bufm1->obj.d;
+      bufm2->obj.i *= (long)bufm1->obj.d;
     }
     else {
       bufm2->obj.i *= bufm1->obj.i;
@@ -4734,7 +4543,6 @@ void G__OP2_modassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
     bufm2->type='n';
@@ -4746,14 +4554,12 @@ G__value *bufm2;
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
   else 
-#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
     return;
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1627
   if(G__isunsignedM(bufm2)) {
     if(G__isunsignedM(bufm1)) {
       bufm2->obj.ulo %= bufm1->obj.ulo;
@@ -4770,9 +4576,6 @@ G__value *bufm2;
       bufm2->obj.i %= bufm1->obj.i;
     }
   }
-#else
-  bufm2->obj.i %= bufm1->obj.i;
-#endif
   G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
 }
 
@@ -4783,7 +4586,6 @@ void G__OP2_divassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-#ifndef G__OLDIMPLEMENTATION2189
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
     bufm2->type='q';
@@ -4800,7 +4602,6 @@ G__value *bufm2;
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
   else 
-#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -4830,7 +4631,7 @@ G__value *bufm2;
 	return;
       }
 #endif
-      bufm2->obj.i /= bufm1->obj.d;
+      bufm2->obj.i /= (long)bufm1->obj.d;
     }
     else {
 #ifdef G__TUNEUP_W_SECURITY
@@ -4839,7 +4640,6 @@ G__value *bufm2;
 	return;
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1627
       if(G__isunsignedM(bufm2)) {
 	if(G__isunsignedM(bufm1)) {
 	  bufm2->obj.ulo /= bufm1->obj.ulo;
@@ -4856,21 +4656,16 @@ G__value *bufm2;
 	  bufm2->obj.i /= bufm1->obj.i;
 	}
       }
-#else
-      bufm2->obj.i /= bufm1->obj.i;
-#endif
     }
     G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
   }
 }
-#endif
 
 
 /****************************************************************
 * G__OP1_OPTIMIZED
 ****************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION578
 /****************************************************************
 * G__OP1_postfixinc_i()
 ****************************************************************/
@@ -5138,7 +4933,6 @@ G__value *pbuf;
 }
 #endif
 
-#endif
 
 /****************************************************************
 * G__OP1_postfixinc()
@@ -5265,7 +5059,6 @@ G__value *pbuf;
 **************************************************************************
 *************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION1164
 /******************************************************************
 * G__suspendbytecode()
 ******************************************************************/
@@ -5292,36 +5085,24 @@ void G__resetbytecode()
   }
   G__asm_noverflow=0;
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION988
 /******************************************************************
 * G__abortbytecode()
 ******************************************************************/
 void G__abortbytecode() 
 {
   if(G__asm_dbg && G__asm_noverflow) {
-#ifndef G__OLDIMPLEMENTATION1164
     if(G__dispmsg>=G__DISPNOTE) {
       if(0==G__xrefflag) 
 	G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
 		     ,G__asm_noverflow);
       else
 	G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
-#else
-      G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
-		   ,G__asm_noverflow);
-#endif
       G__printlinenum();
     }
   }
-#ifndef G__OLDIMPLEMENTATION1164
   if(0==G__xrefflag) G__asm_noverflow=0;
-#else
-  G__asm_noverflow=0;
-#endif
 }
-#endif
 
 /****************************************************************
 * G__inc_cp_asm(cp_inc,dt_dec)
@@ -5337,20 +5118,15 @@ void G__abortbytecode()
 int G__inc_cp_asm(cp_inc,dt_dec)
 int cp_inc,dt_dec;
 {
-#ifndef G__OLDIMPLEMENTATION1164
   if(0==G__xrefflag) {
     G__asm_cp+=cp_inc;
     G__asm_dt-=dt_dec;
   }
-#else
-  G__asm_cp+=cp_inc;
-  G__asm_dt-=dt_dec;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2116
   if(G__asm_instsize && G__asm_cp>G__asm_instsize-8) {
+    void *p;
     G__asm_instsize += 0x100;
-    void *p = realloc((void*)G__asm_stack,sizeof(long)*G__asm_instsize);
+    p = realloc((void*)G__asm_stack,sizeof(long)*G__asm_instsize);
     if(!p) G__genericerror("Error: memory exhausted for bytecode instruction buffer\n");
     G__asm_inst = (long*)p;
   }
@@ -5361,25 +5137,12 @@ int cp_inc,dt_dec;
     }
     G__abortbytecode();
   }
-#else /* 2116 */
-  if(G__asm_cp>G__MAXINST-8) {
-#ifndef G__OLDIMPLEMENTATION841
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Warning: loop compile instruction overflow");
-      G__printlinenum();
-    }
-#endif
-    G__abortbytecode();
-  }
-#endif /* 2116 */
 
   if(G__asm_dt<30) {
-#ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"Warning: loop compile data overflow");
       G__printlinenum();
     }
-#endif
     G__abortbytecode();
   }
   return(0);
@@ -5404,9 +5167,6 @@ int G__clear_asm()
   G__asm_cp=0;
   G__asm_dt=G__MAXSTACK-1;
   G__asm_name_p=0;
-#ifdef G__OLDIMPLEMENTATION937
-  if(G__ASM_FUNC_NOP==G__asm_wholefunction) G__no_exec_compile = 0;
-#endif
   G__asm_cond_cp = -1; /* avoid wrong optimization */
   return(0);
 }
@@ -5418,15 +5178,12 @@ int G__clear_asm()
 ******************************************************************/
 int G__asm_clear()
 {
-#ifndef G__OLDIMPLEMENTATION1570
   if(G__asm_clear_mask) return(0);
-#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
 			 ,G__ifile.name ,G__ifile.line_number);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2134
   /* Issue, value of G__CL must be unique. Otherwise, following optimization
    * causes problem. There is similar issue, but the biggest risk is here. */
   if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]
@@ -5436,18 +5193,6 @@ int G__asm_clear()
   G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
                     + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
   G__inc_cp_asm(2,0);
-#else /* 2134 */
-  if(G__asm_cp<2 || G__CL!=G__asm_inst[G__asm_cp-2]) {
-    G__asm_inst[G__asm_cp]=G__CL;
-#ifndef G__OLDIMPLEMENTATION2132
-    G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
-                    + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
-#else
-    G__asm_inst[G__asm_cp+1]=G__ifile.line_number;
-#endif
-    G__inc_cp_asm(2,0);
-  }
-#endif /* 2134 */
   return(0);
 }
 
@@ -5501,7 +5246,6 @@ void **ppdict;
     if(G__asm_noverflow) G__asm_putint(i);
 #endif
   }
-#ifndef G__OLDIMPLEMENTATION1234
   else if(strcmp(item,"_DATE__")==0) {
     i = G__RSVD_DATE;
 #ifdef G__ASM
@@ -5514,7 +5258,6 @@ void **ppdict;
     if(G__asm_noverflow) G__asm_putint(i);
 #endif
   }
-#endif
   else if(strcmp(item,"#")==0) {
     i = G__RSVD_ARG;
 #ifdef G__ASM
@@ -5528,30 +5271,11 @@ void **ppdict;
 #endif
   }
   else {
-#ifndef G__OLDIMPLEMENTATION715
-#ifndef G__OLDIMPLEMENTATION1173
       i = 0;
-#else
-      i = -1;
-#endif
       buf = G__null;
-#else
-    buf = G__getexpr(item);
-    if(buf.type) {
-      i=G__int(buf);
-    }
-    else {
-      i = -1;
-      buf = G__null;
-    }
-#endif
   }
 
-#ifndef G__OLDIMPLEMENTATION1173
   if(i) {
-#else
-  if(-1 != i) {
-#endif
     buf = G__getrsvd(i);
 #ifdef G__ASM
     if(G__asm_noverflow) {
@@ -5567,7 +5291,6 @@ void **ppdict;
   return(buf);
 }
 
-#ifndef G__OLDIMPLEMENTATION1234
 /**************************************************************************
 * G__get__tm__()
 *
@@ -5619,7 +5342,6 @@ char* G__get__time__()
   result[j] = 0;
   return(result);
 }
-#endif
 
 /**************************************************************************
 * G__value G__getrsvd()
@@ -5631,16 +5353,13 @@ int i;
 
   buf.tagnum = -1;
   buf.typenum = -1;
-#ifndef G__OLDIMPLEMENTATION1495
   buf.ref = 0;
-#endif
 
   switch(i) {
   case G__RSVD_LINE:
     G__letint(&buf,'i',(long)G__ifile.line_number);
     break;
   case G__RSVD_FILE:
-#ifndef G__OLDIMPLEMENTATION1475
     if(0<=G__ifile.filenum && G__ifile.filenum<G__MAXFILE &&
        G__srcfile[G__ifile.filenum].filename) {
       G__letint(&buf,'C',(long)G__srcfile[G__ifile.filenum].filename);
@@ -5648,21 +5367,16 @@ int i;
     else {
       G__letint(&buf,'C',(long)0);
     }
-#else
-    G__letint(&buf,'C',(long)G__ifile.name);
-#endif
     break;
   case G__RSVD_ARG:
     G__letint(&buf,'i',(long)G__argn);
     break;
-#ifndef G__OLDIMPLEMENTATION1234
   case G__RSVD_DATE:
     G__letint(&buf,'C',(long)G__get__date__());
     break;
   case G__RSVD_TIME:
     G__letint(&buf,'C',(long)G__get__time__());
     break;
-#endif
   default:
     G__letint(&buf,'C',(long)G__arg[i]);
     break;
@@ -5712,7 +5426,6 @@ long *inst;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1021
 /****************************************************************
  * G__isInt
  ****************************************************************/
@@ -5734,7 +5447,6 @@ int type;
     return(0);
   }
 }
-#endif
 
 /****************************************************************
 * G__asm_optimize(start)
@@ -5773,21 +5485,14 @@ int *start;
    *******************************************************/
   if((G__asm_inst[*start]==G__LD_VAR
       || (G__asm_inst[*start]==G__LD_MSTR
-#ifndef G__OLDIMPLEMENTATION1333
 	  && !G__asm_wholefunction
-#endif
       )) 
      &&  /* 1 */
      G__asm_inst[*start+5]==G__LD      &&
      G__asm_inst[*start+7]==G__CMP2    &&
      G__asm_inst[*start+9]==G__CNDJMP  &&
-#ifndef G__OLDIMPLEMENTATION1021
      G__isInt(((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]]) && /* 2 */
      G__isInt(G__asm_stack[G__asm_inst[*start+6]].type) &&
-#else
-     ((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]] =='i' && /* 2 */
-     G__asm_stack[G__asm_inst[*start+6]].type=='i' &&
-#endif
      G__asm_inst[*start+3]=='p'    /* 3 */
      ) {
 
@@ -5808,11 +5513,7 @@ int *start;
       G__asm_inst[*start+8] += G__store_struct_offset;
 
     /* long to int conversion */ /* TODO, Storing ptr to temporary stack buffer, is this Bad? */
-#ifndef G__OLDIMPLEMENTATION2113
     pb = (int*)(&G__asm_inst[*start+5]);
-#else
-    pb = (int*)(&(G__asm_stack[G__asm_inst[*start+6]].obj.i));  /* TODO, ??? */
-#endif
     *pb = G__int(G__asm_stack[G__asm_inst[*start+6]]);
     G__asm_inst[*start+9]=(long)(pb);
     G__asm_inst[*start+6]=G__CMPJMP;
@@ -5852,27 +5553,17 @@ int *start;
    *******************************************************/
   else if((G__asm_inst[*start]==G__LD_VAR||
 	   (G__asm_inst[*start]==G__LD_MSTR
-#ifndef G__OLDIMPLEMENTATION1333
 	    && !G__asm_wholefunction
-#endif
 	    )) &&  /* 1 */
 	  (G__asm_inst[*start+5]==G__LD_VAR||
 	   (G__asm_inst[*start+5]==G__LD_MSTR
-#ifndef G__OLDIMPLEMENTATION1333
 	    && !G__asm_wholefunction
-#endif
 	   )) &&  /* 1 */
 	  G__asm_inst[*start+10]==G__CMP2    &&
 	  G__asm_inst[*start+12]==G__CNDJMP  &&
-#ifndef G__OLDIMPLEMENTATION1021
 	  G__isInt(((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]]) && /* 2 */
 	  (G__isInt(((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]]) || /* 2 */
 	   ((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]] =='p' ) && /* 2 */
-#else
-	  ((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]] =='i' && /* 2 */
-	  (((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]] =='i' || /* 2 */
-	   ((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]] =='p' ) && /* 2 */
-#endif
 	  G__asm_inst[*start+3]=='p'  &&  /* 3 */
 	  G__asm_inst[*start+8]=='p'    /* 3 */
 	  ) {
@@ -5935,20 +5626,12 @@ int *start;
      G__asm_inst[G__asm_cp-4]==G__OP1 &&
      G__asm_inst[G__asm_cp-7]==0      &&
      G__asm_inst[G__asm_cp-6]=='p'    &&
-#ifndef G__OLDIMPLEMENTATION599
      G__asm_cond_cp != G__asm_cp-2 &&
-#endif
      (G__LD_VAR==G__asm_inst[G__asm_cp-9]||
       (G__LD_MSTR==G__asm_inst[G__asm_cp-9]
-#ifndef G__OLDIMPLEMENTATION1333
        && !G__asm_wholefunction
-#endif
       )) &&
-#ifndef G__OLDIMPLEMENTATION1021
      G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-5])->type[G__asm_inst[G__asm_cp-8]])) {
-#else
-     ((struct G__var_array*)G__asm_inst[G__asm_cp-5])->type[G__asm_inst[G__asm_cp-8]] =='i') {
-#endif
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i++ optimized\n",G__asm_cp-9);
@@ -5982,10 +5665,6 @@ int *start;
     G__asm_inst[G__asm_cp-5] = G__NOP;
     G__asm_inst[G__asm_cp-4] = G__NOP;
     G__asm_inst[G__asm_cp-3] = G__NOP;
-#ifdef G__OLDIMPLEMENTATION1022
-    G__asm_inst[G__asm_cp-2] = G__NOP;
-    G__asm_inst[G__asm_cp-1] = G__NOP;
-#endif
 
     /*
       G__asm_inst[G__asm_cp-5]=G__RETURN;
@@ -6019,20 +5698,12 @@ int *start;
 	  G__asm_inst[G__asm_cp-9]==0      &&
 	  G__asm_inst[G__asm_cp-8]=='p'    &&
 	  G__asm_inst[G__asm_cp-6]==G__LD  &&
-#ifndef G__OLDIMPLEMENTATION599
 	  G__asm_cond_cp != G__asm_cp-2 &&
-#endif
 	  (G__LD_VAR==G__asm_inst[G__asm_cp-11]||
 	   (G__LD_MSTR==G__asm_inst[G__asm_cp-11]
-#ifndef G__OLDIMPLEMENTATION1333
 	    && !G__asm_wholefunction
-#endif
 	    )) &&
-#ifndef G__OLDIMPLEMENTATION1021
 	  G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]]))  {
-#else
-	  ((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]] =='i')  {
-#endif
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i+=1 optimized\n",G__asm_cp-11);
@@ -6062,10 +5733,6 @@ int *start;
     G__asm_inst[G__asm_cp-5] = G__NOP;
     G__asm_inst[G__asm_cp-4] = G__NOP;
     G__asm_inst[G__asm_cp-3] = G__NOP;
-#ifdef G__OLDIMPLEMENTATION1022
-    G__asm_inst[G__asm_cp-2] = G__NOP;
-    G__asm_inst[G__asm_cp-1] = G__NOP;
-#endif
 
     /*
       G__asm_inst[G__asm_cp-7]=G__RETURN;
@@ -6101,20 +5768,14 @@ int *start;
 	    G__asm_inst[G__asm_cp-16]==G__LD_VAR) ||
 	   (G__asm_inst[G__asm_cp-7]==G__ST_MSTR&&
 	    G__asm_inst[G__asm_cp-16]==G__LD_MSTR
-#ifndef G__OLDIMPLEMENTATION1333
 	    && !G__asm_wholefunction
-#endif
 	   )) &&
 	  G__asm_inst[G__asm_cp-9]==G__OP2     &&
 	  G__asm_inst[G__asm_cp-11]==G__LD     &&
 	  G__asm_inst[G__asm_cp-15]==G__asm_inst[G__asm_cp-6] && /* 2 */
 	  G__asm_inst[G__asm_cp-12]==G__asm_inst[G__asm_cp-3] &&
 	  (G__asm_inst[G__asm_cp-8]=='+'||G__asm_inst[G__asm_cp-8]=='-') &&
-#ifndef G__OLDIMPLEMENTATION1021
 	  G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-3])->type[G__asm_inst[G__asm_cp-6]])       &&
-#else
-	  ((struct G__var_array*)G__asm_inst[G__asm_cp-3])->type[G__asm_inst[G__asm_cp-6]] =='i'       &&
-#endif
 	  G__asm_inst[G__asm_cp-14]==0 &&
 	  G__asm_inst[G__asm_cp-13]=='p' &&   /* 3 */
 	  G__asm_inst[G__asm_cp-4]=='p') {
@@ -6146,10 +5807,6 @@ int *start;
     G__asm_inst[G__asm_cp-5] = G__NOP;
     G__asm_inst[G__asm_cp-4] = G__NOP;
     G__asm_inst[G__asm_cp-3] = G__NOP;
-#ifdef G__OLDIMPLEMENTATION1022
-    G__asm_inst[G__asm_cp-2] = G__NOP;
-    G__asm_inst[G__asm_cp-1] = G__NOP;
-#endif
 
     /*
       G__asm_inst[G__asm_cp-12]=G__RETURN;
@@ -6169,7 +5826,6 @@ int *start;
 }
 
 
-#ifndef G__OLDIMPLEMENTATION482
 /*************************************************************************
 **************************************************************************
 * Optimization level 3 function
@@ -6204,14 +5860,10 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_p0_struct; break;
     case 'f': *pinst = (long)G__LD_p0_float; break;
     case 'd': *pinst = (long)G__LD_p0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_p0_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__LD_p0_longlong; break;
     case 'm': *pinst = (long)G__LD_p0_ulonglong; break;
     case 'q': *pinst = (long)G__LD_p0_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6243,21 +5895,16 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_p1_struct; break;
     case 'f': *pinst = (long)G__LD_p1_float; break;
     case 'd': *pinst = (long)G__LD_p1_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_p1_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__LD_p1_longlong; break;
     case 'm': *pinst = (long)G__LD_p1_ulonglong; break;
     case 'q': *pinst = (long)G__LD_p1_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
   return(done);
 }
 
-#ifndef G__OLDIMPLEMENTATION1405
 /*************************************************************************
 * G__get_LD_pn_p2f()
 *************************************************************************/
@@ -6283,20 +5930,15 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_pn_struct; break;
     case 'f': *pinst = (long)G__LD_pn_float; break;
     case 'd': *pinst = (long)G__LD_pn_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_pn_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__LD_pn_longlong; break;
     case 'm': *pinst = (long)G__LD_pn_ulonglong; break;
     case 'q': *pinst = (long)G__LD_pn_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
   return(done);
 }
-#endif /* 1405 */
 
 /*************************************************************************
 * G__get_LD_P10_p2f()
@@ -6324,14 +5966,10 @@ int reftype;
     case 'U': *pinst = (long)G__LD_P10_struct; break;
     case 'F': *pinst = (long)G__LD_P10_float; break;
     case 'D': *pinst = (long)G__LD_P10_double; break;
-#ifndef G__OLDIMPLEMENTATION2188
     case 'G': *pinst = (long)G__LD_P10_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'N': *pinst = (long)G__LD_P10_longlong; break;
     case 'M': *pinst = (long)G__LD_P10_ulonglong; break;
     case 'Q': *pinst = (long)G__LD_P10_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6366,14 +6004,10 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_p0_struct; break;
     case 'f': *pinst = (long)G__ST_p0_float; break;
     case 'd': *pinst = (long)G__ST_p0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_p0_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__ST_p0_longlong; break;
     case 'm': *pinst = (long)G__ST_p0_ulonglong; break;
     case 'q': *pinst = (long)G__ST_p0_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6405,21 +6039,16 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_p1_struct; break;
     case 'f': *pinst = (long)G__ST_p1_float; break;
     case 'd': *pinst = (long)G__ST_p1_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_p1_bool; break; /* to be fixed */
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__ST_p1_longlong; break;
     case 'm': *pinst = (long)G__ST_p1_ulonglong; break;
     case 'q': *pinst = (long)G__ST_p1_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
   return(done);
 }
 
-#ifndef G__OLDIMPLEMENTATION1406
 /*************************************************************************
 * G__get_ST_pn_p2f()
 *************************************************************************/
@@ -6445,20 +6074,15 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_pn_struct; break;
     case 'f': *pinst = (long)G__ST_pn_float; break;
     case 'd': *pinst = (long)G__ST_pn_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_pn_bool; break; /* to be fixed */
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__ST_pn_longlong; break;
     case 'm': *pinst = (long)G__ST_pn_ulonglong; break;
     case 'q': *pinst = (long)G__ST_pn_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
   return(done);
 }
-#endif /* 1406 */
 
 /*************************************************************************
 * G__get_ST_P10_p2f()
@@ -6486,14 +6110,10 @@ int reftype;
     case 'U': *pinst = (long)G__ST_P10_struct; break;
     case 'F': *pinst = (long)G__ST_P10_float; break;
     case 'D': *pinst = (long)G__ST_P10_double; break;
-#ifndef G__OLDIMPLEMENTATION2188
     case 'G': *pinst = (long)G__ST_P10_bool; break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'N': *pinst = (long)G__ST_P10_longlong; break;
     case 'M': *pinst = (long)G__ST_P10_ulonglong; break;
     case 'Q': *pinst = (long)G__ST_P10_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6528,14 +6148,10 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_Rp0_struct; break;
     case 'f': *pinst = (long)G__LD_Rp0_float; break;
     case 'd': *pinst = (long)G__LD_Rp0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_Rp0_bool; break; /* to be fixed */
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__LD_Rp0_longlong; break;
     case 'm': *pinst = (long)G__LD_Rp0_ulonglong; break;
     case 'q': *pinst = (long)G__LD_Rp0_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6566,14 +6182,10 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_Rp0_struct; break;
     case 'f': *pinst = (long)G__ST_Rp0_float; break;
     case 'd': *pinst = (long)G__ST_Rp0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_Rp0_bool; break; /* to be fixed */
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__ST_Rp0_longlong; break;
     case 'm': *pinst = (long)G__ST_Rp0_ulonglong; break;
     case 'q': *pinst = (long)G__ST_Rp0_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6604,14 +6216,10 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_RP0_struct; break;
     case 'f': *pinst = (long)G__LD_RP0_float; break;
     case 'd': *pinst = (long)G__LD_RP0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_RP0_bool; break; /* to be fixed */
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     case 'n': *pinst = (long)G__LD_RP0_longlong; break;
     case 'm': *pinst = (long)G__LD_RP0_ulonglong; break;
     case 'q': *pinst = (long)G__LD_RP0_longdouble; break;
-#endif
     default: done=0; break;
     }
   }
@@ -6747,9 +6355,7 @@ long inst;
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
-#ifndef G__OLDIMPLEMENTATION910
   if(var->bitfield[ig15]) return;
-#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     switch(inst) {
@@ -6817,7 +6423,6 @@ long inst;
   }
 }
 
-#ifndef G__OLDIMPLEMENTATION1405
 /*************************************************************************
 * G__LD_pn_optimize()
 *************************************************************************/
@@ -6855,7 +6460,6 @@ long inst;
     G__asm_inst[pc+3] = pointlevel;
   }
 }
-#endif /* 1405 */
 
 /*************************************************************************
 * G__LD_P10_optimize()
@@ -6908,9 +6512,7 @@ long inst;
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
-#ifndef G__OLDIMPLEMENTATION910
   if(var->bitfield[ig15]) return;
-#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     switch(inst) {
@@ -6976,7 +6578,6 @@ long inst;
   }
 }
 
-#ifndef G__OLDIMPLEMENTATION1406
 /*************************************************************************
 * G__ST_pn_optimize()
 *************************************************************************/
@@ -7014,7 +6615,6 @@ long inst;
     G__asm_inst[pc+3] = pointlevel;
   }
 }
-#endif
 
 /*************************************************************************
 * G__ST_P10_optimize()
@@ -7058,10 +6658,8 @@ long inst;
 /*************************************************************************
 * array index optimization constant
 *************************************************************************/
-#ifndef G__OLDIMPLEMENTATION822
 #define G__MAXINDEXCONST 11
 static int G__indexconst[G__MAXINDEXCONST] = {0,1,2,3,4,5,6,7,8,9,10};
-#endif
 
 /*************************************************************************
 * G__LD_VAR_int_optimize()
@@ -7197,7 +6795,6 @@ int *pi;
      ********************************************************************/
     if(G__LD_VAR==G__asm_inst[pc+9] || G__LD_LVAR==G__asm_inst[pc+9]) {
       int flag;
-#ifndef G__OLDIMPLEMENTATION822
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
       int  *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
@@ -7208,14 +6805,9 @@ int *pi;
 	pix = (int*)pi2;
 	if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
-#endif
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
       else                            flag=0;
-#ifndef G__OLDIMPLEMENTATION822
       if(G__LD_LVAR==G__asm_inst[pc+9]) flag |= 4;
-#else
-      if(G__LD_VAR==G__asm_inst[pc+9]) flag |= 3;
-#endif
       if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
@@ -7229,14 +6821,7 @@ int *pi;
 	G__asm_inst[pc+7] = flag;
 	G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
 	G__asm_inst[pc+1] = (long)pi;
-#ifndef G__OLDIMPLEMENTATION822
 	G__asm_inst[pc+2] = (long)pix;
-#else
-	G__asm_inst[pc+2] = (long)(&(G__asm_stack[G__asm_inst[pc+6]].obj.i));
-	if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-	  *(int*)G__asm_inst[pc+2]=(int)G__asm_stack[G__asm_inst[pc+6]].obj.i;
-	}
-#endif
 	G__asm_inst[pc+3] = G__asm_inst[pc+8];
 	G__asm_inst[pc+5] = G__asm_inst[pc+10];
 	G__asm_inst[pc+6] = 14;
@@ -7265,7 +6850,6 @@ int *pi;
      ********************************************************************/
     else if(G__ST_VAR==G__asm_inst[pc+9] || G__ST_LVAR==G__asm_inst[pc+9]) {
       int flag;
-#ifndef G__OLDIMPLEMENTATION822
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
       int  *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
@@ -7276,14 +6860,9 @@ int *pi;
 	pix = (int*)pi2;
 	if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
-#endif
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
       else                            flag=0;
-#ifndef G__OLDIMPLEMENTATION822
       if(G__ST_LVAR==G__asm_inst[pc+9]) flag |= 4;
-#else
-      if(G__ST_VAR==G__asm_inst[pc+9]) flag |= 3;
-#endif
       if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
@@ -7297,14 +6876,7 @@ int *pi;
 	G__asm_inst[pc+7] = flag;
 	G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
 	G__asm_inst[pc+1] = (long)pi;
-#ifndef G__OLDIMPLEMENTATION822
 	G__asm_inst[pc+2] = (long)pix;
-#else
-	G__asm_inst[pc+2] = (long)(&(G__asm_stack[G__asm_inst[pc+6]].obj.i));
-	if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-	  *(int*)G__asm_inst[pc+2]=(int)G__asm_stack[G__asm_inst[pc+6]].obj.i;
-	}
-#endif
 	G__asm_inst[pc+3] = G__asm_inst[pc+8];
 	G__asm_inst[pc+5] = G__asm_inst[pc+10];
 	G__asm_inst[pc+6] = 14;
@@ -7389,17 +6961,13 @@ int *pi;
      1 == var->paran[G__asm_inst[pc+3]] &&
      (islower(var->type[G__asm_inst[pc+3]])||
       G__PARANORMAL==var->reftype[G__asm_inst[pc+3]])
-#ifndef G__OLDIMPLEMENTATION876
      && (pc<4 || G__JMP!=G__asm_inst[pc-2] || G__asm_inst[pc-1]!=pc+2)
-#endif
      ) {
     int flag;
-#ifndef G__OLDIMPLEMENTATION822
     if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
       if(*pi>=G__MAXINDEXCONST||*pi<0) return(done);
       else pi = &G__indexconst[*pi];
     }
-#endif
     if(G__LD_LVAR==G__asm_inst[pc+2]) flag = 2;
     else                              flag = 0;
     done = 1;
@@ -7444,17 +7012,13 @@ int *pi;
 	  1 == var->paran[G__asm_inst[pc+3]] &&
 	  (islower(var->type[G__asm_inst[pc+3]])||
 	   G__PARANORMAL==var->reftype[G__asm_inst[pc+3]])
-#ifndef G__OLDIMPLEMENTATION876
 	  && (pc<4 || G__JMP!=G__asm_inst[pc-2] || G__asm_inst[pc-1]!=pc+2)
-#endif
 	  ) {
     int flag;
-#ifndef G__OLDIMPLEMENTATION822
     if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
       if(*pi>=G__MAXINDEXCONST||*pi<0) return(done);
       else pi = &G__indexconst[*pi];
     }
-#endif
     if(G__ST_LVAR==G__asm_inst[pc+2]) flag = 2;
     else                              flag = 0;
     ig15 = G__asm_inst[pc+3];
@@ -7602,7 +7166,6 @@ int pc;
   case G__OPR_DIVASSIGN:
     G__asm_inst[pc+1] = (long)G__OP2_divassign;
     break;
-#ifndef G__OLDIMPLEMENTATION1491
   case G__OPR_ADD_UU:
     G__asm_inst[pc+1] = (long)G__OP2_plus_uu;
     break;
@@ -7627,7 +7190,6 @@ int pc;
   case G__OPR_DIVASSIGN_UU:
     G__asm_inst[pc+1] = (long)G__OP2_divassign_uu;
     break;
-#endif
   case G__OPR_ADD_II:
     G__asm_inst[pc+1] = (long)G__OP2_plus_ii;
     break;
@@ -7688,11 +7250,9 @@ int pc;
   case G__OPR_DIVASSIGN_FD:
     G__asm_inst[pc+1] = (long)G__OP2_divassign_fd;
     break;
-#ifndef G__OLDIMPLEMENTATION2129
   case G__OPR_ADDVOIDPTR:
     G__asm_inst[pc+1] = (long)G__OP2_addvoidptr;
     break;
-#endif
   default:
     done=0;
     break;
@@ -7893,11 +7453,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
-#ifndef G__OLDIMPLEMENTATION1405
 	else if(paran==var->paran[ig15]) {
 	  G__LD_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
@@ -7933,13 +7491,9 @@ int *start;
       *  clear stack pointer
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__OLDIMPLEMENTATION2132
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %s:%d\n",pc
 		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
 				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %d\n",pc,G__asm_inst[pc+1]);
-#endif
 #endif
       /* no optimize */
       pc+=2;
@@ -8005,11 +7559,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
-#ifndef G__OLDIMPLEMENTATION1406
 	else if(paran==var->paran[ig15]) {
 	  G__ST_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
@@ -8055,11 +7607,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,inst);
 	}
-#ifndef G__OLDIMPLEMENTATION1405
 	else if(paran==var->paran[ig15]) {
 	  G__LD_pn_optimize(var,ig15,pc,inst);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
 	}
@@ -8169,11 +7719,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,inst);
 	}
-#ifndef G__OLDIMPLEMENTATION1406
 	else if(paran==var->paran[ig15]) {
 	  G__ST_pn_optimize(var,ig15,pc,inst);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
 	}
@@ -8354,7 +7902,6 @@ int *start;
 #endif
       /* need optimization */
       switch(G__asm_inst[pc+1]) {
-#ifndef G__OLDIMPLEMENTATION578
 
       case G__OPR_POSTFIXINC_I:
 	G__asm_inst[pc] = G__OP1_OPTIMIZED;
@@ -8494,7 +8041,6 @@ int *start;
 	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_f;
 	break;
 #endif
-#endif
       case G__OPR_POSTFIXINC:
 	G__asm_inst[pc] = G__OP1_OPTIMIZED;
 	G__asm_inst[pc+1] = (long)G__OP1_postfixinc;
@@ -8626,7 +8172,6 @@ int *start;
       ++pc;
       break;
 
-#ifndef G__OLDIMPLEMENTATION1399
     case G__BOOL:
       /***************************************
       * 0 BOOL
@@ -8637,7 +8182,6 @@ int *start;
       /* no optimization */
       ++pc;
       break;
-#endif
 
     case G__ISDEFAULTPARA:
       /***************************************
@@ -8732,11 +8276,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,inst);
 	}
-#ifndef G__OLDIMPLEMENTATION1405
 	else if(paran==var->paran[ig15]) {
 	  G__LD_pn_optimize(var,ig15,pc,inst);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,inst);
 	}
@@ -8794,11 +8336,9 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,inst);
 	}
-#ifndef G__OLDIMPLEMENTATION1406
 	else if(paran==var->paran[ig15]) {
 	  G__ST_pn_optimize(var,ig15,pc,inst);
 	}
-#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,inst);
 	}
@@ -9139,14 +8679,9 @@ int *start;
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TOVALUE\n",pc);
 #endif
       /* no optimization */
-#ifndef G__OLDIMPLEMENTATION1401
       pc+=2;
-#else
-      ++pc;
-#endif
       break;
 
-#ifndef G__OLDIMPLEMENTATION523
     case G__INIT_REF:
       /***************************************
       * inst
@@ -9166,7 +8701,6 @@ int *start;
 #endif
       pc+=5;
       break;
-#endif
 
     case G__LETNEWVAL:
       /***************************************
@@ -9228,7 +8762,6 @@ int *start;
       ++pc;
       break;
 
-#ifndef G__OLDIMPLEMENTATION2109
     case G__TRY:
       /***************************************
       * inst
@@ -9288,9 +8821,7 @@ int *start;
       /* no optimization */
       ++pc;
       break;
-#endif /* 2109 */
 
-#ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:
       /***************************************
       * inst
@@ -9321,9 +8852,7 @@ int *start;
       /* no optimization */
       pc+=5;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1437
     case G__SETARYINDEX:
       /***************************************
       * inst
@@ -9361,9 +8890,7 @@ int *start;
       /* no optimization */
       ++pc;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2042
     case G__ENTERSCOPE:
       /***************************************
       * inst
@@ -9402,7 +8929,6 @@ int *start;
       pc+=3;
       break;
 
-#ifndef G__OLDIMPLEMENTATION2160
     case G__CASE:
       /***************************************
       * inst
@@ -9418,29 +8944,9 @@ int *start;
       /* no optimization */
       pc+=2;
       break;
-#endif 
 
 
-#if 0
-    case G__SETARYCTOR:
-      /***************************************
-      * inst
-      * 0 SETARYCTOR
-      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
-      * stack
-      * sp-1         <- sp-paran
-      * sp
-      ***************************************/
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYCTOR\n",pc);
-#endif
-      /* no optimization */
-      pc+=2;
-      break;
-#endif /* 0 */
-#endif /* 2042 */
 
-#ifndef G__OLDIMPLEMENTATION2140
     case G__MEMCPY:
       /***************************************
       * inst
@@ -9457,9 +8963,7 @@ int *start;
       /* no optimization */
       ++pc;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2147
     case G__MEMSETINT:
       /***************************************
       * inst
@@ -9494,9 +8998,7 @@ int *start;
       /* no optimization */
       pc+=3;
       break;
-#endif /* 2147 */
 
-#ifndef G__OLDIMPLEMENTATION2152
     case G__VIRTUALADDSTROS:
       /***************************************
       * inst
@@ -9512,9 +9014,7 @@ int *start;
       /* no optimization */
       pc+=4;
       break;
-#endif /* 2152 */
 
-#ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
       * inst
@@ -9526,7 +9026,6 @@ int *start;
       /* no optimization */
       ++pc;
       break;
-#endif
 
     case G__NOP:
       /***************************************
@@ -9557,9 +9056,7 @@ int *start;
 
   return(0);
 }
-#endif
 
-#if defined(G__ASM_DBG) || !defined(G__OLDIMPLEMENTATION1270)
 /****************************************************************
 * G__dasm()
 *
@@ -9751,13 +9248,9 @@ int isthrow;
       *  clear stack pointer
       ***************************************/
       if(0==isthrow) {
-#ifndef G__OLDIMPLEMENTATION2132
 	fprintf(fout,"%3x: CL %s:%ld\n",pc
 		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
 				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
-#else
-	fprintf(fout,"%3x: CL %ld\n",pc,G__asm_inst[pc+1]);
-#endif
       }
       pc+=2;
       break;
@@ -10167,7 +9660,6 @@ int isthrow;
       ++pc;
       break;
 
-#ifndef G__OLDIMPLEMENTATION1399
     case G__BOOL:
       /***************************************
       * 0 BOOL
@@ -10177,7 +9669,6 @@ int isthrow;
       }
       ++pc;
       break;
-#endif
 
     case G__ISDEFAULTPARA:
       /***************************************
@@ -10561,14 +10052,9 @@ int isthrow;
       if(0==isthrow) {
 	fprintf(fout,"%3x: TOVALUE\n",pc);
       }
-#ifndef G__OLDIMPLEMENTATION1401
       pc+=2;
-#else
-      ++pc;
-#endif
       break;
 
-#ifndef G__OLDIMPLEMENTATION523
     case G__INIT_REF:
       /***************************************
       * inst
@@ -10588,7 +10074,6 @@ int isthrow;
       }
       pc+=5;
       break;
-#endif
 
     case G__LETNEWVAL:
       /***************************************
@@ -10647,7 +10132,6 @@ int isthrow;
       break;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2109
     case G__TRY:
       /***************************************
       * inst
@@ -10702,9 +10186,7 @@ int isthrow;
       }
       ++pc;
       break;
-#endif /* 2109 */
 
-#ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:
       /***************************************
       * inst
@@ -10745,7 +10227,7 @@ int isthrow;
 	fpos_t pos = (fpos_t)G__asm_inst[pc+3];
 #endif
 	fgetpos(G__ifile.fp,&store_pos);
-	G__ifile.filenum = G__asm_inst[pc+1];
+	G__ifile.filenum = (short)G__asm_inst[pc+1];
 	G__ifile.line_number = G__asm_inst[pc+2];
 	strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
 	G__ifile.fp = G__srcfile[G__ifile.filenum].fp;
@@ -10760,9 +10242,7 @@ int isthrow;
       }
       pc+=5;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1437
     case G__SETARYINDEX:
       /***************************************
       * inst
@@ -10797,9 +10277,7 @@ int isthrow;
       }
       ++pc;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2042
     case G__ENTERSCOPE:
       /***************************************
       * inst
@@ -10838,7 +10316,6 @@ int isthrow;
       pc+=3;
       break;
 
-#ifndef G__OLDIMPLEMENTATION2160
     case G__CASE:
       /***************************************
       * inst
@@ -10854,28 +10331,8 @@ int isthrow;
       /* no optimization */
       pc+=2;
       break;
-#endif
 
-#if 0
-    case G__SETARYCTOR:
-      /***************************************
-      * inst
-      * 0 SETARYCTOR
-      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
-      * stack
-      * sp-1         <- sp-paran
-      * sp
-      ***************************************/
-#ifdef G__ASM_DBG
-      if(0==isthrow) G__fprinterr(G__serr,"%3x: SETARYCTOR\n",pc);
-#endif
-      /* no optimization */
-      pc+=2;
-      break;
-#endif /* 0 */
-#endif /* 2042 */
 
-#ifndef G__OLDIMPLEMENTATION2140
     case G__MEMCPY:
       /***************************************
       * inst
@@ -10891,9 +10348,7 @@ int isthrow;
       }
       ++pc;
       break;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2147
     case G__MEMSETINT:
       /***************************************
       * inst
@@ -10926,9 +10381,7 @@ int isthrow;
 #endif
       pc+=3;
       break;
-#endif /* 2147 */
 
-#ifndef G__OLDIMPLEMENTATION2152
     case G__VIRTUALADDSTROS:
       /***************************************
       * inst
@@ -10943,9 +10396,7 @@ int isthrow;
 #endif
       pc+=4;
       break;
-#endif /* 2152 */
 
-#ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
       * inst
@@ -10956,7 +10407,6 @@ int isthrow;
       }
       ++pc;
       break;
-#endif
 
 
     case G__NOP:
@@ -10987,7 +10437,6 @@ int isthrow;
 
   return(0);
 }
-#endif
 
 
 /*

@@ -5,6 +5,10 @@
 *  Copyright(c)    1996    Masaharu Goto
 *************************************************************************/
 
+#ifdef G__APPLE
+#include "X11/Xresource.h"
+#endif
+
 #ifdef __MAKECINT__
 #include <platform.h>
 #endif

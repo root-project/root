@@ -49,18 +49,6 @@
 #define G__CINTBODY
 #include "G__ci.h"
 
-#ifdef G__OLDIMPLEMENTATION1921
-/**************************************************************************
-* Windows tempfile
-*
-*  Borland C++ does not have _tmpnam, need to reimplement by GetTempPath()
-**************************************************************************/
-#ifdef G__WIN32
-#ifndef G__BORLAND
-#define G__TMPFILE
-#endif
-#endif
-#endif
 
 /**************************************************************************
 * GNU readline
@@ -158,7 +146,6 @@
 
 #define G__OPR_ADDVOIDPTR   17
 
-#ifndef G__OLDIMPLEMENTATION572
 #define G__OPR_POSTFIXINC_I  0x110
 #define G__OPR_PREFIXINC_I   0x111
 #define G__OPR_POSTFIXDEC_I  0x112
@@ -189,7 +176,6 @@
 #define G__OPR_POSTFIXDEC_K  0x812
 #define G__OPR_PREFIXDEC_K   0x813
 
-#ifndef G__OLDIMPLEMENTATION1491
 #define G__OPR_ADD_UU        0xa00
 #define G__OPR_SUB_UU        0xa01
 #define G__OPR_MUL_UU        0xa02
@@ -204,7 +190,6 @@
 #define G__OPR_SUBASSIGN_UU  0xa0b
 #define G__OPR_MULASSIGN_UU  0xa0c
 #define G__OPR_DIVASSIGN_UU  0xa0d
-#endif
 
 #define G__OPR_ADD_II        0x100
 #define G__OPR_SUB_II        0x101
@@ -249,7 +234,6 @@
 #define G__OPR_SUBASSIGN_FD  0x30b
 #define G__OPR_MULASSIGN_FD  0x30c
 #define G__OPR_DIVASSIGN_FD  0x30d
-#endif /* ON572 */
 
 
 /**************************************************************************
@@ -260,14 +244,12 @@
 #define G__PARAP2P          2
 #define G__PARAP2P2P        3
 
-#ifndef G__OLDIMPLEMENTATION1967
 #define G__PARAREF         100
 #define G__PARAREFP2P      102
 #define G__PARAREFP2P2P    103
 
 #define G__PLVL(x)        (x%10)
 #define G__REF(x)         ((x/100)*100)
-#endif
 
 #define G__POINTER2FUNC    0
 #define G__FUNCRETURNP2F   1
@@ -499,14 +481,12 @@ struct G__breakcontinue_list {
 #define G__MAXSTACK    0x100
 #define G__MAXSTRSTACK  0x10
 
-#ifndef G__OLDIMPLEMENTATION2132
 /*********************************************
 * G__CL  line+filenum offset
 *********************************************/
 #define G__CL_LINEMASK  0x000fffff
 #define G__CL_FILEMASK  0x00000fff
 #define G__CL_FILESHIFT 0x00100000
-#endif
 
 
 /*********************************************
@@ -521,15 +501,9 @@ struct G__breakcontinue_list {
     if(store_asm_exec) G__asm_loopcompile=0;       \
     G__asm_exec = 0
 
-#ifndef G__OLDIMPLEMENTATION1155
 #define G__RECOVER_ASMENV                          \
     G__asm_exec=store_asm_exec;                    \
     G__asm_loopcompile=G__asm_loopcompile_mode
-#else
-#define G__RECOVER_ASMENV                          \
-    G__asm_exec=store_asm_exec;                    \
-    G__asm_loopcompile=store_asm_loopcompile
-#endif
 
 
 /*********************************************
@@ -587,30 +561,22 @@ struct G__breakcontinue_list {
 #define G__TMPLT_FLOATARG     'f'
 #define G__TMPLT_DOUBLEARG    'd'
 
-#ifndef G__OLDIMPLEMENTATION1587
 #define G__TMPLT_POINTERARG1   0x10000
 #define G__TMPLT_POINTERARG2   0x20000
 #define G__TMPLT_POINTERARG3   0x30000
 #define G__TMPLT_POINTERARGMASK 0xffff0000
-#else
-#define G__TMPLT_POINTERARG1   1
-#define G__TMPLT_POINTERARG2   2
-#define G__TMPLT_POINTERARG3   3
-#endif
 
 #define G__TMPLT_CONSTARG      0x100
 #define G__TMPLT_REFERENCEARG  0x200
 
 #ifdef G__TEMPLATEMEMFUNC
 
-#ifndef G__OLDIMPLEMENTATION691
 /* Doubly linked list of long int, methods are described in tmplt.c */
 struct G__IntList {
   long i;
   struct G__IntList *prev;
   struct G__IntList *next;
 };
-#endif
 
 struct G__Definedtemplatememfunc {
   int line;
@@ -640,20 +606,12 @@ struct G__Definedtemplateclass {
   struct G__Definedtemplatememfunc memfunctmplt;
 #endif
   struct G__Definedtemplateclass *next;
-#ifndef G__OLDIMPLEMENTATION682
   int parent_tagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION691
   struct G__IntList *instantiatedtagnum;
   int isforwarddecl;
-#endif
-#ifndef G__OLDIMPLEMENTATION972
   int friendtagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION1587
   struct G__Definedtemplateclass *specialization;
   struct G__Templatearg *spec_arg;
-#endif
 };
 
 
@@ -667,13 +625,9 @@ struct G__Templatefuncarg {
   int reftype[G__MAXFUNCPARA];
   char paradefault[G__MAXFUNCPARA];
   int argtmplt[G__MAXFUNCPARA];
-#ifndef G__OLDIMPLEMENTATION727
   int *ntarg[G__MAXFUNCPARA];
   int nt[G__MAXFUNCPARA];
-#endif
-#ifndef G__OLDIMPLEMENTATION750
   char **ntargc[G__MAXFUNCPARA];
-#endif
 };
 
 struct G__Definetemplatefunc {
@@ -686,12 +640,8 @@ struct G__Definetemplatefunc {
   FILE *def_fp;
   fpos_t def_pos;
   struct G__Definetemplatefunc *next;
-#ifndef G__OLDIMPLEMENTATION687
   int parent_tagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION972
   int friendtagnum;
-#endif
 };
 
 #endif /* G__TEMPLATEFUNC */
@@ -718,9 +668,7 @@ struct G__Callfuncmacro{
   int line;
   fpos_t mfp_pos;
   struct G__Callfuncmacro *next;
-#ifndef G__OLDIMPLEMENTATION1179
   short call_filenum;
-#endif
 } ;
 
 struct G__Deffuncmacro {
@@ -732,9 +680,7 @@ struct G__Deffuncmacro {
   struct G__Charlist def_para;
   struct G__Callfuncmacro callfuncmacro;
   struct G__Deffuncmacro *next;
-#ifndef G__OLDIMPLEMENTATION1179
   short def_filenum;
-#endif
 } ;
 
 
@@ -784,14 +730,9 @@ struct G__newarylist {
 * struct for storing base class constructor
 **************************************************************************/
 struct G__baseparam {
-#ifndef G__OLDIMPLEMENTATION1870
   char *name;
   char *param;
   struct G__baseparam *next;
-#else
-  char *name[G__MAXBASE];
-  char *param[G__MAXBASE];
-#endif
 };
 
 
@@ -884,9 +825,7 @@ struct G__dictposition {
   /* function template */
   struct G__Definetemplatefunc *definedtemplatefunc;   
 
-#ifndef G__OLDIMPLEMENTATION2014
   char* ptype; /* struct,union,enum,class */
-#endif
 };
 
 #ifdef G__SECURITY
@@ -897,14 +836,10 @@ typedef unsigned long G__UINT32 ;
 #endif
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1207
 typedef void (*G__DLLINIT)();
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1536
 #define G__NONCINTHDR   0x01
 #define G__CINTHDR      0x10
-#endif
 
 struct G__filetable {
   FILE *fp;
@@ -915,41 +850,27 @@ struct G__filetable {
   int maxline;
   struct G__dictposition *dictpos;
   G__UINT32 security;
-#ifndef G__OLDIMPLEMENTATION952
   int included_from; /* filenum of the file which first include this one */
-#endif
-#ifndef G__OLDIMPLEMENTATION1207
   int ispermanentsl;
   G__DLLINIT initsl;
-#endif
-#ifndef G__OLDIMPLEMENTATION1273
   struct G__dictposition *hasonlyfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
   char hdrprop;
-#endif
 #ifndef G__OLDIMPLEMENTATION1649
   char *str;
   int vindex;
 #endif
-#ifndef G__OLDIMPLEMENTATION1756
   int parent_tagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION1908
   int slindex;
-#endif
 };
 
 /**************************************************************************
 * user specified pragma statement
 **************************************************************************/
-#ifndef G__OLDIMPLEMENTATION451
 struct G__AppPragma {
   char *name;
   void *p2f;
   struct G__AppPragma *next;
 };
-#endif
 
 /**************************************************************************
 * Flag to check global operator new/delete()
@@ -996,35 +917,18 @@ struct G__AppPragma {
 /*********************************************************************
 * return status flag
 *********************************************************************/
-#ifndef G__OLDIMPLEMENTATION754
 #define G__RETURN_NON       0
 #define G__RETURN_NORMAL    1 
 #define G__RETURN_IMMEDIATE 2
-#ifndef G__OLDIMPLEMENTATION1844
 #define G__RETURN_TRY      -1 
-#else
-#define G__RETURN_TRY       3 
-#endif
 #define G__RETURN_EXIT1     4
 #define G__RETURN_EXIT2     5
-#else
-#define G__RETURN_NON       0
-#define G__RETURN_NORMAL    1 
-#define G__RETURN_IMMEDIATE 2
-#define G__RETURN_EXIT1     3
-#define G__RETURN_EXIT2     4
-#endif
 
 /*********************************************************************
 * G__isanybase, G__ispublicbase static resolution
 *********************************************************************/
-#ifndef G__OLDIMPLEMENTATION1719
 #define G__STATICRESOLUTION   2  /* for G__isanybase */
 #define G__STATICRESOLUTION2  2  /* for G__ispublicbase */
-#else
-#define G__STATICRESOLUTION   0
-#define G__STATICRESOLUTION2  0
-#endif
 
 /*********************************************************************
 * x
@@ -1051,22 +955,18 @@ struct G__funclist {
   struct G__funclist *prev;
 };
 
-#ifndef G__OLDIMPLEMENTATION1782
 /*********************************************************************
 * variable length string buffer
 *********************************************************************/
 /* #define G__BUFLEN 34 */
 #define G__BUFLEN 80
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1836
 /*********************************************************************
 * variable length string buffer
 *********************************************************************/
 #define G__LONGLONG    1
 #define G__ULONGLONG   2
 #define G__LONGDOUBLE  3
-#endif
 
 /*********************************************************************
 * cintv6, flags
@@ -1082,7 +982,6 @@ struct G__funclist {
 /*********************************************************************
 * debug interface
 *********************************************************************/
-#ifndef G__OLDIMPLEMENTATION2137
 struct G__store_env {
   struct G__var_array *var_local;
   long struct_offset;
@@ -1096,11 +995,8 @@ struct G__view {
   long struct_offset;
   int tagnum;
   int exec_memberfunc;
-#ifndef G__OLDIMPLEMENTATION2159
   long localmem;
-#endif
 };
-#endif
 
 /*********************************************************************
 * cint parser function and global variable prototypes

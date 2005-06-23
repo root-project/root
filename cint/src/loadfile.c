@@ -18,17 +18,8 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION1920 
 /* Define one of following */
-#if 0
-#define G__OLDIMPLEMENTATION1923 /* keep tmpfile for -cN +V +P */
-#else
 #define G__OLDIMPLEMENTATION1922 /* keep opening all header files for +V +P */
-#endif
-#else  /* 1920 */
-#define G__OLDIMPLEMENTATION1922 
-#define G__OLDIMPLEMENTATION1923 
-#endif /* 1920 */
 
 #ifdef G__ROOT
 #ifdef HAVE_CONFIG
@@ -38,10 +29,8 @@
 
 #include "common.h"
 
-#ifndef G__PHILIPPE28
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
-#endif
 #endif
 
 #ifdef G__WIN32
@@ -49,26 +38,6 @@
 #endif
 
 #define G__OLDIMPLEMENTATION1849
-#ifndef G__OLDIMPLEMENTATION1849
-#define G__RESTORE_LOADFILEENV \
-  G__func_now = store_func_now; \
-  G__macroORtemplateINfile = store_macroORtemplateINfile; \
-  G__var_type = store_var_type; \
-  G__tagnum = store_tagnum; \
-  G__typenum = store_typenum; \
-  G__nobreak=store_nobreak; \
-  G__prerun=store_prerun; \
-  G__p_local=store_p_local; \
-  G__asm_noverflow = store_asm_noverflow; \
-  G__no_exec_compile = store_no_exec_compile; \
-  G__asm_exec = store_asm_exec; \
-  G__ifile = store_file ; \
-  G__eof = 0; \
-  G__step=store_step; \
-  G__globalcomp=G__store_globalcomp; \
-  G__iscpp=store_iscpp; \
-  G__security = store_security
-#endif
   
 
 /******************************************************************
@@ -79,12 +48,9 @@
 /* #define G__EDU_VERSION */
 
 
-#ifndef G__OLDIMPLEMENTATION1207
 extern int G__ispermanentsl;
 extern G__DLLINIT G__initpermanentsl;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1210
 static G__IgnoreInclude G__ignoreinclude = (G__IgnoreInclude)NULL;
 
 /******************************************************************
@@ -95,14 +61,11 @@ G__IgnoreInclude ignoreinclude;
 {
   G__ignoreinclude = ignoreinclude;
 }
-#endif
 
 static int G__kindofheader = G__USERHEADER;
 
-#ifndef G__OLDIMPLEMENTATION970
 static int G__copyflag = 0;
 
-#ifndef G__PHILIPPE1
 int (*G__ScriptCompiler) G__P((G__CONST char*,G__CONST char*)) = 0;
 
 /******************************************************************
@@ -113,9 +76,7 @@ int(*p2f) G__P((G__CONST char*,G__CONST char*));
 {
   G__ScriptCompiler = p2f;
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1920
 /******************************************************************
 * G__copytotmpfile()
 ******************************************************************/
@@ -140,7 +101,6 @@ char *prepname;
   fseek(ofp,0L,SEEK_SET);
   return(ofp);
 }
-#endif
 
 /******************************************************************
 * G__copysourcetotmp()
@@ -152,7 +112,6 @@ int fentry;
 {
   if(G__copyflag && 0==prepname[0]) {
     FILE *fpout;
-#ifndef G__OLDIMPLEMENTATION1920
     fpout = tmpfile();
     if(!fpout) {
       G__genericerror("Internal error: can not open tmpfile.");
@@ -167,26 +126,6 @@ int fentry;
     G__srcfile[fentry].fp = fpout;
     fclose(pifile->fp);
     pifile->fp = fpout;
-#else /* 1920 */
-    G__tmpnam(prepname); /* not used anymore */
-    fpout = fopen(prepname,"wb");
-    if(!fpout) {
-      G__fprinterr(G__serr,"cannot open tmp file %s",prepname);
-      G__genericerror((char*)NULL);
-      prepname[0] = 0;
-      return;
-    }
-    G__copyfile(fpout,pifile->fp);
-    G__srcfile[fentry].prepname = (char*)malloc(strlen(prepname)+1);
-    strcpy(G__srcfile[fentry].prepname,prepname);
-    fclose(pifile->fp);
-    fclose(fpout);
-#ifndef G__WIN32
-    pifile->fp = fopen(prepname,"r");
-#else
-    pifile->fp = fopen(prepname,"rb");
-#endif
-#endif /* 1920 */
   }
 }
 
@@ -198,7 +137,6 @@ int flag;
 {
   G__copyflag = flag;
 }
-#endif
 
 /******************************************************************
 * G__ispreprocessfilekey
@@ -247,14 +185,10 @@ int G__include_file()
   int store_cpp;
   int store_globalcomp;
   int expandflag=0;
-#ifndef G__OLDIMPLEMENTATION1725
   static int G__gcomplevel=0;
-#endif
 
   while((c=G__fgetc())!='\n' && c!='\r'
-#ifndef G__OLDIMPLEMENTATION1261
 	&& c!='#'
-#endif
 	) {
     switch(c) {
     case '<':
@@ -295,7 +229,6 @@ int G__include_file()
     }
   }
 
-#ifndef G__OLDIMPLEMENTATION460
   if(expandflag) {
     /* Following stupid code is written to avoid HP-UX CC -O bug */
     struct G__var_array *var;
@@ -310,67 +243,48 @@ int G__include_file()
     else {
       G__fprinterr(G__serr,"Error: cannot expand #include %s",filename);
       G__genericerror(NULL);
-#ifndef G__OLDIMPLEMENTATION1261
       if('#'==c) G__fignoreline();
-#endif
       return(G__LOADFILE_FAILURE);
     }
   }
-#endif
 
   store_cpp=G__cpp;
   G__cpp=G__include_cpp;
 
   if(G__USERHEADER==G__kindofheader) {
-#ifndef G__OLDIMPLEMENTATION1725
     store_globalcomp = G__globalcomp;
     if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
     result = G__loadfile(filename);
     --G__gcomplevel;
     G__globalcomp=store_globalcomp;
-#else
-    result = G__loadfile(filename);
-#endif
   }
   else {
     /* <xxx.h> , 'xxx.h' */
     store_globalcomp=G__globalcomp;
     /* G__globalcomp=G__NOLINK; */
-#ifndef G__OLDIMPLEMENTATION1725
     if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
-#endif
     result = G__loadfile(filename);
-#ifndef G__OLDIMPLEMENTATION1725
     --G__gcomplevel;
-#endif
     G__globalcomp=store_globalcomp;
   }
   G__kindofheader = G__USERHEADER;
 
   G__cpp=store_cpp;
 
-#ifndef G__OLDIMPLEMENTATION1261
   if('#'==c) {
     if(G__LOADFILE_FAILURE==result && G__ispragmainclude) {
       G__ispragmainclude=0;
       c = G__fgetname(filename,"\n\r");
-#ifndef G__OLDIMPLEMENTATION1725
       store_globalcomp = G__globalcomp;
       if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
       if('\n'!=c && '\r'!=c) result = G__include_file();
-#ifndef G__OLDIMPLEMENTATION1725
       --G__gcomplevel;
-#endif
       G__globalcomp=store_globalcomp;
-#else
-      if('\n'!=c && '\r'!=c) result = G__include_file();
-#endif
     }
     else {
       G__fignoreline();
     }
   }
-#endif
 
   return(result);
 }
@@ -397,7 +311,6 @@ char *item;
   return("");
 #endif
 
-#ifndef G__OLDIMPLEMENTATION466
   /****************************************************************
   * Environment variable overrides MAKEINFO file if exists.
   ****************************************************************/
@@ -405,7 +318,6 @@ char *item;
     strcpy(buf,p);
     return(buf);
   }
-#endif
 
   /****************************************************************
   * Get information from MAKEINFO file.
@@ -451,7 +363,6 @@ char *item;
   return(buf);
 }
 
-#ifndef G__OLDIMPLEMENTATION1645
 /******************************************************************
 * G__getmakeinfo1()
 *
@@ -465,9 +376,7 @@ char *item;
   *p = 0;
   return(buf);
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1963
 /******************************************************************
 * G__SetCINTSYSDIR()
 *
@@ -477,9 +386,7 @@ char *cintsysdir;
 {
   strcpy(G__cintsysdir,cintsysdir);
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1731
 /******************************************************************
  * G__SetUseCINTSYSDIR()
  ******************************************************************/
@@ -489,7 +396,6 @@ int UseCINTSYSDIR;
 {
   G__UseCINTSYSDIR=UseCINTSYSDIR;
 }
-#endif
 
 /******************************************************************
 * G__getcintsysdir()
@@ -507,12 +413,8 @@ int G__getcintsysdir()
 #  ifdef CINTINCDIR
     env = CINTINCDIR;
 #  else
-#ifndef G__OLDIMPLEMENTATION1731
     if(G__UseCINTSYSDIR) env=getenv("CINTSYSDIR");
     else                 env=getenv("ROOTSYS");
-#else /* 1731 */
-    env=getenv("ROOTSYS");
-#endif /* 1731 */
 #  endif
 # endif
 #elif defined(G__WILDC)
@@ -538,12 +440,8 @@ int G__getcintsysdir()
 #  ifdef CINTINCDIR
       sprintf(G__cintsysdir, "%s", CINTINCDIR);
 #  else
-#ifndef G__OLDIMPLEMENTATION1731
       if(G__UseCINTSYSDIR) strcpy(G__cintsysdir,env);
       else                 sprintf(G__cintsysdir, "%s%scint", env, G__psep);
-#else /* 1731 */
-      sprintf(G__cintsysdir, "%s%scint", env, G__psep);
-#endif /* 1731 */
 #  endif
 # endif /* ROOTBUILD */
 #endif /* G__VMS */
@@ -558,7 +456,6 @@ int G__getcintsysdir()
       sprintf(G__cintsysdir,".");
       return(EXIT_SUCCESS);
 #else
-#ifndef G__OLDIMPLEMENTATION1314
 #ifdef G__WIN32
       HMODULE hmodule=0;
       if(GetModuleFileName(hmodule,G__cintsysdir,G__MAXFILENAME)) {
@@ -572,7 +469,6 @@ int G__getcintsysdir()
 # endif
 	return(EXIT_SUCCESS);
       }
-#endif
 #endif
 #if defined(G__ROOT)
       G__fprinterr(G__serr,"Warning: environment variable ROOTSYS is not set. Standard include files ignored\n");
@@ -638,7 +534,6 @@ int ifn;
   return(flag);
 }
 
-#ifndef G__OLDIMPLEMENTATION1196
 /******************************************************************
 * G__matchfilename(i,filename)
 ******************************************************************/
@@ -646,7 +541,7 @@ int G__matchfilename(i1,filename)
 int i1;
 char* filename;
 {
-#if !defined(G__PHILIPPE28) && !defined(__CINT__)
+#if  !defined(__CINT__)
 
 #ifdef G__WIN32
   char i1name[_MAX_PATH],fullfile[_MAX_PATH];
@@ -704,7 +599,6 @@ char* filename;
   return(0);
 #endif /* PHILIPPE28 */
 }
-#endif
 
 /******************************************************************
 * G__stripfilename(filename)
@@ -745,7 +639,6 @@ char* filename;
   else return(filename);
 }
 
-#ifndef G__OLDIMPLEMENTATION1273
 /******************************************************************
 * G__smart_unload()
 ******************************************************************/
@@ -773,9 +666,6 @@ int ifn;
   ifn = dictpos->ifn;
   while(ifunc && (ifunc!=hasonlyfunc->ifunc || ifn!=hasonlyfunc->ifn)) {
     ifunc->hash[ifn] = 0;
-#ifndef G__OLDIMPLEMENTATION1706
-    ifunc->funcname[ifn][0] = 0;
-#endif
     if(++ifn>=G__MAXIFUNC) {
       ifunc = ifunc->next;
       ifn = 0;
@@ -795,7 +685,6 @@ int ifn;
     G__smart_shl_unload(allsl);
   }
 }
-#endif
 
 
 /******************************************************************
@@ -814,18 +703,13 @@ char *filename;
   int hash;
   /* int from = -1 ,to = -1, next; */
   int flag;
-#ifndef G__OLDIMPLEMENTATION1765
   char buf[G__MAXFILENAME];
   char *fname;
   char *scope;
   int envtagnum;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__LockCriticalSection();
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1765
   strcpy(buf,filename);
   fname = G__strrstr(buf,"::");
   if(fname) {
@@ -838,9 +722,7 @@ char *filename;
       if(-1==envtagnum) {
 	G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" scope not found ",scope);
 	G__genericerror((char*)NULL);
-#ifndef G__OLDIMPLEMENTATION1345
 	G__UnlockCriticalSection();
-#endif
 	return(G__UNLOADFILE_FAILURE);
       }
     }
@@ -849,31 +731,17 @@ char *filename;
     fname = filename;
     envtagnum = -1;
   }
-#endif
 
   /******************************************************************
   * check if file is already loaded.
   * if not so, return
   ******************************************************************/
-#ifndef G__OLDIMPLEMENTATION1765
   G__hash(fname,hash,i2);
-#else
-  G__hash(filename,hash,i2);
-#endif
 
   flag=0;
   while(i1<G__nfile) {
-#ifndef G__OLDIMPLEMENTATION1196
-#ifndef G__OLDIMPLEMENTATION1765
     if(G__matchfilename(i1,fname)
        && (-1==envtagnum||(envtagnum==G__srcfile[i1].parent_tagnum))){
-#else
-    if(G__matchfilename(i1,filename)) {
-#endif
-#else
-    if((G__srcfile[i1].hash==hash&&strcmp(G__srcfile[i1].filename,filename)==0)
-       ){
-#endif
       flag=1;
       break;
     }
@@ -883,9 +751,7 @@ char *filename;
   if(flag==0) {
     G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" not loaded ",filename);
     G__genericerror((char*)NULL);
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
     return(G__UNLOADFILE_FAILURE);
   }
 
@@ -902,30 +768,22 @@ char *filename;
     G__fprinterr(G__serr,
   "Error: G__unloadfile() Can not unload \"%s\", file busy " ,filename);
     G__genericerror((char*)NULL);
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
     return(G__UNLOADFILE_FAILURE);
   }
 
-#ifndef G__OLDIMPLEMENTATION1273
   if(G__srcfile[ifn].hasonlyfunc && G__do_smart_unload) {
     G__smart_unload(ifn);
   }
   else {
     G__scratch_upto(G__srcfile[ifn].dictpos);
   }
-#else
-  G__scratch_upto(G__srcfile[ifn].dictpos);
-#endif
 
   if(G__debug) {
     G__fprinterr(G__serr,"File=%s unloaded\n",filename);
   }
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__UnlockCriticalSection();
-#endif
   return(G__UNLOADFILE_SUCCESS);
 
 }
@@ -945,46 +803,32 @@ char *filename;
 #ifdef G__VISUAL /* ON959 */
   char buf[11];  
 #endif
-#ifndef G__OLDIMPLEMENTATION1217
   int unnamedmacro = 0;
   int alphaflag=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION1480
   int store_lang = G__lang;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1480
   if(G__ONEBYTE!=G__lang) G__lang = G__UNKNOWNCODING;
-#else
-#ifndef G__OLDIMPLEMENTATION1344
-  G__lang = G__UNKNOWNCODING;
-#endif
-#endif
 
   /* Read 10 byte from beginning of the file.
    * Set badflag if unprintable char is found. */
   for(i=0;i<10;i++) {
     c=fgetc(G__ifile.fp);
-#ifndef G__OLDIMPLEMENTATION1344
     if(G__IsDBCSLeadByte(c)) {
       c=fgetc(G__ifile.fp);
       if(c!=EOF) G__CheckDBCS2ndByte(c);
     } else
-#endif
     if(!isprint(c) && '\t'!=c && '\n'!=c && '\r'!=c && EOF!=c && 0==comflag) {
       ++badflag;
     }
     else if('/'==prev && ('/'==c||'*'==c)) {
       comflag=1; /* set comment flag */
     }
-#ifndef G__OLDIMPLEMENTATION1217
     else if('{'==c && 0==alphaflag && 0==comflag) {
       unnamedmacro=1;
     }
     else if(isalpha(c)) {
       ++alphaflag;
     }
-#endif
     prev = c;
     if(EOF==c) break;
 #ifdef G__VISUAL /* ON959 */
@@ -997,23 +841,17 @@ char *filename;
     G__fprinterr(G__serr,"Error: Bad source file(binary) %s",filename);
     G__genericerror((char*)NULL);
     G__return=G__RETURN_EXIT1;
-#ifndef G__OLDIMPLEMENTATION1480
     G__lang = store_lang;
-#endif
     return(1);
   }
-#ifndef G__OLDIMPLEMENTATION1217
   else if(unnamedmacro) {
     G__fprinterr(G__serr,"Error: Bad source file(unnamed macro) %s",filename);
     G__genericerror((char*)NULL);
     G__fprinterr(G__serr,"  unnamed macro has to be executed by 'x' command\n");
     G__return=G__RETURN_EXIT1;
-#ifndef G__OLDIMPLEMENTATION1480
     G__lang = store_lang;
-#endif
     return(1);
   }
-#endif
   else {
 #ifdef G__VISUAL /* ON959 */
     buf[10] =0;
@@ -1036,13 +874,10 @@ Copyright (C) Microsoft Corp 1984-1997. All rights reserved.
     fseek(G__ifile.fp,SEEK_SET,0);
 #endif
   }
-#ifndef G__OLDIMPLEMENTATION1480
   G__lang = store_lang;
-#endif
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1273
 /******************************************************************
 *  G__checkIfOnlyFunction()
 ******************************************************************/
@@ -1055,7 +890,6 @@ int fentry;
   struct G__Definetemplatefunc *definedtemplatefunc;   
   struct G__dictposition* dictpos = G__srcfile[fentry].dictpos;
   int varflag = 1;
-#ifndef G__OLDIMPLEMENTATION2014
   int tagflag ;
 
   if(dictpos->tagnum == G__struct.alltag) {
@@ -1073,7 +907,6 @@ int fentry;
   else {
     tagflag = 0;
   }
-#endif
 
   var = &G__global;
   while(var->next) var=var->next;
@@ -1108,11 +941,7 @@ int fentry;
     definedtemplatefunc=definedtemplatefunc->next;
 
   if(
-#ifndef G__OLDIMPLEMENTATION2014
      tagflag &&
-#else
-     dictpos->tagnum == G__struct.alltag &&
-#endif
      dictpos->typenum == G__newtype.alltype &&
      varflag &&
      dictpos->deffuncmacro == deffuncmacro &&
@@ -1120,15 +949,11 @@ int fentry;
      dictpos->definedtemplatefunc == definedtemplatefunc) {
     G__srcfile[fentry].hasonlyfunc = 
       (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
-#ifndef G__OLDIMPLEMENTATION2014
     G__srcfile[fentry].hasonlyfunc->ptype = (char*)G__PVOID;
-#endif
     G__store_dictposition(G__srcfile[fentry].hasonlyfunc);
   }
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1919
 /******************************************************************
 * G__loadfile_tmpfile(fp)
 *
@@ -1155,9 +980,7 @@ FILE *fp;
   int store_return;
   long store_struct_offset;
   int hash,temp;
-#ifndef G__OLDIMPLEMENTATION1536
   char hdrprop = G__NONCINTHDR;
-#endif
 
   /******************************************************************
   * check if number of loaded file exceeds G__MAXFILE
@@ -1173,9 +996,7 @@ FILE *fp;
     return(G__LOADFILE_FATAL);
   }
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__LockCriticalSection();
-#endif
 
   /*************************************************
   * store current input file information
@@ -1207,9 +1028,7 @@ FILE *fp;
 
   G__srcfile[fentry].dictpos
     = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
-#ifndef G__OLDIMPLEMENTATION2014
   G__srcfile[fentry].dictpos->ptype = (char*)NULL;
-#endif
   G__store_dictposition(G__srcfile[fentry].dictpos);
 
   G__srcfile[fentry].hdrprop = hdrprop;
@@ -1289,11 +1108,9 @@ FILE *fp;
    * restore parser parameters
    ******************************************************/
   G__store_struct_offset = store_struct_offset;
-#ifndef G__OLDIMPLEMENTATION487
   pragmacompile_filenum = G__ifile.filenum;
   pragmacompile_iscpp = G__iscpp;
   G__func_now = store_func_now;
-#endif
   G__macroORtemplateINfile = store_macroORtemplateINfile;
   G__var_type = store_var_type;
   G__tagnum = store_tagnum;
@@ -1303,11 +1120,9 @@ FILE *fp;
   G__prerun=store_prerun;
   G__p_local=store_p_local;
 
-#ifndef G__OLDIMPLEMENTATION974
   G__asm_noverflow = store_asm_noverflow;
   G__no_exec_compile = store_no_exec_compile;
   G__asm_exec = store_asm_exec;
-#endif
 
   /******************************************************
    * restore input file information to G__ifile
@@ -1323,20 +1138,11 @@ FILE *fp;
   G__security = store_security;
 #endif
   if(G__return>G__RETURN_NORMAL) {
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
-#ifndef G__OLDIMPLEMENTATION1849
-    G__return=store_return;
-#endif
     return(G__LOADFILE_FAILURE);
   }
 
-#ifndef G__OLDIMPLEMENTATION1849
-  G__return=store_return;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION487
 #ifdef G__AUTOCOMPILE
   /*************************************************************
    * if '#pragma compile' appears in source code.
@@ -1348,22 +1154,12 @@ FILE *fp;
     G__iscpp = store_iscpp;
   }
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1273
   G__checkIfOnlyFunction(fentry);
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__UnlockCriticalSection();
-#endif
-#ifndef G__OLDIMPLEMENTATION1920
   return(fentry+2);
-#else
-  return(G__LOADFILE_SUCCESS);
-#endif
 }
-#endif
 
 /******************************************************************
 * G__loadfile(filename)
@@ -1383,13 +1179,9 @@ FILE *fp;
 int G__loadfile(filenamein)
 char *filenamein;
 {
-#ifndef G__PHILIPPE0
   FILE *tmpfp;
-#endif
-#ifndef G__PHILIPPE1
   int external_compiler = 0;
   char* compiler_option = "";
-#endif
   int store_prerun;
   int i1=0;
   struct G__var_array *store_p_local;
@@ -1409,40 +1201,26 @@ char *filenamein;
   int temp;
   int store_macroORtemplateINfile;
   int len;
-#ifndef G__OLDIMPLEMENTATION1705
   int len1;
   char *dllpost;
-#endif
   short store_iscpp;
   G__UINT32 store_security;
-#ifndef G__OLDIMPLEMENTATION460
   char addpost[3][8];
   int i2;
-#endif
-#ifndef G__OLDIMPLEMENTATION487
   int store_func_now;
   int pragmacompile_iscpp;
   int pragmacompile_filenum;
-#endif
-#ifndef G__OLDIMPLEMENTATION974
   int store_asm_noverflow;
   int store_no_exec_compile;
   int store_asm_exec;
-#endif
 #if defined(R__FBSD) || defined(R__OBSD)
   char soext[]=SOEXT;
 #endif
-#ifndef G__OLDIMPLEMENTATION1849
-  int store_return;
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
   char hdrprop = G__NONCINTHDR;
-#endif
   char filename[G__ONELINE];
   strcpy(filename,filenamein);
 
 
-#ifndef G__OLDIMPLEMENTATION464
   /*************************************************
   * delete space chars at the end of filename
   *************************************************/
@@ -1450,9 +1228,7 @@ char *filenamein;
   while(len>1&&isspace(filename[len-1])) {
     filename[--len]='\0';
   }
-#endif
 
-#ifndef G__PHILIPPE1
   /*************************************************
   * Check if the filename as an extension ending in
   * ++, like script.cxx++ or script.C++
@@ -1462,7 +1238,6 @@ char *filenamein;
   * or an 'O' which means respectively to compile
   * in debug or optimized mode.
   *************************************************/  
-#ifndef G__OLDIMPLEMENTATION1734
   compiler_option = 0;
   if ( len>2 && (strncmp(filename+len-2,"+",1)==0 )
        && (strcmp(filename+len-1,"O")==0
@@ -1473,7 +1248,6 @@ char *filenamein;
   }
   if ( len>1 && (strncmp(filename+len-1,"+",1)==0 ) ) {
     if ( len>2 && (strncmp(filename+len-2,"++",2)==0 ) ) {
-#ifndef G__OLDIMPLEMENTATION1303
       if (compiler_option) {
          switch(compiler_option[0]) {
             case 'O': compiler_option = "kfO"; break;
@@ -1483,7 +1257,6 @@ char *filenamein;
       } else {
          compiler_option = "kf";
       }
-#endif 
       len -= 2;
     } else {
       if (compiler_option) {
@@ -1508,33 +1281,8 @@ char *filenamein;
 	return(G__LOADFILE_FAILURE);
     }
   }
-#else /* 1734 */
-  if ( len>1&& (strcmp(filename+len-1,"+")==0 ) ) {
-    if (len>2 && (strcmp(filename+len-2,"++")==0 ) ) {
-#ifndef G__OLDIMPLEMENTATION1303
-      compiler_option = "kf";
-#endif
-      len -= 2;
-    } else {
-      compiler_option = "k";
-      len -= 1;
-    } 
-    filename[len]='\0';
-    external_compiler = 1; /* Request external compilation
-			    * if available (in ROOT) */
-    if (G__ScriptCompiler!=0) {
-      if ( (*G__ScriptCompiler)(filename,compiler_option) )
-	return(G__LOADFILE_SUCCESS);
-      else
-	return(G__LOADFILE_FAILURE);
-    }
-  }
-#endif /* 1734 */
-#endif /* PHIL1 */
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__LockCriticalSection();
-#endif
 
   /*************************************************
   * store current input file information
@@ -1558,9 +1306,7 @@ char *filenamein;
     G__eof = 0;
     G__step=store_step;
     G__setdebugcond();
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
     return(G__LOADFILE_FATAL);
   }
 
@@ -1584,16 +1330,9 @@ char *filenamein;
     /***************************************************
      * check if alreay loaded
      ***************************************************/
-#ifndef G__OLDIMPLEMENTATION1196
     if(G__matchfilename(i1,filename)
-#ifndef G__OLDIMPLEMENTATION1756
        &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
-#endif
        ){
-#else
-    if(hash==G__srcfile[i1].hash&&strcmp(G__srcfile[i1].filename,filename)==0
-       ){
-#endif
       if(G__prerun==0 || G__debugtrace)
 	if(G__dispmsg>=G__DISPNOTE) {
 	  G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
@@ -1606,9 +1345,7 @@ char *filenamein;
       G__eof = 0;
       G__step=store_step;
       G__setdebugcond();
-#ifndef G__OLDIMPLEMENTATION1345
       G__UnlockCriticalSection();
-#endif
       return(G__LOADFILE_DUPLICATE);
     }
     else {
@@ -1640,7 +1377,6 @@ char *filenamein;
      * -p option. open preprocessed tmpfile
      **********************************************/
     sprintf(G__ifile.name,"%s",filename);
-#ifndef G__OLDIMPLEMENTATION1920
 #ifndef G__OLDIMPLEMENTATION1922
     if(G__fons_comment && G__cpp && G__NOLINK!=G__globalcomp) {
 #ifndef G__WIN32
@@ -1651,7 +1387,6 @@ char *filenamein;
     }
     else {
       G__ifile.fp = G__copytotmpfile(prepname);
-#ifndef G__OLDIMPLEMENTATION2092
       if(G__ifile.fp) {
         remove(prepname);
         strcpy(prepname,"(tmpfile)");
@@ -1663,74 +1398,42 @@ char *filenamein;
         G__ifile.fp = fopen(prepname,"rb");
 #endif /* G__WIN32 */
       }
-#else /* 2092 */
-      remove(prepname);
-      strcpy(prepname,"(tmpfile)");
-#endif /* 2092 */
     }
 #else /* 1922 */
     G__ifile.fp = G__copytotmpfile(prepname);
     remove(prepname);
     strcpy(prepname,"(tmpfile)");
 #endif /* 1922 */
-#else /* 1920 */
-#ifndef G__WIN32
-    G__ifile.fp = fopen(prepname,"r");
-#else /* G__WIN32 */
-    G__ifile.fp = fopen(prepname,"rb");
-#endif /* G__WIN32 */
-#endif /* 1920 */
     G__kindofheader = G__USERHEADER;
   }
   else {
     strcpy(addpost[0],"");
     strcpy(addpost[1],".h");
 
-#ifndef G__OLDIMPLEMENTATION800
     strcpy(addpost[2],"");
     for(i2=0;i2<3;i2++) {
       if(2==i2) {
 	if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
 		     strcmp(filename+len-3,".dl")==0 ||
 		     strcmp(filename+len-3,".so")==0))) {
-#ifndef G__OLDIMPLEMENTATION1645
 	  strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
-#else
-	  strcpy(filename+len-3,G__getmakeinfo("DLLPOST"));
-#endif
 	}
 	else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
 			  strcmp(filename+len-4,".DLL")==0))) {
-#ifndef G__OLDIMPLEMENTATION1645
 	  strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
-#else
-	  strcpy(filename+len-4,G__getmakeinfo("DLLPOST"));
-#endif
 	}
 	else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
 			  strcmp(filename+len-2,".A")==0))) {
-#ifndef G__OLDIMPLEMENTATION1645
 	  strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
-#else
-	  strcpy(filename+len-2,G__getmakeinfo("DLLPOST"));
-#endif
 	}
 #if defined(R__FBSD) || defined(R__OBSD)
 	else if (len>strlen(soext) &&
 		 strcmp(filename+len-strlen(soext),soext)==0) {
-#ifndef G__OLDIMPLEMENTATION1645
 	  strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
-#else
-	  strcpy(filename+len-strlen(soext),G__getmakeinfo("DLLPOST"));
-#endif
 	}
 #endif
       }
-#else
-    for(i2=0;i2<2;i2++) {
-#endif
 
-#ifndef G__OLDIMPLEMENTATION794
       G__ifile.fp = NULL;
       /**********************************************
        * If it's a "" header with a relative path, first
@@ -1768,7 +1471,6 @@ char *filenamein;
 #endif
       }
       if (G__ifile.fp) break;
-#endif
       /**********************************************
        * try ./filename
        **********************************************/
@@ -1803,20 +1505,16 @@ char *filenamein;
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
 	ipath = ipath->next;
-#ifndef G__OLDIMPLEMENTATION1451
 	{
 	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
 	  while(sysdir) {
 	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
 	      G__globalcomp=G__NOLINK;
-#ifndef G__OLDIMPLEMENTATION1536
 	      hdrprop = G__CINTHDR;
-#endif
 	    }
 	    sysdir = sysdir->prev;
 	  }
 	}
-#endif
       }
       if(G__ifile.fp) break;
 
@@ -1832,15 +1530,11 @@ char *filenamein;
 #else
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-#ifndef G__OLDIMPLEMENTATION1271
 	if(G__ifile.fp && G__autoload_stdheader) {
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
 	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1857,20 +1551,15 @@ char *filenamein;
 #else
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-#ifndef G__OLDIMPLEMENTATION1271
 	if(G__ifile.fp && G__autoload_stdheader) {
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
 	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
 
-#ifndef G__OLDIMPLEMENTATION1041
       /**********************************************
        * try $CINTSYSDIR/lib
        **********************************************/
@@ -1886,7 +1575,6 @@ char *filenamein;
 	/* G__globalcomp=G__NOLINK; */
       }
       if(G__ifile.fp) break;
-#endif
 
 #ifdef G__EDU_VERSION
       /**********************************************
@@ -1901,15 +1589,11 @@ char *filenamein;
 #else
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-#ifndef G__OLDIMPLEMENTATION1271
 	if(G__ifile.fp && G__autoload_stdheader) {
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
 	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1926,15 +1610,11 @@ char *filenamein;
 #else
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-#ifndef G__OLDIMPLEMENTATION1271
 	if(G__ifile.fp && G__autoload_stdheader) {
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
 	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1995,9 +1675,7 @@ char *filenamein;
 	sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
 	
 	G__ifile.fp = fopen(G__ifile.name,"r");
-#ifndef G__OLDIMPLEMENTATION1536
 	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -2107,25 +1785,16 @@ char *filenamein;
     G__eof = 0;
     G__step=store_step;
     G__globalcomp=G__store_globalcomp;
-#ifndef G__OLDIMPLEMENTATION782
     if(0==G__ispragmainclude) {
       G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
       G__genericerror((char*)NULL);
     }
-#else
-    G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
-    G__genericerror((char*)NULL);
-#endif
     G__iscpp=store_iscpp;
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
     return(G__LOADFILE_FAILURE);
   }
   else {
-#ifndef G__OLDIMPLEMENTATION1210
     if(G__ignoreinclude && (*G__ignoreinclude)(filename,G__ifile.name)) {
-#ifndef G__PHILIPPE7
       /* Close file for process max file open limitation with -cN option */
       /* fclose(G__srcfile[fentry].fp); */
       fclose(G__ifile.fp);
@@ -2142,18 +1811,12 @@ char *filenamein;
       G__setdebugcond();
       G__globalcomp=G__store_globalcomp;
       G__iscpp=store_iscpp;
-#endif
-#ifndef G__OLDIMPLEMENTATION1345
       G__UnlockCriticalSection();
-#endif
       return(G__LOADFILE_SUCCESS);
     }
-#endif
     G__srcfile[G__nfile].dictpos
       = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
-#ifndef G__OLDIMPLEMENTATION2014
     G__srcfile[G__nfile].dictpos->ptype = (char*)NULL;
-#endif
     G__store_dictposition(G__srcfile[G__nfile].dictpos);
     /***************************************************
      * set
@@ -2173,9 +1836,7 @@ char *filenamein;
       fentry=null_entry;
     }
 
-#ifndef G__OLDIMPLEMENTATION1536
     G__srcfile[fentry].hdrprop = hdrprop;
-#endif
 
 #ifdef G__SECURITY
     store_security = G__security;
@@ -2199,22 +1860,12 @@ char *filenamein;
       strcpy(G__srcfile[fentry].filename,filename);
     }
     G__srcfile[fentry].fp=G__ifile.fp;
-#ifndef G__OLDIMPLEMENTATION952
     G__srcfile[fentry].included_from = store_file.filenum;
-#endif
-#ifndef G__OLDIMPLEMENTATION1207
     G__srcfile[fentry].ispermanentsl = G__ispermanentsl;
     G__srcfile[fentry].initsl = (G__DLLINIT)NULL;
-#endif
-#ifndef G__OLDIMPLEMENTATION1273
     G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
-#endif
-#ifndef G__OLDIMPLEMENTATION1756
     G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
-#endif
-#ifndef G__OLDIMPLEMENTATION1908
     G__srcfile[fentry].slindex = -1;
-#endif
   }
 
   if(G__debugtrace) {
@@ -2226,19 +1877,13 @@ char *filenamein;
 
   store_prerun=G__prerun;
   store_p_local=G__p_local;
-#ifndef G__OLDIMPLEMENTATION616
   if(0==G__def_struct_member||-1==G__tagdefining||
      ('n'!=G__struct.type[G__tagdefining]
-#ifndef G__OLDIMPLEMENTATION1608
       && 'c'!=G__struct.type[G__tagdefining]
       && 's'!=G__struct.type[G__tagdefining]
-#endif
      )) {
     G__p_local=NULL;
   }
-#else
-  G__p_local=NULL;
-#endif
 
   G__eof = 0;
   G__prerun = 1;
@@ -2250,30 +1895,20 @@ char *filenamein;
   store_var_type = G__var_type;
   store_tagnum = G__tagnum;
   store_typenum = G__typenum;
-#ifndef G__OLDIMPLEMENTATION487
   store_func_now = G__func_now;
   G__func_now = -1;
-#endif
   store_macroORtemplateINfile = G__macroORtemplateINfile;
   G__macroORtemplateINfile = 0;
-#ifndef G__OLDIMPLEMENTATION974
   store_asm_noverflow = G__asm_noverflow;
   store_no_exec_compile = G__no_exec_compile;
   store_asm_exec = G__asm_exec;
   G__asm_noverflow = 0;
   G__no_exec_compile = 0;
   G__asm_exec = 0;
-#endif
-#ifndef G__OLDIMPLEMENTATION1849
-  store_return=G__return;
-  G__return=G__RETURN_NON;
-#endif
 
 #ifdef G__SHAREDLIB
   len = strlen(filename);
-#ifndef G__OLDIMPLEMENTATION1705
   dllpost = G__getmakeinfo1("DLLPOST");
-#endif
   if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
 	       strcmp(filename+len-3,".dl")==0 ||
 	       strcmp(filename+len-3,".so")==0)) ||
@@ -2282,37 +1917,25 @@ char *filenamein;
 #if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
-#ifndef G__OLDIMPLEMENTATION1705
      (
-#ifndef G__OLDIMPLEMENTATION1873
       dllpost[0] && 
-#endif
       len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
-#endif
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
 	       strcmp(filename+len-2,".A")==0))
      ) {
     /* Caution, G__ifile.fp is left openned.
      * This may cause trouble in future */
     fclose(G__srcfile[fentry].fp);
-#ifndef G__OLDIMPLEMENTATION2224
     if (G__ifile.fp == G__srcfile[fentry].fp) {
       /* Since the file is closed, the FILE* pointer is now invalid and thus
 	 we have to remove it from G__ifile! */
       G__ifile.fp=(FILE*)NULL;
     }
-#endif
     G__srcfile[fentry].fp=(FILE*)NULL;
-#ifndef G__OLDIMPLEMENTATION1908
     G__srcfile[fentry].slindex = G__shl_load(G__ifile.name);
-#else
-    G__shl_load(G__ifile.name);
-#endif
-#ifndef G__OLDIMPLEMENTATION1207
     if(G__ispermanentsl) {
       G__srcfile[fentry].initsl = G__initpermanentsl;
     }
-#endif
   }
   else {
     if(G__globalcomp>1 && strcmp(filename+strlen(filename)-4,".sut")==0) {
@@ -2320,30 +1943,19 @@ char *filenamein;
       G__copyfile(G__sutpi,G__ifile.fp);
     }
     else {
-#ifndef G__OLDIMPLEMENTATION1072
       long store_struct_offset = G__store_struct_offset;
       G__store_struct_offset = 0;
-#endif
       if(G__isbinaryfile(filename)) {
 	G__iscpp=store_iscpp;
 #ifdef G__SECURITY
 	G__security = store_security;
 #endif
-#ifndef G__OLDIMPLEMENTATION1345
 	G__UnlockCriticalSection();
-#endif
-#ifndef G__OLDIMPLEMENTATION1849
-	G__RESTORE_LOADFILEENV;
-#endif
 	return(G__LOADFILE_FAILURE);
       }
-#ifndef G__OLDIMPLEMENTATION970
       if(G__copyflag) G__copysourcetotmp(prepname,&G__ifile,fentry);
-#endif
       while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
-#ifndef G__OLDIMPLEMENTATION1072
       G__store_struct_offset = store_struct_offset;
-#endif
     }
   }
 #else /* of G__SHAREDLIB */
@@ -2357,12 +1969,7 @@ char *filenamein;
 #ifdef G__SECURITY
       G__security = store_security;
 #endif
-#ifndef G__OLDIMPLEMENTATION1345
       G__UnlockCriticalSection();
-#endif
-#ifndef G__OLDIMPLEMENTATION1849
-      G__RESTORE_LOADFILEENV;
-#endif
       return(G__LOADFILE_FAILURE);
     }
     while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
@@ -2378,11 +1985,6 @@ char *filenamein;
        && (!G__fons_comment || !G__cpp)
 #endif
        ) {
-#ifdef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(G__srcfile[fentry].fp);
-#endif
-#ifndef G__PHILIPPE0
       /* After closing the file let's make sure that all reference to
 	 the file pointer are reset. When preprocessor is used, we
 	 will have several logical file packed in one file. */
@@ -2392,17 +1994,8 @@ char *filenamein;
 	  G__srcfile[i1].fp = (FILE*)NULL;
 	}
       }
-#ifndef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(tmpfp);
-#endif
-#else
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(G__srcfile[fentry].fp);
-#endif
-      G__srcfile[fentry].fp = (FILE*)NULL;
-#endif
     }
   }
 
@@ -2410,11 +2003,9 @@ char *filenamein;
   /******************************************************
    * restore parser parameters
    ******************************************************/
-#ifndef G__OLDIMPLEMENTATION487
   pragmacompile_filenum = G__ifile.filenum;
   pragmacompile_iscpp = G__iscpp;
   G__func_now = store_func_now;
-#endif
   G__macroORtemplateINfile = store_macroORtemplateINfile;
   G__var_type = store_var_type;
   G__tagnum = store_tagnum;
@@ -2424,11 +2015,9 @@ char *filenamein;
   G__prerun=store_prerun;
   G__p_local=store_p_local;
 
-#ifndef G__OLDIMPLEMENTATION974
   G__asm_noverflow = store_asm_noverflow;
   G__no_exec_compile = store_no_exec_compile;
   G__asm_exec = store_asm_exec;
-#endif
 
   /******************************************************
    * restore input file information to G__ifile
@@ -2444,20 +2033,11 @@ char *filenamein;
   G__security = store_security;
 #endif
   if(G__return>G__RETURN_NORMAL) {
-#ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
-#endif
-#ifndef G__OLDIMPLEMENTATION1849
-    G__return=store_return;
-#endif
     return(G__LOADFILE_FAILURE);
   }
 
-#ifndef G__OLDIMPLEMENTATION1849
-  G__return=store_return;
-#endif
 
-#ifndef G__OLDIMPLEMENTATION487
 #ifdef G__AUTOCOMPILE
   /*************************************************************
    * if '#pragma compile' appears in source code.
@@ -2469,15 +2049,10 @@ char *filenamein;
     G__iscpp = store_iscpp;
   }
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1273
   G__checkIfOnlyFunction(fentry);
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1345
   G__UnlockCriticalSection();
-#endif
   return(G__LOADFILE_SUCCESS);
 }
 
@@ -2500,19 +2075,13 @@ char *macros,*undeflist,*ppopt,*includepath;
   int tmplen;
   FILE *fp;
   int flag=0;
-#ifndef G__OLDIMPLEMENTATION503
   int inlen;
   char *post;
 
   inlen = strlen(inname);
   post = strrchr(inname,'.');
-#endif
 
-#ifndef G__OLDIMPLEMENTATION503
   if(post && inlen>2) {
-#else
-  if(strlen(inname)>2) {
-#endif
     if(0==strcmp(inname+strlen(inname)-2,".c")) {
       if(!G__cpplock) G__iscpp = 0;
       flag=1;
@@ -2528,11 +2097,7 @@ char *macros,*undeflist,*ppopt,*includepath;
       flag=1;
     }
   }
-#ifndef G__OLDIMPLEMENTATION503
   if(flag==0 && post && inlen>3) {
-#else
-  else if(strlen(inname)>3) {
-#endif
     if(0==strcmp(inname+strlen(inname)-3,".cc") ||
        0==strcmp(inname+strlen(inname)-3,".CC") ||
        0==strcmp(inname+strlen(inname)-3,".hh") ||
@@ -2543,11 +2108,7 @@ char *macros,*undeflist,*ppopt,*includepath;
       flag=1;
     }
   }
-#ifndef G__OLDIMPLEMENTATION503
   if(flag==0 && post && inlen>4) {
-#else
-  else if(strlen(inname)>4) {
-#endif
     if(0==strcmp(inname+strlen(inname)-4,".cxx") ||
        0==strcmp(inname+strlen(inname)-4,".CXX") ||
        0==strcmp(inname+strlen(inname)-4,".cpp") ||
@@ -2560,38 +2121,18 @@ char *macros,*undeflist,*ppopt,*includepath;
       flag=1;
     }
   }
-#ifndef G__OLDIMPLEMENTATION503
   if(flag==0 && post) {
-#else
-  else {
-#endif
     if('\0'==G__cppsrcpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
       strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
-#else
-      strcpy(G__cppsrcpost,G__getmakeinfo("CPPSRCPOST"));
-#endif
     }
     if('\0'==G__csrcpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
       strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
-#else
-      strcpy(G__csrcpost,G__getmakeinfo("CSRCPOST"));
-#endif
     }
     if('\0'==G__cpphdrpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
       strcpy(G__cpphdrpost,G__getmakeinfo1("CPPHDRPOST"));
-#else
-      strcpy(G__cpphdrpost,G__getmakeinfo("CPPHDRPOST"));
-#endif
     }
     if('\0'==G__chdrpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
       strcpy(G__chdrpost,G__getmakeinfo1("CHDRPOST"));
-#else
-      strcpy(G__chdrpost,G__getmakeinfo("CHDRPOST"));
-#endif
     }
     if(0==strcmp(inname+strlen(inname)-strlen(G__cppsrcpost),G__cppsrcpost)) {
       if(!G__clock) G__iscpp=1;
@@ -2610,12 +2151,10 @@ char *macros,*undeflist,*ppopt,*includepath;
       flag=1;
     }
   }
-#ifndef G__OLDIMPLEMENTATION503
   else if(flag==0&&!post) {
     if(!G__clock) G__iscpp=1;
     flag=1;
   }
-#endif
 
   /* If using C preprocessor '-p' option' */
   if(cppflag && flag) {
@@ -2644,7 +2183,6 @@ char *macros,*undeflist,*ppopt,*includepath;
     }
 
     /* Get tmpfile name if necessary */
-#ifndef G__OLDIMPLEMENTATION1099
     if((strlen(inname)>2 && (0==strcmp(inname+strlen(inname)-2,".H")||
 			     0==strcmp(inname+strlen(inname)-2,".h"))) ||
        (strlen(inname)>3 && (0==strcmp(inname+strlen(inname)-3,".hh")||
@@ -2655,10 +2193,6 @@ char *macros,*undeflist,*ppopt,*includepath;
 			     0==strcmp(inname+strlen(inname)-4,".HXX"))) ||
        (!strchr(inname,'.'))
        ) 
-#else
-    if(0==strcmp(inname+strlen(inname)-2,".H")||
-       0==strcmp(inname+strlen(inname)-2,".h")) 
-#endif
     {
       /* if header file, create tmpfile name as xxx.C */
       do {
@@ -2666,21 +2200,13 @@ char *macros,*undeflist,*ppopt,*includepath;
 	tmplen=strlen(tmpfile);
 	if(G__CPPLINK==G__globalcomp || G__iscpp) {
 	  if('\0'==G__cppsrcpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
 	    strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
-#else
-	    strcpy(G__cppsrcpost,G__getmakeinfo("CPPSRCPOST"));
-#endif
 	  }
 	  strcpy(tmpfile+tmplen,G__cppsrcpost);
 	}
 	else {
 	  if('\0'==G__csrcpost[0]) {
-#ifndef G__OLDIMPLEMENTATION1645
 	    strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
-#else
-	    strcpy(G__csrcpost,G__getmakeinfo("CSRCPOST"));
-#endif
 	  }
 	  strcpy(tmpfile+tmplen,G__csrcpost);
 	}
@@ -2770,7 +2296,6 @@ char *macros,*undeflist,*ppopt,*includepath;
 }
 
 
-#ifndef G__OLDIMPLEMENTATION486
 /**************************************************************************
 * G__difffile()
 **************************************************************************/
@@ -2804,7 +2329,6 @@ char *file2;
 
   return(unmatch);
 }
-#endif
 
 /**************************************************************************
 * G__copyfile()
@@ -2823,7 +2347,7 @@ FILE *to,*from;
 #ifdef G__TMPFILE
 static char G__tmpdir[G__MAXFILENAME];
 static char G__mfpname[G__MAXFILENAME];
-#elif !defined(G__OLDIMPLEMENTATION2092)
+#else
 static char G__mfpname[G__MAXFILENAME];
 #endif
 
@@ -2866,10 +2390,8 @@ char *name;
 #if defined(G__TMPFILE) 
   const char *appendix="_cint";
   static char tempname[G__MAXFILENAME];
-#ifndef G__OLDIMPLEMENTATION2174
   int pid = getpid();
   int now = clock();
-#endif
   char *tmp;
   if('\0'==G__tmpdir[0]) {
     if((tmp=getenv("CINTTMPDIR"))) strcpy(G__tmpdir,tmp);
@@ -2880,25 +2402,17 @@ char *name;
   if(name) {
     strcpy(name,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-#ifndef G__OLDIMPLEMENTATION2174
     if(strlen(name)<G__MAXFILENAME-10) 
       sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
     if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
-#else
-    if(strlen(name)<L_tmpnam-6) strcat(name,appendix);
-#endif
     return(name);
   }
   else {
     strcpy(tempname,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-#ifndef G__OLDIMPLEMENTATION2174
     if(strlen(name)<G__MAXFILENAME-10) 
       sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
     if(strlen(tempname)<G__MAXFILENAME-6) strcat(tempname,appendix);
-#else
-    if(strlen(tempname)<L_tmpnam-6) strcat(tempname,appendix);
-#endif
     return(tempname);
   }
 
@@ -2926,9 +2440,7 @@ char *name;
 #endif
 }
 
-#ifndef G__OLDIMPLEMENTATION2092
 static int G__istmpnam=0;
-#endif
 
 /**************************************************************************
 * G__openmfp()
@@ -2936,7 +2448,6 @@ static int G__istmpnam=0;
 void G__openmfp()
 {
 #ifndef G__TMPFILE
-#ifndef G__OLDIMPLEMENTATION2092
   G__mfp=tmpfile();
   if(!G__mfp) {
     do {
@@ -2945,9 +2456,6 @@ void G__openmfp()
     } while((FILE*)NULL==G__mfp && G__setTMPDIR(G__mfpname));
     G__istmpnam=1;
   }
-#else
-  G__mfp=tmpfile();
-#endif
 #else
   do {
     G__tmpnam(G__mfpname); /* Only VC++ uses this */
@@ -2963,7 +2471,6 @@ int G__closemfp()
 {
 #ifndef G__TMPFILE
   int result=0;
-#ifndef G__OLDIMPLEMENTATION2092
   if(!G__istmpnam) {
     if(G__mfp) result=fclose(G__mfp);
     G__mfp = (FILE*)NULL;
@@ -2975,10 +2482,6 @@ int G__closemfp()
     G__mfpname[0]=0;
     G__istmpnam=0;
   }
-#else
-  if(G__mfp) result=fclose(G__mfp);
-  G__mfp = (FILE*)NULL;
-#endif
   return(result);
 #else
   int result=0;
@@ -2997,11 +2500,6 @@ struct G__input_file *G__get_ifile()
 {
    return &G__ifile;
 }
-
-#if 0
-/* Just for experimenting Windows Server OS tmpfile patch */
-FILE* G__dmy_tmpfile() { return((FILE*)NULL); }
-#endif
 
 /*
  * Local Variables:

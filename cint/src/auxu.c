@@ -32,12 +32,13 @@
 * CAUTION: input string will be modified. If you want to keep
 *         the original string, you should copy it to another string.
 ****************************************************************/
-int G__split(line,string,argc,argv)
+int G__split(line,sstring,argc,argv)
 char *line;
-char *string;
+char *sstring;
 int *argc;
 char *argv[];
 {
+  unsigned char *string = (unsigned char*)sstring;
   int lenstring;
   int i=0;
   int flag=0;
@@ -45,18 +46,12 @@ char *argv[];
   int single_quote=0,double_quote=0,back_slash=0;
   
   while((string[i]!='\n')&&
-	(string[i]!='\r')&&
-	(string[i]!='\0')
-#ifdef G__OLDIMPLEMENTATION1616
-	&& (string[i]!=EOF)
-#endif
-	) i++;
+        (string[i]!='\r')&&
+        (string[i]!='\0')
+        ) i++;
   string[i]='\0';
   line[i]='\0';
   lenstring=i;
-#ifdef G__OLDIMPLEMENTATION1616
-  if(string[i]==EOF) n_eof=0;
-#endif
   argv[0]=line;
 
   *argc=0;
@@ -68,30 +63,30 @@ char *argv[];
       break;
     case '\'':
       if((double_quote==0)&&(back_slash==0)) {
-	single_quote ^= 1;
-	string[i]='\0';
-	flag=0;
+        single_quote ^= 1;
+        string[i]='\0';
+        flag=0;
       }
       break;
     case '"' :
       if((single_quote==0)&&(back_slash==0)) {
-	double_quote ^= 1;
-	string[i]='\0';
-	flag=0;
+        double_quote ^= 1;
+        string[i]='\0';
+        flag=0;
       }
       break;
     default  :
       if((isspace(string[i]))&&(back_slash==0)&&
-	 (single_quote==0)&&(double_quote==0)) {
-	string[i]='\0';
-	flag=0;
+         (single_quote==0)&&(double_quote==0)) {
+        string[i]='\0';
+        flag=0;
       }
       else {
-	if(flag==0) {
-	  (*argc)++;
-	  argv[*argc] = &string[i];
-	  flag=1;
-	}
+        if(flag==0) {
+          (*argc)++;
+          argv[*argc] = &string[i];
+          flag=1;
+        }
       }
       back_slash=0;
       break;
@@ -135,15 +130,7 @@ char *arg[];
   /* int i; */
   char *null_fgets;
 #define G__OLDIMPLEMENTATION1816
-#ifndef G__OLDIMPLEMENTATION1816
-  struct G__input_file store_ifile = G__ifile;
-  G__ifile.fp = fp;
-  if(EOF==G__fgetline(line)) null_fgets=(char*)NULL;
-  else                       null_fgets=line;
-  G__ifile = store_ifile;
-#else
   null_fgets=fgets(line,G__LONGLINE*2,fp);
-#endif
   if(null_fgets!=NULL) {
     strcpy(argbuf,line);
     G__split(line,argbuf,argn,arg);
@@ -179,16 +166,16 @@ int num;
   for(i=0;i<num;i++) {
     if((array1[i]&mask)!=(array2[i]&mask)) {
       if(firstfail == -1) {
-	firstfail=i;
-	fail1=array1[i];
-	fail2=array2[i];
+        firstfail=i;
+        fail1=array1[i];
+        fail2=array2[i];
       }
       fail++;
     }
   }
   if(fail!=0) {
     G__fprinterr(G__serr,"G__cmparray() failcount=%d from [%d] , %d != %d\n",
-	    fail,firstfail,fail1,fail2);
+            fail,firstfail,fail1,fail2);
   }
   return(fail);
 }
@@ -201,61 +188,61 @@ short array[],mask;
 int num;
 char *mode;
 {
-	int i;
+        int i;
 
-	if(strcmp(mode,"rand")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=rand()&mask;
-		}
-	}
-	if(strcmp(mode,"inc")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=i&mask;
-		}
-	}
-	if(strcmp(mode,"dec")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=(num-i)&mask;
-		}
-	}
-	if(strcmp(mode,"check1")==0)  {
-		for(i=0;i<num;i++) {
-			array[i]=0xaaaa&mask;
-			array[++i]=0x5555&mask;
-		}
-	}
-	if(strcmp(mode,"check2")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=0x5555&mask;
-			array[++i]=0xaaaa&mask;
-		}
-	}
-	if(strcmp(mode,"check3")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=0xaaaa&mask;
-			array[++i]=0xaaaa&mask;
-			array[++i]=0x5555&mask;
-			array[++i]=0x5555&mask;
-		}
-	}
-	if(strcmp(mode,"check4")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=0x5555&mask;
-			array[++i]=0x5555&mask;
-			array[++i]=0xaaaa&mask;
-			array[++i]=0xaaaa&mask;
-		}
-	}
-	if(strcmp(mode,"zero")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=0;
-		}
-	}
-	if(strcmp(mode,"one")==0) {
-		for(i=0;i<num;i++) {
-			array[i]=0xffff&mask;
-		}
-	}
+        if(strcmp(mode,"rand")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=rand()&mask;
+                }
+        }
+        if(strcmp(mode,"inc")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=i&mask;
+                }
+        }
+        if(strcmp(mode,"dec")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=(num-i)&mask;
+                }
+        }
+        if(strcmp(mode,"check1")==0)  {
+                for(i=0;i<num;i++) {
+                        array[i]=0xaaaa&mask;
+                        array[++i]=0x5555&mask;
+                }
+        }
+        if(strcmp(mode,"check2")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=0x5555&mask;
+                        array[++i]=0xaaaa&mask;
+                }
+        }
+        if(strcmp(mode,"check3")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=0xaaaa&mask;
+                        array[++i]=0xaaaa&mask;
+                        array[++i]=0x5555&mask;
+                        array[++i]=0x5555&mask;
+                }
+        }
+        if(strcmp(mode,"check4")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=0x5555&mask;
+                        array[++i]=0x5555&mask;
+                        array[++i]=0xaaaa&mask;
+                        array[++i]=0xaaaa&mask;
+                }
+        }
+        if(strcmp(mode,"zero")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=0;
+                }
+        }
+        if(strcmp(mode,"one")==0) {
+                for(i=0;i<num;i++) {
+                        array[i]=0xffff&mask;
+                }
+        }
 }
 
 
@@ -357,77 +344,75 @@ G__value *buf1,*buf2;
     var2 = G__struct.memvar[buf2->tagnum] ;
     do {
       for(i=0;i<var1->allvar;i++) {
-	switch(var1->type[i]) {
-	case 'u':
-	  lbuf1.obj.i = buf1->obj.i + var1->p[i];
-	  lbuf2.obj.i = buf2->obj.i + var2->p[i];
-	  lbuf1.type='U';
-	  lbuf2.type='U';
-	  lbuf1.tagnum=var1->p_tagtable[i];
-	  lbuf2.tagnum=var2->p_tagtable[i];
-	  G__storeobject(&lbuf1,&lbuf2);
-	  break;
-	  
-#ifndef G__OLDIMPLEMENTATION1604
-	case 'g':
-#endif
+        switch(var1->type[i]) {
+        case 'u':
+          lbuf1.obj.i = buf1->obj.i + var1->p[i];
+          lbuf2.obj.i = buf2->obj.i + var2->p[i];
+          lbuf1.type='U';
+          lbuf2.type='U';
+          lbuf1.tagnum=var1->p_tagtable[i];
+          lbuf2.tagnum=var2->p_tagtable[i];
+          G__storeobject(&lbuf1,&lbuf2);
+          break;
+          
+        case 'g':
 #ifdef G__BOOL4BYTE
-	  memcpy((void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__INTALLOC*(var1->varlabel[i][1]+1));
-	  break;
+          memcpy((void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__INTALLOC*(var1->varlabel[i][1]+1));
+          break;
 #endif
-	case 'b':
-	case 'c':
-	  memcpy((void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__CHARALLOC*(var1->varlabel[i][1]+1));
-	  break;
-	  
-	case 'r':
-	case 's':
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__SHORTALLOC*(var1->varlabel[i][1]+1)
-		 );
-	  break;
-	  
-	case 'h':
-	case 'i':
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__INTALLOC*(var1->varlabel[i][1]+1)
-		 );
-	  break;
-	  
-	case 'k':
-	case 'l':
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__LONGALLOC*(var1->varlabel[i][1]+1)
-		 );
-	  break;
-	  
-	case 'f':
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__FLOATALLOC*(var1->varlabel[i][1]+1)
-		 );
-	  break;
-	  
-	case 'd':
-	case 'w':
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
-		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__DOUBLEALLOC*(var1->varlabel[i][1]+1)
-		 );
-	  break;
-	}
+        case 'b':
+        case 'c':
+          memcpy((void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__CHARALLOC*(var1->varlabel[i][1]+1));
+          break;
+          
+        case 'r':
+        case 's':
+          memcpy(
+                 (void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__SHORTALLOC*(var1->varlabel[i][1]+1)
+                 );
+          break;
+          
+        case 'h':
+        case 'i':
+          memcpy(
+                 (void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__INTALLOC*(var1->varlabel[i][1]+1)
+                 );
+          break;
+          
+        case 'k':
+        case 'l':
+          memcpy(
+                 (void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__LONGALLOC*(var1->varlabel[i][1]+1)
+                 );
+          break;
+          
+        case 'f':
+          memcpy(
+                 (void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__FLOATALLOC*(var1->varlabel[i][1]+1)
+                 );
+          break;
+          
+        case 'd':
+        case 'w':
+          memcpy(
+                 (void *)(buf1->obj.i+var1->p[i])
+                 ,(void *)(buf2->obj.i+var2->p[i])
+                 ,G__DOUBLEALLOC*(var1->varlabel[i][1]+1)
+                 );
+          break;
+        }
       }
       var1 = var1->next;
       var2 = var2->next;
@@ -437,12 +422,12 @@ G__value *buf1,*buf2;
   }
   else {
     G__genericerror(
-	    "Error:G__storeobject buf1,buf2 different type or non struct"
-		    );
+            "Error:G__storeobject buf1,buf2 different type or non struct"
+                    );
     G__fprinterr(G__serr,"buf1->type = %c , buf2->type = %c\n"
-	    ,buf1->type,buf2->type);
+            ,buf1->type,buf2->type);
     G__fprinterr(G__serr,"buf1->tagnum = %d , buf2->tagnum = %d\n"
-	    ,buf1->tagnum,buf2->tagnum);
+            ,buf1->tagnum,buf2->tagnum);
     return(1);
   }
 }
@@ -476,25 +461,25 @@ G__value *buf1;
     var1 = G__struct.memvar[buf1->tagnum] ;
     do {
       for(i=0;i<var1->allvar;i++) {
-	pointer = buf1->obj.i + var1->p[i];
-	name = var1->varnamebuf[i];
-	type = var1->type[i] ;
-	if(var1->p_tagtable[i]>=0) {
-	  tagname = G__struct.name[var1->p_tagtable[i]];
-	}
-	else {
-	  tagname = (char *)NULL;
-	}
-	if(var1->p_typetable[i]>=0) {
-	  typename = G__newtype.name[var1->p_typetable[i]] ;
-	}
-	else {
-	  typename = (char *)NULL;
-	}
-	sprintf(ifunc,
-		"G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)"
-		,tagname,pointer,(long)name,type,(long)tagname,(long)typename);
-	G__getexpr(ifunc);
+        pointer = buf1->obj.i + var1->p[i];
+        name = var1->varnamebuf[i];
+        type = var1->type[i] ;
+        if(var1->p_tagtable[i]>=0) {
+          tagname = G__struct.name[var1->p_tagtable[i]];
+        }
+        else {
+          tagname = (char *)NULL;
+        }
+        if(var1->p_typetable[i]>=0) {
+          typename = G__newtype.name[var1->p_typetable[i]] ;
+        }
+        else {
+          typename = (char *)NULL;
+        }
+        sprintf(ifunc,
+                "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)"
+                ,tagname,pointer,(long)name,type,(long)tagname,(long)typename);
+        G__getexpr(ifunc);
       }
       var1 = var1->next;
     } while(var1);
@@ -519,13 +504,13 @@ char *file;
 void *buf;
 int size;
 {
-	FILE *fp;
+        FILE *fp;
 
-	fp=fopen(file,"wb");
-	fwrite(buf ,(size_t)size ,1,fp);
-	fflush(fp);
-	fclose(fp);
-	return(1);
+        fp=fopen(file,"wb");
+        fwrite(buf ,(size_t)size ,1,fp);
+        fflush(fp);
+        fclose(fp);
+        return(1);
 }
 
 /****************************************************************
@@ -539,12 +524,12 @@ char *file;
 void *buf;
 int size;
 {
-	FILE *fp;
+        FILE *fp;
 
-	fp=fopen(file,"rb");
-	fread(buf ,(size_t)size ,1,fp);
-	fclose(fp);
-	return(1);
+        fp=fopen(file,"rb");
+        fread(buf ,(size_t)size ,1,fp);
+        fclose(fp);
+        return(1);
 }
 
 #endif
@@ -628,23 +613,16 @@ char *typename;
   case 'o':
     sprintf(vtype,"automatic");
     break;
-#ifndef G__OLDIMPLEMENTATION1604
   case 'g':
     sprintf(vtype,"bool");
     break;
-#endif
   default:
     sprintf(vtype,"unknown %s",ispointer);
     break;
   }
   if(type) strcpy(type,vtype);
-#ifndef G__OLDIMPLEMENTATION2108
   if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]);
   if(typename && buf.typenum>=0) strcpy(typename,G__newtype.name[buf.typenum]);
-#else
-  if(tagname) strcpy(tagname,G__struct.name[buf.tagnum]) ;
-  if(typename) strcpy(typename,G__newtype.name[buf.typenum]) ;
-#endif
   
   sprintf(vtype,"&%s",name);
   buf = G__calc_internal(vtype);
@@ -661,7 +639,7 @@ char *typename;
 int G__textprocessing(fp)
 FILE *fp;
 {
-	return(G__readline(fp,G__oline,G__argb,&G__argn,G__arg));
+        return(G__readline(fp,G__oline,G__argb,&G__argn,G__arg));
 }
 
 #ifdef G__REGEXP

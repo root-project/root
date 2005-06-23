@@ -32,7 +32,6 @@ extern void G__set_cpp_environment();
 
 using namespace std;
 
-#ifndef G__OLDIMPLEMENTATION1635
 /********************************************************************
  * static variables for iostream redirection
  ********************************************************************/
@@ -105,7 +104,6 @@ extern "C" void G__redirectcin(const char* filename) {
   G__redirected_cin = new ifstream(filename,ios_base::in);
   G__store_cin = cin.rdbuf(G__redirected_cin->rdbuf()) ;
 }
-#endif /* 1635 */
 
 #ifndef G__MEMFUNCBODY
 #endif

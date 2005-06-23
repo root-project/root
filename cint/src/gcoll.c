@@ -330,12 +330,8 @@ void *allocmem;
     return(0);
   }
   else {
-#ifndef G__FONS31
     G__fprinterr(G__serr,"Error: Can not free 0x%lx, not allocated."
 	    ,(long)allocmem);
-#else
-    G__fprinterr(G__serr,"Error: Can not free 0x%x, not allocated.",allocmem);
-#endif
     G__genericerror((char*)NULL);
     return(1);
   }
@@ -398,13 +394,8 @@ void **storedmem;
 #ifdef G__IMMEDIATE_GARBAGECOLLECTION
     if(!alloc->reflist && flag) {
 #ifdef G__DEBUG
-#ifndef G__OLDIMPLEMENTATION401
       G__fprinterr(G__serr,"!!! %s object deleted by Reference Count Control !!!\n"
 	      ,G__type2string(alloc->type,alloc->tagnum,-1,0,0));
-#else
-      G__fprinterr(G__serr,"!!! %s object deleted by Reference Count Control !!!\n"
-	      ,G__type2string(alloc->type,alloc->tagnum,-1,0));
-#endif
 #endif
       G__destroy_garbageobject(alloc);
       G__delete_alloctable(alloc);
@@ -434,22 +425,12 @@ FILE *fout;
   fprintf(fout,"Allocated memory =========================================\n");
   fprintf(fout,"type                : location   : reference(s)\n");
   while(alloc) {
-#ifndef G__OLDIMPLEMENTATION401
     fprintf(fout,"%-20s: 0x%lx :"
 	    ,G__type2string(alloc->type,alloc->tagnum,-1,0,0)
 	    ,(long)alloc->allocedmem);
-#else
-    fprintf(fout,"%-20s: 0x%lx :"
-	    ,G__type2string(alloc->type,alloc->tagnum,-1,0)
-	    ,alloc->allocedmem);
-#endif
     reflist = alloc->reflist;
     while(reflist) {
-#ifndef G__FONS31
       fprintf(fout," 0x%lx ,",(long)reflist->ref);
-#else
-      fprintf(fout," 0x%x ,",reflist->ref);
-#endif
       reflist = reflist->next;
     }
     fprintf(fout,"\n");

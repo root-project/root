@@ -21,7 +21,6 @@
 #include "common.h"
 
 
-#ifndef G__OLDIMPLEMENTATION1103
 int G__const_noerror=0;
 /******************************************************************
 * G__const_setnoerror()
@@ -37,16 +36,13 @@ int G__const_resetnoerror() {
   G__const_noerror = 0;
   return(G__const_noerror);
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1528
 /******************************************************************
 * G__const_whatnoerror()
 ******************************************************************/
 int G__const_whatnoerror() {
   return(G__const_noerror);
 }
-#endif
 
 /******************************************************************
 * G__nosupport()
@@ -271,30 +267,21 @@ char *item;
 int G__warnundefined(item)
 char *item;
 {
-#ifndef G__OLDIMPLEMENTATION997
   if(G__prerun&&G__static_alloc&&G__func_now>=0) return(0);
-#endif
-#ifndef G__OLDIMPLEMENTATION997
   if(G__no_exec_compile && 0==G__asm_noverflow) return(0);
-#endif
   if(G__in_pause) return(0);
   if(
-#ifndef G__OLDIMPLEMENTATION2105
      !G__cintv6 &&
-#endif
      G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
     G__CHECK(G__SECURE_PAUSE,1,G__pause());
     G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
   }
   else {
-#ifndef G__OLDIMPLEMENTATION1103
     if(0==G__const_noerror
 #ifndef G__OLDIMPELMENTATION1174
        && !G__splitmessage(item)
 #endif
        ) {
-#endif
-#ifndef G__OLDIMPLEMENTATION1571
       char *p = strchr(item,'(');
       if(p) {
 	char tmp[G__ONELINE];
@@ -324,24 +311,8 @@ char *item;
 		       "Error: Symbol %s is not defined in current scope ",item[0]=='$'?item+1:item);
 	}
       }
-#else
-#ifdef G__ROOT
-      G__fprinterr(G__serr,
-	      "Error: No symbol %s in current scope ",item[0]=='$'?item+1:item);
-#else
-      G__fprinterr(G__serr,
-	      "Error: No symbol %s in current scope ",item);
-#endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1519
       G__genericerror((char*)NULL);
-#endif
-#ifndef G__OLDIMPLEMENTATION1103
     }
-#endif
-#ifdef G__OLDIMPLEMENTATION1519
-    G__genericerror((char*)NULL);
-#endif
   }
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;
@@ -357,23 +328,15 @@ char *message;
 {
   G__eof=2;
   G__fprinterr(G__serr,"Error: Unexpected EOF %s",message);
-#ifndef G__OLDIMPLEMENTATION1086
   G__genericerror((char*)NULL);
-#else
-  G__printlinenum();
-#endif
   if(0==G__cpp) 
     G__fprinterr(G__serr,"Advice: You may need to use +P or -p option\n");
   G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;
 #endif
-#ifndef G__OLDIMPLEMENTATION1771
   if(G__NOLINK!=G__globalcomp && (G__steptrace||G__stepover)) 
     while(0==G__pause()) ;
-#else
-  if(G__steptrace||G__stepover) while(0==G__pause()) ;
-#endif
   return(0);
 }
 
@@ -520,19 +483,8 @@ char *item,*categ;
 **************************************************************************/
 int G__printlinenum()
 {
-#ifndef G__OLDIMPLEMENTATION1196
   G__fprinterr(G__serr," FILE:%s LINE:%d\n" 
 	  ,G__stripfilename(G__ifile.name),G__ifile.line_number);
-#else
-#ifndef G__OLDIMPLEMENTATION1171
-  char *p;
-  p = strstr(G__ifile.name,"./");
-  if(!p) p = G__ifile.name;
-  G__fprinterr(G__serr," FILE:%s LINE:%d\n" ,p,G__ifile.line_number);
-#else
-  G__fprinterr(G__serr," FILE:%s LINE:%d\n" ,G__ifile.name,G__ifile.line_number);
-#endif
-#endif
   return(0);
 }
 
@@ -551,26 +503,16 @@ int G__get_security_error()
 int G__genericerror(message)
 char *message;
 {
-#ifndef G__OLDIMPLEMENTATION1164
   if(G__xrefflag) return(1);
-#endif
 
   if(
-#ifndef G__OLDIMPLEMENTATION2105
      G__cintv6 ||
-#endif
      G__ASM_FUNC_NOP==G__asm_wholefunction) {
-#ifndef G__OLDIMPLEMENTATION1103
     if(0==G__const_noerror) {
-#endif
       if(message) G__fprinterr(G__serr,"%s",message);
       G__printlinenum();
-#ifndef G__OLDIMPLEMENTATION1198
       G__storelasterror();
-#endif
-#ifndef G__OLDIMPLEMENTATION1103
     }
-#endif
   }
 
   G__CHECK(G__SECURE_PAUSE,1,G__pause());
@@ -579,21 +521,17 @@ char *message;
   G__security_error = G__RECOVERABLE;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION875
   if(G__aterror) {
     int store_return=G__return;
     G__return=G__RETURN_NON;
     G__p2f_void_void((void*)G__aterror);
     G__return=store_return;
   }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2117
   if(G__cintv6) {
     if(G__cintv6&G__BC_COMPILEERROR) G__bc_throw_compile_error();
     if(G__cintv6&G__BC_RUNTIMEERROR) G__bc_throw_runtime_error();
   }
-#endif
 
   return(0);
 }
@@ -753,7 +691,6 @@ int mparen;
   c = G__fgetspace();
   if('"'==c) {
     /* extern "C" {  } */
-#ifndef G__OLDIMPLEMENTATION1908
     char fname[G__MAXFILENAME];
     int flag=0;
     c = G__fgetstream(fname,"\"");
@@ -770,21 +707,11 @@ int mparen;
     *pspaceflag = -1;
     *piout=0;
     c=G__fgetspace();
-#else
-    c=G__fignorestream("\"");
-    *pspaceflag = -1;
-    *piout=0;
-    c=G__fgetspace();
-    store_iscpp=G__iscpp;
-    if('{'==c) G__iscpp=0;
-#endif
     fseek(G__ifile.fp,-1,SEEK_CUR);
     if(G__dispsource) G__disp_mask=1;
     G__exec_statement();
     G__iscpp=store_iscpp;
-#ifndef G__OLDIMPLEMENTATION1908
     if(flag) G__ResetShlHandle();
-#endif
     return(0);
   }
   else {
@@ -814,12 +741,8 @@ int mparen,single_quote,double_quote;
   if((mparen!=0)||(single_quote!=0)||(double_quote!=0)){
     G__unexpectedEOF("G__exec_statement()");
   }
-#ifndef G__OLDIMPLEMENTATION632
   if(strcmp(statement,"")!=0 && strcmp(statement,"#endif")!=0 &&
      statement[0]!=0x1a) {
-#else
-  if(strcmp(statement,"")!=0 && strcmp(statement,"#endif")) {
-#endif
     G__fprinterr(G__serr,"Report: Unrecognized string '%s' ignored",statement);
     G__printlinenum();
   }
@@ -864,13 +787,8 @@ G__value *result7;
 char *funcname;
 {
   if(l<low||up<l) { 
-#ifndef G__FONS31
     G__fprinterr(G__serr,"Error: %s param[%d]=%ld up:%ld low:%ld out of range"
 	    ,funcname,p,l,up,low); 
-#else
-    G__fprinterr(G__serr,"Error: %s param[%d]=%d up:%d low:%d out of range"
-	    ,funcname,p,l,up,low); 
-#endif
     G__genericerror((char*)NULL); 
     *result7=G__null; 
     return(1); 
@@ -906,33 +824,22 @@ char *funcname;
 * check for NULL pointer
 ******************************************************************/
 int G__check_nonull(p
-#ifndef G__OLDIMPLEMENTATION575
 		    ,t,para
-#else
-		    ,l
-#endif
 		    ,result7,funcname)
 int p;
-#ifndef G__OLDIMPLEMENTATION575
 int t;
 G__value *para;
-#else
-long l;
-#endif
 G__value *result7;
 char *funcname;
 {
-#ifndef G__OLDIMPLEMENTATION575
   long l;
   l = G__int(*para);
-#endif
   if(0==l) { 
     G__fprinterr(G__serr,"Error: %s param[%d]=%ld must not be 0",funcname,p,l); 
     G__genericerror((char*)NULL); 
     *result7=G__null; 
     return(1); 
   } 
-#ifndef G__OLDIMPLEMENTATION575
   else if(t!=para->type) {
     if('Y'!=t){
       G__fprinterr(G__serr,"Error: %s parameter mismatch param[%d] %c %c"
@@ -943,7 +850,6 @@ char *funcname;
     }
     return(0);
   }
-#endif
   else {
     return(0);
   }
@@ -991,11 +897,7 @@ int G__pounderror()
   G__fprinterr(G__serr,"#error %s\n",buf);
   G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
-#ifndef G__OLDIMPLEMENTATION1199
   G__security_error = G__RECOVERABLE;
-#else
-  G__security_error = G__DANGEROUS;
-#endif
 #endif
   return(0);
 }

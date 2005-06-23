@@ -52,24 +52,18 @@ int G__typepdecl; /* to be commented */
 /********************************************************
 * whole function bytecode compilation flag
 *********************************************************/
-#ifndef G__OLDIMPLEMENTATION599
 int G__asm_cond_cp = -1; /* avoid wrong bytecode optimization */
-#endif
 
 #ifdef G__ASM_WHOLEFUNC
 int G__asm_wholefunction;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION517
 int G__asm_wholefunc_default_cp;
-#endif
 
 #ifdef G__ASM_IFUNC
 
 long *G__asm_inst; /* p-code instruction buffer */
-#ifndef G__OLDIMPLEMENTATION2116
 int G__asm_instsize;
-#endif
 G__value *G__asm_stack; /* data stack and constant buffer */
 char *G__asm_name;
 
@@ -100,9 +94,7 @@ struct G__param *G__asm_param; /* pointer of parameter buffer to
 /* Loop compiler flags */
 int G__asm_loopcompile; /* loop compilation mode. default on(4). 
 			   * This is set to 0 by -O0 */
-#ifndef G__OLDIMPLEMENTATION1155
 int G__asm_loopcompile_mode; 
-#endif
 int G__asm_exec=0; /* p-code execution flag */
 int G__asm_noverflow=0; /* When this is set to 1, compilation starts. 
 			 * If any error found, reset */
@@ -175,11 +167,7 @@ char *G__macro="tmpfile";
 struct G__Deffuncmacro G__deffuncmacro;
 char G__macros[G__LONGLINE];
 char G__ppopt[G__ONELINE];
-#ifndef G__OLDIMPLEMENTATION928
 char *G__allincludepath=(char*)NULL;
-#else
-char G__allincludepath[G__LONGLINE];
-#endif
 char *G__undeflist="";
 
 /**************************************************************************
@@ -212,9 +200,7 @@ int G__argn;
 **************************************************************************/
 struct G__var_array  G__global ;
 struct G__var_array *G__p_local;
-#ifndef G__OLDIMPLEMENTATION686
 struct G__inheritance G__globalusingnamespace;
-#endif
 
 /**************************************************************************
 * structure for struct,union tag information

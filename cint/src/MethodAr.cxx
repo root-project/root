@@ -64,12 +64,10 @@ long G__MethodArgInfo::Property()
       property|=G__BIT_ISDEFAULT;
     if(ifunc->para_reftype[belongingmethod->index][argn]) 
       property|=G__BIT_ISREFERENCE;
-#ifndef G__OLDIMPLEMENTATION401
     if(ifunc->para_isconst[belongingmethod->index][argn]&G__CONSTVAR) 
       property|=G__BIT_ISCONSTANT;
     if(ifunc->para_isconst[belongingmethod->index][argn]&G__PCONSTVAR) 
       property|=G__BIT_ISPCONSTANT;
-#endif
     return(property);
   }
   else {
@@ -115,12 +113,8 @@ int G__MethodArgInfo::Next()
     type.tagnum=ifunc->para_p_tagtable[belongingmethod->index][argn];
     type.typenum =ifunc->para_p_typetable[belongingmethod->index][argn];
     type.reftype = ifunc->para_reftype[belongingmethod->index][argn];
-#ifndef G__OLDIMPLEMENTATION1227
     type.class_property=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION401
     type.isconst = ifunc->para_isconst[belongingmethod->index][argn];
-#endif
     return(1);
   }
   else {

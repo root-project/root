@@ -43,9 +43,7 @@ G__MethodInfo {
   void Init();
   void Init(G__ClassInfo &a);
   void Init(long handlein,long indexin,G__ClassInfo *belongingclassin);
-#ifndef G__OLDIMPLEMENTATION644
   void Init(G__ClassInfo *belongingclassin,long funcpage,long indexin);
-#endif
 
   const char *Name() ;
 #ifndef __MAKECINT__
@@ -69,7 +67,6 @@ G__MethodInfo {
   void* PointerToFunc();
 #endif
   G__ClassInfo* MemberOf() { return(belongingclass); }
-#ifndef G__OLDIMPLEMENTATION1020
   struct G__friendtag* GetFriendInfo() { 
     if(IsValid()) {
       struct G__ifunc_table *ifunc=(struct G__ifunc_table*)handle;
@@ -77,7 +74,6 @@ G__MethodInfo {
     }
     else return 0;
   }
-#endif
   void SetGlobalcomp(int globalcomp);
   int IsValid();
   int SetFilePos(const char* fname);
@@ -87,24 +83,16 @@ G__MethodInfo {
   int LineNumber();
   int Size();
   int IsBusy();
-#ifndef G__OLDIMPLEMENTATION644
   FILE* FilePointer();
   long FilePosition();
-#endif
   char* GetPrototype();
   char* GetMangledName();
 
-#ifndef G__OLDIMPLEMENTATION1908
   int LoadDLLDirect(const char* filename,const char* funcname);
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2073
   void SetVtblIndex(int vtblindex);
   void SetIsVirtual(int isvirtual);
-#endif
-#ifndef G__OLDIMPLEMENTATION2084
   void SetVtblBasetagnum(int basetagnum);
-#endif
 
  protected:
   long handle;

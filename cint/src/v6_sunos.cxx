@@ -32,9 +32,7 @@
 #include <setjmp.h>
 #include "sunos.h"
 
-#ifndef G__OLDIMPLEMENTATION463
 extern FILE *G__serr;
-#endif
 
 /************************************************************************
 * ANSI library implemented

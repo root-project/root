@@ -82,20 +82,15 @@ void G__MethodInfo::Init(long handlein,long indexin
     type.typenum=ifunc->p_typetable[index];
     type.reftype=ifunc->reftype[index];
     type.isconst=ifunc->isconst[index];
-#ifndef G__OLDIMPLEMENTATION1227
     type.class_property=0;
-#endif
   }
-#ifndef G__FONS72
   else { /* initialize if handlein==0 */
     handle=0;
     index=-1;
     belongingclass=(G__ClassInfo*)NULL;
   }
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION644
 void G__MethodInfo::Init(G__ClassInfo *belongingclassin
 	,long funcpage,long indexin)
 {
@@ -126,9 +121,7 @@ void G__MethodInfo::Init(G__ClassInfo *belongingclassin
     type.typenum=ifunc->p_typetable[index];
     type.reftype=ifunc->reftype[index];
     type.isconst=ifunc->isconst[index];
-#ifndef G__OLDIMPLEMENTATION1227
     type.class_property=0;
-#endif
   }
   else { /* initialize if handlein==0 */
     handle=0;
@@ -136,7 +129,6 @@ void G__MethodInfo::Init(G__ClassInfo *belongingclassin
     belongingclass=(G__ClassInfo*)NULL;
   }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 const char* G__MethodInfo::Name()
 {
@@ -203,24 +195,16 @@ long G__MethodInfo::Property()
     case G__PROTECTED: property|=G__BIT_ISPROTECTED; break;
     case G__PRIVATE: property|=G__BIT_ISPRIVATE; break;
     }
-#ifndef G__OLDIMPLEMENTATION1189
     if(ifunc->isconst[index]&G__CONSTFUNC) property|=G__BIT_ISCONSTANT; 
-#endif
     if(ifunc->isconst[index]&G__CONSTVAR) property|=G__BIT_ISCONSTANT;
     if(ifunc->isconst[index]&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;
     if(isupper(ifunc->type[index])) property|=G__BIT_ISPOINTER;
     if(ifunc->staticalloc[index]) property|=G__BIT_ISSTATIC;
     if(ifunc->isvirtual[index]) property|=G__BIT_ISVIRTUAL;
     if(ifunc->ispurevirtual[index]) property|=G__BIT_ISPUREVIRTUAL;
-#ifndef G__OLDIMPLEMENTATION2012
     if(ifunc->pentry[index]->size<0) property|=G__BIT_ISCOMPILED;
-#else
-    if(ifunc->pentry[index]->filenum<0) property|=G__BIT_ISCOMPILED;
-#endif
     if(ifunc->pentry[index]->bytecode) property|=G__BIT_ISBYTECODE;
-#ifndef G__OLDIMPLEMENTATION1287
     if(ifunc->isexplicit[index]) property|=G__BIT_ISEXPLICIT;
-#endif
     return(property);
   }
   else {
@@ -277,35 +261,23 @@ int G__MethodInfo::HasVarArgs()
 ///////////////////////////////////////////////////////////////////////////
 G__InterfaceMethod G__MethodInfo::InterfaceMethod()
 {
-#ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
-#endif
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        -1==ifunc->pentry[index]->size /* this means compiled class */
-#else
-       -1==ifunc->pentry[index]->filenum /* this meant compiled class */
-#endif
        ) {
-#ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
-#endif
       return((G__InterfaceMethod)ifunc->pentry[index]->p);
     }
     else {
-#ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
-#endif
       return((G__InterfaceMethod)NULL);
     }
   }
   else {
-#ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
-#endif
     return((G__InterfaceMethod)NULL);
   }
 }
@@ -316,26 +288,16 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-#ifndef G__OLDIMPLEMENTATION2082
     int store_asm_loopcompile = G__asm_loopcompile;
     G__asm_loopcompile = 4;
-#endif
     if(!ifunc->pentry[index]->bytecode &&
-#ifndef G__OLDIMPLEMENTATION2012
        -1!=ifunc->pentry[index]->size && 
-#else
-       -1!=ifunc->pentry[index]->filenum && 
-#endif
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
-#ifndef G__OLDIMPLEMENTATION1842
        && G__asm_loopcompile>=4
-#endif
        ) {
       G__compile_bytecode(ifunc,(int)index);
     }
-#ifndef G__OLDIMPLEMENTATION2082
     G__asm_loopcompile = store_asm_loopcompile;
-#endif
     return(ifunc->pentry[index]->bytecode);
   }
   else {
@@ -350,17 +312,13 @@ G__DataMemberInfo G__MethodInfo::GetLocalVariable()
   G__DataMemberInfo localvar;
   localvar.Init((long)0,(long)(-1),(G__ClassInfo*)NULL);
   if(IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1164
     int store_fixedscope=G__fixedscope;
     extern int G__xrefflag;
     G__xrefflag=1;
     G__fixedscope=1;
-#endif
     struct G__bytecodefunc* pbc = GetBytecode();
-#ifndef G__OLDIMPLEMENTATION1164
     G__xrefflag=0;
     G__fixedscope=store_fixedscope;
-#endif
     if(!pbc) {
       if(Property()&G__BIT_ISCOMPILED) {
 	G__fprinterr(G__serr,"Limitation: can not get local variable information for compiled function %s\n",Name());
@@ -386,23 +344,15 @@ void* G__MethodInfo::PointerToFunc()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        -1!=ifunc->pentry[index]->size && 
-#else
-       -1!=ifunc->pentry[index]->filenum && 
-#endif
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
-#ifndef G__OLDIMPLEMENTATION1842
        && G__asm_loopcompile>=4
-#endif
        ) {
       G__compile_bytecode(ifunc,(int)index);
     }
-#ifndef G__OLDIMPLEMENTATION1846
     if(G__BYTECODE_SUCCESS==ifunc->pentry[index]->bytecodestatus) 
       return((void*)ifunc->pentry[index]->bytecode);
       
-#endif
     return(ifunc->pentry[index]->tp2f);
   }
   else {
@@ -417,10 +367,8 @@ void G__MethodInfo::SetGlobalcomp(int globalcomp)
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     ifunc->globalcomp[index]=globalcomp;
-#ifndef G__OLDIMPLEMENTATION912
     if(G__NOLINK==globalcomp) ifunc->access[index]=G__PRIVATE;
     else                      ifunc->access[index]=G__PUBLIC;
-#endif
   }
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -455,20 +403,13 @@ int G__MethodInfo::Next()
 {
   if(handle) {
     struct G__ifunc_table *ifunc;
-#ifndef G__OLDIMPLEMENTATION1706
-  nextone:
-#endif
     ifunc = (struct G__ifunc_table*)handle;
     ++index;
     if(ifunc->allifunc<=index) {
-#ifndef G__FONS75
       int t = ifunc->tagnum;
-#endif
       ifunc=ifunc->next;
       if(ifunc) {
-#ifndef G__FONS75
 	ifunc->tagnum=t;
-#endif
 	handle=(long)ifunc;
 	index = 0;
       }
@@ -488,17 +429,12 @@ int G__MethodInfo::Next()
     }
 #endif
     if(IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1706
-      if(0==ifunc->hash[index]) goto nextone;
-#endif
       type.type=ifunc->type[index];
       type.tagnum=ifunc->p_tagtable[index];
       type.typenum=ifunc->p_typetable[index];
       type.reftype=ifunc->reftype[index];
       type.isconst=ifunc->isconst[index];
-#ifndef G__OLDIMPLEMENTATION1227
       type.class_property=0;
-#endif
       return(1);
     }
     else {
@@ -527,18 +463,13 @@ const char* G__MethodInfo::FileName()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION644
 FILE* G__MethodInfo::FilePointer()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
-#else
-       ifunc->pentry[index]->filenum>=0
-#endif
        ) {
       return(G__srcfile[ifunc->pentry[index]->filenum].fp);
     }
@@ -550,7 +481,6 @@ FILE* G__MethodInfo::FilePointer()
     return((FILE*)NULL);
   }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 int G__MethodInfo::LineNumber()
 {
@@ -558,11 +488,7 @@ int G__MethodInfo::LineNumber()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
-#else
-       ifunc->pentry[index]->filenum>=0
-#endif
        ) {
       return(ifunc->pentry[index]->line_number);
     }
@@ -575,7 +501,6 @@ int G__MethodInfo::LineNumber()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION644
 long G__MethodInfo::FilePosition()
 { 
   // returns  'type fname(type p1,type p2)'
@@ -591,11 +516,7 @@ long G__MethodInfo::FilePosition()
     ifunc = (struct G__ifunc_table*)handle;
 #endif
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
-#else
-       ifunc->pentry[index]->filenum>=0
-#endif
        ) {
 #if defined(G__NONSCALARFPOS2)
       return((long)ifunc->pentry[index]->pos.__pos);
@@ -613,7 +534,6 @@ long G__MethodInfo::FilePosition()
     return(invalid);
   }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 int G__MethodInfo::Size()
 {
@@ -621,11 +541,7 @@ int G__MethodInfo::Size()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(
-#ifndef G__OLDIMPLEMENTATION2012
        ifunc->pentry[index]->size>=0
-#else
-       ifunc->pentry[index]->filenum>=0
-#endif
        ) {
       return(ifunc->pentry[index]->size);
     }
@@ -683,7 +599,6 @@ char* G__MethodInfo::GetMangledName()
   return(G__map_cpp_name(GetPrototype()));
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION1908
 extern "C" int G__DLL_direct_globalfunc(G__value *result7
 					,G__CONST char *funcname
 					,struct G__param *libp,int hash) ;
@@ -697,21 +612,15 @@ int G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname)
   if(p2f) {
     ifunc->pentry[index]->tp2f = p2f;
     ifunc->pentry[index]->p = (void*)G__DLL_direct_globalfunc;
-#ifndef G__OLDIMPLEMENTATION2012
     ifunc->pentry[index]->size = -1;
     //ifunc->pentry[index]->filenum = -1; /* not good */
-#else
-    ifunc->pentry[index]->filenum = -1;
-#endif
     ifunc->pentry[index]->line_number = -1;
     return 1;
   }
   return 0;
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef G__OLDIMPLEMENTATION1294
 ///////////////////////////////////////////////////////////////////////////
 // Global function to set precompiled library linkage
 ///////////////////////////////////////////////////////////////////////////
@@ -720,7 +629,6 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
   G__ClassInfo globalscope;
   G__MethodInfo method;
   long dummy=0;
-#ifndef G__OLDIMPLEMENTATION912
   char classname[G__LONGLINE];
 
   // Actually find the last :: to get the full classname, including
@@ -750,78 +658,19 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
   }
   method=globalscope.GetMethod(fname,param,&dummy);
 
-#else
-  method=globalscope.GetMethod(funcname,param,&dummy);
-#endif
   if(method.IsValid()) {
     method.SetGlobalcomp(globalcomp);
     return(0);
   }
   else {
     G__fprinterr(G__serr,"Warning: #pragma link, function %s(%s) not found"
-#ifndef G__OLDIMPLEMENTATION912
 	    ,fname,param);
-#else
-	    ,funcname,param);
-#endif
     G__printlinenum();
     return(1);
   }
 }
-#else
-///////////////////////////////////////////////////////////////////////////
-// Global function to set precompiled library linkage
-///////////////////////////////////////////////////////////////////////////
-extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
-{
-  G__ClassInfo globalscope;
-  G__MethodInfo method;
-  long dummy=0;
-#ifndef G__OLDIMPLEMENTATION912
-  char classname[G__LONGLINE];
-
-  strcpy(classname,funcname);
-  char *fname = strstr(classname,"::");
-  if(fname) {
-    *fname=0;
-    fname+=2;
-    globalscope.Init(classname);
-  }
-  else {
-    fname = funcname;
-  }
-
-  if(strcmp(fname,"*")==0) {
-    method.Init(globalscope);
-    while(method.Next()) {
-      method.SetGlobalcomp(globalcomp);
-    }
-    return(0);
-  }
-  method=globalscope.GetMethod(fname,param,&dummy);
-
-#else
-  method=globalscope.GetMethod(funcname,param,&dummy);
-#endif
-  if(method.IsValid()) {
-    method.SetGlobalcomp(globalcomp);
-    return(0);
-  }
-  else {
-    G__fprinterr(G__serr,"Warning: #pragma link, function %s(%s) not found"
-#ifndef G__OLDIMPLEMENTATION912
-	    ,fname,param);
-#else
-	    ,funcname,param);
-#endif
-    G__printlinenum();
-    return(1);
-  }
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef G__OLDIMPLEMENTATION1781
 ///////////////////////////////////////////////////////////////////////////
 // Global function to set precompiled library linkage
 ///////////////////////////////////////////////////////////////////////////
@@ -855,7 +704,6 @@ extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
   if(method.IsValid()) {
     struct G__ifunc_table *ifunc = method.ifunc();
     int ifn = method.Index();
-#ifndef G__OLDIMPLEMENTATION1842
     int stat;
     int store_asm_loopcompile = G__asm_loopcompile;
     int store_asm_loopcompile_mode = G__asm_loopcompile_mode;
@@ -863,26 +711,17 @@ extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
     stat = G__compile_bytecode(ifunc,ifn);
     G__asm_loopcompile=store_asm_loopcompile;
     G__asm_loopcompile_mode=store_asm_loopcompile_mode;
-#else
-    int stat = G__compile_bytecode(ifunc,ifn);
-#endif
     if(stat) return 0;
     else return 1;
   }
   else {
     G__fprinterr(G__serr,"Warning: function %s(%s) not found"
-#ifndef G__OLDIMPLEMENTATION912
 	    ,fname,param);
-#else
-	    ,funcname,param);
-#endif
     G__printlinenum();
     return(1);
   }
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2073
 ///////////////////////////////////////////////////////////////////////////
 // SetVtblIndex
 ///////////////////////////////////////////////////////////////////////////
@@ -900,9 +739,7 @@ void G__MethodInfo::SetIsVirtual(int isvirtual) {
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
   ifunc->isvirtual[index] = isvirtual;
 }
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2073
 ///////////////////////////////////////////////////////////////////////////
 // SetVtblBasetagnum
 ///////////////////////////////////////////////////////////////////////////
@@ -911,5 +748,4 @@ void G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
   ifunc->vtblbasetagnum[index] = (short)basetagnum;
 }
-#endif
 

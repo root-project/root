@@ -21,13 +21,14 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#ifdef G__CINT_VER6
-#define G__CINTVERSION      6000033
-#define G__CINTVERSIONSTR  "6.0.33, Mar 14 2005"
-#else
-#define G__CINTVERSION      50150169
-#define G__CINTVERSIONSTR  "5.15.169, Mar 14 2005"
+#ifndef G__CINT_VER6
+#define G__CINT_VER6  1
 #endif
+
+#define G__CINTVERSION_V6      6001001
+#define G__CINTVERSIONSTR_V6  "6.1.1, June 20 2005"
+#define G__CINTVERSION_V5      50160001
+#define G__CINTVERSIONSTR_V5  "5.16.1, Jun3 20 2005"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -158,17 +159,12 @@
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
-#ifndef G__OLDIMPLEMENTATION2186
 #if defined(__APPLE__)
 /* Fons, if you find problems, comment out G__BOOL4BYTE and uncomment
  * G__UNADDRESSABLEBOOL. Thanks */
 #define G__BOOL4BYTE
 /* #define G__UNADDRESSABLEBOOL */
 #endif
-#else /* 2186 */
-#define G__BOOL1BYTE
-/* #define G__UNADDRESSABLEBOOL */ /* ??? Philippe propose this change */
-#endif /* 2186 */
 #endif
 
 /* Speed up G__strip_quotation */
@@ -287,7 +283,6 @@
 * END OF SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION1231
 /**************************************************************************
 * One of following macro has to be defined to fix DLL global function
 * conflict problem. G__CPPIF_STATIC is recommended. Define G__CPPIF_PROJNAME
@@ -308,7 +303,6 @@
 #endif
 #endif
 
-#endif
 
 
 /**************************************************************************
@@ -381,7 +375,6 @@
 #   endif
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2189
 /***********************************************************************
  * Native long long support
  ***********************************************************************/
@@ -393,7 +386,6 @@ typedef long long          G__int64;
 typedef unsigned long long G__uint64;
 #endif
 
-#endif
 
 
 /***********************************************************************
@@ -572,18 +564,11 @@ extern "C" {   /* extern C 1 */
 #define G__CHECKLRANGE(p,low,up) \
  if(G__check_lrange(p,low,up,G__int(libp->para[p]),result7,funcname)) return(1)
 
-#ifndef G__OLDIMPLEMENTATION575
 #define G__CHECKTYPE(p,t1,t2) \
  if(G__check_type(p,t1,t2,&libp->para[p],result7,funcname)) return(1)
-#endif
 
-#ifndef G__OLDIMPLEMENTATION575
 #define G__CHECKNONULL(p,t) \
  if(G__check_nonull(p,t,&libp->para[p],result7,funcname)) return(1)
-#else
-#define G__CHECKNONULL(p) \
- if(G__check_nonull(p,G__int(libp->para[p]),result7,funcname)) return(1)
-#endif
 
 #define G__CHECKNPARA(n) \
  if(n!=libp->paran) { \
@@ -693,10 +678,8 @@ extern "C" {   /* extern C 1 */
 
 #define G__EXPLICITCONV
 
-#ifndef G__OLDIMPLEMENTATION1210
 #ifdef __CINT__
 typedef int (*G__IgnoreInclude)();
-#endif
 #endif
 
 /**********************************************************************
@@ -897,7 +880,6 @@ typedef struct {
     double d;
     long    i; /* used to be int */
     struct G__p2p reftype;
-#ifndef G__OLDIMPLEMENTATION845
     char ch;
     short sh;
     int in;
@@ -906,12 +888,9 @@ typedef struct {
     unsigned short ush;
     unsigned int uin;
     unsigned long ulo;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
     G__int64 ll;
     G__uint64 ull;
     long double ld;
-#endif
   } obj;
   int type;
   int tagnum;
@@ -925,7 +904,6 @@ typedef struct {
 } G__value ;
 
 
-#ifndef G__OLDIMPLEMENTATION833
 /**************************************************************************
 * reference type argument for precompiled function
 **************************************************************************/
@@ -940,7 +918,6 @@ typedef struct {
 #define G__Muint(buf)    (*(unsigned int*)(&buf.obj.i))
 #define G__Mulong(buf)   (*(unsigned long*)(&buf.obj.i))
 
-#endif
 
 
 /**************************************************************************
@@ -950,11 +927,9 @@ typedef struct {
 #define G__SYSHEADER  2
 
 
-#ifndef G__OLDIMPLEMENTATION2021
 #ifndef G__ANSI
 #if (__GNUC__>=3)  /* ||defined(__SUNPRO_CC)||defined(__SUNPRO_C) */
 #define G__ANSI
-#endif
 #endif
 #endif
 /* #define G__ANSI */
@@ -991,10 +966,8 @@ extern G__value G__null;
 #define G__FLOATALLOC  sizeof(float)
 #define G__DOUBLEALLOC sizeof(double)
 #define G__P2MFALLOC   G__sizep2memfunc
-#ifndef G__OLDIMPLEMENTATION2189
 #define G__LONGLONGALLOC sizeof(G__int64)
 #define G__LONGDOUBLEALLOC sizeof(long double)
-#endif
 #endif /* __CINT__ */
 
 #ifdef G__TESTMAIN
@@ -1054,7 +1027,6 @@ extern G__value G__null;
 struct G__ifunc_table;
 struct G__var_array;
 
-#ifdef G__FONS_COMMENT
 /**************************************************************************
 * comment information
 *
@@ -1066,9 +1038,7 @@ struct G__comment_info {
   } p;
   int   filenum;
 };
-#endif
 
-#ifdef G__ROOTSPECIAL
 /**************************************************************************
 * ROOT special requirement
 *
@@ -1087,7 +1057,6 @@ struct G__RootSpecial {
   unsigned int heapinstancecount;
   void* defaultconstructor;
 };
-#endif
 
 /**************************************************************************
 * structure for friend function and class
@@ -1125,7 +1094,6 @@ struct G__bytecodefunc {
 #define G__BYTECODE_SUCCESS   3
 #define G__BYTECODE_ANALYSIS  4 /* ON1164 */
 
-#ifndef G__OLDIMPLEMENTATION2012
 /**************************************************************************
  *                                                      1
  *                               2            2          
@@ -1139,21 +1107,6 @@ struct G__bytecodefunc {
  * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
  * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
  **************************************************************************/
-#else
-/**************************************************************************
- *                                                      1
- *                               2            2          
- *                        proto   interpreted   bytecode  compiled
- * fpos_t pos;            hdrpos  src_fpos      src_fpos  ??
- * void* p;            2  NULL    src_fp        src_fp    ifmethod
- * int line_number;       -1      line          line      -1
- * short filenum;      1  fnum    fnum          fnum      -1
- * ushort size;           0       size          size      ??
- * void*  tp2f;           fname   fname         bytecode  (*p2f)|ifmethod
- * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
- * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
- **************************************************************************/
-#endif
 
 struct G__funcentry {
   /* file position and pointer for restoring start point */
@@ -1163,11 +1116,7 @@ struct G__funcentry {
   int  line_number; /* -1 if no function body or compiled function */
   short filenum;    /* -1 if compiled function, otherwise interpreted func */
 #ifdef G__ASM_FUNC
-#ifndef G__OLDIMPLEMENTATION2012
   int size; /* size (number of lines) of function */
-#else
-  unsigned short size; /* size (number of lines) of function */
-#endif
 #endif
 #ifdef G__TRUEP2F
   void *tp2f;
@@ -1203,11 +1152,7 @@ struct G__ifunc_table {
   int allifunc;
 
   /* function name and hash for identification */
-#ifndef G__OLDIMPLEMENTATION1543
   char *funcname[G__MAXIFUNC];
-#else
-  char funcname[G__MAXIFUNC][G__MAXNAME];
-#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC],*pentry[G__MAXIFUNC];
@@ -1219,9 +1164,7 @@ struct G__ifunc_table {
   G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
   short para_nu[G__MAXIFUNC];
   G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-#ifndef G__OLDIMPLEMENTATION1250
   G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-#endif
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
@@ -1261,25 +1204,11 @@ struct G__ifunc_table {
 
   G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
 
-#ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MAXIFUNC];
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1706
-  struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
-  unsigned char          override_ifn[G__MAXIFUNC];
-  struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
-  unsigned char          masking_ifn[G__MAXIFUNC];
-#endif
-#ifdef G__ROOTSPECIAL
   void* userparam[G__MAXIFUNC]; /* user parameter array */
-#endif
-#ifndef G__OLDIMPLEMENTATION2073
   short vtblindex[G__MAXIFUNC]; 
-#endif
-#ifndef G__OLDIMPLEMENTATION2084
   short vtblbasetagnum[G__MAXIFUNC];
-#endif
 };
 
 
@@ -1294,11 +1223,7 @@ struct G__ifunc_table_VMS {
   int allifunc;
 
   /* function name and hash for identification */
-#ifndef G__OLDIMPLEMENTATION1543
   char *funcname[G__MAXIFUNC];
-#else
-  char funcname[G__MAXIFUNC][G__MAXNAME];
-#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC];
@@ -1311,9 +1236,7 @@ struct G__ifunc_table_VMS {
   G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
   short para_nu[G__MAXIFUNC];
   G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-#ifndef G__OLDIMPLEMENTATION1250
   G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-#endif
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
@@ -1353,25 +1276,11 @@ struct G__ifunc_table_VMS {
 
   G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
 
-#ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MAXIFUNC];
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1706
-  struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
-  unsigned char          override_ifn[G__MAXIFUNC];
-  struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
-  unsigned char          masking_ifn[G__MAXIFUNC];
-#endif
-#ifdef G__ROOTSPECIAL
   void* userparam[G__MAXIFUNC];  /* user parameter array */
-#endif
-#ifndef G__OLDIMPLEMENTATION2073
   short vtblindex[G__MAXIFUNC]; 
-#endif
-#ifndef G__OLDIMPLEMENTATION2084
   short vtblbasetagnum[G__MAXIFUNC];
-#endif
 };
 #endif
 
@@ -1395,7 +1304,6 @@ struct G__param {
 };
 
 
-#ifndef G__OLDIMPLEMENTATION1231
 #if defined(__cplusplus) && !defined(__CINT__)
 }   /* extern C 1 */
 #endif
@@ -1427,7 +1335,6 @@ typedef void (*G__incsetup)();
 #if defined(__cplusplus) && !defined(__CINT__)
 extern "C" { /* extern C 3 */
 #endif
-#endif /* 1231 */
 
 /**************************************************************************
 * structure for class inheritance
@@ -1456,11 +1363,7 @@ struct G__var_array {
   /* union for variable pointer */
   long p[G__MEMDEPTH]; /* used to be int */
   int allvar;
-#ifndef G__OLDIMPLEMENTATION1543
   char *varnamebuf[G__MEMDEPTH]; /* variable name */
-#else
-  char varnamebuf[G__MEMDEPTH][G__MAXNAME]; /* variable name */
-#endif
   int hash[G__MEMDEPTH];                    /* hash table of varname */
   int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
   short paran[G__MEMDEPTH];
@@ -1504,9 +1407,7 @@ struct G__var_array {
 #endif
   G__SIGNEDCHAR_T globalcomp[G__MEMDEPTH];
 
-#ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MEMDEPTH];
-#endif
 
 #ifndef G__OLDIMPLEMENTATION2038
   struct G__var_array *enclosing_scope;
@@ -1537,19 +1438,13 @@ struct G__tagtable {
   G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];
   G__SIGNEDCHAR_T iscpplink[G__MAXSTRUCT];
   char isabstract[G__MAXSTRUCT];
-#ifndef G__OLDIMPLEMENTATION1334
   char protectedaccess[G__MAXSTRUCT];
-#endif
 
   int  line_number[G__MAXSTRUCT];
   short filenum[G__MAXSTRUCT];
 
   short parent_tagnum[G__MAXSTRUCT];
-#ifndef G__OLDIMPLEMENTATION1830
   unsigned char funcs[G__MAXSTRUCT];
-#else
-  char funcs[G__MAXSTRUCT];
-#endif
   char istypedefed[G__MAXSTRUCT];
   char istrace[G__MAXSTRUCT];
   char isbreak[G__MAXSTRUCT];
@@ -1559,35 +1454,23 @@ struct G__tagtable {
   struct G__friendtag *friendtag[G__MAXSTRUCT];
 #endif
 
-#ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MAXSTRUCT];
-#endif
 
   G__incsetup incsetup_memvar[G__MAXSTRUCT];
   G__incsetup incsetup_memfunc[G__MAXSTRUCT];
 
-#ifdef G__ROOTSPECIAL
   char rootflag[G__MAXSTRUCT];
   struct G__RootSpecial *rootspecial[G__MAXSTRUCT];
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1238
   char isctor[G__MAXSTRUCT];
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1503
   int defaulttypenum[G__MAXSTRUCT];
 #endif
-#ifdef G__ROOTSPECIAL
   void* userparam[G__MAXSTRUCT];     /* user parameter array */
-#endif
-#ifndef G__OLDIMPLEMENTATION2014
   char* libname[G__MAXSTRUCT];
-#endif
-#ifndef G__OLDIMPLEMENTATION2073
   void* vtable[G__MAXSTRUCT];
   /* short vtabledepth[G__MAXSTRUCT]; */
-#endif
 };
 
 /**************************************************************************
@@ -1608,17 +1491,13 @@ struct G__typedef {
   int *index[G__MAXTYPEDEF];
   short parent_tagnum[G__MAXTYPEDEF];
   char iscpplink[G__MAXTYPEDEF];
-#ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MAXSTRUCT];
-#endif
 #ifdef G__TYPEDEFFPOS
   int filenum[G__MAXTYPEDEF];
   int linenum[G__MAXTYPEDEF];
 #endif
   int alltype;
-#ifndef G__OLDIMPLEMENTATION1394
   G__SIGNEDCHAR_T isconst[G__MAXTYPEDEF];
-#endif
 };
 
 
@@ -1650,9 +1529,7 @@ struct G__tempobject_list {
 #ifdef G__CPPLINK3
   int cpplink;
 #endif
-#ifndef G__OLDIMPLEMENTATION1516
   int no_exec;
-#endif
   struct G__tempobject_list *prev;
 };
 #endif
@@ -1774,18 +1651,10 @@ extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
 #define G__WILDCARD
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1169
-#endif
 extern int G__fgetline G__P((char *string));
 extern int G__load G__P((char *commandfile));
 /* extern float G__float G__P((G__value buf));*/
-#if !defined(G__OLDIMPLEMENTATION481)
 extern G__value (*G__GetSpecialObject) G__P((char *name,void **ptr,void** ppdict));
-#elif !defined(G__OLDIMPLEMENTATION455)
-extern G__value (*G__GetSpecialObject) G__P((char *name,void *ptr));
-#else
-extern G__value (*G__GetSpecialObject) G__P((char *name));
-#endif
 extern int  G__call_setup_funcs G__P((void));
 extern void G__reset_setup_funcs G__P((void));
 extern char *G__cint_version G__P((void));
@@ -1796,7 +1665,6 @@ extern int G__del_alloctable G__P((void* allocmem));
 extern int G__add_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__del_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__disp_garbagecollection G__P((FILE* fout));
-#if !defined(G__OLDIMPLEMENTATION2079)
 struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
 					   ,struct G__ifunc_table *p_ifunc
 					   ,long *pifn,long *poffset
@@ -1808,21 +1676,6 @@ struct G__ifunc_table *G__get_methodhandle2 G__P((char *funcname
 					   ,long *pifn,long *poffset
 					   ,int withConversion
                                            ,int withInheritance));
-#elif !defined(G__OLDIMPLEMENTATION1989)
-struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
-					   ,struct G__ifunc_table *p_ifunc
-					   ,long *pifn,long *poffset
-					   ,int withConversion));
-struct G__ifunc_table *G__get_methodhandle2 G__P((char *funcname
-					   ,struct G__param* libp
-					   ,struct G__ifunc_table *p_ifunc
-					   ,long *pifn,long *poffset
-					   ,int withConversion));
-#else
-struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
-					   ,struct G__ifunc_table *p_ifunc
-					   ,long *pifn,long *poffset));
-#endif
 struct G__var_array *G__searchvariable G__P((char *varname,int varhash
 				       ,struct G__var_array *varlocal
 				       ,struct G__var_array *varglobal
@@ -1839,7 +1692,6 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
 
 
-#ifndef G__OLDIMPLEMENTATION1473
 /**************************************************************************
  * Variable argument, byte layout policy
  **************************************************************************/
@@ -1848,11 +1700,7 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 typedef struct {
   union {
     char d[G__VAARG_SIZE];
-#ifndef G__OLDIMPLEMENTATION1798
     long i[G__VAARG_SIZE/sizeof(long)];
-#else
-    int i[G__VAARG_SIZE/4];
-#endif
   } x;
 } G__va_arg_buf;
 
@@ -1881,14 +1729,12 @@ typedef struct {
  **********************************************/
 /* #define G__VAARG_NOSUPPORT */
 
-#ifndef G__OLDIMPLEMENTATION1696
 #ifdef __ia64__
 #define G__VAARG_INC_COPY_N 8
 #else
 #define G__VAARG_INC_COPY_N 4
 #endif
 #define G__VAARG_PASS_BY_REFERENCE 8
-#endif
 
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 /**********************************************
@@ -1898,10 +1744,8 @@ typedef struct {
  **********************************************/
 /* #define G__VAARG_NOSUPPORT */
 
-#ifndef G__OLDIMPLEMENTATION1696
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
-#endif
 
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 /**********************************************
@@ -1943,7 +1787,6 @@ struct G__va_list_para {
 void G__va_arg_setalign G__P((int n));
 void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
 
-#endif /* 1473 */
 
 #endif /* __CINT__ */
 
@@ -1956,12 +1799,10 @@ void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
 /*************************************************************************
 * ROOT script compiler
 *************************************************************************/
-#ifndef G__PHILIPPE1
 extern G__EXPORT void G__Set_RTLD_NOW G__P((void));
 extern G__EXPORT void G__Set_RTLD_LAZY G__P((void));
 extern G__EXPORT int (*G__ScriptCompiler) G__P((G__CONST char*,G__CONST char*));
 extern G__EXPORT void G__RegisterScriptCompiler G__P((int(*p2f)(G__CONST char*,G__CONST char*)));
-#endif
 /*************************************************************************
 * Pointer to function evaluation function
 *************************************************************************/
@@ -1978,10 +1819,8 @@ extern G__EXPORT int G__defined_tagname G__P((G__CONST char* tagname,int noerror
 
 int G__deleteglobal G__P((void* p));
 int G__deletevariable G__P((G__CONST char* varname));
-#ifndef G__OLDIMPLEMENTATION1142
 extern G__EXPORT int G__optimizemode G__P((int optimizemode));
 extern G__EXPORT int G__getoptimizemode G__P((void));
-#endif
 G__value G__string2type_body G__P((G__CONST char *typenamin,int noerror));
 G__value G__string2type G__P((G__CONST char *typenamin));
 void* G__findsym G__P((G__CONST char *fname));
@@ -1991,46 +1830,28 @@ extern G__EXPORT void G__storerewindposition G__P((void));
 extern G__EXPORT void G__rewinddictionary G__P((void));
 extern G__EXPORT void G__SetCriticalSectionEnv G__P((void));
 
-#ifndef G__OLDIMPLEMENTATION1198
 extern G__EXPORT void G__storelasterror G__P((void));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1207
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1207
 extern G__EXPORT void G__set_smartunload G__P((int smartunload));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1207
 extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION2014
 extern G__EXPORT void G__set_class_autoloading_callback G__P((int (*p2f) G__P((char*,char*))));
 extern G__EXPORT void G__set_class_autoloading_table G__P((char* classname,char* libname));
-#endif
-#ifndef G__OLDIMPLEMENTATION2097
 extern G__EXPORT int G__set_class_autoloading G__P((int newvalue));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1210
 typedef int (*G__IgnoreInclude) G__P((const char* fname,const char* expandedfname));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1423
 #ifdef G__NEVER
 extern G__EXPORT void* G__operator_new G__P((size_t size,void* p));
 extern G__EXPORT void* G__operator_new_ary G__P((size_t size,void* p)) ;
 extern G__EXPORT void G__operator_delete G__P((void *p)) ;
 extern G__EXPORT void G__operator_delete_ary G__P((void *p)) ;
 #endif
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1644
 extern G__EXPORT int G__getexitcode G__P((void));
 extern G__EXPORT int G__get_return G__P((int *exitval));
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1485
 #ifdef G__FIX1
@@ -2043,19 +1864,11 @@ extern G__EXPORT int G__fputerr G__P((int c));
 #define G__fprinterr  fprintf
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1731
 extern G__EXPORT void G__SetUseCINTSYSDIR G__P((int UseCINTSYSDIR));
-#endif
-#ifndef G__OLDIMPLEMENTATION1963
 extern G__EXPORT void G__SetCINTSYSDIR G__P((char* cintsysdir));
-#endif
-#ifndef G__OLDIMPLEMENTATION1964
 extern G__EXPORT void G__set_eolcallback G__P((void* eolcallback));
-#endif
 
-#ifndef G__OLDIMPLEMENTATION1815
 extern G__EXPORT void G__SetCatchException G__P((int mode));
-#endif
 
 #ifdef G__ASM_WHOLEFUNC
 /**************************************************************************
@@ -2074,24 +1887,16 @@ extern G__EXPORT int G__fprintf (FILE* fp,char* fmt,...);
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 #endif
 extern G__EXPORT int G__setmasksignal G__P((int));
-#ifndef G__OLDIMPLEMENTATION1596
 extern void G__settemplevel G__P((int val));
 extern void G__clearstack G__P((void));
-#endif
-#ifndef G__OLDIMPLEMENTATION1600
 extern G__EXPORT int G__lasterror G__P((void)) ;
 extern G__EXPORT void G__reset_lasterror G__P((void));
-#endif
-#ifndef G__OLDIMPLEMENTATION1601
 extern G__EXPORT int G__gettempfilenum G__P((void));
-#endif
 extern G__EXPORT void G__LockCpp G__P((void));
 extern G__EXPORT void G__set_sym_underscore G__P((int x));
 extern G__EXPORT int G__get_sym_underscore G__P((void));
-#ifndef G__OLDIMPLEMENTATION2000
 extern G__EXPORT void* G__get_errmsgcallback G__P((void));
 extern G__EXPORT void G__mask_errmsg G__P((char* msg));
-#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 
@@ -2142,9 +1947,7 @@ extern G__EXPORT int G__delete_ipath G__P((G__CONST char *ipath));
 extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));
-#ifndef G__OLDIMPLEMENTATION2231
 extern G__EXPORT long G__int_cast G__P((G__value buf));
-#endif
 extern G__EXPORT double G__double G__P((G__value buf));
 extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
@@ -2212,9 +2015,7 @@ extern G__EXPORT void G__set_aterror G__P((void (*p2f)()));
 extern G__EXPORT void G__p2f_void_void G__P((void* p2f));
 extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
 extern G__EXPORT char *G__getmakeinfo G__P((char *item));
-#ifndef G__OLDIMPLEMENTATION1645
 extern G__EXPORT char *G__getmakeinfo1 G__P((char *item));
-#endif
 extern G__EXPORT int G__get_security_error G__P((void));
 extern G__EXPORT char* G__map_cpp_name G__P((char *in));
 extern G__EXPORT char* G__Charref G__P((G__value *buf));
@@ -2222,9 +2023,7 @@ extern G__EXPORT short* G__Shortref G__P((G__value *buf));
 extern G__EXPORT int* G__Intref G__P((G__value *buf));
 extern G__EXPORT long* G__Longref G__P((G__value *buf));
 extern G__EXPORT unsigned char* G__UCharref G__P((G__value *buf));
-#ifndef G__OLDIMPLEMENTATION2047
 extern G__EXPORT unsigned char* G__Boolref G__P((G__value *buf));
-#endif
 extern G__EXPORT unsigned short* G__UShortref G__P((G__value *buf));
 extern G__EXPORT unsigned int* G__UIntref G__P((G__value *buf));
 extern G__EXPORT unsigned long* G__ULongref G__P((G__value *buf));
@@ -2247,7 +2046,6 @@ extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 extern G__EXPORT void G__set_errmsgcallback(void* p);
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
 extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,G__int64 value));
 extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,G__uint64 value));
 extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
@@ -2257,7 +2055,6 @@ extern G__EXPORT long double G__Longdouble G__P((G__value buf));
 extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
 extern G__EXPORT G__uint64* G__ULonglongref G__P((G__value *buf));
 extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
-#endif
 
 #else /* G__MULTITHREADLIBCINT */
 
@@ -2287,7 +2084,6 @@ static int (*G__memvar_setup) G__P((void *p,int type,int reftype,int constvar,in
 static int (*G__tag_memvar_reset) G__P((void));
 static int (*G__tag_memfunc_setup) G__P((int tagnum));
 
-#ifndef G__OLDIMPLEMENTATION1231
 #ifdef G__TRUEP2F
 static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
 ,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
@@ -2295,15 +2091,6 @@ static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,G__Interfa
 static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
 ,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
 #endif /* G__TRUEP2F */
-#else /* 1231 */
-#ifdef G__TRUEP2F
-static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
-#else /* G__TRUEP2F */
-static int (*G__memfunc_setup*) G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
-#endif /* G__TRUEP2F */
-#endif /* 1231 */
 
 static int (*G__memfunc_next) G__P((void));
 static int (*G__memfunc_para_setup) G__P((int ifn,int type,int tagnum,int typenum,int reftype,G__value *para_default,char *para_def,char *para_name));
@@ -2339,8 +2126,8 @@ static void (*G__setPrerun) G__P((int prerun));
 static int (*G__readline) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
 static int (*G__getFuncNow) G__P((void));
 static FILE* (*G__getIfileFp) G__P((void));
-static struct G__input_file* G__get_ifile G__P((void));
 static void (*G__incIfileLineNumber) G__P((void));
+static struct G__input_file* G__get_ifile G__P((void));
 static void (*G__setReturn) G__P((int rtn));
 static int (*G__getPrerun) G__P((void));
 static short (*G__getDispsource) G__P((void));
@@ -2410,7 +2197,6 @@ static void (*G__set_emergencycallback) G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 static void (*G__set_errmsgcallback) G__P((void* p));
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
 static void (*G__letLonglong) G__P((G__value* buf,int type,G__int64 value));
 static void (*G__letULonglong) G__P((G__value* buf,int type,G__uint64 value));
 static void (*G__letLongdouble) G__P((G__value* buf,int type,long double value));
@@ -2420,7 +2206,7 @@ static long double (*G__Longdouble) G__P((G__value buf)); /* used to be int */
 static G__int64* (*G__Longlongref) G__P((G__value *buf));
 static G__uint64* (*G__ULonglongref) G__P((G__value *buf));
 static long double* (*G__Longdoubleref) G__P((G__value *buf));
-#endif
+static struct G__input_file* (*G__get_ifile) G__P((void));
 
 #ifdef G__MULTITHREADLIBCINTC
 G__EXPORT void G__SetCCintApiPointers(
@@ -2556,7 +2342,6 @@ G__EXPORT void G__SetCppCintApiPointers(
 #ifndef G__OLDIMPLEMENTATION1485
 		,void* a127
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
 		,void* a128
 		,void* a129
 		,void* a130
@@ -2566,8 +2351,7 @@ G__EXPORT void G__SetCppCintApiPointers(
 		,void* a134
 		,void* a135
 		,void* a136
-#endif
-      ,void* a137
+                ,void* a137
 		)
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
@@ -2638,7 +2422,6 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__readline = (int (*) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[])) ) a58;
   G__getFuncNow = (int (*) G__P((void)) ) a59;
   G__getIfileFp = (FILE* (*) G__P((void)) ) a60;
-  G__get_ifile = (struct G__intput_ifile* (*) G__P((void)) ) a137;
   G__incIfileLineNumber = (void (*) G__P((void)) ) a61;
   G__setReturn = (void (*) G__P((int rtn)) ) a62;
   G__getPrerun = (int (*) G__P((void)) ) a63;
@@ -2708,7 +2491,6 @@ G__EXPORT void G__SetCppCintApiPointers(
 #ifndef G__OLDIMPLEMENTATION1485
   G__set_errmsgcallback= (void (*) G__P((void *p)) ) a127;
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
   G__letLonglong=(void (*) G__P((G__value* buf,int type,G__int64 value)))a128;
   G__letULonglong=(void (*) G__P((G__value* buf,int type,G__uint64 value)))a129;
   G__letLongdouble=(void (*) G__P((G__value* buf,int type,long double value)))a130;
@@ -2718,7 +2500,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__Longlongref=(void (*) G__P((G__value *buf)))a134;
   G__ULonglongref=(void (*) G__P((G__value *buf)))a135;
   G__Longdoubleref=(void (*) G__P((G__value *buf)))a136;
-#endif
+  G__get_ifile = (struct G__intput_ifile* (*) G__P((void)) ) a137;
 }
 
 #endif /* G__MULTITHREADLIBCINT */
@@ -2794,7 +2576,6 @@ int G__system G__P((char *com));
 
 #else /* G__SPECIALSTDIO */
 
-#ifndef G__OLDIMPLEMENTATION614
 #ifdef signal
 #undef signal
 #endif
@@ -2802,7 +2583,6 @@ int G__system G__P((char *com));
 #define alarm(time)        NULL
 typedef void (*G__signaltype)(int,void (*)(int));
 G__signaltype G__signal G__P((int sgnl,void (*f)(int)));
-#endif /* ON614 */
 
 #endif /* G__SPECIALSTDIO */
 
@@ -2811,14 +2591,12 @@ G__signaltype G__signal G__P((int sgnl,void (*f)(int)));
 * end of specialstdio or win32
 **************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION2189
 /***********************************************************************
  * Native long long support
  ***********************************************************************/
 #ifndef __CINT__
 extern G__EXPORT G__int64 G__expr_strtoll G__P((const char *nptr,char **endptr, register int base));
 extern G__EXPORT G__uint64 G__expr_strtoull G__P((const char *nptr, char **endptr, register int base));
-#endif
 #endif
 
 
@@ -2832,25 +2610,6 @@ extern G__EXPORT G__uint64 G__expr_strtoull G__P((const char *nptr, char **endpt
 * endif #ifndef G__MAKECINT
 **************************************************************************/
 
-#ifdef G__OLDIMPLEMENTATION1231
-/**************************************************************************
-* Interface Method type
-*
-**************************************************************************/
-#if defined(__cplusplus) && !defined(__CINT__)
-extern "C" { /* extern C 4' */
-#endif
-
-#ifdef G__ANSIHEADER
-typedef int (*G__InterfaceMethod)(G__value*,G__CONST char*,struct G__param*,int);
-#else
-typedef int (*G__InterfaceMethod)();
-#endif
-
-#if defined(__cplusplus) && !defined(__CINT__)
-} /* extern C 4' */
-#endif
-#endif /* 1231 */
 
 
 #endif /* G__CI_H */
