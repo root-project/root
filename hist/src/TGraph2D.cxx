@@ -551,6 +551,11 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //                  (by default, any previous function is deleted)
    //            = "C" In case of linear fitting, not calculate the chisquare
    //                  (saves time)
+   //            = "ROB" In case of linear fitting, compute the LTS regression
+   //                     coefficients (robust(resistant) regression), using 
+   //                     the default fraction of good points
+   //              "ROB=0.x" - compute the LTS regression coefficients, using
+   //                           0.x as a fraction of good points
    //
    //  In order to use the Range option, one must first create a function
    //  with the expression to be fitted. For example, if your graph2d
@@ -630,6 +635,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
    //  Root > st->SetX1NDC(newx1); //new x start position
    //  Root > st->SetX2NDC(newx2); //new x end position
+
    Int_t fitResult = 0;
    Double_t xmin=0, xmax=0;
    Int_t i, npar,nvpar,nparx;
@@ -666,6 +672,20 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
    TString opt = option;
    opt.ToUpper();
+   Double_t h=0;
+   opt.ReplaceAll("ROB", "H");
+   //for robust fitting, see if # of good points is defined
+   if (opt.Contains("H=0.")) {
+      int start = opt.Index("H=0.");
+      int numpos = start + strlen("H=0.");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+      h = atof(num.Data());
+      h*=TMath::Power(10, -numlen);
+   }
 
    if (opt.Contains("U")) fitOption.User    = 1;
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
@@ -678,6 +698,8 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
+   if (opt.Contains("H")) fitOption.Robust  = 1; 
+
  ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
 ///ymin    = fY[0];
@@ -757,9 +779,11 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 ///}
 
       if (linear){
-	 grFitter->ExecuteCommand("FitGraph2D", 0, 0);
+         if (fitOption.Robust)
+            grFitter->ExecuteCommand("FitGraph2D", &h, 0);
+         else
+            grFitter->ExecuteCommand("FitGraph2D", 0, 0);
       } else {
-
 	 // Some initialisations
 	 if (!fitOption.Verbose) {
 	    arglist[0] = -1;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.162 2005/05/13 19:58:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.163 2005/05/18 12:31:08 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1001,6 +1001,11 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //             = "C" In case of linear fitting, not calculate the chisquare
 //                    (saves time)
 //             = "F" If fitting a polN, switch to minuit fitter
+//             = "ROB" In case of linear fitting, compute the LTS regression
+//                     coefficients (robust(resistant) regression), using 
+//                     the default fraction of good points
+//               "ROB=0.x" - compute the LTS regression coefficients, using
+//                           0.x as a fraction of good points
 //
 //   When the fit is drawn (by default), the parameter goption may be used
 //   to specify a list of graphics options. See TGraph::Paint for a complete
@@ -1164,9 +1169,22 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    // Decode string choptin and fill fitOption structure
    Foption_t fitOption;
-
+   Double_t h=0;
    TString opt = option;
    opt.ToUpper();
+   opt.ReplaceAll("ROB", "H");
+   //for robust fitting, see if # of good points is defined
+   if (opt.Contains("H=0.")) {
+      int start = opt.Index("H=0.");
+      int numpos = start + strlen("H=0.");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+      h = atof(num.Data());
+      h*=TMath::Power(10, -numlen);
+   }
 
    if (opt.Contains("U")) fitOption.User    = 1;
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
@@ -1179,7 +1197,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-   if (opt.Contains("F")) fitOption.Minuit = 1;
+   if (opt.Contains("F")) fitOption.Minuit  = 1;
+   if (opt.Contains("H")) fitOption.Robust  = 1; 
 
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
@@ -1227,7 +1246,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 IsSet = kFALSE;
       }
       if (!IsSet) {
-	//TLinearFitter *lf=(TLinearFitter *)cl->New();
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
@@ -1253,13 +1271,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       f1->SetRange(xmin, xmax);
    }
 
-
-
 //*-*- If case of a predefined function, then compute initial values of parameters
 ///////
    if (linear){
-     grFitter->ExecuteCommand("FitGraph", 0, 0);
-
+      if (fitOption.Robust)
+         grFitter->ExecuteCommand("FitGraph", &h, 0);
+      else
+         grFitter->ExecuteCommand("FitGraph", 0, 0);
    } else {
 
       //Int_t special = f1->GetNumber();

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.9 2005/05/31 18:49:25 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.10 2005/06/06 13:44:10 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
+#include "TRandom.h"
 
 
 ClassImp(TLinearFitter)
@@ -146,6 +147,33 @@ ClassImp(TLinearFitter)
 //  3.2 If fitting with a pre-defined TF123, the fit results are also
 //      written into this function.
 //
+///////////////////////////////////////////////////////////////////////////
+// 4.Robust fitting - Least Trimmed Squares regression (LTS)
+//   Outliers are atypical(by definition), infrequant observations; data points
+//   which do not appear to follow the characteristic distribution of the rest
+//   of the data. These may reflect genuine properties of the underlying
+//   phenomenon(variable), or be due to measurement errors or anomalies which
+//   shouldn't be modelled. (StatSoft electronic textbook)
+//
+//   Even a single gross outlier can greatly influence the results of least-
+//   squares fitting procedure, and in this case use of robust(resistant) methods
+//   is recommended.
+//   
+//   The method implemented here is based on the article and algorithm:
+//   "Computing LTS Regression for Large Data Sets" by 
+//   P.J.Rousseeuw and Katrien Van Driessen
+//   The idea of the method is to find the fitting coefficients for a subset
+//   of h observations (out of n) with the smallest sum of squared residuals.
+//   The size of the subset h should lie between (npoints + nparameters +1)/2 
+//   and n, and represents the minimal number of good points in the dataset.
+//   The default value is set to (npoints + nparameters +1)/2, but of course
+//   if you are sure that the data contains less outliers it's better to change
+//   h according to your data.
+//   
+//   To perform a robust fit, call EvalRobust() function instead of Eval() after
+//   adding the points and setting the fitting function. 
+//   Note, that standard errors on parameters are not computed!
+//
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -167,6 +195,7 @@ TLinearFitter::TLinearFitter()
    fSpecial=0;
    fInputFunction=0;
    fStoreData=kTRUE;
+   fRobust=kFALSE;
 }
 
 //______________________________________________________________________________
@@ -187,6 +216,7 @@ TLinearFitter::TLinearFitter(Int_t ndim)
    fSpecial=0;
    fInputFunction=0;
    fStoreData=kTRUE;
+   fRobust = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -213,7 +243,7 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
       fStoreData=kTRUE;
    else
       fStoreData=kFALSE;
-
+   fRobust=kFALSE;
    SetFormula(formula);
 }
 
@@ -251,6 +281,7 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
    else
       fStoreData=kFALSE;
    fIsSet=kTRUE;
+   fRobust=kFALSE;
    SetFormula(function);
 }
 
@@ -296,7 +327,7 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
          fX(j,i)=x[i];
    }
    //add the point to the design matrix, if the formula has been set
-   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>199)
+   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>199 || !fRobust)
           AddToDesign(x, y, e);
    else if (!fStoreData)
       Error("AddPoint", "Point can't be added, because the formula hasn't been set and data is not stored");
@@ -421,7 +452,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
 //______________________________________________________________________________
 void TLinearFitter::Clear(Option_t * /*option*/)
 {
-   //Clears everything. Used in TH1::Fit().
+   //Clears everything. Used in TH1::Fit and TGraph::Fit().
 
    fParams.Clear();
    fParCovar.Clear();
@@ -454,6 +485,8 @@ void TLinearFitter::Clear(Option_t * /*option*/)
    fChisquare=0;
    fY2=0;
    fSpecial=0;
+   fRobust=kFALSE;
+   fFitsample.Clear();
 }
 
 //______________________________________________________________________________
@@ -550,7 +583,7 @@ void TLinearFitter::Chisquare()
 //______________________________________________________________________________
 void TLinearFitter::Eval()
 {
-   // Evaluate the function.
+   // Perform the fit and evaluate the parameters
 
    Double_t e;
    if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<200)){
@@ -775,6 +808,17 @@ Double_t TLinearFitter::GetParError(Int_t ipar) const
 }
 
 //______________________________________________________________________________
+void TLinearFitter::GetFitSample(TBits &bits)
+{
+   if (!fRobust){
+      Error("GetFitSample", "there is no fit sample in ordinary least-squares fit");
+      return;
+   }
+   for (Int_t i=0; i<fNpoints; i++)
+      bits.SetBitNumber(i, fFitsample.TestBitNumber(i));
+
+}
+//______________________________________________________________________________
 void TLinearFitter::SetDim(Int_t ndim)
 {
    //set the number of dimensions
@@ -990,14 +1034,24 @@ Bool_t TLinearFitter::UpdateMatrix()
 }
 
 //______________________________________________________________________________
-Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t * /*args*/, Int_t /*nargs*/)
+Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t *args, Int_t /*nargs*/)
 {
    //To use in TGraph::Fit and TH1::Fit().
 
-   if (!strcmp(command, "FitGraph"))      GraphLinearFitter();
+   if (!strcmp(command, "FitGraph")){
+      if (args)      GraphLinearFitter(args[0]);
+      else           GraphLinearFitter(0);
+   }
+   if (!strcmp(command, "FitGraph2D")){
+      if (args)      Graph2DLinearFitter(args[0]);
+      else           Graph2DLinearFitter(0);
+   }
+   if (!strcmp(command, "FitMultiGraph")){
+      if (args)      MultiGraphLinearFitter(args[0]);
+      else           MultiGraphLinearFitter(0);
+   }
    if (!strcmp(command, "FitHist"))       HistLinearFitter();
-   if (!strcmp(command, "FitGraph2D"))    Graph2DLinearFitter();
-   if (!strcmp(command, "FitMultiGraph")) MultiGraphLinearFitter();
+//   if (!strcmp(command, "FitMultiGraph")) MultiGraphLinearFitter();
 
    return 0;
 }
@@ -1009,15 +1063,22 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
    // errors.
 
    if (level==3){
-      printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");
-      for (Int_t i=0; i<fNfunctions; i++){
-	printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
-      }
+     if (!fRobust){
+        printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");     
+	for (Int_t i=0; i<fNfunctions; i++){
+	   printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
+	}
+     } else {
+        printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");     
+	for (Int_t i=0; i<fNfunctions; i++){
+	   printf("%d\t%f\n", i, fParams(i));
+	}
+     }
    }
 }
 
 //______________________________________________________________________________
-void TLinearFitter::GraphLinearFitter()
+void TLinearFitter::GraphLinearFitter(Double_t h)
 {
    //Used in TGraph::Fit().
 
@@ -1035,6 +1096,10 @@ void TLinearFitter::GraphLinearFitter()
    SetDim(1);
    SetFormula(f1);
 
+   if (Foption.Robust){
+      fRobust=kTRUE;
+      StoreData(kTRUE);
+   }
    //put the points into the fitter
    Int_t n=grr->GetN();
    for (Int_t i=0; i<n; i++){
@@ -1045,6 +1110,10 @@ void TLinearFitter::GraphLinearFitter()
       AddPoint(&x[i], y[i], e);
    }
 
+   if (Foption.Robust){
+      EvalRobust(h);
+      return;
+   }
    
    Eval();
 
@@ -1068,7 +1137,7 @@ void TLinearFitter::GraphLinearFitter()
 }
 
 //______________________________________________________________________________
-void TLinearFitter::Graph2DLinearFitter()
+void TLinearFitter::Graph2DLinearFitter(Double_t h)
 {
    StoreData(kFALSE);
 
@@ -1094,6 +1163,11 @@ void TLinearFitter::Graph2DLinearFitter()
    SetDim(2);
    SetFormula(f2);
 
+   if (Foption.Robust){
+      fRobust=kTRUE;
+      StoreData(kTRUE);
+   }
+
    for (Int_t bin=0;bin<n;bin++) {
       x[0] = gx[bin];
       x[1] = gy[bin];
@@ -1107,6 +1181,11 @@ void TLinearFitter::Graph2DLinearFitter()
       if (e<0 || Foption.W1)
          e=1;
       AddPoint(x, z, e);
+   }
+
+   if (Foption.Robust){
+      EvalRobust(h);
+      return;
    }
 
    Eval();
@@ -1140,7 +1219,7 @@ void TLinearFitter::Graph2DLinearFitter()
 }
 
 //______________________________________________________________________________
-void TLinearFitter::MultiGraphLinearFitter()
+void TLinearFitter::MultiGraphLinearFitter(Double_t h)
 {
 
    Int_t n, i;
@@ -1152,6 +1231,11 @@ void TLinearFitter::MultiGraphLinearFitter()
    Foption_t Foption = grFitter->GetFitOption();
 
    SetDim(1);
+
+   if (Foption.Robust){
+      fRobust=kTRUE;
+      StoreData(kTRUE);
+   }  
    SetFormula(f1);
 
    TGraph *gr;
@@ -1167,6 +1251,11 @@ void TLinearFitter::MultiGraphLinearFitter()
             e=1;
          AddPoint(&gx[i], gy[i], e);
       }
+   }
+
+   if (Foption.Robust){
+      EvalRobust(h);
+      return;
    }
 
    Eval();
@@ -1241,7 +1330,7 @@ void TLinearFitter::HistLinearFitter()
             } else {
                eu  = hfit->GetBinError(bin);
                if (eu <= 0) continue;
-            }
+            }         
             AddPoint(x, cu, eu);
 
          }
@@ -1280,3 +1369,619 @@ void TLinearFitter::HistLinearFitter()
       f1->SetChisquare(fChisquare);
    }
 }
+
+//______________________________________________________________________________
+void TLinearFitter::EvalRobust(Double_t h)
+{
+   //Finds the parameters of the fitted function in case data contains
+   //outliers. 
+   //Parameter h stands for the minimal fraction of good points in the
+   //dataset (h < 1, i.e. for 70% of good points take h=0.7). 
+   //The default value of h*Npoints is  (Npoints + Nparameters+1)/2 
+   //If the user provides a value of h smaller than above, default is taken
+   //See class description for the algorithm details
+
+   fRobust = kTRUE;
+   Double_t kEps = 1e-13;
+   Int_t nmini = 300;
+   Int_t i, j, maxind=0, k, k1 = 500;
+   Int_t nbest = 10;
+   Double_t chi2;
+   Double_t *bestchi2 = new Double_t[nbest];
+   for (i=0; i<nbest; i++)
+      bestchi2[i]=1e30;
+
+   Int_t hdef=Int_t((fNpoints+fNfunctions+1)/2);
+
+   if (h<0.000001) fH = hdef;
+   else if (h>0 && h<1 && fNpoints*h > hdef)
+      fH = Int_t(fNpoints*h);
+   else {
+      Warning("Fitting:", "illegal value of H, default is taken");
+      fH=hdef;
+   }
+
+   fDesign.ResizeTo(fNfunctions, fNfunctions);
+   fAtb.ResizeTo(fNfunctions);
+   fParams.ResizeTo(fNfunctions);
+
+   Int_t *index = new Int_t[fNpoints];
+   Double_t *residuals = new Double_t[fNpoints];
+
+   if (fNpoints < 2*nmini) {
+      //when number of cases is small
+
+      //to store the best coefficients (columnwise)
+      TMatrixD cstock(fNfunctions, nbest);
+      for (k = 0; k < k1; k++) {
+	 CreateSubset(fNpoints, fH, index);
+	 chi2 = CStep(1, fH, residuals,index, index, -1, -1);
+	 chi2 = CStep(2, fH, residuals,index, index, -1, -1);
+	 maxind = TMath::LocMax(nbest, bestchi2);
+	 if (chi2 < bestchi2[maxind]) {
+	    bestchi2[maxind] = chi2;
+	    for (i=0; i<fNfunctions; i++) 
+	       cstock(i, maxind) = fParams(i);
+	 }
+      }
+
+      //for the nbest best results, perform CSteps until convergence
+      Int_t *bestindex = new Int_t[fH];
+      Double_t currentbest;
+      for (i=0; i<nbest; i++) {
+         for (j=0; j<fNfunctions; j++)
+             fParams(j) = cstock(j, i);
+         chi2 = 1;
+	 while (chi2 > kEps) {
+            chi2 = CStep(2, fH, residuals,index, index, -1, -1);
+	    if (TMath::Abs(chi2 - bestchi2[i]) < kEps)
+	       break;
+	    else
+	       bestchi2[i] = chi2;
+	 }
+         currentbest = TMath::MinElement(nbest, bestchi2);
+         if (chi2 <= currentbest + kEps) {
+            for (j=0; j<fH; j++){
+               bestindex[j]=index[j];
+            }
+            maxind = i;
+         }
+	 for (j=0; j<fNfunctions; j++)
+	    cstock(j, i) = fParams(j);
+      }
+      //report the result with the lowest chisquare
+      for (j=0; j<fNfunctions; j++)
+	 fParams(j) = cstock(j, maxind);
+      fFitsample.SetBitNumber(fNpoints, kFALSE);
+      for (j=0; j<fH; j++){
+         //printf("bestindex[%d]=%d\n", j, bestindex[j]);
+         fFitsample.SetBitNumber(bestindex[j]);
+      }
+      if (fInputFunction){
+         ((TF1*)fInputFunction)->SetChisquare(bestchi2[maxind]);
+         ((TF1*)fInputFunction)->SetNumberFitPoints(fH);
+         ((TF1*)fInputFunction)->SetNDF(fH-fNfunctions);
+      }
+      delete [] index;
+      delete [] bestindex;
+      delete [] residuals;
+      return;
+   } 
+   //if n is large, the dataset should be partitioned
+   Int_t indsubdat[5];
+   for (i=0; i<5; i++) 
+      indsubdat[i] = 0;
+
+   Int_t nsub = Partition(nmini, indsubdat);
+   Int_t hsub;
+
+   Int_t sum = TMath::Min(nmini*5, fNpoints);
+
+   Int_t *subdat = new Int_t[sum]; //to store the indices of selected cases
+   RDraw(subdat, indsubdat);
+
+   TMatrixD cstockbig(fNfunctions, nbest*5);
+   Int_t *beststock = new Int_t[nbest];
+   Int_t i_start = 0;
+   Int_t i_end = indsubdat[0];
+   Int_t k2 = Int_t(k1/nsub);
+   for (Int_t kgroup = 0; kgroup < nsub; kgroup++) {
+
+      hsub = Int_t(fH * indsubdat[kgroup]/fNpoints);
+      for (i=0; i<nbest; i++)
+	 bestchi2[i] = 1e16;
+      for (k=0; k<k2; k++) {
+	 CreateSubset(indsubdat[kgroup], hsub, index);
+	 chi2 = CStep(1, hsub, residuals, index, subdat, i_start, i_end);
+	 chi2 = CStep(2, hsub, residuals, index, subdat, i_start, i_end);
+	 maxind = TMath::LocMax(nbest, bestchi2);
+	 if (chi2 < bestchi2[maxind]){
+	    for (i=0; i<fNfunctions; i++)
+	       cstockbig(i, nbest*kgroup + maxind) = fParams(i);
+	    bestchi2[maxind] = chi2;
+	 }
+      }
+      if (kgroup != nsub - 1){
+	 i_start += indsubdat[kgroup];
+	 i_end += indsubdat[kgroup+1];
+      }
+   }
+
+   for (i=0; i<nbest; i++)
+      bestchi2[i] = 1e30;
+   //on the pooled subset
+   Int_t hsub2 = Int_t(fH*sum/fNpoints);
+   for (k=0; k<nbest*5; k++) {
+      for (i=0; i<fNfunctions; i++)
+	 fParams(i)=cstockbig(i, k);
+      chi2 = CStep(1, hsub2, residuals, index, subdat, 0, sum);
+      chi2 = CStep(2, hsub2, residuals, index, subdat, 0, sum);
+      maxind = TMath::LocMax(nbest, bestchi2);
+      if (chi2 < bestchi2[maxind]){
+	 beststock[maxind] = k;
+	 bestchi2[maxind] = chi2; 
+      }
+   }
+
+   //now the array beststock keeps indices of 10 best candidates in cstockbig matrix
+   for (k=0; k<nbest; k++) {
+      for (i=0; i<fNfunctions; i++)
+	 fParams(i) = cstockbig(i, beststock[k]);
+      chi2 = CStep(1, fH, residuals, index, index, -1, -1);
+      chi2 = CStep(2, fH, residuals, index, index, -1, -1);
+      bestchi2[k] = chi2;
+   }
+   
+   maxind = TMath::LocMin(nbest, bestchi2);
+   for (i=0; i<fNfunctions; i++)
+      fParams(i)=cstockbig(i, beststock[maxind]);
+
+   chi2 = 1;
+   while (chi2 > kEps) {
+      chi2 = CStep(2, fH, residuals, index, index, -1, -1);
+      if (TMath::Abs(chi2 - bestchi2[maxind]) < kEps)
+	 break;
+      else
+	 bestchi2[maxind] = chi2;
+   }
+
+   fFitsample.SetBitNumber(fNpoints, kFALSE);
+   for (j=0; j<fH; j++)
+      fFitsample.SetBitNumber(index[j]);
+   if (fInputFunction){
+      ((TF1*)fInputFunction)->SetChisquare(bestchi2[maxind]);
+      ((TF1*)fInputFunction)->SetNumberFitPoints(fH);
+      ((TF1*)fInputFunction)->SetNDF(fH-fNfunctions);
+   }      
+
+   delete [] subdat;
+   delete [] beststock;
+   delete [] bestchi2;
+   delete [] residuals;
+   delete [] index;
+
+   return;
+}
+
+//____________________________________________________________________________
+void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
+{
+   //Creates a p-subset to start
+   //ntotal - total number of points from which the subset is chosen
+
+   Int_t i, j;
+   Bool_t repeat=kFALSE;
+   Int_t nindex=0;
+   Int_t num;
+   for(i=0; i<ntotal; i++)
+      index[i] = ntotal+1;
+
+   TRandom r;
+   //create a p-subset
+   for (i=0; i<fNfunctions; i++) {
+      num=Int_t(r.Uniform(0, 1)*(ntotal-1));
+      if (i>0){
+	 for(j=0; j<=i-1; j++) {
+	    if(index[j]==num)
+	       repeat = kTRUE;
+	 }
+      }
+      if(repeat==kTRUE) {
+	 i--;
+	 repeat = kFALSE;
+      } else {
+	 index[i] = num;
+	 nindex++;
+      }
+   }
+   
+   //compute the coefficients of a hyperplane through the p-subset
+   fDesign.Zero();
+   fAtb.Zero();
+   for (i=0; i<fNfunctions; i++){
+      AddToDesign(TMatrixDRow(fX, index[i]).GetPtr(), fY(index[i]), fE(index[i]));
+   }
+   Bool_t ok;
+
+   ok = Linf();
+
+   //if the chosen points don't define a hyperplane, add more 
+   while (!ok && (nindex < h)) {
+      repeat=kFALSE;
+      do{
+	 num=Int_t(r.Uniform(0,1)*(ntotal-1));
+	 repeat=kFALSE;
+	 for(i=0; i<nindex; i++) {
+	    if(index[i]==num) {
+	       repeat=kTRUE;
+	       break;
+	    }
+	 }
+      } while(repeat==kTRUE);
+
+      index[nindex] = num;
+      nindex++;
+      //check if the system is of full rank now
+      AddToDesign(TMatrixDRow(fX, index[nindex-1]).GetPtr(), fY(index[nindex-1]), fE(index[nindex-1]));
+      ok = Linf();
+   }
+}
+
+//____________________________________________________________________________
+Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end)
+{
+   //The CStep procedure, as described in the article
+
+   Int_t i, j, itemp, n;
+   Double_t func;
+   Double_t val[100];
+   Int_t npar;
+   if (start > -1) {
+      n = end - start;
+      for (i=0; i<n; i++) {
+	 func = 0;
+	 itemp = subdat[start+i];
+	 if (fInputFunction){
+            fInputFunction->SetParameters(fParams.GetMatrixArray());
+	    func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+	 } else {
+	    func=0;
+	    if ((fSpecial>100)&&(fSpecial<200)){
+		  npar = fSpecial-100;
+		  val[0] = 1;
+		  for (j=1; j<npar; j++)
+		     val[j] = val[j-1]*fX(itemp, 0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j)*val[j];
+	    } else {
+	       if (fSpecial>200) {
+		  //hyperplane case
+		  npar = fSpecial-201;
+		  func+=fParams(0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j+1)*fX(itemp, j);
+	       } else {
+		  for (j=0; j<fNfunctions; j++) {
+		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+		     func += fParams(j)*val[j];
+		  }
+	       }
+	    }
+	 }
+	 residuals[i] = (fY(itemp) - func)*(fY(itemp) - func)/(fE(i)*fE(i));
+      }
+   } else {
+       n=fNpoints;
+       for (i=0; i<fNpoints; i++) {
+	  func = 0;
+	  if (fInputFunction){
+	     fInputFunction->SetParameters(fParams.GetMatrixArray());
+	     func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
+	  } else {
+	    func=0;
+	    if ((fSpecial>100)&&(fSpecial<200)){
+	       Int_t npar = fSpecial-100;
+	       val[0] = 1;
+	       for (j=1; j<npar; j++)
+		  val[j] = val[j-1]*fX(i, 0);
+	       for (j=0; j<npar; j++)
+		  func += fParams(j)*val[j];
+	    } else {
+	       if (fSpecial>200) {
+		  //hyperplane case
+		  Int_t npar = fSpecial-201;
+		  func+=fParams(0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j+1)*fX(i, j);
+	       } else {
+		  for (j=0; j<fNfunctions; j++) {
+		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, i).GetPtr());
+		     func += fParams(j)*val[j];
+		  }
+	       }
+	    }
+	  }   
+	  residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
+       }
+   }
+   //take h with smallest residuals
+   KOrdStat(n, residuals, h-1, index);
+   //add them to the design matrix
+   fDesign.Zero();
+   fAtb.Zero();
+   for (i=0; i<h; i++)
+      AddToDesign(TMatrixDRow(fX, index[i]).GetPtr(), fY(index[i]), fE(index[i]));
+   
+   Linf();
+
+   //don't calculate the chisquare at the 1st cstep
+   if (step==1) return 0;
+   Double_t sum=0;
+
+
+   if (start > -1) {
+      for (i=0; i<h; i++) {
+	 itemp = subdat[start+index[i]];
+	 if (fInputFunction){
+	    fInputFunction->SetParameters(fParams.GetMatrixArray());
+	    func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+	 } else {
+	    func=0;
+	    if ((fSpecial>100)&&(fSpecial<200)){
+		  npar = fSpecial-100;
+		  val[0] = 1;
+		  for (j=1; j<npar; j++)
+		     val[j] = val[j-1]*fX(itemp, 0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j)*val[j];
+	    } else {
+	       if (fSpecial>200) {
+		  //hyperplane case
+		  npar = fSpecial-201;
+		  func+=fParams(0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j+1)*fX(itemp, j);
+	       } else {
+		  for (j=0; j<fNfunctions; j++) {
+		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+		     func += fParams(j)*val[j];
+		  }
+	       }
+	    }
+	 }
+	 sum+=(fY(itemp)-func)*(fY(itemp)-func)/(fE(itemp)*fE(itemp));
+      }
+   } else {
+      for (i=0; i<h; i++) {
+	 if (fInputFunction){
+	    fInputFunction->SetParameters(fParams.GetMatrixArray());
+	    func=fInputFunction->EvalPar(TMatrixDRow(fX, index[i]).GetPtr());
+	 } else {
+	    func=0;
+	    if ((fSpecial>100)&&(fSpecial<200)){
+	       Int_t npar = fSpecial-100;
+	       val[0] = 1;
+	       for (j=1; j<npar; j++)
+		  val[j] = val[j-1]*fX(index[i], 0);
+	       for (j=0; j<npar; j++)
+		  func += fParams(j)*val[j];
+	    } else {
+	       if (fSpecial>200) {
+		  //hyperplane case
+		  Int_t npar = fSpecial-201;
+		  func+=fParams(0);
+		  for (j=0; j<npar; j++)
+		     func += fParams(j+1)*fX(index[i], j);
+	       } else {
+		  for (j=0; j<fNfunctions; j++) {
+		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, index[i]).GetPtr());
+		     func += fParams(j)*val[j];
+		  }
+	       }
+	    }
+	 }   
+	 
+         sum+=(fY(index[i])-func)*(fY(index[i])-func)/(fE(index[i])*fE(index[i]));
+      }
+   }
+
+   return sum; 
+}
+
+//____________________________________________________________________________
+Bool_t TLinearFitter::Linf()
+{
+
+   //currently without the intercept term
+   fDesignTemp2+=fDesignTemp3;
+   fDesignTemp+=fDesignTemp2;
+   fDesign+=fDesignTemp;
+   fDesignTemp3.Zero();
+   fDesignTemp2.Zero();
+   fDesignTemp.Zero();
+   fAtbTemp2+=fAtbTemp3;
+   fAtbTemp+=fAtbTemp2;
+   fAtb+=fAtbTemp;
+   fAtbTemp3.Zero();
+   fAtbTemp2.Zero();
+   fAtbTemp.Zero();
+
+   fY2+=fY2Temp;
+   fY2Temp=0;
+
+
+   TDecompChol chol(fDesign);
+   TVectorD temp(fNfunctions);
+   Bool_t ok;
+   temp = chol.Solve(fAtb, ok);
+   if (!ok){
+      //fDesign.Print();
+      fParams.Zero();
+      return kFALSE;
+   }
+   fParams = temp;
+   return ok;
+}
+
+//____________________________________________________________________________
+Int_t TLinearFitter::Partition(Int_t nmini, Int_t *indsubdat)
+{
+   //divides the elements into approximately equal subgroups
+   //number of elements in each subgroup is stored in indsubdat
+   //number of subgroups is returned
+
+   Int_t nsub;
+
+   if ((fNpoints>=2*nmini) && (fNpoints<=(3*nmini-1))) {
+      if (fNpoints%2==1){
+	 indsubdat[0]=Int_t(fNpoints*0.5);
+	 indsubdat[1]=Int_t(fNpoints*0.5)+1;
+      } else
+	 indsubdat[0]=indsubdat[1]=Int_t(fNpoints/2);
+    nsub=2;
+   }
+   else{
+      if((fNpoints>=3*nmini) && (fNpoints<(4*nmini -1))) {
+	 if(fNpoints%3==0){
+	    indsubdat[0]=indsubdat[1]=indsubdat[2]=Int_t(fNpoints/3);
+	 } else {
+	    indsubdat[0]=Int_t(fNpoints/3);
+	    indsubdat[1]=Int_t(fNpoints/3)+1;
+	    if (fNpoints%3==1) indsubdat[2]=Int_t(fNpoints/3);
+	    else indsubdat[2]=Int_t(fNpoints/3)+1;
+	 }
+	 nsub=3;
+      }
+      else{
+	 if((fNpoints>=4*nmini)&&(fNpoints<=(5*nmini-1))){
+	    if (fNpoints%4==0) indsubdat[0]=indsubdat[1]=indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
+	    else {
+	       indsubdat[0]=Int_t(fNpoints/4);
+	       indsubdat[1]=Int_t(fNpoints/4)+1;
+	       if(fNpoints%4==1) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
+	       if(fNpoints%4==2) {
+		  indsubdat[2]=Int_t(fNpoints/4)+1;
+		  indsubdat[3]=Int_t(fNpoints/4);
+	       }
+	       if(fNpoints%4==3) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4)+1;
+	    }
+	    nsub=4;
+	 } else {
+	    for(Int_t i=0; i<5; i++)
+	       indsubdat[i]=nmini;
+	    nsub=5;
+	 }
+      }
+   }
+   return nsub;
+}
+
+//____________________________________________________________________________
+void TLinearFitter::RDraw(Int_t *subdat, Int_t *indsubdat)
+{
+   //Draws ngroup nonoverlapping subdatasets out of a dataset of size n
+   //such that the selected case numbers are uniformly distributed from 1 to n
+   
+   Int_t jndex = 0;
+   Int_t nrand;
+   Int_t i, k, m, j;
+   Int_t ngroup=0;
+   for (i=0; i<5; i++) {
+      if (indsubdat[i]!=0)
+	 ngroup++;
+   }
+   TRandom r;
+   for (k=1; k<=ngroup; k++) {
+      for (m=1; m<=indsubdat[k-1]; m++) {
+	 nrand = Int_t(r.Uniform(0, 1) * (fNpoints-jndex)) + 1;
+	 jndex++;
+	 if (jndex==1) {
+	    subdat[0] = nrand;
+	 } else {
+	    subdat[jndex-1] = nrand + jndex - 2;
+	    for (i=1; i<=jndex-1; i++) {
+	       if(subdat[i-1] > nrand+i-2) {
+		  for(j=jndex; j>=i+1; j--) {
+		     subdat[j-1] = subdat[j-2];
+		  }
+		  subdat[i-1] = nrand+i-2;
+		  break;  //breaking the loop for(i=1...
+	       }
+	    }
+	 }
+      }
+   }
+   
+}
+
+//____________________________________________________________________________
+Double_t TLinearFitter::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work)
+{
+  //copy of the TMath::KOrdStat because I need an Int_t work array
+
+   Bool_t isAllocated = kFALSE;
+   const Int_t kWorkMax=100;
+   Int_t i, ir, j, l, mid;
+   Int_t arr;
+   Int_t *ind;
+   Int_t workLocal[kWorkMax];
+   Int_t temp;
+
+
+   if (work) {
+      ind = work;
+   } else {
+      ind = workLocal;
+      if (ntotal > kWorkMax) {
+         isAllocated = kTRUE;
+         ind = new Int_t[ntotal];
+      }
+   }
+
+   for (Int_t ii=0; ii<ntotal; ii++) {
+      ind[ii]=ii;
+   }
+   Int_t rk = k;
+   l=0;
+   ir = ntotal-1;
+   for(;;) {
+      if (ir<=l+1) { //active partition contains 1 or 2 elements
+         if (ir == l+1 && a[ind[ir]]<a[ind[l]])
+	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         Double_t tmp = a[ind[rk]];
+         if (isAllocated)
+            delete [] ind;
+         return tmp;
+      } else {
+         mid = (l+ir) >> 1; //choose median of left, center and right
+         {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
+         if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
+	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+
+         if (a[ind[l+1]]>a[ind[ir]])
+	    {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
+
+         if (a[ind[l]]>a[ind[l+1]])
+    	    {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
+
+         i=l+1;        //initialize pointers for partitioning
+         j=ir;
+         arr = ind[l+1];
+         for (;;) {
+	    do i++; while (a[ind[i]]<a[arr]);
+	    do j--; while (a[ind[j]]>a[arr]);
+	    if (j<i) break;  //pointers crossed, partitioning complete
+	       {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+         }
+         ind[l+1]=ind[j];
+         ind[j]=arr;
+         if (j>=rk) ir = j-1; //keep active the partition that
+         if (j<=rk) l=i;      //contains the k_th element
+      }
+   }
+}
+

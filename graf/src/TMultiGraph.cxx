@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.21 2005/05/02 21:45:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.22 2005/05/06 15:40:22 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -213,6 +213,11 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 //             = "C" In case of linear fitting, not calculate the chisquare
 //                    (saves time)
 //             = "F" If fitting a polN, switch to minuit fitter
+//             = "ROB" In case of linear fitting, compute the LTS regression
+//                     coefficients (robust(resistant) regression), using 
+//                     the default fraction of good points
+//               "ROB=0.x" - compute the LTS regression coefficients, using
+//                           0.x as a fraction of good points
 //
 //   When the fit is drawn (by default), the parameter goption may be used
 //   to specify a list of graphics options. See TGraph::Paint for a complete
@@ -326,8 +331,6 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
 
-
-
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
@@ -367,6 +370,20 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
    TString opt = option;
    opt.ToUpper();
+   Double_t h=0;
+   opt.ReplaceAll("ROB", "H");
+   //for robust fitting, see if # of good points is defined
+   if (opt.Contains("H=0.")) {
+      int start = opt.Index("H=0.");
+      int numpos = start + strlen("H=0.");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+      h = atof(num.Data());
+      h*=TMath::Power(10, -numlen);
+   }
 
    if (opt.Contains("U")) fitOption.User    = 1;
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
@@ -380,6 +397,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
    if (opt.Contains("F")) fitOption.Minuit  = 1;
+   if (opt.Contains("H")) fitOption.Robust  = 1; 
 
    if (rxmax > rxmin) {
       xmin = rxmin;
@@ -469,8 +487,10 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    }
 
    if (linear){
-      grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
-
+      if (fitOption.Robust)
+         grFitter->ExecuteCommand("FitMultiGraph", &h, 0);
+      else
+         grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
    } else {
 
       //Int_t special = f1->GetNumber();

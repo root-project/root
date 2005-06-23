@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.3 2005/04/17 14:12:49 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.4 2005/05/06 15:40:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,7 +41,8 @@ struct Foption_t {
    int Plus;        // "+"  Add new function (default is replace)
    int Integral;    // "I"  Use function integral instead of function in center of bin
    int Nochisq;     // "C"  In case of linear fitting, don't calculate the chisquare
-   int Minuit;      // "F" If fitting a polN, switch to minuit fitter
+   int Minuit;      // "F"  If fitting a polN, switch to minuit fitter
+   int Robust;      // "ROB" For a TGraph use robust fitting
 
    Foption_t() {
       Quiet    = 0;
@@ -60,6 +61,7 @@ struct Foption_t {
       Integral = 0;
       Nochisq  = 0;
       Minuit   = 0;
+      Robust   = 0;
    }
 };
 

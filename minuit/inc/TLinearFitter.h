@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.3 2005/03/04 15:32:26 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.4 2005/04/29 16:10:42 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -193,15 +193,25 @@ private:
    char         *fFormula;       //the formula
    Bool_t       fIsSet;          //Has the formula been set?
    Bool_t       fStoreData;      //Is the data stored?
-   Bool_t       fCorrect;        //correcting for the case y>>e
-
    Double_t     fChisquare;      //Chisquare of the fit
 
+   Int_t        fH;              //number of good points in robust fit
+   Bool_t       fRobust;         //true when performing a robust fit
+   TBits        fFitsample;      //indices of points, used in the robust fit
+
    void AddToDesign(Double_t *x, Double_t y, Double_t e);
-   void GraphLinearFitter();
-   void Graph2DLinearFitter();
+   void GraphLinearFitter(Double_t h);
+   void Graph2DLinearFitter(Double_t h);
    void HistLinearFitter();
-   void MultiGraphLinearFitter();
+   void MultiGraphLinearFitter(Double_t h);
+
+   //robust fitting functions:
+   Int_t     Partition(Int_t nmini, Int_t *indsubdat);
+   Double_t  KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work);
+   void      RDraw(Int_t *subdat, Int_t *indsubdat);
+   void      CreateSubset(Int_t ntotal, Int_t h, Int_t *index);
+   Double_t  CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end);
+   Bool_t    Linf();
 
 public:
    TLinearFitter();
@@ -217,7 +227,8 @@ public:
    virtual void       ClearPoints();
    virtual void       Chisquare();
    virtual void       Eval();
-   virtual Int_t      ExecuteCommand(const char *command, Double_t * /*args*/, Int_t /*nargs*/);
+   virtual void       EvalRobust(Double_t h=-1);
+   virtual Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
@@ -232,6 +243,7 @@ public:
    virtual Double_t   GetParError(Int_t ipar) const;
    virtual Double_t   GetParTValue(Int_t ipar) const {return fTValues(ipar);}
    virtual Double_t   GetParSignificance(Int_t ipar) const {return fParSign(ipar);}
+   virtual void       GetFitSample(TBits& bits);
    virtual Bool_t     IsFixed(Int_t ipar) const {return fFixedParams[ipar];}
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;
    virtual void       ReleaseParameter(Int_t ipar);
