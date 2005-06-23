@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.7 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.8 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -44,8 +44,8 @@ public:
 
    virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
 
-   static void SetGlobalMutex(TVirtualMutex *vm) { fgMutex=vm; }
-   static TVirtualMutex* GetGlobalMutex()        { return fgMutex; }
+   static void SetGlobalMutex(TVirtualMutex *vm);
+   static TVirtualMutex* GetGlobalMutex();
 
    ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
 };
