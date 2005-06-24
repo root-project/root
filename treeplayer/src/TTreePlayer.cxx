@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.190 2005/05/02 09:38:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.191 2005/05/27 16:40:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -261,6 +261,7 @@
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
 #include "TTreeIndex.h"
+#include "TChainIndex.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -311,6 +312,16 @@ TTreePlayer::~TTreePlayer()
 //______________________________________________________________________________
 TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
 {
+   TVirtualIndex *index;
+   if (dynamic_cast<const TChain*>(T)) {
+      index = new TChainIndex(T, majorname, minorname);
+      if (index->IsZombie()) {
+         delete index;
+         Error("BuildIndex", "Creating a TChainIndex unsuccessfull - switching to TTreeIndex");
+      }
+      else
+         return index;
+   }
    return new TTreeIndex(T,majorname,minorname);
 }
 
@@ -3321,5 +3332,5 @@ void TTreePlayer::UpdateFormulaLeaves()
          lnk = lnk->Next();
       }
    }
-   if (fTree->GetTreeIndex()) fTree->GetTreeIndex()->SetTree(fTree);
 }
+
