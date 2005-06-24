@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.15 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.16 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -22,12 +22,18 @@ namespace PyROOT {
 
    namespace Utility {
 
-   // convenience functions
+   // convenience functions for adding methods to classes
       bool AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
                        int flags = METH_VARARGS );
       bool AddToClass( PyObject* pyclass, const char* label, const char* func );
 
+   // initialize proxy type objects
       bool InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
+
+   // retrieve the memory buffer from pyobject, return buflength, tc (optional) is python
+   // array.array type code, size is type size, buf will point to buffer, and if check is
+   // true, some heuristics will be applied to check buffer compatibility with the type
+      int GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, bool check = true );
 
    // memory handling
       enum EMemoryPolicy { kHeuristics = 1, kStrict = 2 };

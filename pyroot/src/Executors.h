@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.3 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.4 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -29,36 +29,36 @@ namespace PyROOT {
       virtual PyObject* Execute( G__CallFunc*, void* ) = 0;
    };
 
-#define PYROOT_BASIC_EXECUTOR( name )                  \
-   class name : public Executor {                      \
-   public:                                             \
-      virtual PyObject* Execute( G__CallFunc*, void* );\
+#define PYROOT_DECLARE_BASIC_EXECUTOR( name )                                 \
+   class name##Executor : public Executor {                                   \
+   public:                                                                    \
+      virtual PyObject* Execute( G__CallFunc*, void* );                       \
    }
 
 // executors for built-ins
-   PYROOT_BASIC_EXECUTOR( CharExecutor );
-   PYROOT_BASIC_EXECUTOR( IntExecutor );
-   PYROOT_BASIC_EXECUTOR( LongExecutor );
-   PYROOT_BASIC_EXECUTOR( ULongExecutor );
-   PYROOT_BASIC_EXECUTOR( DoubleExecutor );
-   PYROOT_BASIC_EXECUTOR( VoidExecutor );
-   PYROOT_BASIC_EXECUTOR( LongLongExecutor );
-   PYROOT_BASIC_EXECUTOR( CStringExecutor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Long );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Char );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Int );
+   PYROOT_DECLARE_BASIC_EXECUTOR( ULong );
+   PYROOT_DECLARE_BASIC_EXECUTOR( LongLong );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Double );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Void );
+   PYROOT_DECLARE_BASIC_EXECUTOR( CString );
 
 // pointer/array executors
-   PYROOT_BASIC_EXECUTOR( VoidArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( ShortArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( UShortArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( IntArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( UIntArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( LongArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( ULongArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( FloatArrayExecutor );
-   PYROOT_BASIC_EXECUTOR( DoubleArrayExecutor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( VoidArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( ShortArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( UShortArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( IntArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( UIntArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( LongArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( ULongArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( FloatArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( DoubleArray );
 
 // special cases
-   PYROOT_BASIC_EXECUTOR( STLStringExecutor );
-   PYROOT_BASIC_EXECUTOR( TGlobalExecutor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( STLString );
+   PYROOT_DECLARE_BASIC_EXECUTOR( TGlobal );
 
    class RootObjectExecutor : public Executor {
    public:
@@ -75,12 +75,15 @@ namespace PyROOT {
       virtual PyObject* Execute( G__CallFunc*, void* );
    };
 
-   PYROOT_BASIC_EXECUTOR( ConstructorExecutor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
 
 // factories
    typedef Executor* (*ExecutorFactory_t) ();
    typedef std::map< std::string, ExecutorFactory_t > ExecFactories_t;
    R__EXTERN ExecFactories_t gExecFactories;
+
+// create executor from fully qualified type
+   Executor* CreateExecutor( const std::string& fullType );
 
 } // namespace PyROOT
 

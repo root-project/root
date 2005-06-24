@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.8 2005/06/14 05:06:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.9 2005/06/14 05:37:00 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -7,10 +7,12 @@
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
+#include "Utility.h"
 
 // ROOT
 #include "Rtypes.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "DllImport.h"
 
 // CINT
@@ -18,6 +20,7 @@
 
 // Standard
 #include <utility>
+#include <Riostream.h>
 
 
 //- data ______________________________________________________________________
@@ -25,6 +28,12 @@ PyROOT::ExecFactories_t PyROOT::gExecFactories;
 
 
 //- executors for built-ins ---------------------------------------------------
+PyObject* PyROOT::LongExecutor::Execute( G__CallFunc* func, void* self )
+{
+   return PyLong_FromLong( (long)func->ExecInt( self ) );
+}
+
+//____________________________________________________________________________
 PyObject* PyROOT::CharExecutor::Execute( G__CallFunc* func, void* self )
 {
    long result = func->ExecInt( self );
@@ -40,15 +49,15 @@ PyObject* PyROOT::IntExecutor::Execute( G__CallFunc* func, void* self )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::LongExecutor::Execute( G__CallFunc* func, void* self )
-{
-   return PyLong_FromLong( (long)func->ExecInt( self ) );
-}
-
-//____________________________________________________________________________
 PyObject* PyROOT::ULongExecutor::Execute( G__CallFunc* func, void* self )
 {
    return PyLong_FromUnsignedLong( (unsigned long)func->ExecInt( self ) );
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::LongLongExecutor::Execute( G__CallFunc* func, void* self )
+{
+   return PyLong_FromLongLong( (Long64_t)G__Longlong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
@@ -63,12 +72,6 @@ PyObject* PyROOT::VoidExecutor::Execute( G__CallFunc* func, void* self )
    func->Exec( self );
    Py_INCREF( Py_None );
    return Py_None;
-}
-
-//____________________________________________________________________________
-PyObject* PyROOT::LongLongExecutor::Execute( G__CallFunc* func, void* self )
-{
-   return PyLong_FromLongLong( (Long64_t)G__Longlong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
@@ -103,6 +106,7 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Long,   Long_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( ULong,  ULong_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Float,  Float_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
+
 
 //- special cases ------------------------------------------------------------
 PyObject* PyROOT::STLStringExecutor::Execute( G__CallFunc* func, void* self )
@@ -143,7 +147,7 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
    G__pop_tempobject();            // doesn't call dtor
 
 // the final result can then be bound
-   ObjectProxy* pyobj = (ObjectProxy*)BindRootObject( result2, fClass );
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result2, fClass );
    if ( ! pyobj )
       return 0;
 
@@ -161,6 +165,42 @@ PyObject* PyROOT::ConstructorExecutor::Execute( G__CallFunc* func, void* klass )
 
 
 //- factories -----------------------------------------------------------------
+PyROOT::Executor* PyROOT::CreateExecutor( const std::string& fullType )
+{
+   Executor* result = 0;
+   std::string realType = TClassEdit::ShortType( G__TypeInfo( fullType.c_str() ).TrueName(), 1 );
+
+// select and set executor
+   const char* q = "";
+   int isPointer = Utility::IsPointer( fullType );
+   if ( isPointer == 1 )
+      q = "*";
+
+   ExecFactories_t::iterator h = gExecFactories.find( realType + q );
+   if ( h == gExecFactories.end() ) {
+      TClass* klass = gROOT->GetClass( realType.c_str() );
+      if ( klass != 0 ) {
+         result = isPointer ? new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
+      } else {
+      // could still be an enum ...
+         G__TypeInfo ti( fullType.c_str() );
+         if ( ti.Property() & G__BIT_ISENUM )
+            h = gExecFactories.find( "UInt_t" );
+         else {
+            std::cerr << "return type in not handled (using void): " << fullType << std::endl;
+            h = gExecFactories.find( "void" );
+         }
+      }
+   }
+
+   if ( ! result && h != gExecFactories.end() )
+   // executor factory available, use it to create executor
+      result = (h->second)();
+
+   return result;                  // may still be null
+}
+
+//____________________________________________________________________________
 #define PYROOT_EXECUTOR_FACTORY( name )                \
 Executor* Create##name()                               \
 {                                                      \
@@ -174,8 +214,8 @@ namespace {
 // us macro rather than template for portability ...
    PYROOT_EXECUTOR_FACTORY( CharExecutor )
    PYROOT_EXECUTOR_FACTORY( IntExecutor )
-   PYROOT_EXECUTOR_FACTORY( LongExecutor )
    PYROOT_EXECUTOR_FACTORY( ULongExecutor )
+   PYROOT_EXECUTOR_FACTORY( LongExecutor )
    PYROOT_EXECUTOR_FACTORY( DoubleExecutor )
    PYROOT_EXECUTOR_FACTORY( VoidExecutor )
    PYROOT_EXECUTOR_FACTORY( LongLongExecutor )

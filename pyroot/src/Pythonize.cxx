@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.20 2005/06/12 17:21:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.21 2005/06/17 19:14:53 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -15,9 +15,11 @@
 // ROOT
 #include "TClass.h"
 #include "TCollection.h"
+#include "TDirectory.h"
 #include "TSeqCollection.h"
 #include "TObject.h"
 #include "TFunction.h"
+#include "TTree.h"
 
 // CINT
 #include "Api.h"
@@ -45,20 +47,20 @@ namespace {
    }
 
 // to prevent compiler warnings about const char* -> char*
-   inline PyObject* callPyObjMethod( PyObject* obj, const char* meth )
+   inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth )
    {
       return PyObject_CallMethod( obj, const_cast< char* >( meth ), const_cast< char* >( "" ) );
    }
 
 //____________________________________________________________________________
-   inline PyObject* callPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
+   inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
    {
       return PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "O" ), arg1 );
    }
 
 //____________________________________________________________________________
-   inline PyObject* callPyObjMethod(
+   inline PyObject* CallPyObjMethod(
       PyObject* obj, const char* meth, PyObject* arg1, PyObject* arg2 )
    {
       return PyObject_CallMethod(
@@ -66,7 +68,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   inline PyObject* callPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
+   inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
    {
       return PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "Oi" ), arg1, arg2 );
@@ -74,27 +76,27 @@ namespace {
 
 
 //- helpers --------------------------------------------------------------------
-   PyObject* callSelf( PyObject* args, const char* meth, const char* fmt )
+   PyObject* CallPySelfMethod( PyObject* args, const char* meth, const char* fmt )
    {
       PyObject* self = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( fmt ), &self ) )
          return 0;
 
-      return callPyObjMethod( self, meth );
+      return CallPyObjMethod( self, meth );
    }
 
 //____________________________________________________________________________
-   PyObject* callSelfPyObject( PyObject* args, const char* meth, const char* fmt )
+   PyObject* CallPySelfObjMethod( PyObject* args, const char* meth, const char* fmt )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( fmt ), &self, &obj ) )
          return 0;
 
-      return callPyObjMethod( self, meth, obj );
+      return CallPyObjMethod( self, meth, obj );
    }
 
 //____________________________________________________________________________
-   PyObject* pyStyleIndex( PyObject* self, PyObject* index )
+   PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
       long idx = PyInt_AsLong( index );
       if ( PyErr_Occurred() )
@@ -122,18 +124,18 @@ namespace {
       PyObject* self = PyTuple_GET_ITEM( args, 0 );
       PyObject* obj  = PyTuple_GET_ITEM( args, 1 );
 
-      PyObject* pyindex = pyStyleIndex( self, obj );
+      PyObject* pyindex = PyStyleIndex( self, obj );
       if ( ! pyindex )
          return 0;
 
-      PyObject* result = callPyObjMethod( self, meth, pyindex );
+      PyObject* result = CallPyObjMethod( self, meth, pyindex );
       Py_DECREF( pyindex );
       return result;
    }
 
 
 //- TObject behaviour ----------------------------------------------------------
-   PyObject* contains( PyObject*, PyObject* args )
+   PyObject* TObjectContains( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__contains__" ), &self, &obj ) )
@@ -142,14 +144,14 @@ namespace {
       if ( ! ( ObjectProxy_Check( obj ) || PyString_Check( obj ) ) )
          return PyInt_FromLong( 0l );
 
-      PyObject* found = callPyObjMethod( self, "FindObject", obj );
+      PyObject* found = CallPyObjMethod( self, "FindObject", obj );
       PyObject* result = PyInt_FromLong( PyObject_IsTrue( found ) );
       Py_DECREF( found );
       return result;
    }
 
 //____________________________________________________________________________
-   PyObject* compare( PyObject*, PyObject* args )
+   PyObject* TObjectCompare( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__cmp__" ), &self, &obj ) )
@@ -158,11 +160,11 @@ namespace {
       if ( ! ObjectProxy_Check( obj ) )
          return PyInt_FromLong( -1l );
 
-      return callPyObjMethod( self, "Compare", obj );
+      return CallPyObjMethod( self, "Compare", obj );
    }
 
 //____________________________________________________________________________
-   PyObject* isequal( PyObject*, PyObject* args )
+   PyObject* TObjectIsEqual( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__eq__" ), &self, &obj ) )
@@ -171,12 +173,12 @@ namespace {
       if ( ! ObjectProxy_Check( obj ) )
          return PyInt_FromLong( 0l );
 
-      return callPyObjMethod( self, "IsEqual", obj );
+      return CallPyObjMethod( self, "IsEqual", obj );
    }
 
 
 //- TCollection behaviour ------------------------------------------------------
-   PyObject* collectionExtend( PyObject*, PyObject* args )
+   PyObject* TCollectionExtend( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:extend" ), &self, &obj ) )
@@ -184,7 +186,7 @@ namespace {
 
       for ( int i = 0; i < PySequence_Size( obj ); ++i ) {
          PyObject* item = PySequence_GetItem( obj, i );
-         PyObject* result = callPyObjMethod( self, "Add", item );
+         PyObject* result = CallPyObjMethod( self, "Add", item );
          Py_XDECREF( result );
          Py_DECREF( item );
       }
@@ -194,9 +196,9 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* collectionRemove( PyObject*, PyObject* args )
+   PyObject* TCollectionRemove( PyObject*, PyObject* args )
    {
-      PyObject* result = callSelfPyObject( args, "Remove", "OO:remove" );
+      PyObject* result = CallPySelfObjMethod( args, "Remove", "OO:remove" );
       if ( ! result )
          return 0;
 
@@ -212,17 +214,17 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* collectionAdd( PyObject*, PyObject* args )
+   PyObject* TCollectionAdd( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *other = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__add__" ), &self, &other ) )
          return 0;
 
-      PyObject* l = callPyObjMethod( self, "Clone" );
+      PyObject* l = CallPyObjMethod( self, "Clone" );
       if ( ! l )
          return 0;
 
-      PyObject* result = callPyObjMethod( l, "extend", other );
+      PyObject* result = CallPyObjMethod( l, "extend", other );
       if ( ! result ) {
          Py_DECREF( l );
          return 0;
@@ -232,7 +234,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* collectionMul( PyObject*, PyObject* args )
+   PyObject* TCollectionMul( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; long imul = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Ol:__mul__" ), &self, &imul ) )
@@ -246,7 +248,7 @@ namespace {
       PyObject* nseq = BindRootObject( self->ObjectIsA()->New(), self->ObjectIsA() );
 
       for ( long i = 0; i < imul; ++i ) {
-         PyObject* result = callPyObjMethod( nseq, "extend", (PyObject*)self );
+         PyObject* result = CallPyObjMethod( nseq, "extend", (PyObject*)self );
          Py_DECREF( result );
       }
 
@@ -254,7 +256,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* collectionIMul( PyObject*, PyObject* args )
+   PyObject* TCollectionIMul( PyObject*, PyObject* args )
    {
       PyObject* self = 0; long imul = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Ol:__imul__" ), &self, &imul ) )
@@ -263,7 +265,7 @@ namespace {
       PyObject* l = PySequence_List( self );
 
       for ( long i = 0; i < imul - 1; ++i ) {
-         callPyObjMethod( self, "extend", l );
+         CallPyObjMethod( self, "extend", l );
       }
 
       Py_INCREF( self );
@@ -271,7 +273,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* collectionCount( PyObject*, PyObject* args )
+   PyObject* TCollectionCount( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:count" ), &self, &obj ) )
@@ -297,7 +299,7 @@ namespace {
 
 
 //____________________________________________________________________________
-   PyObject* collectionIter( PyObject*, PyObject* args ) {
+   PyObject* TCollectionIter( PyObject*, PyObject* args ) {
       ObjectProxy* self = (ObjectProxy*) PyTuple_GET_ITEM( args, 0 );
       if ( ! ObjectProxy_Check( self ) || ! self->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "iteration over non-sequence" );
@@ -305,7 +307,7 @@ namespace {
       }
 
       TCollection* col =
-         (TCollection*) self->ObjectIsA()->DynamicCast( TCollection::Class(), self->GetObject() );
+         (TCollection*)self->ObjectIsA()->DynamicCast( TCollection::Class(), self->GetObject() );
 
       PyObject* pyobject = BindRootObject( (void*) new TIter( col ), TIter::Class() );
       ((ObjectProxy*)pyobject)->fFlags |= ObjectProxy::kIsOwner;
@@ -314,7 +316,7 @@ namespace {
 
 
 //- TSeqCollection behaviour ---------------------------------------------------
-   PyObject* seqCollectionGetItem( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionGetItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PySliceObject* index = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__getitem__" ), &self, &index ) )
@@ -328,8 +330,8 @@ namespace {
 
          TClass* clSeq = self->ObjectIsA();
          TSeqCollection* oseq =
-            (TSeqCollection*) clSeq->DynamicCast( TSeqCollection::Class(), self->GetObject() );
-         TSeqCollection* nseq = (TSeqCollection*) clSeq->New();
+            (TSeqCollection*)clSeq->DynamicCast( TSeqCollection::Class(), self->GetObject() );
+         TSeqCollection* nseq = (TSeqCollection*)clSeq->New();
 
          int start, stop, step;
          PySlice_GetIndices( index, oseq->GetSize(), &start, &stop, &step );
@@ -344,7 +346,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionSetItem( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionSetItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PyObject* index = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args,
@@ -357,7 +359,7 @@ namespace {
             return 0;
          }
 
-         TSeqCollection* oseq = (TSeqCollection*) self->ObjectIsA()->DynamicCast(
+         TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
          int start, stop, step;
@@ -377,24 +379,24 @@ namespace {
          return Py_None;
       }
 
-      PyObject* pyindex = pyStyleIndex( (PyObject*)self, index );
+      PyObject* pyindex = PyStyleIndex( (PyObject*)self, index );
       if ( ! pyindex )
          return 0;
 
-      PyObject* result  = callPyObjMethod( (PyObject*)self, "RemoveAt", pyindex );
+      PyObject* result  = CallPyObjMethod( (PyObject*)self, "RemoveAt", pyindex );
       if ( ! result ) {
          Py_DECREF( pyindex );
          return 0;
       }
 
       Py_DECREF( result );
-      result = callPyObjMethod( (PyObject*)self, "AddAt", obj, pyindex );
+      result = CallPyObjMethod( (PyObject*)self, "AddAt", obj, pyindex );
       Py_DECREF( pyindex );
       return result;
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionDelItem( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionDelItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PySliceObject* index = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__del__" ), &self, &index ) )
@@ -406,7 +408,7 @@ namespace {
             return 0;
          }
 
-         TSeqCollection* oseq = (TSeqCollection*) self->ObjectIsA()->DynamicCast(
+         TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
          int start, stop, step;
@@ -429,7 +431,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionInsert( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionInsert( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0; long idx = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OlO:insert" ), &self, &idx, &obj ) )
@@ -441,11 +443,11 @@ namespace {
       else if ( size < idx )
          idx = size;
 
-      return callPyObjMethod( self, "AddAt", obj, idx );
+      return CallPyObjMethod( self, "AddAt", obj, idx );
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionPop( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionPop( PyObject*, PyObject* args )
    {
       if ( PyTuple_GET_SIZE( args ) == 1 ) {
          PyObject* self = PyTuple_GET_ITEM( args, 0 );
@@ -460,7 +462,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionReverse( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionReverse( PyObject*, PyObject* args )
    {
       PyObject* self = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O:reverse" ), &self ) )
@@ -470,11 +472,11 @@ namespace {
       if ( ! tup )
          return 0;
 
-      PyObject* result = callPyObjMethod( self, "Clear" );
+      PyObject* result = CallPyObjMethod( self, "Clear" );
       Py_XDECREF( result );
 
       for ( int i = 0; i < PySequence_Size( tup ); ++i ) {
-         PyObject* result = callPyObjMethod( self, "AddAt", PyTuple_GET_ITEM( tup, i ), 0 );
+         PyObject* result = CallPyObjMethod( self, "AddAt", PyTuple_GET_ITEM( tup, i ), 0 );
          Py_XDECREF( result );
       }
 
@@ -483,26 +485,26 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionSort( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionSort( PyObject*, PyObject* args )
    {
       PyObject* self = PyTuple_GET_ITEM( args, 0 );
 
       if ( PyTuple_GET_SIZE( args ) == 1 ) {
       // no specialized sort, use ROOT one
-         return callPyObjMethod( self, "Sort" );
+         return CallPyObjMethod( self, "Sort" );
       } else {
       // sort in a python list copy
          PyObject* l = PySequence_List( self );
-         PyObject* result = callPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 1 ) );
+         PyObject* result = CallPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 1 ) );
          Py_XDECREF( result );
          if ( PyErr_Occurred() ) {
             Py_DECREF( l );
             return 0;
          }
 
-         result = callPyObjMethod( self, "Clear" );
+         result = CallPyObjMethod( self, "Clear" );
          Py_XDECREF( result );
-         result = callPyObjMethod( self, "extend", l );
+         result = CallPyObjMethod( self, "extend", l );
          Py_XDECREF( result );
          Py_DECREF( l );
 
@@ -512,9 +514,9 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* seqCollectionIndex( PyObject*, PyObject* args )
+   PyObject* TSeqCollectionIndex( PyObject*, PyObject* args )
    {
-      PyObject* index = callSelfPyObject( args, "IndexOf", "OO:index" );
+      PyObject* index = CallPySelfObjMethod( args, "IndexOf", "OO:index" );
       if ( ! index )
          return 0;
 
@@ -528,7 +530,7 @@ namespace {
    }
 
 //- vector behaviour as primitives --------------------------------------------
-   PyObject* vectorGetItem( PyObject*, PyObject* args )
+   PyObject* VectorGetItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PySliceObject* index = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__getitem__" ), &self, &index ) )
@@ -549,7 +551,7 @@ namespace {
          PySlice_GetIndices( index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
          for ( int i = start; i < stop; i += step ) {
             PyObject* pyidx = PyInt_FromLong( i );
-            callPyObjMethod( nseq, "push_back", callPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
+            CallPyObjMethod( nseq, "push_back", CallPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
             Py_DECREF( pyidx );
          }
 
@@ -560,11 +562,11 @@ namespace {
    }
 
 //- STL container iterator supprt ---------------------------------------------
-   PyObject* stlSequenceIter( PyObject*, PyObject* args )
+   PyObject* StlSequenceIter( PyObject*, PyObject* args )
    {
-      PyObject* iter = callSelf( args, "begin", "O" );
+      PyObject* iter = CallPySelfMethod( args, "begin", "O" );
       if ( iter ) {
-         PyObject* end = callSelf( args, "end", "O" );
+         PyObject* end = CallPySelfMethod( args, "end", "O" );
          if ( end )
             PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
          Py_XDECREF( end );
@@ -576,7 +578,7 @@ namespace {
 #define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
    PyObject* name##StringRepr( PyObject*, PyObject* args )                    \
    {                                                                          \
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
       PyObject* repr = PyString_FromFormat( "\'%s\'", PyString_AsString( data ) ); \
       Py_DECREF( data );                                                      \
       return repr;                                                            \
@@ -584,7 +586,7 @@ namespace {
                                                                               \
    PyObject* name##StringCompare( PyObject*, PyObject* args )                 \
    {                                                                          \
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
       int result = PyObject_Compare( data, PyTuple_GET_ITEM( args, 1 ) );     \
       Py_DECREF( data );                                                      \
       if ( PyErr_Occurred() )                                                 \
@@ -594,7 +596,7 @@ namespace {
                                                                               \
    PyObject* name##StringIsequal( PyObject*, PyObject* args )                 \
    {                                                                          \
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
       PyObject* result = PyObject_RichCompare( data, PyTuple_GET_ITEM( args, 1 ), Py_EQ );\
       Py_DECREF( data );                                                      \
       if ( ! result )                                                         \
@@ -602,17 +604,17 @@ namespace {
       return result;                                                          \
    }
 
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( stl, c_str )
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   t, Data )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( Stl, c_str )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   T, Data )
 
 
 //- TObjString behaviour -------------------------------------------------------
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( obj, GetName )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TObj, GetName )
 
 //____________________________________________________________________________
-   PyObject* objStringLength( PyObject*, PyObject* args )
+   PyObject* TObjStringLength( PyObject*, PyObject* args )
    {
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
+      PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
       int size = PySequence_Size( data );
       Py_DECREF( data );
       return PyInt_FromLong( size );
@@ -620,7 +622,7 @@ namespace {
 
 
 //- TIter behaviour ------------------------------------------------------------
-   PyObject* iterIter( PyObject*, PyObject* args )
+   PyObject* TIterIter( PyObject*, PyObject* args )
    {
       PyObject* iter = PyTuple_GET_ITEM( args, 0 );
       Py_INCREF( iter );
@@ -628,9 +630,9 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* iterNext( PyObject*, PyObject* args )
+   PyObject* TIterNext( PyObject*, PyObject* args )
    {
-      PyObject* next = callSelf( args, "Next", "O:next" );
+      PyObject* next = CallPySelfMethod( args, "Next", "O:next" );
 
       if ( ! next )
          return 0;
@@ -646,7 +648,7 @@ namespace {
 
 
 //- STL iterator behaviour -----------------------------------------------------
-   PyObject* stlIterCompare( PyObject*, PyObject* args )
+   PyObject* StlIterCompare( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0, *pyobj = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__cmp__" ), &self, &pyobj ) )
@@ -659,7 +661,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* stlIterNext( PyObject*, PyObject* args )
+   PyObject* StlIterNext( PyObject*, PyObject* args )
    {
       PyObject* self = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O" ), &self ) )
@@ -670,13 +672,13 @@ namespace {
       PyObject* last = PyObject_GetAttrString( self, const_cast< char* >( "end" ) );
       if ( last != 0 ) {
          PyObject* dummy = PyInt_FromLong( 1l );
-         PyObject* iter = callPyObjMethod( self, "__postinc__", dummy );
+         PyObject* iter = CallPyObjMethod( self, "__postinc__", dummy );
          Py_DECREF( dummy );
          if ( iter != 0 ) {
             if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)iter)->fObject )
                PyErr_SetString( PyExc_StopIteration, "" );
             else
-               next = callPyObjMethod( iter, "__deref__" );
+               next = CallPyObjMethod( iter, "__deref__" );
          }
          Py_XDECREF( iter );
       }
@@ -685,6 +687,64 @@ namespace {
       return next;
    }
 
+
+//- TDirectory member templates ----------------------------------------------
+   PyObject* TDirectoryGetObject( PyObject*, PyObject* args )
+   {
+      ObjectProxy* self = 0; PyObject* name = 0; ObjectProxy* ptr = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OSO:TDirectory::GetObject" ),
+               &self, &name, &ptr ) )
+         return 0;
+
+      TDirectory* dir =
+         (TDirectory*)self->ObjectIsA()->DynamicCast( TDirectory::Class(), self->GetObject() );
+
+      if ( ! dir ) {
+         PyErr_SetString( PyExc_TypeError,
+           "TDirectory::GetObject must be called with a TDirectory instance as first argument" );
+         return 0;
+      }
+
+      void* address = dir->GetObjectChecked( PyString_AS_STRING( name ), ptr->ObjectIsA() );
+      if ( address ) {
+         ptr->Set( address, ptr->ObjectIsA() );
+
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyString_AS_STRING( name ) );
+      return 0;
+   }
+
+//____________________________________________________________________________
+   PyObject* TDirectoryWriteObject( PyObject*, PyObject* args )
+   {
+      ObjectProxy *self = 0, *wrt = 0; PyObject *name = 0, *option = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OOS|S:TDirectory::WriteObject" ),
+               &self, &wrt, &name, &option ) )
+         return 0;
+
+      TDirectory* dir =
+         (TDirectory*)self->ObjectIsA()->DynamicCast( TDirectory::Class(), self->GetObject() );
+
+      if ( ! dir ) {
+         PyErr_SetString( PyExc_TypeError,
+           "TDirectory::WriteObject must be called with a TDirectory instance as first argument" );
+         return 0;
+      }
+
+      Int_t result = 0;
+      if ( option != 0 ) {
+         result = dir->WriteObjectAny( wrt->GetObject(), wrt->ObjectIsA(),
+            PyString_AS_STRING( name ), PyString_AS_STRING( option ) );
+      } else {
+         result = dir->WriteObjectAny(
+            wrt->GetObject(), wrt->ObjectIsA(), PyString_AS_STRING( name ) );
+      }
+
+      return PyInt_FromLong( (long)result );
+   }
 
 //- TTree behaviour ----------------------------------------------------------
    class TreeEraser : public TObject {
@@ -708,23 +768,23 @@ namespace {
    };
 
 //____________________________________________________________________________
-   PyObject* treeGetAttr( PyObject*, PyObject* args )
+   PyObject* TTreeGetAttr( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *name = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__getattr__" ), &self, &name ) )
          return 0;
 
    // setup notification as needed
-      PyObject* notify = callPyObjMethod( self, "GetNotify" );
+      PyObject* notify = CallPyObjMethod( self, "GetNotify" );
       if ( PyObject_Not( notify ) ) {
          TObject* te = new TreeEraser( self );
-         PyObject* result = callPyObjMethod( self, "SetNotify", BindRootObject( te, te->IsA() ) );
+         PyObject* result = CallPyObjMethod( self, "SetNotify", BindRootObject( te, te->IsA() ) );
          Py_XDECREF( result );
       }
       Py_DECREF( notify );
 
    // allow access to leaves as if they are data members
-      PyObject* leaf = callPyObjMethod( self, "GetLeaf", name );
+      PyObject* leaf = CallPyObjMethod( self, "GetLeaf", name );
       if ( ! leaf )
          return 0;
 
@@ -732,17 +792,17 @@ namespace {
          PyObject* value = 0;
 
       // found a leaf, extract value if just one, or wrap buffer if more
-         PyObject* lcount = callPyObjMethod( leaf, "GetLeafCount" );
-         PyObject* length = callPyObjMethod( leaf, "GetLenStatic" );
+         PyObject* lcount = CallPyObjMethod( leaf, "GetLeafCount" );
+         PyObject* length = CallPyObjMethod( leaf, "GetLenStatic" );
 
          if ( lcount == Py_None && PyInt_AS_LONG( length ) <= 1 ) {
-            value = callPyObjMethod( leaf, "GetValue" );
+            value = CallPyObjMethod( leaf, "GetValue" );
          } else {
-            PyObject* ptr = callPyObjMethod( leaf, "GetValuePointer" );
+            PyObject* ptr = CallPyObjMethod( leaf, "GetValuePointer" );
             void* arr = PyLong_AsVoidPtr( ptr );
             Py_DECREF( ptr );
 
-            PyObject* tname = callPyObjMethod( leaf, "GetTypeName" );
+            PyObject* tname = CallPyObjMethod( leaf, "GetTypeName" );
             std::string stname( PyString_AS_STRING( tname ) );
 
             BufFac_t* fac = BufFac_t::Instance();
@@ -780,6 +840,137 @@ namespace {
       return 0;
    }
 
+//____________________________________________________________________________
+   class TTreeBranch : public PyCallable {
+   public:
+      TTreeBranch( MethodProxy* org ) { Py_INCREF( org ); m_org = org; }
+      TTreeBranch( const TTreeBranch& t ) : PyCallable( t ) { Py_INCREF( t.m_org ); m_org = t.m_org; }
+      TTreeBranch& operator=( const TTreeBranch& t )
+      {
+         if ( &t != this ) {
+            Py_INCREF( t.m_org );
+            m_org = t.m_org;
+         }
+         return *this;
+      }
+      ~TTreeBranch() { Py_DECREF( m_org ); m_org = 0; }
+
+   public:
+      virtual PyObject* GetDocString()
+      {
+         return PyString_FromString( "TBranch* TTree::Branch( ... )" );
+      }
+
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+      {
+      // acceptable signatures:
+      //   ( const char*, void*, const char*, Int_t = 32000 )
+      //   ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+      //   ( const char*, T**, Int_t = 32000, Int_t = 99 ) 
+         int argc = PyTuple_GET_SIZE( args );
+
+         if ( 2 <= argc ) {
+            TTree* tree = (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+
+            if ( ! tree ) {
+               PyErr_SetString( PyExc_TypeError,
+                  "TTree::Branch must be called with a TTree instance as first argument" );
+               return 0;
+            }
+
+            PyObject *name = 0, *clName = 0, *leaflist = 0;
+            PyObject *address = 0;
+            PyObject *bufsize = 0, *splitlevel = 0;
+
+         // try: ( const char*, void*, const char*, Int_t = 32000 )
+            if ( PyArg_ParseTuple( args, const_cast< char* >( "SOS|O!:Branch" ),
+                    &name, &address, &leaflist, &PyInt_Type, &bufsize ) ) {
+
+               void* buf = 0;
+               if ( ObjectProxy_Check( address ) )
+                  buf = (void*)((ObjectProxy*)address)->GetObject();
+               else
+                  Utility::GetBuffer( address, '*', 1, buf, false );
+ 
+               if ( buf != 0 ) {
+                  TBranch* branch = 0;
+                  if ( argc == 4 ) {
+                     branch = tree->Branch( PyString_AS_STRING( name ), buf,
+                        PyString_AS_STRING( leaflist ), PyInt_AS_LONG( bufsize ) );
+                  } else {
+                     branch = tree->Branch(
+                        PyString_AS_STRING( name ), buf, PyString_AS_STRING( leaflist ) );
+                  }
+
+                  return BindRootObject( branch, TBranch::Class() );
+               }
+
+            }
+            PyErr_Clear();
+
+         // try: ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+         //  or: ( const char*,              T**, Int_t = 32000, Int_t = 99 ) 
+            bool bIsMatch = false;
+            if ( PyArg_ParseTuple( args, const_cast< char* >( "SSO|O!O!:Branch" ),
+                    &name, &clName, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
+               bIsMatch = true;
+            } else {
+               PyErr_Clear();
+               if ( PyArg_ParseTuple( args, const_cast< char* >( "SO|O!O!" ),
+                       &name, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) )
+                  bIsMatch = true;
+               else
+                  PyErr_Clear();
+            }
+
+            if ( bIsMatch == true ) {
+               std::string klName = clName ? PyString_AS_STRING( clName ) : "";
+               void* buf = 0;
+
+               if ( ObjectProxy_Check( address ) ) {
+                  if ( ((ObjectProxy*)address)->fFlags & ObjectProxy::kIsReference )
+                     buf = (void*)((ObjectProxy*)address)->fObject;
+                  else
+                     buf = (void*)&((ObjectProxy*)address)->fObject;
+                  
+                  if ( ! clName ) {
+                     klName = ((ObjectProxy*)address)->ObjectIsA()->GetName();
+                     argc += 1;
+                  }
+               } else
+                  Utility::GetBuffer( address, '*', 1, buf, false );
+
+               if ( buf != 0 && klName != "" ) {
+                  TBranch* branch = 0;
+                  if ( argc == 3 ) {
+                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf );
+                  } else if ( argc == 4 ) {
+                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf,
+                        PyInt_AS_LONG( bufsize ) );
+                  } else if ( argc == 5 ) {
+                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf,
+                        PyInt_AS_LONG( bufsize ), PyInt_AS_LONG( splitlevel ) );
+                  }
+
+                  return BindRootObject( branch, TBranch::Class() );
+               }
+            }
+         }
+
+      // still here? Then call original Branch() to reach the other overloads:
+         Py_INCREF( (PyObject*)self );
+         m_org->fSelf = self;
+         PyObject* result = PyObject_Call( (PyObject*)m_org, args, kwds );
+         m_org->fSelf = 0;
+         Py_DECREF( (PyObject*)self );
+
+         return result;
+      }
+
+   private:
+      MethodProxy* m_org;
+   };
+
 
 //- TFN behaviour ------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > gPyObjectCallbacks;
@@ -788,7 +979,7 @@ namespace {
    int gLastTag = 99;
    CallInfo_t* gLastCallInfo = 0;
 
-   int pyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
+   int PyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
       PyObject* result = 0;
 
@@ -900,8 +1091,8 @@ namespace {
          ifunc->pentry[index]->size        = -1;
          ifunc->pentry[index]->filenum     = -1;
          ifunc->pentry[index]->line_number = -1;
-         ifunc->pentry[index]->tp2f = (void*)pyFuncCallback;
-         ifunc->pentry[index]->p    = (void*)pyFuncCallback;
+         ifunc->pentry[index]->tp2f = (void*)PyFuncCallback;
+         ifunc->pentry[index]->p    = (void*)PyFuncCallback;
 
       // setup association
          int tag = -1 - fgCount;
@@ -983,7 +1174,7 @@ namespace {
 
 
 //- TFunction behaviour --------------------------------------------------------
-   PyObject* functionCall( PyObject*, PyObject* args ) {
+   PyObject* TFunctionCall( PyObject*, PyObject* args ) {
       if ( PyTuple_GET_SIZE( args ) < 1 || ! ObjectProxy_Check( PyTuple_GET_ITEM( args, 0 ) ) ) {
          PyErr_SetString( PyExc_TypeError,
             "unbound method __call__ requires TFunction instance as first argument" );
@@ -1005,43 +1196,43 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TObject" ) {
    // support for the 'in' operator
-      Utility::AddToClass( pyclass, "__contains__", (PyCFunction) contains );
+      Utility::AddToClass( pyclass, "__contains__", (PyCFunction) TObjectContains );
 
    // comparing for lists
-      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) compare );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) isequal );
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjectCompare );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual );
 
       return true;
    }
 
    if ( name == "TCollection" ) {
       Utility::AddToClass( pyclass, "append",   "Add" );
-      Utility::AddToClass( pyclass, "extend",   (PyCFunction) collectionExtend );
-      Utility::AddToClass( pyclass, "remove",   (PyCFunction) collectionRemove );
-      Utility::AddToClass( pyclass, "__add__",  (PyCFunction) collectionAdd );
-      Utility::AddToClass( pyclass, "__imul__", (PyCFunction) collectionIMul );
-      Utility::AddToClass( pyclass, "__mul__",  (PyCFunction) collectionMul );
-      Utility::AddToClass( pyclass, "__rmul__", (PyCFunction) collectionMul );
+      Utility::AddToClass( pyclass, "extend",   (PyCFunction) TCollectionExtend );
+      Utility::AddToClass( pyclass, "remove",   (PyCFunction) TCollectionRemove );
+      Utility::AddToClass( pyclass, "__add__",  (PyCFunction) TCollectionAdd );
+      Utility::AddToClass( pyclass, "__imul__", (PyCFunction) TCollectionIMul );
+      Utility::AddToClass( pyclass, "__mul__",  (PyCFunction) TCollectionMul );
+      Utility::AddToClass( pyclass, "__rmul__", (PyCFunction) TCollectionMul );
 
-      Utility::AddToClass( pyclass, "count", (PyCFunction) collectionCount );
+      Utility::AddToClass( pyclass, "count", (PyCFunction) TCollectionCount );
 
       Utility::AddToClass( pyclass, "__len__",  "GetSize" );
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) collectionIter );
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TCollectionIter );
 
       return true;
    }
 
    if ( name == "TSeqCollection" ) {
-      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) seqCollectionGetItem );
-      Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) seqCollectionSetItem );
-      Utility::AddToClass( pyclass, "__delitem__", (PyCFunction) seqCollectionDelItem );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) TSeqCollectionGetItem );
+      Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) TSeqCollectionSetItem );
+      Utility::AddToClass( pyclass, "__delitem__", (PyCFunction) TSeqCollectionDelItem );
 
-      Utility::AddToClass( pyclass, "insert",  (PyCFunction) seqCollectionInsert );
-      Utility::AddToClass( pyclass, "pop",     (PyCFunction) seqCollectionPop );
-      Utility::AddToClass( pyclass, "reverse", (PyCFunction) seqCollectionReverse );
-      Utility::AddToClass( pyclass, "sort",    (PyCFunction) seqCollectionSort );
+      Utility::AddToClass( pyclass, "insert",  (PyCFunction) TSeqCollectionInsert );
+      Utility::AddToClass( pyclass, "pop",     (PyCFunction) TSeqCollectionPop );
+      Utility::AddToClass( pyclass, "reverse", (PyCFunction) TSeqCollectionReverse );
+      Utility::AddToClass( pyclass, "sort",    (PyCFunction) TSeqCollectionSort );
 
-      Utility::AddToClass( pyclass, "index", (PyCFunction) seqCollectionIndex );
+      Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex );
 
       return true;
    }
@@ -1050,62 +1241,62 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
 
       Utility::AddToClass( pyclass, "__len__",     "size" );
-      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) vectorGetItem );
-      Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) stlSequenceIter );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
+      Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) StlSequenceIter );
 
       return true;
    }
 
    if ( IsTemplatedSTLClass( name, "list" ) ) {
       Utility::AddToClass( pyclass, "__len__",  "size" );
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) stlSequenceIter );
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
 
       return true;
    }
 
    if ( name.find( "iterator" ) != std::string::npos ) {
-      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) stlIterCompare );
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlIterCompare );
 
-      Utility::AddToClass( pyclass, "next", (PyCFunction) stlIterNext );
+      Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext );
 
       return true;
    }
 
    if ( name == "string" || name == "std::string" ) {
-      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) stlStringRepr );
+      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) StlStringRepr );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
       Utility::AddToClass( pyclass, "__len__", "length" );
-      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) stlStringCompare );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) stlStringIsequal );
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsequal );
 
       return true;
    }
 
    if ( name == "TString" ) {
-      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) tStringRepr );
+      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) TStringRepr );
       Utility::AddToClass( pyclass, "__str__", "Data" );
       Utility::AddToClass( pyclass, "__len__", "Length" );
 
       Utility::AddToClass( pyclass, "__cmp__", "CompareTo" );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) tStringIsequal );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsequal );
 
       return true;
    }
 
    if ( name == "TObjString" ) {
-      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) objStringRepr );
+      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) TObjStringRepr );
       Utility::AddToClass( pyclass, "__str__",  "GetName" );
-      Utility::AddToClass( pyclass, "__len__",  (PyCFunction) objStringLength );
+      Utility::AddToClass( pyclass, "__len__",  (PyCFunction) TObjStringLength );
 
-      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) objStringCompare );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) objStringIsequal );
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjStringCompare );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsequal );
 
       return true;
    }
 
    if ( name == "TIter" ) {
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) iterIter );
-      Utility::AddToClass( pyclass, "next",     (PyCFunction) iterNext );
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TIterIter );
+      Utility::AddToClass( pyclass, "next",     (PyCFunction) TIterNext );
 
       return true;
    }
@@ -1116,9 +1307,29 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return true;
    }
 
+   if ( name == "TDirectory" ) {
+   // note: this replaces the already existing TDirectory::GetObject()
+      Utility::AddToClass( pyclass, "GetObject", (PyCFunction) TDirectoryGetObject );
+
+   // note: this replaces the already existing TDirectory::WriteObject()
+      Utility::AddToClass( pyclass, "WriteObject", (PyCFunction) TDirectoryWriteObject );
+
+      return true;
+   }
+
    if ( name == "TTree" ) {
    // allow direct browsing of the tree
-      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) treeGetAttr );
+      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr );
+
+   // workaround for templated member Branch()
+      MethodProxy* original = (MethodProxy*)PyObject_GetAttrString(
+         pyclass, const_cast< char* >( "Branch" ) );
+      MethodProxy* method = MethodProxy_New( "Branch", new TTreeBranch( original ) );
+      Py_DECREF( original );
+
+      PyObject_SetAttrString(
+         pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
+      Py_DECREF( method );      
 
       return true;
    }
@@ -1152,7 +1363,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TFunction" ) {
    // allow direct call
-      Utility::AddToClass( pyclass, "__call__", (PyCFunction) functionCall );
+      Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
       return true;
    }

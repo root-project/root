@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.7 2005/05/25 08:38:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.8 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -32,11 +32,11 @@ namespace PyROOT {
 
    public:
       virtual bool SetArg( PyObject*, G__CallFunc* ) = 0;
-      virtual PyObject* FromMemory( void* address ) = 0;
-      virtual bool ToMemory( PyObject* value, void* address ) = 0;
+      virtual PyObject* FromMemory( void* address );
+      virtual bool ToMemory( PyObject* value, void* address );
    };
 
-#define PYROOT_BASIC_CONVERTER( name )                                        \
+#define PYROOT_DECLARE_BASIC_CONVERTER( name )                                \
    class name##Converter : public Converter {                                 \
    public:                                                                    \
       virtual bool SetArg( PyObject*, G__CallFunc* );                         \
@@ -44,7 +44,14 @@ namespace PyROOT {
       virtual bool ToMemory( PyObject*, void* );                              \
    }
 
-#define PYROOT_ARRAY_CONVERTER( name )                                        \
+#define PYROOT_DECLARE_BASIC_CONVERTER2( name, base )                         \
+   class name##Converter : public base##Converter {                           \
+   public:                                                                    \
+      virtual PyObject* FromMemory( void* );                                  \
+      virtual bool ToMemory( PyObject*, void* );                              \
+   }
+
+#define PYROOT_DECLARE_ARRAY_CONVERTER( name )                                \
    class name##Converter : public Converter {                                 \
    public:                                                                    \
       name##Converter( int size = -1 ) { fSize = size; }                      \
@@ -55,27 +62,26 @@ namespace PyROOT {
      int fSize;                                                               \
    }
 
-#define PYROOT_BASIC_CONVERTER2( name, base )                                 \
-   class name##Converter : public base##Converter {                           \
-   public:                                                                    \
-      virtual PyObject* FromMemory( void* );                                  \
-      virtual bool ToMemory( PyObject*, void* );                              \
-   }
-
 // converters for built-ins
-   PYROOT_BASIC_CONVERTER( Long );
-   PYROOT_BASIC_CONVERTER( Bool );
-   PYROOT_BASIC_CONVERTER( Char );
-   PYROOT_BASIC_CONVERTER( UChar );
-   PYROOT_BASIC_CONVERTER2( Short, Long );
-   PYROOT_BASIC_CONVERTER2( UShort, Long );
-   PYROOT_BASIC_CONVERTER2( Int, Long );
-   PYROOT_BASIC_CONVERTER2( UInt, Long );
-   PYROOT_BASIC_CONVERTER2( ULong, Long );
-   PYROOT_BASIC_CONVERTER( Double );
-   PYROOT_BASIC_CONVERTER2( Float, Double );
-   PYROOT_BASIC_CONVERTER( Void );
-   PYROOT_BASIC_CONVERTER( LongLong );
+   PYROOT_DECLARE_BASIC_CONVERTER( Long );
+   PYROOT_DECLARE_BASIC_CONVERTER( LongRef );
+   PYROOT_DECLARE_BASIC_CONVERTER( Bool );
+   PYROOT_DECLARE_BASIC_CONVERTER( Char );
+   PYROOT_DECLARE_BASIC_CONVERTER( UChar );
+   PYROOT_DECLARE_BASIC_CONVERTER2( Short, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER2( UShort, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER2( Int, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER2( UInt, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER2( ULong, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER( LongLong );
+   PYROOT_DECLARE_BASIC_CONVERTER( Double );
+   PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
+   PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );
+
+   class VoidConverter : public Converter {
+   public:
+      virtual bool SetArg( PyObject*, G__CallFunc* );
+   };
 
    class CStringConverter : public Converter {
    public:
@@ -102,17 +108,22 @@ namespace PyROOT {
       bool fKeepControl;
    };
 
-   PYROOT_ARRAY_CONVERTER( ShortArray );
-   PYROOT_ARRAY_CONVERTER( UShortArray );
-   PYROOT_ARRAY_CONVERTER( IntArray );
-   PYROOT_ARRAY_CONVERTER( UIntArray );
-   PYROOT_ARRAY_CONVERTER( LongArray );
-   PYROOT_ARRAY_CONVERTER( ULongArray );
-   PYROOT_ARRAY_CONVERTER( FloatArray );
-   PYROOT_ARRAY_CONVERTER( DoubleArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( ShortArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( UShortArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( IntArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( UIntArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( LongArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( ULongArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( FloatArray );
+   PYROOT_DECLARE_ARRAY_CONVERTER( DoubleArray );
+
+   class LongLongArrayConverter : public VoidArrayConverter {
+   public:
+      virtual bool SetArg( PyObject*, G__CallFunc* );
+   };
 
 // converters for special cases
-#define PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( name, strtype )          \
+#define PYROOT_DECLARE_STRING_CONVERTER( name, strtype )                      \
    class name##Converter : public Converter {                                 \
    public:                                                                    \
       virtual bool SetArg( PyObject*, G__CallFunc* );                         \
@@ -122,14 +133,14 @@ namespace PyROOT {
       strtype fBuffer;                                                        \
    }
 
-   PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString );
-   PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string );
+   PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
+   PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
 
-   class KnownClassConverter: public VoidArrayConverter {
+   class RootObjectConverter: public VoidArrayConverter {
    public:
-      KnownClassConverter( const TClassRef& klass, bool keepControl = false ) :
+      RootObjectConverter( const TClassRef& klass, bool keepControl = false ) :
          VoidArrayConverter( keepControl ), fClass( klass ) {}
-      KnownClassConverter( TClass* klass, bool keepControl = false ) :
+      RootObjectConverter( TClass* klass, bool keepControl = false ) :
          VoidArrayConverter( keepControl ), fClass( klass ) {}
       virtual bool SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
@@ -139,23 +150,23 @@ namespace PyROOT {
       TClassRef fClass;
    };
 
-   class KnownClassPtrConverter : public KnownClassConverter {
+   class RootObjectPtrConverter : public RootObjectConverter {
    public:
-      KnownClassPtrConverter( const TClassRef& klass, bool keepControl = false ) :
-         KnownClassConverter( klass, keepControl ) {}
-      KnownClassPtrConverter( TClass* klass, bool keepControl = false ) :
-         KnownClassConverter( klass, keepControl ) {}
+      RootObjectPtrConverter( const TClassRef& klass, bool keepControl = false ) :
+         RootObjectConverter( klass, keepControl ) {}
+      RootObjectPtrConverter( TClass* klass, bool keepControl = false ) :
+         RootObjectConverter( klass, keepControl ) {}
       virtual bool SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
       virtual bool ToMemory( PyObject* value, void* address );
    };
 
-   class LongLongArrayConverter : public VoidArrayConverter {
+   class VoidPtrRefConverter : public Converter {
    public:
       virtual bool SetArg( PyObject*, G__CallFunc* );
    };
 
-   PYROOT_BASIC_CONVERTER( PyObject );
+   PYROOT_DECLARE_BASIC_CONVERTER( PyObject );
 
 // factories
    typedef Converter* (*ConverterFactory_t) ( long user );

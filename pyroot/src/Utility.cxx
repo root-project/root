@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.18 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.19 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -95,8 +95,8 @@ bool PyROOT::Utility::AddToClass(
    PyObject* func = PyCFunction_New( pdef, NULL );
    PyObject* method = PyMethod_New( func, NULL, pyclass );
    PyObject_SetAttrString( pyclass, pdef->ml_name, method );
-   Py_DECREF( func );
    Py_DECREF( method );
+   Py_DECREF( func );
 
    if ( PyErr_Occurred() )
       return false;
@@ -131,6 +131,42 @@ bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const c
 
 // declare success
    return true;
+}
+
+//____________________________________________________________________________
+int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, bool check )
+{
+// special case: don't handle strings here (yes, they're buffers, but not quite)
+   if ( PyString_Check( pyobject ) )
+      return 0;
+
+// attempt to retrieve pointer to buffer interface
+   PyBufferProcs* bufprocs = pyobject->ob_type->tp_as_buffer;
+   PySequenceMethods* seqmeths = pyobject->ob_type->tp_as_sequence;
+   if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
+        (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
+
+   // get the buffer
+      int buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
+
+      if ( check == true ) {
+      // determine buffer compatibility (use "buf" as a status flag)
+         PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+         if ( pytc != 0 ) {     // for array objects
+            if ( PyString_AS_STRING( pytc )[0] != tc )
+               buf = 0;         // no match
+            Py_DECREF( pytc );
+         } else if ( buflen / (*(seqmeths->sq_length))( pyobject ) == size ) {
+         // this is a gamble ... may or may not be ok, but that's for the user
+            PyErr_Clear();
+         } else
+            buf = 0;                      // not compatible
+      }
+
+      return buflen;
+   }
+
+   return 0;
 }
 
 //____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.11 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.12 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -10,6 +10,7 @@
 #include "RootWrapper.h"
 
 // ROOT
+#include "TClass.h"
 #include "TClassEdit.h"
 
 // CINT
@@ -22,6 +23,20 @@
 
 //- data ______________________________________________________________________
 PyROOT::ConvFactories_t PyROOT::gConvFactories;
+
+//- base converter implementation ---------------------------------------------
+PyObject* PyROOT::Converter::FromMemory( void* )
+{
+   PyErr_SetString( PyExc_TypeError, "unknown type can not be converted from memory" );
+   return 0;
+}
+
+//_____________________________________________________________________________
+bool PyROOT::Converter::ToMemory( PyObject*, void* )
+{
+   PyErr_SetString( PyExc_TypeError, "unknown type can not be converted to memory" );
+   return false;
+}
 
 
 //- helper macro's ------------------------------------------------------------
@@ -39,6 +54,18 @@ bool PyROOT::name##Converter::ToMemory( PyObject* value, void* address )      \
    *((type*)address) = (type)s;                                               \
    return true;                                                               \
 }
+
+#define PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( name )                          \
+PyObject* PyROOT::name##Converter::FromMemory( void* )                        \
+{                                                                             \
+   return 0;                                                                  \
+}                                                                             \
+                                                                              \
+bool PyROOT::name##Converter::ToMemory( PyObject*, void* )                    \
+{                                                                             \
+   return false;                                                              \
+}
+
 
 //_____________________________________________________________________________
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type, low, high )        \
@@ -97,6 +124,18 @@ bool PyROOT::LongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 }
 
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_AsLong )
+
+//____________________________________________________________________________
+bool PyROOT::LongRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   if ( ! PyInt_CheckExact( pyobject ) )
+      return false;
+
+   func->SetArgRef( ((PyIntObject*)pyobject)->ob_ival );
+   return true;
+}
+
+PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
 bool PyROOT::BoolConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
@@ -159,22 +198,21 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
+bool PyROOT::DoubleRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   if ( ! PyFloat_CheckExact( pyobject ) )
+      return false;
+
+   func->SetArgRef( ((PyFloatObject*)pyobject)->ob_fval );
+   return true;
+}
+
+PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
+
+//____________________________________________________________________________
 bool PyROOT::VoidConverter::SetArg( PyObject*, G__CallFunc* )
 {
    PyErr_SetString( PyExc_SystemError, "void arguments can\'t be set" );
-   return false;
-}
-
-PyObject* PyROOT::VoidConverter::FromMemory( void* )
-{
-// TODO: verify to see if this is the proper approach
-   Py_INCREF( Py_None );
-   return Py_None;
-}
-
-bool PyROOT::VoidConverter::ToMemory( PyObject*, void* )
-{
-   PyErr_SetString( PyExc_SystemError, "void parameters can\'t be converted to memory" );
    return false;
 }
 
@@ -230,48 +268,14 @@ bool PyROOT::CStringConverter::ToMemory( PyObject* value, void* address ) {
    return true;
 }
 
+
 //- pointer/array conversions -------------------------------------------------
 namespace {
-
-   inline int getbuffer( PyObject* pyobject, char tc, int size, void*& buf, bool check = true )
-   {
-   // special case: don't handle strings here (yes, they're buffers, but not quite)
-      if ( PyString_Check( pyobject ) )
-         return 0;
-
-   // attempt to retrieve pointer to buffer interface
-      PyBufferProcs* bufprocs = pyobject->ob_type->tp_as_buffer;
-      PySequenceMethods* seqmeths = pyobject->ob_type->tp_as_sequence;
-      if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
-           (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
-
-      // get the buffer
-         int buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
-
-         if ( check == true ) {
-         // determine buffer compatibility (use "buf" as a status flag)
-            PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
-            if ( pytc != 0 ) {     // for array objects
-               if ( PyString_AS_STRING( pytc )[0] != tc )
-                  buf = 0;         // no match
-               Py_DECREF( pytc );
-            } else if ( buflen / (*(seqmeths->sq_length))( pyobject ) == size ) {
-            // this is a gamble ... may or may not be ok, but that's for the user
-               PyErr_Clear();
-            } else
-               buf = 0;                      // not compatible
-         }
-
-         return buflen;
-      }
-
-      return 0;
-   }
 
    inline bool CArraySetArg( PyObject* pyobject, G__CallFunc* func, char tc, int size )
    {
       void* buf = 0;
-      int buflen = getbuffer( pyobject, tc, size, buf );
+      int buflen = PyROOT::Utility::GetBuffer( pyobject, tc, size, buf );
       if ( ! buf || buflen == 0 )
          return false;
 
@@ -302,11 +306,11 @@ bool PyROOT::VoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 
 // get the buffer
    void* buf = 0;
-   int buflen = getbuffer( pyobject, '*', 1, buf, false );
+   int buflen = Utility::GetBuffer( pyobject, '*', 1, buf, false );
 
 // ok if buffer exists (can't perform any useful size checks)
    if ( buf && buflen != 0 ) {
-      func->SetArg( (long) buf );
+      func->SetArg( (long)buf );
       return true;
    }
 
@@ -341,7 +345,7 @@ bool PyROOT::VoidArrayConverter::ToMemory( PyObject* value, void* address )
    }
 
    void* buf = 0;
-   int buflen = getbuffer( value, '*', 1, buf, false );
+   int buflen = Utility::GetBuffer( value, '*', 1, buf, false );
    if ( ! buf || buflen == 0 )
       return false;
 
@@ -364,7 +368,7 @@ PyObject* PyROOT::name##ArrayConverter::FromMemory( void* address )          \
 bool PyROOT::name##ArrayConverter::ToMemory( PyObject* value, void* address )\
 {                                                                            \
    void* buf = 0;                                                            \
-   int buflen = getbuffer( value, code, sizeof(type), buf );                 \
+   int buflen = Utility::GetBuffer( value, code, sizeof(type), buf );        \
    if ( ! buf || buflen == 0 )                                               \
       return false;                                                          \
    if ( 0 <= fSize ) {                                                       \
@@ -387,6 +391,19 @@ PYROOT_IMPLEMENT_ARRAY_CONVERTER( Long,   Long_t,   'l' )
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( ULong,  ULong_t,  'L' )
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( Float,  Float_t,  'f' )
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( Double, Double_t, 'd' )
+
+//____________________________________________________________________________
+bool PyROOT::LongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+   if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
+      Py_DECREF( pytc );           // such thing for long long in module array
+      return false;
+   }
+   
+   return VoidArrayConverter::SetArg( pyobject, func );
+}
+
 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
@@ -421,7 +438,7 @@ PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 
 //____________________________________________________________________________
-bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+bool PyROOT::RootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    if ( ! ObjectProxy_Check( pyobject ) ) {
       if ( pyobject == gNullObject ) {   // allow NULL pointer as a special case
@@ -456,13 +473,13 @@ bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::KnownClassConverter::FromMemory( void* address )
+PyObject* PyROOT::RootObjectConverter::FromMemory( void* address )
 {
    return BindRootObject( address, fClass, false );
 }
 
 //____________________________________________________________________________
-bool PyROOT::KnownClassConverter::ToMemory( PyObject* value, void* address )
+bool PyROOT::RootObjectConverter::ToMemory( PyObject* value, void* address )
 {
    if ( ! ObjectProxy_Check( value ) ) {
       if ( value == gNullObject ) {   // allow NULL pointer as a special case
@@ -488,7 +505,7 @@ bool PyROOT::KnownClassConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-bool PyROOT::KnownClassPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+bool PyROOT::RootObjectPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    if ( ! ObjectProxy_Check( pyobject ) )
       return false;               // not a PyROOT object (TODO: handle SWIG etc.)
@@ -507,13 +524,13 @@ bool PyROOT::KnownClassPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::KnownClassPtrConverter::FromMemory( void* address )
+PyObject* PyROOT::RootObjectPtrConverter::FromMemory( void* address )
 {
    return BindRootObject( address, fClass, true );
 }
 
 //____________________________________________________________________________
-bool PyROOT::KnownClassPtrConverter::ToMemory( PyObject* value, void* address )
+bool PyROOT::RootObjectPtrConverter::ToMemory( PyObject* value, void* address )
 {
    if ( ! ObjectProxy_Check( value ) )
       return false;               // not a PyROOT object (TODO: handle SWIG etc.)
@@ -532,15 +549,14 @@ bool PyROOT::KnownClassPtrConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-bool PyROOT::LongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+bool PyROOT::VoidPtrRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
-   if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
-      Py_DECREF( pytc );           // such thing for long long in module array
-      return false;
+   if ( ObjectProxy_Check( pyobject ) ) {
+      func->SetArgRef( reinterpret_cast< long& >( ((ObjectProxy*)pyobject)->fObject ) );
+      return true;
    }
-   
-   return VoidArrayConverter::SetArg( pyobject, func );
+
+   return false;
 }
 
 //____________________________________________________________________________
@@ -576,16 +592,24 @@ bool PyROOT::PyObjectConverter::ToMemory( PyObject* value, void* address )
 PyROOT::Converter* PyROOT::CreateConverter( const std::string& fullType, long user )
 {
    Converter* result = 0;
-   ConvFactories_t::iterator h = gConvFactories.end();
 
    G__TypeInfo ti( fullType.c_str() );
    std::string realType = TClassEdit::ShortType( ti.TrueName(), 1 );
    int isp = Utility::IsPointer( fullType );
 
 // first, look for an explicit (user-installed) converter factory
+   const char* q = "";
    if ( isp == 1 )
-      h = gConvFactories.find( realType + "*" );
-   else
+      q = "*";
+   else if ( isp == 10 )
+      q = "&";
+   else if ( isp == 11 )
+      q = "*&";
+
+   ConvFactories_t::iterator h = gConvFactories.find( realType + q );
+
+// TODO: fix this hack ...
+   if ( h == gConvFactories.end() && isp == 10 )
       h = gConvFactories.find( realType );
 
 // use a general converter if nothing installed
@@ -597,17 +621,20 @@ PyROOT::Converter* PyROOT::CreateConverter( const std::string& fullType, long us
 
       if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
          if ( isp == 2 || isp == 11 )        // meaning '**' or '*&'
-            result = new KnownClassPtrConverter( klass, control );
+            result = new RootObjectPtrConverter( klass, control );
          else if ( isp == 1 || isp == 10 )   // case of '*' or '&'
-            result = new KnownClassConverter( klass, control );
+            result = new RootObjectConverter( klass, control );
          else if ( isp == 0 )                // by value
-            result = new KnownClassConverter( klass, true );
+            result = new RootObjectConverter( klass, true );
          else                                // TODO: this may cause pbs ...
             result = new VoidArrayConverter( control );
 
       } else if ( ti.Property() & G__BIT_ISENUM ) {
       // special case; represent enums as unsigned integers
-         h = gConvFactories.find( "UInt_t" );
+         if ( isp == 10 )
+            h = gConvFactories.find( "long&" );
+         else
+            h = gConvFactories.find( "UInt_t" );
       } else if ( 0 < isp )        // pointer and reference types treated as void*'s
          result = new VoidArrayConverter( control );
    }
@@ -646,9 +673,11 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Int )
    PYROOT_BASIC_CONVERTER_FACTORY( UInt )
    PYROOT_BASIC_CONVERTER_FACTORY( Long )
+   PYROOT_BASIC_CONVERTER_FACTORY( LongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ULong )
    PYROOT_BASIC_CONVERTER_FACTORY( Float )
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
+   PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
    PYROOT_BASIC_CONVERTER_FACTORY( CString )
@@ -660,9 +689,10 @@ namespace {
    PYROOT_ARRAY_CONVERTER_FACTORY( ULongArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( FloatArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( DoubleArray )
+   PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
    PYROOT_BASIC_CONVERTER_FACTORY( TString )
    PYROOT_BASIC_CONVERTER_FACTORY( STLString )
-   PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
+   PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrRef )
    PYROOT_BASIC_CONVERTER_FACTORY( PyObject )
 
 // converter factories for ROOT types
@@ -679,10 +709,12 @@ namespace {
       ncp_t( "unsigned int",       &CreateUIntConverter               ),
       ncp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
       ncp_t( "long",               &CreateLongConverter               ),
+      ncp_t( "long&",              &CreateLongRefConverter            ),
       ncp_t( "unsigned long",      &CreateULongConverter              ),
       ncp_t( "long long",          &CreateLongLongConverter           ),
       ncp_t( "float",              &CreateFloatConverter              ),
       ncp_t( "double",             &CreateDoubleConverter             ),
+      ncp_t( "double&",            &CreateDoubleRefConverter          ),
       ncp_t( "void",               &CreateVoidConverter               ),
       ncp_t( "const char*",        &CreateCStringConverter            ),
       ncp_t( "char*",              &CreateCStringConverter            ),
@@ -696,12 +728,13 @@ namespace {
       ncp_t( "unsigned long*",     &CreateULongArrayConverter         ),
       ncp_t( "float*",             &CreateFloatArrayConverter         ),
       ncp_t( "double*",            &CreateDoubleArrayConverter        ),
+      ncp_t( "long long*",         &CreateLongLongArrayConverter      ),
 
    // factories for special cases
       ncp_t( "TString",            &CreateTStringConverter            ),
       ncp_t( "std::string",        &CreateSTLStringConverter          ),
       ncp_t( "string",             &CreateSTLStringConverter          ),
-      ncp_t( "long long*",         &CreateLongLongArrayConverter      ),
+      ncp_t( "void*&",             &CreateVoidPtrRefConverter         ),
       ncp_t( "PyObject*",          &CreatePyObjectConverter           ),
       ncp_t( "_object*",           &CreatePyObjectConverter           )
    };

@@ -1,12 +1,13 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.25 2005/06/06 15:08:40 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.26 2005/06/10 14:30:22 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/08/05
+# Last: 06/20/05
 
 """PyROOT user module.
 
  o) install lazy ROOT class/variable lookup as appropriate
  o) feed gSystem and gInterpreter for display updates
+ o) add readline completion (if supported by python build)
  o) enable some ROOT/CINT style commands
  o) handle a few special cases such as gPad, STL, etc.
 
@@ -23,11 +24,41 @@ if sys.version[0:3] < '2.2':
 
 ## readline support, if available
 try:
-  import rlcompleter, readline
-  readline.parse_and_bind( 'tab: complete' )
-  readline.parse_and_bind( 'set show-all-if-ambiguous On' )
+   import rlcompleter, readline
+
+   class FileNameCompleter( rlcompleter.Completer ):
+      def file_matches( self, text ):
+         matches = []
+         path, name = os.path.split( text )
+
+         try:
+            for fn in os.listdir( path or os.curdir ):
+               if fn[:len(name)] == name:
+                  full = os.path.join( path, fn )
+                  matches.append( full )
+
+                  if os.path.isdir( full ):
+                     matches += map( lambda x: os.path.join( full, x ), os.listdir( full ) )
+         except OSError:
+            pass
+
+         return matches
+
+      def global_matches( self, text ):
+         matches = rlcompleter.Completer.global_matches( self, text )
+         if not matches:
+            matches = []
+         return matches + self.file_matches( text )
+
+   readline.set_completer( FileNameCompleter().complete )
+   readline.set_completer_delims(
+      pystring.replace( readline.get_completer_delims(), os.sep , '' ) )
+
+   readline.parse_and_bind( 'tab: complete' )
+   readline.parse_and_bind( 'set show-all-if-ambiguous On' )
 except:
-  pass
+ # module readline typically doesn't exist on non-Unix platforms
+   pass
 
 ## load PyROOT C++ extension module, special case for linux and Sun
 needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
@@ -49,11 +80,12 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '3.0.0'
+__version__ = '3.1.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'NULL',
-                    'Template', 'AddressOf', 'std' ]
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad',
+                    'AddressOf', 'NULL', 'MakeNullPointer',
+                    'Template', 'std' ]
 
 _orig_ehook = sys.excepthook
 

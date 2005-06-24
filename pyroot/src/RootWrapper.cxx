@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.32 2005/06/12 17:21:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.33 2005/06/14 05:06:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -219,7 +219,8 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       bool isStatic = isNamespace || ( method->Property() & G__BIT_ISSTATIC );
 
    // public methods are normally visible, private methods are mangled python-wise
-   // note the overload implications which are name based
+   // note the overload implications which are name based, and note that rootcint
+   // does not create the interface methods for private/protected methods ...
       if ( !( method->Property() & kIsPublic ) )
          if ( mtName == clName )             // don't expose private ctors
             continue;

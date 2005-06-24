@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.36 2005/06/17 19:14:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.37 2005/06/22 20:18:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -28,7 +28,7 @@
 #include <string.h>
 #include <exception>
 #include <string>
-#include <Riostream.h>
+
 
 //- local helpers ------------------------------------------------------------
 namespace {
@@ -122,34 +122,9 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
 //____________________________________________________________________________
 bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
 {
-// determine effective return type
-   std::string longName = fMethod ? fMethod->GetReturnTypeName() : fClass->GetName();
-   std::string shortName = TClassEdit::ShortType( G__TypeInfo( longName.c_str() ).TrueName(), 1 );
-
-// select and set executor
-   const char* q = "";
-   int isPointer = Utility::IsPointer( longName );
-   if ( isPointer == 1 )
-      q = "*";
-
-   ExecFactories_t::iterator h = gExecFactories.find( shortName + q );
-   if ( h != gExecFactories.end() )
-      executor = (h->second)();
-   else {
-      TClass* klass = gROOT->GetClass( shortName.c_str() );
-      if ( klass != 0 ) {
-         executor = isPointer ? new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
-      } else {
-      // could still be an enum ...
-         G__TypeInfo ti( longName.c_str() );
-         if ( ti.Property() & G__BIT_ISENUM )
-            executor = (gExecFactories[ "UInt_t" ])();
-         else {
-            std::cerr << "return type in method not handled! " << shortName << std::endl;
-            executor = (gExecFactories[ "void" ])();
-         }
-      }
-   }
+   executor = CreateExecutor( fMethod ? fMethod->GetReturnTypeName() : fClass->GetName() );
+   if ( ! executor )
+      return false;
 
    return true;
 }
@@ -338,7 +313,7 @@ bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::MethodHolder::Execute( void* self )
 {
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2( gCINTMutex );
    TempLevelGuard g;
 
    PyObject* result = 0;

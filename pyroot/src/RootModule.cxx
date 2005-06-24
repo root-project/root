@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.14 2005/06/14 05:06:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.15 2005/06/17 19:14:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -195,6 +195,34 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* MakeNullPointer( PyObject*, PyObject* args )
+   {
+      int argc = PyTuple_GET_SIZE( args );
+      if ( argc != 0 && argc != 1 ) {
+         PyErr_Format( PyExc_TypeError,
+            "MakeNullPointer takes at most 1 argument (%d given)", argc );
+         return 0;
+      }
+
+   // no class given: use the general NULL object
+      if ( argc == 0 ) {
+         Py_INCREF( gNullObject );
+         return gNullObject;
+      }
+
+   // check argument for either class object or string name
+      PyObject* pyname = PyObject_Str( PyTuple_GET_ITEM( args, 0 ) );
+      TClass* klass = gROOT->GetClass( PyString_AS_STRING( pyname ) );
+      if ( ! klass ) {
+         PyErr_SetString( PyExc_TypeError,
+            "MakeNullPointer expects a valid class or class name as an argument" );
+         return 0;
+      }
+
+      return BindRootObjectNoCast( 0, klass, false );
+   }
+
+//____________________________________________________________________________
    PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
    {
       PyObject* policy = 0;
@@ -226,6 +254,8 @@ static PyMethodDef PyROOTMethods[] = {
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object" },
+   { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
+     METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
      METH_VARARGS, (char*) "Determines object ownership model" },
    { NULL, NULL, 0, NULL }
