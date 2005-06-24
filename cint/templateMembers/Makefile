@@ -40,6 +40,8 @@ templateMembersDict.cxx: templateMembersClasses.h templateMembersLinkdef.h
 
 templateMembers_C.$(DllSuf): templateMembersDict.cxx
 
+templateMembersNoMem.log: templateMembers.log
+	$(CMDECHO) grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
 templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v -e Processing > templateMembers.log && \
