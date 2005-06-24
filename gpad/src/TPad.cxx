@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.183 2005/06/21 18:15:13 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.184 2005/06/23 16:13:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3604,7 +3604,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       image = kTRUE;
    }
 
-   Int_t wid=0;
+   Int_t wid = 0;
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
@@ -3618,21 +3618,24 @@ void TPad::Print(const char *filenam, Option_t *option)
          return;
       }
       if (gtype != TImage::kUnknown) {
-         Int_t saver = gErrorIgnoreLevel;
-         gErrorIgnoreLevel = kFatal;
-         gErrorIgnoreLevel = saver;
-         gVirtualX->Update(1);
-         gSystem->Sleep(30); // syncronize
-
-         TImage *img = TImage::Create();
-         img->FromPad(this);
-         img->WriteImage(psname, gtype);
-
+         if (gVirtualX->InheritsFrom("TGQt")) {
+            wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
+            gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
+         } else {
+            Int_t saver = gErrorIgnoreLevel;
+            gErrorIgnoreLevel = kFatal;
+            gVirtualX->Update(1);
+            gSystem->Sleep(30); // syncronize
+            TImage *img = TImage::Create();
+            img->FromPad(this);
+            img->WriteImage(psname.Data(), gtype);
+            gErrorIgnoreLevel = saver;     
+         }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "file %s has been created", psname.Data());
          }
       } else {
-         Warning("Print", "Cannot create %s file in batch mode.", opt);
+         Warning("Print", "Unsupported image format %s", psname.Data());
       }
       return;
    }

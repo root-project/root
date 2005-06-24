@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.3 2005/03/08 05:48:55 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -58,7 +58,7 @@ void TQtClientGuard::Disconnect(QWidget *w)
       QWidget *grabber = QWidget::mouseGrabber();
       fQClientGuard.remove();
       disconnect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
-      if (grabber == w)
+      if (grabber == w && gQt->IsRegistered(w) )
          gVirtualX->GrabPointer(TGQt::iwid(w), 0, 0, 0, kFALSE);
    } else {
       fDeadCounter++;

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.88 2005/03/08 05:57:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.89 2005/04/23 10:55:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -436,6 +436,11 @@ void TCanvas::Build()
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
    else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
 
+   // Set Pad parameters
+   gPad            = this;
+   fCanvas         = this;
+   fMother         = (TPad*)gPad;
+
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
       gVirtualX->SelectWindow(fCanvasID);
@@ -462,10 +467,6 @@ void TCanvas::Build()
    }
    gROOT->GetListOfCanvases()->Add(this);
 
-   // Set Pad parameters
-   gPad            = this;
-   fCanvas         = this;
-   fMother         = (TPad*)gPad;
    if (!fPrimitives) {
       fPrimitives     = new TList;
       SetFillColor(gStyle->GetCanvasColor());

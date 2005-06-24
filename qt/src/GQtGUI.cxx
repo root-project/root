@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.14 2005/06/02 21:52:33 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.15 2005/06/21 17:09:26 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
                  };
    QtGContext() : QWidget(0,"rootGCContext") ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
    QtGContext(const GCValues_t &gval) : QWidget(0,"rootGCContext") ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
-   QtGContext(const QtGContext &src)  : QWidget() {fprintf(stderr,"QtGContext(const QtGContext &src)\n");}
+   QtGContext(const QtGContext & /*src*/)  : QWidget() {fprintf(stderr,"QtGContext(const QtGContext &src)\n");}
    void              Copy(const QtGContext &dst,Mask_t mask = 0xff);
    const QtGContext &Copy(const GCValues_t &gval);
    void              DumpMask() const;
@@ -502,9 +502,37 @@ bool TQtGrabPointerFilter::eventFilter( QObject *, QEvent *e)
 void  TGQt::SetOpacity(Int_t) { }
 //______________________________________________________________________________
 Window_t TGQt::GetWindowID(Int_t id) {
- 
-   return (Window_t)iwid(id);
+
+//   return (Window_t)iwid(id);
+   // Create a "client" wrapper for the "canvas" widget to make Fons happy
+   QPaintDevice *widDev = iwid(id);
+   TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(iwid(id));
+   if (widDev && !canvasWidget) {
+      // The workaround for V.Onuchine ASImage - extremely error prone and dangerous
+      // MUST be fixed later
+     return rootwid(widDev);
+   }
+   assert(canvasWidget);
+   TQtClientWidget  *client = 0;
+   // Only one wrapper per "Canvas Qt Widget" is allowed
+   if (! (client = (TQtClientWidget  *)canvasWidget->GetRootID() )  ) {
+      //   QWidget *canvasWidget = (QWidget *)wid(id);
+      QWidget *parent  = canvasWidget->parentWidget();
+      client  = (TQtClientWidget  *)wid(CreateWindow(rootwid(parent)
+         ,0,0,canvasWidget->width(),canvasWidget->height()
+         ,0,0,0,0,0,0));
+      // reparent the canvas
+      canvasWidget->reparent(client,QPoint(0,0));
+      QBoxLayout * l = new QVBoxLayout( client );
+      l->addWidget( canvasWidget );
+      canvasWidget->SetRootID(client);
+      client->SetCanvasWidget(canvasWidget);
+      canvasWidget->setMouseTracking(kFALSE);
+      client->setMouseTracking(kTRUE);
+   }
+   return rootwid(client);
 }
+
 //______________________________________________________________________________
 Window_t  TGQt::GetDefaultRootWindow() const
 {
@@ -1356,8 +1384,20 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
    assert(qtcontext(gc).HasValid(QtGContext::kROp));
    // fprintf(stderr," TQt::CopyArea this=%p, fROp=%x\n", this, qtcontext(gc).fROp);
-   if ( dest && src) 
-      bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp); // ignoreMask )
+   if ( dest && src) {
+      //QtGContext qgc = qtcontext(gc);
+      QPixmap *pix = dynamic_cast<QPixmap*>(iwid(src));
+      QBitmap *mask = qtcontext(gc).fClipMask;
+      if (pix && mask && (qtcontext(gc).fMask & QtGContext::kClipMask)) {
+         if ((pix->width() != mask->width()) || (pix->height() != mask->height())) {
+            pix->resize(mask->width(), mask->height());
+         }
+         pix->setMask(*mask);
+         bitBlt(iwid(dest), dest_x,dest_y,pix, src_x,src_y,width,height, qtcontext(gc).fROp);
+      } else {
+         bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp);
+      }
+   }
 }
 //______________________________________________________________________________
 void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
@@ -2577,3 +2617,93 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
    //  fprintf(stderr,"---- - - > TGQt::SendDestroyEvent %p  %ld \n", widget, pwid(widget) );
    ((TGQt *)this)->SendEvent(TGQt::kDefault,&destroyEvent);
 }
+
+// -- Dummy staff
+
+
+//______________________________________________________________________________
+unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // in format:
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // By default all pixels from the whole drawable are returned.
+   //
+   // Note that return array is 32-bit aligned
+
+
+   if (!wid || (int(wid) == -1) ) return 0;
+
+   QPaintDevice &dev = *iwid(wid);
+   QPixmap *pix=0;
+   switch (dev.devType()) {
+   case QInternal::Widget:
+     pix = &((TQtWidget*)&dev)->GetBuffer();
+     break;
+
+   case QInternal::Pixmap: {
+      pix = (QPixmap *)&dev;
+      break;
+                          }
+   case QInternal::Picture:
+   case QInternal::Printer:
+   case QInternal::UndefinedDevice:
+   default: assert(0);
+     break;
+   };
+
+   if (pix) {
+      // Create intermediate pixmap to stretch the original one if any
+      QPixmap outMap(0,0);
+      if ( (h == w) && (w == UInt_t(-1) ) ) outMap.resize(pix->size());
+      else outMap.resize(w,h);
+
+      QImage img = pix->convertToImage();
+      if (!img.isNull()) {
+         UInt_t *bits = new UInt_t[w*h];
+         UInt_t *ibits = (UInt_t *)img.bits();
+
+         int idx = y;
+         int iii = 0;
+         for (UInt_t j = 0; j < h; j++) {
+            for (UInt_t i = 0; i < w; i++) {
+               bits[iii + i] = ibits[idx + x + i];
+            }
+            idx += w;
+            iii += w;
+         }
+         return (unsigned char *)bits;
+      }
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Pixmap_t TGQt::CreatePixmapFromData(unsigned char * bits, UInt_t width, 
+                                       UInt_t height)
+{
+   // create pixmap from RGB data. RGB data is in format :
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // Note that data must be 32-bit aligned
+
+   QImage img(bits, width, height, 32, 0, 0, QImage::LittleEndian);
+   QPixmap *p = new QPixmap(img);
+   fQPixmapGuard.Add(p);
+   return Pixmap_t(rootwid(p));
+}
+
+//______________________________________________________________________________
+Window_t TGQt::GetCurrentWindow() const
+{
+   // Return current/selected window pointer.
+   // This method removes the protection. The code eventually will crash.
+   // Must be moved to some protected area.
+
+   return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
+}
+

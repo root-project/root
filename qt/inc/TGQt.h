@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.9 2005/03/25 19:41:03 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.10 2005/06/21 17:09:26 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -95,6 +95,7 @@ class TGQt  : public TVirtualX  {
    friend class TQtWidget;
    friend class TQtClientWidget;
    friend class TQtImage;
+   friend class TQtClientGuard;
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
@@ -173,6 +174,7 @@ protected:
 #endif
    static Int_t   RegisterWid(QPaintDevice *wid);   // register QWidget for the embedded TCanvas
    static Int_t   UnRegisterWid(QPaintDevice *wid); // unregister QWidget of the TCanvas
+   static Bool_t  IsRegistered(QPaintDevice *wid);  // Check whether the object has been registered
 private:
    TGQt& operator=(const TGQt&);
 public:
@@ -238,10 +240,6 @@ public:
       static QString QtFileFormat(const char *selector);
       static QString QtFileFormat(const QString &selector);
 #endif
-
-   unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
-   Pixmap_t       CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
-   Window_t       GetCurrentWindow() const;
 
    ClassDef(TGQt,0)  //Interface to Qt GUI
 };
