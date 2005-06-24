@@ -1,0 +1,36 @@
+
+Processing testFriendsIndices.C+...
+Creating e0.root
+Creating e1.root
+Creating e2.root
+Creating e3.root
+Creating e4.root
+Creating f0.root
+Creating f1.root
+Creating f2.root
+Creating f3.root
+Creating f4.root
+************************************
+*    Row   *     f.val *     e.val *
+************************************
+*        0 *        93 *        93 *
+*        1 *        93 *        93 *
+*        2 *        52 *        52 *
+*        3 *        52 *        52 *
+*        4 *        12 *        12 *
+*        5 *        12 *        12 *
+*        6 *        70 *        70 *
+*        7 *        70 *        70 *
+*        8 *        25 *        25 *
+*        9 *        25 *        25 *
+*       10 *        36 *        36 *
+*       11 *        36 *        36 *
+*       12 *        18 *        18 *
+*       13 *        18 *        18 *
+*       14 *        37 *        37 *
+*       15 *        37 *        37 *
+*       16 *        27 *        27 *
+*       17 *        27 *        27 *
+*       18 *        99 *        99 *
+*       19 *        99 *        99 *
+************************************
