@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: GenVectorIO.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: GenVectorIO.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -18,6 +18,11 @@
 //
 #ifndef ROOT_Math_GenVectorIO 
 #define ROOT_Math_GenVectorIO 1
+
+#if defined(__alpha) 
+#defined __USE_STD_IOSTREAM
+#endif
+
 
 #include <cctype>
 #include <iostream>
