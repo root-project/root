@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.6 2004/07/08 10:02:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.7 2005/01/12 18:39:29 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -416,6 +416,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    fMainTip         = 0;
    fNavMode = kNavRegions;
 
+   SetDisabledPicture(fPic);
    SetState(kButtonDisabled);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -440,6 +441,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    fMainTip         = 0;
    fNavMode = kNavRegions;
 
+   SetDisabledPicture(fPic);
    SetState(kButtonDisabled);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,

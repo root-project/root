@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.56 2005/06/06 20:04:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.57 2005/06/08 07:08:36 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -766,8 +766,9 @@ void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
 
    if (!pic) return;
 
-   if (fOwnDisabledPic) fClient->FreePicture(fPicD);
+   if (fOwnDisabledPic && fPicD) fClient->FreePicture(fPicD);
    fPicD = pic;
+   ((TGPicture*)pic)->AddReference();
    fOwnDisabledPic = kFALSE;
 }
 
