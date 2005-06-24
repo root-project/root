@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.65 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.66 2005/06/23 15:08:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -1120,7 +1120,10 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
    
    // Scene should be modify locked
    if (fScene.CurrentLock() != TGLScene::kModifyLock) {
-      assert(kFALSE);
+      Error("TViewerOpenGL::AddObject", "expected scene to be in mofifed locked");
+      // TODO: For the moment live with this - DrawOverlap() problems to discuss with Andrei
+      // Just reject as pad will redraw anyway
+      // assert(kFALSE);
       return TBuffer3D::kNone;
    }
    

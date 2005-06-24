@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.65 2005/06/15 08:44:35 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.66 2005/06/15 11:53:00 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1043,6 +1043,13 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
    if (shape.IsA() != TGeoCompositeShape::Class()) {
       // Does viewer prefer local frame positions?
       Bool_t localFrame = viewer->PreferLocalFrame();
+
+      // If we have a transform matrix setup we are not capable of providing
+      // a local buffer with local->master translation so force the buffer to 
+      // global frame. This applies in the case of overlap drawing only
+      if (fGeoManager->IsMatrixTransform()) {
+         localFrame = kFALSE;
+      }
 
       // Perform first fetch of buffer from the shape and try adding it
       // to the viewer
