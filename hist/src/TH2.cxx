@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.74 2005/04/27 12:11:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.75 2005/05/10 20:12:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1991,11 +1991,11 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   One must create a graphical cut (mouse or C++) and specify the name
 //   of the cut between [] in the option.
 //   For example, with a TCutG named "cutg", one can call:
-//      myhist->ProjectionY(" ",firstybin,lastybin,"[cutg]");
+//      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg]");
 //   To invert the cut, it is enough to put a "-" in front of its name:
-//      myhist->ProjectionY(" ",firstybin,lastybin,"[-cutg]");
+//      myhist->ProjectionY(" ",firstxbin,lastxbin,"[-cutg]");
 //   It is possible to apply several cuts:
-//      myhist->ProjectionY(" ",firstybin,lastybin,[cutg1,cutg2]");
+//      myhist->ProjectionY(" ",firstxbin,lastxbin,[cutg1,cutg2]");
 //
 //   NOTE that if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
