@@ -12,17 +12,20 @@ MATHCOREDIRS := $(MATHCOREDIR)/src
 MATHCOREDIRI := $(MATHCOREDIR)/inc
 
 ##### libMathCore #####
-MATHCOREL    := $(MODDIRI)/GenVector/LinkDef.h
+MATHCOREL    := $(MODDIRI)/MathCore/LinkDef.h
 MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDH1  := $(MODDIRI)/GenVector/Vector3D.h \
-                $(MODDIRI)/GenVector/Point3D.h \
-                $(MODDIRI)/GenVector/LorentzVector.h \
-                $(MODDIRI)/GenVector/VectorUtil_Cint.h
+MATHCOREDH1  := $(MODDIRI)/MathCore/Vector3D.h \
+                $(MODDIRI)/MathCore/Point3D.h \
+                $(MODDIRI)/MathCore/Vector4D.h \
+                $(MODDIRI)/MathCore/Rotation3D.h \
+                $(MODDIRI)/MathCore/SpecFunc.h \
+                $(MODDIRI)/MathCore/DistFunc.h \
+                $(MODDIRI)/MathCore/VectorUtil_Cint.h
 
-MATHCOREH    := $(filter-out $(MODDIRI)/GenVector/LinkDef%, $(wildcard $(MODDIRI)/GenVector/*.h))
+MATHCOREH    := $(filter-out $(MODDIRI)/MathCore/LinkDef%, $(wildcard $(MODDIRI)/MathCore/*.h))
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCOREO    := $(MATHCORES:.cxx=.o)
 
@@ -31,16 +34,16 @@ MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
 MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/GenVector/%.h,include/GenVector/%.h,$(MATHCOREH))
+ALLHDRS      += $(patsubst $(MODDIRI)/MathCore/%.h,include/MathCore/%.h,$(MATHCOREH))
 ALLLIBS      += $(MATHCORELIB)
 
 # include all dependency files
 INCLUDEFILES += $(MATHCOREDEP)
 
 ##### local rules #####
-include/GenVector/%.h: $(MATHCOREDIRI)/GenVector/%.h
-		@(if [ ! -d "include/GenVector" ]; then   \
-		   mkdir include/GenVector;               \
+include/MathCore/%.h: $(MATHCOREDIRI)/MathCore/%.h
+		@(if [ ! -d "include/MathCore" ]; then   \
+		   mkdir include/MathCore;               \
 		fi)
 		cp $< $@
 
