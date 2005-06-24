@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.6 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.7 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -117,12 +117,13 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
 //______________________________________________________________________________
 void TGLBoundingBox::SetAligned(UInt_t nbPnts, const Double_t * pnts)
 {
-   // Set aligned box using a range of points
-   if (nbPnts < 2 || !pnts) {
+   // Set aligned box using one or more points
+   if (nbPnts < 1 || !pnts) {
       assert(false);
       return;
    }
 
+   // Single point gives a zero volume BB
    TGLVertex3 low(pnts[0], pnts[1], pnts[2]);
    TGLVertex3 high(pnts[0], pnts[1], pnts[2]);
 

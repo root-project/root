@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.11 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.12 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -299,10 +299,10 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
 {
    Bool_t interest = kFALSE;
 
-   // TODO: Investigate why we sometime get objects with zero volume BBs
+   // Some have objects zero volume BBs - e.g. single points. Always have
+   // interest in these - there is no way to set a threshold on a point volume.....
    if (box.Volume() == 0.0) {
-      //assert(kFALSE);
-      return kFALSE;
+      return kTRUE;
    }
    // If interest box is empty we take everything with volume larger than
    // 1% of largest seen so far
