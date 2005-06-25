@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -12,23 +12,17 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.19 2005/06/24 13:54:15 wbrown Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 //
 #ifndef ROOT_Math_DisplacementVector3D 
 #define ROOT_Math_DisplacementVector3D 1
 
-#ifndef ROOT_Math_DisplacementVector3D 
 #include "MathCore/Cartesian3D.h"
-#endif
-#ifndef ROOT_Math_DisplacementVector3D 
 #include "MathCore/Polar3D.h"
-#endif
-#ifndef ROOT_Math_DisplacementVector3D 
 #include "MathCore/CylindricalEta3D.h"
-#endif
-
 #include "MathCore/PositionVector3Dfwd.h"
 #include "MathCore/GenVectorIO.h"
+
 
 #include <cassert>
 
