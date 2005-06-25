@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.9 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.10 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -21,27 +21,48 @@
 //                          =========================
 //
 // The TPython class allows for access to python objects from CINT. The current
-// functionality is only basic: ROOT objects and builtin types can cross the
-// boundary between the two interpreters. All other cross-coding is based on
-// strings that are run on the python interpreter.
+// functionality is only basic: ROOT objects and builtin types can freely cross
+// the boundary between the two interpreters, python objects can be instantiated
+// and their methods can be called. All other cross-coding is based on strings
+// that are run on the python interpreter.
 //
-// Example: Accessing the python interpreter from ROOT
+// Examples:
 //
-// root [0] gSystem->Load( "libPyROOT" );
-// (int)0
-// root [1] TPython::Exec( "print 1 + 1" );  // write '2' to stdout
-// 2
+//  $ cat MyPyClass.py
+//  print 'creating class MyPyClass ... '
 //
-// // create a TBrowser on the python side, and transfer it back and forth
-// root [2] TBrowser* b = (TBrowser*) Python::Eval( "ROOT.TBrowser()" );
-// root [3] TPython::Bind( b, "b" );
-// root [4] b == (TBrowser*) TPython::Eval( "b" )
-// (int)1
+//  class MyPyClass:
+//     def __init__( self ):
+//        print 'in MyPyClass.__init__'
 //
-// // builtin variables can cross-over
-// root [5] int i = TPython::Eval( "1 + 1" );
-// root [6] i
-// (int)2
+//     def gime( self, what ):
+//        return what
+//
+//  $ root -l
+//  // Execute a string of python code.
+//  root [0] TPython::Exec( "print \'Hello World!\'" );
+//  Hello World!
+//
+//  // Create a TBrowser on the python side, and transfer it back and forth.
+//  // Note the required explicit (void*) cast!
+//  root [1] TBrowser* b = (void*)TPython::Eval( "ROOT.TBrowser()" );
+//  root [2] TPython::Bind( b, "b" );
+//  root [3] b == (void*) TPython::Eval( "b" )
+//  (int)1
+//
+//  // Builtin variables can cross-over by using implicit casts.
+//  root [4] int i = TPython::Eval( "1 + 1" );
+//  root [5] i
+//  (int)2
+//
+//  // Load a python module with a class definition, and use it.
+//  root [6] TPython::LoadMacro( "MyPyClass.py" );
+//  creating class MyPyClass ...
+//  root [7] MyPyClass m;
+//  in MyPyClass.__init__
+//  root [8] char* s = m.gime( "aap" );
+//  root [9] s
+//  (char* 0x41ee7754)"aap"
 //
 // It is possible to switch between interpreters by calling "TPython::Prompt()"
 // on the CINT side, while returning with ^D (EOF). State is preserved between
@@ -108,7 +129,8 @@ Bool_t TPython::Initialize()
 void TPython::LoadMacro( const char* name )
 {
 // Execute the give python script as if it were a macro (effectively an
-// execfile in __main__), and create CINT equivalents for new python classes.
+// execfile in __main__), and create CINT equivalents for any newly available
+// python classes.
 
 // setup
    if ( ! Initialize() )
@@ -174,7 +196,7 @@ const TPyReturn TPython::Eval( const char* expr )
 //
 // Caution: do not hold on to the return value: either store it in a builtin
 // type (implicit casting will work), or in a pointer to a ROOT object (explicit
-// casting is required).
+// casting to a void* is required).
 
 // setup
    if ( ! Initialize() )

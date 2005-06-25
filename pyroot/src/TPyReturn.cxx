@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.4 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.5 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -19,10 +19,19 @@
 //                        =============================
 //
 // Transport class for bringing objects from python (dynamically typed) to CINT
-// (statically typed). Upon cast to another value, either implicitly (builtin
-// types) or explicitly (pointers to ROOT objects), the TPyReturn object goes
-// out of existence. For this reason, it can not be copied and it should not
-// be held by reference.
+// (statically typed). It is best to immediately cast a TPyReturn to the real
+// type, either implicitly (for builtin types) or explicitly (through a void*
+// cast for pointers to ROOT objects).
+//
+// Examples:
+//
+//  root [0] TBrowser* b = (void*)TPython::Eval( "ROOT.TBrowser()" );
+//  root [1] int i = TPython::Eval( "1+1" );
+//  root [2] i
+//  (int)2
+//  root [3] double d = TPython::Eval( "1+3.1415" );
+//  root [4] d
+//  (double)4.14150000000000063e+00
 
 
 //- data ---------------------------------------------------------------------
