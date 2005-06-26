@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.6 2005/06/14 15:29:06 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.7 2005/06/25 20:39:41 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -33,16 +33,17 @@ TImage *TImage::Create()
 
    static TPluginHandler *h = 0;
 
-   TImage *img = 0;
-   if (!h && (h = gROOT->GetPluginManager()->FindHandler("TImage"))) {
+   if (!h) {
+      h = gROOT->GetPluginManager()->FindHandler("TImage");
       if (!h) return 0;
       if (h->LoadPlugin() == -1) {
          h = 0;   // try to reload plugin next time
          return 0;
       }
-      img = (TImage *) h->ExecPlugin(0);
-      if (img) img->SetName("dummy_image");
    }
+   TImage *img = (TImage *) h->ExecPlugin(0);
+   if (img) img->SetName("dummy_image");
+
    return img;
 }
 
