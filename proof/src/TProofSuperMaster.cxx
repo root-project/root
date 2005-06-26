@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.1 2005/06/22 20:25:28 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.2 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -40,8 +40,8 @@
 ClassImp(TProofSuperMaster)
 
 //______________________________________________________________________________
-TProofSuperMaster::TProofSuperMaster(const Char_t *masterurl, const Char_t *conffile,
-                                     const Char_t *confdir, Int_t loglevel)
+TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile,
+                                     const char *confdir, Int_t loglevel)
   : TProof(masterurl, conffile, confdir, loglevel)
 {
    // Start super master PROOF session.
@@ -92,13 +92,13 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
       fConfFile = fconf;
 
       // read the config file
-      Char_t line[1024];
+      char line[1024];
       TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
       int  ord = 0;
 
       // check for valid master line
       while (fgets(line, sizeof(line), pconf)) {
-         Char_t word[12][128];
+         char word[12][128];
          if (line[0] == '#') continue;   // skip comment lines
          int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
              word[0], word[1],
@@ -113,7 +113,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
             TInetAddress a = gSystem->GetHostByName(word[1]);
             if (!host.CompareTo(a.GetHostName()) ||
                 !strcmp(word[1], "localhost")) {
-               const Char_t *image = word[1];
+               const char *image = word[1];
                for (int i = 2; i < nword; i++) {
 
                   if (!strncmp(word[i], "image=", 6))
@@ -147,7 +147,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
       // check for valid submaster lines and start them
       rewind(pconf);
       while (fgets(line, sizeof(line), pconf)) {
-         Char_t word[12][128];
+         char word[12][128];
          if (line[0] == '#') continue;   // skip comment lines
          int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
              word[0], word[1],
@@ -159,9 +159,9 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
              !strcmp(word[0], "submaster")) {
             int sport    = fPort;
 
-            const Char_t *conffile = 0;
-            const Char_t *image = word[1];
-            const Char_t *msd = 0;
+            const char *conffile = 0;
+            const char *image = word[1];
+            const char *msd = 0;
             for (int i = 2; i < nword; i++) {
 
                if (!strncmp(word[i], "image=", 6))
@@ -177,7 +177,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 
             // Get slave FQDN ...
             TString SlaveFqdn;
-            TInetAddress SlaveAddr = gSystem->GetHostByName((const Char_t *)word[1]);
+            TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
             if (SlaveAddr.IsValid()) {
                SlaveFqdn = SlaveAddr.GetHostName();
                if (SlaveFqdn == "UnNamedHost")
@@ -190,7 +190,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 
                // Prepare arguments
                TProofThreadArg *ta =
-                   new TProofThreadArg((const Char_t *)(word[1]), sport,
+                   new TProofThreadArg((const char *)(word[1]), sport,
                                        fullord, image, conffile, msd,
                                        fSlaves, this);
                if (ta) {
@@ -307,7 +307,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 }
 
 //______________________________________________________________________________
-Int_t TProofSuperMaster::Process(TDSet *set, const Char_t *selector, Option_t *option,
+Int_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
                                  Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
