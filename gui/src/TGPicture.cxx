@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.22 2005/06/21 17:09:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.23 2005/06/24 12:27:29 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -57,7 +57,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
 
    TString pname = name;
    pname.Strip();
-   TString ext = strrchr(pname.Data(), '.');
+   TString ext = strrchr(pname, '.');
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
@@ -76,7 +76,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
 
    char *picnam = gSystem->Which(fPath, pname, kReadPermission);
    if (!picnam) {
-      pic = new TGPicture(pname.Data());
+      pic = new TGPicture(pname);
       pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
       pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
       pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
@@ -86,7 +86,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
 
    TImage *img = TImage::Open(picnam);
    if (!img) {
-      pic = new TGPicture(pname.Data());
+      pic = new TGPicture(pname);
       pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
       pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
       pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
@@ -115,7 +115,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 
    TString pname = name;
    pname.Strip();
-   TString ext = strrchr(pname.Data(), '.');
+   TString ext = strrchr(pname, '.');
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
@@ -200,7 +200,9 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap,
 //______________________________________________________________________________
 const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
 {
-   // create picture from XPM data
+   // Create picture from XPM data.
+   // Picture must be freed using TGPicturePool::FreePicture().
+   // If picture creation failed 0 is returned.
 
    UInt_t w, h;
 
@@ -212,22 +214,20 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
       fPicList = new THashTable(50);
    }
    char *ptr = xpm[0];
-   while( isspace((int)*ptr)) ++ptr;
+   while (isspace((int)*ptr)) ++ptr;
    w = atoi(ptr);
 
-   while(isspace((int)*ptr)) ++ptr;
+   while (isspace((int)*ptr)) ++ptr;
    h = atoi(ptr);
 
    const char *hname = TGPicture::HashName(name, w, h);
    TGPicture *pic = (TGPicture *)fPicList->FindObject(hname);
-
    if (pic) {
       pic->AddReference();
       return pic;
    }
 
    TImage *img = TImage::Open(xpm);
-
    if (!img) {
       pic = new TGPicture(hname, kTRUE);
       pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
