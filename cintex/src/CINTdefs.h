@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTdefs.h,v 1.1 2005/06/23 10:33:20 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -172,33 +172,33 @@
   /// Give data back to CINT
   template <class T> inline int Converter<T>::toCint(G__value* res, void* p)   {
     switch( res->type )  {
-      case 'y': G__setnull(res);                            break;
-      case 'f': G__letdouble(res,res->type,double(*(T*)p)); break;
-      case 'F': G__letint   (res,res->type,int( (T*)p));    break;   
-      case 'd': G__letdouble(res,res->type,double(*(T*)p)); break;
-      case 'D': G__letint   (res,res->type,int( (T*)p));    break;   
-      case 'g': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'G': G__letint   (res,res->type,int( (T*)p));    break;   
-      case 'c': G__letint   (res,res->type,int(*(T*)p));    break;   
-      case 'C': G__letint   (res,res->type,int( (T*)p));    break;   
-      case 'b': G__letint   (res,res->type,int(*(T*)p));    break;  
-      case 'B': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 's': G__letint   (res,res->type,int(*(T*)p));    break;   
-      case 'S': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'r': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'R': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'i': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'I': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'h': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'H': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'l': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'L': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'k': G__letint   (res,res->type,int(*(T*)p));    break;
-      case 'K': G__letint   (res,res->type,int( (T*)p));    break;  
-      case 'u': G__letint   (res,res->type,int(p));         break;
-      case 'U': G__letint   (res,res->type,int(p));         break;
-      case 'Y': G__letint   (res,res->type,int(p));         break;
-      default:  G__letint   (res,res->type,int(*(T*)p));    break;
+      case 'y': G__setnull(res);                                   break;
+      case 'f': G__letdouble(res,res->type,double(*(T*)p));        break;
+      case 'F': G__letint   (res,res->type,(long int)( (T*)p));    break;   
+      case 'd': G__letdouble(res,res->type,double(*(T*)p));        break;
+      case 'D': G__letint   (res,res->type,(long int)( (T*)p));    break;   
+      case 'g': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'G': G__letint   (res,res->type,(long int)( (T*)p));    break;   
+      case 'c': G__letint   (res,res->type,(long int)(*(T*)p));    break;   
+      case 'C': G__letint   (res,res->type,(long int)( (T*)p));    break;   
+      case 'b': G__letint   (res,res->type,(long int)(*(T*)p));    break;  
+      case 'B': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 's': G__letint   (res,res->type,(long int)(*(T*)p));    break;   
+      case 'S': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'r': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'R': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'i': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'I': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'h': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'H': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'l': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'L': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'k': G__letint   (res,res->type,(long int)(*(T*)p));    break;
+      case 'K': G__letint   (res,res->type,(long int)( (T*)p));    break;  
+      case 'u': G__letint   (res,res->type,(long int)(p));         break;
+      case 'U': G__letint   (res,res->type,(long int)(p));         break;
+      case 'Y': G__letint   (res,res->type,(long int)(p));         break;
+      default:  G__letint   (res,res->type,(long int)(*(T*)p));    break;
     }
     return 1;
   }
