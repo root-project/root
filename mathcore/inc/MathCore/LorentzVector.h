@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -19,9 +19,11 @@
 
 
 #include "MathCore/Cartesian4D.h"
-#include "MathCore/DisplacementVector3D.h"
+#include "MathCore/DisplacementVector3Dfwd.h"
+#ifdef LATER
 // needed for definition of size_t
 #include <stdlib.h>
+#endif
 
 #include "MathCore/GenVectorIO.h"
 
@@ -69,8 +71,8 @@ namespace ROOT {
 	 constructor from a LorentzVector expressed in different
 	 coordinates, or using a different Scalar type
       */
-      template <class T>
-      explicit LorentzVector(const LorentzVector<T> & v ) : 
+      template <class OtherType>
+      explicit LorentzVector(const LorentzVector<OtherType> & v ) : 
 	fCoordinates( v.Coordinates() ) {}
 
       /**
@@ -140,9 +142,9 @@ namespace ROOT {
       // ------ Set, Get, and access coordinate data ------
       
       /**
-	 Retrieve a const reference to  the coordinates object
+	 Retrieve a copy of of the coordinates system object
       */
-      const CoordSystem & Coordinates() const {
+      CoordSystem Coordinates() const {
         return fCoordinates;
       }
 
@@ -180,14 +182,12 @@ namespace ROOT {
       void GetCoordinates( Scalar& a, Scalar& b, Scalar& c, Scalar & d ) const
                             { fCoordinates.GetCoordinates(a, b, c, d);  }
 
-#ifdef LATER
       /**
          get internal data into 4 Scalars at *begin to *end
        */
       template <class IT>
       void GetCoordinates( IT begin, IT end ) const
-                            { fCoordinates.GetCoordinates(begin); }
-#endif
+                            { fCoordinates.GetCoordinates(&(*begin)); }
 
       /**
          get internal data into an array of 4 Scalar numbers
@@ -225,8 +225,8 @@ namespace ROOT {
       /** 
 	  return 4-th component (time or energy for a 4-momentum vector) 
       */ 
-      //Scalar T() const { return fCoordinates.E(); } // problem on some platform T() 
-      Scalar E() const { return fCoordinates.E(); }
+      Scalar T() const { return fCoordinates.T(); } 
+      Scalar E() const { return fCoordinates.T(); }
 
 
       /**
@@ -474,16 +474,16 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class CoordSystem >
       inline
       std::basic_ostream<char_t,traits_t> &
       operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , LorentzVector<T> const & v
+                  , LorentzVector<CoordSystem> const & v
                   )
     {
       if( !os )  return os;
 
-      typename T::Scalar a, b, c, d;
+      typename CoordSystem::Scalar a, b, c, d;
       v.GetCoordinates(a, b, c, d);
 
       if( detail::get_manip( os, detail::bitforbit ) )  {
@@ -503,16 +503,16 @@ namespace ROOT {
     }  // op<< <>()
 
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class CoordSystem >
       inline
       std::basic_istream<char_t,traits_t> &
       operator >> ( std::basic_istream<char_t,traits_t> & is
-                  , LorentzVector<T> & v
+                  , LorentzVector<CoordSystem> & v
                   )
     {
       if( !is )  return is;
 
-      typename T::Scalar a, b, c, d;
+      typename CoordSystem::Scalar a, b, c, d;
 
       if( detail::get_manip( is, detail::bitforbit ) )  {
         detail::set_manip( is, detail::bitforbit, '\00' );

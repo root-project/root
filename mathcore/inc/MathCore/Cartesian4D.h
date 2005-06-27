@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian4D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian4D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -30,12 +30,12 @@ namespace ROOT {
     The metric used is (-,-,-,+)
     */ 
     
-    template <class T> 
+    template <class ValueType> 
     class Cartesian4D { 
       
     public : 
       
-      typedef T Scalar;
+      typedef ValueType Scalar;
       
       
       /**
@@ -47,15 +47,15 @@ namespace ROOT {
       /**
         Constructor  from x, y , z , t values
        */
-      Cartesian4D(T  x, T  y, T  z, T  t) : fX(x), fY(y), fZ(z), fT(t) {}
+      Cartesian4D(Scalar  x, Scalar  y, Scalar  z, Scalar  t) : fX(x), fY(y), fZ(z), fT(t) {}
       
       
       /**
-        construct from any vector of  coordinate system class implementing X(), Y() and Z() and E()
+        construct from any vector of  coordinate system class implementing X(), Y() and Z() and T()
        */
       template <class CoordSystem> 
         explicit Cartesian4D(const CoordSystem & v) : 
-        fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fT( v.E() )  { }
+        fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fT( v.T() )  { }
       
       // no reason for a custom destructor  ~Cartesian3D() {} and copy constructor
       
@@ -83,99 +83,99 @@ namespace ROOT {
       
       // coordinate accessors 
       
-      T X() const { return fX;}
-      T Y() const { return fY;}
-      T Z() const { return fZ;}
-      T E() const { return fT;}
+      Scalar X() const { return fX;}
+      Scalar Y() const { return fY;}
+      Scalar Z() const { return fZ;}
+      Scalar T() const { return fT;}
       
       // other coordinate representation
       
       /**
         magnitude of spatial components
        */
-      T R() const { return std::sqrt( fX*fX + fY*fY + fZ*fZ ); } 
+      Scalar R() const { return std::sqrt( fX*fX + fY*fY + fZ*fZ ); } 
       
       /**
         vector magnitude square  
        */
       
-      T M2() const { return fT*fT - fX*fX - fY*fY - fZ*fZ;}
+      Scalar M2() const { return fT*fT - fX*fX - fY*fY - fZ*fZ;}
       
       /**
         vector invariant mass 
        */
-      T M() const    { 
-        T mm = M2();
+      Scalar M() const    { 
+        Scalar mm = M2();
         return mm < 0.0 ? -std::sqrt(-mm) : std::sqrt(mm);
       }
       
       /** 
         transverse spatial component squared  
         */
-      T Perp2() const { return fX*fX + fY*fY;}
+      Scalar Perp2() const { return fX*fX + fY*fY;}
       
       /**
         Transverse spatial component (rho)
        */
-      T Rho() const { return std::sqrt( Perp2());}
-      T Pt() const { return std::sqrt( Perp2());}
+      Scalar Rho() const { return std::sqrt( Perp2());}
+      Scalar Pt() const { return std::sqrt( Perp2());}
 
       
       /** 
         transverse mass squared
         */
-      T Mt2() const { return fT*fT - fZ*fZ; } 
+      Scalar Mt2() const { return fT*fT - fZ*fZ; } 
       
       /**
         transverse mass
        */
-      T Mt() const { 
-        T mm = Mt2();
+      Scalar Mt() const { 
+        Scalar mm = Mt2();
         return mm < 0.0 ? -std::sqrt(-mm) : std::sqrt(mm);
       } 
       
       /** 
         transverse energy squared
         */
-      T Et2() const {  // is (E^2 * pt ^2) / p^2 but faster to express p in terms of pt
-        T pt2 = Perp2();
+      Scalar Et2() const {  // is (E^2 * pt ^2) / p^2 but faster to express p in terms of pt
+        Scalar pt2 = Perp2();
         return pt2 == 0 ? 0 : fT*fT * pt2/( pt2 + fZ*fZ );
       }
       
       /**
         transverse energy
        */
-      T Et() const { 
-        T etet = Et2();
+      Scalar Et() const { 
+        Scalar etet = Et2();
         return fT < 0.0 ? -std::sqrt(etet) : std::sqrt(etet);
       }
       
       /**
         azimuthal angle 
        */
-      T Phi() const  { return fX == 0.0 && fY == 0.0 ? 0.0 : std::atan2(fY,fX);}
+      Scalar Phi() const  { return fX == 0.0 && fY == 0.0 ? 0.0 : std::atan2(fY,fX);}
       
       /**
         polar angle
        */
-      T Theta() const {
+      Scalar Theta() const {
         return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : std::atan2(Rho(),fZ);
       }
       
       /** 
         pseudorapidity
         */
-      T Eta() const { 
-        T rho = Rho();
+      Scalar Eta() const { 
+        Scalar rho = Rho();
         if (rho > 0) {
-          T z_scaled(fZ/rho);
+          Scalar z_scaled(fZ/rho);
           return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); // faster 
         } else if (fZ==0) {
           return 0;
         } else if (fZ>0) {
-          return fZ + etaMax<T>();
+          return fZ + etaMax<ValueType>();
         }  else {
-          return fZ - etaMax<T>();
+          return fZ - etaMax<ValueType>();
         }
       }
       
@@ -183,32 +183,32 @@ namespace ROOT {
       /**
         set X value 
        */
-      void setX( T  x) { 
+      void setX( Scalar  x) { 
         fX = x; 
       }
       /**
         set Y value 
        */
-      void setY( T  y) { 
+      void setY( Scalar  y) { 
         fX = y; 
       }
       /**
         set Z value 
        */
-      void setZ( T  z) { 
+      void setZ( Scalar  z) { 
         fX = z; 
       }
       /**
         set T value 
        */
-      void setT( T  t) { 
+      void setT( Scalar  t) { 
         fT = t; 
       }
       
       /**
         scale coordinate values by a scalar quantity a
        */
-      void Scale( const T & a) { 
+      void Scale( const Scalar & a) { 
         fX *= a; 
         fY *= a; 
         fZ *= a; 
@@ -217,14 +217,14 @@ namespace ROOT {
       
       
       /**
-        Assignment from a generic coordinate system implementing X(), Y(), Z() and E()
+        Assignment from a generic coordinate system implementing X(), Y(), Z() and T()
        */
       template <class AnyCoordSystem> 
         Cartesian4D & operator = (const AnyCoordSystem & v) { 
           fX = v.X();  
           fY = v.Y();  
           fZ = v.Z();  
-          fT = v.E();
+          fT = v.T();
           return *this;
         }
       
@@ -232,10 +232,10 @@ namespace ROOT {
       
       // The following make this coordinate system look enough like a CLHEP
       // vector that an assignment member template can work with either
-      T x() const { return X();}
-      T y() const { return Y();}
-      T z() const { return Z(); } 
-      T t() const { return E(); } 
+      Scalar x() const { return X();}
+      Scalar y() const { return Y();}
+      Scalar z() const { return Z(); } 
+      Scalar t() const { return T(); } 
       
       
       
@@ -245,10 +245,10 @@ namespace ROOT {
         (contigous) data containing the coordinate values x,y,z,t
       */
 
-      T fX;
-      T fY;
-      T fZ;
-      T fT;
+      Scalar fX;
+      Scalar fY;
+      Scalar fZ;
+      Scalar fT;
       
     }; 
     

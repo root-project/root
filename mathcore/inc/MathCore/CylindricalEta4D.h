@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta4D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta4D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -35,16 +35,16 @@ namespace ROOT {
 	threfore there is NO method returning a pointer to the data
     */ 
     
-    template <class T> 
+    template <class ValueType> 
     class CylindricalEta4D { 
       
     public : 
       
-      typedef T Scalar;
+      typedef ValueType Scalar;
       
       CylindricalEta4D() : fPt(0), fEta(0), fPhi(0), fE(0) {}
       
-      CylindricalEta4D(T  pt, T  eta, T  phi, T  e) :   
+      CylindricalEta4D(Scalar  pt, Scalar  eta, Scalar  phi, Scalar  e) :   
         fPt(pt),
         fEta(eta),
         fPhi(phi),
@@ -52,14 +52,14 @@ namespace ROOT {
       {}
       
       /**
-        Generic constructor from any 4D coordinate system implementing Pt(), Eta(), Phi() and E()  
+        Generic constructor from any 4D coordinate system implementing Pt(), Eta(), Phi() and T()  
        */ 
       template <class CoordSystem > 
         explicit CylindricalEta4D(const CoordSystem & c) : 
         fPt(c.Pt()),
         fEta(c.Eta()),
         fPhi(c.Phi()),
-        fE(c.E())
+        fE(c.T())
       {}
       
       
@@ -68,82 +68,82 @@ namespace ROOT {
       /**
         Set internal data based on an array of 4 Scalar numbers
        */ 
-      void SetCoordinates( const T * src ) { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fE=src[3]; }
+      void SetCoordinates( const Scalar * src ) { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fE=src[3]; }
       
       /**
         get internal data into an array of 3 Scalar numbers
        */ 
-      void GetCoordinates( T * dest ) const 
+      void GetCoordinates( Scalar * dest ) const 
       { dest[0] = fPt; dest[1] = fEta; dest[2] = fPhi; dest[3] = fE; }
       
       /**
         Set internal data based on 3 Scalar numbers
        */ 
-      void SetCoordinates(T  pt, T  eta, T  phi, T  e) { fPt=pt; fEta = eta; fPhi = phi; fE = e; }
+      void SetCoordinates(Scalar  pt, Scalar  eta, Scalar  phi, Scalar  e) { fPt=pt; fEta = eta; fPhi = phi; fE = e; }
       
       /**
         get internal data into 3 Scalar numbers
        */ 
-      void GetCoordinates(T& pt, T & eta, T & phi, T& e) const { pt=fPt; eta=fEta; phi = fPhi; e = fE; }
+      void GetCoordinates(Scalar & pt, Scalar & eta, Scalar & phi, Scalar & e) const { pt=fPt; eta=fEta; phi = fPhi; e = fE; }
   	
       
       
-      T X() const { return fPt*cos(fPhi);}
+      Scalar X() const { return fPt*cos(fPhi);}
 
-      T Y() const { return fPt*sin(fPhi);}
+      Scalar Y() const { return fPt*sin(fPhi);}
 
-      T Z()     const {
+      Scalar Z()     const {
         return fPt >  0 ? fPt*std::sinh(fEta) : 
         fEta == 0 ? 0                    :
-        fEta >  0 ? fEta - etaMax<T>()   :
-        fEta + etaMax<T>(); 
+        fEta >  0 ? fEta - etaMax<ValueType>()   :
+        fEta + etaMax<ValueType>(); 
       }
       
-      T E() const { return fE; }
+      Scalar T() const { return fE; }
       
       
-      T R() const { return fPt*std::cosh(fEta); } 
+      Scalar R() const { return fPt*std::cosh(fEta); } 
       
-      T M2() const { return fE*fE - R()*R(); }
+      Scalar M2() const { return fE*fE - R()*R(); }
       
-      T M() const  { 
+      Scalar M() const  { 
         double mm = M2();
         return mm < 0.0 ? -std::sqrt(-mm) : std::sqrt(mm);
       }  
       
       
-      T Perp2() const { return fPt*fPt;}
+      Scalar Perp2() const { return fPt*fPt;}
       
-      T Rho() const { return fPt;} 
+      Scalar Rho() const { return fPt;} 
       
-      T Mt2() const { return fE*fE  - Z()*Z(); } 
+      Scalar Mt2() const { return fE*fE  - Z()*Z(); } 
       
-      T Mt() const { 
+      Scalar Mt() const { 
         double mm = Mt2();
         return mm < 0.0 ? -std::sqrt(-mm) : std::sqrt(mm);
       } 
       
-      T Et2() const { return Et()*Et(); }
+      Scalar Et2() const { return Et()*Et(); }
       
-      T Et() const { 
+      Scalar Et() const { 
         return fE / std::cosh(fEta); // not sure if this is fastest impl.
       }
       
-      T Phi() const  { return fPhi;}
+      Scalar Phi() const  { return fPhi;}
       
-      T Theta() const {
+      Scalar Theta() const {
         return  2* std::atan( exp( - fEta ) );
       }
       
       // pseudorapidity
-      T Eta() const { return fEta; } 
+      Scalar Eta() const { return fEta; } 
       
       // setters 
       
       /**
         Set the coordinate value Pt, Eta, Phi and E
        */
-      void SetValues(const T & Pt, const T & Eta, const T & Phi, const T & E) { 
+      void SetValues(const Scalar & Pt, const Scalar & Eta, const Scalar & Phi, const Scalar & E) { 
         fPt = Pt;  
         fEta = Eta; 
         fPhi = Phi; 
@@ -151,18 +151,18 @@ namespace ROOT {
       }
 
       // Set Data members
-      void SetPt(const T & Pt) { fPt = Pt; }
+      void SetPt(const Scalar & Pt) { fPt = Pt; }
       
-      void SetEta(const T & Eta) { fEta = Eta; }
+      void SetEta(const Scalar & Eta) { fEta = Eta; }
       
-      void SetPhi(const T & Phi) { fPhi = Phi; }
+      void SetPhi(const Scalar & Phi) { fPhi = Phi; }
       
-      void SetE(const T & E) { fE = E; }
+      void SetE(const Scalar & E) { fE = E; }
       
       /**
         Scale coordinate values by a scalar quantity a
        */
-      void Scale( const T & a) { 
+      void Scale( const Scalar & a) { 
         fPt *= a; 
         fE *= a; 
       }
@@ -178,7 +178,7 @@ namespace ROOT {
           fPt = c.Pt(); 
           fEta = c.Eta();
           fPhi = c.Phi(); 
-          fE = c.E(); 
+          fE = c.T(); 
           return *this;
         }
       
@@ -186,19 +186,19 @@ namespace ROOT {
   
       // The following make this coordinate system look enough like a CLHEP
       // vector that an assignment member template can work with either
-      T x() const { return X();}
-      T y() const { return Y();}
-      T z() const { return Z(); } 
-      T t() const { return E(); } 
+      Scalar x() const { return X();}
+      Scalar y() const { return Y();}
+      Scalar z() const { return Z(); } 
+      Scalar t() const { return T(); } 
 
       
       
     private:
         
-      T fPt;
-      T fEta;
-      T fPhi;
-      T fE; 
+      Scalar fPt;
+      Scalar fEta;
+      Scalar fPhi;
+      Scalar fE; 
       
     };
     

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: etaMax.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: etaMax.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -45,10 +45,10 @@ namespace ROOT {
         Function providing the maximum possible value of pseudorapidity for
         a non-zero rho, in the Scalar type with the largest dynamic range.
      */
-    template <class T>
+    template <class ValueType>
     inline
-    T etaMax() {
-      return static_cast<T>(22756.0);
+    ValueType etaMax() {
+      return static_cast<ValueType>(22756.0);
     }
 
   } // namespace Math

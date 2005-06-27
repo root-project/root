@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -33,6 +33,10 @@ namespace ROOT {
     // utility functions for vector classes in global space 
 
     XYZVector operator * (double a, XYZVector v) { 
+      return v *= a;
+    }
+
+    XYZTVector operator * (double a, XYZTVector v) { 
       return v *= a;
     }
     

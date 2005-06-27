@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.2 2005/06/25 20:42:04 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.2 2005/06/25 20:42:04 brun Exp $
 //
 #ifndef ROOT_Math_DisplacementVector3D 
 #define ROOT_Math_DisplacementVector3D 1
@@ -185,7 +185,7 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin, IT end ) const
-                            { fCoordinates.GetCoordinates(begin); }
+                            { fCoordinates.GetCoordinates(&(*begin)); }
 
       /**
          get internal data into an array of 3 Scalar numbers
