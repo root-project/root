@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.29 2005/03/07 09:15:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.30 2005/04/17 14:12:50 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -328,7 +328,9 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
    Double_t dersum[100], grad[100];
    Double_t x[3];
    Int_t bin,binx,biny,binz,k;
-   Axis_t binlow, binup, binsize;
+   Axis_t binxlow, binxup, binxsize;
+   Axis_t binylow, binyup, binysize;
+   Axis_t binzlow, binzup, binzsize;
 
    Int_t npfits = 0;
 
@@ -354,8 +356,14 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
    
    for (binz=hzfirst;binz<=hzlast;binz++) {
       x[2]  = zaxis->GetBinCenter(binz);
+      binzlow  = zaxis->GetBinLowEdge(binz);
+      binzsize = zaxis->GetBinWidth(binz);
+      binzup   = binzlow + binzsize;
       for (biny=hyfirst;biny<=hylast;biny++) {
          x[1]  = yaxis->GetBinCenter(biny);
+         binylow  = yaxis->GetBinLowEdge(biny);
+         binysize = yaxis->GetBinWidth(biny);
+         binyup   = binylow + binysize;
          for (binx=hxfirst;binx<=hxlast;binx++) {
             x[0]  = xaxis->GetBinCenter(binx);
             if (!f1->IsInside(x)) continue;
@@ -363,10 +371,18 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
             cu  = hfit->GetBinContent(bin);
             TF1::RejectPoint(kFALSE);
             if (Foption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = f1->Integral(binlow,binup,u)/binsize;
+               binxlow  = xaxis->GetBinLowEdge(binx);
+               binxsize = xaxis->GetBinWidth(binx);
+               binxup   = binxlow + binxsize;
+               if (hfit->GetDimension() < 2) {
+                  fu = f1->Integral(binxlow,binxup,u)/binxsize;
+               } else if (hfit->GetDimension() < 3) {
+                  f1->SetParameters(u);
+                  fu = f1->Integral(binxlow,binxup,binylow,binyup)/(binxsize*binysize);
+               } else {
+                  f1->SetParameters(u);
+                  fu = f1->Integral(binxlow,binxup,binylow,binyup,binzlow,binzup)/(binxsize*binysize*binzsize);
+               }
             } else {
                fu = f1->EvalPar(x,u);
             }
