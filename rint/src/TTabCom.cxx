@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.25 2004/08/21 09:33:40 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.26 2004/11/03 11:04:25 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -152,6 +152,8 @@
 #define IfDebug(x)  if(gDebug==TTabCom::kDebug) x
 
 #ifdef R__WIN32
+#undef tmpnam
+#define tmpnam(a) _tempnam(a, 0)
 const char kDelim = ';';
 #else
 const char kDelim = ':';
