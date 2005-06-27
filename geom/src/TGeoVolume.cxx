@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.62 2005/06/13 12:17:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.63 2005/06/14 15:47:02 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -466,6 +466,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
          sprintf(num,"%i", i);
          memcpy(name+2+ndigits-strlen(num), num, strlen(num));
          obj->SetName(name);
+         delete [] name;
       }   
       printf("   number of illegal overlaps/extrusions : %d\n", novlps);
    }   
@@ -669,6 +670,7 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
    node->SetName(name);
+   delete [] name;
    node->SetNumber(copy_no);
 }
 
@@ -693,6 +695,7 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    char *name = new char[strlen(vol->GetName())+7];
    sprintf(name, "%s_%i", vol->GetName(), copy_no+1);
    node->SetName(name);
+   delete [] name;
    node->SetNumber(copy_no+1);
 }
 
@@ -732,6 +735,7 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
    node->SetName(name);
+   delete [] name;
    node->SetNumber(copy_no);
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
@@ -1228,6 +1232,7 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    sprintf(name, "%s", GetName());
    // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
+   delete [] name;
    Int_t i;
    // copy volume attributes
    vol->SetLineColor(GetLineColor());
@@ -1284,6 +1289,7 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
     sprintf(name, "%s", GetName());
     // build a volume with same name, shape and medium
     TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
+    delete [] name;
     Int_t i=0;
     // copy volume attributes
     vol->SetVisibility(IsVisible());
@@ -1763,6 +1769,7 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
     sprintf(name, "%s", GetName());
     // build a volume with same name, shape and medium
     TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
+    delete [] name;
     Int_t i=0;
     // copy volume attributes
     vol->SetVisibility(IsVisible());

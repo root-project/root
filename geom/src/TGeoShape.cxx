@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.30 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.31 2005/05/25 14:25:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -432,6 +432,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
       // Set up local -> master translation matrix
       if (localFrame) {
          TGeoMatrix * localMasterMat = gGeoManager->GetCurrentMatrix();
+         if (gGeoManager->IsMatrixTransform()) localMasterMat = gGeoManager->GetGLMatrix();
          if (!localMasterMat) { 
             assert(kFALSE); 
             return; 
