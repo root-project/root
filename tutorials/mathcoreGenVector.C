@@ -1,11 +1,24 @@
-// macro to test mathcore GenVector classes 
+// Example macro to test available methods and operation on the 
+// mathcore GenVector classes. The results are compared and check at the 
+// numerical precision levels. 
+// Some small discrepancy can appear when the macro 
+// is executed on different architectures where it has been calibrated (Power PC G5)
+// The macro is divided in 4 parts: 
+//    - testVector3D          :  tests of the 3D Vector classes
+//    - testPoint3D           :  tests of the 3D Point classes
+//    - testLorentzVector     :  tests of the 4D LorentzVector classes
+//    - testVectorUtil        :  tests of the utility functions of all the vector classes
+//
+// To execute the macro type in: 
+//
+// root[0]: .x  mathcoreGenVector.C
+
 
 int ntest = 0; 
 int nfail = 0; 
 int ok = 0;
 
 void mathcoreGenVector() {
-
 
   gSystem->Load("libMathCore");
   using namespace ROOT::Math;
@@ -131,10 +144,8 @@ int testVector3D() {
   ok+= compare(1.0,vu.R(),"unit ");
 
   XYZVector q1 = v1;
-  // RhoEtaPhiVector q2 = v1;  ! copy constructor between different vector does not work yet)  
-  RhoEtaPhiVector q2; 
-  q2 = v1;
-  q2.Coordinates().SetPhi(2.0);
+  // RhoEtaPhiVector q2 = v1;  ! copy onstructor between different vector does not work yet)  
+  RhoEtaPhiVector q2(1.0,1.0,1.0);
   
   XYZVector q3 = q1 + q2; 
   XYZVector q4 = q3 - q2; 
@@ -144,6 +155,26 @@ int testVector3D() {
   ok+= compare( q4.Z(), q1.Z(), "op Z" );
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
+
+
+  //test setters
+ 
+  std::cout << "Test Setters :                  " ;
+
+  q2.SetXYZ(q1.X(), q1.Y(), q1.Z() );
+
+  ok+= compare( q2.X(), q1.X(), "setXYZ X"  );
+  ok+= compare( q2.Y(), q1.Y(), "setXYZ Y" );
+  ok+= compare( q2.Z(), q1.Z(), "setXYZ Z" );
+
+  q2.SetCoordinates( 2.0*q1.Rho(), q1.Eta(), q1.Phi() );
+  q1s = 2.0*q1;
+  ok+= compare( q2.X(), q1s.X(), "set X"  );
+  ok+= compare( q2.Y(), q1s.Y(), "set Y" );
+  ok+= compare( q2.Z(), q1s.Z(), "set Z" );
+  
+
+  if (ok == 0) std::cout << "\t\t OK " << std::endl;
 
   std::cout << "Test Linear Algebra conversion: " ;
 
@@ -156,7 +187,7 @@ int testVector3D() {
   vla2[0] = 1.; vla2[1] = -2.; vla2[2] = 1.;
 
   XYZVector vxyz2; 
-  vxyz2.AssignFrom(vla2, 0);
+  vxyz2.SetCoordinates(&vla2[0]);
 
   ok = 0; 
   double prod1 =  vxyz1.Dot(vxyz2); 
@@ -179,6 +210,7 @@ int testPoint3D() {
 
   int ret = 0;
 
+  //XYZPoint p1(0.00001, 0.00001, 30000000000.0);
   XYZPoint p1(1.0, 2.0, 3.0);
 
   std::cout << "Test Cartesian-Polar :          ";
@@ -186,14 +218,14 @@ int testPoint3D() {
   Polar3DPoint p2(p1.R(), p1.Theta(), p1.Phi() );
 
   ok = 0;
-  ok+= compare(p1.X(), p2.X(), "x"); 
-  ok+= compare(p1.Y(), p2.Y(), "y"); 
-  ok+= compare(p1.Z(), p2.Z(), "z"); 
-  ok+= compare(p1.Phi(), p2.Phi(), "phi"); 
-  ok+= compare(p1.Theta(), p2.Theta(), "theta"); 
-  ok+= compare(p1.R(), p2.R(), "r"); 
-  ok+= compare(p1.Eta(), p2.Eta(), "eta"); 
-  ok+= compare(p1.Rho(), p2.Rho(), "rho"); 
+  ok+= compare(p1.x(), p2.X(), "x"); 
+  ok+= compare(p1.y(), p2.Y(), "y"); 
+  ok+= compare(p1.z(), p2.Z(), "z"); 
+  ok+= compare(p1.phi(), p2.Phi(), "phi"); 
+  ok+= compare(p1.theta(), p2.Theta(), "theta"); 
+  ok+= compare(p1.r(), p2.R(), "r"); 
+  ok+= compare(p1.eta(), p2.Eta(), "eta"); 
+  ok+= compare(p1.rho(), p2.Rho(), "rho"); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -226,7 +258,8 @@ int testPoint3D() {
 
   //RhoEtaPhiPoint q1 = p1;  ! constructor yet not working in CINT
   RhoEtaPhiPoint q1; q1 = p1; 
-  q1.Coordinates().SetEta(2.0);
+  q1.SetCoordinates(p1.Rho(),2.0, p1.Phi() );
+
   Polar3DVector v2(p1.R(), p1.Theta(),p1.Phi()); 
 
   
@@ -245,6 +278,8 @@ int testPoint3D() {
 //   ok+= compare( v4.Y(), v2.Y(), "op Y" );
 //   ok+= compare( v4.Z(), v2.Z(), "op Z" );
 
+
+
 }
 
 
@@ -259,24 +294,24 @@ int testLorentzVector() {
 
   int ret = 0;
 
-  //LorentzVector v1(0.00001, 0.00001, 30000000000.0);
-  LorentzVector v1(1.0, 2.0, 3.0, 4.0);
+  //XYZTVector v1(0.00001, 0.00001, 30000000000.0);
+  XYZTVector v1(1.0, 2.0, 3.0, 4.0);
 
 
   std::cout << "Test Cartesian-Cylindrical4D :  ";
 
-  LorentzVectorPtEtaPhiE v2( v1.Rho(), v1.Eta(), v1.Phi(), v1.E() ); 
+  PtEtaPhiEVector v2( v1.Rho(), v1.Eta(), v1.Phi(), v1.E() ); 
 
   ok = 0;
-  ok+= compare(v1.X(), v2.X(), "x"); 
-  ok+= compare(v1.Y(), v2.Y(), "y"); 
-  ok+= compare(v1.Z(), v2.Z(), "z", 2); 
-  ok+= compare(v1.E(), v2.E(), "e"); 
+  ok+= compare(v1.Px(), v2.X(), "x"); 
+  ok+= compare(v1.Py(), v2.Y(), "y"); 
+  ok+= compare(v1.Pz(), v2.Z(), "z", 2); 
+  ok+= compare(v1.E(), v2.T(), "e"); 
   ok+= compare(v1.Phi(), v2.Phi(), "phi"); 
   ok+= compare(v1.Theta(), v2.Theta(), "theta"); 
   ok+= compare(v1.Pt(), v2.Pt(), "pt"); 
   ok+= compare(v1.M(), v2.M(), "mass", 5); 
-  ok+= compare(v1.et(), v2.et(), "et"); 
+  ok+= compare(v1.Et(), v2.Et(), "et"); 
   ok+= compare(v1.Mt(), v2.Mt(), "mt", 3); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
@@ -290,26 +325,45 @@ int testLorentzVector() {
 
   //std::cout << "\nTest scaling : " ;
 
-  LorentzVector vscale1 = v1*10;
-  LorentzVector vscale2 = vscale1/10;
+  XYZTVector vscale1 = v1*10;
+  XYZTVector vscale2 = vscale1/10;
   ok+= compare( v1.M(), vscale2.M(), "scale");
 
 
-  LorentzVector q1 = v1;
+  XYZTVector q1 = v1;
   // RhoEtaPhiVector q2 = v1;  ! copy onstructor between different vector does not work yet)  
-  LorentzVectorPtEtaPhiE  q2; 
-  q2 = v1;
-  q2.Coordinates().SetEta(2.0);
+  PtEtaPhiEVector  q2(1.0,1.0,1.0,5.0); 
   
-  LorentzVector q3 = q1 + q2; 
-  LorentzVector q4 = q3 - q2; 
+  XYZTVector q3 = q1 + q2; 
+  XYZTVector q4 = q3 - q2; 
 
-  ok+= compare( q4.X(), q1.X(), "op X"  );
-  ok+= compare( q4.Y(), q1.Y(), "op Y" );
-  ok+= compare( q4.Z(), q1.Z(), "op Z" );
-  ok+= compare( q4.E(), q1.E(), "op E" );
+  ok+= compare( q4.x(), q1.X(), "op X"  );
+  ok+= compare( q4.y(), q1.Y(), "op Y" );
+  ok+= compare( q4.z(), q1.Z(), "op Z" );
+  ok+= compare( q4.t(), q1.E(), "op E" );
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
+
+  //test setters
+ 
+  std::cout << "Test Setters :                  " ;
+
+  q2.SetXYZT(q1.Px(), q1.Py(), q1.Pz(), q1.E() );
+
+  ok+= compare( q2.X(), q1.X(), "setXYZT X"  );
+  ok+= compare( q2.Y(), q1.Y(), "setXYZT Y" );
+  ok+= compare( q2.Z(), q1.Z(), "setXYZT Z" ,2);
+  ok+= compare( q2.T(), q1.E(), "setXYZT E" );
+
+  q2.SetCoordinates( 2.0*q1.Rho(), q1.Eta(), q1.Phi(), 2.0*q1.E() );
+  q1s = q1*2.0;
+  ok+= compare( q2.X(), q1s.X(), "set X"  );
+  ok+= compare( q2.Y(), q1s.Y(), "set Y" );
+  ok+= compare( q2.Z(), q1s.Z(), "set Z" ,2);
+  ok+= compare( q2.T(), q1s.T(),  "set E" );
+ 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
 
 
 }
@@ -371,16 +425,16 @@ int testVectorUtil() {
   std::cout << "LorentzVector utility funct.:   ";
 
 
-  LorentzVector q1(1.0, 2.0, 3.0,4.0); 
-  LorentzVectorPtEtaPhiE q2cyl(q1.Pt(), q1.Eta()+1.0, q1.Phi() + 1.0, q1.E() ); 
+  XYZTVector q1(1.0, 2.0, 3.0,4.0); 
+  PtEtaPhiEVector q2cyl(q1.Pt(), q1.Eta()+1.0, q1.Phi() + 1.0, q1.E() ); 
   // mixedmethods not yet impl. 
-  LorentzVector q2; q2 = q2cyl; 
+  XYZTVector q2; q2 = q2cyl; 
 
   ok = 0; 
   ok += compare( VectorUtil::DeltaPhi(q1,q2), 1.0, "deltaPhi LVec");
   ok += compare( VectorUtil::DeltaR(q1,q2), sqrt(2.0), "DeltaR LVec");
   
-  LorentzVector qsum = q1+q2; 
+  XYZTVector qsum = q1+q2; 
   ok += compare( VectorUtil::InvariantMass(q1,q2), qsum.M(), "InvMass");
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
