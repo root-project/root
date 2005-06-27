@@ -76,7 +76,10 @@ void create()
 
 TChain* chains[noChains];
 
+Bool_t gVerbose = kTRUE;
+
 void testChainFriendsWithIndex(int what = 3) {
+   if (what & 4) gVerbose = kFALSE;
    if (what & 1) create();
    if (what & 2) {
       for (Int_t i = 0; i < noChains; i++)
@@ -94,7 +97,8 @@ void testChainFriendsWithIndex(int what = 3) {
          }
       chains[1]->BuildIndex("val", "val2");
       chains[0]->AddFriend(chains[1],"");
-      chains[0]->Scan("f.val:e.val","","",20);
+      if (gVerbose) chains[0]->Scan("f.val:e.val:f.val-e.val","","colsize=13",20);
+      else chains[0]->Scan("f.val-e.val","","colsize=13",20);
    }
 }
 

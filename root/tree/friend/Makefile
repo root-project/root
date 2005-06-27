@@ -60,7 +60,7 @@ treefriend: treefriend.log
 	$(TestDiff)
 
 FriendsIndices.log: testFriendsIndices_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l testFriendsIndices.C+ > FriendsIndices.log
+	$(CMDECHO) root.exe -q -b -l 'testFriendsIndices.C+(7)' > FriendsIndices.log
 
 FriendsIndices: FriendsIndices.log
 	$(TestDiff)
