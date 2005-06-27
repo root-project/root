@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.36 2005/03/10 19:19:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.37 2005/06/09 15:20:17 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TGTextEditDialogs.h"
 #include "TGResourcePool.h"
 #include "TGMsgBox.h"
+#include "TError.h"
 #include "Riostream.h"
 
 
@@ -96,17 +97,17 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 
    if (!opened)
       opened = fClient->GetPicture("ofolder_t.xpm");
-   else 
-      ((TRefCnt *)opened)->AddReference();
+   else
+      ((TGPicture *)opened)->AddReference();
 
    if (!closed)
       closed = fClient->GetPicture("folder_t.xpm");
    else
-      ((TRefCnt *)closed)->AddReference();
+      ((TGPicture *)closed)->AddReference();
 
    fOpenPic   = opened;
    fClosedPic = closed;
-   
+
    fPicWidth  = TMath::Max(fOpenPic->GetWidth(), fClosedPic->GetWidth());
 
    fOpen = fActive = kFALSE;
@@ -139,16 +140,27 @@ void TGListTreeItem::Rename(const char *new_name)
 }
 
 //___________________________________________________________________________
-void TGListTreeItem::SetPictures(const TGPicture* opened, const TGPicture* closed)
+void TGListTreeItem::SetPictures(const TGPicture *opened, const TGPicture *closed)
 {
    // Change list tree item icons.
 
    fClient->FreePicture(fOpenPic);
    fClient->FreePicture(fClosedPic);
+
+   if (!opened) {
+      ::Warning("TGListTreeItem::SetPictures", "opened picture not specified, defaulting to ofolder_t");
+      opened = fClient->GetPicture("ofolder_t.xpm");
+   } else
+      ((TGPicture *)opened)->AddReference();
+
+   if (!closed) {
+      ::Warning("TGListTreeItem::SetPictures", "closed picture not specified, defaulting to folder_t");
+      closed = fClient->GetPicture("folder_t.xpm");
+   } else
+      ((TGPicture *)closed)->AddReference();
+
    fOpenPic   = opened;
    fClosedPic = closed;
-   ((TRefCnt *)fOpenPic)->AddReference();
-   ((TRefCnt *)fClosedPic)->AddReference();
 }
 
 
@@ -235,7 +247,7 @@ TGListTree::~TGListTree()
 
    item = fFirst;
    while (item) {
-      if (item->fFirstchild) 
+      if (item->fFirstchild)
          PDeleteChildren(item->fFirstchild);
       sibling = item->fNextsibling;
       delete item;
