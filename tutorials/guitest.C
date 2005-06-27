@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.54 2005/06/08 06:14:51 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.55 2005/06/22 15:11:10 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -803,7 +803,7 @@ void TestMainFrame::HandleMenu(Int_t id)
             static TString dir(".");
             TGFileInfo fi;
             fi.fFileTypes = filetypes;
-            fi.fIniDir    = StrDup(dir.Data());
+            fi.fIniDir    = StrDup(dir);
             printf("fIniDir = %s\n", fi.fIniDir);
             new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
             printf("Open file: %s (dir: %s)\n", fi.fFilename, fi.fIniDir);
@@ -1857,7 +1857,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    TString dirname = item->GetText();
 
    while ((parent=item->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname.Data());
+      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
       item = parent;
    }
 
@@ -1873,7 +1873,7 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
    // use  UserData to indicate that item was already browsed
    item->SetUserData((void*)1);
 
-   TSystemDirectory dir(item->GetText(),DirName(item).Data());
+   TSystemDirectory dir(item->GetText(),DirName(item));
 
    TList *files = dir.GetListOfFiles();
 
@@ -1886,10 +1886,10 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
          fname = file->GetName();
          if (file->IsDirectory()) {
             if ((fname!="..") && (fname!=".")) { // skip it
-               fContents->AddItem(item,fname.Data());
+               fContents->AddItem(item,fname);
             }
          } else if (fname.EndsWith(".root")) {   // add root files
-            fContents->AddItem(item,fname.Data(),fIcon,fIcon);
+            fContents->AddItem(item,fname,fIcon,fIcon);
          }
       }
       delete files;
@@ -1987,7 +1987,7 @@ void TestFileList::DisplayFile(const TString &fname)
       fContents->AddItem(entry);
 
       // user data is a filename
-      entry->SetUserData((void*)StrDup(fname.Data()));
+      entry->SetUserData((void*)StrDup(fname));
    }
    fMain->Resize();
 }

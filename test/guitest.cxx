@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.51 2005/04/19 09:10:59 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.52 2005/06/22 15:11:10 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1738,7 +1738,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    TString dirname = item->GetText();
 
    while ((parent=item->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname.Data());
+      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
       item = parent;
    }
 
@@ -1760,7 +1760,7 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
    // use  UserData to indicate that item was already browsed
    item->SetUserData((void*)1);
 
-   TSystemDirectory dir(item->GetText(),DirName(item).Data());
+   TSystemDirectory dir(item->GetText(),DirName(item));
 
    TList *files = dir.GetListOfFiles();
 
@@ -1773,10 +1773,10 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
          fname = file->GetName();
          if (file->IsDirectory()) {
             if ((fname!="..") && (fname!=".")) { // skip it
-               fContents->AddItem(item,fname.Data());
+               fContents->AddItem(item,fname);
             }
          } else if (fname.EndsWith(".root")) {   // add root files
-            fContents->AddItem(item,fname.Data(),fIcon,fIcon);
+            fContents->AddItem(item,fname,fIcon,fIcon);
          }
       }
       delete files;
@@ -1861,7 +1861,7 @@ void TestFileList::DisplayFile(const TString &fname)
       fContents->AddItem(entry);
 
       // user data is a filename
-      entry->SetUserData((void*)StrDup(fname.Data()));
+      entry->SetUserData((void*)StrDup(fname));
    }
    Resize();
 }
