@@ -1,12 +1,12 @@
 //
 // Cint macro as an example to write a std vector of ROOT::Math LorentzVector 
 // (XYZTVector) in a tree and to read back. 
-// In the write() funciton a variable number of track Vector is generate 
+// In the write() function a variable number of track Vectors is generated 
 // according to a Poisson distribution with random momentum uniformly distributed 
 // in phi and eta. 
-// In the read() the vectors are read back and the content analyzed and some information // such as nnumber of track per event or the track pt distributions are displayed 
-// in a canvas.
-//
+// In the read() the vectors are read back and the content analyzed and 
+// some information such as number of tracks per event or the track pt 
+// distributions are displayed  in a canvas. 
 //
 // To execute the macro type in: 
 //
