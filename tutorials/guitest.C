@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.55 2005/06/22 15:11:10 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.56 2005/06/27 15:34:53 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -291,6 +291,7 @@ public:
    virtual ~TestDialog();
 
    // slots
+   void DoClose();
    void CloseWindow();
    void DoOK();
    void DoCancel();
@@ -323,6 +324,7 @@ public:
    virtual ~TestMsgBox();
 
    // slots
+   void TryToClose();
    void CloseWindow();
    void DoClose();
    void DoRadio();
@@ -657,6 +659,10 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuView->CheckEntry(M_VIEW_ENBL_DOCK);
    fMenuView->CheckEntry(M_VIEW_ENBL_HIDE);
 
+   // When using the DockButton of the MenuDock,
+   // the states 'enable' and 'disable' of menus have to be updated.
+   fMenuDock->Connect("Undocked()", "TestMainFrame", this, "HandleMenu(=M_VIEW_UNDOCK)");
+
    fMenuHelp = new TGPopupMenu(gClient->GetRoot());
    fMenuHelp->AddEntry("&Contents", M_HELP_CONTENTS);
    fMenuHelp->AddEntry("&Search...", M_HELP_SEARCH);
@@ -949,7 +955,8 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    // "main" window.
 
    fMain = new TGTransientFrame(p, main, w, h, options);
-   fMain->Connect("CloseWindow()", "TestDialog", this, "CloseWindow()");
+   fMain->Connect("CloseWindow()", "TestDialog", this, "DoClose()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1193,6 +1200,20 @@ void TestDialog::FillHistos()
    }
 }
 
+void TestDialog::DoClose()
+{
+   printf("\nTerminating dialog: via window manager\n");
+   if (fFillHistos) {
+      fFillHistos = kFALSE;
+      TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
+   } else
+      CloseWindow();
+
+   // Close the Ged editor if it was activated.
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
+}
+
 void TestDialog::CloseWindow()
 {
    // Called when window is closed via the window manager.
@@ -1346,6 +1367,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h, options);
    fMain->Connect("CloseWindow()", "TestMsgBox", this, "CloseWindow()");
+   fMain->DontCallClose();
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1517,9 +1539,24 @@ void TestMsgBox::DoTest()
          break;
       }
 
+   // Since the message dialog box is created, we disable the
+   // signal/slot communication mechanism, in order to ensure we
+   // can't close the fMain window while the message box is open.
+   fMain->Disconnect("CloseWindow()");
+   fMain->Connect("CloseWindow()", "TestMsgBox", this, "TryToClose()");
    new TGMsgBox(gClient->GetRoot(), fMain,
                 fTbtitle->GetString(), fTbmsg->GetString(),
                 icontype, buttons, &retval);
+   fMain->Disconnect("CloseWindow()");
+   fMain->Connect("CloseWindow()", "TestMsgBox", this, "CloseWindow()");
+
+}
+
+void TestMsgBox::TryToClose()
+{
+   // The user try to close the main window,
+   //  while a message dialog box is still open.
+   printf("Can't close the window '%s' : a message box is still open\n", fMain->GetWindowName());
 }
 
 void TestMsgBox::DoRadio()
@@ -1690,22 +1727,31 @@ void TestSliders::DoSlider(Int_t pos)
       case HSId1:
          fTbh1->Clear();
          fTbh1->AddText(0, buf);
+         // Re-align the cursor with the characters.
+         fTeh1->SetCursorPosition(fTeh1->GetCursorPosition());
+         fTeh1->Deselect();
          gClient->NeedRedraw(fTeh1);
          break;
       case VSId1:
          fTbv1->Clear();
          fTbv1->AddText(0, buf);
+         fTev1->SetCursorPosition(fTev1->GetCursorPosition());
+         fTev1->Deselect();
          gClient->NeedRedraw(fTev1);
          break;
       case HSId2:
          fTbh2->Clear();
          fTbh2->AddText(0, buf);
+         fTeh2->SetCursorPosition(fTeh2->GetCursorPosition());
+         fTeh2->Deselect();
          gClient->NeedRedraw(fTeh2);
          break;
       case VSId2:
          sprintf(buf, "%f", fVslider2->GetMinPosition());
          fTbv2->Clear();
          fTbv2->AddText(0, buf);
+         fTev2->SetCursorPosition(fTev2->GetCursorPosition());
+         fTev2->Deselect();
          gClient->NeedRedraw(fTev2);
          break;
       default:
