@@ -36,8 +36,15 @@ GQTCXXFLAGS   := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 
+# Qt project header files
+
+QCUSTOMWIDGETS += $(GQTDIRI)/TQtWidget.cw
+QMAKERULES     += $(GQTDIRI)/rootcint.pri $(GQTDIRI)/rootcintrule.pri $(GQTDIRI)/rootlibs.pri
+
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GQTH))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.cw,include/%.cw,$(QCUSTOMWIDGETS))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.pri,include/%.pri,$(QMAKERULES))
 ALLLIBS       += $(GQTLIB)
 
 # include all dependency files
@@ -47,6 +54,12 @@ INCLUDEFILES  += $(GQTDEP)
 include/%.h:    $(GQTDIRI)/%.h
 		cp $< $@
 
+include/%.cw:    $(GQTDIRI)/%.cw
+		cp $< $@
+      
+include/%.pri:    $(GQTDIRI)/%.pri
+		cp $< $@
+      
 $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(MAINLIBS) $(GQTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ \
