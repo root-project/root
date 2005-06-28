@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.hxx,v 1.2 2003/04/10 14:36:43 pdk Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.h,v 1.2 2003/04/11 06:44:39 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #ifndef ROOT_TVector3
 #include "TVector3.h"
 #endif
+
+class TQuaternion;
 
 class TRotation : public TObject {
     
@@ -36,6 +38,7 @@ public:
   // Default constructor. Gives a unit matrix.
 
   TRotation(const TRotation &);
+  TRotation(const TQuaternion &);
   // Copy constructor.
 
   virtual ~TRotation() {;};

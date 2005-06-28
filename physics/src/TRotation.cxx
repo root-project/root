@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.6 2003/04/11 12:36:10 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.7 2003/09/03 06:08:34 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -178,6 +178,7 @@ a rotation of a <TT>TVector3</TT> analog to the mathematical notation
 //
 
 #include "TRotation.h"
+#include "TQuaternion.h"
 #include "TError.h"
 
 ClassImp(TRotation)
@@ -229,6 +230,74 @@ TRotation TRotation::operator* (const TRotation & b) const {
 		     fzx*b.fxx + fzy*b.fyx + fzz*b.fzx,
 		     fzx*b.fxy + fzy*b.fyy + fzz*b.fzy,
 		     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
+}
+
+//_____________________________________
+TRotation::TRotation(const TQuaternion & Q) {
+	// Constructor for a rotation based on a Quaternion
+	// if magnitude of quaternion is null, creates identity rotation
+	// if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
+
+
+	double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
+	double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();
+	double two_y2 = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Y();
+	double two_z2 = 2 * Q.fVectorPart.Z() * Q.fVectorPart.Z();
+	double two_xy = 2 * Q.fVectorPart.X() * Q.fVectorPart.Y();
+	double two_xz = 2 * Q.fVectorPart.X() * Q.fVectorPart.Z();
+	double two_xr = 2 * Q.fVectorPart.X() * Q.fRealPart;
+	double two_yz = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Z();
+	double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
+	double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
+
+	// protect agains zero quaternion
+	double mag2 = Q.QMag2();
+	if (mag2 > 0) {
+
+		// diago + identity
+		fxx = two_r2 + two_x2;
+		fyy = two_r2 + two_y2;
+		fzz = two_r2 + two_z2;
+
+		//	line 0 column 1 and conjugate
+		fxy = two_xy - two_zr;
+		fyx = two_xy + two_zr;
+
+		//	line 0 column 2 and conjugate
+		fxz = two_xz + two_yr;
+		fzx = two_xz - two_yr;
+
+		//	line 1 column 2 and conjugate
+		fyz = two_yz - two_xr;
+		fzy = two_yz + two_xr;
+
+		// protect agains non-unit quaternion 
+		if (TMath::Abs(mag2-1) > 1e-10) {
+			fxx /= mag2;
+			fyy /= mag2;
+			fzz /= mag2;
+			fxy /= mag2;
+			fyx /= mag2;
+			fxz /= mag2;
+			fzx /= mag2;
+			fyz /= mag2;
+			fzy /= mag2;
+		}
+
+		// diago : remove identity
+		fxx -= 1;
+		fyy -= 1;
+		fzz -= 1;
+
+
+	} else {
+		// Identity
+
+		fxx = fyy = fzz = 1;
+		fxy = fyx = fxz = fzx = fyz = fzy = 0;
+
+	}
+
 }
 
 TRotation & TRotation::Rotate(Double_t a, const TVector3& axis) {
