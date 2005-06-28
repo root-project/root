@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.52 2005/06/22 15:11:10 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.53 2005/06/27 15:34:52 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -12,6 +12,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 #include <TVirtualX.h>
+#include <TVirtualPadEditor.h>
 #include <TGResourcePool.h>
 #include <TGListBox.h>
 #include <TGListTree.h>
@@ -865,6 +866,15 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       default:
          break;
    }
+
+   if (fMenuDock->IsUndocked()) {
+      fMenuView->EnableEntry(M_VIEW_DOCK);
+      fMenuView->DisableEntry(M_VIEW_UNDOCK);
+   } else {
+      fMenuView->EnableEntry(M_VIEW_UNDOCK);
+      fMenuView->DisableEntry(M_VIEW_DOCK);
+   }
+   
    return kTRUE;
 }
 
@@ -1115,8 +1125,12 @@ void TestDialog::FillHistos()
 
 void TestDialog::CloseWindow()
 {
-   // Called when window is closed via the window manager.
-
+   // Called when window is closed (via the window manager or not).
+   // Let's stop histogram filling...
+   fFillHistos = kFALSE;
+   // ... and close the Ged editor if it was activated.
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
    DeleteWindow();
 }
 
@@ -1135,7 +1149,6 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch(parm1) {
                   case 1:
                   case 2:
-                     fFillHistos = kFALSE;
                      printf("\nTerminating dialog: %s pressed\n",
                             (parm1 == 1) ? "OK" : "Cancel");
                      CloseWindow();
@@ -1409,9 +1422,14 @@ Bool_t TestMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (fR[i]->GetState() == kButtonDown)
                            { icontype = mb_icon[i]; break; }
 
+                     // Since the message dialog box is created, we disable the
+                     // window manager close mechanism, in order to ensure we
+                     // can't close the fMain window while the MessageBox is open.
+                     SetBit(kDontCallClose);
                      new TGMsgBox(fClient->GetRoot(), this,
                                   fTbtitle->GetString(), fTbmsg->GetString(),
                                   icontype, buttons, &retval);
+                     ResetBit(kDontCallClose);
                      break;
 
                   case 2:
@@ -1582,22 +1600,31 @@ Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case HSId1:
                      fTbh1->Clear();
                      fTbh1->AddText(0, buf);
+                     // Re-align the cursor with the characters.
+                     fTeh1->SetCursorPosition(fTeh1->GetCursorPosition());
+                     fTeh1->Deselect();
                      fClient->NeedRedraw(fTeh1);
                      break;
                   case VSId1:
                      fTbv1->Clear();
                      fTbv1->AddText(0, buf);
+                     fTev1->SetCursorPosition(fTev1->GetCursorPosition());
+                     fTev1->Deselect();
                      fClient->NeedRedraw(fTev1);
                      break;
                   case HSId2:
                      fTbh2->Clear();
                      fTbh2->AddText(0, buf);
+                     fTeh2->SetCursorPosition(fTeh2->GetCursorPosition());
+                     fTeh2->Deselect();
                      fClient->NeedRedraw(fTeh2);
                      break;
                   case VSId2:
                      sprintf(buf, "%f", fVslider2->GetMinPosition());
                      fTbv2->Clear();
                      fTbv2->AddText(0, buf);
+                     fTev2->SetCursorPosition(fTev2->GetCursorPosition());
+                     fTev2->Deselect();
                      fClient->NeedRedraw(fTev2);
                      break;
                }
