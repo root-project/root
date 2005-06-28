@@ -10,6 +10,11 @@ PS: please let us know if you are not on this list while you should be, or
     if something in your entry is incorrect.
 
 -------------------
+N: Eric Anciant
+E: eric.anciant@sodern.fr
+D: TQuaternion class
+
+-------------------
 N: Ilka Antcheva
 E: Ilka.Antcheva@cern.ch
 D: editor of the User's Guide, quality assurance
@@ -308,6 +313,10 @@ N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x
 
+N: Lorenzo Moneta
+E: Lorenzo.Moneta@cern.ch
+D: Math libraries
+
 N: Miroslav Morhac
 E: fyzimiro@nrmail.jinr.ru
 D: TSpectrum class
@@ -397,6 +406,10 @@ D: initial event generator interface
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
 D: various contributions to GUI classes
+
+N: Stefan Roiser
+E: Stefan.Roiser@cern.ch
+D: Reflex and Cintex
 
 N: Pawel Sawicki
 E: Pawel.Sawicki@ifj.edu.pl
