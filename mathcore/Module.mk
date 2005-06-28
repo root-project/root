@@ -12,7 +12,12 @@ MATHCOREDIRS := $(MATHCOREDIR)/src
 MATHCOREDIRI := $(MATHCOREDIR)/inc
 
 ##### libMathCore #####
-MATHCOREL    := $(MODDIRI)/MathCore/LinkDef.h
+MATHCOREL    := $(MODDIRI)/MathCore/LinkDef.h 
+MATHCORE_EXTRAL := $(MODDIRI)/MathCore/LinkDef_Func.h \
+		   $(MODDIRI)/MathCore/LinkDef_GenVector.h \
+                   $(MODDIRI)/MathCore/LinkDef_Point3D.h \
+                   $(MODDIRI)/MathCore/LinkDef_Vector3D.h \
+                   $(MODDIRI)/MathCore/LinkDef_Vector4D.h 
 MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
@@ -54,7 +59,7 @@ $(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
 		   "$(MATHCOREO) $(MATHCOREDO)"             \
 		   "$(MATHCORELIBEXTRA)"
 
-$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(ROOTCINTTMP)
+$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORE_EXTRAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
 

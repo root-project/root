@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.2 2005/06/28 09:55:13 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.3 2005/06/28 11:11:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 
@@ -103,7 +103,9 @@
 
 //too long names in Windows - skip this dictionary
 #ifndef _WIN32
+#ifndef __sun
 #pragma link C++ class vector<ROOT::Math::PtEtaPhiEVector >+;
+#endif
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiVector >+;
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiPoint >+;
 #endif
