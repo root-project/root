@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcint.pri,v 1.2 2005/06/24 23:07:59 fine Exp $
+# $Id: rootcint.pri,v 1.1 2005/06/28 13:21:39 brun Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -56,7 +56,7 @@
 #
 # -------  define rootlibs.pri -----------------
 ROOTLIBSPRI = 
-ROOTLIBSPRIFILE = rootlibs.pr
+ROOTLIBSPRIFILE = rootlibs.pri
 
 isEmpty(ROOTLIBSPRI) 
 {
