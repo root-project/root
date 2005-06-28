@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.2 2005/06/27 17:50:02 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -19,7 +19,7 @@
 
 
 #include "MathCore/Cartesian4D.h"
-#include "MathCore/DisplacementVector3Dfwd.h"
+#include "MathCore/Vector3Dfwd.h"
 #ifdef LATER
 // needed for definition of size_t
 #include <stdlib.h>
