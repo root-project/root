@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.12 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.1 2005/06/24 20:25:11 pcanal Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -57,9 +57,10 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
    fTree               = (TTree*)T;
    fMajorName          = majorname;
    fMinorName          = minorname;
+   UInt_t i = 0;
 
    // Go through all the trees and check if they have indeces. If not then build them.
-   for (Int_t i = 0; i < chain->GetNtrees(); i++) {
+   for (i = 0; i < chain->GetNtrees(); i++) {
       ChainIndexEntry_t entry;
       chain->LoadTree((chain->GetTreeOffset())[i]);
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
@@ -82,7 +83,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       fEntries.push_back(entry);
    }
    // Check if the indices of different trees are in order. If not then return an error.
-   for (unsigned int i = 0; i < fEntries.size() - 1; i++) {
+   for (i = 0; i < fEntries.size() - 1; i++) {
       if (fEntries[i].fMaxIndexValue > fEntries[i+1].fMinIndexValue) {
          DeleteIndices();
          MakeZombie();
