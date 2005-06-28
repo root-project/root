@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -34,5 +34,21 @@
 #pragma link C++ function ROOT::Math::poisson_pdf( unsigned int , double);
 #pragma link C++ function ROOT::Math::tdistribution_pdf( double , double);
 #pragma link C++ function ROOT::Math::uniform_pdf( double , double, double);
+
+#pragma link C++ function ROOT::Math::breitwigner_prob( double , double);
+#pragma link C++ function ROOT::Math::breitwigner_quant( double , double);
+#pragma link C++ function ROOT::Math::cauchy_prob( double , double);
+#pragma link C++ function ROOT::Math::cauchy_quant( double , double);
+#pragma link C++ function ROOT::Math::exponential_prob( double , double);
+#pragma link C++ function ROOT::Math::exponential_quant( double , double);
+#pragma link C++ function ROOT::Math::gaussian_prob( double , double);
+#pragma link C++ function ROOT::Math::gaussian_quant( double , double);
+#pragma link C++ function ROOT::Math::lognormal_prob( double , double, double);
+#pragma link C++ function ROOT::Math::lognormal_quant( double , double, double);
+#pragma link C++ function ROOT::Math::normal_prob( double , double);
+#pragma link C++ function ROOT::Math::normal_quant( double , double);
+#pragma link C++ function ROOT::Math::uniform_prob( double , double, double);
+#pragma link C++ function ROOT::Math::uniform_quant( double , double, double);
+
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: SpecFunc.cxx,v 1.2 2005/06/24 21:03:27 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: SpecFunc.cxx,v 1.3 2005/06/24 21:30:57 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -19,7 +19,7 @@
 #endif
 
 
-#include "math.h"
+#include <cmath>
 
 namespace ROOT {
 namespace Math {
@@ -49,16 +49,16 @@ double erfc(double x) {
                   a7 = -1.13520398,   a8 = 1.48851587,
                   a9 = -0.82215223,  a10 = 0.17087277;
 
-   double v = 1; // The return value
-   double z = fabs(x);
+   double v = 1.0; // The return value
+   double z = std::fabs(x);
 
    if (z <= 0) return v; // erfc(0)=1
 
-   double t = 1/(1+0.5*z);
+   double t = 1.0/(1.0+0.5*z);
 
-   v = t*exp((-z*z) +a1+t*(a2+t*(a3+t*(a4+t*(a5+t*(a6+t*(a7+t*(a8+t*(a9+t*a10)))))))));
+   v = t*std::exp((-z*z) +a1+t*(a2+t*(a3+t*(a4+t*(a5+t*(a6+t*(a7+t*(a8+t*(a9+t*a10)))))))));
 
-   if (x < 0) v = 2-v; // erfc(-x)=2-erfc(x)
+   if (x < 0) v = 2.0-v; // erfc(-x)=2-erfc(x)
 
    return v;
 #else
@@ -74,7 +74,7 @@ double erf(double x) {
 
 
 #ifdef NOT_HAVE_TGAMMA
-  return (1-ROOT::Math::erfc(x));
+  return (1.0-ROOT::Math::erfc(x));
 #else
   return ::erf(x);
 #endif
@@ -109,13 +109,13 @@ double lgamma(double z) {
    double x   = z;
    double y   = x;
    double tmp = x+5.5;
-   tmp = (x+0.5)*log(tmp)-tmp;
+   tmp = (x+0.5)*std::log(tmp)-tmp;
    double ser = 1.000000000190015;
    for (int i=1; i<7; i++) {
-      y   += 1;
+      y   += 1.0;
       ser += c[i]/y;
    }
-   double v = tmp+log(c[0]*ser/x);
+   double v = tmp+std::log(c[0]*ser/x);
    return v;
 
 #else
@@ -135,7 +135,7 @@ double tgamma(double x) {
 
 
 #ifdef NOT_HAVE_TGAMMA
-  return exp(ROOT::Math::lgamma(x));
+  return std::exp(ROOT::Math::lgamma(x));
 #else
   return ::tgamma(x);
 #endif
@@ -149,7 +149,7 @@ double tgamma(double x) {
 
 double beta(double x, double y) {
 
-  return exp(lgamma(x)+lgamma(y)-lgamma(x+y));
+  return std::exp(lgamma(x)+lgamma(y)-lgamma(x+y));
 
 }
 

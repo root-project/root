@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 
@@ -91,10 +91,18 @@
 #pragma extra_include "vector";
 #include <vector>
 
-//#pragma link C++ class vector<ROOT::Math::LorentzVector<ROOT::Math::Cartesian4D<double> > >+;
+
+// conflict on solaris between template class T from std::vector and T(). 
+#ifndef __sun      
 #pragma link C++ class vector<ROOT::Math::XYZTVector >+;
+#pragma link C++ class vector<ROOT::Math::PtEtaPhiEVector >+;
+#endif
 #pragma link C++ class vector<ROOT::Math::XYZVector >+;
+#pragma link C++ class vector<ROOT::Math::RhoEtaPhiVector >+;
+#pragma link C++ class vector<ROOT::Math::Polar3DVector >+;
 #pragma link C++ class vector<ROOT::Math::XYZPoint >+;
+#pragma link C++ class vector<ROOT::Math::RhoEtaPhiPoint >+;
+#pragma link C++ class vector<ROOT::Math::Polar3DPoint >+;
 
 
 #endif

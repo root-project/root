@@ -23,6 +23,7 @@ MATHCOREDH1  := $(MODDIRI)/MathCore/Vector3D.h \
                 $(MODDIRI)/MathCore/Rotation3D.h \
                 $(MODDIRI)/MathCore/SpecFunc.h \
                 $(MODDIRI)/MathCore/DistFunc.h \
+                $(MODDIRI)/MathCore/ProbFunc.h \
                 $(MODDIRI)/MathCore/VectorUtil_Cint.h
 
 MATHCOREH    := $(filter-out $(MODDIRI)/MathCore/LinkDef%, $(wildcard $(MODDIRI)/MathCore/*.h))

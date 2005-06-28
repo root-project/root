@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -27,7 +27,7 @@ namespace Math {
   double binomial_pdf(unsigned int k, double p, unsigned int n) {
 
     if (k > n) {
-      return 0;
+      return 0.0;
     } else {
 
       double coeff = ROOT::Math::lgamma(n+1) - ROOT::Math::lgamma(k+1) - ROOT::Math::lgamma(n-k+1);
@@ -57,7 +57,7 @@ namespace Math {
   double chisquared_pdf(double x, double r) {
 
     if (x <= 0) {
-      return 0 ;
+      return 0.0;
     } else {
       return std::exp ((r/2 - 1) * std::log(x/2) - x/2 - ROOT::Math::lgamma(r/2))/2;
     }
@@ -69,7 +69,7 @@ namespace Math {
   double exponential_pdf(double x, double lambda) {
 
     if (x < 0) {
-      return 0;
+      return 0.0;
     } else {
       return lambda * std::exp (-lambda * x);
     }
@@ -81,7 +81,7 @@ namespace Math {
   double fdistribution_pdf(double x, double n, double m) {
 
     if (x < 0) {
-      return 0;
+      return 0.0;
     } else {
 
       return std::exp((n/2) * std::log(n) + (m/2) * std::log(m) + ROOT::Math::lgamma((n+m)/2) - ROOT::Math::lgamma(n/2) - ROOT::Math::lgamma(m/2))
@@ -96,13 +96,13 @@ namespace Math {
   double gamma_pdf(double x, double alpha, double theta) {
 
     if (x < 0) {
-      return 0 ;
+      return 0.0;
     } else if (x == 0) {
       
       if (alpha == 1) {
         return 1.0/theta;
       } else {
-        return 0;
+        return 0.0;
       }
 
     } else if (alpha == 1) {
@@ -134,7 +134,7 @@ namespace Math {
   double lognormal_pdf(double x, double m, double s) {
 
     if (x <= 0) {
-      return 0 ;
+      return 0.0;
     } else {
       double tmp = (std::log(x) - m)/s;
       return 1.0 / (x * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
@@ -163,8 +163,8 @@ namespace Math {
 
   double tdistribution_pdf(double x, double r) {
 
-    return (std::exp (ROOT::Math::lgamma((r + 1)/2) - ROOT::Math::lgamma(r/2)) / std::sqrt (M_PI * r)) 
-      * std::pow ((1 + x*x/r), -(r + 1)/2);
+    return (std::exp (ROOT::Math::lgamma((r + 1.0)/2.0) - ROOT::Math::lgamma(r/2.0)) / std::sqrt (M_PI * r)) 
+      * std::pow ((1.0 + x*x/r), -(r + 1.0)/2.0);
 
   }
 
@@ -177,7 +177,7 @@ namespace Math {
     if (x < b && x >= a) {
       return 1.0/(b - a);
     } else {
-      return 0;
+      return 0.0;
     }
 
   }
