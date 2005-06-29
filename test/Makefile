@@ -63,6 +63,10 @@ STRESSLO      = stressLinear.$(ObjSuf)
 STRESSLS      = stressLinear.$(SrcSuf)
 STRESSL       = stressLinear$(ExeSuf)
 
+STRESSVECO   = stressVector.$(ObjSuf)
+STRESSVECS   = stressVector.$(SrcSuf)
+STRESSVEC    = stressVector$(ExeSuf)
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
@@ -118,14 +122,14 @@ THREADS       = threads$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) \
-                $(CTORTUREO) $(QPRANDOMO) $(THREADO)
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(TESTBITSO) \
+                $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
-                $(THREADS)
+                $(THREADS) $(STRESSVEC)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -214,6 +218,10 @@ $(VLAZY):       $(VLAZYO)
 		@echo "$@ done"
 
 $(STRESSL):     $(STRESSLO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSVEC):   $(STRESSVECO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
