@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.38 2005/04/04 15:00:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.39 2005/04/05 08:54:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1314,7 +1314,9 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
 TGeoCombiTrans::~TGeoCombiTrans()
 {
 // destructor
-   if (fRotation && TestBit(TGeoMatrix::kGeoMatrixOwned)) delete fRotation;
+   if (fRotation) {
+      if(TestBit(TGeoMatrix::kGeoMatrixOwned) && !fRotation->IsRegistered()) delete fRotation;
+   }   
 }
 
 //_____________________________________________________________________________
