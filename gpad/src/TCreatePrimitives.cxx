@@ -188,7 +188,8 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
       if (mode == kCurlyArc) {
          //calculate radius in pixels and convert to users x
-         radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))));
+         radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))))
+                 - gPad->PixeltoX(0);
          phimin = 0;
          phimax = 360;
          cline = new TCurlyArc(x0,y0,radius,phimin,phimax
