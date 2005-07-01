@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.153 2005/06/23 10:53:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.154 2005/06/23 20:51:14 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -335,16 +335,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fVersion         = ROOT_RELEASE;
    fVersionInt      = IVERSQ();
-#ifdef ROOT_RELEASE_DATE
    fVersionDate     = IDATQQ(ROOT_RELEASE_DATE);
-#else
-   fVersionDate     = IDATQQ(__DATE__);
-#endif
-#ifdef ROOT_RELEASE_TIME
    fVersionTime     = ITIMQQ(ROOT_RELEASE_TIME);
-#else
-   fVersionTime     = ITIMQQ(__TIME__);
-#endif
    fBuiltDate       = IDATQQ(__DATE__);
    fBuiltTime       = ITIMQQ(__TIME__);
 
