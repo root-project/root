@@ -1,7 +1,7 @@
 # Module.mk for mathcore module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
-# Author: Fons Rademakers, 29/2/2000
+# Author: Fons Rademakers, 20/6/2005
 
 MODDIR       := mathcore
 MODDIRS      := $(MODDIR)/src
@@ -13,11 +13,11 @@ MATHCOREDIRI := $(MATHCOREDIR)/inc
 
 ##### libMathCore #####
 MATHCOREL    := $(MODDIRI)/MathCore/LinkDef.h 
-MATHCORE_EXTRAL := $(MODDIRI)/MathCore/LinkDef_Func.h \
-		   $(MODDIRI)/MathCore/LinkDef_GenVector.h \
-                   $(MODDIRI)/MathCore/LinkDef_Point3D.h \
-                   $(MODDIRI)/MathCore/LinkDef_Vector3D.h \
-                   $(MODDIRI)/MathCore/LinkDef_Vector4D.h 
+MATHCORELINC := $(MODDIRI)/MathCore/LinkDef_Func.h \
+                $(MODDIRI)/MathCore/LinkDef_GenVector.h \
+                $(MODDIRI)/MathCore/LinkDef_Point3D.h \
+                $(MODDIRI)/MathCore/LinkDef_Vector3D.h \
+                $(MODDIRI)/MathCore/LinkDef_Vector4D.h 
 MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
@@ -49,7 +49,7 @@ INCLUDEFILES += $(MATHCOREDEP)
 ##### local rules #####
 include/MathCore/%.h: $(MATHCOREDIRI)/MathCore/%.h
 		@(if [ ! -d "include/MathCore" ]; then   \
-		   mkdir include/MathCore;               \
+		   mkdir -p include/MathCore;               \
 		fi)
 		cp $< $@
 
@@ -59,7 +59,7 @@ $(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
 		   "$(MATHCOREO) $(MATHCOREDO)"             \
 		   "$(MATHCORELIBEXTRA)"
 
-$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORE_EXTRAL) $(ROOTCINTTMP)
+$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
 
