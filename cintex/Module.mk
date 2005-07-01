@@ -30,7 +30,7 @@ INCLUDEFILES += $(CINTEXDEP)
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		@(if [ ! -d "include/Cintex" ]; then    \
-		   mkdir include/Cintex;                \
+		   mkdir -p include/Cintex;             \
 		fi)
 		cp $< $@
 
@@ -54,6 +54,7 @@ clean::         clean-cintex
 
 distclean-cintex: clean-cintex
 		@rm -f $(CINTEXDEP) $(CINTEXLIB)
+		@rm -rf include/Cintex
 
 distclean::     distclean-cintex
 

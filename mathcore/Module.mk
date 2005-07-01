@@ -49,7 +49,7 @@ INCLUDEFILES += $(MATHCOREDEP)
 ##### local rules #####
 include/MathCore/%.h: $(MATHCOREDIRI)/MathCore/%.h
 		@(if [ ! -d "include/MathCore" ]; then   \
-		   mkdir -p include/MathCore;               \
+		   mkdir -p include/MathCore;            \
 		fi)
 		cp $< $@
 
@@ -81,6 +81,7 @@ clean::         clean-mathcore
 
 distclean-mathcore: clean-mathcore
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) $(MATHCORELIB)
+		@rm -rf include/MathCore
 
 distclean::     distclean-mathcore
 

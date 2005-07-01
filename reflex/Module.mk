@@ -56,6 +56,7 @@ clean::         clean-reflex
 
 distclean-reflex: clean-reflex
 		@rm -f $(REFLEXDEP) $(REFLEXLIB)
+		@rm -rf include/Reflex
 
 distclean::     distclean-reflex
 
