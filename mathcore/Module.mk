@@ -70,7 +70,7 @@ all-mathcore:   $(MATHCORELIB)
 
 map-mathcore:   $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHCORELIB) \
-		   -d $(MATHCORELIBDEP) -c $(MATHCOREL)
+		   -d $(MATHCORELIBDEP) -c $(MATHCOREL) $(MATHCORELINC)
 
 map::           map-mathcore
 
