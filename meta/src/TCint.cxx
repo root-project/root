@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.103 2005/06/06 12:46:01 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.104 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1023,7 +1023,11 @@ Int_t TCint::LoadLibraryMap()
                      } else {
                         G__set_class_autoloading_table((char*)base.c_str(), lib);
                      }
+                     ++k;
                   }
+               } else if (cls[k] == '<') {
+                  // We do not want to look at the namespace inside the template parameters!
+                  break;
                }
             }
          }
