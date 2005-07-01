@@ -17,10 +17,11 @@ GQTDS         := $(MODDIRS)/G__GQt.cxx
 GQTDO         := $(GQTDS:.cxx=.o)
 GQTDH         := $(GQTDS:.cxx=.h)
 
-GQTH1          := $(GQTDIRI)/TGQt.h $(GQTDIRI)/TQtThread.h $(GQTDIRI)/TQtApplication.h \
-                  $(GQTDIRI)/TQtBrush.h $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h\
-                  $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h $(GQTDIRI)/TQtMarker.h \
-                  $(GQTDIRI)/TQtTimer.h
+GQTH1         := $(GQTDIRI)/TGQt.h $(GQTDIRI)/TQtThread.h \
+                 $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h \
+                 $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
+                 $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h \
+                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h
 
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GQTS          := $(filter-out $(MODDIRS)/moc_%,\
@@ -39,7 +40,8 @@ GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 # Qt project header files
 
 QCUSTOMWIDGETS += $(GQTDIRI)/TQtWidget.cw
-QMAKERULES     += $(GQTDIRI)/rootcint.pri $(GQTDIRI)/rootcintrule.pri $(GQTDIRI)/rootlibs.pri
+QMAKERULES     += $(GQTDIRI)/rootcint.pri $(GQTDIRI)/rootcintrule.pri \
+                  $(GQTDIRI)/rootlibs.pri
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GQTH))
