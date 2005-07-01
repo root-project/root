@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.210 2005/05/27 16:42:59 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.211 2005/06/13 23:26:45 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -510,6 +510,8 @@ void LoadLibraryMap() {
    ifstream filelist(filelistname.c_str());
 
    string filename;
+   static char *buffer = 0;
+   static unsigned int sbuffer = 0;
 
    while ( filelist >> filename ) {
       ifstream file(filename.c_str());
@@ -550,10 +552,20 @@ void LoadLibraryMap() {
                            break;
                         } else {
                            gAutoloads[base] = line;
-                           G__set_class_autoloading_table((char*)base.c_str(),
+                           if (sbuffer < base.size()+20) {
+                              delete [] buffer;
+                              buffer = new char[base.size()+20];
+                              sbuffer = base.size()+20;
+                           }
+                           strcpy(buffer,base.c_str());
+                           G__set_class_autoloading_table(buffer,
                                                           (char*)line.c_str());
                         }
+                        ++k;
                      }
+                  } else if (classname[k] == '<') {
+                     // We do not want to look at the namespace inside the template parameters!
+                     break;
                   }
                }
             }
@@ -563,7 +575,13 @@ void LoadLibraryMap() {
                continue;
             }
             gAutoloads[classname] = line;
-            G__set_class_autoloading_table((char*)classname.c_str(),
+            if (sbuffer < classname.size()+20) {
+               delete [] buffer;
+               buffer = new char[classname.size()+20];
+               sbuffer = classname.size()+20;
+            }
+            strcpy(buffer,classname.c_str());
+            G__set_class_autoloading_table(buffer,
                                            (char*)line.c_str());
          }
       }
