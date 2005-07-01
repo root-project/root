@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.95 2005/05/14 16:20:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.96 2005/05/18 12:31:09 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3123,11 +3123,18 @@ void TFormula::Streamer(TBuffer &b)
 
          // We need to reinstate (if possible) the TMethodCall.
          if (fFunctions.GetLast()>=0) {
+            // Compiles will reset the parameter values so we need
+            // to temporarily keep them
+            Double_t *param = fParams;
+            Int_t npar = fNpar;
+            fParams = 0;
             Compile();
+            for (Int_t i = 0; i<npar && i<fNpar; ++i) fParams[i] = param[i];
+            delete [] param;
          } else if (v<6) {
             Convert(v);
          }
-	 Optimize();
+	      Optimize();
          return;
       }
       //====process old versions before automatic schema evolution
