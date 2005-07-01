@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.3 2005/03/21 15:15:47 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.7 2005/06/08 21:13:48 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -16,7 +16,8 @@
 //                                                                      //
 // TClassRef                                                            //
 //                                                                      //
-// Reference to a TClass object.                                        //
+// Reference to a TClass object and intrusive list of other             //
+// to thise same TClass object references                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -27,26 +28,40 @@
 #include "TRef.h"
 #endif
 
+#include <string>
+
 class TClassRef {
 
 private:
-   TString   fClassName; //Name of referenced class
-   TClass   *fClassPtr;  //! Ptr to the TClass object
+   std::string  fClassName; //Name of referenced class
+   TClass      *fClassPtr;  //! Ptr to the TClass object
+   TClassRef   *fPrevious;  //! link to the previous refs
+   TClassRef   *fNext;      //! link to the next refs 
 
+   friend class TClass;
+
+   TClass   *InternalGetClass() const;
+   void      ListReset();
 public:
-   TClassRef();
+   TClassRef() : fClassPtr(0), fPrevious(0), fNext(0) {}
    TClassRef(TClass *cl);
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);
-   TClassRef& operator=(const TClassRef&);
+   TClassRef &operator=(const TClassRef&);
+   TClassRef &operator=(TClass*);
 
-   ~TClassRef();
+   ~TClassRef() { if (fClassPtr) fClassPtr->RemoveRef(this); };
 
-   TClass *GetClass()  const;
-   void Reset() { fClassPtr = 0; }
+   void SetName(const char* new_name) { 
+      if ( fClassPtr && fClassName != new_name ) Reset(); 
+      fClassName = new_name; 
+   }
+   const char *GetClassName() { return fClassName.c_str(); }
+   TClass *GetClass()  const { return fClassPtr ? fClassPtr : InternalGetClass(); }
+   void Reset() { if (fClassPtr) fClassPtr->RemoveRef(this); fClassPtr = 0; }
 
-   TClass* operator->() const { return GetClass(); }
-   operator TClass*() const { return GetClass(); }
+   TClass* operator->() const { return fClassPtr ? fClassPtr : InternalGetClass(); }
+   operator TClass*() const { return fClassPtr ? fClassPtr : InternalGetClass(); }
 
 };
 

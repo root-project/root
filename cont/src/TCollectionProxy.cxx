@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.2 2004/11/01 12:26:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.4 2005/05/23 17:02:45 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -37,28 +37,33 @@
 
 // Do not clutter global namespace with shit....
 namespace {
-  static TClassEdit::ESTLType stl_type(const char* class_name)  {
-    if ( class_name )  {
+   static TClassEdit::ESTLType stl_type(const std::string& class_name)  {
       int nested = 0;
       std::vector<std::string> inside;
-      int num = TClassEdit::GetSplit(class_name,inside,nested);
+      int num = TClassEdit::GetSplit(class_name.c_str(),inside,nested);
       if ( num > 1 )  {
-        return (TClassEdit::ESTLType)TClassEdit::STLKind(inside[0].c_str());
+         return (TClassEdit::ESTLType)TClassEdit::STLKind(inside[0].c_str());
       }
-    }
-    return TClassEdit::kNotSTL;
-  }
+      return TClassEdit::kNotSTL;
+   }
 
-  static TEmulatedCollectionProxy* genEmulation(const char* class_name)  {
-    switch ( stl_type(class_name) )  {
-      case TClassEdit::kNotSTL:
-        return 0;
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
-        return new TEmulatedMapProxy(class_name);
-      default:
-        return new TEmulatedCollectionProxy(class_name);
-    }
+   static TEmulatedCollectionProxy* genEmulation(const char* class_name)  {
+      if ( class_name )  {
+         std::string cl = class_name;
+         if ( cl.find("stdext::hash_") != std::string::npos )
+            cl.replace(3,10,"::");
+         if ( cl.find("__gnu_cxx::hash_") != std::string::npos )
+            cl.replace(0,16,"std::");
+         switch ( stl_type(cl) )  {
+            case TClassEdit::kNotSTL:
+              return 0;
+           case TClassEdit::kMap:
+           case TClassEdit::kMultiMap:
+             return new TEmulatedMapProxy(class_name);
+           default:
+             return new TEmulatedCollectionProxy(class_name);
+         }
+      }
     return 0;
   }
 }

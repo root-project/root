@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.11 2005/04/18 10:54:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.13 2005/05/23 17:02:45 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -60,46 +60,52 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
   fEnv = 0;
   fKey = 0;
   if ( fClass )  {
-    int nested = 0;
-    std::vector<std::string> inside;
-    fPointers  = false;
-    int num = TClassEdit::GetSplit(fName.c_str(),inside,nested);
-    if ( num > 1 )  {
-      std::string nam;
-      fSTL_type = TClassEdit::STLKind(inside[0].c_str());
-      // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-      int slong = sizeof(void*);
-      switch ( fSTL_type )  {
-        case TClassEdit::kMap:
-        case TClassEdit::kMultiMap:
-          nam = "pair<"+inside[1]+","+inside[2];
-          nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-          fValue = new Value(nam);
-          fKey   = new Value(inside[1]);
-          fVal   = new Value(inside[2]);
-          fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
-          if ( 0 == fValDiff )  {
-            fValDiff = fKey->fSize + fVal->fSize;
-            fValDiff += (slong - fKey->fSize%slong)%slong;
-            fValDiff += (slong - fValDiff%slong)%slong;
+     int nested = 0;
+     std::vector<std::string> inside;
+     fPointers  = false;
+     int num = TClassEdit::GetSplit(fName.c_str(),inside,nested);
+     if ( num > 1 )  {
+        std::string nam;
+        if ( inside[0].find("stdext::hash_") != std::string::npos ) {
+           inside[0].replace(3,10,"::");
+        }
+        if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos ) {
+           inside[0].replace(0,16,"std::");
+        }
+        fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+        // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
+        int slong = sizeof(void*);
+        switch ( fSTL_type )  {
+         case TClassEdit::kMap:
+           case TClassEdit::kMultiMap:
+              nam = "pair<"+inside[1]+","+inside[2];
+              nam += (nam[nam.length()-1]=='>') ? " >" : ">";
+              fValue = new Value(nam);
+              fKey   = new Value(inside[1]);
+              fVal   = new Value(inside[2]);
+              fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
+              if ( 0 == fValDiff )  {
+                 fValDiff = fKey->fSize + fVal->fSize;
+                 fValDiff += (slong - fKey->fSize%slong)%slong;
+                 fValDiff += (slong - fValDiff%slong)%slong;
 
-          }
-          if ( 0 == fValOffset )  {
-            fValOffset  = fKey->fSize;
-            fValOffset += (slong - fKey->fSize%slong)%slong;
-          }
-          break;
-        default:
-          fValue = new Value(inside[1]);
-          fVal   = new Value(*fValue);
-          if ( 0 == fValDiff )  {
-            fValDiff  = fVal->fSize;
-            fValDiff += (slong - fValDiff%slong)%slong;
-          }
-          break;
-      }
-      fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
-      return this;
+              }
+              if ( 0 == fValOffset )  {
+                 fValOffset  = fKey->fSize;
+                 fValOffset += (slong - fKey->fSize%slong)%slong;
+              }
+              break;
+           default:
+              fValue = new Value(inside[1]);
+              fVal   = new Value(*fValue);
+              if ( 0 == fValDiff )  {
+                 fValDiff  = fVal->fSize;
+                 fValDiff += (slong - fValDiff%slong)%slong;
+              }
+              break;
+        }
+        fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
+        return this;
     }
     Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",fClass->GetName());
   }
@@ -107,114 +113,119 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
   return 0;
 }
 
-/// Return the current size of the container
-UInt_t TEmulatedCollectionProxy::Size() const   {
-  if ( fEnv && fEnv->object )   {
-    return fEnv->size = PCont_t(fEnv->object)->size()/fValDiff;
-  }
-  Fatal("TEmulatedCollectionProxy","Size> Logic error - no proxy object set.");
-  return 0;
+UInt_t TEmulatedCollectionProxy::Size() const   
+{
+   // Return the current size of the container
+
+   if ( fEnv && fEnv->object )   {
+      return fEnv->size = PCont_t(fEnv->object)->size()/fValDiff;
+   }
+   Fatal("TEmulatedCollectionProxy","Size> Logic error - no proxy object set.");
+   return 0;
 }
 
-/// Clear the emulated collection.
-void TEmulatedCollectionProxy::Clear(const char* opt)  {
-  Resize(0, opt && *opt=='f');
+void TEmulatedCollectionProxy::Clear(const char* opt)  
+{
+   // Clear the emulated collection.
+   Resize(0, opt && *opt=='f');
 }
 
-/// Shrink the container
-void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )  {
-  typedef std::string  String_t;
-  PCont_t c   = PCont_t(fEnv->object);
-  char* addr  = ((char*)fEnv->start) + fValDiff*left;
-  size_t i;
+void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )  
+{
+   /// Shrink the container
+   typedef std::string  String_t;
+   PCont_t c   = PCont_t(fEnv->object);
+   char* addr  = ((char*)fEnv->start) + fValDiff*left;
+   size_t i;
 
-  switch ( fSTL_type )  {
-    case TClassEdit::kMap:
-    case TClassEdit::kMultiMap:
-      addr = ((char*)fEnv->start) + fValDiff*left;
-      switch(fKey->fCase)  {
-        case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-        case G__BIT_ISENUM:
-          break;
-        case G__BIT_ISCLASS:
-          for( i= fKey->fType ? left : nCurr; i<nCurr; ++i, addr += fValDiff )  {
-            // Call emulation in case non-compiled content
-            fKey->fType->Destructor(addr, kTRUE);
-          }
-          break;
-        case R__BIT_ISSTRING:
-          for( i=left; i<nCurr; ++i, addr += fValDiff )
-            ((std::string*)addr)->~String_t();
-          break;
-        case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* h = (StreamHelper*)addr;
-            void* ptr = h->ptr();
-            fKey->fType->Destructor(ptr);
-            h->set(0);
-          }
-        case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* h = (StreamHelper*)addr;
-            delete (std::string*)h->ptr();
-            h->set(0);
-          }
-          break;
-        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* h = (StreamHelper*)addr;
-            delete (TString*)h->ptr();
-            h->set(0);
-          }
-          break;
-      }
-      addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
-      // DO NOT break; just continue
+   switch ( fSTL_type )  {
+      case TClassEdit::kMap:
+      case TClassEdit::kMultiMap:
+        addr = ((char*)fEnv->start) + fValDiff*left;
+        switch(fKey->fCase)  {
+           case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+           case G__BIT_ISENUM:
+              break;
+           case G__BIT_ISCLASS:
+              for( i= fKey->fType ? left : nCurr; i<nCurr; ++i, addr += fValDiff ) {
+                 // Call emulation in case non-compiled content
+                 fKey->fType->Destructor(addr, kTRUE);
+              }
+              break;
+           case R__BIT_ISSTRING:
+              for( i=left; i<nCurr; ++i, addr += fValDiff ) {
+                 ((std::string*)addr)->~String_t();
+              }
+              break;
+           case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+              for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+                 StreamHelper* h = (StreamHelper*)addr;
+                 void* ptr = h->ptr();
+                 fKey->fType->Destructor(ptr);
+                 h->set(0);
+              }
+           case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+              for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                 StreamHelper* h = (StreamHelper*)addr;
+                 delete (std::string*)h->ptr();
+                 h->set(0);
+              }
+              break;
+           case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+              for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                 StreamHelper* h = (StreamHelper*)addr;
+                 delete (TString*)h->ptr();
+                 h->set(0);
+              }
+              break;
+        }
+        addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
+        // DO NOT break; just continue
 
-    // General case for all values
-    default:
-      switch( fVal->fCase )  {
-        case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-        case G__BIT_ISENUM:
-          break;
-        case G__BIT_ISCLASS:
-          for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+        // General case for all values
+      default:
+         switch( fVal->fCase )  {
+      case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+      case G__BIT_ISENUM:
+         break;
+      case G__BIT_ISCLASS:
+         for( i=left; i<nCurr; ++i, addr += fValDiff )  {
             // Call emulation in case non-compiled content
             fVal->fType->Destructor(addr,kTRUE);
-          }
-          break;
-        case R__BIT_ISSTRING:
-          for( i=left; i<nCurr; ++i, addr += fValDiff )
+         }
+         break;
+      case R__BIT_ISSTRING:
+         for( i=left; i<nCurr; ++i, addr += fValDiff )
             ((std::string*)addr)->~String_t();
-          break;
-        case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+         break;
+      case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+         for( i=left; i<nCurr; ++i, addr += fValDiff )  {
             StreamHelper* h = (StreamHelper*)addr;
             void* p = h->ptr();
             if ( p )  {
-              fVal->fType->Destructor(p);
+               fVal->fType->Destructor(p);
             }
             h->set(0);
-          }
-        case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+         }
+      case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+         for( i=nCurr; i<left; ++i, addr += fValDiff )   {
             StreamHelper* h = (StreamHelper*)addr;
             delete (std::string*)h->ptr();
             h->set(0);
-          }
-          break;
-        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+         }
+         break;
+      case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+         for( i=nCurr; i<left; ++i, addr += fValDiff )   {
             StreamHelper* h = (StreamHelper*)addr;
             delete (TString*)h->ptr();
             h->set(0);
-          }
-          break;
-      }
-  }
-  c->resize(left*fValDiff,0);
-  fEnv->start = left>0 ? &(*c->begin()) : 0;
-  return;
+         }
+         break;
+         }
+   }
+   c->resize(left*fValDiff,0);
+   fEnv->start = left>0 ? &(*c->begin()) : 0;
+   return;
 }
 
 /// Expand the container

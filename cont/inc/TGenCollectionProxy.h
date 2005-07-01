@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.6 2005/03/08 21:23:25 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.8 2005/06/01 15:43:18 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -219,6 +219,7 @@ protected:
   int           fValOffset; // Offset from key to value (in maps)
   int           fValDiff;   // Offset between two consecutive value_types (memory layout).
   Proxies_t     fProxyList; // Stack of recursive proxies 
+  Proxies_t     fProxyKept; // Optimization: Keep proxies once they were created
   int           fSTL_type;  // STL container type
   Info_t        fTypeinfo;  // Type information
 

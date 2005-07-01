@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.2 2005/03/21 15:15:47 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.7 2005/06/09 18:20:02 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -17,20 +17,18 @@
 // when a library containing the described class is loaded after a      //
 // file containing an instance of this class has been opened.           //
 //                                                                      //
+// The references kept track of using an intrusive double linked list.  //
+// The intrusive list is maintained by TClass::AddRef and               //
+// TClass::RemoveRef.  The 'start' of the list is held in               //
+// TClass::fRefStart.                                                   //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClassRef.h"
 
 //______________________________________________________________________________
-TClassRef::TClassRef() :
-   fClassName("unknown"), fClassPtr(0)
-{
-   // Default ctor.
-}
-
-//______________________________________________________________________________
 TClassRef::TClassRef(const TClassRef &org) :
-   fClassName(org.fClassName), fClassPtr(org.fClassPtr)
+   fClassName(org.fClassName), fClassPtr(org.fClassPtr), fPrevious(0), fNext(0)
 {
    // Copy ctor, increases reference count to original TClass object.
 
@@ -38,49 +36,80 @@ TClassRef::TClassRef(const TClassRef &org) :
 }
 
 //______________________________________________________________________________
-TClassRef &TClassRef::operator=(const TClassRef &rhs)
-{
-   // Assignment operator, increases reference count to original class object.
-
-   if (this != &rhs) {
-      fClassName = rhs.fClassName;
-      fClassPtr = rhs.fClassPtr;
-      if (fClassPtr) fClassPtr->AddRef(this);
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TClassRef::TClassRef(const char *classname) :
-    fClassName(classname), fClassPtr(0)
+    fClassName(classname), fClassPtr(0), fPrevious(0), fNext(0)
 {
    // Create reference to specified class name, but don't set referenced
    // class object.
 }
 
 //______________________________________________________________________________
-TClassRef::TClassRef(TClass *cl) :
-    fClassName(cl?cl->GetName():"unknown"), fClassPtr(cl)
+TClassRef::TClassRef(TClass *cl) : fClassPtr(cl), fPrevious(0), fNext(0)
 {
    // Add reference to specified class object.
-
-   if (fClassPtr) fClassPtr->AddRef(this);
+   
+   if (fClassPtr) {
+      fClassName = cl->GetName();
+      fClassPtr->AddRef(this);
+   }
 }
 
 //______________________________________________________________________________
-TClassRef::~TClassRef()
+TClassRef &TClassRef::operator=(const TClassRef &rhs)
 {
-   // Dtor, decreases reference count of TClass object.
+   // Assignment operator, increases reference count to original class object.
 
-   if (fClassPtr) fClassPtr->RemoveRef(this);
+   if (this != &rhs) {      
+      if (fClassPtr != rhs.fClassPtr) {
+         if (fClassPtr) fClassPtr->RemoveRef(this);
+         fClassName = rhs.fClassName;
+         fClassPtr  = rhs.fClassPtr;
+         if (fClassPtr) fClassPtr->AddRef(this);
+      }
+   }
+   return *this;
 }
 
 //______________________________________________________________________________
-TClass *TClassRef::GetClass()  const
+TClassRef &TClassRef::operator=(TClass* rhs)
+{
+   // Assignment operator, increases reference count to original class object.
+
+   if (this->fClassPtr != rhs) {      
+      if (fClassPtr) fClassPtr->RemoveRef(this);
+      fClassPtr  = rhs;
+      if (fClassPtr) {
+         fClassName = fClassPtr->GetName();
+         fClassPtr->AddRef(this);
+      }
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+TClass *TClassRef::InternalGetClass() const
 {
    // Return the current TClass object corresponding to fClassName.
+
    if (fClassPtr) return fClassPtr;
-   (const_cast<TClassRef*>(this))->fClassPtr = TClass::GetClass(fClassName.Data());
+   if (fClassName.size()==0) return 0;
+
+   (const_cast<TClassRef*>(this))->fClassPtr = gROOT->GetClass(fClassName.c_str());
    if (fClassPtr) fClassPtr->AddRef(const_cast<TClassRef*>(this));
+
    return fClassPtr;
+}
+
+//______________________________________________________________________________
+void TClassRef::ListReset() 
+{
+   // Reset this object and all the objects in the list.
+   // We assume that the TClass has also reset its fRefStart data member.
+
+   for (TClassRef *ref = this; ref != 0; /* nothing */ ) {
+      TClassRef *next = ref->fNext;
+      ref->fNext = ref->fPrevious = 0;
+      ref->fClassPtr = 0;
+      ref = next;
+   }
 }
