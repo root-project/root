@@ -1,3 +1,7 @@
+#include "Singleton.h+"
+
+void runtemplateSingleton(bool output=false)
 {
-// Fill out the code of the actual test
+   Singleton<int>::Instance().DoIt(output);
+   Singleton<double>::Instance().DoIt(output);
 }

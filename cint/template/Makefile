@@ -66,5 +66,7 @@ templatefriend.log : templatefriend_cxx.$(DllSuf)
 templatefriend: templatefriend.log
 	$(TestDiffW)
 
+templateSingleton.log: Singleton_h.$(DllSuf)
+
 templateSingleton: templateSingleton.log
 	$(TestDiff)
