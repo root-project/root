@@ -12,15 +12,9 @@ rm -rf $EXPDIR
 mkdir $EXPDIR
 cd $EXPDIR
 
-cvs -d :pserver:cvs@root.cern.ch:/user/cvs login <<!
-cvs
-!
-
-#cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs export -r $CURVERS root
-#cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs export -D today root
-cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs co root
-
-cvs -d :pserver:cvs@root.cern.ch:/user/cvs logout
+#cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co -r $CURVERS root
+#cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co -D today root
+cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co root
 
 tar cvf $TARFILE root
 gzip $TARFILE
