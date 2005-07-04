@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.104 2005/03/11 00:49:46 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.105 2005/04/15 17:26:09 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2356,13 +2356,13 @@ int main(int argc, char **argv)
 #else
       confdir = ROOTPREFIX;
 #endif
+   }
 #ifdef ROOTBINDIR
-      rootbindir= ROOTBINDIR;
+   rootbindir= ROOTBINDIR;
 #endif
 #ifdef ROOTETCDIR
-      rootetcdir= ROOTETCDIR;
+   rootetcdir= ROOTETCDIR;
 #endif
-   }
 
    // Define rootbindir if not done already
    if (!rootbindir.length())

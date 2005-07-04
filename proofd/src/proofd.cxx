@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.74 2005/02/12 02:14:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.75 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -833,7 +833,7 @@ int main(int argc, char **argv)
       gConfDir = std::string(*argv);
    } else {
       // try to guess the config directory...
-#ifndef ROOTPREFIX
+#ifndef ROOTDATADIR
       if (getenv("ROOTSYS")) {
          gConfDir = getenv("ROOTSYS");
          if (gDebug > 0)
@@ -843,15 +843,15 @@ int main(int argc, char **argv)
          Error(ErrFatal, -1, "main: no config directory specified");
       }
 #else
-      gConfDir = ROOTPREFIX;
-#endif
-#ifdef ROOTBINDIR
-      gRootBinDir= ROOTBINDIR;
-#endif
-#ifdef ROOTETCDIR
-      rootetcdir= ROOTETCDIR;
+      gConfDir = ROOTDATADIR;
 #endif
    }
+#ifdef ROOTBINDIR
+   gRootBinDir= ROOTBINDIR;
+#endif
+#ifdef ROOTETCDIR
+   rootetcdir= ROOTETCDIR;
+#endif
 
    // Define gRootBinDir if not done already
    if (!gRootBinDir.length())
