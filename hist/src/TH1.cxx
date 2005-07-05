@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.241 2005/05/18 12:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.242 2005/06/15 13:57:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2219,7 +2219,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    Int_t fitResult = 0;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
-   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
+   Double_t eplus,eminus,eparab,globcc,amin,aminref,edm,errdef,werr;
    Double_t params[100], arglist[100];
    Axis_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
    Int_t hxfirst, hxlast, hyfirst, hylast, hzfirst, hzlast;
@@ -2449,9 +2449,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 	 f1->SetParameter(i,par);
 	 f1->SetParError(i,werr);
       }
-      hFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+      hFitter->GetStats(aminref,edm,errdef,nvpar,nparx);
       //     If Log Likelihood, compute an equivalent chisquare
       //if (Foption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
+      amin = aminref;
       if (Foption.Like) amin = hFitter->Chisquare(npar, params);
 
       f1->SetChisquare(amin);
@@ -2462,8 +2463,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
 
    if (!Foption.Quiet) {
-      if (Foption.Errors) hFitter->PrintResults(4,amin);
-      else                hFitter->PrintResults(3,amin);
+      if (Foption.Errors) hFitter->PrintResults(4,aminref);
+      else                hFitter->PrintResults(3,aminref);
    }
 
 
