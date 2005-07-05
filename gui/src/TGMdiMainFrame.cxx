@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.15 2004/12/09 22:55:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.16 2005/01/12 18:39:29 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -434,8 +434,11 @@ TGRectangle TGMdiMainFrame::GetBBox() const
       TGMdiFrameList *travel;
 
       for (travel = fChildren; travel; travel = travel->GetNext()) {
-         TGRectangle wrect(travel->GetDecorFrame()->GetX(), travel->GetDecorFrame()->GetY(),
-                          travel->GetDecorFrame()->GetWidth(), travel->GetDecorFrame()->GetHeight());
+         Int_t x = travel->GetDecorFrame()->GetX();
+         Int_t y = travel->GetDecorFrame()->GetY();
+         UInt_t w = travel->GetDecorFrame()->GetWidth();
+         UInt_t h = travel->GetDecorFrame()->GetHeight();
+         TGRectangle wrect(x, y, w, h);
          rect.Merge(wrect);
       }
       return rect;
@@ -453,7 +456,8 @@ TGRectangle TGMdiMainFrame::GetMinimizedBBox() const
       if (travel->GetDecorFrame()->IsMinimized()) {
          TGRectangle wrect(travel->GetDecorFrame()->GetX(), travel->GetDecorFrame()->GetY(),
                            travel->GetDecorFrame()->GetWidth(), travel->GetDecorFrame()->GetHeight());
-         if (first) rect = wrect; else rect.Merge(wrect);
+         if (first) rect = wrect; 
+         else rect.Merge(wrect);
          first = kFALSE;
       }
    }
@@ -883,7 +887,7 @@ void TGMdiMainFrame::FreeMove(TGMdiFrame *mdiframe)
    if (!frame) return;
 
    Int_t x = frame->GetTitleBar()->GetWidth() / 2;
-   Int_t y = frame->GetTitleBar()->GetHeight() - 1;// / 2;
+   Int_t y = frame->GetTitleBar()->GetHeight() - 1;
 
    gVirtualX->Warp(x, y, frame->GetTitleBar()->GetId());
 
@@ -929,8 +933,8 @@ void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
    gVirtualX->SetCursor(frame->GetLowerRightCR()->GetId(), cursor);
 
    gVirtualX->GrabPointer(frame->GetLowerRightCR()->GetId(),
-               kButtonReleaseMask | kPointerMotionMask,
-               kNone, cursor, kTRUE, kFALSE);
+                           kButtonReleaseMask | kPointerMotionMask,
+                           kNone, cursor, kTRUE, kFALSE);
 
    frame->GetLowerRightCR()->HandleButton(&event);
 }
@@ -1075,8 +1079,8 @@ TGDimension TGMdiContainer::GetDefaultSize() const
 {
    TGRectangle rect = fMain->GetBBox();
 
-   Int_t xpos = -fMain->GetViewPort()->GetHPos();
-   Int_t ypos = -fMain->GetViewPort()->GetVPos();
+   Int_t xpos = -fMain->GetViewPort()->GetHPos() - rect.LeftTop().fX;
+   Int_t ypos = -fMain->GetViewPort()->GetVPos() - rect.LeftTop().fY;
 
    return TGDimension(TMath::Max(Int_t(xpos + fWidth), rect.RightBottom().fX + 1),
                       TMath::Max(Int_t(ypos + fHeight), rect.RightBottom().fY + 1));
@@ -1085,6 +1089,8 @@ TGDimension TGMdiContainer::GetDefaultSize() const
 //______________________________________________________________________________
 Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
 {
+   //
+
    if (event->fWindow != fId) {
       TGRectangle rect = fMain->GetBBox();
 
@@ -1095,7 +1101,7 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
       Int_t h = TMath::Max(vh, rect.RightBottom().fY + 1);
 
       if ((w != (Int_t)fWidth) || (h != (Int_t)fHeight)) {
-         ((TGMainFrame *)fMain)->Layout();
+         ((TGMdiMainFrame*)fMain)->Layout();
          return kTRUE;
       }
    }

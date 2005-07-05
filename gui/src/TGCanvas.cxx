@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.32 2005/01/19 16:09:29 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.33 2005/01/20 15:37:28 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -271,7 +271,8 @@ Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
    }
 
    TGContainer *cont = (TGContainer*)fContainer;
-   cont->DrawRegion(0, 0, fWidth, fHeight);
+   cont->DrawRegion(event->fX, event->fY, event->fWidth, event->fHeight);
+
    return kTRUE;
 }
 
@@ -343,6 +344,10 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
 TGContainer::~TGContainer()
 {
    // Delete canvas container.
+
+   if (TGSearchDialog::gDialog()) {
+      TQObject::Disconnect(TGSearchDialog::gDialog(), 0, this);
+   }
 
    delete fScrollTimer;
    fScrollTimer = 0;
@@ -1145,44 +1150,72 @@ Bool_t TGContainer::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGContainer::Search()
+TGFrame *TGContainer::FindFrameByName(const char *name)
 {
-   // Invokes search dialog. Looks for item with the entered name.
+   // find frame by name
 
-   Int_t ret = 0;
+   if (!IsMapped()) return 0;
+
+   Bool_t direction = kTRUE;
+   Bool_t caseSensitive = kFALSE;
+
+   if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
+      caseSensitive = TGSearchDialog::gDialog()->GetType()->fCaseSensitive;
+      direction = TGSearchDialog::gDialog()->GetType()->fDirection;
+   }
+
    char msg[256];
-   TGFrameElement* fe = 0;
-   fSearch = new TGSearchType;
+   TGFrameElement *fe = (TGFrameElement*)FindItem(name, direction, caseSensitive);
 
-   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, fSearch, &ret);
+   if (!fe) {  // find again
+      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      fLastActiveEl = 0;
+      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
 
-   if (ret) {
-         fe = (TGFrameElement*)FindItem(fSearch->fBuffer, fSearch->fDirection,
-                                        fSearch->fCaseSensitive);
-
-      if (!fe) {  // find again
-         if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
-         fLastActiveEl = 0;
-         fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
-
-         if (!fe) {
-            sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
-            gVirtualX->Bell(50);
-            new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
-                         kMBIconExclamation, kMBOk, 0);
-         } else {
-            if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
-            ActivateItem(fe);
-            AdjustPosition();
-         }
+      if (!fe) {
+         sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
+         gVirtualX->Bell(20);
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
+                       kMBIconExclamation, kMBOk, 0);
+         return 0;
       } else {
          if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
          ActivateItem(fe);
          AdjustPosition();
+         return fe->fFrame;
       }
+   } else {
+      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      ActivateItem(fe);
+      AdjustPosition();
+      return fe->fFrame;
    }
-   delete fSearch;
-   fSearch = 0;
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGContainer::Search(Bool_t close)
+{
+   // Invokes search dialog. Looks for item with the entered name.
+
+   Int_t ret = 0;
+
+   TGSearchType *srch = new TGSearchType;
+   srch->fClose = close;
+ 
+   if (!close) {
+      if (!TGSearchDialog::gDialog()) {
+         TGSearchDialog::gDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+      }
+      TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGContainer", this, "FindFrameByName(char *)");
+      TGSearchDialog::gDialog()->MapRaised();
+   } else {
+      new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+      if (ret) {
+         FindFrameByName(srch->fBuffer);
+      }
+      delete srch;
+   }
 }
 
 //______________________________________________________________________________
@@ -1369,7 +1402,7 @@ TGFrameElement* TGContainer::FindFrame(Int_t x,Int_t y,Bool_t exclude)
 }
 
 //______________________________________________________________________________
-void* TGContainer::FindItem(const TString& name, Bool_t direction,
+void *TGContainer::FindItem(const TString& name, Bool_t direction,
                             Bool_t caseSensitive, Bool_t beginWith)
 {
 
@@ -1379,7 +1412,7 @@ void* TGContainer::FindItem(const TString& name, Bool_t direction,
    if (name.IsNull()) return 0;
    int idx = kNPOS;
 
-   TGFrameElement* el = 0;
+   TGFrameElement *el = 0;
    TString str;
    TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
 
@@ -1402,11 +1435,11 @@ void* TGContainer::FindItem(const TString& name, Bool_t direction,
 
    while (el) {
       str = el->fFrame->GetTitle();
-      idx = str.Index(name,0,cmp);
+      idx = str.Index(name, 0, cmp);
 
-      if (idx!=kNPOS) {
+      if (idx != kNPOS) {
          if (beginWith) {
-            if (idx==0) return el;
+            if (idx == 0) return el;
          } else {
             return el;
          }

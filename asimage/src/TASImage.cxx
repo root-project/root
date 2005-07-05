@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.42 2005/06/21 18:15:13 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.44 2005/06/22 15:37:47 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -56,6 +56,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TASImage.h"
+#include "TASImagePlugin.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
@@ -72,6 +73,8 @@
 #include "TTF.h"
 #include "TRandom.h"
 #include "Riostream.h"
+#include "THashTable.h"
+#include "TPluginManager.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -102,6 +105,7 @@ Bool_t TASImage::fgInit = kFALSE;
 
 static ASFontManager *gFontManager = 0;
 static unsigned long kAllPlanes = ~0;
+THashTable *TASImage::fgPlugList = new THashTable(50);
 
 ///////////////////////////// alphablending macros ///////////////////////////////
 typedef struct {
@@ -132,6 +136,7 @@ static __argb32__ *b = new __argb32__;
 
 
 ClassImp(TASImage)
+ClassImp(TASImagePlugin)
 
 //______________________________________________________________________________
 void TASImage::DestroyImage()
@@ -334,27 +339,74 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // the first input parameter ("filename"), such string  is returned by 
    // GetImageBuffer method.
 
+   Bool_t xpm = filename && (filename[0] == '/' &&
+                filename[1] == '*') && filename[2] == ' ';
+   
+   if (xpm) {  // XPM strings in-memory array
+      SetImageBuffer((char**)&filename, TImage::kXpm);
+      fName = "XPM_image";
+      return;
+   }
+
+   ASImage *image = file2ASImage(filename, 0, SCREEN_GAMMA, GetImageCompression(), 0);
+
+   if (!image) {  // try to read it via plugin
+      TString ext = strrchr(filename, '.') + 1;
+
+      if (ext.IsNull()) {
+         return;
+      }
+      ext.ToLower();
+      ext.Strip();
+      UInt_t w = 0; 
+      UInt_t h = 0;
+      unsigned char *bitmap = 0;
+
+      TImagePlugin *plug = (TImagePlugin*)fgPlugList->FindObject(ext.Data());
+
+      if (!plug) {
+         TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TImagePlugin", ext.Data());
+         if (!handler || ((handler->LoadPlugin() == -1))) {
+            return;
+         }
+         plug = (TImagePlugin*)handler->ExecPlugin(1, ext.Data());
+
+         if (!plug) {
+            return;
+         }
+
+         fgPlugList->Add(plug);
+      }
+
+      if (plug) {
+         if (plug->InheritsFrom(TASImagePlugin::Class())) {
+            image = ((TASImagePlugin*)plug)->File2ASImage(filename);
+            if (image) goto end;
+         }
+         bitmap = plug->ReadFile(filename, w, h);
+         if (bitmap) {
+            image = bitmap2asimage(bitmap, w, h, 0, 0);
+         }
+         if (!image) {
+            return;
+         }
+      }
+   }
+
+end:
+   fName.Form("%s.", gSystem->BaseName(filename));
+
    DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 
-   Bool_t xpm = filename && (filename[0] == '/' &&
-                filename[1] == '*') && filename[2] == ' ';
-   
-   if (xpm) {
-      SetImageBuffer((char**)&filename, TImage::kXpm);
-      fName = "XPM_image";
-   } else {
-      fImage = file2ASImage(filename, 0, SCREEN_GAMMA, GetImageCompression(), 0);
-      fName.Form("%s.", gSystem->BaseName(filename));
-   }
-
+   fImage      = image;
    fZoomUpdate = kNoZoom;
    fEditable   = kFALSE;
    fZoomOffX   = 0;
    fZoomOffY   = 0;
-   fZoomWidth  = fImage ? fImage->width : 0;
-   fZoomHeight = fImage ? fImage->height : 0;
+   fZoomWidth  = fImage->width;
+   fZoomHeight = fImage->height;
    fPaintMode  = 1;
 }
 
@@ -788,9 +840,6 @@ void TASImage::Draw(Option_t *option)
    //
    // The default is to display the image in the current gPad.
 
-   static UInt_t bw = 0;
-   static UInt_t bh = 0;
-
    if (!fImage) {
       Error("Draw", "no image set");
       return;
@@ -799,9 +848,12 @@ void TASImage::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
-      new TCanvas(GetName(), Form("%s (%d x %d)", GetName(),
-                  fImage->width, fImage->height),
-                  fImage->width+bw, fImage->height+bh);
+      Int_t w = fImage->height < 65 ? -fImage->width : fImage->width;
+      Int_t h = fImage->height < 65 ? 64 : fImage->height;
+      TString rname = GetName();
+      rname.ReplaceAll(".", "");
+      new TCanvas(rname.Data(), Form("%s (%d x %d)", rname.Data(), 
+                  fImage->width, fImage->height), w, h);
    }
 
    if (!opt.Contains("x")) {
@@ -817,7 +869,7 @@ void TASImage::Draw(Option_t *option)
       gPad->RangeAxis(0, 0, 1, 1);
    }
 
-   TFrame * frame = gPad->GetFrame();
+   TFrame *frame = gPad->GetFrame();
    frame->SetBorderMode(0);
    frame->SetFillColor(gPad->GetFillColor());
    frame->SetLineColor(gPad->GetFillColor());
@@ -3680,6 +3732,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
             }
             if (iDash >= nDash) {
                iDash = 0;
+
                i = 0;
             }
          }
@@ -4987,7 +5040,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
    params.flags = 0;
    params.width = 0;
    params.height = 0 ;
-   params.filter = SCL_DO_ALL ;
+   params.filter = SCL_DO_ALL;
    params.gamma = 0;
    params.gamma_table = 0;
    params.compression = 0;
@@ -5045,11 +5098,14 @@ void TASImage::CreateThumbnail()
 
    if (fImage->width > fImage->height) {
       w = sz;
-      h = fImage->height/(fImage->width/sz);
+      h = (fImage->height*sz)/fImage->width;
    } else {
       h = sz;
-      w = fImage->width/(fImage->height/sz);
+      w = (fImage->width*sz)/fImage->height;
    }
+
+   w = w < 8 ? 8 : w;
+   h = h < 8 ? 8 : h;
 
    img = scale_asimage(fgVisual, fImage, w, h, ASA_ASImage, 
                        GetImageCompression(), GetImageQuality());

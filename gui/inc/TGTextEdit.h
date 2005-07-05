@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.14 2004/06/14 10:28:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.15 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -96,7 +96,8 @@ public:
    virtual Bool_t Paste();
    virtual void   Print(Option_t * = "") const;
    virtual void   Delete(Option_t * = "");
-   virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
+   virtual Bool_t Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE);
+   virtual void   Search(Bool_t close);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
                           Bool_t direction, Bool_t caseSensitive);
    virtual Bool_t Goto(Long_t line, Long_t column = 0);
@@ -118,6 +119,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleFocusChange(Event_t *event);
+   virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*

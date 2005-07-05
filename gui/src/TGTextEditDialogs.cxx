@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.8 2004/12/15 09:27:48 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TGTextEntry.h"
 #include "TGIcon.h"
 #include "TGMsgBox.h"
+#include "TGComboBox.h"
 
 #include <stdlib.h>
 
@@ -45,6 +46,8 @@ ClassImp(TGSearchDialog)
 ClassImp(TGPrintDialog)
 ClassImp(TGGotoDialog)
 
+static TString gLastSearchString;
+TGSearchDialog *TGSearchDialog::gSearchDialog = 0;
 
 //______________________________________________________________________________
 TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
@@ -86,21 +89,23 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    fLSearch = new TGLabel(fF3, new TGHotString("Search &for:"));
 
    fBSearch = new TGTextBuffer(100);
-   if (fType->fBuffer)
-      fBSearch->AddText(0,fType->fBuffer);
+   if (!gLastSearchString.IsNull())
+      fBSearch->AddText(0, gLastSearchString.Data());
    else
       fSearchButton->SetState(kButtonDisabled);
 
-   fSearch = new TGTextEntry(fF3, fBSearch);
+   fCombo = new TGComboBox(fF3, "");
+   fSearch = fCombo->GetTextEntry();
+   fBSearch = fSearch->GetBuffer(); 
    fSearch->Associate(this);
-   fSearch->Resize(220, fSearch->GetDefaultHeight());
+   fCombo->Resize(220, fSearch->GetDefaultHeight());
    fSearch->SelectAll();
 
    fL5 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 5, 0, 0);
    fL6 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 0, 2, 0, 0);
 
    fF3->AddFrame(fLSearch, fL5);
-   fF3->AddFrame(fSearch, fL6);
+   fF3->AddFrame(fCombo, fL6);
 
    fG2 = new TGGroupFrame(fF4, new TGString("Direction"), kHorizontalFrame);
 
@@ -150,8 +155,11 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
                kMWMFuncAll | kMWMFuncMaximize | kMWMFuncResize,
                kMWMInputModeless);
 
-   MapWindow();
-   fClient->WaitFor(this);
+   if (fType->fClose) {
+      MapWindow();
+      fSearch->RequestFocus();
+      fClient->WaitFor(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -163,7 +171,7 @@ TGSearchDialog::~TGSearchDialog()
    delete fCancelButton;
    delete fDirectionRadio[0]; delete fDirectionRadio[1];
    delete fCaseCheck;
-   delete fSearch;
+   delete fCombo;
    delete fLSearch;
    delete fG2;
    delete fF1; delete fF2; delete fF3; delete fF4;
@@ -177,7 +185,19 @@ void TGSearchDialog::CloseWindow()
    // Close the dialog. On close the dialog will be deleted and cannot be
    // re-used.
 
-   DeleteWindow();
+   if (fType->fClose) {
+      DeleteWindow();
+   } else {
+      UnmapWindow();
+   }
+}
+
+//______________________________________________________________________________
+void TGSearchDialog::TextEntered(const char *text)
+{
+   // emit signal when search text entered
+
+   Emit("TextEntered(const char *)", text);
 }
 
 //______________________________________________________________________________
@@ -194,10 +214,12 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   case 1:
                      string = fBSearch->GetString();
-                     fType->fBuffer = new char[strlen(string)+1];
-                     strcpy(fType->fBuffer, string);
+                     fType->fBuffer = (char*)string;
+                     gLastSearchString = string;
                      *fRetCode = kTRUE;
-                     CloseWindow();
+                     TextEntered(string);
+                     fCombo->ReturnPressed();
+                     if (fType->fClose) CloseWindow();
                      break;
                   case 2:
                      *fRetCode = kFALSE;
@@ -232,17 +254,19 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTE_TEXTCHANGED:
                string = fBSearch->GetString();
-               if (strlen(string) == 0)
+               if (strlen(string) == 0) {
                   fSearchButton->SetState(kButtonDisabled);
-               else
+               } else {
                   fSearchButton->SetState(kButtonUp);
+               }
                break;
             case kTE_ENTER:
                string = fBSearch->GetString();
-               fType->fBuffer = new char[strlen(string)+1];
-               strcpy(fType->fBuffer, string);
+               fType->fBuffer = (char*)string;
+               gLastSearchString = string;
                *fRetCode = kTRUE;
-               CloseWindow();
+               TextEntered(string);
+               if (fType->fClose) CloseWindow();
                break;
             default:
                break;
@@ -346,6 +370,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
                kMWMFuncAll | kMWMFuncMaximize | kMWMFuncResize,
                kMWMInputModeless);
 
+   fPrinterEntry->RequestFocus();
    MapWindow();
    fClient->WaitFor(this);
 }
@@ -490,6 +515,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
                kMWMInputModeless);
 
    MapWindow();
+   fGoTo->RequestFocus();
    fClient->WaitFor(this);
 }
 

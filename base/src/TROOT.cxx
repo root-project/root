@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.154 2005/06/23 20:51:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.155 2005/07/01 08:51:17 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -382,6 +382,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fMessageHandlers = new TList;
    fSecContexts = new TList;
    fProofs      = new TList;
+   fClipboard   = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.5 2000/07/12 17:58:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    void DelText(ULong_t pos, ULong_t length);
    void InsText(ULong_t pos, const char *text);
    char *GetText(ULong_t pos, ULong_t length);
+   char *GetText() const { return fString; }
 
    void DelChar(ULong_t pos);
    void InsChar(ULong_t pos, char character);
@@ -104,6 +105,7 @@ public:
 
    Bool_t  DelLine(ULong_t pos);
    char   *GetLine(TGLongPosition pos, ULong_t length);
+   TGTextLine *GetCurrentLine() const { return fCurrent; }
    Bool_t  BreakLine(TGLongPosition pos);
    Bool_t  InsLine(ULong_t row, const char *string);
 

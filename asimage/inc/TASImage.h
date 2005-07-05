@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.13 2005/06/21 17:09:25 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.14 2005/06/21 18:15:13 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 struct ASImage;
 struct ASVisual;
 class TBrowser;
+class THashTable;
 
 class TASImage : public TImage {
 
@@ -81,6 +82,7 @@ protected:
    Pixmap_t  fMask;         //! mask
    ASImage  *fGrayImage;    //! gray image
    Bool_t    fIsGray;       //! kTRUE if image is gray
+   static THashTable *fgPlugList;   //! hash table containing loaded plugins
 
    static ASVisual *fgVisual;  // pointer to visual structure
    static Bool_t    fgInit;    // global flag to init afterimage only once

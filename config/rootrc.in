@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.106 2005/06/17 14:07:16 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.107 2005/06/18 09:58:57 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -431,6 +431,9 @@ Plugin.TViewerX3D:      x11    TViewerX3D    X3d          "TViewerX3D(TVirtualPa
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
 Plugin.TImage:              *  TASImage      ASImage      "TASImage()"
 Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImageGui  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
+Plugin.TImagePlugin:     ps    TASPluginGS   ASPluginGS   "TASPluginGS(const char*)"
++Plugin.TImagePlugin:    eps   TASPluginGS   ASPluginGS   "TASPluginGS(const char*)"
++Plugin.TImagePlugin:    pdf   TASPluginGS   ASPluginGS   "TASPluginGS(const char*)"
 Plugin.TFileDrawMap         *  TFileDrawMap  TreePlayer   "TFileDrawMap(const TFile*, const char*, const char*)"
 Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,const char*)"
 +Plugin.TVirtualX:   x11ttf    TGX11TTF      GX11TTF      "TGX11TTF()"

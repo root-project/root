@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.107 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.108 2005/02/18 11:22:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1328,12 +1328,13 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
                       kKeyControlMask, kTRUE);
 
-   // if parent is editting/embedable add this frame to the parent
+   // if parent is editting/embeddable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
       if (p->InheritsFrom(TGCompositeFrame::Class())) {
+         static TGLayoutHints expandLH(kLHintsExpandX | kLHintsExpandY);
          frame = (TGCompositeFrame*)p;
-         frame->AddFrame(this);
+         frame->AddFrame(this, &expandLH);
 
          // used during paste operation
          if (gDragManager && gDragManager->IsPasting()) {

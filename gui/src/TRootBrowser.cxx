@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.74 2005/05/31 18:52:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.75 2005/06/01 12:35:55 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -40,6 +40,8 @@
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"
 #include "TGTextEntry.h"
+#include "TGTextEdit.h"
+#include "TGTextEditDialogs.h"
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -87,6 +89,7 @@ enum ERootBrowserCommands {
    kViewLineUp,
    kViewHidden,
    kViewRefresh,
+   kViewFind,
 
    kViewArrangeByName,     // Arrange submenu
    kViewArrangeByType,
@@ -146,6 +149,8 @@ static ToolBarData_t gToolBarData[] = {
    { "tb_back.xpm",      "Back",           kFALSE, kHistoryBack, 0 },
    { "tb_forw.xpm",      "Forward",        kFALSE, kHistoryForw, 0 },
    { "tb_refresh.xpm",   "Refresh (F5)",   kFALSE, kViewRefresh, 0 },
+   { "",                 "",               kFALSE, -1, 0 },
+   { "tb_find.xpm",      "Find (Ctrl-F)",  kFALSE, kViewFind, 0 },
    { 0,                  0,                kFALSE, 0, 0 }
 };
 
@@ -155,6 +160,7 @@ static ToolBarData_t gToolBarData[] = {
 static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
+
 ////////////////////////////////////////////////////////////////////////////////////
 class TRootBrowserHistoryCursor : public TObject {
 public:
@@ -653,7 +659,7 @@ void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
    // Find a frame which assosiated object has a name containing a "name" string.
 
    if (!fGrouped) {
-      return TGContainer::FindItem(name,direction,caseSensitive,beginWith);
+      return TGContainer::FindItem(name, direction, caseSensitive, beginWith);
    }
 
    if (name.IsNull()) return 0;
@@ -823,6 +829,8 @@ TRootBrowser::~TRootBrowser()
    delete fComboLayout;
    delete fBarLayout;
 
+   delete fTextEdit;
+
    if (fWidgets) fWidgets->Delete();
    delete fWidgets;
 
@@ -839,6 +847,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fEditDisabled = kTRUE;
    fHistory = new TRootBrowserHistory;
    fHistoryCursor = 0;
+   fBrowseTextFile = kFALSE;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -1022,9 +1031,9 @@ void TRootBrowser::CreateBrowser(const char *name)
    fLt->Associate(this);
    fLt->SetAutoTips();
 
-   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   fWidgets->Add(lo);
-   fV1->AddFrame(fTreeView, lo);
+   fExpandLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+   fWidgets->Add(fExpandLayout);
+   fV1->AddFrame(fTreeView, fExpandLayout);
 
    // Create list view (icon box)
    fListView = new TGListView(fV2, 520, 250); // canvas
@@ -1046,7 +1055,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    }
 
    // reuse lo from "create tree"
-   fV2->AddFrame(fListView, lo);
+   fV2->AddFrame(fListView, fExpandLayout);
 
    AddFrame(fHf, lo);
 
@@ -1057,6 +1066,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    fStatusBar->SetParts(parts, 2);
    lo = new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0);
    AddFrame(fStatusBar, lo);
+
+   fTextEdit = 0;
 
    // Misc
    SetWindowName(name);
@@ -1174,20 +1185,17 @@ void TRootBrowser::BrowseObj(TObject *obj)
    // Emits signal "BrowseObj(TObject*)".
 
    TGPosition pos = fIconBox->GetPagePosition();
-
    Emit("BrowseObj(TObject*)", (Long_t)obj);
 
    if (obj->IsFolder()) fIconBox->RemoveAll();
-
    obj->Browse(fBrowser);
-
    if ((fListLevel && obj->IsFolder()) || (!fListLevel && (obj == gROOT))) {
       fIconBox->Refresh();
    }
 
-   if (fBrowser)
+   if (fBrowser) {
       fBrowser->SetRefreshFlag(kFALSE);
-
+   }
    UpdateDrawOption();
 
    fIconBox->SetHsbPosition(pos.fX);
@@ -1268,7 +1276,6 @@ void TRootBrowser::DisplayDirectory()
 
    char *p, path[1024];
 
-
    fLt->GetPathnameFromItem(fListLevel, path, 12);
    p = path;
    while (*p && *(p+1) == '/') ++p;
@@ -1283,11 +1290,17 @@ void TRootBrowser::DisplayDirectory()
    p = path;
    while (*p && *(p+1) == '/') ++p;
    fFSComboBox->Update(p);
-   if (fListLevel) AddToHistory(fListLevel);
+
+   if (fListLevel) {
+      AddToHistory(fListLevel);
+   } else {
+      return;
+   }
 
    // disable/enable up level navigation
    TGButton *btn = fToolBar->GetButton(kOneLevelUp);
    const char *dirname = gSystem->DirName(p);
+
    TObject *obj = (TObject*)fListLevel->GetUserData();
    Bool_t disableUp = (strlen(dirname) == 1) && (*dirname == '/');
 
@@ -1313,7 +1326,6 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
-      Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       TString act;
       TString ext = obj->GetName();
 
@@ -1328,6 +1340,9 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          } else {
             gApplication->ProcessLine(act.Data());
          }
+         Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+      } else {
+         BrowseTextFile(obj->GetName());
       }
 
       ////////// new TFile was opened. Add it to the browser /////
@@ -1379,6 +1394,9 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
                w = (img->GetWidth()*sz)/img->GetHeight();
             }
 
+            w = w < 54 ? 54 : w;
+            h = h < 54 ? 54 : h;
+
             img->Scale(w, h);
             img->Merge(img, "tint");   // contrasting
             img->DrawBox(0, 0, w, h, "#ffff00", 1); // yellow frame
@@ -1406,6 +1424,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    TRootHelpDialog *hd;
    TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
+   TObject *obj;
+   TGListTreeItem *item = 0;
 
    gVirtualX->Update();
 
@@ -1528,8 +1548,10 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   // Handle toolbar button...
                   case kOneLevelUp:
                   {
-                     TGListTreeItem *item = 0;
-                     TObject *obj;
+                     if (fBrowseTextFile) {
+                        HideTextEdit();
+                        break;
+                     }
                      if (!fListLevel || !fListLevel->IsActive()) break;
 
                      if (fListLevel && fIconBox->WasGrouped()) {
@@ -1545,16 +1567,18 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
                      }
                      if (fListLevel) item = fListLevel->GetParent();
+                     
 
                      if (item) {
                         fListLevel = item;
+                        obj = (TObject *)fListLevel->GetUserData();
                         HighlightListLevel();
-                        DisplayDirectory();
-                        obj = (TObject *) fListLevel->GetUserData();
-                        BrowseObj(obj);
+                        DisplayDirectory();                     
+                        if (obj) BrowseObj(obj);
                         fClient->NeedRedraw(fLt);
                      } else {
-                        ToUpSystemDirectory();
+                        obj = (TObject *)fListLevel->GetUserData();
+                        if (obj) ToSystemDirectory(gSystem->DirName(obj->GetTitle()));
                      }
                      break;
                   }
@@ -1565,6 +1589,10 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kHistoryForw:
                      HistoryForward();
+                     break;
+
+                  case kViewFind:
+                     Search();
                      break;
 
                   // Handle Help menu items...
@@ -1628,10 +1656,16 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                if (parm1 == kFSComboBox) {
                   TGTreeLBEntry *e = (TGTreeLBEntry *) fFSComboBox->GetSelectedEntry();
                   if (e) {
-                     fListLevel = fLt->FindItemByPathname(e->GetPath()->GetString());
-                     HighlightListLevel();
-                     DisplayDirectory();
-                     Refresh(kTRUE);
+                     const char *dirname = e->GetPath()->GetString();
+                     item = fLt->FindItemByPathname(dirname);
+                     if (item) {
+                        fListLevel = item;
+                        HighlightListLevel();
+                        DisplayDirectory();
+                        fClient->NeedRedraw(fLt);
+                     } else {
+                        ToSystemDirectory(dirname);
+                     }
                   }
                }
                break;
@@ -1646,6 +1680,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
             case kCT_ITEMCLICK:
                if (parm1 == kButton1 || parm1 == kButton3) {
+                  HideTextEdit();
                   TGListTreeItem *item;
                   TObject *obj = 0;
                   if ((item = fLt->GetSelected()) != 0 ) {
@@ -1666,6 +1701,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
             case kCT_ITEMDBLCLICK:
                if (parm1 == kButton1) {
+                  if (fBrowseTextFile) {
+                     HideTextEdit();
+                  }
                   if (fListLevel && fIconBox->WasGrouped()) {
                      TObject *obj;
                      TGListTreeItem *item;
@@ -1697,8 +1735,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   // display title of selected object
                   TGFileItem *item;
                   void *p = 0;
-                  if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                     TObject *obj = (TObject *) item->GetUserData();
+                  if ((item = (TGFileItem *)fIconBox->GetNextSelected(&p)) != 0) {
+                     TObject *obj = (TObject *)item->GetUserData();
 
                      TGListTreeItem *itm = 0;
                      if (!fListLevel) itm = fLt->GetFirstItem();
@@ -1862,6 +1900,10 @@ Bool_t TRootBrowser::HistoryBackward()
 {
    // go to the past
 
+   if (fBrowseTextFile) {
+      HideTextEdit();
+      return kFALSE;
+   }
    TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->Before(fHistoryCursor);
    TGButton *btn = fToolBar->GetButton(kHistoryBack);
    TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
@@ -1892,6 +1934,11 @@ Bool_t TRootBrowser::HistoryBackward()
 Bool_t TRootBrowser::HistoryForward()
 {
    //  go to the future
+
+   if (fBrowseTextFile) {
+      HideTextEdit();
+      return kFALSE;
+   }
 
    TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor);
    TGButton *btn = fToolBar->GetButton(kHistoryForw);
@@ -1969,21 +2016,19 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::ToUpSystemDirectory()
+void TRootBrowser::ToSystemDirectory(const char *dirname)
 {
-   // display upper directory
+   // display  directory
+
+   TString dir = dirname;
 
    if (fListLevel) {
       TObject* obj = (TObject*)fListLevel->GetUserData();
 
-      if (obj && (obj->IsA()==TSystemDirectory::Class())) {
-         TString dirname;
-         dirname = obj->GetTitle();
+      if (obj && (obj->IsA() == TSystemDirectory::Class())) {
          TObject* old = obj;
-         dirname = gSystem->DirName(dirname.Data());
-         fListLevel->Rename(dirname.Data());
-         obj = new TSystemDirectory(dirname.Data(),dirname.Data());
-
+         fListLevel->Rename(dir.Data());
+         obj = new TSystemDirectory(dir.Data(), dir.Data());
          while (fListLevel->GetFirstChild())
             fLt->RecursiveDeleteItem(fListLevel->GetFirstChild(),
                                      fListLevel->GetFirstChild()->GetUserData());
@@ -1998,8 +2043,8 @@ void TRootBrowser::ToUpSystemDirectory()
          fClient->NeedRedraw(fLt);
          fClient->NeedRedraw(fIconBox);
          DisplayDirectory();
-         gSystem->ChangeDirectory(dirname.Data());
-         fStatusBar->SetText(dirname.Data(),1);
+         //gSystem->ChangeDirectory(dir.Data());
+         fStatusBar->SetText(dir.Data(), 1);
          ClearHistory();   // clear browsing history
       }
    }
@@ -2034,6 +2079,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 {
    // Default action when double clicking on icon.
 
+   const char *dirname = 0; 
    if (obj) {
       TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
 
@@ -2055,7 +2101,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
                   fListLevel = 0;
                }
             } else {
-               ToUpSystemDirectory();
+               dirname = gSystem->DirName(gSystem->pwd());
+               ToSystemDirectory(dirname);
                return;
             }
          }
@@ -2068,11 +2115,13 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          if (fListLevel) {
             fLt->OpenItem(fListLevel);
             itm = fListLevel->GetFirstChild();
-         } else
+         } else {
             itm = fLt->GetFirstItem();
+         }
 
-         while (itm && (itm->GetUserData() != obj))
+         while (itm && (itm->GetUserData() != obj)) {
             itm = itm->GetNextSibling();
+         }
 
          if (!itm && fListLevel) {
             itm = fLt->AddItem(fListLevel, obj->GetName());
@@ -2082,7 +2131,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          if (itm) {
             fListLevel = itm;
             DisplayDirectory();
-            TObject *kobj = (TObject *) itm->GetUserData();
+            TObject *kobj = (TObject *)itm->GetUserData();
 
             if (kobj->IsA() == TKey::Class()) {
                Chdir(fListLevel->GetParent());
@@ -2112,11 +2161,13 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
 out:
       if (obj->IsA() != TSystemFile::Class()) {
-         if (obj && obj->IsFolder())
+         if (obj && obj->IsFolder()) {
             fIconBox->Refresh();
+         }
 
-         if (fBrowser)
+         if (fBrowser) {
             fBrowser->SetRefreshFlag(kFALSE);
+         }
 
          fClient->NeedRedraw(fIconBox);
          fClient->NeedRedraw(fLt);
@@ -2145,6 +2196,12 @@ void TRootBrowser::Refresh(Bool_t force)
 {
    // Refresh the browser contents.
 
+   if (fTextEdit) {
+      fTextEdit->LoadFile(fTextFileName.Data());
+      fClient->NeedRedraw(fTextEdit);
+      return;
+   }
+
    if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force)
       && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
@@ -2164,8 +2221,7 @@ void TRootBrowser::Refresh(Bool_t force)
 
       // Refresh the IconBox
       if (fListLevel) {
-         TObject *obj = (TObject *) fListLevel->GetUserData();
-
+         TObject *obj = (TObject *)fListLevel->GetUserData();
          if (obj) {
             fTreeLock = kTRUE;
             BrowseObj(obj);
@@ -2321,4 +2377,113 @@ void TRootBrowser::SetSortMode(Int_t new_mode)
 
    fIconBox->Sort(smode);
 }
+
+//______________________________________________________________________________
+void TRootBrowser::Search()
+{
+   // starts serach dialog
+
+   if (!fTextEdit) {
+      fIconBox->Search(kFALSE);
+   } else {
+      fTextEdit->Search(kFALSE);
+   }
+}
+
+//______________________________________________________________________________
+static Bool_t isBinary(const char *str, int len)
+{
+   // test 
+
+   for (int i = 0; i < len; i++) {
+      char c = str[i];
+      if (((c < 32) || (c > 126)) && (c != '\t') && (c != '\r') && (c != '\n')) {
+         return kTRUE;
+      }
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TRootBrowser::HideTextEdit()
+{
+   // hide text edit 
+
+   if (!fTextEdit) return;
+
+   fTextEdit->UnmapWindow();
+   fV2->RemoveFrame(fTextEdit);
+   fV2->AddFrame(fListView, fExpandLayout);
+   fTextEdit->DestroyWindow();
+   delete fTextEdit;
+   fTextEdit = 0;
+   fListView->Resize(fV2->GetWidth(), fV2->GetHeight());
+   fV2->MapSubwindows();
+   fV2->Layout();
+   fBrowseTextFile = kFALSE;
+   fTextFileName = "";
+}
+
+//______________________________________________________________________________
+void TRootBrowser::BrowseTextFile(const char *file)
+{
+   // browse text file
+
+   Bool_t loaded = (fTextEdit != 0);
+   if (gSystem->AccessPathName(file, kReadPermission)) {
+      if (loaded) {
+         HistoryBackward();
+      }
+      return;
+   }
+   const int bufferSize = 1024;
+   char buffer[bufferSize];
+
+   FILE *fd = fopen(file, "r");
+   int sz = fread(buffer, bufferSize, 1, fd);
+   fclose(fd);
+
+   if (isBinary(buffer, sz)) {
+      if (loaded) {
+         HistoryBackward();
+      }
+      return;
+   }
+
+   if (!fTextEdit) {
+      fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(), 
+                                 kSunkenFrame | kDoubleBorder);
+      if (TGSearchDialog::gDialog()) {
+         TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
+                                             fTextEdit, "Search(char *,Bool_t,Bool_t)");
+      }
+      fV2->AddFrame(fTextEdit, fExpandLayout);
+   }
+   fTextFileName = file;
+   fTextEdit->LoadFile(file);
+   if (loaded) return;
+
+   fTextEdit->SetReadOnly();
+   fListView->UnmapWindow();
+   fV2->RemoveFrame(fListView);
+   fV2->MapSubwindows();
+   fV2->Layout();
+   fBrowseTextFile = kTRUE;
+
+   if (fListLevel) {
+      AddToHistory(fListLevel);
+   }
+   TGButton *btn = fToolBar->GetButton(kHistoryForw);
+
+   if (btn) {
+      btn->SetState(kButtonDisabled);
+   }
+
+   TGButton *btn2 = fToolBar->GetButton(kHistoryBack);
+
+   if (btn2) {
+      btn2->SetState(kButtonUp);
+   }
+}
+
 

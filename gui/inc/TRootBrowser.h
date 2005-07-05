@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.16 2005/05/27 12:24:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.17 2005/05/30 10:21:14 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -47,6 +47,7 @@ class TGFileItem;
 class TList;
 class TGFileContainer;
 class TGComboBox;
+class TGTextEdit;
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
@@ -70,6 +71,9 @@ private:
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
    TGComboBox          *fDrawOption;         // drawing option entry
+   TGLayoutHints       *fExpandLayout;       //
+   Bool_t               fBrowseTextFile;     //
+   TString              fTextFileName;
 
    TList               *fWidgets;
    TList               *fHistory;            // history of browsing
@@ -86,8 +90,11 @@ private:
    void  DisplayTotal(Int_t total, Int_t selected);
    void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
    void  SetSortMode(Int_t new_mode);
-   void  ToUpSystemDirectory();
+   void  ToSystemDirectory(const char *dirname);
    void  UpdateDrawOption();
+   void  Search();
+   void  BrowseTextFile(const char *file);
+   void  HideTextEdit();
 
    Bool_t  HistoryBackward();
    Bool_t  HistoryForward();
@@ -110,6 +117,7 @@ protected:
    Bool_t               fTreeLock;          // true when we want to lock TGListTree
    Int_t                fViewMode;          // current IconBox view mode
    Int_t                fSortMode;          // current IconBox sort mode
+   TGTextEdit          *fTextEdit;          // text 
 
 public:
    TRootBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 500, UInt_t height = 300);

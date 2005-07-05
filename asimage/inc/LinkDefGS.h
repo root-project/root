@@ -1,4 +1,4 @@
-/* @(#)root/asimage:$Name:  $:$Id: LinkDef.h,v 1.3 2005/05/06 14:55:47 brun Exp $ */
+/* @(#)root/asimage:$Name:  $:$Id: LinkDefGS.h,v 1.1 2005/04/29 16:16:34 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TASImage-;
-#pragma link C++ class TASImagePlugin;
+#pragma link C++ class TASPluginGS;
 
 #endif

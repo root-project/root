@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.6 2004/12/09 22:55:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.7 2005/04/07 14:43:35 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -207,6 +207,7 @@ public:
 
    TGMdiFrame      *GetCurrent() const;
    TGMdiFrame      *GetMdiFrame(UInt_t id) const;
+   TGFrame         *GetContainer() const { return fContainer; }
    Bool_t           SetCurrent(UInt_t newcurrent);
    Bool_t           SetCurrent(TGMdiFrame *f);  //*SIGNAL*
 

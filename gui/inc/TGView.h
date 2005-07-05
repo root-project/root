@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.9 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -73,6 +73,7 @@ protected:
    TViewTimer       *fScrollTimer;  // scrollbar timer
    TGGC              fWhiteGC;      // graphics context used for scrolling
                                     // generates GraphicsExposure events
+   Bool_t            fReadOnly;     //
 
 public:
    TGView(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
@@ -117,7 +118,10 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
+   virtual void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; }
+   virtual Bool_t IsReadOnly() const { return fReadOnly; }
 
    virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
 
@@ -139,21 +143,23 @@ public:
                Pixel_t back = GetWhitePixel());
 
    Bool_t HandleSelectionRequest(Event_t *event)
-        { fView->HandleSelectionRequest(event); return kTRUE; }
+        { return fView->HandleSelectionRequest(event); }
    Bool_t HandleSelectionClear(Event_t *event)
-        { fView->HandleSelectionClear(event); return kTRUE; }
+        { return fView->HandleSelectionClear(event); }
    Bool_t HandleSelection(Event_t *event)
-        { fView->HandleSelection(event); return kTRUE; }
+        { return fView->HandleSelection(event); }
    Bool_t HandleButton(Event_t *event)
-        { fView->HandleButton(event); return kTRUE; }
+        { return fView->HandleButton(event); }
    Bool_t HandleExpose(Event_t *event)
-        { fView->HandleExpose(event); return kTRUE; }
+        { return fView->HandleExpose(event); }
    Bool_t HandleCrossing(Event_t *event)
-        { fView->HandleCrossing(event); return kTRUE; }
+        { return fView->HandleCrossing(event); }
    Bool_t HandleMotion(Event_t *event)
-        { fView->HandleMotion(event); return kTRUE; }
+        { return fView->HandleMotion(event); }
    Bool_t HandleKey(Event_t *event)
-        { fView->HandleKey(event); return kTRUE; }
+        { return fView->HandleKey(event); }
+   Bool_t HandleDoubleClick(Event_t *event)
+        { return fView->HandleDoubleClick(event); }
 
    ClassDef(TGViewFrame,0)  // Frame containing the actual text
 };

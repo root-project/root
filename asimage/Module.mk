@@ -53,7 +53,7 @@ ASIMAGEDS    := $(MODDIRS)/G__ASImage.cxx
 ASIMAGEDO    := $(ASIMAGEDS:.cxx=.o)
 ASIMAGEDH    := $(ASIMAGEDS:.cxx=.h)
 
-ASIMAGEH     := $(MODDIRI)/TASImage.h
+ASIMAGEH     := $(MODDIRI)/TASImage.h $(MODDIRI)/TASImagePlugin.h
 ASIMAGES     := $(MODDIRS)/TASImage.cxx
 ASIMAGEO     := $(ASIMAGES:.cxx=.o)
 
@@ -75,13 +75,28 @@ ASIMAGEGUIDEP := $(ASIMAGEGUIO:.o=.d) $(ASIMAGEGUIDO:.o=.d)
 
 ASIMAGEGUILIB := $(LPATH)/libASImageGui.$(SOEXT)
 
+##### libASPluginGS #####
+ASIMAGEGSL  := $(MODDIRI)/LinkDefGS.h
+ASIMAGEGSDS := $(MODDIRS)/G__ASImageGS.cxx
+ASIMAGEGSDO := $(ASIMAGEGSDS:.cxx=.o)
+ASIMAGEGSDH := $(ASIMAGEGSDS:.cxx=.h)
+
+ASIMAGEGSH  := $(MODDIRI)/TASPluginGS.h
+ASIMAGEGSS  := $(MODDIRS)/TASPluginGS.cxx
+ASIMAGEGSO  := $(ASIMAGEGSS:.cxx=.o)
+
+ASIMAGEGSDEP := $(ASIMAGEGSO:.o=.d) $(ASIMAGEGSDO:.o=.d)
+
+ASIMAGEGSLIB := $(LPATH)/libASPluginGS.$(SOEXT)
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEH))
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGUIH))
-ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB)
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGSH))
+ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB)
 
 # include all dependency files
-INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
+INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP) $(ASIMAGEGSDEP)
 
 ##### local rules #####
 include/%.h:    $(ASIMAGEDIRI)/%.h
@@ -226,7 +241,32 @@ $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMP)
 $(ASIMAGEGUIDO): $(ASIMAGEGUIDS) $(ASTEPLIB)
 		$(CXX) $(NOOPT) $(CXXFLAGS) $(ASTEPDIRI) -I. -o $@ -c $<
 
-all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB)
+##### libASImageGS #####
+$(ASIMAGEGSLIB):  $(ASIMAGEGSO) $(ASIMAGEGSDO) $(ASTEPDEP) $(FREETYPEDEP) \
+                   $(MAINLIBS) $(ASIMAGEGSLIBDEP)
+ifeq ($(PLATFORM),win32)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImageGS.$(SOEXT) $@ \
+		   "$(ASIMAGEGSO) $(ASIMAGEGSDO)" \
+		   "$(ASIMAGEGSLIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) \
+                    $(ASEXTRALIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+else
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImageGS.$(SOEXT) $@ \
+		   "$(ASIMAGEGSO) $(ASIMAGEGSDO)" \
+		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) \
+                    $(ASEXTRALIB) $(XLIBS) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+endif
+
+$(ASIMAGEGSDS): $(ASIMAGEGSH) $(ASIMAGEGSL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEGSH) $(ASIMAGEGSL)
+
+$(ASIMAGEGSDO): $(ASIMAGEGSDS) $(ASTEPLIB)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(ASTEPDIRI) -I. -o $@ -c $<
+
+
+all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB)
 
 map-asimage:    $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGELIB) \
@@ -236,10 +276,14 @@ map-asimagegui: $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGEGUILIB) \
 		   -d $(ASIMAGEGUILIBDEP) -c $(ASIMAGEGUIL)
 
-map::           map-asimage map-asimagegui
+map-asimagegs: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGEGSLIB) \
+		   -d $(ASIMAGEGSLIBDEP) -c $(ASIMAGEGSL)
+
+map::           map-asimage map-asimagegui map-asimagegs
 
 clean-asimage:
-		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO)
+		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO) (ASIMAGEGSO) $(ASIMAGEGSDO)
 ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(ASTEPDIRS) ]; then \
@@ -261,7 +305,9 @@ clean::         clean-asimage
 distclean-asimage: clean-asimage
 		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB) \
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
-		   $(ASIMAGEGUILIB)
+		   $(ASIMAGEGUILIB) \
+		   $(ASIMAGEGSDEP) $(ASIMAGEGSDS) $(ASIMAGEGSDH) \
+		   $(ASIMAGEGSLIB)
 
 ifeq ($(BUILTINASIMAGE),yes)
 		@rm -rf $(ASTEPLIB)
@@ -275,4 +321,7 @@ $(ASIMAGEO): %.o: %.cxx $(ASTEPLIB) $(FREETYPEDEP)
 	$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<
 
 $(ASIMAGEGUIO): %.o: %.cxx $(ASTEPLIB)
+	$(CXX) $(OPT) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<
+
+$(ASIMAGEGSO): %.o: %.cxx $(ASTEPLIB)
 	$(CXX) $(OPT) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<

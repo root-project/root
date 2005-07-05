@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.37 2005/06/09 15:20:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.38 2005/06/27 15:11:53 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -795,7 +795,7 @@ void TGListTree::AdjustPosition(TGListTreeItem *item)
 }
 
 //______________________________________________________________________________
-void TGListTree::Search()
+void TGListTree::Search(Bool_t /*close*/)
 {
    // Invokes search dialog. Looks for item with the entered name.
 
@@ -803,17 +803,17 @@ void TGListTree::Search()
    char msg[256];
    static TString buf;
 
-   fSearch = new TGSearchType;
-   fSearch->fBuffer = (char*)buf.Data();
+   TGSearchType *srch = new TGSearchType;
+   srch->fBuffer = (char*)buf.Data();
 
    TGListTreeItem *item;
-   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, fSearch, &ret);
+   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
 
    if (ret) {
-      item = FindItemByPathname(fSearch->fBuffer);
+      item = FindItemByPathname(srch->fBuffer);
       if (!item) {
-         sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
-         gVirtualX->Bell(50);
+         sprintf(msg, "Couldn't find \"%s\"", srch->fBuffer);
+         gVirtualX->Bell(20);
          new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
                       kMBIconExclamation, kMBOk, 0);
       } else {
@@ -821,9 +821,8 @@ void TGListTree::Search()
          HighlightItem(item);
       }
    }
-   buf = fSearch->fBuffer;
-   delete fSearch;
-   fSearch = 0;
+   buf = srch->fBuffer;
+   delete srch;
 }
 
 //---- drawing functions

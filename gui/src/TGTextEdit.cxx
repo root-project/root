@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.27 2004/12/15 09:27:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.28 2005/02/18 11:22:28 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -54,7 +54,6 @@ static char *gPrintCommand = 0;
 TGGC *TGTextEdit::fgCursor0GC;
 TGGC *TGTextEdit::fgCursor1GC;
 
-
 ClassImp(TGTextEdit)
 
 //______________________________________________________________________________
@@ -93,6 +92,9 @@ TGTextEdit::~TGTextEdit()
 {
    // Cleanup text edit widget.
 
+   if (TGSearchDialog::gDialog()) {
+      TQObject::Disconnect(TGSearchDialog::gDialog(), 0, this);
+   }
    delete fCurBlink;
    delete fMenu;
    delete fSearch;
@@ -258,8 +260,9 @@ Bool_t TGTextEdit::Paste()
 {
    // Paste text into widget.
 
-    gVirtualX->ConvertPrimarySelection(fId, fClipboard, 0);
-    return kTRUE;
+   if (fReadOnly) return kTRUE;
+   gVirtualX->ConvertPrimarySelection(fId, fClipboard, 0);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -320,7 +323,7 @@ void TGTextEdit::Delete(Option_t *)
 {
    // Delete selection.
 
-   if (!fIsMarked)
+   if (!fIsMarked || fReadOnly)
       return;
 
    if (fMarkedStart.fX == fMarkedEnd.fX &&
@@ -385,9 +388,28 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
    // Search for string in the specified direction. If direction is true
    // the search will be in forward direction.
 
+   if (!IsMapped()) return kFALSE;
+
+   if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
+      caseSensitive = TGSearchDialog::gDialog()->GetType()->fCaseSensitive;
+      direction = TGSearchDialog::gDialog()->GetType()->fDirection;
+   }
+
    TGLongPosition pos;
-   if (!fText->Search(&pos, fCurrent, string, direction, caseSensitive))
-      return kFALSE;
+   if (!fText->Search(&pos, fCurrent, string, direction, caseSensitive)) {
+      fCurrent.fX = 1;
+      fCurrent.fY = 1;
+
+      if (!fText->Search(&pos, fCurrent, string, direction, caseSensitive)) { //try again
+         TString msg;
+         msg.Form("Couldn't find \"%s\"", string);
+         gVirtualX->Bell(20);
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "TextEdit", msg.Data(),
+                   kMBIconExclamation, kMBOk, 0);
+         return kFALSE;
+      }
+      return kTRUE;
+   }
    UnMark();
    fIsMarked = kTRUE;
    fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
@@ -480,6 +502,12 @@ Bool_t TGTextEdit::Goto(Long_t line, Long_t column)
    SetVsbPosition((ToScrYCoord(pos.fY)+fVisible.fY)/fScrollVal.fY);
    SetHsbPosition(0);
 
+   UnMark();
+   fIsMarked = kTRUE;
+   fMarkedStart.fY = fMarkedEnd.fY = line;
+   fMarkedStart.fX = 0;
+   fMarkedEnd.fX = fCanvas->GetWidth();
+
    return kTRUE;
 }
 
@@ -538,7 +566,7 @@ void TGTextEdit::DrawCursor(Int_t mode)
 
    char count = -1;
    char cursor = ' ';
-   if (fCurrent.fY >= fText->RowCount() || fCurrent.fX > fText->GetLineLength(fCurrent.fY))
+   if (fCurrent.fY >= fText->RowCount() || fCurrent.fX > fText->GetLineLength(fCurrent.fY) || fReadOnly) 
       return;
 
    if (fCurrent.fY >= ToObjYCoord(fVisible.fY) &&
@@ -709,13 +737,17 @@ Bool_t TGTextEdit::HandleSelection(Event_t *event)
    return kTRUE;
 }
 
+static Bool_t dbl_clk = kFALSE;
+static Bool_t trpl_clk = kFALSE;
+
 //______________________________________________________________________________
 Bool_t TGTextEdit::HandleButton(Event_t *event)
 {
    // Handle mouse button event in text edit widget.
 
-   if (event->fWindow != fCanvas->GetId())
-      return kTRUE;
+   if (event->fWindow != fCanvas->GetId()) {
+      return kFALSE;
+   }
 
    TGLongPosition pos;
 
@@ -743,7 +775,93 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          SetMenuState();
          fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
       }
+      dbl_clk = kFALSE;
+      trpl_clk = kFALSE;
    }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
+{
+   // handle double click
+
+   if (event->fWindow != fCanvas->GetId()) {
+      return kFALSE;
+   }
+
+   if (event->fCode != kButton1) {
+      return kFALSE;
+   } 
+
+   SetFocus();
+   TGLongPosition pos;
+   pos.fY = ToObjYCoord(fVisible.fY + event->fY);
+
+   if (dbl_clk && (event->fTime - fgLastClick < 350)) { // triple click
+      fgLastClick  = event->fTime;
+      dbl_clk = kFALSE;
+      trpl_clk = kTRUE;
+      fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
+      fIsMarked = kTRUE;
+      fMarkedStart.fX = 0;
+      fMarkedEnd.fX = strlen(fText->GetCurrentLine()->GetText());
+      Marked(kTRUE);
+      DrawRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
+                 UInt_t(ToScrYCoord(fMarkedEnd.fY + 1) - ToScrYCoord(fMarkedStart.fY)));
+      return kTRUE;
+   }
+
+   if (trpl_clk && (event->fTime - fgLastClick < 350)) { // 4 click
+      fgLastClick  = event->fTime;
+      trpl_clk = kFALSE;
+      fIsMarked = kTRUE;
+      fMarkedStart.fY = 0;
+      fMarkedStart.fX = 0;
+      fMarkedEnd.fY = fText->RowCount()-1;
+      fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY);
+      if (fMarkedEnd.fX < 0) {
+         fMarkedEnd.fX = 0;
+      }
+      DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
+      return kTRUE;
+   }
+
+   dbl_clk = kTRUE;
+   trpl_clk = kFALSE;
+
+   if (pos.fY >= fText->RowCount()) {
+      pos.fY = fText->RowCount() - 1;
+   }
+   pos.fX = ToObjXCoord(fVisible.fX + event->fX, pos.fY);
+  
+   if (pos.fX >= fText->GetLineLength(pos.fY)) {
+      pos.fX = fText->GetLineLength(pos.fY);
+   }
+   while (fText->GetChar(pos) == 16) {
+      pos.fX++;
+   }
+
+   SetCurrent(pos);
+
+   fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
+   char *line = fText->GetCurrentLine()->GetText();
+
+   Int_t i = pos.fX;
+   while (i >= 0 && isprint(line[i]) && !isspace(line[i])) i--;
+   i++;
+   fMarkedStart.fX = i;
+
+   i = pos.fX;
+   while (isprint(line[i]) && !isspace(line[i])) i++;
+
+   fIsMarked = kTRUE;
+   fMarkedEnd.fX = i;
+
+   Marked(kTRUE);
+   DrawRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
+              UInt_t(ToScrYCoord(fMarkedEnd.fY + 1) - ToScrYCoord(fMarkedStart.fY)));
+
    return kTRUE;
 }
 
@@ -753,8 +871,9 @@ Bool_t TGTextEdit::HandleMotion(Event_t *event)
    // Handle mouse motion event in text edit widget.
 
    TGLongPosition pos;
-   if (event->fWindow != fCanvas->GetId())
+   if (event->fWindow != fCanvas->GetId()) {
       return kTRUE;
+   }
 
    if (fScrolling == -1) {
       pos.fY = ToObjYCoord(fVisible.fY+event->fY);
@@ -813,9 +932,8 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
       if (event->fState & kKeyControlMask) {   // Cntrl key modifier pressed
          switch((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
             case kKey_A:
-               mark_ok = kTRUE;
-               Home();
-               break;
+               SelectAll();
+               return kTRUE;
             case kKey_B:
                mark_ok = kTRUE;
                PrevChar();
@@ -824,9 +942,9 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                Copy();
                return kTRUE;
             case kKey_D:
-               if (fIsMarked)
+               if (fIsMarked) {
                   Cut();
-               else {
+               } else {
                   Long_t len = fText->GetLineLength(fCurrent.fY);
                   if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
                      gVirtualX->Bell(0);
@@ -839,10 +957,6 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
             case kKey_E:
                mark_ok = kTRUE;
                End();
-               break;
-            case kKey_F:
-               mark_ok = kTRUE;
-               NextChar();
                break;
             case kKey_H:
                DelChar();
@@ -870,6 +984,19 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
             case kKey_X:
                Cut();
                return kTRUE;
+            case kKey_F:
+               Search(kFALSE);
+               return kTRUE;
+            case kKey_L:
+            {   
+               Long_t ret = fCurrent.fY+1;
+               new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
+               if (ret > -1) {
+                  ret--;   // user specifies lines starting at 1
+                  Goto(ret);
+               }
+               return kTRUE;
+            }
             default:
                return kTRUE;
          }
@@ -1040,6 +1167,33 @@ Bool_t TGTextEdit::HandleFocusChange(Event_t *event)
 }
 
 //______________________________________________________________________________
+void TGTextEdit::Search(Bool_t close)
+{
+   // Invokes search dialog.
+
+   Int_t ret = 0;
+
+   TGSearchType *srch = new TGSearchType;
+   srch->fClose = close;
+
+   if (!close) {
+      if (!TGSearchDialog::gDialog()) {
+         TGSearchDialog::gDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
+                                                        fCanvas, 400, 150, srch, &ret);         
+      }
+      TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
+                                          this, "Search(char *,Bool_t,Bool_t)");
+      TGSearchDialog::gDialog()->MapRaised();
+   } else {
+      new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+      if (ret) {
+         Search(srch->fBuffer);
+      }
+      delete srch;
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Process context menu messages.
@@ -1129,23 +1283,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kM_SEARCH_FIND:
                      {
-                        Int_t ret = 0;
-                        if (!fSearch)
-                           fSearch = new TGSearchType;
-                        new TGSearchDialog(fClient->GetDefaultRoot(), this, 400, 150,
-                                           fSearch, &ret);
-                        if (ret) {
-                           if (!Search(fSearch->fBuffer, fSearch->fDirection,
-                                       fSearch->fCaseSensitive)) {
-                              char msg[256];
-                              sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
-                              new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
-                                           kMBIconExclamation, kMBOk, 0);
-                           }
-                        } else {
-                           delete fSearch;
-                           fSearch = 0;
-                        }
+                        Search(kFALSE);
                      }
                      break;
                   case kM_SEARCH_FINDAGAIN:
@@ -1191,6 +1329,8 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 void TGTextEdit::InsChar(char character)
 {
    // Insert a character in the text edit widget.
+
+   if (fReadOnly) return;
 
    char *charstring = 0;
    TGLongPosition pos;
@@ -1260,6 +1400,8 @@ void TGTextEdit::InsChar(char character)
 void TGTextEdit::DelChar()
 {
    // Delete a character from the text edit widget.
+
+   if (fReadOnly) return;
 
    if (fCurrent.fY == 0 && fCurrent.fX == 0) {
       gVirtualX->Bell(0);
@@ -1335,6 +1477,8 @@ void TGTextEdit::DelChar()
 void TGTextEdit::BreakLine()
 {
    // Break a line.
+
+   if (fReadOnly) return;
 
    TGLongPosition pos;
    fText->BreakLine(fCurrent);

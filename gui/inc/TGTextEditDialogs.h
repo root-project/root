@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.3 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.4 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -34,7 +34,8 @@ public:
    Bool_t  fDirection;
    Bool_t  fCaseSensitive;
    char   *fBuffer;
-   TGSearchType() { fDirection = kTRUE; fCaseSensitive = kFALSE; fBuffer = 0; }
+   Bool_t  fClose;
+   TGSearchType() { fDirection = kTRUE; fCaseSensitive = kFALSE; fBuffer = 0; fClose = kTRUE; }
 };
 
 class TGButton;
@@ -44,7 +45,7 @@ class TGTextEntry;
 class TGTextBuffer;
 class TGLabel;
 class TGIcon;
-
+class TGComboBox;
 
 class TGSearchDialog : public TGTransientFrame {
 
@@ -63,6 +64,8 @@ protected:
    TGLabel            *fLSearch;               // label
    TGSearchType       *fType;                  // search type structure
    Int_t              *fRetCode;               // return code
+   TGComboBox         *fCombo;                 // text entry combobox
+   static TGSearchDialog *gSearchDialog;       // global singleton
 
 public:
    TGSearchDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
@@ -72,6 +75,11 @@ public:
 
    virtual void   CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual void   SetClose(Bool_t on) { fType->fClose = on; }
+   virtual Bool_t IsClose() const {  return fType->fClose; }
+   virtual void   TextEntered(const char *text); //*SIGNAL*
+   virtual TGSearchType *GetType() const { return fType; }
+   static TGSearchDialog *&gDialog() { return gSearchDialog; }
 
    ClassDef(TGSearchDialog,0)  // Text search dialog used by TGTextEdit widget
 };

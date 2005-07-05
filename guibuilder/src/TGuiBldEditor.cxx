@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.5 2004/10/06 14:38:19 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.6 2004/10/07 09:56:53 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -75,11 +75,12 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
    fFrameName->SetAlignment(kTextLeft);
    fFrameName->Resize(80, fFrameName->GetHeight());
    f->AddFrame(fFrameName, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,1));
+   fFrameName->SetEnabled(kFALSE);
 
-   Pixel_t color;
-   fClient->GetColorByName("#ff0000", color);
-   fLabel->SetTextColor(color, kTRUE);
-   fFrameName->SetTextColor(color, kTRUE);
+   //Pixel_t color;
+   //fClient->GetColorByName("#ff0000", color);
+   //fLabel->SetTextColor(color, kFALSE);
+   //fFrameName->SetTextColor(color, kFALSE);
 }
 
 //______________________________________________________________________________
@@ -274,8 +275,8 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
    fBtnGroup->SetButton(kBldBorderRaised, opt & kRaisedFrame);
    fBtnGroup->SetButton(kBldBorderPlain, !(opt & kRaisedFrame) && !(opt & kSunkenFrame));
 
-   //if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
-   //if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
+   if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
+   if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

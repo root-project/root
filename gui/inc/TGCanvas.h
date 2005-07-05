@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.24 2004/12/08 17:13:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.25 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -34,7 +34,6 @@ class TGViewPort;
 class TGCanvas;
 class TGFrameElement;
 class TGContainerTimer;
-class TGSearchType;
 class TGContainerKeyboardTimer;
 class TGContainerScrollTimer;
 
@@ -59,7 +58,6 @@ protected:
    Int_t              fSelected;      // number of selected items
    TTimer            *fScrollTimer;   // autoscroll timer
    Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
-   TGSearchType      *fSearch;        // structure used by search dialog
    Bool_t             fLastDir;       // direction of last search
    Bool_t             fLastCase;      // case sensetivity of last search
    TString            fLastName;      // the name of object of last search
@@ -74,23 +72,10 @@ protected:
    virtual void DoRedraw();
    virtual void ClearViewPort();
    virtual void ActivateItem(TGFrameElement* el);
-   virtual void LineUp(Bool_t select = kFALSE);
-   virtual void LineDown(Bool_t select = kFALSE);
-   virtual void LineLeft(Bool_t select = kFALSE);
-   virtual void LineRight(Bool_t select = kFALSE);
-   virtual void PageUp(Bool_t select = kFALSE);
-   virtual void PageDown(Bool_t select = kFALSE);
-   virtual void Home(Bool_t select = kFALSE);
-   virtual void End(Bool_t select = kFALSE);
-   virtual void Search();
-   virtual void RepeatSearch();
    virtual void SearchPattern();
    virtual void OnAutoScroll();
+   virtual void RepeatSearch();
 
-   virtual void *FindItem(const TString& name,
-                          Bool_t direction = kTRUE,
-                          Bool_t caseSensitive = kTRUE,
-                          Bool_t beginWith = kFALSE);
 public:
    TGContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kSunkenFrame,
@@ -119,10 +104,24 @@ public:
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
    virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);
+   virtual TGFrame        *FindFrameByName(const char *name);
    virtual TGHScrollBar *GetHScrollbar() const;
    virtual TGVScrollBar *GetVScrollbar() const;
-   virtual void  SetHsbPosition(Int_t newPos);
-   virtual void  SetVsbPosition(Int_t newPos);
+   virtual void SetHsbPosition(Int_t newPos);
+   virtual void SetVsbPosition(Int_t newPos);
+   virtual void LineUp(Bool_t select = kFALSE);
+   virtual void LineDown(Bool_t select = kFALSE);
+   virtual void LineLeft(Bool_t select = kFALSE);
+   virtual void LineRight(Bool_t select = kFALSE);
+   virtual void PageUp(Bool_t select = kFALSE);
+   virtual void PageDown(Bool_t select = kFALSE);
+   virtual void Home(Bool_t select = kFALSE);
+   virtual void End(Bool_t select = kFALSE);
+   virtual void Search(Bool_t close = kTRUE);
+   virtual void *FindItem(const TString& name,
+                          Bool_t direction = kTRUE,
+                          Bool_t caseSensitive = kTRUE,
+                          Bool_t beginWith = kFALSE);
 
    virtual const TGFrame *GetNextSelected(void **current);
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }

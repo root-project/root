@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.56 2005/06/27 15:34:53 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.57 2005/06/28 17:22:35 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -189,7 +189,7 @@ const char *editortxt4 =
 "Shift - Right Arrow\n"
 "    Mark text one character rightwards.\n"
 "Control-A\n"
-"    Move the cursor to the beginning of the line.\n"
+"    Select the whole text.\n"
 "Control-B\n"
 "    Move the cursor one character leftwards."
 ;
@@ -201,12 +201,14 @@ const char *editortxt5 =
 "Control-E\n"
 "    Move the cursor to the end of the line.\n"
 "Control-F\n"
-"    Move the cursor one character rightwards.\n"
+"    Start Search Dialog.\n"
 "Control-H\n"
 "    Delete the character to the left of the cursor.\n"
 "Control-K\n"
 "    Delete marked text if any or delete all\n"
-"    characters to the right of the cursor."
+"    characters to the right of the cursor.\n"
+"Control-L\n"
+"    Start GoTo Line Dialog"
 ;
 const char *editortxt6 =
 "Control-U\n"

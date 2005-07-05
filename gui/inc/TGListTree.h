@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.15 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.16 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -203,7 +203,7 @@ public:
    void PageDown(Bool_t select = kFALSE);
    void LineUp(Bool_t select = kFALSE);
    void LineDown(Bool_t select = kFALSE);
-   void Search();
+   void Search(Bool_t close = kTRUE);
 
    Int_t Sort(TGListTreeItem *item);
    Int_t SortSiblings(TGListTreeItem *item);

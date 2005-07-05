@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.11 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.12 2004/10/22 07:31:58 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -131,6 +131,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
 
    fScrollTimer = new TViewTimer(this, 75);
    gSystem->AddTimer(fScrollTimer);
+   fReadOnly = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -296,8 +297,9 @@ Bool_t TGView::HandleButton(Event_t *event)
 {
    // Handle mouse button event in text editor.
 
-   if (event->fWindow != fCanvas->GetId())
-      return kTRUE;
+   if (event->fWindow != fCanvas->GetId()) {
+      return kFALSE;
+   }
 
    if (event->fCode == kButton1) {
       if (event->fType == kButtonPress) {
@@ -335,7 +337,7 @@ Bool_t TGView::HandleButton(Event_t *event)
       // move three lines up
       if (fVisible.fY > 0) {
          SetVsbPosition(fVisible.fY / fScrollVal.fY - 3);
-         Mark(fMousePos.fX, fMarkedStart.fY - 3);
+         //Mark(fMousePos.fX, fMarkedStart.fY - 3);
       }
    } else if (event->fCode == kButton5) {
       // move three lines down
@@ -343,7 +345,7 @@ Bool_t TGView::HandleButton(Event_t *event)
          TGLongPosition size;
          size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
          SetVsbPosition(fVisible.fY / fScrollVal.fY + 3);
-         Mark(fMousePos.fX, size.fY + 3);
+         //Mark(fMousePos.fX, size.fY + 3);
       }
    } else if (event->fType == kButtonPress) {
       if (event->fCode == kButton2) {
@@ -358,6 +360,17 @@ Bool_t TGView::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGView::HandleDoubleClick(Event_t *event)
+{
+   // handle double click
+
+   if (event->fWindow != fCanvas->GetId()) {
+      return kFALSE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TGView::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in the text editor widget.
@@ -366,8 +379,9 @@ Bool_t TGView::HandleMotion(Event_t *event)
        (ToObjXCoord(fVisible.fX+event->fX, ToObjYCoord(fVisible.fY+event->fY)) == fMousePos.fX))
       return kTRUE;
 
-   if (fScrolling != -1)
+   if (fScrolling != -1) {
       return kTRUE;
+   }
 
    fMousePos.fY = ToObjYCoord(fVisible.fY+event->fY);
    if (fMousePos.fY >= ReturnLineCount())

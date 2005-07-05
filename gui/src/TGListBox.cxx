@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.43 2005/04/01 13:51:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.44 2005/04/28 08:30:57 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -1228,6 +1228,15 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
    args[1] = id;
 
    Emit("Selected(Int_t,Int_t)", args);
+}
+
+//______________________________________________________________________________
+TGLBEntry *TGListBox::FindEntry(const char *name) const
+{
+   // find entry by name
+
+   TGFrameElement *el = (TGFrameElement *)fLbc->FindItem(name);
+   return (TGLBEntry *)(el ? el->fFrame : 0);
 }
 
 //______________________________________________________________________________

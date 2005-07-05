@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.11 2004/12/09 22:55:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.12 2005/01/12 18:39:29 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -118,7 +118,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
    fUpperRightCR->SetMinSize(50, fTitlebar->GetDefaultHeight() + 2 * fBorderWidth);
    fLowerRightCR->SetMinSize(50, fTitlebar->GetDefaultHeight() + 2 * fBorderWidth);
 
-   AddInput(kStructureNotifyMask | kButtonPressMask | kButtonReleaseMask);
+   AddInput(kStructureNotifyMask | kButtonPressMask);
 
    fFrame->ReparentWindow(this, fBorderWidth, fTitlebar->GetDefaultHeight());
    fFrame->fParent = this;
@@ -246,6 +246,15 @@ void TGMdiDecorFrame::SetWindowIcon(const TGPicture *icon)
 //______________________________________________________________________________
 void TGMdiDecorFrame::Move(Int_t x, Int_t y)
 {
+   //
+
+   if (x < 0) {
+      fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
+   }
+
+   if (y < 0) {
+      fMdiMainFrame->SetVsbPosition(fMdiMainFrame->GetViewPort()->GetHeight());
+   }
    TGCompositeFrame::Move(x, y);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
 }
@@ -253,6 +262,16 @@ void TGMdiDecorFrame::Move(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
+   //
+
+   if (x < 0) {
+      fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
+   }
+
+   if (y < 0) {
+      fMdiMainFrame->SetVsbPosition(fMdiMainFrame->GetViewPort()->GetHeight());
+   }
+
    TGCompositeFrame::MoveResize(x, y, w, h);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
 }
@@ -260,14 +279,22 @@ void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 Bool_t TGMdiDecorFrame::HandleConfigureNotify(Event_t *event)
 {
+   // resize event
+
+   if ((event->fX < 0) || (event->fY < 0) ||
+       (event->fX + event->fWidth > fMdiMainFrame->GetViewPort()->GetWidth()) ||
+       (event->fY + event->fHeight > fMdiMainFrame->GetViewPort()->GetHeight())) {
+      fMdiMainFrame->Resize();
+   }
+
    if (event->fWindow == fFrame->GetId()) {
       UInt_t newW = event->fWidth + 2 * fBorderWidth;
       UInt_t newH = event->fHeight + 2 * fBorderWidth +
                     fTitlebar->GetDefaultHeight();
 
-      if ((fWidth != newW) || (fHeight != newH))
-          Resize(newW, newH);
-
+      if ((fWidth != newW) || (fHeight != newH)) {
+         Resize(newW, newH);
+      }
       return kTRUE;
    }
    return kFALSE;
@@ -281,13 +308,6 @@ Bool_t TGMdiDecorFrame::HandleButton(Event_t *event)
       void *ud;
       fTitlebar->GetWinIcon()->GetPopup()->EndMenu(ud);
       SendMessage(fMdiMainFrame, MK_MSG(kC_MDI, kMDI_CURRENT), fId, 0);
-   }
-   else {
-      TGFrame *f = GetFrameFromPoint(event->fX, event->fY);
-      if (f && f != this) {
-         TranslateCoordinates(f, event->fX, event->fY, event->fX, event->fY);
-         f->HandleButton(event);
-      }
    }
    return kTRUE;
 }
@@ -418,7 +438,7 @@ void TGMdiTitleBar::SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *font)
 
    fClient->GetFont(font->GetName());
    fWinName->SetTextFont(font);
-   fWinName->SetTextColor(fore, kTRUE);
+   fWinName->SetTextColor(fore, kFALSE);
    fMFrame->SetBackgroundColor(back);
    fWinName->SetBackgroundColor(back);
    fWinIcon->SetBackgroundColor(back);
@@ -485,7 +505,7 @@ Bool_t TGMdiTitleBar::HandleButton(Event_t *event)
       }
 
       TGFrame *f = GetFrameFromPoint(event->fX, event->fY);
-      if (f && f != this) {
+      if (f && (f != this)) {
          TranslateCoordinates(f, event->fX, event->fY, event->fX, event->fY);
          f->HandleButton(event);
       }
@@ -704,8 +724,8 @@ TGMdiWinResizer::TGMdiWinResizer(const TGWindow *p, const TGWindow *mdiwin,
    fMidButPressed = fLeftButPressed = fRightButPressed = kFALSE;
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
-              kButtonPressMask | kButtonReleaseMask | kButtonMotionMask,
-              kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask | kButtonMotionMask,
+                         kNone, kNone);
    SetWindowName();
 }
 
@@ -732,9 +752,8 @@ Bool_t TGMdiWinResizer::HandleButton(Event_t *event)
                DrawBox(fNewX, fNewY, fNewW, fNewH);
             }
             fLeftButPressed = kTRUE;
-            gVirtualX->GrabPointer(fId,
-               kButtonReleaseMask | kPointerMotionMask,
-               kNone, kNone, kTRUE, kFALSE);
+            gVirtualX->GrabPointer(fId, kButtonReleaseMask | kPointerMotionMask,
+                                   kNone, kNone, kTRUE, kFALSE);
             break;
 
          case kButton2:

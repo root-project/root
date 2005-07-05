@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.53 2005/06/27 15:34:52 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.54 2005/06/28 17:37:53 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -177,14 +177,18 @@ const char *editortxt =
 "    has been marked by the user (e.g. by clicking and dragging) the cursor\n"
 "    will be put at the beginning of the marked text and the marked text will\n"
 "    be removed.\n"
+"    Deletes the character on the right side of the text cursor. If a text\n"
+"    has been marked by the user (e.g. by clicking and dragging) the cursor\n"
+"    will be put at the beginning of the marked text and the marked text will\n"
+"    be removed.\n"
 "Shift - Left Arrow\n"
 "    Mark text one character leftwards.\n"
 "Shift - Right Arrow\n"
 "    Mark text one character rightwards.\n"
 "Control-A\n"
-"    Move the cursor to the beginning of the line.\n"
+"    Select the whole text.\n"
 "Control-B\n"
-"    Move the cursor one character leftwards.\n"
+"    Move the cursor one character leftwards."
 "Control-C\n"
 "    Copy the marked text to the clipboard.\n"
 "Control-D\n"
@@ -192,12 +196,14 @@ const char *editortxt =
 "Control-E\n"
 "    Move the cursor to the end of the line.\n"
 "Control-F\n"
-"    Move the cursor one character rightwards.\n"
+"    Start Search Dialog.\n"
 "Control-H\n"
 "    Delete the character to the left of the cursor.\n"
 "Control-K\n"
 "    Delete marked text if any or delete all\n"
 "    characters to the right of the cursor.\n"
+"Control-L\n"
+"    Start GoTo Line Dialog\n"
 "Control-U\n"
 "    Delete all characters on the line.\n"
 "Control-V\n"
