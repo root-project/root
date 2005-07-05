@@ -283,7 +283,8 @@ map-asimagegs: $(RLIBMAP)
 map::           map-asimage map-asimagegui map-asimagegs
 
 clean-asimage:
-		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO) (ASIMAGEGSO) $(ASIMAGEGSDO)
+		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO) \
+		   $(ASIMAGEGSO) $(ASIMAGEGSDO)
 ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(ASTEPDIRS) ]; then \
