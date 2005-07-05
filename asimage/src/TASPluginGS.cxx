@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TASPluginGS.cxx,v 1.6 2005/06/14 15:29:06 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TASPluginGS.cxx,v 1.1 2005/07/05 12:36:05 brun Exp $
 //  Author: Valeriy Onuchin   23/06/05
 
 /*************************************************************************
@@ -18,7 +18,23 @@
 
 #include "TASPluginGS.h"
 #include "TSystem.h"
-#include "afterimage.h"
+
+#ifndef WIN32
+#   include <X11/Xlib.h>
+#else
+#   include "Windows4root.h"
+#endif
+
+extern "C" {
+#ifndef WIN32
+#   include <afterbase.h>
+#else
+#   include <win32/config.h>
+#   include <win32/afterbase.h>
+#   define X_DISPLAY_MISSING 1
+#endif
+#   include <import.h>
+}
 
 
 ClassImp(TASPluginGS)

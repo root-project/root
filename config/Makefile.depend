@@ -20,6 +20,8 @@ ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib
 ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
 ASIMAGEGUILIBEXTRA  = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
                       lib/libASImage.lib
+ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
+ASIMAGEGSLIBEXTRA   = lib/libGraf.lib lib/libASImage.lib
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
@@ -172,6 +174,8 @@ ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad
 ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
 ASIMAGEGUILIBEXTRA  = -Llib -lGraf -lHist -lGui -lASImage
+ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
+ASIMAGEGSLIBEXTRA   = -Llib -lGraf -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
