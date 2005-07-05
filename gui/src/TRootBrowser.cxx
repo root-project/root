@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.75 2005/06/01 12:35:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.76 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2466,6 +2466,7 @@ void TRootBrowser::BrowseTextFile(const char *file)
    fTextEdit->SetReadOnly();
    fListView->UnmapWindow();
    fV2->RemoveFrame(fListView);
+   fTextEdit->MapWindow();
    fV2->MapSubwindows();
    fV2->Layout();
    fBrowseTextFile = kTRUE;
