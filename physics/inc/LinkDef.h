@@ -1,4 +1,4 @@
-/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.6 2004/11/26 11:10:37 brun Exp $ */
+/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.7 2005/06/28 07:16:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,15 @@
 #pragma link C++ function operator * ( const TVector2 &, Double_t  );
 #pragma link C++ function operator * ( Double_t, const TVector2 & );
 #pragma link C++ function operator / ( const TVector2 &, Double_t);
+
+#pragma link C++ function operator + (Double_t , const TQuaternion & );
+#pragma link C++ function operator - (Double_t , const TQuaternion & );
+#pragma link C++ function operator * (Double_t , const TQuaternion & );
+#pragma link C++ function operator / (Double_t , const TQuaternion & );
+#pragma link C++ function operator + (const TVector3 &, const TQuaternion &);
+#pragma link C++ function operator - (const TVector3 &, const TQuaternion &);
+#pragma link C++ function operator * (const TVector3 &, const TQuaternion &);
+#pragma link C++ function operator / (const TVector3 &, const TQuaternion &);
 
 #pragma link C++ class TRotation+;
 #pragma link C++ class TGenPhaseSpace+;
