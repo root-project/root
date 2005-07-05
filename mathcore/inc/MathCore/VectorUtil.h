@@ -1,7 +1,7 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.6 2005/06/24 11:22:34 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: Mark Fischler & Lorenzo Moneta   06/2005 
 
  /**********************************************************************
@@ -44,6 +44,8 @@ namespace ROOT {
 	like  Phi() or Eta() or mag() can use these functions.   
 	The functions returning a scalar value, returns always double precision number even if the vector are 
 	based on another precision type
+
+	@ingroup GenVector
     */ 
     
     
@@ -95,7 +97,7 @@ namespace ROOT {
 	 \param v1  Vector v1  
 	 \param v2  Vector v2
 	 \return   cosine of Angle between the two vectors
-	 \f[ \cos \theta = \frac { \vec{v1} \cDot \vec{v2} }{ | \vec{v1} | | \vec{v2} | } \f]
+	 \f[ \cos \theta = \frac { \vec{v1} \cdot \vec{v2} }{ | \vec{v1} | | \vec{v2} | } \f]
       */ 
       // this cannot be made all generic since Mag2() for 2, 3 or 4 D is different 
       // need to have a specialization for polar Coordinates ??
@@ -123,7 +125,7 @@ namespace ROOT {
 	 \param v1  Vector v1  
 	 \param v2  Vector v2
 	 \return   Angle between the two vectors
-	 \f[ \theta = \cos ^{-1} \frac { \vec{v1} \cDot \vec{v2} }{ | \vec{v1} | | \vec{v2} | } \f]
+	 \f[ \theta = \cos ^{-1} \frac { \vec{v1} \cdot \vec{v2} }{ | \vec{v1} | | \vec{v2} | } \f]
       */ 
       template <class Vector1, class Vector2> 
       double Angle( const  Vector1 & v1, const Vector2 & v2) { 
@@ -140,7 +142,7 @@ namespace ROOT {
        \param v1 LorenzVector 1
        \param v2 LorenzVector 2
        \return invariant mass M 
-       \f[ M_{12} = \sqrt{ (\vec{v1} + \vec{v2} ) \cDot (\vec{v1} + \vec{v2} ) } \f]
+       \f[ M_{12} = \sqrt{ (\vec{v1} + \vec{v2} ) \cdot (\vec{v1} + \vec{v2} ) } \f]
     */ 
       template <class Vector1, class Vector2> 
       double InvariantMass( const Vector1 & v1, const Vector2 & v2) { 

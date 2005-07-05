@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
  /**********************************************************************
@@ -36,13 +36,9 @@ namespace ROOT {
      This is the optimal representation for application to vectors.
      See also AxisAngle, EulerAngles, and Quaternion for classes
      which have conversion operators to Rotation3D.
-  */
 
-// TODO - remove class Test
-class Test {
-  template <class T>
-  Test (T begin) { }
-};
+     @ingroup GenVector
+  */
 
 class Rotation3D {
 

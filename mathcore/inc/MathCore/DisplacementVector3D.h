@@ -1,19 +1,21 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.2 2005/06/25 20:42:04 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.3 2005/06/27 17:50:02 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
- /**********************************************************************
-  *                                                                    *
-  * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
-  *                                                                    *
-  *                                                                    *
-  **********************************************************************/
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+**********************************************************************/
 
 // Header source file for class DisplacementVector3D
 //
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.2 2005/06/25 20:42:04 brun Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.3 2005/06/27 17:50:02 brun Exp $
 //
+
+
 #ifndef ROOT_Math_DisplacementVector3D 
 #define ROOT_Math_DisplacementVector3D 1
 
@@ -37,6 +39,8 @@ namespace ROOT {
               One example is the XYZVector which is a vector based on
               double precision x,y,z data members by using the
               Cartesian3D<double> Coordinate system.
+
+	      @ingroup GenVector
     */
 
     template <class CoordSystem>

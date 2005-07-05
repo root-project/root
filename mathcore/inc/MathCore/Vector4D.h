@@ -1,5 +1,10 @@
-// @(#)root/mathcore:$Name:  $:$Id: Vector4D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Vector4D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
+
+
+/**
+   @defgroup GenVector 3D and 4D Vectors
+ */
 
 #ifndef ROOT_Math_Vector4D 
 #define ROOT_Math_Vector4D 

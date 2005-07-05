@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.2 2005/06/27 17:50:02 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.3 2005/06/28 05:00:39 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -39,6 +39,8 @@ namespace ROOT {
 	The metric used for the LorentzVector is (-,-,-,+).
 	In the case of LorentzVector we don't distinguish the concept of points and vectors as in the 3D case, 
 	since the main use case for 4D Vectors is to describe the kinematics of relativistic particles. A LorentzVector behaves like a DisplacementVector in 4D.       
+
+	@ingroup GenVector
     */
 
     template <class CoordSystem > 

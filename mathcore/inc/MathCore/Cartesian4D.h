@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian4D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian4D.h,v 1.2 2005/06/27 17:50:02 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -28,6 +28,9 @@ namespace ROOT {
     /** 
     Class describing a 4D cartesian coordinate system (x, y, z, t coordinates). 
     The metric used is (-,-,-,+)
+
+    @ingroup GenVector
+
     */ 
     
     template <class ValueType> 

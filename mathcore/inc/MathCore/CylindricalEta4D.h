@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta4D.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta4D.h,v 1.2 2005/06/27 17:50:02 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta, A. Zsenei   06/2005 
 
 /**********************************************************************
@@ -33,6 +33,8 @@ namespace ROOT {
 	The metric used is (-,-,-,+). 
 	Note that the data are not stored contigously in memory 
 	threfore there is NO method returning a pointer to the data
+
+	@ingroup GenVector
     */ 
     
     template <class ValueType> 
