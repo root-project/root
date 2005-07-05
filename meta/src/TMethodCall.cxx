@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.20 2005/03/13 15:05:31 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.21 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -173,6 +173,35 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
 }
 
 //______________________________________________________________________________
+static TClass *R__FindClass(const char *function, UInt_t &pos) 
+{
+   // Helper function to find the TClass associated with a qualified
+   // function name
+
+   if (function) {
+      UInt_t nested = 0;
+      for(int i=strlen(function); i>=0; --i) {
+         switch(function[i]) {
+            case '<': --nested; break;
+            case '>': ++nested; break;
+            case ':': 
+               if (nested==0) {
+                  if (i>2 && function[i-1]==':') {
+                     TString classname(function);
+                     classname[i-1] = 0;
+                     TClass *cl = gROOT->GetClass(classname);
+                     if (cl) pos = i+1;
+                     return cl;
+                  }               
+               }
+               break;
+         }
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void TMethodCall::Init(const char *function, const char *params)
 {
    // Initialize the function invocation environment. Necessary input
@@ -182,7 +211,9 @@ void TMethodCall::Init(const char *function, const char *params)
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   Init(0, function, params);
+   UInt_t pos = 0;
+   TClass *cl = R__FindClass(function,pos);
+   Init(cl, function+pos, params);
 }
 
 //______________________________________________________________________________
@@ -227,7 +258,9 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   InitWithPrototype(0, function, proto);
+   UInt_t pos = 0;
+   TClass *cl = R__FindClass(function,pos);
+   InitWithPrototype(cl, function+pos, proto);
 }
 
 //______________________________________________________________________________
