@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.102 2005/04/29 20:34:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.103 2005/04/30 12:51:00 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -332,8 +332,11 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
       fNumber = -1;
       gROOT->GetListOfFunctions()->Add(this);
+      if (! fMethodCall->IsValid() ) {
+         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",name);
+      }
    } else {
-      Printf("Function:%s cannot be compiled",name);
+      Error("TF1","requires a proper function name!");
    }
 }
 
@@ -417,8 +420,11 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
       fNumber = -1;
       gROOT->GetListOfFunctions()->Add(this);
+      if (! fMethodCall->IsValid() ) {
+         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
+      }
    } else {
-      Printf("Function:%s cannot be compiled",name);
+      Error("TF1","can not find any function at the address 0x%x. This function requested for %s",fcn,name);
    }
 }
 
@@ -443,19 +449,11 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
-   char *funcname = G__p2f2funcname((void*)fcn);
-   if (funcname) {
-      fType       = 2;
-      SetTitle(funcname);
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
-      fNumber = -1;
-      fFunction   = 0;
-   } else {
-      fType       = 1;
-      fMethodCall = 0;
-      fFunction   = fcn;
-   }
+
+   fType       = 1;
+   fMethodCall = 0;
+   fFunction   = fcn;
+
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
