@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.80 2005/04/18 10:54:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.81 2005/04/20 07:17:28 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1499,8 +1499,8 @@ void TBuffer::ReadFastArray(void **start, const TClass *cl, Int_t n,
                             Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
-   // The objects read are stores starting at the address '*start'
-   // The objects in the array are assume to be of class 'cl' or a derived class.
+   // The objects read are stored starting at the address '*start'
+   // The objects in the array are assumed to be of class 'cl' or a derived class.
    // 'mode' indicates whether the data member is marked with '->'
 
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer (*start)
