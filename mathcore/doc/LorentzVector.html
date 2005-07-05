@@ -1,0 +1,68 @@
+// LorentzVector doxygen page
+
+/**
+
+  \page LorentzVectorPage  LorentzVector Classes
+
+
+The following types of LorentzVector are defined by defaults: 
+
+<ul>
+<li>ROOT::Math::XYZTVector  vector based on x,y,z,t coordinates (cartesian) in double precision
+<li>ROOT::Math::XYZTVectorF  vector based on x,y,z,t coordinates (cartesian) in float precision
+<li>ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates  in double precision
+</ul>
+The metric used for all the LorentzVector's is (-,-,-,+)
+
+<p> 
+<h4>Constructors and Assignment</h4>
+The following declarations are available: 
+<pre>
+ XYZTVector           v1;                  // create an empty vector (x = 0, y = 0, z = 0, t = 0) 
+ XYZTVector           v2(1,2,3,4);         // create a vector with x=1, y = 2, z = 3, t = 4 
+ PtEtaPhiEVector  v3( 1, 2, PI, 5);        // create a vector with pt = 1, eta = 2, phi = PI, E = 5
+</pre>
+Note that each type of vector is constructed by passing its coordinates representations, so a XYZTVector(1,2,3,4) is different from a PtEtaPhiEVector(1,2,3,4). 
+<p>
+In addition the Vector classes can be constructed by any vector, which implements the accessors x(), y() and z() and t(). 
+This con be another LorentzVector3 based on a different coordinate system or even any vector of a different package, like the CLHEP HepLorentzVector that implements the required signatures.  
+<pre>
+  XYZTVector           v1(1,2,3,4); 
+  PtEtaPhiEVector      v2(v1);
+ 
+  CLHEP::HepLorentzVector q(1,2,3,4); 
+  XYZTVector              v3(q)  
+</pre>
+
+<h4>Coordinate Accessors</h4>
+To get information on the coordinates on the vector (cartesian, polar, cylindrical, etc...) see the documentation for the class ROOT::Math::LorentzVector
+
+<h4>Setter Methods</h4>
+Setter methods as in CLHEP, setting each coordinate at a time are not supported. The setters methods supported are : 
+<ul>
+<li> SetCoordinates(c1,c2,c3,c4)  which sets the four basic coordinates, x,y,z,t for a ROOT::Math::XYZTVector and pt, eta, phi, E for a ROOT::Math::PtEtaPhiEVector
+<li>SetXYZT(x,y,z,t) which set the x,y,z,t for all type of vectors.
+</ul>
+In additions are supported as for the 3D Vectors the Set/GetCoordinates from C arrays or using iterators
+
+<h4>Arithmetic Operations</h4>
+The following operations are possible between LorentzVectors classes, even of different coordinate system types: 
+( v is a one of the LorentzVector class, q is a generic Vector  implementing x(), y(), z() and t() and a  is 
+a generic scalar type: double, flot, int, etc.... )  
+<pre>
+v += q; 
+v -= q; 
+v1 *= a;
+v1 /= a; 
+</pre>
+Between LorentzVector classes, the following operations are possibles: ( v1 and v2 can be two vectors in different coordinate system. v3 is the same type of v1)   
+<pre>
+v3 = v1 + v2;   
+v3 = v1 - v2;  
+v2 = a * v1;   
+v2 = v1 * a;
+v2 = v1 / a;   
+</pre>
+
+
+*/

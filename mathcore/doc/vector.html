@@ -1,0 +1,133 @@
+// Vector Doxygen doc page
+
+/**
+
+  \page Vector  Generic Vector for 3 and 4 Dimensions
+
+  
+
+
+This is a proposal for a new vector package, @b GenVector, 
+describing vectors and their operations in 2, 3, and 4 dimensions. 
+The 4 dimensional space is used for describing relativistic particles. 
+These vectors are different from generic vectors of the Linear Algebra package which describe N-dimensional vectors. The functionality of this package is currently provided by the CLHEP <A HREF="http://proj-clhep.web.cern.ch/proj-clhep/manual/UserGuide/VectorDefs/index.html">Vector</A> And 
+<A HREF="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/namespaceHepGeom.html">Geometry</A> packages and  the %ROOT <A HREF="http://root.cern.ch/root/html/PHYSICS_Index.html">Physics Vector</A> classes (Tvector2, TVector3 and TLorentzVector). It is also re-uses concepts and ideas from the CMS <A HREF="http://lcgapp.cern.ch/doxygen/SEAL/snapshot/html/dir_000007.html">Common Vector package</A>.
+The main characteristics of this package are :
+<ul> 
+<li><h4>Minimal interface</h4>
+We define a minimal interface trying to avoid duplications in contrast to what is currently provided by the Vector package of CLHEP. 
+<ul>
+<li>We try to avoid methods providing the same functionality but with different names ( like getX() and x() in CLHEP). 
+<li>we minimize the number of setter methods, avoiding methods which can set the Vector classes in an inconsistent state. 
+We provide only methods which set all the coordinates at the same time and we enforce the use of transformations as rotations or translations (additions) for modifying the vector contents. 
+<li>The majority of the functionality, which is present in the CLHEP package, involving operations on two vectors, is moved in separated helper functions (see ROOT::Math::VectorUtil). This has the advantage that the basic interface will remain more stable with time while additional functions can be added easily. 
+</ul>
+<p>
+We adopted a compromised between a simple interface and user convenience. We could have gone to the extreme of having a class containing only the scalar data, with member functions only returning the data themself and move all the other functionality in separate functions. This approach, although it has some appeal, it requires a complete change from the way these classes are used. We have therefore prefer to keep a more conservative approach, mantaining the most used functions inside the vector classes, and moving other fuctionality  outside as global functions in a namespace.  
+In addition, our choice of having all the coordinate accessors inside the vector classes, provides us the possibility of specializing the vector classes depending on the coordinate system.      
+<li><h4>Optimal runtime performances</h4>
+We try to minimize any overhead in the run-time performances. We have deliberatly avoided to have any virtual function and even virtual destructors in the classes and have inlined as much as possible all the functions. 
+
+
+<li><h4>Generic scalar type</h4> 
+For maximum flexibility and minimize in some use case memory allocation, the vector classes are templated on the scalar type. To avoid exposing templated parameter to the users, typedefs are defined for 
+vectors based on float and double's. 
+<li><h4>Coordinate Type</h4>
+The Vector (and point classes) are based on a generic type of coordinates. Various classes exist to describe the different coordinates, such as Cartesian (for 3, and 4 dimensions), Polar for dimension 3 and Cylindrical for 3 and 4 dimensions. 
+Users can define the Vectors according to the coordinate type which is most efficient for their use. For performances reason, we prefer to implement this concept using template classes instead of inheritance. 
+<li><h4>Points and Vector concept</h4>
+Mathematically Vectors and Points are two distinct concepts. They have different transformations, like Vectors only rotate while Points rotate and translate.  You can add two vectors but not two points and the difference between two points is a vector. In contrast to the CLHEP Vector package, but as in the CLHEP Geometry package and in the CMS Vector package,  
+we distinguish for the 3 dimensions, between Points and Vectors. They are defined as two distinct types; Points are described by the 
+ROOT::Math::PositionVector3D class while Vectors by the 
+ROOT::Math::DisplacementVector3D class. 
+Therefore only some transformations are allowed, for example it is not allowed to add two points, and translations have no effect on Vectors. Comparing to the CMS Vector package, we don't want to distinguish between Vectors according to their reference frame, for example between local frame vector and global frame vectors. 
+We have recognized a limited needs for this functionality and a too high cost for including this additional complexity. 
+</li> 
+
+<li><h3>Transformations</h3>
+<p>
+We describe also  some geometrical 3D transformations such as rotations and translations and Lorentz 4D transformations which are composed by a boost and a 3D rotation. 
+<ul>
+<li><h4>3D Rotations</h4> 
+Rotations can be expressed in various ways according to their representations. For example a rotation can be described by a 3x3 orthogonal matrix or by 3 Euler angles or by a direction axis and an angle. We implement these concepts by defining different classes describing the various type of rotations:
+
+<ul>
+  <li>Rotation described by a 3x3 matrix (ROOT::Math::Rotation3D)
+  <li>Rotation described by Euler angles
+  <li>Rotation described by a direction axis and an angle 
+<li>Rotation described by a quaternion
+</ul> 
+ </li>
+In the current release, only the implementation based on 3D matrix is present.
+<li><h4>3D Transformation</h4> 
+A 3D transformation is composed of a rotation and a translation. We describe transformations using a class which is template on the 3D rotation types and the vector type. 
+It is important to note that transformations act differently on  Vectors and Points. The Vectors only rotate, therefore when applying a transfomation (rotation + translation) on a Vector, only the rotation operates while the translation has no effect. The interface for Transformations is similar to the one used in the CLHEP Geometry package 
+(class <A href="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/classHepGeom_1_1Transform3D.html">Transform3D</A>). 
+</li>
+<li><h4>Lorentz Rotation</h4>
+A generic Lorentz Rotation can be expressed as a 4x4 matrix containing a 3D rotation part and a boost part. A pure boost can be instead described by a 4x4 symmetric matrix. 
+
+
+<p>
+Contrary to the Vectors, all the Transfromations classes are based on double scalar value, since lower precision would result in too large numerical errors.
+
+ 
+</li>
+
+<h3>Connection to Linear Algebra package</h3>
+
+In some use cases, like in track reconstruction, it is needed to use the content of the vector and rotation classes in conjunction with linear algebra operations.  We prefer to avoid any direct dependency to any Linear algebra package. However, we provide some hooks to convert to and from Linear Algebra classes. 
+The Vectors and the transformatios have methods which allow to get and set their data members passing either an iterator or pointer to a contigous set of data, like a C array.  This allows a easy connection with any linear algebra package (like the %ROOT TMatrix classes) which allows creation of matrices using C arrays.
+</ul>
+<p>
+
+<p>
+<h2>Example of Usage</h2>
+
+<ul>
+<li>\ref Vector3DPage 
+<li>\ref Point3DPage
+<li>\ref LorentzVectorPage
+<li>\ref TransformPage
+<li>ROOT::Math::VectorUtil (Helper functions)
+<li>\ref ExtUsagePage
+</ul>
+<p>
+
+
+<h2>Packaging</h2>
+This classes will be part of the basic Math library, <em>libMathCore</em>. 
+All of the classes and functions will be in the namespace, 
+<em>ROOT::Math</em>. 
+
+<h2>Current Status and Time Scale</h2>
+This current version is avaliable with the <A href="http://root.cern.ch/root/Version502.html">ROOT development version 5.02</A>. 
+A tar file of all MathCore is downloadable from 
+<A href="http://seal.web.cern.ch/seal/MathLibs/MathCore-1_0_0.tar.gz">here</A>.
+The current version provides Vectors and 3d Rotations based on 3x3 matrices.
+
+<h2>Backward compatibility with %ROOT and CLHEP Vector classes</h2>
+
+When these classes will be available in ROOT, we will create adapter (proxy) classes replacing the current %ROOT Vector classes (TVector3, TLorentzVector, TRotation and TLorentzRotation). For example a new TLorentzVector, will still inherit from TObject and contain an instance to the new ROOT::Math::LorentzVector class. All the TLorentzVector member functions will be implemented forwarding the calls to the ROOT::Math::LorentzVector. Since all these methods will be inlined, the performance overhead expected for TLorentzVector will be negligible. 
+For mantaining some compatibility with CLHEP and easy the migration, we have decided to keep the same naming convention as CLHEP for the interfaces for some of the most used functions. 
+For example we will have a ROOT::Math::XYZVector::x(), y() and z() as in CLHEP. 
+ 
+<h2>References</h2>
+<ol>
+<li>CLHEP Vector package (<A HREF="http://proj-clhep.web.cern.ch/proj-clhep/manual/UserGuide/VectorDefs/index.html">User guide</A> and <A HREF="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/dir_000027.html">reference doc</A>)
+<li><A HREF="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/namespaceH">CLHEP Geometry package</A>
+<li><A HREF="http://root.cern.ch/root/html/PHYSICS_Index.html">%ROOT Physics Vector classes</A> 
+<li><A HREF="http://lcgapp.cern.ch/doxygen/SEAL/snapshot/html/dir_000007.html">CMS Vector package</A>
+</ol>
+<p>
+<p>
+
+<hr>
+<p>
+@authors The %ROOT Math Library Team 
+<p>
+@b Contact:   <Lorenzo.Moneta@cern.ch>  
+
+
+
+*/
