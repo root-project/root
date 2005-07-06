@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.184 2005/06/23 16:13:20 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.185 2005/06/24 12:27:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1310,16 +1310,16 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
    static Bool_t PA, PB, PC, PD, T, L, R, B, INSIDE;
    Int_t  wx, wy;
-   TVirtualPad  *parent;
    Bool_t opaque  = OpaqueMoving();
    Bool_t ropaque = OpaqueResizing();
    Bool_t fixedr  = HasFixedAspectRatio();
 
    if (!IsEditable() && event != kMouseEnter) return;
-
+   TVirtualPad  *parent = GetMother();
+   if (!parent->IsEditable()) return;
+   
    HideToolTip(event);
 
-   parent = GetMother();
    if (fXlowNDC < 0 && event != kButton1Down) return;
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
