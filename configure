@@ -1114,7 +1114,7 @@ if test "x$enable_builtin_freetype" = "x" || \
    test "x$enable_builtin_freetype" = "xno" ; then
 
    checking_msg "freetype-config"
-   if which freetype-config > /dev/null 2>&1 ; then
+   if `which freetype-config > /dev/null 2>&1` ; then
       which freetype-config
 
       message "Checking for libfreetype version >= 9.3.0"
