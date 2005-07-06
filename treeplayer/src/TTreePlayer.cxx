@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.191 2005/05/27 16:40:09 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.192 2005/06/24 20:25:11 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -464,7 +464,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 
    TString selname = wrapperPrefix;
 
-   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,"",3);
+   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,option,3);
 
    selname = gp.GetFileName();
    if (aclicMode.Length()==0) {
