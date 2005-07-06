@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.17 2005/03/08 05:33:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.18 2005/05/27 16:40:09 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -413,8 +413,12 @@ namespace ROOT {
          container = kClones;
          middle = "Cla";
          isclones = true;
+      } else if (!topdesc && branch && 
+                 branch->GetBranchCount() == branch->GetMother()) {
+         container = kClones;
+         middle = "Cla";
+         isclones = true;
       }
-
       Int_t bid = branch->GetID();
 
       TStreamerElement *element = 0;
@@ -1211,7 +1215,7 @@ namespace ROOT {
             }
             if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
                TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
-               TStreamerInfo *info = be ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+               TStreamerInfo *info = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
                                                       isclones, branch->GetSplitLevel());
             } else {
@@ -1258,8 +1262,8 @@ namespace ROOT {
             if (desc) {
                while ( (subbranch = (TBranch*)subnext()) ) {
                   skipped = AnalyzeBranch(subbranch,1,desc);
-                  if (skipped != 0) Error("AnalyzeTree",
-                                          "Unexpectly read more than one branch in AnalyzeTree.");
+                  Int_t s = 0;
+                  while( s<skipped && subnext() ) { s++; };
                }
             }
             desc = AddClass(desc);
