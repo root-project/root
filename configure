@@ -241,19 +241,19 @@ check_library() {
     for i in $libdirs ; do
         # look first in the lib32 directories
         if test "x$checklib32" = "xyes" ; then
-            i32=`echo $i | sed 's|lib*|lib32|'`
+            i32=`echo $i | sed 's|lib|lib32|'`
             #i="$i32 $i"
             i="$i32"
         fi
         # look first in the lib64 directories
         if test "x$checklib64" = "xyes" ; then
-            i64=`echo $i | sed 's|lib*|lib64|'`
+            i64=`echo $i | sed 's|lib|lib64|'`
             #i="$i64 $i"
             i="$i64"
         fi
         # look first in the hpux64 directories
         if test "x$checkhpux64" = "xyes" ; then
-            i64=`echo $i | sed 's|\(lib*\)|\1/hpux64|'`
+            i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
             #i="$i64 $i"
             i="$i64"
         fi
