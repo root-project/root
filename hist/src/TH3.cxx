@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.61 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.62 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -134,7 +134,7 @@ void TH3::Copy(TObject &obj) const
    ((TH3&)obj).fTsumwxz     = fTsumwxz;
    ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
-      
+
 //______________________________________________________________________________
 Int_t TH3::BufferEmpty(Int_t action)
 {
@@ -143,7 +143,7 @@ Int_t TH3::BufferEmpty(Int_t action)
 // action =  0 histogram is filled from the buffer
 // action =  1 histogram is filled and buffer is deleted
 //             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram   
+//             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -194,12 +194,12 @@ Int_t TH3::BufferEmpty(Int_t action)
       }
    }
    fBuffer = 0;
-   
+
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
    fBuffer = buffer;
-   
+
    if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
@@ -207,7 +207,7 @@ Int_t TH3::BufferEmpty(Int_t action)
    }
    return nbentries;
 }
- 
+
 //______________________________________________________________________________
 Int_t TH3::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 {
@@ -262,7 +262,7 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z)
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-      
+
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -883,7 +883,7 @@ void TH3::GetStats(Stat_t *stats) const
    // stats[10]= sumwyz
 
    if (fBuffer) ((TH3*)this)->BufferEmpty();
-   
+
    Int_t bin, binx, biny, binz;
    Stat_t w,err;
    Double_t x,y,z;
@@ -977,7 +977,7 @@ Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t b
    }
    return integral;
 }
-        
+
 //______________________________________________________________________________
 Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
 {
@@ -987,7 +987,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
 //
 //     option is a character string to specify options
 //         "U" include Underflows in test
-//         "O" include Overflows 
+//         "O" include Overflows
 //         "N" include comparison of normalizations
 //         "D" Put out a line of "Debug" printout
 //
@@ -1003,7 +1003,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
 
    TString opt = option;
    opt.ToUpper();
-   
+
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
@@ -1039,7 +1039,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
       Error("KolmogorovTest","Number of channels in Z is different, %d and %d\n",ncz1,ncz2);
       return 0;
    }
-    
+
      // Check consistency in channel edges
    Bool_t afunc1 = kFALSE;
    Bool_t afunc2 = kFALSE;
@@ -1068,7 +1068,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
    Int_t iend = ncx1, jend = ncy1, kend = ncz1;
    if (opt.Contains("U")) {ibeg = 0; jbeg = 0; kbeg = 0;}
    if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1; kend = ncz1+1;}
-   
+
    Int_t i,j,k,bin;
    Double_t hsav;
    Double_t sum1  = 0;
@@ -1147,7 +1147,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
    }
 
    //  Probably one should compute a third distance <======
-   
+
    //    Get Kolmogorov probability
    Double_t factnm;
    if (afunc1)      factnm = TMath::Sqrt(sum2);
@@ -1155,7 +1155,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
    else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
    Double_t z  = dfmax*factnm;
    Double_t z2 = dfmax2*factnm;
-   
+
    prb = TMath::KolmogorovProb(0.5*(z+z2)); //<==this should probably be updated
 
    Double_t prb1=0, prb2=0;
@@ -1177,7 +1177,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
       printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
       printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
-      if (opt.Contains("N")) 
+      if (opt.Contains("N"))
       printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
    }
       // This numerical error condition should never occur:
@@ -1185,7 +1185,7 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
    return prb;
-}   
+}
 
 
 //______________________________________________________________________________
@@ -1203,7 +1203,7 @@ Long64_t TH3::Merge(TCollection *list)
    //of bins and different limits, BUT the largest bin width must be
    //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
-                                                                                            
+
    if (!list) return 0;
    if (list->IsEmpty()) return (Int_t) GetEntries();
 
@@ -1317,11 +1317,11 @@ Long64_t TH3::Merge(TCollection *list)
          for (Int_t i = 0; i < kNstat; i++)
             totstats[i] += stats[i];
          nentries += h->GetEntries();
-                                                                                            
+
          nx = h->GetXaxis()->GetNbins();
          ny = h->GetYaxis()->GetNbins();
          nz = h->GetZaxis()->GetNbins();
-                                                                                            
+
          for (binz = 0; binz <= nz + 1; binz++) {
             iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
             for (biny = 0; biny <= ny + 1; biny++) {
@@ -1358,7 +1358,7 @@ Long64_t TH3::Merge(TCollection *list)
    SetEntries(nentries);
    if (hclone) delete hclone;
    return (Long64_t)nentries;
-}   
+}
 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option) const
@@ -1445,7 +1445,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
   }
   if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h1->SetEntries(fEntries);
   else h1->SetEntries(entries);
-  
+
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
@@ -1453,7 +1453,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
      char optin[100];
      strcpy(optin,opt.Data());
      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
      if (!gPad->FindObject(h1)) {
         h1->Draw(optin);
      } else {
@@ -1461,7 +1461,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
      }
      if (padsav) padsav->cd();
   }
-  
+
   return h1;
 }
 
@@ -1494,12 +1494,12 @@ TH1 *TH3::Project3D(Option_t *option) const
    // The following sequence
    //    h->Project3D("xy");
    //    h->Project3D("xy2");
-   //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2" 
+   //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2"
    //
    //  NOTE 2: The number of entries in the projected histogram is set to the
    //  number of entries of the parent histogram if all bins are selected,
    //  otherwise it is set to the sum of the bin contents.
-      
+
   TString opt = option; opt.ToLower();
   Int_t ixmin = fXaxis.GetFirst();
   Int_t ixmax = fXaxis.GetLast();
@@ -1591,13 +1591,13 @@ TH1 *TH3::Project3D(Option_t *option) const
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)                                  
+           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
                         ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else if (ybins->fN == 0) {
            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
                         ,nx,&xbins->fArray[ixmin-1]);
         } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]                                  
+           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
                         ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else {
            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
@@ -1738,13 +1738,13 @@ TH1 *TH3::Project3D(Option_t *option) const
   Double_t entries  = 0;
   Double_t newerror = 0;
   for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
-     Int_t ix = ixbin-ixmin+1;
+     Int_t ix = ixbin-ixmin;
      if (ix < 0) ix=0; if (ix > nx+1) ix = nx+1;
      for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
-        Int_t iy = iybin-iymin+1;
+        Int_t iy = iybin-iymin;
         if (iy < 0) iy=0; if (iy > ny+1) iy = ny+1;
         for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
-           Int_t iz = izbin-izmin+1;
+           Int_t iz = izbin-izmin;
            if (iz < 0) iz=0; if (iz > nz+1) iz = nz+1;
            Int_t bin = GetBin(ixbin,iybin,izbin);
            cont = GetBinContent(bin);
@@ -1922,7 +1922,7 @@ void TH3::Streamer(TBuffer &R__b)
       TAtt3D::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TH3::IsA());
       //====end of old versions
-      
+
    } else {
       TH3::Class()->WriteBuffer(R__b,this);
    }
@@ -2055,7 +2055,7 @@ void TH3C::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
    TArrayC::Set(n);
@@ -2098,7 +2098,7 @@ void TH3C::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH3C::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH3C::Class()->WriteBuffer(R__b,this);
    }
@@ -2291,7 +2291,7 @@ void TH3S::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
    TArrayS::Set(n);
@@ -2324,7 +2324,7 @@ void TH3S::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH3S::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH3S::Class()->WriteBuffer(R__b,this);
    }
@@ -2517,7 +2517,7 @@ void TH3I::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
    TArrayI::Set(n);
@@ -2689,7 +2689,7 @@ void TH3F::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
    TArrayF::Set(n);
@@ -2722,7 +2722,7 @@ void TH3F::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH3F::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH3F::Class()->WriteBuffer(R__b,this);
    }
@@ -2895,7 +2895,7 @@ void TH3D::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
    TArrayD::Set(n);
@@ -2928,7 +2928,7 @@ void TH3D::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH3D::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH3D::Class()->WriteBuffer(R__b,this);
    }
