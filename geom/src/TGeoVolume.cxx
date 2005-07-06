@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.63 2005/06/14 15:47:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.64 2005/06/27 13:09:47 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -665,7 +665,7 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+7];
+   name = new char[strlen(vol->GetName())+15];
    sprintf(name, "%s_%i", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
@@ -692,7 +692,7 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    TGeoNode *node = new TGeoNodeOffset(vol, copy_no, offset);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   char *name = new char[strlen(vol->GetName())+7];
+   char *name = new char[strlen(vol->GetName())+15];
    sprintf(name, "%s_%i", vol->GetName(), copy_no+1);
    node->SetName(name);
    delete [] name;
@@ -730,7 +730,7 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+7];
+   name = new char[strlen(vol->GetName())+15];
    sprintf(name, "%s_%i", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
