@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.13 2005/03/10 13:46:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.14 2005/07/05 22:23:17 pcanal Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const ;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
+   virtual Double_t GetSave(const Double_t *x);
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
@@ -66,6 +67,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
+   virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetClippingBoxOff(); // *MENU*
    virtual void     SetClippingBoxOn(Double_t xclip=0, Double_t yclip=0, Double_t zclip=0); // *MENU*
@@ -90,7 +92,7 @@ public:
    virtual Double_t Covariance3XZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(1,ax,bx,0,ay,by,1,az,bz,epsilon);}
    virtual Double_t Covariance3YZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(0,ax,bx,1,ay,by,1,az,bz,epsilon);}
    
-   ClassDef(TF3,2)  //The Parametric 3-D function
+   ClassDef(TF3,3)  //The Parametric 3-D function
 };
 
 inline void TF3::GetRange(Double_t &xmin, Double_t &xmax) const
