@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.19 2005/07/07 07:33:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.20 2005/07/07 09:49:43 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -301,28 +301,25 @@ Double_t TF3::GetSave(const Double_t *xx)
    if (dz <= 0) return 0;
 
    //we make a trilinear interpolation using the 8 points surrounding x,y,z
-   //(to be implemented by Olivier)
    Int_t ibin    = Int_t((x-xmin)/dx);
    Int_t jbin    = Int_t((y-ymin)/dy);
    Int_t kbin    = Int_t((z-zmin)/dz);
-   //this is a temporary solution
-   Int_t l = ibin + (npx+1)*(jbin + kbin*(npy+1));
-   Double_t r = fSave[l];
-   
-/*
-   //Olivier will implement a trilinear interpolation based on the bilinear interpolation in TF2
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t zlow = zmin + kbin*dz;
    Double_t t    = (x-xlow)/dx;
    Double_t u    = (y-ylow)/dy;
    Double_t v    = (z-zlow)/dz;
-   Int_t k1      = jbin*(npx+1) + ibin;
-   Int_t k2      = jbin*(npx+1) + ibin +1;
-   Int_t k3      = (jbin+1)*(npx+1) + ibin +1;
-   Int_t k4      = (jbin+1)*(npx+1) + ibin;
-   Double_t r    = (1-t)*(1-u)*fSave[k1] +t*(1-u)*fSave[k2] +t*u*fSave[k3] + (1-t)*u*fSave[k4];
-*/
+   Int_t k1      = (ibin  ) + (npx+1)*((jbin  ) + (npy+1)*(kbin  ));
+   Int_t k2      = (ibin+1) + (npx+1)*((jbin  ) + (npy+1)*(kbin  ));
+   Int_t k3      = (ibin+1) + (npx+1)*((jbin+1) + (npy+1)*(kbin  ));
+   Int_t k4      = (ibin  ) + (npx+1)*((jbin+1) + (npy+1)*(kbin  ));
+   Int_t k5      = (ibin  ) + (npx+1)*((jbin  ) + (npy+1)*(kbin+1));
+   Int_t k6      = (ibin+1) + (npx+1)*((jbin  ) + (npy+1)*(kbin+1));
+   Int_t k7      = (ibin+1) + (npx+1)*((jbin+1) + (npy+1)*(kbin+1));
+   Int_t k8      = (ibin  ) + (npx+1)*((jbin+1) + (npy+1)*(kbin+1));
+   Double_t r    = (1-t)*(1-u)*(1-v)*fSave[k1] + t*(1-u)*(1-v)*fSave[k2] + t*u*(1-v)*fSave[k3] + (1-t)*u*(1-v)*fSave[k4] +
+                   (1-t)*(1-u)*v*fSave[k5] + t*(1-u)*v*fSave[k6] + t*u*v*fSave[k7] + (1-t)*u*v*fSave[k8];
    return r;
 }
 
