@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.18 2005/03/10 13:46:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.19 2005/07/07 07:33:50 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -304,7 +304,7 @@ Double_t TF3::GetSave(const Double_t *xx)
    //(to be implemented by Olivier)
    Int_t ibin    = Int_t((x-xmin)/dx);
    Int_t jbin    = Int_t((y-ymin)/dy);
-   Int_t kbin    = Int_t((z-ymin)/dz);
+   Int_t kbin    = Int_t((z-zmin)/dz);
    //this is a temporary solution
    Int_t l = ibin + (npx+1)*(jbin + kbin*(npy+1));
    Double_t r = fSave[l];
