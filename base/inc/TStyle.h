@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.21 2005/06/01 16:15:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.22 2005/06/02 14:10:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
         Color_t       fGridColor;         //grid line color (if 0 use axis line color)
         Style_t       fGridStyle;         //grid line style
         Width_t       fGridWidth;         //grid line width
+        Width_t       fLegendBorderSize;  //TLegend box border size
         Int_t         fHatchesLineWidth;  //hatches line width for hatch styles > 3100
         Double_t      fHatchesSpacing;    //hatches spacing for hatch styles > 3100
         Color_t       fFrameFillColor;    //pad frame fill color
@@ -196,6 +197,7 @@ public:
         const char      *GetFitFormat()       const {return fFitFormat.Data();}
         Int_t            GetHatchesLineWidth() const {return fHatchesLineWidth;}
         Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
+        Width_t          GetLegendBorderSize() const   {return fLegendBorderSize;}
         Int_t            GetNumberOfColors() const  {return fPalette.fN;}
         Color_t          GetPadColor() const        {return fPadColor;}
         Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
@@ -322,6 +324,7 @@ public:
         void             SetCanvasDefW(Int_t w=700) {fCanvasDefW = w;}
         void             SetCanvasDefX(Int_t topx=10) {fCanvasDefX = topx;}
         void             SetCanvasDefY(Int_t topy=10) {fCanvasDefY = topy;}
+        void             SetLegendBorderSize(Width_t size=4) {fLegendBorderSize = size;}
         void             SetPadColor(Color_t color=19) {fPadColor = color;}
         void             SetPadBorderSize(Width_t size=1) {fPadBorderSize = size;}
         void             SetPadBorderMode(Int_t mode=1) {fPadBorderMode = mode;}

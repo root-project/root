@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.45 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.46 2005/06/23 06:24:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -111,6 +111,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetTitleBorderSize(1);
       SetStatColor(0);
       SetStatBorderSize(1);
+      SetLegendBorderSize(1);
       return;
    }
    if (strcmp(name,"Bold") == 0) {
@@ -347,6 +348,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
    ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    ((TStyle&)obj).fNumberContours = fNumberContours;
+   ((TStyle&)obj).fLegendBorderSize = fLegendBorderSize;
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -460,6 +462,7 @@ void TStyle::Reset(Option_t *)
    fTitlePS        = "";
    fStripDecimals  = kTRUE;
    fNumberContours = 20;
+   fLegendBorderSize= 4;
 
    SetDateX();
    SetDateY();

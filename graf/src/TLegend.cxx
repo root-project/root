@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.22 2004/11/26 07:33:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.23 2005/01/03 09:50:10 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 
+#include "TStyle.h"
 #include "TLatex.h"
 #include "TLine.h"
 #include "TBox.h"
@@ -96,6 +97,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char 
     fPrimitives->AddFirst(headerEntry);
   }
   SetDefaults();
+  SetBorderSize(gStyle->GetLegendBorderSize());
 }
 
 //____________________________________________________________________________
