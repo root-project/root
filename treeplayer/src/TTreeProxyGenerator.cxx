@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.18 2005/05/27 16:40:09 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.19 2005/07/06 18:44:08 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1262,7 +1262,7 @@ namespace ROOT {
             if (desc) {
                while ( (subbranch = (TBranch*)subnext()) ) {
                   skipped = AnalyzeBranch(subbranch,1,desc);
-                  Int_t s = 0;
+                  UInt_t s = 0;
                   while( s<skipped && subnext() ) { s++; };
                }
             }
