@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.19 2005/06/21 17:09:26 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.20 2005/06/24 12:27:30 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -282,7 +282,7 @@ QWidget      *TGQt::wid(Window_t id)
       dev = (QPaintDevice *)id;
 
    if ( dev->devType() != QInternal::Widget) {
-        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", __FUNCTION__, __LINE__
+        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", "TGQt::wid", __LINE__
            , dev->devType()
            , QInternal::Widget);
 //           , (const char *)dev->name(), (const char *)dev->className(), QInternal::Widget);
@@ -624,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.19 2005/06/21 17:09:26 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.101 2005/07/06 22:19:19 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -717,7 +717,7 @@ Bool_t TGQt::Init(void* /*display*/)
          //  provide the replacement and the codec
         fSymbolFontFamily = "Arial";
         fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
-        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
+        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
         // create a custom codec
         new QSymbolCodec();
     }
@@ -760,7 +760,6 @@ Bool_t  TGQt::IsRegistered(QPaintDevice *wid)
    // Check whether the object has been registered
    return fWidgetArray->find(wid) == -1 ? kFALSE : kTRUE;
 }
-
 //______________________________________________________________________________
 Int_t TGQt::InitWindow(ULong_t window)
 {
@@ -818,7 +817,7 @@ QColor &TGQt::ColorIndex(Color_t ic)
    }
 #ifdef QTDEBUG
    else {
-      fprintf(stderr," TGQt::%s:%d - Wrong color index %d\n", __FUNCTION__,__LINE__, ic);
+      fprintf(stderr," TGQt::%s:%d - Wrong color index %d\n", "TGQt::wid",__LINE__, ic);
    }
 #endif
 
@@ -1302,23 +1301,24 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
 
       QFontMetrics metrics(*fQFont);
       QRect bRect = metrics.boundingRect(text);
-      switch( fTextAlignH ) {
-           case 2: x -= bRect.width()/2; // h center;
-              break;
-           case 3: x -= bRect.width();         //  Right;
-      };
 
-      switch( fTextAlignV ) {
-          case 2: y += bRect.height()/2 - metrics.descent(); // v center
-             break;
-          case 3: y += bRect.height() - metrics.descent(); // AlignTop;
-      };
       fQPainter->translate(x,y);
-      // Add rotation if any
-      if (TMath::Abs(angle) > 0.1 )  fQPainter->rotate(-angle);
+      if (TMath::Abs(angle) > 0.1 ) fQPainter->rotate(-angle);
+      int dx =0; int dy =0;
 
+      switch( fTextAlignH ) {
+           case 2: dx = -bRect.width()/2;                    // h center;
+              break;
+           case 3: dx = -bRect.width();                      //  Right;
+              break;
+      };
+      switch( fTextAlignV ) {
+          case 2: dy = bRect.height()/2 - metrics.descent(); // v center
+             break;
+          case 3: dy = bRect.height()   - metrics.descent(); // AlignTop;
+      };
 
-      fQPainter->drawText (0, 0, GetTextDecoder()->toUnicode (text));
+      fQPainter->drawText (dx, dy, GetTextDecoder()->toUnicode (text));
 
       fQPainter->restore();
       qApp->unlock();
@@ -1531,7 +1531,20 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
    // deprecated
    return 0;
 }
-
+#ifdef __APPLE__
+//______________________________________________________________________________
+  class requestString : public QDialog {
+  public:
+    QString   fText;
+    QLineEdit fEdit;
+    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop), fText(text),fEdit(this)
+    {
+       setBackgroundMode(Qt::NoBackground);
+       connect(&fEdit,SIGNAL( returnPressed () ), this, SLOT( accept() ));
+    }
+    ~requestString(){;}
+  };
+#endif
 //______________________________________________________________________________
 Int_t  TGQt::RequestString(int x, int y, char *text)
 {
@@ -1550,7 +1563,7 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
 //*-*    1     -  input was Ok
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
+#ifndef  __APPLE__
   class requestString : public QDialog {
   public:
     QString   fText;
@@ -1562,6 +1575,7 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
     }
     ~requestString(){;}
   };
+#endif
   int  res = QDialog::Rejected;
   if (fSelectedWindow->devType() == QInternal::Widget ) {
      TQtWidget *w = (TQtWidget *)fSelectedWindow;
@@ -1672,13 +1686,6 @@ void  TGQt::SelectWindow(int wid)
          fSelectedBuffer=0; fSelectedWindow = NoOperation;
       } else {
          QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(dev);
-         TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-
-         if (widget && !widget->Canvas()) {
-            TCanvas *canvas = (TCanvas*)gPad->GetCanvas();
-            widget->SetCanvas(canvas);
-         }
-
          if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
          fPrevWindow     = fSelectedWindow;
          if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
@@ -2621,5 +2628,3 @@ Int_t TGQt::processQtEvents(Int_t maxtime)
    // QEventLoop::ExcludeUserInput QEventLoop::ExcludeSocketNotifiers
    return 0;
  }
-
-
