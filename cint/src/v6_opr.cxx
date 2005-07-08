@@ -187,7 +187,7 @@ double val;
 ***********************************************************************/
 void G__intassignbyref(defined,val)
 G__value *defined;
-long val;
+G__int64 val;
 {
   if(isupper(defined->type)) {
     if(defined->ref) *(long*)defined->ref = (long)val;

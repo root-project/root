@@ -75,6 +75,8 @@ double G__doubleM(buf)
 {
   return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
 	  ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
+          ('m'==buf->type) ? (double)(buf->obj.ull) :
+          ('n'==buf->type) ? (double)(buf->obj.ll) :
 	  (double)(buf->obj.i) );
 }
 #else
@@ -4940,7 +4942,7 @@ G__value *pbuf;
 void G__OP1_postfixinc(pbuf)
 G__value *pbuf;
 {
-  long iorig;
+  G__int64 iorig;
   double dorig;
   switch(pbuf->type) {
   case 'd':
@@ -4950,7 +4952,7 @@ G__value *pbuf;
     pbuf->obj.d=dorig;
     break;
   default:
-    iorig = pbuf->obj.i;
+    iorig = G__Longlong(*pbuf);
     if(isupper(pbuf->type)) {
       G__intassignbyref(pbuf,iorig+G__sizeof(pbuf));
       pbuf->obj.i = iorig;
@@ -4967,7 +4969,7 @@ G__value *pbuf;
 void G__OP1_postfixdec(pbuf)
 G__value *pbuf;
 {
-  long iorig;
+  G__int64 iorig;
   double dorig;
   switch(pbuf->type) {
   case 'd':
@@ -4977,7 +4979,7 @@ G__value *pbuf;
     pbuf->obj.d=dorig;
     break;
   default:
-    iorig = pbuf->obj.i;
+    iorig = G__Longlong(*pbuf);
     if(isupper(pbuf->type)) {
       G__intassignbyref(pbuf,iorig-G__sizeof(pbuf));
       pbuf->obj.i = iorig;
@@ -5001,10 +5003,10 @@ G__value *pbuf;
     break;
   default:
     if(isupper(pbuf->type)) {
-      G__intassignbyref(pbuf,pbuf->obj.i+G__sizeof(pbuf));
+      G__intassignbyref(pbuf,G__Longlong(*pbuf)+G__sizeof(pbuf));
     }
     else {
-      G__intassignbyref(pbuf,pbuf->obj.i+1);
+      G__intassignbyref(pbuf,G__Longlong(*pbuf)+1);
     }
   }
 }
@@ -5021,10 +5023,10 @@ G__value *pbuf;
     break;
   default:
     if(isupper(pbuf->type)) {
-      G__intassignbyref(pbuf,pbuf->obj.i-G__sizeof(pbuf));
+      G__intassignbyref(pbuf,G__Longlong(*pbuf)-G__sizeof(pbuf));
     }
     else {
-      G__intassignbyref(pbuf,pbuf->obj.i-1);
+      G__intassignbyref(pbuf,G__Longlong(*pbuf)-1);
     }
   }
 }
@@ -5045,7 +5047,14 @@ G__value *pbuf;
       G__genericerror("Error: Illegal pointer operation unary -");
     }
     else {
-      pbuf->obj.i *= -1;
+       switch(pbuf->type) {
+         case 'm':
+         case 'n':
+           pbuf->obj.ll *= -1;
+           break;
+         default:
+	   pbuf->obj.i *= -1;
+       }
     }
   }
 }

@@ -356,7 +356,7 @@ int G__set_sizep2memfunc G__P((FILE *fp));
 int G__getcommentstring G__P((char *buf,int tagnum,struct G__comment_info *pcomment));
 void G__bstore G__P((int operatorin,G__value expressionin,G__value *defined));
 void G__doubleassignbyref G__P((G__value *defined,double val));
-void G__intassignbyref G__P((G__value *defined,long val));
+void G__intassignbyref G__P((G__value *defined,G__int64 val));
 int G__scopeoperator G__P((char *name,int *phash,long *pstruct_offset,int *ptagnum));
 int G__label_access_scope G__P((char *statement,int *piout,int *pspaceflag,int *pmparen));
 int G__cmp G__P((G__value buf1,G__value buf2));
