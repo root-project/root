@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.12 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.13 2005/06/24 14:53:02 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -20,13 +20,14 @@
 
 ClassImp(TGLCamera)
 
+const Double_t TGLCamera::fInterestBoxExpansion = 1.3;
+
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
    fViewport(0,0,100,100),
    fProjM(),  fModVM(), fClipM(),
    fCacheDirty(kTRUE),
-   fInterestBox(), fInterestFrustum(), fInterestFrustumAsBox(), 
-   fInterestBoxExpansion(2.0), fLargestInterest(0.0)
+   fLargestInterest(0.0)
 {
    for (UInt_t i = 0; i < kPlanesPerFrustum; i++ ) {
       fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0, 0.0);
@@ -116,15 +117,6 @@ void TGLCamera::UpdateCache()
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLCamera::EyePoint() const
-{
-   if (fCacheDirty) {
-      Error("TGLCamera::FrustumBox()", "cache dirty");
-   }
-   return Intersection(fFrustumPlanes[kRIGHT], fFrustumPlanes[kLEFT], fFrustumPlanes[kTOP]);
-}
-
-//______________________________________________________________________________
 TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
 {
    // Return the the current camera frustum. If asBox == FALSE return
@@ -132,7 +124,8 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    // return a true box, using the far clipping plane intersection projected
    // back to the near plane
 
-   // TODO: BoundingBox return name is misleading - should be a bounding volume
+   // TODO: BoundingBox return name is misleading - and not always valid
+   // Need a generic bounding volume object
    if (fCacheDirty) {
       Error("TGLCamera::FrustumBox()", "cache dirty");
    }
@@ -169,6 +162,27 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    }
 
    return TGLBoundingBox(vertex);
+}
+
+//______________________________________________________________________________
+TGLVertex3 TGLCamera::EyePoint() const
+{
+  // Extract the camera eye point using the current frustum planes
+  if (fCacheDirty) {
+      Error("TGLCamera::FrustumBox()", "cache dirty");
+   }
+   return Intersection(fFrustumPlanes[kRIGHT], fFrustumPlanes[kLEFT], fFrustumPlanes[kTOP]);
+}
+
+//______________________________________________________________________________
+TGLVector3 TGLCamera::EyeDirection() const
+{
+   // Extract the camera eye direction using the current frustum planes
+   if (fCacheDirty) {
+      Error("TGLCamera::FrustumBox()", "cache dirty");
+   }
+   // Direction is just normal of near clipping plane
+   return fFrustumPlanes[kNEAR].Norm();
 }
 
 //______________________________________________________________________________
@@ -268,42 +282,10 @@ TGLVector3 TGLCamera::ProjectedShift(const TGLVertex3 & vertex, Int_t xDelta, In
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::EyeDistances(const TGLBoundingBox & box) const
-{
-   TGLVertex3 eyePoint = EyePoint();
-   Double_t nearDist=0, farDist=0, currentDist;
-   TGLVector3 currentVertex;
-
-   for (UInt_t i=0; i<8; i++) {
-      currentVertex = box[i] - eyePoint;
-      currentDist = currentVertex.Mag();
-      if (i==0) {
-         nearDist = currentDist;
-         farDist = currentDist;
-      }
-      if (currentDist < nearDist) {
-         nearDist = currentDist;
-      }
-      if (currentDist > farDist) {
-         farDist = currentDist;
-      }
-   }
-   currentVertex = box.Center() - eyePoint;
-   currentDist = currentVertex.Mag();
-
-   return TGLVector3(nearDist, farDist, currentDist);
-}
-
-//______________________________________________________________________________
 Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
 {
    Bool_t interest = kFALSE;
 
-   // Some have objects zero volume BBs - e.g. single points. Always have
-   // interest in these - there is no way to set a threshold on a point volume.....
-   if (box.Volume() == 0.0) {
-      return kTRUE;
-   }
    // If interest box is empty we take everything with volume larger than
    // 1% of largest seen so far
    if (fInterestBox.IsEmpty()) {
@@ -314,10 +296,21 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
          interest = kTRUE;
       }
    } else {
+      // We have a valid interest box
+
+      // Objects are of interest if the have sufficient length or volume ratio c.f.
+      // the current interest box, and they at least partially overlap it
       Double_t lengthRatio = box.Extents().Mag() / fInterestBox.Extents().Mag();
-      Double_t volumeRatio = box.Volume() / fInterestBox.Volume();
-      if ((lengthRatio > 0.001) || (volumeRatio > 0.005)) {
-         interest = TGLBoundingBox::Intersect(fInterestBox, box);
+      
+      // Some objects have zero volume BBs - e.g. single points - skip the volume ratio
+      // test for these - no way to threshold on 0
+      Double_t volumeRatio = 1.0;
+      if (!box.IsEmpty()) {
+         volumeRatio = box.Volume() / fInterestBox.Volume();
+      }
+
+      if ((lengthRatio > 0.001) || (volumeRatio > 0.0001)) {
+         interest = fInterestBox.Overlap(box) != kOutside;
       }
    }
 
@@ -329,33 +322,49 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
 {
    Bool_t exposedUpdate = kFALSE;
 
-   TGLBoundingBox frustumBox = Frustum(kTRUE); // Get current frustum as box
-   Double_t ratio = fInterestBox.Volume() / (frustumBox.Volume() * pow(fInterestBoxExpansion,3));
-   
-   // Reconstruct the interest box if frustum has moved out of it, or been scaled significantly
-   // (or forced request)
-   if (fInterestBox.IsEmpty() || !fInterestBox.AlignedContains(frustumBox) ||
-       ratio > 8.0 || ratio < 0.125 || force) {
+   // Construct a new interest box using the current frustum box as a basis
+   TGLBoundingBox frustumBox = Frustum(kTRUE);
+   TGLBoundingBox newInterestBox(frustumBox);
 
-	   //std::cout << "UpdateInterest: Ratio: " << ratio;
-      //if(fInterestBox.IsEmpty()) { std::cout << "Interest EMPTY"; }
-      //if(fInterestBox.AlignedContains(frustumBox)) { std::cout << "FrustIN"; } else { std::cout << "FrustOUT"; }
-	   //std::cout << std::endl << "Frustum : " << std::endl; frustumBox.Dump();
-	   //std::cout << "Old Interest : " << std::endl; fInterestBox.Dump();
-      // Construct a new axis aligned interest box based on limits of camera frustum
-      TGLVertex3 low(frustumBox.XMin(), frustumBox.YMin(), frustumBox.ZMin());
-      TGLVertex3 high(frustumBox.XMax(), frustumBox.YMax(), frustumBox.ZMax());
-      fInterestBox.SetAligned(low, high);
+   // The Z(2) axis of frustum (near->far plane) can be quite shallow c.f. X(0)/Y(1)
+   // For interest box we want to expand to ensure it is at least size
+   // of smaller X/Y to avoid excessive interest box recalculations
+   TGLVector3 frustumExtents = frustumBox.Extents();
+   Double_t minBoxLength = frustumExtents.Mag() * fInterestBoxExpansion;
+   newInterestBox.Scale(minBoxLength/frustumExtents[0], minBoxLength/frustumExtents[1], minBoxLength/frustumExtents[2]);
 
-      //assert(fInterestBox.AlignedContains(frustumBox) && fInterestBox.Volume() >= frustumBox.Volume());
-      fInterestBox.Scale(fInterestBoxExpansion);
+   // Expand the interest box
+   //newInterestBox.Scale(fInterestBoxExpansion);
 
-	   //std::cout << "New Interest : " << std::endl; fInterestBox.Dump();
+   // Calculate volume ratio of new to old
+   Double_t volRatio = 0.0;
+   if (!fInterestBox.IsEmpty()) {
+      volRatio = newInterestBox.Volume() / fInterestBox.Volume();
+   }
+
+   // Update the existing interest box with new one if:
+   // i) Volume ratio old/new interest has changed significantly
+   // ii) The current frustum is not inside existing interest
+   // iii) Force case (debugging)
+   if (volRatio > 8.0 || volRatio < 0.125 || fInterestBox.IsEmpty() || 
+       fInterestBox.Overlap(frustumBox) != kInside || force) {
+      fPreviousInterestBox = fInterestBox;
+      fInterestBox = newInterestBox;
+
+      // Frustum should be fully contained now
+      if (fInterestBox.Overlap(frustumBox) != kInside) {
+         Error("TGLCamera::UpdateInterest", "update interest box does not contain frustum");
+      }
+      
       exposedUpdate = kTRUE;
 
-      // Keep the real frustum shapes as debuging aid
+      // Keep the real frustum (real and box versions) as debuging aid
       fInterestFrustum = Frustum(kFALSE);
-      fInterestFrustumAsBox = Frustum(kTRUE);
+      fInterestFrustumAsBox = frustumBox;
+      
+      if (gDebug>2 || force) {
+         Info("TGLCamera::UpdateInterest", "changed - volume ratio %f", volRatio );
+      }
    }
 
    return exposedUpdate;
@@ -430,14 +439,21 @@ void TGLCamera::DrawDebugAids() const
    glColor3d(1.0,0.65,0.15);
    fInterestFrustumAsBox.Draw();
 
-   // Interest box (BLUE)
+   // Current Interest box (BLUE)
    glColor3d(0.0,0.0,1.0);
    fInterestBox.Draw();
 
-   // Aligned frustum box used as interest box basis (YELLOW)
-   // Can get from current interest by inverting expansion
-   TGLBoundingBox shrunkInterestBox = fInterestBox;
-   shrunkInterestBox.Scale(1.0/fInterestBoxExpansion);
-   glColor3d(1.0,1.0,0.0);
-   shrunkInterestBox.Draw();
+   // Previous interest (GREY)
+   glColor3d(.8,.7,.6);
+   fPreviousInterestBox.Draw();
+
+   // Also draw line from current eye point out in eye direction - should not
+   // appear if calculated correctly
+   TGLVertex3 start = EyePoint();
+   TGLVertex3 end = start + EyeDirection();
+   glColor3d(1.0,1.0,1.0);
+   glBegin(GL_LINES);
+   glVertex3dv(start.CArr());
+   glVertex3dv(end.CArr());
+   glEnd();
 }

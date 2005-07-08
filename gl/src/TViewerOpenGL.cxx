@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.66 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.67 2005/06/24 14:28:57 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -1035,10 +1035,16 @@ Bool_t TViewerOpenGL::RebuildScene()
    // If we accepted all offered physicals into the scene no point in 
    // rebuilding it
    if (fAcceptedAllPhysicals) {
-      if (gDebug>3 || fDebugMode) {
-         Info("TViewerOpenGL::RebuildScene", "not required - all physicals previous accepted");
+      // For debug mode always force even if not required
+      if (fDebugMode) {
+         Info("TViewerOpenGL::RebuildScene", "not required - all physicals previous accepted (FORCED anyway)");
       }
-      return kFALSE;   
+      else {
+         if (gDebug>3) {
+            Info("TViewerOpenGL::RebuildScene", "not required - all physicals previous accepted");
+         }
+         return kFALSE;   
+      }
    }
    // Update the camera interest (forced in debug mode) - if changed
    // scene should be rebuilt

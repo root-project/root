@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.7 2005/06/17 14:31:08 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.8 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -118,15 +118,22 @@ void TGLViewer::Draw()
    // Release draw lock on scene
    fScene.ReleaseLock(TGLScene::kDrawLock);
 
+   Bool_t redrawReq = kFALSE;
+
    // Debug mode have forced rebuilds only
    if (!fDebugMode) {
       // Scene rebuild required?
       if (!RebuildScene()) {
          // Final draw pass required?
-         if (fNextSceneLOD != kHigh) {
-            fRedrawTimer->RequestDraw(100, kHigh);
-         }
+         redrawReq = fNextSceneLOD != kHigh;
       }
+   } else {
+      // Final draw pass required?
+      redrawReq = fNextSceneLOD != kHigh;
+   }
+
+   if (redrawReq) {
+      fRedrawTimer->RequestDraw(100, kHigh);
    }
 }
 

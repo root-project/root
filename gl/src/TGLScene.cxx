@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.11 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.12 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -677,7 +677,7 @@ void TGLScene::SelectedModified()
 
    // The selected object was modified external - our bounding box
    // is potentially invalid
-   if (fSelectedPhysical && !BoundingBox().AlignedContains(fSelectedPhysical->BoundingBox())) {
+   if (fSelectedPhysical && BoundingBox().Overlap(fSelectedPhysical->BoundingBox()) != kInside) {
       fBoundingBoxValid = kFALSE;
    }
 }

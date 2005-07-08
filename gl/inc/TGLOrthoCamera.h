@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.5 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -59,7 +59,7 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
-   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0);
+   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0);
 
    ClassDef(TGLOrthoCamera,0) // an orthogonal view camera
 };

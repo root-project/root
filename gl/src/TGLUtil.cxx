@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.6 2005/06/01 15:13:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.7 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -163,34 +163,24 @@ ClassImp(TGLPlane)
 //______________________________________________________________________________
 TGLPlane::TGLPlane()
 {
-   fVals[0] = 1.0;
-   fVals[1] = 1.0;
-   fVals[2] = 1.0;
-   fVals[0] = 0.0;
+   Set(1.0, 1.0, 1.0, 0.0);
 }
 
 //______________________________________________________________________________
-TGLPlane::TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm)
+TGLPlane::TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise)
 {
-   fVals[0] = a;
-   fVals[1] = b;
-   fVals[2] = c;
-   fVals[3] = d;
-   if (norm) {
-      Normalise();
-   }
+   Set(a, b, c, d, normalise);
 }
 
 //______________________________________________________________________________
-TGLPlane::TGLPlane(Double_t eq[4], Bool_t norm)
+TGLPlane::TGLPlane(Double_t eq[4], Bool_t normalise)
 {
-   fVals[0] = eq[0];
-   fVals[1] = eq[1];
-   fVals[2] = eq[2];
-   fVals[3] = eq[3];
-   if (norm) {
-      Normalise();
-   }
+   Set(eq, normalise);
+}
+
+TGLPlane::TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise)
+{
+   Set(norm, point, normalise);
 }
 
 //______________________________________________________________________________
@@ -311,11 +301,19 @@ void TGLMatrix::SetScale(const TGLVector3 & scale)
    }
 }
 
-// TODO: Move this to the TGeo side and remove
 //______________________________________________________________________________
-void TGLMatrix::InvRot()
+void TGLMatrix::Transpose3x3()
 {
-	Double_t temp = fVals[4];
+   // Transpose the top left 3x3 matrix component along major diagonal
+
+   // TODO: Move this fix to the TBuffer3D filling side and remove
+
+   // 0  4  8 12
+   // 1  5  9 13
+   // 2  6 10 14
+   // 3  7 11 15
+
+   Double_t temp = fVals[4];
 	fVals[4] = fVals[1];
 	fVals[1] = temp;
 	temp = fVals[8];

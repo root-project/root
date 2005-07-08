@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.9 2005/06/17 14:31:08 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.10 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -120,12 +120,12 @@ public:
    void                     SelectedModified();
 
    // Locking
-   inline Bool_t TakeLock(ELock lock) const;
-   inline Bool_t ReleaseLock(ELock lock) const;
-   inline Bool_t IsLocked() const;
-   inline ELock  CurrentLock() const;
-   static inline const char * LockName(ELock lock);
-   static inline Bool_t       LockValid(ELock lock); 
+   Bool_t TakeLock(ELock lock) const;
+   Bool_t ReleaseLock(ELock lock) const;
+   Bool_t IsLocked() const;
+   ELock  CurrentLock() const;
+   static const char * LockName(ELock lock);
+   static Bool_t       LockValid(ELock lock); 
    
    // Debug
    void   Dump() const;

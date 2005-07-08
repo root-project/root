@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.8 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.9 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -55,10 +55,10 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    fModified(kFALSE)
 {
    fLogicalShape.AddRef();
-   // Temporary hack - invert the rotation part of martix as TGeo sends this
+   // Temporary hack - invert the 3x3 part of martix as TGeo sends this
    // in opp layout to shear/translation parts. Speak to Andrei about best place
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
-	fTransform.InvRot();
+   fTransform.Transpose3x3();
    UpdateBoundingBox();
 
    // Set color and reset modified flag as we are just initialising

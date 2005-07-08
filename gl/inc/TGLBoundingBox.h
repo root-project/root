@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.4 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.5 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -30,17 +30,20 @@ class TGLBoundingBox
 private:
    // Fields
 
-   // Box vertices are indexed thus:
+   // Box vertices are indexed thus (OpenGL is left handed by default)
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
    //
-   //   7-------6
-   //  /|      /|
-   // 3-------2 |
-   // | 4-----|-5
-   // |/      |/
-   // 0-------1
-   //
-   // 0123 near face
-   // 4567 far face
+   // 0123 'far' face
+   // 4567 'near' face
    //
    // This could be more compact: 3 vertices which form plane cutting
    // box diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix it in space - rest
@@ -74,10 +77,11 @@ public:
    void SetAligned(UInt_t nbPnts, const Double_t * pnts); // axis aligned
 
    void Transform(const TGLMatrix & matrix);
-   void Scale(Double_t val);
+   void Scale(Double_t factor);
+   void Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor);
    void Translate(const TGLVector3 & offset);
 
-   inline const TGLVertex3 & operator [] (UInt_t index) const;
+   const TGLVertex3 & operator [] (UInt_t index) const;
    Double_t XMin() const { return Min(0); }
    Double_t XMax() const { return Max(0); }
    Double_t YMin() const { return Min(1); }
@@ -85,15 +89,14 @@ public:
    Double_t ZMin() const { return Min(2); }
    Double_t ZMax() const { return Max(2); }
 
-   inline TGLVertex3 Center() const;
-   inline TGLVector3 Extents() const;
-   inline TGLVector3 Axis(UInt_t i, Bool_t normalised = true) const;
-   inline Double_t   Volume() const { return fVolume; }
-   inline Bool_t     IsEmpty() const;
+   TGLVertex3 Center() const;
+   TGLVector3 Extents() const;
+   TGLVector3 Axis(UInt_t i, Bool_t normalised = kTRUE) const;
+   Double_t   Volume() const { return fVolume; }
+   Bool_t     IsEmpty() const;
 
-          EOverlap Overlap(const TGLPlane & plane) const;
-          Bool_t   AlignedContains(const TGLBoundingBox & other) const; // we MUST be axis aligned
-   static Bool_t   Intersect(const TGLBoundingBox & a, const TGLBoundingBox & b);
+   EOverlap Overlap(const TGLPlane & plane) const;
+   EOverlap Overlap(const TGLBoundingBox & box) const;
 
    void Draw() const;
    void Dump() const;
@@ -130,25 +133,48 @@ inline TGLVertex3 TGLBoundingBox::Center() const
 //______________________________________________________________________________
 inline TGLVector3 TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) const
 {
-   //   7-------6
-   //  /|      /|
-   // 3-------2 |
-   // | 4-----|-5
-   // |/      |/
-   // 0-------1
+   // Return a vector representing axis of index i (0:X, 1:Y, 2:Z). 
+   // Vector can be as-is (edge, magnitude == extent) or normalised (default)
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
+   //
 
    TGLVector3 axis;
-   if (i == 0) {
+   if (i == 0) {        // local X
       axis.Set(fVertex[1] - fVertex[0]);
-   } else if (i == 1) {
+   } else if (i == 1) { // local Y
       axis.Set(fVertex[3] - fVertex[0]);
-   } else if (i == 2) {
+   } else if (i == 2) { // local Z
       axis.Set(fVertex[4] - fVertex[0]);
    } else {
       assert(kFALSE);
    }
+
    if (normalised) {
-      axis.Normalise();
+      // Try to cope with a zero volume bounding box where one axis
+      // is zero by falling back on cross product of other two (will fail with
+      // two zero mag axes)
+      Double_t mag = axis.Mag();
+      static Bool_t inZeroAxis = kFALSE; // Protect for possible inf. recursion
+      if (!inZeroAxis && axis.Mag() == 0.0) {
+         inZeroAxis = kTRUE;
+         TGLVector3 other1 = Axis((i+1)%3, kTRUE);
+         TGLVector3 other2 = Axis((i+2)%3, kTRUE);
+         axis = Cross(other1, other2);
+         mag = axis.Mag();
+         inZeroAxis = kFALSE;
+      }
+      if (mag > 0.0 ) {
+         axis /= mag;
+      }
    }
    return axis;
 }

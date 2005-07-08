@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.8 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.9 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -47,8 +47,15 @@ private:
    // Frustum planes (cached)
    mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //!
 
+   // Debuging visual aids
+   TGLBoundingBox   fPreviousInterestBox;  //! previous interest box (DEBUG)
+   TGLBoundingBox   fInterestFrustum;      //! frustum basis of current interest box - NOT a true BB! (DEBUG)
+   TGLBoundingBox   fInterestFrustumAsBox; //! frustum basis (as box) of current interest box (DEBUG)
+
+   
+   static const Double_t fInterestBoxExpansion; //! expansion c.f. aligned current frustum box
+
    // Methods
-   TGLVertex3     EyePoint() const;
    TGLBoundingBox Frustum(Bool_t asBox = kTRUE) const; // current frustum
 
    // Non-copyable class
@@ -64,10 +71,7 @@ protected:
    Bool_t    fCacheDirty;  //! cached items dirty?
 
    TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
-   TGLBoundingBox   fInterestFrustum;      //! frustum used to create interest box - debug mode only
-   TGLBoundingBox   fInterestFrustumAsBox; //! squared off frustum - debug mode only
-   Double_t         fInterestBoxExpansion; //! expansion c.f. aligned current frustum box
-   mutable Double_t fLargestInterest;
+   mutable Double_t fLargestInterest;      //! largest box diagonal - used when bootstrapping interest box
 
    // Methods
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
@@ -90,14 +94,17 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
-   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) = 0;
+   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) = 0;
 
-   // Location, projection and overlap tests
+   // Current orientation 
+   TGLVertex3 EyePoint() const;
+   TGLVector3 EyeDirection() const;
+
+   // Projection and overlap tests
    EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
    TGLVector3 ProjectedShift (const TGLVertex3 & vertex, Int_t xDelta, Int_t yDelta) const;
-   TGLVector3 EyeDistances   (const TGLBoundingBox & box) const; // distances of near/far verticies and center
 
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box) const;

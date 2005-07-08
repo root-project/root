@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.6 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.7 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -77,21 +77,20 @@ public:
    TGLVertex3(const TGLVertex3 & other);
    virtual ~TGLVertex3();
 
-   TGLVertex3 & operator=(const TGLVertex3 & rhs) { Set(rhs); return *this; }
-   const TGLVertex3 & operator - ()
-   { fVals[0] = -fVals[0]; fVals[1] = -fVals[1]; fVals[2] = -fVals[2]; return *this; }
+         TGLVertex3 & operator =  (const TGLVertex3 & rhs);
+   const TGLVertex3 & operator -= (const TGLVector3 & val);
+   const TGLVertex3 & operator += (const TGLVector3 & val);
+         TGLVertex3   operator -  () const;
 
-   void Fill(Double_t val) { Set(val,val,val); }
-   void Set(Double_t x, Double_t y, Double_t z) { fVals[0]=x; fVals[1]=y; fVals[2]=z; }
-   void Set(const TGLVertex3 & other) { fVals[0]=other.fVals[0]; fVals[1]=other.fVals[1]; fVals[2]=other.fVals[2]; }
+   void Fill(Double_t val);
+   void Set(Double_t x, Double_t y, Double_t z);
+   void Set(const TGLVertex3 & other);
    void Shift(TGLVector3 & shift);
    void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
 
    // Accessors
-   Double_t & operator [] (Int_t index)
-   { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
-   const Double_t& operator [] (Int_t index) const
-   { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
+   Double_t & operator [] (Int_t index);
+   const Double_t& operator [] (Int_t index) const;
    Double_t   X() const { return fVals[0]; }
    Double_t & X()       { return fVals[0]; }
    Double_t   Y() const { return fVals[1]; }
@@ -100,12 +99,71 @@ public:
    Double_t & Z()       { return fVals[2]; }
 
    const Double_t * CArr() const { return fVals; }
-   Double_t * Arr() { return fVals; }
+   Double_t *       Arr()        { return fVals; }
 
    void Dump() const;
 
    ClassDef(TGLVertex3,0) // GL 3 component vertex helper/wrapper class
 };
+
+//______________________________________________________________________________
+inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs) 
+{ 
+   Set(rhs); 
+   return *this; 
+}
+
+// operator -= & operator += inline needs to be defered until full TGLVector3 definition
+
+//______________________________________________________________________________
+inline TGLVertex3 TGLVertex3::operator - () const
+{ 
+   return TGLVertex3(-fVals[0], -fVals[1], -fVals[2]);
+}
+
+//______________________________________________________________________________
+inline Double_t & TGLVertex3::operator [] (Int_t index)
+{ 
+   if (!ValidIndex(index)) { 
+      assert(kFALSE); 
+      return fVals[0]; 
+   } else {
+      return fVals[index]; 
+   } 
+}
+
+//______________________________________________________________________________
+inline const Double_t& TGLVertex3::operator [] (Int_t index) const
+{ 
+   if (!ValidIndex(index)) { 
+      assert(kFALSE); 
+      return fVals[0]; 
+   } else {
+      return fVals[index]; 
+   } 
+}
+
+//______________________________________________________________________________
+inline void TGLVertex3::Fill(Double_t val)
+{ 
+   Set(val,val,val); 
+}
+
+//______________________________________________________________________________
+inline void TGLVertex3::Set(Double_t x, Double_t y, Double_t z) 
+{ 
+   fVals[0]=x; 
+   fVals[1]=y; 
+   fVals[2]=z; 
+}
+
+//______________________________________________________________________________
+inline void TGLVertex3::Set(const TGLVertex3 & other)
+{ 
+   fVals[0]=other.fVals[0]; 
+   fVals[1]=other.fVals[1]; 
+   fVals[2]=other.fVals[2]; 
+}
 
 /*************************************************************************
  * TGLVector3 - TODO
@@ -121,18 +179,55 @@ public:
    TGLVector3(const TGLVector3 & other);
    virtual ~TGLVector3();
 
-   const TGLVector3 & operator -= (const TGLVector3 & val)
-   { fVals[0] -= val[0]; fVals[1] -= val[1]; fVals[2] -= val[2]; return *this; }
-   const TGLVector3 & operator /= (Double_t val)
-   { fVals[0] /= val; fVals[1] /= val; fVals[2] /= val; return *this; }
-   const TGLVector3 & operator *= (Double_t val)
-   { fVals[0] *= val; fVals[1] *= val; fVals[2] *= val; return *this; }
+   const TGLVector3 & operator /= (Double_t val);
+   const TGLVector3 & operator *= (Double_t val);
+         TGLVector3   operator -  () const;
 
-   inline Double_t Mag() const;
-   inline void Normalise();
+   Double_t Mag() const;
+   void     Normalise();
 
    ClassDef(TGLVector3,0) // GL 3 component vector helper/wrapper class
 };
+
+// Inline for TGLVertex3 requiring full TGLVector definition
+//______________________________________________________________________________
+inline const TGLVertex3 & TGLVertex3::operator -= (const TGLVector3 & vector)
+{ 
+   fVals[0] -= vector[0]; fVals[1] -= vector[1]; fVals[2] -= vector[2]; 
+   return *this; 
+}
+
+// Inline for TGLVertex3 requiring full TGLVector definition
+//______________________________________________________________________________
+inline const TGLVertex3 & TGLVertex3::operator += (const TGLVector3 & vector)
+{ 
+   fVals[0] += vector[0]; fVals[1] += vector[1]; fVals[2] += vector[2]; 
+   return *this; 
+}
+
+//______________________________________________________________________________
+inline const TGLVector3 & TGLVector3::operator /= (Double_t val)
+{ 
+   fVals[0] /= val; 
+   fVals[1] /= val; 
+   fVals[2] /= val; 
+   return *this; 
+}
+
+//______________________________________________________________________________
+inline const TGLVector3 & TGLVector3::operator *= (Double_t val)
+{ 
+   fVals[0] *= val; 
+   fVals[1] *= val; 
+   fVals[2] *= val; 
+   return *this; 
+}
+
+//______________________________________________________________________________
+inline TGLVector3 TGLVector3::operator - () const
+{ 
+   return TGLVector3(-fVals[0], -fVals[1], -fVals[2]);
+}
 
 //______________________________________________________________________________
 inline Double_t TGLVector3::Mag() const
@@ -181,30 +276,30 @@ inline const TGLVector3 operator * (const TGLVector3 & vec, Double_t val)
 
 //______________________________________________________________________________
 // Vertex + Vector => Vertex
-inline TGLVertex3 operator + (const TGLVertex3 & vertex, const TGLVector3 & vec)
+inline TGLVertex3 operator + (const TGLVertex3 & vertex1, const TGLVector3 & vertex2)
 {
-   return TGLVertex3(vertex[0] + vec[0], vertex[1] + vec[1], vertex[2] + vec[2]);
+   return TGLVertex3(vertex1[0] + vertex2[0], vertex1[1] + vertex2[1], vertex1[2] + vertex2[2]);
 }
 
 //______________________________________________________________________________
 // Vertex - Vertex => Vector
-inline TGLVector3 operator - (const TGLVertex3 & vertex, const TGLVertex3 & vec)
+inline TGLVector3 operator - (const TGLVertex3 & vertex1, const TGLVertex3 & vertex2)
 {
-   return TGLVector3(vertex[0] - vec[0], vertex[1] - vec[1], vertex[2] - vec[2]);
+   return TGLVector3(vertex1[0] - vertex2[0], vertex1[1] - vertex2[1], vertex1[2] - vertex2[2]);
 }
 
 //______________________________________________________________________________
 // Vector + Vector => Vector
-inline TGLVector3 operator + (const TGLVector3 & first, const TGLVector3 & second)
+inline TGLVector3 operator + (const TGLVector3 & vector1, const TGLVector3 & vector2)
 {
-   return TGLVector3(first[0] + second[0], first[1] + second[1], first[2] + second[2]);
+   return TGLVector3(vector1[0] + vector2[0], vector1[1] + vector2[1], vector1[2] + vector2[2]);
 }
 
 //______________________________________________________________________________
 // Vector - Vector => Vector
-inline TGLVector3 operator - (const TGLVector3 & first, const TGLVector3 & second)
+inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vector2)
 {
-   return TGLVector3(first[0] - second[0], first[1] - second[1], first[2] - second[2]);
+   return TGLVector3(vector1[0] - vector2[0], vector1[1] - vector2[1], vector1[2] - vector2[2]);
 }
 
 /*************************************************************************
@@ -226,9 +321,9 @@ public:
    virtual ~TGLRect(); // ClassDef introduces virtual fns
 
    // Bitwise copy const & =op are ok at present
-   inline void Set(Int_t x, Int_t y, UInt_t width, UInt_t height);
-   inline void SetCorner(Int_t x, Int_t y);
-   inline void Offset(Int_t dX, Int_t dY);
+   void Set(Int_t x, Int_t y, UInt_t width, UInt_t height);
+   void SetCorner(Int_t x, Int_t y);
+   void Offset(Int_t dX, Int_t dY);
    void Expand(Int_t x, Int_t y);
 
    Int_t    X()       const { return fX; }
@@ -299,13 +394,14 @@ private:
 
 public:
    TGLPlane();
-   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
+   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
    TGLPlane(Double_t eq[4], Bool_t norm = kTRUE);
+   TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
 
-   //inline const TGLPlane& operator *= (Double_t val);
-   inline void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
-   inline void Set(Double_t eq[4], Bool_t norm = kTRUE);
+   void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
+   void Set(Double_t eq[4], Bool_t norm = kTRUE);
+   void Set(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE); 
 
    Double_t A() const { return fVals[0]; }
    Double_t B() const { return fVals[1]; }
@@ -313,8 +409,8 @@ public:
    Double_t D() const { return fVals[3]; }
 
    TGLVector3 Norm() const { return TGLVector3( fVals[0], fVals[1], fVals[2]); }
-   inline Double_t DistanceTo(const TGLVertex3 & vertex) const;
-   inline TGLVertex3 NearestOn(const TGLVertex3 & point) const;
+   Double_t DistanceTo(const TGLVertex3 & vertex) const;
+   TGLVertex3 NearestOn(const TGLVertex3 & point) const;
 
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
@@ -323,25 +419,38 @@ public:
 };
 
 //______________________________________________________________________________
-inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm)
+inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise)
 {
    fVals[0] = a;
    fVals[1] = b;
    fVals[2] = c;
    fVals[3] = d;
-   if (norm) {
+   if (normalise) {
       Normalise();
    }
 }
 
 //______________________________________________________________________________
-inline void TGLPlane::Set(Double_t eq[4], Bool_t norm)
+inline void TGLPlane::Set(Double_t eq[4], Bool_t normalise)
 {
    fVals[0] = eq[0];
    fVals[1] = eq[1];
    fVals[2] = eq[2];
    fVals[3] = eq[3];
-   if (norm) {
+   if (normalise) {
+      Normalise();
+   }
+}
+
+//______________________________________________________________________________
+inline void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise)
+{
+   // Set plane from a normal vector and in-plane point pair
+   fVals[0] = norm[0];
+   fVals[1] = norm[1];
+   fVals[2] = norm[2];
+   fVals[3] = -(fVals[0]*point[0] + fVals[1]*point[1] + fVals[2]*point[2]);
+   if (normalise) {
       Normalise();
    }
 }
@@ -405,11 +514,9 @@ public:
    TGLMatrix(const TGLMatrix & other);
    virtual ~TGLMatrix(); // ClassDef introduces virtual fns
 
-   const TGLMatrix & operator=(const TGLMatrix & rhs) { Set(rhs.fVals); return *this; }
-   //const TGLMatrix & operator*(const TGLMatrix & rhs);
+   const TGLMatrix & operator=(const TGLMatrix & rhs);
 
-   Double_t & operator [] (Int_t index)
-   { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
+   Double_t & operator [] (Int_t index);
 
    void Set(const Double_t vals[16]);
    void SetIdentity();
@@ -421,7 +528,7 @@ public:
    void        SetScale(const TGLVector3 & scale);
 
    void TransformVertex(TGLVertex3 & vertex) const;
-	void InvRot();
+	void Transpose3x3();
 
    void Dump() const;
 
@@ -430,6 +537,24 @@ public:
 
    ClassDef(TGLMatrix,0) // GL matrix helper/wrapper class
 };
+
+//______________________________________________________________________________
+inline const TGLMatrix & TGLMatrix::operator=(const TGLMatrix & rhs) 
+{ 
+   Set(rhs.fVals); 
+   return *this; 
+}
+
+//______________________________________________________________________________
+inline Double_t & TGLMatrix::operator [] (Int_t index)
+{ 
+   if (!ValidIndex(index)) { 
+      assert(kFALSE); 
+      return fVals[0]; 
+   } else {
+      return fVals[index]; 
+   } 
+}
 
 /*************************************************************************
  * TGLUtil - TODO

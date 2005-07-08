@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.5 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -137,10 +137,72 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
 }
 
 //______________________________________________________________________________
-void TGLPerspectiveCamera::Apply(const TGLBoundingBox & box, const TGLRect * pickRect)
+void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect)
 {
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+
+   if(fViewport.Width() == 0 || fViewport.Height() == 0) {
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      return;
+   }
+
+   // To find decent near/far clip plane distances we construct the
+   // frustum thus:
+   // i) first setup perspective with arbitary near/far planes
+   gluPerspective(fFOV, fViewport.Aspect(), 1.0, 1000.0);
+
+   // ii) setup modelview
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   glTranslated(0, 0, -fDolly);
+   glRotated(fVRotate, 1.0, 0.0, 0.0);
+   glRotated(fHRotate, 0.0, 0.0, 1.0);
+   glRotated(90, 0.0, 1.0, 0.0);
+   glTranslated(fTruck[0], fTruck[1], fTruck[2]);
+
+   // iii) update the cached frustum planes so we can get eye point/direction
+   Bool_t modifiedCache = kFALSE;
+   if (fCacheDirty) {
+      UpdateCache();
+      modifiedCache = kTRUE;
+   }
+
+   // iv) Create a clip plane, using the eye direction as normal, passing through eye point
+   TGLPlane clipPlane(EyeDirection(),EyePoint());
+   fCacheDirty = modifiedCache;
+
+   // v) find the near/far distance which just encapsulate the passed bounding box vertexes
+   //    not ideal - should really find the nearest/further points on box surface
+   //    which intersect frustum - however this much more complicated
+   Double_t currentDist, nearClipDist=0, farClipDist=0;
+   for (UInt_t i=0; i<8; i++) {
+      currentDist = clipPlane.DistanceTo(sceneBox[i]);
+      if (i==0) {
+         nearClipDist = currentDist;
+         farClipDist = nearClipDist;
+      }
+      if (currentDist < nearClipDist) {
+         nearClipDist = currentDist;
+      }
+      if (currentDist > farClipDist) {
+         farClipDist = currentDist;
+      }
+   }
+   // Add 1% each way to avoid any rounding conflicts with drawn objects
+   nearClipDist *= 0.99;
+   farClipDist *= 1.01;
+   if (farClipDist < 2.0) {
+      farClipDist = 2.0;
+   }
+   if (nearClipDist < farClipDist/1000.0) {
+      nearClipDist = farClipDist/1000.0;
+   }
+   // vi) reset the perspective using the correct near/far clips distances
+   // and restore modelview mode
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 
@@ -152,38 +214,17 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & box, const TGLRect * pic
                     pickRect->Width(), pickRect->Height(),
                     viewport);
    }
-
-   if(fViewport.Width() == 0 || fViewport.Height() == 0) {
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-   } else {
-      Double_t boxDiag = box.Extents().Mag();
-      Double_t nearClip = TMath::Abs(fDolly) - (boxDiag/2.0);
-      if (nearClip < 3.0) {
-         nearClip = 3.0;
-      }
-      Double_t farClip = nearClip + boxDiag;
-
-      gluPerspective(fFOV, fViewport.Aspect(), nearClip, farClip);
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glTranslated(0, 0, -fDolly);
-      glRotated(fVRotate, 1.0, 0.0, 0.0);
-      glRotated(fHRotate, 0.0, 0.0, 1.0);
-      glRotated(90, 0.0, 1.0, 0.0);
-      glTranslated(fTruck[0], fTruck[1], fTruck[2]);
-
-      // Tracing
-      if (gDebug>3) {
-         Info("TGLPerspectiveCamera::Apply", "FOV %f Dolly %f fVRot %f fHRot", fFOV, fDolly, fVRotate, fHRotate);
-         Info("TGLPerspectiveCamera::Apply", "fTruck (%f,%f,%f)", fTruck[0], fTruck[1], fTruck[2]);
-         Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClip, farClip);
-      }
-   }
+   gluPerspective(fFOV, fViewport.Aspect(), nearClipDist, farClipDist);
+   glMatrixMode(GL_MODELVIEW);
 
    if (fCacheDirty) {
       UpdateCache();
    }
+   // Tracing
+   if (gDebug>3) {
+      Info("TGLPerspectiveCamera::Apply", "FOV %f Dolly %f fVRot %f fHRot", fFOV, fDolly, fVRotate, fHRotate);
+      Info("TGLPerspectiveCamera::Apply", "fTruck (%f,%f,%f)", fTruck[0], fTruck[1], fTruck[2]);
+      Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClipDist, farClipDist);
+   }
 }
-
 
