@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.19 2004/09/13 16:39:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.20 2005/02/17 11:59:58 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -211,6 +211,8 @@ void TPaveText::EditText()
    if (!obj->InheritsFrom(TText::Class())) return;
    TText *text = (TText*)obj;
    gROOT->SetSelectedPrimitive(text);
+   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->SetSelected((TObject*)0x%x)",gPad->GetCanvas(),text));   
+   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->Selected((TVirtualPad*)0x%x,(TObject*)0x%x,1)",gPad->GetCanvas(),gPad,text));   
    text->SetTextAttributes();
 }
 
