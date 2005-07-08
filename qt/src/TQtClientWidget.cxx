@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.5 2005/04/15 07:19:50 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.6 2005/05/31 18:42:24 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #include "TQtClientFilter.h"
 #include "TQtClientGuard.h"
 #include "TGQt.h"
+#include "TQtLock.h"
+
 #include <qkeysequence.h>
 #include <qaccel.h>
 #include <qevent.h>
@@ -239,7 +241,7 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
             }
             QKeySequence keys(key[0],key[1],key[2],key[3]);
             if (fGrabbedKey->findKey(keys) == -1)  {
-              fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
+             /* int itemId = &*/ fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
            //      fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d, evail=%d \n", TGQt::wid(this), modifier, keycode ,fGrabbedKey->count()
            //   , fGrabbedKey->isEnabled() );
             }
@@ -281,7 +283,7 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
 void TQtClientWidget::SetCanvasWidget(TQtWidget *widget)
 {
    // Associate this widget with the parent ROOT gui widget
-   qApp->lock();
+   TQtLock lock;
    if (fCanvasWidget)
       disconnect(fCanvasWidget,SIGNAL(destroyed()), this, SLOT(disconnect()));
    fCanvasWidget = widget;
@@ -290,7 +292,6 @@ void TQtClientWidget::SetCanvasWidget(TQtWidget *widget)
       setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
       connect(fCanvasWidget,SIGNAL(destroyed()),this,SLOT(Disconnect()));
    }
-   qApp->unlock();
 }
 //______________________________________________________________________________
 void TQtClientWidget::UnSetKeyMask(Int_t keycode, UInt_t modifier)
