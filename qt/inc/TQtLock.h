@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtLock.h,v 1.2 2005/07/08 00:26:35 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtLock.h,v 1.1 2005/07/08 06:43:09 brun Exp $
 // Author: Giulio Eulisse  04/07/2005
 #ifndef ROOT_TQtLock
 #define ROOT_TQtLock
@@ -18,14 +18,14 @@ class TQtLock
 {
  public:
     TQtLock (void) { Lock();   }
-   ~TQtLock (void) { Unlock(); }
+   ~TQtLock (void) { UnLock(); }
     void Lock(Bool_t on=kTRUE) {
        if (qApp) {
           if (on)  qApp->lock();
           else     qApp->unlock();
        }
     }
-    void Unlock(Bool_t on=kFALSE) { Lock(!on); }
+    void UnLock(Bool_t on=kTRUE) { Lock(!on); }
 };
 
 #endif
