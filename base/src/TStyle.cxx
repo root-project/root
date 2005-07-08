@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.46 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.47 2005/07/07 06:54:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -313,7 +313,6 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fOptFit         = fOptFit;
    ((TStyle&)obj).fOptStat        = fOptStat;
    ((TStyle&)obj).fOptTitle       = fOptTitle;
-   ((TStyle&)obj).fErrorMarker    = fErrorMarker;
    ((TStyle&)obj).fEndErrorSize   = fEndErrorSize;
    ((TStyle&)obj).fErrorX         = fErrorX;
    ((TStyle&)obj).fStatColor      = fStatColor;
@@ -426,7 +425,6 @@ void TStyle::Reset(Option_t *)
    fOptFit         = 0;
    fOptStat        = 1;
    fOptTitle       = 1;
-   fErrorMarker    = 21;
    fEndErrorSize   = 2;
    fErrorX         = 0.5;
    fScreenFactor   = 1;

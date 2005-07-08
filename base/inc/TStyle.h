@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.22 2005/06/02 14:10:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.23 2005/07/07 06:54:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -63,7 +63,6 @@ private:
         Int_t         fOptTitle;          //=1 if option Title is selected
         Int_t         fOptFile;           //=1 if option File is selected
         Int_t         fOptFit;            //=1 if option Fit is selected
-        Int_t         fErrorMarker;       //marker for error bars
         Int_t         fShowEventStatus;   //Show event status panel
         Int_t         fShowEditor;        //Show pad editor
         Int_t         fShowToolBar;       //Show toolbar
@@ -181,7 +180,6 @@ public:
         Float_t          GetBarOffset() const {return fBarOffset;}
         Float_t          GetBarWidth() const {return fBarWidth;}
         Int_t            GetDrawBorder() const {return fDrawBorder;}
-        Int_t            GetErrorMarker() const {return fErrorMarker;}
         Float_t          GetEndErrorSize() const {return fEndErrorSize;}
         Float_t          GetErrorX() const {return fErrorX;}
         Color_t          GetCanvasColor() const {return fCanvasColor;}
@@ -313,7 +311,6 @@ public:
         void             SetBarWidth(Float_t barwidth=0.5) {fBarWidth = barwidth;}
         void             SetDateX(Float_t x=0.01) {fDateX = x;}
         void             SetDateY(Float_t y=0.01) {fDateY = y;}
-        void             SetErrorMarker(Int_t marker=21) {fErrorMarker = marker;}
         void             SetEndErrorSize(Float_t np=2);
         void             SetErrorX(Float_t errorx=0.5) {fErrorX = errorx;}
         void             SetDrawBorder(Int_t drawborder=1) {fDrawBorder = drawborder;}
@@ -391,7 +388,7 @@ public:
 
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,10)  //A collection of all graphics attributes
+        ClassDef(TStyle,11)  //A collection of all graphics attributes
 };
 
 
