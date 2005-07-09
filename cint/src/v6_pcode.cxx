@@ -4951,15 +4951,27 @@ G__value *pbuf;
     G__doubleassignbyref(pbuf,dorig+1.0);
     pbuf->obj.d=dorig;
     break;
+  case 'm':
+  case 'n':
+    iorig = G__Longlong(*pbuf);
+    if(isupper(pbuf->type)) {
+      G__intassignbyref(pbuf,iorig+G__sizeof(pbuf));
+      pbuf->obj.ll = iorig;
+    }
+    else {
+      G__intassignbyref(pbuf,iorig+1);
+      pbuf->obj.ll = iorig;
+    }
+    break;
   default:
     iorig = G__Longlong(*pbuf);
     if(isupper(pbuf->type)) {
       G__intassignbyref(pbuf,iorig+G__sizeof(pbuf));
-      pbuf->obj.i = iorig;
+      pbuf->obj.i = (long)iorig;
     }
     else {
       G__intassignbyref(pbuf,iorig+1);
-      pbuf->obj.i = iorig;
+      pbuf->obj.i = (long)iorig;
     }
   }
 }
@@ -4978,15 +4990,27 @@ G__value *pbuf;
     G__doubleassignbyref(pbuf,dorig-1.0);
     pbuf->obj.d=dorig;
     break;
+  case 'm':
+  case 'n':
+    iorig = G__Longlong(*pbuf);
+    if(isupper(pbuf->type)) {
+      G__intassignbyref(pbuf,iorig-G__sizeof(pbuf));
+      pbuf->obj.ll = iorig;
+    }
+    else {
+      G__intassignbyref(pbuf,iorig-1);
+      pbuf->obj.ll = iorig;
+    }
+    break;
   default:
     iorig = G__Longlong(*pbuf);
     if(isupper(pbuf->type)) {
       G__intassignbyref(pbuf,iorig-G__sizeof(pbuf));
-      pbuf->obj.i = iorig;
+      pbuf->obj.i = (long)iorig;
     }
     else {
       G__intassignbyref(pbuf,iorig-1);
-      pbuf->obj.i = iorig;
+      pbuf->obj.i = (long)iorig;
     }
   }
 }
