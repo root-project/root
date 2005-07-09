@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.43 2005/03/21 16:20:56 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.44 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -32,7 +32,7 @@ class TFile;
 class TBrowser;
 class TCut;
 class TChainProof;
-
+class TDSet;
 
 class TChain : public TTree {
 
@@ -52,6 +52,7 @@ protected:
                                    //  procesed by PROOF
 
    void ReleaseChainProof();
+   virtual TDSet    *MakeTDSetWithoutFriends() const;
 
 public:
    // TChain constants
@@ -108,6 +109,7 @@ public:
            Long64_t  LoadTree(Long64_t entry);
    virtual void      Loop(Option_t *option="",Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
+   virtual TDSet    *MakeTDSet() const;
    virtual Long64_t  Merge(const char *name);
    virtual Long64_t  Merge(TCollection *list);
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");

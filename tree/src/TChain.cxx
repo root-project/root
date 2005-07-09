@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.109 2005/06/13 19:21:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.110 2005/06/14 08:52:55 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -44,7 +44,10 @@
 #include "TChainProof.h"
 #include "TVirtualProof.h"
 #include "TDSet.h"
+#include "TError.h"
 #include "TVirtualIndex.h"
+#include <queue>
+#include <map>
 
 ClassImp(TChain)
 
@@ -1006,6 +1009,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    return fReadEntry;
 }
 
+
 //______________________________________________________________________________
 void TChain::Loop(Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
@@ -1468,6 +1472,79 @@ void TChain::ReleaseChainProof()
    SafeDelete(fChainProof);
 }
 
+
+//_______________________________________________________________________
+TDSet* TChain::MakeTDSet() const
+{
+   // Creates a new TDSet containing files from this chain
+   // and creates separate TDSet for each friend of this
+   // chain and friends of friends of this chain, and so on.
+   // If a chain apprears more than once in this friendship 
+   // graph only one TDSet will be created.
+   // All the chains from the friendship graph will be added as
+   // friends to the main TDSet (so friends hierarchy in the 
+   // result TDSet will be flat.
+   // Keep in mind that the destructor of a TDSet does delete
+   // the friend TDSets.
+   // Returns the created TDSet or 0 in case of error.
+
+   TDSet * mainDSet = MakeTDSetWithoutFriends();
+   std::set<const TChain*> processed;
+   std::queue<const TChain*> chainsQueue;
+   chainsQueue.push(this);
+   processed.insert(this);
+   while (!chainsQueue.empty()) {
+      const TChain* chain = chainsQueue.front();
+      chainsQueue.pop();
+      TIter friendsIter(chain->GetListOfFriends());
+      while(TFriendElement *friendElement = dynamic_cast<TFriendElement*> (friendsIter()) ) {
+         if (TChain* friendChain = dynamic_cast<TChain*>(friendElement->GetTree())) {
+            if (processed.find(friendChain) == processed.end()) {    // if not yet processed
+               processed.insert(friendChain);
+               mainDSet->AddFriend(friendChain->MakeTDSetWithoutFriends(), friendElement->GetName());
+               chainsQueue.push(friendChain);                        // for further processing
+            }
+         }
+         else {
+            // cleanup
+            delete mainDSet;
+            Error("MakeTDSetWithFriends", 
+                  "Only TChains supported. Illegal tree %s.\n", friendElement->GetTree()->GetName());
+            return 0;
+         }
+      }
+   }
+   return mainDSet;
+}
+
+//_______________________________________________________________________
+TDSet* TChain::MakeTDSetWithoutFriends() const
+{
+   // Creates a new TDSet containing files from this chain.
+
+   TIter next(GetListOfFiles());
+   TChainElement *element;
+   TDSet *dset = new TDSet("TTree", GetName());
+   while ((element = (TChainElement*)next())) {
+      TString file(element->GetTitle());
+      TString tree(element->GetName());
+      Int_t slashpos = tree.Index("/");
+      TString dir;
+      if (slashpos>=0) {
+         // Copy the tree name specification
+         TString behindSlash = tree(slashpos+1,tree.Length()-slashpos-1);
+         // and remove it from basename
+         tree.Remove(slashpos);
+         dir = tree;
+         tree = behindSlash;
+      }
+      dset->Add(file, tree, dir);
+   }
+   dset->SetDirectory(0);
+   return dset;
+}
+
+
 //______________________________________________________________________________
 void TChain::SetProof(TVirtualProof *proof)
 {
@@ -1483,11 +1560,8 @@ void TChain::SetProof(TVirtualProof *proof)
       return;
    ReleaseChainProof();
    if (proof) {
-      TDSet* set = TDSet::MakeTDSet(this);
-      if (!set) { // anyway should always succeed
-         Error("SetProof", "error creating a TDSet from a chain");
-         return;
-      }
+      TDSet* set = MakeTDSet();
+      Assert(set);         // should always succeed
       fChainProof = TChainProof::MakeChainProof(set, proof);
       if (!fChainProof)
          Error("SetProof", "can't set PROOF");

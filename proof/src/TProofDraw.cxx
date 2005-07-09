@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.18 2005/04/06 15:56:14 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.19 2005/04/12 09:26:27 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -86,6 +86,7 @@ Bool_t TProofDraw::Notify()
       Assert(fStatus);
    }
    if (!fStatus->IsOk()) return kFALSE;
+   if (!fManager) return kFALSE;
    fManager->UpdateFormulaLeaves();
    return kTRUE;
 }
@@ -247,7 +248,13 @@ Bool_t TProofDraw::CompileVariables()
    for (int i = 0; i < fDimension; i++) {
       fVar[i] = new TTreeFormula(Form("Var%d", i),fTreeDrawArgsParser.GetVarExp(i),fTree);
       fVar[i]->SetQuickLoad(kTRUE);
-      if (!fVar[i]->GetNdim()) { ClearFormula(); return kFALSE;}
+      if (!fVar[i]->GetNdim()) {
+         ClearFormula();
+         Error("CompileVariables", "Error compiling expression");
+         SetError("CompileVariables", "Error compiling variables");
+         
+         return kFALSE;
+      }
       fManager->Add(fVar[i]);
    }
 

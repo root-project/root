@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.59 2005/06/07 20:28:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.60 2005/06/22 20:18:11 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -432,7 +432,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    if (!fProof->IsMaster() && set->GetEventList()) {
       elist = set->GetEventList();
    }
-   mesg << set << fn << fInput << opt << nentries << first << elist; // no evl yet
+   mesg << set << fn << fInput << opt << nentries << first << elist; 
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);

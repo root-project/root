@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.57 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.58 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -81,9 +81,10 @@ class TVirtualMutex;
 // 1 -> 2: new arguments for Process() command, option added
 // 2 -> 3: package manager enabling protocol changed
 // 3 -> 4: introduction of multi-level-master support
+// 4 -> 5: added friends support
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 4;             // protocol version number
+const Int_t       kPROOF_Protocol = 5;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir

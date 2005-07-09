@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.24 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.25 2005/04/06 10:01:40 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -543,11 +543,12 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 {
    // Check existence of file/dir/tree an get number of entries
    // Assumes the files have been setup
+   PDB(kPacketizer, 2)
+      Info("ValidateFiles", "Validating %s", dset->GetObjName());
 
    TMap     slaves_by_sock;
    TMonitor mon;
    TList    workers;
-
 
    // Setup the communication infrastructure
 
@@ -604,6 +605,9 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
               << TString(elem->GetFileName())
               << TString(elem->GetDirectory())
               << TString(elem->GetObjName());
+            PDB(kPacketizer,3)
+               Info("ValidateFiles", "Send %s, %s, %s\n", 
+                    elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
@@ -801,6 +805,45 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
    return slstat->GetEntriesProcessed();
 }
 
+//______________________________________________________________________________
+TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
+{
+   // Creates a new TDSetElement from from base packet starting from first entry with num entries.
+   // For each friend of the TDSet from the base element a TDSetElement will be created which
+   // corresponds to the given range. The same for friends of the friends etc.
+   // All the TDSetElements will be connected in a friendship graph which corresponds to 
+   // the graph of their parent TDSet. 
+   // Note that no TDSets and TDSetElements are changed. 
+   // The function returns a new created objects which have to be deleted.
+
+
+   // find out the number of the base element on the list in its TDSet
+   TIter next(base->GetSet()->GetListOfElements());
+   Int_t elemNumber = -1;
+   Int_t tmp = 0;
+   while (TObject* o = next()) {
+      if (o != base)
+         tmp++;
+      else {
+         elemNumber = tmp;
+         break;
+      }
+   }
+   Assert(elemNumber != -1);
+
+   TDSetElement* elem = new TDSetElement(0, base->GetFileName(), base->GetObjName(),
+                                          base->GetDirectory(), first, num);
+
+   // create TDSetElements for all the TDSets in the friendship graph
+   TDSet::FriendsList_t *friends = base->GetSet()->GetListOfFriends();
+   for (TDSet::FriendsList_t::iterator i = friends->begin(); i != friends->end(); ++i) {
+      TDSetElement* friendElem = dynamic_cast<TDSetElement*>
+                                   ((i->first)->GetListOfElements()->At(elemNumber));
+      elem->AddFriend(new TDSetElement(0, friendElem->GetFileName(), friendElem->GetObjName(),
+                                          friendElem->GetDirectory(), first, num), i->second);
+   }
+   return elem;
+}
 
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
@@ -915,8 +958,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       file->MoveNextEntry(num);
    }
 
-   slstat->fCurElem = new TDSetElement(0,base->GetFileName(),base->GetObjName(),
-                                       base->GetDirectory(),first,num);
+   slstat->fCurElem = CreateNewPacket(base, first, num);
    if (base->GetEventList()) {
       // take a part of the event list.
       TEventList *evl = new TEventList();

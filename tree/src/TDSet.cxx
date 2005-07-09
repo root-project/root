@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.19 2005/05/12 12:15:24 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.20 2005/05/13 16:39:50 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -59,12 +59,11 @@
 #include "TPluginManager.h"
 #include "TChain.h"
 #include "TChainElement.h"
-
+#include <set>
+#include <queue>
 
 ClassImp(TDSetElement)
 ClassImp(TDSet)
-
-
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const TDSet *set, const char *file,
@@ -91,6 +90,7 @@ TDSetElement::TDSetElement(const TDSet *set, const char *file,
    fMsd         = msd;
    fTDSetOffset = 0;
    fEventList   = 0;
+   fFriends     = 0;
    fValid       = kFALSE;
 
    if (objname)
@@ -103,6 +103,7 @@ TDSetElement::TDSetElement(const TDSet *set, const char *file,
 TDSetElement::~TDSetElement()
 {
    // Clean up the element.
+   DeleteFriends();
 }
 
 //______________________________________________________________________________
@@ -250,6 +251,36 @@ Int_t TDSetElement::Compare(const TObject *obj) const
 
 
 //______________________________________________________________________________
+void TDSetElement::AddFriend(TDSetElement *friendElement, const char* alias)
+{
+   // Add friend TDSetElement to this set. The friendset will be holded by this
+   // class, however it won't be owned by it and won't be deleted
+   // in this TDSet's dectructor.
+
+   if (!friendElement) {
+      Error("AddFriend", "The friend TDSetElement is null!");
+      return;
+   }
+   if (!fFriends)
+      fFriends = new FriendsList_t;
+   fFriends->push_back(std::make_pair(friendElement, TString(alias)));
+}
+
+//______________________________________________________________________________
+void TDSetElement::DeleteFriends()
+{
+   // Deletes the list of friends and all the friends on the list.
+   if (!fFriends)
+      return;
+   for (FriendsList_t::iterator i = fFriends->begin();
+             i != fFriends->end(); ++i) {
+      delete i->first;
+   }
+   delete fFriends;
+   fFriends = 0;
+}
+
+//______________________________________________________________________________
 TDSet::TDSet()
 {
    // Default ctor.
@@ -260,6 +291,7 @@ TDSet::TDSet()
    fIterator  = 0;
    fCurrent   = 0;
    fEventList = 0;
+   fFriends   = 0;
 }
 
 //______________________________________________________________________________
@@ -282,6 +314,7 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    fIterator = 0;
    fCurrent  = 0;
    fEventList = 0;
+   fFriends = 0;
 
    if (!type || !*type) {
       Error("TDSet", "type name must be specified");
@@ -309,9 +342,10 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
 TDSet::~TDSet()
 {
    // Cleanup.
-
+   DeleteFriends();
    delete fElements;
    delete fIterator;
+   delete fFriends;
 }
 
 
@@ -468,21 +502,23 @@ Bool_t TDSet::Add(TDSet *set)
 }
 
 //______________________________________________________________________________
-void TDSet::AddFriend(TDSet *friendset)
+void TDSet::AddFriend(TDSet *friendset, const char* alias)
 {
    // Add friend dataset to this set. Only possible if the TDSet type is
-   // a TTree or derived class.
+   // a TTree or derived class. The friendset will be owned by this class.
 
-   if (!friendset)
+   if (!friendset) {
+      Error("AddFriend", "The friend TDSet is null!");
       return;
+   }
 
    if (!fIsTree) {
       Error("AddFriend", "a friend set can only be added to a TTree TDSet");
       return;
    }
 
-   // to be implemented
-   Error("AddFriend", "not implemented");
+   if (!fFriends) fFriends = new FriendsList_t;
+   fFriends->push_back(std::make_pair(friendset, alias));
 }
 
 //______________________________________________________________________________
@@ -642,33 +678,6 @@ TTree* TDSet::GetTreeHeader(TVirtualProof* proof)
    return proof->GetTreeHeader(this);
 }
 
-//_______________________________________________________________________
-TDSet* TDSet::MakeTDSet(TChain *chain)
-{
-   // Creates a new TDSet new containing files from te given chain.
-
-   TIter next(chain->GetListOfFiles());
-   TChainElement *element;
-   TDSet *dset = new TDSet("TTree", chain->GetName());
-   while ((element = (TChainElement*)next())) {
-      TString file(element->GetTitle());
-      TString tree(element->GetName());
-      Int_t slashpos = tree.Index("/");
-      TString dir;
-      if (slashpos>=0) {
-         // Copy the tree name specification
-         TString behindSlash = tree(slashpos+1,tree.Length()-slashpos-1);
-         // and remove it from basename
-         tree.Remove(slashpos);
-         dir = tree;
-         tree = behindSlash;
-      }
-      dset->Add(file, tree, dir);
-   }
-   dset->SetDirectory(0);
-   return dset;
-}
-
 //______________________________________________________________________________
 Bool_t TDSet::ElementsValid() const
 {
@@ -743,3 +752,16 @@ void TDSet::Validate(TDSet* dset)
       }
    }
 }
+
+//______________________________________________________________________________
+void TDSet::DeleteFriends() 
+{
+   // Deletes the list of friends and all the friends on the list.
+   if (!fFriends)
+      return;
+   for (FriendsList_t::iterator i = fFriends->begin(); i != fFriends->end(); ++i)
+      delete i->first;
+   delete fFriends;
+   fFriends = 0;
+}
+

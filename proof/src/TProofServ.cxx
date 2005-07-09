@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.95 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.96 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -543,35 +543,17 @@ TDSetElement *TProofServ::GetNextPacket()
 
    fLatency.Stop();
 
-   Bool_t         ok;
-   TDSetElement  *e;
+   TDSetElement  *e = 0;
    TString        file;
    TString        dir;
    TString        obj;
-   Long64_t       first;
-   Long64_t       num;
 
    Int_t what = mess->What();
 
    switch (what) {
       case kPROOF_GETPACKET:
 
-         (*mess) >> ok;
-
-         if (ok) {
-            (*mess) >> file >> dir >> obj >> first;
-            if (first != -1) {
-               (*mess) >> num;
-               e = new TDSetElement(0, file, obj, dir, first, num);
-            } else {
-               TEventList *elist;
-               (*mess) >> elist;
-               e = new TDSetElement(0, file, obj, dir);
-               e->SetEventList(elist);
-            }
-         } else {
-            e = 0;
-         }
+         (*mess) >> e;
          if (e != 0) {
             fCompute.Start();
             PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %lld %lld",
@@ -741,6 +723,18 @@ void TProofServ::HandleSocketInput()
             TDSet *dset;
             TString filename, opt;
             TList *input;
+            if (IsMaster()) {
+               // update the field fSet in each element of the each dataset in the friendship graph
+               TDSet::FriendsList_t friends = *(dset->GetListOfFriends());
+               friends.push_front(std::make_pair(dset, ""));
+               for (TDSet::FriendsList_t::iterator i = friends.begin(); 
+                     i != friends.end(); ++i) {
+                  i->first->Reset();
+                  while (TDSetElement *e = i->first->Next())
+                     e->SetSet(i->first);
+                  i->first->Reset();
+               }
+            }
             Long64_t nentries, first;
             TEventList *evl;
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.11 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.12 2005/05/12 12:15:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -50,6 +50,9 @@
 #include "TEventList.h"
 #endif
 
+#include <set>
+#include <list>
+
 class TList;
 class TDSet;
 class TEventList;
@@ -61,28 +64,35 @@ class TEventList;
 
 
 class TDSetElement : public TObject {
-
+public:
+   typedef  std::list<std::pair<TDSetElement*, TString> > FriendsList_t;
 private:
    TString          fFileName;   // physical or logical file name
    TString          fObjName;    // name of objects to be analyzed in this file
    TString          fDirectory;  // directory in file where to look for objects
    Long64_t         fFirst;      // first entry to process
    Long64_t         fNum;        // number of entries to process
-   const TDSet     *fSet;        // set to which element belongs
+   const TDSet     *fSet;        //! set to which element belongs
    TString          fMsd;        // mass storage domain name
-   Long64_t         fTDSetOffset;//! offset in the whole TDSet of the first
-                                 //  entry in this element
+   Long64_t         fTDSetOffset;// the global offset in the TDSet of the first
+                                 // entry in this element
    TEventList      *fEventList;  // event list to be used in processing
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
+   FriendsList_t    *fFriends;    // friend elements
+   Bool_t           fOwnerOfFriends;      // if true then all the TDSets in the friendship
+                                          // graph will be deleted in the destructor
 
 public:
-   TDSetElement() { fSet = 0;  fValid = kFALSE; fEventList = 0;}
+   TDSetElement() { fSet = 0;  fValid = kFALSE; fEventList = 0; fFriends = 0; fOwnerOfFriends = kFALSE; }
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0);
    virtual ~TDSetElement();
 
+   virtual FriendsList_t *GetListOfFriends() const { return fFriends; }
+   virtual void     AddFriend(TDSetElement *friendElement, const char* alias);
+   virtual void     DeleteFriends();
    const char      *GetFileName() const { return fFileName; }
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
@@ -101,19 +111,27 @@ public:
    void             Validate(TDSetElement *elem);
    Int_t            Compare(const TObject *obj) const;
    Bool_t           IsSortable() const { return kTRUE; }
+   void             SetSet(TDSet* set) { fSet = set; }
+   const TDSet     *GetSet() const { return fSet; }
 
-   ClassDef(TDSetElement,2)  // A TDSet element
+   ClassDef(TDSetElement,3)  // A TDSet element
 };
 
 
 class TDSet : public TNamed {
+public:
+   typedef  std::list<std::pair<TDSet*, TString> > FriendsList_t;
 
 private:
-   TString  fObjName;     // name of objects to be analyzed (e.g. TTree name)
-   TList   *fElements;    //-> list of TDSetElements
-   Bool_t   fIsTree;      // true if type is a TTree (or TTree derived)
-   TIter   *fIterator;    //! iterator on fElements
-   TEventList *fEventList; //! event list for processing
+   TString        fObjName;     // name of objects to be analyzed (e.g. TTree name)
+   TList         *fElements;    //-> list of TDSetElements
+   Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
+   TIter         *fIterator;    //! iterator on fElements
+   TEventList    *fEventList; //! event list for processing
+   FriendsList_t *fFriends;   // friend elements
+   TDSet(const TDSet &);           // not implemented
+   void operator=(const TDSet &);  // not implemented
+
 protected:
    TDSetElement  *fCurrent;  //! current element
 
@@ -126,7 +144,10 @@ public:
                              const char *dir = 0, Long64_t first = 0,
                              Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
-   virtual void          AddFriend(TDSet *friendset);
+   virtual void          AddFriend(TDSet *friendset, const char* alias);
+   virtual void          DeleteFriends();
+   virtual FriendsList_t *GetListOfFriends() const { return fFriends; } // may be null !
+
    virtual Int_t         Process(const char *selector, Option_t *option = "",
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,
@@ -166,13 +187,12 @@ public:
    virtual void          StartViewer(); // *MENU*
 
    virtual TTree        *GetTreeHeader(TVirtualProof *proof);
-   static TDSet         *MakeTDSet(TChain *chain);
    virtual void          SetEventList(TEventList* evl) { fEventList = evl;}
    TEventList           *GetEventList() const {return fEventList; }
    void                  Validate();
    void                  Validate(TDSet *dset);
 
-   ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,2)  // Data set for remote processing (PROOF)
 };
 
 #endif

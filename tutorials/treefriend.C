@@ -102,10 +102,11 @@ void CompareTrees() {
       } else {
          if (TF->GetEntryWithIndex(Run,Event) > 0) {
             if (i <100) printf("i=%d, Run=%d, Event=%d, x=%g, y=%g, z=%g,  : fRun=%d, fEvent=%d, fx=%g, fy=%g, fz=%g\n",i,Run,Event,x,y,z,fRun,fEvent,fx,fy,fz);
-         }   
-      }   
+         } 
+      } 
    }
-   printf("nok = %d, fentries=%g\n",nok,TF->GetEntries());
+   printf("nok = %d, fentries=%lld\n",nok,TF->GetEntries());
+
    delete f;
    delete ff;
 }

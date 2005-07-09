@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.1 2005/02/21 09:44:47 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.2 2005/05/18 12:31:09 brun Exp $
 // Author: Maarten Ballintijn   13/02/2005
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 
 class TCollection;
 
-class TSelectorScalar :  public TParameter<Long64_t> {
+class TSelectorScalar : public TParameter<Long64_t> {
 
 public:
    TSelectorScalar(const char *name = "", Long64_t val = 0)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.93 2005/06/23 06:24:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.94 2005/06/23 10:51:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1390,20 +1390,7 @@ Int_t TProof::Collect(TMonitor *mon)
                elem = fPlayer->GetNextPacket(sl, mess);
 
                TMessage answ(kPROOF_GETPACKET);
-
-               if (elem != 0) {
-                  answ << kTRUE
-                       << TString(elem->GetFileName())
-                       << TString(elem->GetDirectory())
-                       << TString(elem->GetObjName());
-                  if (elem->GetEventList())
-                     answ << ((Long64_t)-1) << elem->GetEventList();
-                  else
-                     answ << elem->GetFirst() << elem->GetNum();
-               } else {
-                  answ << kFALSE;
-               }
-
+               answ << elem;
                s->Send(answ);
             }
             break;
