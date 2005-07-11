@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.54 2005/06/28 17:37:53 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.55 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -38,6 +38,7 @@
 #include <TGColorSelect.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
+#include <TColor.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TRandom.h>
@@ -636,7 +637,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // Fill canvas with 256 colored frames
    for (int i=0; i < 256; ++i)
       fCanvasWindow->AddFrame(new TGFrame(fCanvasWindow->GetContainer(),
-                                          32, 32, 0, (i+1)&255),
+                              32, 32, 0, TColor::RGB2Pixel(0,0,(i+1)&255)),
                               new TGLayoutHints(kLHintsExpandY | kLHintsRight));
 
    AddFrame(fCanvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
@@ -880,7 +881,7 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       fMenuView->EnableEntry(M_VIEW_UNDOCK);
       fMenuView->DisableEntry(M_VIEW_DOCK);
    }
-   
+
    return kTRUE;
 }
 

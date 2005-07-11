@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.57 2005/06/28 17:22:35 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.58 2005/07/05 12:36:07 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -40,6 +40,7 @@
 #include <RQ_OBJECT.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
+#include <TColor.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TRandom.h>
@@ -720,7 +721,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // Fill canvas with 256 colored frames
    for (int i=0; i < 256; ++i)
       fCanvasWindow->AddFrame(new TGFrame(fCanvasWindow->GetContainer(),
-                                          32, 32, 0, (i+1)&255),
+                              32, 32, 0, TColor::RGB2Pixel(0,0,(i+1)&255)),
                               new TGLayoutHints(kLHintsExpandY | kLHintsRight));
 
    fMain->AddFrame(fCanvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
