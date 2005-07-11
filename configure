@@ -1837,7 +1837,7 @@ if test ! "x$enable_ruby" = "xno" ; then
        test "x$enable_shared" = "xno" ; then
         check_library_options="libruby-static libruby1.8-static"
     else
-        check_library_options="libruby libruby1.8"
+        check_library_options="libruby libruby1.8 libruby18"
     fi
     check_library "$check_library_options" \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
