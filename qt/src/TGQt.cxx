@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.16 2005/04/06 09:32:11 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TQtClientFilter.h"
 #include "TQtEventQueue.h"
 #include "TQtSymbolCodec.h"
+#include "TQtLock.h"
 
 #include "TSystem.h"
 #ifdef R__QTWIN32
@@ -122,9 +123,9 @@ class TQWidgetCollection {
 protected:
    //______________________________________________________________________________
    inline  Int_t SetMaxId(Int_t newId)
-   { 
-      fIDMax =  newId; 
-      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax; 
+   {
+      fIDMax =  newId;
+      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax;
       return fIDMax;
    }
 
@@ -151,7 +152,7 @@ protected:
 
    //______________________________________________________________________________
    inline Int_t GetFreeId(QPaintDevice *device) {
-	
+
       Int_t Id = 0;
       if (!fFreeWindowsIdStack.isEmpty() ) {
          Id = fFreeWindowsIdStack.pop();
@@ -244,7 +245,7 @@ QPaintDevice *TGQt::iwid(Int_t wid)
    QPaintDevice *topDevice = 0;
    if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
      topDevice = (*fWidgetArray)[wid];
-	else {         
+	else {
      assert(wid <= Int_t(fWidgetArray->MaxTotalId()));
      // this is allowed from the embedded TCanvas dtor only.
      //  at this point "wid" may have been destroyed
@@ -282,7 +283,7 @@ QWidget      *TGQt::wid(Window_t id)
       dev = (QPaintDevice *)id;
 
    if ( dev->devType() != QInternal::Widget) {
-        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", __FUNCTION__, __LINE__
+        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", "TGQt::wid", __LINE__
            , dev->devType()
            , QInternal::Widget);
 //           , (const char *)dev->name(), (const char *)dev->className(), QInternal::Widget);
@@ -324,14 +325,14 @@ static float CalibrateFont()
     // Environment variable ROOTFONTFACTOR allows to set the factor manually
     static float fontCalibFactor = -1;
     if (fontCalibFactor  < 0 ) {
-    
+
        const char * envFactor = gSystem->Getenv("ROOTFONTFACTOR");
        bool ok=false;
-       if (envFactor && envFactor[0]) 
+       if (envFactor && envFactor[0])
           fontCalibFactor= QString(envFactor).toFloat(&ok);
        if (!ok) {
-    
-          bool  italic = TRUE;    
+
+          bool  italic = TRUE;
           long  bold   = 5;
           QString fontName = "Times New Roman";
 
@@ -357,7 +358,7 @@ static float CalibrateFont()
           // printf(" Font metric w = %d , h = %d\n", w,h);
           float f;
           switch (h) {
-             case 12: f = 1.10;  break;// it was  f = 1.13 :-(; 
+             case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
              case 14: f = 0.915; break;// it was f = 0.94  :-(;
              case 16: f = 0.94;  break;// to be tested yet
              default: f = 1.10;  break;
@@ -384,9 +385,8 @@ int TGQt::fgCoinLoaded = 0; // coint viewer DLL has not been loaded
 int TGQt::CoinFlag()
 {
   // return the Coin/QGL viewer flag safely
-   qApp->lock();
+   TQtLock lock;
    int ret = fgCoinFlag;
-   qApp->unlock();
    return ret;
 }
 
@@ -394,9 +394,9 @@ int TGQt::CoinFlag()
 void TGQt::SetCoinFlag(int flag)
 {
   // Set the Coin/QGL viewer flag safely
-   qApp->lock();
+   TQtLock lock;
    fgCoinFlag=flag;
-   qApp->unlock();
+   
 }
 
 //______________________________________________________________________________
@@ -607,13 +607,14 @@ TGQt::~TGQt()
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ==================
-   qApp->lock();
-   gVirtualX = gGXBatch;
-   gROOT->SetBatch();
-   delete fQClientFilter;
-   delete fQClientFilterBuffer;
-   delete fQPainter; fQPainter = 0;
-   qApp->unlock();
+   {  // critical section
+      TQtLock lock;
+      gVirtualX = gGXBatch;
+      gROOT->SetBatch();
+      delete fQClientFilter;
+      delete fQClientFilterBuffer;
+      delete fQPainter; fQPainter = 0;
+   }
    // Stop GUI thread
    TQtApplication::Terminate();
    // fprintf(stderr, "TGQt::~TGQt()<------\n");
@@ -624,7 +625,8 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.97 2005/04/14 01:05:16 fine Exp $ this=%p\n",this);
+   //
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -755,6 +757,12 @@ Int_t  TGQt::UnRegisterWid(QPaintDevice *wid)
    return fWidgetArray->RemoveByPointer(wid);
 }
 //______________________________________________________________________________
+Bool_t  TGQt::IsRegistered(QPaintDevice *wid)
+{
+   // Check whether the object has been registered
+   return fWidgetArray->find(wid) == -1 ? kFALSE : kTRUE;
+}
+//______________________________________________________________________________
 Int_t TGQt::InitWindow(ULong_t window)
 {
    //*-*
@@ -767,7 +775,7 @@ Int_t TGQt::InitWindow(ULong_t window)
    QWidget   *parent = 0;
    if (window <= fWidgetArray->MaxId() )
       parent = dynamic_cast<TQtWidget *> (iwid(int     (window)));
-   else {      
+   else {
       QPaintDevice *dev = dynamic_cast<QPaintDevice *>(iwid(Window_t(window)));
       parent = dynamic_cast<QWidget *>(dev);
    }
@@ -811,7 +819,7 @@ QColor &TGQt::ColorIndex(Color_t ic)
    }
 #ifdef QTDEBUG
    else {
-      fprintf(stderr," TGQt::%s:%d - Wrong color index %d\n", __FUNCTION__,__LINE__, ic);
+      fprintf(stderr," TGQt::%s:%d - Wrong color index %d\n", "TGQt::wid",__LINE__, ic);
    }
 #endif
 
@@ -1029,7 +1037,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    // mode=0 hollow  (kHollow)
    // mode=1 solid   (kSolid)
 
-   qApp->lock();
+   TQtLock lock;
    if (fSelectedWindow)
    {
       fQPainter->save();
@@ -1048,7 +1056,6 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
       }
       fQPainter->restore();
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1064,7 +1071,7 @@ void  TGQt::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
    // if (X2-X1)/NX (or Y) is not a exact pixel number the position of
    // the top rigth corner may be wrong.
 
-   qApp->lock();
+   TQtLock lock;
    if (fSelectedWindow)
    {
       fQPainter->save();
@@ -1109,8 +1116,6 @@ void  TGQt::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
       }
       fQPainter->restore();
    }
-   qApp->unlock();
-
 }
 
 //______________________________________________________________________________
@@ -1120,7 +1125,7 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
    // n         : number of points
    // xy(2,n)   : list of points
 
-   qApp->lock();
+   TQtLock lock;
    if (fSelectedWindow && n>0)
    {
       fQPainter->save();
@@ -1137,7 +1142,6 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
       fQPainter->drawPolygon(qtPoints);
       fQPainter->restore();
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1147,9 +1151,8 @@ void  TGQt::DrawLine(int x1, int y1, int x2, int y2)
    // x1,y1        : begin of line
    // x2,y2        : end of line
 
-  qApp->lock();
+  TQtLock lock;
   if (fSelectedWindow) fQPainter->drawLine(x1,y1,x2,y2);
-  qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1159,7 +1162,7 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
    // n         : number of points
    // xy        : list of points
 
-  qApp->lock();
+  TQtLock lock;
   if (fSelectedWindow)  {
     QPointArray qtPoints(n);
     TPoint *rootPoint = xy;
@@ -1167,7 +1170,6 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
        qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
     fQPainter->drawPolyline(qtPoints);
   }
-  qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1176,7 +1178,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
    // Draw n markers with the current attributes at position x, y.
    // n    : number of markers to draw
    // xy   : x,y coordinates of markers
-   qApp->lock();
+   TQtLock lock;
    if (fSelectedWindow)
    {
       fQPainter->save();
@@ -1259,7 +1261,6 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
       }
       fQPainter->restore();
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1285,8 +1286,8 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
 #endif
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
-      qApp->lock();
-      Int_t tsize = (Int_t)(fTextSize+0.5); 
+      TQtLock lock;
+      Int_t tsize = (Int_t)(fTextSize+0.5);
       if (TMath::Abs(mgn-1) >0.05)  fQFont->setPixelSizeFloat(mgn*FontMagicFactor(tsize));
       UpdateFont();
       fQPainter->save();
@@ -1295,26 +1296,26 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
 
       QFontMetrics metrics(*fQFont);
       QRect bRect = metrics.boundingRect(text);
-      switch( fTextAlignH ) {
-           case 2: x -= bRect.width()/2; // h center;
-              break;
-           case 3: x -= bRect.width();         //  Right;
-      };
 
-      switch( fTextAlignV ) {
-          case 2: y += bRect.height()/2 - metrics.descent(); // v center
-             break;
-          case 3: y += bRect.height() - metrics.descent(); // AlignTop;
-      };
       fQPainter->translate(x,y);
-      // Add rotation if any
-      if (TMath::Abs(angle) > 0.1 )  fQPainter->rotate(-angle);
+      if (TMath::Abs(angle) > 0.1 ) fQPainter->rotate(-angle);
+      int dx =0; int dy =0;
 
+      switch( fTextAlignH ) {
+           case 2: dx = -bRect.width()/2;                    // h center;
+              break;
+           case 3: dx = -bRect.width();                      //  Right;
+              break;
+      };
+      switch( fTextAlignV ) {
+          case 2: dy = bRect.height()/2 - metrics.descent(); // v center
+             break;
+          case 3: dy = bRect.height()   - metrics.descent(); // AlignTop;
+      };
 
-      fQPainter->drawText (0, 0, GetTextDecoder()->toUnicode (text));
+      fQPainter->drawText (dx, dy, GetTextDecoder()->toUnicode (text));
 
       fQPainter->restore();
-      qApp->unlock();
    }
 }
 
@@ -1323,10 +1324,9 @@ void  TGQt::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
    // Return character up vector.
 
-   qApp->lock();
+   TQtLock lock;
    chupx = fCharacterUpX;
    chupy = fCharacterUpY;
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1409,9 +1409,9 @@ ULong_t  TGQt::GetPixel(Color_t cindex)
 void  TGQt::GetRGB(int index, float &r, float &g, float &b)
 {
    // Get rgb values for color "index".
-   qApp->lock();
    const float BIGGEST_RGB_VALUE=255.;
    r = g = b = 0;
+   TQtLock lock;
    if (fSelectedWindow != NoOperation) {
       int c[3];
       QColor &color = fPallete[index];
@@ -1421,7 +1421,6 @@ void  TGQt::GetRGB(int index, float &r, float &g, float &b)
       g = c[1]/BIGGEST_RGB_VALUE;
       b = c[2]/BIGGEST_RGB_VALUE;
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1462,14 +1461,13 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    // ih          : text height
    // mess        : message
 
-   qApp->lock();
+   TQtLock lock;
    if (fQFont) {
       QSize textSize = QFontMetrics(*fQFont).size(Qt::SingleLine,GetTextDecoder()->toUnicode(mess)) ;
       w = textSize.width() ;
       h = (unsigned int)(textSize.height());
 //      fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d size =%f\n", w,h,fTextFont, fTextSize);
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1524,7 +1522,20 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
    // deprecated
    return 0;
 }
-
+#ifdef __APPLE__
+//______________________________________________________________________________
+  class requestString : public QDialog {
+  public:
+    QString   fText;
+    QLineEdit fEdit;
+    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop), fText(text),fEdit(this)
+    {
+       setBackgroundMode(Qt::NoBackground);
+       connect(&fEdit,SIGNAL( returnPressed () ), this, SLOT( accept() ));
+    }
+    ~requestString(){;}
+  };
+#endif
 //______________________________________________________________________________
 Int_t  TGQt::RequestString(int x, int y, char *text)
 {
@@ -1543,7 +1554,7 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
 //*-*    1     -  input was Ok
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
+#ifndef  __APPLE__
   class requestString : public QDialog {
   public:
     QString   fText;
@@ -1555,6 +1566,7 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
     }
     ~requestString(){;}
   };
+#endif
   int  res = QDialog::Rejected;
   if (fSelectedWindow->devType() == QInternal::Widget ) {
      TQtWidget *w = (TQtWidget *)fSelectedWindow;
@@ -1588,7 +1600,7 @@ void  TGQt::RescaleWindow(int wid, UInt_t w, UInt_t h)
    // w    : Width
    // h    : Heigth
 
-   qApp->lock();
+   TQtLock lock;
    if (wid && wid != -1 && wid != kDefault )
    {
       QPaintDevice *widget = iwid(wid);
@@ -1601,7 +1613,6 @@ void  TGQt::RescaleWindow(int wid, UInt_t w, UInt_t h)
          }
       }
    }
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1611,7 +1622,7 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
    // wid : pixmap to be resized
    // w,h : Width and height of the pixmap
 
-   qApp->lock();
+   TQtLock lock;
    if (wid && wid != -1 && wid != kDefault )
    {
       QPaintDevice *pixmap = iwid(wid);
@@ -1627,7 +1638,6 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
          }
       }
    }
-   qApp->unlock();
    return 1;
 }
 
@@ -1635,7 +1645,7 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
 void  TGQt::ResizeWindow(int wid)
 {
    // Resize the current window if necessary.
-   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) ) 
+   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) )
    {
       QPaintDevice *dev = iwid(wid);
       TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
@@ -1674,7 +1684,7 @@ void  TGQt::SelectWindow(int wid)
          }
       }
    }
-   
+
    if (fPrevWindow && fPrevWindow != (void *)-1 && (fWidgetArray->find(fPrevWindow) != -1) )   End();
    if (fSelectedWindow && (fSelectedWindow != NoOperation))  Begin();
 }
@@ -1684,9 +1694,9 @@ void  TGQt::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
    // Set character up vector.
 
-   qApp->lock();
+   TQtLock lock;
    if (chupx == fCharacterUpX  && chupy == fCharacterUpY) {
-      qApp->unlock();
+      
       return;
    }
 
@@ -1703,7 +1713,6 @@ void  TGQt::SetCharacterUp(Float_t chupx, Float_t chupy)
 
    fCharacterUpX = chupx;
    fCharacterUpY = chupy;
-   qApp->unlock();
 }
 
 //______________________________________________________________________________
@@ -1723,13 +1732,12 @@ void  TGQt::SetClipRegion(int wid, int x, int y, UInt_t w, UInt_t h)
    // w,h        : size of clipping rectangle;
 
    QRect rect(x,y,w,h);
-   qApp->lock();
+   TQtLock lock;
    fClipMap.replace(iwid(wid),rect);
    if (fSelectedWindow == iwid(wid) && fSelectedWindow->paintingActive())
    {
       UpdateClipRectangle();
    }
-   qApp->unlock();
 }
 
 //____________________________________________________________________________
@@ -2256,7 +2264,7 @@ Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/)
    //
    // Set text font to specified name. This function returns 0 if
    // the specified font is found, 1 if not.
-   
+
    // Qt takes care to make sure the proper font is loaded and scaled.
    return 0;
 }
@@ -2402,7 +2410,7 @@ void  TGQt::SetTextSize(Float_t textsize)
    //*-*                      =====================
    if ( fTextSize != textsize ) {
       fTextSize = textsize;
-      if (fTextSize > 0) {	
+      if (fTextSize > 0) {
          Int_t   tsize =(Int_t)( textsize+0.5);
          fQFont->setPixelSize(int(FontMagicFactor(tsize)));
          fTextFontModified = 1;
@@ -2466,7 +2474,6 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
    //               like "png","jpg","bmp"  . . .
    //               If no or some unknown extension is provided then
    //               the "png" format is used by default
-
 
    if (!wid || (wid == -1) ) return;
 

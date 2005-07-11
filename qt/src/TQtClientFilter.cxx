@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.5 2005/03/24 07:16:02 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.7 2005/07/07 06:06:05 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -576,6 +576,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    } else {
       delete &event;
       if (filterTime) filterTime->Stop();
+      qApp->unlock();
       return kFALSE;  // We need the standard Qt processing
    }
 

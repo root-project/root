@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.8 2005/03/07 07:44:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.11 2005/06/24 12:27:29 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -95,6 +95,7 @@ class TGQt  : public TVirtualX  {
    friend class TQtWidget;
    friend class TQtClientWidget;
    friend class TQtImage;
+   friend class TQtClientGuard;
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
@@ -173,6 +174,7 @@ protected:
 #endif
    static Int_t   RegisterWid(QPaintDevice *wid);   // register QWidget for the embedded TCanvas
    static Int_t   UnRegisterWid(QPaintDevice *wid); // unregister QWidget of the TCanvas
+   static Bool_t  IsRegistered(QPaintDevice *wid);  // Check whether the object has been registered
 private:
    TGQt& operator=(const TGQt&);
 public:
@@ -238,7 +240,6 @@ public:
       static QString QtFileFormat(const char *selector);
       static QString QtFileFormat(const QString &selector);
 #endif
-
 
    ClassDef(TGQt,0)  //Interface to Qt GUI
 };

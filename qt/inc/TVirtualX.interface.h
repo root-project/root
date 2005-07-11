@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.5 2005/03/25 18:30:54 fine Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.5 2005/06/24 12:27:29 brun Exp $
 // Author: Valeri Fine   28/07/2004
 
 //
@@ -239,6 +239,11 @@ public:
                                  Int_t dx, Int_t dy, Int_t x, Int_t y,
                                  UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
+// new dummy methods from Valeriy O. 
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   Pixmap_t       CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
+   Window_t       GetCurrentWindow() const;
+
 #if 0 
 //   Alas CINT does not understand the complex CPP statement below.
 //   This forces us to edit the file "by hand" (V.Fine 01/03/2005)

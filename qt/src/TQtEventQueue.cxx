@@ -1,9 +1,4 @@
-// Author: Valeri Fine   25/03/2004
-
-#include "TQtEventQueue.h"
-#include <qapplication.h> 
-
-// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.cxx,v 1.4 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************
@@ -14,6 +9,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#include "TQtEventQueue.h"
+#include "TQtLock.h"
+#include <qapplication.h>
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -61,14 +60,13 @@ int TQtEventQueue::RemoveItems(const Event_t *ev)
    
    int counter = 0;
    if (ev) {
-      qApp->lock();
+      TQtLock lock;
       int next = find(ev);
       while(next != -1) {
          remove();            // The removed item is deleted also
          next = findNext(ev);
          counter++;
       }
-      qApp->unlock();
    }
    return counter;
 }
