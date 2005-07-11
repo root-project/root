@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.96 2005/06/23 00:29:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.97 2005/07/09 04:03:23 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -723,11 +723,18 @@ void TProofServ::HandleSocketInput()
             TDSet *dset;
             TString filename, opt;
             TList *input;
+            Long64_t nentries, first;
+            TEventList *evl;
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
+
+            (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl;
+
             if (IsMaster()) {
-               // update the field fSet in each element of the each dataset in the friendship graph
+               // update the field fSet in each element of the each dataset
+               // in the friendship graph
                TDSet::FriendsList_t friends = *(dset->GetListOfFriends());
                friends.push_front(std::make_pair(dset, ""));
-               for (TDSet::FriendsList_t::iterator i = friends.begin(); 
+               for (TDSet::FriendsList_t::iterator i = friends.begin();
                      i != friends.end(); ++i) {
                   i->first->Reset();
                   while (TDSetElement *e = i->first->Next())
@@ -735,11 +742,7 @@ void TProofServ::HandleSocketInput()
                   i->first->Reset();
                }
             }
-            Long64_t nentries, first;
-            TEventList *evl;
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
-            (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl;
             if (evl)
                dset->SetEventList(evl);
 
