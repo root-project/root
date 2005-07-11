@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.21 2005/06/17 19:14:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.22 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -746,6 +746,11 @@ namespace {
       return PyInt_FromLong( (long)result );
    }
 
+}
+
+
+namespace PyROOT {      // workaround for Intel icc on Linux
+
 //- TTree behaviour ----------------------------------------------------------
    class TreeEraser : public TObject {
    public:
@@ -971,6 +976,13 @@ namespace {
       MethodProxy* m_org;
    };
 
+} // namespace PyROOT
+
+
+namespace {
+
+// for convenience
+   using namespace PyROOT;
 
 //- TFN behaviour ------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > gPyObjectCallbacks;
