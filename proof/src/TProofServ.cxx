@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.97 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.98 2005/07/11 16:31:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -733,9 +733,10 @@ void TProofServ::HandleSocketInput()
                // update the field fSet in each element of the each dataset
                // in the friendship graph
                TDSet::FriendsList_t friends = *(dset->GetListOfFriends());
-               friends.push_front(std::make_pair(dset, ""));
+               // implicit conversion from const char* -> TString is broken on RedHat 7.3 (gcc 2.96)
+               friends.push_front(std::make_pair(dset, TString("")));
                for (TDSet::FriendsList_t::iterator i = friends.begin();
-                     i != friends.end(); ++i) {
+                    i != friends.end(); ++i) {
                   i->first->Reset();
                   while (TDSetElement *e = i->first->Next())
                      e->SetSet(i->first);
