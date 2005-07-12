@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.7 2005/06/22 20:18:11 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.8 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -44,7 +44,6 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    // for the selected system will be loaded. When the connection could not
    // be opened 0 is returned.
 
-   R__LOCKGUARD2(gROOTMutex);
    TPluginHandler *h;
    TSQLServer *serv = 0;
 
