@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.10 2005/03/11 18:33:48 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.11 2005/04/15 17:26:09 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -137,7 +137,7 @@ static int Sendn(int sock, const void *buffer, int length)
 static int Recvn(int sock, void *buffer, int length)
 {
    // Receive exactly length bytes into buffer. Returns number of bytes
-   // received. Returns -1 in case of error.
+   // received or 0 in case connection is closed. Returns -1 in case of error.
 
    if (sock < 0) return -1;
 
@@ -147,11 +147,12 @@ static int Recvn(int sock, void *buffer, int length)
    for (n = 0; n < length; n += nrecv) {
       while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1 && GetErrno() == EINTR)
          ResetErrno();   // probably a SIGCLD that was caught
+      if (nrecv == 0)
+         break;          // EOF
       if (nrecv < 0) {
          Error(gErrFatal,-1,"Recvn: error (sock: %d): errno: %d",sock,GetErrno());
          return nrecv;
-      } else if (nrecv == 0)
-         break;         // EOF
+      }
    }
 
    gBytesRecv += n;
@@ -276,12 +277,13 @@ static int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
    // Receive a buffer. Returns the newly allocated buffer, the length
    // of the buffer and message type in kind.
 
-   int hdr[2];
+   int hdr[2] = { 0, 0 };
 
    if (NetRecvRaw(hdr, sizeof(hdr)) < 0)
       return -1;
 
    len = ntohl(hdr[0]) - sizeof(int);
+   if (len < 0) len = 0;
    kind = (EMessageTypes) ntohl(hdr[1]);
    if (len) {
       buf = new char* [len];
