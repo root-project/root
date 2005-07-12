@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.7 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.8 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -168,7 +168,12 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 }
 
 
-const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const 
+RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
+{
+  return const_cast<RooArgSet&>((const_cast<RooNumIntConfig*>(this)->getConfigSection(name))) ;
+}
+
+const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 {
   // Retrieve configuration information specific to integrator with given name
 

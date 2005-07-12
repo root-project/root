@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.31 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.32 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -226,7 +226,13 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   Double_t sum(0) ;
   for (int i=0 ; i<GetN() ; i++) {
     Double_t x,y ;
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x,y) ;
+#else
+    const_cast<RooHist*>(this)->GetPoint(i,x,y) ;
+#endif
+
     if (x>=xlo && x<=xhi) {
       sum += y ;
     }

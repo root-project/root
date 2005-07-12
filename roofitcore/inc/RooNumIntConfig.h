@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.rdl,v 1.4 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.rdl,v 1.5 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,6 +60,7 @@ public:
 
   Bool_t addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& defaultConfig) ;
   const RooArgSet& getConfigSection(const char* name) const ;
+  RooArgSet& getConfigSection(const char* name) ;
 
   void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
