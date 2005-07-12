@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.rdl,v 1.9 2005/04/18 21:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,8 @@ public:
   
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   virtual ExtendMode extendMode() const { return CanBeExtended ; }
-  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ;
+  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
 protected:
 

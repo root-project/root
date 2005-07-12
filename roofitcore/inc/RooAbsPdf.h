@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.81 2005/04/18 21:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.82 2005/06/20 15:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -146,7 +146,8 @@ public:
   virtual ExtendMode extendMode() const { return CanNotBeExtended ; } 
   inline Bool_t canBeExtended() const { return (extendMode() != CanNotBeExtended) ; }
   inline Bool_t mustBeExtended() const { return (extendMode() == MustBeExtended) ; }
-  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ; 
+  virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;

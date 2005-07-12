@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.44 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.45 2005/06/21 16:42:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -321,16 +321,18 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
     // scale this histogram to match that density
     _normNumEvts = rp->getFitRangeNEvt()/corFac ;
     _normObj = rp ;
-    //cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
-    //cout << "updating numevts to " << _normNumEvts << endl ;
+    // cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
+    // cout << "updating numevts to " << _normNumEvts << endl ;
     
   } else {
 
     _normObj = rp ;
     _normNumEvts = rp->getFitRangeNEvt() ;
-    _normBinWidth = rp->getFitRangeBinW() ;
+    if (rp->getFitRangeBinW()) {
+      _normBinWidth = rp->getFitRangeBinW() ;
+    }
 
-    //cout << "updating numevts to " << _normNumEvts << endl ;    
+    // cout << "updating numevts to " << _normNumEvts << endl ;    
   }
 
 }

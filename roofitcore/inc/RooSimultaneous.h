@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.39 2005/06/16 09:31:31 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.40 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,8 @@ public:
     return CanNotBeExtended ; 
   }
 
-  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ;
+  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;

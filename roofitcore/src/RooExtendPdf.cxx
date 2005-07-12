@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.17 2005/06/20 15:44:51 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.18 2005/06/23 11:44:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,6 +98,11 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   // x over the full range.
 
   RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;
+
+  if (_rangeName && (!nset || nset->getSize()==0)) {
+    cout << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range " 
+	 << _rangeName << ".  Results may be nonsensical" << endl ;  
+  }
 
   Double_t nExp = _n ;
 

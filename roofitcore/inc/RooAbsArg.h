@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.86 2005/06/20 15:44:43 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.87 2005/06/23 15:08:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,6 +89,7 @@ public:
   // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
   friend class RooAddPdf ;
+  RooArgSet* getVariables() const ;
   RooArgSet* getParameters(const RooAbsData* data) const ;
   RooArgSet* getParameters(const RooAbsData& data) const { return getParameters(&data) ; }
   RooArgSet* getParameters(const RooArgSet& set) const { return getParameters(&set) ; }
