@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.8 2005/06/24 14:53:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.9 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -60,13 +60,66 @@ TGLBoundingBox::~TGLBoundingBox()
 }
 
 //______________________________________________________________________________
+void TGLBoundingBox::UpdateCache()
+{
+   // Update the internal cached volume and axes vectors
+
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
+   //
+
+   // Do axes first so Extents() is correct
+   fAxes[0].Set(fVertex[1] - fVertex[0]);
+   fAxes[1].Set(fVertex[3] - fVertex[0]);
+   fAxes[2].Set(fVertex[4] - fVertex[0]);
+
+   // Sometimes have zero volume BB due to single zero magnitude 
+   // axis record and try to fix below
+   Bool_t fixZeroMagAxis = kFALSE;
+   Int_t zeroMagAxisInd = -1; 
+   for (UInt_t i = 0; i<3; i++) {
+      fAxesNorm[i] = fAxes[i];
+      Double_t mag = fAxesNorm[i].Mag();
+      if (mag > 0.0) {
+         fAxesNorm[i] /= mag;
+      } else {
+         if (!fixZeroMagAxis && zeroMagAxisInd == -1) {
+            zeroMagAxisInd = i;
+            fixZeroMagAxis = kTRUE;
+         } else if (fixZeroMagAxis) {
+            fixZeroMagAxis = kFALSE;
+         }
+      }
+   }
+
+   // Try to cope with a zero volume bounding box where one 
+   // axis is zero by using cross product of other two
+   if (fixZeroMagAxis) {
+      fAxesNorm[zeroMagAxisInd] = Cross(fAxesNorm[(zeroMagAxisInd+1)%3], 
+                                        fAxesNorm[(zeroMagAxisInd+2)%3]);
+   }
+
+   TGLVector3 extents = Extents();
+   fVolume = fabs(extents.X() * extents.Y() * extents.Z());
+}
+
+//______________________________________________________________________________
 void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 {
   // Set a bounding box from provided 8 verticies
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = vertex[v];
    }
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -78,7 +131,8 @@ void TGLBoundingBox::Set(const Double_t vertex[8][3])
          fVertex[v][a] = vertex[v][a];
       }
    }
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -88,7 +142,8 @@ void TGLBoundingBox::Set(const TGLBoundingBox & other)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Set(other.fVertex[v]);
    }
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -98,7 +153,8 @@ void TGLBoundingBox::SetEmpty()
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Fill(0.0);
    }
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -131,7 +187,8 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    fVertex[5] = highVertex; fVertex[5].Y() -= diff.Y();
    fVertex[6] = highVertex;
    fVertex[7] = highVertex; fVertex[7].X() -= diff.X();
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -167,7 +224,8 @@ void TGLBoundingBox::Scale(Double_t factor)
 {
    // Isotropically scale bounding box along it's LOCAL axes, preserving center
    Scale(factor, factor, factor);
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -202,7 +260,8 @@ void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
    fVertex[6] +=  xOffset + yOffset + zOffset; 
    fVertex[7] += -xOffset + yOffset + zOffset; 
 
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________
@@ -213,7 +272,7 @@ void TGLBoundingBox::Translate(const TGLVector3 & offset)
       fVertex[v] = fVertex[v] + offset;
    }
 
-   // No volume change
+   // No cache change - volume and axes vectors remain same
 }
 
 //______________________________________________________________________________
@@ -224,8 +283,8 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
       matrix.TransformVertex(fVertex[v]);
    }
 
-   // Could change volume
-   UpdateVolume();
+   // Could change cached volume/axes
+   UpdateCache();
 }
 
 //______________________________________________________________________________

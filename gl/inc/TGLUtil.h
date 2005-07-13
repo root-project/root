@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.7 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.8 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -124,23 +124,23 @@ inline TGLVertex3 TGLVertex3::operator - () const
 //______________________________________________________________________________
 inline Double_t & TGLVertex3::operator [] (Int_t index)
 { 
-   if (!ValidIndex(index)) { 
+   /*if (!ValidIndex(index)) { 
       assert(kFALSE); 
       return fVals[0]; 
-   } else {
+   } else {*/
       return fVals[index]; 
-   } 
+   //} 
 }
 
 //______________________________________________________________________________
 inline const Double_t& TGLVertex3::operator [] (Int_t index) const
 { 
-   if (!ValidIndex(index)) { 
+   /*if (!ValidIndex(index)) { 
       assert(kFALSE); 
       return fVals[0]; 
-   } else {
+   } else {*/
       return fVals[index]; 
-   } 
+   //} 
 }
 
 //______________________________________________________________________________
@@ -548,12 +548,12 @@ inline const TGLMatrix & TGLMatrix::operator=(const TGLMatrix & rhs)
 //______________________________________________________________________________
 inline Double_t & TGLMatrix::operator [] (Int_t index)
 { 
-   if (!ValidIndex(index)) { 
+   /*if (!ValidIndex(index)) { 
       assert(kFALSE); 
       return fVals[0]; 
-   } else {
+   } else {*/
       return fVals[index]; 
-   } 
+   //} 
 }
 
 /*************************************************************************
