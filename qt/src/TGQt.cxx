@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.23 2005/07/13 06:04:13 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -626,7 +626,7 @@ Bool_t TGQt::Init(void* /*display*/)
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
    //
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.23 2005/07/13 06:04:13 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1047,11 +1047,14 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
          fQPainter->setBrush(Qt::NoBrush);
          fQPainter->drawRect(x1,y2,x2-x1+1,y1-y2+1);
       } else {
+#ifdef QT_HATCHED_BACKGROUND         
+     //  The ROOT hatched styles background can be the transparent only
          if (fQBrush->style() != Qt::SolidPattern)
          {
             fQPainter->setBackgroundColor(fQBrush->GetColor());
             fQPainter->setBackgroundMode( Qt::OpaqueMode );
          }
+#endif         
          fQPainter->fillRect(x1,y2,x2-x1+1,y1-y2+1,*fQBrush);
       }
       fQPainter->restore();
@@ -1131,10 +1134,14 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
       fQPainter->save();
       if (fQBrush->style() == Qt::SolidPattern)
          fQPainter->setPen(Qt::NoPen);
+#ifdef QT_HATCHED_BACKGROUND         
+      //  The ROOT hatched styles background can be the transparent only
       else {
          fQPainter->setBackgroundColor(fQBrush->GetColor());
          fQPainter->setBackgroundMode( Qt::OpaqueMode );
       }
+#endif
+      
       QPointArray qtPoints(n);
       TPoint *rootPoint = xy;
       for (int i =0;i<n;i++,rootPoint++)
@@ -1385,7 +1392,7 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
    y = devSize.top();
    w = devSize.width();
    h = devSize.height();
-   // fprintf(stderr," TGQt::GetGeometry %d %d %d %d\n", x,y,w,h);
+   // fprintf(stderr," TGQt::GetGeometry %d %d %d %d %d\n", wid, x,y,w,h);
 }
 
 //______________________________________________________________________________
@@ -2570,7 +2577,6 @@ void TGQt::Begin()
          ((TQtWidget *)fSelectedWindow)->AdjustBufferSize();
       if (!fQPainter->begin(src) )
          fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
-      fQPainter->setBackgroundColor(Qt::white);
       UpdatePen();
       UpdateBrush();
       UpdateFont();
