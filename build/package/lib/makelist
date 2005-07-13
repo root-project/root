@@ -39,7 +39,7 @@ endif
 ifneq ($(DEV),)
 PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) 
 devlist:
-	@for f in $(PKGHDRS)  ; do echo $$f ; done >> $(OUT)/$(DEV).install
+	@for f in $(filter-out %.cw %.pri, $(PKGHDRS))  ; do echo $$f ; done >> $(OUT)/$(DEV).install
 else
 devlist:
 endif

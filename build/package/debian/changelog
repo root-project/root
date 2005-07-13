@@ -1,3 +1,9 @@
+root (5.03.01) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@cholm>  Wed,  6 Jul 2005 12:28:25 +0200
+
 root (5.01.01-1) unstable; urgency=low
 
   * New upstream
