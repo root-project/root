@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: makedocs.cc,v 1.17 2005/02/25 14:23:04 wverkerke Exp $
+ *    File: $Id: makedocs.cc,v 1.18 2005/02/28 21:48:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 void makedocs(const char *version="Development", const char *where= "./html", Bool_t doTutorial=kFALSE) 
 {
 
-  TString sourceDir(".:../RooFitCore:../RooFitCore/tmp/RooFitCore/include:../RooFitModels:../RooFitModels/tmp/RooFitModels") ;
+  TString sourceDir(".:../RooFitCore:../RooFitCore/tmp/RooFitCore:../RooFitModels:../RooFitModels/tmp/RooFitModels") ;
   gEnv->SetValue("Unix.*.Root.Html.SourceDir",sourceDir.Data());
   gEnv->SetValue("Unix.*.Root.Html.OutputDir",where);
   gEnv->SetValue("Unix.*.Root.Html.Description","// -- CLASS DESCRIPTION");
