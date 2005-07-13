@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.21 2005/07/07 06:06:05 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -626,7 +626,7 @@ Bool_t TGQt::Init(void* /*display*/)
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
    //
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.21 2005/07/07 06:06:05 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.22 2005/07/08 06:43:09 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1375,7 +1375,7 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
             } else{
                devSize = thisWidget.geometry();
             }
-            devSize.moveTopLeft(thisWidget.mapToGlobal(thisWidget.pos()));
+            devSize.moveTopLeft(thisWidget.mapToGlobal(QPoint(0,0)));
          } else {
             devSize = GetQRect(*dev);
          }
