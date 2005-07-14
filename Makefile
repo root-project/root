@@ -248,6 +248,9 @@ ifneq ($(GCC_MINOR),0)
 F77LDFLAGS   += -lfrtbegin
 endif
 endif
+ifeq ($(GCC_MAJOR),4)
+F77LDFLAGS   += -lfrtbegin
+endif
 
 ##### Utilities #####
 
