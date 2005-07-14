@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.95 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.96 2005/07/14 14:34:41 pcanal Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2958,19 +2958,19 @@ void TProof::ValidateDSet(TDSet *dset)
       Int_t nelements = setelements->GetSize();
       for (Int_t i=0; i<nslaves; i++) {
 
-         TDSet dset(dset->GetType(), dset->GetObjName(),
-                   dset->GetDirectory());
+         TDSet copyset(dset->GetType(), dset->GetObjName(),
+                       dset->GetDirectory());
          for (Int_t j = (i*nelements)/nslaves;
                     j < ((i+1)*nelements)/nslaves;
                     j++) {
             TDSetElement *elem =
                dynamic_cast<TDSetElement*>(setelements->At(j));
-            dset.Add(elem->GetFileName(), elem->GetObjName(),
-                    elem->GetDirectory(), elem->GetFirst(),
-                    elem->GetNum(), elem->GetMsd());
+            copyset.Add(elem->GetFileName(), elem->GetObjName(),
+                        elem->GetDirectory(), elem->GetFirst(),
+                        elem->GetNum(), elem->GetMsd());
          }
 
-         if (dset.GetListOfElements()->GetSize()>0) {
+         if (copyset.GetListOfElements()->GetSize()>0) {
             TMessage mesg(kPROOF_VALIDATE_DSET);
             mesg << &dset;
 
@@ -2978,7 +2978,7 @@ void TProof::ValidateDSet(TDSet *dset)
             PDB(kGlobal,1) Info("ValidateDSet",
                                 "Sending TDSet with %d elements to slave %s"
                                 " to be validated",
-                                dset.GetListOfElements()->GetSize(),
+                                copyset.GetListOfElements()->GetSize(),
                                 sl->GetOrdinal());
             sl->GetSocket()->Send(mesg);
             usedslaves.Add(sl);
