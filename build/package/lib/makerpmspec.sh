@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.7 2005/03/21 21:34:37 rdm Exp $
+# $Id: makerpmspec.sh,v 1.8 2005/03/24 17:14:30 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -80,6 +80,7 @@ for p in $pkglist ; do
 	$long
 
 	%files -n $p -f rpm/$p.install
+	%defattr(-,root,root)
 
 	EOF
 

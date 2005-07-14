@@ -23,7 +23,7 @@ if test "x$1" = "xrpm" ; then
 	    *fumili)							;;
 	    *gl)							;;
 	    *globus)	echo -n ", libglobus-dev"			;;
-	    *hbook)	echo -n ", CERNLIB, gcc-g77"			;;
+	    *hbook)	echo -n ", gcc-g77"				;;
 	    *krb5)	echo -n ", krb5-devel"				;;
 	    *ldap)	echo -n ", openldap-devel"			;;
 	    *minuit)							;;

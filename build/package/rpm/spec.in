@@ -23,7 +23,7 @@ Packager:     Christian Holm Christensen <cholm@nbi.dk>
 Distribution: Applications/Physics
 Vendor:       ROOT Team
 URL:          http://root.cern.ch
-Source:       ftp://root.cern.ch/root/root-v%{ver}.source.tar.gz
+Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:        Applications/Physics
 BuildRoot:    /tmp/rootrpm
 Summary:      Numerical data analysis framework (OO)
@@ -47,7 +47,7 @@ ROOT web-site: http://root.cern.ch
 #
 # Prepare sources - make package output dir (e.g. ../i686)
 %prep
-%setup -n %{name}-v%{version}
+%setup -n %{name}
 
 #---------------------------------------------------------------------
 # The actual build
@@ -101,7 +101,7 @@ sed -e "s,/usr/local,%_prefix,g" \
 build/package/lib/makelists.sh rpm %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
-NEWEXT=`cat /usr/lib/rpm/brp-compress | grep  -m 1 COMPRESS_EXT`
+NEWEXT=`cat /usr/lib/rpm/brp-compress | grep COMPRESS_EXT=`
 NEWEXT=`echo ${NEWEXT} |sed 's/^COMPRESS_EXT=//'`
 OLDEXT=1
 NEWEXT=${OLDEXT}${NEWEXT}
@@ -119,6 +119,11 @@ rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd		\
       ${RPM_BUILD_ROOT}%{_prefix}/lib/root/libAfterImage.a	\
       ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/rlibmap.1
 
+# -------------------------------------------------------------------
+# Clean up
+#
+%clean
+rm -rf $RPM_BUILD_ROOT
 
 ######################################################################
 #
