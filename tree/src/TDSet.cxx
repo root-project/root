@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.20 2005/05/13 16:39:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.21 2005/07/09 04:03:23 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -66,14 +66,14 @@ ClassImp(TDSetElement)
 ClassImp(TDSet)
 
 //______________________________________________________________________________
-TDSetElement::TDSetElement(const TDSet *set, const char *file,
+TDSetElement::TDSetElement(const TDSet *dset, const char *file,
                            const char *objname, const char *dir,
                            Long64_t first, Long64_t num,
                            const char *msd)
 {
    // Create a TDSet element.
 
-   fSet      = set;
+   fSet      = dset;
    fFileName = file;
    if (first < 0) {
       Warning("TDSetElement", "first must be >= 0, %d is not allowed - setting to 0", first);
@@ -477,21 +477,21 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
 
 
 //______________________________________________________________________________
-Bool_t TDSet::Add(TDSet *set)
+Bool_t TDSet::Add(TDSet *dset)
 {
    // Add specified data set to the this set.
 
-   if (!set)
+   if (!dset)
       return kFALSE;
 
-   if (set->fName != fName) {
+   if (dset->fName != fName) {
       Error("Add", "cannot add a set with a different type");
       return kFALSE;
    }
 
    TDSetElement *el;
-   TIter next(set->fElements);
-   TObject *last = set == this ? fElements->Last() : 0;
+   TIter next(dset->fElements);
+   TObject *last = (dset == this) ? fElements->Last() : 0;
    while ((el = (TDSetElement*) next())) {
       Add(el->GetFileName(), el->GetObjName(), el->GetDirectory(),
           el->GetFirst(), el->GetNum(), el->GetMsd());

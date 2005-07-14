@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.94 2005/06/23 10:51:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.95 2005/07/09 04:03:23 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1741,7 +1741,7 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
+Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
                       Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
@@ -1750,7 +1750,7 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
    if (!IsValid()) return -1;
 
    if (fProgressDialog)
-      fProgressDialog->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
+      fProgressDialog->ExecPlugin(5, this, selector, dset->GetListOfElements()->GetSize(),
                                   first, nentries);
 
    // deactivate the default application interrupt handler
@@ -1759,7 +1759,7 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
    if (gApplication)
       sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
 
-   Long64_t rv = fPlayer->Process(set, selector, option, nentries, first, evl);
+   Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first, evl);
 
    if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
       Info("Process","the processing was aborted - %lld events processed", fPlayer->GetEventsProcessed());
@@ -1780,7 +1780,7 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
 }
 
 //______________________________________________________________________________
-Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, Option_t *option,
+Int_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
@@ -1788,7 +1788,7 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
 
    if (!IsValid()) return -1;
 
-   return fPlayer->DrawSelect(set, varexp, selection, option, nentries, first);
+   return fPlayer->DrawSelect(dset, varexp, selection, option, nentries, first);
 }
 
 //______________________________________________________________________________
@@ -2958,27 +2958,27 @@ void TProof::ValidateDSet(TDSet *dset)
       Int_t nelements = setelements->GetSize();
       for (Int_t i=0; i<nslaves; i++) {
 
-         TDSet set(dset->GetType(), dset->GetObjName(),
+         TDSet dset(dset->GetType(), dset->GetObjName(),
                    dset->GetDirectory());
          for (Int_t j = (i*nelements)/nslaves;
                     j < ((i+1)*nelements)/nslaves;
                     j++) {
             TDSetElement *elem =
                dynamic_cast<TDSetElement*>(setelements->At(j));
-            set.Add(elem->GetFileName(), elem->GetObjName(),
+            dset.Add(elem->GetFileName(), elem->GetObjName(),
                     elem->GetDirectory(), elem->GetFirst(),
                     elem->GetNum(), elem->GetMsd());
          }
 
-         if (set.GetListOfElements()->GetSize()>0) {
+         if (dset.GetListOfElements()->GetSize()>0) {
             TMessage mesg(kPROOF_VALIDATE_DSET);
-            mesg << &set;
+            mesg << &dset;
 
             TSlave *sl = dynamic_cast<TSlave*>(slaves->At(i));
             PDB(kGlobal,1) Info("ValidateDSet",
                                 "Sending TDSet with %d elements to slave %s"
                                 " to be validated",
-                                set.GetListOfElements()->GetSize(),
+                                dset.GetListOfElements()->GetSize(),
                                 sl->GetOrdinal());
             sl->GetSocket()->Send(mesg);
             usedslaves.Add(sl);

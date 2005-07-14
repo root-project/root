@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.8 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.9 2005/07/13 15:27:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -191,17 +191,17 @@ public:
 
 // Inline for TGLVertex3 requiring full TGLVector definition
 //______________________________________________________________________________
-inline const TGLVertex3 & TGLVertex3::operator -= (const TGLVector3 & vector)
+inline const TGLVertex3 & TGLVertex3::operator -= (const TGLVector3 & vec)
 { 
-   fVals[0] -= vector[0]; fVals[1] -= vector[1]; fVals[2] -= vector[2]; 
+   fVals[0] -= vec[0]; fVals[1] -= vec[1]; fVals[2] -= vec[2]; 
    return *this; 
 }
 
 // Inline for TGLVertex3 requiring full TGLVector definition
 //______________________________________________________________________________
-inline const TGLVertex3 & TGLVertex3::operator += (const TGLVector3 & vector)
+inline const TGLVertex3 & TGLVertex3::operator += (const TGLVector3 & vec)
 { 
-   fVals[0] += vector[0]; fVals[1] += vector[1]; fVals[2] += vector[2]; 
+   fVals[0] += vec[0]; fVals[1] += vec[1]; fVals[2] += vec[2]; 
    return *this; 
 }
 
