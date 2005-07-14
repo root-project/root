@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.108 2005/02/18 11:22:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.109 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2288,13 +2288,27 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
+
    TString ff = filename && strlen(filename) ? filename : "Rootappl.C";
 
+   // Computes the main method name.
    const char *fname = gSystem->BaseName(ff.Data());
+   Int_t lenfname = strlen(fname);
+   char *sname = new char[lenfname];
+
+   Int_t i = 0;
+   while ((*fname != '.') && (i < lenfname)) {
+      sname[i] = *fname;
+      i++; fname++;
+   }
+   if (i == lenfname) {
+      ff += ".C";
+      i  += 2;
+   }
+   sname[i] = 0;
 
    out.open(ff.Data(), ios::out);
-
-   if (!out.good() || !strlen(fname)) {
+   if (!out.good()) {
        Error("SaveSource", "cannot open file: %s", ff.Data());
        return;
    }
@@ -2332,21 +2346,10 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the fname
-   char *sname = new char[strlen(fname)];
-
-   Int_t i=0;
-   while (*fname != '.') {
-       sname[i] = *fname;
-       i++; fname++;
-   }
-   sname[i] = 0;
-
    out << endl;
    out << "void " << sname << "()" << endl;
-   delete [] sname;
-   //delete fname;
-
    out <<"{"<< endl;
+   delete [] sname;
 
    gListOfHiddenFrames->Clear();
    TGMainFrame::SavePrimitive(out, option);
@@ -2412,7 +2415,8 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    out.close();
 
-   if (!opt.Contains("quiet")) Printf(" C++ macro file %s has been generated", fname-i);
+   if (!opt.Contains("quiet"))
+      printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff.Data()));
 
    // reset bit TClass::kClassSaved for all classes
    nextc1.Reset();
@@ -2682,13 +2686,27 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
+
    TString ff = filename && strlen(filename) ? filename : "Rootdlog.C";
 
+   // Computes the main method name.
    const char *fname = gSystem->BaseName(ff.Data());
+   Int_t lenfname = strlen(fname);
+   char *sname = new char[lenfname];
+
+   Int_t i = 0;
+   while ((*fname != '.') && (i < lenfname)) {
+      sname[i] = *fname;
+      i++; fname++;
+   }
+   if (i == lenfname) {
+      ff += ".C";
+      i  += 2;
+   }
+   sname[i] = 0;
 
    out.open(ff.Data(), ios::out);
-
-   if (!out.good() || !strlen(fname)) {
+   if (!out.good()) {
        Error("SaveSource", "cannot open file: %s", ff.Data());
        return;
    }
@@ -2726,19 +2744,9 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the fname
-   char *sname = new char[strlen(fname)];
-
-   Int_t i=0;
-   while (*fname != '.') {
-       sname[i] = *fname;
-       i++; fname++;
-   }
-   sname[i] = 0;
-
    out << endl;
    out << "void " << sname << "()" << endl;
    delete [] sname;
-   //delete fname;
 
    //  Save GUI widgets as a C++ macro in a file
    out <<"{"<< endl;
@@ -2806,7 +2814,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    out.close();
 
-   if (!opt.Contains("quiet")) Printf(" C++ macro file %s has been generated", fname-i);
+   if (!opt.Contains("quiet"))
+      printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff.Data()));
 
    // reset bit TClass::kClassSaved for all classes
    nextc1.Reset();

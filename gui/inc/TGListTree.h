@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.16 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.17 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -193,6 +193,7 @@ public:
    Int_t ReparentChildren(TGListTreeItem *item, TGListTreeItem *newparent);
    void  SetToolTipItem(TGListTreeItem *item, const char *string);
    void  SetAutoTips(Bool_t on = kTRUE) { fAutoTips = on; }
+   void  SetSelected(TGListTreeItem *item) { fSelected = item; }
    void  AdjustPosition(TGListTreeItem *item);
    void  AdjustPosition() { TGContainer::AdjustPosition(); }
 
