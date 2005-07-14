@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.8 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.9 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -122,16 +122,19 @@ void TGLViewer::Draw()
 
    // Debug mode have forced rebuilds only
    if (!fDebugMode) {
-      // Scene rebuild required?
-      if (!RebuildScene()) {
-         // Final draw pass required?
-         redrawReq = fNextSceneLOD != kHigh;
+      // Final draw pass
+      if (fNextSceneLOD == kHigh) {
+         RebuildScene();
+      } else {
+         // Final draw pass required
+         redrawReq = kTRUE;
       }
    } else {
       // Final draw pass required?
       redrawReq = fNextSceneLOD != kHigh;
    }
 
+   // Request final pass high quality redraw via timer
    if (redrawReq) {
       fRedrawTimer->RequestDraw(100, kHigh);
    }

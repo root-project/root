@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.67 2005/06/24 14:28:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.68 2005/07/08 15:39:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -1055,6 +1055,9 @@ Bool_t TViewerOpenGL::RebuildScene()
       return kFALSE;
    }
    
+   // We are going to rebuild the scene - ensure any pending redraw timer cancelled now
+   fRedrawTimer->Stop();
+
    if (gDebug>3 || fDebugMode) {
       Info("TViewerOpenGL::RebuildScene", "required");
    }

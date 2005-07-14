@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.7 2005/07/13 15:27:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -129,12 +129,11 @@ inline TGLVector3 TGLBoundingBox::Extents() const
 inline TGLVertex3 TGLBoundingBox::Center() const
 {
    // Return the center vertex of the box
-   TGLVector3 v = fVertex[6] - fVertex[0];
-   return fVertex[0] + v/2.0;
-   // This looks clumsy but avoids construction of temporary TGLVector object
-/*   return TGLVertex3((fVertex[6].X() - fVertex[0].X())/2.0,
-                     (fVertex[6].Y() - fVertex[0].Y())/2.0,
-                     (fVertex[6].Z() - fVertex[0].Z())/2.0);*/
+
+   // This looks clumsy but avoids construction of temporary TGLVector3 object
+   return TGLVertex3((fVertex[0].X() + fVertex[6].X())/2.0,
+                     (fVertex[0].Y() + fVertex[6].Y())/2.0,
+                     (fVertex[0].Z() + fVertex[6].Z())/2.0);
 }
 
 //______________________________________________________________________________

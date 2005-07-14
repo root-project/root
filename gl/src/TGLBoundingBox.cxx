@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.9 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.10 2005/07/13 15:27:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -322,11 +322,31 @@ EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
    TGLVector3 aHL = a.Extents() / 2.0; // Half length extents
    TGLVector3 bHL = b.Extents() / 2.0; // Half length extents
 
-   // Perform separating axes search - test is greatly simplified
+   // Following tests are greatly simplified
    // if we convert into our local frame
 
    // Find translation in parent frame
    TGLVector3 parentT = b.Center() - a.Center();
+
+   // First: Do a simple & cheap sphere approximation containment test.
+   // In many uses b will be completely contained by a and very much smaller
+   // these cases short circuited here
+
+   // We need the inner sphere for the container (box a) - radius = shortest box half length
+   Double_t aSphereRadius = aHL[0] < aHL[1] ? aHL[0] : aHL[1];
+   if (aHL[2] < aSphereRadius) {
+      aSphereRadius = aHL[2];
+   }
+   // and the outer sphere for containee (box b) - radius = box diagonal
+   Double_t bSphereRadius = bHL.Mag();
+
+   // If b sphere radius + translation mag is smaller than b sphere radius
+   // b is complete contained by a
+   if (bSphereRadius + parentT.Mag() < aSphereRadius) {
+      return kInside;
+   }
+   
+   // Second: Perform more expensive 15 seperating axes test
 
    // Find translation in A's frame
    TGLVector3 aT(Dot(parentT, a.Axis(0)), Dot(parentT, a.Axis(1)), Dot(parentT, a.Axis(2)));
