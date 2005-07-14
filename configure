@@ -2096,7 +2096,7 @@ if test "x$enable_globus" = "xyes"; then
 
    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
      libssl_$flavour libcrypto_$flavour ; do
-     check_library $i "$enable_shared" "$searchlibdir" /usr/lib \
+     check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
         /usr/local/lib
         if test "x$found_lib" = "x" ; then
             globuslib=""
@@ -2135,6 +2135,15 @@ if test "x$enable_globus" = "xyes"; then
          done
       fi
    fi
+   case $platform in 
+       linux*) 
+	   tmplibdir=$globuslibdir
+	   for i in $tmplibdir ; do 
+	       extra=`echo $i | sed 's/-L/-Wl,-rpath,/'`
+	       globuslibdir="$globuslibdir $extra"
+	   done
+	   ;;
+   esac
 
    # Need to source this before init proxies
    sourcepath=""
@@ -2869,6 +2878,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
     test "x$enable_python"  = "xyes" && pkglist="$pkglist root-plugin-python"
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
+    test "x$enable_roofit"  = "xyes" && pkglist="$pkglist root-plugin-roofit"
     test "x$enable_ruby"    = "xyes" && pkglist="$pkglist root-plugin-ruby"
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
     test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-sapdb"
@@ -2974,6 +2984,17 @@ if test "$platform" = "win32" ; then
     mv Makefile.tmpp Makefile.tmp
 fi
 
+if test "x$enable_globus" = "xyes" ; then
+    if test "$arch" = "solarisCC5"; then
+	sed -e "s|@ldflags@|-R$globusdir/lib @ldflags@|" \
+	    < Makefile.tmp > Makefile.tmpp
+    else
+	sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
+	    < Makefile.tmp > Makefile.tmpp
+    fi
+    mv Makefile.tmpp Makefile.tmp
+fi
+
 if test ! "x$haveconfig" = "x" ; then
     ##################################################################
     #
@@ -3003,13 +3024,8 @@ if test ! "x$haveconfig" = "x" ; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
-           if test "x$enable_globus" = "xyes" ; then
-             sed -e "s|@ldflags@|-Wl,-rpath,$libdir -Wl,-rpath,$GLOBUS_LOCATION/lib @ldflags@|" \
-                    < Makefile.tmp > Makefile.tmpp
-           else
-             sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
-                    < Makefile.tmp > Makefile.tmpp
-           fi
+	    sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+		< Makefile.tmp > Makefile.tmpp
         fi
         mv Makefile.tmpp Makefile.tmp
     fi

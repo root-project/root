@@ -23,6 +23,7 @@ PREFIX		= /usr
 SYSCONFDIR	= /etc
 PKGDOCDIR	= /usr/share/doc/root
 CONFOPTIONS	:=--enable-table				\
+		  --enable-roofit				\
 		  --enable-ruby					\
 		  --enable-qt					\
 		  --enable-pythia				\
@@ -34,7 +35,8 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-afs					\
 		  --disable-srp					\
 		  --disable-builtin-freetype			\
-		  --disable-builtin-afterimage
+		  --disable-builtin-afterimage			\
+		  --with-globus=/opt/globus
 VERSION		= $(shell cat build/version_number | tr '/' '.')
 PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n 's/packages: //p')
 BUILDDEP	:= $(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))

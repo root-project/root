@@ -34,9 +34,9 @@ for d in * ; do
     case $d in 							
 	base)       lib=libroot             ; dev=libroot-dev; bin=root-bin
 	            extra="ALLLIBS=/usr/lib/root/libCore.so" ;;  	
-	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html|matrix)
+	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	meta*|net|newdelete|physics|postscript|rint|table|thread|tree*) 
+	matrix|meta*|net|newdelete|physics|postscript|rint|table|thread|tree*) 
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx|xml) 	
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
