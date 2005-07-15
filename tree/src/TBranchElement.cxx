@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.174 2005/06/13 21:55:22 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.175 2005/06/20 14:09:15 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2064,6 +2064,7 @@ void TBranchElement::InitializeOffsets()
          TClass *parentBranchClass = parentElem->GetClassPointer();
 
          if ( ! parentBranchClass->InheritsFrom(clm) ) {
+
             // We are in the case where there is a missing branch in the hiearchy
             TString parentDataName( GetName() );
             const char *ename = fID<0 ? 0 : ((TStreamerElement*)fInfo->GetElems()[fID])->GetName();
@@ -2072,6 +2073,24 @@ void TBranchElement::InitializeOffsets()
             CleanParentName(parentDataName,parent->GetName());
 
             fParentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
+
+            if (parent->fType==1) {
+               const char *name = GetName();
+               const char *pos = strchr( name, '.');
+               if (pos && fParentOffset) {
+                  size_t idx = (pos-name);
+                  TClass *pbc = parentBranchClass;
+                  if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
+                     std::string enam( name, idx );
+                     TObject *info = parentInfo->GetElements()->FindObject(enam.c_str());
+                     if (info) {
+                        // If all the condition above are fullfilled we have already
+                        // compensated for the missing branch.
+                        fParentOffset=0;
+                     }
+                  }
+               }
+            }
          } else {
             // Case where we have a proper branch hierachy
             // fObject is already correct!
@@ -2195,7 +2214,7 @@ void TBranchElement::InitializeOffsets()
                   fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
                }
                else  {
-                  Error("SetAddress","branch=%s, parentInfo=0",branch->GetName());
+                  Error("SetAddress","branch=%s, parentInfo==0",branch->GetName());
                }
             }
          }
