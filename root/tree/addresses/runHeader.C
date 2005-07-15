@@ -14,7 +14,9 @@
   if (b==0) {
      cerr << "Now I don't understand the branch Event.Clusters has disappeared!!" << end;
   }
+  pSubEvent->header.number = 11;
   pSubEvent->Clusters.val = 33;
+  pEvent->header.number = 1;
   pEvent->Clusters.val = 3;
   new ((*pEvent->Clusters.pPhotons)[0]) Track(11);
   new ((*pEvent->Clusters.pPhotons)[1]) Track(12);
@@ -28,6 +30,8 @@
   tree.GetEntry(0);
   cerr << "For pEvent val is    : " << pEvent.Clusters.val << endl;
   cerr << "For pSubEvent val is : " << pSubEvent.Clusters.val << endl;
+  cerr << "For pEvent number is    : " << pEvent.header.number << endl;
+  cerr << "For pSubEvent number is : " << pSubEvent.header.number << endl;
   if (pEvent.Clusters.val != 3) {
      cerr << "Abnormal value of pEvent.Clusters.val! It should have been 3." << endl;
      gApplication->Terminate(1);

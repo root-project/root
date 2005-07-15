@@ -89,7 +89,7 @@ treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 treeBranch: treeBranch.log
 	$(TestDiff)
 
-inheritAndOwn.log: test_Persistency0_C.$(DllSuf)
+inheritAndOwn.log: test_Persistency0_C.$(DllSuf)  test_Persistency3_C.$(DllSuf)
 
 inheritAndOwn: inheritAndOwn.log
 	$(TestDiff)

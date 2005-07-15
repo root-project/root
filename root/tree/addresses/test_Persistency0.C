@@ -143,16 +143,23 @@ bool test_ReadObject() {
   fi.Close();
   return true;
 }
-bool test_WriteObjectInTree() {
+bool test_WriteObjectInTree(bool withdot) {
   Data* d      = new Data();
   Aggregate* g = new Aggregate();
   Final* f     = new Final();
 
   TFile fo("tree.root","RECREATE");
   TTree* tree = new TTree("tree","Test Tree");
-  failUnless( tree->Branch("Data","Data",&d, 32000,99), "Creating Data branch");
-  failUnless( tree->Branch("Aggregate","Aggregate",&g, 32000,99), "Creating Aggregate branch");
-  failUnless( tree->Branch("Final","Final",&f, 32000,99), "Creating Final branch");
+  if (withdot) {
+     failUnless( tree->Branch("Data.","Data",&d, 32000,99), "Creating Data branch");
+     failUnless( tree->Branch("Aggregate.","Aggregate",&g, 32000,99), "Creating Aggregate branch");
+     failUnless( tree->Branch("Final.","Final",&f, 32000,99), "Creating Final branch");
+  } else {
+     failUnless( tree->Branch("Data","Data",&d, 32000,99), "Creating Data branch");
+     failUnless( tree->Branch("Aggregate","Aggregate",&g, 32000,99), "Creating Aggregate branch");
+     failUnless( tree->Branch("Final","Final",&f, 32000,99), "Creating Final branch");
+  }
+  //tree->Print();
   for (int i = 0; i < 2; i++ ) {
     d->setPattern(i);
 
@@ -177,7 +184,7 @@ bool test_WriteObjectInTree() {
   return true;
 }
 
-bool test_ReadObjectInTree() {
+bool test_ReadObjectInTree(bool withdot) {
   Data* d      = new Data();
   Aggregate* g = new Aggregate();
   Final* f     = new Final(); 
@@ -185,9 +192,15 @@ bool test_ReadObjectInTree() {
   TFile fi("tree.root");
   TTree* tree = (TTree*)fi.Get("tree");
   failUnless( tree, "Getting tree");
-  tree->GetBranch("Data")->SetAddress(&d);
-  tree->GetBranch("Aggregate")->SetAddress(&g);
-  tree->GetBranch("Final")->SetAddress(&f);
+  if (withdot) {
+     tree->GetBranch("Data.")->SetAddress(&d);
+     tree->GetBranch("Aggregate.")->SetAddress(&g);
+     tree->GetBranch("Final.")->SetAddress(&f);
+  } else {
+     tree->GetBranch("Data")->SetAddress(&d);
+     tree->GetBranch("Aggregate")->SetAddress(&g);
+     tree->GetBranch("Final")->SetAddress(&f);
+  }
   int n = tree->GetEntries();
   failUnlessEqual( 2, n, "Number of entries in Tree");
   for ( int i = 0; i < n; i++ ) {
@@ -207,13 +220,13 @@ bool test_ReadObjectInTree() {
   fi.Close();
   return true;
 }
-void test_Persistency0()
+void test_Persistency0(bool withdot=false)
 {
   gROOT->ProcessLine(".O 0");  // Disable CINT optimization
 
   cout << "ObjectInitialization: "      << (test_ObjectInitialization()      ? "OK" : "FAIL") << endl;
   cout << "WriteObject:          "      << (test_WriteObject()       ? "OK" : "FAIL") << endl;
   cout << "ReadObject:           "      << (test_ReadObject()        ? "OK" : "FAIL") << endl;
-  cout << "WriteObjectInTree:    "      << (test_WriteObjectInTree() ? "OK" : "FAIL") << endl;
-  cout << "ReadObjectInTree:     "      << (test_ReadObjectInTree() ? "OK" : "FAIL") << endl;
+  cout << "WriteObjectInTree:    "      << (test_WriteObjectInTree(withdot) ? "OK" : "FAIL") << endl;
+  cout << "ReadObjectInTree:     "      << (test_ReadObjectInTree(withdot) ? "OK" : "FAIL") << endl;
 }
