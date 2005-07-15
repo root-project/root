@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.175 2005/06/20 14:09:15 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.168.2.1 2005/07/01 19:59:56 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2067,6 +2067,24 @@ void TBranchElement::InitializeOffsets()
             CleanParentName(parentDataName,parent->GetName());
 
             fParentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
+
+             if (parent->fType==1) {
+                const char *name = GetName();
+                const char *pos = strchr( name, '.');
+                if (pos && fParentOffset) {
+                   size_t idx = (pos-name);
+                   TClass *pbc = parentBranchClass;
+                   if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
+                      std::string enam( name, idx );
+                      TObject *info = parentInfo->GetElements()->FindObject(enam.c_str());
+                      if (info) {
+                         // If all the condition above are fullfilled we have already
+                         // compensated for the missing branch.
+                         fParentOffset=0;
+                      }
+                   }
+                }
+             }
          } else {
             // Case where we have a proper branch hierachy
             // fObject is already correct!
