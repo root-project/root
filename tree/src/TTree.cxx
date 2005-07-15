@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v4-04-02 $:$Id: TTree.cxx,v 1.249 2005/04/28 07:29:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.249.2.1 2005/05/18 09:32:42 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1498,6 +1498,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
             sprintf(bname,"%s",element->GetFullName());
          }
          TBranchElement *bre = new TBranchElement(bname,sinfo,id,pointer,bufsize,splitlevel-1);
+         bre->SetParentClass(cl);
          blist->Add(bre);
          id++;
       }
