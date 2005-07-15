@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.109 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.110 2005/07/14 14:13:02 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2301,10 +2301,8 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       sname[i] = *fname;
       i++; fname++;
    }
-   if (i == lenfname) {
+   if (i == lenfname) 
       ff += ".C";
-      i  += 2;
-   }
    sname[i] = 0;
 
    out.open(ff.Data(), ios::out);
@@ -2699,10 +2697,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       sname[i] = *fname;
       i++; fname++;
    }
-   if (i == lenfname) {
+   if (i == lenfname) 
       ff += ".C";
-      i  += 2;
-   }
    sname[i] = 0;
 
    out.open(ff.Data(), ios::out);
