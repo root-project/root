@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.44 2004/11/17 06:02:52 brun Exp $
+// @(#)root/cont:$Name: v4-04-02-patches $:$Id: TClonesArray.cxx,v 1.45 2005/03/11 21:48:39 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -299,7 +299,8 @@ void TClonesArray::Delete(Option_t *)
    // memory (e.g. objects inheriting from TNamed or containing TStrings
    // allocate memory). If not you better use Clear() since if is faster.
 
-   for (Int_t i = 0; i < fSize; i++)
+   Long_t dtoronly = TObject::GetDtorOnly();
+   for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
          // Tell custom operator delete() not to delete space when
          // object fCont[i] is deleted. Only destructors are called
@@ -307,6 +308,9 @@ void TClonesArray::Delete(Option_t *)
          TObject::SetDtorOnly(fCont[i]);
          delete fCont[i];
       }
+   }
+   // Restore the state.
+   TObject::SetDtorOnly((void*)dtoronly);
 
    // Protect against erroneously setting of owner bit.
    SetOwner(kFALSE);
@@ -417,8 +421,10 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
       // Tell custom operator delete() not to delete space when
       // object fCont[i] is deleted. Only destructors are called
       // for this object.
+      Long_t dtoronly = TObject::GetDtorOnly();
       TObject::SetDtorOnly(fCont[i]);
       delete fCont[i];
+      TObject::SetDtorOnly((void*)dtoronly);
    }
 
    if (fCont[i]) {
@@ -447,8 +453,10 @@ TObject *TClonesArray::Remove(TObject *obj)
       // Tell custom operator delete() not to delete space when
       // object fCont[i] is deleted. Only destructors are called
       // for this object.
+      Long_t dtoronly = TObject::GetDtorOnly();
       TObject::SetDtorOnly(fCont[i]);
       delete fCont[i];
+      TObject::SetDtorOnly((void*)dtoronly);
    }
 
    fCont[i] = 0;
