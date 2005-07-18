@@ -106,6 +106,8 @@
 #define G__OLDIMPLEMENTATION1073
 #endif
 
+#define G__OLDIMPLEMENTATION1073
+ 
 /* Native long long, unsigned long long, long double implementation */
 #ifndef G__NATIVELONGLONG
 #define G__OLDIMPLEMENTATION2189
