@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.21 2005/07/09 04:03:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.22 2005/07/14 14:34:41 pcanal Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -253,9 +253,8 @@ Int_t TDSetElement::Compare(const TObject *obj) const
 //______________________________________________________________________________
 void TDSetElement::AddFriend(TDSetElement *friendElement, const char* alias)
 {
-   // Add friend TDSetElement to this set. The friendset will be holded by this
-   // class, however it won't be owned by it and won't be deleted
-   // in this TDSet's dectructor.
+   // Add friend TDSetElement to this set. The friend element will be owned by this
+   // object and will be deleted in this TDSetElement's dectructor.
 
    if (!friendElement) {
       Error("AddFriend", "The friend TDSetElement is null!");
@@ -505,7 +504,8 @@ Bool_t TDSet::Add(TDSet *dset)
 void TDSet::AddFriend(TDSet *friendset, const char* alias)
 {
    // Add friend dataset to this set. Only possible if the TDSet type is
-   // a TTree or derived class. The friendset will be owned by this class.
+   // a TTree or derived class. The friendset will be owned by this class
+   // and deleted in its destructor.
 
    if (!friendset) {
       Error("AddFriend", "The friend TDSet is null!");
@@ -518,7 +518,7 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
    }
 
    if (!fFriends) fFriends = new FriendsList_t;
-   fFriends->push_back(std::make_pair(friendset, alias));
+   fFriends->push_back(std::make_pair(friendset, TString(alias)));
 }
 
 //______________________________________________________________________________
