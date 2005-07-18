@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.6 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.7 2005/06/10 17:49:47 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -31,8 +31,9 @@
 #include <string>
 
 typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
-                           std::string&, Int_t &, Int_t &, std::string &);
-typedef Int_t (*SrvClup_t)(const char *);
+                           std::string&, Int_t &, Int_t &, std::string &,
+                           TSeqCollection *);
+typedef Int_t (*SrvClup_t)(TSeqCollection *);
 
 // These mask are globally available to manipulate the option to Accept
 const UChar_t kSrvAuth   = 0x1;            // Require client authentication

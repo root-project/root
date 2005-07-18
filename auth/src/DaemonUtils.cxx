@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: DaemonUtils.cxx,v 1.4 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.5 2005/03/11 18:33:48 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -53,7 +53,9 @@
 #include "Rtypes.h"
 #include "DaemonUtils.h"
 #include "TAuthenticate.h"
+#include "TSecContext.h"
 #include "TEnv.h"
+#include "TROOT.h"
 
 //________________________________________________________________________
 
@@ -72,14 +74,15 @@ using namespace ROOT;
 extern "C" {
    Int_t SrvAuthenticate(TSocket *socket,
                          const char *confdir, const char *tmpdir,
-                         string &user, Int_t &meth, Int_t &type, string &ctkn) {
-      return SrvAuthImpl(socket, confdir, tmpdir, user, meth, type, ctkn);
+                         string &user, Int_t &meth, Int_t &type, string &ctkn,
+                         TSeqCollection *secctxlist) {
+      return SrvAuthImpl(socket, confdir, tmpdir, user, meth, type, ctkn, secctxlist);
    }
 }
 
 extern "C" {
-   Int_t SrvAuthCleanup(const char *str) {
-      return SrvClupImpl(str);
+   Int_t SrvAuthCleanup(TSeqCollection *sls) {
+      return SrvClupImpl(sls);
    }
 }
 
@@ -182,21 +185,26 @@ void ErrSys(int level, const char *msg)
 }
 
 //______________________________________________________________________________
-Int_t SrvClupImpl(const char *str)
+Int_t SrvClupImpl(TSeqCollection *secls)
 {
    // Wrapper to cleanup code
-
-   int rc = RpdCleanupAuthTab(str);
-   if (gDebug > 0 && rc < 0)
-      ErrorInfo("SrvClupImpl: operation unsuccessful (rc: %d, ctkn: %s)",
-                rc,str);
-
+   TIter next(secls);
+   TSecContext *nsc ;
+   while ((nsc = (TSecContext *)next())) {
+      if (!strncmp(nsc->GetID(),"server",6)) {
+         int rc = RpdCleanupAuthTab(nsc->GetToken());
+         if (gDebug > 0 && rc < 0)
+            ErrorInfo("SrvClupImpl: operation unsuccessful (rc: %d, ctkn: %s)",
+                      rc, nsc->GetToken());
+      }
+   }
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
-                  string &user, Int_t &meth, Int_t &type, string &ctoken)
+                  string &user, Int_t &meth, Int_t &type, string &ctoken,
+                  TSeqCollection *secctxlist)
 {
    // Server authentication code.
    // Returns 0 in case authentication failed
@@ -250,6 +258,45 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    //    0 (new), 1 (existing), 2 (updated offset)
    int clientprotocol = 0;
    rc = RpdInitSession(fgService, user, clientprotocol, meth, type, ctoken);
+
+   TSecContext *seccontext = 0;
+   if (rc > 0) {
+      string openhost(socket->GetInetAddress().GetHostName());
+
+      if (type == 1) {
+         // An existing authentication has been re-used: retrieve
+         // the related security context
+         TIter next(gROOT->GetListOfSecContexts());
+         while ((seccontext = (TSecContext *)next())) {
+            if (!(strncmp(seccontext->GetID(),"server",6))) {
+               if (seccontext->GetMethod() == meth) {
+                  if (!strcmp(openhost.c_str(),seccontext->GetHost())) {
+                     if (!strcmp(user.c_str(),seccontext->GetUser()))
+                        break;
+                  }
+               }
+            }
+         }
+      }
+
+      if (!seccontext) {
+         // New authentication: Fill a SecContext for cleanup
+         // in case of interrupt
+         seccontext = new TSecContext(user.c_str(), openhost.c_str(), meth, -1,
+                                      "server", ctoken.c_str());
+         if (seccontext) {
+            // Add to the list
+            secctxlist->Add(seccontext);
+            // Store SecContext
+            socket->SetSecContext(seccontext);
+         } else {
+            if (gDebug > 0)
+               ErrorInfo("SrvAuthImpl: could not create sec context object"
+                                      ": potential problems in cleaning");
+         }
+      }
+   }
+
 
    // Done
    return rc;

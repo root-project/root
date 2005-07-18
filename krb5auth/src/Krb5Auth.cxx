@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.25 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.26 2004/11/05 13:55:13 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -49,7 +49,6 @@
 #include "Krb5Auth.h"
 #include "TSocket.h"
 #include "TAuthenticate.h"
-#include "TSecContext.h"
 #include "TDatime.h"
 #include "TROOT.h"
 #include "THostAuth.h"
@@ -63,7 +62,7 @@ Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
 static Int_t Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc = kFALSE);
 static Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
-static Int_t Krb5CheckSecCtx(const char *, TSecContext *);
+static Int_t Krb5CheckSecCtx(const char *, TRootSecContext *);
 
 class Krb5AuthInit {
 public:
@@ -660,7 +659,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
 
       // Create SecContext object
-      TSecContext *ctx =
+      TRootSecContext *ctx =
          auth->GetHostAuth()->CreateSecContext((const char *)lUser,
              auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, OffSet,
              Details, (const char *)Token, ExpDate, 0, RSAKey);
@@ -680,7 +679,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
       // Get a SecContext for the record and avoid problems
       // with fSecContext undefined in TAuthenticate
-      TSecContext *ctx = 
+      TRootSecContext *ctx = 
          auth->GetHostAuth()->CreateSecContext((const char *)user,
              auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, -1,
              Details, 0);
@@ -800,7 +799,7 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
 }
 
 //______________________________________________________________________________
-Int_t Krb5CheckSecCtx(const char *Principal, TSecContext *Ctx)
+Int_t Krb5CheckSecCtx(const char *principal, TRootSecContext *ctx)
 {
    // Krb5 version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if Principal is matches the one used to instantiate Ctx
@@ -809,8 +808,8 @@ Int_t Krb5CheckSecCtx(const char *Principal, TSecContext *Ctx)
 
    Int_t rc = 0;
 
-   if (Ctx->IsActive()) {
-      if (strstr(Ctx->GetDetails(),Principal))
+   if (ctx->IsActive()) {
+      if (strstr(ctx->GetID(), principal))
          rc = 1;
    }
    return rc;

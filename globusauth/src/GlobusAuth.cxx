@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.17 2005/01/14 17:10:29 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.18 2005/02/02 17:37:51 brun Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -521,7 +521,10 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
                  GlbDelCredHandle);
          }
          *LocalEnv = 2;
-         gShmIdCred = atoi(lApp->Argv(9));
+         gShmIdCred = -1;
+         const char *p = gSystem->Getenv("ROOTSHMIDCRED");
+         if (p)
+            gShmIdCred = strtol(p, (char **)0, 10);
          if (gShmIdCred <= 0) {
             Info("GlobusGetLocalEnv",
                     " Delegate credentials undefined");
@@ -1048,34 +1051,33 @@ void GlobusCleanupShm()
 {
    // This function cleans up shared memories associated with Globus
 
-   TApplication *lApp = gROOT->GetApplication();
-
-   if (lApp != 0) {
-      if (lApp->Argc() > 9 && gROOT->IsProofServ()) {
-         struct shmid_ds shm_ds;
-         int rc;
-         // Delegated Credentials
-         gShmIdCred = atoi(lApp->Argv(9));
-         if (gShmIdCred != -1) {
-            if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
-               if ((rc == EINVAL) || (rc == EIDRM)) {
-                  if (gDebug > 3)
-                     Info("GlobusCleanupShm:",
-                          "credentials shared memory segment %s"
-                          "already marked as destroyed");
-               } else {
-                  Warning("GlobusCleanupShm:",
-                          "unable to mark segment as destroyed (error: 0x%x)",
-                          rc);
-               }
-            } else if (gDebug > 3)
-               Info("GlobusCleanupShm:",
-                    "shared memory segment %d marked for destruction",
-                    gShmIdCred);
-         } else if (gDebug > 3) {
+   if (gROOT->IsProofServ()) {
+      struct shmid_ds shm_ds;
+      int rc;
+      // Delegated Credentials
+      gShmIdCred = -1;
+      const char *p = gSystem->Getenv("ROOTSHMIDCRED");
+      if (p)
+         gShmIdCred = strtol(p, (char **)0, 10);
+      if (gShmIdCred != -1) {
+         if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
+            if ((rc == EINVAL) || (rc == EIDRM)) {
+               if (gDebug > 3)
+                  Info("GlobusCleanupShm:",
+                       "credentials shared memory segment %s"
+                       "already marked as destroyed");
+            } else {
+               Warning("GlobusCleanupShm:",
+                       "unable to mark segment as destroyed (error: 0x%x)",
+                       rc);
+            }
+         } else if (gDebug > 3)
             Info("GlobusCleanupShm:",
-                 "gShmIdCred not defined in this session");
-         }
+                 "shared memory segment %d marked for destruction",
+                 gShmIdCred);
+      } else if (gDebug > 3) {
+         Info("GlobusCleanupShm:",
+              "gShmIdCred not defined in this session");
       }
    }
 }

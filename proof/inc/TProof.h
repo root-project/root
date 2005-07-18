@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.58 2005/06/23 06:24:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.59 2005/07/09 04:03:23 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -228,7 +228,6 @@ private:
    TString         fWorkDir;        //current work directory on remote servers
    TString         fUser;           //user under which to run
    TString         fUrlProtocol;    //net protocol name
-   TSecContext    *fSecContext;     //SecContext of the related authentication
    Int_t           fLogLevel;       //server debug logging level
    Int_t           fStatus;         //remote return status (part of kPROOF_LOGDONE)
    TList          *fSlaveInfo;      //!list returned by kPROOF_GETSLAVEINFO
@@ -393,7 +392,6 @@ public:
    const char *GetImage() const { return fImage; }
    const char *GetUrlProtocol() const { return fUrlProtocol; }
    Int_t       GetPort() const { return fPort; }
-   Int_t       GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t       GetRemoteProtocol() const { return fProtocol; }
    Int_t       GetClientProtocol() const { return kPROOF_Protocol; }
    Int_t       GetStatus() const { return fStatus; }

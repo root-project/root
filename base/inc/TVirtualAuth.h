@@ -1,34 +1,40 @@
-// @(#)root/net:$Name:  $:$Id: AuthConst.h,v 1.3 2004/10/11 21:50:06 rdm Exp $
-// Author: Gerardo Ganis   3/12/2003
+// Author: G. Ganis   08/07/05
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_AuthConst
-#define ROOT_AuthConst
+#ifndef ROOT_TVirtualAuth
+#define ROOT_TVirtualAuth
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// AuthConst                                                            //
+// TVirtualAuth                                                         //
 //                                                                      //
-// Const used in authentication business                                //
+// Abstract interface for client authentication code.                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// Number of security levels and masks
-const Int_t       kMAXSEC         = 6;
-const Int_t       kMAXSECBUF      = 2048;
-const Int_t       kAUTH_REUSE_MSK = 0x1;
-const Int_t       kAUTH_CRYPT_MSK = 0x2;
-const Int_t       kAUTH_SSALT_MSK = 0x4;
-const Int_t       kAUTH_RSATY_MSK = 0x8;
-const Int_t       kMAXRSATRIES    = 100;
-const Int_t       kPRIMELENGTH    = 20;
-const Int_t       kPRIMEEXP       = 40;
+class TSecContext;
+class TSocket;
+
+class TVirtualAuth {
+
+public:
+   TVirtualAuth() { }
+   virtual ~TVirtualAuth() { }
+
+   virtual TSecContext *Authenticate(TSocket *, const char *host,
+                                     const char *user, Option_t *options) = 0;
+   virtual Int_t        ClientVersion() = 0;
+   virtual void         ErrorMsg(const char *where, Int_t ecode) = 0;
+   virtual const char  *Name() = 0;
+
+   ClassDef(TVirtualAuth,0)  // client auth interface
+};
 
 #endif

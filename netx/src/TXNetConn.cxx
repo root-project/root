@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.9 2005/01/05 01:20:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.10 2005/05/01 10:00:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -1128,7 +1128,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
          // Send the client protocol first
          UInt_t cproto = 0;
          len = sizeof(cproto);
-         memcpy((char *)&cproto,Form(" %d", TAuthenticate::GetClientProtocol()),len);
+         memcpy((char *)&cproto,Form(" %d", TSocket::GetClientProtocol()),len);
          writeCount = fgConnectionManager->WriteRaw(log, &cproto, len, kDefault);
          if (writeCount != len) {
             Error("DoHandShake", "Error sending %d bytes to the server [%s:%d]",

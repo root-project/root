@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.98 2005/07/11 16:31:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.99 2005/07/12 15:57:32 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -244,14 +244,22 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    }
 
    // crude check on number of arguments
-   if (*argc<9) {
-     Fatal("TProofServ", "Must have at least 8 arguments (see  proofd).");
+   if (*argc<2) {
+     Fatal("TProofServ", "Must have at least 1 arguments (see  proofd).");
      exit(1);
    }
 
    // get socket to be used (setup in proofd)
-   Int_t sock = atoi(argv[8]);
-
+   if (!(gSystem->Getenv("ROOTOPENSOCK"))) {
+     Fatal("TProofServ", "Socket setup by proofd undefined");
+     exit(1);
+   }
+   Int_t sock = strtol(gSystem->Getenv("ROOTOPENSOCK"), (char **)0, 10);
+   if (sock <= 0) {
+     Fatal("TProofServ", "Invalid socket descriptor number (%d)", sock);
+     exit(1);
+   }
+   
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
    SetErrorHandler(ProofServErrorHandler);
@@ -590,8 +598,8 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
    // Get and handle command line options. Fixed format:
    // "proofserv"|"proofslave" <confdir>
 
-   if (*argc <= 2) {
-      Fatal("TProofServ", "Must be started from proofd with arguments");
+   if (*argc <= 1) {
+      Fatal("GetOptions", "Must be started from proofd with arguments");
       exit(1);
    }
 
@@ -602,11 +610,16 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
       fMasterServ = kFALSE;
       fService = argv[1];
    } else {
-      Fatal("TProofServ", "Must be started as proofmaster or proofslave");
+      Fatal("GetOptions", "Must be started as proofmaster or proofslave");
       exit(1);
    }
 
-   fConfDir = argv[2];
+   // Confdir
+   if (!(gSystem->Getenv("ROOTCONFDIR"))) {
+     Fatal("GetOptions", "Must specify a config directory");
+     exit(1);
+   }
+   fConfDir = gSystem->Getenv("ROOTCONFDIR");
 }
 
 //______________________________________________________________________________
@@ -733,7 +746,8 @@ void TProofServ::HandleSocketInput()
                // update the field fSet in each element of the each dataset
                // in the friendship graph
                TDSet::FriendsList_t friends = *(dset->GetListOfFriends());
-               // implicit conversion from const char* -> TString is broken on RedHat 7.3 (gcc 2.96)
+               // implicit conversion from const char* -> TString is broken
+               // on RedHat 7.3 (gcc 2.96)
                friends.push_front(std::make_pair(dset, TString("")));
                for (TDSet::FriendsList_t::iterator i = friends.begin();
                     i != friends.end(); ++i) {
@@ -1982,80 +1996,43 @@ void TProofServ::Setup()
       gSystem->Exit(1);
    }
 
-   // First receive, decode and store the public part of RSA key
-   Int_t retval, kind;
-   if (fSocket->Recv(retval,kind) != 2*sizeof(Int_t)) {
-      //other side has closed connection
-      Info("Setup", "socket has been closed due to protocol mismatch - Exiting");
-      gSystem->Exit(0);
-   }
-
-   Int_t RSAKey = 0;
-   TApplication *lApp = gROOT->GetApplication();
-   if (kind == kROOTD_RSAKEY) {
-
-      if (retval > -1) {
-         if (gSystem->Getenv("ROOTKEYFILE")) {
-
-            TString KeyFile = gSystem->Getenv("ROOTKEYFILE");
-            KeyFile += retval;
-
-            FILE *fKey = 0;
-            char PubKey[kMAXPATHLEN] = { 0 };
-            if (!gSystem->AccessPathName(KeyFile.Data(), kReadPermission)) {
-               fKey = fopen(KeyFile.Data(), "r");
-               if (fKey) {
-                  Int_t klen = fread((void *)PubKey,1,sizeof(PubKey),fKey);
-                  // Set RSA key
-                  RSAKey = TAuthenticate::SetRSAPublic(PubKey,klen);
-                  fclose(fKey);
-               }
-            }
-         }
-
-         // Receive passwd
-         if (fSocket->SecureRecv(fPasswd, 2, RSAKey) < 0) {
-            Error("Setup", "failed to receive password");
-            gSystem->Exit(1);
-         }
-
-      } else if (retval == -1) {
-
-         // Receive inverted passwd
-         TMessage *mess;
-         if ((fSocket->Recv(mess) <= 0) || !mess) {
-            Error("Setup", "failed to receive inverted password");
-            gSystem->Exit(1);
-         }
-         (*mess) >> fPasswd;
-         delete mess;
-
-         for (Int_t i = 0; i < fPasswd.Length(); i++) {
-            char inv = ~fPasswd(i);
-            fPasswd.Replace(i, 1, inv);
-         }
-
+   // If old version, setup authentication related stuff
+   if (fProtocol < 5) {
+      TString wconf;
+      if (OldAuthSetup(wconf) != 0) {
+         Error("Setup", "OldAuthSetup: failed to setup authentication");
+         gSystem->Exit(1);
       }
-   }
+      if (IsMaster()) {
+         fConfFile = wconf;
+         fWorkDir = kPROOF_WorkDir;
+      } else {
+         if (fProtocol < 4) {
+            fWorkDir = kPROOF_WorkDir;
+         } else {
+            fWorkDir = wconf;
+            if (fWorkDir.IsNull()) fWorkDir = kPROOF_WorkDir;
+         }
+      }
+   } else {
 
-   // Receive user and passwd information
-   TMessage *mess;
-
-   if ((fSocket->Recv(mess) <= 0) || !mess) {
-      Error("Setup", "failed to receive ordinal and config info");
-      gSystem->Exit(1);
+      // Receive some useful information
+      TMessage *mess;
+      if ((fSocket->Recv(mess) <= 0) || !mess) {
+         Error("Setup", "failed to receive ordinal and config info");
+         gSystem->Exit(1);
+      }
+      if (IsMaster()) {
+         (*mess) >> fUser >> fOrdinal >> fConfFile;
+         fWorkDir = kPROOF_WorkDir;
+      } else {
+         (*mess) >> fUser >> fOrdinal >> fWorkDir;
+         if (fWorkDir.IsNull()) fWorkDir = kPROOF_WorkDir;
+      }
+      delete mess;
    }
 
    if (IsMaster()) {
-      if (fProtocol < 4) {
-         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fConfFile;
-         fOrdinal = "0";
-      } else {
-         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal >> fConfFile;
-      }
-      delete mess;
-
-      fWorkDir = kPROOF_WorkDir;
 
       // strip off any prooftype directives
       TString conffile = fConfFile;
@@ -2081,7 +2058,8 @@ void TProofServ::Setup()
             while (fgets(line, sizeof(line), pconf)) {
                char word[12][128];
                if (line[0] == '#') continue;   // skip comment lines
-               Int_t nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+               Int_t nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                   word[0], word[1],
                    word[2], word[3], word[4], word[5], word[6],
                    word[7], word[8], word[9], word[10], word[11]);
 
@@ -2107,49 +2085,12 @@ void TProofServ::Setup()
             gSystem->Exit(1);
          }
       }
-   } else {
-      if (fProtocol < 4) {
-         Int_t ord;
-         (*mess) >> fUser >> fPwHash >> fSRPPwd >> ord;
-         fOrdinal = "0.";
-         fOrdinal += ord;
-         fWorkDir = kPROOF_WorkDir;
-      } else {
-         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal >> fWorkDir;
-         if (fWorkDir.IsNull()) fWorkDir = kPROOF_WorkDir;
-      }
-      delete mess;
-   }
-
-   // Set Globals for later use
-   TAuthenticate::SetGlobalUser(fUser);
-   TAuthenticate::SetGlobalPasswd(fPasswd);
-   TAuthenticate::SetGlobalPwHash(fPwHash);
-   TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
-   TAuthenticate::SetDefaultRSAKeyType(RSAKey);
-   if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv(7)) > 0) {
-      Bool_t rha = (Bool_t)atoi(lApp->Argv(7));
-      TAuthenticate::SetReadHomeAuthrc(rha);
    }
 
    // goto to the main PROOF working directory
-    char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-    fWorkDir = workdir;
-    delete [] workdir;
-
-   // Read user or system authentication directives and
-   // receive auth info transmitted from the client
-
-   Int_t hostauthret;
-   if (IsMaster())
-      hostauthret = fSocket->RecvHostAuth("M", fConfFile);
-   else
-      hostauthret = fSocket->RecvHostAuth("S");
-
-   if (hostauthret < 0) {
-      Error("Setup", "failed to receive HostAuth info");
-      gSystem->Exit(1);
-   }
+   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
+   fWorkDir = workdir;
+   delete [] workdir;
 
    // deny write access for group and world
    gSystem->Umask(022);
@@ -2298,4 +2239,52 @@ TProofServ *TProofServ::This()
    // deleted from the symbol table.
 
    return gProofServ;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::OldAuthSetup(TString &conf)
+{
+   // Setup authentication related stuff for old versions.
+   // Provided for backward compatibility
+   OldProofServAuthSetup_t oldAuthSetupHook = 0;
+
+   if (!oldAuthSetupHook) {
+      // Load libraries needed for (server) authentication ...
+#ifdef ROOTLIBDIR
+      TString authlib = TString(ROOTLIBDIR) + "/libRootAuth";
+#else
+      TString authlib = TString(gRootDir) + "/lib/libRootAuth";
+#endif
+      char *p = 0;
+      // The generic one
+      if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(authlib) == -1) {
+            Error("OldAuthSetup", "can't load %s",authlib.Data());
+            return kFALSE;
+         }
+      } else {
+         Error("OldAuthSetup", "can't locate %s",authlib.Data());
+         return -1;
+      }
+      //
+      // Locate OldProofServAuthSetup
+      Func_t f = gSystem->DynFindSymbol(authlib,"OldProofServAuthSetup");
+      if (f)
+         oldAuthSetupHook = (OldProofServAuthSetup_t)(f);
+      else {
+         Error("OldAuthSetup", "can't find OldProofServAuthSetup");
+         return -1;
+      }
+   }
+   //
+   // Setup
+   if (oldAuthSetupHook) {
+      return (*oldAuthSetupHook)(fSocket, IsMaster(), fProtocol,
+                                 fUser, fOrdinal, conf);
+   } else {
+      Error("OldAuthSetup",
+            "hook to method OldProofServAuthSetup is undefined");
+      return -1;
+   }
 }

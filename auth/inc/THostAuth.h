@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.6 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: THostAuth.h,v 1.7 2005/06/23 10:51:11 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -32,8 +32,8 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
-#ifndef ROOT_TSecContext
-#include "TSecContext.h"
+#ifndef ROOT_TRootSecContext
+#include "TRootSecContext.h"
 #endif
 #ifndef ROOT_AuthConst
 #include "AuthConst.h"
@@ -60,6 +60,7 @@ private:
                        Int_t *authmeth = 0, char **details = 0);
 public:
 
+   THostAuth();
    THostAuth(const char *host, const char *user,
              Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
    THostAuth(const char *host, Int_t server, const char *user,
@@ -112,12 +113,12 @@ public:
    virtual  void  Print(Option_t *option = "") const;
    void     PrintEstablished() const;
 
-   TSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
-                                 Int_t offset, const char *details,
-                                 const char *token, TDatime expdate = kROOTTZERO,
-                                 void *ctx = 0, Int_t key = -1);
+   TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
+                                     Int_t offset, const char *details,
+                                     const char *token, TDatime expdate = kROOTTZERO,
+                                     void *ctx = 0, Int_t key = -1);
 
-   ClassDef(THostAuth,0)  // Class providing host specific authentication information
+   ClassDef(THostAuth,1)  // Class providing host specific authentication information
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.74 2005/06/22 20:18:11 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.75 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -23,10 +23,11 @@
 #include "TAuthenticate.h"
 #include "TApplication.h"
 #include "THostAuth.h"
-#include "TSecContext.h"
+#include "TRootSecContext.h"
 #include "TPluginManager.h"
 #include "TNetFile.h"
 #include "TPSocket.h"
+#include "TMessage.h"
 #include "TSystem.h"
 #include "TError.h"
 #include "Getline.h"
@@ -106,23 +107,13 @@ Bool_t         TAuthenticate::fgUsrPwdCrypt;
 Int_t          TAuthenticate::fgLastError = -1;
 Int_t          TAuthenticate::fgAuthTO = -2;       // Timeout value
 
-// Protocol changes (this was in TNetFile before)
-// 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
-// 7 -> 8: added support for update being a create (open stat = 2 and not 1)
-// 8 -> 9: added new authentication features (see README.AUTH)
-// 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
-// 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
-// 11 -> 12: add random tags to avoid reply attacks (password+token)
-Int_t TAuthenticate::fgClientProtocol = 12;  // increase when client protocol changes
-
 // ID of the main thread as unique identifier
 Int_t TAuthenticate::fgProcessID = -1;
 
-TVirtualMutex *gAuthenticateMutex = 0; 
+TVirtualMutex *gAuthenticateMutex = 0;
 
 // Standar version of Sec Context match checking
-Int_t StdCheckSecCtx(const char *, TSecContext *);
-
+Int_t StdCheckSecCtx(const char *, TRootSecContext *);
 
 ClassImp(TAuthenticate)
 
@@ -135,6 +126,10 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    if (gDebug > 2 && gAuthenticateMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
    R__LOCKGUARD2(gAuthenticateMutex);
+
+   // In PROOF decode the buffer sent by the client, if any
+   if (strstr(gROOT->GetApplication()->ApplicationName(),"proof"))
+      ProofAuthSetup();
 
    // Use the ID of the starting thread as unique identifier
    if (fgProcessID < 0)
@@ -299,9 +294,15 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    }
 
    //
-   // Make memory copy of THostAuth personal to this user host
-   fHostAuth->SetHost(fqdn);
-   fHostAuth->SetUser(CheckUser);
+   // If generic THostAuth (i.e. with wild card or user == any)
+   // make a personalized memory copy of this THostAuth
+   if (strchr(fHostAuth->GetHost(),'*') || strchr(fHostAuth->GetHost(),'*') ||
+       fHostAuth->GetServer() == -1 ) {
+      fHostAuth = new THostAuth(*fHostAuth);
+      fHostAuth->SetHost(fqdn);
+      fHostAuth->SetUser(CheckUser);
+      fHostAuth->SetServer(servtype);
+   }
 
    // If a specific method has been requested via the protocol
    // set it as first
@@ -337,8 +338,8 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // This is what we have in memory
    if (gDebug > 3) {
       TIter next(fHostAuth->Established());
-      TSecContext *ctx;
-      while ((ctx = (TSecContext *) next()))
+      TRootSecContext *ctx;
+      while ((ctx = (TRootSecContext *) next()))
          ctx->Print("0");
    }
 }
@@ -824,7 +825,7 @@ void TAuthenticate::SetEnvironment()
 
    // Defaults
    fgDefaultUser = fgUser;
-   if (fSecurity == kKrb5 || 
+   if (fSecurity == kKrb5 ||
       (fSecurity == kGlobus && gROOT->IsProofServ()))
       fgAuthReUse = kFALSE;
    else
@@ -1495,6 +1496,9 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 
    R__LOCKGUARD2(gAuthenticateMutex);
 
+   // Make sure it is in range
+   err = (err < kErrError) ? ((err > -1) ? err : -1) : kErrError;
+
    Int_t erc = err;
    Bool_t forceprint = kFALSE;
    TString lasterr = "";
@@ -1993,7 +1997,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
          sscanf(cmdinfo, "%s %d %s %s", cd1, &id3, pipe, dum);
          snprintf(SecName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
                   -fgProcessID, pipe,
-                 (int)strlen(User), User.Data(), fgClientProtocol);
+                 (int)strlen(User), User.Data(), TSocket::GetClientProtocol());
          newsock->Send(SecName, kROOTD_SSH);
          if (level > 1) {
             // Improved diagnostics
@@ -2676,7 +2680,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
             // daemon token must be re-initialized; for PROOF, we
             // just flag the entry as AFS; this allows to skip reusing
             // but to keep the session key for password forwarding
-            fSecContext->SetDetails("AFS authentication");
+            fSecContext->SetID("AFS authentication");
          return 1;
       } else {
          fgPasswd = "";
@@ -3144,8 +3148,8 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
 
    // First in the local list
    TIter next(fHostAuth->Established());
-   TSecContext *SecCtx;
-   while ((SecCtx = (TSecContext *)next())) {
+   TRootSecContext *SecCtx;
+   while ((SecCtx = (TRootSecContext *)next())) {
       if (SecCtx->GetMethod() == Method) {
          if (fRemote == SecCtx->GetHost()) {
             if (CheckSecCtx &&
@@ -3158,7 +3162,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
    // If nothing found, try the all list
    if (!SecCtx) {
       next = TIter(gROOT->GetListOfSecContexts());
-      while ((SecCtx = (TSecContext *)next())) {
+      while ((SecCtx = (TRootSecContext *)next())) {
          if (SecCtx->GetMethod() == Method) {
             if (fRemote == SecCtx->GetHost()) {
                if (CheckSecCtx &&
@@ -3646,7 +3650,7 @@ char *TAuthenticate::GetRandString(Int_t Opt, Int_t Len)
 Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
                                 Int_t key, const char *str)
 {
-   // Encode null terminated str using the session private key indcated by enc
+   // Encode null terminated str using the session private key indicated by enc
    // and sends it over the network
    // Returns number of bytes sent, or -1 in case of error.
    // enc = 1 for private encoding, enc = 2 for public encoding
@@ -3767,6 +3771,8 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
          ::Info("TAuthenticate::SecureRecv","unknown key type (%d)",key);
       return -1;
    }
+
+   nrec= strlen(*str);
 
    return nrec;
 }
@@ -4049,138 +4055,6 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::GetClientProtocol()
-{
-   // Static method returning supported client protocol.
-
-   return fgClientProtocol;
-}
-
-//______________________________________________________________________________
-void TAuthenticate::CleanupSecContextAll(Option_t *opt)
-{
-   // Ask remote client to cleanup all active security context
-   // Static method called in TROOT for final cleanup
-
-   TIter next(gROOT->GetListOfSecContexts());
-   TSecContext *nsc ;
-   while ((nsc = (TSecContext *)next())) {
-      if (nsc->IsActive()) {
-         TAuthenticate::CleanupSecContext(nsc,kTRUE);
-         nsc->DeActivate("");
-         // All have been remotely Deactivated
-         TIter nxtl(gROOT->GetListOfSecContexts());
-         TSecContext *nscl;
-         while ((nscl = (TSecContext *)nxtl())) {
-            if (nscl != nsc && !strcmp(nscl->GetHost(),nsc->GetHost())) {
-               // Need to set ofs=-1 to avoid sending another
-               // cleanup request
-               nscl->DeActivate("");
-            }
-         }
-      }
-   }
-
-   // Clear the list
-   {   
-     R__LOCKGUARD2(gROOTMutex);
-     gROOT->GetListOfSecContexts()->Clear();
-   }
-
-   if (opt && !strncasecmp(opt,"k",1)) {
-      // We are quitting, so cleanup memory also memory
-      Int_t i = 2;
-      while (i--) {
-         if (fgRSAPubExport[i].keys)
-            delete[] fgRSAPubExport[i].keys;
-         fgRSAPubExport[i].len = 0;
-      }
-   }
-}
-
-//______________________________________________________________________________
-Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
-{
-   // Ask remote client to cleanup security context 'ctx'
-   // If 'all', all sec context with the same host as ctx
-   // are cleaned.
-   // Static method called by ~TSecContext
-
-   Bool_t cleaned = kFALSE;
-
-   // Nothing to do if inactive ...
-   if (!ctx->IsActive())
-      return kTRUE;
-
-   // Contact remote services that used this context,
-   // starting from the last ...
-   TIter last(ctx->GetSecContextCleanup(),kIterBackward);
-   TSecContextCleanup *nscc = 0;
-   while ((nscc = (TSecContextCleanup *)last()) && !cleaned) {
-
-      // First check if remote daemon supports cleaning
-      Int_t srvtyp = nscc->GetType();
-      Int_t rproto = nscc->GetProtocol();
-      Int_t level = 2;
-      if ((srvtyp == TSocket::kROOTD && rproto < 10) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 9))
-         level = 1;
-      if ((srvtyp == TSocket::kROOTD && rproto < 8) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 7))
-         level = 0;
-      if (level) {
-         TString rHost(ctx->GetHost());
-         Int_t port = nscc->GetPort();
-
-         TSocket *news = new TSocket(rHost.Data(),port,-1);
-
-         if (news && news->IsValid()) {
-            if (srvtyp == TSocket::kPROOFD) {
-               news->SetOption(kNoDelay, 1);
-               news->Send("cleaning request");
-            } else
-               news->SetOption(kNoDelay, 0);
-
-            // Backward compatibility: send socket size
-            if (srvtyp == TSocket::kROOTD && level == 1)
-               news->Send((Int_t)0, (Int_t)0);
-
-            if (all || level == 1) {
-               news->Send(Form("%d",fgProcessID),
-                               kROOTD_CLEANUP);
-               cleaned = kTRUE;
-            } else {
-               news->Send(Form("%d %d %d %s",fgProcessID,ctx->GetMethod(),
-                               ctx->GetOffSet(),ctx->GetUser()),kROOTD_CLEANUP);
-               if (TAuthenticate::SecureSend(news, 1, ctx->GetRSAKey(),
-                  (char *)ctx->GetToken()) == -1) {
-                  ::Info("CleanupSecContext", "problems securesending token");
-               } else {
-                  cleaned = kTRUE;
-               }
-            }
-            if (cleaned && gDebug > 2) {
-               char srvname[3][10] = {"sockd", "rootd", "proofd"};
-               ::Info("CleanupSecContext",
-                    "remote %s notified for cleanup (%s,%d)",
-                    srvname[srvtyp],rHost.Data(),port);
-            }
-         }
-         SafeDelete(news);
-      }
-   }
-
-   if (!cleaned)
-      if (gDebug > 2)
-         ::Info("CleanupSecContext",
-                "unable to open valid socket for cleanup for %s",
-                 ctx->GetHost());
-
-   return cleaned;
-
-}
-
-//______________________________________________________________________________
 Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
 {
    // Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or
@@ -4296,6 +4170,11 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
 
       // Now scan
       char *tmp = new char[strlen(line)+1];
+      if (!tmp) {
+         ::Error("TAuthenticate::ReadRootAuthrc",
+                   "could not allocate temporary buffer");
+         return 0;
+      }
       strcpy(tmp,line);
       char *nxt = strtok(tmp," ");
 
@@ -4558,8 +4437,9 @@ void TAuthenticate::ReadProofConf(const char *conffile)
    if (gDebug > 2)
       ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
    if (gSystem->AccessPathName(fconf, kReadPermission)) {
-      TApplication *lApp = gROOT->GetApplication();
-      sprintf(fconf, "%s/proof/etc/%s",lApp->Argv(2), conffile);
+      if (gSystem->Getenv("ROOTCONFDIR"))
+         sprintf(fconf, "%s/proof/etc/%s",
+                        gSystem->Getenv("ROOTCONFDIR"), conffile);
       if (gDebug > 2)
          ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
@@ -4737,7 +4617,10 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
       if (lApp != 0 && lApp->Argc() > 9) {
          if (gROOT->IsProofServ()) {
             // Delegated Credentials
-            Int_t ShmId = atoi(lApp->Argv(9));
+            Int_t ShmId = -1;
+            if (gSystem->Getenv("ROOTSHMIDCRED"))
+               ShmId = strtol(gSystem->Getenv("ROOTSHMIDCRED"),
+                             (char **)0, 10);
             if (ShmId != -1) {
                struct shmid_ds shm_ds;
                if (shmctl(ShmId, IPC_STAT, &shm_ds) == 0)
@@ -4795,7 +4678,7 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
 
 
 //______________________________________________________________________________
-Int_t StdCheckSecCtx(const char *User, TSecContext *Ctx)
+Int_t StdCheckSecCtx(const char *user, TRootSecContext *ctx)
 {
    // Standard version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if User is matches the one in Ctx
@@ -4804,9 +4687,9 @@ Int_t StdCheckSecCtx(const char *User, TSecContext *Ctx)
 
    Int_t rc = 0;
 
-   if (Ctx->IsActive()) {
-      if (!strcmp(User,Ctx->GetUser()) &&
-           strncmp("AFS",Ctx->GetDetails(),3))
+   if (ctx->IsActive()) {
+      if (!strcmp(user,ctx->GetUser()) &&
+           strncmp("AFS", ctx->GetID(), 3))
          rc = 1;
    }
    return rc;
@@ -4867,7 +4750,7 @@ void TAuthenticate::MergeHostAuthList(TList *Std, TList *New, Option_t *Opt)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::RemoveSecContext(TSecContext *ctx)
+void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
 {
    // Tool for removing SecContext ctx from THostAuth listed in
    // fgAuthInfo or fgProofAuthInfo
@@ -4878,8 +4761,8 @@ void TAuthenticate::RemoveSecContext(TSecContext *ctx)
    TIter nxai(GetAuthInfo());
    while ((ha = (THostAuth *)nxai())) {
       TIter next(ha->Established());
-      TSecContext *lctx = 0;
-      while ((lctx = (TSecContext *) next())) {
+      TRootSecContext *lctx = 0;
+      while ((lctx = (TRootSecContext *) next())) {
          if (lctx == ctx) {
             ha->Established()->Remove(ctx);
             break;
@@ -4891,8 +4774,8 @@ void TAuthenticate::RemoveSecContext(TSecContext *ctx)
    TIter nxpa(GetProofAuthInfo());
    while ((ha = (THostAuth *)nxpa())) {
       TIter next(ha->Established());
-      TSecContext *lctx = 0;
-      while ((lctx = (TSecContext *) next())) {
+      TRootSecContext *lctx = 0;
+      while ((lctx = (TRootSecContext *) next())) {
          if (lctx == ctx) {
             ha->Established()->Remove(ctx);
             break;
@@ -4901,3 +4784,740 @@ void TAuthenticate::RemoveSecContext(TSecContext *ctx)
    }
 
 }
+
+//_________________________________________________________________________
+static int ToB64low(const char *in, char *out, int mod)
+{
+   // Base64 encoding of 3 bytes at in.
+   // Output (4 bytes) saved at out (not null terminated).
+   // Return 0 on success, -1 if input or output arrays are
+   // not defined.
+   static char b64ref[64] = {'A','B','C','D','E','F','G','H','I','J',
+                             'K','L','M','N','O','P','Q','R','S','T',
+                             'U','V','W','X','Y','Z',
+                             'a','b','c','d','e','f','g','h','i','j',
+                             'k','l','m','n','o','p','q','r','s','t',
+                             'u','v','w','x','y','z',
+                             '0','1','2','3','4','5','6','7','8','9',
+                             '+','/'};
+   if (!in || !out)
+      return -1;
+
+   if (mod == 1) {
+      *out++ = b64ref[ 0x3F & (in[0] >> 2) ];
+      *out++ = b64ref[ 0x3F & (0x30 & (in[0] << 4)) ];
+      *out++ = '=';
+      *out++ = '=';
+   } else if (mod == 2) {
+      *out++ = b64ref[ 0x3F & (in[0] >> 2) ];
+      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
+      *out++ = b64ref[ 0x3F & (0x3C & (in[1] << 2)) ];
+      *out++ = '=';
+   } else {
+      *out++ = b64ref[ (int)(0x3F & (in[0] >> 2)) ];
+      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
+      *out++ = b64ref[ 0x3F & ((0x3C & (in[1] << 2)) | (0x03 & (in[2] >> 6))) ];
+      *out++ = b64ref[ 0x3F & in[2] ];
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::EncodeBase64(const char *in, Int_t lin, TString &out)
+{
+   // Transform lin bytes at in into a null terminated base64 string
+   // at out.
+   // Returns length of output string or -1 in case of failure
+
+   if (!in)
+      return -1;
+   int lout = (lin%3) ? ((lin/3) + 1)*4 : (lin/3) * 4;
+
+   out = "";
+   int i = 0;
+   int mod = 0;
+   char oo[5] = {0};
+   for (; i < lin; i += 3) {
+      mod = lin-i;
+      ToB64low(in+i,oo,mod);
+      oo[4] = 0;
+      out += oo;
+   }
+
+   return lout;
+}
+
+//_________________________________________________________________________
+static int FromB64low(const char *in, char *out)
+{
+   // Base64 decoding of 4 bytes at in.
+   // Output (3 bytes) returned in out.
+   // No check for base64-ness of input characters.
+   // Return 0 on success, -1 if input or output arrays are
+   // not defined.
+   static int b64inv[256] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
+                             52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,
+                             -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
+                             15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,
+                             -1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
+                             41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+   if (!in || !out)
+      return -1;
+
+   UInt_t i0 = (UInt_t)(in[0]);
+   UInt_t i1 = (UInt_t)(in[1]);
+   UInt_t i2 = (UInt_t)(in[2]);
+   UInt_t i3 = (UInt_t)(in[3]);
+   if (in[3] != '=') {
+      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
+      *out++ = (0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2));
+      *out++ = (0xC0 & (b64inv[i2] << 6)) | (0x3F &  b64inv[i3]);
+      return 3;
+   } else if (in[2] == '=') {
+      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
+      return 1;
+   } else {
+      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
+      *out++ = (0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2));
+      return 2;
+   }
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::DecodeBase64(const char *in, char *out)
+{
+   // Decode base64 string at in into a generic buffer at out.
+   // No check for base64-ness of input characters.
+   // Called with out == 0 return the length of the output buffer.
+   // Return number of meaningful bytes in output, or -1 if input
+   // array is not defined.
+   //
+   // NB: if the length of the input string is not a multiple of
+   //     4, the (strlen(in) - strlen(in)/4) bytes at the end are
+   //     ignored.
+
+   if (!in)
+      return -1;
+   int lin = strlen(in);
+   int lout = (lin/4)*3;
+
+   if (!out)
+      // Just return the output length
+      return lout;
+
+   int i = 0;
+   int k = 0;
+   for (; i < lin; i += 4) {
+      FromB64low(in+i,out+k);
+      k += 3;
+   }
+
+   return lout;
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::ProofAuthSetup()
+{
+   // Authentication related stuff setup in TProofServ.
+   // This is the place where the buffer send by the client / master is
+   // decoded. It contains also password information, if the case requires.
+   // Return 0 on success, -1 on failure.
+
+   static Bool_t done = kFALSE;
+
+   // Only once
+   if (done)
+      return 0;
+   done = kTRUE;
+
+   // Localise the buffer and decode it
+   const char *p = gSystem->Getenv("ROOTPROOFAUTHSETUP");
+   if (!p) {
+      if (gDebug > 2)
+         Info("ProofAuthSetup","Buffer not found: nothing to do");
+      return 0;
+   }
+   Int_t mlen = TAuthenticate::DecodeBase64(p, 0);
+   char *mbuf = new char[mlen];
+   if ((mlen = TAuthenticate::DecodeBase64(p, mbuf)) < 0) {
+      Error("ProofAuthSetup","Problem decoding the buffer");
+      return -1;
+   }
+
+   // Create the message
+   TMessage *mess = new TMessage(mbuf, mlen+sizeof(UInt_t));
+
+   // Extract the information
+   TString user = "";
+   TString passwd = "";
+   Bool_t  pwhash = kFALSE;
+   Bool_t  srppwd = kFALSE;
+   Int_t  rsakey = -1;
+   *mess >> user >> passwd >> pwhash >> srppwd >> rsakey;
+
+   // Set Globals for later use
+   TAuthenticate::SetGlobalUser(user);
+   TAuthenticate::SetGlobalPasswd(passwd);
+   TAuthenticate::SetGlobalPwHash(pwhash);
+   TAuthenticate::SetGlobalSRPPwd(srppwd);
+   TAuthenticate::SetDefaultRSAKeyType(rsakey);
+   const char *h = gSystem->Getenv("ROOTHOMEAUTHRC");
+   if (h) {
+      Bool_t rha = (Bool_t)(strtol(h, (char **)0, 10));
+      TAuthenticate::SetReadHomeAuthrc(rha);
+   }
+
+   // Extract the list of THostAuth
+   TList *pha = (TList *)mess->ReadObject(TList::Class());
+   if (!pha) {
+      if (gDebug > 0)
+         Info("ProofAuthSetup","List of THostAuth not found");
+      return 0;
+   }
+
+   Bool_t master = gROOT->IsProofServ();
+   TIter next(pha);
+   THostAuth *ha = 0;
+   while ((ha = (THostAuth *)next())) {
+
+      // Check if there is already one compatible
+      Int_t kExact = 0;
+      THostAuth *haex = 0;
+      Bool_t FromProofAI = kFALSE;
+      if (master) {
+         // Look first in the proof list
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"P",&kExact);
+         // If nothing found, look also in the standard list
+         if (!haex) {
+            haex =
+                TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+         } else
+            FromProofAI = kTRUE;
+      } else {
+         // For slaves look first in the standard list only
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+      }
+
+      if (haex) {
+         // If yes, action depends on whether it matches exactly or not
+         if (kExact == 1) {
+            // Update info in AuthInfo if Slave or in ProofAuthInfo
+            // if Master and the entry was already in ProofAuthInfo
+            if (!master || FromProofAI) {
+               // update this existing one with the information found in
+               // in the new one, if needed
+               haex->Update(ha);
+               // Delete temporary THostAuth
+               SafeDelete(ha);
+            } else
+               // Master, entry not already in ProofAuthInfo,
+               // Add it to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+         } else {
+            // update this new one with the information found in
+            // in the existing one (if needed) and ...
+            Int_t i = 0;
+            for (; i < haex->NumMethods(); i++) {
+               Int_t met = haex->GetMethod(i);
+               if (!ha->HasMethod(met))
+                  ha->AddMethod(met,haex->GetDetails(met));
+            }
+            if (master)
+               // ... add the new one to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+            else
+               // We add this one to the standard list
+               TAuthenticate::GetAuthInfo()->Add(ha);
+         }
+      } else {
+         if (master)
+            // We add this one to the list for forwarding
+            TAuthenticate::GetProofAuthInfo()->Add(ha);
+         else
+            // We add this one to the standard list
+            TAuthenticate::GetAuthInfo()->Add(ha);
+      }
+   }
+
+   // We are done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
+{
+   // Setup of authetication related stuff in PROOF run after a
+   // successful authentication.
+   // Return 0 on success, -1 on failure.
+
+   // Fill some useful info
+   TSecContext *sc    = sock->GetSecContext();
+   TString user       = sc->GetUser();
+   Int_t remoteOffSet = sc->GetOffSet();
+
+   // send user name to remote host
+   // for UsrPwd and SRP methods send also passwd, rsa encoded
+   TMessage pubkey;
+   TString passwd = "";
+   Bool_t  pwhash = kFALSE;
+   Bool_t  srppwd = kFALSE;
+   Bool_t  sndsrp = kFALSE;
+
+   Bool_t upwd = sc->IsA("UsrPwd");
+   Bool_t srp = sc->IsA("SRP");
+
+   TPwdCtx *pwdctx = 0;
+   if (remoteOffSet > -1 && (upwd || srp))
+      pwdctx = (TPwdCtx *)(sc->GetContext());
+
+   if (client) {
+      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (remoteOffSet > -1))
+         sndsrp = kTRUE;
+   } else {
+      if (srp && pwdctx) {
+         if (pwdctx->GetPasswd() != "" && remoteOffSet > -1)
+            sndsrp = kTRUE;
+      }
+   }
+
+   if ((upwd && pwdctx) || (srp  && sndsrp)) {
+      if (pwdctx) {
+         passwd = pwdctx->GetPasswd();
+         pwhash = pwdctx->IsPwHash();
+      }
+   }
+
+   Int_t keytyp = ((TRootSecContext *)sc)->GetRSAKey();
+
+   // Prepare buffer
+   TMessage mess;
+   mess << user << passwd << pwhash << srppwd << keytyp;
+
+   // Add THostAuth info
+   mess.WriteObject(TAuthenticate::GetProofAuthInfo());
+
+   // Get buffer as a base 64 string
+   char *mbuf = mess.Buffer();
+   Int_t mlen = mess.Length();
+   TString messb64;
+   TAuthenticate::EncodeBase64(mbuf, mlen, messb64);
+
+   // Send it over
+   if (TAuthenticate::SecureSend(sock, 1, keytyp, messb64.Data()) == -1) {
+      ::Error("ProofAuthSetup","problems secure-sending message buffer");
+      return -1;
+   }
+
+   // We are done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::GetClientProtocol()
+{
+   // Static method returning supported client protocol.
+
+   return TSocket::GetClientProtocol();
+}
+
+//
+// The code below is needed by TSlave and TProofServ for backward
+// compatibility.
+//
+
+//______________________________________________________________________________
+static Int_t SendHostAuth(TSocket *s)
+{
+   // Sends the list of the relevant THostAuth objects to the master or
+   // to the active slaves, typically data servers external to the proof
+   // cluster. The list is of THostAuth to be sent is specified by
+   // TAuthenticate::fgProofAuthInfo after directives found in the
+   // .rootauthrc family files ('proofserv' key)
+   // Returns -1 if a problem sending THostAuth has occured, -2 in case
+   // of problems closing the transmission.
+
+   Int_t retval = 0, ns = 0;
+
+   if (!s) {
+      Error("SendHostAuth","invalid input: socket undefined");
+      return -1;
+   }
+
+
+   TIter next(TAuthenticate::GetProofAuthInfo());
+   THostAuth *ha;
+   while ((ha = (THostAuth *)next())) {
+      TString Buf;
+      ha->AsString(Buf);
+      if((ns = s->Send(Buf, kPROOF_HOSTAUTH)) < 1) {
+         retval = -1;
+         break;
+      }
+      if (gDebug > 2)
+         Info("SendHostAuth","sent %d bytes (%s)",ns,Buf.Data());
+   }
+
+   // End of transmission ...
+   if ((ns = s->Send("END", kPROOF_HOSTAUTH)) < 1)
+      retval = -2;
+   if (gDebug > 2)
+      Info("SendHostAuth","sent %d bytes for closing",ns);
+
+   return retval;
+}
+
+//______________________________________________________________________________
+static Int_t RecvHostAuth(TSocket *s, Option_t *opt, const char *proofconf)
+{
+   // Receive from client/master directives for authentications, create
+   // related THostAuth and add them to the TAuthenticate::ProofAuthInfo
+   // list. Opt = "M" or "m" if Master, "S" or "s" if Proof slave.
+   // The 'proofconf' file is read only if Master
+
+   if (!s) {
+      Error("RecvHostAuth","invalid input: socket undefined");
+      return -1;
+   }
+
+   // Check if Master
+   Bool_t Master = !strncasecmp(opt,"M",1) ? kTRUE : kFALSE;
+
+   // First read directives from <rootauthrc>, <proofconf> and alike files
+   if (Master)
+      TAuthenticate::ReadRootAuthrc(proofconf);
+   else
+      TAuthenticate::ReadRootAuthrc();
+
+   // Receive buffer
+   Int_t kind;
+   char buf[kMAXSECBUF];
+   Int_t nr = s->Recv(buf, kMAXSECBUF, kind);
+   if (nr < 0 || kind != kPROOF_HOSTAUTH) {
+      Error("RecvHostAuth", "received: kind: %d (%d bytes)", kind, nr);
+      return -1;
+   }
+   if (gDebug > 2)
+      Info("RecvHostAuth","received %d bytes (%s)",nr,buf);
+
+   while (strcmp(buf, "END")) {
+      // Clean buffer
+      Int_t nc = (nr < kMAXSECBUF)? nr : kMAXSECBUF ;
+      buf[nc] = '\0';
+
+      // Create THostAuth
+      THostAuth *ha = new THostAuth((const char *)&buf);
+
+      // Check if there is already one compatible
+      Int_t kExact = 0;
+      THostAuth *haex = 0;
+      Bool_t FromProofAI = kFALSE;
+      if (Master) {
+         // Look first in the proof list
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"P",&kExact);
+         // If nothing found, look also in the standard list
+         if (!haex) {
+            haex =
+                TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+         } else
+            FromProofAI = kTRUE;
+      } else {
+         // For slaves look first in the standard list only
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+      }
+
+      if (haex) {
+         // If yes, action depends on whether it matches exactly or not
+         if (kExact == 1) {
+            // Update info in AuthInfo if Slave or in ProofAuthInfo
+            // if Master and the entry was already in ProofAuthInfo
+            if (!Master || FromProofAI) {
+               // update this existing one with the information found in
+               // in the new one, if needed
+               haex->Update(ha);
+               // Delete temporary THostAuth
+               SafeDelete(ha);
+            } else
+               // Master, entry not already in ProofAuthInfo,
+               // Add it to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+         } else {
+            // update this new one with the information found in
+            // in the existing one (if needed) and ...
+            Int_t i = 0;
+            for (; i < haex->NumMethods(); i++) {
+               Int_t met = haex->GetMethod(i);
+               if (!ha->HasMethod(met))
+                  ha->AddMethod(met,haex->GetDetails(met));
+            }
+            if (Master)
+               // ... add the new one to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+            else
+               // We add this one to the standard list
+               TAuthenticate::GetAuthInfo()->Add(ha);
+         }
+      } else {
+         if (Master)
+            // We add this one to the list for forwarding
+            TAuthenticate::GetProofAuthInfo()->Add(ha);
+         else
+            // We add this one to the standard list
+            TAuthenticate::GetAuthInfo()->Add(ha);
+      }
+
+
+      // Get the next one
+      nr = s->Recv(buf, kMAXSECBUF, kind);
+      if (nr < 0 || kind != kPROOF_HOSTAUTH) {
+         Info("RecvHostAuth","Error: received: kind: %d (%d bytes)", kind, nr);
+         return -1;
+      }
+      if (gDebug > 2)
+         Info("RecvHostAuth","received %d bytes (%s)",nr,buf);
+   }
+
+   return 0;
+}
+
+extern "C" {
+//______________________________________________________________________________
+Int_t OldSlaveAuthSetup(TSocket *sock,
+                        Bool_t master, TString ord, TString conf)
+{
+   // Setup of authetication in PROOF run after successful opening
+   // of the socket. Provided for backward compatibility.
+   // Return 0 on success, -1 on failure.
+
+
+   // Fill some useful info
+   TSecContext *sc    = sock->GetSecContext();
+   TString user       = sc->GetUser();
+   Int_t proofdProto  = sock->GetRemoteProtocol();
+   Int_t remoteOffSet = sc->GetOffSet();
+
+   // send user name to remote host
+   // for UsrPwd and SRP methods send also passwd, rsa encoded
+   TMessage pubkey;
+   TString passwd = "";
+   Bool_t  pwhash = kFALSE;
+   Bool_t  srppwd = kFALSE;
+   Bool_t  sndsrp = kFALSE;
+
+   Bool_t upwd = sc->IsA("UsrPwd");
+   Bool_t srp = sc->IsA("SRP");
+
+   TPwdCtx *pwdctx = 0;
+   if (remoteOffSet > -1 && (upwd || srp))
+      pwdctx = (TPwdCtx *)(sc->GetContext());
+
+   if (!master) {
+      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (remoteOffSet > -1))
+         sndsrp = kTRUE;
+   } else {
+      if (srp && pwdctx) {
+         if (pwdctx->GetPasswd() != "" && remoteOffSet > -1)
+            sndsrp = kTRUE;
+      }
+   }
+
+   if ((upwd && pwdctx) || (srp  && sndsrp)) {
+
+      // Send offset to identify remotely the public part of RSA key
+      if (sock->Send(remoteOffSet, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+         Error("OldAuthSetup", "failed to send offset in RSA key");
+         return -1;
+      }
+
+      if (pwdctx) {
+         passwd = pwdctx->GetPasswd();
+         pwhash = pwdctx->IsPwHash();
+      }
+
+      Int_t keytyp = ((TRootSecContext *)sc)->GetRSAKey();
+      if (TAuthenticate::SecureSend(sock, 1, keytyp, passwd.Data()) == -1) {
+         if (remoteOffSet > -1)
+            Warning("OldAuthSetup","problems secure-sending pass hash %s",
+                    "- may result in failures");
+         // If non RSA encoding available try passwd inversion
+         if (upwd) {
+            for (int i = 0; i < passwd.Length(); i++) {
+               char inv = ~passwd(i);
+               passwd.Replace(i, 1, inv);
+            }
+            TMessage mess;
+            mess << passwd;
+            if (sock->Send(mess) < 0) {
+               Error("OldAuthSetup", "failed to send inverted password");
+               return -1;
+            }
+         }
+      }
+
+   } else {
+
+      // Send notification of no offset to be sent ...
+      if (sock->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+         Error("OldAuthSetup", "failed to send no offset notification in RSA key");
+         return -1;
+      }
+   }
+
+   // Send ordinal (and config) info to slave (or master)
+   TMessage mess;
+   mess << user << pwhash << srppwd << ord << conf;
+
+   if (sock->Send(mess) < 0) {
+      Error("OldAuthSetup", "failed to send ordinal and config info");
+      return -1;
+   }
+
+   if (proofdProto > 6) {
+      // Now we send authentication details to access, e.g., data servers
+      // not in the proof cluster and to be propagated to slaves.
+      // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
+      // line in .rootauthrc
+      if (SendHostAuth(sock) < 0) {
+         Error("OldAuthSetup", "failed to send HostAuth info");
+         return -1;
+      }
+   }
+
+   // We are done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t OldProofServAuthSetup(TSocket *sock, Bool_t master, Int_t protocol,
+                            TString &user, TString &ord, TString &conf)
+{
+   // Authentication related setup in TProofServ run after successful
+   // startup. Provided for backward compatibility.
+   // Return 0 on success, -1 on failure.
+
+   // First receive, decode and store the public part of RSA key
+   Int_t retval, kind;
+   if (sock->Recv(retval, kind) != 2*sizeof(Int_t)) {
+      //other side has closed connection
+      Info("OldProofServAuthSetup",
+           "socket has been closed due to protocol mismatch - Exiting");
+      return -1;
+   }
+
+   Int_t rsakey = 0;
+   TString passwd;
+   if (kind == kROOTD_RSAKEY) {
+
+      if (retval > -1) {
+         if (gSystem->Getenv("ROOTKEYFILE")) {
+
+            TString keyfile = gSystem->Getenv("ROOTKEYFILE");
+            keyfile += retval;
+
+            FILE *fKey = 0;
+            char pubkey[kMAXPATHLEN] = { 0 };
+            if (!gSystem->AccessPathName(keyfile.Data(), kReadPermission)) {
+               fKey = fopen(keyfile.Data(), "r");
+               if (fKey) {
+                  Int_t klen = fread((void *)pubkey,1,sizeof(pubkey),fKey);
+                  // Set RSA key
+                  rsakey = TAuthenticate::SetRSAPublic(pubkey,klen);
+                  fclose(fKey);
+               }
+            }
+         }
+
+         // Receive passwd
+         char *pwd = 0;
+         if (TAuthenticate::SecureRecv(sock, 2, rsakey, &pwd) < 0) {
+            Error("OldProofServAuthSetup", "failed to receive password");
+            return -1;
+         }
+         passwd = pwd;
+         delete[] pwd;
+
+      } else if (retval == -1) {
+
+         // Receive inverted passwd
+         TMessage *mess;
+         if ((sock->Recv(mess) <= 0) || !mess) {
+            Error("OldProofServAuthSetup", "failed to receive inverted password");
+            return -1;
+         }
+         (*mess) >> passwd;
+         delete mess;
+
+         for (Int_t i = 0; i < passwd.Length(); i++) {
+            char inv = ~passwd(i);
+            passwd.Replace(i, 1, inv);
+         }
+
+      }
+   }
+
+   // Receive final information
+   TMessage *mess;
+   if ((sock->Recv(mess) <= 0) || !mess) {
+      Error("OldProofServAuthSetup", "failed to receive ordinal and config info");
+      return -1;
+   }
+
+   // Decode it
+   Bool_t pwhash, srppwd;
+   if (master) {
+      if (protocol < 4) {
+         (*mess) >> user >> pwhash >> srppwd >> conf;
+         ord = "0";
+      } else {
+         (*mess) >> user >> pwhash >> srppwd >> ord >> conf;
+      }
+   } else {
+      if (protocol < 4) {
+         Int_t iord;
+         (*mess) >> user >> pwhash >> srppwd >> iord;
+         ord = "0.";
+         ord += iord;
+      } else {
+         (*mess) >> user >> pwhash >> srppwd >> ord >> conf;
+      }
+   }
+   delete mess;
+
+   // Set Globals for later use
+   TAuthenticate::SetGlobalUser(user);
+   TAuthenticate::SetGlobalPasswd(passwd);
+   TAuthenticate::SetGlobalPwHash(pwhash);
+   TAuthenticate::SetGlobalSRPPwd(srppwd);
+   TAuthenticate::SetDefaultRSAKeyType(rsakey);
+   const char *h = gSystem->Getenv("ROOTHOMEAUTHRC");
+   if (h) {
+      Bool_t rha = (Bool_t)(strtol(h, (char **)0, 10));
+      TAuthenticate::SetReadHomeAuthrc(rha);
+   }
+
+   // Read user or system authentication directives and
+   // receive auth info transmitted from the client
+   Int_t hostauthret;
+   if (master)
+      hostauthret = RecvHostAuth(sock, "M", conf);
+   else
+      hostauthret = RecvHostAuth(sock, "S", 0);
+
+   if (hostauthret < 0) {
+      Error("OldProofServAuthSetup", "failed to receive HostAuth info");
+      return -1;
+   }
+
+   // We are done
+   return 0;
+}}

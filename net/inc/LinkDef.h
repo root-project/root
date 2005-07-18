@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.14 2005/05/12 13:19:39 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.15 2005/05/20 10:04:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,7 +24,6 @@
 #pragma link C++ global kSrvNoAuth;
 
 #pragma link C++ class TInetAddress-;
-#pragma link C++ class TAuthenticate;
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
 #pragma link C++ class TPServerSocket;
@@ -46,7 +45,6 @@
 #pragma link C++ class TGridJob+;
 #pragma link C++ class TGridJobStatus+;
 #pragma link C++ class TGridCollection+;
-#pragma link C++ class THostAuth;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.h,v 1.5 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.h,v 1.6 2004/11/05 13:55:13 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -67,7 +67,8 @@ enum ERootdErrors {
    kErrBadPwdFile,
    kErrBadPwdFileHEquNoFiles,
    kErrBadPwdFileHEquBadFiles,
-   kErrBadPwdFileHEquFailed
+   kErrBadPwdFileHEquFailed,
+   kErrError
 };
 
 R__EXTERN const char *gRootdErrStr[];

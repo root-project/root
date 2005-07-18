@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.96 2005/07/14 14:34:41 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.97 2005/07/14 17:59:48 pcanal Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -321,7 +321,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fProgressDialog = 0;
    fStatus         = 0;
    fSlaveInfo      = 0;
-   fSecContext     = 0;
    fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
    delete u;
@@ -1436,6 +1435,17 @@ Int_t TProof::Collect(TMonitor *mon)
                PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                if (out) {
+
+
+            TIter no(out);
+            TObject *ob = 0;
+            Int_t io = 0;
+            while ((ob = no())) {
+               io++;   
+            }
+
+
+
                   out->SetOwner();
                   fPlayer->StoreOutput(out); // Adopts the list
                } else {
@@ -1678,12 +1688,16 @@ void TProof::Print(Option_t *option) const
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Security context:         %s", fSecContext->AsString(secCont));
       TSlave *sl = (TSlave *)fActiveSlaves->First();
-      if (sl)
+      if (sl) {
+         TString sc;
+         Printf("Security context:         %s",
+                                        sl->GetSocket()->GetSecContext()->AsString(sc));
          Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
-      else
+      } else {
+         Printf("Security context:         Error - No connection");
          Printf("Proofd protocol version:  Error - No connection");
+      }
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());

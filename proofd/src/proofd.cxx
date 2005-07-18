@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.75 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.76 2005/07/04 14:58:22 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -150,6 +150,7 @@
 // 9: change authentication cleaning protocol
 // 10: modified SSH protocol + support for server 'no authentication' mode
 // 11: added support for openSSL keys for encryption
+// 12: major authentication re-organization
 
 #include "config.h"
 #include "RConfig.h"
@@ -238,7 +239,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 11;       // increase when protocol changes
+static int gProtocol             = 12;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;
@@ -391,11 +392,9 @@ void ProofdExec()
    // Authenticate the user and exec the proofserv program.
    // gConfdir is the location where the PROOF config files and binaries live.
 
-   char *argvv[11];
+   char *argvv[3];
    std::string arg0;
    std::string msg;
-   char  sfd[64];
-   char  rpid[20] = {0};
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -451,9 +450,24 @@ void ProofdExec()
          }
       }
    }
+
+   // Receive buffer for final setup of authentication related stuff
+   // This is base 64 string to decoded by proofserv, if needed
+   if (RpdGetClientProtocol() > 12) {
+      char *authbuff = 0;
+      if (RpdSecureRecv(&authbuff) > 0) {
+         // Save it in an environment variable
+         char *rootproofauthsetup = new char[20+strlen(authbuff)];
+         sprintf(rootproofauthsetup, "ROOTPROOFAUTHSETUP=%s", authbuff);
+         putenv(rootproofauthsetup);
+         delete[] authbuff;
+      } else {
+         ErrorInfo("ProofdExec: problems secure-receiving auth buffer");
+      }
+   }
+
    if (gDebug > 0)
       ErrorInfo("ProofdExec: send Okay (SockFd: %d)", SockFd);
-
    NetSend("Okay");
 
    // Find a free filedescriptor outside the standard I/O range
@@ -480,36 +494,61 @@ void ProofdExec()
       }
    }
 
+   //
+   // Set environments vars for proofserv
+   // Config dir
+   char *rootconf = new char[13+gConfDir.length()];
+   sprintf(rootconf, "ROOTCONFDIR=%s", gConfDir.c_str());
+   putenv(rootconf);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: setting: %s", rootconf);
+   // Temp dir
+   char *roottmp = new char[12+gTmpDir.length()];
+   sprintf(roottmp, "ROOTTMPDIR=%s", gTmpDir.c_str());
+   putenv(roottmp);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: setting: %s", roottmp);
+   // User, host, rpid
+   char *rootentity = new char[gUser.length()+gOpenHost.length()+33];
+   sprintf(rootentity,
+           "ROOTENTITY=%s:%d@%s", gUser.c_str(), gRemPid, gOpenHost.c_str());
+   putenv(rootentity);
+   if (gDebug > 2)
+      ErrorInfo("ProofdExec: setting: %s", rootentity);
+   // Open socket
+   char *rootopensock = new char[33];
+   sprintf(rootopensock, "ROOTOPENSOCK=%d", SockFd);
+   putenv(rootopensock);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: setting: %s", rootopensock);
+   // ReadHomeAuthrc option
+   char *roothomeauthrc = new char[20];
+   sprintf(roothomeauthrc, "ROOTHOMEAUTHRC=%s", gReadHomeAuthrc.c_str());
+   putenv(roothomeauthrc);
+   if (gDebug > 2)
+      ErrorInfo("ProofdExec: setting: %s", roothomeauthrc);
+   
 #ifdef R__GLBS
-   // to pass over shm id to proofserv
-   char  cShmIdCred[20];
-   snprintf(cShmIdCred,20,"%d",RpdGetShmIdCred());
+   // ID of shm with exported credentials
+   char *shmidcred = new char[25];
+   sprintf(shmidcred, "ROOTSHMIDCRED=%d", RpdGetShmIdCred());
+   putenv(shmidcred);
+   if (gDebug > 2)
+      ErrorInfo("ProofdExec: setting: %s", shmidcred);
 #endif
 
    // start server version
    arg0 = gRootBinDir + "/proofserv";
    argvv[0] = (char *)arg0.c_str();
    argvv[1] = (char *)(gMaster ? "proofserv" : "proofslave");
-   argvv[2] = (char *)gConfDir.c_str();
-   argvv[3] = (char *)gTmpDir.c_str();
-   argvv[4] = (char *)gOpenHost.c_str();
-   snprintf(rpid,20,"%d", gRemPid);
-   argvv[5] = rpid;
-   argvv[6] = (char *)gUser.c_str();
-   argvv[7] = (char *)gReadHomeAuthrc.c_str();
-   snprintf(sfd,64,"%d", SockFd);
-   argvv[8] = sfd;
-#ifdef R__GLBS
-   argvv[9] = cShmIdCred;
-   argvv[10] = 0;
-#else
-   argvv[9] = 0;
-#endif
+   argvv[2] = 0;
 
 #ifndef ROOTPREFIX
    char *rootsys = new char[9+gConfDir.length()];
    sprintf(rootsys, "ROOTSYS=%s", gConfDir.c_str());
    putenv(rootsys);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: setting: %s", rootsys);
 #endif
 #ifndef ROOTLIBDIR
    char *ldpath;
@@ -540,6 +579,8 @@ void ProofdExec()
    }
 #   endif
    putenv(ldpath);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: setting: %s", ldpath);
 #endif
 
    // Check if a special file for authentication directives
@@ -552,23 +593,19 @@ void ProofdExec()
       authrc = new char[15+gAuthrc.length()];
       sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc.c_str());
       putenv(authrc);
+      if (gDebug > 0)
+         ErrorInfo("ProofdExec: setting: %s", authrc);
    }
 
+   // For backward compatibility
    char *keyfile = new char[15+strlen(RpdGetKeyRoot())];
    sprintf(keyfile, "ROOTKEYFILE=%s",RpdGetKeyRoot());
    putenv(keyfile);
+   if (gDebug > 2)
+      ErrorInfo("ProofdExec: setting: %s", keyfile);
 
    if (gDebug > 0)
-#ifdef R__GLBS
-      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s,"
-                " %s, %s, %s)",
-                argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
-                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9]);
-#else
-      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
-                argvv[5], argvv[6], argvv[7], argvv[8]);
-#endif
+      ErrorInfo("ProofdExec: execv(%s, %s)", argvv[0], argvv[1]);
 
    // Start proofserv
    execv(arg0.c_str(), argvv);

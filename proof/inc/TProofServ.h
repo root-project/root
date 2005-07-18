@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.26 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.27 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -37,20 +37,23 @@
 #include "TStopwatch.h"
 #endif
 
-
 class TProof;
 class TProofPlayer;
 class TSocket;
 class TList;
 class TDSetElement;
 
+// Hook to external function setting up authentication related stuff
+// for old versions.
+// For backward compatibility
+typedef Int_t (*OldProofServAuthSetup_t)(TSocket *, Bool_t, Int_t,
+                                         TString &, TString &, TString &);
 
 class TProofServ : public TApplication {
 
 private:
    TString       fService;          //service we are running, either "proofserv" or "proofslave"
    TString       fUser;             //user as which we run
-   TString       fPasswd;           //encoded passwd info for slaves
    TString       fConfDir;          //directory containing cluster config information
    TString       fConfFile;         //file containing config information
    TString       fWorkDir;          //directory containing all proof related info
@@ -72,8 +75,6 @@ private:
    Int_t         fGroupSize;        //size of the active slave group
    Int_t         fLogLevel;         //debug logging level
    Int_t         fNcmd;             //command history number
-   Bool_t        fPwHash;           //true if fPasswd is a passwd hash
-   Bool_t        fSRPPwd;           //true if fPasswd is a SRP passwd
    Bool_t        fMasterServ;       //true if we are a master server
    Bool_t        fInterrupt;        //if true macro execution will be stopped
    Float_t       fRealTime;         //real time spent executing commands
@@ -93,6 +94,7 @@ private:
    Int_t       UnloadPackage(const char *package);
    Int_t       UnloadPackages();
    void        HandleSocketInputDuringProcess();
+   Int_t       OldAuthSetup(TString &wconf);
 
 public:
    TProofServ(Int_t *argc, char **argv);

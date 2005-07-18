@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.79 2005/04/15 17:26:09 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.80 2005/04/28 16:14:28 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -510,6 +510,14 @@ const char *RpdGetKeyRoot()
    // Return pointer to the root string for key files
    // Used by proofd.
    return (const char *)gRpdKeyRoot.c_str();
+}
+
+//______________________________________________________________________________
+int RpdGetClientProtocol()
+{
+   // Return protocol version run by the client.
+   // Used by proofd.
+   return gClientProtocol;
 }
 
 #ifdef R__KRB5

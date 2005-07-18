@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.46 2005/06/23 06:24:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.47 2005/07/05 12:36:06 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -124,7 +124,6 @@ protected:
    static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
 
                    TROOT();               //Only used by Dictionary
-   void            AuthCleanup();         //Cleanup remote auth info
    void            InitSystem();          //Operating System interface
    void            InitThreads();         //Initialize threads library
    TClass         *FindSTLClass(const char *name, Bool_t load) const;

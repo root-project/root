@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: DaemonUtils.h,v 1.2 2004/10/11 21:50:06 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.3 2004/10/12 07:08:36 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #ifndef ROOT_TSocket
 #include "TSocket.h"
 #endif
+#ifndef ROOT_TSeqCollection
+#include "TSeqCollection.h"
+#endif
 #ifndef ROOT_NetErrors
 #include "NetErrors.h"
 #endif
@@ -36,8 +39,8 @@
 
 extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          std::string &user, Int_t &meth,
-                         Int_t &type, std::string &ctoken);
-extern Int_t SrvClupImpl(const char *);
+                         Int_t &type, std::string &ctoken, TSeqCollection *);
+extern Int_t SrvClupImpl(TSeqCollection *);
 
 typedef void (*ErrorHandler_t)(int level, const char *msg);
 

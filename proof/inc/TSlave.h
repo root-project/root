@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.14 2005/02/08 22:40:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.15 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -30,14 +30,17 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TSecContext
-#include "TSecContext.h"
+#ifndef ROOT_TSocket
+#include "TSocket.h"
 #endif
 
 class TFileHandler;
 class TProof;
-class TSocket;
 
+// Hook to external function setting up authentication related stuff
+// for old versions.
+// For backward compatibility
+typedef Int_t (*OldSlaveAuthSetup_t)(TSocket *, Bool_t, TString, TString);
 
 class TSlave : public TObject {
 
@@ -57,7 +60,6 @@ private:
    Int_t         fPort;      //slave's port number
    TString       fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
-   TSecContext  *fSecContext;//security context of the related authentication
    Int_t         fProtocol;  //slave's protocol level
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
@@ -78,6 +80,8 @@ private:
           const char *image, TProof *proof, ESlaveType stype,
           const char *workdir, const char *conffile, const char *msd);
 
+   Int_t         OldAuthSetup(Bool_t master, TString wconf);
+
 public:
    virtual ~TSlave();
 
@@ -94,7 +98,6 @@ public:
    Int_t          GetPort() const { return fPort; }
    const char    *GetOrdinal() const { return fOrdinal; }
    Int_t          GetPerfIdx() const { return fPerfIdx; }
-   Int_t          GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t          GetProtocol() const { return fProtocol; }
    TSocket       *GetSocket() const { return fSocket; }
    TProof        *GetProof() const { return fProof; }

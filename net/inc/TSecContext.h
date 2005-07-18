@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.3 2005/04/30 01:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.4 2005/06/23 10:51:11 rdm Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -31,9 +31,6 @@
 #ifndef ROOT_TDatime
 #include "TDatime.h"
 #endif
-#ifndef ROOT_TAuthenticate
-#include "TAuthenticate.h"
-#endif
 
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
 const TDatime kROOTTZERO = 788914800;
@@ -44,53 +41,55 @@ class TPwdCtx;
 
 class TSecContext : public TObject {
 
+friend class TRootSecContext;
+
 private:
    void        *fContext;             // Krb5, Globus: ptr to specific sec context
    TList       *fCleanup;             // Points to list with info for remote cleanup
-   TString      fDetails;             // Auth process details (user, principal, ... )
    TDatime      fExpDate;             // Expiring date (one sec precision)
    TString      fHost;                // Remote host name
+   TString      fID;                  // String identifying uniquely this context
    Int_t        fMethod;              // Authentication method used
+   TString      fMethodName;          // Authentication method name
    Int_t        fOffSet;              // offset in remote host auth tab file (in bytes)
-   Int_t        fRSAKey;              // Type of RSA key used
    TString      fToken;               // Token identifying this authentication
    TString      fUser;                // Remote login username
+
+   virtual Bool_t  CleanupSecContext(Bool_t all);
+   void         Cleanup();
 
 public:
 
    TSecContext(const char *url, Int_t meth, Int_t offset,
-               const char *details, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
+               const char *id, const char *token,
+               TDatime expdate = kROOTTZERO, void *ctx = 0);
    TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
-               const char *details, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
+               const char *id, const char *token,
+               TDatime expdate = kROOTTZERO, void *ctx = 0);
    virtual    ~TSecContext();
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);
-   const char *AsString(TString &out) const;
-   void        Cleanup();
+   virtual const char *AsString(TString &out);
 
-   void        DeActivate(Option_t *opt = "CR");
+   virtual void DeActivate(Option_t *opt = "CR");
    void       *GetContext() const { return fContext; }
-   const char *GetDetails() const { return fDetails; }
    TDatime     GetExpDate() const { return fExpDate; }
    const char *GetHost()    const { return fHost; }
+   const char *GetID() const { return fID; }
    Int_t       GetMethod()  const { return fMethod; }
-   const char *GetMethodName() const
-                   { return TAuthenticate::GetAuthMethod(fMethod); }
+   const char *GetMethodName() const { return fMethodName; }
    Int_t       GetOffSet()  const { return fOffSet; }
-   Int_t       GetRSAKey()  const { return fRSAKey; }
    TList      *GetSecContextCleanup() const { return fCleanup; }
    const char *GetToken()   const { return fToken; }
    const char *GetUser()    const { return fUser; }
 
-   Bool_t      IsA(const char *methodname) const;
+   Bool_t      IsA(const char *methodname);
    Bool_t      IsActive()   const;
 
    virtual void Print(Option_t *option = "F") const;
 
-   void        SetDetails(const char *details) { fDetails= details; }
    void        SetExpDate(TDatime expdate)  { fExpDate= expdate; }
+   void        SetID(const char *id)        { fID= id; }
    void        SetOffSet(Int_t offset)      { fOffSet = offset; }
    void        SetUser(const char *user)    { fUser   = user; }
 

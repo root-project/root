@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.17 2004/12/16 19:33:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.18 2005/06/10 17:49:47 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -33,9 +33,14 @@
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
 #endif
+#ifndef ROOT_TVirtualAuth
+#include "TVirtualAuth.h"
+#endif
 #ifndef ROOT_TSecContext
 #include "TSecContext.h"
 #endif
+
+typedef TVirtualAuth *(*Auth_t)();
 
 enum ESockOptions {
    kSendBuffer,        // size of send buffer
@@ -60,8 +65,6 @@ enum ESendRecvOptions {
 
 class TMessage;
 class THostAuth;
-class TSecContext;
-
 
 class TSocket : public TNamed {
 
@@ -93,18 +96,17 @@ protected:
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
+   static Int_t  fgClientProtocol; // client "protocol" version
+
    TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0;
                fCompress = 0; fSecContext = 0; fServType = kSOCKD;}
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
 
 private:
-   void         operator=(const TSocket &);  // not implemented
-   Option_t    *GetOption() const { return TObject::GetOption(); }
-   Int_t        RecvHostAuth(Option_t *opt, const char *proofconf = 0);
-   Int_t        SecureRecv(TString &out, Int_t dec, Int_t key = 1);
-   Int_t        SecureSend(const char *in, Int_t enc, Int_t keyType = 1);
-   Int_t        SendHostAuth();
+   void          operator=(const TSocket &);  // not implemented
+   Option_t     *GetOption() const { return TObject::GetOption(); }
+   TVirtualAuth *LoadAuth(const char *alib);
 
 public:
    TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);
@@ -152,7 +154,10 @@ public:
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
    void                  SetService(const char *service) { fService = service; }
+   void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }
+
+   static Int_t          GetClientProtocol();
 
    static ULong64_t      GetSocketBytesSent() { return fgBytesSent; }
    static ULong64_t      GetSocketBytesRecv() { return fgBytesRecv; }
@@ -162,8 +167,9 @@ public:
                                           Int_t tcpwindowsize = -1, TSocket *s = 0);
    static TSocket       *CreateAuthSocket(const char *url, Int_t size = 0,
                                           Int_t tcpwindowsize = -1, TSocket *s = 0);
+   static void           NetError(const char *where, Int_t error);
 
-   ClassDef(TSocket,1)  //This class implements client sockets
+   ClassDef(TSocket,0)  //This class implements client sockets
 };
 
 #endif

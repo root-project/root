@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.7 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.8 2005/06/23 10:51:12 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include "TSecContext.h"
+#include "TSocket.h"
 #include "TUrl.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -35,8 +36,8 @@ ClassImp(TSecContextCleanup)
 
 //______________________________________________________________________________
 TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
-                         Int_t offset, const char *details,
-                         const char *token, TDatime expdate, void *ctx, Int_t key)
+                         Int_t offset, const char *id,
+                         const char *token, TDatime expdate, void *ctx)
             : TObject()
 {
    // Ctor for SecContext object.
@@ -44,7 +45,6 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
 
    fContext = ctx;
    fCleanup = new TList;
-   fDetails = details;
    fExpDate = expdate;
    if (offset > -1) {
       if (fExpDate < TDatime()) {
@@ -54,9 +54,10 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
       }
    }
    fHost    = host;
+   fID      = id;
    fMethod  = meth;
+   fMethodName = "";
    fOffSet  = offset;
-   fRSAKey  = key;
    fToken   = token;
    fUser    = user;
 
@@ -69,8 +70,8 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
 
 //______________________________________________________________________________
 TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
-                         const char *details, const char *token,
-                         TDatime expdate, void *ctx, Int_t key)
+                         const char *token, const char *id,
+                         TDatime expdate, void *ctx)
             : TObject()
 {
    // Ctor for SecContext object.
@@ -79,7 +80,6 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
 
    fContext = ctx;
    fCleanup = new TList;
-   fDetails = details;
    fExpDate = expdate;
    if (offset > -1) {
       if (fExpDate < TDatime()) {
@@ -89,9 +89,10 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
       }
    }
    fHost    = TUrl(url).GetHost();
+   fID      = id;
    fMethod  = meth;
+   fMethodName = "";
    fOffSet  = offset;
-   fRSAKey  = key;
    fToken   = token;
    fUser    = TUrl(url).GetUser();
 
@@ -105,17 +106,63 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
 //______________________________________________________________________________
 TSecContext::~TSecContext()
 {
-   // Dtor: DeActivate (local/remote cleanup, list removal),
-   // if still Active
+   // Dtor: delete (deActivate, local/remote cleanup, list removal)
+   // all what is still active 
 
-   if (IsActive())
-      DeActivate();
+   Cleanup();
+}
+//______________________________________________________________________________
+void TSecContext::Cleanup()
+{
+   // Cleanup what is still active
+
+   if (IsActive()) {
+      CleanupSecContext(kTRUE);
+      DeActivate("R");
+      // All have been remotely Deactivated
+      TIter nxtl(gROOT->GetListOfSecContexts());
+      TSecContext *nscl;
+      while ((nscl = (TSecContext *)nxtl())) {
+         if (nscl != this && !strcmp(nscl->GetHost(), fHost.Data())) {
+            // Need to set ofs=-1 to avoid sending another
+            // cleanup request
+            nscl->DeActivate("");
+         }
+      }
+   }
 
    // Delete the cleanup list
    if (fCleanup) {
       fCleanup->Delete();
       delete fCleanup;
+      fCleanup = 0;
    }
+}
+
+//______________________________________________________________________________
+void TSecContext::DeActivate(Option_t *Opt)
+{
+   // Set OffSet to -1 and expiring Date to default
+   // Remove from the list
+   // If Opt contains "C" or "c", ask for remote cleanup
+   // If Opt contains "R" or "r", remove from the list
+   // Default Opt="CR"
+
+   // Ask remote cleanup of this context
+   Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
+   if (clean && fOffSet > -1)
+      CleanupSecContext(kFALSE);
+
+   Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
+   if (remove && fOffSet > -1){
+      R__LOCKGUARD2(gROOTMutex);
+      // Remove from the global list
+      gROOT->GetListOfSecContexts()->Remove(this);
+   }
+
+   // Set inactive
+   fOffSet  = -1;
+   fExpDate = kROOTTZERO;
 }
 
 //______________________________________________________________________________
@@ -130,72 +177,12 @@ void TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
 }
 
 //______________________________________________________________________________
-void TSecContext::Cleanup()
-{
-   // Ask remote cleanup of this context
-
-   TAuthenticate::CleanupSecContext(this,kFALSE);
-}
-
-//______________________________________________________________________________
-void TSecContext::DeActivate(Option_t *Opt)
-{
-   // Set OffSet to -1 and expiring Date to default
-   // Remove from the list
-   // If globus, cleanup local stuff
-   // If Opt contains "C" or "c", ask for remote cleanup
-   // If Opt contains "R" or "r", remove from the list
-   // Default Opt="CR"
-
-   // Ask remote cleanup of this context
-   Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
-   if (clean && fOffSet > -1)
-      Cleanup();
-
-   // Cleanup TPwdCtx object fro UsrPwd and SRP
-   if (fMethod == TAuthenticate::kClear ||
-       fMethod == TAuthenticate::kSRP)
-      if (fContext) {
-         delete (TPwdCtx *)fContext;
-         fContext = 0;
-      }
-
-   // Cleanup globus security context if needed
-   if (fMethod == TAuthenticate::kGlobus && fContext) {
-      GlobusAuth_t GlobusAuthHook = TAuthenticate::GetGlobusAuthHook();
-      if (GlobusAuthHook != 0) {
-         TString det("context");
-         TString us("-1");
-         (*GlobusAuthHook)((TAuthenticate *)fContext,us,det);
-         fContext = 0;
-      }
-   }
-
-   Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
-   if (remove && fOffSet > -1){
-      R__LOCKGUARD2(gROOTMutex);
-      // Remove from the global list
-      gROOT->GetListOfSecContexts()->Remove(this);
-      // Remove also from local lists in THostAuth objects
-      TAuthenticate::RemoveSecContext(this);
-   }
-
-   // Set inactive
-   fOffSet  = -1;
-   fExpDate = kROOTTZERO;
-
-}
-
-//______________________________________________________________________________
-Bool_t TSecContext::IsA(const char *methname) const
+Bool_t TSecContext::IsA(const char *methname)
 {
    // Checks if this security context is for method named 'methname'
-   // Valid names: UsrPwd, SRP, Krb5, Globus, SSH, UidGid
-   // (Case sensitive)
-   // (see TAuthenticate.cxx for updated list)
+   // Case sensitive.
 
-   TString ThisMethod(TAuthenticate::GetAuthMethod(fMethod));
-   return (ThisMethod == methname);
+   return Bool_t(!strcmp(methname, GetMethodName()));
 }
 
 //______________________________________________________________________________
@@ -247,11 +234,10 @@ void TSecContext::Print(Option_t *opt) const
            "+------------------------------------------------------+");
       Info("Print",
            "+ Host:%s Method:%d (%s) User:'%s'",
-            GetHost(),fMethod,TAuthenticate::GetAuthMethod(fMethod),
+            GetHost(), fMethod, GetMethodName(),
             fUser.Data());
       Info("Print",
-           "+         OffSet:%d Details: '%s'",
-                      fOffSet,fDetails.Data());
+           "+         OffSet:%d, id:%s", fOffSet, fID.Data());
       if (fOffSet > -1)
          Info("Print",
            "+         Expiration time: %s",fExpDate.AsString());
@@ -259,53 +245,53 @@ void TSecContext::Print(Option_t *opt) const
            "+------------------------------------------------------+");
    } else if (!strncasecmp(opt,"S",1)) {
       if (fOffSet > -1) {
-         if (fDetails.BeginsWith("AFS"))
-            Printf("Security context:     Method: AFS, not reusable");
-         else
-            Printf("Security context:     Method: %d (%s) expiring on %s",
-                   fMethod,TAuthenticate::GetAuthMethod(fMethod),
-                   fExpDate.AsString());
+         Printf("Security context:     Method: %d (%s) expiring on %s",
+                fMethod, GetMethodName(),
+                fExpDate.AsString());
       } else {
          Printf("Security context:     Method: %d (%s) not reusable",
-                fMethod,TAuthenticate::GetAuthMethod(fMethod));
+                fMethod, GetMethodName());
       }
    } else {
       // special printing form for THostAuth
       Info("PrintEstblshed","+ %s h:%s met:%d (%s) us:'%s'",
-            Ord, GetHost(), fMethod, TAuthenticate::GetAuthMethod(fMethod),
+            Ord, GetHost(), fMethod, GetMethodName(),
             fUser.Data());
-      Info("PrintEstblshed","+ %s offset:%d det: '%s'",
-            Spc,fOffSet,fDetails.Data());
+      Info("PrintEstblshed","+ %s offset:%d id:%s", Spc, fOffSet, fID.Data());
       if (fOffSet > -1)
          Info("PrintEstblshed","+ %s expiring: %s",Spc,fExpDate.AsString());
    }
 }
 
 //______________________________________________________________________________
-const char *TSecContext::AsString(TString &out) const
+const char *TSecContext::AsString(TString &out)
 {
    // Returns short string with relevant information about this
    // security context
 
    if (fOffSet > -1) {
-      if (fDetails.BeginsWith("AFS"))
-         out = Form("Method: AFS, not reusable");
-      else {
-         char expdate[32];
-         out = Form("Method: %d (%s) expiring on %s",
-                    fMethod, TAuthenticate::GetAuthMethod(fMethod),
-                    fExpDate.AsString(expdate));
-      }
+      char expdate[32];
+      out = Form("Method: %d (%s) expiring on %s",
+                 fMethod, GetMethodName(), fExpDate.AsString(expdate));
    } else {
       if (fOffSet == -1)
-         out = Form("Method: %d (%s) not reusable",
-                    fMethod, TAuthenticate::GetAuthMethod(fMethod));
+         out = Form("Method: %d (%s) not reusable", fMethod, GetMethodName());
       else if (fOffSet == -3)
          out = Form("Method: %d (%s) authorized by /etc/hosts.equiv or $HOME/.rhosts",
-                    fMethod, TAuthenticate::GetAuthMethod(fMethod));
+                    fMethod, GetMethodName());
       else if (fOffSet == -4)
          out = Form("No authentication required remotely");
    }
    return out.Data();
 }
 
+//______________________________________________________________________________
+Bool_t TSecContext::CleanupSecContext(Bool_t)
+{
+   // Ask remote client to cleanup security context 'ctx'
+   // If 'all', all sec context with the same host as ctx
+   // are cleaned.
+
+   AbstractMethod("CleanupSecContext");
+   return kFALSE;
+}

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.156 2005/07/05 12:36:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.157 2005/07/18 15:56:41 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -499,9 +499,6 @@ TROOT::~TROOT()
       // out of date
       if (!fVersionInt) return;
 
-      // Remote cleanup of authentication stuff
-      TAuthenticate::CleanupSecContextAll();
-
       // ATTENTION!!! Order is important!
 
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
@@ -511,8 +508,8 @@ TROOT::~TROOT()
       fCanvases->Delete();    SafeDelete(fCanvases);    // first close canvases
 #endif
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
+      fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
-      fSecContexts->Delete(); SafeDelete(fSecContexts); // and security contexts
       fMappedFiles->Delete("slow");                     // and mapped files
       delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs

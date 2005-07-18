@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.5 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.6 2004/11/05 13:55:13 rdm Exp $
 // Author: Fons Rademakers   28/08/2003
 
 /*************************************************************************
@@ -63,5 +63,6 @@ const char *gRootdErrStr[] = {
    "can't get passwd info, .rootdpass perms not 0600",
    "can't get passwd info, .rootdpass perms not 0600 (host equivalence: no files found)",
    "can't get passwd info, .rootdpass perms not 0600 (host equivalence: files have wrong permissions)",
-   "can't get passwd info, .rootdpass perms not 0600 (host equivalence: passwd-free access not allowed)"
+   "can't get passwd info, .rootdpass perms not 0600 (host equivalence: passwd-free access not allowed)",
+   "generic error"
 };

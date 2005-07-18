@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.6 2003/09/22 10:27:01 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.7 2004/05/05 14:43:34 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 
 class TMessage : public TBuffer {
 
+friend class TAuthenticate;
 friend class TSocket;
 friend class TPSocket;
 

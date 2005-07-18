@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.9 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.10 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -36,6 +36,8 @@ SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
 // Defaul options for accept
 UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
+TVirtualMutex *gSrvAuthenticateMutex = 0; 
+
 ClassImp(TServerSocket)
 
 //______________________________________________________________________________
@@ -43,7 +45,7 @@ static void setaccopt(UChar_t &Opt, UChar_t Mod)
 {
    // Kind of macro to parse input options
    // Modify Opt according to modifier Mod
-   R__LOCKGUARD2(gAuthenticateMutex);
+   R__LOCKGUARD2(gSrvAuthenticateMutex);
 
    if (!Mod) return;
 
@@ -138,14 +140,10 @@ TServerSocket::~TServerSocket()
 {
    // Destructor: cleanup authentication stuff (if any) and close
 
-   R__LOCKGUARD2(gAuthenticateMutex);
+   R__LOCKGUARD2(gSrvAuthenticateMutex);
    if (fSecContexts && fgSrvAuthClupHook) {
-      TIter next(fSecContexts);
-      TSecContext *nsc ;
-      while ((nsc = (TSecContext *)next())) {
-         if (!strncmp(nsc->GetDetails(),"server",6))
-            (*fgSrvAuthClupHook)(nsc->GetToken());
-      }
+      // Cleanup the security contexts
+      (*fgSrvAuthClupHook)(fSecContexts);
       // Remove the list
       fSecContexts->Delete();
       SafeDelete(fSecContexts);
@@ -278,7 +276,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    // open connection
 
    if (!fgSrvAuthHook) {
-      R__LOCKGUARD2(gAuthenticateMutex);
+      R__LOCKGUARD2(gSrvAuthenticateMutex);
 
       // Load libraries needed for (server) authentication ...
 #ifdef ROOTLIBDIR
@@ -353,49 +351,12 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    Int_t type = 0;
    std::string ctkn = "";
    if (fgSrvAuthHook)
-      auth = (*fgSrvAuthHook)(sock,confdir,tmpdir,user,meth,type,ctkn);
+      auth = (*fgSrvAuthHook)(sock, confdir, tmpdir, user,
+                              meth, type, ctkn, fSecContexts);
 
    if (gDebug > 2)
       Info("Authenticate","auth = %d, type= %d, ctkn= %s",
             auth, type, ctkn.c_str());
-
-   TSecContext *seccontext = 0;
-   if (auth > 0) {
-
-      if (type == 1) {
-         // An existing authentication has been re-used: retrieve
-         // the related security context
-         R__LOCKGUARD2(gROOTMutex);
-         TIter next(gROOT->GetListOfSecContexts());
-         while ((seccontext = (TSecContext *)next())) {
-            if (!(strncmp(seccontext->GetDetails(),"server",6))) {
-               if (seccontext->GetMethod() == meth) {
-                  if (openhost == seccontext->GetHost()) {
-                     if (!strcmp(user.c_str(),seccontext->GetUser()))
-                        break;
-                  }
-               }
-            }
-         }
-      }
-
-      if (!seccontext) {
-         // New authentication: Fill a SecContext for cleanup
-         // in case of interrupt
-         seccontext = new TSecContext(user.c_str(), openhost, meth, -1,
-                                      "server", ctkn.c_str());
-         if (seccontext) {
-            // Add to the list
-            fSecContexts->Add(seccontext);
-            // Store SecContext
-            sock->SetSecContext(seccontext);
-         } else {
-            if (gDebug > 0)
-               Warning("Authenticate","could not create sec context object"
-                                      ": potential problems in cleaning");
-         }
-      }
-   }
 
    return auth;
 }

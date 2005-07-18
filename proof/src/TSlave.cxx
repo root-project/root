@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.40 2005/06/23 06:24:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.41 2005/06/23 10:51:56 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
                const char *workdir, const char *conffile, const char *msd)
   : fName(host), fImage(image), fProofWorkDir(workdir),
     fWorkDir(workdir), fUser(), fPort(port),
-    fOrdinal(ord), fPerfIdx(perf), fSecContext(0),
+    fOrdinal(ord), fPerfIdx(perf),
     fProtocol(0), fSocket(0), fProof(proof),
     fInput(0), fBytesRead(0), fRealTime(0),
     fCpuTime(0), fSlaveType(stype), fStatus(0),
@@ -97,15 +97,10 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
    R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
-   fSecContext        = fSocket->GetSecContext();
-   fUser              = fSecContext->GetUser();
-   Int_t ProofdProto  = fSocket->GetRemoteProtocol();
-   Int_t RemoteOffSet = fSocket->GetSecContext()->GetOffSet();
-
+   fUser              = fSocket->GetSecContext()->GetUser();
+   proof->fUser       = fUser;
    PDB(kGlobal,3) {
-     fSocket->GetSecContext()->Print("e");
-     Info("TSlave",
-         "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
+      Info("TSlave","%s: fUser is .... %s", iam.Data(), fUser.Data());
    }
 
    char buf[512];
@@ -146,104 +141,36 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 
    // protocols less than 4 are incompatible
    if (fProtocol < 4) {
-      Error("TSlave", "incompatible PROOF versions (remote version must be >= 4, is %d)", fProtocol);
+      Error("TSlave", "incompatible PROOF versions (remote version"
+                      " must be >= 4, is %d)", fProtocol);
       SafeDelete(fSocket);
       return;
    }
 
-   proof->fProtocol   = fProtocol;   // on master this is the protocol
-   proof->fSecContext = fSecContext;
+   proof->fProtocol   = fProtocol;   // protocol of last slave on master
    proof->fUser       = fUser;
-                                        // of the last slave
-   // send user name to remote host
-   // for UsrPwd and SRP methods send also passwd, rsa encoded
-   TMessage pubkey;
-   TString passwd = "";
-   Bool_t  pwhash = kFALSE;
-   Bool_t  srppwd = kFALSE;
-   Bool_t  sndsrp = kFALSE;
 
-   Bool_t upwd = fSecContext->IsA("UsrPwd");
-   Bool_t srp = fSecContext->IsA("SRP");
-
-   TPwdCtx *pwdctx = 0;
-   if (RemoteOffSet > -1 && (upwd || srp))
-      pwdctx = (TPwdCtx *)(fSecContext->GetContext());
-
-   if (!proof->IsMaster()) {
-      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (RemoteOffSet > -1))
-         sndsrp = kTRUE;
-   } else {
-      if (srp && pwdctx) {
-         if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
-            sndsrp = kTRUE;
-      }
-   }
-
-   if ((upwd && pwdctx) || (srp  && sndsrp)) {
-
-      // Send offset to identify remotely the public part of RSA key
-      if (fSocket->Send(RemoteOffSet,kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-         Error("TSlave", "failed to send offset in RSA key");
+   if (fProtocol < 5) {
+      //
+      // Setup authentication related stuff for ald versions
+      Bool_t isMaster = (stype == kMaster);
+      TString wconf = isMaster ? TString(conffile) : fProofWorkDir;
+      if (OldAuthSetup(isMaster, wconf) != 0) {
+         Error("TSlave", "OldAuthSetup: failed to setup authentication");
          SafeDelete(fSocket);
          return;
       }
-
-      if (pwdctx) {
-         passwd = pwdctx->GetPasswd();
-         pwhash = pwdctx->IsPwHash();
-      }
-
-      if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
-         if (RemoteOffSet > -1)
-            Warning("TSlave","problems secure-sending pass hash %s",
-                    "- may result in failures");
-         // If non RSA encoding available try passwd inversion
-         if (upwd) {
-            for (int i = 0; i < passwd.Length(); i++) {
-               char inv = ~passwd(i);
-               passwd.Replace(i, 1, inv);
-            }
-            TMessage mess;
-            mess << passwd;
-            if (fSocket->Send(mess) < 0) {
-               Error("TSlave", "failed to send inverted password");
-               SafeDelete(fSocket);
-               return;
-            }
-         }
-      }
-
    } else {
+      //
+      // Send ordinal (and config) info to slave (or master)
+      TMessage mess;
+      if (stype == kMaster)
+         mess << fUser << fOrdinal << TString(conffile);
+      else
+         mess << fUser << fOrdinal << fProofWorkDir;
 
-      // Send notification of no offset to be sent ...
-      if (fSocket->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-         Error("TSlave", "failed to send no offset notification in RSA key");
-         SafeDelete(fSocket);
-         return;
-      }
-   }
-
-   // Send ordinal (and config) info to slave (or master)
-   TMessage mess;
-   if (stype == kMaster)
-      mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
-   else
-      mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
-
-   if (fSocket->Send(mess) < 0) {
-      Error("TSlave", "failed to send ordinal and config info");
-      SafeDelete(fSocket);
-      return;
-   }
-
-   if (ProofdProto > 6) {
-      // Now we send authentication details to access, e.g., data servers
-      // not in the proof cluster and to be propagated to slaves.
-      // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
-      // line in .rootauthrc
-      if (fSocket->SendHostAuth() < 0) {
-         Error("TSlave", "failed to send HostAuth info");
+      if (fSocket->Send(mess) < 0) {
+         Error("TSlave", "failed to send ordinal and config info");
          SafeDelete(fSocket);
          return;
       }
@@ -265,6 +192,21 @@ TSlave::~TSlave()
 void TSlave::Close(Option_t *)
 {
    // Close slave socket.
+
+   // deactivate used sec context if talking to proofd daemon running
+   // an old protocol (sec context disactivated remotely)
+   TSecContext *sc = fSocket->GetSecContext();
+   if (sc && sc->IsActive()) {
+      TIter last(sc->GetSecContextCleanup(), kIterBackward);
+      TSecContextCleanup *nscc = 0;
+      while ((nscc = (TSecContextCleanup *)last())) {
+         if (nscc->GetType() == TSocket::kPROOFD &&
+             nscc->GetProtocol() < 9) {
+            sc->DeActivate("");
+            break;
+         }
+      }
+   }
 
    SafeDelete(fInput);
    SafeDelete(fSocket);
@@ -301,14 +243,14 @@ void TSlave::Print(Option_t *) const
 {
    // Printf info about slave.
 
-   TString secCont;
+   TString sc;
 
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());
-      Printf("    Security context:        %s", fSecContext->AsString(secCont));
+      Printf("    Security context:        %s", fSocket->GetSecContext()->AsString(sc));
       Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
       Printf("    Image name:              %s", GetImage());
       Printf("    Working directory:       %s", GetWorkDir());
@@ -329,4 +271,50 @@ void TSlave::SetInputHandler(TFileHandler *ih)
 
    fInput = ih;
    fInput->Add();
+}
+
+//______________________________________________________________________________
+Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
+{
+   // Setup authentication related stuff for old versions.
+   // Provided for backward compatibility.
+   static OldSlaveAuthSetup_t oldAuthSetupHook = 0;
+
+   if (!oldAuthSetupHook) {
+      // Load libraries needed for (server) authentication ...
+#ifdef ROOTLIBDIR
+      TString authlib = TString(ROOTLIBDIR) + "/libRootAuth";
+#else
+      TString authlib = TString(gRootDir) + "/lib/libRootAuth";
+#endif
+      char *p = 0;
+      // The generic one
+      if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(authlib) == -1) {
+            Error("OldAuthSetup", "can't load %s",authlib.Data());
+            return kFALSE;
+         }
+      } else {
+         Error("OldAuthSetup", "can't locate %s",authlib.Data());
+         return -1;
+      }
+      //
+      // Locate OldSlaveAuthSetup
+      Func_t f = gSystem->DynFindSymbol(authlib,"OldSlaveAuthSetup");
+      if (f)
+         oldAuthSetupHook = (OldSlaveAuthSetup_t)(f);
+      else {
+         Error("OldAuthSetup", "can't find OldSlaveAuthSetup");
+         return -1;
+      }
+   }
+   //
+   // Setup
+   if (oldAuthSetupHook) {
+      return (*oldAuthSetupHook)(fSocket, master, fOrdinal, wconf);
+   } else {
+      Error("OldAuthSetup", "hook to method OldSlaveAuthSetup is undefined");
+      return -1;
+   }
 }

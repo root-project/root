@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.24 2004/11/05 13:55:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.25 2005/02/18 09:51:21 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -94,6 +94,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service);
 void RpdAuthCleanup(const char *sstr, int opt);
 int  RpdGenRSAKeys(int);
 const char *RpdGetKeyRoot();
+int  RpdGetClientProtocol();
 #ifdef R__GLBS
 int  RpdGetShmIdCred();
 #endif

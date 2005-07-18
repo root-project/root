@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.29 2005/06/22 20:18:11 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.30 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -47,12 +47,11 @@
 
 class TAuthenticate;
 class THostAuth;
-class TProofServ;
 class TSocket;
-class TSecContext;
+class TRootSecContext;
 class TVirtualMutex;
 
-typedef Int_t (*CheckSecCtx_t)(const char *subj, TSecContext *ctx);
+typedef Int_t (*CheckSecCtx_t)(const char *subj, TRootSecContext *ctx);
 typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
 typedef Int_t (*Krb5Auth_t)(TAuthenticate *auth, TString &user, TString &det, Int_t version);
 typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char *passwd,
@@ -62,8 +61,8 @@ R__EXTERN TVirtualMutex *gAuthenticateMutex;
 
 class TAuthenticate : public TObject {
 
-friend class TProofServ;
-friend class TSecContext;
+friend class TRootAuth;
+friend class TRootSecContext;
 friend class TSocket;
 
 public:
@@ -77,7 +76,7 @@ private:
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
    TString      fRemote;      // remote host to which we want to connect
    Int_t        fRSAKey;      // Type of RSA key used
-   TSecContext *fSecContext;  // pointer to relevant sec context
+   TRootSecContext *fSecContext;  // pointer to relevant sec context
    ESecurity    fSecurity;    // actual logon security level
    TSocket     *fSocket;      // connection to remote daemon
    Bool_t       fSRPPwd;      // kTRUE if fPasswd is a SRP passwd
@@ -85,11 +84,9 @@ private:
    TString      fUser;        // user to be authenticated
    Int_t        fTimeOut;     // timeout flag
 
-   Bool_t       Authenticate();
    Int_t        GenRSAKeys();
    Bool_t       GetPwHash() const { return fPwHash; }
    Int_t        GetRSAKey() const { return fRSAKey; }
-   TSecContext *GetSecContext() const { return fSecContext; }
    ESecurity    GetSecurity() const { return fSecurity; }
    Bool_t       GetSRPPwd() const { return fSRPPwd; }
    const char  *GetSshUser(TString user) const;
@@ -98,6 +95,7 @@ private:
    Bool_t       GetUserPasswd(TString &user, TString &passwd,
                               Bool_t &pwhash, Bool_t srppwd);
    char        *GetRandString(Int_t Opt,Int_t Len);
+   Int_t        ProofAuthSetup();
    Int_t        RfioAuth(TString &user);
    void         SetEnvironment();
    Int_t        SshAuth(TString &user);
@@ -106,7 +104,6 @@ private:
    static TList         *fgAuthInfo;
    static TString        fgAuthMeth[kMAXSEC];
    static Bool_t         fgAuthReUse;      // kTRUE is ReUse required
-   static Int_t          fgClientProtocol; // client protocol level
    static TString        fgDefaultUser;    // Default user information
    static TDatime        fgExpDate;        // Expiring date for new security contexts
    static GlobusAuth_t   fgGlobusAuthHook;
@@ -136,18 +133,17 @@ private:
    static Int_t          fgProcessID;      // ID of the main thread as unique identifier
 
    static Bool_t         CheckHost(const char *Host, const char *host);
-   static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);
-   static void           FileExpand(const char *fin, FILE *ftmp);
-   static void           RemoveSecContext(TSecContext *ctx);
 
-protected:
-   static void           SetReadHomeAuthrc(Bool_t readhomeauthrc); // for TProofServ
+   static void           FileExpand(const char *fin, FILE *ftmp);
+   static Int_t          ProofAuthSetup(TSocket *sock, Bool_t client);
+   static void           RemoveSecContext(TRootSecContext *ctx);
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
                  const char *user = "");
    virtual ~TAuthenticate() { }
 
+   Bool_t             Authenticate();
    Int_t              AuthExists(TString User, Int_t method, const char *Options,
                           Int_t *Message, Int_t *Rflag, CheckSecCtx_t funcheck);
    void               CatchTimeOut();
@@ -158,17 +154,20 @@ public:
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
    Int_t              GetRSAKeyType() const { return fRSAKey; }
+   TRootSecContext       *GetSecContext() const { return fSecContext; }
    TSocket           *GetSocket() const { return fSocket; }
    const char        *GetUser() const { return fUser; }
    Int_t              HasTimedOut() const { return fTimeOut; }
    void               SetRSAKeyType(Int_t key) { fRSAKey = key; }
-   void               SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
+   void               SetSecContext(TRootSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
-   static void        CleanupSecContextAll(Option_t *opt = "k");
+
+   static Int_t       DecodeBase64(const char *in, char *out);
    static Int_t       DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n,
                                       rsa_NUMBER &d, void **rsassl = 0);
+   static Int_t       EncodeBase64(const char *in, Int_t lin, TString &out);
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);
    static Int_t       GetAuthMethodIdx(const char *meth);
@@ -213,6 +212,7 @@ public:
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetPromptUser(Bool_t promptuser);
    static void        SetDefaultRSAKeyType(Int_t key);
+   static void        SetReadHomeAuthrc(Bool_t readhomeauthrc); // for PROOF
    static void        SetRSAInit(Int_t init = 1);
    static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
    static void        SetSecureAuthHook(SecureAuth_t func);

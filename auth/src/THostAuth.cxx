@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.7 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.8 2005/06/23 10:51:12 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -25,13 +25,21 @@
 
 #include "TSystem.h"
 #include "THostAuth.h"
-#include "TSecContext.h"
+#include "TRootSecContext.h"
 #include "TAuthenticate.h"
 #include "TSocket.h"
 #include "TUrl.h"
 
 
 ClassImp(THostAuth)
+
+//______________________________________________________________________________
+THostAuth::THostAuth() : TObject()
+{
+   // Deafult constructor.
+
+   Create(0, 0);
+}
 
 //______________________________________________________________________________
 THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
@@ -715,15 +723,15 @@ void THostAuth::CountFailure(Int_t method)
 }
 
 //______________________________________________________________________________
-TSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
+TRootSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
                         Int_t meth, Int_t offset, const char *details,
                         const char *token, TDatime expdate, void *sctx, Int_t key)
 {
    // Create a Security context and add it to local list
    // Return pointer to it to be stored in TAuthenticate
 
-   TSecContext *ctx = new TSecContext(user, host, meth, offset, details,
-                                      token, expdate, sctx, key);
+   TRootSecContext *ctx = new TRootSecContext(user, host, meth, offset, details,
+                                              token, expdate, sctx, key);
    // Add it also to the local list if active
    if (ctx->IsActive())
       fSecContexts->Add(ctx);
