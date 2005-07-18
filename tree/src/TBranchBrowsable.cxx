@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.4 2005/05/18 12:31:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.5 2005/05/18 21:04:54 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -586,9 +586,10 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
    myStreamerElementsToCheck.AddAll(streamerInfo->GetElements());
 
    Int_t numAdded=0;
-   TIter iStreamerElements(&myStreamerElementsToCheck);
    TStreamerElement* streamerElement=0;
-   while ((streamerElement=(TStreamerElement*)iStreamerElements())) {
+   TObjLink *link = myStreamerElementsToCheck.FirstLink();
+   while (link) {
+      streamerElement = (TStreamerElement*)link->GetObject();
       if (streamerElement->IsBase()) {
          // this is a base class place holder
          // continue with the base class's streamer info
@@ -629,6 +630,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          li.Add(nsb);
          numAdded++;
       }
+      link = link->Next();
    }
    return numAdded;
 }
