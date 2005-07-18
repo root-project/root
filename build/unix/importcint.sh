@@ -64,9 +64,9 @@ tar cf - -C $ORG --exclude lib/WildCard --exclude lib/cintocx \
    --exclude lib/wintcldl --exclude lib/wintcldl83 --exclude CVS \
    --exclude .cvsignore include lib main stl tool | (cd $ASM; tar xf -)
 
-rm -f $SRCT/dmystrm.c
-rm -f $SRCT/dmystrct.c
-rm -f $SRCT/dmyinit.c
+rm -f $SRCT/v6_dmystrm.cxx
+rm -f $SRCT/v6_dmystrct.cxx
+rm -f $SRCT/v6_dmyinit.cxx
 rm -f $INCLT/done
 rm -f $INCLT/error
 rm -f $INCLT/iosenum.*
