@@ -677,7 +677,6 @@ int G__keyword_anytime_6(char *statement)
   if(strcmp(statement,"#ifdef")==0){
     int stat = G__pp_ifdef(1);
     return(stat);
-    return(1);
   }
   
   /***********************************
@@ -739,7 +738,6 @@ int G__keyword_anytime_7(char *statement)
   if(strcmp(statement,"#ifndef")==0){
     int stat = G__pp_ifdef(0);
     return(stat);
-    return(1);
   }
   if(strcmp(statement,"#pragma")==0){
     G__pragma();
@@ -2381,8 +2379,8 @@ G__value G__exec_switch()
     }
     result=G__exec_statement();
     if(G__return!=G__RETURN_NON) {
-      return(result);
       G__ifswitch = store_ifswitch;
+      return(result);
     }
     
     /* break found */
@@ -2413,7 +2411,7 @@ G__value G__exec_if()
   char condition[G__LONGLINE];
 #endif
   G__value result;
-  int FALSE=0;
+  int localFALSE=0;
   fpos_t store_fpos;
   int    store_line_number;
   int c;
@@ -2467,7 +2465,7 @@ G__value G__exec_if()
 #endif
       return(result);
     }
-    FALSE=0;
+    localFALSE=0;
   }
 
   else {
@@ -2503,7 +2501,7 @@ G__value G__exec_if()
 #endif
     G__no_exec_compile=store_no_exec_compile;
     G__no_exec=0;
-    FALSE=1;
+    localFALSE=1;
   }
   
   if(G__asm_noverflow) {
@@ -2590,11 +2588,11 @@ G__value G__exec_if()
     /* else execute else clause */
     G__temp_read=0;
     G__mparen=0;
-    if(FALSE==1
+    if(localFALSE==1
        || G__asm_wholefunction
        ) {
       G__no_exec=0;
-      /* FALSE=0; */
+      /* localFALSE=0; */
       result=G__exec_statement();
     }
     else {
