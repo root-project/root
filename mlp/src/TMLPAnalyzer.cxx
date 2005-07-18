@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.9 2005/02/03 07:29:32 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.10 2005/02/03 20:32:55 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TPad.h"
 #include "TCanvas.h"
 #include "TGaxis.h"
+#include "TRegexp.h"
 #include "Riostream.h"
 
 ClassImp(TMLPAnalyzer)
@@ -105,12 +106,16 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
    Int_t cnt = 0;
    while (end != -1) {
       brName = TString(input(beg, end - beg));
+      if (brName[0]=='@')
+        brName = brName(1,brName.Length()-1);
       beg = end + 1;
       end = input.Index(",", beg + 1);
       if(cnt==idx) return brName;
       cnt++;
    }
    brName = TString(input(beg, input.Length() - beg));
+   if (brName[0]=='@')
+      brName = brName(1,brName.Length()-1);
    return brName;
 }
 
@@ -155,7 +160,6 @@ void TMLPAnalyzer::GatherInformations()
    // Fills the two analysis trees.
 
    Double_t shift = 0.1;
-
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
    Int_t nEvents = test->GetN();
@@ -163,16 +167,30 @@ void TMLPAnalyzer::GatherInformations()
    Double_t* params = new Double_t[NN];
    Double_t* rms    = new Double_t[NN];
    TTreeFormula** formulas = new TTreeFormula*[NN];
+   Int_t index[NN];
    TString formula;
+   TRegexp re("{[0-9]+}$");
+   Ssiz_t len = formula.Length();
+   Ssiz_t pos = -1;
    Int_t i(0), j(0), k(0), l(0);
    for(i=0; i<NN; i++){
       formula = GetNeuronFormula(i);
-      formulas[i] = new TTreeFormula(Form("NF%d",this),formula,data);
+      pos = re.Index(formula,&len);
+      if(pos==-1 || len<3) {
+         formulas[i] = new TTreeFormula(Form("NF%d",this),formula,data);
+         index[i] = 0;
+      }
+      else {
+         TString newformula(formula,pos);
+         TString val = formula(pos+1,len-2);
+         formulas[i] = new TTreeFormula(Form("NF%d",this),newformula,data);
+         formula = newformula;
+         index[i] = val.Atoi();
+      }
       TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
       data->Draw(Form("%s>>tmpb",formula.Data()),"","goff");
       rms[i]  = tmp.GetRMS();
    }
-
    Int_t InNeuron = 0;
    Double_t Diff = 0.;
    if(fAnalysisTree) delete fAnalysisTree;
@@ -180,7 +198,6 @@ void TMLPAnalyzer::GatherInformations()
    fAnalysisTree->SetDirectory(0);
    fAnalysisTree->Branch("InNeuron",&InNeuron,"InNeuron/I");
    fAnalysisTree->Branch("Diff",&Diff,"Diff/D");
-
    Int_t numOutNodes=GetNeurons(GetLayers());
    Double_t *outVal=new Double_t[numOutNodes];
    Double_t *trueVal=new Double_t[numOutNodes];
@@ -205,22 +222,19 @@ void TMLPAnalyzer::GatherInformations()
       leaflist+=Form("True%d/D:",i);
    leaflist.Remove(leaflist.Length()-1);
    fIOTree->Branch("True", trueVal, leaflist);
-
    Double_t v1 = 0.;
    Double_t v2 = 0.;
    // Loop on the events in the test sample
    for(j=0; j< nEvents; j++) {
       fNetwork->GetEntry(test->GetEntry(j));
-
       // Loop on the neurons to evaluate
-      for(k=0; k<GetNeurons(1); k++) 
-         params[k] = formulas[k]->EvalInstance();
-
+      for(k=0; k<GetNeurons(1); k++) {
+         params[k] = formulas[k]->EvalInstance(index[k]);
+      }
       for(k=0; k<GetNeurons(GetLayers()); k++) {
          outVal[k] = fNetwork->Evaluate(k,params);
          trueVal[k] = ((TNeuron*)fNetwork->fLastLayer[k])->GetBranch();
       }
-
       fIOTree->Fill();
 
       // Loop on the input neurons

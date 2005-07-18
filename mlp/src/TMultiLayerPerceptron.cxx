@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.26 2005/02/03 07:29:32 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.27 2005/02/11 18:40:08 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -17,9 +17,9 @@
 // There are facilities to train the network and use the output.
 //
 // The input layer is made of inactive neurons (returning the
-// normalized input), hidden layers are made of sigmoids and output
-// neurons are linear. (One should still try to pass normalized inputs,
-// e.g. between [0.,1])
+// optionaly normalized input) and output neurons are linear. 
+// The type of hidden neurons is free, the default being sigmoids.
+// (One should still try to pass normalized inputs, e.g. between [0.,1])
 //
 // The basic input is a TTree and two (training and test) TEventLists.
 // Input and output neurons are assigned a value computed for each event
@@ -28,7 +28,7 @@
 // 6 learning methods are available: kStochastic, kBatch,
 // kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
 //
-// This implementation, written by C. Delaere,  is *inspired* from
+// This implementation, written by C. Delaere, is *inspired* from
 // the mlpfit package from J.Schwindling et al.
 //
 ///////////////////////////////////////////////////////////////////////////
@@ -155,16 +155,21 @@ given in the constructor. The network is described by a simple
 string: The input/output layers are defined by giving the expression for
 each neuron, separated by comas. Hidden layers are just described
 by the number of neurons. The layers are separated by semicolons.
-In addition, output layer formulas can be preceded by '@' (e.g "@out")
-if one wants to also normalize the output.
+In addition, input/output layer formulas can be preceded by '@' (e.g "@out")
+if one wants to also normalize the data from the TTree.
 Input and outputs are taken from the TTree given as second argument.
-Expressions are evaluated as for TTree::Draw().
+Expressions are evaluated as for TTree::Draw(), arrays are expended in 
+distinct neurons, one for each index. 
+This can only be done for fixed-size arrays.
 One defines the training and test datasets by TEventLists.</FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
 <U><FONT COLOR="#ff0000">Example</FONT></U><SPAN STYLE="text-decoration: none">:
 </SPAN>TMultiLayerPerceptron(&quot;x,y:10:5:f&quot;,inputTree);</SPAN></FONT></P>
 <P><FONT SIZE=3>Both the TTree and the TEventLists can be defined in
-the constructor, or later with the suited setter method.</FONT></P>
+the constructor, or later with the suited setter method. The lists 
+used for training and test can be defined either explicitely, or via
+a string containing the formula to be used to define them, exactly as 
+for a TCut.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the
 TMultiLayerPerceptron::SetLearningMethod() . Learning methods are :</FONT></P>
 <P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
@@ -280,12 +285,17 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
    fTau = 3;
    fLastAlpha = 0;
    fReset = 50;
+   fType = TNeuron::kSigmoid;
+   fextF = "";
+   fextD = "";
 }
 
 //______________________________________________________________________________
 TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
                                              TEventList * training,
-                                             TEventList * test)
+                                             TEventList * test, 
+                                             TNeuron::NeuronType type,
+                                             const char* extF, const char* extD)
 {
    // The network is described by a simple string:
    // The input/output layers are defined by giving
@@ -315,9 +325,13 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fTest = test;
    fTestOwner = false;
    fWeight = "1";
-   BuildNetwork();
-   if (data)
+   fType = type;
+   fextF = extF;
+   fextD = extD;
+   if (data) {
+      BuildNetwork();
       AttachData();
+   }
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -329,9 +343,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
 }
 
 //______________________________________________________________________________
-TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * weight, TTree * data,
+TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, 
+                                             const char * weight, TTree * data,
                                              TEventList * training,
-                                             TEventList * test)
+                                             TEventList * test, 
+                                             TNeuron::NeuronType type,
+                                             const char* extF, const char* extD)
 {
    // The network is described by a simple string:
    // The input/output layers are defined by giving
@@ -360,9 +377,13 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    fTest = test;
    fTestOwner = false;
    fWeight = weight;
-   BuildNetwork();
-   if (data)
+   fType = type;
+   fextF = extF;
+   fextD = extD;
+   if (data) {
+      BuildNetwork();
       AttachData();
+   }
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -376,7 +397,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
 //______________________________________________________________________________
 TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
                                              const char * training,
-                                             const char * test)
+                                             const char * test, 
+                                             TNeuron::NeuronType type,
+                                             const char* extF, const char* extD)
 {
    // The network is described by a simple string:
    // The input/output layers are defined by giving
@@ -409,8 +432,11 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fWeight = "1";
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
-   BuildNetwork();
+   fType = type;
+   fextF = extF;
+   fextD = extD;
    if (data) {
+      BuildNetwork();
       data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
       data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
       AttachData();
@@ -429,9 +455,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
 }
 
 //______________________________________________________________________________
-TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * weight, TTree * data,
+TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, 
+                                             const char * weight, TTree * data,
                                              const char * training,
-                                             const char * test)
+                                             const char * test, 
+                                             TNeuron::NeuronType type,
+                                             const char* extF, const char* extD)
 {
    // The network is described by a simple string:
    // The input/output layers are defined by giving
@@ -463,8 +492,11 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    fWeight = weight;
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
-      BuildNetwork();
+   fType = type;
+   fextF = extF;
+   fextD = extD;
    if (data) {
+      BuildNetwork();
       data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
       data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
       AttachData();
@@ -497,8 +529,10 @@ void TMultiLayerPerceptron::SetData(TTree * data)
       return;
    }
    fData = data;
-   if (data)
+   if (data) {
+      BuildNetwork();
       AttachData();
+   }
 }
 
 //______________________________________________________________________________
@@ -1061,9 +1095,13 @@ void TMultiLayerPerceptron::AttachData()
    Int_t nentries = fFirstLayer.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       end = (end == -1 ? input.Length() : end);
+      normalize = false;
       brName = TString(input(beg, end - beg));
       neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
-      fManager->Add(neuron->UseBranch(fData,brName.Data()));
+      if (brName[0]=='@')
+         normalize = true;
+      fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
+      if(!normalize) neuron->SetNormalisation(0., 1.);
       beg = end + 1;
       end = input.Index(",", beg + 1);
    }
@@ -1087,16 +1125,63 @@ void TMultiLayerPerceptron::AttachData()
       beg = end + 1;
       end = output.Index(",", beg + 1);
    }
-   if(fManager->GetMultiplicity()>1)
-      Warning("BuildNetwork()","all indices in arrays must be specified.\nFirst element will be assumed.");
    fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
-   fManager->Sync();
+   //fManager->Sync();
+}
+
+//______________________________________________________________________________
+void TMultiLayerPerceptron::ExpandStructure()
+{
+   // Expand the structure of the first layer
+   TString input  = TString(fStructure(0, fStructure.First(':')));
+   TString hiddenAndOutput = TString(
+         fStructure(fStructure.First(':') + 1,
+                    fStructure.Length() - fStructure.First(':')));
+   Int_t nneurons = input.CountChar(',')+1;
+   TString newInput;
+   Int_t i = 0;
+   Ssiz_t pos = 0;
+   TString name;
+   TTreeFormula* f = 0;
+   // loop on input neurons
+   for (i = 0; i<nneurons; i++) {
+      Ssiz_t nextpos=input.Index(",",pos);
+      if (nextpos!=kNPOS)
+         name=input(pos,nextpos-pos);
+      else name=input(pos,input.Length());
+      pos=nextpos+1;
+      f = new TTreeFormula("sizeTestFormula",name,fData);
+      // Variable size arrays are unrelialable
+      if(f->GetMultiplicity()==1 && f->GetNdata()>1) {
+         Warning("TMultiLayerPerceptron::ExpandStructure()","Variable size arrays cannot be used to build implicitely an input layer. The index 0 will be assumed.");
+      }
+      // Check if we are coping with an array... then expand
+      // The array operator used is {}. It is detected in TNeuron, and
+      // passed directly as instance index of the TTreeFormula, 
+      // so that complex compounds made of arrays can be used without
+      // parsing the details.
+      else if(f->GetNdata()>1) {
+         for(Int_t j=0; j<f->GetNdata(); j++) {
+            if(i||j) newInput += ",";
+            newInput += name;
+            newInput += "{";
+            newInput += j;
+            newInput += "}";
+         }
+         continue;
+      }
+      if(i) newInput += ",";
+      newInput += name;
+   }
+   // Save the result
+   fStructure = newInput + ":" + hiddenAndOutput;
 }
 
 //______________________________________________________________________________
 void TMultiLayerPerceptron::BuildNetwork()
 {
    // Instanciates the network from the description
+   ExpandStructure();
    TString input  = TString(fStructure(0, fStructure.First(':')));
    TString hidden = TString(
            fStructure(fStructure.First(':') + 1,
@@ -1148,7 +1233,6 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
 void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
 {
    // Builds hidden layers.
-   // Neurons are Sigmoids.
    Int_t beg = 0;
    Int_t end = hidden.Index(":", beg + 1);
    Int_t prevStart = 0;
@@ -1162,7 +1246,7 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
       Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
       for (i = 0; i < num; i++) {
          name.Form("HiddenL%d:N%d",layer,i);
-         neuron = new TNeuron(TNeuron::kSigmoid, name);
+         neuron = new TNeuron(fType, name, "", (const char*)fextF, (const char*)fextD);
          fNetwork.AddLast(neuron);
          for (j = prevStart; j < prevStop; j++) {
             synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -1178,7 +1262,7 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
    for (i = 0; i < num; i++) {
       name.Form("HiddenL%d:N%d",layer,i);
-      neuron = new TNeuron(TNeuron::kSigmoid, name);
+      neuron = new TNeuron(fType, name);
       fNetwork.AddLast(neuron);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -1261,9 +1345,9 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
       if (!hist)
          hist = new TH2D(setname.Data(), title.Data(), 50, -1, 1, 50, -1, 1);
       hist->Reset();
-      Int_t nEvents = fTraining->GetN();
+      Int_t nEvents = events->GetN();
       for (i = 0; i < nEvents; i++) {
-         GetEntry(fTraining->GetEntry(i));
+         GetEntry(events->GetEntry(i));
          hist->Fill(out->GetValue(), (out->GetBranch() - norm[1]) / norm[0]);
       }
       hist->Draw();
@@ -1276,9 +1360,9 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
       if (!hist)
          hist = new TH1D(setname, title, 50, 1, -1);
       hist->Reset();
-      Int_t nEvents = fTraining->GetN();
+      Int_t nEvents = events->GetN();
       for (i = 0; i < nEvents; i++)
-         hist->Fill(Result(fTraining->GetEntry(i), index));
+         hist->Fill(Result(events->GetEntry(i), index));
       hist->Draw();
       if (opt.Contains("train") && opt.Contains("test")) {
          events = fTraining;
@@ -1287,9 +1371,9 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
          if (!hist)
             hist = new TH1D(setname, title, 50, 1, -1);
          hist->Reset();
-         Int_t nEvents = fTest->GetN();
+         Int_t nEvents = events->GetN();
          for (i = 0; i < nEvents; i++)
-            hist->Fill(Result(fTest->GetEntry(i), index));
+            hist->Fill(Result(events->GetEntry(i), index));
          hist->Draw("same");
       }
    }
@@ -1308,9 +1392,24 @@ void TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
       output = &cout;
    else
       output = new ofstream(filen.Data());
+   TNeuron *neuron = NULL;
+   *output << "#input normalization" << endl;
+   Int_t nentries = fFirstLayer.GetEntriesFast();
+   Int_t j=0;
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
+      *output << neuron->GetNormalisation()[0] << " " 
+              << neuron->GetNormalisation()[1] << endl;
+   }
+   *output << "#output normalization" << endl;
+   nentries = fLastLayer.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fLastLayer.UncheckedAt(j);
+      *output << neuron->GetNormalisation()[0] << " " 
+              << neuron->GetNormalisation()[1] << endl;
+   }
    *output << "#neurons weights" << endl;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   TNeuron *neuron = NULL;
    while ((neuron = (TNeuron *) it->Next()))
       *output << neuron->GetWeight() << endl;
    delete it;
@@ -1337,15 +1436,34 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    if (filen == "")
       return;
    ifstream input(filen.Data());
+   // input normalzation
    input.getline(buff, 100);
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
+   TObjArrayIter *it = (TObjArrayIter *) fFirstLayer.MakeIterator();
+   Float_t n1,n2;
    TNeuron *neuron = NULL;
+   while ((neuron = (TNeuron *) it->Next())) {
+      input >> n1 >> n2;
+      neuron->SetNormalisation(n2,n1);
+   }
+   input.getline(buff, 100);
+   // output normalization
+   input.getline(buff, 100);
+   it = (TObjArrayIter *) fLastLayer.MakeIterator();
+   while ((neuron = (TNeuron *) it->Next())) {
+      input >> n1 >> n2;
+      neuron->SetNormalisation(n2,n1);
+   }
+   input.getline(buff, 100);
+   // neuron weights
+   input.getline(buff, 100);
+   it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next())) {
       input >> w;
       neuron->SetWeight(w);
    }
    delete it;
    input.getline(buff, 100);
+   // synapse weights
    input.getline(buff, 100);
    it = (TObjArrayIter *) fSynapses.MakeIterator();
    TSynapse *synapse = NULL;
@@ -1356,7 +1474,6 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    delete it;
    delete[] buff;
 }
-
 
 //______________________________________________________________________________
 Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params) const
@@ -1392,6 +1509,9 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
    TString lg = language;
    lg.ToUpper();
    Int_t i;
+   if(GetType()==TNeuron::kExternal) {
+      Warning("TMultiLayerPerceptron::Export","Request to export a network using an external function");
+   }
    if (lg == "C++") {
       TString classname = filename;
       TString header = filename;
@@ -1427,8 +1547,9 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          sourcefile << "     case " << idx++ << ":" << endl
-                    << "         return neuron" << neuron << "();"
-                    << endl;
+                    << "         return ((neuron" << neuron << "()*"
+                    << neuron->GetNormalisation()[0] << ")+" 
+                    << neuron->GetNormalisation()[1] << ");" << endl;
       sourcefile << "     default:" << endl
                  << "         return 0.;" << endl << "   }"
                  << endl;
@@ -1455,7 +1576,32 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
             if (!neuron->GetPost(0))
                sourcefile << "   return input;" << endl;
             else {
-               sourcefile << "   return ((1/(1+exp(-input)))*";
+               switch(neuron->GetType()) {
+                  case (TNeuron::kSigmoid):
+                     {
+                        sourcefile << "   return ((1/(1+exp(-input)))*";
+                        break;
+                     }
+                  case (TNeuron::kLinear):
+                     {
+                        sourcefile << "   return (input*";
+                        break;
+                     }
+                  case (TNeuron::kTanh):
+                     {
+                        sourcefile << "   return (tanh(input)*";
+                        break;
+                     }
+                  case (TNeuron::kGauss):
+                     {
+                        sourcefile << "   return (exp(-input*input)*";
+                        break;
+                     }
+                  default:
+                     { 
+                        sourcefile << "   return 0.";
+                     }
+               }
                sourcefile << neuron->GetNormalisation()[0] << ")+" ;
                sourcefile << neuron->GetNormalisation()[1] << ";" << endl;
             }
@@ -1499,18 +1645,12 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       ofstream sourcefile(source);
 
       // Header
-      sourcefile << "      double precision function " << filename << "(x, index)" << endl;
+      sourcefile << "      double precision function " << filename 
+                 << "(x, index)" << endl;
       sourcefile << implicit;
       sourcefile << "      double precision x(" <<
       fFirstLayer.GetEntriesFast() << ")" << endl << endl;
 
-/*      // First layer
-      sourcefile << "C --- First Layer" << endl;
-      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
-         sourcefile << "      first" << i << " = (x(" << i+1 << ") - "
-             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
-             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << endl;
-*/
       // Last layer
       sourcefile << "C --- Last Layer" << endl;
       TNeuron *neuron;
@@ -1519,8 +1659,10 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       TString ifelseif = "      if (index.eq.";
       while ((neuron = (TNeuron *) it->Next())) {
          sourcefile << ifelseif.Data() << idx++ << ") then" << endl
-                    << "          " << filename << "=neuron" << neuron << "(x)"
-                    << endl;
+                    << "          " << filename 
+                    << "=((neuron" << neuron << "(x)*"
+                    << neuron->GetNormalisation()[0] << ")+"
+                    << neuron->GetNormalisation()[1] << ");" << endl;
 	 ifelseif = "      else if (index.eq.";
       }
       sourcefile << "      else" << endl
@@ -1529,20 +1671,26 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       sourcefile << "      end" << endl;
 
       // Network
-      sourcefile << "C --- Hidden layers" << endl;
+      sourcefile << "C --- First and Hidden layers" << endl;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
-         sourcefile << "      double precision function neuron" << neuron << "(x)" << endl
+         sourcefile << "      double precision function neuron" 
+                    << neuron << "(x)" << endl
 		    << implicit;
-         sourcefile << "      double precision x(" << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+         sourcefile << "      double precision x(" 
+                    << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
          if (!neuron->GetPre(0)) {
-            sourcefile << "      neuron" << neuron << " = (x(" << idx+1 << ") - "
-             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[1] << "d0)/"
-             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[0] << "d0" << endl;
+            sourcefile << "      neuron" << neuron 
+                       << " = (x(" << idx+1 << ") - "
+             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[1] 
+             << "d0)/"
+             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[0] 
+             << "d0" << endl;
 	     idx++;
          } else {
-            sourcefile << "      neuron" << neuron << " = " << neuron->GetWeight() << "d0" << endl;
+            sourcefile << "      neuron" << neuron 
+                       << " = " << neuron->GetWeight() << "d0" << endl;
             TSynapse *syn;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++)))
@@ -1550,7 +1698,35 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
 	    		  << " = neuron" << neuron
 			  << " + synapse" << syn << "(x)" << endl;
             if (neuron->GetPost(0)) {
-               sourcefile << "      neuron" << neuron << "= (sigmoid(neuron" << neuron << ")*";
+               switch(neuron->GetType()) {
+                  case (TNeuron::kSigmoid):
+                     {
+                        sourcefile << "      neuron" << neuron 
+                                   << "= (sigmoid(neuron" << neuron << ")*";
+                        break;
+                     }
+                  case (TNeuron::kLinear):
+                     {
+                        break;
+                     }
+                  case (TNeuron::kTanh):
+                     {
+                        sourcefile << "      neuron" << neuron 
+                                   << "= (tanh(neuron" << neuron << ")*";
+                        break;
+                     }
+                  case (TNeuron::kGauss):
+                     {
+                        sourcefile << "      neuron" << neuron 
+                                   << "= (exp(-neuron" << neuron << "*neuron"
+                                   << neuron << "))*";
+                        break;
+                     }
+                  default:
+                     { 
+                        sourcefile << "   neuron " << neuron << "= 0.";
+                     }
+               }
                sourcefile << neuron->GetNormalisation()[0] << "d0)+" ;
                sourcefile << neuron->GetNormalisation()[1] << "d0" << endl;
             }
@@ -1566,8 +1742,10 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       while ((synapse = (TSynapse *) it->Next())) {
          sourcefile << "      double precision function " << "synapse"
                     << synapse << "(x)\n" << implicit;
-         sourcefile << "      double precision x(" << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
-         sourcefile << "      synapse" << synapse << "=neuron" << synapse->GetPre()
+         sourcefile << "      double precision x(" 
+                    << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+         sourcefile << "      synapse" << synapse 
+                    << "=neuron" << synapse->GetPre()
                     << "(x)*" << synapse->GetWeight() << "d0" << endl;
          sourcefile << "      end" << endl << endl;
       }
@@ -1581,6 +1759,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       pyfile += ".py";
       ofstream pythonfile(pyfile);
       pythonfile << "from cmath import exp" << endl << endl;
+      pythonfile << "from cmath import tanh" << endl << endl;
       pythonfile << "class " << classname << ":" << endl;
       pythonfile << "\tdef value(self,index";
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
@@ -1596,7 +1775,9 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          pythonfile << "\t\tif index==" << idx++
-             << ": return self.neuron" << neuron << "()" << endl;
+             << ": return ((self.neuron" << neuron << "()*"
+             << neuron->GetNormalisation()[0] << ")+" 
+             << neuron->GetNormalisation()[1] << ");" << endl;
       pythonfile << "\t\treturn 0." << endl;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
@@ -1614,7 +1795,32 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
             if (!neuron->GetPost(0))
                pythonfile << "\t\treturn input" << endl;
             else {
-               pythonfile << "\t\treturn ((1/(1+exp(-input)))*";
+               switch(neuron->GetType()) {
+                  case (TNeuron::kSigmoid):
+                     {
+                        pythonfile << "\t\treturn ((1/(1+exp(-input)))*";
+                        break;
+                     }
+                  case (TNeuron::kLinear):
+                     {
+                        pythonfile << "\t\treturn (input*";
+                        break;
+                     }
+                  case (TNeuron::kTanh):
+                     {
+                        pythonfile << "\t\treturn (tanh(input)*";
+                        break;
+                     }
+                  case (TNeuron::kGauss):
+                     {
+                        pythonfile << "\t\treturn (exp(-input*input)*";
+                        break;
+                     }
+                  default:
+                     { 
+                        pythonfile << "\t\treturn 0.";
+                     }
+               }
                pythonfile << neuron->GetNormalisation()[0] << ")+" ;
                pythonfile << neuron->GetNormalisation()[1] << endl;
             }

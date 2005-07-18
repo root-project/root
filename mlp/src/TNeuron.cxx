@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.12 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.13 2004/12/16 21:20:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -18,9 +18,10 @@
 // A network is built connecting neurons by synapses.
 // There are different types of neurons: linear (a+bx),
 // sigmoid (1/(1+exp(-x)), tanh or gaussian.
+// An external function can also be used, together with its derivative.
 // In a Multi Layer Perceptron, the input layer is made of
-// inactive neurons (returning the normalized input), hidden layers
-// are made of sigmoids and output neurons are linear.
+// inactive neurons (returning the normalized input) and output neurons 
+// are linear. Hidden neurons may be anything, the default being sigmoids.
 //
 // This implementation contains several methods to compute the value,
 // the derivative, the DeDw, ...
@@ -33,18 +34,21 @@
 #include "TNeuron.h"
 #include "TTree.h"
 #include "TTreeFormula.h"
+#include "TFormula.h"
 #include "TBranch.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TH1D.h"
+#include "TRegexp.h"
 #include "Riostream.h"
 
 ClassImp(TNeuron)
 
 //______________________________________________________________________________
 TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
-                 const char* name /*= ""*/, const char* title /*= ""*/):
-   TNamed(name, title)
+                 const char* name /*= ""*/, const char* title /*= ""*/,
+                 const char* extF /*= ""*/, const char* extD  /*= ""*/ )
+   :TNamed(name, title)
 {
    // Usual constructor
    fpre.SetOwner(false);
@@ -60,6 +64,13 @@ TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
    fDeDw  = 0;
    fDEDw  = 0;
    fValue = 0;
+   fExtF  = 0;
+   fExtD  = 0;
+   fIndex = 0;
+   if(fType==kExternal) {
+      fExtF = (TFormula*)gROOT->FindObject(extF);
+      fExtD = (TFormula*)gROOT->FindObject(extD);
+   }
 }
 
 //______________________________________________________________________________
@@ -827,6 +838,12 @@ void TNeuron::AddPost(TSynapse * post)
    fpost.AddLast(post);
 }
 
+TNeuron::NeuronType TNeuron::GetType() const
+{
+   // Returns the neuron type.
+   return fType;
+}
+
 //______________________________________________________________________________
 TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
 {
@@ -835,11 +852,32 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    // This normalisation is used by GetValue() (input neurons)
    // and GetError() (output neurons)
    if (fFormula) delete fFormula;
-   fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
+   // Set the formula
+   // One checks for {}: defined as instance in TMultiLayerPerceptron
+   // so that EvalInstance can be used. This allows to use arrays as
+   // input, also in complex calculation, without detailed string parsing.
+   TRegexp re("{[0-9]+}$");
+   TString f(formula);
+   Ssiz_t len = f.Length();
+   Ssiz_t pos = re.Index(f,&len);
+   if(pos==-1 || len<3)
+      fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
+   else {
+      TString newformula(formula,pos);
+      TString val = f(pos+1,len-2);
+      fFormula = new TTreeFormula(Form("NF%d",this),
+                                  (const char*) newformula,input);
+      fIndex = val.Atoi();
+      f = newformula;
+   }
+   // Computes the default normalization
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
-   input->Draw(Form("%s>>tmpb",formula),"","goff");
+   input->Draw(Form("%s>>tmpb",(const char*)f),"","goff");
    fNorm[0] = tmp.GetRMS();
    fNorm[1] = tmp.GetMean();
+   // Check the dimensionality 
+   if(fFormula->GetNdata()>1 && fIndex==0)
+      Warning("TNeuron::UseBranch()","all indices in arrays must be specified, otherwise the first element will be assumed.");
    return fFormula;
 }
 
@@ -847,7 +885,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
 Double_t TNeuron::GetBranch() const
 {
    // Returns the formula value.
-   Double_t branch = fFormula->EvalInstance();
+   Double_t branch = fFormula->EvalInstance(fIndex);
    if (isnan(branch))
       branch = 0.;
    return branch;
@@ -895,6 +933,10 @@ Double_t TNeuron::GetValue() const
           value = TMath::Exp(-input * input);
           break;
         }
+      case TNeuron::kExternal: {
+          value = fExtF->Eval(input);
+          break;
+        }
       }
       return (((TNeuron*)this)->fValue = value);
    }
@@ -934,6 +976,10 @@ Double_t TNeuron::GetDerivative() const
      }
    case TNeuron::kGauss: {
        derivative = (-2) * input * TMath::Exp(-input * input);
+       break;
+     }
+   case TNeuron::kExternal: {
+       derivative = fExtD->Eval(input);
        break;
      }
    }

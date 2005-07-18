@@ -54,9 +54,10 @@ void mlpHiggs(Int_t ntrain=100) {
    // Build and train the NN ptsumf is used as a weight since we are primarly 
    // interested  by high pt events.
    // The datasets used here are the same as the default ones.
-   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf,acolin:5:3:type",
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("@msumf,@ptsumf,@acolin:5:3:type",
                                                           "ptsumf",simu,"Entry$%2","(Entry$+1)%2");
    mlp->Train(ntrain, "text,graph,update=10");
+   mlp->Export("test","python");
    // Use TMLPAnalyzer to see what it looks for
    TCanvas* mlpa_canvas = new TCanvas("mlpa_canvas","Network analysis");
    mlpa_canvas->Divide(2,2);

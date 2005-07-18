@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.7 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.8 2004/10/12 07:30:03 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -23,6 +23,9 @@
 #endif
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TNeuron
+#include "TNeuron.h"
 #endif
 
 class TTree;
@@ -62,16 +65,26 @@ class TMultiLayerPerceptron : public TObject {
    TMultiLayerPerceptron();
    TMultiLayerPerceptron(const char* layout, TTree* data = NULL,
                          const char* training = "Entry$%2==0",
-                         const char* test = "");
-   TMultiLayerPerceptron(const char* layout, const char* weight, TTree* data = NULL,
+                         const char* test = "", 
+                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         const char* extF = "", const char* extD  = "");
+   TMultiLayerPerceptron(const char* layout, 
+                         const char* weight, TTree* data = NULL,
                          const char* training = "Entry$%2==0",
-                         const char* test = "");
+                         const char* test = "", 
+                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout, TTree* data,
                          TEventList* training,
-                         TEventList* test);
-   TMultiLayerPerceptron(const char* layout, const char* weight, TTree* data,
+                         TEventList* test, 
+                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         const char* extF = "", const char* extD  = "");
+   TMultiLayerPerceptron(const char* layout, 
+                         const char* weight, TTree* data,
                          TEventList* training,
-                         TEventList* test);
+                         TEventList* test, 
+                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         const char* extF = "", const char* extD  = "");
    virtual ~TMultiLayerPerceptron();
    void SetData(TTree*);
    void SetTrainingDataSet(TEventList* train);
@@ -99,7 +112,8 @@ class TMultiLayerPerceptron : public TObject {
    inline Double_t GetTau()      const { return fTau; }
    inline Int_t GetReset()       const { return fReset; }
    inline TString GetStructure() const { return fStructure; }
-   void DrawResult(Int_t index = 0, Option_t* option = "") const;
+   inline TNeuron::NeuronType GetType() const { return fType; }
+   void DrawResult(Int_t index = 0, Option_t* option = "test") const;
    void DumpWeights(Option_t* filename = "-") const;
    void LoadWeights(Option_t* filename = "");
    Double_t Evaluate(Int_t index, Double_t* params) const;
@@ -122,6 +136,7 @@ class TMultiLayerPerceptron : public TObject {
    Double_t DerivDir(Double_t*);
 
  private:
+   void ExpandStructure();
    void BuildFirstLayer(TString&);
    void BuildHiddenLayers(TString&);
    void BuildLastLayer(TString&, Int_t);
@@ -137,6 +152,9 @@ class TMultiLayerPerceptron : public TObject {
    TObjArray fSynapses;            // Collection of all the synapses in the network
    TString fStructure;             // String containing the network structure
    TString fWeight;                // String containing the event weight
+   TNeuron::NeuronType fType;      // Type of hidden neurons
+   TString fextF;                  // String containing the function name
+   TString fextD;                  // String containing the derivative name
    TEventList *fTraining;          //! EventList defining the events in the training dataset
    TEventList *fTest;              //! EventList defining the events in the test dataset
    LearningMethod fLearningMethod; //! The Learning Method
@@ -151,7 +169,7 @@ class TMultiLayerPerceptron : public TObject {
    Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent - Default=50
    Bool_t fTrainingOwner;          //! internal flag whether one has to delete fTraining or not
    Bool_t fTestOwner;              //! internal flag whether one has to delete fTest or not
-   ClassDef(TMultiLayerPerceptron, 2)	// a Neural Network
+   ClassDef(TMultiLayerPerceptron, 3)	// a Neural Network
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.6 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.7 2004/12/16 21:20:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -23,6 +23,7 @@ class TTreeFormula;
 class TSynapse;
 class TBranch;
 class TTree;
+class TFormula;
 
 //____________________________________________________________________
 //
@@ -48,10 +49,11 @@ class TNeuron : public TNamed {
    friend class TSynapse;
 
  public:
-   enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss };
+   enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kExternal };
 
    TNeuron(NeuronType type = kSigmoid, 
-           const char* name = "", const char* title = "");
+           const char* name = "", const char* title = "", 
+           const char* extF = "", const char* extD  = "" );
    virtual ~ TNeuron() {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }
@@ -61,6 +63,7 @@ class TNeuron : public TNamed {
    Double_t GetError() const;
    Double_t GetDeDw() const;
    Double_t GetBranch() const;
+   NeuronType GetType() const;
    void SetWeight(Double_t w);
    inline Double_t GetWeight() const { return fWeight; }
    void SetNormalisation(Double_t mean, Double_t RMS);
@@ -82,9 +85,12 @@ class TNeuron : public TNamed {
    Double_t fWeight;      // weight used for computation
    Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
    NeuronType fType;      // neuron type
+   TFormula* fExtF;       // function   (external mode)
+   TFormula* fExtD;       // derivative (external mode)
    //buffers
    //should be mutable when supported by all compilers
    TTreeFormula* fFormula;//! formula to be used for inputs and outputs
+   Int_t fIndex;          //! index in the formula
    Bool_t fNewValue;      //! do we need to compute fValue again ?
    Double_t fValue;       //! buffer containing the last neuron output
    Bool_t fNewDeriv;      //! do we need to compute fDerivative again ?
@@ -93,7 +99,7 @@ class TNeuron : public TNamed {
    Double_t fDeDw;        //! buffer containing the last derivative of the error
    Double_t fDEDw;        //! buffer containing the sum over all examples of DeDw
 
-   ClassDef(TNeuron, 2)   // Neuron for MultiLayerPerceptrons
+   ClassDef(TNeuron, 3)   // Neuron for MultiLayerPerceptrons
 };
 
 #endif
