@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.192 2005/06/24 20:25:11 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.193 2005/07/06 19:13:32 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1257,7 +1257,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       head = headOK;
       leafStatus[l] = 0;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      len = leaf->GetLen();
+      len = leaf->GetLen(); if (len<=0) len = 1;
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       branchname[0] = 0;
@@ -1289,6 +1289,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (leafcount) {
          len = leafcount->GetMaximum();
+         if (len<=0) len = 1;
          strcpy(blen,leafcount->GetName());
          bname = &blen[0];
          while (*bname) {if (*bname == '.') *bname='_'; bname++;}
