@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.1 2005/05/14 16:20:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.2 2005/05/18 12:31:09 brun Exp $
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************
@@ -397,7 +397,7 @@ Int_t TFormulaPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaPrimitive("Gaus","Gaus",TFastFun::Gaus));
    AddFormula(new TFormulaPrimitive("Gausn","Gausn",TFastFun::Gausn));
    AddFormula(new TFormulaPrimitive("Landau","Landau",TFastFun::Landau));
-   AddFormula(new TFormulaPrimitive("Landaun","Landaun",TFastFun::Landau));
+   AddFormula(new TFormulaPrimitive("Landaun","Landaun",TFastFun::Landaun));
    //
    //
    // polynoms
@@ -434,10 +434,10 @@ Int_t TFormulaPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaPrimitive("asin","asin",asin));                         // 14
    AddFormula(new TFormulaPrimitive("TMath::ATan","TMath::ATan",atan));           // 15
    AddFormula(new TFormulaPrimitive("atan","atan",atan));                         // 15
-   AddFormula(new TFormulaPrimitive("TMath::ATan2","TMath::ATan2",atan2));       // 16
-   AddFormula(new TFormulaPrimitive("atan2","atan2",atan2));                     // 16
+   AddFormula(new TFormulaPrimitive("TMath::ATan2","TMath::ATan2",atan2));        // 16
+   AddFormula(new TFormulaPrimitive("atan2","atan2",atan2));                      // 16
    //   kpow      = 20, ksq = 21, ksqrt     = 22, 
-   AddFormula(new TFormulaPrimitive("pow","pow",TMath::Power));                         //20
+   AddFormula(new TFormulaPrimitive("pow","pow",TMath::Power));                 //20
    AddFormula(new TFormulaPrimitive("sq","sq",TFastFun::Pow2));                 //21
    AddFormula(new TFormulaPrimitive("sqrt","sqrt",TFastFun::Sqrt));             //22
    // kmin      = 24, kmax = 25,
@@ -465,10 +465,11 @@ Int_t TFormulaPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaPrimitive("TMath::ATanH","TMath::ATanh",TMath::ATanH));           // 75
    AddFormula(new TFormulaPrimitive("atanh","atanh",TMath::ATanH));                         // 75
    //  
-   AddFormula(new TFormulaPrimitive("TMath::Abs","TMath::Abs",TMath::Abs));                         // 
-   AddFormula(new TFormulaPrimitive("TMath::BreitWigner","TMath::BreitWigner",TMath::BreitWigner));                         // 
-   AddFormula(new TFormulaPrimitive("TMath::Gaus","TMath::Gaus",(GenFunc1110)TMath::Gaus));                         // 
-   TFormulaPrimitive::AddFormula(new TFormulaPrimitive("TMath::Landau","TMath::Landau",(TFormulaPrimitive::GenFunc1110)TMath::Landau));                         // 
+   AddFormula(new TFormulaPrimitive("TMath::Abs","TMath::Abs",TMath::Abs));
+   AddFormula(new TFormulaPrimitive("TMath::BreitWigner","TMath::BreitWigner",TMath::BreitWigner));
+
+   //Disable direct access to TMath::Landau for now because of the default parameter.
+   //AddFormula(new TFormulaPrimitive("TMath::Landau","TMath::Landau",(TFormulaPrimitive::GenFunc1110)TMath::Landau));
 
    TMath_GenerInterface();
    return 1;
