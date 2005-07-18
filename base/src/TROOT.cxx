@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.155 2005/07/01 08:51:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.156 2005/07/05 12:36:06 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1295,6 +1295,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       fTypes->Add(new TDataType("unsigned short"));
       fTypes->Add(new TDataType("int"));
       fTypes->Add(new TDataType("unsigned int"));
+      fTypes->Add(new TDataType("unsigned"));
       fTypes->Add(new TDataType("long"));
       fTypes->Add(new TDataType("unsigned long"));
       fTypes->Add(new TDataType("long long"));
