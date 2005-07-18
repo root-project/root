@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.10 2005/02/03 20:32:55 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.11 2005/02/03 20:32:55 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -167,7 +167,7 @@ void TMLPAnalyzer::GatherInformations()
    Double_t* params = new Double_t[NN];
    Double_t* rms    = new Double_t[NN];
    TTreeFormula** formulas = new TTreeFormula*[NN];
-   Int_t index[NN];
+   Int_t* index = new Int_t[NN];
    TString formula;
    TRegexp re("{[0-9]+}$");
    Ssiz_t len = formula.Length();
@@ -259,6 +259,7 @@ void TMLPAnalyzer::GatherInformations()
    delete[] rms;
    delete[] outVal;
    delete[] trueVal;
+   delete[] index;
    for(i=0; i<GetNeurons(1); i++) delete formulas[i]; delete [] formulas;
    fAnalysisTree->ResetBranchAddresses();
    fIOTree->ResetBranchAddresses();
