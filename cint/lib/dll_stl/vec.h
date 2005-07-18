@@ -41,8 +41,8 @@ using namespace std;
 #pragma link C++ class vector<void*>;
 #endif
 #pragma link C++ class vector<char*>;
-#if 0 /* (!defined(G__VISUAL)) */
-// currently does not work on windows
+#if 0
+// currently does not work on most platform
 #pragma link C++ class vector<const char*>;
 #endif
 #if defined(G__STRING_DLL) // || defined(G__ROOT)

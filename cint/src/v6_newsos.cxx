@@ -32,6 +32,8 @@
 #include <setjmp.h>
 #include "newsos.h"
 
+extern "C" {
+
 extern FILE *G__serr;
 
 /************************************************************************
@@ -42,8 +44,8 @@ FILE *fp;
 fpos_t *position;
 {
         if(fp) 
-	  fseek(fp,*position,SEEK_SET);
-	return(0);
+          fseek(fp,*position,SEEK_SET);
+        return(0);
 }
 
 
@@ -52,8 +54,8 @@ FILE *fp;
 fpos_t *position;
 {
         if(fp)
-	  *position = ftell(fp);
-	return(0);
+          *position = ftell(fp);
+        return(0);
 }
 
 /************************************************************************
@@ -62,9 +64,9 @@ fpos_t *position;
 G__newsos_nosupport(funcname)
 char *funcname;
 {
-	G__fprinterr(G__serr,
-		"Limitation: %s() not supported for NewsOS\n",funcname);
-}	
+        G__fprinterr(G__serr,
+                "Limitation: %s() not supported for NewsOS\n",funcname);
+}        
 
 /************************************************************************
 * Unsupported dummy function
@@ -74,29 +76,29 @@ char *funcname;
 int raise(signal)
 int signal;
 {
-	int result;
+        int result;
 #ifdef G__NEVER
-	G__newss_nosupport("raise");
+        G__newss_nosupport("raise");
 #else
-	switch(signal) {
-	case SIGINT: G__fsigint(); break;
-	case SIGILL: G__fsigill(); break;
-	case SIGFPE: G__fsigfpe(); break;
-	case SIGABRT: G__fsigabrt(); break;
-	case SIGSEGV: G__fsigsegv(); break;
-	case SIGTERM: G__fsigterm(); break;
-	default: break;
-	}
+        switch(signal) {
+        case SIGINT: G__fsigint(); break;
+        case SIGILL: G__fsigill(); break;
+        case SIGFPE: G__fsigfpe(); break;
+        case SIGABRT: G__fsigabrt(); break;
+        case SIGSEGV: G__fsigsegv(); break;
+        case SIGTERM: G__fsigterm(); break;
+        default: break;
+        }
 #endif
-	return(result);
+        return(result);
 }
 
 char *strerror(error)
 int error;
 {
-	char *result;
-	G__newsos_nosupport("strerror");
-	return(result);
+        char *result;
+        G__newsos_nosupport("strerror");
+        return(result);
 }
 
 double difftime(newtime,oldtime)
@@ -106,9 +108,9 @@ time_t newtime,oldtime;
 int newtime,oldtime;
 #endif
 {
-	double result;
-	G__newsos_nosupport("difftime");
-	return(result);
+        double result;
+        G__newsos_nosupport("difftime");
+        return(result);
 }
 
 
@@ -117,9 +119,9 @@ char *sqrt;
 char **tailptr;
 int base;
 {
-	unsigned long result;
-	G__newsos_nosupport("strtoul");
-	return(result);
+        unsigned long result;
+        G__newsos_nosupport("strtoul");
+        return(result);
 }
 
 #ifdef G__NEWSOS4
@@ -127,9 +129,9 @@ int base;
 * NewsOS 4.x specifix dummy functions
 *********************************************************************/
 unsigned long clock() {
-	unsigned long result;
-	G__newsos_nosupport("clock");
-	return(result);
+        unsigned long result;
+        G__newsos_nosupport("clock");
+        return(result);
 }
 
 int setvbuf(fp,buffer,mode,size)
@@ -138,9 +140,9 @@ char *buffer;
 int mode;
 unsigned int size;
 {
-	int result;
-	G__newsos_nosupport("setvbuf");
-	return(result);
+        int result;
+        G__newsos_nosupport("setvbuf");
+        return(result);
 }
 
 unsigned int strxfrm(string1,string2,n)
@@ -148,11 +150,13 @@ char *string1;
 char *string2;
 unsigned int n;
 {
-	unsigned int result;
-	G__newsos_nosupport("strxfrm");
-	return(result);
+        unsigned int result;
+        G__newsos_nosupport("strxfrm");
+        return(result);
 }
 #endif
+
+} /* extern "C" */
 
 #else
 

@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 int G__quiet=0;
 
 static int G__history_size_max = 51;
@@ -27,8 +29,7 @@ static int G__history_size_min = 30;
 /************************************************************
 * G__set_history_size()
 *************************************************************/
-void G__set_history_size(s)
-int s;
+void G__set_history_size(int s)
 {
   if(s>0) {
     G__history_size_min = s;
@@ -48,9 +49,7 @@ extern int add_history G__P((char* str));
 *
 *  command history with file store
 *************************************************************/
-void G__input_history(state,string)
-int *state;
-char *string;
+void G__input_history(int *state,char *string)
 {
   char G__oneline[G__LONGLINE*2];
   char G__argbuf[G__LONGLINE*2];
@@ -81,9 +80,9 @@ char *string;
     fp=fopen(histfile,"r");
     if(fp) {
       while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
-	add_history(arg[0]);
-	strcpy(prevstring,arg[0]);
-	*state = (*state)+1;
+        add_history(arg[0]);
+        strcpy(prevstring,arg[0]);
+        *state = (*state)+1;
       }
       fclose(fp);
     }
@@ -156,8 +155,7 @@ char *string;
 *
 *  command input frontend
 *************************************************************/
-char *G__input(prompt)
-char *prompt;
+char *G__input(char *prompt)
 {
   static char line[G__LONGLINE];
   char *pchar;
@@ -182,7 +180,7 @@ char *prompt;
     pchar=readline(prompt);
     while(pchar&&strlen(pchar)>G__LONGLINE-5) {
       G__fprinterr(G__serr,"!!! User command too long !!! (%d>%d)\n"
-		   ,strlen(pchar),G__LONGLINE-5);
+                   ,strlen(pchar),G__LONGLINE-5);
       pchar=readline(prompt);
     }
     if(pchar) strcpy(line,pchar);
@@ -223,20 +221,20 @@ char *prompt;
       case 'Y':
       case 'z':
       case 'y':
-	break;
+        break;
       case 'N':
       case 'n':
-	if(G__dumpreadline[0]) {
-	  line[0]='<';
-	  G__dumpinput(line);
-	}
-	break;
+        if(G__dumpreadline[0]) {
+          line[0]='<';
+          G__dumpinput(line);
+        }
+        break;
       case EOF:
-	line[0]='Q';
-	break;
+        line[0]='Q';
+        break;
       default:
-	G__dumpinput(line);
-	break;
+        G__dumpinput(line);
+        break;
       }
     }
     else {
@@ -266,16 +264,11 @@ char *prompt;
 * complete on compiled function names (if this is the first word in 
 * the line, or on filenames if not.) */
 
-char **completion_matches();
+char **completion_matches(char *text,char *(*entry_function) (char*,int));
 
-char **G__funcname_completion(text,start,end)
-char *text;
-int start,end;
+char **G__funcname_completion(char *text,int /* start */,int /* end */)
 {
   char **matchs;
-#ifndef G__OLDIMPLEMENTATION1911
-  if(0 && start && end) return((char**)NULL);
-#endif
   matchs = (char **)NULL;
   /* If this word is at the start of the line, then it is a function name */
   matchs = completion_matches(text,G__search_next_member);
@@ -291,7 +284,7 @@ int start,end;
 
 
 #ifdef G__GNUREADLINE
-extern char **(*rl_attempted_completion_function)();
+extern char **(*rl_attempted_completion_function)(char*,int,int);
 extern char *rl_basic_word_break_characters;
 
 int G__init_readline()
@@ -309,8 +302,7 @@ int G__init_readline()
 
 
 
-char *G__strrstr(string1,string2)
-char *string1,*string2;
+char *G__strrstr(char *string1,char *string2)
 {
   char *p=NULL,*s,*result=NULL;
   s=string1;
@@ -321,7 +313,7 @@ char *string1,*string2;
   return(result);
 }
 
-
+} /* extern "C" */
 
 /*
  * Local Variables:

@@ -24,12 +24,12 @@ CINTS1       += $(CINTDIRM)/G__setup.c
 CINTALLO     := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
 CINTALLDEP   := $(CINTALLO:.o=.d)
 
-CINTS1       := $(filter-out $(MODDIRS)/sunos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
-CINTS1       := $(filter-out $(MODDIRS)/macos.%,$(CINTS1))
-CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
-CINTS1       := $(filter-out $(MODDIRS)/newsos.%,$(CINTS1))
 
+CINTS2       := $(filter-out $(MODDIRS)/v6_sunos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/v6_macos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/v6_winnt.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/v6_newsos.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/allstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
@@ -113,7 +113,7 @@ ifeq ($(PLATFORM),sunos)
 CINTS1       += $(MODDIRS)/sunos.c
 endif
 ifeq ($(PLATFORM),macos)
-CINTS1       += $(MODDIRS)/macos.c
+CINTS2       += $(MODDIRS)/v6_macos.cxx
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),macosx)
@@ -123,7 +123,7 @@ ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
-CINTS1       += $(MODDIRS)/winnt.c
+CINTS2       += $(MODDIRS)/v6_winnt.cxx
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/longif3.cxx
 ifeq ($(VC_MAJOR),13)
@@ -180,11 +180,11 @@ endif
 
 CINTS        := $(CINTS1) $(CINTS2)
 CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
-CINTTMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINTO))
+CINTTMPO     := $(subst v6_loadfile.o,v6_loadfile_tmp.o,$(CINTO))
 CINTTMPINC   := -I$(MODDIR)/include -I$(MODDIR)/stl -I$(MODDIR)/lib
 CINTDEP      := $(CINTO:.o=.d)
-CINTDEP      += $(MODDIRS)/loadfile_tmp.d
-CINTALLDEP   += $(MODDIRS)/loadfile_tmp.d
+CINTDEP      += $(MODDIRS)/v6_loadfile_tmp.d
+CINTALLDEP   += $(MODDIRS)/v6_loadfile_tmp.d
 
 CINTLIB      := $(LPATH)/libCint.$(SOEXT)
 
@@ -289,11 +289,11 @@ $(CINTDIRS)/iccstrm.o: $(CINTDIRS)/iccstrm.cxx
 $(CINTDIRS)/accstrm.o: $(CINTDIRS)/accstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm -o $@ -c $<
 
-$(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
-	$(CC) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
+$(CINTDIRS)/v6_stdstrct.o: $(CINTDIRS)/v6_stdstrct.cxx
+	$(CXX) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
 
-$(CINTDIRS)/loadfile_tmp.o: $(CINTDIRS)/loadfile.c
-	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
+$(CINTDIRS)/v6_loadfile_tmp.o: $(CINTDIRS)/v6_loadfile.cxx
+	$(CXX) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
 
 $(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
 	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<

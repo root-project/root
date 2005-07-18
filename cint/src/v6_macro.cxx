@@ -20,7 +20,7 @@
 
 #include "common.h"
 
-
+extern "C" {
 
 /******************************************************************
 * void G__define()
@@ -81,17 +81,17 @@ void G__define()
       c=G__fgetc();
       switch(c) {
       case '/':
-	G__fignoreline();
-	c='\n';
-	break;
+        G__fignoreline();
+        c='\n';
+        break;
       case '*':
-	G__skip_comment();
-	c=G__fgetstream(initvalue+strlen(initvalue),"\n\r\\/");
-	break;
+        G__skip_comment();
+        c=G__fgetstream(initvalue+strlen(initvalue),"\n\r\\/");
+        break;
       default:
-	sprintf(initvalue+strlen(initvalue),"/%c",c);
-	c=G__fgetstream(initvalue+strlen(initvalue),"\n\r\\/");
-	break;
+        sprintf(initvalue+strlen(initvalue),"/%c",c);
+        c=G__fgetstream(initvalue+strlen(initvalue),"\n\r\\/");
+        break;
       }
     }
     if(c=='\\') {
@@ -163,8 +163,7 @@ void G__define()
 /***********************************************************************
 * int G__handle_as_typedef(oldtype,newtype)
 ***********************************************************************/
-int G__handle_as_typedef(oldtype,newtype)
-char *oldtype,*newtype;
+int G__handle_as_typedef(char *oldtype,char *newtype)
 {
   int type='\0' , tagnum = -1 ,ispointer=0 , isunsigned;
   int typenum;
@@ -245,8 +244,8 @@ char *oldtype,*newtype;
     else {
       typenum=G__defined_typename(oldtype);
       if(typenum>=0) {
-	type = G__newtype.type[typenum];
-	tagnum=G__newtype.tagnum[typenum];
+        type = G__newtype.type[typenum];
+        tagnum=G__newtype.tagnum[typenum];
       }
     }
   }
@@ -267,9 +266,9 @@ char *oldtype,*newtype;
   if(type) {
     if(strcmp(newtype,"bool")!=0) {
       if(G__dispmsg>=G__DISPNOTE) {
-	G__fprinterr(G__serr,"Note: macro handled as typedef %s %s;"
-		     ,oldtype,newtype);
-	G__printlinenum();
+        G__fprinterr(G__serr,"Note: macro handled as typedef %s %s;"
+                     ,oldtype,newtype);
+        G__printlinenum();
       }
     }
     G__search_typename(newtype,type,tagnum,0);
@@ -291,9 +290,7 @@ char *oldtype,*newtype;
 /**************************************************************************
 * G__createmacro()
 **************************************************************************/
-void G__createmacro(new_name,initvalue)
-char *new_name;
-char *initvalue;
+void G__createmacro(char *new_name,char *initvalue)
 {
   char line[G__ONELINE];
   int c;
@@ -322,8 +319,8 @@ char *initvalue;
   /* print out header */
   ++G__mline;
   fprintf(G__mfp,"// #define %s  FILE:%s LINE:%d\n"
-	  ,new_name
-	  ,G__ifile.name,G__ifile.line_number);
+          ,new_name
+          ,G__ifile.name,G__ifile.line_number);
   
   fgetpos(G__mfp,&pos);
   
@@ -398,9 +395,7 @@ char *initvalue;
 *  output int *done  :  1 if macro function called, 0 if no macro found
 *
 **************************************************************************/
-G__value G__execfuncmacro(item,done)
-char *item;
-int *done;
+G__value G__execfuncmacro(char *item,int *done)
 {
   G__value result;
   struct G__Deffuncmacro *deffuncmacro;
@@ -524,16 +519,11 @@ int *done;
 * translate function macro parameter at the first execution of func macro
 *
 **************************************************************************/
-int G__transfuncmacro(item,deffuncmacro,callfuncmacro,call_pos,p
-		      ,nobraces,nosemic
-		      )
-char *item;
-struct G__Deffuncmacro *deffuncmacro;
-struct G__Callfuncmacro *callfuncmacro;
-fpos_t call_pos;
-char *p;
-int nobraces;
-int nosemic;
+int G__transfuncmacro(char *item,G__Deffuncmacro *deffuncmacro
+                      ,G__Callfuncmacro *callfuncmacro,fpos_t call_pos
+                      ,char *p
+                      ,int nobraces,int nosemic
+                      )
 {
   struct G__Charlist call_para;
   
@@ -554,13 +544,13 @@ int nosemic;
   
   /* translate macro function */
   G__replacefuncmacro(item
-		      ,callfuncmacro
-		      ,&call_para
-		      ,&deffuncmacro->def_para
-		      ,deffuncmacro->def_fp
-		      ,deffuncmacro->def_pos
-		      ,nobraces,nosemic
-		      );
+                      ,callfuncmacro
+                      ,&call_para
+                      ,&deffuncmacro->def_para
+                      ,deffuncmacro->def_fp
+                      ,deffuncmacro->def_pos
+                      ,nobraces,nosemic
+                      );
   
   G__freecharlist(&call_para);
   
@@ -573,16 +563,11 @@ int nosemic;
 * Replace function macro parameter at the first execution of func macro
 *
 **************************************************************************/
-int G__replacefuncmacro(item,callfuncmacro,callpara,defpara,def_fp,def_pos
-			,nobraces,nosemic
-			)
-char *item;
-struct G__Callfuncmacro *callfuncmacro;
-struct G__Charlist *callpara,*defpara;
-FILE *def_fp;
-fpos_t def_pos;
-int nobraces;
-int nosemic;
+int G__replacefuncmacro(char *item,G__Callfuncmacro *callfuncmacro
+                        ,G__Charlist *callpara,G__Charlist *defpara
+                        ,FILE *def_fp,fpos_t def_pos
+                        ,int nobraces,int nosemic
+                        )
 {
   fpos_t pos;
   int c;
@@ -608,8 +593,8 @@ int nosemic;
   /* print out header */
   ++G__mline;
   fprintf(G__mfp,"// #define %s  FILE:%s LINE:%d\n"
-	  ,item
-	  ,G__ifile.name,G__ifile.line_number);
+          ,item
+          ,G__ifile.name,G__ifile.line_number);
   
   fgetpos(G__mfp,&pos);
   callfuncmacro->mfp_pos = pos;
@@ -633,7 +618,7 @@ int nosemic;
     c = G__fgetstream(symbol,punctuation);
     if('\0' != symbol[0]) {
       if(0==double_quote && 0==single_quote)
-	G__argsubstitute(symbol,callpara,defpara);
+        G__argsubstitute(symbol,callpara,defpara);
       fprintf(G__mfp,"%s",symbol);
       fgetpos(G__mfp,&backup_pos);
       semicolumn = 0;
@@ -642,18 +627,18 @@ int nosemic;
     if(0==single_quote && 0==double_quote) {
       if('\n'==c || '\r'==c) break;
       if('\\'==c) {
-	c=G__fgetc();
-	/* Things got very complicated here, No one is sure which of
-	 * 973, 969, 948 is good */
-	if('\n'==c) continue;
-	if('\r'==c) c=G__fgetc();
+        c=G__fgetc();
+        /* Things got very complicated here, No one is sure which of
+         * 973, 969, 948 is good */
+        if('\n'==c) continue;
+        if('\r'==c) c=G__fgetc();
       }
       
       if(';'==c) {
-	semicolumn = 1;
+        semicolumn = 1;
       }
       else if(!isspace(c)) {
-	semicolumn = 0;
+        semicolumn = 0;
       }
       if (c == '#') {
         c = G__fgetc ();
@@ -661,11 +646,11 @@ int nosemic;
           /* Token paste operation */
           fsetpos (G__mfp, &backup_pos);
           G__fgetspace ();
-	  fseek(G__ifile.fp,-1,SEEK_CUR);
+          fseek(G__ifile.fp,-1,SEEK_CUR);
           continue;
         }
         else {
-	  fseek(G__ifile.fp,-1,SEEK_CUR);
+          fseek(G__ifile.fp,-1,SEEK_CUR);
         }
       }
     }
@@ -884,17 +869,15 @@ int G__maybe_finish_macro ()
 * Substitute macro argument
 *
 **************************************************************************/
-int G__argsubstitute(symbol,callpara,defpara)
-char *symbol;
-struct G__Charlist *callpara,*defpara;
+int G__argsubstitute(char *symbol,G__Charlist *callpara,G__Charlist *defpara)
 {
   while(defpara->next) {
     if(strcmp(defpara->string,symbol)==0) {
       if(callpara->string) strcpy(symbol,callpara->string);
       else {
-	/* Line number is not quite correct in following error messaging */
-	G__genericerror("Error: insufficient number of macro arguments");
-	symbol[0] = 0;
+        /* Line number is not quite correct in following error messaging */
+        G__genericerror("Error: insufficient number of macro arguments");
+        symbol[0] = 0;
       }
       break;
     }
@@ -910,8 +893,7 @@ struct G__Charlist *callpara,*defpara;
 * Create deffuncmacro list when prerun
 *
 **************************************************************************/
-int G__createfuncmacro(new_name)
-char *new_name;
+int G__createfuncmacro(char *new_name)
 {
   struct G__Deffuncmacro *deffuncmacro;
   int hash,i;
@@ -938,7 +920,7 @@ char *new_name;
   while(deffuncmacro->next) deffuncmacro=deffuncmacro->next;
   
   /* store name */
-  deffuncmacro->name = malloc(strlen(new_name)+1);
+  deffuncmacro->name = (char*)malloc(strlen(new_name)+1);
   strcpy(deffuncmacro->name,new_name);
   
   /* store hash */
@@ -975,9 +957,7 @@ char *new_name;
 /**************************************************************************
 * G__getparameterlist()
 **************************************************************************/
-int G__getparameterlist(paralist,charlist)
-char *paralist;
-struct G__Charlist *charlist;
+int G__getparameterlist(char *paralist,G__Charlist *charlist)
 {
   int isrc;
   char string[G__ONELINE];
@@ -993,11 +973,11 @@ struct G__Charlist *charlist;
     if (c == '\t') c = ' ';
     
     if (charlist->string)
-      charlist->string = realloc (charlist->string,
+      charlist->string = (char*) realloc (charlist->string,
                                   strlen (charlist->string) +
                                   strlen (string) + 2);
     else {
-      charlist->string = malloc(strlen(string)+2);
+      charlist->string = (char*)malloc(strlen(string)+2);
       charlist->string[0] = '\0';
     }
     strcat (charlist->string, string);
@@ -1021,8 +1001,7 @@ struct G__Charlist *charlist;
 /**************************************************************************
 * G__freedeffuncmacro()
 **************************************************************************/
-int G__freedeffuncmacro(deffuncmacro)
-struct G__Deffuncmacro *deffuncmacro;
+int G__freedeffuncmacro(G__Deffuncmacro *deffuncmacro)
 {
   if(deffuncmacro->next) {
     G__freedeffuncmacro(deffuncmacro->next);
@@ -1041,8 +1020,7 @@ struct G__Deffuncmacro *deffuncmacro;
 /**************************************************************************
 * G__freecallfuncmacro()
 **************************************************************************/
-int G__freecallfuncmacro(callfuncmacro)
-struct G__Callfuncmacro *callfuncmacro;
+int G__freecallfuncmacro(G__Callfuncmacro *callfuncmacro)
 {
   if(callfuncmacro->next) {
     G__freecallfuncmacro(callfuncmacro->next);
@@ -1055,8 +1033,7 @@ struct G__Callfuncmacro *callfuncmacro;
 /**************************************************************************
 * G__freecharlist()
 **************************************************************************/
-int G__freecharlist(charlist)
-struct G__Charlist *charlist;
+int G__freecharlist(G__Charlist *charlist)
 {
   if(charlist->next) {
     G__freecharlist(charlist->next);
@@ -1070,6 +1047,7 @@ struct G__Charlist *charlist;
   return(0);
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

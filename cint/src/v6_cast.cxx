@@ -20,18 +20,15 @@
 
 #include "common.h"
 
+extern "C" {
 
 /**************************************************************************
 * G__castclass()
 *
 **************************************************************************/
-void G__castclass(result3,tagnum,castflag,ptype
-		  ,reftype
-		  )
-G__value *result3;
-int tagnum,castflag;
-int *ptype;
-int reftype;
+void G__castclass(G__value *result3,int tagnum, int castflag,int *ptype
+                  ,int reftype
+                  )
 {
   int offset=0;
   if(-1!=result3->tagnum) {
@@ -39,10 +36,10 @@ int reftype;
     if(-1!=(offset=G__isanybase(tagnum,result3->tagnum,result3->obj.i))) 
       offset=offset;
     else if(0==castflag && 0==G__oprovld && 
-	    (G__SECURE_MARGINAL_CAST&G__security) &&
+            (G__SECURE_MARGINAL_CAST&G__security) &&
              (islower(*ptype) || islower(result3->type)) &&
-	    0==reftype &&
-	    'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
+            0==reftype &&
+            'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
       G__genericerror("Error: illegal type cast (1)");
       return;
     }
@@ -62,16 +59,16 @@ int reftype;
 #endif
   }
   else if(-1==result3->tagnum && -1!=result3->typenum &&
-	  (strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
-	   strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
-	   strcmp(G__newtype.name[result3->typenum],"long double")==0 ||
-	   (-1!=G__newtype.tagnum[result3->typenum] &&
-	    (strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
-		    ,"G__longlong")==0 ||
-	     strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
-		    ,"G__ulonglong")==0 ||
-	     strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
-		    ,"G__longdouble")==0)))) {
+          (strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
+           strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
+           strcmp(G__newtype.name[result3->typenum],"long double")==0 ||
+           (-1!=G__newtype.tagnum[result3->typenum] &&
+            (strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+                    ,"G__longlong")==0 ||
+             strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+                    ,"G__ulonglong")==0 ||
+             strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+                    ,"G__longdouble")==0)))) {
     char com[G__ONELINE],buf2[G__ONELINE];
     int known = 0;
     int store_typenum = result3->typenum;
@@ -83,8 +80,8 @@ int reftype;
     return;
   }
   else if(0==castflag && 0==G__oprovld &&
-	  (G__SECURE_MARGINAL_CAST&G__security) &&
-	  'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
+          (G__SECURE_MARGINAL_CAST&G__security) &&
+          'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
     G__genericerror("Error: illegal type cast (2)");
     return;
   }
@@ -98,8 +95,7 @@ int reftype;
 * long G__int_cast(G__value buf)
 * 
 ****************************************************************/
-long G__int_cast(buf) /* used to be int */
-G__value buf;
+long G__int_cast(G__value buf) /* used to be int */
 {
   switch(buf.type) {
   case 'd':
@@ -120,8 +116,7 @@ G__value buf;
 * long G__uint_cast(G__value buf)
 * 
 ****************************************************************/
-unsigned long G__uint_cast(buf) /* used to be int */
-G__value buf;
+unsigned long G__uint_cast(G__value buf) /* used to be int */
 {
   switch(buf.type) {
   case 'd':
@@ -148,9 +143,7 @@ G__value buf;
 *
 *
 ******************************************************************/
-G__value G__castvalue(casttype,result3)
-char *casttype;
-G__value result3;
+G__value G__castvalue(char *casttype,G__value result3)
 {
   int lenitem,castflag,type;
   int tagnum;
@@ -163,8 +156,8 @@ G__value result3;
 
   /* Questionable condition */
   G__CHECK(G__SECURE_CASTING
-	   ,!G__oprovld&&!G__cppconstruct&&!G__castcheckoff
-	   ,return(G__null));
+           ,!G__oprovld&&!G__cppconstruct&&!G__castcheckoff
+           ,return(G__null));
 #ifdef G__SECURITY
   G__castcheckoff=0;
 #endif
@@ -190,15 +183,15 @@ G__value result3;
     isconst=1;
     if(strncmp(px," const *",8)==0 || strncmp(px," const &",8)==0) {
       while(*(px+7)) {
-	*px = *(px+7);
-	++px;
+        *px = *(px+7);
+        ++px;
       }
       *px = 0;
     }
     else {
       while(*(px+6)) {
-	*px = *(px+6);
-	++px;
+        *px = *(px+6);
+        ++px;
       }
       *px = 0;
     }
@@ -235,38 +228,38 @@ G__value result3;
     if((G__security&G__SECURE_CAST2P)&&
        !G__oprovld&&!G__cppconstruct&&!G__castcheckoff) {
       if(isupper(result3.type)&&(-1!=result3.tagnum)) {
-	/* allow casting between public base-derived */
-	casttype[lenitem-1]='\0';
-	tagnum = G__defined_tagname(casttype,2);
-	if(-1!=tagnum) {
+        /* allow casting between public base-derived */
+        casttype[lenitem-1]='\0';
+        tagnum = G__defined_tagname(casttype,2);
+        if(-1!=tagnum) {
 #ifdef G__VIRTUALBASE
-	  if(-1!=(offset=G__ispublicbase(tagnum,result3.tagnum
-					 ,result3.obj.i))) {
+          if(-1!=(offset=G__ispublicbase(tagnum,result3.tagnum
+                                         ,result3.obj.i))) {
 #else
-	  if(-1!=(offset=G__ispublicbase(tagnum,result3.tagnum))) {
+          if(-1!=(offset=G__ispublicbase(tagnum,result3.tagnum))) {
 #endif
-	    result3.obj.i += offset;
-	    result3.tagnum=tagnum;
-	    result3.typenum = -1;
-	    return(result3);
-	  }
-	  else {
-	    int store_tagnum = G__tagnum;
-	    G__tagnum = result3.tagnum;
-	    offset = G__find_virtualoffset(tagnum);
-	    G__tagnum = store_tagnum;
-	    if(offset) {
-	      result3.obj.i -= offset;
-	      result3.tagnum=tagnum;
-	      result3.typenum = -1;
-	      return(result3);
-	    }
-	  }
-	}
-	G__CHECK(G__SECURE_CAST2P,1,return(G__null));
+            result3.obj.i += offset;
+            result3.tagnum=tagnum;
+            result3.typenum = -1;
+            return(result3);
+          }
+          else {
+            int store_tagnum = G__tagnum;
+            G__tagnum = result3.tagnum;
+            offset = G__find_virtualoffset(tagnum);
+            G__tagnum = store_tagnum;
+            if(offset) {
+              result3.obj.i -= offset;
+              result3.tagnum=tagnum;
+              result3.typenum = -1;
+              return(result3);
+            }
+          }
+        }
+        G__CHECK(G__SECURE_CAST2P,1,return(G__null));
       }
       else {
-	G__CHECK(G__SECURE_CAST2P,1,return(G__null));
+        G__CHECK(G__SECURE_CAST2P,1,return(G__null));
       }
     }
 
@@ -458,14 +451,14 @@ G__value result3;
   if(type && 'u'==store_result.type) {
     char ttt[G__ONELINE];
     G__fundamental_conversion_operator(type ,-1 ,-1 ,reftype,isconst
-				       ,&store_result,ttt);
+                                       ,&store_result,ttt);
     return(store_result);
   }    
   else if('u'==store_result.type && strcmp(casttype,"bool")==0) {
     char ttt[G__ONELINE];
     G__fundamental_conversion_operator(type ,G__defined_tagname("bool",2)
-				       ,-1 ,reftype,isconst
-				       ,&store_result,ttt);
+                                       ,-1 ,reftype,isconst
+                                       ,&store_result,ttt);
     return(store_result);
   }
 
@@ -509,42 +502,42 @@ G__value result3;
       result3.typenum=G__defined_typename(casttype);
       G__var_type=store_var_type;
       if(result3.typenum== -1) {
-	tagnum=G__defined_tagname(casttype,0);
-	if(tagnum== -1) type='Y'; /* checked */
-	else G__castclass(&result3,tagnum,castflag,&type,reftype);
+        tagnum=G__defined_tagname(casttype,0);
+        if(tagnum== -1) type='Y'; /* checked */
+        else G__castclass(&result3,tagnum,castflag,&type,reftype);
       }
       else {
-	tagnum=G__newtype.tagnum[result3.typenum];
-	if(islower(G__newtype.type[result3.typenum])) 
-	  type=G__newtype.type[result3.typenum]+castflag;
-	else {
-	  type=G__newtype.type[result3.typenum];
-	  switch(G__newtype.reftype[result3.typenum]) {
-	  case G__PARANORMAL:
-	  case G__PARAREFERENCE:
-	    reftype = G__PARAP2P;
-	    break;
-	  default:
-	    reftype = G__newtype.reftype[result3.typenum] + 1;
-	    break;
-	  }
-	}
-	if(tagnum != -1) {
-	  if(
-	     G__struct.type[tagnum]=='e'
-	     ) {
-	    type='i'+castflag;
-	  }
-	  else {
-	    G__castclass(&result3,tagnum,castflag,&lenitem,reftype);
-	  }
-	}
-	else if('u'==store_result.type) {
-	  char ttt[G__ONELINE];
-	  G__fundamental_conversion_operator(type,-1,result3.typenum
-					     ,reftype,isconst
-					     ,&store_result,ttt);
-	  return(store_result);
+        tagnum=G__newtype.tagnum[result3.typenum];
+        if(islower(G__newtype.type[result3.typenum])) 
+          type=G__newtype.type[result3.typenum]+castflag;
+        else {
+          type=G__newtype.type[result3.typenum];
+          switch(G__newtype.reftype[result3.typenum]) {
+          case G__PARANORMAL:
+          case G__PARAREFERENCE:
+            reftype = G__PARAP2P;
+            break;
+          default:
+            reftype = G__newtype.reftype[result3.typenum] + 1;
+            break;
+          }
+        }
+        if(tagnum != -1) {
+          if(
+             G__struct.type[tagnum]=='e'
+             ) {
+            type='i'+castflag;
+          }
+          else {
+            G__castclass(&result3,tagnum,castflag,&lenitem,reftype);
+          }
+        }
+        else if('u'==store_result.type) {
+          char ttt[G__ONELINE];
+          G__fundamental_conversion_operator(type,-1,result3.typenum
+                                             ,reftype,isconst
+                                             ,&store_result,ttt);
+          return(store_result);
         }
       }
     }
@@ -644,11 +637,7 @@ G__value result3;
 *   G__exec_asm()
 *
 ******************************************************************/
-void G__asm_cast(type,buf,tagnum,reftype)
-int type;
-G__value *buf;
-int tagnum;
-int reftype;
+void G__asm_cast(int type,G__value *buf,int tagnum,int reftype)
 {
   switch((char)type) {
   case 'd':
@@ -704,8 +693,8 @@ int reftype;
     if(G__PARAREFERENCE==reftype) {
       int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
       if(-1!=offset) {
-	buf->obj.i += offset;
-	buf->ref += offset;
+        buf->obj.i += offset;
+        buf->ref += offset;
       }
     }
   default:
@@ -715,7 +704,7 @@ int reftype;
   }
 }
 
-
+} /* extern "C" */
 
 /*
  * Local Variables:

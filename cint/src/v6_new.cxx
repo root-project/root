@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 #ifdef G__ROOT
 extern void* G__new_interpreted_object G__P((int size));
 extern void G__delete_interpreted_object G__P((void* p));
@@ -38,8 +40,7 @@ extern void G__delete_interpreted_object G__P((void* p));
 *  new (arena)type
 *
 ****************************************************************/
-G__value G__new_operator(expression)
-char *expression;
+G__value G__new_operator(char *expression)
 {
   char arena[G__ONELINE];
   long memarena=0;
@@ -132,7 +133,7 @@ char *expression;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n"
-			     ,G__asm_cp,1 ,G__asm_dt);
+                             ,G__asm_cp,1 ,G__asm_dt);
 #endif
       G__asm_inst[G__asm_cp]=G__LD;
       G__asm_inst[G__asm_cp+1]=G__asm_dt;
@@ -146,12 +147,12 @@ char *expression;
     if(initializer) {
       pinc=1;
       if(-1==tagnum) {
-	*initializer = 0;
-	tagnum = G__defined_tagname(basictype,1);
-	*initializer = '(';
+        *initializer = 0;
+        tagnum = G__defined_tagname(basictype,1);
+        *initializer = '(';
       }
       if(-1!=tagnum) sprintf(construct,"%s%s"
-			     ,G__struct.name[tagnum],initializer);
+                             ,G__struct.name[tagnum],initializer);
       else strcpy(construct,basictype);
       *initializer='\0';
     }
@@ -165,7 +166,7 @@ char *expression;
   size = G__Lsizeof(type);
   if(size == -1) {
     G__fprinterr(G__serr,"Error: type %s not defined FILE:%s LINE:%d\n"
-	    ,type,G__ifile.name,G__ifile.line_number);
+            ,type,G__ifile.name,G__ifile.line_number);
     return(G__null);
   }
   
@@ -235,13 +236,13 @@ char *expression;
   if(G__asm_noverflow) {
     if(ld_flag) {
       if(-1==G__tagnum || G__CPPLINK!=G__struct.iscpplink[G__tagnum]
-	 || ispointer || isupper(var_type)) {
-	/* increment for LD 1, otherwise, cancel LD 1 */
-	G__inc_cp_asm(2,1);
+         || ispointer || isupper(var_type)) {
+        /* increment for LD 1, otherwise, cancel LD 1 */
+        G__inc_cp_asm(2,1);
       }
       else {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"Cancel LD 1\n");
+        if(G__asm_dbg) G__fprinterr(G__serr,"Cancel LD 1\n");
 #endif
       }
     }
@@ -266,15 +267,15 @@ char *expression;
       if(arenaflag) pointer = memarena;
       else {
 #ifdef G__ROOT
-	pointer = (long)G__new_interpreted_object(size*pinc);
+        pointer = (long)G__new_interpreted_object(size*pinc);
 #else
-	pointer = (long)malloc( (size_t)(size*pinc) );
+        pointer = (long)malloc( (size_t)(size*pinc) );
 #endif
       }
     }
     if(pointer==(long)NULL && 0==G__no_exec_compile) {
       G__fprinterr(G__serr,"Error: memory allocation for %s %s size=%d pinc=%d FILE:%s LINE:%d\n"
-	      ,type,expression,size,pinc,G__ifile.name,G__ifile.line_number);
+              ,type,expression,size,pinc,G__ifile.name,G__ifile.line_number);
       G__tagnum=store_tagnum;
       G__typenum=store_typenum;
       return(G__null);
@@ -285,7 +286,7 @@ char *expression;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: NEWALLOC %d %d\n"
-			     ,G__asm_cp,size,pinc);
+                             ,G__asm_cp,size,pinc);
 #endif
       G__asm_inst[G__asm_cp] = G__NEWALLOC;
       if(memarena) G__asm_inst[G__asm_cp+1] = 0;
@@ -315,7 +316,7 @@ char *expression;
     }
     if(G__dispsource) {
       G__fprinterr(G__serr,"\n!!!Calling constructor 0x%lx.%s for new %s"
-	      ,G__store_struct_offset,type,type);
+              ,G__store_struct_offset,type,type);
     }
     
     if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
@@ -324,27 +325,27 @@ char *expression;
       if(memarena) G__globalvarpointer = memarena;
       else G__globalvarpointer = G__PVOID;
       if(arrayindex) {
-	G__cpp_aryconstruct=pinc;
+        G__cpp_aryconstruct=pinc;
 #ifdef G__ASM
-	if(G__asm_noverflow) {
+        if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+          if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
 #endif
-	  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
-	  G__asm_inst[G__asm_cp+1]= 1;
-	  G__inc_cp_asm(2,0);
-	}
+          G__asm_inst[G__asm_cp]=G__SETARYINDEX;
+          G__asm_inst[G__asm_cp+1]= 1;
+          G__inc_cp_asm(2,0);
+        }
 #endif
       }
       result=G__getfunction(construct,&known,G__CALLCONSTRUCTOR);
 #ifdef G__ASM
       if(arrayindex && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
 #endif
-	G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
-	G__asm_inst[G__asm_cp+1] = 1;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
+        G__asm_inst[G__asm_cp+1] = 1;
+        G__inc_cp_asm(2,0);
       }
 #endif
       result.type=toupper(result.type);
@@ -357,11 +358,11 @@ char *expression;
       G__globalvarpointer = store_globalvarpointer;
 #ifdef G__ASM
       if(memarena && G__asm_noverflow) {
-	G__asm_inst[G__asm_cp] = G__SETGVP;
-	G__asm_inst[G__asm_cp+1] = -1;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp] = G__SETGVP;
+        G__asm_inst[G__asm_cp+1] = -1;
+        G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
 #endif
       }
 #endif
@@ -369,27 +370,27 @@ char *expression;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
-	G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
-	G__inc_cp_asm(1,0);
+        G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
+        G__inc_cp_asm(1,0);
       }
 #endif
 
 #ifdef G__SECURITY
       if(G__security&G__SECURE_GARBAGECOLLECTION) {
-	if(!G__no_exec_compile && 0==memarena) {
-	  G__add_alloctable((void*)result.obj.i,result.type,result.tagnum);
+        if(!G__no_exec_compile && 0==memarena) {
+          G__add_alloctable((void*)result.obj.i,result.type,result.tagnum);
 #ifdef G__ASM
-	  if(G__asm_noverflow) {
+          if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
+            if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
 #endif
-	    G__asm_inst[G__asm_cp]=G__ADDALLOCTABLE;
-	    G__inc_cp_asm(1,0);
-	  }
+            G__asm_inst[G__asm_cp]=G__ADDALLOCTABLE;
+            G__inc_cp_asm(1,0);
+          }
 #endif
-	}
+        }
       }
 #endif
       return(result);
@@ -397,82 +398,82 @@ char *expression;
     else {
       /* This is an interpreted class */
       if(arrayindex && !G__no_exec_compile
-	 && 'e'!=G__struct.type[G__tagnum]
-	 ) G__alloc_newarraylist(pointer,pinc);
+         && 'e'!=G__struct.type[G__tagnum]
+         ) G__alloc_newarraylist(pointer,pinc);
       G__var_type='p';
       for(i=0;i<pinc;i++) {
-	G__abortbytecode(); /* Disable bytecode */
+        G__abortbytecode(); /* Disable bytecode */
         if(G__no_exec_compile) break;
-	G__getfunction(construct,&known,G__TRYCONSTRUCTOR);
-	result.ref=0;
-	if(known==0) {
-	  if(initializer) {
-	    G__value buf;
-	    char *bp;
-	    char *ep;
-	    bp = strchr(construct,'(');
-	    ep = strrchr(construct,')');
-	    G__ASSERT(bp && ep) ;
-	    *ep=0;
-	    *bp=0;
-	    ++bp;
-	    {
-	      int cx,nx=0;
-	      char tmpx[G__ONELINE];
-	      cx = G__getstream(bp,&nx,tmpx,"),");
-	      if(','==cx) {
-		*ep=')';
-		*(bp-1)='(';
-		/* only to display error message */
-		G__getfunction(construct,&known,G__CALLCONSTRUCTOR);
-		break;
-	      }
-	    }
-	    /* construct = "TYPE" , bp = "ARG" */
-	    buf = G__getexpr(bp);
-	    /* G__ASSERT(-1!=buf.tagnum); */
-	    G__abortbytecode(); /* Disable bytecode */
-	    if(-1!=buf.tagnum && 0==G__no_exec_compile) {
-	      if(buf.tagnum != G__tagnum) {
-		G__fprinterr(G__serr
-			     ,"Error: Illegal initialization of %s("
-			     ,G__fulltagname(G__tagnum,1));
-		G__fprinterr(G__serr,"%s)",G__fulltagname(buf.tagnum,1));
-		G__genericerror((char*)NULL);
-		return(G__null);
-	      }
-	      memcpy((void*)G__store_struct_offset,(void*)buf.obj.i
-		     ,G__struct.size[buf.tagnum]);
-	    }
-	  }
-	  break;
-	}
-	G__store_struct_offset += size;
-	/* WARNING: FOLLOWING PART MUST BE REDESIGNED TO SUPPORT WHOLE 
-	 * FUNCTION COMPILATION */
+        G__getfunction(construct,&known,G__TRYCONSTRUCTOR);
+        result.ref=0;
+        if(known==0) {
+          if(initializer) {
+            G__value buf;
+            char *bp;
+            char *ep;
+            bp = strchr(construct,'(');
+            ep = strrchr(construct,')');
+            G__ASSERT(bp && ep) ;
+            *ep=0;
+            *bp=0;
+            ++bp;
+            {
+              int cx,nx=0;
+              char tmpx[G__ONELINE];
+              cx = G__getstream(bp,&nx,tmpx,"),");
+              if(','==cx) {
+                *ep=')';
+                *(bp-1)='(';
+                /* only to display error message */
+                G__getfunction(construct,&known,G__CALLCONSTRUCTOR);
+                break;
+              }
+            }
+            /* construct = "TYPE" , bp = "ARG" */
+            buf = G__getexpr(bp);
+            /* G__ASSERT(-1!=buf.tagnum); */
+            G__abortbytecode(); /* Disable bytecode */
+            if(-1!=buf.tagnum && 0==G__no_exec_compile) {
+              if(buf.tagnum != G__tagnum) {
+                G__fprinterr(G__serr
+                             ,"Error: Illegal initialization of %s("
+                             ,G__fulltagname(G__tagnum,1));
+                G__fprinterr(G__serr,"%s)",G__fulltagname(buf.tagnum,1));
+                G__genericerror((char*)NULL);
+                return(G__null);
+              }
+              memcpy((void*)G__store_struct_offset,(void*)buf.obj.i
+                     ,G__struct.size[buf.tagnum]);
+            }
+          }
+          break;
+        }
+        G__store_struct_offset += size;
+        /* WARNING: FOLLOWING PART MUST BE REDESIGNED TO SUPPORT WHOLE 
+         * FUNCTION COMPILATION */
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM
-	G__abortbytecode(); /* Disable bytecode */
-	if(G__asm_noverflow) {
-	  if(pinc>1) {
+        G__abortbytecode(); /* Disable bytecode */
+        if(G__asm_noverflow) {
+          if(pinc>1) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
+            if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
 #endif
-	    G__asm_inst[G__asm_cp] = G__ADDSTROS;
-	    G__asm_inst[G__asm_cp+1] = size;
-	    G__inc_cp_asm(2,0);
-	  }
-	}
+            G__asm_inst[G__asm_cp] = G__ADDSTROS;
+            G__asm_inst[G__asm_cp+1] = size;
+            G__inc_cp_asm(2,0);
+          }
+        }
 #endif /* G__ASM */
 #endif /* G__ASM_IFUNC */
       }
 #ifdef G__ASM
       if(memarena && G__asm_noverflow) {
-	G__asm_inst[G__asm_cp] = G__SETGVP;
-	G__asm_inst[G__asm_cp+1] = -1;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp] = G__SETGVP;
+        G__asm_inst[G__asm_cp+1] = -1;
+        G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1'\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1'\n",G__asm_cp);
 #endif
       }
 #endif
@@ -495,8 +496,8 @@ char *expression;
     typenum=G__defined_typename(construct);
     if(-1!=typenum) {
       strcpy(construct,G__type2string(G__newtype.type[typenum]
-				      ,G__newtype.tagnum[typenum] ,-1
-				      ,G__newtype.reftype[typenum] ,0));
+                                      ,G__newtype.tagnum[typenum] ,-1
+                                      ,G__newtype.reftype[typenum] ,0));
     }
     hash = strlen(construct);
     store_var_type = G__var_type;
@@ -588,8 +589,7 @@ char *expression;
 *  [x][y][z]     get x*y*z
 *
 ****************************************************************/
-int G__getarrayindex(indexlist)
-char *indexlist;
+int G__getarrayindex(char *indexlist)
 {
   int p_inc=1;
   int p=1;
@@ -635,9 +635,7 @@ char *indexlist;
 * delete 
 *
 ****************************************************************/
-void G__delete_operator(expression,isarray)
-char *expression;
-int isarray;
+void G__delete_operator(char *expression,int isarray)
 {
   long store_struct_offset; /* used to be int */
   int store_tagnum,store_typenum;
@@ -662,7 +660,7 @@ int isarray;
     return;
   }
   else if(0==buf.obj.i && 0==G__no_exec_compile && 
-	  G__ASM_FUNC_NOP==G__asm_wholefunction) {
+          G__ASM_FUNC_NOP==G__asm_wholefunction) {
     zeroflag=1;
     G__no_exec_compile = 1;
     buf.obj.d = 0;
@@ -701,7 +699,7 @@ int isarray;
     sprintf(destruct,"~%s()",G__struct.name[G__tagnum]);
     if(G__dispsource) {
       G__fprinterr(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s"
-	      ,G__store_struct_offset ,destruct ,expression);
+              ,G__store_struct_offset ,destruct ,expression);
     }
     done=0;
 
@@ -724,16 +722,16 @@ int isarray;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+        G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
       if(isarray) {
-	G__asm_inst[G__asm_cp] = G__GETARYINDEX;
+        G__asm_inst[G__asm_cp] = G__GETARYINDEX;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: GETARYINDEX\n",G__asm_cp-2);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: GETARYINDEX\n",G__asm_cp-2);
 #endif
-	G__inc_cp_asm(1,0);
+        G__inc_cp_asm(1,0);
       }
     }
 #endif /* G__ASM */
@@ -749,14 +747,14 @@ int isarray;
 #ifndef G__ASM_IFUNC
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+        G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+        G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
-	}
+        if(G__asm_dbg) {
+          G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+          G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        }
 #endif
       }
 #endif /* G__ASM */
@@ -769,10 +767,10 @@ int isarray;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
-	G__asm_inst[G__asm_cp] = G__POPSTROS;
-	G__inc_cp_asm(1,0);
+        G__asm_inst[G__asm_cp] = G__POPSTROS;
+        G__inc_cp_asm(1,0);
       }
 #endif /* G__ASM */
 #endif /* !G__ASM_IFUNC */
@@ -785,31 +783,31 @@ int isarray;
       /* WARNING: FOLLOWING PART MUST BE REDESIGNED TO SUPPORT WHOLE
        * FUNCTION COMPILATION */
       if(isarray) {
-	if(!G__no_exec_compile)
-	  pinc=G__free_newarraylist(G__store_struct_offset);
-	else pinc = 1;
-	size = G__struct.size[G__tagnum];
-	for(i=pinc-1;i>=0;--i) {
-	  G__store_struct_offset = buf.obj.i+size*i;
-	  G__getfunction(destruct,&done ,G__TRYDESTRUCTOR);
+        if(!G__no_exec_compile)
+          pinc=G__free_newarraylist(G__store_struct_offset);
+        else pinc = 1;
+        size = G__struct.size[G__tagnum];
+        for(i=pinc-1;i>=0;--i) {
+          G__store_struct_offset = buf.obj.i+size*i;
+          G__getfunction(destruct,&done ,G__TRYDESTRUCTOR);
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM
-	  if(0==done) break;
-	  G__abortbytecode(); /* Disable bytecode */
-	  if(G__asm_noverflow) {
+          if(0==done) break;
+          G__abortbytecode(); /* Disable bytecode */
+          if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
+            if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
 #endif
-	    G__asm_inst[G__asm_cp] = G__ADDSTROS;
-	    G__asm_inst[G__asm_cp+1] = (long)size;
-	    G__inc_cp_asm(2,0);
-	  }
+            G__asm_inst[G__asm_cp] = G__ADDSTROS;
+            G__asm_inst[G__asm_cp+1] = (long)size;
+            G__inc_cp_asm(2,0);
+          }
 #endif /* G__ASM */
 #endif /* !G__ASM_IFUNC */
-	}
+        }
       }
       else {
-	G__getfunction(destruct,&done,G__TRYDESTRUCTOR);
+        G__getfunction(destruct,&done,G__TRYDESTRUCTOR);
       }
     }
 
@@ -834,21 +832,21 @@ int isarray;
 #ifdef G__ASM
     if(G__asm_noverflow) {
       if(isarray) {
-	G__asm_inst[G__asm_cp] = G__RESETARYINDEX;
-	G__asm_inst[G__asm_cp+1] = 0;
+        G__asm_inst[G__asm_cp] = G__RESETARYINDEX;
+        G__asm_inst[G__asm_cp+1] = 0;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",G__asm_cp-2);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",G__asm_cp-2);
 #endif
-	G__inc_cp_asm(2,0);
+        G__inc_cp_asm(2,0);
       }
       if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
-	/* if interpreted class, free memory */
+        /* if interpreted class, free memory */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
 #endif
-	G__asm_inst[G__asm_cp] = G__DELETEFREE;
-	G__asm_inst[G__asm_cp+1] = isarray? 1 : 0;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp] = G__DELETEFREE;
+        G__asm_inst[G__asm_cp+1] = isarray? 1 : 0;
+        G__inc_cp_asm(2,0);
       }
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp+1);
@@ -918,16 +916,14 @@ int isarray;
 /****************************************************************
 * G__alloc_newarraylist()
 ****************************************************************/
-int G__alloc_newarraylist(point,pinc)
-long point;
-int pinc;
+int G__alloc_newarraylist(long point,int pinc)
 {
   struct G__newarylist *newary;
 
 #ifdef G__MEMTEST
   fprintf(G__memhist,"G__alloc_newarraylist(%lx,%d)\n",point,pinc);
 #endif
-	
+        
   /****************************************************
    * Find out end of list
    ****************************************************/
@@ -952,8 +948,7 @@ int pinc;
 /****************************************************************
 * G__free_newarraylist()
 ****************************************************************/
-int G__free_newarraylist(point)
-long point;
+int G__free_newarraylist(long point)
 {
   struct G__newarylist *newary,*prev;
   int pinc,flag=0;
@@ -978,7 +973,7 @@ long point;
   
   if(flag==0) {
     G__fprinterr(G__serr,"Error: delete[] on wrong object 0x%lx FILE:%s LINE:%d\n"
-	    ,point,G__ifile.name,G__ifile.line_number);
+            ,point,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   
@@ -1004,9 +999,7 @@ long point;
 *
 * Parsing of 'delete obj' 'delete obj[]'
 **************************************************************************/
-int G__handle_delete(piout ,statement)
-int *piout;
-char *statement;
+int G__handle_delete(int *piout ,char *statement)
 {
   int c;
   c=G__fgetstream(statement ,"[;");
@@ -1026,6 +1019,8 @@ char *statement;
   }
   return(0);
 }
+
+} /* extern "C" */
 
 /*
  * Local Variables:

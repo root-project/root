@@ -117,6 +117,7 @@ class G__gototable {
  * G__blockscope
  ***********************************************************************/
 class G__blockscope {
+  friend class G__blockscope_expr;
  protected:
   ////////////////////////////////////////////////////////////////////
   // function ID, moved from G__compiler
@@ -176,6 +177,7 @@ class G__blockscope {
   int isfriend(int tagnum) const;
 
   G__bc_inst& GetInst() { return(m_bc_inst); }
+  int GetTagnum() const { return(m_ifunc->tagnum); }
 
  private:
   // operator
@@ -253,12 +255,13 @@ class G__blockscope {
 		 ,struct G__var_array* var,int ig15,int num);
 
 
- protected:
-  int call_func(G__ClassInfo& cls
-		,const string& fname,struct G__param *libp
-		,int memfuncflag,int isarray=0
-		,G__ClassInfo::MatchMode mode=G__ClassInfo::ConversionMatch
-		);
+  //protected:
+ public:
+  G__value call_func(G__ClassInfo& cls
+                     ,const string& fname,struct G__param *libp
+                     ,int memfuncflag,int isarray=0
+                    ,G__ClassInfo::MatchMode mode=G__ClassInfo::ConversionMatch
+                     );
 
  public:
   int conversion(G__value& result,struct G__var_array* var,int ig15,int vartype,int paran);

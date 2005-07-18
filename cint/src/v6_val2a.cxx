@@ -20,15 +20,15 @@
 
 #include "common.h"
 
+extern "C" {
+
 #define G__OLDIMPLEMENTATION328
 
 /****************************************************************
 * char *G__valuemonitor()
 * 
 ****************************************************************/
-char *G__valuemonitor(buf,temp)
-G__value buf;
-char *temp;
+char *G__valuemonitor(G__value buf,char *temp)
 {
   char temp2[G__ONELINE];
 
@@ -38,17 +38,17 @@ char *temp;
     case 'f':
       /* typedef can be local to a class */
       if(buf.obj.d<0.0)
-	sprintf(temp,"(%s)(%.17e)"
-		,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				,0
-				,0)
-				,buf.obj.d);
+        sprintf(temp,"(%s)(%.17e)"
+                ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                ,0
+                                ,0)
+                                ,buf.obj.d);
       else
-	sprintf(temp,"(%s)%.17e"
-		,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				,0
-				,0)
-				,buf.obj.d);
+        sprintf(temp,"(%s)%.17e"
+                ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                ,0
+                                ,0)
+                                ,buf.obj.d);
       break;
   case 'b':
     if(G__in_pause)
@@ -76,75 +76,75 @@ char *temp;
     break;
     default:
       if(islower(buf.type)) {
-	if('u'==buf.type && -1!=buf.tagnum &&
-	   (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
-	    strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
-	    strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
-	  if(G__in_pause) {
-	    char llbuf[100];
-	    sprintf(temp,"(%s)" 
-		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				    ,buf.obj.reftype.reftype,0));
-	    if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
-	      sprintf(llbuf
-	  ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-		      ,(long)llbuf,buf.obj.i);
-	      G__getitem(llbuf);
-	      strcat(temp,llbuf);
-	    }
-	    else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
-	      sprintf(llbuf
-	  ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-		      ,(long)llbuf,buf.obj.i);
-	      G__getitem(llbuf);
-	      strcat(temp,llbuf);
-	    }
-	    else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
-	      sprintf(llbuf
-	  ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-		      ,(long)llbuf,buf.obj.i);
-	      G__getitem(llbuf);
-	      strcat(temp,llbuf);
-	    }
-	  }
-	  else
-	    G__setiparseobject(&buf,temp);
-	} else
-	  if (buf.type=='n' && buf.obj.ll<0) 
-	    sprintf(temp,"(%s)(%lld)" 
-		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				    ,0,0)
-		    ,buf.obj.ll);
-	  else if (buf.type=='m' || buf.type=='n') 
-	    sprintf(temp,"(%s)%llu" 
-		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				    ,0,0)
-		    ,buf.obj.ull);
-	
-	  else 
-	if(buf.obj.i<0)
-	  sprintf(temp,"(%s)(%ld)" 
-		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				  ,buf.obj.reftype.reftype,0)
-		  ,buf.obj.i);
-	else
-	  sprintf(temp,"(%s)%ld" 
-		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				  ,buf.obj.reftype.reftype,0)
-		  ,buf.obj.i);
+        if('u'==buf.type && -1!=buf.tagnum &&
+           (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
+            strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
+            strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
+          if(G__in_pause) {
+            char llbuf[100];
+            sprintf(temp,"(%s)" 
+                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                    ,buf.obj.reftype.reftype,0));
+            if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
+              sprintf(llbuf
+          ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+                      ,(long)llbuf,buf.obj.i);
+              G__getitem(llbuf);
+              strcat(temp,llbuf);
+            }
+            else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
+              sprintf(llbuf
+          ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+                      ,(long)llbuf,buf.obj.i);
+              G__getitem(llbuf);
+              strcat(temp,llbuf);
+            }
+            else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+              sprintf(llbuf
+          ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+                      ,(long)llbuf,buf.obj.i);
+              G__getitem(llbuf);
+              strcat(temp,llbuf);
+            }
+          }
+          else
+            G__setiparseobject(&buf,temp);
+        } else
+          if (buf.type=='n' && buf.obj.ll<0) 
+            sprintf(temp,"(%s)(%lld)" 
+                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                    ,0,0)
+                    ,buf.obj.ll);
+          else if (buf.type=='m' || buf.type=='n') 
+            sprintf(temp,"(%s)%llu" 
+                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                    ,0,0)
+                    ,buf.obj.ull);
+        
+          else 
+        if(buf.obj.i<0)
+          sprintf(temp,"(%s)(%ld)" 
+                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                  ,buf.obj.reftype.reftype,0)
+                  ,buf.obj.i);
+        else
+          sprintf(temp,"(%s)%ld" 
+                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                  ,buf.obj.reftype.reftype,0)
+                  ,buf.obj.i);
       }
       else {
-	if('C'==buf.type&&G__in_pause && buf.obj.i>0x10000 &&
-	   G__PARANORMAL==buf.obj.reftype.reftype) 
-	  sprintf(temp,"(%s 0x%lx)\"%s\""
-		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				  ,buf.obj.reftype.reftype,0)
-		  ,buf.obj.i,(char*)buf.obj.i);
-	else
-	  sprintf(temp,"(%s)0x%lx" 
-		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				  ,buf.obj.reftype.reftype,0)
-		  ,buf.obj.i);
+        if('C'==buf.type&&G__in_pause && buf.obj.i>0x10000 &&
+           G__PARANORMAL==buf.obj.reftype.reftype) 
+          sprintf(temp,"(%s 0x%lx)\"%s\""
+                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                  ,buf.obj.reftype.reftype,0)
+                  ,buf.obj.i,(char*)buf.obj.i);
+        else
+          sprintf(temp,"(%s)0x%lx" 
+                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                  ,buf.obj.reftype.reftype,0)
+                  ,buf.obj.i);
       }
     }
     return(temp);
@@ -170,25 +170,25 @@ char *temp;
   case 'C':
     if(buf.obj.i!=0) {
       if(G__in_pause && G__PARANORMAL==buf.obj.reftype.reftype) {
-	if(strlen((char*)buf.obj.i)>G__ONELINE-25) {
-	  strncpy(temp2,(char*)buf.obj.i,G__ONELINE-25);
-	  temp2[G__ONELINE-25] = 0;
-	  sprintf(temp,"(char* 0x%lx)\"%s\"...",buf.obj.i,temp2);
-	}
-	else {
-	  G__add_quotation((char*)buf.obj.i,temp2);
-	  sprintf(temp,"(char* 0x%lx)%s",buf.obj.i,temp2);
-	}
+        if(strlen((char*)buf.obj.i)>G__ONELINE-25) {
+          strncpy(temp2,(char*)buf.obj.i,G__ONELINE-25);
+          temp2[G__ONELINE-25] = 0;
+          sprintf(temp,"(char* 0x%lx)\"%s\"...",buf.obj.i,temp2);
+        }
+        else {
+          G__add_quotation((char*)buf.obj.i,temp2);
+          sprintf(temp,"(char* 0x%lx)%s",buf.obj.i,temp2);
+        }
       }
       else {
-	sprintf(temp,"(char*)0x%lx",buf.obj.i);
+        sprintf(temp,"(char*)0x%lx",buf.obj.i);
       }
     }
     else {
       if(G__in_pause) 
-	sprintf(temp,"(char* 0x0)\"\"");
+        sprintf(temp,"(char* 0x0)\"\"");
       else 
-	sprintf(temp,"(char*)0x0");
+        sprintf(temp,"(char*)0x0");
     }
     break;
   case 'c':
@@ -234,32 +234,32 @@ char *temp;
   case 'i':
     if(buf.tagnum != -1) {
       if(G__struct.type[buf.tagnum]=='e') {
-	if(buf.obj.i<0)
-	  sprintf(temp,"(enum %s)(%d)",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
-	else
-	  sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
+        if(buf.obj.i<0)
+          sprintf(temp,"(enum %s)(%d)",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
+        else
+          sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
       }
       else {
-	if(buf.obj.i<0)
-	  sprintf(temp,"(int)(%d)",(int)buf.obj.i);
-	else 
-	  sprintf(temp,"(int)%d",(int)buf.obj.i);
+        if(buf.obj.i<0)
+          sprintf(temp,"(int)(%d)",(int)buf.obj.i);
+        else 
+          sprintf(temp,"(int)%d",(int)buf.obj.i);
       }
     }
     else {
       if(buf.obj.i<0)
-	sprintf(temp,"(int)(%d)",(int)buf.obj.i);
+        sprintf(temp,"(int)(%d)",(int)buf.obj.i);
       else 
-	sprintf(temp,"(int)%d",(int)buf.obj.i);
+        sprintf(temp,"(int)%d",(int)buf.obj.i);
     }
     break;
   case 'I':
     if(buf.tagnum != -1) {
       if(G__struct.type[buf.tagnum]=='e') {
-	sprintf(temp,"(enum %s*)0x%lx",G__fulltagname(buf.tagnum,1),buf.obj.i);
+        sprintf(temp,"(enum %s*)0x%lx",G__fulltagname(buf.tagnum,1),buf.obj.i);
       }
       else {
-	sprintf(temp,"(int*)0x%lx",buf.obj.i);
+        sprintf(temp,"(int*)0x%lx",buf.obj.i);
       }
     }
     else {
@@ -348,68 +348,68 @@ char *temp;
     switch(G__struct.type[buf.tagnum]) {
     case 's':
       if(buf.obj.i<0)
-	sprintf(temp,"(struct %s)(%ld)" 
-		,G__fulltagname(buf.tagnum,1),buf.obj.i);
+        sprintf(temp,"(struct %s)(%ld)" 
+                ,G__fulltagname(buf.tagnum,1),buf.obj.i);
       else
-	sprintf(temp,"(struct %s)%ld" ,G__fulltagname(buf.tagnum,1),buf.obj.i);
+        sprintf(temp,"(struct %s)%ld" ,G__fulltagname(buf.tagnum,1),buf.obj.i);
       break;
     case 'c':
       if(-1!=buf.tagnum &&
-	 (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
-	  strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
-	  strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
-	if(G__in_pause) {
-	  char llbuf[100];
-	  sprintf(temp,"(%s)" 
-		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				  ,buf.obj.reftype.reftype,0));
-	  if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
-	    sprintf(llbuf
-		    ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-		    ,(long)llbuf,buf.obj.i);
-	    G__getitem(llbuf);
-	    strcat(temp,llbuf);
-	  }
-	  else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
-	    sprintf(llbuf
-		    ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-		    ,(long)llbuf,buf.obj.i);
-	    G__getitem(llbuf);
-	    strcat(temp,llbuf);
-	  }
-	  else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
-	    sprintf(llbuf
-		    ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-		    ,(long)llbuf,buf.obj.i);
-	    G__getitem(llbuf);
-	    strcat(temp,llbuf);
-	  }
-	}
-	else
-	  G__setiparseobject(&buf,temp);
+         (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
+          strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
+          strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
+        if(G__in_pause) {
+          char llbuf[100];
+          sprintf(temp,"(%s)" 
+                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                  ,buf.obj.reftype.reftype,0));
+          if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
+            sprintf(llbuf
+                    ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+                    ,(long)llbuf,buf.obj.i);
+            G__getitem(llbuf);
+            strcat(temp,llbuf);
+          }
+          else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
+            sprintf(llbuf
+                    ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+                    ,(long)llbuf,buf.obj.i);
+            G__getitem(llbuf);
+            strcat(temp,llbuf);
+          }
+          else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+            sprintf(llbuf
+                    ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+                    ,(long)llbuf,buf.obj.i);
+            G__getitem(llbuf);
+            strcat(temp,llbuf);
+          }
+        }
+        else
+          G__setiparseobject(&buf,temp);
       } else
       if(buf.obj.i<0) 
-	sprintf(temp,"(class %s)(%ld)" 
-		,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
+        sprintf(temp,"(class %s)(%ld)" 
+                ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
       else
-	sprintf(temp,"(class %s)%ld" ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
+        sprintf(temp,"(class %s)%ld" ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
       break;
     case 'u':
       if(buf.obj.i<0)
-	sprintf(temp,"(union %s)(%ld)"
-		,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
+        sprintf(temp,"(union %s)(%ld)"
+                ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
       else
-	sprintf(temp,"(union %s)%ld" ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
+        sprintf(temp,"(union %s)%ld" ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
       break;
     case 'e':
       sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
       break;
     default:
       if(buf.obj.i<0)
-	sprintf(temp,"(unknown %s)(%ld)" 
-		,G__struct.name[buf.tagnum] ,buf.obj.i);
+        sprintf(temp,"(unknown %s)(%ld)" 
+                ,G__struct.name[buf.tagnum] ,buf.obj.i);
       else 
-	sprintf(temp,"(unknown %s)%ld" ,G__struct.name[buf.tagnum] ,buf.obj.i);
+        sprintf(temp,"(unknown %s)%ld" ,G__struct.name[buf.tagnum] ,buf.obj.i);
       break;
     }
     break;
@@ -477,8 +477,7 @@ char *temp;
 * G__access2string()
 *
 ****************************************************************/
-char *G__access2string(caccess)
-int caccess;
+char *G__access2string(int caccess)
 {
   switch(caccess) {
   case G__PRIVATE: return("private:");
@@ -492,8 +491,7 @@ int caccess;
 * G__tagtype2string()
 *
 ****************************************************************/
-char *G__tagtype2string(tagtype)
-int tagtype;
+char *G__tagtype2string(int tagtype)
 {
   switch(tagtype) {
   case 'c': return("class");
@@ -513,9 +511,7 @@ int tagtype;
 * return full tagname, if mask_dollar=1, $ for the typedef class
 * is omitted
 ****************************************************************/
-char *G__fulltagname(tagnum,mask_dollar)
-int tagnum;
-int mask_dollar;
+char *G__fulltagname(int tagnum,int mask_dollar)
 {
 #if !defined(G__OLDIMPLEMENTATION1823)
   static char string[G__LONGLINE];
@@ -541,7 +537,7 @@ int mask_dollar;
 #ifndef G__OLDIMPLEMENTATION1503
     if(-1!=G__struct.defaulttypenum[p_tagnum[pt]]) 
       sprintf(string+len,"%s::"
-	      ,G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
+              ,G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
     else
       sprintf(string+len,"%s::",G__struct.name[p_tagnum[pt]]+os);
 #else
@@ -576,8 +572,7 @@ int mask_dollar;
 * G__type2string()
 *
 **************************************************************************/
-char *G__type2string(type,tagnum,typenum,reftype,isconst)
-int type,tagnum,typenum,reftype,isconst;
+char *G__type2string(int type,int tagnum,int typenum,int reftype,int isconst)
 {
   static char stringbuf[G__LONGLINE];
   char *string;
@@ -619,8 +614,8 @@ int type,tagnum,typenum,reftype,isconst;
   if(-1!=typenum) {
     if(0<=G__newtype.parent_tagnum[typenum]) 
       sprintf(string,"%s::%s"
-	      ,G__fulltagname(G__newtype.parent_tagnum[typenum],1)
-	      ,G__newtype.name[typenum]);
+              ,G__fulltagname(G__newtype.parent_tagnum[typenum],1)
+              ,G__newtype.name[typenum]);
     else
       sprintf(string,"%s",G__newtype.name[typenum]);
 #ifndef G__OLDIMPLEMENTATION1329
@@ -630,29 +625,29 @@ int type,tagnum,typenum,reftype,isconst;
       switch(reftype) {
       case G__PARANORMAL:
       case G__PARAREFERENCE:
-	break;
+        break;
       default:
-	pointlevel = reftype;
-	break;
+        pointlevel = reftype;
+        break;
       }
       pointlevel -= G__newtype.nindex[typenum];
       switch(pointlevel) {
       case 0:
-	type = tolower(type);
-	if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
-	break;
+        type = tolower(type);
+        if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
+        break;
       case 1:
-	type = toupper(type);
-	if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
-	break;
+        type = toupper(type);
+        if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
+        break;
       default:
-	if(pointlevel>0) {
-	  type = toupper(type);
-	  reftype = pointlevel;
-	}
-	else {
-	}
-	break;
+        if(pointlevel>0) {
+          type = toupper(type);
+          reftype = pointlevel;
+        }
+        else {
+        }
+        break;
       }
     }
 #endif
@@ -660,59 +655,59 @@ int type,tagnum,typenum,reftype,isconst;
       switch(G__newtype.reftype[typenum]) {
       case G__PARANORMAL:
       case G__PARAREFERENCE:
-	if(isupper(type)) {
-	  switch(reftype) {
-	  case G__PARAREFERENCE:
-	  case G__PARANORMAL: type=tolower(type); break;
-	  case G__PARAP2P:    reftype=G__PARANORMAL; break;
-	  default:            --reftype; break;
-	  }
-	}
-	else {
-	  G__type2string(type,tagnum,-1,reftype,isconst);
-	  /* return buffer is static. So, stringbuf is set above */
-	  goto endof_type2string;
-	}
-	break;
-	
-	break;
+        if(isupper(type)) {
+          switch(reftype) {
+          case G__PARAREFERENCE:
+          case G__PARANORMAL: type=tolower(type); break;
+          case G__PARAP2P:    reftype=G__PARANORMAL; break;
+          default:            --reftype; break;
+          }
+        }
+        else {
+          G__type2string(type,tagnum,-1,reftype,isconst);
+          /* return buffer is static. So, stringbuf is set above */
+          goto endof_type2string;
+        }
+        break;
+        
+        break;
       default:
 #if !defined(G__OLDIMPLEMENTATION2191)
-	if('1'==type) {
-	  switch(reftype) {
-	  case G__PARAREFERENCE:
-	  case G__PARANORMAL: type=tolower(type); break;
-	  case G__PARAP2P:    reftype=G__PARANORMAL; break;
-	  default: --reftype; break;
-	  }
-	} else 
+        if('1'==type) {
+          switch(reftype) {
+          case G__PARAREFERENCE:
+          case G__PARANORMAL: type=tolower(type); break;
+          case G__PARAP2P:    reftype=G__PARANORMAL; break;
+          default: --reftype; break;
+          }
+        } else 
 #else
-	if('Q'==type) {
-	  if(isupper(type)) {
-	    switch(reftype) {
-	    case G__PARAREFERENCE:
-	    case G__PARANORMAL: type=tolower(type); break;
-	    case G__PARAP2P:    reftype=G__PARANORMAL; break;
-	    default: --reftype; break;
-	    }
-	  }
-	} else 
+        if('Q'==type) {
+          if(isupper(type)) {
+            switch(reftype) {
+            case G__PARAREFERENCE:
+            case G__PARANORMAL: type=tolower(type); break;
+            case G__PARAP2P:    reftype=G__PARANORMAL; break;
+            default: --reftype; break;
+            }
+          }
+        } else 
 #endif
-	if(islower(type) || G__newtype.reftype[typenum]>reftype) {
-	  G__type2string(type,tagnum,-1,reftype,isconst);
-	  goto endof_type2string;
-	}
-	else if(G__newtype.reftype[typenum]==reftype) {
-	  reftype = G__PARANORMAL;
-	  type=tolower(type);
-	}
-	else if(G__newtype.reftype[typenum]+1==reftype) {
-	  reftype = G__PARANORMAL;
-	}
-	else {
-	  reftype = G__PARAP2P + reftype-G__newtype.reftype[typenum]-2;
-	}
-	break;
+        if(islower(type) || G__newtype.reftype[typenum]>reftype) {
+          G__type2string(type,tagnum,-1,reftype,isconst);
+          goto endof_type2string;
+        }
+        else if(G__newtype.reftype[typenum]==reftype) {
+          reftype = G__PARANORMAL;
+          type=tolower(type);
+        }
+        else if(G__newtype.reftype[typenum]+1==reftype) {
+          reftype = G__PARANORMAL;
+        }
+        else {
+          reftype = G__PARAP2P + reftype-G__newtype.reftype[typenum]-2;
+        }
+        break;
       }
     }
   }
@@ -723,31 +718,31 @@ int type,tagnum,typenum,reftype,isconst;
     }
     if('$'==G__struct.name[tagnum][0]) {
       if('\0'==G__struct.name[tagnum][1]) {
-	G__ASSERT('e'==G__struct.type[tagnum]);
-	sprintf(string,"enum "); 
-	len=5;
+        G__ASSERT('e'==G__struct.type[tagnum]);
+        sprintf(string,"enum "); 
+        len=5;
       }
       else {
-	len=0;
+        len=0;
       }
     }
     else {
       if(G__CPPLINK==G__globalcomp
-	 || G__iscpp
-	 ) {
-	len=0;
+         || G__iscpp
+         ) {
+        len=0;
       }
       else {
-	switch(G__struct.type[tagnum]) {
-	case 'e': sprintf(string,"enum "); break;
-	case 'c': sprintf(string,"class "); break;
-	case 's': sprintf(string,"struct "); break;
-	case 'u': sprintf(string,"union "); break;
-	case 'n': sprintf(string,"namespace "); break;
-	case 'a': strcpy(string,""); break;
-	case 0: sprintf(string,"(unknown) "); break;
-	}
-	len=strlen(string);
+        switch(G__struct.type[tagnum]) {
+        case 'e': sprintf(string,"enum "); break;
+        case 'c': sprintf(string,"class "); break;
+        case 's': sprintf(string,"struct "); break;
+        case 'u': sprintf(string,"union "); break;
+        case 'n': sprintf(string,"namespace "); break;
+        case 'a': strcpy(string,""); break;
+        case 0: sprintf(string,"(unknown) "); break;
+        }
+        len=strlen(string);
       }
     }
     sprintf(string+len,"%s",G__fulltagname(tagnum,1));
@@ -802,25 +797,25 @@ int type,tagnum,typenum,reftype,isconst;
   default:
     if(isupper(type)) {
       if((isconst&G__PCONSTVAR)&&G__PARANORMAL==reftype) 
-	strcpy(string+strlen(string)," *const");
+        strcpy(string+strlen(string)," *const");
 #ifdef G__OLDIMPLEMENTATION1859_YET
       else if((isconst&G__PCONSTVAR)&&G__PARAREFERENCE==reftype) {
-	if((isconst&G__CONSTVAR)==0) strcpy(string+strlen(string)," const*&");
-	else strcpy(string+strlen(string),"*&");
-	reftype=G__PARANORMAL;
+        if((isconst&G__CONSTVAR)==0) strcpy(string+strlen(string)," const*&");
+        else strcpy(string+strlen(string),"*&");
+        reftype=G__PARANORMAL;
       }
 #endif
       else 
-	strcpy(string+strlen(string),"*");
+        strcpy(string+strlen(string),"*");
     }
     switch(reftype) {
     case G__PARANORMAL: break;
     case G__PARAREFERENCE:
       if(-1==typenum||G__PARAREFERENCE!=G__newtype.reftype[typenum]) {
-	if(isconst&G__PCONSTVAR
-	   && 0==(isconst&G__CONSTVAR)
-	   ) strcpy(string+strlen(string)," const&");
-	else strcpy(string+strlen(string),"&");
+        if(isconst&G__PCONSTVAR
+           && 0==(isconst&G__CONSTVAR)
+           ) strcpy(string+strlen(string)," const&");
+        else strcpy(string+strlen(string),"&");
       }
       break;
     case G__PARAP2P:
@@ -849,8 +844,8 @@ int type,tagnum,typenum,reftype,isconst;
   if(strlen(stringbuf)>=sizeof(stringbuf)) {
     G__fprinterr(G__serr,
  "Error in G__type2sting: string length (%d) greater than buffer length (%d)!",
-		 strlen(stringbuf),
-		 sizeof(stringbuf));
+                 strlen(stringbuf),
+                 sizeof(stringbuf));
     G__genericerror((char*)NULL);  
   }
   return(stringbuf);
@@ -860,8 +855,7 @@ int type,tagnum,typenum,reftype,isconst;
 * G__val2pointer()
 *
 **************************************************************************/
-int G__val2pointer(result7)
-G__value *result7;
+int G__val2pointer(G__value *result7)
 {
   if(0==result7->ref) {
     G__genericerror("Error: incorrect use of referencing operator '&'");
@@ -896,8 +890,7 @@ G__value *result7;
 *   nothing    G__getitem() used to call, but commented out now
 *
 ******************************************************************/
-double G__atodouble(string)
-char *string;
+double G__atodouble(char *string)
 {
   int lenstring;
   int ig16=0,ig26=0;
@@ -988,10 +981,7 @@ char *string;
 *   G__logicstring()
 *
 ******************************************************************/
-char *G__getbase(expression,base,digit,result1)
-unsigned int expression;
-int base,digit;
-char *result1;
+char *G__getbase(unsigned int expression,int base,int digit,char *result1)
 {
   char result[G__MAXNAME];
   int ig18=0,ig28=0;
@@ -1011,30 +1001,30 @@ char *result1;
   result1[ig18++]='0' ;
   switch(base) {
   case 2:
-	  result1[ig18++]='b' ;
-	  break;
+          result1[ig18++]='b' ;
+          break;
   case 4:
-	  result1[ig18++]='q' ;
-	  break;
+          result1[ig18++]='q' ;
+          break;
   case 8:
-	  result1[ig18++]='o' ;
-	  break;
+          result1[ig18++]='o' ;
+          break;
   case 10:
-	  result1[ig18++]='d' ;
-	  break;
+          result1[ig18++]='d' ;
+          break;
   case 16:
-	  result1[ig18++]='x' ;
-	  break;
+          result1[ig18++]='x' ;
+          break;
   default:
-	  result1[ig18++]= base + '0' ;
+          result1[ig18++]= base + '0' ;
   }
   */
 
   while(0<=ig28) {
-	  result1[ig18++] = result[ig28--] ;
+          result1[ig18++] = result[ig28--] ;
   }
   if(ig18==0) {
-	  result1[ig18++]='0';
+          result1[ig18++]='0';
   }
   result1[ig18]='\0';
 
@@ -1050,8 +1040,7 @@ char *result1;
 *   G__getbase
 *
 ******************************************************************/
-int G__getdigit(number)
-unsigned int number;
+int G__getdigit(unsigned int number)
 {
   switch(number) {
   case 0:
@@ -1064,21 +1053,21 @@ unsigned int number;
   case 7:
   case 8:
   case 9:
-	  return( number + '0' );
+          return( number + '0' );
   case 10:
-	  return('a');
+          return('a');
   case 11:
-	  return('b');
+          return('b');
   case 12:
-	  return('c');
+          return('c');
   case 13:
-	  return('d');
+          return('d');
   case 14:
-	  return('e');
+          return('e');
   case 15:
-	  return('f');
+          return('f');
   default:
-	  return('x');
+          return('x');
   }
   /* return('x'); */
 }
@@ -1092,9 +1081,7 @@ unsigned int number;
 *   G__getitem()
 *
 ******************************************************************/
-G__value G__checkBase(string,known4)
-char *string;
-int *known4;
+G__value G__checkBase(char *string,int *known4)
 {
   G__value result4;
   int n=0,nchar,base=0;
@@ -1135,46 +1122,46 @@ int *known4;
       switch(string[++n]) {
       case 'b':
       case 'B':
-	/*******************************
-	 * binary base doesn't exist in
-	 * ANSI. Original enhancement
-	 *******************************/
-	base=2;
-	break;
+        /*******************************
+         * binary base doesn't exist in
+         * ANSI. Original enhancement
+         *******************************/
+        base=2;
+        break;
       case 'q':
       case 'Q':
-	/******************************
-	 * quad specifier may not exist
-	 * in ANSI
-	 ******************************/
-	base=4;
-	break;
+        /******************************
+         * quad specifier may not exist
+         * in ANSI
+         ******************************/
+        base=4;
+        break;
       case 'o':
       case 'O':
-	/******************************
-	 * octal specifier may not exist
-	 * in ANSI
-	 ******************************/
-	base=8;
-	break;
+        /******************************
+         * octal specifier may not exist
+         * in ANSI
+         ******************************/
+        base=8;
+        break;
       case 'h':
       case 'H':
-	/*******************************
-	 * 0h and 0H doesn't exist in
-	 * ANSI. Original enhancement
-	 *******************************/
+        /*******************************
+         * 0h and 0H doesn't exist in
+         * ANSI. Original enhancement
+         *******************************/
       case 'x':
       case 'X':
-	base=16;
-	break;
+        base=16;
+        break;
       default:
-	/*******************************
-	 * Octal if other specifiers,
-	 * namely a digit
-	 *******************************/
-	base=8;
-	--n;
-	break;
+        /*******************************
+         * Octal if other specifiers,
+         * namely a digit
+         *******************************/
+        base=8;
+        --n;
+        break;
       }
       
       /********************************************
@@ -1191,137 +1178,137 @@ int *known4;
        * scan constant expression body
        ********************************************/
       while((string[n]!=' ')&&(string[n]!='\t')&&(n<nchar)) {
-	  switch(string[n]) {
-	  case '0':
-	    /*
-	      case 'L':
-	      case 'l':
-	      */
-	    value=value*base;
-	    tristate *= base;
-	    break;
-	  case '1':
-	    /*
-	      case 'H':
-	      case 'h':
-	      */
-	    value=value*base+1;
-	    tristate *= base;
-	    break;
-	  case '2':
-	    value=value*base+2;
-	    tristate *= base;
-	    break;
-	  case '3':
-	    value=value*base+3;
-	    tristate *= base;
-	    break;
-	  case '4':
-	    value=value*base+4;
-	    tristate *= base;
-	    break;
-	  case '5':
-	    value=value*base+5;
-	    tristate *= base;
-	    break;
-	  case '6':
-	    value=value*base+6;
-	    tristate *= base;
-	    break;
-	  case '7':
-	    value=value*base+7;
-	    tristate *= base;
-	    break;
-	  case '8':
-	    value=value*base+8;
-	    tristate *= base;
-	    break;
-	  case '9':
-	    value=value*base+9;
-	    tristate *= base;
-	    break;
-	  case 'a':
-	  case 'A':
-	    value=value*base+10;
-	    tristate *= base;
-	    break;
-	  case 'b':
-	  case 'B':
-	    value=value*base+11;
-	    tristate *= base;
-	    break;
-	  case 'c':
-	  case 'C':
-	    value=value*base+12;
-	    tristate *= base;
-	    break;
-	  case 'd':
-	  case 'D':
-	    value=value*base+13;
-	    tristate *= base;
-	    break;
-	  case 'e':
-	  case 'E':
-	    value=value*base+14;
-	    tristate *= base;
-	    break;
-	  case 'f':
-	  case 'F':
-	    value=value*base+15;
-	    tristate *= base;
-	    break;
-	  case 'l':
-	  case 'L':
-	    /********************************************
-	     * long
-	     ********************************************/
-	    type = 'l';
-	    break;
-	  case 'u':
-	  case 'U':
-	    /********************************************
-	     * unsigned
-	     ********************************************/
-	    unsign = 1;
-	    break;
+          switch(string[n]) {
+          case '0':
+            /*
+              case 'L':
+              case 'l':
+              */
+            value=value*base;
+            tristate *= base;
+            break;
+          case '1':
+            /*
+              case 'H':
+              case 'h':
+              */
+            value=value*base+1;
+            tristate *= base;
+            break;
+          case '2':
+            value=value*base+2;
+            tristate *= base;
+            break;
+          case '3':
+            value=value*base+3;
+            tristate *= base;
+            break;
+          case '4':
+            value=value*base+4;
+            tristate *= base;
+            break;
+          case '5':
+            value=value*base+5;
+            tristate *= base;
+            break;
+          case '6':
+            value=value*base+6;
+            tristate *= base;
+            break;
+          case '7':
+            value=value*base+7;
+            tristate *= base;
+            break;
+          case '8':
+            value=value*base+8;
+            tristate *= base;
+            break;
+          case '9':
+            value=value*base+9;
+            tristate *= base;
+            break;
+          case 'a':
+          case 'A':
+            value=value*base+10;
+            tristate *= base;
+            break;
+          case 'b':
+          case 'B':
+            value=value*base+11;
+            tristate *= base;
+            break;
+          case 'c':
+          case 'C':
+            value=value*base+12;
+            tristate *= base;
+            break;
+          case 'd':
+          case 'D':
+            value=value*base+13;
+            tristate *= base;
+            break;
+          case 'e':
+          case 'E':
+            value=value*base+14;
+            tristate *= base;
+            break;
+          case 'f':
+          case 'F':
+            value=value*base+15;
+            tristate *= base;
+            break;
+          case 'l':
+          case 'L':
+            /********************************************
+             * long
+             ********************************************/
+            type = 'l';
+            break;
+          case 'u':
+          case 'U':
+            /********************************************
+             * unsigned
+             ********************************************/
+            unsign = 1;
+            break;
 #ifdef G__NEVER
-	  case 's':
-	  case 'S':
-	    /********************************************
-	     * short, may not exist in ANSI
-	     * and doesn't work fine. 
-	     * shoud be done as casting
-	     ********************************************/
-	    type = 's';
-	    break;
+          case 's':
+          case 'S':
+            /********************************************
+             * short, may not exist in ANSI
+             * and doesn't work fine. 
+             * shoud be done as casting
+             ********************************************/
+            type = 's';
+            break;
 #endif
-	  case 'x':
-	  case 'X':
-	    /***************************************
-	     * Not ANSI
-	     * enhancement for tristate logic expression
-	     ***************************************/
-	    value *= base;
-	    tristate=tristate*base+(base-1);
-	    break;
-	  case 'z':
-	  case 'Z':
-	    /***************************************
-	     * Not ANSI
-	     * enhancement for tristate logic expression
-	     ***************************************/
-	    value=value*base+(base-1);
-	    tristate=tristate*base+(base-1);
-	    break;
-	  default:
-	    value=value*base;
-	    G__fprinterr(G__serr, "Error: unexpected character in expression %s "
-		    ,string);
-	    G__genericerror((char*)NULL);
-	    break;
-	  }
-	  n++;
-	}
+          case 'x':
+          case 'X':
+            /***************************************
+             * Not ANSI
+             * enhancement for tristate logic expression
+             ***************************************/
+            value *= base;
+            tristate=tristate*base+(base-1);
+            break;
+          case 'z':
+          case 'Z':
+            /***************************************
+             * Not ANSI
+             * enhancement for tristate logic expression
+             ***************************************/
+            value=value*base+(base-1);
+            tristate=tristate*base+(base-1);
+            break;
+          default:
+            value=value*base;
+            G__fprinterr(G__serr, "Error: unexpected character in expression %s "
+                    ,string);
+            G__genericerror((char*)NULL);
+            break;
+          }
+          n++;
+        }
       }
     }
   if(value>-1) {
@@ -1356,9 +1343,7 @@ int *known4;
 *   G__getitem()
 *
 ******************************************************************/
-int G__isfloat(string,type)
-char *string;
-int *type;
+int G__isfloat(char *string,int *type)
 {
   int ig17=0;
   int c;
@@ -1450,8 +1435,8 @@ int *type;
     case 'd':
     case 'f':
       G__fprinterr(G__serr,
-	      "Error: unsigned can not be specified for float or double %s "
-	      ,string );
+              "Error: unsigned can not be specified for float or double %s "
+              ,string );
       G__genericerror((char*)NULL);
       break;
     default:
@@ -1473,8 +1458,7 @@ int *type;
 * Called by
 *   nothing
 ******************************************************************/
-int G__isoperator(c)
-int c;
+int G__isoperator(int c)
 {
   switch(c) {
   case '+':
@@ -1513,9 +1497,7 @@ int c;
 *   G__getexpr()    to identify power and operator
 *
 ******************************************************************/
-int G__isexponent(expression4,lenexpr)
-char *expression4;
-int lenexpr;
+int G__isexponent(char *expression4,int lenexpr)
 {
 
 
@@ -1557,8 +1539,7 @@ int lenexpr;
 *   G__strip_quotation()   To identify char pointer and string
 *
 ******************************************************************/
-int G__isvalue(temp)
-char *temp;
+int G__isvalue(char *temp)
 {
   if  ( (isdigit(temp[0])) ||((temp[0]=='-')&&(isdigit(temp[1])))) {
     return(1);
@@ -1572,9 +1553,7 @@ char *temp;
 * G__string2type_body
 *
 ******************************************************************/
-G__value G__string2type_body(typenamin,noerror)
-char *typenamin;
-int noerror;
+G__value G__string2type_body(const char *typenamin,int noerror)
 {
   char typenam[G__MAXNAME*2];
   char temp[G__MAXNAME*2];
@@ -1783,19 +1762,19 @@ int noerror;
       result.tagnum=G__newtype.tagnum[result.typenum];
       result.type=G__newtype.type[result.typenum];
       if(result.tagnum != -1 && G__struct.type[result.tagnum]=='e') {
-	result.type='i';
+        result.type='i';
       }
     }
     else {
       if(0==noerror) {
-	result.tagnum=G__defined_tagname(typenam,0);
-	if(result.tagnum== -1) result.type='Y'; /* checked */
-	else                   result.type='u';
+        result.tagnum=G__defined_tagname(typenam,0);
+        if(result.tagnum== -1) result.type='Y'; /* checked */
+        else                   result.type='u';
       }
       else {
-	result.tagnum=G__defined_tagname(typenam,noerror);
-	if(result.tagnum== -1) result.type=0; /* checked */
-	else                   result.type='u';
+        result.tagnum=G__defined_tagname(typenam,noerror);
+        if(result.tagnum== -1) result.type=0; /* checked */
+        else                   result.type='u';
       }
     }
   }
@@ -1811,10 +1790,10 @@ int noerror;
     default:
       result.type = toupper(result.type);
       if(rlevel) {
-	result.obj.reftype.reftype = G__PARAREFP2P + plevel-2;
+        result.obj.reftype.reftype = G__PARAREFP2P + plevel-2;
       }
       else {
-	result.obj.reftype.reftype = G__PARAP2P + plevel-2;
+        result.obj.reftype.reftype = G__PARAP2P + plevel-2;
       }
       break;
     }
@@ -1828,8 +1807,7 @@ int noerror;
 * G__string2type
 *
 ******************************************************************/
-G__value G__string2type(typenamin)
-char *typenamin;
+G__value G__string2type(const char *typenamin)
 {
   int store_var_type = G__var_type;
   G__value buf = G__string2type_body(typenamin,0);
@@ -1837,6 +1815,7 @@ char *typenamin;
   return(buf);
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 #ifndef __CINT__
 void G__setCINTLIBNAME G__P((char *cintlib));
 void G__setcopyflag G__P((int flag));
@@ -58,9 +60,7 @@ static G__parse_hook_t* G__beforeparse_hook;
 *    G__cpp_setupXXX initializer ctor.
 *
 **************************************************************************/
-void G__add_setup_func(libname, func)
-char *libname;
-G__incsetup func;
+void G__add_setup_func(const char *libname,G__incsetup func)
 {
    int i, islot = -1;
 
@@ -90,7 +90,7 @@ G__incsetup func;
    if (islot == -1) islot = G__nlibs++;
 
    G__setup_func_list[islot] = (G__setup_func_struct*)malloc(sizeof(G__setup_func_struct));
-   G__setup_func_list[islot]->libname = malloc(strlen(libname)+1);
+   G__setup_func_list[islot]->libname = (char*) malloc(strlen(libname)+1);
    G__setup_func_list[islot]->func    = func;
    G__setup_func_list[islot]->inited  = 0;
    strcpy(G__setup_func_list[islot]->libname, libname);
@@ -103,8 +103,7 @@ G__incsetup func;
 *    G__cpp_setupXXX initializer dtor.
 *
 **************************************************************************/
-void G__remove_setup_func(libname)
-char *libname;
+void G__remove_setup_func(const char *libname)
 {
    int i;
 
@@ -175,8 +174,7 @@ static struct G__libsetup_list G__p2fsetup;
 /**************************************************************************
 * G__set_p2fsetup()
 **************************************************************************/
-void G__set_p2fsetup(p2f)
-void (*p2f)();
+void G__set_p2fsetup(void (*p2f)())
 {
   struct G__libsetup_list *setuplist;
   setuplist = &G__p2fsetup;
@@ -193,8 +191,7 @@ void (*p2f)();
 /**************************************************************************
 * G__free_p2fsetuplist()
 **************************************************************************/
-static void G__free_p2fsetuplist(setuplist)
-struct G__libsetup_list *setuplist;
+static void G__free_p2fsetuplist(G__libsetup_list *setuplist)
 {
   if(setuplist->next) {
     G__free_p2fsetuplist(setuplist->next);
@@ -232,8 +229,7 @@ static void G__do_p2fsetup()
 /**************************************************************************
 * G__read_include_env()
 **************************************************************************/
-static void G__read_include_env(envname)
-char* envname;
+static void G__read_include_env(char* envname)
 {
   char *env = getenv(envname);
   if(env) {
@@ -289,8 +285,7 @@ char* envname;
 *    G__scratch_all();     // terminate cint
 *
 **************************************************************************/
-int G__init_cint(command)
-char *command;
+int G__init_cint(const char *command)
 {
   int argn=0,i;
   int result;
@@ -371,8 +366,7 @@ char *command;
 * Command file has to contain
 *    cint < [options] > [file1] < [file2] < [file3] <...>>>
 **************************************************************************/
-int G__load(commandfile)
-char *commandfile;
+int G__load(char *commandfile)
 {
   int argn=0,i;
   char *arg[G__MAXARG],line[G__LONGLINE*2],argbuf[G__LONGLINE*2];
@@ -382,7 +376,7 @@ char *commandfile;
   cfp=fopen(commandfile,"r");
   if(cfp==NULL) {
     fprintf(stderr,"Error: command file \"%s\" doesn't exist\n"
-	    ,commandfile);
+            ,commandfile);
     fprintf(stderr,"  Make command file : [comID] <[cint options]> [file1] <[file2]<[file3]<...>>>\n");
     return(-1);
   }
@@ -426,8 +420,7 @@ int G__getcintready()
 * G__setothermain()
 *
 **************************************************************************/
-void G__setothermain(othermain)
-int othermain;
+void G__setothermain(int othermain)
 {
   G__othermain = (short)othermain;
 }
@@ -436,8 +429,7 @@ int othermain;
 * G__setglobalcomp()
 *
 **************************************************************************/
-void G__setglobalcomp(globalcomp)
-int globalcomp;
+void G__setglobalcomp(int globalcomp)
 {
   G__globalcomp = globalcomp;
 }
@@ -492,10 +484,7 @@ char *G__optarg;
 #define optarg G__optarg
 #define getopt G__getopt
 
-int G__getopt(argc, argv,optlist)
-int argc;
-char **argv;
-char *optlist;
+int G__getopt(int argc, char **argv, char *optlist)
 {
   int optkey;
   char *p;
@@ -504,27 +493,27 @@ char *optlist;
       optkey = argv[optind][1] ;
       p = optlist;
       while(*p) {
-	if( (*p) == optkey ) {
-	  ++p;
-	  if(':'==(*p)) { /* option with argument */
-	    if(argv[optind][2]) { /* -aARGUMENT */
-	      optarg=argv[optind]+2;
-	      optind+=1;
-	      return(argv[optind-1][1]);
-	    }
-	    else { /* -a ARGUMENT */
-	      optarg=argv[optind+1];
-	      optind+=2;
-	      return(argv[optind-2][1]);
-	    }
-	  }
-	  else { /* option without argument */
-	    ++optind;
-	    optarg=(char*)NULL;
-	    return(argv[optind-1][1]);
-	  }
-	}
-	++p;
+        if( (*p) == optkey ) {
+          ++p;
+          if(':'==(*p)) { /* option with argument */
+            if(argv[optind][2]) { /* -aARGUMENT */
+              optarg=argv[optind]+2;
+              optind+=1;
+              return(argv[optind-1][1]);
+            }
+            else { /* -a ARGUMENT */
+              optarg=argv[optind+1];
+              optind+=2;
+              return(argv[optind-2][1]);
+            }
+          }
+          else { /* option without argument */
+            ++optind;
+            optarg=(char*)NULL;
+            return(argv[optind-1][1]);
+          }
+        }
+        ++p;
       }
       G__fprinterr(G__serr,"Error: Unknown option %s\n",argv[optind]);
       ++optind;
@@ -551,9 +540,7 @@ extern int G__quiet;
 *
 * Main entry of the C/C++ interpreter
 **************************************************************************/
-int G__main(argc,argv)
-int  argc ;
-char *argv[] ;
+int G__main(int argc,char **argv)
 {
   int stepfrommain=0;
   int  ii ;
@@ -714,7 +701,7 @@ char *argv[] ;
    *************************************************************/
   while((c=getopt(argc,argv
   ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:"))
-	!=EOF) {
+        !=EOF) {
     switch(c) {
 
 #ifndef G__OLDIMPLEMENTATION2226
@@ -773,8 +760,8 @@ char *argv[] ;
     case 'M':
       G__is_operator_newdelete = (int)G__int(G__calc_internal((optarg)));
       if(G__NOT_USING_2ARG_NEW&G__is_operator_newdelete) {
-	G__fprinterr(G__serr,"!!!-M option may not be needed any more. A new scheme has been implemented.\n");
-	G__fprinterr(G__serr,"!!!Refer to $CINTSYSDIR/doc/makecint.txt for the detail.\n");
+        G__fprinterr(G__serr,"!!!-M option may not be needed any more. A new scheme has been implemented.\n");
+        G__fprinterr(G__serr,"!!!Refer to $CINTSYSDIR/doc/makecint.txt for the detail.\n");
       }
       break;
 
@@ -797,22 +784,22 @@ char *argv[] ;
 
     case 'x':
       if(xfileflag) {
-	G__fprinterr(G__serr,"Error: only one -x option is allowed\n");
-	G__exit(EXIT_FAILURE);
+        G__fprinterr(G__serr,"Error: only one -x option is allowed\n");
+        G__exit(EXIT_FAILURE);
       }
       else {
 #ifndef G__OLDIMPLEMENATTION1919
-	xfileflag=optind-1;
+        xfileflag=optind-1;
 #else
 #ifndef G__OLDIMPLEMENATTION1564
-	G__tmpnam(G__xfile); /* not used anymore */
+        G__tmpnam(G__xfile); /* not used anymore */
 #else
-	tmpnam(G__xfile);
+        tmpnam(G__xfile);
 #endif
-	G__ifile.fp=fopen(G__xfile,"w");
-	fprintf(G__ifile.fp,"%s\n",optarg);
-	fclose(G__ifile.fp);
-	xfileflag=1;
+        G__ifile.fp=fopen(G__xfile,"w");
+        fprintf(G__ifile.fp,"%s\n",optarg);
+        fclose(G__ifile.fp);
+        xfileflag=1;
 #endif
       }
       break;
@@ -842,7 +829,7 @@ char *argv[] ;
       break;
 
     case 'n': /* customize G__cpplink file name
-	       *   G__cppXXX?.C , G__cXXX.c */
+               *   G__cppXXX?.C , G__cXXX.c */
       if(linkflag) {
         G__fprinterr(G__serr,"Warning: option -n[linkname] must be given prior to -c[linklevel]\n");
       }
@@ -862,31 +849,31 @@ char *argv[] ;
 
     case 'u':
       if(!G__fpundeftype) {
-	G__security = 0;
-	G__fpundeftype = fopen(optarg,"w");
-	fprintf(G__fpundeftype,"/* List of possible undefined type names. This list is not perfect.\n");
-  	fprintf(G__fpundeftype,"* It is user's responsibility to modify this file. \n");
-  	fprintf(G__fpundeftype,"* There are cases that the undefined type names can be\n");
-  	fprintf(G__fpundeftype,"*   class name\n");
-  	fprintf(G__fpundeftype,"*   struct name\n");
-  	fprintf(G__fpundeftype,"*   union name\n");
-  	fprintf(G__fpundeftype,"*   enum name\n");
-  	fprintf(G__fpundeftype,"*   typedef name\n");
-  	fprintf(G__fpundeftype,"*   not a typename but object name by CINT's mistake\n");
-  	fprintf(G__fpundeftype,"* but CINT can not distinguish between them. So it outputs 'class xxx;' \n");
-  	fprintf(G__fpundeftype,"* for all.\n");
-  	fprintf(G__fpundeftype,"*/\n");
+        G__security = 0;
+        G__fpundeftype = fopen(optarg,"w");
+        fprintf(G__fpundeftype,"/* List of possible undefined type names. This list is not perfect.\n");
+          fprintf(G__fpundeftype,"* It is user's responsibility to modify this file. \n");
+          fprintf(G__fpundeftype,"* There are cases that the undefined type names can be\n");
+          fprintf(G__fpundeftype,"*   class name\n");
+          fprintf(G__fpundeftype,"*   struct name\n");
+          fprintf(G__fpundeftype,"*   union name\n");
+          fprintf(G__fpundeftype,"*   enum name\n");
+          fprintf(G__fpundeftype,"*   typedef name\n");
+          fprintf(G__fpundeftype,"*   not a typename but object name by CINT's mistake\n");
+          fprintf(G__fpundeftype,"* but CINT can not distinguish between them. So it outputs 'class xxx;' \n");
+          fprintf(G__fpundeftype,"* for all.\n");
+          fprintf(G__fpundeftype,"*/\n");
       }
       break;
 
 #ifdef G__SHAREDLIB
     case 'l': /* dynamic link file, shared library file */
       if(
-	 -1==G__shl_load(optarg)
-	 ) {
-	if(G__key!=0) system("key .cint_key -l execute");
-	G__scratch_all();
-	return(EXIT_FAILURE);
+         -1==G__shl_load(optarg)
+         ) {
+        if(G__key!=0) system("key .cint_key -l execute");
+        G__scratch_all();
+        return(EXIT_FAILURE);
       }
       break;
 #else
@@ -901,12 +888,12 @@ char *argv[] ;
     case 'W':
       switch(optarg[1]) {
       case 'p':
-	strcpy(G__ppopt,optarg+2);
-	ppc=G__ppopt;
-	while((ppc=strchr(ppc,','))) *ppc=' ';
-	break;
+        strcpy(G__ppopt,optarg+2);
+        ppc=G__ppopt;
+        while((ppc=strchr(ppc,','))) *ppc=' ';
+        break;
       case 'l':
-	break;
+        break;
       }
       break;
     case 'A': /* C++ mode lock */
@@ -941,32 +928,32 @@ char *argv[] ;
     case 'X': /* readline dumpfile execution */
       G__dumpreadline[0]=fopen(optarg,"r");
       if(G__dumpreadline[0]) {
-	G__Xdumpreadline[0]=1;
-	G__fprinterr(G__serr," -X : readline dumpfile %s executed\n",
-		optarg);
+        G__Xdumpreadline[0]=1;
+        G__fprinterr(G__serr," -X : readline dumpfile %s executed\n",
+                optarg);
       }
       else {
-	G__fprinterr(G__serr,
-		"Readline dumpfile %s can not open\n"
-		,optarg);
-	return(EXIT_FAILURE);
+        G__fprinterr(G__serr,
+                "Readline dumpfile %s can not open\n"
+                ,optarg);
+        return(EXIT_FAILURE);
       }
       break;
     case 'd': /* dump file */
 #ifdef G__DUMPFILE
       G__fprinterr(G__serr," -d : dump function call history to %s\n",
-	      optarg);
+              optarg);
       if(strcmp(optarg+strlen(optarg)-2,".c")==0 ||
-	 strcmp(optarg+strlen(optarg)-2,".C")==0 ||
-	 strcmp(optarg+strlen(optarg)-2,".h")==0 ||
-	 strcmp(optarg+strlen(optarg)-2,".H")==0) {
-	G__fprinterr(G__serr,"-d %s : Improper history dump file name\n"
-		,optarg);
+         strcmp(optarg+strlen(optarg)-2,".C")==0 ||
+         strcmp(optarg+strlen(optarg)-2,".h")==0 ||
+         strcmp(optarg+strlen(optarg)-2,".H")==0) {
+        G__fprinterr(G__serr,"-d %s : Improper history dump file name\n"
+                ,optarg);
       }
       else sprintf(dumpfile,"%s",optarg);
 #else
       G__fprinterr(G__serr,
-	      " -d : func call dump not supported now\n");
+              " -d : func call dump not supported now\n");
 #endif
       break;
     case 'k': /* user function key */
@@ -990,28 +977,28 @@ char *argv[] ;
        */
       G__globalcomp=atoi(optarg);
       if(abs(G__globalcomp)>=10) {
-	G__default_link = abs(G__globalcomp)%10;
-	G__globalcomp /= 10;
+        G__default_link = abs(G__globalcomp)%10;
+        G__globalcomp /= 10;
       }
       linkflag=1;
       if(!linkfilename) {
         switch(G__globalcomp) {
         case G__CPPLINK: 
-	  linkfilename = "G__cpplink.C";
-	  G__iscpp=1;
-	  G__cpplock=1;
-	  break;
+          linkfilename = "G__cpplink.C";
+          G__iscpp=1;
+          G__cpplock=1;
+          break;
         case G__CLINK:
-	  linkfilename = "G__clink.c";
-	  G__iscpp=0;
-	  G__clock=1;
-	  break;
+          linkfilename = "G__clink.c";
+          G__iscpp=0;
+          G__clock=1;
+          break;
         default:
-	  linkfilename = "G__cpplink.cxx"; break;
+          linkfilename = "G__cpplink.cxx"; break;
         }
       }
       if(!dllid) {
-	dllid = "";
+        dllid = "";
       }
       G__set_globalcomp(optarg,linkfilename,dllid);
       break;
@@ -1209,21 +1196,21 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENATTION1919
       FILE *tmpf = tmpfile();
       if(tmpf) {
-	fprintf(tmpf,"%s\n",argv[xfileflag]);
-	xfileflag=0;
-	fseek(tmpf,0L,SEEK_SET);
-	if(G__loadfile_tmpfile(tmpf) || G__eof==2) {
-	  /* file not found or unexpected EOF */
-	  if(G__CPPLINK==G__globalcomp||G__CLINK==G__globalcomp) {
-	    G__cleardictfile(-1);
-	  }
-	  G__scratch_all();
-	  return(EXIT_FAILURE);
-	}
-	continue;
+        fprintf(tmpf,"%s\n",argv[xfileflag]);
+        xfileflag=0;
+        fseek(tmpf,0L,SEEK_SET);
+        if(G__loadfile_tmpfile(tmpf) || G__eof==2) {
+          /* file not found or unexpected EOF */
+          if(G__CPPLINK==G__globalcomp||G__CLINK==G__globalcomp) {
+            G__cleardictfile(-1);
+          }
+          G__scratch_all();
+          return(EXIT_FAILURE);
+        }
+        continue;
       }
       else {
-	xfileflag=0;
+        xfileflag=0;
       }
 #else
       sprintf(sourcefile,G__xfile);
@@ -1268,7 +1255,7 @@ char *argv[] ;
     if(G__loadfile(sourcefile)<0 || G__eof==2) {
       /* file not found or unexpected EOF */
       if(G__CPPLINK==G__globalcomp||G__CLINK==G__globalcomp) {
-	G__cleardictfile(-1);
+        G__cleardictfile(-1);
       }
       G__scratch_all();
       return(EXIT_FAILURE);
@@ -1417,7 +1404,7 @@ char *argv[] ;
     para.para[1].ref = 0;
     para.para[1].obj.reftype.reftype = G__PARAP2P;
     G__interpret_func(&result,temp,&para,G__HASH_MAIN,G__p_ifunc
-		      ,G__EXACT,G__TRYNORMAL);
+                      ,G__EXACT,G__TRYNORMAL);
 
 
     if(0==result.type) result=G__null;
@@ -1433,18 +1420,18 @@ char *argv[] ;
       G__fprinterr(G__serr,"!!! return from main() function\n");
 #ifdef SIGALRM
       if(G__RETURN_EXIT1==G__return) {
-	G__fprinterr(G__serr,
-	    "Press return or process will be terminated in %dsec by timeout\n"
-		     ,G__TIMEOUT);
-	signal(SIGALRM,G__timeout);
-	alarm(G__TIMEOUT);
+        G__fprinterr(G__serr,
+            "Press return or process will be terminated in %dsec by timeout\n"
+                     ,G__TIMEOUT);
+        signal(SIGALRM,G__timeout);
+        alarm(G__TIMEOUT);
       }
 #endif
       G__pause();
 #ifdef SIGALRM
       if(G__RETURN_EXIT1==G__return) {
-	alarm(0);
-	G__fprinterr(G__serr,"Time out cancelled\n");
+        alarm(0);
+        G__fprinterr(G__serr,"Time out cancelled\n");
       }
 #endif
       G__pause();
@@ -1496,15 +1483,15 @@ char *argv[] ;
       fprintf(G__sout,"No main() function found in given source file. Interactive interface started.\n");
       switch(G__ReadInputMode()) {
       case G__INPUTROOTMODE:
-	fprintf(G__sout,"'?':help, '.q':quit, 'statement','{statements;}' or '.p [expr]' to evaluate\n");
-	break;
+        fprintf(G__sout,"'?':help, '.q':quit, 'statement','{statements;}' or '.p [expr]' to evaluate\n");
+        break;
       case G__INPUTCXXMODE:
-	fprintf(G__sout,"'?':help, '.q':quit, 'statement;','{statements;}' or '.p [expr]' to evaluate\n");
-	break;
+        fprintf(G__sout,"'?':help, '.q':quit, 'statement;','{statements;}' or '.p [expr]' to evaluate\n");
+        break;
       case G__INPUTCINTMODE:
       default:
-	fprintf(G__sout,"'h':help, 'q':quit, '{statements;}' or 'p [expr]' to evaluate\n");
-	break;
+        fprintf(G__sout,"'h':help, 'q':quit, '{statements;}' or 'p [expr]' to evaluate\n");
+        break;
       }
     } /* ON1078 */
 
@@ -1515,9 +1502,9 @@ char *argv[] ;
     while(1) {
       G__pause();
       if(G__return>G__RETURN_NORMAL&&G__RETURN_EXIT1!=G__return) {
-	G__return=G__RETURN_NON;
-	G__scratch_all();
-	return(EXIT_SUCCESS);
+        G__return=G__RETURN_NON;
+        G__scratch_all();
+        return(EXIT_SUCCESS);
       }
     }
   }
@@ -2196,10 +2183,7 @@ void G__set_stdio()
 *
 *
 ******************************************************************/
-void G__set_stdio_handle(sout,serr,sin)
-FILE* sout;
-FILE* serr;
-FILE* sin;
+void G__set_stdio_handle(FILE *sout,FILE *serr,FILE *sin)
 {
   char temp[G__ONELINE];
 
@@ -2245,8 +2229,7 @@ char *G__cint_version()
 * revision print out
 *
 **************************************************************************/
-int G__cintrevision(fp)
-FILE *fp;
+int G__cintrevision(FILE *fp)
 {
   fprintf(fp,"\n");
   fprintf(fp,"cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
@@ -2263,10 +2246,8 @@ FILE *fp;
 * G__AddConstStringList()
 *
 **************************************************************************/
-struct G__ConstStringList* G__AddConstStringList(current,str,islen)
-struct G__ConstStringList* current;
-char* str;
-int islen;
+G__ConstStringList* G__AddConstStringList(G__ConstStringList *current
+                                          ,char *str,int islen)
 {
   int itemp;
   struct G__ConstStringList* next;
@@ -2292,8 +2273,7 @@ int islen;
 * G__DeleteConstStringList()
 *
 **************************************************************************/
-void G__DeleteConstStringList(current)
-struct G__ConstStringList* current;
+void G__DeleteConstStringList(G__ConstStringList* current)
 {
   struct G__ConstStringList* tmp;
   while(current) {
@@ -2320,13 +2300,12 @@ void G__LockCpp()
 * G__SetCatchException()
 *
 **************************************************************************/
-void G__SetCatchException(mode)
-int mode;
+void G__SetCatchException(int mode)
 {
   G__catchexception = mode;
 }
 
-
+} /* extern "C" */
 
 /*
  * Local Variables:

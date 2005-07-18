@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+extern "C" {
 
 #define G__IMMEDIATE_GARBAGECOLLECTION
 
@@ -79,8 +80,7 @@ static unsigned int G__count_garbagecollection;
 /**************************************************************************
 * G__search_alloctable()
 **************************************************************************/
-static struct G__alloclist* G__search_alloctable(mem)
-void *mem;
+static struct G__alloclist* G__search_alloctable(void *mem)
 {
   struct G__alloclist *alloc;
   alloc = G__alloctable;
@@ -94,8 +94,7 @@ void *mem;
 /**************************************************************************
 * G__free_reflist()
 **************************************************************************/
-static void G__free_reflist(reflist)
-struct G__reflist *reflist;
+static void G__free_reflist(G__reflist *reflist)
 {
   if(reflist) {
     if(reflist->next) {
@@ -112,9 +111,7 @@ struct G__reflist *reflist;
 *  1) delete entry from alloclist
 *
 **************************************************************************/
-static struct G__reflist* G__delete_reflist(alloc,reflist)
-struct G__alloclist *alloc;
-struct G__reflist *reflist;
+static struct G__reflist* G__delete_reflist(G__alloclist *alloc,G__reflist *reflist)
 {
   struct G__reflist *freed;
   static struct G__reflist temp;
@@ -143,8 +140,7 @@ struct G__reflist *reflist;
 *  1) delete entry from alloclist
 *
 **************************************************************************/
-static struct G__alloclist* G__delete_alloctable(alloc)
-struct G__alloclist *alloc;
+static struct G__alloclist* G__delete_alloctable(G__alloclist *alloc)
 {
   struct G__alloclist *freed;
   static struct G__alloclist temp;
@@ -178,8 +174,7 @@ struct G__alloclist *alloc;
 *  2) If interpreted class or fundamental class, free memory or close file
 *
 **************************************************************************/
-void G__destroy_garbageobject(alloc)
-struct G__alloclist *alloc;
+void G__destroy_garbageobject(G__alloclist *alloc)
 {
   long store_tagnum;
   long store_struct_offset;
@@ -272,17 +267,17 @@ int G__garbagecollection()
       /* Delete dummy reference count for returned pointer */
       reflist = alloc->reflist;
       while(reflist) {
-	if((void**)NULL==reflist->ref) {
-	  reflist=G__delete_reflist(alloc,reflist);
-	}
-	reflist=reflist->next;
+        if((void**)NULL==reflist->ref) {
+          reflist=G__delete_reflist(alloc,reflist);
+        }
+        reflist=reflist->next;
       }
     }
     alloc=alloc->next;
   }
 
   G__fprinterr(G__serr,"!!! %d object(s) deleted by Reference Count Control !!!\n"
-	  ,G__count_garbagecollection);
+          ,G__count_garbagecollection);
   count = G__count_garbagecollection;
   G__count_garbagecollection=0;
 
@@ -293,10 +288,7 @@ int G__garbagecollection()
 /**************************************************************************
 * G__add_alloctable()
 **************************************************************************/
-void G__add_alloctable(allocedmem,type,tagnum)
-void *allocedmem;
-int type;
-int tagnum;
+void G__add_alloctable(void *allocedmem,int type,int tagnum)
 {
   if(G__p_alloc) {
     G__p_alloc->next=(struct G__alloclist*)malloc(sizeof(struct G__alloclist));
@@ -318,8 +310,7 @@ int tagnum;
 /**************************************************************************
 * G__del_alloctable()
 **************************************************************************/
-int G__del_alloctable(allocmem)
-void *allocmem;
+int G__del_alloctable(void *allocmem)
 {
   struct G__alloclist *alloc;
 
@@ -331,7 +322,7 @@ void *allocmem;
   }
   else {
     G__fprinterr(G__serr,"Error: Can not free 0x%lx, not allocated."
-	    ,(long)allocmem);
+            ,(long)allocmem);
     G__genericerror((char*)NULL);
     return(1);
   }
@@ -340,9 +331,7 @@ void *allocmem;
 /**************************************************************************
 * G__add_refcount()
 **************************************************************************/
-int G__add_refcount(allocedmem,storedmem)
-void *allocedmem;
-void **storedmem;
+int G__add_refcount(void *allocedmem,void **storedmem)
 {
   struct G__alloclist *alloc;
   struct G__reflist *reflist;
@@ -371,9 +360,7 @@ void **storedmem;
 /**************************************************************************
 * G__del_refcount()
 **************************************************************************/
-int G__del_refcount(allocedmem,storedmem)
-void *allocedmem;
-void **storedmem;
+int G__del_refcount(void *allocedmem,void **storedmem)
 {
   int flag=1;
   struct G__alloclist *alloc;
@@ -383,11 +370,11 @@ void **storedmem;
     reflist = alloc->reflist;
     while(reflist) {
       if(reflist->ref==storedmem) {
-	reflist=G__delete_reflist(alloc,reflist);
+        reflist=G__delete_reflist(alloc,reflist);
       }
       else if((void**)NULL==reflist->ref) {
-	reflist=G__delete_reflist(alloc,reflist);
-	flag=0;
+        reflist=G__delete_reflist(alloc,reflist);
+        flag=0;
       }
       reflist=reflist->next;
     }
@@ -395,7 +382,7 @@ void **storedmem;
     if(!alloc->reflist && flag) {
 #ifdef G__DEBUG
       G__fprinterr(G__serr,"!!! %s object deleted by Reference Count Control !!!\n"
-	      ,G__type2string(alloc->type,alloc->tagnum,-1,0,0));
+              ,G__type2string(alloc->type,alloc->tagnum,-1,0,0));
 #endif
       G__destroy_garbageobject(alloc);
       G__delete_alloctable(alloc);
@@ -415,8 +402,7 @@ void **storedmem;
 /**************************************************************************
 * G__disp_garbagecollection()
 **************************************************************************/
-int G__disp_garbagecollection(fout)
-FILE *fout;
+int G__disp_garbagecollection(FILE *fout)
 {
   static struct G__alloclist *alloc;
   struct G__reflist *reflist;
@@ -426,8 +412,8 @@ FILE *fout;
   fprintf(fout,"type                : location   : reference(s)\n");
   while(alloc) {
     fprintf(fout,"%-20s: 0x%lx :"
-	    ,G__type2string(alloc->type,alloc->tagnum,-1,0,0)
-	    ,(long)alloc->allocedmem);
+            ,G__type2string(alloc->type,alloc->tagnum,-1,0,0)
+            ,(long)alloc->allocedmem);
     reflist = alloc->reflist;
     while(reflist) {
       fprintf(fout," 0x%lx ,",(long)reflist->ref);
@@ -439,8 +425,7 @@ FILE *fout;
   return(0);
 }
 
-
-
+} /* extern "C" */
 
 /*
  * Local Variables:

@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      6001001
-#define G__CINTVERSIONSTR_V6  "6.1.1, June 20 2005"
-#define G__CINTVERSION_V5      50160001
-#define G__CINTVERSIONSTR_V5  "5.16.1, Jun3 20 2005"
+#define G__CINTVERSION_V6      6001002
+#define G__CINTVERSIONSTR_V6  "6.1.2, July 14 2005"
+#define G__CINTVERSION_V5      50160002
+#define G__CINTVERSIONSTR_V5  "5.16.2, July 14 2005"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -105,8 +105,6 @@
 #define G__OLDIMPLEMENTATION2042
 #define G__OLDIMPLEMENTATION1073
 #endif
-
-#define G__OLDIMPLEMENTATION1073
 
 /* Native long long, unsigned long long, long double implementation */
 #ifndef G__NATIVELONGLONG
@@ -1114,7 +1112,7 @@ struct G__funcentry {
   /* file position and pointer for restoring start point */
   fpos_t pos; /* Set if interpreted func body defined, unknown otherwise */
   void *p;  /* FILE* for source file or  int (*)() for compiled function
-	     * (void*)NULL if no function body */
+             * (void*)NULL if no function body */
   int  line_number; /* -1 if no function body or compiled function */
   short filenum;    /* -1 if compiled function, otherwise interpreted func */
 #ifdef G__ASM_FUNC
@@ -1610,8 +1608,8 @@ extern void (*G__aterror)();
 
 #define G__ASSERT(f)                                                      \
   if(!(f)) fprintf(G__serr                                                \
-		   ,"cint internal error: %s line %u FILE:%s LINE:%d\n"   \
-		   ,__FILE__,__LINE__,G__ifile.name,G__ifile.line_number)
+                   ,"cint internal error: %s line %u FILE:%s LINE:%d\n"   \
+                   ,__FILE__,__LINE__,G__ifile.name,G__ifile.line_number)
 
 
 #else
@@ -1668,23 +1666,23 @@ extern int G__add_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__del_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__disp_garbagecollection G__P((FILE* fout));
 struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
-					   ,struct G__ifunc_table *p_ifunc
-					   ,long *pifn,long *poffset
-					   ,int withConversion
+                                           ,struct G__ifunc_table *p_ifunc
+                                           ,long *pifn,long *poffset
+                                           ,int withConversion
                                            ,int withInheritance));
 struct G__ifunc_table *G__get_methodhandle2 G__P((char *funcname
-					   ,struct G__param* libp
-					   ,struct G__ifunc_table *p_ifunc
-					   ,long *pifn,long *poffset
-					   ,int withConversion
+                                           ,struct G__param* libp
+                                           ,struct G__ifunc_table *p_ifunc
+                                           ,long *pifn,long *poffset
+                                           ,int withConversion
                                            ,int withInheritance));
 struct G__var_array *G__searchvariable G__P((char *varname,int varhash
-				       ,struct G__var_array *varlocal
-				       ,struct G__var_array *varglobal
-				       ,long *pG__struct_offset
-				       ,long *pstore_struct_offset
-				       ,int *pig15
-				       ,int isdecl));
+                                       ,struct G__var_array *varlocal
+                                       ,struct G__var_array *varglobal
+                                       ,long *pG__struct_offset
+                                       ,long *pstore_struct_offset
+                                       ,int *pig15
+                                       ,int isdecl));
 
 
 struct G__ifunc_table* G__p2f2funchandle G__P((void* p2f,struct G__ifunc_table* p_ifunc,int* pindex));
@@ -2215,146 +2213,146 @@ G__EXPORT void G__SetCCintApiPointers(
 #else
 G__EXPORT void G__SetCppCintApiPointers(
 #endif
-		void* a1,
-		void* a2,
-		void* a3,
-		void* a4,
-		void* a5,
-		void* a6,
-		void* a7,
-		void* a8,
-		void* a9,
-		void* a10,
-		void* a11,
-		void* a12,
-		void* a13,
-		void* a14,
-		void* a15,
-		void* a16,
-		void* a17,
-		void* a18,
-		void* a19,
-		void* a20,
-		void* a21,
-		void* a22,
-		void* a23,
-		void* a24,
-		void* a25,
-		void* a26,
-		void* a27,
-		void* a28,
-		void* a29,
-		void* a30,
-		void* a31,
-		void* a32,
-		void* a33,
-		void* a34,
-		void* a35,
-		void* a36,
-		void* a37,
-		void* a38,
-		void* a39,
-		void* a40,
-		void* a41,
-		void* a42,
-		void* a43,
-		void* a44,
-		void* a45,
-		void* a46,
-		void* a47,
-		void* a48,
-		void* a49,
-		void* a50,
-		void* a51,
-		void* a52,
-		void* a53,
-		void* a54,
-		void* a55,
-		void* a56,
-		void* a57,
-		void* a58,
-		void* a59,
-		void* a60,
-		void* a61,
-		void* a62,
-		void* a63,
-		void* a64,
-		void* a65,
-		void* a66,
-		void* a67,
-		void* a68,
-		void* a69,
-		void* a70,
-		void* a71,
-		void* a72,
-		void* a73,
-		void* a74,
-		void* a75,
-		void* a76,
-		void* a77,
-		void* a78,
-		void* a79,
-		void* a80,
-		void* a81,
-		void* a82,
-		void* a83,
-		void* a84,
-		void* a85,
-		void* a86,
-		void* a87,
-		void* a88,
-		void* a89,
-		void* a90,
-		void* a91,
-		void* a92,
-		void* a93,
-		void* a94,
-		void* a95,
-		void* a96,
-		void* a97,
-		void* a100,
-		void* a101,
-		void* a102,
-		void* a103,
-		void* a104,
-		void* a105,
-		void* a106,
-		void* a107,
-		void* a108,
-		void* a109,
-		void* a110,
-		void* a111,
-		void* a112,
-		void* a113,
-		void* a114,
-		void* a115,
-		void* a116,
-		void* a117,
-		void* a118,
-		void* a119,
-		void* a120,
-		void* a121,
-		void* a122,
-		void* a123,
-		void* a124
+                void* a1,
+                void* a2,
+                void* a3,
+                void* a4,
+                void* a5,
+                void* a6,
+                void* a7,
+                void* a8,
+                void* a9,
+                void* a10,
+                void* a11,
+                void* a12,
+                void* a13,
+                void* a14,
+                void* a15,
+                void* a16,
+                void* a17,
+                void* a18,
+                void* a19,
+                void* a20,
+                void* a21,
+                void* a22,
+                void* a23,
+                void* a24,
+                void* a25,
+                void* a26,
+                void* a27,
+                void* a28,
+                void* a29,
+                void* a30,
+                void* a31,
+                void* a32,
+                void* a33,
+                void* a34,
+                void* a35,
+                void* a36,
+                void* a37,
+                void* a38,
+                void* a39,
+                void* a40,
+                void* a41,
+                void* a42,
+                void* a43,
+                void* a44,
+                void* a45,
+                void* a46,
+                void* a47,
+                void* a48,
+                void* a49,
+                void* a50,
+                void* a51,
+                void* a52,
+                void* a53,
+                void* a54,
+                void* a55,
+                void* a56,
+                void* a57,
+                void* a58,
+                void* a59,
+                void* a60,
+                void* a61,
+                void* a62,
+                void* a63,
+                void* a64,
+                void* a65,
+                void* a66,
+                void* a67,
+                void* a68,
+                void* a69,
+                void* a70,
+                void* a71,
+                void* a72,
+                void* a73,
+                void* a74,
+                void* a75,
+                void* a76,
+                void* a77,
+                void* a78,
+                void* a79,
+                void* a80,
+                void* a81,
+                void* a82,
+                void* a83,
+                void* a84,
+                void* a85,
+                void* a86,
+                void* a87,
+                void* a88,
+                void* a89,
+                void* a90,
+                void* a91,
+                void* a92,
+                void* a93,
+                void* a94,
+                void* a95,
+                void* a96,
+                void* a97,
+                void* a100,
+                void* a101,
+                void* a102,
+                void* a103,
+                void* a104,
+                void* a105,
+                void* a106,
+                void* a107,
+                void* a108,
+                void* a109,
+                void* a110,
+                void* a111,
+                void* a112,
+                void* a113,
+                void* a114,
+                void* a115,
+                void* a116,
+                void* a117,
+                void* a118,
+                void* a119,
+                void* a120,
+                void* a121,
+                void* a122,
+                void* a123,
+                void* a124
 #ifndef G__OLDIMPLEMENTATION1546
-		,void* a125
-		,void* a126
+                ,void* a125
+                ,void* a126
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
-		,void* a127
+                ,void* a127
 #endif
-		,void* a128
-		,void* a129
-		,void* a130
-		,void* a131
-		,void* a132
-		,void* a133
-		,void* a134
-		,void* a135
-		,void* a136
+                ,void* a128
+                ,void* a129
+                ,void* a130
+                ,void* a131
+                ,void* a132
+                ,void* a133
+                ,void* a134
+                ,void* a135
+                ,void* a136
                 ,void* a137
-		)
+                )
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
   G__setothermain = (void (*) G__P((int othermain)) ) a2;

@@ -21,6 +21,10 @@
 /* Define one of following */
 #define G__OLDIMPLEMENTATION1922 /* keep opening all header files for +V +P */
 
+#ifdef _WIN32
+#include "process.h"
+#endif
+
 #ifdef G__ROOT
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -39,6 +43,7 @@
 
 #define G__OLDIMPLEMENTATION1849
   
+extern "C" {
 
 /******************************************************************
 * Define G__EDU_VERSION for CINT C++ educational version.
@@ -56,8 +61,7 @@ static G__IgnoreInclude G__ignoreinclude = (G__IgnoreInclude)NULL;
 /******************************************************************
 * G__set_ignoreinclude
 ******************************************************************/
-void G__set_ignoreinclude(ignoreinclude)
-G__IgnoreInclude ignoreinclude;
+void G__set_ignoreinclude(G__IgnoreInclude ignoreinclude)
 {
   G__ignoreinclude = ignoreinclude;
 }
@@ -71,8 +75,7 @@ int (*G__ScriptCompiler) G__P((G__CONST char*,G__CONST char*)) = 0;
 /******************************************************************
 * G__RegisterScriptCompiler()
 ******************************************************************/
-void G__RegisterScriptCompiler(p2f)
-int(*p2f) G__P((G__CONST char*,G__CONST char*));
+void G__RegisterScriptCompiler(int(*p2f) G__P((G__CONST char*,G__CONST char*)))
 {
   G__ScriptCompiler = p2f;
 }
@@ -80,8 +83,7 @@ int(*p2f) G__P((G__CONST char*,G__CONST char*));
 /******************************************************************
 * G__copytotmpfile()
 ******************************************************************/
-static FILE* G__copytotmpfile(prepname)
-char *prepname;
+static FILE* G__copytotmpfile(char *prepname)
 {
   FILE *ifp;
   FILE *ofp;
@@ -105,10 +107,7 @@ char *prepname;
 /******************************************************************
 * G__copysourcetotmp()
 ******************************************************************/
-static void G__copysourcetotmp(prepname,pifile,fentry)
-char *prepname;
-struct G__input_file *pifile;
-int fentry;
+static void G__copysourcetotmp(char *prepname,G__input_file *pifile, int fentry)
 {
   if(G__copyflag && 0==prepname[0]) {
     FILE *fpout;
@@ -132,8 +131,7 @@ int fentry;
 /**************************************************************************
 * G__setcopyflag()
 **************************************************************************/
-void G__setcopyflag(flag)
-int flag;
+void G__setcopyflag(int flag)
 {
   G__copyflag = flag;
 }
@@ -141,8 +139,7 @@ int flag;
 /******************************************************************
 * G__ispreprocessfilekey
 ******************************************************************/
-static int G__ispreprocessfilekey(filename)
-char *filename;
+static int G__ispreprocessfilekey(char *filename)
 {
   struct G__Preprocessfilekey *pkey;
   /* char *p; */
@@ -188,8 +185,8 @@ int G__include_file()
   static int G__gcomplevel=0;
 
   while((c=G__fgetc())!='\n' && c!='\r'
-	&& c!='#'
-	) {
+        && c!='#'
+        ) {
     switch(c) {
     case '<':
       if(storeit==0) storeit=1;
@@ -201,29 +198,29 @@ int G__include_file()
     case '\"':
       switch(storeit) {
       case 0:
-	storeit=1;
-	break;
+        storeit=1;
+        break;
       case 1:
-	storeit = -1;
-	G__kindofheader=G__USERHEADER;
-	break;
+        storeit = -1;
+        G__kindofheader=G__USERHEADER;
+        break;
       }
       break;
     default:
       if(!isspace(c)) {
-	if(1==storeit) {
-	  filename[i++]=c;
-	  filename[i]='\0';
-	}
-	else if(-1!=storeit) {
-	  storeit=1;
-	  expandflag=1;
-	  filename[i++]=c;
-	  filename[i]='\0';
-	}
+        if(1==storeit) {
+          filename[i++]=c;
+          filename[i]='\0';
+        }
+        else if(-1!=storeit) {
+          storeit=1;
+          expandflag=1;
+          filename[i++]=c;
+          filename[i]='\0';
+        }
       }
       else if(expandflag) {
-	storeit = -1;
+        storeit = -1;
       }
       break;
     }
@@ -293,8 +290,7 @@ int G__include_file()
 * G__getmakeinfo()
 *
 ******************************************************************/
-char *G__getmakeinfo(item)
-char *item;
+char *G__getmakeinfo(char *item)
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
@@ -336,9 +332,9 @@ char *item;
     G__fprinterr(G__serr,"Error: cannot open %s\n",makeinfo);
     G__fprinterr(G__serr,
      "!!! There are examples of MAKEINFO files under %s/platform/ !!!\n"
-	    ,G__cintsysdir);
+            ,G__cintsysdir);
     G__fprinterr(G__serr,
-	    "Please refer to these examples and create for your platform\n");
+            "Please refer to these examples and create for your platform\n");
     return(buf);
   }
 
@@ -347,15 +343,15 @@ char *item;
     if(argn>2 && strcmp(arg[1],item)==0) {
       p = strchr(arg[0],'=');
       if(p) {
-	do {
-	  ++p;
-	} while(isspace(*p));
-	strcpy(buf,p);
-	fclose(fp);
-	return(buf);
+        do {
+          ++p;
+        } while(isspace(*p));
+        strcpy(buf,p);
+        fclose(fp);
+        return(buf);
       }
       else {
-	G__fprinterr(G__serr,"MAKEINFO syntax error\n");
+        G__fprinterr(G__serr,"MAKEINFO syntax error\n");
       }
     }
   }
@@ -367,8 +363,7 @@ char *item;
 * G__getmakeinfo1()
 *
 ******************************************************************/
-char *G__getmakeinfo1(item)
-char *item;
+char *G__getmakeinfo1(char *item)
 {
   char *buf = G__getmakeinfo(item);
   char *p = buf;
@@ -381,8 +376,7 @@ char *item;
 * G__SetCINTSYSDIR()
 *
 ******************************************************************/
-void G__SetCINTSYSDIR(cintsysdir)
-char *cintsysdir;
+void G__SetCINTSYSDIR(char *cintsysdir)
 {
   strcpy(G__cintsysdir,cintsysdir);
 }
@@ -391,8 +385,7 @@ char *cintsysdir;
  * G__SetUseCINTSYSDIR()
  ******************************************************************/
 static int G__UseCINTSYSDIR=0;
-void G__SetUseCINTSYSDIR(UseCINTSYSDIR)
-int UseCINTSYSDIR;
+void G__SetUseCINTSYSDIR(int UseCINTSYSDIR)
 {
   G__UseCINTSYSDIR=UseCINTSYSDIR;
 }
@@ -459,15 +452,15 @@ int G__getcintsysdir()
 #ifdef G__WIN32
       HMODULE hmodule=0;
       if(GetModuleFileName(hmodule,G__cintsysdir,G__MAXFILENAME)) {
-        char *p = G__strrstr(G__cintsysdir,G__psep);
+        char *p = G__strrstr(G__cintsysdir,(char*)G__psep);
         if(p) *p = 0;
 # ifdef G__ROOT
-        p = G__strrstr(G__cintsysdir,G__psep);
+        p = G__strrstr(G__cintsysdir,(char*)G__psep);
         if(p) *p = 0;
-	strcat(G__cintsysdir,G__psep);
-	strcat(G__cintsysdir,"cint");
+        strcat(G__cintsysdir,G__psep);
+        strcat(G__cintsysdir,"cint");
 # endif
-	return(EXIT_SUCCESS);
+        return(EXIT_SUCCESS);
       }
 #endif
 #if defined(G__ROOT)
@@ -488,8 +481,7 @@ int G__getcintsysdir()
 /******************************************************************
 * G__isfilebusy()
 ******************************************************************/
-int G__isfilebusy(ifn)
-int ifn;
+int G__isfilebusy(int ifn)
 {
   struct G__ifunc_table *ifunc;
   int flag=0;
@@ -503,9 +495,9 @@ int ifn;
   while(ifunc) {
     for(i1=0;i1<ifunc->allifunc;i1++) {
       if( 0!=ifunc->busy[i1] && ifunc->pentry[i1]->filenum>=ifn ) {
-	G__fprinterr(G__serr,"Function %s() busy. loaded after \"%s\"\n"
-		,ifunc->funcname[i1],G__srcfile[ifn].filename);
-	flag++;
+        G__fprinterr(G__serr,"Function %s() busy. loaded after \"%s\"\n"
+                ,ifunc->funcname[i1],G__srcfile[ifn].filename);
+        flag++;
       }
     }
     ifunc=ifunc->next;
@@ -521,11 +513,11 @@ int ifn;
     ifunc = G__struct.memfunc[i2];
     while(ifunc) {
       for(i1=0;i1<ifunc->allifunc;i1++) {
-	if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
-	  G__fprinterr(G__serr,"Function %s() busy. loaded after\"%s\"\n"
-		  ,ifunc->funcname[i1],G__srcfile[ifn].filename);
-	  flag++;
-	}
+        if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
+          G__fprinterr(G__serr,"Function %s() busy. loaded after\"%s\"\n"
+                  ,ifunc->funcname[i1],G__srcfile[ifn].filename);
+          flag++;
+        }
       }
       ifunc=ifunc->next;
     }
@@ -537,9 +529,7 @@ int ifn;
 /******************************************************************
 * G__matchfilename(i,filename)
 ******************************************************************/
-int G__matchfilename(i1,filename)
-int i1;
-char* filename;
+int G__matchfilename(int i1,char *filename)
 {
 #if  !defined(__CINT__)
 
@@ -583,9 +573,9 @@ char* filename;
       p=buf;
       while((p=strchr(p,'\\'))) *p='/';
       if(strlen(buf)>1 && ':'==buf[1]) {
-	char buf2[G__ONELINE];
-	strcpy(buf2,buf+2);
-	strcpy(buf,buf2);
+        char buf2[G__ONELINE];
+        strcpy(buf2,buf+2);
+        strcpy(buf,buf2);
       }
 #elif defined(G__POSIX) || defined(G__ROOT)
       getcwd(buf,G__ONELINE);
@@ -593,7 +583,7 @@ char* filename;
       buf[0] = 0;
 #endif
       if(strncmp(buf,G__srcfile[i1].filename
-		 ,filenamebase-G__srcfile[i1].filename-1)==0) return(1);
+                 ,filenamebase-G__srcfile[i1].filename-1)==0) return(1);
     }
   }
   return(0);
@@ -603,8 +593,7 @@ char* filename;
 /******************************************************************
 * G__stripfilename(filename)
 ******************************************************************/
-char* G__stripfilename(filename)
-char* filename;
+char* G__stripfilename(char *filename)
 {
   char *filenamebase;
   if(!filename) return("");
@@ -642,8 +631,7 @@ char* filename;
 /******************************************************************
 * G__smart_unload()
 ******************************************************************/
-void G__smart_unload(ifn)
-int ifn;
+void G__smart_unload(int ifn)
 {
   struct G__dictposition *dictpos= G__srcfile[ifn].dictpos;
   struct G__dictposition *hasonlyfunc = G__srcfile[ifn].hasonlyfunc;
@@ -694,8 +682,7 @@ int ifn;
 *  2) Unload file and return 0
 *
 ******************************************************************/
-int G__unloadfile(filename)
-char *filename;
+int G__unloadfile(const char *filename)
 {
   int ifn;
   int i1=0;
@@ -720,15 +707,15 @@ char *filename;
     else {
       envtagnum = G__defined_tagname(scope,2);
       if(-1==envtagnum) {
-	G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" scope not found ",scope);
-	G__genericerror((char*)NULL);
-	G__UnlockCriticalSection();
-	return(G__UNLOADFILE_FAILURE);
+        G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" scope not found ",scope);
+        G__genericerror((char*)NULL);
+        G__UnlockCriticalSection();
+        return(G__UNLOADFILE_FAILURE);
       }
     }
   }
   else {
-    fname = filename;
+    fname = (char*)filename;
     envtagnum = -1;
   }
 
@@ -792,8 +779,7 @@ char *filename;
 * G__isbinaryfile()
 *
 ******************************************************************/
-static int G__isbinaryfile(filename)
-char *filename;
+static int G__isbinaryfile(char *filename)
 {
   int c;
   int prev=0;
@@ -881,8 +867,7 @@ Copyright (C) Microsoft Corp 1984-1997. All rights reserved.
 /******************************************************************
 *  G__checkIfOnlyFunction()
 ******************************************************************/
-static void G__checkIfOnlyFunction(fentry)
-int fentry;
+static void G__checkIfOnlyFunction(int fentry)
 {
   struct G__var_array *var;
   struct G__Deffuncmacro *deffuncmacro;
@@ -897,10 +882,10 @@ int fentry;
     if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype) {
       int i;
       for(i=0; i<G__struct.alltag; i++) {
-	if(dictpos->ptype[i]!=G__struct.type[i]) {
-	  tagflag=0;
-	  break;
-	}
+        if(dictpos->ptype[i]!=G__struct.type[i]) {
+          tagflag=0;
+          break;
+        }
       }
     }
   }
@@ -919,12 +904,12 @@ int fentry;
     int ig152 = dictpos->ig15;
     while(var2 && (var2 != var || ig152 != var->allvar)) {
       if('p'!=var2->type[ig152]) { 
-	varflag = 0;
-	break;
+        varflag = 0;
+        break;
       }
       if(++ig152>=G__MEMDEPTH) {
-	var2 = var2->next;
-	ig152=0;
+        var2 = var2->next;
+        ig152=0;
       }
     }
   }
@@ -958,8 +943,7 @@ int fentry;
 * G__loadfile_tmpfile(fp)
 *
 ******************************************************************/
-int G__loadfile_tmpfile(fp)
-FILE *fp;
+int G__loadfile_tmpfile(FILE *fp)
 {
   int store_prerun;
   struct G__var_array *store_p_local;
@@ -1176,8 +1160,7 @@ FILE *fp;
 *  9)                                        return 0
 *
 ******************************************************************/
-int G__loadfile(filenamein)
-char *filenamein;
+int G__loadfile(const char *filenamein)
 {
   FILE *tmpfp;
   int external_compiler = 0;
@@ -1273,12 +1256,12 @@ char *filenamein;
     
     filename[len]='\0';
     external_compiler = 1; /* Request external compilation
-			    * if available (in ROOT) */
+                            * if available (in ROOT) */
     if (G__ScriptCompiler!=0) {
       if ( (*G__ScriptCompiler)(filename,compiler_option) )
-	return(G__LOADFILE_SUCCESS);
+        return(G__LOADFILE_SUCCESS);
       else
-	return(G__LOADFILE_FAILURE);
+        return(G__LOADFILE_FAILURE);
     }
   }
 
@@ -1324,7 +1307,7 @@ char *filenamein;
      ***************************************************/
     if((char*)NULL==G__srcfile[i1].filename) {
       if(null_entry == -1) {
-	null_entry = i1;
+        null_entry = i1;
       }
     }
     /***************************************************
@@ -1334,9 +1317,9 @@ char *filenamein;
        &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
        ){
       if(G__prerun==0 || G__debugtrace)
-	if(G__dispmsg>=G__DISPNOTE) {
-	  G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
-	}
+        if(G__dispmsg>=G__DISPNOTE) {
+          G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+        }
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1367,7 +1350,7 @@ char *filenamein;
   * Get actual open file name.
   **********************************************/
   G__preprocessor(prepname,filename,G__cpp,G__macros,G__undeflist
-		  ,G__ppopt,G__allincludepath);
+                  ,G__ppopt,G__allincludepath);
 
   /**********************************************
   * open file
@@ -1413,24 +1396,24 @@ char *filenamein;
     strcpy(addpost[2],"");
     for(i2=0;i2<3;i2++) {
       if(2==i2) {
-	if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
-		     strcmp(filename+len-3,".dl")==0 ||
-		     strcmp(filename+len-3,".so")==0))) {
-	  strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
-	}
-	else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
-			  strcmp(filename+len-4,".DLL")==0))) {
-	  strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
-	}
-	else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
-			  strcmp(filename+len-2,".A")==0))) {
-	  strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
-	}
+        if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
+                     strcmp(filename+len-3,".dl")==0 ||
+                     strcmp(filename+len-3,".so")==0))) {
+          strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
+        }
+        else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
+                          strcmp(filename+len-4,".DLL")==0))) {
+          strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
+        }
+        else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
+                          strcmp(filename+len-2,".A")==0))) {
+          strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
+        }
 #if defined(R__FBSD) || defined(R__OBSD)
-	else if (len>strlen(soext) &&
-		 strcmp(filename+len-strlen(soext),soext)==0) {
-	  strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
-	}
+        else if (len>strlen(soext) &&
+                 strcmp(filename+len-strlen(soext),soext)==0) {
+          strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
+        }
 #endif
       }
 
@@ -1465,9 +1448,9 @@ char *filenamein;
         strcpy (p, filename);
         strcat (p, addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
       }
       if (G__ifile.fp) break;
@@ -1478,17 +1461,17 @@ char *filenamein;
 #ifdef G__VMS
         sprintf(G__ifile.name,"%s",filename);
 #else
-	sprintf(G__ifile.name,"%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"%s%s",filename,addpost[i2]);
 #endif
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
       }
       else {
-	G__ifile.fp=NULL;
-	G__kindofheader = G__USERHEADER;
+        G__ifile.fp=NULL;
+        G__kindofheader = G__USERHEADER;
       }
       if(G__ifile.fp) break;
 
@@ -1497,24 +1480,24 @@ char *filenamein;
        **********************************************/
       ipath = &G__ipathentry;
       while(G__ifile.fp==NULL && ipath->pathname) {
-	sprintf(G__ifile.name,"%s%s%s%s"
-		,ipath->pathname,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"%s%s%s%s"
+                ,ipath->pathname,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	ipath = ipath->next;
-	{
-	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
-	  while(sysdir) {
-	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
-	      G__globalcomp=G__NOLINK;
-	      hdrprop = G__CINTHDR;
-	    }
-	    sysdir = sysdir->prev;
-	  }
-	}
+        ipath = ipath->next;
+        {
+          struct G__ConstStringList* sysdir = G__SystemIncludeDir;
+          while(sysdir) {
+            if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
+              G__globalcomp=G__NOLINK;
+              hdrprop = G__CINTHDR;
+            }
+            sysdir = sysdir->prev;
+          }
+        }
       }
       if(G__ifile.fp) break;
 
@@ -1523,19 +1506,19 @@ char *filenamein;
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"%s%sinclude%s%s%s",G__cintsysdir,G__psep
-		,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"%s%sinclude%s%s%s",G__cintsysdir,G__psep
+                ,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	if(G__ifile.fp && G__autoload_stdheader) {
-	  G__globalcomp=G__store_globalcomp;
-	  G__gen_linksystem(filename);
-	}
-	hdrprop = G__CINTHDR;
-	G__globalcomp=G__NOLINK;
+        if(G__ifile.fp && G__autoload_stdheader) {
+          G__globalcomp=G__store_globalcomp;
+          G__gen_linksystem(filename);
+        }
+        hdrprop = G__CINTHDR;
+        G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
 
@@ -1544,19 +1527,19 @@ char *filenamein;
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"%s%sstl%s%s%s",G__cintsysdir,G__psep
-		,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"%s%sstl%s%s%s",G__cintsysdir,G__psep
+                ,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	if(G__ifile.fp && G__autoload_stdheader) {
-	  G__globalcomp=G__store_globalcomp;
-	  G__gen_linksystem(filename);
-	}
-	hdrprop = G__CINTHDR;
-	G__globalcomp=G__NOLINK;
+        if(G__ifile.fp && G__autoload_stdheader) {
+          G__globalcomp=G__store_globalcomp;
+          G__gen_linksystem(filename);
+        }
+        hdrprop = G__CINTHDR;
+        G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
 
@@ -1565,14 +1548,14 @@ char *filenamein;
        **********************************************/
       /* G__getcintsysdir(); */
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"%s%slib%s%s%s",G__cintsysdir,G__psep
-		,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"%s%slib%s%s%s",G__cintsysdir,G__psep
+                ,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	/* G__globalcomp=G__NOLINK; */
+        /* G__globalcomp=G__NOLINK; */
       }
       if(G__ifile.fp) break;
 
@@ -1582,19 +1565,19 @@ char *filenamein;
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"include%s%s%s"
-		,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"include%s%s%s"
+                ,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	if(G__ifile.fp && G__autoload_stdheader) {
-	  G__globalcomp=G__store_globalcomp;
-	  G__gen_linksystem(filename);
-	}
-	hdrprop = G__CINTHDR;
-	G__globalcomp=G__NOLINK;
+        if(G__ifile.fp && G__autoload_stdheader) {
+          G__globalcomp=G__store_globalcomp;
+          G__gen_linksystem(filename);
+        }
+        hdrprop = G__CINTHDR;
+        G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
 
@@ -1603,19 +1586,19 @@ char *filenamein;
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"stl%s%s%s"
-		,G__psep,filename,addpost[i2]);
+        sprintf(G__ifile.name,"stl%s%s%s"
+                ,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	if(G__ifile.fp && G__autoload_stdheader) {
-	  G__globalcomp=G__store_globalcomp;
-	  G__gen_linksystem(filename);
-	}
-	hdrprop = G__CINTHDR;
-	G__globalcomp=G__NOLINK;
+        if(G__ifile.fp && G__autoload_stdheader) {
+          G__globalcomp=G__store_globalcomp;
+          G__gen_linksystem(filename);
+        }
+        hdrprop = G__CINTHDR;
+        G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
 #endif /* G__EDU_VERSION */
@@ -1625,13 +1608,13 @@ char *filenamein;
        * try /msdev/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/msdev/include/%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"/msdev/include/%s%s",filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 #endif /* G__VISUAL */
@@ -1641,13 +1624,13 @@ char *filenamein;
        * try /sc/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/sc/include/%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"/sc/include/%s%s",filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 #endif /* G__SYMANTEC */
@@ -1657,12 +1640,12 @@ char *filenamein;
        * try $ROOTSYS[include]
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	/*  sprintf(G__ifile.name,getenv("ROOTSYS"));
-	    sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-	/*G__globalcomp=G__store_globalcomp;*/
+        /*  sprintf(G__ifile.name,getenv("ROOTSYS"));
+            sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+        sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
+        
+        G__ifile.fp = fopen(G__ifile.name,"r");
+        /*G__globalcomp=G__store_globalcomp;*/
       }
       if(G__ifile.fp) break;
       
@@ -1670,13 +1653,13 @@ char *filenamein;
        * try $ROOTSYS[cint.include]
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
-	     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-	hdrprop = G__CINTHDR;
-	G__globalcomp=G__NOLINK;
+        /*   sprintf(G__ifile.name,"%s",G__cintsysdir);
+             sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+        sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
+        
+        G__ifile.fp = fopen(G__ifile.name,"r");
+        hdrprop = G__CINTHDR;
+        G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
       
@@ -1698,13 +1681,13 @@ char *filenamein;
        * try /usr/include/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/usr/include/%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"/usr/include/%s%s",filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 
@@ -1713,13 +1696,13 @@ char *filenamein;
        * try /usr/include/g++/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/usr/include/g++/%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"/usr/include/g++/%s%s",filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 #endif /* __GNUC__ */
@@ -1729,13 +1712,13 @@ char *filenamein;
        * try /usr/include/CC/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/usr/include/CC/%s%s",filename,addpost[i2]);
+        sprintf(G__ifile.name,"/usr/include/CC/%s%s",filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
@@ -1745,14 +1728,14 @@ char *filenamein;
        * try /usr/include/codelibs/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-	sprintf(G__ifile.name,"/usr/include/codelibs/%s%s"
-		,filename,addpost[i2]);
+        sprintf(G__ifile.name,"/usr/include/codelibs/%s%s"
+                ,filename,addpost[i2]);
 #ifndef G__WIN32
-	G__ifile.fp = fopen(G__ifile.name,"r");
+        G__ifile.fp = fopen(G__ifile.name,"r");
 #else
-	G__ifile.fp = fopen(G__ifile.name,"rb");
+        G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
-	G__globalcomp=G__store_globalcomp;
+        G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
@@ -1799,7 +1782,7 @@ char *filenamein;
       /* fclose(G__srcfile[fentry].fp); */
       fclose(G__ifile.fp);
       /* since we ignore the file, we can assume that it has no template
-	 nor any references... */
+         nor any references... */
       
       /******************************************************
        * restore input file information to G__ifile
@@ -1910,10 +1893,10 @@ char *filenamein;
   len = strlen(filename);
   dllpost = G__getmakeinfo1("DLLPOST");
   if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
-	       strcmp(filename+len-3,".dl")==0 ||
-	       strcmp(filename+len-3,".so")==0)) ||
+               strcmp(filename+len-3,".dl")==0 ||
+               strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
-	       strcmp(filename+len-4,".DLL")==0)) ||
+               strcmp(filename+len-4,".DLL")==0)) ||
 #if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
@@ -1921,18 +1904,23 @@ char *filenamein;
       dllpost[0] && 
       len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
-	       strcmp(filename+len-2,".A")==0))
+               strcmp(filename+len-2,".A")==0))
      ) {
     /* Caution, G__ifile.fp is left openned.
      * This may cause trouble in future */
     fclose(G__srcfile[fentry].fp);
     if (G__ifile.fp == G__srcfile[fentry].fp) {
       /* Since the file is closed, the FILE* pointer is now invalid and thus
-	 we have to remove it from G__ifile! */
+         we have to remove it from G__ifile! */
       G__ifile.fp=(FILE*)NULL;
     }
     G__srcfile[fentry].fp=(FILE*)NULL;
-    G__srcfile[fentry].slindex = G__shl_load(G__ifile.name);
+    {
+      int allsl = G__shl_load(G__ifile.name);
+      if (allsl != -1) {
+        G__srcfile[fentry].slindex = allsl;
+      }
+    }
     if(G__ispermanentsl) {
       G__srcfile[fentry].initsl = G__initpermanentsl;
     }
@@ -1946,12 +1934,12 @@ char *filenamein;
       long store_struct_offset = G__store_struct_offset;
       G__store_struct_offset = 0;
       if(G__isbinaryfile(filename)) {
-	G__iscpp=store_iscpp;
+        G__iscpp=store_iscpp;
 #ifdef G__SECURITY
-	G__security = store_security;
+        G__security = store_security;
 #endif
-	G__UnlockCriticalSection();
-	return(G__LOADFILE_FAILURE);
+        G__UnlockCriticalSection();
+        return(G__LOADFILE_FAILURE);
       }
       if(G__copyflag) G__copysourcetotmp(prepname,&G__ifile,fentry);
       while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
@@ -1986,13 +1974,13 @@ char *filenamein;
 #endif
        ) {
       /* After closing the file let's make sure that all reference to
-	 the file pointer are reset. When preprocessor is used, we
-	 will have several logical file packed in one file. */
+         the file pointer are reset. When preprocessor is used, we
+         will have several logical file packed in one file. */
       tmpfp = G__srcfile[fentry].fp;
       for(i1=0;i1<G__nfile;i1++) {
         if (G__srcfile[i1].fp==tmpfp){
-	  G__srcfile[i1].fp = (FILE*)NULL;
-	}
+          G__srcfile[i1].fp = (FILE*)NULL;
+        }
       }
       /* Close file for process max file open limitation with -cN option */
       fclose(tmpfp);
@@ -2064,10 +2052,9 @@ char *filenamein;
 *  CPPPREP and CPREP.
 *
 **************************************************************************/
-int G__preprocessor(outname,inname,cppflag,macros,undeflist,ppopt,includepath)
-char *outname,*inname;
-int cppflag;
-char *macros,*undeflist,*ppopt,*includepath;
+int G__preprocessor(char *outname,char *inname,int cppflag
+                    ,char *macros,char *undeflist,char *ppopt
+                    ,char *includepath)
 {
   char temp[G__LARGEBUF];
   /* char *envcpp; */
@@ -2143,7 +2130,7 @@ char *macros,*undeflist,*ppopt,*includepath;
       flag=1;
     }
     else if(0==strcmp(inname+strlen(inname)-strlen(G__cpphdrpost)
-		      ,G__cpphdrpost)) {
+                      ,G__cpphdrpost)) {
       flag=1;
     }
     else if(0==strcmp(inname+strlen(inname)-strlen(G__chdrpost),G__chdrpost)) {
@@ -2163,58 +2150,58 @@ char *macros,*undeflist,*ppopt,*includepath;
     if('\0'==G__ccom[0]) {
       switch(G__globalcomp) {
       case G__CPPLINK: /* C++ link */
-	strcpy(G__ccom,G__getmakeinfo("CPPPREP"));
-	break;
+        strcpy(G__ccom,G__getmakeinfo("CPPPREP"));
+        break;
       case G__CLINK: /* C link */
-	strcpy(G__ccom,G__getmakeinfo("CPREP"));
-	break;
+        strcpy(G__ccom,G__getmakeinfo("CPREP"));
+        break;
       default:
-	if(G__iscpp) strcpy(G__ccom,G__getmakeinfo("CPPPREP"));
-	else         strcpy(G__ccom,G__getmakeinfo("CPREP"));
-	break;
+        if(G__iscpp) strcpy(G__ccom,G__getmakeinfo("CPPPREP"));
+        else         strcpy(G__ccom,G__getmakeinfo("CPREP"));
+        break;
       }
       if('\0'==G__ccom[0]) {
 #ifdef __GNUC__
-	sprintf(G__ccom,"g++ -E");
+        sprintf(G__ccom,"g++ -E");
 #else
-	sprintf(G__ccom,"CC -E");
+        sprintf(G__ccom,"CC -E");
 #endif
       }
     }
 
     /* Get tmpfile name if necessary */
     if((strlen(inname)>2 && (0==strcmp(inname+strlen(inname)-2,".H")||
-			     0==strcmp(inname+strlen(inname)-2,".h"))) ||
+                             0==strcmp(inname+strlen(inname)-2,".h"))) ||
        (strlen(inname)>3 && (0==strcmp(inname+strlen(inname)-3,".hh")||
-			     0==strcmp(inname+strlen(inname)-3,".HH"))) ||
+                             0==strcmp(inname+strlen(inname)-3,".HH"))) ||
        (strlen(inname)>4 && (0==strcmp(inname+strlen(inname)-4,".hpp")||
-			     0==strcmp(inname+strlen(inname)-4,".HPP")||
-			     0==strcmp(inname+strlen(inname)-4,".hxx")||
-			     0==strcmp(inname+strlen(inname)-4,".HXX"))) ||
+                             0==strcmp(inname+strlen(inname)-4,".HPP")||
+                             0==strcmp(inname+strlen(inname)-4,".hxx")||
+                             0==strcmp(inname+strlen(inname)-4,".HXX"))) ||
        (!strchr(inname,'.'))
        ) 
     {
       /* if header file, create tmpfile name as xxx.C */
       do {
-	G__tmpnam(tmpfile); /* can't replace this with tmpfile() */
-	tmplen=strlen(tmpfile);
-	if(G__CPPLINK==G__globalcomp || G__iscpp) {
-	  if('\0'==G__cppsrcpost[0]) {
-	    strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
-	  }
-	  strcpy(tmpfile+tmplen,G__cppsrcpost);
-	}
-	else {
-	  if('\0'==G__csrcpost[0]) {
-	    strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
-	  }
-	  strcpy(tmpfile+tmplen,G__csrcpost);
-	}
-	fp = fopen(tmpfile,"w");
+        G__tmpnam(tmpfile); /* can't replace this with tmpfile() */
+        tmplen=strlen(tmpfile);
+        if(G__CPPLINK==G__globalcomp || G__iscpp) {
+          if('\0'==G__cppsrcpost[0]) {
+            strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
+          }
+          strcpy(tmpfile+tmplen,G__cppsrcpost);
+        }
+        else {
+          if('\0'==G__csrcpost[0]) {
+            strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
+          }
+          strcpy(tmpfile+tmplen,G__csrcpost);
+        }
+        fp = fopen(tmpfile,"w");
       } while((FILE*)NULL==fp && G__setTMPDIR(tmpfile));
       if(fp) {
-	fprintf(fp,"#include \"%s\"\n\n\n",inname);
-	fclose(fp);
+        fprintf(fp,"#include \"%s\"\n\n\n",inname);
+        fclose(fp);
       }
     }
     else {
@@ -2240,12 +2227,12 @@ char *macros,*undeflist,*ppopt,*includepath;
      ***************************************************************/
     if(G__cintsysdir[0]) {
       sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s -o%s"
-	      ,G__ccom ,macros,undeflist,ppopt ,includepath
-	      ,G__cintsysdir,G__cintsysdir,G__cintsysdir,tmpfile,outname);
+              ,G__ccom ,macros,undeflist,ppopt ,includepath
+              ,G__cintsysdir,G__cintsysdir,G__cintsysdir,tmpfile,outname);
     }
     else {
       sprintf(temp,"%s %s %s %s -I. %s -D__CINT__ %s -o%s" ,G__ccom
-	      ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
+              ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
     }
 #elif defined(G__BORLAND)
     /**************************************************************
@@ -2255,12 +2242,12 @@ char *macros,*undeflist,*ppopt,*includepath;
     strcat(outname,".i");
     if(G__cintsysdir[0]) {
       sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib -o%s %s"
-	      ,G__ccom ,macros,undeflist,ppopt ,includepath
-	      ,G__cintsysdir,G__cintsysdir,G__cintsysdir,outname,tmpfile);
+              ,G__ccom ,macros,undeflist,ppopt ,includepath
+              ,G__cintsysdir,G__cintsysdir,G__cintsysdir,outname,tmpfile);
     }
     else {
       sprintf(temp,"%s %s %s %s -I. %s -D__CINT__ -o%s %s" ,G__ccom
-	      ,macros,undeflist,ppopt ,includepath ,outname,tmpfile);
+              ,macros,undeflist,ppopt ,includepath ,outname,tmpfile);
     }
 #else
     /**************************************************************
@@ -2299,9 +2286,7 @@ char *macros,*undeflist,*ppopt,*includepath;
 /**************************************************************************
 * G__difffile()
 **************************************************************************/
-int G__difffile(file1,file2)
-char *file1;
-char *file2;
+int G__difffile(char *file1,char *file2)
 {
   FILE *fp1;
   FILE *fp2;
@@ -2315,8 +2300,8 @@ char *file2;
       c1=fgetc(fp1);
       c2=fgetc(fp2);
       if(c1!=c2) {
-	++unmatch;
-	break;
+        ++unmatch;
+        break;
       }
     } while(EOF!=c1 && EOF!=c2);
     if(c1!=c2) ++unmatch;
@@ -2333,8 +2318,7 @@ char *file2;
 /**************************************************************************
 * G__copyfile()
 **************************************************************************/
-int G__copyfile(to,from)
-FILE *to,*from;
+int G__copyfile(FILE *to,FILE *from)
 {
   int c=0;
   while(EOF != (c=fgetc(from))) {
@@ -2355,8 +2339,7 @@ static char G__mfpname[G__MAXFILENAME];
 /**************************************************************************
 * G__setTMPDIR()
 **************************************************************************/
-int G__setTMPDIR(badname)
-char *badname;
+int G__setTMPDIR(char *badname)
 {
 #ifndef G__TMPFILE
   G__fprinterr(G__serr,"CAUTION: tmpfile %s can't open\n",badname);
@@ -2384,8 +2367,7 @@ char *badname;
 /**************************************************************************
 * G__tmpnam()
 **************************************************************************/
-char* G__tmpnam(name)
-char *name;
+char* G__tmpnam(char *name)
 {
 #if defined(G__TMPFILE) 
   const char *appendix="_cint";
@@ -2500,6 +2482,8 @@ struct G__input_file *G__get_ifile()
 {
    return &G__ifile;
 }
+
+} /* extern "C" */
 
 /*
  * Local Variables:

@@ -359,7 +359,7 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
   G__BaseClassInfo bas(cls);
   struct G__param para;
   string args;
-  int ctorfound;
+  G__value ctorfound;
   int pc_skip=0;
 
   while(bas.Next()) { // iterate only direct inheritance
@@ -368,7 +368,7 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
       pc_skip = m_bc_inst.JMPIFVIRTUALOBJ(bas.Offset());
     }
 
-    ctorfound=0;
+    ctorfound=G__null;
 
     // compile initialization list for base class ctor
     args = initlist[bas.Name()];
@@ -398,7 +398,7 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
       m_bc_inst.Assign(pc_skip,m_bc_inst.GetPC());
     }
 
-    if(!ctorfound) {
+    if(!ctorfound.type) {
       m_bc_inst.rewind(store_pc);
       // Because implicit default and copy ctors are always generated as
       // far as they can exist, failure to find ctor here should be an error.
@@ -415,9 +415,9 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
   G__DataMemberInfo dat(cls);
   struct G__param para;
   string args;
-  int ctorfound;
+  G__value ctorfound;
   while(dat.Next()) {
-    ctorfound=0;
+    ctorfound=G__null;
 
     // compile initlization list for data member
     args = initlist[dat.Name()];
@@ -458,7 +458,7 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 	}
         m_bc_inst.POPSTROS();
       }
-      if(!ctorfound) {
+      if(!ctorfound.type) {
 	// TODO, is this an error?
 	m_bc_inst.rewind(store_pc);
         // Because implicit default and copy ctors are always generated as
@@ -468,7 +468,7 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 	G__genericerror((char*)NULL);
       }
     }
-    if(!ctorfound && para.paran) {
+    if(!ctorfound.type && para.paran) {
       // fundamental type initialization. 
       // Since implicit default and copy ctors are always generated, class object
       // member should not come here.
@@ -565,9 +565,9 @@ void G__functionscope::Baseclasscopyctor(int c) {
 void G__functionscope::Baseclasscopyctor_base(G__ClassInfo& cls
 					      ,struct G__param *libp) {
   G__BaseClassInfo bas(cls);
-  int found;
+  G__value found;
   while(bas.Next()) {
-    found=0;
+    found=G__null;
     int store_pc= m_bc_inst.GetPC();
 
     // prepare oprand
@@ -586,7 +586,7 @@ void G__functionscope::Baseclasscopyctor_base(G__ClassInfo& cls
     // pop oprand
     m_bc_inst.POP(); // ??? need this? copy ctor returns value???
 
-    if(!found) {
+    if(!found.type) {
       m_bc_inst.rewind(store_pc);
       // Since implicit copy is generated for every class, this is
       // rather an error.
@@ -601,9 +601,9 @@ void G__functionscope::Baseclasscopyctor_base(G__ClassInfo& cls
 void G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
 					        ,struct G__param *libp) {
   G__DataMemberInfo dat(cls);
-  int found;
+  G__value found;
   while(dat.Next()) {
-    found=0;
+    found=G__null;
     struct G__var_array *var=(struct G__var_array*)dat.Handle();
     int ig15 = dat.Index();
     m_bc_inst.PUSHCPY();
@@ -632,7 +632,7 @@ void G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
 			);
       }
       m_bc_inst.POPSTROS();
-      if(!found) {
+      if(!found.type) {
         m_bc_inst.rewind(store_pc);
         // Since implicit copy ctor is generated for every class, this is
         // rather an error.
@@ -642,7 +642,7 @@ void G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
         G__genericerror((char*)NULL);
       }
     }
-    if(!found) {
+    if(!found.type) {
       if(dat.ArrayDim()) {
 	// (LD SRC), LD DEST, LD SIZE, MEMCPY
 	m_bc_inst.LD_MSTR(var,ig15,0,'p');
@@ -705,9 +705,9 @@ void G__functionscope::Baseclassassign(int c) {
 void G__functionscope::Baseclassassign_base(G__ClassInfo& cls
 					  ,struct G__param *libp) {
   G__BaseClassInfo bas(cls);
-  int found;
+  G__value found;
   while(bas.Next()) {
-    found=0;
+    found=G__null;
     int store_pc= m_bc_inst.GetPC();
     // prepare oprand
     m_bc_inst.PUSHCPY();
@@ -717,7 +717,7 @@ void G__functionscope::Baseclassassign_base(G__ClassInfo& cls
     found=call_func(bas,"operator=",libp,G__TRYMEMFUNC);
     if(bas.Offset()) m_bc_inst.ADDSTROS(-bas.Offset());
     m_bc_inst.POP();
-    if(!found) {
+    if(!found.type) {
       m_bc_inst.rewind(store_pc);
       // Since implicit operator= is generated for every class, this is
       // rather an error.
@@ -731,9 +731,9 @@ void G__functionscope::Baseclassassign_base(G__ClassInfo& cls
 void G__functionscope::Baseclassassign_member(G__ClassInfo& cls
 					  ,struct G__param *libp) {
   G__DataMemberInfo dat(cls);
-  int found;
+  G__value found;
   while(dat.Next()) {
-    found=0;
+    found=G__null;
     struct G__var_array *var=(struct G__var_array*)dat.Handle();
     int ig15 = dat.Index();
     m_bc_inst.PUSHCPY();
@@ -759,7 +759,7 @@ void G__functionscope::Baseclassassign_member(G__ClassInfo& cls
 	found=call_func(*dat.Type(),"operator=",libp,G__TRYMEMFUNC,0);
       }
       m_bc_inst.POPSTROS();
-      if(!found) {
+      if(!found.type) {
         m_bc_inst.rewind(store_pc);
         // Since implicit operator= is generated for every class, this is
         // rather an error.
@@ -768,7 +768,7 @@ void G__functionscope::Baseclassassign_member(G__ClassInfo& cls
         G__genericerror((char*)NULL);
       }
     }
-    if(!found) {
+    if(!found.type) {
       if(dat.ArrayDim()) {
 	// (LD SRC), LD DEST, LD SIZE, MEMCPY
 	m_bc_inst.LD_MSTR(var,ig15,0,'p');
@@ -810,31 +810,31 @@ void G__functionscope::Baseclassdtor_base(G__ClassInfo& cls) {
   G__BaseClassInfo bas(cls);
   struct G__param para;
   string args;
-  int dtorfound;
+  G__value dtorfound;
   para.paran = 0;
   para.para[0] = G__null;
   string fname;
   while(bas.Prev()) {
-    dtorfound=0;
+    dtorfound=G__null;
     int store_pc= m_bc_inst.GetPC();
     if(bas.Offset()) m_bc_inst.ADDSTROS(bas.Offset());
     fname = "~";
     fname.append(G__struct.name[bas.Tagnum()]);
     dtorfound=call_func(bas,fname,&para,G__TRYMEMFUNC);
     if(bas.Offset()) m_bc_inst.ADDSTROS(-bas.Offset());
-    if(!dtorfound) m_bc_inst.rewind(store_pc);
+    if(!dtorfound.type) m_bc_inst.rewind(store_pc);
   }
 }
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Baseclassdtor_member(G__ClassInfo& cls) {
   G__DataMemberInfo dat(cls);
   struct G__param para;
-  int dtorfound;
+  G__value dtorfound;
   string fname;
   para.paran = 0;
   para.para[0] = G__null;
   while(dat.Prev()) {
-    dtorfound=0;
+    dtorfound=G__null;
     if((dat.Property()&(G__BIT_ISCLASS|G__BIT_ISSTRUCT)) &&
        !(dat.Property()&
 	(G__BIT_ISPOINTER|G__BIT_ISREFERENCE|G__BIT_ISSTATIC))) {
@@ -855,7 +855,7 @@ void G__functionscope::Baseclassdtor_member(G__ClassInfo& cls) {
 	dtorfound=call_func(*dat.Type(),fname,&para,G__TRYMEMFUNC,0);
       }
       if(dat.Offset()) m_bc_inst.ADDSTROS(-dat.Offset());
-      if(!dtorfound) m_bc_inst.rewind(store_pc);
+      if(!dtorfound.type) m_bc_inst.rewind(store_pc);
     }
   }
 }

@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+extern "C" {
 
 /* 1723 is not needed because freopen deals with both stdout and cout */
 #define G__OLDIMPLEMENTATION1723
@@ -197,11 +198,10 @@ static void (*G__LeaveCriticalSection)();
 /************************************************************************
 * G__SetCriticalSectionEnv
 ************************************************************************/
-void G__SetCrititalSectionEnv(issamethread,storelockthread,entercs,leavecs)
-int (*issamethread)();
-void (*storelockthread)();
-void (*entercs)();
-void (*leavecs)();
+void G__SetCrititalSectionEnv(int (*issamethread)()
+                              ,void (*storelockthread)()
+                              ,void (*entercs)()
+                              ,void (*leavecs)())
 {
   G__IsSameThread=issamethread;
   G__StoreLockThread=storelockthread;
@@ -247,8 +247,7 @@ void G__UnlockCriticalSection() {
 /************************************************************************
 * G__autoloading()  com="{  TUnknown x;" ,  "new TUnknown
 ************************************************************************/
-int G__autoloading(com)
-char *com;
+int G__autoloading(char *com)
 {
   int i=0,j=0;
   char classname[G__ONELINE];
@@ -293,8 +292,7 @@ int (*G__pautoloading) G__P((char*)) = G__autoloading;
 /************************************************************************
 * G__set_autoloading
 ************************************************************************/
-void G__set_autoloading(p2f)
-int (*p2f) G__P((char*));
+void G__set_autoloading(int (*p2f) G__P((char*)))
 {
   G__pautoloading = p2f;
 }
@@ -302,8 +300,7 @@ int (*p2f) G__P((char*));
 /************************************************************************
 * G__is_valid_dictpos
 ************************************************************************/
-int G__is_valid_dictpos(dict)
-struct G__dictposition *dict;
+int G__is_valid_dictpos(G__dictposition *dict)
 {
   int flag=0;
   struct G__var_array *var = &G__global; 
@@ -361,8 +358,7 @@ void G__init_undo()
 /******************************************************************
 * G__increment_undo_index()
 ******************************************************************/
-void G__increment_undo_index(pi)
-int *pi;
+void G__increment_undo_index(int *pi)
 {
   if(++(*pi)>=G__MAXUNDO) *pi=0;
 }
@@ -370,8 +366,7 @@ int *pi;
 /******************************************************************
 * G__decrement_undo_index()
 ******************************************************************/
-void G__decrement_undo_index(pi)
-int *pi;
+void G__decrement_undo_index(int *pi)
 {
   if(--(*pi)<0) *(pi)=G__MAXUNDO-1;
 }
@@ -402,8 +397,7 @@ void G__store_undo_position()
 /******************************************************************
 * G__show_undo_position()
 ******************************************************************/
-void G__show_undo_position(index)
-int index;
+void G__show_undo_position(int index)
 {
   int nfile=undodictpos[index].nfile;
   int tagnum=undodictpos[index].tagnum;
@@ -499,8 +493,7 @@ void G__clear_errordictpos()
 /******************************************************************
 * G__clearfilebusy()
 ******************************************************************/
-int G__clearfilebusy(ifn)
-int ifn;
+int G__clearfilebusy(int ifn)
 {
   struct G__ifunc_table *ifunc;
   int flag=0;
@@ -519,10 +512,10 @@ int ifn;
     }
     for(i1=0;i1<ifunc->allifunc;i1++) {
       if( 0!=ifunc->busy[i1] && ifunc->pentry[i1]->filenum>=ifn ) {
-	ifunc->busy[i1] = 0;
-	G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
-		,ifunc->funcname[i1]);
-	flag++;
+        ifunc->busy[i1] = 0;
+        G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
+                ,ifunc->funcname[i1]);
+        flag++;
       }
     }
     ifunc=ifunc->next;
@@ -538,12 +531,12 @@ int ifn;
     ifunc = G__struct.memfunc[i2];
     while(ifunc) {
       for(i1=0;i1<ifunc->allifunc;i1++) {
-	if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
-	  ifunc->busy[i1] = 0;
-	  G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
-		  ,ifunc->funcname[i1]);
-	  flag++;
-	}
+        if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
+          ifunc->busy[i1] = 0;
+          G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
+                  ,ifunc->funcname[i1]);
+          flag++;
+        }
       }
       ifunc=ifunc->next;
     }
@@ -593,8 +586,7 @@ void G__rewinddictionary()
 /************************************************************************
 * G__atevaluate
 ************************************************************************/
-static int G__atevaluate(buf)
-G__value buf;
+static int G__atevaluate(G__value buf)
 {
   G__value result;
   char com[G__ONELINE],buf2[G__ONELINE];
@@ -635,8 +627,7 @@ G__value buf;
 * G__display_tempobj()
 *
 ************************************************************************/
-static void G__display_tempobj(fout)
-FILE *fout;
+static void G__display_tempobj(FILE *fout)
 {
   struct G__tempobject_list *p = G__p_tempbuf;
   char buf[G__ONELINE];
@@ -654,20 +645,13 @@ FILE *fout;
 *  display keyword for '/[keyword]' debugger command
 *
 ************************************************************************/
-static void G__display_keyword(fout,keyword,
+static void G__display_keyword(FILE *fout,char *keyword,
 #ifndef G__OLDIMPLEMENTATION1917
-			       keyfile
+                               FILE *keyfile
 #else
-			       fname
+                               char *fname
 #endif
 )
-FILE *fout;
-char *keyword;
-#ifndef G__OLDIMPLEMENTATION1917
-FILE *keyfile;
-#else
-char *fname;
-#endif
 {
   char line[G__LONGLINE];
   char *null_fgets;
@@ -684,7 +668,7 @@ char *fname;
     null_fgets=fgets(line,G__LONGLINE-1,keyfile);
     while((char*)NULL!=null_fgets) {
       if(strstr(line,keyword)) {
-	if(G__more(fout,line)) break;
+        if(G__more(fout,line)) break;
       }
       null_fgets=fgets(line,G__LONGLINE-1,keyfile);
     }
@@ -701,8 +685,7 @@ char *fname;
 * G__reloadfile
 *
 ************************************************************************/
-int G__reloadfile(filename)
-char *filename;
+int G__reloadfile(char *filename)
 {
   int i,j=0;
   char *storefname[G__MAXFILE];
@@ -721,16 +704,16 @@ char *filename;
        G__matchfilename(i,filename)
        ) {
       if(G__srcfile[i].hasonlyfunc && G__do_smart_unload) {
-	G__smart_unload(i);
-	flag = 0;
+        G__smart_unload(i);
+        flag = 0;
       }
       else flag=1;
       j=i;
       while(-1!=G__srcfile[j].included_from
             /* do not take the tempfile in consideration! */
             && (G__srcfile[j].included_from<=G__gettempfilenum())
-	    ) {
-	j=G__srcfile[j].included_from;
+            ) {
+        j=G__srcfile[j].included_from;
       }
       break;
     }
@@ -739,11 +722,11 @@ char *filename;
   if(flag) {
     for(i=j;i<G__nfile;i++) { 
       if(G__srcfile[i].filename[0]) {
-	if(G__srcfile[i].prepname) storecpp[storen] = 1;
-	else                       storecpp[storen] = 0;
-	storefname[storen] = (char*)malloc(strlen(G__srcfile[i].filename)+1);
-	strcpy(storefname[storen],G__srcfile[i].filename);
-	++storen;
+        if(G__srcfile[i].prepname) storecpp[storen] = 1;
+        else                       storecpp[storen] = 0;
+        storefname[storen] = (char*)malloc(strlen(G__srcfile[i].filename)+1);
+        strcpy(storefname[storen],G__srcfile[i].filename);
+        ++storen;
       }
     }
   }
@@ -777,11 +760,7 @@ char *filename;
 * G__display_classkeyword()
 *
 ************************************************************************/
-void G__display_classkeyword(fout,classnamein,keyword,base) 
-FILE *fout;
-char *classnamein;
-char *keyword;
-int base;
+void G__display_classkeyword(FILE *fout,char *classnamein,char *keyword,int base) 
 {
 #ifndef G__OLDIMPLEMENTATION1823
   char buf[G__BUFLEN];
@@ -840,8 +819,7 @@ int base;
 /******************************************************************
 * G__security_recover()
 ******************************************************************/
-int G__security_recover(fout)
-FILE *fout;
+int G__security_recover(FILE *fout)
 {
   int err = G__security_error ;
   if(G__security_error) {
@@ -849,17 +827,17 @@ FILE *fout;
 #ifndef G__OLDIMPLEMENTATION1485
       if(fout==G__serr) {
 #ifdef G__ROOT
-	G__fprinterr(G__serr,"*** Fatal error in interpreter... restarting interpreter ***\n");
+        G__fprinterr(G__serr,"*** Fatal error in interpreter... restarting interpreter ***\n");
 #else
-	G__fprinterr(G__serr,"!!!Fatal error. Sorry, terminate cint session!!!\n");
+        G__fprinterr(G__serr,"!!!Fatal error. Sorry, terminate cint session!!!\n");
 #endif
       } else 
 #endif
       if(fout) {
 #ifdef G__ROOT
-	fprintf(fout,"*** Fatal error in interpreter... restarting interpreter ***\n");
+        fprintf(fout,"*** Fatal error in interpreter... restarting interpreter ***\n");
 #else
-	fprintf(fout,"!!!Fatal error. Sorry, terminate cint session!!!\n");
+        fprintf(fout,"!!!Fatal error. Sorry, terminate cint session!!!\n");
 #endif
       }
     }
@@ -868,17 +846,17 @@ FILE *fout;
 #ifndef G__OLDIMPLEMENTATION1485
       if(fout==G__serr) {
 #ifdef G__ROOT
-	G__fprinterr(G__serr,"*** Interpreter error recovered ***\n");
+        G__fprinterr(G__serr,"*** Interpreter error recovered ***\n");
 #else
-	G__fprinterr(G__serr,"!!!Error recovered!!!\n");
+        G__fprinterr(G__serr,"!!!Error recovered!!!\n");
 #endif
       } else
 #endif
       if(fout) {
 #ifdef G__ROOT
-	fprintf(fout,"*** Interpreter error recovered ***\n");
+        fprintf(fout,"*** Interpreter error recovered ***\n");
 #else
-	fprintf(fout,"!!!Error recovered!!!\n");
+        fprintf(fout,"!!!Error recovered!!!\n");
 #endif
       }
       G__return=G__RETURN_NON;
@@ -935,7 +913,7 @@ int G__pause()
   int ignore=G__PAUSE_NORMAL;
   int more = 0;
 
-  void (*oldhandler)();
+  void (*oldhandler)(int);
 
 
 #ifdef G__NEVER
@@ -966,7 +944,7 @@ int G__pause()
      (!G__test(G__assertion))) {
     if(G__security_error) {
       G__fprinterr(G__serr,"Warning: Assertion failed, delete assert expression %s\n"
-		   ,G__assertion);
+                   ,G__assertion);
       G__assertion[0] = 0;
     }
     return(ignore);
@@ -1000,14 +978,14 @@ int G__pause()
     if (prompt[0]) strcpy(command, prompt);
     else {
       if('\0'==view.file.name[0]) {
-	sprintf(command,"%s> ", cintname);
+        sprintf(command,"%s> ", cintname);
       }
       else {
-	p = strrchr(view.file.name,G__psep[0]);
-	if(p && *(p+1)) strcpy(filename,p+1);
-	else            strcpy(filename,view.file.name);
-	sprintf(command,"FILE:%s LINE:%d %s> "
-		,G__stripfilename(filename),view.file.line_number,cintname);
+        p = strrchr(view.file.name,G__psep[0]);
+        if(p && *(p+1)) strcpy(filename,p+1);
+        else            strcpy(filename,view.file.name);
+        sprintf(command,"FILE:%s LINE:%d %s> "
+                ,G__stripfilename(filename),view.file.line_number,cintname);
       }
     }
 
@@ -1028,7 +1006,7 @@ int G__pause()
 
        /* if G__atpause is defined , evaluate the function */
        if(G__atpause) {
-	 G__p2f_void_void((void*)G__atpause);
+         G__p2f_void_void((void*)G__atpause);
        }
 
     /************************************
@@ -1068,7 +1046,7 @@ int G__pause()
     /************************************
     * G__pause() when break key
     ************************************/
-    oldhandler = signal(SIGINT,G__breakkey);
+    oldhandler = (void (*)(int))signal(SIGINT,G__breakkey);
 
     G__pause_return=0;
 
@@ -1109,14 +1087,14 @@ int G__update_stdio()
 /******************************************************************
 * G__redirectoutput
 ******************************************************************/
-static void G__redirectoutput(com,psout,pserr,psin,asemicolumn,keyword,pipefile)
-char *com;
-FILE **psout;
-FILE **pserr;
-FILE **psin;
-int asemicolumn;
-char *keyword;
-char *pipefile;
+static void G__redirectoutput(char *com
+                              ,FILE **psout,FILE **pserr
+#ifdef G__REDIRECTIO
+                              ,FILE ** psin
+#else
+                              ,FILE ** /* psin */
+#endif
+                              ,int asemicolumn,char *keyword,char *pipefile)
 {
   char *semicolumn;
   char *redirect;
@@ -1132,9 +1110,6 @@ char *pipefile;
   int j=1;
   int mode=0; /* 0:stdout, 1:stderr, 2:stdout+stderr */
 
-#ifndef G__OLDIMPLEMENTATION1911
-  if(psin) {} /* avoid unused parameter warning message */ 
-#endif
   redirect=strrchr(com,'>');
   redirectin=strrchr(com,'<');
   semicolumn=strrchr(com,';');
@@ -1153,9 +1128,9 @@ char *pipefile;
 
     if(redirect && 
        (isspace(*(redirect-1)) ||
-	(*(redirect-1)=='2' && isspace(*(redirect-2))) ||
-	(*(redirect-1)=='>' && isspace(*(redirect-2))) ||
-	(*(redirect-1)=='>' && *(redirect-2)=='2' && isspace(*(redirect-3))))&&
+        (*(redirect-1)=='2' && isspace(*(redirect-2))) ||
+        (*(redirect-1)=='>' && isspace(*(redirect-2))) ||
+        (*(redirect-1)=='>' && *(redirect-2)=='2' && isspace(*(redirect-3))))&&
        ((char*)NULL==singlequote||redirect>singlequote) &&
        ((char*)NULL==doublequote||redirect>doublequote) &&
        ((char*)NULL==paren||redirect>paren) &&
@@ -1165,19 +1140,19 @@ char *pipefile;
        *   cint> command >& filename
        *                 ^^          */
       if('&'==(*(redirect+1))) {
-	mode=G__NUM_STDBOTH;
-	++j;
+        mode=G__NUM_STDBOTH;
+        ++j;
       }
 
       /* get filename to redirect 
        *    cint> command > filename
        *                  ^ -------- */
       while((*(redirect+j))) {
-	if(!isspace(*(redirect+j))) {
-	  filename[i++] = *(redirect+j);
-	}
-	else if(i) break;
-	++j;
+        if(!isspace(*(redirect+j))) {
+          filename[i++] = *(redirect+j);
+        }
+        else if(i) break;
+        ++j;
       }
       filename[i] = '\0';
       strcpy(pipefile,filename);
@@ -1187,10 +1162,10 @@ char *pipefile;
        *                            ^-------- */
       while((*(redirect+j))&&isspace((*(redirect+j)))) ++j;
       if('/'== *(redirect+j)) {
-	++j;
-	i=0;
-	while((*(redirect+j))) keyword[i++] = *(redirect+j++);
-	keyword[i] = '\0';
+        ++j;
+        i=0;
+        while((*(redirect+j))) keyword[i++] = *(redirect+j++);
+        keyword[i] = '\0';
       }
 
 
@@ -1199,11 +1174,11 @@ char *pipefile;
        *                 ^^          */
       --redirect;
       if('>'==(*redirect)) {
-	--redirect;
-	openmode="a";
+        --redirect;
+        openmode="a";
       }
       else {
-	openmode="w";
+        openmode="w";
       }
 
       /* check if stderr 
@@ -1213,73 +1188,73 @@ char *pipefile;
       }
       else 
       if('2'==(*redirect)) {
-	--redirect;
-	mode=G__NUM_STDERR; /* stderr */
+        --redirect;
+        mode=G__NUM_STDERR; /* stderr */
       }
       else {
-	mode=G__NUM_STDOUT; /* stdout */
+        mode=G__NUM_STDOUT; /* stdout */
       }
 
       /* check if there is a space char right before redirection
        *   cint> command > filename
        *                ^          */
       if(isspace(*redirect) && filename[0]) {
-	/* cut command string at redirect command
-	 *   cint> command > filename
-	 *                ^0          */
-	*redirect='\0';
+        /* cut command string at redirect command
+         *   cint> command > filename
+         *                ^0          */
+        *redirect='\0';
 
 
-	/* open redirect file */
+        /* open redirect file */
 #ifdef G__REDIRECTIO
-	switch(mode) {
-	case G__NUM_STDOUT: /* stdout */
-	  *psout = G__sout;
+        switch(mode) {
+        case G__NUM_STDOUT: /* stdout */
+          *psout = G__sout;
 #ifndef G__WIN32
-	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+          if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 #endif
-	  G__sout = freopen(filename,openmode,G__sout);
-	  G__redirect_on();
-	  break;
-	case G__NUM_STDERR: /* stderr */
-	  *pserr = G__serr;
+          G__sout = freopen(filename,openmode,G__sout);
+          G__redirect_on();
+          break;
+        case G__NUM_STDERR: /* stderr */
+          *pserr = G__serr;
 #ifndef G__WIN32
-	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
+          if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
 #endif
-	  G__serr = freopen(filename,openmode,G__serr);
-	  /*DEBUG G__dumpfile = G__serr; */
-	  break;
-	case G__NUM_STDBOTH: /* stdout + stderr */
-	  *psout = G__sout;
-	  *pserr = G__serr;
+          G__serr = freopen(filename,openmode,G__serr);
+          /*DEBUG G__dumpfile = G__serr; */
+          break;
+        case G__NUM_STDBOTH: /* stdout + stderr */
+          *psout = G__sout;
+          *pserr = G__serr;
 #ifndef G__WIN32
-	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
-	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
+          if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+          if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
 #endif
-	  G__sout = freopen(filename,openmode,G__sout);
-	  G__serr = freopen(filename,"a",G__serr);
-	  G__redirect_on();
-	  break;
-	}
+          G__sout = freopen(filename,openmode,G__sout);
+          G__serr = freopen(filename,"a",G__serr);
+          G__redirect_on();
+          break;
+        }
 #else
-	switch(mode) {
-	case G__NUM_STDOUT: /* stdout */
-	  *psout = G__sout;
-	  G__sout = fopen(filename,openmode);
-	  break;
-	case G__NUM_STDERR: /* stderr */
-	  *pserr = G__serr;
-	  /*DEBUG G__dumpfile = 0; */
-	  G__serr = fopen(filename,openmode);
-	  break;
-	case G__NUM_STDBOTH: /* stdout & stderr */
-	  *psout = G__sout;
-	  *pserr = G__serr;
-	  G__sout = fopen(filename,openmode);
-	  G__serr = fopen(filename,"a");
-	  break;
-	}
-	G__update_stdio(); /* update stdout,stderr,stdin in interpreter */
+        switch(mode) {
+        case G__NUM_STDOUT: /* stdout */
+          *psout = G__sout;
+          G__sout = fopen(filename,openmode);
+          break;
+        case G__NUM_STDERR: /* stderr */
+          *pserr = G__serr;
+          /*DEBUG G__dumpfile = 0; */
+          G__serr = fopen(filename,openmode);
+          break;
+        case G__NUM_STDBOTH: /* stdout & stderr */
+          *psout = G__sout;
+          *pserr = G__serr;
+          G__sout = fopen(filename,openmode);
+          G__serr = fopen(filename,"a");
+          break;
+        }
+        G__update_stdio(); /* update stdout,stderr,stdin in interpreter */
 #endif
       } /* isspace */
     } /* redirect && ... */
@@ -1302,22 +1277,22 @@ char *pipefile;
       i=0;
       j=1;
       while((*(redirectin+j))) {
-	if(!isspace(*(redirectin+j))) {
-	  filename[i++] = *(redirectin+j);
-	}
-	else if(i) break;
-	++j;
+        if(!isspace(*(redirectin+j))) {
+          filename[i++] = *(redirectin+j);
+        }
+        else if(i) break;
+        ++j;
       }
       filename[i] = '\0';
 
       *redirectin = '\0';
       --redirectin;
       if(isspace(*redirectin)) {
-	*psin = G__sin;
+        *psin = G__sin;
 #ifndef G__WIN32
-	if (!strlen(stdinsav)) strcpy(stdinsav,ttyname(STDIN_FILENO));
+        if (!strlen(stdinsav)) strcpy(stdinsav,ttyname(STDIN_FILENO));
 #endif
-	G__sin = freopen(filename,"r",G__sin);
+        G__sin = freopen(filename,"r",G__sin);
       }
     }
   }
@@ -1327,12 +1302,8 @@ char *pipefile;
 /******************************************************************
 * G__unredirectoutput
 ******************************************************************/
-static void G__unredirectoutput(sout,serr,sin,keyword,pipefile)
-FILE **sout;
-FILE **serr;
-FILE **sin;
-char *keyword;
-char *pipefile;
+static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin
+                                ,char *keyword,char *pipefile)
 {
 #ifdef G__REDIRECTIO
   G__redirect_off();
@@ -1395,8 +1366,7 @@ char *pipefile;
 /******************************************************************
 * G__IsBadCommand
 ******************************************************************/
-int G__IsBadCommand(com)
-char *com;
+int G__IsBadCommand(char *com)
 {
   int i=0;
   int nest=0;
@@ -1427,17 +1397,17 @@ char *com;
     case '\\':
       ++i;
       if(0==com[i] || '\n'==com[i]) {
-	--i;
-	strcpy(com+i,G__input("> "));
-	if(G__return==G__RETURN_IMMEDIATE) return(-1);
+        --i;
+        strcpy(com+i,G__input("> "));
+        if(G__return==G__RETURN_IMMEDIATE) return(-1);
       }
       break;
     case '/':
       if((single_quote==0)&&(double_quote==0)) {
-	if('/'==com[i+1]) {
-	  com[i]=0;
-	  com[i+1]=0;
-	}
+        if('/'==com[i+1]) {
+          com[i]=0;
+          com[i+1]=0;
+        }
       }
       break;
     }
@@ -1506,18 +1476,18 @@ int G__ReadInputMode()
     inputmodebuf=G__getmakeinfo1("INPUTMODE");
     if(inputmodebuf && inputmodebuf[0]) {
       if(strstr(inputmodebuf,"c++")||strstr(inputmodebuf,"C++")) 
-	G__rootmode=G__INPUTCXXMODE;
+        G__rootmode=G__INPUTCXXMODE;
       else if(strstr(inputmodebuf,"root")||strstr(inputmodebuf,"ROOT")) 
-	G__rootmode=G__INPUTROOTMODE;
+        G__rootmode=G__INPUTROOTMODE;
       else if(strstr(inputmodebuf,"cint")||strstr(inputmodebuf,"CINT"))
-	G__rootmode=G__INPUTCINTMODE;
+        G__rootmode=G__INPUTCINTMODE;
     }
     inputmodebuf=G__getmakeinfo1("INPUTMODELOCK");
     if(inputmodebuf && inputmodebuf[0]) {
       if(strstr(inputmodebuf,"on")||strstr(inputmodebuf,"ON")) 
-	G__lockinputmode=1;
+        G__lockinputmode=1;
       else if(strstr(inputmodebuf,"off")||strstr(inputmodebuf,"OFF")) 
-	G__lockinputmode=0;
+        G__lockinputmode=0;
     }
   }
   return(G__rootmode);
@@ -1526,10 +1496,7 @@ int G__ReadInputMode()
 /******************************************************************
 * G__debugvariable()
 ******************************************************************/
-void G__debugvariable(fp,var,name) 
-FILE* fp;
-struct G__var_array *var;
-char* name;
+void G__debugvariable(FILE *fp,G__var_array *var,char *name) 
 {
   int ig15;
   int i;
@@ -1538,15 +1505,15 @@ char* name;
       if(var->hash[ig15] && strcmp(var->varnamebuf[ig15],name)==0) {
         fprintf(fp
          ,"%s p=%ld type=%c typenum=%d tagnum=%d const=%x static=%d\n paran=%d "
-		,var->varnamebuf[ig15]
-		,var->p[ig15]
-		,var->type[ig15]
-		,var->p_typetable[ig15]
-		,var->p_tagtable[ig15]
-		,var->constvar[ig15]
-		,var->statictype[ig15]
-		,var->paran[ig15]
-	        );
+                ,var->varnamebuf[ig15]
+                ,var->p[ig15]
+                ,var->type[ig15]
+                ,var->p_typetable[ig15]
+                ,var->p_tagtable[ig15]
+                ,var->constvar[ig15]
+                ,var->statictype[ig15]
+                ,var->paran[ig15]
+                );
         i=0;
         while(var->varlabel[ig15][i]) {
           fprintf(fp,"[%d]",var->varlabel[ig15][i++]);
@@ -1561,12 +1528,8 @@ char* name;
 /******************************************************************
 * intG__process_cmd()
 ******************************************************************/
-int G__process_cmd(line, prompt, more, err, rslt)
-char *line;
-char *prompt;
-int  *more;
-int  *err;
-G__value *rslt;
+int G__process_cmd(char *line,char *prompt,int *more,int *err
+                   ,G__value *rslt)
 {
   FILE *tempfp;   /* used for input dump file */
   char command[G__LONGLINE];
@@ -1630,7 +1593,7 @@ G__value *rslt;
 
   if(strlen(line)>G__LONGLINE-5) {
     G__fprinterr(G__serr,"!!! User command too long (%d>%d)!!!\n"
-		 ,strlen(line),G__LONGLINE-5);
+                 ,strlen(line),G__LONGLINE-5);
     G__UnlockCriticalSection();
     return(0);
   }
@@ -1663,49 +1626,49 @@ G__value *rslt;
     /* #ifdef G__ROOT */
     if(G__INPUTROOTMODE&G__rootmode) {
       if (command[0] == '.') {
-	strcpy(syscom, command+1);
-	strcpy(command, syscom);
+        strcpy(syscom, command+1);
+        strcpy(command, syscom);
       } 
       else if (strcmp(command, "?") == 0) {
-	strcpy(command, "help");
+        strcpy(command, "help");
       } 
       else if ('\0'!=command[0] && command[0] != '{') {
 #ifndef G__OLDIMPLEMENTATION1774
-	switch(G__IsBadCommand(command)) {
+        switch(G__IsBadCommand(command)) {
         case 0:
-	  break;
+          break;
         case 1:
-	  com=command;
-	  goto multi_line_command;
+          com=command;
+          goto multi_line_command;
         case -1:
-	default:
-	  fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
-	  G__UnlockCriticalSection();
-	  return(ignore=G__PAUSE_NORMAL);
-	  break;
-	}
+        default:
+          fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
+          G__UnlockCriticalSection();
+          return(ignore=G__PAUSE_NORMAL);
+          break;
+        }
 #else /* 1774 */
-	if(G__IsBadCommand(command)) {
-	  fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
-	  G__UnlockCriticalSection();
-	  return(ignore=G__PAUSE_NORMAL);
-	}
+        if(G__IsBadCommand(command)) {
+          fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
+          G__UnlockCriticalSection();
+          return(ignore=G__PAUSE_NORMAL);
+        }
 #endif /* 1774 */
-	G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
-			  ,keyword,pipefile);
-	temp = strlen(command)-1;
-	while (isspace(command[temp])) --temp;
-	if (command[temp] == ';') {
-	  sprintf(syscom, "{%s}", command);
+        G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
+                          ,keyword,pipefile);
+        temp = strlen(command)-1;
+        while (isspace(command[temp])) --temp;
+        if (command[temp] == ';') {
+          sprintf(syscom, "{%s}", command);
 #ifndef G__OLDIMPLEMENTATION1774
-	  if(G__INPUTCXXMODE!=G__rootmode) noprintflag=1;
+          if(G__INPUTCXXMODE!=G__rootmode) noprintflag=1;
 #else
-	  noprintflag=1;
+          noprintflag=1;
 #endif
-	}
-	else
-	  sprintf(syscom, "{%s;}", command);
-	strcpy(command, syscom);
+        }
+        else
+          sprintf(syscom, "{%s;}", command);
+        strcpy(command, syscom);
       }
     }
     /* #endif */
@@ -1726,7 +1689,7 @@ G__value *rslt;
      0!=strncmp(com,">",1)&&0!=strncmp(com,"<",1)&&
      0!=strncmp(com,"2>",2)) {
     G__redirectoutput(com,&store_stdout,&store_stderr,&store_stdin,0
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
   }
   
   temp=0;
@@ -1754,16 +1717,16 @@ G__value *rslt;
     if(strncmp("class",com,3)==0) {
       char *p = strchr(string,'/');
       if(p) {
-	*p = 0;
-	++p;
+        *p = 0;
+        ++p;
       }
       G__display_classkeyword(G__sout,string,p,0);
     }
     else if(strncmp("Class",com,3)==0) {
       char *p = strchr(string,'/');
       if(p) {
-	*p = 0;
-	++p;
+        *p = 0;
+        ++p;
       }
       G__display_classkeyword(G__sout,string,p,1);
     }
@@ -1796,9 +1759,9 @@ G__value *rslt;
     else if(strncmp("include",com,4)==0) {
       if(0==(*stringb)) G__display_includepath(G__sout);
       else {
-	string = stringb+strlen(stringb)-1;
-	while(isspace(*string)) *(string--) = 0;
-	G__add_ipath(stringb);
+        string = stringb+strlen(stringb)-1;
+        while(isspace(*string)) *(string--) = 0;
+        G__add_ipath(stringb);
       }
     }
 
@@ -1854,70 +1817,70 @@ G__value *rslt;
     }
 
     else if(strncmp("ls",com,2)==0 ||
-	    strncmp("ll",com,2)==0 ||
-	    strncmp("dir",com,3)==0 ||
-	    strncmp("pwd",com,3)==0 ||
-	    strncmp("cp",com,2)==0 ||
-	    strncmp("copy",com,4)==0 ||
-	    strncmp("gmake",com,5)==0 ||
-	    strncmp("make",com,4)==0 ||
-	    strncmp("mv",com,2)==0 ||
-	    strncmp("move",com,4)==0 ||
-	    strncmp("mkdir",com,5)==0 ||
-	    strncmp("vi",com,2)==0 ||
-	    strncmp("notepad",com,7)==0 ||
-	    strncmp("grep",com,4)==0 ||
-	    strncmp("fgrep",com,5)==0 ||
-	    strncmp("egrep",com,5)==0 ||
-	    strncmp("diff",com,4)==0 ||
-	    strncmp("wc",com,2)==0 ||
-	    strncmp("cat",com,3)==0 ||
-	    strncmp("more",com,4)==0 ||
-	    strncmp("less",com,4)==0 ||
-	    strncmp("echo",com,4)==0 ||
-	    strncmp("cint",com,4)==0 ||
-	    strncmp("du",com,2)==0 ||
-	    strncmp("sh",com,2)==0 ||
-	    strncmp("csh",com,3)==0 ||
-	    strncmp("ksh",com,3)==0 ||
-	    strncmp("bash",com,4)==0 ||
-	    strncmp("man",com,3)==0 ||
-	    strncmp("type",com,4)==0) {
+            strncmp("ll",com,2)==0 ||
+            strncmp("dir",com,3)==0 ||
+            strncmp("pwd",com,3)==0 ||
+            strncmp("cp",com,2)==0 ||
+            strncmp("copy",com,4)==0 ||
+            strncmp("gmake",com,5)==0 ||
+            strncmp("make",com,4)==0 ||
+            strncmp("mv",com,2)==0 ||
+            strncmp("move",com,4)==0 ||
+            strncmp("mkdir",com,5)==0 ||
+            strncmp("vi",com,2)==0 ||
+            strncmp("notepad",com,7)==0 ||
+            strncmp("grep",com,4)==0 ||
+            strncmp("fgrep",com,5)==0 ||
+            strncmp("egrep",com,5)==0 ||
+            strncmp("diff",com,4)==0 ||
+            strncmp("wc",com,2)==0 ||
+            strncmp("cat",com,3)==0 ||
+            strncmp("more",com,4)==0 ||
+            strncmp("less",com,4)==0 ||
+            strncmp("echo",com,4)==0 ||
+            strncmp("cint",com,4)==0 ||
+            strncmp("du",com,2)==0 ||
+            strncmp("sh",com,2)==0 ||
+            strncmp("csh",com,3)==0 ||
+            strncmp("ksh",com,3)==0 ||
+            strncmp("bash",com,4)==0 ||
+            strncmp("man",com,3)==0 ||
+            strncmp("type",com,4)==0) {
       system(com);
     }
     else if(strncmp("rm",com,2)==0 ||
-	    strncmp("del",com,4)==0 ||
-	    strncmp("rmdir",com,5)==0) {
+            strncmp("del",com,4)==0 ||
+            strncmp("rmdir",com,5)==0) {
       char localbuf[80];
       strcpy(localbuf,G__input("Are you sure(y/n)? "));
       if(tolower(localbuf[0])=='y') system(com);
       else fprintf(G__sout,"aborted\n");
     }
     else if(strncmp("set",com,3)==0 ||
-	    strncmp("export",com,6)==0) {
+            strncmp("export",com,6)==0) {
       char *plocal = strchr(stringb,'=');
       if(plocal) {
 #if defined(G__WIN32)
-	*plocal++ = 0;
-	if(FALSE==SetEnvironmentVariable(stringb,plocal)) 
-	  G__fprinterr(G__serr,"can not set environment variable %s=%s\n"
-		  ,stringb,plocal);
+        *plocal++ = 0;
+        if(FALSE==SetEnvironmentVariable(stringb,plocal)) 
+          G__fprinterr(G__serr,"can not set environment variable %s=%s\n"
+                  ,stringb,plocal);
 #elif defined(G__POSIX)
-	if(0!=putenv(stringb))  /* DOES NOT WORK , WHY ??? */
-	  G__fprinterr(G__serr,"can not set environment variable %s\n",stringb);
+        if(0!=putenv(stringb))  /* DOES NOT WORK , WHY ??? */
+          G__fprinterr(G__serr,"can not set environment variable %s\n",stringb);
 #endif
       }
       else {
-	system(com);
+        system(com);
       }
     }
     else if(strncmp("cd",com,2)==0) {
 #if defined(G__WIN32)
       if(FALSE==SetCurrentDirectory(stringb))
-	G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
+        G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
 #elif defined(G__POSIX)
       if(0!=chdir(stringb)) 
-	G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
+        G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
 #endif
     }
 
@@ -1928,7 +1891,7 @@ G__value *rslt;
 #ifdef G__SECURITY
     else if(strncmp("where",com,4)==0) {
       fprintf(G__sout,"FILE:%s LINE:%d interpreter=%s\n"
-	      ,G__stripfilename(view.file.name),view.file.line_number,G__nam);
+              ,G__stripfilename(view.file.name),view.file.line_number,G__nam);
     }
 
     else if(strncmp("security",com,4)==0) {
@@ -1970,27 +1933,27 @@ G__value *rslt;
 
     else if(strncmp("scratch",com,4)==0) {
       if(!G__isfilebusy(0)) {
-	G__scratch_all();
-	G__init_undo();
+        G__scratch_all();
+        G__init_undo();
       }
     }
 
 #ifndef G__ROOT
     else if(strncmp(".",com,1)==0) {
       if(0==G__lockinputmode) {
-	G__rootmode ^= 1;
-	fprintf(G__sout,"!!!Debugger Command mode switched as follows!!!\n");
-	if(G__INPUTROOTMODE&G__rootmode) {
-	  fprintf(G__sout,"    > .[command]\n");
-	  fprintf(G__sout,"    > [statement]\n");
-	}
-	else {
-	  fprintf(G__sout,"    > [command]\n");
-	  fprintf(G__sout,"    > { [statement] }\n");
-	}
+        G__rootmode ^= 1;
+        fprintf(G__sout,"!!!Debugger Command mode switched as follows!!!\n");
+        if(G__INPUTROOTMODE&G__rootmode) {
+          fprintf(G__sout,"    > .[command]\n");
+          fprintf(G__sout,"    > [statement]\n");
+        }
+        else {
+          fprintf(G__sout,"    > [command]\n");
+          fprintf(G__sout,"    > { [statement] }\n");
+        }
       }
       else {
-	fprintf(G__sout,"!!!Debugger Command mode locked!!!\n");
+        fprintf(G__sout,"!!!Debugger Command mode locked!!!\n");
       }
     }
 #endif
@@ -2001,17 +1964,17 @@ G__value *rslt;
       G__fprinterr(G__serr,"!!! Sorry, can not reset interpreter !!!\n");
 #else
       if(!G__isfilebusy(0)) { 
-	int store_othermain=G__othermain;
-	G__scratch_all(); /* To make memory leak check work */
-	if(G__commandline[0]) G__init_cint(G__commandline);
-	else {
-	  G__init_cint(G__nam);
-	}
-	G__othermain=store_othermain;
-	G__init_undo();
+        int store_othermain=G__othermain;
+        G__scratch_all(); /* To make memory leak check work */
+        if(G__commandline[0]) G__init_cint(G__commandline);
+        else {
+          G__init_cint(G__nam);
+        }
+        G__othermain=store_othermain;
+        G__init_undo();
       }
       else {
-	G__fprinterr(G__serr,"!!! Sorry, can not reset interpreter !!!\n");
+        G__fprinterr(G__serr,"!!! Sorry, can not reset interpreter !!!\n");
       }
 #endif
     }
@@ -2023,7 +1986,7 @@ G__value *rslt;
        *******************************************************/
       G__more_pause((FILE*)NULL,1);
       G__listfunc(G__sout,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL
-		    ,(struct G__ifunc_table*)NULL);
+                    ,(struct G__ifunc_table*)NULL);
       G__listshlfunc(G__sout);
     }
 
@@ -2036,16 +1999,16 @@ G__value *rslt;
       temp=0;
       while(isspace(string[temp])) temp++;
       if(isalpha(string[temp]))
-	tempfp=fopen(string+temp,"w");
+        tempfp=fopen(string+temp,"w");
       else
-	tempfp=(FILE*)NULL;
+        tempfp=(FILE*)NULL;
       if(tempfp) {
-	fprintf(G__sout,"saving trace coverage to %s\n",string+temp);
-	G__dump_tracecoverage(tempfp);
-	fclose(tempfp);
+        fprintf(G__sout,"saving trace coverage to %s\n",string+temp);
+        G__dump_tracecoverage(tempfp);
+        fclose(tempfp);
       }
       else {
-	fprintf(G__sout,"can not open file %s\n",string+temp);
+        fprintf(G__sout,"can not open file %s\n",string+temp);
       }
     }
 
@@ -2103,29 +2066,29 @@ G__value *rslt;
     /* interactive return of undefined symbol */
     else if(strncmp("return",com,1)==0) {
       if(G__interactive_undefined) {
-	G__interactivereturnvalue = G__calc_internal(string);
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	ignore = G__PAUSE_NORMAL;
+        G__interactivereturnvalue = G__calc_internal(string);
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+        ignore = G__PAUSE_NORMAL;
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       else {
-	G__fprinterr(G__serr,"!!! Use 'return' command at your own risk !!!\n");
-	G__interactivereturnvalue = G__calc_internal(string);
-	G__return=G__RETURN_IMMEDIATE;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	ignore = 2;
+        G__fprinterr(G__serr,"!!! Use 'return' command at your own risk !!!\n");
+        G__interactivereturnvalue = G__calc_internal(string);
+        G__return=G__RETURN_IMMEDIATE;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+        ignore = 2;
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
     }
 
@@ -2134,40 +2097,40 @@ G__value *rslt;
       else                        index=2;
       while(isspace(command[index])&&command[index]!='\0') index++;
       if((*(command+index))) {
-	if(G__sout!=G__stdout) {
-	  fprintf(G__stdout,"Old save file closed\n");
-	  fclose(G__sout);
-	}
-	if(G__serr!=G__stderr && G__serr!=G__sout) {
-	  fprintf(G__stdout,"Old save file closed\n");
-	  fclose(G__serr);
-	}
-	if(strncmp(">>",com,2)!=0) {
-	  G__sout=fopen(command+index,"w");
-	  fclose(G__sout);
-	}
-	G__serr=G__sout=fopen(command+index,"a");
-	G__redirectcout(command+index);
-	G__redirectcerr(command+index);
-	if(G__sout) {
-	  fprintf(G__stdout,"Output will be saved in file %s! ('>&' to display on screen)\n" 
-		 ,command+index);
-	}
-	else {
-	  G__sout = G__stdout;
-	  G__serr = G__stderr;
-	  fprintf(G__stdout,"Can not open file %s\n",command+index);
-	}
+        if(G__sout!=G__stdout) {
+          fprintf(G__stdout,"Old save file closed\n");
+          fclose(G__sout);
+        }
+        if(G__serr!=G__stderr && G__serr!=G__sout) {
+          fprintf(G__stdout,"Old save file closed\n");
+          fclose(G__serr);
+        }
+        if(strncmp(">>",com,2)!=0) {
+          G__sout=fopen(command+index,"w");
+          fclose(G__sout);
+        }
+        G__serr=G__sout=fopen(command+index,"a");
+        G__redirectcout(command+index);
+        G__redirectcerr(command+index);
+        if(G__sout) {
+          fprintf(G__stdout,"Output will be saved in file %s! ('>&' to display on screen)\n" 
+                 ,command+index);
+        }
+        else {
+          G__sout = G__stdout;
+          G__serr = G__stderr;
+          fprintf(G__stdout,"Can not open file %s\n",command+index);
+        }
       }
       else {
-	if(G__sout && G__sout!=G__stdout) {
-	  G__unredirectcout();
-	  G__unredirectcerr();
-	  fclose(G__sout);
-	}
-	G__sout = G__stdout;
-	G__serr = G__stderr;
-	fprintf(G__stdout,"Output will be displayed on screen!\n");
+        if(G__sout && G__sout!=G__stdout) {
+          G__unredirectcout();
+          G__unredirectcerr();
+          fclose(G__sout);
+        }
+        G__sout = G__stdout;
+        G__serr = G__stderr;
+        fprintf(G__stdout,"Output will be displayed on screen!\n");
       }
       G__update_stdio();
     }
@@ -2177,32 +2140,32 @@ G__value *rslt;
       else                       index=1;
       while(isspace(command[index])&&command[index]!='\0') index++;
       if((*(command+index))) {
-	if(G__sout!=G__stdout) {
-	  fprintf(G__stdout,"Old save file closed\n");
-	  fclose(G__sout);
-	}
-	if(strncmp(">>",com,2)!=0) {
-	  G__sout=fopen(command+index,"w");
-	  fclose(G__sout);
-	}
-	G__sout=fopen(command+index,"a");
-	G__redirectcout(command+index);
-	if(G__sout) {
-	  fprintf(G__stdout,"Output will be saved in file %s! ('>' to display on screen)\n" 
-		 ,command+index);
-	}
-	else {
-	  G__sout = G__stdout;
-	  fprintf(G__stdout,"Can not open file %s\n",command+index);
-	}
+        if(G__sout!=G__stdout) {
+          fprintf(G__stdout,"Old save file closed\n");
+          fclose(G__sout);
+        }
+        if(strncmp(">>",com,2)!=0) {
+          G__sout=fopen(command+index,"w");
+          fclose(G__sout);
+        }
+        G__sout=fopen(command+index,"a");
+        G__redirectcout(command+index);
+        if(G__sout) {
+          fprintf(G__stdout,"Output will be saved in file %s! ('>' to display on screen)\n" 
+                 ,command+index);
+        }
+        else {
+          G__sout = G__stdout;
+          fprintf(G__stdout,"Can not open file %s\n",command+index);
+        }
       }
       else {
-	if(G__sout && G__sout!=G__stdout) {
-	  G__unredirectcout();
-	  fclose(G__sout);
-	}
-	G__sout = G__stdout;
-	fprintf(G__stdout,"Output will be displayed on screen!\n");
+        if(G__sout && G__sout!=G__stdout) {
+          G__unredirectcout();
+          fclose(G__sout);
+        }
+        G__sout = G__stdout;
+        fprintf(G__stdout,"Output will be displayed on screen!\n");
       }
       G__update_stdio();
     }
@@ -2212,29 +2175,29 @@ G__value *rslt;
       else                        index=2;
       while(isspace(command[index])&&command[index]!='\0') index++;
       if((*(command+index))) {
-	if(strncmp(">>",com,2)!=0) {
-	  G__serr=fopen(command+index,"w");
-	  fclose(G__serr);
-	  /* fclose(G__sout); */
-	}
-	G__serr=fopen(command+index,"a");
-	G__redirectcerr(command+index);
-	if(G__serr) {
-	  fprintf(G__stdout,"Error will be saved in file %s! ('2>' to display on screen)\n" 
-		 ,command+index);
-	}
-	else {
-	  G__serr = G__stderr;
-	  fprintf(G__stdout,"Can not open file %s\n",command+index);
-	}
+        if(strncmp(">>",com,2)!=0) {
+          G__serr=fopen(command+index,"w");
+          fclose(G__serr);
+          /* fclose(G__sout); */
+        }
+        G__serr=fopen(command+index,"a");
+        G__redirectcerr(command+index);
+        if(G__serr) {
+          fprintf(G__stdout,"Error will be saved in file %s! ('2>' to display on screen)\n" 
+                 ,command+index);
+        }
+        else {
+          G__serr = G__stderr;
+          fprintf(G__stdout,"Can not open file %s\n",command+index);
+        }
       }
       else {
-	if(G__serr && G__serr!=G__stderr) {
-	  G__unredirectcerr();
-	  fclose(G__serr);
-	}
-	G__serr = G__stderr;
-	fprintf(G__sout,"Error will be displayed on screen!\n");
+        if(G__serr && G__serr!=G__stderr) {
+          G__unredirectcerr();
+          fclose(G__serr);
+        }
+        G__serr = G__stderr;
+        fprintf(G__sout,"Error will be displayed on screen!\n");
       }
       G__update_stdio();
     }
@@ -2248,12 +2211,12 @@ G__value *rslt;
       while(isspace(command[index])&&command[index]!='\0') index++;
       tempfp=fopen(command+index,"r");
       if(tempfp) {
-	fprintf(G__sout,"Execute readline dumpfile %s\n"
-		,command+index);
-	G__pushdumpinput(tempfp,1);
+        fprintf(G__sout,"Execute readline dumpfile %s\n"
+                ,command+index);
+        G__pushdumpinput(tempfp,1);
       }
       else {
-	fprintf(G__sout,"Can not open file %s\n",command+1);
+        fprintf(G__sout,"Can not open file %s\n",command+1);
       }
       G__update_stdio();
     }
@@ -2269,38 +2232,38 @@ G__value *rslt;
       while(isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
         G__fprinterr(G__serr,"Error: no file specified\n");
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
+        G__UnlockCriticalSection();
         return(ignore);
       }
       G__store_undo_position();
       com = strchr(string+temp, '(');
       if (com) {
-	char *px = com-1;
-	*com = '\0';
-	while(isspace(*px)) *px-- = '\0';
+        char *px = com-1;
+        *com = '\0';
+        while(isspace(*px)) *px-- = '\0';
       }
       temp2 = G__prerun;
       G__prerun = 1;  /* suppress warning message if file already loaded */
       temp1 = G__loadfile(string+temp);
       if (temp1 == 1) {
-	 G__prerun = 0;
+         G__prerun = 0;
          G__unloadfile(string+temp);
-	 G__storerewindposition();
+         G__storerewindposition();
          if (G__loadfile(string+temp)) {
             G__prerun = temp2;
-	    G__pause_return=1;
-	    G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	    if(G__security_error) G__cancel_undo_position();
+            G__pause_return=1;
+            G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+            if(G__security_error) G__cancel_undo_position();
 #ifdef G__SECURITY
-	    *err |= G__security_recover(G__serr);
+            *err |= G__security_recover(G__serr);
 #endif
-	    G__UnlockCriticalSection();
+            G__UnlockCriticalSection();
             return(ignore);
          }
       }
@@ -2308,51 +2271,51 @@ G__value *rslt;
       G__prerun = temp2;
       com1= strrchr(string+temp,'.');
       if(com) {
-	char *px = com-1;
-	*com='(';
-	while(0==(*px)) *px-- = ' ';
+        char *px = com-1;
+        *com='(';
+        while(0==(*px)) *px-- = ' ';
       }
       com = com1;
       if (com) {
-	 char *s;
+         char *s;
          *com = '\0';
-	 s = strrchr(string+temp,'/');
-	 if(!s) s=strrchr(string+temp,'\\');
-	 if(!s) s=string+temp;
-	 else   s++;
-	 strcpy(syscom, s);
+         s = strrchr(string+temp,'/');
+         if(!s) s=strrchr(string+temp,'\\');
+         if(!s) s=string+temp;
+         else   s++;
+         strcpy(syscom, s);
          s=syscom;
          while(s && *s) {
            if('-'==(*s)) *s='_';
            ++s;
          }
-	 string = strchr(com+1, '(');
-	 if (string)
-	   strcat(syscom, string);
-	 else
-	   strcat(syscom, "()");
+         string = strchr(com+1, '(');
+         if (string)
+           strcat(syscom, string);
+         else
+           strcat(syscom, "()");
          buf=G__calc_internal(syscom);
-	 if(rslt) *rslt = buf;
+         if(rslt) *rslt = buf;
          G__in_pause=1;
          G__valuemonitor(buf,syscom);
          G__in_pause=0;
 #ifndef G__OLDIMPLEMENTATION1259
-	 if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
-	   char tmp[G__ONELINE];
-	   sprintf(tmp,"(const %s",syscom+1);
-	   strcpy(syscom,tmp);
-	 }
-	 if(buf.isconst&G__PCONSTVAR) {
-	   char tmp2[G__ONELINE];
-	   char *ptmp = strchr(syscom,')');
-	   strcpy(tmp2,ptmp);
-	   strcpy(ptmp,"const");
-	   strcat(syscom,tmp2);
-	 }
+         if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
+           char tmp[G__ONELINE];
+           sprintf(tmp,"(const %s",syscom+1);
+           strcpy(syscom,tmp);
+         }
+         if(buf.isconst&G__PCONSTVAR) {
+           char tmp2[G__ONELINE];
+           char *ptmp = strchr(syscom,')');
+           strcpy(tmp2,ptmp);
+           strcpy(ptmp,"const");
+           strcat(syscom,tmp2);
+         }
 #endif
          if(buf.type && 0==G__atevaluate(buf)) fprintf(G__sout,"%s\n",syscom);
 #ifdef G__SECURITY
-	 *err |= G__security_recover(G__serr);
+         *err |= G__security_recover(G__serr);
 #endif
       } else {
          fprintf(G__sout, "Expecting . in filename\n");
@@ -2360,15 +2323,15 @@ G__value *rslt;
     }
 
     else if(
-	    (G__do_smart_unload && strncmp("L",com,1)==0) ||
-	    strncmp("Lall",com,2)==0
-	    ) {
+            (G__do_smart_unload && strncmp("L",com,1)==0) ||
+            strncmp("Lall",com,2)==0
+            ) {
       temp=0;
       while(isspace(string[temp])) temp++;
       G__UnlockCriticalSection();
       G__reloadfile(string+temp);
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-			  ,keyword,pipefile);
+                          ,keyword,pipefile);
       *err |= G__security_recover(G__serr);
       return(ignore);
     }
@@ -2382,12 +2345,12 @@ G__value *rslt;
       while(isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
          G__fprinterr(G__serr,"Error: no file specified\n");
-	 G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+         G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
          *err |= G__security_recover(G__serr);
 #endif
-	 G__UnlockCriticalSection();
+         G__UnlockCriticalSection();
          return(ignore);
       }
       G__store_undo_position();
@@ -2396,17 +2359,17 @@ G__value *rslt;
       temp1 = G__loadfile(string+temp);
       if (temp1 == 1) {
          G__unloadfile(string+temp);
-	 G__storerewindposition();
+         G__storerewindposition();
          if (G__loadfile(string+temp)) {
             G__prerun = temp2;
             G__pause_return=1;
-	    G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	    if(G__security_error) G__cancel_undo_position();
+            G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+            if(G__security_error) G__cancel_undo_position();
 #ifdef G__SECURITY
-	    *err |= G__security_recover(G__serr);
+            *err |= G__security_recover(G__serr);
 #endif
-	    G__UnlockCriticalSection();
+            G__UnlockCriticalSection();
             return(ignore);
          }
       }
@@ -2424,16 +2387,16 @@ G__value *rslt;
       while(isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
          G__fprinterr(G__serr,"Error: no file specified\n");
-	 G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+         G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
          *err |= G__security_recover(G__serr);
 #endif
-	 G__UnlockCriticalSection();
+         G__UnlockCriticalSection();
          return(ignore);
       }
       if(G__UNLOADFILE_SUCCESS==G__unloadfile(string+temp))
-	G__init_undo();
+        G__init_undo();
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -2447,13 +2410,13 @@ G__value *rslt;
       while(isspace(command[index])&&command[index]!='\0') index++;
       tempfp=fopen(command+index,"w");
       if(tempfp) {
-	fprintf(G__sout
-		,"Create new readline dumpfile %s and start dump\n"
-		,command+index);
-	G__pushdumpinput(tempfp,0);
+        fprintf(G__sout
+                ,"Create new readline dumpfile %s and start dump\n"
+                ,command+index);
+        G__pushdumpinput(tempfp,0);
       }
       else {
-	fprintf(G__sout,"Can not open file %s\n",command+1);
+        fprintf(G__sout,"Can not open file %s\n",command+1);
       }
     }
 
@@ -2465,13 +2428,13 @@ G__value *rslt;
       while(isspace(command[index])&&command[index]!='\0') index++;
       tempfp=fopen(command+index,"a");
       if(tempfp) {
-	fprintf(G__sout
-		,"Append readline dump to %s\n"
-		,command+index);
-	G__pushdumpinput(tempfp,0);
+        fprintf(G__sout
+                ,"Append readline dump to %s\n"
+                ,command+index);
+        G__pushdumpinput(tempfp,0);
       }
       else {
-	fprintf(G__sout,"Can not open file %s\n",command+1);
+        fprintf(G__sout,"Can not open file %s\n",command+1);
       }
     }
 
@@ -2480,12 +2443,12 @@ G__value *rslt;
        * Stop readline dump.
        *******************************************************/
       if(G__dumpreadline[0]) {
-	fprintf(G__sout,"Stop readline dump.\n");
-	fclose(G__dumpreadline[0]);
-	G__popdumpinput();
+        fprintf(G__sout,"Stop readline dump.\n");
+        fclose(G__dumpreadline[0]);
+        G__popdumpinput();
       }
       else {
-	fprintf(G__sout,"No readline dumpfile in the stack\n");
+        fprintf(G__sout,"No readline dumpfile in the stack\n");
       }
     }
 
@@ -2521,9 +2484,9 @@ G__value *rslt;
       G__more(G__sout,"cint (C/C++ interpreter) debugger usage:\n");
 #endif
       if(G__INPUTROOTMODE&G__rootmode) {
-	G__more(G__sout,"All commands must be preceded by a . (dot), except\n");
-	G__more(G__sout,"for the evaluation statement { } and the ?.\n");
-	G__more(G__sout,"===========================================================================\n");
+        G__more(G__sout,"All commands must be preceded by a . (dot), except\n");
+        G__more(G__sout,"for the evaluation statement { } and the ?.\n");
+        G__more(G__sout,"===========================================================================\n");
       }
 #ifndef G__ROOT
       G__more(G__sout,"Dump:        n [file]  : create new readline dumpfile and start dump\n");
@@ -2626,59 +2589,59 @@ G__value *rslt;
        *******************************************************/
       do {
 #if defined(G__OLDIMPLEMENTATION2092_YET)
-	G__temp=tmpfile();
+        G__temp=tmpfile();
         if(!G__temp) {
-	  G__tmpnam(tname); /* not used anymore */
-	  G__temp=fopen(tname,"w");
+          G__tmpnam(tname); /* not used anymore */
+          G__temp=fopen(tname,"w");
           istmpnam=1;
         }
 #elif !defined(G__OLDIMPLEMENTATION1917)
-	G__temp=tmpfile();
+        G__temp=tmpfile();
 #else
-	G__tmpnam(tname); /* not used anymore */
-	G__temp=fopen(tname,"w");
+        G__tmpnam(tname); /* not used anymore */
+        G__temp=fopen(tname,"w");
 #endif
       } while((FILE*)NULL==G__temp && G__setTMPDIR(tname));
       if(G__temp) {
-	G__cintrevision(G__temp);
-	G__list_sut(G__temp);
-	/* compiled and interpreterd objects */
-	G__display_class(G__temp,"",0,0);
-	G__display_typedef(G__temp,"",0);
-	G__display_string(G__temp);
-	G__display_template(G__temp," ");
-	G__display_macro(G__temp,"");
-	G__display_files(G__temp);
-	G__listfunc(G__temp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL
-		    ,(struct G__ifunc_table*)NULL);
-	G__varmonitor(G__temp,&G__global,"","",0);
+        G__cintrevision(G__temp);
+        G__list_sut(G__temp);
+        /* compiled and interpreterd objects */
+        G__display_class(G__temp,"",0,0);
+        G__display_typedef(G__temp,"",0);
+        G__display_string(G__temp);
+        G__display_template(G__temp," ");
+        G__display_macro(G__temp,"");
+        G__display_files(G__temp);
+        G__listfunc(G__temp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL
+                    ,(struct G__ifunc_table*)NULL);
+        G__varmonitor(G__temp,&G__global,"","",0);
 #if defined(G__OLDIMPLEMENTATION2092_YET)
         if(istmpnam) fclose(G__temp);
 #elif !defined(G__OLDIMPLEMENTATION1917)
 #else
-	fclose(G__temp);
+        fclose(G__temp);
 #endif
       
-	if(command[strlen(command)-1]==' ') command[strlen(command)-1]='\0';
+        if(command[strlen(command)-1]==' ') command[strlen(command)-1]='\0';
 #if defined(G__OLDIMPLEMENTATION2092_YET)
         if(!istmpnam) {
-	  G__display_keyword(G__sout,command+1,G__temp);
-	  fclose(G__temp);
+          G__display_keyword(G__sout,command+1,G__temp);
+          fclose(G__temp);
         }
         else {
-	  G__display_keyword(G__sout,command+1,tname);
-	  remove(tname);
+          G__display_keyword(G__sout,command+1,tname);
+          remove(tname);
         }
 #elif !defined(G__OLDIMPLEMENTATION1917)
-	G__display_keyword(G__sout,command+1,G__temp);
-	fclose(G__temp);
+        G__display_keyword(G__sout,command+1,G__temp);
+        fclose(G__temp);
 #else
-	G__display_keyword(G__sout,command+1,tname);
-	remove(tname);
+        G__display_keyword(G__sout,command+1,tname);
+        remove(tname);
 #endif
       }
       else {
-	G__fprinterr(G__serr,"Error: Tempfile G__temp can not open\n");
+        G__fprinterr(G__serr,"Error: Tempfile G__temp can not open\n");
       }
     }
 
@@ -2706,13 +2669,13 @@ G__value *rslt;
        *******************************************************/
       command[0]=' ';
       if(command[1]=='\0') {
-	G__assertion[0]='\0'; /* sprintf(G__assertion,""); */
-	fprintf(G__sout,"Break assertion is deleted\n");
+        G__assertion[0]='\0'; /* sprintf(G__assertion,""); */
+        fprintf(G__sout,"Break assertion is deleted\n");
       }
       else {
-	sprintf(G__assertion,"%s",command+1);
-	fprintf(G__sout,"Break only if (%s) is true\n"
-		,G__assertion);
+        sprintf(G__assertion,"%s",command+1);
+        fprintf(G__sout,"Break only if (%s) is true\n"
+                ,G__assertion);
       }
     }
 
@@ -2750,7 +2713,7 @@ G__value *rslt;
       else if('G'==command[0]) G__varmonitor(G__sout,&G__global,command+index,"",0);
       else if(G__cintv6) {
         if(G__bc_setdebugview(temp1,&view)) 
-	  G__varmonitor(G__sout,view.var_local,command+index,"",view.localmem);
+          G__varmonitor(G__sout,view.var_local,command+index,"",view.localmem);
       }
       else G__varmonitor(G__sout,G__p_local,command+index,"",0);
       G__RESET_TEMPENV;
@@ -2774,15 +2737,15 @@ G__value *rslt;
        * Toggle trace mode
        *******************************************************/
       if(G__istrace==0) {
-	G__istrace=1;
+        G__istrace=1;
 #ifdef G__ASM_DBG
-	if(string[0]) G__istrace = atoi(string);
+        if(string[0]) G__istrace = atoi(string);
 #endif
-	fprintf(G__sout,"\nTrace mode on %d\n",G__istrace);
+        fprintf(G__sout,"\nTrace mode on %d\n",G__istrace);
       }
       else {
-	fprintf(G__sout,"\nTrace mode off\n");
-	G__istrace=0;
+        fprintf(G__sout,"\nTrace mode off\n");
+        G__istrace=0;
       }
       G__debug = G__istrace;
       G__setdebugcond();
@@ -2793,12 +2756,12 @@ G__value *rslt;
        * Toggle display mode
        *******************************************************/
       if(G__breakdisp==0) {
-	G__breakdisp=1;
-	fprintf(G__sout,"\nDisplay mode on\n");
+        G__breakdisp=1;
+        fprintf(G__sout,"\nDisplay mode on\n");
       }
       else {
-	fprintf(G__sout,"\nDisplay mode off\n");
-	G__breakdisp=0;
+        fprintf(G__sout,"\nDisplay mode off\n");
+        G__breakdisp=0;
       }
     }
 
@@ -2807,17 +2770,17 @@ G__value *rslt;
        * Delete break point
        *******************************************************/
       if(1<G__findposition(string,view.file,&line_number,&filenum)
-	 && filenum>=0 && line_number>=0
-	 ) {
-	G__srcfile[filenum].breakpoint[line_number] &= G__NOBREAK;
-	fprintf(G__sout,"Break point line %d %s deleted\n"
-		,line_number,G__srcfile[filenum].filename);
-	G__step=0;
-	G__charstep=0;
-	G__setdebugcond();
+         && filenum>=0 && line_number>=0
+         ) {
+        G__srcfile[filenum].breakpoint[line_number] &= G__NOBREAK;
+        fprintf(G__sout,"Break point line %d %s deleted\n"
+                ,line_number,G__srcfile[filenum].filename);
+        G__step=0;
+        G__charstep=0;
+        G__setdebugcond();
       }
       else {
-	G__fprinterr(G__serr,"can not determine where to delete break point\n");
+        G__fprinterr(G__serr,"can not determine where to delete break point\n");
       }
     }
 
@@ -2826,35 +2789,35 @@ G__value *rslt;
        * Set break point
        *******************************************************/
       if(1<G__findposition(string,view.file,&line_number,&filenum) &&
-	 filenum>=0 && line_number>=0 &&
-	 G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline
-	 ) {
-	fprintf(G__sout,"Break point set to line %d %s\n"
-		,line_number,G__srcfile[filenum].filename);
-	G__srcfile[filenum].breakpoint[line_number] |= G__BREAK;
-	G__step=0;
-	G__charstep=0;
-	G__setdebugcond();
+         filenum>=0 && line_number>=0 &&
+         G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline
+         ) {
+        fprintf(G__sout,"Break point set to line %d %s\n"
+                ,line_number,G__srcfile[filenum].filename);
+        G__srcfile[filenum].breakpoint[line_number] |= G__BREAK;
+        G__step=0;
+        G__charstep=0;
+        G__setdebugcond();
       }
       else if(0==G__srcfile[filenum].maxline) {
-	if((FILE*)NULL==G__srcfile[filenum].fp) {
-	  G__fprinterr(G__serr,"Can not put break point in included file\n");
-	}
-	else {
-	  G__fprinterr(G__serr,"Setting break point suspended\n");
-	  temp=0;
-	  while(isspace(string[temp])) ++temp;
-	  if('\0'==string[temp]) {
-	    sprintf(G__breakline,"%d",G__ifile.line_number);
-	    strcpy(G__breakfile,G__srcfile[G__ifile.filenum].filename);
-	  }
-	  else {
-	    strcpy(G__breakline,string+temp);
-	  }
-	}
+        if((FILE*)NULL==G__srcfile[filenum].fp) {
+          G__fprinterr(G__serr,"Can not put break point in included file\n");
+        }
+        else {
+          G__fprinterr(G__serr,"Setting break point suspended\n");
+          temp=0;
+          while(isspace(string[temp])) ++temp;
+          if('\0'==string[temp]) {
+            sprintf(G__breakline,"%d",G__ifile.line_number);
+            strcpy(G__breakfile,G__srcfile[G__ifile.filenum].filename);
+          }
+          else {
+            strcpy(G__breakline,string+temp);
+          }
+        }
       }
       else {
-	G__fprinterr(G__serr,"Can not determine where to put break point\n");
+        G__fprinterr(G__serr,"Can not determine where to put break point\n");
       }
     }
 
@@ -2868,30 +2831,30 @@ G__value *rslt;
       G__steptrace=0;
       G__setdebugcond();
       if(strlen(string)==0) {
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       else if(1<G__findposition(string,view.file,&line_number,&filenum)
-	      && filenum>=0 && line_number>=0 
-	      ) {
-	G__srcfile[filenum].breakpoint[line_number] |= G__CONTUNTIL;
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+              && filenum>=0 && line_number>=0 
+              ) {
+        G__srcfile[filenum].breakpoint[line_number] |= G__CONTUNTIL;
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       else {
-	G__fprinterr(G__serr,"can not determine where to stop\n");
+        G__fprinterr(G__serr,"can not determine where to stop\n");
       }
     }
 
@@ -2902,17 +2865,17 @@ G__value *rslt;
        * Set view file
        *******************************************************/
       for(temp=0;temp<G__nfile;temp++) {
-	if(G__matchfilename(temp,string)) break;
+        if(G__matchfilename(temp,string)) break;
       }
       if(temp>=G__nfile) {
-	G__fprinterr(G__serr,"filename %s not loaded\n",string);
+        G__fprinterr(G__serr,"filename %s not loaded\n",string);
       }
       else {
-	view.file.filenum=temp;
-	view.file.fp=G__srcfile[temp].fp;
-	strcpy(view.file.name,G__srcfile[temp].filename);
-	view.file.line_number=1;
-	G__pr(G__sout,view.file);
+        view.file.filenum=temp;
+        view.file.fp=G__srcfile[temp].fp;
+        strcpy(view.file.name,G__srcfile[temp].filename);
+        view.file.line_number=1;
+        G__pr(G__sout,view.file);
       }
     }
 
@@ -2935,16 +2898,16 @@ G__value *rslt;
        * Display source code
        *******************************************************/
       if(0<G__findposition(command,view.file,&line_number,&filenum)&&filenum>=0
-	 && line_number>=0 
-	 ) {
-	view.file.filenum = filenum;
-	view.file.fp = G__srcfile[filenum].fp;
-	strcpy(view.file.name,G__srcfile[filenum].filename);
-	view.file.line_number = line_number;
-	G__pr(G__sout,view.file);
+         && line_number>=0 
+         ) {
+        view.file.filenum = filenum;
+        view.file.fp = G__srcfile[filenum].fp;
+        strcpy(view.file.name,G__srcfile[filenum].filename);
+        view.file.line_number = line_number;
+        G__pr(G__sout,view.file);
       }
       else {
-	fprintf(G__sout,"No proper file view.file. Can not display source! Use 'f [file]' command\n");
+        fprintf(G__sout,"No proper file view.file. Can not display source! Use 'f [file]' command\n");
       }
     }
 
@@ -2960,30 +2923,30 @@ G__value *rslt;
       }
       else {
         while(local && temp<temp1-1) {
-	  ++temp;
-	  local=local->prev_local;
+          ++temp;
+          local=local->prev_local;
         }
         if(0==temp1) {
-	  view.file = G__ifile;
-	  view.var_local = G__p_local;
-	  view.struct_offset=G__store_struct_offset;
-	  view.tagnum=G__tagnum;
-	  view.exec_memberfunc=G__exec_memberfunc;
-	  G__pr(G__sout,view.file);
+          view.file = G__ifile;
+          view.var_local = G__p_local;
+          view.struct_offset=G__store_struct_offset;
+          view.tagnum=G__tagnum;
+          view.exec_memberfunc=G__exec_memberfunc;
+          G__pr(G__sout,view.file);
         }
         else if(local && local->prev_local) {
-	  view.file.filenum = local->prev_filenum ;
-	  strcpy(view.file.name,G__srcfile[view.file.filenum].filename);
-	  view.file.fp = G__srcfile[view.file.filenum].fp;
-	  view.file.line_number = local->prev_line_number;
-	  view.var_local = local->prev_local;
-	  view.struct_offset=view.var_local->struct_offset;
-	  view.tagnum=view.var_local->tagnum;
-	  view.exec_memberfunc=view.var_local->exec_memberfunc;
-	  G__pr(G__sout,view.file);
+          view.file.filenum = local->prev_filenum ;
+          strcpy(view.file.name,G__srcfile[view.file.filenum].filename);
+          view.file.fp = G__srcfile[view.file.filenum].fp;
+          view.file.line_number = local->prev_line_number;
+          view.var_local = local->prev_local;
+          view.struct_offset=view.var_local->struct_offset;
+          view.tagnum=view.var_local->tagnum;
+          view.exec_memberfunc=view.var_local->exec_memberfunc;
+          G__pr(G__sout,view.file);
         }
         else {
-	  fprintf(G__sout,"Stack isn't that deep\n");
+          fprintf(G__sout,"Stack isn't that deep\n");
         }
       }
     }
@@ -2997,7 +2960,7 @@ G__value *rslt;
       ignore=G__PAUSE_IGNORE;
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3016,7 +2979,7 @@ G__value *rslt;
       G__setdebugcond();
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3035,7 +2998,7 @@ G__value *rslt;
       G__setdebugcond();
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3054,7 +3017,7 @@ G__value *rslt;
       G__setdebugcond();
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3063,46 +3026,46 @@ G__value *rslt;
     }
 
     else if( strncmp(command,"qqqqqqq",7)==0 ||
-	     strncmp(command,"QQQQQQQ",7)==0) {
+             strncmp(command,"QQQQQQQ",7)==0) {
       abort();
     }
     else if( strncmp(command,"qqqqq",5)==0 ||
-	     strncmp(command,"QQQQQ",5)==0) {
+             strncmp(command,"QQQQQ",5)==0) {
       G__fprinterr(G__serr,"  Bye... (try 'qqqqqqq' if still running)\n");
       exit(EXIT_FAILURE);
     }
 
     else if( strncmp(command,"qqq",3)==0 ||
-	     strncmp(command,"QQQ",3)==0) {
+             strncmp(command,"QQQ",3)==0) {
       fprintf(G__sout,"*** Process will be killed ***\n");
       strcpy(command,G__input("Are you sure(y/Y/n)? "));
       if(command[0]=='Y') {
-	G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
-	exit(EXIT_FAILURE); 
+        G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
+        exit(EXIT_FAILURE); 
       }
       else if(command[0]=='y') {
-	G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	G__closemfp();
-	G__mfp=NULL;
-	G__close_inputfiles();
-	exit(EXIT_SUCCESS); 
+        G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+        G__closemfp();
+        G__mfp=NULL;
+        G__close_inputfiles();
+        exit(EXIT_SUCCESS); 
       }
       else {
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(0);
+        G__UnlockCriticalSection();
+        return(0);
       }
     }
 
     else if( strncmp(command,"qq",2)==0 ||
-	     strncmp(command,"QQ",2)==0 ) {
+             strncmp(command,"QQ",2)==0 ) {
       G__return=G__RETURN_EXIT1;
 #ifndef G__ROOT
       fprintf(G__sout,"Exit current interpretation.\n");
@@ -3113,7 +3076,7 @@ G__value *rslt;
        *****************************************/
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-			  ,keyword,pipefile);
+                          ,keyword,pipefile);
       ignore = 2;
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
@@ -3124,19 +3087,19 @@ G__value *rslt;
     
     else if(strncmp("q",com,1)==0 || strncmp("exit",com,4)==0) {
       if(G__doingconstruction) {
-	G__fprinterr(G__serr,"Use 'qqq' when you quit in the middle of object construction (%d)\n"
-		,G__doingconstruction);
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        G__fprinterr(G__serr,"Use 'qqq' when you quit in the middle of object construction (%d)\n"
+                ,G__doingconstruction);
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       else {
-	G__fprinterr(G__serr,"  Bye... (try 'qqq' if still running)\n");
+        G__fprinterr(G__serr,"  Bye... (try 'qqq' if still running)\n");
       }
 
       G__stepover=0;
@@ -3151,43 +3114,43 @@ G__value *rslt;
       if(G__othermain) {
         /*******************************************************
          * QQ : exit all interpretation
-	 * Q  : exit current interpretation
-	 *******************************************************/
-	if(command[1]=='q') {
-	  G__return=G__RETURN_EXIT2;
-	  fprintf(G__sout,"Exit current command file.\n");
-	}
-	else {
-	  G__return=G__RETURN_EXIT1;
+         * Q  : exit current interpretation
+         *******************************************************/
+        if(command[1]=='q') {
+          G__return=G__RETURN_EXIT2;
+          fprintf(G__sout,"Exit current command file.\n");
+        }
+        else {
+          G__return=G__RETURN_EXIT1;
 #ifndef G__ROOT
-	  fprintf(G__sout,"Exit current interpretation.\n");
+          fprintf(G__sout,"Exit current interpretation.\n");
 #endif
-	}
-	/*****************************************
-	* return 2 so that user can utilize 
-	* while(G__pause()==0) ;
-	*****************************************/
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	ignore = 2;
+        }
+        /*****************************************
+        * return 2 so that user can utilize 
+        * while(G__pause()==0) ;
+        *****************************************/
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+        ignore = 2;
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       else {
         /*******************************************************
-	 * Q  : exit process
-	 *******************************************************/
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+         * Q  : exit process
+         *******************************************************/
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__DEBUG
-	 G__exit(EXIT_SUCCESS);
+         G__exit(EXIT_SUCCESS);
 #else
-	 G__close_inputfiles();
-	 exit(EXIT_SUCCESS); 
+         G__close_inputfiles();
+         exit(EXIT_SUCCESS); 
 #endif
       }
     }
@@ -3200,29 +3163,29 @@ G__value *rslt;
       temp=1;
       while(isspace(command[temp])) temp++;
       if (com[0] == 'E') {
-	if(command[temp]=='\0') {
-	  if('\0'==G__tempc[0]) G__tmpnam(G__tempc); /* E command, rare case */
-	  sprintf(syscom,"%s %s",editor, G__tempc);
-	  system(syscom);
-	  sprintf(syscom,G__tempc);
-	}
-	else {
-	  sprintf(syscom,"%s %s",editor, command+temp);
-	  system(syscom);
-	  sprintf(syscom,command+temp);
-	}
+        if(command[temp]=='\0') {
+          if('\0'==G__tempc[0]) G__tmpnam(G__tempc); /* E command, rare case */
+          sprintf(syscom,"%s %s",editor, G__tempc);
+          system(syscom);
+          sprintf(syscom,G__tempc);
+        }
+        else {
+          sprintf(syscom,"%s %s",editor, command+temp);
+          system(syscom);
+          sprintf(syscom,command+temp);
+        }
       } else {
-	if (command[temp]=='\0') {
-	  G__fprinterr(G__serr,"Error: no file specified\n");
-	  G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        if (command[temp]=='\0') {
+          G__fprinterr(G__serr,"Error: no file specified\n");
+          G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
           *err |= G__security_recover(G__serr);
 #endif
-	  G__UnlockCriticalSection();
-	  return(ignore);
-	}
-	sprintf(syscom,command+temp);
+          G__UnlockCriticalSection();
+          return(ignore);
+        }
+        sprintf(syscom,command+temp);
       }
 
       /*******************************************************
@@ -3238,21 +3201,21 @@ G__value *rslt;
         buf=G__exec_tempfile(syscom);
         if(rslt) *rslt = buf;
         if(G__ifile.filenum>=0) 
-	  G__security = G__srcfile[G__ifile.filenum].security;
+          G__security = G__srcfile[G__ifile.filenum].security;
         else
-	  G__security = G__SECURE_LEVEL0;
+          G__security = G__SECURE_LEVEL0;
 #ifndef G__ROOT
         G__in_pause=1;
         G__valuemonitor(buf,syscom);
         G__in_pause=0;
 #ifndef G__OLDIMPLEMENTATION1259
         if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
-	  char tmp[G__ONELINE];
+          char tmp[G__ONELINE];
           sprintf(tmp,"(const %s",syscom+1);
           strcpy(syscom,tmp);
         }
         if(buf.isconst&G__PCONSTVAR) {
-	  char tmp2[G__ONELINE];
+          char tmp2[G__ONELINE];
           char *ptmp = strchr(syscom,')');
           strcpy(tmp2,ptmp);
           strcpy(ptmp,"const");
@@ -3269,14 +3232,14 @@ G__value *rslt;
 #endif
 
       if(G__return!=G__RETURN_NON) {
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
         *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       
     }
@@ -3289,118 +3252,118 @@ G__value *rslt;
     multi_line_command:
 #endif
       if (*more == 0) {
-	ftemp.fp = tmpfile();
+        ftemp.fp = tmpfile();
         if(!ftemp.fp) {
-	  do {
-	    G__tmpnam(tname); /* not used anymore */
-	    ftemp.fp = fopen(tname,"w");
-	  } while((FILE*)NULL==ftemp.fp && G__setTMPDIR(tname));
+          do {
+            G__tmpnam(tname); /* not used anymore */
+            ftemp.fp = fopen(tname,"w");
+          } while((FILE*)NULL==ftemp.fp && G__setTMPDIR(tname));
           istmpnam=1;
         }
       } 
       else {
-	com = command+1;
+        com = command+1;
 #ifndef G__OLDIMPLEMENTATION1774
-	if('@'==com[0]) {
-	  if(ftemp.fp) fclose(ftemp.fp);
-	  ftemp.fp = (FILE*)NULL;
-	  *more=0;
-	  G__fprinterr(G__serr,"!!!command line input aborted!!!\n");
-	  G__UnlockCriticalSection();
-	  return(0);
-	}
+        if('@'==com[0]) {
+          if(ftemp.fp) fclose(ftemp.fp);
+          ftemp.fp = (FILE*)NULL;
+          *more=0;
+          G__fprinterr(G__serr,"!!!command line input aborted!!!\n");
+          G__UnlockCriticalSection();
+          return(0);
+        }
 #endif
       }
 
       if(!ftemp.fp) {
-	G__fprinterr(G__serr,"Error: could not create file %s\n",tname);
+        G__fprinterr(G__serr,"Error: could not create file %s\n",tname);
       }
       else {
-	temp = *more; 
+        temp = *more; 
         temp1 = 0;
-	double_quote=0; single_quote=0;
-	while(com[temp1]!='\0') {
-	  switch(com[temp1]) {
-	  case '"':
-	    if(single_quote==0) double_quote ^= 1;
-	    break;
-	  case '\'':
-	    if(double_quote==0) single_quote ^= 1;
-	    break;
-	  case '{':
+        double_quote=0; single_quote=0;
+        while(com[temp1]!='\0') {
+          switch(com[temp1]) {
+          case '"':
+            if(single_quote==0) double_quote ^= 1;
+            break;
+          case '\'':
+            if(double_quote==0) single_quote ^= 1;
+            break;
+          case '{':
 #ifndef G__OLDIMPLEMENTATION1774
-	  case '(':
-	  case '[':
+          case '(':
+          case '[':
 #endif
-	    if((single_quote==0)&&(double_quote==0)) temp++;
-	    break;
-	  case '}':
+            if((single_quote==0)&&(double_quote==0)) temp++;
+            break;
+          case '}':
 #ifndef G__OLDIMPLEMENTATION1774
-	  case ')':
-	  case ']':
+          case ')':
+          case ']':
 #endif
-	    if((single_quote==0)&&(double_quote==0)) temp--;
-	    break;
-	  case '\\':
-	    ++temp1;
-	    break;
-	  }
-	  ++temp1;
-	}
-	if (temp>0) {
-	  fprintf(ftemp.fp,"%s\n",com);
+            if((single_quote==0)&&(double_quote==0)) temp--;
+            break;
+          case '\\':
+            ++temp1;
+            break;
+          }
+          ++temp1;
+        }
+        if (temp>0) {
+          fprintf(ftemp.fp,"%s\n",com);
 #ifndef G__OLDIMPLEMENTATION1774
-	  strcpy(prompt,"end with '}', '@':abort > ");
+          strcpy(prompt,"end with '}', '@':abort > ");
 #else
-	  strcpy(prompt,"end with '}'> ");
+          strcpy(prompt,"end with '}'> ");
 #endif
           *more = temp;
-	  G__pause_return=0;
+          G__pause_return=0;
 #ifdef G__SECURITY
           *err |= G__security_recover(G__serr);
 #endif
-	  G__UnlockCriticalSection();
+          G__UnlockCriticalSection();
           return(0);
-	} else {
-	  string = strrchr(com,'}');
-	  if(string) {
-	    G__redirectoutput(string
-			      ,&store_stdout,&store_stderr,&store_stdin,0
-		      ,keyword,pipefile);
-	    *string = '\0';
-	  }
-	  fprintf(ftemp.fp,"%s\n",com);
-	  fprintf(ftemp.fp,"}\n");
+        } else {
+          string = strrchr(com,'}');
+          if(string) {
+            G__redirectoutput(string
+                              ,&store_stdout,&store_stderr,&store_stdin,0
+                      ,keyword,pipefile);
+            *string = '\0';
+          }
+          fprintf(ftemp.fp,"%s\n",com);
+          fprintf(ftemp.fp,"}\n");
           *more = 0;
           prompt[0] = '\0';
         }
         if(istmpnam) fclose(ftemp.fp);
 
-	/*******************************************************
-	 * Execute temp file
-	 *******************************************************/
-	G__store_undo_position();
-	G__more_pause((FILE*)NULL,1);
+        /*******************************************************
+         * Execute temp file
+         *******************************************************/
+        G__store_undo_position();
+        G__more_pause((FILE*)NULL,1);
         { 
           struct G__store_env store;
           G__SET_TEMPENV;
           if(!istmpnam) {
             G__command_eval=1 ;
             buf=G__exec_tempfile_fp(ftemp.fp);
-	    if(G__security_error&&G__pautoloading&&(*G__pautoloading)(com)) {
-	      buf=G__exec_tempfile_fp(ftemp.fp);
-	    }
+            if(G__security_error&&G__pautoloading&&(*G__pautoloading)(com)) {
+              buf=G__exec_tempfile_fp(ftemp.fp);
+            }
             if(rslt) *rslt = buf;
-	    if(ftemp.fp) fclose(ftemp.fp);
-	    ftemp.fp = (FILE*)NULL;
+            if(ftemp.fp) fclose(ftemp.fp);
+            ftemp.fp = (FILE*)NULL;
           }
           else {
             strcpy(sname,tname);
             G__command_eval=1 ;
             buf=G__exec_tempfile(sname);
-	    if(G__security_error&&G__pautoloading&&(*G__pautoloading)(com)) {
-	      buf=G__exec_tempfile(sname);
-	    }
+            if(G__security_error&&G__pautoloading&&(*G__pautoloading)(com)) {
+              buf=G__exec_tempfile(sname);
+            }
             if(rslt) *rslt = buf;
             remove(sname);
           }
@@ -3423,35 +3386,35 @@ G__value *rslt;
 #endif
           G__RESET_TEMPENV;
         }
-	if(-1==G__func_now) G__p_local=0;
-	if(buf.type && 0==G__atevaluate(buf)
-	   && !noprintflag
-	   ) fprintf(G__sout,"%s\n",syscom);
-	noprintflag = 0;
-	G__command_eval=0 ;
-	G__free_tempobject();
-	if(-1==G__func_now) G__p_local=store.var_local;
-	if(G__security_error) G__cancel_undo_position();
+        if(-1==G__func_now) G__p_local=0;
+        if(buf.type && 0==G__atevaluate(buf)
+           && !noprintflag
+           ) fprintf(G__sout,"%s\n",syscom);
+        noprintflag = 0;
+        G__command_eval=0 ;
+        G__free_tempobject();
+        if(-1==G__func_now) G__p_local=store.var_local;
+        if(G__security_error) G__cancel_undo_position();
 #ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
+        *err |= G__security_recover(G__serr);
 #endif
 
-	if(G__return!=G__RETURN_NON) {
-	  G__pause_return=1;
-	  G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+        if(G__return!=G__RETURN_NON) {
+          G__pause_return=1;
+          G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
           *err |= G__security_recover(G__serr);
 #endif
-	  G__UnlockCriticalSection();
-	  return(ignore);
-	}
-	
+          G__UnlockCriticalSection();
+          return(ignore);
+        }
+        
       }
     }
 
     else if(strncmp("p",com,1)==0 || 
-	    strncmp("s",com,1)==0 || strncmp("S",com,1)==0) {
+            strncmp("s",com,1)==0 || strncmp("S",com,1)==0) {
       G__STORE_EVALENV;
       /*******************************************************
        * Evaluate statement
@@ -3461,198 +3424,198 @@ G__value *rslt;
       strcpy(command,syscom);
       if(strlen(command)>0) {
 
-	G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
-		      ,keyword,pipefile);
-	
+        G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
+                      ,keyword,pipefile);
+        
 #ifdef G__ASM
-	G__STORE_ASMENV;
+        G__STORE_ASMENV;
 #endif
-	G__command_eval=1 ;
-	store_var_type = G__var_type;
-	G__var_type='p';
-	
-	single_quote=0;
-	double_quote=0;
-	evalbase=command;
-	temp=1;
-	while(temp) {
-	  evalbase++;
-	  switch(*evalbase) {
-	  case '"':
-	    if(single_quote==0) {
-	      double_quote ^= 1;
-	    }
-	    break;
-	  case '\'':
-	    if(double_quote==0) {
-	      single_quote ^= 1;
-	    }
-	    break;
-	  case '\\':
-	    if(double_quote==0&&single_quote==0) {
-	      temp=0;
-	    }
-	    else {
-	      evalbase++;
-	    }
-	    break;
-	  case '\0':
-	    if(double_quote==0&&single_quote==0) {
-	      temp=0;
-	      evalbase=(char *)NULL;
-	    }
-	    break;
-	  }
-	}
-	G__SET_TEMPENV;
-	if(evalbase) {
-	  *evalbase='\0';
-	  temp1=1;
-	  num=0;
-	  if(isdigit(evalbase[temp1])) {
-	    while(isdigit(evalbase[temp1])) {
-	      syscom[temp1-1]=evalbase[temp1];
-	      ++temp1;
-	    }
-	    syscom[temp1-1]='\0';
-	    num=atoi(syscom);
-	  }
-	  switch(tolower(evalbase[temp1])) {
+        G__command_eval=1 ;
+        store_var_type = G__var_type;
+        G__var_type='p';
+        
+        single_quote=0;
+        double_quote=0;
+        evalbase=command;
+        temp=1;
+        while(temp) {
+          evalbase++;
+          switch(*evalbase) {
+          case '"':
+            if(single_quote==0) {
+              double_quote ^= 1;
+            }
+            break;
+          case '\'':
+            if(double_quote==0) {
+              single_quote ^= 1;
+            }
+            break;
+          case '\\':
+            if(double_quote==0&&single_quote==0) {
+              temp=0;
+            }
+            else {
+              evalbase++;
+            }
+            break;
+          case '\0':
+            if(double_quote==0&&single_quote==0) {
+              temp=0;
+              evalbase=(char *)NULL;
+            }
+            break;
+          }
+        }
+        G__SET_TEMPENV;
+        if(evalbase) {
+          *evalbase='\0';
+          temp1=1;
+          num=0;
+          if(isdigit(evalbase[temp1])) {
+            while(isdigit(evalbase[temp1])) {
+              syscom[temp1-1]=evalbase[temp1];
+              ++temp1;
+            }
+            syscom[temp1-1]='\0';
+            num=atoi(syscom);
+          }
+          switch(tolower(evalbase[temp1])) {
           case 'v':
-	    base = 100;
-	    break;
-	  case 'x':
-	  case 'h':
-	    base=16;
-	    break;
-	  case 'b':
-	  case 'z':
-	    base=2;
-	    break;
-	  case 'o':
-	    base=8;
-	    break;
-	  case 'd':
-	    base=10;
-	    break;
-	  case 'n':
-	    base=0;
-	    break;
-	  }
-	  if(num<=0) {
-	    buf = G__calc_internal(command);
-	    if(rslt) *rslt = buf;
-	    G__in_pause=1;
-	    if(base==0) {
-	      G__valuemonitor(buf,syscom);
-	    }
-	    else if(base==100) {
-	      sprintf(syscom,"{d=%g i=%ld,reftype=%d} type=%c,tag=%d,type=%d,ref=%lx,isconst=%d"
-		      ,buf.obj.d,buf.obj.i,buf.obj.reftype.reftype
-		      ,buf.type,buf.tagnum,buf.typenum,buf.ref,buf.isconst);
-	    }
-	    else {
-	      G__getbase(buf.obj.i ,base ,0,evalresult);
-	      sprintf(syscom,"0%c%s" ,evalbase[temp1] ,evalresult);
-	    }
-	    G__in_pause=0;
-	    fprintf(G__sout,"%s\n",syscom);
-	  }
-	  else {
-	    for(temp=0;temp<num;temp++) {
-	      if(temp%2==0) {
-		sprintf(syscom,"&%s+%d" ,command+1 ,temp);
-		buf=G__calc_internal(syscom);
-		if(rslt) *rslt = buf;
-		fprintf(G__sout,"\n0x%lx: " ,buf.obj.i);
-	      }
-	      sprintf(syscom,"*(&%s+%d)" ,command+1 ,temp);
-	      buf = G__calc_internal(syscom);
-	      if(rslt) *rslt = buf;
-	      G__in_pause=1;
-	      if(base==0) {
-		G__valuemonitor(buf,syscom);
-	      }
-	      else {
-		G__getbase(buf.obj.i,base ,0,evalresult);
-		sprintf(syscom,"0%c%s" ,evalbase[temp1] ,evalresult);
-	      }
-	      G__in_pause=0;
-	      fprintf(G__sout,"%30s ",syscom);
-	    }
-	    fprintf(G__sout,"\n");
-	  }
-	}
-	else {
-	  buf = G__calc_internal(command);
-	  if(G__security_error && G__pautoloading && (*G__pautoloading)(com)) {
-	    buf = G__calc_internal(command);
-	  }
-	  if(rslt) *rslt = buf;
-	  if((char*)NULL==strstr(command,"G__stepmode(")) G__step=store_step;
-	  G__in_pause=1;
-	  G__valuemonitor(buf,syscom);
-	  G__in_pause=0;
+            base = 100;
+            break;
+          case 'x':
+          case 'h':
+            base=16;
+            break;
+          case 'b':
+          case 'z':
+            base=2;
+            break;
+          case 'o':
+            base=8;
+            break;
+          case 'd':
+            base=10;
+            break;
+          case 'n':
+            base=0;
+            break;
+          }
+          if(num<=0) {
+            buf = G__calc_internal(command);
+            if(rslt) *rslt = buf;
+            G__in_pause=1;
+            if(base==0) {
+              G__valuemonitor(buf,syscom);
+            }
+            else if(base==100) {
+              sprintf(syscom,"{d=%g i=%ld,reftype=%d} type=%c,tag=%d,type=%d,ref=%lx,isconst=%d"
+                      ,buf.obj.d,buf.obj.i,buf.obj.reftype.reftype
+                      ,buf.type,buf.tagnum,buf.typenum,buf.ref,buf.isconst);
+            }
+            else {
+              G__getbase(buf.obj.i ,base ,0,evalresult);
+              sprintf(syscom,"0%c%s" ,evalbase[temp1] ,evalresult);
+            }
+            G__in_pause=0;
+            fprintf(G__sout,"%s\n",syscom);
+          }
+          else {
+            for(temp=0;temp<num;temp++) {
+              if(temp%2==0) {
+                sprintf(syscom,"&%s+%d" ,command+1 ,temp);
+                buf=G__calc_internal(syscom);
+                if(rslt) *rslt = buf;
+                fprintf(G__sout,"\n0x%lx: " ,buf.obj.i);
+              }
+              sprintf(syscom,"*(&%s+%d)" ,command+1 ,temp);
+              buf = G__calc_internal(syscom);
+              if(rslt) *rslt = buf;
+              G__in_pause=1;
+              if(base==0) {
+                G__valuemonitor(buf,syscom);
+              }
+              else {
+                G__getbase(buf.obj.i,base ,0,evalresult);
+                sprintf(syscom,"0%c%s" ,evalbase[temp1] ,evalresult);
+              }
+              G__in_pause=0;
+              fprintf(G__sout,"%30s ",syscom);
+            }
+            fprintf(G__sout,"\n");
+          }
+        }
+        else {
+          buf = G__calc_internal(command);
+          if(G__security_error && G__pautoloading && (*G__pautoloading)(com)) {
+            buf = G__calc_internal(command);
+          }
+          if(rslt) *rslt = buf;
+          if((char*)NULL==strstr(command,"G__stepmode(")) G__step=store_step;
+          G__in_pause=1;
+          G__valuemonitor(buf,syscom);
+          G__in_pause=0;
 #ifndef G__OLDIMPLEMENTATION1259
-	  if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
-	    char tmp[G__ONELINE];
-	    sprintf(tmp,"(const %s",syscom+1);
-	    strcpy(syscom,tmp);
-	  }
-	  if(buf.isconst&G__PCONSTVAR) {
-	    char tmp2[G__ONELINE];
-	    char *ptmp = strchr(syscom,')');
-	    strcpy(tmp2,ptmp);
-	   strcpy(ptmp,"const");
-	   strcat(syscom,tmp2);
-	  }
+          if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
+            char tmp[G__ONELINE];
+            sprintf(tmp,"(const %s",syscom+1);
+            strcpy(syscom,tmp);
+          }
+          if(buf.isconst&G__PCONSTVAR) {
+            char tmp2[G__ONELINE];
+            char *ptmp = strchr(syscom,')');
+            strcpy(tmp2,ptmp);
+           strcpy(ptmp,"const");
+           strcat(syscom,tmp2);
+          }
 #endif
-	}
-	G__RESET_TEMPENV;
-	
+        }
+        G__RESET_TEMPENV;
+        
 #ifdef G__ASM
-	G__RECOVER_ASMENV;
+        G__RECOVER_ASMENV;
 #endif
-	G__var_type = store_var_type;
-	
+        G__var_type = store_var_type;
+        
 
-	if(buf.type && 0==G__atevaluate(buf)) {
-	  fprintf(G__sout,"%s\n",syscom);
-	  if('u'==buf.type && buf.obj.i) {
-	    G__objectmonitor(G__sout,buf.obj.i,buf.tagnum,"");
-	  }
-	}
-	G__command_eval=0 ;
-	G__free_tempobject();
+        if(buf.type && 0==G__atevaluate(buf)) {
+          fprintf(G__sout,"%s\n",syscom);
+          if('u'==buf.type && buf.obj.i) {
+            G__objectmonitor(G__sout,buf.obj.i,buf.tagnum,"");
+          }
+        }
+        G__command_eval=0 ;
+        G__free_tempobject();
 
 
-#ifdef G__SECURITY
-	*err |= G__security_recover(G__serr);
-#endif
-	
-	if(G__return!=G__RETURN_NON) {
-	  G__pause_return=1;
-	  G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	  G__RESTORE_EVALENV;
-#ifdef G__SECURITY
-          *err |= G__security_recover(G__serr);
-#endif
-	  G__UnlockCriticalSection();
-	  return(ignore);
-	}
-      }
-      else {
-	ignore=G__stepover;
-	G__pause_return=1;
-	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
-	G__RESTORE_EVALENV;
 #ifdef G__SECURITY
         *err |= G__security_recover(G__serr);
 #endif
-	G__UnlockCriticalSection();
-	return(ignore);
+        
+        if(G__return!=G__RETURN_NON) {
+          G__pause_return=1;
+          G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+          G__RESTORE_EVALENV;
+#ifdef G__SECURITY
+          *err |= G__security_recover(G__serr);
+#endif
+          G__UnlockCriticalSection();
+          return(ignore);
+        }
+      }
+      else {
+        ignore=G__stepover;
+        G__pause_return=1;
+        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
+                      ,keyword,pipefile);
+        G__RESTORE_EVALENV;
+#ifdef G__SECURITY
+        *err |= G__security_recover(G__serr);
+#endif
+        G__UnlockCriticalSection();
+        return(ignore);
       }
       G__RESTORE_EVALENV; 
     }
@@ -3661,7 +3624,7 @@ G__value *rslt;
       ignore=G__PAUSE_NORMAL;
       G__pause_return=0;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3673,7 +3636,7 @@ G__value *rslt;
       ignore=G__stepover;
       G__pause_return=1;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
       *err |= G__security_recover(G__serr);
 #endif
@@ -3686,7 +3649,7 @@ G__value *rslt;
     }
 
     G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-		      ,keyword,pipefile);
+                      ,keyword,pipefile);
 #ifdef G__SECURITY
     *err |= G__security_recover(G__serr);
 #endif
@@ -3701,9 +3664,7 @@ G__value *rslt;
 *
 *
 **************************************************************************/
-int G__setaccess(statement,iout)
-char *statement;
-int iout;
+int G__setaccess(char *statement,int iout)
 {
   if(7==iout && strcmp(statement,"public:")==0) {
     G__access=G__PUBLIC;
@@ -3721,12 +3682,12 @@ int iout;
 * G__set_smartunload()
 *
 **************************************************************************/
-void G__set_smartunload(smartunload)
-int smartunload;
+void G__set_smartunload(int smartunload)
 {
   G__do_smart_unload = smartunload;
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

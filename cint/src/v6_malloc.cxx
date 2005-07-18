@@ -28,6 +28,8 @@
 #include <sys/types.h>
 #include <sys/shm.h>
 
+extern "C" {
+
 int G__myshmid;
 void* G__shmbuffer;
 int* G__pthreadnum;
@@ -43,8 +45,7 @@ int G__CreateThread() {
 /******************************************************************
 * G__shmcalloc()
 ******************************************************************/
-void* G__shmmalloc(size)
-int size;
+void* G__shmmalloc(int size)
 {
   int* poffset = (int*)G__shmbuffer;
   void* result;
@@ -65,9 +66,7 @@ int size;
 /******************************************************************
 * G__shmcalloc()
 ******************************************************************/
-void* G__shmcalloc(atomsize,num)
-int atomsize;
-int num;
+void* G__shmcalloc(int atomsize,int num)
 {
   int i;
   int size = atomsize * num;
@@ -142,8 +141,11 @@ void G__shminit() {
   atexit(G__shmfinish);
 }
 
+} /* extern "C" */
 /******************************************************************/
 #endif /* G__SHMGLOBAL */
+
+extern "C" {
 
 extern int G__const_noerror;
 
@@ -159,7 +161,7 @@ static long G__getstaticobject()
 
   if(-1!=G__memberfunc_tagnum) /* questionable */
     sprintf(temp,"%s\\%x\\%x\\%x",G__varname_now,G__func_page,G__func_now
-	    ,G__memberfunc_tagnum);
+            ,G__memberfunc_tagnum);
   else
     sprintf(temp,"%s\\%x\\%x" ,G__varname_now,G__func_page,G__func_now);
 
@@ -169,7 +171,7 @@ static long G__getstaticobject()
     i=0;
     while(i<var->allvar) {
       if((var->hash[i]==hash)&&(strcmp(var->varnamebuf[i],temp)==0)) {
-	return(var->p[i]);
+        return(var->p[i]);
       }
       i++;
     }
@@ -187,10 +189,7 @@ static long G__getstaticobject()
 *
 *  Allocate memory
 ******************************************************************/
-long G__malloc(n,bsize,item) /* used to be int */
-int n;
-int bsize;
-char *item;
+long G__malloc(int n,int bsize,char *item) /* used to be int */
 {
   long allocmem; /* used to be int */
   int size;
@@ -226,17 +225,17 @@ char *item;
        * pre-RUN.
        *************************************/
       if((G__static_alloc==1)&&(G__prerun==0)
-	 && 0<=G__func_now
-	 ) {
-	return(G__getstaticobject());
+         && 0<=G__func_now
+         ) {
+        return(G__getstaticobject());
       }
       /*************************************
        * Allocate memory area. Normal case
        *************************************/
       else {
-	if(G__prerun) allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-	else          allocmem=(long)malloc((size_t)size);
-	if(allocmem==(long)NULL) G__malloc_error(item);
+        if(G__prerun) allocmem=(long)calloc((size_t)n ,(size_t)bsize);
+        else          allocmem=(long)malloc((size_t)size);
+        if(allocmem==(long)NULL) G__malloc_error(item);
       }
       return(allocmem);
     }
@@ -252,56 +251,56 @@ char *item;
        * Conservative padding strategy
        ********************************************/
       if(G__struct.type[G__tagdefining]=='s' ||
-	 G__struct.type[G__tagdefining]=='c') {
-	/***********************************
-	 * allocate static data member
-	 ***********************************/
-	if(G__static_alloc) {
-	  if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
-	    return(G__getstaticobject());
-	  }
-	  else {
-	    allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-	    if(allocmem==(long)NULL) G__malloc_error(item);
-	  }
-	  return(allocmem);
-	}
-	/***********************************
-	 * Get padding size
-	 ***********************************/
-	if(bsize>(int)G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
-	else	    allocmem=bsize;
-	/***********************************
-	 * Get padding size
-	 ***********************************/
-	G__struct.size[G__tagdefining] += size;
-	/***********************************
-	 * padding 
-	 ***********************************/
-	if(allocmem&&G__struct.size[G__tagdefining]%allocmem!=0){
-	  G__struct.size[G__tagdefining]
-	    += allocmem - G__struct.size[G__tagdefining]%allocmem;
-	}
-	return(G__struct.size[G__tagdefining]-size);
+         G__struct.type[G__tagdefining]=='c') {
+        /***********************************
+         * allocate static data member
+         ***********************************/
+        if(G__static_alloc) {
+          if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
+            return(G__getstaticobject());
+          }
+          else {
+            allocmem=(long)calloc((size_t)n ,(size_t)bsize);
+            if(allocmem==(long)NULL) G__malloc_error(item);
+          }
+          return(allocmem);
+        }
+        /***********************************
+         * Get padding size
+         ***********************************/
+        if(bsize>(int)G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
+        else            allocmem=bsize;
+        /***********************************
+         * Get padding size
+         ***********************************/
+        G__struct.size[G__tagdefining] += size;
+        /***********************************
+         * padding 
+         ***********************************/
+        if(allocmem&&G__struct.size[G__tagdefining]%allocmem!=0){
+          G__struct.size[G__tagdefining]
+            += allocmem - G__struct.size[G__tagdefining]%allocmem;
+        }
+        return(G__struct.size[G__tagdefining]-size);
       }
       /***********************************
        * In case of union
        ***********************************/
       else if(G__struct.type[G__tagdefining]=='u') {
-	if(G__struct.size[G__tagdefining]<size) {
-	  G__struct.size[G__tagdefining] = size;
-	  if((size%2)==1) 
-	    G__struct.size[G__tagdefining]++;
-	}
-	return(0);
+        if(G__struct.size[G__tagdefining]<size) {
+          G__struct.size[G__tagdefining] = size;
+          if((size%2)==1) 
+            G__struct.size[G__tagdefining]++;
+        }
+        return(0);
       }
       /***********************************
        * In case of namespace
        ***********************************/
       else if(G__struct.type[G__tagdefining]=='n') {
-	allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-	if(allocmem==(long)NULL) G__malloc_error(item);
-	return(allocmem);
+        allocmem=(long)calloc((size_t)n ,(size_t)bsize);
+        if(allocmem==(long)NULL) G__malloc_error(item);
+        return(allocmem);
       }
     }
   }
@@ -315,6 +314,7 @@ char *item;
   return(-1); /* this should never happen, avoiding lint error */
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

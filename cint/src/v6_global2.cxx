@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 /**************************************************************************
 *  flags
 **************************************************************************/
@@ -162,8 +164,8 @@ int G__fixedscope;
 int G__isfuncreturnp2f;
 
 int G__virtual;
-struct G__ifunc_table *G__ifunc_exist();
-struct G__ifunc_table *G__ifunc_ambiguous();
+struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc,G__ifunc_table *ifunc,int *piexist,int mask);
+struct G__ifunc_table *G__ifunc_ambiguous(G__ifunc_table *ifunc_now,int allifunc,G__ifunc_table *ifunc,int *piexist,int derivedtagnum);
 
 /* #define G__OLDIMPLEMENTATION78 */
 
@@ -443,6 +445,7 @@ int G__cintv6 = 0;
 
 struct G__input_file G__lasterrorpos;
 
+} /* extern "C" */
 
 /*
  * Local Variables:

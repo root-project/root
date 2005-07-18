@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 /* array index for type_info. This must correspond to the class member 
 * layout of class type_info in the <typeinfo.h> */
 #define G__TYPEINFO_VIRTUALID 0
@@ -43,8 +45,7 @@ int G__rootCcomment=0;
 *   G__bstore()
 *
 ******************************************************************/
-int G__sizeof(object)
-G__value *object;
+int G__sizeof(G__value *object)
 {
   if(isupper(object->type) && object->obj.reftype.reftype!=G__PARANORMAL) {
     return(G__LONGALLOC);
@@ -99,9 +100,7 @@ G__value *object;
 * int G__Loffsetof()
 *
 ******************************************************************/
-int G__Loffsetof(tagname,memname)
-char *tagname;
-char *memname;
+int G__Loffsetof(char *tagname,char *memname)
 {
   int tagnum;
   struct G__var_array *var;
@@ -117,7 +116,7 @@ char *memname;
   while(var) {
     for(i=0;i<var->allvar;i++) {
       if(hash==var->hash[i] && strcmp(memname,var->varnamebuf[i])==0) {
-	return((int)var->p[i]);
+        return((int)var->p[i]);
       }
     }
     var=var->next;
@@ -135,8 +134,7 @@ char *memname;
 *   G__special_func()
 *
 ******************************************************************/
-int G__Lsizeof(typename)
-char *typename;
+int G__Lsizeof(char *type_name)
 {
   int hash;
   int ig15;
@@ -152,30 +150,30 @@ char *typename;
 
 
   /* return size of pointer if xxx* */
-  if('*'==typename[strlen(typename)-1]) {
+  if('*'==type_name[strlen(type_name)-1]) {
     return(sizeof(void *));
   }
 
   /* searching for struct/union tagtable */
-  if((strncmp(typename,"struct",6)==0)
-     || strncmp(typename,"signed",6)==0
+  if((strncmp(type_name,"struct",6)==0)
+     || strncmp(type_name,"signed",6)==0
      ) {
-    typename = typename+6;
+    type_name = type_name+6;
   }
-  else if((strncmp(typename,"class",5)==0)) {
-    typename = typename+5;
+  else if((strncmp(type_name,"class",5)==0)) {
+    type_name = type_name+5;
   }
-  else if((strncmp(typename,"union",5)==0)) {
-    typename = typename+5;
+  else if((strncmp(type_name,"union",5)==0)) {
+    type_name = type_name+5;
   }
 
-  tagnum = G__defined_tagname(typename,1); /* case 8) */
+  tagnum = G__defined_tagname(type_name,1); /* case 8) */
   if(-1 != tagnum) {
     if('e'!=G__struct.type[tagnum]) return(G__struct.size[tagnum]);
     else                            return(G__INTALLOC);
   }
 
-  typenum = G__defined_typename(typename);
+  typenum = G__defined_typename(type_name);
   if(-1 != typenum) {
     switch(G__newtype.type[typenum]) {
     case 'n':
@@ -217,77 +215,77 @@ char *typename;
     default:
       /* if struct or union */
       if(isupper(G__newtype.type[typenum])) {
-	result = sizeof(void *);
+        result = sizeof(void *);
       }
       else if(G__newtype.tagnum[typenum]>=0) {
-	result = G__struct.size[G__newtype.tagnum[typenum]];
+        result = G__struct.size[G__newtype.tagnum[typenum]];
       }
       else {
-	return(0);
+        return(0);
       }
       break;
     }
     if(G__newtype.nindex[typenum]) {
       for(ig15=0;ig15<G__newtype.nindex[typenum];ig15++) {
-	result *= G__newtype.index[typenum][ig15] ;
+        result *= G__newtype.index[typenum][ig15] ;
       }
     }
     return(result);
   }
 
-  if((strcmp(typename,"int")==0)||
-     (strcmp(typename,"unsignedint")==0))
+  if((strcmp(type_name,"int")==0)||
+     (strcmp(type_name,"unsignedint")==0))
     return(sizeof(int));
-  if((strcmp(typename,"long")==0)||
-     (strcmp(typename,"longint")==0)||
-     (strcmp(typename,"unsignedlong")==0)||
-     (strcmp(typename,"unsignedlongint")==0))
+  if((strcmp(type_name,"long")==0)||
+     (strcmp(type_name,"longint")==0)||
+     (strcmp(type_name,"unsignedlong")==0)||
+     (strcmp(type_name,"unsignedlongint")==0))
     return(sizeof(long));
-  if((strcmp(typename,"short")==0)||
-     (strcmp(typename,"shortint")==0)||
-     (strcmp(typename,"unsignedshort")==0)||
-     (strcmp(typename,"unsignedshortint")==0))
+  if((strcmp(type_name,"short")==0)||
+     (strcmp(type_name,"shortint")==0)||
+     (strcmp(type_name,"unsignedshort")==0)||
+     (strcmp(type_name,"unsignedshortint")==0))
     return(sizeof(short));
-  if((strcmp(typename,"char")==0)||
-     (strcmp(typename,"unsignedchar")==0))
+  if((strcmp(type_name,"char")==0)||
+     (strcmp(type_name,"unsignedchar")==0))
     return(sizeof(char));
-  if((strcmp(typename,"float")==0)||
-     (strcmp(typename,"float")==0))
+  if((strcmp(type_name,"float")==0)||
+     (strcmp(type_name,"float")==0))
     return(sizeof(float));
-  if((strcmp(typename,"double")==0)
+  if((strcmp(type_name,"double")==0)
      )
     return(sizeof(double));
-  if(strcmp(typename,"longdouble")==0) {
+  if(strcmp(type_name,"longdouble")==0) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__LONGDOUBLE);
     return(G__struct.size[tagnum]);
   }
-  if(strcmp(typename,"longlong")==0
-     || strcmp(typename,"longlongint")==0
+  if(strcmp(type_name,"longlong")==0
+     || strcmp(type_name,"longlongint")==0
      ) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
     return(G__struct.size[tagnum]);
   }
-  if(strcmp(typename,"unsignedlonglong")==0
-     || strcmp(typename,"unsignedlonglongint")==0
+  if(strcmp(type_name,"unsignedlonglong")==0
+     || strcmp(type_name,"unsignedlonglongint")==0
      ) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
     return(G__struct.size[tagnum]);
   }
-  if(strcmp(typename,"void")==0)
+  if(strcmp(type_name,"void")==0)
     return(sizeof(void*));
-  if(strcmp(typename,"FILE")==0)
+  if(strcmp(type_name,"FILE")==0)
     return(sizeof(FILE));
 #ifdef G__BOOL4BYTE
-  if(strcmp(typename,"bool")==0) return(sizeof(int));
+  if(strcmp(type_name,"bool")==0) return(sizeof(int));
 #else
-  if(strcmp(typename,"bool")==0) return(sizeof(unsigned char));
+  if(strcmp(type_name,"bool")==0) return(sizeof(unsigned char));
 #endif
 
-  while('*'==typename[pointlevel]) ++pointlevel;
-  strcpy(namebody,typename+pointlevel);
+  while('*'==type_name[pointlevel]) ++pointlevel;
+  strcpy(namebody,type_name+pointlevel);
   while((char*)NULL!=(p=strrchr(namebody,'['))) {
     *p='\0';
     ++pointlevel;
@@ -298,7 +296,7 @@ char *typename;
     char temp[G__ONELINE];
     if(-1!=G__memberfunc_tagnum) /* questionable */
       sprintf(temp,"%s\\%x\\%x\\%x",namebody,G__func_page,G__func_now
-	      ,G__memberfunc_tagnum);
+              ,G__memberfunc_tagnum);
     else
       sprintf(temp,"%s\\%x\\%x" ,namebody,G__func_page,G__func_now);
     
@@ -317,38 +315,38 @@ char *typename;
     if(pointlevel<=var->paran[ig15]) {
       switch(pointlevel) {
       case 0: 
-	pinc=var->varlabel[ig15][1]+1; 
-	break;
+        pinc=var->varlabel[ig15][1]+1; 
+        break;
       case 1:
-	pinc=var->varlabel[ig15][0]; 
-	break;
+        pinc=var->varlabel[ig15][0]; 
+        break;
       default:
-	pinc=var->varlabel[ig15][0]; 
-	for(i=1;i<pointlevel;i++) pinc/=var->varlabel[ig15][i+1];
-	break;
+        pinc=var->varlabel[ig15][0]; 
+        for(i=1;i<pointlevel;i++) pinc/=var->varlabel[ig15][i+1];
+        break;
       }
     }
     else {
       switch(pointlevel) {
       case 0: break;
       case 1:
-	if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
-	else if(G__PARAP2P==buf.obj.reftype.reftype) {
-	  buf.obj.reftype.reftype=G__PARANORMAL;
-	}
-	else --buf.obj.reftype.reftype;
-	break;
+        if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
+        else if(G__PARAP2P==buf.obj.reftype.reftype) {
+          buf.obj.reftype.reftype=G__PARANORMAL;
+        }
+        else --buf.obj.reftype.reftype;
+        break;
       case 2:
-	if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
-	else if(G__PARAP2P==buf.obj.reftype.reftype) {
-	  buf.type=tolower(buf.type);
-	  buf.obj.reftype.reftype=G__PARANORMAL;
-	}
-	else if(G__PARAP2P2P==buf.obj.reftype.reftype) {
-	  buf.obj.reftype.reftype=G__PARANORMAL;
-	}
-	else buf.obj.reftype.reftype-=2;
-	break;
+        if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
+        else if(G__PARAP2P==buf.obj.reftype.reftype) {
+          buf.type=tolower(buf.type);
+          buf.obj.reftype.reftype=G__PARANORMAL;
+        }
+        else if(G__PARAP2P2P==buf.obj.reftype.reftype) {
+          buf.obj.reftype.reftype=G__PARANORMAL;
+        }
+        else buf.obj.reftype.reftype-=2;
+        break;
       }
       return(G__sizeof(&buf));
     }
@@ -356,9 +354,9 @@ char *typename;
     return(pinc*G__sizeof(&buf));
   }
 
-  buf = G__getexpr(typename);
+  buf = G__getexpr(type_name);
   if(buf.type) {
-    if('C'==buf.type && '"'==typename[0]) return(strlen((char*)buf.obj.i)+1);
+    if('C'==buf.type && '"'==type_name[0]) return(strlen((char*)buf.obj.i)+1);
     return(G__sizeof(&buf));
   }
 
@@ -368,14 +366,13 @@ char *typename;
 
 #ifdef G__TYPEINFO
 /******************************************************************
-* int G__typeid(typename)
+* int G__typeid(type_name)
 *
 * Called by
 *   G__special_func()
 *
 ******************************************************************/
-long *G__typeid(typenamein)
-char *typenamein;
+long *G__typeid(char *typenamein)
 {
   G__value buf;
   int c;
@@ -385,7 +382,7 @@ char *typenamein;
   int pointlevel=0,isref=0;
   int tag_type_info;
   char typenamebuf[G__MAXNAME*2];
-  char *typename;
+  char *type_name;
   int isconst = 0;
 
   /**********************************************************************
@@ -401,10 +398,10 @@ char *typenamein;
   * In case of typeid(X&) , typeid(X*) , strip & or *
   ***********************************************************************/
   strcpy(typenamebuf,typenamein);
-  typename=typenamebuf;
-  len=strlen(typename);
+  type_name=typenamebuf;
+  len=strlen(type_name);
 
-  while('*'==(c=typename[len-1]) || '&'==c) {
+  while('*'==(c=type_name[len-1]) || '&'==c) {
     switch(c) {
     case '*':
       ++pointlevel;
@@ -414,22 +411,22 @@ char *typenamein;
       break;
     }
     --len;
-    typename[len]='\0';
+    type_name[len]='\0';
   }
 
   /**********************************************************************
   * Search for typedef names
   **********************************************************************/
-  if(strcmp(typename,"longlong")==0) {
-    strcpy(typename,"G__longlong");
+  if(strcmp(type_name,"longlong")==0) {
+    strcpy(type_name,"G__longlong");
   }
-  else if(strcmp(typename,"unsignedlonglong")==0) {
-    strcpy(typename,"G__ulonglong");
+  else if(strcmp(type_name,"unsignedlonglong")==0) {
+    strcpy(type_name,"G__ulonglong");
   }
-  else if(strcmp(typename,"longdouble")==0) {
-    strcpy(typename,"G__longdouble");
+  else if(strcmp(type_name,"longdouble")==0) {
+    strcpy(type_name,"G__longdouble");
   }
-  typenum = G__defined_typename(typename);
+  typenum = G__defined_typename(type_name);
   if(-1 != typenum) {
     type    = G__newtype.type[typenum];
     tagnum  = G__newtype.tagnum[typenum];
@@ -441,44 +438,44 @@ char *typenamein;
       switch(tolower(type)) {
       case 'n':
       case 'm':
-	size = G__LONGLONGALLOC;
-	break;
+        size = G__LONGLONGALLOC;
+        break;
       case 'g':
 #ifdef G__BOOL4BYTE
-	size = G__INTALLOC;
-	break;
+        size = G__INTALLOC;
+        break;
 #endif
       case 'b':
       case 'c':
-	size = G__CHARALLOC;
-	break;
+        size = G__CHARALLOC;
+        break;
       case 'r':
       case 's':
-	size = G__SHORTALLOC;
-	break;
+        size = G__SHORTALLOC;
+        break;
       case 'h':
       case 'i':
-	size = G__INTALLOC;
-	break;
+        size = G__INTALLOC;
+        break;
       case 'k':
       case 'l':
-	size = G__LONGALLOC;
-	break;
+        size = G__LONGALLOC;
+        break;
       case 'f':
-	size = G__FLOATALLOC;
-	break;
+        size = G__FLOATALLOC;
+        break;
       case 'd':
-	size = G__DOUBLEALLOC;
-	break;
+        size = G__DOUBLEALLOC;
+        break;
       case 'e':
       case 'y':
-	size = -1;
-	break;
+        size = -1;
+        break;
       case 'a':
-	size = G__sizep2memfunc;
-	break;
+        size = G__sizep2memfunc;
+        break;
       case 'q':
-	break;
+        break;
       }
     }
   }
@@ -488,34 +485,34 @@ char *typenamein;
     /*********************************************************************
      * Search for class/struct/union names
      *********************************************************************/
-    if((strncmp(typename,"struct",6)==0)) {
-      typename = typename+6;
+    if((strncmp(type_name,"struct",6)==0)) {
+      type_name = type_name+6;
     }
-    else if((strncmp(typename,"class",5)==0)) {
-      typename = typename+5;
+    else if((strncmp(type_name,"class",5)==0)) {
+      type_name = type_name+5;
     }
-    else if((strncmp(typename,"union",5)==0)) {
-      typename = typename+5;
+    else if((strncmp(type_name,"union",5)==0)) {
+      type_name = type_name+5;
     }
     
-    tagnum = G__defined_tagname(typename,1); 
+    tagnum = G__defined_tagname(type_name,1); 
     if(-1 != tagnum) {
       reftype=G__PARANORMAL;
       switch(G__struct.type[tagnum]) {
       case 'u':
       case 's':
       case 'c':
-	type = 'u';
-	size = G__struct.size[tagnum];
-	break;
+        type = 'u';
+        size = G__struct.size[tagnum];
+        break;
       case 'e':
-	type = 'i';
-	size = G__INTALLOC;
-	break;
+        type = 'i';
+        size = G__INTALLOC;
+        break;
       case 'n':
-	size = G__struct.size[tagnum];
-	G__genericerror("Error: can not get sizeof namespace");
-	break;
+        size = G__struct.size[tagnum];
+        G__genericerror("Error: can not get sizeof namespace");
+        break;
       }
     }
 
@@ -526,59 +523,59 @@ char *typenamein;
        *******************************************************************/
       reftype = G__PARANORMAL;
 
-      if(strcmp(typename,"int")==0) {
+      if(strcmp(type_name,"int")==0) {
         type = 'i';
-	size = G__INTALLOC;
+        size = G__INTALLOC;
       }
-      if(strcmp(typename,"unsignedint")==0) {
-	type = 'h';
-	size = G__INTALLOC;
+      if(strcmp(type_name,"unsignedint")==0) {
+        type = 'h';
+        size = G__INTALLOC;
       }
-      if((strcmp(typename,"long")==0)||
-	 (strcmp(typename,"longint")==0)) {
-	type='l';
-	size = G__LONGALLOC;
+      if((strcmp(type_name,"long")==0)||
+         (strcmp(type_name,"longint")==0)) {
+        type='l';
+        size = G__LONGALLOC;
       }
-      if((strcmp(typename,"unsignedlong")==0)||
-	 (strcmp(typename,"unsignedlongint")==0)) {
-	type = 'k';
-	size = G__LONGALLOC;
+      if((strcmp(type_name,"unsignedlong")==0)||
+         (strcmp(type_name,"unsignedlongint")==0)) {
+        type = 'k';
+        size = G__LONGALLOC;
       }
-      if((strcmp(typename,"short")==0)||
-	 (strcmp(typename,"shortint")==0)) {
-	type = 's';
-	size = G__SHORTALLOC;
+      if((strcmp(type_name,"short")==0)||
+         (strcmp(type_name,"shortint")==0)) {
+        type = 's';
+        size = G__SHORTALLOC;
       }
-      if((strcmp(typename,"unsignedshort")==0)||
-	 (strcmp(typename,"unsignedshortint")==0)) {
-	type = 'r';
-	size = G__SHORTALLOC;
+      if((strcmp(type_name,"unsignedshort")==0)||
+         (strcmp(type_name,"unsignedshortint")==0)) {
+        type = 'r';
+        size = G__SHORTALLOC;
       }
-      if((strcmp(typename,"char")==0)||
-	 (strcmp(typename,"signedchar")==0)) {
-	type = 'c';
-	size = G__CHARALLOC;
+      if((strcmp(type_name,"char")==0)||
+         (strcmp(type_name,"signedchar")==0)) {
+        type = 'c';
+        size = G__CHARALLOC;
       }
-      if(strcmp(typename,"unsignedchar")==0) {
-	type = 'b';
-	size = G__CHARALLOC;
+      if(strcmp(type_name,"unsignedchar")==0) {
+        type = 'b';
+        size = G__CHARALLOC;
       }
-      if(strcmp(typename,"float")==0) {
-	type = 's'; 
-	size = G__FLOATALLOC;
+      if(strcmp(type_name,"float")==0) {
+        type = 's'; 
+        size = G__FLOATALLOC;
       }
-      if((strcmp(typename,"double")==0)
-	 ) {
-	type = 'd';
-	size = G__DOUBLEALLOC;
+      if((strcmp(type_name,"double")==0)
+         ) {
+        type = 'd';
+        size = G__DOUBLEALLOC;
       }
-      if(strcmp(typename,"void")==0) {
+      if(strcmp(type_name,"void")==0) {
         type = 'y';
-	size = sizeof(void*);
+        size = sizeof(void*);
       }
-      if(strcmp(typename,"FILE")==0) {
+      if(strcmp(type_name,"FILE")==0) {
         type = 'e';
-	size = -1;
+        size = -1;
       }
     }
   }
@@ -659,10 +656,7 @@ char *typenamein;
 * G__getcomment()
 *
 ******************************************************************/
-void G__getcomment(buf,pcomment,tagnum)
-char *buf;
-struct G__comment_info *pcomment;
-int tagnum;
+void G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
 {
   fpos_t pos,store_pos;
   FILE *fp;
@@ -678,18 +672,18 @@ int tagnum;
       if(filenum==G__MAXFILE) fp = G__mfp;
       else                    fp = G__srcfile[filenum].fp;
       if((FILE*)NULL==fp) {
-	/* Open the right file even in case where we use the preprocessor */
-	if ( 
-	    filenum<G__MAXFILE &&
-	    G__srcfile[filenum].prepname ) {
-	  fp = fopen(G__srcfile[filenum].prepname,"r");
-	} else {
-	  fp = fopen(G__srcfile[filenum].filename,"r");
-	}
-	flag=0;
+        /* Open the right file even in case where we use the preprocessor */
+        if ( 
+            filenum<G__MAXFILE &&
+            G__srcfile[filenum].prepname ) {
+          fp = fopen(G__srcfile[filenum].prepname,"r");
+        } else {
+          fp = fopen(G__srcfile[filenum].filename,"r");
+        }
+        flag=0;
       }
       else {
-	fgetpos(fp,&store_pos);
+        fgetpos(fp,&store_pos);
       }
       fsetpos(fp,&pos);
       fgets(buf,G__ONELINE-1,fp);
@@ -698,15 +692,15 @@ int tagnum;
       p = strchr(buf,'\r');
       if(p) *p = '\0';
       if(G__rootCcomment) {
-	p = G__strrstr(buf,"*/");
-	if(p) *p = '\0';
+        p = G__strrstr(buf,"*/");
+        if(p) *p = '\0';
       }
 
       if(flag) {
-	fsetpos(fp,&store_pos);
+        fsetpos(fp,&store_pos);
       }
       else {
-	fclose(fp);
+        fclose(fp);
       }
     }
     else if(-2==pcomment->filenum) {
@@ -726,10 +720,7 @@ int tagnum;
 * G__getcommenttypedef()
 *
 ******************************************************************/
-void G__getcommenttypedef(buf,pcomment,typenum)
-char *buf;
-struct G__comment_info *pcomment;
-int typenum;
+void G__getcommenttypedef(char *buf,G__comment_info *pcomment,int typenum)
 {
   fpos_t pos,store_pos;
   FILE *fp;
@@ -744,18 +735,18 @@ int typenum;
       if(filenum==G__MAXFILE) fp = G__mfp;
       else                    fp = G__srcfile[filenum].fp;
       if((FILE*)NULL==fp) {
-	/* Open the right file even in case where we use the preprocessor */
-	if ( 
-	    filenum<G__MAXFILE &&
-	    G__srcfile[filenum].prepname ) {
-	  fp = fopen(G__srcfile[filenum].prepname,"r");
-	} else {
-	  fp = fopen(G__srcfile[filenum].filename,"r");
-	}
-	flag=0;
+        /* Open the right file even in case where we use the preprocessor */
+        if ( 
+            filenum<G__MAXFILE &&
+            G__srcfile[filenum].prepname ) {
+          fp = fopen(G__srcfile[filenum].prepname,"r");
+        } else {
+          fp = fopen(G__srcfile[filenum].filename,"r");
+        }
+        flag=0;
       }
       else {
-	fgetpos(fp,&store_pos);
+        fgetpos(fp,&store_pos);
       }
       fsetpos(fp,&pos);
       fgets(buf,G__ONELINE-1,fp);
@@ -767,10 +758,10 @@ int typenum;
       if(p) *(p+1) = '\0';
 
       if(flag) {
-	fsetpos(fp,&store_pos);
+        fsetpos(fp,&store_pos);
       }
       else {
-	fclose(fp);
+        fclose(fp);
       }
     }
     else if(-2==pcomment->filenum) {
@@ -794,9 +785,7 @@ int typenum;
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_classinfo(item,tagnum)
-char *item;
-int tagnum;
+long G__get_classinfo(char *item,int tagnum)
 {
   char *buf;
   int tag_string_buf;
@@ -812,8 +801,8 @@ int tagnum;
       ++tagnum;
       if(tagnum<0 || G__struct.alltag<=tagnum) return(-1);
       if(('s'==G__struct.type[tagnum]||'c'==G__struct.type[tagnum])&&
-	 -1==G__struct.parent_tagnum[tagnum]) {
-	return((long)tagnum);
+         -1==G__struct.parent_tagnum[tagnum]) {
+        return((long)tagnum);
       }
     }
   }
@@ -858,13 +847,13 @@ int tagnum;
     buf[0]='\0';
     for(i=0;i<baseclass->basen;i++) {
       if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-	if(p) {
-	  sprintf(buf+p,",");
-	  ++p;
-	}
-	sprintf(buf+p,"%s%s" ,G__access2string(baseclass->baseaccess[i])
-		,G__struct.name[baseclass->basetagnum[i]]);
-	p=strlen(buf);
+        if(p) {
+          sprintf(buf+p,",");
+          ++p;
+        }
+        sprintf(buf+p,"%s%s" ,G__access2string(baseclass->baseaccess[i])
+                ,G__struct.name[baseclass->basetagnum[i]]);
+        p=strlen(buf);
       }
     }
 
@@ -899,11 +888,7 @@ int tagnum;
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_variableinfo(item,phandle,pindex,tagnum)
-char *item;
-long *phandle;
-long *pindex;
-int tagnum;
+long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum)
 {
   char *buf;
   int tag_string_buf;
@@ -971,9 +956,9 @@ int tagnum;
     G__alloc_tempobject(tag_string_buf, -1 );
     buf = (char*)G__p_tempbuf->obj.obj.i;
     strcpy(buf,G__type2string(var->type[index] 
-			      ,var->p_tagtable[index]
-			      ,var->p_typetable[index] 
-			      ,var->reftype[index],0));
+                              ,var->p_tagtable[index]
+                              ,var->p_typetable[index] 
+                              ,var->reftype[index],0));
     return((long)buf);
   }
 
@@ -1010,11 +995,7 @@ int tagnum;
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_functioninfo(item,phandle,pindex,tagnum)
-char *item;
-long *phandle;
-long *pindex;
-int tagnum;
+long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
 {
   char *buf;
   int tag_string_buf;
@@ -1085,9 +1066,9 @@ int tagnum;
     G__alloc_tempobject(tag_string_buf, -1 );
     buf = (char*)G__p_tempbuf->obj.obj.i;
     strcpy(buf,G__type2string(ifunc->type[index] 
-			      ,ifunc->p_tagtable[index]
-			      ,ifunc->p_typetable[index] 
-			      ,ifunc->reftype[index],0));
+                              ,ifunc->p_tagtable[index]
+                              ,ifunc->p_typetable[index] 
+                              ,ifunc->reftype[index],0));
     return((long)buf);
   }
 
@@ -1103,17 +1084,17 @@ int tagnum;
     p=0;
     for(i=0;i<ifunc->para_nu[index];i++) {
       if(p) {
-	sprintf(buf+p,",");
-	++p;
+        sprintf(buf+p,",");
+        ++p;
       }
       sprintf(buf+p,"%s",G__type2string(ifunc->para_type[index][i]
-					,ifunc->para_p_tagtable[index][i]
-					,ifunc->para_p_typetable[index][i]
-					,ifunc->para_reftype[index][i],0));
+                                        ,ifunc->para_p_tagtable[index][i]
+                                        ,ifunc->para_p_typetable[index][i]
+                                        ,ifunc->para_reftype[index][i],0));
       p=strlen(buf);
       if(ifunc->para_default[index][i]) {
-	sprintf(buf+p,"=");
-		/* ,G__valuemonitor(*ifunc->para_default[index][i],temp)); */
+        sprintf(buf+p,"=");
+                /* ,G__valuemonitor(*ifunc->para_default[index][i],temp)); */
       }
       p=strlen(buf);
     }
@@ -1147,8 +1128,7 @@ static int G__va_arg_align_size=G__VAARG_INC_COPY_N;
 #else
 static int G__va_arg_align_size=0;
 #endif
-void G__va_arg_setalign(n)
-int n;
+void G__va_arg_setalign(int n)
 {
   G__va_arg_align_size = n;
 }
@@ -1156,11 +1136,7 @@ int n;
 /**************************************************************************
  * G__va_arg_copyvalue()
  **************************************************************************/
-void G__va_arg_copyvalue(t,p,pval,objsize)
-int t;
-void* p;
-G__value *pval;
-int objsize;
+void G__va_arg_copyvalue(int t,void *p,G__value *pval,int objsize)
 {
 #ifdef G__VAARG_PASS_BY_REFERENCE
   if(objsize>G__VAARG_PASS_BY_REFERENCE) {
@@ -1227,7 +1203,7 @@ int objsize;
 #if (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 #define G__alignof_ppc(objsize)  (objsize>4?16:4)
 #define G__va_rounded_size_ppc(typesize) ((typesize + 3) & ~3)
-#define G__va_align_ppc(AP, objsize)					   \
+#define G__va_align_ppc(AP, objsize)                                           \
      ((((unsigned long)(AP)) + ((G__alignof_ppc(objsize) == 16) ? 15 : 3)) \
       & ~((G__alignof_ppc(objsize) == 16) ? 15 : 3))
 
@@ -1238,10 +1214,7 @@ int objsize;
 /**************************************************************************
  * G__va_arg_put()
  **************************************************************************/
-void G__va_arg_put(pbuf,libp,n)
-G__va_arg_buf* pbuf;
-struct G__param *libp;
-int n;
+void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
 {
   int objsize;
   int type;
@@ -1335,10 +1308,7 @@ int n;
 /**************************************************************************
  * G__va_arg_copyfunc() , Never used so far
  **************************************************************************/
-void G__va_arg_copyfunc(fp,ifunc,ifn)
-FILE* fp;
-struct G__ifunc_table* ifunc;
-int ifn;
+void G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
 {
   FILE *xfp;
   int n;
@@ -1358,10 +1328,10 @@ int ifn;
   fsetpos(xfp,&ifunc->pentry[ifn]->pos);
 
   fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
-				  ,ifunc->p_tagtable[ifn]
-				  ,ifunc->p_typetable[ifn]
-				  ,ifunc->reftype[ifn]
-				  ,ifunc->isconst[ifn]));
+                                  ,ifunc->p_tagtable[ifn]
+                                  ,ifunc->p_typetable[ifn]
+                                  ,ifunc->reftype[ifn]
+                                  ,ifunc->isconst[ifn]));
   fprintf(fp,"%s(",ifunc->funcname[ifn]);
 
   /* print out parameter types */
@@ -1378,10 +1348,10 @@ int ifn;
     }
     /* print out type of return value */
     fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][n]
-				    ,ifunc->para_p_tagtable[ifn][n]
-				    ,ifunc->para_p_typetable[ifn][n]
-				    ,ifunc->para_reftype[ifn][n]
-				    ,ifunc->para_isconst[ifn][n]));
+                                    ,ifunc->para_p_tagtable[ifn][n]
+                                    ,ifunc->para_p_typetable[ifn][n]
+                                    ,ifunc->para_reftype[ifn][n]
+                                    ,ifunc->para_isconst[ifn][n]));
     
     if(ifunc->para_name[ifn][n]) {
       fprintf(fp," %s",ifunc->para_name[ifn][n]);
@@ -1427,10 +1397,8 @@ int ifn;
 /**************************************************************************
  * G__typeconversion
  **************************************************************************/
-void G__typeconversion(ifunc,ifn,libp) 
-struct G__ifunc_table *ifunc;
-int ifn;
-struct G__param *libp;
+void G__typeconversion(G__ifunc_table *ifunc,int ifn
+                       ,G__param *libp) 
 {
   int formal_type,    param_type;
   int formal_reftype, param_reftype;
@@ -1455,10 +1423,10 @@ struct G__param *libp;
       case 'r':
       case 'h':
       case 'k':
-	libp->para[i].obj.d = libp->para[i].obj.i;
-	libp->para[i].type = formal_type;
-	libp->para[i].ref = (long)(&libp->para[i].obj.d);
-	break;
+        libp->para[i].obj.d = libp->para[i].obj.i;
+        libp->para[i].type = formal_type;
+        libp->para[i].ref = (long)(&libp->para[i].obj.d);
+        break;
       }
       break;
     case 'c':
@@ -1472,10 +1440,10 @@ struct G__param *libp;
       switch(param_type) {
       case 'd':
       case 'f':
-	libp->para[i].obj.i = (long)libp->para[i].obj.d;
-	libp->para[i].type = formal_type;
-	libp->para[i].ref = (long)(&libp->para[i].obj.i);
-	break;
+        libp->para[i].obj.i = (long)libp->para[i].obj.d;
+        libp->para[i].type = formal_type;
+        libp->para[i].ref = (long)(&libp->para[i].obj.i);
+        break;
       }
       break;
     }
@@ -1486,16 +1454,16 @@ struct G__param *libp;
  * G__DLL_direct_globalfunc
  **************************************************************************/
 int G__DLL_direct_globalfunc(G__value *result7
-			     ,G__CONST char *funcname /* ifunc */
-			     ,struct G__param *libp
-			     ,int hash)   /* ifn */  {
+                             ,G__CONST char *funcname /* ifunc */
+                             ,struct G__param *libp
+                             ,int hash)   /* ifn */  {
   struct G__ifunc_table *ifunc = (struct G__ifunc_table*)funcname;
   int ifn=hash;
 
-  int (*itp2f)();
-  double (*dtp2f)();
-  void (*vtp2f)();
-  G__va_arg_buf (*utp2f)();
+  int (*itp2f)(G__va_arg_buf);
+  double (*dtp2f)(G__va_arg_buf);
+  void (*vtp2f)(G__va_arg_buf);
+  G__va_arg_buf (*utp2f)(G__va_arg_buf);
 
   G__va_arg_buf G__va_arg_return;
   G__va_arg_buf G__va_arg_bufobj;
@@ -1505,11 +1473,11 @@ int G__DLL_direct_globalfunc(G__value *result7
   switch(ifunc->type[ifn]) {
   case 'd':
   case 'f':
-    dtp2f = (double (*)())ifunc->pentry[ifn]->tp2f;
+    dtp2f = (double (*)(G__va_arg_buf))ifunc->pentry[ifn]->tp2f;
     G__letdouble(result7,ifunc->type[ifn],dtp2f(G__va_arg_bufobj));
     break;
   case 'u':
-    utp2f = (G__va_arg_buf (*)())ifunc->pentry[ifn]->tp2f;
+    utp2f = (G__va_arg_buf (*)(G__va_arg_buf))ifunc->pentry[ifn]->tp2f;
     G__va_arg_return = utp2f(G__va_arg_bufobj);
     result7->type = 'u';
     result7->tagnum = ifunc->p_tagtable[ifn];
@@ -1517,12 +1485,12 @@ int G__DLL_direct_globalfunc(G__value *result7
     result7->obj.i = (long)(&G__va_arg_return); /* incorrect! experimental */
     break;
   case 'y':
-    vtp2f = (void (*)())ifunc->pentry[ifn]->tp2f;
+    vtp2f = (void (*)(G__va_arg_buf))ifunc->pentry[ifn]->tp2f;
     vtp2f(G__va_arg_bufobj);
     G__setnull(result7);
     break;
   default:
-    itp2f = (int(*)())ifunc->pentry[ifn]->tp2f;
+    itp2f = (int(*)(G__va_arg_buf))ifunc->pentry[ifn]->tp2f;
     G__letint(result7,ifunc->type[ifn],itp2f(G__va_arg_bufobj));
     break;
   }
@@ -1532,6 +1500,7 @@ int G__DLL_direct_globalfunc(G__value *result7
   return 1;
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

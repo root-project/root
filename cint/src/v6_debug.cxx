@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+extern "C" {
 
 /*********************************************************
 * G__setdebugcond()
@@ -43,10 +44,7 @@ void G__setdebugcond()
 *  return   1    source file exists but line not exact
 *  return   2    source line exactly found
 ****************************************************************/
-int G__findposition(string,view,pline,pfnum)
-char *string;
-struct G__input_file view;
-int *pline,*pfnum;
+int G__findposition(char *string,G__input_file view,int *pline, int *pfnum)
 {
   int i=0;
 
@@ -81,7 +79,7 @@ int *pline,*pfnum;
   else if(*pline<1) {
     *pline=1;
     return(1);
-  } 	
+  }         
   else if(G__srcfile[*pfnum].maxline<*pline) {
     *pline=G__srcfile[*pfnum].maxline-1;
     return(1);
@@ -92,9 +90,7 @@ int *pline,*pfnum;
 /****************************************************************
 * G__findfuncposition()
 ****************************************************************/
-int G__findfuncposition(func,pline,pfnum)
-char *func;
-int *pline,*pfnum;
+int G__findfuncposition(char *func,int *pline,int *pfnum)
 {
   char funcname[G__ONELINE];
   char scope[G__ONELINE];
@@ -125,8 +121,8 @@ int *pline,*pfnum;
       /* class scope A::func , global scope ::func */
       if(-1==tagnum) ifunc = &G__ifunc;  /* global scope, ::func */
       else {
-	G__incsetup_memfunc(tagnum);
-	ifunc = G__struct.memfunc[tagnum]; /* specific class */
+        G__incsetup_memfunc(tagnum);
+        ifunc = G__struct.memfunc[tagnum]; /* specific class */
       }
     }
   }
@@ -139,9 +135,9 @@ int *pline,*pfnum;
     temp1=0;
     while(temp1<ifunc->allifunc) {
       if(strcmp(ifunc->funcname[temp1],funcname)==0) {
-	*pline = ifunc->pentry[temp1]->line_number;
-	*pfnum = ifunc->pentry[temp1]->filenum;
-	return(2);
+        *pline = ifunc->pentry[temp1]->line_number;
+        *pfnum = ifunc->pentry[temp1]->filenum;
+        return(2);
       }
       ++temp1;
     }
@@ -153,9 +149,7 @@ int *pline,*pfnum;
 /****************************************************************
 * G__display_proto()
 ****************************************************************/
-int G__display_proto(fp,func)
-FILE *fp;
-char *func;
+int G__display_proto(FILE *fp,char *func)
 {
   char funcname[G__LONGLINE];
   char scope[G__LONGLINE];
@@ -206,12 +200,12 @@ char *func;
     for(i1=0;i1<baseclass->basen;i1++) {
       ifunc = G__struct.memfunc[baseclass->basetagnum[i1]];
       if(i) {
-	if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc)) 
-	  return(1);
+        if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc)) 
+          return(1);
       }
       else  {
-	if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc))
-	  return(1);
+        if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc))
+          return(1);
       }
     }
   }
@@ -232,9 +226,7 @@ int G__gettempfilenum()
 /****************************************************************
 * G__exec_tempfile_core()
 ****************************************************************/
-G__value G__exec_tempfile_core(file,fp)
-char *file;
-FILE *fp;
+G__value G__exec_tempfile_core(const char *file,FILE *fp)
 {
 #ifdef G__EH_SIGNAL
   void (*fpe)();
@@ -280,16 +272,19 @@ FILE *fp;
   /*************************************************
   * delete space chars at the end of filename
   *************************************************/
+  char *filename = 0;
   if(file) {
     len = strlen(file);
-    while(len>1&&isspace(file[len-1])) {
-      file[--len]='\0';
+    filename = new char[len+1];
+    strcpy(filename,file);
+    while(len>1&&isspace(filename[len-1])) {
+      filename[--len]='\0';
     }
   
 #ifndef G__WIN32
-    ftemp.fp = fopen(file,"r");
+    ftemp.fp = fopen(filename,"r");
 #else
-    ftemp.fp = fopen(file,"rb");
+    ftemp.fp = fopen(filename,"rb");
 #endif
   }
   else {
@@ -299,7 +294,7 @@ FILE *fp;
 
   if(ftemp.fp) {
     ftemp.line_number = 1;
-    if(file) sprintf(ftemp.name,file);
+    if(file) { strcpy(ftemp.name,filename); delete [] filename; }
     else     strcpy(ftemp.name,"(tmpfile)");
     ftemp.filenum = G__tempfilenum;
     G__srcfile[G__tempfilenum].fp = ftemp.fp;
@@ -422,8 +417,7 @@ FILE *fp;
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
-G__value G__exec_tempfile_fp(fp)
-FILE *fp;
+G__value G__exec_tempfile_fp(FILE *fp)
 {
   return(G__exec_tempfile_core((char*)NULL,fp));
 }
@@ -431,8 +425,7 @@ FILE *fp;
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
-G__value G__exec_tempfile(file)
-char *file;
+G__value G__exec_tempfile(const char *file)
 {
   return(G__exec_tempfile_core(file,(FILE*)NULL));
 }
@@ -442,8 +435,7 @@ char *file;
 /**************************************************************************
 * G__exec_text()
 **************************************************************************/
-G__value G__exec_text(unnamedmacro)
-char *unnamedmacro;
+G__value G__exec_text(const char *unnamedmacro)
 {
 #ifndef G__TMPFILE
   char tname[L_tmpnam+10], sname[L_tmpnam+10];
@@ -547,9 +539,7 @@ char *unnamedmacro;
 /**************************************************************************
 * G__exec_text_str()
 **************************************************************************/
-char* G__exec_text_str(unnamedmacro,result)
-char *unnamedmacro;
-char *result;
+char* G__exec_text_str(const char *unnamedmacro,char *result)
 {
   G__value buf = G__exec_text(unnamedmacro);
   G__valuemonitor(buf,result);
@@ -561,8 +551,7 @@ char *result;
 /**************************************************************************
 * G__load_text()
 **************************************************************************/
-char* G__load_text(namedmacro)
-char *namedmacro;
+char* G__load_text(const char *namedmacro)
 {
   int fentry;
   char* result = (char*)NULL;
@@ -619,10 +608,7 @@ char *namedmacro;
 /**************************************************************************
 * G__beforelargestep()
 **************************************************************************/
-int G__beforelargestep(statement,piout,plargestep)
-char *statement;
-int *piout;
-int *plargestep;
+int G__beforelargestep(char *statement,int *piout,int *plargestep)
 {
   G__break=0;
   G__setdebugcond();
@@ -647,12 +633,11 @@ int *plargestep;
 /**************************************************************************
 * G__afterlargestep()
 **************************************************************************/
-void G__afterlargestep(plargestep)
-int *plargestep;
+void G__afterlargestep(int *plargestep)
 {
-	G__step = 1;
-	*plargestep=0;
-	G__setdebugcond();
+        G__step = 1;
+        *plargestep=0;
+        G__setdebugcond();
 }
 
 
@@ -671,7 +656,7 @@ void G__EOFfgetc()
   }
   if(G__dispsource) {
     if((G__debug||G__break||G__step
-	)&&
+        )&&
        ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
       G__fprinterr(G__serr,"EOF\n");
@@ -700,7 +685,7 @@ void G__BREAKfgetc()
     G__setdebugcond();
     if(G__srcfile[G__ifile.filenum].breakpoint) {
       G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] 
-	&= G__NOCONTUNTIL;
+        &= G__NOCONTUNTIL;
     }
   }
 #else
@@ -728,8 +713,7 @@ void G__DISPNfgetc()
 /**************************************************************************
 * G__DISPfgetc()
 **************************************************************************/
-void G__DISPfgetc(c)
-int c;
+void G__DISPfgetc(int c)
 {
   if((G__debug||G__break||G__step
       )&&
@@ -747,13 +731,12 @@ int c;
 /**************************************************************************
 * G__lockedvariable()
 **************************************************************************/
-void G__lockedvariable(item)
-char *item;
+void G__lockedvariable(char *item)
 {
   if(G__dispmsg>=G__DISPWARN) {
     G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
-		 ,item
-		 ,G__ifile.name,G__ifile.line_number);
+                 ,item
+                 ,G__ifile.name,G__ifile.line_number);
   }
 }
 
@@ -761,8 +744,7 @@ char *item;
 /**************************************************************************
 * G__lock_variable()
 **************************************************************************/
-int G__lock_variable(varname)
-char *varname;
+int G__lock_variable(char *varname)
 {
   int hash,ig15;
   struct G__var_array *var;
@@ -773,17 +755,17 @@ char *varname;
   }
   
   G__hash(varname,hash,ig15)
-  var = G__getvarentry(varname,hash,&ig15,&G__global,G__p_local);	
+  var = G__getvarentry(varname,hash,&ig15,&G__global,G__p_local);        
   
   if(var) {
     var->constvar[ig15] |= G__LOCKVAR;
     G__fprinterr(G__serr,"Variable %s locked FILE:%s LINE:%d\n"
-	    ,varname,G__ifile.name,G__ifile.line_number);
+            ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
     G__fprinterr(G__serr,"Warining: failed locking %s FILE:%s LINE:%d\n"
-	    ,varname,G__ifile.name,G__ifile.line_number);
+            ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
 }
@@ -791,8 +773,7 @@ char *varname;
 /**************************************************************************
 * G__unlock_variable()
 **************************************************************************/
-int G__unlock_variable(varname)
-char *varname;
+int G__unlock_variable(char *varname)
 {
   int hash,ig15;
   struct G__var_array *var;
@@ -803,17 +784,17 @@ char *varname;
   }
   
   G__hash(varname,hash,ig15)
-    var = G__getvarentry(varname,hash,&ig15,&G__global,G__p_local);	
+    var = G__getvarentry(varname,hash,&ig15,&G__global,G__p_local);        
   
   if(var) {
     var->constvar[ig15] &= ~G__LOCKVAR;
     G__fprinterr(G__serr,"Variable %s unlocked FILE:%s LINE:%d\n"
-	    ,varname,G__ifile.name,G__ifile.line_number);
+            ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
     G__fprinterr(G__serr,"Warining: failed unlocking %s FILE:%s LINE:%d\n"
-	    ,varname,G__ifile.name,G__ifile.line_number);
+            ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
 }
@@ -823,8 +804,7 @@ char *varname;
 * G__setbreakpoint()
 *
 **************************************************************************/
-int G__setbreakpoint(breakline,breakfile)
-char *breakline,*breakfile;
+int G__setbreakpoint(char *breakline,char *breakfile)
 {
   int ii;
   int line;
@@ -835,25 +815,25 @@ char *breakline,*breakfile;
     if(NULL==breakfile || '\0'==breakfile[0]) {
       G__fprinterr(G__serr," -b : break point on line %d every file\n",line);
       for(ii=0;ii<G__nfile;ii++) {
-	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
-	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
+        if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
+          G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
     }
     else {
       for(ii=0;ii<G__nfile;ii++) {
-	if(G__srcfile[ii].filename&&
-	   G__matchfilename(ii,breakfile)
-	   ) break;
+        if(G__srcfile[ii].filename&&
+           G__matchfilename(ii,breakfile)
+           ) break;
       }
       if(ii<G__nfile) {
-	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
-		,line,breakfile);
-	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
-	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
+        G__fprinterr(G__serr," -b : break point on line %d file %s\n"
+                ,line,breakfile);
+        if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
+          G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr(G__serr,"File %s is not loaded\n",breakfile);
-	return(1);
+        G__fprinterr(G__serr,"File %s is not loaded\n",breakfile);
+        return(1);
       }
     }
 
@@ -861,13 +841,13 @@ char *breakline,*breakfile;
   else {
     if(1<G__findfuncposition(breakline,&line,&ii)) {
       if(G__srcfile[ii].breakpoint) {
-	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
-		,line,G__srcfile[ii].filename);
-	G__srcfile[ii].breakpoint[line] |= G__BREAK;
+        G__fprinterr(G__serr," -b : break point on line %d file %s\n"
+                ,line,G__srcfile[ii].filename);
+        G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr(G__serr,"unable to put breakpoint in %s (included file)\n"
-		,breakline);
+        G__fprinterr(G__serr,"unable to put breakpoint in %s (included file)\n"
+                ,breakline);
       }
     }
     else {
@@ -904,8 +884,7 @@ G__value G__interactivereturn()
 * G__set_tracemode()
 *
 **************************************************************************/
-void G__set_tracemode(name)
-char *name;
+void G__set_tracemode(char *name)
 {
   int tagnum;
   int i=0;
@@ -923,8 +902,8 @@ char *name;
       if(p) *p = '\0';
       tagnum = G__defined_tagname(s,0);
       if(-1!=tagnum) { 
-	G__struct.istrace[tagnum] = 1;
-	fprintf(G__sout,"trace %s object on\n",s);
+        G__struct.istrace[tagnum] = 1;
+        fprintf(G__sout,"trace %s object on\n",s);
       }
       if(p) s = p+1;
       else  s = p;
@@ -937,8 +916,7 @@ char *name;
 * G__del_tracemode()
 *
 **************************************************************************/
-void G__del_tracemode(name)
-char *name;
+void G__del_tracemode(char *name)
 {
   int tagnum;
   int i=0;
@@ -956,8 +934,8 @@ char *name;
       if(p) *p = '\0';
       tagnum = G__defined_tagname(s,0);
       if(-1!=tagnum) {
-	G__struct.istrace[tagnum] = 0;
-	fprintf(G__sout,"trace %s object off\n",s);
+        G__struct.istrace[tagnum] = 0;
+        fprintf(G__sout,"trace %s object off\n",s);
       }
       if(p) s = p+1;
       else  s = p;
@@ -970,8 +948,7 @@ char *name;
 * G__set_classbreak()
 *
 **************************************************************************/
-void G__set_classbreak(name)
-char *name;
+void G__set_classbreak(char *name)
 {
   int tagnum;
   int i=0;
@@ -984,8 +961,8 @@ char *name;
       if(p) *p = '\0';
       tagnum = G__defined_tagname(s,0);
       if(-1!=tagnum) {
-	G__struct.isbreak[tagnum] = 1;
-	fprintf(G__sout,"set break point at every %s member function\n",s);
+        G__struct.isbreak[tagnum] = 1;
+        fprintf(G__sout,"set break point at every %s member function\n",s);
       }
       if(p) s = p+1;
       else  s = p;
@@ -997,8 +974,7 @@ char *name;
 * G__del_classbreak()
 *
 **************************************************************************/
-void G__del_classbreak(name)
-char *name;
+void G__del_classbreak(char *name)
 {
   int tagnum;
   int i=0;
@@ -1011,8 +987,8 @@ char *name;
       if(p) *p = '\0';
       tagnum = G__defined_tagname(s,0);
       if(-1!=tagnum) {
-	G__struct.isbreak[tagnum] = 0;
-	fprintf(G__sout,"delete break point at every %s member function\n",s);
+        G__struct.isbreak[tagnum] = 0;
+        fprintf(G__sout,"delete break point at every %s member function\n",s);
       }
       if(p) s = p+1;
       else  s = p;
@@ -1024,9 +1000,7 @@ char *name;
 * G__setclassdebugcond()
 *
 **************************************************************************/
-void G__setclassdebugcond(tagnum,brkflag)
-int tagnum;
-int brkflag;
+void G__setclassdebugcond(int tagnum,int brkflag)
 {
   if(G__cintv6) return;
   if(-1==tagnum) {
@@ -1043,6 +1017,8 @@ int brkflag;
     else                                  G__breaksignal=0;
   }
 }
+
+} /* extern "C" */
 
 /*
  * Local Variables:

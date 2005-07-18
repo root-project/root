@@ -20,67 +20,57 @@
 
 #include "common.h"
 
+extern "C" {
+
 /****************************************************************
 * G__letdouble(G__value buf,char type,double value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letdouble(buf,type,value)
-G__value *buf;
-int type;
-double value;
+void G__letdouble(G__value *buf,int type,double value)
 {
-	buf->type=type;
-	buf->obj.d=value;
-	/*
-	buf->tagnum = -1;
-	buf->typenum = -1;
-	*/
+        buf->type=type;
+        buf->obj.d=value;
+        /*
+        buf->tagnum = -1;
+        buf->typenum = -1;
+        */
 }
 
 /****************************************************************
 * G__letbool(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letbool(buf,type,value)
-G__value *buf;
-int type;
-long value; /* used to be int */
+void G__letbool(G__value *buf,int type,long value)
 {
-	buf->type=type;
-	buf->obj.i=value?1:0;
-	/*
-	buf->tagnum = -1;
-	buf->typenum = -1;
-	*/
-	buf->obj.reftype.reftype = G__PARANORMAL;
+        buf->type=type;
+        buf->obj.i=value?1:0;
+        /*
+        buf->tagnum = -1;
+        buf->typenum = -1;
+        */
+        buf->obj.reftype.reftype = G__PARANORMAL;
 }
 
 /****************************************************************
 * G__letint(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letint(buf,type,value)
-G__value *buf;
-int type;
-long value; /* used to be int */
+void G__letint(G__value *buf,int type,long value)
 {
-	buf->type=type;
-	buf->obj.i=value;
-	/*
-	buf->tagnum = -1;
-	buf->typenum = -1;
-	*/
-	buf->obj.reftype.reftype = G__PARANORMAL;
+        buf->type=type;
+        buf->obj.i=value;
+        /*
+        buf->tagnum = -1;
+        buf->typenum = -1;
+        */
+        buf->obj.reftype.reftype = G__PARANORMAL;
 }
 
 /****************************************************************
 * G__letLonglong(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letLonglong(buf,type,value)
-G__value *buf;
-int type;
-G__int64 value; /* used to be int */
+void G__letLonglong(G__value *buf,int type,G__int64 value)
 {
   buf->type=type;
   buf->obj.ll=value;
@@ -95,10 +85,7 @@ G__int64 value; /* used to be int */
 * G__letULonglong(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letULonglong(buf,type,value)
-G__value *buf;
-int type;
-G__uint64 value; /* used to be int */
+void G__letULonglong(G__value *buf,int type,G__uint64 value)
 {
   buf->type=type;
   buf->obj.ull=value;
@@ -113,10 +100,7 @@ G__uint64 value; /* used to be int */
 * G__letLongdouble(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
-void G__letLongdouble(buf,type,value)
-G__value *buf;
-int type;
-long double value; /* used to be int */
+void G__letLongdouble(G__value *buf,int type,long double value)
 {
   buf->type=type;
   buf->obj.ld=value;
@@ -131,16 +115,15 @@ long double value; /* used to be int */
 * int G__isdouble(G__value buf)
 * 
 ****************************************************************/
-int G__isdouble(buf)
-G__value buf;
+int G__isdouble(G__value buf)
 {
-	switch(buf.type) {
-	case 'd':
-	case 'f':
-		return(1);
-	default:
-		return(0);
-	}
+        switch(buf.type) {
+        case 'd':
+        case 'f':
+                return(1);
+        default:
+                return(0);
+        }
 }
 
 #ifdef G__NEVER
@@ -148,26 +131,25 @@ G__value buf;
 * float G__float(G__value buf)
 * 
 ****************************************************************/
-float G__float(buf)
-G__value buf;
+float G__float(G__value buf)
 {
-	float result;
-	switch(buf.type) {
-	case 'd': /* double */
-	case 'f': /* float */
-	case 'w': /* logic */
-		result = (float)buf.obj.d;
-		return(result);
-	case 'k': /* unsigned long */
-	case 'h': /* unsigned int */
-	case 'r': /* unsigned short */
-	case 'b': /* unsigned char */
-		result = (float)(buf.obj.ulo);
-		return(result);
-	default:
-		result = (float)buf.obj.i;
-		return(result);
-	}
+        float result;
+        switch(buf.type) {
+        case 'd': /* double */
+        case 'f': /* float */
+        case 'w': /* logic */
+                result = (float)buf.obj.d;
+                return(result);
+        case 'k': /* unsigned long */
+        case 'h': /* unsigned int */
+        case 'r': /* unsigned short */
+        case 'b': /* unsigned char */
+                result = (float)(buf.obj.ulo);
+                return(result);
+        default:
+                result = (float)buf.obj.i;
+                return(result);
+        }
 }
 #endif
 
@@ -175,46 +157,43 @@ G__value buf;
 * double G__double(G__value buf)
 * 
 ****************************************************************/
-double G__double(buf)
-G__value buf;
+double G__double(G__value buf)
 {
-	switch(buf.type) {
-	case 'd': /* double */
-	case 'f': /* float */
-	case 'w': /* logic */
-		return(buf.obj.d);
-	case 'k': /* unsigned long */
-	case 'h': /* unsigned int */
-	case 'r': /* unsigned short */
-	case 'b': /* unsigned char */
-		return((double)(buf.obj.ulo));
-	default:
-		return((double)buf.obj.i);
-	}
+        switch(buf.type) {
+        case 'd': /* double */
+        case 'f': /* float */
+        case 'w': /* logic */
+                return(buf.obj.d);
+        case 'k': /* unsigned long */
+        case 'h': /* unsigned int */
+        case 'r': /* unsigned short */
+        case 'b': /* unsigned char */
+                return((double)(buf.obj.ulo));
+        default:
+                return((double)buf.obj.i);
+        }
 }
 
 /****************************************************************
 * long G__bool(G__value buf)
 * 
 ****************************************************************/
-long G__bool(buf) /* used to be int */
-G__value buf;
+long G__bool(G__value buf)
 {
-	switch(buf.type) {
-	case 'd':
-	case 'f':
-		return((long)(0!=buf.obj.d?1:0));
-	default:
-		return(buf.obj.i?1:0);
-	}
+        switch(buf.type) {
+        case 'd':
+        case 'f':
+                return((long)(0!=buf.obj.d?1:0));
+        default:
+                return(buf.obj.i?1:0);
+        }
 }
 
 /****************************************************************
 * long G__int(G__value buf)
 * 
 ****************************************************************/
-long G__int(buf) /* used to be int */
-G__value buf;
+long G__int(G__value buf)
 {
   switch(buf.type) {
   case 'd':
@@ -236,8 +215,7 @@ G__value buf;
 * long G__uint(G__value buf)
 * 
 ****************************************************************/
-unsigned long G__uint(buf) /* used to be int */
-G__value buf;
+unsigned long G__uint(G__value buf)
 {
   switch(buf.type) {
   case 'd':
@@ -263,8 +241,7 @@ G__value buf;
 * G__int64 G__Longlong(G__value buf)
 * 
 ****************************************************************/
-G__int64 G__Longlong(buf) /* used to be int */
-G__value buf;
+G__int64 G__Longlong(G__value buf)
 {
   switch(buf.type) {
   case 'd':
@@ -285,8 +262,7 @@ G__value buf;
 * G__uint64 G__Longlong(G__value buf)
 * 
 ****************************************************************/
-G__uint64 G__ULonglong(buf) /* used to be int */
-G__value buf;
+G__uint64 G__ULonglong(G__value buf)
 {
   switch(buf.type) {
   case 'd':
@@ -313,8 +289,7 @@ G__value buf;
 * long double G__Longdouble(G__value buf)
 * 
 ****************************************************************/
-long double G__Longdouble(buf) /* used to be int */
-G__value buf;
+long double G__Longdouble(G__value buf)
 {
   switch(buf.type) {
   case 'd':
@@ -340,9 +315,7 @@ G__value buf;
 *
 *
 ******************************************************************/
-G__value G__toXvalue(result,var_type)
-G__value result;
-int var_type;
+G__value G__toXvalue(G__value result,int var_type)
 {
   switch(var_type) {
   case 'v':
@@ -385,8 +358,7 @@ int var_type;
 * G__value G__tovalue(G__value p)
 *
 ******************************************************************/
-G__value G__tovalue(p)
-G__value p;
+G__value G__tovalue(G__value p)
 {
   G__value result;
 
@@ -408,46 +380,46 @@ G__value p;
     if(isupper(p.type)) {
       switch(p.obj.reftype.reftype) {
       case G__PARANORMAL:
-	result.type = tolower(p.type);
-	result.obj.i = 1;
-	result.ref = p.obj.i;
-	if(G__asm_noverflow) {
-	  switch(p.type) {
-	  case 'B': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_B; break;
-	  case 'C': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_C; break;
-	  case 'R': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_R; break;
-	  case 'S': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_S; break;
-	  case 'H': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_H; break;
-	  case 'I': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I; break;
-	  case 'K': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_K; break;
-	  case 'L': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_L; break;
-	  case 'F': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_F; break;
-	  case 'D': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_D; break;
-	  case 'U': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_U; break;
-	  default: break;
-	  }
-	}
-	return(result);
+        result.type = tolower(p.type);
+        result.obj.i = 1;
+        result.ref = p.obj.i;
+        if(G__asm_noverflow) {
+          switch(p.type) {
+          case 'B': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_B; break;
+          case 'C': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_C; break;
+          case 'R': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_R; break;
+          case 'S': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_S; break;
+          case 'H': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_H; break;
+          case 'I': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I; break;
+          case 'K': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_K; break;
+          case 'L': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_L; break;
+          case 'F': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_F; break;
+          case 'D': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_D; break;
+          case 'U': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_U; break;
+          default: break;
+          }
+        }
+        return(result);
       case G__PARAP2P:
-	result.obj.i = 1;
-	result.ref = p.obj.i;
-	result.obj.reftype.reftype=G__PARANORMAL;
-	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p;
-	return(result);
+        result.obj.i = 1;
+        result.ref = p.obj.i;
+        result.obj.reftype.reftype=G__PARANORMAL;
+        if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p;
+        return(result);
       case G__PARAP2P2P:
-	result.obj.i = 1;
-	result.ref = p.obj.i;
-	result.obj.reftype.reftype=G__PARAP2P;
-	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p;
-	return(result);
+        result.obj.i = 1;
+        result.ref = p.obj.i;
+        result.obj.reftype.reftype=G__PARAP2P;
+        if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p;
+        return(result);
       case G__PARAREFERENCE:
-	break;
+        break;
       default:
-	result.obj.i = 1;
-	result.ref = p.obj.i;
-	--result.obj.reftype.reftype;
-	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p2;
-	return(result);
+        result.obj.i = 1;
+        result.ref = p.obj.i;
+        --result.obj.reftype.reftype;
+        if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p2;
+        return(result);
       }
     }
   }
@@ -554,16 +526,16 @@ G__value p;
       G__store_struct_offset = p.obj.i;
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	G__inc_cp_asm(-2,0);
-	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-	G__inc_cp_asm(2,0);
+        G__inc_cp_asm(-2,0);
+        G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+        G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+        G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"TOVALUE cancelled\n");
-	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
-	}
+        if(G__asm_dbg) {
+          G__fprinterr(G__serr,"TOVALUE cancelled\n");
+          G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+          G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        }
 #endif
       }
 #endif
@@ -574,10 +546,10 @@ G__value p;
       G__store_struct_offset = store_struct_offsetX; 
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	G__asm_inst[G__asm_cp] = G__POPSTROS;
-	G__inc_cp_asm(1,0);
+        G__asm_inst[G__asm_cp] = G__POPSTROS;
+        G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
 #endif
       }
 #endif
@@ -599,8 +571,7 @@ G__value p;
 * G__value G__letVvalue(G__value *p,G__value expression)
 *
 ******************************************************************/
-G__value G__letVvalue(p,result)
-G__value *p,result;
+G__value G__letVvalue(G__value *p,G__value result)
 {
 #ifdef G__ASM
   if(G__asm_noverflow) {
@@ -640,8 +611,7 @@ G__value *p,result;
 * G__value G__letPvalue(G__value *p,G__value expression)
 *
 ******************************************************************/
-G__value G__letPvalue(p,result)
-G__value *p,result;
+G__value G__letPvalue(G__value *p,G__value result)
 {
 #ifdef G__ASM
   if(G__asm_noverflow) {
@@ -665,66 +635,65 @@ G__value *p,result;
 *   G__initary
 *
 ******************************************************************/
-G__value G__letvalue(p,result)
-G__value *p,result;
+G__value G__letvalue(G__value *p,G__value result)
 {
   if(G__no_exec_compile) {
     if(-1!=p->tagnum && 'e'!=G__struct.type[p->tagnum]) {
       switch(p->type) {
       case 'U':
-	result=G__classassign(p->obj.i,p->tagnum, result);
-	break;
+        result=G__classassign(p->obj.i,p->tagnum, result);
+        break;
       case 'u':
-	{
-	  G__value para;
-	  char refopr[G__MAXNAME];
-	  long store_struct_offsetX = G__store_struct_offset;
-	  int store_tagnumX = G__tagnum;
-	  int done=0;
-	  int store_var_type = G__var_type;
-	  G__var_type='p';
+        {
+          G__value para;
+          char refopr[G__MAXNAME];
+          long store_struct_offsetX = G__store_struct_offset;
+          int store_tagnumX = G__tagnum;
+          int done=0;
+          int store_var_type = G__var_type;
+          G__var_type='p';
 #ifdef G__ASM
-	  if(G__asm_noverflow) {
-	    if(G__LETPVAL==G__asm_inst[G__asm_cp-1]||
-	       G__LETVVAL==G__asm_inst[G__asm_cp-1]) {
+          if(G__asm_noverflow) {
+            if(G__LETPVAL==G__asm_inst[G__asm_cp-1]||
+               G__LETVVAL==G__asm_inst[G__asm_cp-1]) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) 
-		G__fprinterr(G__serr,"LETPVAL,LETVVAL cancelled\n");
+              if(G__asm_dbg) 
+                G__fprinterr(G__serr,"LETPVAL,LETVVAL cancelled\n");
 #endif
-	      G__inc_cp_asm(-1,0);
-	    }
+              G__inc_cp_asm(-1,0);
+            }
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) {
-	      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
-	    }
+            if(G__asm_dbg) {
+              G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+              G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+            }
 #endif
-	    G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-	    G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-	    G__inc_cp_asm(2,0);
-	  }
+            G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+            G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+            G__inc_cp_asm(2,0);
+          }
 #endif
-	  G__store_struct_offset = p->obj.i;
-	  G__tagnum = p->tagnum;
-	  strcpy(refopr,"operator*()");
-	  para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
-	  G__tagnum = store_tagnumX;
-	  G__store_struct_offset = store_struct_offsetX;
-	  G__var_type=store_var_type;
+          G__store_struct_offset = p->obj.i;
+          G__tagnum = p->tagnum;
+          strcpy(refopr,"operator*()");
+          para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
+          G__tagnum = store_tagnumX;
+          G__store_struct_offset = store_struct_offsetX;
+          G__var_type=store_var_type;
 #ifdef G__ASM
-	  if(G__asm_noverflow) {
+          if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) {
-	      G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
-	    }
+            if(G__asm_dbg) {
+              G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
+            }
 #endif
-	    G__asm_inst[G__asm_cp] = G__POPSTROS;
-	    G__inc_cp_asm(1,0);
-	  }
-	  G__letVvalue(&para,result);
+            G__asm_inst[G__asm_cp] = G__POPSTROS;
+            G__inc_cp_asm(1,0);
+          }
+          G__letVvalue(&para,result);
 #endif
-	}
-	break;
+        }
+        break;
       }
     }
     return(result);
@@ -795,22 +764,22 @@ G__value *p,result;
       G__var_type='p';
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	if(G__LETPVAL==G__asm_inst[G__asm_cp-1]||
-	   G__LETVVAL==G__asm_inst[G__asm_cp-1]) {
+        if(G__LETPVAL==G__asm_inst[G__asm_cp-1]||
+           G__LETVVAL==G__asm_inst[G__asm_cp-1]) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"LETPVAL,LETVVAL cancelled\n");
+          if(G__asm_dbg) G__fprinterr(G__serr,"LETPVAL,LETVVAL cancelled\n");
 #endif
-	  G__inc_cp_asm(-1,0);
-	}
+          G__inc_cp_asm(-1,0);
+        }
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
-	}
+        if(G__asm_dbg) {
+          G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+          G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        }
 #endif
-	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-	G__inc_cp_asm(2,0);
+        G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+        G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+        G__inc_cp_asm(2,0);
       }
 #endif
       G__store_struct_offset = p->obj.i;
@@ -823,12 +792,12 @@ G__value *p,result;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
-	}
+        if(G__asm_dbg) {
+          G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
+        }
 #endif
-	G__asm_inst[G__asm_cp] = G__POPSTROS;
-	G__inc_cp_asm(1,0);
+        G__asm_inst[G__asm_cp] = G__POPSTROS;
+        G__inc_cp_asm(1,0);
       }
       G__letVvalue(&para,result);
 #endif
@@ -852,7 +821,7 @@ G__value *p,result;
   return(result);
 }
 
-
+} /* extern "C" */
 
 /*
  * Local Variables:

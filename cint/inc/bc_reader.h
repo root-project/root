@@ -59,6 +59,14 @@ class G__fstream {
   void setpos(fpos_t& pos) { m_pos=pos; rewindpos(); }
   void storepos(int c=0);
   int rewindpos() ;
+  unsigned long getpos() { return((unsigned long)0 /* m_pos */ ); } //not used
+  void setspos(unsigned long pos) { 
+#ifdef __linux
+     m_pos.__pos = pos;
+#else
+     m_pos=pos; 
+#endif
+  }
 };
 
 /***********************************************************************
@@ -78,6 +86,8 @@ class G__sstream {
   void setpos(fpos_t& /* pos */) { }
   void storepos(int c=0) { m_store_pos=m_pos; m_c=c; }
   int rewindpos() { m_pos=m_store_pos; return(m_c); }
+  unsigned long getpos() { return((long)m_pos); }
+  void setspos(unsigned long pos) { m_pos=pos; }
 };
 
 /***********************************************************************
@@ -124,6 +134,8 @@ class G__virtualreader {
   virtual void storepos(int c=0)=0;
   virtual int rewindpos()=0;
 
+  virtual unsigned long getpos() =0 ;
+  virtual void setspos(unsigned long pos) =0 ;
 };
 
 
@@ -180,6 +192,9 @@ class G__srcreader : public G__virtualreader {
 
   void storepos(int c=0) { m_stream.storepos(c); }
   int rewindpos() { return(m_stream.rewindpos()); }
+
+  unsigned long getpos() { return(m_stream.getpos()); }
+  void setspos(unsigned long pos) { m_stream.setspos(pos); }
 
  private:
   int fgetstream_core(string& phrase,const string& endmark

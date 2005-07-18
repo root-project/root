@@ -52,8 +52,11 @@ extern "C" {
 #include <string>
 using namespace std;
 
+template<class T> T bc_min(T a,T b) { return((a<b)?a:b); }
+template<class T> T bc_max(T a,T b) { return((a>b)?a:b); }
+
 /*************************************************************************
- * class G__typeReader
+ * class G__TypeReader
  *************************************************************************/
 class G__TypeReader : public G__TypeInfo {
   int m_static;

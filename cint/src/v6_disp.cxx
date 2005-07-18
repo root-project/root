@@ -21,6 +21,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 int G__browsing=1; /* used in disp.c and intrpt.c */
 
  
@@ -208,8 +210,7 @@ static int G__more_len;
 /***********************************************************************
 * G__more_col()
 ***********************************************************************/
-void G__more_col(len)
-int len;
+void G__more_col(int len)
 {
   G__more_len += len;
 }
@@ -217,9 +218,7 @@ int len;
 /***********************************************************************
 * G__more_pause()
 ***********************************************************************/
-int G__more_pause(fp,len)
-FILE* fp;
-int len;
+int G__more_pause(FILE *fp,int len)
 {
   static int shownline = 0;
   static int dispsize = 22;
@@ -288,9 +287,7 @@ int len;
 /***********************************************************************
 * G__more()
 ***********************************************************************/
-int G__more(fp,msg)
-FILE* fp;
-char* msg;
+int G__more(FILE *fp,char *msg)
 {
 #ifndef G__OLDIMPLEMENTATION1485
   if(fp==G__serr) G__fprinterr(G__serr,"%s",msg);
@@ -310,21 +307,15 @@ char* msg;
 /***********************************************************************
 * void G__disp_purevirtualfunc
 ***********************************************************************/
-void G__display_purevirtualfunc(tagnum)
-int tagnum;
+void G__display_purevirtualfunc(int /* tagnum */)
 {
-#ifndef G__OLDIMPLEMENTATION1911
-   if (tagnum) {} /* just to avoid unused parameter warning */
-#endif
   /* to be implemented */
 }
 
 /***********************************************************************
 * void G__disp_friend
 ***********************************************************************/
-int G__display_friend(fp,friendtag)
-FILE *fp;
-struct G__friendtag* friendtag;
+int G__display_friend(FILE *fp,G__friendtag*friendtag)
 {
   char msg[G__LONGLINE];
   sprintf(msg," friend ");
@@ -340,11 +331,7 @@ struct G__friendtag* friendtag;
 /***********************************************************************
 * void G__listfunc
 ***********************************************************************/
-int G__listfunc(fp,access,fname,ifunc)
-FILE *fp;
-int access;
-char *fname;
-struct G__ifunc_table *ifunc;
+int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 {
   int i,n;
   char temp[G__ONELINE];
@@ -556,8 +543,7 @@ struct G__ifunc_table *ifunc;
 * G__showstack()
 *
 **************************************************************************/
-int G__showstack(fout)
-FILE *fout;
+int G__showstack(FILE *fout)
 {
   int temp,temp1;
   struct G__var_array *local;
@@ -607,8 +593,7 @@ FILE *fout;
 /**************************************************************************
 * G__getdictpos()
 **************************************************************************/
-struct G__dictposition* G__get_dictpos(fname)
-char *fname;
+struct G__dictposition* G__get_dictpos(char *fname)
 {
   struct G__dictposition *dict = (struct G__dictposition*)NULL;
   int i;
@@ -626,9 +611,7 @@ char *fname;
 * G__display_newtypes()
 *
 **************************************************************************/
-int G__display_newtypes(fout,fname)
-FILE* fout;
-char *fname;
+int G__display_newtypes(FILE *fout,char *fname)
 {
   struct G__dictposition *dict = (struct G__dictposition*)NULL;
   int i;
@@ -657,8 +640,7 @@ char *fname;
 * G__display_string()
 *
 **************************************************************************/
-int G__display_string(fout)
-FILE *fout;
+int G__display_string(FILE *fout)
 {
   int len;
   unsigned long totalsize=0;
@@ -689,10 +671,7 @@ FILE *fout;
 * G__display_classinheritance()
 *
 ****************************************************************/
-static int G__display_classinheritance(fout,tagnum,space)
-FILE *fout;
-int tagnum;
-char *space;
+static int G__display_classinheritance(FILE *fout,int tagnum,char *space)
 {
   int i;
   struct G__inheritance *baseclass;
@@ -741,10 +720,7 @@ char *space;
 * G__display_membervariable()
 *
 ****************************************************************/
-static int G__display_membervariable(fout,tagnum,base)
-FILE *fout;
-int tagnum;
-int base;
+static int G__display_membervariable(FILE *fout,int tagnum,int base)
 {
   struct G__var_array *var;
   struct G__inheritance *baseclass;
@@ -776,11 +752,7 @@ int base;
 * G__display_memberfunction()
 *
 ****************************************************************/
-static int G__display_memberfunction(fout,tagnum,access,base)
-FILE *fout;
-int tagnum;
-int access;
-int base;
+static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
 {
   struct G__ifunc_table *store_ifunc;
   int store_exec_memberfunc;
@@ -820,11 +792,7 @@ extern int G__class_autoloading G__P((int tagnum));
 * G__display_class()
 *
 ****************************************************************/
-int G__display_class(fout,name,base,start)
-FILE *fout;
-char *name;
-int base;
-int start;
+int G__display_class(FILE *fout,char *name,int base,int start)
 {
   int tagnum;
   int i,j;
@@ -1031,10 +999,7 @@ int start;
 * G__display_typedef()
 *
 ****************************************************************/
-int G__display_typedef(fout,name,startin)
-FILE *fout;
-char *name;
-int startin;
+int G__display_typedef(FILE *fout,char *name,int startin)
 {
   int i,j;
   int start,stop;
@@ -1137,10 +1102,7 @@ int startin;
 * G__display_eachtemplate()
 *
 ****************************************************************/
-int G__display_eachtemplate(fout,deftmplt,detail)
-FILE *fout;
-struct G__Definedtemplateclass *deftmplt;
-int detail;
+int G__display_eachtemplate(FILE *fout,G__Definedtemplateclass *deftmplt,int detail)
 {
   struct G__Templatearg *def_para;
   struct G__Definedtemplatememfunc *memfunctmplt;
@@ -1229,9 +1191,7 @@ int detail;
 * G__display_eachtemplatefunc()
 *
 ****************************************************************/
-int G__display_eachtemplatefunc(fout,deftmpfunc)
-FILE *fout;
-struct G__Definetemplatefunc *deftmpfunc;
+int G__display_eachtemplatefunc(FILE *fout, G__Definetemplatefunc *deftmpfunc)
 {
   char msg[G__LONGLINE];
   struct G__Templatearg *def_para;
@@ -1334,9 +1294,7 @@ struct G__Definetemplatefunc *deftmpfunc;
 * G__display_template()
 *
 ****************************************************************/
-int G__display_template(fout,name)
-FILE *fout;
-char *name;
+int G__display_template(FILE *fout,char *name)
 {
   int i /* ,j */;
   struct G__Definedtemplateclass *deftmplt;
@@ -1381,8 +1339,7 @@ char *name;
 * G__display_includepath()
 *
 ****************************************************************/
-int G__display_includepath(fout)
-FILE *fout;
+int G__display_includepath(FILE *fout)
 {
   fprintf(fout,"include path: %s\n",G__allincludepath);
   return(0);
@@ -1392,9 +1349,7 @@ FILE *fout;
 * G__display_macro()
 *
 ****************************************************************/
-int G__display_macro(fout,name)
-FILE *fout;
-char *name;
+int G__display_macro(FILE *fout,char *name)
 {
   struct G__Deffuncmacro *deffuncmacro;
   struct G__Charlist *charlist;
@@ -1473,8 +1428,7 @@ char *name;
 * G__display_files()
 *
 ****************************************************************/
-int G__display_files(fout)
-FILE *fout;
+int G__display_files(FILE *fout)
 {
   char msg[G__ONELINE];
   int i;
@@ -1505,9 +1459,7 @@ FILE *fout;
 *  print source file
 *
 ********************************************************************/
-int G__pr(fout,view)
-FILE *fout;
-struct G__input_file view;
+int G__pr(FILE *fout,G__input_file view)
 {
   int center,thisline,filenum;
   char G__oneline[G__LONGLINE*2];
@@ -1644,8 +1596,7 @@ struct G__input_file view;
 * G__dump_tracecoverage()
 *
 ***********************************************************************/
-int G__dump_tracecoverage(fout)
-FILE *fout;
+int G__dump_tracecoverage(FILE *fout)
 {
   int iarg;
   struct G__input_file view;
@@ -1668,11 +1619,7 @@ FILE *fout;
 * void G__objectmonitor()
 *
 ******************************************************************/
-int G__objectmonitor(fout,pobject,tagnum,addspace)
-FILE *fout;
-long pobject;
-int tagnum;
-char *addspace;
+int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
 {
   struct G__inheritance *baseclass;
   char space[G__ONELINE];
@@ -1738,12 +1685,7 @@ char *addspace;
 * void G__varmonitor()
 *
 ******************************************************************/
-int G__varmonitor(fout,var,index,addspace,offset)
-FILE *fout;
-struct G__var_array *var;
-char *index;
-char *addspace;
-long offset;
+int G__varmonitor(FILE *fout,G__var_array *var,char *index,char *addspace,long offset)
 {
   int imon1;
   long addr;
@@ -2089,8 +2031,7 @@ static G__ErrMsgCallback_t G__ErrMsgCallback;
 /**************************************************************************
 * G__set_errmsgcallback()
 **************************************************************************/
-void G__set_errmsgcallback(p)
-void *p;
+void G__set_errmsgcallback(void *p)
 {
   G__ErrMsgCallback = (G__ErrMsgCallback_t)p;
 }
@@ -2098,12 +2039,8 @@ void *p;
 /**************************************************************************
 * G__mask_errmsg()
 **************************************************************************/
-void G__mask_errmsg(msg)
-char *msg;
+void G__mask_errmsg(char * /* msg */)
 {
-#ifndef G__OLDIMPLEMENTATION1911
-   if (msg) {} /* just to avoid unused parameter warning */
-#endif
 }
 
 /**************************************************************************
@@ -2172,8 +2109,7 @@ va_list arg;
 /**************************************************************************
 * G__fputerr()
 **************************************************************************/
-int G__fputerr(c)
-int c;
+int G__fputerr(int c)
 {
   int result;
   if(G__ErrMsgCallback && G__serr==G__stderr) {
@@ -2224,12 +2160,12 @@ static int G__masksignal=0;
 * G__signal()
 **************************************************************************/
 #ifndef G__SYMANTEC
-G__signaltype G__signal(sgnl,f)
+G__signaltype G__signal(int sgnl,void (*f) G__P((int)))
 #else
 void* G__signal(sgnl,f)
-#endif
 int sgnl;
 void (*f) G__P((int));
+#endif
 {
 #ifndef G__SYMANTEC
   if(!G__masksignal) return((G__signaltype)signal(sgnl,f));
@@ -2243,8 +2179,7 @@ void (*f) G__P((int));
 /**************************************************************************
 * G__setmasksignal()
 **************************************************************************/
-int G__setmasksignal(masksignal)
-int masksignal;
+int G__setmasksignal(int masksignal)
 {
   G__masksignal=masksignal;
   return(0);
@@ -2253,8 +2188,7 @@ int masksignal;
 /**************************************************************************
 * G__setautoconsole()
 **************************************************************************/
-void G__setautoconsole(autoconsole)
-int autoconsole;
+void G__setautoconsole(int autoconsole)
 {
   G__autoconsole=autoconsole;
   G__isconsole=0;
@@ -2432,8 +2366,7 @@ int G__system(char *com)
 /**************************************************************************
 * G__setautoconsole()
 **************************************************************************/
-void G__setautoconsole(autoconsole)
-int autoconsole;
+void G__setautoconsole(int autoconsole)
 {
   autoconsole=autoconsole; /* no effect */
 }
@@ -2456,6 +2389,7 @@ int G__FreeConsole()
 
 #endif /* G__WIN32 */
 
+} /* extern "C" */
 
 /*
  * Local Variables:

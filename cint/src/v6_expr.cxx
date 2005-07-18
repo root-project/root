@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 #if defined(G__NONANSI) || defined(G__SUNOS4) || defined(G__NEWSOS6) || defined(G__NEWSOS4)
 #define G__OLDIMPLEMENTATION918
 #endif
@@ -37,27 +39,23 @@ extern int G__dynconst;
 /******************************************************************
 * G__setiparseobject()
 ******************************************************************/
-char* G__setiparseobject(result,str)
-G__value* result;
-char *str;
+char* G__setiparseobject(G__value *result,char *str)
 {
   sprintf(str,"_$%c%d%c_%d_%c%lu"
-	  ,result->type
-	  ,0
-	  ,(0==result->isconst)?'0':'1'
-	  ,result->tagnum
-	  ,(result->obj.i<0)?'M':'P'
-	  ,labs(result->obj.i)
-	  );
+          ,result->type
+          ,0
+          ,(0==result->isconst)?'0':'1'
+          ,result->tagnum
+          ,(result->obj.i<0)?'M':'P'
+          ,labs(result->obj.i)
+          );
   return(str);
 }
 
 /******************************************************************
 * G__getiparseobject()
 ******************************************************************/
-static void G__getiparseobject(result,item)
-G__value* result;
-char *item;
+static void G__getiparseobject(G__value *result,char *item)
 {
   /* '_$trc_[tagnum]_[addr]' */
   char *xtmp = item+6;
@@ -99,8 +97,7 @@ void G__reset_lasterror()
 * open to public as CINT API.
 *
 ******************************************************************/
-G__value G__calc_internal(exprwithspace)
-char *exprwithspace;
+G__value G__calc_internal(char *exprwithspace)
 {
 #ifdef G__EH_SIGNAL
   void (*fpe)();
@@ -140,13 +137,13 @@ char *exprwithspace;
     switch( exprwithspace[iin] ) {
     case '"' : /* double quote */
       if(single_quote==0) {
-	double_quote ^= 1;
+        double_quote ^= 1;
       }
       exprnospace[iout++] = exprwithspace[iin++] ;
       break;
     case '\'' : /* single quote */
       if(double_quote==0) {
-	single_quote ^= 1;
+        single_quote ^= 1;
       }
       exprnospace[iout++] = exprwithspace[iin++] ;
       break;
@@ -158,27 +155,27 @@ char *exprwithspace;
       exprnospace[iout] = '\0'; /* temporarily terminate string */
       len=strlen(exprnospace);
       if((single_quote!=0)||(double_quote!=0)||
-	 (len>=3+ipunct&&strncmp(exprnospace+ipunct,"new",3)==0)
-	 || (len>=5+ipunct&&strncmp(exprnospace+ipunct,"const",5)==0)
-	 ) {
-	exprnospace[iout++] = exprwithspace[iin] ;
+         (len>=3+ipunct&&strncmp(exprnospace+ipunct,"new",3)==0)
+         || (len>=5+ipunct&&strncmp(exprnospace+ipunct,"const",5)==0)
+         ) {
+        exprnospace[iout++] = exprwithspace[iin] ;
       }
       else if(len>=8&&strncmp(exprnospace,"delete[]",8)==0) {
-	G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
-	G__delete_operator(exprnospace,1);
-	result = G__null;
-	goto deletereturn;
+        G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
+        G__delete_operator(exprnospace,1);
+        result = G__null;
+        goto deletereturn;
       }
       else if(len>=6&&strncmp(exprnospace,"delete",6)==0) {
-	G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
-	if(exprnospace[0]=='[') {
-	  G__delete_operator(exprnospace+2,1);
-	}
-	else {
-	  G__delete_operator(exprnospace,0);
-	}
-	result = G__null;
-	goto deletereturn;
+        G__getstream(exprwithspace ,&iin ,exprnospace,"\0");
+        if(exprnospace[0]=='[') {
+          G__delete_operator(exprnospace+2,1);
+        }
+        else {
+          G__delete_operator(exprnospace,0);
+        }
+        result = G__null;
+        goto deletereturn;
       }
       iin++;
       break;
@@ -243,8 +240,7 @@ char *exprwithspace;
 * open to public as CINT API.
 *
 ******************************************************************/
-G__value G__calc(exprwithspace)
-char *exprwithspace;
+G__value G__calc(const char *exprwithspace)
 {
   G__value result;
   int store_security_error; 
@@ -256,7 +252,7 @@ char *exprwithspace;
 
   G__storerewindposition();
 
-  result = G__calc_internal(exprwithspace);
+  result = G__calc_internal((char*)exprwithspace);
 
   G__security_recover(G__serr);
   
@@ -275,11 +271,9 @@ char *exprwithspace;
 *  evaluate a?b:c operator
 *
 ******************************************************************/
-static G__value G__conditionaloperator(defined,expression,ig1,ebuf)
-G__value defined;
-char *expression;
-int ig1;
-char *ebuf;
+static G__value G__conditionaloperator(G__value defined
+                                       ,char *expression
+                                       ,int ig1,char *ebuf)
 {
   int tempop;
   int ppointer=0;
@@ -312,8 +306,8 @@ char *ebuf;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: JMP assigned later\n" ,G__asm_cp);
-	G__fprinterr(G__serr,"  CNDJMP assigned %x?%x\n",G__asm_cp+2,ppointer-1);
+        G__fprinterr(G__serr,"%3x: JMP assigned later\n" ,G__asm_cp);
+        G__fprinterr(G__serr,"  CNDJMP assigned %x?%x\n",G__asm_cp+2,ppointer-1);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
@@ -341,8 +335,8 @@ char *ebuf;
       G__no_exec_compile=store_no_exec_compile;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: JMP assigned later\n",G__asm_cp);
-	G__fprinterr(G__serr,"  CNDJMP assigned %x?%x\n",G__asm_cp+2,ppointer-1);
+        G__fprinterr(G__serr,"%3x: JMP assigned later\n",G__asm_cp);
+        G__fprinterr(G__serr,"  CNDJMP assigned %x?%x\n",G__asm_cp+2,ppointer-1);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
@@ -376,9 +370,7 @@ char *ebuf;
 * G__iscastexpr_body()
 *
 ******************************************************************/
-int G__iscastexpr_body(ebuf,lenbuf)
-char *ebuf;
-int lenbuf;
+int G__iscastexpr_body(char *ebuf,int lenbuf)
 {
 #ifndef G__OLDIMPLEMENTATION1802
   int result;
@@ -623,13 +615,13 @@ int lenbuf;
         }                                                             \
         else if(isalnum(expression[ig1+2])|| /* 2008 */               \
                 '.'==expression[ig1+2]||'_'==expression[ig1+2]) {     \
-	  /* a+ +b, a- -b */                                          \
-	  ebuf[lenbuf]=0;                                             \
+          /* a+ +b, a- -b */                                          \
+          ebuf[lenbuf]=0;                                             \
           ++ig1;                                                      \
           G__exec_binopr('+',G__PREC_ADD);                            \
         }                                                             \
         else {                                                        \
-	  /* a++, a-- */                                              \
+          /* a++, a-- */                                              \
           ++ig1;                                                      \
           if('v'==G__var_type) {                                      \
             G__exec_unaopr('*');                                      \
@@ -641,7 +633,7 @@ int lenbuf;
       }                                                               \
       else {                                                          \
         /* *++a = expr should be handled at assignment oprerator */   \
-	/* ++a, --a */                                                \
+        /* ++a, --a */                                                \
         ++ig1;                                                        \
         if('v'==G__var_type) {                                        \
           G__exec_unaopr('*');                                        \
@@ -669,19 +661,19 @@ int lenbuf;
          (isdigit(ebuf[0])||'.'==ebuf[0]||                            \
          ('('==ebuf[0]&&(pebuf=strchr(ebuf,')'))&&                    \
           (isdigit(*++pebuf)||'.'==(*pebuf))))) {                     \
-	/* 1e+10, 1e-10, (double)1e+6 */                              \
+        /* 1e+10, 1e-10, (double)1e+6 */                              \
         ebuf[lenbuf++]=c;                                             \
       }                                                               \
       else {                                                          \
-	ebuf[lenbuf]=0; /* ON742 */                                   \
-	if(!G__iscastexpr(ebuf)) {                                    \
-	  /* a+b, a-b */                                              \
+        ebuf[lenbuf]=0; /* ON742 */                                   \
+        if(!G__iscastexpr(ebuf)) {                                    \
+          /* a+b, a-b */                                              \
           G__exec_binopr(c,G__PREC_ADD);                              \
-	}                                                             \
-	else {                                                        \
-	  /* (int)-abc */                                             \
-	  ebuf[lenbuf++]=c;                                           \
-	}                                                             \
+        }                                                             \
+        else {                                                        \
+          /* (int)-abc */                                             \
+          ebuf[lenbuf++]=c;                                           \
+        }                                                             \
         /* G__exec_binopr(c,G__PREC_ADD); ON742 */                    \
       }                                                               \
     }                                                                 \
@@ -732,51 +724,51 @@ int lenbuf;
 
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
-	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
+          store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
+          if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
-	  }                                                           \
-	  if(G__asm_noverflow) {                                      \
-	    if(G__asm_dbg) {                                          \
-	      G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
-	      G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1); \
-	    }                                                         \
-	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
-	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
+          }                                                           \
+          if(G__asm_noverflow) {                                      \
+            if(G__asm_dbg) {                                          \
+              G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
+              G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1); \
+            }                                                         \
+            G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+            G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
             G__asm_inst[G__asm_cp+2] = G__PVOID; /* 1575 */ \
-	    ppointer_and[pp_and] = G__asm_cp+2;                       \
-	    G__inc_cp_asm(3,0);                                       \
-	  }                                                           \
+            ppointer_and[pp_and] = G__asm_cp+2;                       \
+            G__inc_cp_asm(3,0);                                       \
+          }                                                           \
           ++G__templevel; /* 1516 */ \
-	  ++pp_and;                                                   \
+          ++pp_and;                                                   \
         }
 
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
-	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
+          store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
+          if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
-	  }                                                           \
-	  if(G__asm_noverflow) {                                      \
-	    if(G__asm_dbg) {                                          \
-	      G__fprinterr(G__serr,"%3x: BOOL\n",G__asm_cp);               \
-	      G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp+1);          \
-	      G__fprinterr(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+2); \
-	    }                                                         \
-	    G__asm_inst[G__asm_cp]=G__BOOL;                           \
-	    G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
-	    G__asm_inst[G__asm_cp+2]=G__CND1JMP;                      \
+          }                                                           \
+          if(G__asm_noverflow) {                                      \
+            if(G__asm_dbg) {                                          \
+              G__fprinterr(G__serr,"%3x: BOOL\n",G__asm_cp);               \
+              G__fprinterr(G__serr,"%3x: PUSHCPY\n",G__asm_cp+1);          \
+              G__fprinterr(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+2); \
+            }                                                         \
+            G__asm_inst[G__asm_cp]=G__BOOL;                           \
+            G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
+            G__asm_inst[G__asm_cp+2]=G__CND1JMP;                      \
             G__asm_inst[G__asm_cp+3] = G__PVOID; /* 1575 */ \
-	    ppointer_or[pp_or] = G__asm_cp+3;                         \
-	    G__inc_cp_asm(4,0);                                       \
-	  }                                                           \
+            ppointer_or[pp_or] = G__asm_cp+3;                         \
+            G__inc_cp_asm(4,0);                                       \
+          }                                                           \
           ++G__templevel; /* 1516 */ \
-	  ++pp_or;                                                    \
+          ++pp_or;                                                    \
         }
 
 #define G__RESTORE_NOEXEC_ANDOPR                                      \
@@ -829,40 +821,40 @@ int lenbuf;
 
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
-	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
+          store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
+          if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
-	  }                                                           \
-	  if(G__asm_noverflow) {                                      \
-	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
-	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
+          }                                                           \
+          if(G__asm_noverflow) {                                      \
+            G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+            G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
             G__asm_inst[G__asm_cp+2] = G__PVOID; /* 1575 */ \
-	    ppointer_and[pp_and] = G__asm_cp+2;                       \
-	    G__inc_cp_asm(3,0);                                       \
-	  }                                                           \
+            ppointer_and[pp_and] = G__asm_cp+2;                       \
+            G__inc_cp_asm(3,0);                                       \
+          }                                                           \
           ++G__templevel; /* 1516 */ \
-	  ++pp_and;                                                   \
+          ++pp_and;                                                   \
         }
 
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
-	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
+          store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
+          if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
-	  }                                                           \
-	  if(G__asm_noverflow) {                                      \
-	    G__asm_inst[G__asm_cp]=G__BOOL;                           \
-	    G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
-	    G__asm_inst[G__asm_cp+2]=G__CND1JMP;                      \
+          }                                                           \
+          if(G__asm_noverflow) {                                      \
+            G__asm_inst[G__asm_cp]=G__BOOL;                           \
+            G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
+            G__asm_inst[G__asm_cp+2]=G__CND1JMP;                      \
             G__asm_inst[G__asm_cp+3] = G__PVOID; /* 1575 */ \
-	    ppointer_or[pp_or] = G__asm_cp+3;                         \
-	    G__inc_cp_asm(4,0);                                       \
-	  }                                                           \
+            ppointer_or[pp_or] = G__asm_cp+3;                         \
+            G__inc_cp_asm(4,0);                                       \
+          }                                                           \
           ++G__templevel; /* 1516 */ \
-	  ++pp_or;                                                    \
+          ++pp_or;                                                    \
         }
 
 #define G__RESTORE_NOEXEC_ANDOPR                                      \
@@ -910,8 +902,7 @@ int lenbuf;
 *
 ******************************************************************/
 #define G__STACKDEPTH 100 /* increased from 12 */
-G__value G__getexpr(expression)
-char *expression;
+G__value G__getexpr(char *expression)
 {
   G__value vstack[G__STACKDEPTH]; /* evaluated value stack */
   int sp=0;                       /* stack pointer */
@@ -996,19 +987,19 @@ char *expression;
     ****************************************************/
     case '(': /* new(arena) type(),  (type)val, (expr) */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)&&
-	 lenbuf==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
+         lenbuf==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
 #ifndef G__OLDIMPLEMENTATION1802
-	if(vv!=ebuf) free((void*)ebuf);
+        if(vv!=ebuf) free((void*)ebuf);
 #endif
-	return(G__new_operator(expression+ig1));
+        return(G__new_operator(expression+ig1));
       }
       /* no break here */
     case '[': 
     case '{': 
       if((double_quote==0)&&(single_quote==0)) {
-	nest++;
-	ebuf[lenbuf++]=c;
-	inew=ig1+1;
+        nest++;
+        ebuf[lenbuf++]=c;
+        inew=ig1+1;
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1017,9 +1008,9 @@ char *expression;
     case ']': 
     case '}': 
       if((double_quote==0)&&(single_quote==0)) {
-	nest--;
-	ebuf[lenbuf++]=c;
-	inew=ig1+1;
+        nest--;
+        ebuf[lenbuf++]=c;
+        inew=ig1+1;
         if (!iscastexpr && '('==ebuf[0]) {
           ebuf[lenbuf] = '\0';
           iscastexpr = G__iscastexpr(ebuf);
@@ -1033,39 +1024,39 @@ char *expression;
     ****************************************************/
     case ' ': /* new type, new (arena) type */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(lenbuf-inew==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
+        if(lenbuf-inew==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
 #ifndef G__OLDIMPLEMENTATION1802
-	  if(vv!=ebuf) free((void*)ebuf);
+          if(vv!=ebuf) free((void*)ebuf);
 #endif
-	  return(G__new_operator(expression+ig1+1));
-	}
-	/* else ignore c, shoud not happen, but not sure */
-	inew=ig1+1;
+          return(G__new_operator(expression+ig1+1));
+        }
+        /* else ignore c, shoud not happen, but not sure */
+        inew=ig1+1;
       }
       else ebuf[lenbuf++]=c;
       break;
     case '!': /* !a, a!=b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if('='==expression[ig1+1]) {
-	  /* a!=b */
-	  ++ig1;
-	  if(0==lenbuf) { G__expr_error; }
-	  G__exec_binopr(G__OPR_NE,G__PREC_EQUAL);
-	  break;
-	}
+        if('='==expression[ig1+1]) {
+          /* a!=b */
+          ++ig1;
+          if(0==lenbuf) { G__expr_error; }
+          G__exec_binopr(G__OPR_NE,G__PREC_EQUAL);
+          break;
+        }
       }
       /* no break here */
     case '~': /* ~a */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
         if(lenbuf) {
-	  /* a->~b(), a::~b(), a.~b() */
-	  explicitdtor=1;
-	  ebuf[lenbuf++]=c; 
-	}
-	else {
-	  /* ~a, !a */
-	  G__exec_unaopr(c);
-	}
+          /* a->~b(), a::~b(), a.~b() */
+          explicitdtor=1;
+          ebuf[lenbuf++]=c; 
+        }
+        else {
+          /* ~a, !a */
+          G__exec_unaopr(c);
+        }
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1086,178 +1077,178 @@ char *expression;
       break;
     case '<': /* a<<b, a<b, a<=b, a<<=b */
       if(nest==0&&single_quote==0&&double_quote==0&&explicitdtor==0) {
-	ebuf[lenbuf]='\0'; 
-	if(G__defined_templateclass(ebuf)) {
+        ebuf[lenbuf]='\0'; 
+        if(G__defined_templateclass(ebuf)) {
 /* #define G__OLDIMPLEMENTATION790 */
-	  ++ig1;
-	  ebuf[lenbuf++] = c;
-	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
-	  lenbuf=strlen(ebuf);
-	  ebuf[lenbuf++] = c;
-	  ebuf[lenbuf] = '\0';
-	  --ig1;
-	  /* try to instantiate the template */
-	  (void)G__defined_tagname(ebuf,1);
-	  lenbuf=strlen(ebuf);
-	  break;
-	}
+          ++ig1;
+          ebuf[lenbuf++] = c;
+          c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
+          lenbuf=strlen(ebuf);
+          ebuf[lenbuf++] = c;
+          ebuf[lenbuf] = '\0';
+          --ig1;
+          /* try to instantiate the template */
+          (void)G__defined_tagname(ebuf,1);
+          lenbuf=strlen(ebuf);
+          break;
+        }
 #ifndef G__OLDIMPLEMENTATION1560
-	else if(strchr(expression+ig1,'>') && 
+        else if(strchr(expression+ig1,'>') && 
                 (G__defined_templatefunc(ebuf)
-		 || G__defined_templatememfunc(ebuf)
+                 || G__defined_templatememfunc(ebuf)
                  )) {
-	  ++ig1;
-	  ebuf[lenbuf++] = c;
-	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
-	  if('>'==c) strcat(ebuf,">");
-	  lenbuf = strlen(ebuf);
-	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,"(");
-	  if('('==c) strcat(ebuf,"(");
-	  lenbuf = strlen(ebuf);
-	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,")");
-	  if(')'==c) strcat(ebuf,")");
-	  lenbuf=strlen(ebuf);
-	  --ig1;
-	  break;
-	}
+          ++ig1;
+          ebuf[lenbuf++] = c;
+          c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
+          if('>'==c) strcat(ebuf,">");
+          lenbuf = strlen(ebuf);
+          c=G__getstream_template(expression,&ig1,ebuf+lenbuf,"(");
+          if('('==c) strcat(ebuf,"(");
+          lenbuf = strlen(ebuf);
+          c=G__getstream_template(expression,&ig1,ebuf+lenbuf,")");
+          if(')'==c) strcat(ebuf,")");
+          lenbuf=strlen(ebuf);
+          --ig1;
+          break;
+        }
 #endif
-	else if(strcmp(ebuf,"dynamic_cast")==0 ||
-		strcmp(ebuf,"static_cast")==0 ||
-		strcmp(ebuf,"reinterpret_cast")==0 ||
-		strcmp(ebuf,"const_cast")==0) {
+        else if(strcmp(ebuf,"dynamic_cast")==0 ||
+                strcmp(ebuf,"static_cast")==0 ||
+                strcmp(ebuf,"reinterpret_cast")==0 ||
+                strcmp(ebuf,"const_cast")==0) {
           /* TODO, implement casts, may need to introduce new instruction */
-	  ++ig1;
+          ++ig1;
           ebuf[0]='(';
-	  c=G__getstream_template(expression,&ig1,ebuf+1,">");
-	  lenbuf=strlen(ebuf);
-	  ebuf[lenbuf++] = ')';
-	  ebuf[lenbuf] = '\0';
-	  --ig1;
-	  break;
-	}
-	G__wrap_shifts(c,G__OPR_LSFTASSIGN,G__OPR_LSFT,G__OPR_LE)
+          c=G__getstream_template(expression,&ig1,ebuf+1,">");
+          lenbuf=strlen(ebuf);
+          ebuf[lenbuf++] = ')';
+          ebuf[lenbuf] = '\0';
+          --ig1;
+          break;
+        }
+        G__wrap_shifts(c,G__OPR_LSFTASSIGN,G__OPR_LSFT,G__OPR_LE)
       }
       else ebuf[lenbuf++]=c;
       break;
     case '>': /* a>>b, a>b, a>=b, a>>=b */
       if(nest==0&&single_quote==0&&double_quote==0&&explicitdtor==0) {
-	G__wrap_shifts(c,G__OPR_RSFTASSIGN,G__OPR_RSFT,G__OPR_GE)
+        G__wrap_shifts(c,G__OPR_RSFTASSIGN,G__OPR_RSFT,G__OPR_GE)
       }
       else ebuf[lenbuf++]=c;
       break;
 
     case '@': /* a@b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(0==lenbuf) { G__expr_error; }
-	G__exec_binopr(c,G__PREC_PWR);
+        if(0==lenbuf) { G__expr_error; }
+        G__exec_binopr(c,G__PREC_PWR);
       }
       else ebuf[lenbuf++]=c;
       break;
     case '*': /* *a, a*b, a*=b, a**b, **a */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if('='==expression[ig1+1]) {
-	  /* a*=b */
-	  ++ig1;
-	  G__exec_oprassignopr(G__OPR_MULASSIGN);
-	}
-	else if(c==expression[ig1+1]) {
-	  if(lenbuf) {
+        if('='==expression[ig1+1]) {
+          /* a*=b */
+          ++ig1;
+          G__exec_oprassignopr(G__OPR_MULASSIGN);
+        }
+        else if(c==expression[ig1+1]) {
+          if(lenbuf) {
 #ifndef G__NOPOWEROPR
-	    /* a**b handle as power operator */
-	    ++ig1;
-	    G__exec_binopr('@',G__PREC_PWR);
+            /* a**b handle as power operator */
+            ++ig1;
+            G__exec_binopr('@',G__PREC_PWR);
 #else
-	    /* a**b handle as a*(*b) */
-	    G__exec_binopr('*',G__PREC_MULT);
-	    G__exec_unaopr('*');
-	    ++ig1;
+            /* a**b handle as a*(*b) */
+            G__exec_binopr('*',G__PREC_MULT);
+            G__exec_unaopr('*');
+            ++ig1;
 #endif
-	  }
-	  else {
-	    /* **a */
-	    ++ig1;
-	    G__exec_unaopr(c);
-	    /* it is questionable whether to change following to 
-	     * G__exec_unaopr(c); */
-	     G__exec_unaopr(c);
-	  }
-	}
-	else if(lenbuf) {
-	  ebuf[lenbuf]=0;
+          }
+          else {
+            /* **a */
+            ++ig1;
+            G__exec_unaopr(c);
+            /* it is questionable whether to change following to 
+             * G__exec_unaopr(c); */
+             G__exec_unaopr(c);
+          }
+        }
+        else if(lenbuf) {
+          ebuf[lenbuf]=0;
 #define G__OLDIMPLEMENTATION792 /* BAD CHANGE */
-	  if(!G__iscastexpr(ebuf)) {
-	    /* a*b */
-	    G__exec_binopr(c,G__PREC_MULT);
-	  }
-	  else {
-	    /* (int)*abc */
-	    ebuf[lenbuf++]=c;
-	  }
-	}
-	else {
-	  /* *a */
-	  /* it is questionable whether to change following to 
-	   * G__exec_unaopr(c); */
+          if(!G__iscastexpr(ebuf)) {
+            /* a*b */
+            G__exec_binopr(c,G__PREC_MULT);
+          }
+          else {
+            /* (int)*abc */
+            ebuf[lenbuf++]=c;
+          }
+        }
+        else {
+          /* *a */
+          /* it is questionable whether to change following to 
+           * G__exec_unaopr(c); */
 #define G__OLDIMPLEMENTATION1619
-	   G__exec_unaopr(c);
-	}
+           G__exec_unaopr(c);
+        }
       }
       else ebuf[lenbuf++]=c;
       break;
     case '&': /* &a, a&b, a&&b, a&=b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(c==expression[ig1+1]) {
-	  /* a&&b */
-	  ++ig1;
-	  G__exec_binopr('A',G__PREC_LOGICAND);
-	  G__SUSPEND_ANDOPR;
-	}
-	else if('='==expression[ig1+1]) {
-	  /* a&=b */
-	  ++ig1;
-	  G__exec_oprassignopr(G__OPR_BANDASSIGN);
-	}
-	else if(lenbuf) {
-	  ebuf[lenbuf]=0;
-	  if(!G__iscastexpr(ebuf)) {
-	    /* a&b */
-	    G__exec_binopr(c,G__PREC_BITAND);
-	  }
-	  else {
-	    /* (int*)&abc */
-	    ebuf[lenbuf++]=c;
-	  }
-	}
-	else {
-	  /* &a */
-	  G__exec_unaopr(c); /* ON717 */
-	}
+        if(c==expression[ig1+1]) {
+          /* a&&b */
+          ++ig1;
+          G__exec_binopr('A',G__PREC_LOGICAND);
+          G__SUSPEND_ANDOPR;
+        }
+        else if('='==expression[ig1+1]) {
+          /* a&=b */
+          ++ig1;
+          G__exec_oprassignopr(G__OPR_BANDASSIGN);
+        }
+        else if(lenbuf) {
+          ebuf[lenbuf]=0;
+          if(!G__iscastexpr(ebuf)) {
+            /* a&b */
+            G__exec_binopr(c,G__PREC_BITAND);
+          }
+          else {
+            /* (int*)&abc */
+            ebuf[lenbuf++]=c;
+          }
+        }
+        else {
+          /* &a */
+          G__exec_unaopr(c); /* ON717 */
+        }
       }
       else ebuf[lenbuf++]=c;
       break;
     case '|': /* a|b, a||b, a|=b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(c==expression[ig1+1]) {
-	  /* a||b */
-	  ++ig1;
-	  G__exec_binopr('O',G__PREC_LOGICOR);
+        if(c==expression[ig1+1]) {
+          /* a||b */
+          ++ig1;
+          G__exec_binopr('O',G__PREC_LOGICOR);
           G__RESTORE_NOEXEC_ANDOPR
           G__RESTORE_ANDOPR
-	  G__SUSPEND_OROPR;
-	}
-	else if('='==expression[ig1+1]) {
-	  /* a|=b */
-	  ++ig1;
-	  G__exec_oprassignopr(G__OPR_BORASSIGN);
-	}
-	else if(lenbuf) {
-	  /* a&b */
-	  G__exec_binopr(c,G__PREC_BITOR);
-	}
-	else {
-	  /* &a */
-	  G__exec_unaopr(c);
-	}
+          G__SUSPEND_OROPR;
+        }
+        else if('='==expression[ig1+1]) {
+          /* a|=b */
+          ++ig1;
+          G__exec_oprassignopr(G__OPR_BORASSIGN);
+        }
+        else if(lenbuf) {
+          /* a&b */
+          G__exec_binopr(c,G__PREC_BITOR);
+        }
+        else {
+          /* &a */
+          G__exec_unaopr(c);
+        }
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1267,43 +1258,43 @@ char *expression;
     ****************************************************/
     case '=': /* a==b, a=b */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	if(c==expression[ig1+1]) {
-	  /* a==b */
-	  ++ig1;
-	  G__exec_binopr(G__OPR_EQ,G__PREC_EQUAL);
-	}
-	else {
-	  /* a=b */
-	  G__var_type='p';
-	  defined=G__getexpr(expression+ig1+1);
-	  strncpy(ebuf,expression,ig1);
-	  ebuf[ig1] = '\0';
-	  G__var_type=store_var_type;
+        if(c==expression[ig1+1]) {
+          /* a==b */
+          ++ig1;
+          G__exec_binopr(G__OPR_EQ,G__PREC_EQUAL);
+        }
+        else {
+          /* a=b */
+          G__var_type='p';
+          defined=G__getexpr(expression+ig1+1);
+          strncpy(ebuf,expression,ig1);
+          ebuf[ig1] = '\0';
+          G__var_type=store_var_type;
 #ifndef G__OLDIMPLEMENTATION1802
-	  vstack[0]= G__letvariable(ebuf,defined,&G__global,G__p_local);
-	  if(vv!=ebuf) free((void*)ebuf);
-	  return(vstack[0]);
+          vstack[0]= G__letvariable(ebuf,defined,&G__global,G__p_local);
+          if(vv!=ebuf) free((void*)ebuf);
+          return(vstack[0]);
 #else
-	  return(G__letvariable(ebuf,defined,&G__global,G__p_local));
+          return(G__letvariable(ebuf,defined,&G__global,G__p_local));
 #endif
-	}
-	inew=ig1+1;
+        }
+        inew=ig1+1;
       }
       else ebuf[lenbuf++]=c;
       break;
     case '?': /* a?b:c */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
-	G__exec_evalall;
-	G__RESTORE_NOEXEC_ANDOPR
+        G__exec_evalall;
+        G__RESTORE_NOEXEC_ANDOPR
         G__RESTORE_NOEXEC_OROPR
-	G__RESTORE_ANDOPR
-	G__RESTORE_OROPR
+        G__RESTORE_ANDOPR
+        G__RESTORE_OROPR
 #ifndef G__OLDIMPLEMENTATION1802
         vstack[1]=G__conditionaloperator(vstack[0],expression,ig1,ebuf);
-	if(vv!=ebuf) free((void*)ebuf);
-	return(vstack[1]);
+        if(vv!=ebuf) free((void*)ebuf);
+        return(vstack[1]);
 #else
-	return(G__conditionaloperator(vstack[0],expression,ig1,ebuf));
+        return(G__conditionaloperator(vstack[0],expression,ig1,ebuf));
 #endif
       }
       else ebuf[lenbuf++]=c;
@@ -1348,8 +1339,7 @@ char *expression;
 *    G__getexpr()    at the end
 *
 ******************************************************************/
-G__value G__getprod(expression1)
-char *expression1;
+G__value G__getprod(char *expression1)
 {
   G__value defined1,reg;
   char ebuf1[G__ONELINE];
@@ -1384,70 +1374,70 @@ char *expression1;
     switch(expression1[ig11]) {
     case '"' : /* double quote */
       if(single_quote==0) {
-	double_quote ^= 1;
+        double_quote ^= 1;
       }
       ebuf1[lenbuf1++]=expression1[ig11];
       break;
     case '\'' : /* single quote */
       if(double_quote==0) {
-	single_quote ^= 1;
+        single_quote ^= 1;
       }
       ebuf1[lenbuf1++]=expression1[ig11];
       break;
     case '*':
       if(strncmp(expression1,"new ",4)==0) { 
-	ebuf1[lenbuf1++]=expression1[ig11];
-	break;
+        ebuf1[lenbuf1++]=expression1[ig11];
+        break;
       }
     case '/':
     case '%':
       if((nest1==0)&&(single_quote==0)&&(double_quote==0)) {
-	switch(lenbuf1) {
-	case 0:
-	  operator1=G__getoperator(operator1 ,expression1[ig11]);
-	  break;
-	default:
-	  if(operator1=='\0') operator1='*';
-	  ebuf1[lenbuf1]='\0';
-	  reg=G__getpower(ebuf1);
-	  G__bstore(operator1,reg,&defined1);
-	  lenbuf1=0;
-	  ebuf1[0]='\0';
-	  operator1=expression1[ig11];
-	  break;
-	}
+        switch(lenbuf1) {
+        case 0:
+          operator1=G__getoperator(operator1 ,expression1[ig11]);
+          break;
+        default:
+          if(operator1=='\0') operator1='*';
+          ebuf1[lenbuf1]='\0';
+          reg=G__getpower(ebuf1);
+          G__bstore(operator1,reg,&defined1);
+          lenbuf1=0;
+          ebuf1[0]='\0';
+          operator1=expression1[ig11];
+          break;
+        }
       }
       else {
-	ebuf1[lenbuf1++]=expression1[ig11];
+        ebuf1[lenbuf1++]=expression1[ig11];
       }
       break;
     case '(':
     case '[':
     case '{':
       if((double_quote==0)&&(single_quote==0)) {
-	nest1++;
-	ebuf1[lenbuf1++]=expression1[ig11];
+        nest1++;
+        ebuf1[lenbuf1++]=expression1[ig11];
       }
       else {
-	ebuf1[lenbuf1++]=expression1[ig11];
+        ebuf1[lenbuf1++]=expression1[ig11];
       }
       break;
     case ')':
     case ']':
     case '}':
       if((double_quote==0)&&(single_quote==0)) {
-	ebuf1[lenbuf1++]=expression1[ig11];
-	nest1--;
+        ebuf1[lenbuf1++]=expression1[ig11];
+        nest1--;
       }
       else {
-	ebuf1[lenbuf1++]=expression1[ig11];
+        ebuf1[lenbuf1++]=expression1[ig11];
       }
       break;
     case '@':
     case '~':
     case ' ':
       if((nest1==0)&&(single_quote==0)&&(double_quote==0)) {
-	prodpower=1;
+        prodpower=1;
       }
       ebuf1[lenbuf1++]=expression1[ig11];
       break;
@@ -1487,8 +1477,7 @@ char *expression1;
 *    G__getprod()    at the end
 *
 ******************************************************************/
-G__value G__getpower(expression2)
-char *expression2;
+G__value G__getpower(char *expression2)
 {
   G__value defined2,reg;
   char ebuf2[G__ONELINE];
@@ -1513,13 +1502,13 @@ char *expression2;
     switch(expression2[ig12]) {
     case '"' : /* double quote */
       if(single_quote==0) {
-	double_quote ^= 1;
+        double_quote ^= 1;
       }
       ebuf2[lenbuf2++]=expression2[ig12];
       break;
     case '\'' : /* single quote */
       if(double_quote==0) {
-	single_quote ^= 1;
+        single_quote ^= 1;
       }
       ebuf2[lenbuf2++]=expression2[ig12];
       break;
@@ -1527,56 +1516,56 @@ char *expression2;
       /* explicit destructor handled in G__getexpr(), just go through here */
     case '@':
       if((nest2==0)&&(single_quote==0)&&(double_quote==0)) {
-	switch(lenbuf2) {
-	case 0:
-	  operator2=G__getoperator(operator2
-				   ,expression2[ig12]);
-	  break;
-	default:
-	  ebuf2[lenbuf2]='\0';
-	  reg=G__getitem(ebuf2);
-	  G__bstore(operator2,reg,&defined2);
-	  lenbuf2=0;
-	  ebuf2[0]='\0';
-	  operator2=expression2[ig12];
-	  break;
-	}
+        switch(lenbuf2) {
+        case 0:
+          operator2=G__getoperator(operator2
+                                   ,expression2[ig12]);
+          break;
+        default:
+          ebuf2[lenbuf2]='\0';
+          reg=G__getitem(ebuf2);
+          G__bstore(operator2,reg,&defined2);
+          lenbuf2=0;
+          ebuf2[0]='\0';
+          operator2=expression2[ig12];
+          break;
+        }
       }
       else {
-	ebuf2[lenbuf2++]=expression2[ig12];
+        ebuf2[lenbuf2++]=expression2[ig12];
       }
       break;
     case ' ':
       if((nest2==0)&&(single_quote==0)&&(double_quote==0)&&
-	 (strncmp(expression2,"new",3)==0)) {
-	return(G__new_operator(expression2+ig12+1));
+         (strncmp(expression2,"new",3)==0)) {
+        return(G__new_operator(expression2+ig12+1));
       }
       else {
-	G__fprinterr(G__serr,"Error: G__power() expression %s ",expression2 );
-	G__genericerror((char*)NULL);
-	return(G__null);
+        G__fprinterr(G__serr,"Error: G__power() expression %s ",expression2 );
+        G__genericerror((char*)NULL);
+        return(G__null);
       }
       /* break; */
     case '(':
     case '[':
     case '{':
       if((double_quote==0)&&(single_quote==0)) {
-	nest2++;
-	ebuf2[lenbuf2++]=expression2[ig12];
+        nest2++;
+        ebuf2[lenbuf2++]=expression2[ig12];
       }
       else {
-	ebuf2[lenbuf2++]=expression2[ig12];
+        ebuf2[lenbuf2++]=expression2[ig12];
       }
       break;
     case ')':
     case ']':
     case '}':
       if((double_quote==0)&&(single_quote==0)) {
-	ebuf2[lenbuf2++]=expression2[ig12];
-	nest2--;
+        ebuf2[lenbuf2++]=expression2[ig12];
+        nest2--;
       }
       else {
-	ebuf2[lenbuf2++]=expression2[ig12];
+        ebuf2[lenbuf2++]=expression2[ig12];
       }
       break;
       
@@ -1586,7 +1575,7 @@ char *expression2;
       break;
       
       default :
-	ebuf2[lenbuf2++]=expression2[ig12];
+        ebuf2[lenbuf2++]=expression2[ig12];
       break;
     }
     ig12++;
@@ -1605,9 +1594,7 @@ char *expression2;
 /******************************************************************
 * G__getpointer2memberfunc
 ******************************************************************/
-int G__getpointer2memberfunc(item,presult)
-char *item;
-G__value *presult;
+int G__getpointer2memberfunc(char *item,G__value *presult)
 {
   int hash=0;
   long scope_struct_offset=0;
@@ -1628,35 +1615,35 @@ G__value *presult;
     for(ifn=0;ifn<memfunc->allifunc;ifn++) {
       if(strcmp(item,memfunc->funcname[ifn])==0) {
 #ifndef G__OLDIMPLEMENTATION1289
-	/* For the time being, pointer to member function can only be handled
-	 * as function name */
+        /* For the time being, pointer to member function can only be handled
+         * as function name */
 #ifndef G__OLDIMPLEMENTATION1993
-	if(('n'==G__struct.type[scope_tagnum] || memfunc->staticalloc[ifn])
-	   && memfunc->pentry[ifn]->size<0 
-	   && memfunc->pentry[ifn]->tp2f) {
-	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
-	}
-	else {
-	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
-	}
+        if(('n'==G__struct.type[scope_tagnum] || memfunc->staticalloc[ifn])
+           && memfunc->pentry[ifn]->size<0 
+           && memfunc->pentry[ifn]->tp2f) {
+          G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
+        }
+        else {
+          G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+        }
 #else
-	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
-	/* 
-	if(
-	   memfunc->pentry[ifn]->size>=0
+        G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+        /* 
+        if(
+           memfunc->pentry[ifn]->size>=0
           ) 
-	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
-	else 
-	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
-	*/
+          G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+        else 
+          G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
+        */
 #endif
 #else
-	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+        G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 #endif
-	presult->tagnum = -1;
-	presult->typenum= -1;
-	presult->ref=0;
-	return(1);
+        presult->tagnum = -1;
+        presult->typenum= -1;
+        presult->ref=0;
+        return(1);
       }
     }
     memfunc=memfunc->next;
@@ -1681,8 +1668,7 @@ G__value *presult;
 *    G__getfunction()
 *
 ******************************************************************/
-G__value G__getitem(item)
-char *item;
+G__value G__getitem(char *item)
 {
   int known;
   G__value result3;
@@ -1703,21 +1689,21 @@ char *item;
       result3=G__checkBase(item,&known);
 #ifdef G__ASM
       if(G__asm_noverflow) {
-	/**************************************
-	 * G__LD instruction
-	 * 0 LD
-	 * 1 address in data stack
-	 * put result3
-	 **************************************/
+        /**************************************
+         * G__LD instruction
+         * 0 LD
+         * 1 address in data stack
+         * put result3
+         **************************************/
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %ld from %x\n"
-			       ,G__asm_cp,G__int(result3)
-			       ,G__asm_dt);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %ld from %x\n"
+                               ,G__asm_cp,G__int(result3)
+                               ,G__asm_dt);
 #endif
-	G__asm_inst[G__asm_cp]=G__LD;
-	G__asm_inst[G__asm_cp+1]=G__asm_dt;
-	G__asm_stack[G__asm_dt]=result3;
-	G__inc_cp_asm(2,1);
+        G__asm_inst[G__asm_cp]=G__LD;
+        G__asm_inst[G__asm_cp+1]=G__asm_dt;
+        G__asm_stack[G__asm_dt]=result3;
+        G__inc_cp_asm(2,1);
       }
 #endif
       result3.tagnum = -1;
@@ -1749,17 +1735,17 @@ char *item;
           c='m';
           G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10));
        } else {
- 	 xxx=strtoul(item,NULL,10);
- 	 if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
- 	 if(xxx==ULONG_MAX) {
- 	   char ulongmax[100];
- 	   int ulonglen = strlen(item);
- 	   sprintf(ulongmax,"%lu",ULONG_MAX);
- 	   while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
- 	     item[--ulonglen]=0;
- 	   if(strcmp(ulongmax,item)!=0) 
- 	     G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
- 	 } 
+          xxx=strtoul(item,NULL,10);
+          if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
+          if(xxx==ULONG_MAX) {
+            char ulongmax[100];
+            int ulonglen = strlen(item);
+            sprintf(ulongmax,"%lu",ULONG_MAX);
+            while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
+              item[--ulonglen]=0;
+            if(strcmp(ulongmax,item)!=0) 
+              G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
+          } 
           G__letint(&result3,c,xxx);
           result3.obj.i=xxx;
        }
@@ -1787,8 +1773,8 @@ char *item;
        **************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %g from %x\n"
-			     ,G__asm_cp,G__double(result3)
-			     ,G__asm_dt);
+                             ,G__asm_cp,G__double(result3)
+                             ,G__asm_dt);
 #endif
       G__asm_inst[G__asm_cp]=G__LD;
       G__asm_inst[G__asm_cp+1]=G__asm_dt;
@@ -1817,8 +1803,8 @@ char *item;
        **************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD '%c' from %x\n"
-			     ,G__asm_cp,(char)G__int(result3)
-			     ,G__asm_dt);
+                             ,G__asm_cp,(char)G__int(result3)
+                             ,G__asm_dt);
 #endif
       G__asm_inst[G__asm_cp]=G__LD;
       G__asm_inst[G__asm_cp+1]=G__asm_dt;
@@ -1868,8 +1854,8 @@ char *item;
       G__var_typeB = store_var_typeB;
       result3=G__getfunction(item,&known,G__TRYNORMAL);
       if(known) {
-	result3 = G__toXvalue(result3,store_var_typeB);
-	if(G__initval_eval) G__dynconst=G__DYNCONST;
+        result3 = G__toXvalue(result3,store_var_typeB);
+        if(G__initval_eval) G__dynconst=G__DYNCONST;
       }
       G__var_typeB = 'p';
     }
@@ -1881,78 +1867,78 @@ char *item;
     /* undefined */
     if(known==0) {
       if(strncmp(item,"__",2)==0) {
-	result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
+        result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
         if(result3.type) known = 1;
       } else
       if(
 #ifdef G__ROOT
-	 G__dispmsg < G__DISPROOTSTRICT &&
+         G__dispmsg < G__DISPROOTSTRICT &&
 #endif
-	 G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
-	/* append $ to object and try to find it again */
-	if (!G__gettingspecial && item[0] != '$') {
+         G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
+        /* append $ to object and try to find it again */
+        if (!G__gettingspecial && item[0] != '$') {
 #ifndef G__OLDIMPLEMENTATION1802
-	  char *sbuf;
+          char *sbuf;
 #else
-	  char sbuf[G__LONGLINE];
+          char sbuf[G__LONGLINE];
 #endif
-	  int store_return = G__return;
-	  int store_security_error = G__security_error;
-	  /* This fix should be verified very carefully */
-	  if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
+          int store_return = G__return;
+          int store_security_error = G__security_error;
+          /* This fix should be verified very carefully */
+          if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
 #ifndef G__OLDIMPLEMENTATION1802
-	  sbuf = (char*)malloc(strlen(item)+2);
-	  if(!sbuf) {
-	    G__genericerror("Internal error: malloc in G__getitem(),sbuf");
-	    return(G__null);
-	  }
+          sbuf = (char*)malloc(strlen(item)+2);
+          if(!sbuf) {
+            G__genericerror("Internal error: malloc in G__getitem(),sbuf");
+            return(G__null);
+          }
 #endif
-	  sprintf(sbuf, "$%s", item);
-	  G__gettingspecial = 1;
+          sprintf(sbuf, "$%s", item);
+          G__gettingspecial = 1;
           G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
-	  result3 = G__getitem(sbuf);
+          result3 = G__getitem(sbuf);
 #ifndef G__OLDIMPLEMENTATION1802
-	  free((void*)sbuf);
+          free((void*)sbuf);
 #endif
-	  G__gettingspecial = 0;
-	  if(G__const_noerror) {
-	    G__return = store_return;
-	    G__security_error = store_security_error;
-	  }
-	  return result3;
-	}
+          G__gettingspecial = 0;
+          if(G__const_noerror) {
+            G__return = store_return;
+            G__security_error = store_security_error;
+          }
+          return result3;
+        }
       }
       if (known == 0 && result3.obj.i == 0) {
-	result3=G__null;
-	if(G__noerr_defined==0) {
-	  
-	  if(G__definemacro==0) {
-	    char *pxx;
-	    G__warnundefined(item);
-	    pxx = strstr(item,"::");
-	    if(!pxx || pxx==item) {
-	      pxx = strchr(item,'(');
-	      if(pxx) {
-		*pxx = 0;
-		if((0==G__const_noerror&&!G__asm_wholefunction)
-		   && (!G__no_exec_compile || G__asm_noverflow)
-		   ) {
-		  G__fprinterr(G__serr,"Possible candidates are...\n");
-		  if('$'==item[0]) G__display_proto(G__serr,item+1);
-		  else             G__display_proto(G__serr,item);
-		}
-		*pxx = '(';
-	      }
-	    }
-	    result3=G__interactivereturn();
-	  }
-	  else {
-	    /*
-	    G__genericerror("Limitation: This form of macro may not be expanded. Use +P or -p option");
-	    */
-	    return(G__null);
-	  }
-	}
+        result3=G__null;
+        if(G__noerr_defined==0) {
+          
+          if(G__definemacro==0) {
+            char *pxx;
+            G__warnundefined(item);
+            pxx = strstr(item,"::");
+            if(!pxx || pxx==item) {
+              pxx = strchr(item,'(');
+              if(pxx) {
+                *pxx = 0;
+                if((0==G__const_noerror&&!G__asm_wholefunction)
+                   && (!G__no_exec_compile || G__asm_noverflow)
+                   ) {
+                  G__fprinterr(G__serr,"Possible candidates are...\n");
+                  if('$'==item[0]) G__display_proto(G__serr,item+1);
+                  else             G__display_proto(G__serr,item);
+                }
+                *pxx = '(';
+              }
+            }
+            result3=G__interactivereturn();
+          }
+          else {
+            /*
+            G__genericerror("Limitation: This form of macro may not be expanded. Use +P or -p option");
+            */
+            return(G__null);
+          }
+        }
       }
     }
   }
@@ -1972,8 +1958,7 @@ char *item;
 *
 ***********************************************************************/
 
-int G__getoperator(newoperator,oldoperator)
-int newoperator,oldoperator;
+int G__getoperator(int newoperator,int oldoperator)
 {
   switch(newoperator) {
   case '+':
@@ -2190,8 +2175,7 @@ int newoperator,oldoperator;
 /***********************************************************************
 * int *G__test(char *expression2)
 ***********************************************************************/
-int G__test(expression2)
-char *expression2;
+int G__test(char *expression2)
 {
   G__value result;
   result=G__getexpr(expression2);
@@ -2223,9 +2207,7 @@ char *expression2;
 *   G__test()
 *
 ******************************************************************/
-int G__btest(operator2,lresult,rresult)
-int operator2;
-G__value lresult,rresult;
+int G__btest(int operator2,G__value lresult,G__value rresult)
 {
 
   if(lresult.type=='u' || rresult.type=='u') {
@@ -2281,7 +2263,7 @@ G__value lresult,rresult;
 
 }
 
-
+} /* extern "C" */
 
 /*
  * Local Variables:

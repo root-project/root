@@ -237,35 +237,35 @@ void G__errorexit G__P((int signame));
 void G__killproc G__P((int signame));
 void G__timeout G__P((int signame));
 
-void G__fsigabrt G__P((void));
-void G__fsigfpe G__P((void));
-void G__fsigill G__P((void));
-void G__fsigint G__P((void));
-void G__fsigsegv G__P((void));
-void G__fsigterm G__P((void));
+void G__fsigabrt G__P((int));
+void G__fsigfpe G__P((int));
+void G__fsigill G__P((int));
+void G__fsigint G__P((int));
+void G__fsigsegv G__P((int));
+void G__fsigterm G__P((int));
 #ifdef SIGHUP
-void G__fsighup G__P((void));
+void G__fsighup G__P((int));
 #endif
 #ifdef SIGQUIT
-void G__fsigquit G__P((void));
+void G__fsigquit G__P((int));
 #endif
 #ifdef SIGTSTP
-void G__fsigtstp G__P((void));
+void G__fsigtstp G__P((int));
 #endif
 #ifdef SIGTTIN
-void G__fsigttin G__P((void));
+void G__fsigttin G__P((int));
 #endif
 #ifdef SIGTTOU
-void G__fsigttou G__P((void));
+void G__fsigttou G__P((int));
 #endif
 #ifdef SIGALRM
-void G__fsigalrm G__P((void));
+void G__fsigalrm G__P((int));
 #endif
 #ifdef SIGUSR1
-void G__fsigusr1 G__P((void));
+void G__fsigusr1 G__P((int));
 #endif
 #ifdef SIGUSR2
-void G__fsigusr2 G__P((void));
+void G__fsigusr2 G__P((int));
 #endif
 
 int G__errorprompt G__P((char *nameoferror));

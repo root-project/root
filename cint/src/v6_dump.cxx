@@ -20,12 +20,12 @@
 
 #include "common.h"
 
+extern "C" {
+
 /****************************************************************
 * G__pushdumpinput(fp,exflag)
 ****************************************************************/
-int G__pushdumpinput(fp,exflag)
-FILE *fp;
-int exflag;
+int G__pushdumpinput(FILE *fp,int exflag)
 {
   int i;
   for(i=5;i>0;i--) {
@@ -64,8 +64,7 @@ int G__popdumpinput()
 *
 *  Write readline string to a dump file.
 ****************************************************************/
-int G__dumpinput(line)
-char *line;
+int G__dumpinput(char *line)
 {
   if(G__dumpreadline[0]!=NULL) {
     fprintf(G__dumpreadline[0],"%s\n",line);
@@ -78,8 +77,7 @@ char *line;
 *
 *  Read readline string from a dump file.
 ****************************************************************/
-char *G__xdumpinput(prompt)
-char *prompt;
+char *G__xdumpinput(char *prompt)
 {
   static char line[G__LONGLINE];
   char *null_fgets;
@@ -101,6 +99,7 @@ char *prompt;
   return(line);
 }
 
+} /* extern "C" */
 
 /*
  * Local Variables:

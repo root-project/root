@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+extern "C" {
 
 /***********************************************************************
 * EH_env and err_env are only variable name which isn't escaped by 'G__' 
@@ -70,15 +71,15 @@ char *G__asm_name;
 long G__asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
 G__value G__asm_stack_g[G__MAXSTACK]; /* data stack */
 char G__asm_name_g[G__ASM_FUNCNAMEBUF]; /* buffer to store function names 
-				         * which is called within the 
-					 * compiled loop */
+                                         * which is called within the 
+                                         * compiled loop */
 int G__asm_name_p=0; /* pointer to the function name buffer */
 
 #else /* G__ASM_IFUNC */
 long G__asm_inst[G__MAXINST]; /* p-code instruction buffer */
 G__value G__asm_stack[G__MAXSTACK]; /* data stack */
 char G__asm_name[G__LONGLINE*2]; /* buffer to store function names which 
-				* is called within the compiled loop */
+                                * is called within the compiled loop */
 int G__asm_name_p=0; /* pointer to the function name buffer */
 #endif /* G__ASM_IFUNC */
 
@@ -89,18 +90,18 @@ int G__asm_dt=G__MAXSTACK-1;   /* compile time stack pointer */
 /* Global variables to bring compilation data */
 int G__asm_index;              /* variable index */
 struct G__param *G__asm_param; /* pointer of parameter buffer to 
-				* bring function parameter */
+                                * bring function parameter */
 
 /* Loop compiler flags */
 int G__asm_loopcompile; /* loop compilation mode. default on(4). 
-			   * This is set to 0 by -O0 */
+                           * This is set to 0 by -O0 */
 int G__asm_loopcompile_mode; 
 int G__asm_exec=0; /* p-code execution flag */
 int G__asm_noverflow=0; /* When this is set to 1, compilation starts. 
-			 * If any error found, reset */
+                         * If any error found, reset */
 
 int G__asm_dbg=0; /* p-code debugging flag, only valid when compiled with
-		   * G__ASM_DBG */
+                   * G__ASM_DBG */
 #ifdef G__ASM_DBG
 char *G__LOOPCOMPILEABORT="LOOP COMPILE ABORTED";
 #endif
@@ -246,6 +247,8 @@ void (*G__atpause)();
 * pointer to function which is evaluated in G__genericerror()
 **************************************************************************/
 void (*G__aterror)();
+
+} /* extern "C" */
 
 /*
  * Local Variables:

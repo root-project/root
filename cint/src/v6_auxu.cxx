@@ -25,6 +25,7 @@
 *
 ****************************************************************/
 
+extern "C" {
 
 /****************************************************************
 * G__split(original,stringbuf,argc,argv)
@@ -32,11 +33,7 @@
 * CAUTION: input string will be modified. If you want to keep
 *         the original string, you should copy it to another string.
 ****************************************************************/
-int G__split(line,sstring,argc,argv)
-char *line;
-char *sstring;
-int *argc;
-char *argv[];
+int G__split(char *line,char *sstring,int *argc,char *argv[])
 {
   unsigned char *string = (unsigned char*)sstring;
   int lenstring;
@@ -84,7 +81,7 @@ char *argv[];
       else {
         if(flag==0) {
           (*argc)++;
-          argv[*argc] = &string[i];
+          argv[*argc] = (char*)&string[i];
           flag=1;
         }
       }
@@ -98,9 +95,7 @@ char *argv[];
 /****************************************************************
 * G__readsimpleline(fp,line)
 ****************************************************************/
-int G__readsimpleline(fp,line)
-FILE *fp;
-char *line;
+int G__readsimpleline(FILE *fp,char *line)
 {
   char *null_fgets;
   char *p;
@@ -121,11 +116,7 @@ char *line;
 /****************************************************************
 * G__readline(fp,line,argbuf,argn,arg)
 ****************************************************************/
-int G__readline(fp,line,argbuf,argn,arg)
-FILE *fp;
-int *argn;
-char *line,*argbuf;
-char *arg[];
+int G__readline(FILE *fp,char *line,char *argbuf,int *argn, char *arg[])
 {
   /* int i; */
   char *null_fgets;
@@ -158,9 +149,7 @@ char *arg[];
 /******************************************************************
 * int G__cmparray(array1,array2,num,mask)
 ******************************************************************/
-int G__cmparray(array1,array2,num,mask)
-short array1[],array2[],mask;
-int num;
+int G__cmparray(short array1[],short array2[],int num,short mask)
 {
   int i,fail=0,firstfail = -1,fail1=0,fail2=0;
   for(i=0;i<num;i++) {
@@ -183,10 +172,7 @@ int num;
 /******************************************************************
 * G__setarray(array,num,mask,mode)
 ******************************************************************/
-void G__setarray(array,num,mask,mode)
-short array[],mask;
-int num;
-char *mode;
+void G__setarray(short array[], int num, short mask,char *mode)
 {
         int i;
 
@@ -261,10 +247,7 @@ char *mode;
 *                       2:kill xgraph window
 ************************************************************************/
 
-int G__graph(xdata,ydata,ndata,title,mode)
-double *xdata,*ydata;
-int ndata,mode;
-char *title;
+int G__graph(double *xdata,double *ydata,int ndata,char *title,int mode)
 {
   int i;
   FILE *fp;
@@ -329,8 +312,7 @@ char *title;
 *  Interpreter : G__storeobject(void *buf1,void *buf2)
 *  Compiler    : G__storeobject(G__value *buf1,G__value *buf2)
 ****************************************************************/
-int G__storeobject(buf1,buf2)
-G__value *buf1,*buf2;
+int G__storeobject(G__value *buf1,G__value *buf2)
 {
   int i;
   struct G__var_array *var1,*var2;
@@ -442,8 +424,7 @@ G__value *buf1,*buf2;
 *  Interpreter : G__storeobject(void *buf1,void *buf2)
 *  Compiler    : G__storeobject(G__value *buf1,G__value *buf2)
 ****************************************************************/
-int G__scanobject(buf1)
-G__value *buf1;
+int G__scanobject(G__value *buf1)
 {
   int i;
   struct G__var_array *var1;
@@ -451,7 +432,7 @@ G__value *buf1;
   char type;
   char *name;
   char *tagname;
-  char *typename;
+  char *type_name;
   long pointer;
 
   char ifunc[G__ONELINE];
@@ -471,14 +452,14 @@ G__value *buf1;
           tagname = (char *)NULL;
         }
         if(var1->p_typetable[i]>=0) {
-          typename = G__newtype.name[var1->p_typetable[i]] ;
+          type_name = G__newtype.name[var1->p_typetable[i]] ;
         }
         else {
-          typename = (char *)NULL;
+          type_name = (char *)NULL;
         }
         sprintf(ifunc,
                 "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)"
-                ,tagname,pointer,(long)name,type,(long)tagname,(long)typename);
+                ,tagname,pointer,(long)name,type,(long)tagname,(long)type_name);
         G__getexpr(ifunc);
       }
       var1 = var1->next;
@@ -499,10 +480,7 @@ G__value *buf1;
 * dump object into a file
 *
 ****************************************************************/
-int G__dumpobject(file,buf,size)
-char *file;
-void *buf;
-int size;
+int G__dumpobject(char *file,void *buf,int size)
 {
         FILE *fp;
 
@@ -519,10 +497,7 @@ int size;
 * load object from a file
 *
 ****************************************************************/
-int G__loadobject(file,buf,size)
-char *file;
-void *buf;
-int size;
+int G__loadobject(char *file,void *buf,int size)
 {
         FILE *fp;
 
@@ -541,11 +516,7 @@ int size;
 *
 *
 ****************************************************************/
-long G__what_type(name,type,tagname,typename)
-char *name;
-char *type;
-char *tagname;
-char *typename;
+long G__what_type(char *name,char *type,char *tagname,char *type_name)
 {
   G__value buf;
   static char vtype[80];
@@ -622,7 +593,7 @@ char *typename;
   }
   if(type) strcpy(type,vtype);
   if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]);
-  if(typename && buf.typenum>=0) strcpy(typename,G__newtype.name[buf.typenum]);
+  if(type_name && buf.typenum>=0) strcpy(type_name,G__newtype.name[buf.typenum]);
   
   sprintf(vtype,"&%s",name);
   buf = G__calc_internal(vtype);
@@ -636,8 +607,7 @@ char *typename;
 /**************************************************************************
 * G__textprocessing()
 **************************************************************************/
-int G__textprocessing(fp)
-FILE *fp;
+int G__textprocessing(FILE *fp)
 {
         return(G__readline(fp,G__oline,G__argb,&G__argn,G__arg));
 }
@@ -646,9 +616,7 @@ FILE *fp;
 /**************************************************************************
 * G__matchtregex()
 **************************************************************************/
-int G__matchregex(pattern,string)
-char *pattern;
-char *string;
+int G__matchregex(char *pattern, char *string)
 {
   int i;
   regex_t re;
@@ -666,9 +634,7 @@ char *string;
 /**************************************************************************
 * G__matchtregex()
 **************************************************************************/
-int G__matchregex(pattern,string)
-char *pattern;
-char *string;
+int G__matchregex(char *pattern,char *string)
 {
   char *re, *s;
   /* char buf[256]; */
@@ -681,6 +647,8 @@ char *string;
 }
 #endif
 
+
+} /* extern "C" */
 
 /*
  * Local Variables:

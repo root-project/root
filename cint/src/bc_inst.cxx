@@ -783,7 +783,7 @@ void G__bc_inst::DELETEFREE(int isarray) {
 /**************************************************************************
 * SWAP
 **************************************************************************/
-void G__bc_inst::SWAP(int /* isarray */) {
+void G__bc_inst::SWAP() {
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SWAP\n",G__asm_cp);
 #endif

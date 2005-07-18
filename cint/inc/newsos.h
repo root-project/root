@@ -51,12 +51,12 @@
 
 typedef long fpos_t;
 
-extern void G__fsigint();
-extern void G__fsigill();
-extern void G__fsigfpe();
-extern void G__fsigabrt();
-extern void G__fsigsegv();
-extern void G__fsigterm();
+extern void G__fsigint(int);
+extern void G__fsigill(int);
+extern void G__fsigfpe(int);
+extern void G__fsigabrt(int);
+extern void G__fsigsegv(int);
+extern void G__fsigterm(int);
 
 #endif /* G__NEWSOS_H */
 

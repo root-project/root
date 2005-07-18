@@ -141,7 +141,7 @@ public:
   void SET_NEWALLOC(int tagnum,int var_type);
   void SET_NEWALLOC(const G__TypeInfo& type);
   void DELETEFREE(int isarray);
-  void SWAP(int isarray);
+  void SWAP();
   void BASECONV(int formal_tagnum,int baseoffset);
   void STORETEMP(void);
   void ALLOCTEMP(int tagnum);

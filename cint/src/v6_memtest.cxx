@@ -24,6 +24,7 @@
 #define G__MEMTEST_H
 #include "common.h"
 
+extern "C" {
 
 #if !defined(G__SMALLOBJECT) && defined(G__DEBUG)
 
@@ -66,8 +67,8 @@ char* comment;
   if(G__nth_memory==i) {
     if(G__mth_event==m || G__mth_event==0) {
       printf("0x%lx=%s()\talive=%d\tuse=%d i=%d %dth FILE:%s LINE:%d\n"
-	   ,(long)G__mem[i].p,comment,G__mem[i].alive,G__mem[i].use,i,m
-	   ,G__ifile.name,G__ifile.line_number);
+           ,(long)G__mem[i].p,comment,G__mem[i].alive,G__mem[i].use,i,m
+           ,G__ifile.name,G__ifile.line_number);
       /*G__pause();*/
     }
     ++m;
@@ -132,9 +133,9 @@ size_t size;
 #endif
 #ifdef G__DUMPMEMHISTORY
   fprintf(G__memhist
-	  ,"0x%lx=malloc(%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	  ,(long)G__mem[i].p,size,G__mem[i].alive,G__mem[i].use,i
-	  ,G__ifile.name,G__ifile.line_number);
+          ,"0x%lx=malloc(%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+          ,(long)G__mem[i].p,size,G__mem[i].alive,G__mem[i].use,i
+          ,G__ifile.name,G__ifile.line_number);
   fflush(G__memhist);
 #ifndef G__OLDIMPLEMENTATION2226
   G__break_memtest(i,"malloc");
@@ -201,9 +202,9 @@ size_t n,bsize;
 #endif
 #ifdef G__DUMPMEMHISTORY
   fprintf(G__memhist
-	  ,"0x%lx=calloc(%d,%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	  ,(long)G__mem[i].p,n,bsize,G__mem[i].alive,G__mem[i].use,i
-	  ,G__ifile.name,G__ifile.line_number);
+          ,"0x%lx=calloc(%d,%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+          ,(long)G__mem[i].p,n,bsize,G__mem[i].alive,G__mem[i].use,i
+          ,G__ifile.name,G__ifile.line_number);
   fflush(G__memhist);
 #ifndef G__OLDIMPLEMENTATION2226
   G__break_memtest(i,"calloc");
@@ -238,14 +239,14 @@ void *p;
 #ifdef G__DUMPMEMHISTORY
     if(G__mem[i].alive<0)
       fprintf(G__memhist
-	      ,"0x%lx=free()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
-	      ,G__ifile.name,G__ifile.line_number);
+              ,"0x%lx=free()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+              ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+              ,G__ifile.name,G__ifile.line_number);
     else
       fprintf(G__memhist
-	      ,"0x%lx=free()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
-	      ,G__ifile.name,G__ifile.line_number);
+              ,"0x%lx=free()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+              ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+              ,G__ifile.name,G__ifile.line_number);
 #ifndef G__OLDIMPLEMENTATION2226
     G__break_memtest(i,"free");
 #endif
@@ -254,7 +255,7 @@ void *p;
   else {
 #ifdef G__DUMPMEMHISTORY
     fprintf(G__memhist ,"free(0x%lx) not allocated FILE:%s LINE:%d\n"
-	    ,(long)p,G__ifile.name,G__ifile.line_number);
+            ,(long)p,G__ifile.name,G__ifile.line_number);
 #endif
     G__fprinterr(G__serr,"free(0x%lx) not allocated",(long)p);
     G__printlinenum();
@@ -297,9 +298,9 @@ size_t size;
     
 #ifdef G__DUMPMEMHISTORY
     fprintf(G__memhist
-	    ,"0x%lx=realloc(0x%lx,%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	    ,(long)tmp,(long)G__mem[i].p,size ,G__mem[i].alive,G__mem[i].use,i
-	    ,G__ifile.name,G__ifile.line_number);
+            ,"0x%lx=realloc(0x%lx,%d)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+            ,(long)tmp,(long)G__mem[i].p,size ,G__mem[i].alive,G__mem[i].use,i
+            ,G__ifile.name,G__ifile.line_number);
 #ifndef G__OLDIMPLEMENTATION2226
     G__break_memtest(i,"realloc");
 #endif
@@ -311,10 +312,10 @@ size_t size;
        * Set strange data
        ***************************************************/
       if(G__mem[i].size<(int)size) {
-	pc = (char *)G__mem[i].p;
-	for(j=G__mem[i].size;j<(int)size;j++) {
-	  *(pc+j) = (char)0xa5;
-	}
+        pc = (char *)G__mem[i].p;
+        for(j=G__mem[i].size;j<(int)size;j++) {
+          *(pc+j) = (char)0xa5;
+        }
       }
       G__mem[i].size = size;
     }
@@ -323,7 +324,7 @@ size_t size;
   else {
 #ifdef G__DUMPMEMHISTORY
     fprintf(G__memhist ,"realloc(0x%lx,%d) not allocated FILE:%s LINE:%d\n"
-	    ,(long)p,size,G__ifile.name,G__ifile.line_number);
+            ,(long)p,size,G__ifile.name,G__ifile.line_number);
 #endif
     G__fprinterr(G__serr,"realloc(0x%lx,%ld) not allocated",(long)p,size);
     G__printlinenum();
@@ -367,15 +368,15 @@ int G__memresult()
     if(G__mem[i].alive) {
 #ifdef G__DUMPMEMHISTORY
       fprintf(G__memhist ,"0x%lx\talive=%d\tuse=%d i=%d\tERROR %s\n"
-	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
+              ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
 #endif
       G__fprinterr(G__serr,"0x%lx\talive=%d\tuse=%d i=%d\tERROR %s\n"
-	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
+              ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
     }
     else {
 #ifdef G__DUMPMEMHISTORY
       fprintf(G__memhist ,"0x%lx\talive=%d\tuse=%d i=%d %s\n"
-	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
+              ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
 #endif
     }
   }
@@ -447,9 +448,9 @@ char *fname,*mode;
 #endif
 #ifdef G__DUMPMEMHISTORY
   fprintf(G__memhist
-	  ,"0x%lx=fopen(%s,%s)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	  ,(long)G__mem[i].p,fname,mode,G__mem[i].alive,G__mem[i].use,i
-	  ,G__ifile.name,G__ifile.line_number);
+          ,"0x%lx=fopen(%s,%s)\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+          ,(long)G__mem[i].p,fname,mode,G__mem[i].alive,G__mem[i].use,i
+          ,G__ifile.name,G__ifile.line_number);
   fflush(G__memhist);
 #endif
   return(result);
@@ -471,15 +472,15 @@ FILE *p;
     
 #ifdef G__DUMPMEMHISTORY
     fprintf(G__memhist
-	    ,"0x%lx=fclose()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	    ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
-	    ,G__ifile.name,G__ifile.line_number);
+            ,"0x%lx=fclose()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+            ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+            ,G__ifile.name,G__ifile.line_number);
 #endif
   }
   else {
 #ifdef G__DUMPMEMHISTORY
     fprintf(G__memhist ,"fclose(0x%lx) not opened FILE:%s LINE:%d\n"
-	    ,(long)p,G__ifile.name,G__ifile.line_number);
+            ,(long)p,G__ifile.name,G__ifile.line_number);
 #endif
     G__fprinterr(G__serr,"fclose(0x%lx) not opened",(long)p);
     G__printlinenum();
@@ -538,9 +539,9 @@ void *G__TEST_tmpfile()
 #endif
 #ifdef G__DUMPMEMHISTORY
   fprintf(G__memhist
-	  ,"0x%lx=tmpfile()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
-	  ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
-	  ,G__ifile.name,G__ifile.line_number);
+          ,"0x%lx=tmpfile()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+          ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+          ,G__ifile.name,G__ifile.line_number);
   fflush(G__memhist);
 #endif
   return(result);
@@ -549,18 +550,20 @@ void *G__TEST_tmpfile()
 #endif /* G__SMALLOBJECT */
 
 #ifndef G__OLDIMPLEMENTATION2226
-void G__setmemtestbreak(n,m)
-int n;
-int m;
+#ifdef G__DEBUG
+void G__setmemtestbreak(int n,int m)
+#else
+void G__setmemtestbreak(int,int)
+#endif
 {
 #ifdef G__DEBUG
   G__nth_memory = n;
   G__mth_event = m;
-#elif !defined(G__OLDIMPLEMENTATION1911)
-   if (n&&m) {} /* to avoid unused parameter warnign message */
 #endif
 }
 #endif
+
+} /* extern "C" */
 
 /*
  * Local Variables:

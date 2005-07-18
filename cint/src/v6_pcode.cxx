@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+extern "C" {
+
 #ifdef G__ROOT
 extern void* G__new_interpreted_object G__P((int size));
 extern void G__delete_interpreted_object G__P((void* p));
@@ -70,14 +72,13 @@ int G__asm_step=0;
 * G__doubleM()
 ****************************************************************/
 #ifdef G__ALWAYS
-double G__doubleM(buf)
-     G__value *buf;
+double G__doubleM(G__value *buf)
 {
   return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
-	  ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
-          ('m'==buf->type) ? (double)(buf->obj.ull) :
+          ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
+          ('m'==buf->type) ? (double)(G__int64)(buf->obj.ull) :
           ('n'==buf->type) ? (double)(buf->obj.ll) :
-	  (double)(buf->obj.i) );
+          (double)(buf->obj.i) );
 }
 #else
 #define G__doubleM(buf)                                                \
@@ -96,7 +97,6 @@ double G__doubleM(buf)
 ****************************************************************/
 #define G__isunsignedM(buf) ('h'==buf->type||'k'==buf->type)
 
-
 /*************************************************************************
 **************************************************************************
 * Optimization level 2 runtime function
@@ -109,33 +109,27 @@ double G__doubleM(buf)
 *  Optimized comparator
 *
 ****************************************************************/
-int G__asm_test_E(a,b)
-int *a,*b;
+int G__asm_test_E(int *a,int *b)
 {
   return(*a==*b);
 }
-int G__asm_test_N(a,b)
-int *a,*b;
+int G__asm_test_N(int *a,int *b)
 {
   return(*a!=*b);
 }
-int G__asm_test_GE(a,b)
-int *a,*b;
+int G__asm_test_GE(int *a,int *b)
 {
   return(*a>=*b);
 }
-int G__asm_test_LE(a,b)
-int *a,*b;
+int G__asm_test_LE(int *a,int *b)
 {
   return(*a<=*b);
 }
-int G__asm_test_g(a,b)
-int *a,*b;
+int G__asm_test_g(int *a,int *b)
 {
   return(*a>*b);
 }
-int G__asm_test_l(a,b)
-int *a,*b;
+int G__asm_test_l(int *a,int *b)
 {
   return(*a<*b);
 }
@@ -149,8 +143,7 @@ int *a,*b;
 * G__value G__asm_toXvalue(G__value* p)
 *
 ******************************************************************/
-void G__asm_toXvalue(result)
-G__value* result;
+void G__asm_toXvalue(G__value* result)
 {
   if(islower(result->type)) {
     result->type = toupper(result->type);
@@ -170,8 +163,7 @@ typedef void (*G__p2f_tovalue) G__P((G__value*));
 /******************************************************************
 * void G__asm_tovalue_p2p(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_p2p(result)
-G__value *result;
+void G__asm_tovalue_p2p(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(long *)(result->obj.i));
@@ -181,8 +173,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_p2p2p(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_p2p2p(result)
-G__value *result;
+void G__asm_tovalue_p2p2p(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(long *)(result->obj.i));
@@ -192,8 +183,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_p2p2p2(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_p2p2p2(result)
-G__value *result;
+void G__asm_tovalue_p2p2p2(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(long *)(result->obj.i));
@@ -203,8 +193,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_LL(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_LL(result)
-G__value *result;
+void G__asm_tovalue_LL(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.ll = (*(G__int64*)(result->obj.i));
@@ -213,8 +202,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_ULL(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_ULL(result)
-G__value *result;
+void G__asm_tovalue_ULL(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.ull = (*(G__uint64*)(result->obj.i));
@@ -223,8 +211,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_LD(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_LD(result)
-G__value *result;
+void G__asm_tovalue_LD(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.ld = (*(long double*)(result->obj.i));
@@ -234,8 +221,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_B(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_B(result)
-G__value *result;
+void G__asm_tovalue_B(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(unsigned char *)(result->obj.i));
@@ -244,8 +230,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_C(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_C(result)
-G__value *result;
+void G__asm_tovalue_C(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(char *)(result->obj.i));
@@ -254,8 +239,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_R(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_R(result)
-G__value *result;
+void G__asm_tovalue_R(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(unsigned short *)(result->obj.i));
@@ -264,8 +248,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_S(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_S(result)
-G__value *result;
+void G__asm_tovalue_S(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(short *)(result->obj.i));
@@ -274,8 +257,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_H(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_H(result)
-G__value *result;
+void G__asm_tovalue_H(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(unsigned int *)(result->obj.i));
@@ -284,8 +266,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_I(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_I(result)
-G__value *result;
+void G__asm_tovalue_I(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(int *)(result->obj.i));
@@ -294,8 +275,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_K(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_K(result)
-G__value *result;
+void G__asm_tovalue_K(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(unsigned long *)(result->obj.i));
@@ -304,8 +284,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_L(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_L(result)
-G__value *result;
+void G__asm_tovalue_L(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.i = (long)(*(long *)(result->obj.i));
@@ -314,8 +293,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_F(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_F(result)
-G__value *result;
+void G__asm_tovalue_F(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.d = (double)(*(float *)(result->obj.i));
@@ -324,8 +302,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_D(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_D(result)
-G__value *result;
+void G__asm_tovalue_D(G__value *result)
 {
   result->ref = result->obj.i;
   result->obj.d = (double)(*(double *)(result->obj.i));
@@ -334,8 +311,7 @@ G__value *result;
 /******************************************************************
 * void G__asm_tovalue_U(G__value* p)
 ******************************************************************/
-void G__asm_tovalue_U(result)
-G__value *result;
+void G__asm_tovalue_U(G__value *result)
 {
   result->ref = result->obj.i;
   /* result->obj.i = result->obj.i; */
@@ -375,12 +351,7 @@ G__value *result;
 /****************************************************************
 * G__LD_p0_longlong()
 ****************************************************************/
-void G__LD_p0_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;              
@@ -392,12 +363,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_ulonglong()
 ****************************************************************/
-void G__LD_p0_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;              
@@ -409,12 +375,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_longdouble()
 ****************************************************************/
-void G__LD_p0_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;              
@@ -427,12 +388,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_bool()
 ****************************************************************/
-void G__LD_p0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_INT(int,'g');
@@ -444,84 +400,49 @@ long ig15;
 /****************************************************************
 * G__LD_p0_char()
 ****************************************************************/
-void G__LD_p0_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(char,'c');
 }
 /****************************************************************
 * G__LD_p0_uchar()
 ****************************************************************/
-void G__LD_p0_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(unsigned char,'b');
 }
 /****************************************************************
 * G__LD_p0_short()
 ****************************************************************/
-void G__LD_p0_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(short,'s');
 }
 /****************************************************************
 * G__LD_p0_ushort()
 ****************************************************************/
-void G__LD_p0_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(unsigned short,'r');
 }
 /****************************************************************
 * G__LD_p0_int()
 ****************************************************************/
-void G__LD_p0_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(int,'i');
 }
 /****************************************************************
 * G__LD_p0_uint()
 ****************************************************************/
-void G__LD_p0_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(unsigned int,'h');
 }
 /****************************************************************
 * G__LD_p0_long()
 ****************************************************************/
-void G__LD_p0_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(long,'l');
 }
@@ -529,24 +450,14 @@ long ig15;
 /****************************************************************
 * G__LD_p0_ulong()
 ****************************************************************/
-void G__LD_p0_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT(unsigned long,'k');
 }
 /****************************************************************
 * G__LD_p0_pointer()
 ****************************************************************/
-void G__LD_p0_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -559,12 +470,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_struct()
 ****************************************************************/
-void G__LD_p0_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -576,12 +482,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_float()
 ****************************************************************/
-void G__LD_p0_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -593,12 +494,7 @@ long ig15;
 /****************************************************************
 * G__LD_p0_double()
 ****************************************************************/
-void G__LD_p0_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -612,12 +508,10 @@ long ig15;
 * G__nonintarrayindex
 *************************************************************************/
 void G__nonintarrayindex G__P((struct G__var_array*,int));
-void G__nonintarrayindex(var,ig15)
-struct G__var_array *var; 
-int ig15;
+void G__nonintarrayindex(struct G__var_array *var,int ig15)
 {
   G__fprinterr(G__serr,"Error: %s[] invalud type for array index"
-	       ,var->varnamebuf[ig15]);
+               ,var->varnamebuf[ig15]);
   G__genericerror((char*)NULL);
 }
 
@@ -653,12 +547,7 @@ int ig15;
 /****************************************************************
 * G__LD_p1_longlong()
 ****************************************************************/
-void G__LD_p1_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -674,12 +563,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_ulonglong()
 ****************************************************************/
-void G__LD_p1_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -695,12 +579,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_longdouble()
 ****************************************************************/
-void G__LD_p1_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -717,12 +596,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_bool()
 ****************************************************************/
-void G__LD_p1_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_INT_P1(int,'g');
@@ -734,60 +608,35 @@ long ig15;
 /****************************************************************
 * G__LD_p1_char()
 ****************************************************************/
-void G__LD_p1_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(char,'c');
 }
 /****************************************************************
 * G__LD_p1_uchar()
 ****************************************************************/
-void G__LD_p1_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(unsigned char,'b');
 }
 /****************************************************************
 * G__LD_p1_short()
 ****************************************************************/
-void G__LD_p1_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(short,'s');
 }
 /****************************************************************
 * G__LD_p1_ushort()
 ****************************************************************/
-void G__LD_p1_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(unsigned short,'r');
 }
 /****************************************************************
 * G__LD_p1_int()
 ****************************************************************/
-void G__LD_p1_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(int,'i');
 }
@@ -795,24 +644,14 @@ long ig15;
 /****************************************************************
 * G__LD_p1_uint()
 ****************************************************************/
-void G__LD_p1_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(unsigned int,'h');
 }
 /****************************************************************
 * G__LD_p1_long()
 ****************************************************************/
-void G__LD_p1_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(long,'l');
 }
@@ -820,24 +659,14 @@ long ig15;
 /****************************************************************
 * G__LD_p1_ulong()
 ****************************************************************/
-void G__LD_p1_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P1(unsigned long,'k');
 }
 /****************************************************************
 * G__LD_p1_pointer()
 ****************************************************************/
-void G__LD_p1_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
@@ -856,12 +685,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_struct()
 ****************************************************************/
-void G__LD_p1_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
@@ -879,12 +703,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_float()
 ****************************************************************/
-void G__LD_p1_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
@@ -902,12 +721,7 @@ long ig15;
 /****************************************************************
 * G__LD_p1_double()
 ****************************************************************/
-void G__LD_p1_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
@@ -972,12 +786,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_longlong()
 ****************************************************************/
-void G__LD_pn_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];                    
@@ -1002,12 +811,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_ulonglong()
 ****************************************************************/
-void G__LD_pn_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];                    
@@ -1031,12 +835,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_longdouble()
 ****************************************************************/
-void G__LD_pn_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];                    
@@ -1061,12 +860,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_bool()
 ****************************************************************/
-void G__LD_pn_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_INT_PN(int,'g');
@@ -1078,60 +872,35 @@ long ig15;
 /****************************************************************
 * G__LD_pn_char()
 ****************************************************************/
-void G__LD_pn_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(char,'c');
 }
 /****************************************************************
 * G__LD_pn_uchar()
 ****************************************************************/
-void G__LD_pn_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(unsigned char,'b');
 }
 /****************************************************************
 * G__LD_pn_short()
 ****************************************************************/
-void G__LD_pn_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(short,'s');
 }
 /****************************************************************
 * G__LD_pn_ushort()
 ****************************************************************/
-void G__LD_pn_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(unsigned short,'r');
 }
 /****************************************************************
 * G__LD_pn_int()
 ****************************************************************/
-void G__LD_pn_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(int,'i');
 }
@@ -1139,24 +908,14 @@ long ig15;
 /****************************************************************
 * G__LD_pn_uint()
 ****************************************************************/
-void G__LD_pn_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(unsigned int,'h');
 }
 /****************************************************************
 * G__LD_pn_long()
 ****************************************************************/
-void G__LD_pn_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(long,'l');
 }
@@ -1164,24 +923,14 @@ long ig15;
 /****************************************************************
 * G__LD_pn_ulong()
 ****************************************************************/
-void G__LD_pn_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_PN(unsigned long,'k');
 }
 /****************************************************************
 * G__LD_pn_pointer()
 ****************************************************************/
-void G__LD_pn_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -1208,12 +957,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_struct()
 ****************************************************************/
-void G__LD_pn_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -1239,12 +983,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_float()
 ****************************************************************/
-void G__LD_pn_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -1270,12 +1009,7 @@ long ig15;
 /****************************************************************
 * G__LD_pn_double()
 ****************************************************************/
-void G__LD_pn_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -1318,12 +1052,7 @@ long ig15;
 /****************************************************************
 * G__LD_P10_longlong()
 ****************************************************************/
-void G__LD_P10_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];  
   buf->tagnum = -1;              
@@ -1335,12 +1064,7 @@ long ig15;
 /****************************************************************
 * G__LD_P10_ulonglong()
 ****************************************************************/
-void G__LD_P10_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];  
   buf->tagnum = -1;              
@@ -1352,12 +1076,7 @@ long ig15;
 /****************************************************************
 * G__LD_P10_longdouble()
 ****************************************************************/
-void G__LD_P10_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];  
   buf->tagnum = -1;              
@@ -1370,12 +1089,7 @@ long ig15;
 /****************************************************************
 * G__LD_P10_bool()
 ****************************************************************/
-void G__LD_P10_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_INT_P10(int,'g');
@@ -1387,60 +1101,35 @@ long ig15;
 /****************************************************************
 * G__LD_P10_char()
 ****************************************************************/
-void G__LD_P10_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(char,'c');
 }
 /****************************************************************
 * G__LD_P10_uchar()
 ****************************************************************/
-void G__LD_P10_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(unsigned char,'b');
 }
 /****************************************************************
 * G__LD_P10_short()
 ****************************************************************/
-void G__LD_P10_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(short,'s');
 }
 /****************************************************************
 * G__LD_P10_ushort()
 ****************************************************************/
-void G__LD_P10_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(unsigned short,'r');
 }
 /****************************************************************
 * G__LD_P10_int()
 ****************************************************************/
-void G__LD_P10_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   /* G__ASM_GET_INT_P10(int,'i'); */
   G__value *buf= &pbuf[*psp-1];   
@@ -1454,24 +1143,14 @@ long ig15;
 /****************************************************************
 * G__LD_P10_uint()
 ****************************************************************/
-void G__LD_P10_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(unsigned int,'h');
 }
 /****************************************************************
 * G__LD_P10_long()
 ****************************************************************/
-void G__LD_P10_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(long,'l');
 }
@@ -1479,24 +1158,14 @@ long ig15;
 /****************************************************************
 * G__LD_P10_ulong()
 ****************************************************************/
-void G__LD_P10_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_INT_P10(unsigned long,'k');
 }
 /****************************************************************
 * G__LD_P10_pointer()
 ****************************************************************/
-void G__LD_P10_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   buf->tagnum = var->p_tagtable[ig15];
@@ -1509,30 +1178,20 @@ long ig15;
 /****************************************************************
 * G__LD_P10_struct()
 ****************************************************************/
-void G__LD_P10_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = 'u';
   buf->typenum = var->p_typetable[ig15];
   buf->ref = *(long*)(var->p[ig15]+offset)
-	+buf->obj.i*G__struct.size[buf->tagnum];
+        +buf->obj.i*G__struct.size[buf->tagnum];
   buf->obj.i = buf->ref;
 }
 /****************************************************************
 * G__LD_P10_float()
 ****************************************************************/
-void G__LD_P10_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   buf->tagnum = -1;
@@ -1544,12 +1203,7 @@ long ig15;
 /****************************************************************
 * G__LD_P10_double()
 ****************************************************************/
-void G__LD_P10_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_P10_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
   buf->tagnum = -1;
@@ -1574,12 +1228,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_longlong()
 ****************************************************************/
-void G__ST_p0_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   G__int64 llval;
@@ -1607,12 +1256,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_ulonglong()
 ****************************************************************/
-void G__ST_p0_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   G__uint64 ullval;
@@ -1639,12 +1283,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_longdouble()
 ****************************************************************/
-void G__ST_p0_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   long double ldval;
@@ -1676,12 +1315,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_bool()
 ****************************************************************/
-void G__ST_p0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT(int);
@@ -1692,84 +1326,49 @@ long ig15;
 /****************************************************************
 * G__ST_p0_char()
 ****************************************************************/
-void G__ST_p0_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(char);
 }
 /****************************************************************
 * G__ST_p0_uchar()
 ****************************************************************/
-void G__ST_p0_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(unsigned char);
 }
 /****************************************************************
 * G__ST_p0_short()
 ****************************************************************/
-void G__ST_p0_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(short);
 }
 /****************************************************************
 * G__ST_p0_ushort()
 ****************************************************************/
-void G__ST_p0_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(unsigned short);
 }
 /****************************************************************
 * G__ST_p0_int()
 ****************************************************************/
-void G__ST_p0_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(int);
 }
 /****************************************************************
 * G__ST_p0_uint()
 ****************************************************************/
-void G__ST_p0_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(unsigned int);
 }
 /****************************************************************
 * G__ST_p0_long()
 ****************************************************************/
-void G__ST_p0_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(long);
 }
@@ -1777,24 +1376,14 @@ long ig15;
 /****************************************************************
 * G__ST_p0_ulong()
 ****************************************************************/
-void G__ST_p0_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT(unsigned long);
 }
 /****************************************************************
 * G__ST_p0_pointer()
 ****************************************************************/
-void G__ST_p0_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   long address = var->p[ig15]+offset;
@@ -1812,25 +1401,15 @@ long ig15;
 /****************************************************************
 * G__ST_p0_struct()
 ****************************************************************/
-void G__ST_p0_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   memcpy((void*)(var->p[ig15]+offset),(void*)pbuf[*psp-1].obj.i
-	 ,G__struct.size[var->p_tagtable[ig15]]);
+         ,G__struct.size[var->p_tagtable[ig15]]);
 }
 /****************************************************************
 * G__ST_p0_float()
 ****************************************************************/
-void G__ST_p0_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(float*)(var->p[ig15]+offset)=(float)G__doubleM(val);
@@ -1838,12 +1417,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_double()
 ****************************************************************/
-void G__ST_p0_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(double*)(var->p[ig15]+offset)=(double)G__doubleM(val);
@@ -1877,12 +1451,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_longlong()
 ****************************************************************/
-void G__ST_p1_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                 
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -1896,12 +1465,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_ulonglong()
 ****************************************************************/
-void G__ST_p1_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                 
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -1915,12 +1479,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_longdouble()
 ****************************************************************/
-void G__ST_p1_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                 
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
@@ -1935,12 +1494,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_bool()
 ****************************************************************/
-void G__ST_p1_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT_P1(int);
@@ -1951,60 +1505,35 @@ long ig15;
 /****************************************************************
 * G__ST_p1_char()
 ****************************************************************/
-void G__ST_p1_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(char);
 }
 /****************************************************************
 * G__ST_p1_uchar()
 ****************************************************************/
-void G__ST_p1_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(unsigned char);
 }
 /****************************************************************
 * G__ST_p1_short()
 ****************************************************************/
-void G__ST_p1_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(short);
 }
 /****************************************************************
 * G__ST_p1_ushort()
 ****************************************************************/
-void G__ST_p1_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(unsigned short);
 }
 /****************************************************************
 * G__ST_p1_int()
 ****************************************************************/
-void G__ST_p1_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(int);
 }
@@ -2012,24 +1541,14 @@ long ig15;
 /****************************************************************
 * G__ST_p1_uint()
 ****************************************************************/
-void G__ST_p1_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(unsigned int);
 }
 /****************************************************************
 * G__ST_p1_long()
 ****************************************************************/
-void G__ST_p1_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(long);
 }
@@ -2037,24 +1556,14 @@ long ig15;
 /****************************************************************
 * G__ST_p1_ulong()
 ****************************************************************/
-void G__ST_p1_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P1(unsigned long);
 }
 /****************************************************************
 * G__ST_p1_pointer()
 ****************************************************************/
-void G__ST_p1_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
@@ -2066,10 +1575,10 @@ long ig15;
     long newval = G__int(pbuf[*psp-2]);
     if(G__security&G__SECURE_GARBAGECOLLECTION && address) {
       if(*(long*)address) {
-	G__del_refcount((void*)(*(long*)address),(void**)address);
+        G__del_refcount((void*)(*(long*)address),(void**)address);
       }
       if(newval) {
-	G__add_refcount((void*)newval,(void**)address);
+        G__add_refcount((void*)newval,(void**)address);
       }
     }
     *(long*)(address) = newval;
@@ -2079,12 +1588,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_struct()
 ****************************************************************/
-void G__ST_p1_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
@@ -2094,19 +1598,14 @@ long ig15;
   else
 #endif
     memcpy((void*)(var->p[ig15]+offset
-		 +val->obj.i*G__struct.size[var->p_tagtable[ig15]])
-	 ,(void*)pbuf[*psp-2].obj.i,G__struct.size[var->p_tagtable[ig15]]);
+                 +val->obj.i*G__struct.size[var->p_tagtable[ig15]])
+         ,(void*)pbuf[*psp-2].obj.i,G__struct.size[var->p_tagtable[ig15]]);
   --(*psp);
 }
 /****************************************************************
 * G__ST_p1_float()
 ****************************************************************/
-void G__ST_p1_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
@@ -2122,12 +1621,7 @@ long ig15;
 /****************************************************************
 * G__ST_p1_double()
 ****************************************************************/
-void G__ST_p1_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
@@ -2182,12 +1676,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_longlong()
 ****************************************************************/
-void G__ST_pn_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
   int ary = var->varlabel[ig15][0];                              
@@ -2208,12 +1697,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_ulonglong()
 ****************************************************************/
-void G__ST_pn_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
   int ary = var->varlabel[ig15][0];                              
@@ -2234,12 +1718,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_longdouble()
 ****************************************************************/
-void G__ST_pn_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
   int ary = var->varlabel[ig15][0];                              
@@ -2260,12 +1739,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_bool()
 ****************************************************************/
-void G__ST_pn_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT_PN(int);
@@ -2277,60 +1751,35 @@ long ig15;
 /****************************************************************
 * G__ST_p0_char()
 ****************************************************************/
-void G__ST_pn_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(char);
 }
 /****************************************************************
 * G__ST_pn_uchar()
 ****************************************************************/
-void G__ST_pn_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(unsigned char);
 }
 /****************************************************************
 * G__ST_pn_short()
 ****************************************************************/
-void G__ST_pn_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(short);
 }
 /****************************************************************
 * G__ST_pn_ushort()
 ****************************************************************/
-void G__ST_pn_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(unsigned short);
 }
 /****************************************************************
 * G__ST_pn_int()
 ****************************************************************/
-void G__ST_pn_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(int);
 }
@@ -2338,24 +1787,14 @@ long ig15;
 /****************************************************************
 * G__ST_pn_uint()
 ****************************************************************/
-void G__ST_pn_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(unsigned int);
 }
 /****************************************************************
 * G__ST_pn_long()
 ****************************************************************/
-void G__ST_pn_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(long);
 }
@@ -2363,24 +1802,14 @@ long ig15;
 /****************************************************************
 * G__ST_pn_ulong()
 ****************************************************************/
-void G__ST_pn_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_PN(unsigned long);
 }
 /****************************************************************
 * G__ST_pn_pointer()
 ****************************************************************/
-void G__ST_pn_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -2399,10 +1828,10 @@ long ig15;
     long newval = G__int(pbuf[*psp-1]);
     if(G__security&G__SECURE_GARBAGECOLLECTION && address) {
       if(*(long*)address) {
-	G__del_refcount((void*)(*(long*)address),(void**)address);
+        G__del_refcount((void*)(*(long*)address),(void**)address);
       }
       if(newval) {
-	G__add_refcount((void*)newval,(void**)address);
+        G__add_refcount((void*)newval,(void**)address);
       }
     }
     *(long*)(address) = newval;
@@ -2411,12 +1840,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_struct()
 ****************************************************************/
-void G__ST_pn_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -2433,18 +1857,13 @@ long ig15;
   else
 #endif
     memcpy((void*)(var->p[ig15]+offset
-		 +p_inc*G__struct.size[var->p_tagtable[ig15]])
-	 ,(void*)pbuf[*psp-1].obj.i,G__struct.size[var->p_tagtable[ig15]]);
+                 +p_inc*G__struct.size[var->p_tagtable[ig15]])
+         ,(void*)pbuf[*psp-1].obj.i,G__struct.size[var->p_tagtable[ig15]]);
 }
 /****************************************************************
 * G__ST_pn_float()
 ****************************************************************/
-void G__ST_pn_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -2466,12 +1885,7 @@ long ig15;
 /****************************************************************
 * G__ST_pn_double()
 ****************************************************************/
-void G__ST_pn_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
   int ary = var->varlabel[ig15][0];
@@ -2507,12 +1921,7 @@ long ig15;
 /****************************************************************
 * G__ST_p10_longlong()
 ****************************************************************/
-void G__ST_P10_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                          
   *(G__int64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__int64)) 
@@ -2522,12 +1931,7 @@ long ig15;
 /****************************************************************
 * G__ST_p10_ulonglong()
 ****************************************************************/
-void G__ST_P10_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                          
   *(G__uint64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__uint64)) 
@@ -2537,12 +1941,7 @@ long ig15;
 /****************************************************************
 * G__ST_p10_longdouble()
 ****************************************************************/
-void G__ST_P10_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                                          
   *(long double*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(long double)) 
@@ -2553,12 +1952,7 @@ long ig15;
 /****************************************************************
 * G__ST_p0_bool()
 ****************************************************************/
-void G__ST_P10_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_INT_P10(int);
@@ -2569,60 +1963,35 @@ long ig15;
 /****************************************************************
 * G__ST_p0_char()
 ****************************************************************/
-void G__ST_P10_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(char);
 }
 /****************************************************************
 * G__ST_P10_uchar()
 ****************************************************************/
-void G__ST_P10_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(unsigned char);
 }
 /****************************************************************
 * G__ST_P10_short()
 ****************************************************************/
-void G__ST_P10_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(short);
 }
 /****************************************************************
 * G__ST_P10_ushort()
 ****************************************************************/
-void G__ST_P10_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(unsigned short);
 }
 /****************************************************************
 * G__ST_P10_int()
 ****************************************************************/
-void G__ST_P10_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(int);
 }
@@ -2630,24 +1999,14 @@ long ig15;
 /****************************************************************
 * G__ST_P10_uint()
 ****************************************************************/
-void G__ST_P10_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(unsigned int);
 }
 /****************************************************************
 * G__ST_P10_long()
 ****************************************************************/
-void G__ST_P10_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(long);
 }
@@ -2655,52 +2014,33 @@ long ig15;
 /****************************************************************
 * G__ST_P10_ulong()
 ****************************************************************/
-void G__ST_P10_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(unsigned long);
 }
 /****************************************************************
 * G__ST_P10_pointer()
 ****************************************************************/
-void G__ST_P10_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_INT_P10(long);
 }
 /****************************************************************
 * G__ST_P10_struct()
 ****************************************************************/
-void G__ST_P10_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   memcpy((void*)(*(long*)(var->p[ig15]+offset)
-		 +val->obj.i*G__struct.size[var->p_tagtable[ig15]])
-	 ,(void*)pbuf[*psp-2].obj.i,G__struct.size[var->p_tagtable[ig15]]);
+                 +val->obj.i*G__struct.size[var->p_tagtable[ig15]])
+         ,(void*)pbuf[*psp-2].obj.i,G__struct.size[var->p_tagtable[ig15]]);
   --(*psp);
 }
+
 /****************************************************************
 * G__ST_P10_float()
 ****************************************************************/
-void G__ST_P10_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(float*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(float))
@@ -2710,12 +2050,7 @@ long ig15;
 /****************************************************************
 * G__ST_P10_double()
 ****************************************************************/
-void G__ST_P10_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_P10_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(double*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(double))
@@ -2744,12 +2079,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_longlong()
 ****************************************************************/
-void G__LD_Rp0_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -2761,12 +2091,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_ulonglong()
 ****************************************************************/
-void G__LD_Rp0_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -2778,12 +2103,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_longdouble()
 ****************************************************************/
-void G__LD_Rp0_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -2797,12 +2117,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_bool()
 ****************************************************************/
-void G__LD_Rp0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_REFINT(int,'g');
@@ -2814,84 +2129,49 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_char()
 ****************************************************************/
-void G__LD_Rp0_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(char,'c');
 }
 /****************************************************************
 * G__LD_Rp0_uchar()
 ****************************************************************/
-void G__LD_Rp0_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(unsigned char,'b');
 }
 /****************************************************************
 * G__LD_Rp0_short()
 ****************************************************************/
-void G__LD_Rp0_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(short,'s');
 }
 /****************************************************************
 * G__LD_Rp0_ushort()
 ****************************************************************/
-void G__LD_Rp0_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(unsigned short,'r');
 }
 /****************************************************************
 * G__LD_Rp0_int()
 ****************************************************************/
-void G__LD_Rp0_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(int,'i');
 }
 /****************************************************************
 * G__LD_Rp0_uint()
 ****************************************************************/
-void G__LD_Rp0_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(unsigned int,'h');
 }
 /****************************************************************
 * G__LD_Rp0_long()
 ****************************************************************/
-void G__LD_Rp0_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(long,'l');
 }
@@ -2899,24 +2179,14 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_ulong()
 ****************************************************************/
-void G__LD_Rp0_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFINT(unsigned long,'k');
 }
 /****************************************************************
 * G__LD_Rp0_pointer()
 ****************************************************************/
-void G__LD_Rp0_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -2929,12 +2199,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_struct()
 ****************************************************************/
-void G__LD_Rp0_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -2946,12 +2211,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_float()
 ****************************************************************/
-void G__LD_Rp0_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -2963,12 +2223,7 @@ long ig15;
 /****************************************************************
 * G__LD_Rp0_double()
 ****************************************************************/
-void G__LD_Rp0_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_Rp0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -2997,12 +2252,7 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_longlong()
 ****************************************************************/
-void G__ST_Rp0_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                    
   long adr = *(long*)(var->p[ig15]+offset);         
@@ -3031,12 +2281,7 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_ulonglong()
 ****************************************************************/
-void G__ST_Rp0_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                    
   long adr = *(long*)(var->p[ig15]+offset);         
@@ -3064,12 +2309,7 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_longdouble()
 ****************************************************************/
-void G__ST_Rp0_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];                    
   long adr = *(long*)(var->p[ig15]+offset);         
@@ -3102,12 +2342,7 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_bool()
 ****************************************************************/
-void G__ST_Rp0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_ASSIGN_REFINT(int);
@@ -3120,84 +2355,49 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_char()
 ****************************************************************/
-void G__ST_Rp0_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(char);
 }
 /****************************************************************
 * G__ST_Rp0_uchar()
 ****************************************************************/
-void G__ST_Rp0_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(unsigned char);
 }
 /****************************************************************
 * G__ST_Rp0_short()
 ****************************************************************/
-void G__ST_Rp0_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(short);
 }
 /****************************************************************
 * G__ST_Rp0_ushort()
 ****************************************************************/
-void G__ST_Rp0_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(unsigned short);
 }
 /****************************************************************
 * G__ST_Rp0_int()
 ****************************************************************/
-void G__ST_Rp0_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(int);
 }
 /****************************************************************
 * G__ST_Rp0_uint()
 ****************************************************************/
-void G__ST_Rp0_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(unsigned int);
 }
 /****************************************************************
 * G__ST_Rp0_long()
 ****************************************************************/
-void G__ST_Rp0_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(long);
 }
@@ -3205,49 +2405,29 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_ulong()
 ****************************************************************/
-void G__ST_Rp0_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(unsigned long);
 }
 /****************************************************************
 * G__ST_Rp0_pointer()
 ****************************************************************/
-void G__ST_Rp0_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_ASSIGN_REFINT(long);
 }
 /****************************************************************
 * G__ST_Rp0_struct()
 ****************************************************************/
-void G__ST_Rp0_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   memcpy((void*)(*(long*)(var->p[ig15]+offset)),(void*)pbuf[*psp-1].obj.i
-	 ,G__struct.size[var->p_tagtable[ig15]]);
+         ,G__struct.size[var->p_tagtable[ig15]]);
 }
 /****************************************************************
 * G__ST_Rp0_float()
 ****************************************************************/
-void G__ST_Rp0_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(float*)(*(long*)(var->p[ig15]+offset))=(float)G__doubleM(val);
@@ -3255,12 +2435,7 @@ long ig15;
 /****************************************************************
 * G__ST_Rp0_double()
 ****************************************************************/
-void G__ST_Rp0_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__ST_Rp0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
   *(double*)(*(long*)(var->p[ig15]+offset))=(double)G__doubleM(val);
@@ -3287,12 +2462,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_longlong()
 ****************************************************************/
-void G__LD_RP0_longlong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -3304,12 +2474,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_ulonglong()
 ****************************************************************/
-void G__LD_RP0_ulonglong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -3321,12 +2486,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_longdouble()
 ****************************************************************/
-void G__LD_RP0_longdouble(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];         
   buf->tagnum = -1;                       
@@ -3339,12 +2499,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_bool()
 ****************************************************************/
-void G__LD_RP0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_bool(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
 #ifdef G__BOOL4BYTE
   G__ASM_GET_REFPINT(int,'G');
@@ -3356,84 +2511,49 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_char()
 ****************************************************************/
-void G__LD_RP0_char(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_char(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(char,'C');
 }
 /****************************************************************
 * G__LD_RP0_uchar()
 ****************************************************************/
-void G__LD_RP0_uchar(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_uchar(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(unsigned char,'B');
 }
 /****************************************************************
 * G__LD_RP0_short()
 ****************************************************************/
-void G__LD_RP0_short(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_short(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(short,'S');
 }
 /****************************************************************
 * G__LD_RP0_ushort()
 ****************************************************************/
-void G__LD_RP0_ushort(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(unsigned short,'R');
 }
 /****************************************************************
 * G__LD_RP0_int()
 ****************************************************************/
-void G__LD_RP0_int(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(int,'I');
 }
 /****************************************************************
 * G__LD_RP0_uint()
 ****************************************************************/
-void G__LD_RP0_uint(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_uint(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(unsigned int,'H');
 }
 /****************************************************************
 * G__LD_RP0_long()
 ****************************************************************/
-void G__LD_RP0_long(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_long(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(long,'L');
 }
@@ -3441,24 +2561,14 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_ulong()
 ****************************************************************/
-void G__LD_RP0_ulong(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__ASM_GET_REFPINT(unsigned long,'K');
 }
 /****************************************************************
 * G__LD_RP0_pointer()
 ****************************************************************/
-void G__LD_RP0_pointer(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -3471,12 +2581,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_struct()
 ****************************************************************/
-void G__LD_RP0_struct(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = var->p_tagtable[ig15];
@@ -3488,12 +2593,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_float()
 ****************************************************************/
-void G__LD_RP0_float(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -3505,12 +2605,7 @@ long ig15;
 /****************************************************************
 * G__LD_RP0_double()
 ****************************************************************/
-void G__LD_RP0_double(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
+void G__LD_RP0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
   buf->tagnum = -1;
@@ -3527,9 +2622,7 @@ long ig15;
 /*************************************************************************
 * G__OP2_plus_uu()
 *************************************************************************/
-void G__OP2_plus_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_plus_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
   bufm2->type = 'h';
@@ -3539,9 +2632,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_minus_uu()
 *************************************************************************/
-void G__OP2_minus_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_minus_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
   bufm2->type = 'h';
@@ -3551,9 +2642,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_multiply_uu()
 *************************************************************************/
-void G__OP2_multiply_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_multiply_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
   bufm2->type = 'h';
@@ -3563,9 +2652,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divide_uu()
 *************************************************************************/
-void G__OP2_divide_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divide_uu(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.ulo) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3579,9 +2666,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addassign_uu()
 *************************************************************************/
-void G__OP2_addassign_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addassign_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo += bufm1->obj.ulo;
   *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
@@ -3589,9 +2674,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_subassign_uu()
 *************************************************************************/
-void G__OP2_subassign_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_subassign_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo -= bufm1->obj.ulo;
   *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
@@ -3599,9 +2682,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_mulassign_uu()
 *************************************************************************/
-void G__OP2_mulassign_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_mulassign_uu(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.ulo *= bufm1->obj.ulo;
   *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
@@ -3609,9 +2690,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divassign_uu()
 *************************************************************************/
-void G__OP2_divassign_uu(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divassign_uu(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.ulo) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3629,9 +2708,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_plus_ii()
 *************************************************************************/
-void G__OP2_plus_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_plus_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i = bufm2->obj.i + bufm1->obj.i;
   bufm2->type = 'i';
@@ -3641,9 +2718,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_minus_ii()
 *************************************************************************/
-void G__OP2_minus_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_minus_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i = bufm2->obj.i - bufm1->obj.i;
   bufm2->type = 'i';
@@ -3653,9 +2728,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_multiply_ii()
 *************************************************************************/
-void G__OP2_multiply_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_multiply_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i = bufm2->obj.i * bufm1->obj.i;
   bufm2->type = 'i';
@@ -3665,9 +2738,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divide_ii()
 *************************************************************************/
-void G__OP2_divide_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divide_ii(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3681,9 +2752,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addassign_ii()
 *************************************************************************/
-void G__OP2_addassign_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addassign_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i += bufm1->obj.i;
   *(int*)bufm2->ref=(int)bufm2->obj.i;
@@ -3691,9 +2760,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_subassign_ii()
 *************************************************************************/
-void G__OP2_subassign_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_subassign_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i -= bufm1->obj.i;
   *(int*)bufm2->ref=(int)bufm2->obj.i;
@@ -3701,9 +2768,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_mulassign_ii()
 *************************************************************************/
-void G__OP2_mulassign_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_mulassign_ii(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i *= bufm1->obj.i;
   *(int*)bufm2->ref=(int)bufm2->obj.i;
@@ -3711,9 +2776,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divassign_ii()
 *************************************************************************/
-void G__OP2_divassign_ii(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divassign_ii(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3731,9 +2794,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_plus_dd()
 *************************************************************************/
-void G__OP2_plus_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_plus_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
   bufm2->type = 'd';
@@ -3743,9 +2804,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_minus_dd()
 *************************************************************************/
-void G__OP2_minus_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_minus_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
   bufm2->type = 'd';
@@ -3755,9 +2814,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_multiply_dd()
 *************************************************************************/
-void G__OP2_multiply_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_multiply_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
   bufm2->type = 'd';
@@ -3767,9 +2824,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divide_dd()
 *************************************************************************/
-void G__OP2_divide_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divide_dd(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.d) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3783,9 +2838,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addassign_dd()
 *************************************************************************/
-void G__OP2_addassign_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addassign_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d += bufm1->obj.d;
   *(double*)bufm2->ref=bufm2->obj.d;
@@ -3793,9 +2846,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_subassign_dd()
 *************************************************************************/
-void G__OP2_subassign_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_subassign_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d -= bufm1->obj.d;
   *(double*)bufm2->ref=bufm2->obj.d;
@@ -3803,9 +2854,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_mulassign_dd()
 *************************************************************************/
-void G__OP2_mulassign_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_mulassign_dd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d *= bufm1->obj.d;
   *(double*)bufm2->ref=bufm2->obj.d;
@@ -3813,9 +2862,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divassign_dd()
 *************************************************************************/
-void G__OP2_divassign_dd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divassign_dd(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.d) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3832,9 +2879,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addassign_fd()
 *************************************************************************/
-void G__OP2_addassign_fd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addassign_fd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d += bufm1->obj.d;
   *(float*)bufm2->ref=(float)bufm2->obj.d;
@@ -3842,9 +2887,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_subassign_fd()
 *************************************************************************/
-void G__OP2_subassign_fd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_subassign_fd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d -= bufm1->obj.d;
   *(float*)bufm2->ref=(float)bufm2->obj.d;
@@ -3852,9 +2895,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_mulassign_fd()
 *************************************************************************/
-void G__OP2_mulassign_fd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_mulassign_fd(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.d *= bufm1->obj.d;
   *(float*)bufm2->ref=(float)bufm2->obj.d;
@@ -3862,9 +2903,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divassign_fd()
 *************************************************************************/
-void G__OP2_divassign_fd(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divassign_fd(G__value *bufm1,G__value *bufm2)
 {
   if(0==bufm1->obj.d) {
     G__genericerror("Error: operator '/' divided by zero");
@@ -3878,9 +2917,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addvoidptr()
 *************************************************************************/
-void G__OP2_addvoidptr(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addvoidptr(G__value *bufm1,G__value *bufm2)
 {
   bufm2->obj.i += bufm1->obj.i;
 }
@@ -3892,9 +2929,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_plus()
 *************************************************************************/
-void G__OP2_plus(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_plus(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
@@ -3960,9 +2995,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_minus()
 *************************************************************************/
-void G__OP2_minus(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_minus(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
@@ -4034,9 +3067,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_multiply()
 *************************************************************************/
-void G__OP2_multiply(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_multiply(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
@@ -4089,9 +3120,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_modulus()
 *************************************************************************/
-void G__OP2_modulus(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_modulus(G__value *bufm1,G__value *bufm2)
 {
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
@@ -4132,9 +3161,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divide()
 *************************************************************************/
-void G__OP2_divide(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divide(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
@@ -4153,8 +3180,8 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.d) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       bufm2->obj.d = bufm2->obj.d / bufm1->obj.d;
@@ -4162,14 +3189,14 @@ G__value *bufm2;
     else {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.i) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       if(G__isunsignedM(bufm1)) 
-	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
+        bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
       else
-	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
+        bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
     }
     bufm2->type = 'd';
   }
@@ -4217,9 +3244,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_logicaland()
 *************************************************************************/
-void G__OP2_logicaland(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_logicaland(G__value *bufm1,G__value *bufm2)
 {
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.i=G__Longlong(*bufm2)&&G__Longlong(*bufm1);
@@ -4241,9 +3266,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_logicalor()
 *************************************************************************/
-void G__OP2_logicalor(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_logicalor(G__value *bufm1,G__value *bufm2)
 {
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.i=G__Longlong(*bufm2)||G__Longlong(*bufm1);
@@ -4261,13 +3284,10 @@ G__value *bufm2;
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
 }
-
 /*************************************************************************
 * G__CMP2_equal()
 *************************************************************************/
-void G__CMP2_equal(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_equal(G__value *bufm1,G__value *bufm2)
 {
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
@@ -4282,9 +3302,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__CMP2_notequal()
 *************************************************************************/
-void G__CMP2_notequal(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_notequal(G__value *bufm1,G__value *bufm2)
 {
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
@@ -4299,9 +3317,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__CMP2_greaterorequal()
 *************************************************************************/
-void G__CMP2_greaterorequal(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_greaterorequal(G__value *bufm1,G__value *bufm2)
 {
   if(G__doubleM(bufm2)>=G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
@@ -4313,9 +3329,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__CMP2_lessorequal()
 *************************************************************************/
-void G__CMP2_lessorequal(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_lessorequal(G__value *bufm1,G__value *bufm2)
 {
   if(G__doubleM(bufm2)<=G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
@@ -4327,9 +3341,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__CMP2_greater()
 *************************************************************************/
-void G__CMP2_greater(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_greater(G__value *bufm1,G__value *bufm2)
 {
   if(G__doubleM(bufm2)>G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                    bufm2->obj.i = 0;
@@ -4341,9 +3353,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__CMP2_less()
 *************************************************************************/
-void G__CMP2_less(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__CMP2_less(G__value *bufm1,G__value *bufm2)
 {
   if(G__doubleM(bufm2)<G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                    bufm2->obj.i = 0;
@@ -4393,9 +3403,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_addassign()
 *************************************************************************/
-void G__OP2_addassign(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_addassign(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
@@ -4443,9 +3451,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_subassign()
 *************************************************************************/
-void G__OP2_subassign(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_subassign(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
@@ -4478,10 +3484,10 @@ G__value *bufm2;
     }
     else if(isupper(bufm2->type)) {
       if(isupper(bufm1->type)) {
-	bufm2->obj.i=(bufm2->obj.i-bufm1->obj.i)/G__sizeof(bufm2);
+        bufm2->obj.i=(bufm2->obj.i-bufm1->obj.i)/G__sizeof(bufm2);
       }
       else {
-	bufm2->obj.i=bufm2->obj.i-bufm1->obj.i*G__sizeof(bufm2);
+        bufm2->obj.i=bufm2->obj.i-bufm1->obj.i*G__sizeof(bufm2);
       }
     }
     else if(isupper(bufm1->type)) {
@@ -4498,9 +3504,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_mulassign()
 *************************************************************************/
-void G__OP2_mulassign(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_mulassign(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
@@ -4541,9 +3545,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_modassign()
 *************************************************************************/
-void G__OP2_modassign(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_modassign(G__value *bufm1,G__value *bufm2)
 {
   if('n'==bufm2->type || 'n'==bufm1->type) {
     bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
@@ -4584,9 +3586,7 @@ G__value *bufm2;
 /*************************************************************************
 * G__OP2_divassign()
 *************************************************************************/
-void G__OP2_divassign(bufm1,bufm2)
-G__value *bufm1;
-G__value *bufm2;
+void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
 {
   if('q'==bufm2->type || 'q'==bufm1->type) {
     bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
@@ -4608,8 +3608,8 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.d) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       bufm2->obj.d /= bufm1->obj.d;
@@ -4617,8 +3617,8 @@ G__value *bufm2;
     else {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.i) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       bufm2->obj.d /= (double)bufm1->obj.i;
@@ -4629,8 +3629,8 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.d) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       bufm2->obj.i /= (long)bufm1->obj.d;
@@ -4638,25 +3638,25 @@ G__value *bufm2;
     else {
 #ifdef G__TUNEUP_W_SECURITY
       if(0==bufm1->obj.i) {
-	G__genericerror("Error: operator '/' divided by zero");
-	return;
+        G__genericerror("Error: operator '/' divided by zero");
+        return;
       }
 #endif
       if(G__isunsignedM(bufm2)) {
-	if(G__isunsignedM(bufm1)) {
-	  bufm2->obj.ulo /= bufm1->obj.ulo;
-	}
-	else {
-	  bufm2->obj.ulo /= bufm1->obj.i;
-	}
+        if(G__isunsignedM(bufm1)) {
+          bufm2->obj.ulo /= bufm1->obj.ulo;
+        }
+        else {
+          bufm2->obj.ulo /= bufm1->obj.i;
+        }
       }
       else {
-	if(G__isunsignedM(bufm1)) {
-	  bufm2->obj.i /= bufm1->obj.ulo;
-	}
-	else {
-	  bufm2->obj.i /= bufm1->obj.i;
-	}
+        if(G__isunsignedM(bufm1)) {
+          bufm2->obj.i /= bufm1->obj.ulo;
+        }
+        else {
+          bufm2->obj.i /= bufm1->obj.i;
+        }
       }
     }
     G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
@@ -4671,32 +3671,28 @@ G__value *bufm2;
 /****************************************************************
 * G__OP1_postfixinc_i()
 ****************************************************************/
-void G__OP1_postfixinc_i(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_i(G__value *pbuf)
 {
   *(int*)pbuf->ref = (int)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_i()
 ****************************************************************/
-void G__OP1_postfixdec_i(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_i(G__value *pbuf)
 {
   *(int*)pbuf->ref = (int)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_i()
 ****************************************************************/
-void G__OP1_prefixinc_i(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_i(G__value *pbuf)
 {
   *(int*)pbuf->ref = (int)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_i()
 ****************************************************************/
-void G__OP1_prefixdec_i(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_i(G__value *pbuf)
 {
   *(int*)pbuf->ref = (int)(--pbuf->obj.i);
 }
@@ -4704,32 +3700,28 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_d()
 ****************************************************************/
-void G__OP1_postfixinc_d(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)pbuf->obj.d+1.0;
 }
 /****************************************************************
 * G__OP1_postfixdec_d()
 ****************************************************************/
-void G__OP1_postfixdec_d(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)pbuf->obj.d-1.0;
 }
 /****************************************************************
 * G__OP1_prefixinc_d()
 ****************************************************************/
-void G__OP1_prefixinc_d(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)(++pbuf->obj.d);
 }
 /****************************************************************
 * G__OP1_prefixdec_d()
 ****************************************************************/
-void G__OP1_prefixdec_d(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)(--pbuf->obj.d);
 }
@@ -4738,32 +3730,28 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_l()
 ****************************************************************/
-void G__OP1_postfixinc_l(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_l(G__value *pbuf)
 {
   *(long*)pbuf->ref = (long)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_l()
 ****************************************************************/
-void G__OP1_postfixdec_l(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_l(G__value *pbuf)
 {
   *(long*)pbuf->ref = (long)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_l()
 ****************************************************************/
-void G__OP1_prefixinc_l(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_l(G__value *pbuf)
 {
   *(long*)pbuf->ref = (long)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_l()
 ****************************************************************/
-void G__OP1_prefixdec_l(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_l(G__value *pbuf)
 {
   *(long*)pbuf->ref = (long)(--pbuf->obj.i);
 }
@@ -4771,32 +3759,28 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_s()
 ****************************************************************/
-void G__OP1_postfixinc_s(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_s(G__value *pbuf)
 {
   *(short*)pbuf->ref = (short)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_s()
 ****************************************************************/
-void G__OP1_postfixdec_s(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_s(G__value *pbuf)
 {
   *(short*)pbuf->ref = (short)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_s()
 ****************************************************************/
-void G__OP1_prefixinc_s(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_s(G__value *pbuf)
 {
   *(short*)pbuf->ref = (short)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_s()
 ****************************************************************/
-void G__OP1_prefixdec_s(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_s(G__value *pbuf)
 {
   *(short*)pbuf->ref = (short)(--pbuf->obj.i);
 }
@@ -4804,32 +3788,28 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_h()
 ****************************************************************/
-void G__OP1_postfixinc_h(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_h(G__value *pbuf)
 {
   *(unsigned int*)pbuf->ref = (unsigned int)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_h()
 ****************************************************************/
-void G__OP1_postfixdec_h(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_h(G__value *pbuf)
 {
   *(unsigned int*)pbuf->ref = (unsigned int)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_h()
 ****************************************************************/
-void G__OP1_prefixinc_h(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_h(G__value *pbuf)
 {
   *(unsigned int*)pbuf->ref = (unsigned int)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_h()
 ****************************************************************/
-void G__OP1_prefixdec_h(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_h(G__value *pbuf)
 {
   *(unsigned int*)pbuf->ref = (unsigned int)(--pbuf->obj.i);
 }
@@ -4837,32 +3817,28 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_k()
 ****************************************************************/
-void G__OP1_postfixinc_k(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_k(G__value *pbuf)
 {
   *(unsigned long*)pbuf->ref = (unsigned long)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_k()
 ****************************************************************/
-void G__OP1_postfixdec_k(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_k(G__value *pbuf)
 {
   *(unsigned long*)pbuf->ref = (unsigned long)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_k()
 ****************************************************************/
-void G__OP1_prefixinc_k(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_k(G__value *pbuf)
 {
   *(unsigned long*)pbuf->ref = (unsigned long)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_k()
 ****************************************************************/
-void G__OP1_prefixdec_k(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_k(G__value *pbuf)
 {
   *(unsigned long*)pbuf->ref = (unsigned long)(--pbuf->obj.i);
 }
@@ -4870,66 +3846,56 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc_r()
 ****************************************************************/
-void G__OP1_postfixinc_r(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_r(G__value *pbuf)
 {
   *(unsigned short*)pbuf->ref = (unsigned short)pbuf->obj.i+1;
 }
 /****************************************************************
 * G__OP1_postfixdec_r()
 ****************************************************************/
-void G__OP1_postfixdec_r(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_r(G__value *pbuf)
 {
   *(unsigned short*)pbuf->ref = (unsigned short)pbuf->obj.i-1;
 }
 /****************************************************************
 * G__OP1_prefixinc_r()
 ****************************************************************/
-void G__OP1_prefixinc_r(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_r(G__value *pbuf)
 {
   *(unsigned short*)pbuf->ref = (unsigned short)(++pbuf->obj.i);
 }
 /****************************************************************
 * G__OP1_prefixdec_r()
 ****************************************************************/
-void G__OP1_prefixdec_r(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_r(G__value *pbuf)
 {
   *(unsigned short*)pbuf->ref = (unsigned short)(--pbuf->obj.i);
 }
-
-
 /****************************************************************
 * G__OP1_postfixinc_f()
 ****************************************************************/
-void G__OP1_postfixinc_f(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc_f(G__value *pbuf)
 {
   *(float*)pbuf->ref = (float)pbuf->obj.d+1.0;
 }
 /****************************************************************
 * G__OP1_postfixdec_f()
 ****************************************************************/
-void G__OP1_postfixdec_f(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec_f(G__value *pbuf)
 {
   *(float*)pbuf->ref = (float)pbuf->obj.d-1.0;
 }
 /****************************************************************
 * G__OP1_prefixinc_f()
 ****************************************************************/
-void G__OP1_prefixinc_f(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc_f(G__value *pbuf)
 {
   *(float*)pbuf->ref = (float)(++pbuf->obj.d);
 }
 /****************************************************************
 * G__OP1_prefixdec_f()
 ****************************************************************/
-void G__OP1_prefixdec_f(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec_f(G__value *pbuf)
 {
   *(float*)pbuf->ref = (float)(--pbuf->obj.d);
 }
@@ -4939,8 +3905,7 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixinc()
 ****************************************************************/
-void G__OP1_postfixinc(pbuf)
-G__value *pbuf;
+void G__OP1_postfixinc(G__value *pbuf)
 {
   G__int64 iorig;
   double dorig;
@@ -4978,8 +3943,7 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_postfixdec()
 ****************************************************************/
-void G__OP1_postfixdec(pbuf)
-G__value *pbuf;
+void G__OP1_postfixdec(G__value *pbuf)
 {
   G__int64 iorig;
   double dorig;
@@ -5017,8 +3981,7 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_prefixinc()
 ****************************************************************/
-void G__OP1_prefixinc(pbuf)
-G__value *pbuf;
+void G__OP1_prefixinc(G__value *pbuf)
 {
   switch(pbuf->type) {
   case 'd':
@@ -5037,8 +4000,7 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_prefixdec()
 ****************************************************************/
-void G__OP1_prefixdec(pbuf)
-G__value *pbuf;
+void G__OP1_prefixdec(G__value *pbuf)
 {
   switch(pbuf->type) {
   case 'd':
@@ -5057,8 +4019,7 @@ G__value *pbuf;
 /****************************************************************
 * G__OP1_minus()
 ****************************************************************/
-void G__OP1_minus(pbuf)
-G__value *pbuf;
+void G__OP1_minus(G__value *pbuf)
 {
   pbuf->ref = 0;
   switch(pbuf->type) {
@@ -5077,7 +4038,7 @@ G__value *pbuf;
            pbuf->obj.ll *= -1;
            break;
          default:
-	   pbuf->obj.i *= -1;
+           pbuf->obj.i *= -1;
        }
     }
   }
@@ -5127,10 +4088,10 @@ void G__abortbytecode()
   if(G__asm_dbg && G__asm_noverflow) {
     if(G__dispmsg>=G__DISPNOTE) {
       if(0==G__xrefflag) 
-	G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
-		     ,G__asm_noverflow);
+        G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
+                     ,G__asm_noverflow);
       else
-	G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
+        G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
       G__printlinenum();
     }
   }
@@ -5148,8 +4109,7 @@ void G__abortbytecode()
 * void.
 *
 ****************************************************************/
-int G__inc_cp_asm(cp_inc,dt_dec)
-int cp_inc,dt_dec;
+int G__inc_cp_asm(int cp_inc,int dt_dec)
 {
   if(0==G__xrefflag) {
     G__asm_cp+=cp_inc;
@@ -5214,7 +4174,7 @@ int G__asm_clear()
   if(G__asm_clear_mask) return(0);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
-			 ,G__ifile.name ,G__ifile.line_number);
+                         ,G__ifile.name ,G__ifile.line_number);
 #endif
 
   /* Issue, value of G__CL must be unique. Otherwise, following optimization
@@ -5231,13 +4191,11 @@ int G__asm_clear()
 
 #endif /* G__ASM */
 
-
 #ifdef G__ASM
 /**************************************************************************
 * G__asm_putint()
 **************************************************************************/
-int G__asm_putint(i)
-int i;
+int G__asm_putint(int i)
 {
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n",G__asm_cp,i,G__asm_dt);
@@ -5253,17 +4211,10 @@ int i;
 /**************************************************************************
 * G__value G__getreserved()
 **************************************************************************/
-G__value G__getreserved(item ,ptr,ppdict)
-char *item;
-void **ptr;
-void **ppdict;
+G__value G__getreserved(char *item ,void ** /* ptr */,void ** /* ppdict */)
 {
   G__value buf;
   int i;
-
-#ifndef G__OLDIMPLEMENTATION1911
-  if(0 && ptr && ppdict) return(G__null);
-#endif
 
   G__abortbytecode();
 
@@ -5329,8 +4280,7 @@ void **ppdict;
 *
 *  returns 'Sun Nov 28 21:40:32 1999\n' in buf
 **************************************************************************/
-void G__get__tm__(buf)
-char *buf;
+void G__get__tm__(char *buf)
 {
   time_t t = time(0);
   sprintf(buf,"%s",ctime(&t));
@@ -5379,8 +4329,7 @@ char* G__get__time__()
 /**************************************************************************
 * G__value G__getrsvd()
 **************************************************************************/
-G__value G__getrsvd(i)
-int i;
+G__value G__getrsvd(int i)
 {
   G__value buf;
 
@@ -5415,7 +4364,7 @@ int i;
     break;
   }
 
-	return(buf);
+        return(buf);
 }
 
 
@@ -5428,9 +4377,7 @@ int i;
 /****************************************************************
 * G__asm_gettest()
 ****************************************************************/
-long G__asm_gettest(op,inst)
-int op;
-long *inst;
+long G__asm_gettest(int op,long *inst)
 {
   switch(op) {
   case 'E': /* != */
@@ -5453,7 +4400,7 @@ long *inst;
     break;
   default:
     G__fprinterr(G__serr,"Error: Loop compile optimizer, illegal conditional instruction %d(%c) FILE:%s LINE:%d\n"
-	    ,op,op,G__ifile.name,G__ifile.line_number);
+            ,op,op,G__ifile.name,G__ifile.line_number);
     break;
   }
   return(0);
@@ -5462,8 +4409,7 @@ long *inst;
 /****************************************************************
  * G__isInt
  ****************************************************************/
-int G__isInt(type)
-int type;
+int G__isInt(int type)
 {
   switch(type) {
   case 'i':
@@ -5489,8 +4435,7 @@ int type;
 *  Quasi-Assembly-Code optimizer
 *
 ****************************************************************/
-int G__asm_optimize(start)
-int *start;
+int G__asm_optimize(int *start)
 {
   /* Issue, value of G__LD_VAR, G__LD_MVAR, G__LD, G__CMP2, G__CNDJMP must be
    * unique. Otherwise, following optimization causes problem. */
@@ -5518,7 +4463,7 @@ int *start;
    *******************************************************/
   if((G__asm_inst[*start]==G__LD_VAR
       || (G__asm_inst[*start]==G__LD_MSTR
-	  && !G__asm_wholefunction
+          && !G__asm_wholefunction
       )) 
      &&  /* 1 */
      G__asm_inst[*start+5]==G__LD      &&
@@ -5532,11 +4477,11 @@ int *start;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
       G__fprinterr(G__serr,"%3x: CMPJMP i %c %d optimized\n"
-	      ,*start+6,G__asm_inst[*start+8]
-	      ,G__int(G__asm_stack[G__asm_inst[*start+6]]));
+              ,*start+6,G__asm_inst[*start+8]
+              ,G__int(G__asm_stack[G__asm_inst[*start+6]]));
 #endif
     G__asm_gettest((int)G__asm_inst[*start+8]
-		   ,&G__asm_inst[*start+7]);
+                   ,&G__asm_inst[*start+7]);
 
     G__asm_inst[*start+8]=
       ((struct G__var_array*)G__asm_inst[*start+4])->p[G__asm_inst[*start+1]];
@@ -5585,26 +4530,26 @@ int *start;
    * G__asm_cp   RTN                                     RTN
    *******************************************************/
   else if((G__asm_inst[*start]==G__LD_VAR||
-	   (G__asm_inst[*start]==G__LD_MSTR
-	    && !G__asm_wholefunction
-	    )) &&  /* 1 */
-	  (G__asm_inst[*start+5]==G__LD_VAR||
-	   (G__asm_inst[*start+5]==G__LD_MSTR
-	    && !G__asm_wholefunction
-	   )) &&  /* 1 */
-	  G__asm_inst[*start+10]==G__CMP2    &&
-	  G__asm_inst[*start+12]==G__CNDJMP  &&
-	  G__isInt(((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]]) && /* 2 */
-	  (G__isInt(((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]]) || /* 2 */
-	   ((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]] =='p' ) && /* 2 */
-	  G__asm_inst[*start+3]=='p'  &&  /* 3 */
-	  G__asm_inst[*start+8]=='p'    /* 3 */
-	  ) {
+           (G__asm_inst[*start]==G__LD_MSTR
+            && !G__asm_wholefunction
+            )) &&  /* 1 */
+          (G__asm_inst[*start+5]==G__LD_VAR||
+           (G__asm_inst[*start+5]==G__LD_MSTR
+            && !G__asm_wholefunction
+           )) &&  /* 1 */
+          G__asm_inst[*start+10]==G__CMP2    &&
+          G__asm_inst[*start+12]==G__CNDJMP  &&
+          G__isInt(((struct G__var_array*)G__asm_inst[*start+4])->type[G__asm_inst[*start+1]]) && /* 2 */
+          (G__isInt(((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]]) || /* 2 */
+           ((struct G__var_array*)G__asm_inst[*start+9])->type[G__asm_inst[*start+6]] =='p' ) && /* 2 */
+          G__asm_inst[*start+3]=='p'  &&  /* 3 */
+          G__asm_inst[*start+8]=='p'    /* 3 */
+          ) {
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
       G__fprinterr(G__serr,"%3x: CMPJMP a %c b optimized\n"
-	      ,*start+9,G__asm_inst[*start+11]);
+              ,*start+9,G__asm_inst[*start+11]);
 #endif
     G__asm_gettest((int)G__asm_inst[*start+11] ,&G__asm_inst[*start+10]);
 
@@ -5725,18 +4670,18 @@ int *start;
    * G__asm_cp   RTN                           G__asm_cp  RTN
    *******************************************************/
   else if(G__asm_inst[G__asm_cp-2]==G__JMP &&
-	  G__asm_inst[G__asm_cp-4]==G__OP2 &&
-	  (G__asm_inst[G__asm_cp-3]==G__OPR_ADDASSIGN ||
-	   G__asm_inst[G__asm_cp-3]==G__OPR_SUBASSIGN) &&
-	  G__asm_inst[G__asm_cp-9]==0      &&
-	  G__asm_inst[G__asm_cp-8]=='p'    &&
-	  G__asm_inst[G__asm_cp-6]==G__LD  &&
-	  G__asm_cond_cp != G__asm_cp-2 &&
-	  (G__LD_VAR==G__asm_inst[G__asm_cp-11]||
-	   (G__LD_MSTR==G__asm_inst[G__asm_cp-11]
-	    && !G__asm_wholefunction
-	    )) &&
-	  G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]]))  {
+          G__asm_inst[G__asm_cp-4]==G__OP2 &&
+          (G__asm_inst[G__asm_cp-3]==G__OPR_ADDASSIGN ||
+           G__asm_inst[G__asm_cp-3]==G__OPR_SUBASSIGN) &&
+          G__asm_inst[G__asm_cp-9]==0      &&
+          G__asm_inst[G__asm_cp-8]=='p'    &&
+          G__asm_inst[G__asm_cp-6]==G__LD  &&
+          G__asm_cond_cp != G__asm_cp-2 &&
+          (G__LD_VAR==G__asm_inst[G__asm_cp-11]||
+           (G__LD_MSTR==G__asm_inst[G__asm_cp-11]
+            && !G__asm_wholefunction
+            )) &&
+          G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]]))  {
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i+=1 optimized\n",G__asm_cp-11);
@@ -5797,21 +4742,21 @@ int *start;
    * G__asm_cp   RTN                            G__asm_cp RTN
    *******************************************************/
   else if(G__asm_inst[G__asm_cp-2]==G__JMP &&
-	  ((G__asm_inst[G__asm_cp-7]==G__ST_VAR&&
-	    G__asm_inst[G__asm_cp-16]==G__LD_VAR) ||
-	   (G__asm_inst[G__asm_cp-7]==G__ST_MSTR&&
-	    G__asm_inst[G__asm_cp-16]==G__LD_MSTR
-	    && !G__asm_wholefunction
-	   )) &&
-	  G__asm_inst[G__asm_cp-9]==G__OP2     &&
-	  G__asm_inst[G__asm_cp-11]==G__LD     &&
-	  G__asm_inst[G__asm_cp-15]==G__asm_inst[G__asm_cp-6] && /* 2 */
-	  G__asm_inst[G__asm_cp-12]==G__asm_inst[G__asm_cp-3] &&
-	  (G__asm_inst[G__asm_cp-8]=='+'||G__asm_inst[G__asm_cp-8]=='-') &&
-	  G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-3])->type[G__asm_inst[G__asm_cp-6]])       &&
-	  G__asm_inst[G__asm_cp-14]==0 &&
-	  G__asm_inst[G__asm_cp-13]=='p' &&   /* 3 */
-	  G__asm_inst[G__asm_cp-4]=='p') {
+          ((G__asm_inst[G__asm_cp-7]==G__ST_VAR&&
+            G__asm_inst[G__asm_cp-16]==G__LD_VAR) ||
+           (G__asm_inst[G__asm_cp-7]==G__ST_MSTR&&
+            G__asm_inst[G__asm_cp-16]==G__LD_MSTR
+            && !G__asm_wholefunction
+           )) &&
+          G__asm_inst[G__asm_cp-9]==G__OP2     &&
+          G__asm_inst[G__asm_cp-11]==G__LD     &&
+          G__asm_inst[G__asm_cp-15]==G__asm_inst[G__asm_cp-6] && /* 2 */
+          G__asm_inst[G__asm_cp-12]==G__asm_inst[G__asm_cp-3] &&
+          (G__asm_inst[G__asm_cp-8]=='+'||G__asm_inst[G__asm_cp-8]=='-') &&
+          G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-3])->type[G__asm_inst[G__asm_cp-6]])       &&
+          G__asm_inst[G__asm_cp-14]==0 &&
+          G__asm_inst[G__asm_cp-13]=='p' &&   /* 3 */
+          G__asm_inst[G__asm_cp-4]=='p') {
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i=i+1 optimized\n",G__asm_cp-16);
@@ -5868,9 +4813,7 @@ int *start;
 /*************************************************************************
 * G__get_LD_p0_p2f()
 *************************************************************************/
-int G__get_LD_p0_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_LD_p0_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -5906,9 +4849,7 @@ long *pinst;
 /*************************************************************************
 * G__get_LD_p1_p2f()
 *************************************************************************/
-int G__get_LD_p1_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_LD_p1_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -5941,9 +4882,7 @@ long *pinst;
 /*************************************************************************
 * G__get_LD_pn_p2f()
 *************************************************************************/
-int G__get_LD_pn_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_LD_pn_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -5976,10 +4915,7 @@ long *pinst;
 /*************************************************************************
 * G__get_LD_P10_p2f()
 *************************************************************************/
-int G__get_LD_P10_p2f(type,pinst,reftype)
-int type;
-long *pinst;
-int reftype;
+int G__get_LD_P10_p2f(int type,long *pinst,int reftype)
 {
   int done = 1;
   if(G__PARAP2P==reftype) {
@@ -6015,9 +4951,7 @@ int reftype;
 /*************************************************************************
 * G__get_ST_p0_p2f()
 *************************************************************************/
-int G__get_ST_p0_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_ST_p0_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6050,9 +4984,7 @@ long *pinst;
 /*************************************************************************
 * G__get_ST_p1_p2f()
 *************************************************************************/
-int G__get_ST_p1_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_ST_p1_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6085,9 +5017,7 @@ long *pinst;
 /*************************************************************************
 * G__get_ST_pn_p2f()
 *************************************************************************/
-int G__get_ST_pn_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_ST_pn_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6120,10 +5050,7 @@ long *pinst;
 /*************************************************************************
 * G__get_ST_P10_p2f()
 *************************************************************************/
-int G__get_ST_P10_p2f(type,pinst,reftype)
-int type;
-long *pinst;
-int reftype;
+int G__get_ST_P10_p2f(int type,long *pinst,int reftype)
 {
   int done = 1;
   if(G__PARAP2P==reftype) {
@@ -6159,9 +5086,7 @@ int reftype;
 /*************************************************************************
 * G__get_LD_Rp0_p2f()
 *************************************************************************/
-int G__get_LD_Rp0_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_LD_Rp0_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6193,9 +5118,7 @@ long *pinst;
 /*************************************************************************
 * G__get_ST_Rp0_p2f()
 *************************************************************************/
-int G__get_ST_Rp0_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_ST_Rp0_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6227,9 +5150,7 @@ long *pinst;
 /*************************************************************************
 * G__get_LD_RP0_p2f()
 *************************************************************************/
-int G__get_LD_RP0_p2f(type,pinst)
-int type;
-long *pinst;
+int G__get_LD_RP0_p2f(int type,long *pinst)
 {
   int done = 1;
   if(isupper(type)) {
@@ -6262,11 +5183,7 @@ long *pinst;
 /*************************************************************************
 * G__LD_Rp0_optimize()
 *************************************************************************/
-void G__LD_Rp0_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_Rp0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6291,7 +5208,7 @@ long inst;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
-	      ,var->varnamebuf[ig15]);
+              ,var->varnamebuf[ig15]);
     }
 #endif
     G__asm_inst[pc] = originst;
@@ -6301,11 +5218,7 @@ long inst;
 /*************************************************************************
 * G__ST_Rp0_optimize()
 *************************************************************************/
-void G__ST_Rp0_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__ST_Rp0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6330,7 +5243,7 @@ long inst;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
-	      ,var->varnamebuf[ig15]);
+              ,var->varnamebuf[ig15]);
     }
 #endif
     G__asm_inst[pc] = originst;
@@ -6340,11 +5253,7 @@ long inst;
 /*************************************************************************
 * G__LD_RP0_optimize()
 *************************************************************************/
-void G__LD_RP0_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_RP0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6369,7 +5278,7 @@ long inst;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (7) error %s\n"
-	      ,var->varnamebuf[ig15]);
+              ,var->varnamebuf[ig15]);
     }
 #endif
     G__asm_inst[pc] = originst;
@@ -6380,11 +5289,7 @@ long inst;
 /*************************************************************************
 * G__LD_p0_optimize()
 *************************************************************************/
-void G__LD_p0_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_p0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6410,7 +5315,7 @@ long inst;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR optimize (6) error %s\n"
-	      ,var->varnamebuf[ig15]);
+              ,var->varnamebuf[ig15]);
     }
 #endif
     G__asm_inst[pc] = originst;
@@ -6421,11 +5326,7 @@ long inst;
 /*************************************************************************
 * G__LD_p1_optimize()
 *************************************************************************/
-void G__LD_p1_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_p1_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6449,7 +5350,7 @@ long inst;
   if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (8) error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6459,11 +5360,7 @@ long inst;
 /*************************************************************************
 * G__LD_pn_optimize()
 *************************************************************************/
-void G__LD_pn_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_pn_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6487,7 +5384,7 @@ long inst;
   if(0==G__get_LD_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (8) error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6497,11 +5394,7 @@ long inst;
 /*************************************************************************
 * G__LD_P10_optimize()
 *************************************************************************/
-void G__LD_P10_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__LD_P10_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6523,10 +5416,10 @@ long inst;
   G__asm_inst[pc] = inst;
   G__asm_inst[pc+3] = 0;
   if(0==G__get_LD_P10_p2f(var->type[ig15],&G__asm_inst[pc+2]
-			  ,var->reftype[ig15])) {
+                          ,var->reftype[ig15])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (9) error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6537,11 +5430,7 @@ long inst;
 /*************************************************************************
 * G__ST_p0_optimize()
 *************************************************************************/
-void G__ST_p0_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__ST_p0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6566,7 +5455,7 @@ long inst;
   if(0==G__get_ST_p0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize (8) error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6576,11 +5465,7 @@ long inst;
 /*************************************************************************
 * G__ST_p1_optimize()
 *************************************************************************/
-void G__ST_p1_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__ST_p1_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6604,7 +5489,7 @@ long inst;
   if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6614,11 +5499,7 @@ long inst;
 /*************************************************************************
 * G__ST_pn_optimize()
 *************************************************************************/
-void G__ST_pn_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__ST_pn_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6642,7 +5523,7 @@ long inst;
   if(0==G__get_ST_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6652,11 +5533,7 @@ long inst;
 /*************************************************************************
 * G__ST_P10_optimize()
 *************************************************************************/
-void G__ST_P10_optimize(var,ig15,pc,inst)
-struct G__var_array *var;
-int ig15;
-int pc;
-long inst;
+void G__ST_P10_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 {
   long originst=G__asm_inst[pc];
   int pointlevel=G__asm_inst[pc+3];
@@ -6678,10 +5555,10 @@ long inst;
   G__asm_inst[pc] = inst;
   G__asm_inst[pc+3] = 0;
   if(0==G__get_ST_P10_p2f(var->type[ig15],&G__asm_inst[pc+2]
-			  ,var->reftype[ig15])) {
+                          ,var->reftype[ig15])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"Error: ST_VAR optimize (7) error %s\n"
-			   ,var->varnamebuf[ig15]);
+                           ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
@@ -6697,9 +5574,7 @@ static int G__indexconst[G__MAXINDEXCONST] = {0,1,2,3,4,5,6,7,8,9,10};
 /*************************************************************************
 * G__LD_VAR_int_optimize()
 *************************************************************************/
-int G__LD_VAR_int_optimize(ppc,pi)
-int *ppc;
-int *pi;
+int G__LD_VAR_int_optimize(int *ppc,int *pi)
 {
   struct G__var_array *var;
   int ig15;
@@ -6735,22 +5610,22 @@ int *pi;
       if(G__LD_LVAR==G__asm_inst[pc+5]) flag |= 2;
       if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg)
-	  G__fprinterr(G__serr,"Error: LD_VAR,LD_VAR[1] optimize error %s\n"
-		  ,var->varnamebuf[ig15]);
+        if(G__asm_dbg)
+          G__fprinterr(G__serr,"Error: LD_VAR,LD_VAR[1] optimize error %s\n"
+                  ,var->varnamebuf[ig15]);
 #endif
       }
       else {
-	done=1;
-	G__asm_inst[pc+5] = flag;
-	G__asm_inst[pc] = G__LDST_VAR_INDEX;
-	G__asm_inst[pc+1] = (long)pi;
-	G__asm_inst[pc+3] = G__asm_inst[pc+6];
-	G__asm_inst[pc+4] = 10;
-	G__asm_inst[pc+6] = G__asm_inst[pc+9];
-	*ppc = pc+5; /* other 2 is incremented one level up */
+        done=1;
+        G__asm_inst[pc+5] = flag;
+        G__asm_inst[pc] = G__LDST_VAR_INDEX;
+        G__asm_inst[pc+1] = (long)pi;
+        G__asm_inst[pc+3] = G__asm_inst[pc+6];
+        G__asm_inst[pc+4] = 10;
+        G__asm_inst[pc+6] = G__asm_inst[pc+9];
+        *ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (1) optimized\n");
+        if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (1) optimized\n");
 #endif
       }
     }
@@ -6775,22 +5650,22 @@ int *pi;
       ig15 = G__asm_inst[pc+6];
       if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg)
-	  G__fprinterr(G__serr,"Error: LD_VAR,ST_VAR[1] optimize error %s\n"
-		  ,var->varnamebuf[ig15]);
+        if(G__asm_dbg)
+          G__fprinterr(G__serr,"Error: LD_VAR,ST_VAR[1] optimize error %s\n"
+                  ,var->varnamebuf[ig15]);
 #endif
       }
       else {
-	done=1;
-	G__asm_inst[pc+5] = flag;
-	G__asm_inst[pc] = G__LDST_VAR_INDEX;
-	G__asm_inst[pc+1] = (long)pi;
-	G__asm_inst[pc+3] = G__asm_inst[pc+6];
-	G__asm_inst[pc+4] = 10;
-	G__asm_inst[pc+6] = G__asm_inst[pc+9];
-	*ppc = pc+5; /* other 2 is incremented one level up */
+        done=1;
+        G__asm_inst[pc+5] = flag;
+        G__asm_inst[pc] = G__LDST_VAR_INDEX;
+        G__asm_inst[pc+1] = (long)pi;
+        G__asm_inst[pc+3] = G__asm_inst[pc+6];
+        G__asm_inst[pc+4] = 10;
+        G__asm_inst[pc+6] = G__asm_inst[pc+9];
+        *ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (2) optimized\n");
+        if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (2) optimized\n");
 #endif
       }
     }
@@ -6800,15 +5675,15 @@ int *pi;
    * G__LDST_VAR_INDEX_OPR optimization
    ********************************************************************/
   else if(G__LD==G__asm_inst[pc+5] &&
-	  'i'==G__asm_stack[G__asm_inst[pc+6]].type &&
-	  G__OP2 == G__asm_inst[pc+7] &&
-	  ('+' == G__asm_inst[pc+8] || '-' == G__asm_inst[pc+8]) &&
-	  1==G__asm_inst[pc+11] &&
-	  'p'==G__asm_inst[pc+12] &&
-	  (var = (struct G__var_array*)G__asm_inst[pc+13]) &&
-	  1==var->paran[G__asm_inst[pc+10]] &&
-	  (islower(var->type[G__asm_inst[pc+10]])||
-	   G__PARANORMAL==var->reftype[G__asm_inst[pc+10]])) {
+          'i'==G__asm_stack[G__asm_inst[pc+6]].type &&
+          G__OP2 == G__asm_inst[pc+7] &&
+          ('+' == G__asm_inst[pc+8] || '-' == G__asm_inst[pc+8]) &&
+          1==G__asm_inst[pc+11] &&
+          'p'==G__asm_inst[pc+12] &&
+          (var = (struct G__var_array*)G__asm_inst[pc+13]) &&
+          1==var->paran[G__asm_inst[pc+10]] &&
+          (islower(var->type[G__asm_inst[pc+10]])||
+           G__PARANORMAL==var->reftype[G__asm_inst[pc+10]])) {
     ig15 = G__asm_inst[pc+10];
     /********************************************************************
      * 0 G__LD_VAR,LVAR                    G__LDST_VAR_INDEX_OPR
@@ -6831,37 +5706,37 @@ int *pi;
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
       int  *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
-	if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
-	else pix = &G__indexconst[*pi2];
+        if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
+        else pix = &G__indexconst[*pi2];
       }
       else {
-	pix = (int*)pi2;
-	if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
+        pix = (int*)pi2;
+        if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
       else                            flag=0;
       if(G__LD_LVAR==G__asm_inst[pc+9]) flag |= 4;
       if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg)
-	  G__fprinterr(G__serr,
-		  "Error: LD_VAR,LD,OP2,LD_VAR[1] optimize error %s\n"
-		  ,var->varnamebuf[ig15]);
+        if(G__asm_dbg)
+          G__fprinterr(G__serr,
+                  "Error: LD_VAR,LD,OP2,LD_VAR[1] optimize error %s\n"
+                  ,var->varnamebuf[ig15]);
 #endif
       }
       else {
-	done=1;
-	G__asm_inst[pc+7] = flag;
-	G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
-	G__asm_inst[pc+1] = (long)pi;
-	G__asm_inst[pc+2] = (long)pix;
-	G__asm_inst[pc+3] = G__asm_inst[pc+8];
-	G__asm_inst[pc+5] = G__asm_inst[pc+10];
-	G__asm_inst[pc+6] = 14;
-	G__asm_inst[pc+8] = G__asm_inst[pc+13];
-	*ppc = pc+9; /* other 2 is incremented one level up */
+        done=1;
+        G__asm_inst[pc+7] = flag;
+        G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
+        G__asm_inst[pc+1] = (long)pi;
+        G__asm_inst[pc+2] = (long)pix;
+        G__asm_inst[pc+3] = G__asm_inst[pc+8];
+        G__asm_inst[pc+5] = G__asm_inst[pc+10];
+        G__asm_inst[pc+6] = 14;
+        G__asm_inst[pc+8] = G__asm_inst[pc+13];
+        *ppc = pc+9; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (3) optimized\n");
+        if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (3) optimized\n");
 #endif
       }
     }
@@ -6886,37 +5761,37 @@ int *pi;
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
       int  *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
-	if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
-	else pix = &G__indexconst[*pi2];
+        if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
+        else pix = &G__indexconst[*pi2];
       }
       else {
-	pix = (int*)pi2;
-	if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
+        pix = (int*)pi2;
+        if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
       else                            flag=0;
       if(G__ST_LVAR==G__asm_inst[pc+9]) flag |= 4;
       if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg)
-	  G__fprinterr(G__serr,
-		  "Error: LD_VAR,LD,OP2,ST_VAR[1] optimize error %s\n"
-		  ,var->varnamebuf[ig15]);
+        if(G__asm_dbg)
+          G__fprinterr(G__serr,
+                  "Error: LD_VAR,LD,OP2,ST_VAR[1] optimize error %s\n"
+                  ,var->varnamebuf[ig15]);
 #endif
       }
       else {
-	done=1;
-	G__asm_inst[pc+7] = flag;
-	G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
-	G__asm_inst[pc+1] = (long)pi;
-	G__asm_inst[pc+2] = (long)pix;
-	G__asm_inst[pc+3] = G__asm_inst[pc+8];
-	G__asm_inst[pc+5] = G__asm_inst[pc+10];
-	G__asm_inst[pc+6] = 14;
-	G__asm_inst[pc+8] = G__asm_inst[pc+13];
-	*ppc = pc+9; /* other 2 is incremented one level up */
+        done=1;
+        G__asm_inst[pc+7] = flag;
+        G__asm_inst[pc] = G__LDST_VAR_INDEX_OPR;
+        G__asm_inst[pc+1] = (long)pi;
+        G__asm_inst[pc+2] = (long)pix;
+        G__asm_inst[pc+3] = G__asm_inst[pc+8];
+        G__asm_inst[pc+5] = G__asm_inst[pc+10];
+        G__asm_inst[pc+6] = 14;
+        G__asm_inst[pc+8] = G__asm_inst[pc+13];
+        *ppc = pc+9; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (4) optimized\n");
+        if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (4) optimized\n");
 #endif
       }
     }
@@ -6968,9 +5843,7 @@ int *pi;
 /*************************************************************************
 * G__LD_int_optimize()
 *************************************************************************/
-int G__LD_int_optimize(ppc,pi)
-int *ppc;
-int *pi;
+int G__LD_int_optimize(int *ppc,int *pi)
 {
   struct G__var_array *var;
   int ig15;
@@ -7008,8 +5881,8 @@ int *pi;
     if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(G__serr,"Error: LD,LD_VAR[1] optimize error %s\n"
-		,var->varnamebuf[ig15]);
+        G__fprinterr(G__serr,"Error: LD,LD_VAR[1] optimize error %s\n"
+                ,var->varnamebuf[ig15]);
 #endif
     }
     else {
@@ -7018,7 +5891,7 @@ int *pi;
       G__asm_inst[pc] = G__LDST_VAR_INDEX;
       G__asm_inst[pc+1] = (long)pi;
       if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-	*(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
+        *(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
       }
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
@@ -7038,15 +5911,15 @@ int *pi;
    * 6 var_array pointer                 var_array pointer
    ********************************************************************/
   else if((G__ST_VAR==G__asm_inst[pc+2] || G__ST_LVAR==G__asm_inst[pc+2]) &&
-	  1==G__asm_inst[pc+4] &&
-	  'p' == G__asm_inst[pc+5] &&
-	  (var = (struct G__var_array*)G__asm_inst[pc+6]) &&
-	  1 == var->paran[G__asm_inst[pc+3]] &&
-	  1 == var->paran[G__asm_inst[pc+3]] &&
-	  (islower(var->type[G__asm_inst[pc+3]])||
-	   G__PARANORMAL==var->reftype[G__asm_inst[pc+3]])
-	  && (pc<4 || G__JMP!=G__asm_inst[pc-2] || G__asm_inst[pc-1]!=pc+2)
-	  ) {
+          1==G__asm_inst[pc+4] &&
+          'p' == G__asm_inst[pc+5] &&
+          (var = (struct G__var_array*)G__asm_inst[pc+6]) &&
+          1 == var->paran[G__asm_inst[pc+3]] &&
+          1 == var->paran[G__asm_inst[pc+3]] &&
+          (islower(var->type[G__asm_inst[pc+3]])||
+           G__PARANORMAL==var->reftype[G__asm_inst[pc+3]])
+          && (pc<4 || G__JMP!=G__asm_inst[pc-2] || G__asm_inst[pc-1]!=pc+2)
+          ) {
     int flag;
     if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
       if(*pi>=G__MAXINDEXCONST||*pi<0) return(done);
@@ -7058,8 +5931,8 @@ int *pi;
     if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(G__serr,"Error: LD,ST_VAR[1] optimize error %s\n"
-		,var->varnamebuf[ig15]);
+        G__fprinterr(G__serr,"Error: LD,ST_VAR[1] optimize error %s\n"
+                ,var->varnamebuf[ig15]);
 #endif
     }
     else {
@@ -7068,7 +5941,7 @@ int *pi;
       G__asm_inst[pc] = G__LDST_VAR_INDEX;
       G__asm_inst[pc+1] = (long)pi;
       if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-	*(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
+        *(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
       }
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
@@ -7085,8 +5958,7 @@ int *pi;
 /*************************************************************************
 * G__CMP2_optimize()
 *************************************************************************/
-int G__CMP2_optimize(pc)
-int pc;
+int G__CMP2_optimize(int pc)
 {
   G__asm_inst[pc] = G__OP2_OPTIMIZED;
   switch(G__asm_inst[pc+1]) {
@@ -7115,8 +5987,7 @@ int pc;
 /*************************************************************************
 * G__OP2_optimize()
 *************************************************************************/
-int G__OP2_optimize(pc)
-int pc;
+int G__OP2_optimize(int pc)
 {
   int done=1;
   switch(G__asm_inst[pc+1]) {
@@ -7298,8 +6169,7 @@ int pc;
 /*************************************************************************
 * G__asm_optimze3()
 *************************************************************************/
-int G__asm_optimize3(start)
-int *start;
+int G__asm_optimize3(int *start)
 {
   int pc;               /* instruction program counter */
   int illegal=0;
@@ -7333,10 +6203,10 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr(G__serr,"%3lx: LDST_VAR_P index=%ld %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        G__fprinterr(G__serr,"%3lx: LDST_VAR_P index=%ld %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       pc+=5;
@@ -7355,10 +6225,10 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr(G__serr,"%3lx: LDST_MSTR_P index=%d %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        G__fprinterr(G__serr,"%3lx: LDST_MSTR_P index=%d %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       pc+=5;
@@ -7379,10 +6249,10 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	var = (struct G__var_array*)G__asm_inst[pc+6];
-	G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX index=%d %s\n"
-		,pc,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+3]]);
+        var = (struct G__var_array*)G__asm_inst[pc+6];
+        G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX index=%d %s\n"
+                ,pc,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+3]]);
       }
 #endif
       pc+=G__asm_inst[pc+4];
@@ -7405,10 +6275,10 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	var = (struct G__var_array*)G__asm_inst[pc+8];
-	G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX_OPR index=%d %s\n"
-		,pc,G__asm_inst[pc+5]
-		,var->varnamebuf[G__asm_inst[pc+5]]);
+        var = (struct G__var_array*)G__asm_inst[pc+8];
+        G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX_OPR index=%d %s\n"
+                ,pc,G__asm_inst[pc+5]
+                ,var->varnamebuf[G__asm_inst[pc+5]]);
       }
 #endif
       pc+=G__asm_inst[pc+6];
@@ -7465,33 +6335,33 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: LD_VAR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: LD_VAR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if('p'==var_type &&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	if(0==paran && 0==var->paran[ig15]) {
-	  if('i'==var->type[ig15]) {
-	    if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
-	      G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
-	  }
-	  else {
-	    G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
-	  }
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__LD_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__LD_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__LD_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        if(0==paran && 0==var->paran[ig15]) {
+          if('i'==var->type[ig15]) {
+            if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
+              G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
+          }
+          else {
+            G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
+          }
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__LD_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__LD_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__LD_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
       }
       pc+=5;
       break;
@@ -7507,13 +6377,13 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD %g from %x \n"
-			     ,pc
-			     ,G__double(G__asm_stack[G__asm_inst[pc+1]])
-			     ,G__asm_inst[pc+1]);
+                             ,pc
+                             ,G__double(G__asm_stack[G__asm_inst[pc+1]])
+                             ,G__asm_inst[pc+1]);
 #endif
       /* no optimize */
       if('i'==G__asm_stack[G__asm_inst[pc+1]].type) {
-	G__LD_int_optimize(&pc,(int*)(&(G__asm_stack[G__asm_inst[pc+1]].obj.i)));
+        G__LD_int_optimize(&pc,(int*)(&(G__asm_stack[G__asm_inst[pc+1]].obj.i)));
       }
       pc+=2;
       break;
@@ -7525,8 +6395,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %s:%d\n",pc
-		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
-				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+                 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
+                                  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
 #endif
       /* no optimize */
       pc+=2;
@@ -7544,12 +6414,12 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(isprint(G__asm_inst[pc+1])) {
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP2 '%c'%d \n" ,pc
-		,G__asm_inst[pc+1],G__asm_inst[pc+1]);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP2 '%c'%d \n" ,pc
+                ,G__asm_inst[pc+1],G__asm_inst[pc+1]);
       }
       else {
-	if(G__asm_dbg)
-	  G__fprinterr(G__serr,"%3lx: OP2 %d \n",pc,G__asm_inst[pc+1]);
+        if(G__asm_dbg)
+          G__fprinterr(G__serr,"%3lx: OP2 %d \n",pc,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization */
@@ -7577,27 +6447,27 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: ST_VAR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: ST_VAR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if(('p'==var_type || var_type == var->type[ig15])&&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	if(0==paran && 0==var->paran[ig15]) {
-	  G__ST_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__ST_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__ST_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__ST_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        if(0==paran && 0==var->paran[ig15]) {
+          G__ST_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__ST_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__ST_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__ST_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
+        }
       }
       pc+=5;
       break;
@@ -7622,30 +6492,30 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: LD_MSTR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: LD_MSTR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if('p'==var_type &&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	long inst;
-	if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
-	else                                      inst = G__LDST_MSTR_P;
-	if(0==paran && 0==var->paran[ig15]) {
-	  G__LD_p0_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__LD_p1_optimize(var,ig15,pc,inst);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__LD_pn_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__LD_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        long inst;
+        if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
+        else                                      inst = G__LDST_MSTR_P;
+        if(0==paran && 0==var->paran[ig15]) {
+          G__LD_p0_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__LD_p1_optimize(var,ig15,pc,inst);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__LD_pn_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__LD_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
+        }
       }
       pc+=5;
       break;
@@ -7660,11 +6530,11 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
-		,pc
-		,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
-		,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
-		,G__asm_inst[pc+4]);
+        G__fprinterr(G__serr,"%3lx: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
+                ,pc
+                ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
+                ,G__asm_inst[pc+4]);
       }
 #endif
       /* no optmization */
@@ -7734,30 +6604,30 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: ST_MSTR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: ST_MSTR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if('p'==var_type &&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	long inst;
-	if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
-	else                                      inst = G__LDST_MSTR_P;
-	if(0==paran && 0==var->paran[ig15]) {
-	  G__ST_p0_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__ST_p1_optimize(var,ig15,pc,inst);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__ST_pn_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__ST_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        long inst;
+        if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
+        else                                      inst = G__LDST_MSTR_P;
+        if(0==paran && 0==var->paran[ig15]) {
+          G__ST_p0_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__ST_p1_optimize(var,ig15,pc,inst);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__ST_pn_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__ST_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
+        }
       }
       pc+=5;
       break;
@@ -7771,8 +6641,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: INCJMP *(int*)0x%lx+%d to %x\n"
-			     ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
-			     ,G__asm_inst[pc+3]);
+                             ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
+                             ,G__asm_inst[pc+3]);
 #endif
       /* no optimization */
       pc+=4;
@@ -7788,7 +6658,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CNDJMP to %x\n"
-			     ,pc ,G__asm_inst[pc+1]);
+                             ,pc ,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
       pc+=2;
@@ -7804,7 +6674,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: CMP2 '%c' \n" ,pc ,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3lx: CMP2 '%c' \n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization, but not high priority */
@@ -7870,12 +6740,12 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_inst[pc+1]<G__MAXSTRUCT) {
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
-		,"compiled",G__asm_inst[pc+3]);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
+                ,"compiled",G__asm_inst[pc+3]);
       }
       else {
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
-		,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
+                ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
 #endif
       /* no optimization */
@@ -7907,8 +6777,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: CAST to %c type%d tag%d\n" ,pc
-		,(char)G__asm_inst[pc+1],G__asm_inst[pc+2],G__asm_inst[pc+3]);
+        G__fprinterr(G__serr,"%3lx: CAST to %c type%d tag%d\n" ,pc
+                ,(char)G__asm_inst[pc+1],G__asm_inst[pc+2],G__asm_inst[pc+3]);
       }
 #endif
       /* need optimization */
@@ -7926,174 +6796,174 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(isprint(G__asm_inst[pc+1])){
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 '%c'%d\n",pc
-		,G__asm_inst[pc+1],G__asm_inst[pc+1] );
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 '%c'%d\n",pc
+                ,G__asm_inst[pc+1],G__asm_inst[pc+1] );
       }
       else {
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 %d\n",pc,G__asm_inst[pc+1]);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 %d\n",pc,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization */
       switch(G__asm_inst[pc+1]) {
 
       case G__OPR_POSTFIXINC_I:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_i;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_i;
+        break;
       case G__OPR_POSTFIXDEC_I:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_i;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_i;
+        break;
       case G__OPR_PREFIXINC_I:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_i;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_i;
+        break;
       case G__OPR_PREFIXDEC_I:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_i;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_i;
+        break;
 
       case G__OPR_POSTFIXINC_D:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_d;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_d;
+        break;
       case G__OPR_POSTFIXDEC_D:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_d;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_d;
+        break;
       case G__OPR_PREFIXINC_D:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_d;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_d;
+        break;
       case G__OPR_PREFIXDEC_D:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_d;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_d;
+        break;
 
 #if G__NEVER /* following change rather slowed down */
       case G__OPR_POSTFIXINC_S:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_s;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_s;
+        break;
       case G__OPR_POSTFIXDEC_S:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_s;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_s;
+        break;
       case G__OPR_PREFIXINC_S:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_s;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_s;
+        break;
       case G__OPR_PREFIXDEC_S:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_s;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_s;
+        break;
 
       case G__OPR_POSTFIXINC_L:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_l;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_l;
+        break;
       case G__OPR_POSTFIXDEC_L:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_l;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_l;
+        break;
       case G__OPR_PREFIXINC_L:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_l;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_l;
+        break;
       case G__OPR_PREFIXDEC_L:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_l;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_l;
+        break;
 
       case G__OPR_POSTFIXINC_H:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_h;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_h;
+        break;
       case G__OPR_POSTFIXDEC_H:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_h;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_h;
+        break;
       case G__OPR_PREFIXINC_H:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_h;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_h;
+        break;
       case G__OPR_PREFIXDEC_H:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_h;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_h;
+        break;
 
       case G__OPR_POSTFIXINC_R:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_r;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_r;
+        break;
       case G__OPR_POSTFIXDEC_R:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_r;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_r;
+        break;
       case G__OPR_PREFIXINC_R:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_r;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_r;
+        break;
       case G__OPR_PREFIXDEC_R:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_r;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_r;
+        break;
 
       case G__OPR_POSTFIXINC_K:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_k;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_k;
+        break;
       case G__OPR_POSTFIXDEC_K:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_k;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_k;
+        break;
       case G__OPR_PREFIXINC_K:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_k;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_k;
+        break;
       case G__OPR_PREFIXDEC_K:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_k;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_k;
+        break;
 
 
       case G__OPR_POSTFIXINC_F:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_f;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc_f;
+        break;
       case G__OPR_POSTFIXDEC_F:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec_f;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec_f;
+        break;
       case G__OPR_PREFIXINC_F:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc_f;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc_f;
+        break;
       case G__OPR_PREFIXDEC_F:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_f;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec_f;
+        break;
 #endif
       case G__OPR_POSTFIXINC:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixinc;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixinc;
+        break;
       case G__OPR_POSTFIXDEC:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_postfixdec;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_postfixdec;
+        break;
       case G__OPR_PREFIXINC:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixinc;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixinc;
+        break;
       case G__OPR_PREFIXDEC:
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_prefixdec;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_prefixdec;
+        break;
       case '-':
-	G__asm_inst[pc] = G__OP1_OPTIMIZED;
-	G__asm_inst[pc+1] = (long)G__OP1_minus;
-	break;
+        G__asm_inst[pc] = G__OP1_OPTIMIZED;
+        G__asm_inst[pc+1] = (long)G__OP1_minus;
+        break;
       }
       pc+=2;
       break;
@@ -8122,7 +6992,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: ADDSTROS %d\n" ,pc,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3lx: ADDSTROS %d\n" ,pc,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -8223,7 +7093,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: !ISDEFAULTPARA JMP %x\n"
-			     ,pc,G__asm_inst[pc+1]);
+                             ,pc,G__asm_inst[pc+1]);
 #endif
       pc+=2;
       /* no optimization */
@@ -8243,10 +7113,10 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr(G__serr,"%3lx: LDST_LVAR_P index=%d %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        G__fprinterr(G__serr,"%3lx: LDST_LVAR_P index=%d %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       pc+=5;
@@ -8272,49 +7142,49 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: LD_LVAR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: LD_LVAR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if(G__PARAREFERENCE==var->reftype[ig15]) {
-	switch(var_type) {
-	case 'P':
-	  G__LD_RP0_optimize(var,ig15,pc,G__LDST_LVAR_P);
+        switch(var_type) {
+        case 'P':
+          G__LD_RP0_optimize(var,ig15,pc,G__LDST_LVAR_P);
           break;
-	case 'p':
-	  G__LD_Rp0_optimize(var,ig15,pc,G__LDST_LVAR_P);
-	  break;
-	case 'v':
-	  break;
-	}
+        case 'p':
+          G__LD_Rp0_optimize(var,ig15,pc,G__LDST_LVAR_P);
+          break;
+        case 'v':
+          break;
+        }
       } 
       else 
       if('p'==var_type &&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	long inst;
-	if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
-	else                                      inst = G__LDST_LVAR_P;
-	if(0==paran && 0==var->paran[ig15]) {
-	  if('i'==var->type[ig15]) {
-	    if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
-	      G__LD_p0_optimize(var,ig15,pc,inst);
-	  }
-	  else {
-	    G__LD_p0_optimize(var,ig15,pc,inst);
-	  }
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__LD_p1_optimize(var,ig15,pc,inst);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__LD_pn_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__LD_P10_optimize(var,ig15,pc,inst);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        long inst;
+        if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
+        else                                      inst = G__LDST_LVAR_P;
+        if(0==paran && 0==var->paran[ig15]) {
+          if('i'==var->type[ig15]) {
+            if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
+              G__LD_p0_optimize(var,ig15,pc,inst);
+          }
+          else {
+            G__LD_p0_optimize(var,ig15,pc,inst);
+          }
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__LD_p1_optimize(var,ig15,pc,inst);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__LD_pn_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__LD_P10_optimize(var,ig15,pc,inst);
+        }
       }
       pc+=5;
       break;
@@ -8339,42 +7209,42 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: ST_LVAR index=%d paran=%d point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: ST_LVAR index=%d paran=%d point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
       /* need optimization */
       if(G__PARAREFERENCE==var->reftype[ig15]) {
-	switch(var_type) {
-	case 'P':
+        switch(var_type) {
+        case 'P':
           break;
-	case 'p':
-	  G__ST_Rp0_optimize(var,ig15,pc,G__LDST_LVAR_P);
-	  break;
-	case 'v':
-	  break;
-	}
+        case 'p':
+          G__ST_Rp0_optimize(var,ig15,pc,G__LDST_LVAR_P);
+          break;
+        case 'v':
+          break;
+        }
       } 
       else 
       if(('p'==var_type || var_type == var->type[ig15]) &&
-	 (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
-	long inst;
-	if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
-	else                                      inst = G__LDST_LVAR_P;
-	if(0==paran && 0==var->paran[ig15]) {
-	  G__ST_p0_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 1==var->paran[ig15]) {
-	  G__ST_p1_optimize(var,ig15,pc,inst);
-	}
-	else if(paran==var->paran[ig15]) {
-	  G__ST_pn_optimize(var,ig15,pc,inst);
-	}
-	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
-	  G__ST_P10_optimize(var,ig15,pc,inst);
-	}
+         (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
+        long inst;
+        if(G__LOCALSTATIC==var->statictype[ig15]) inst = G__LDST_VAR_P;
+        else                                      inst = G__LDST_LVAR_P;
+        if(0==paran && 0==var->paran[ig15]) {
+          G__ST_p0_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 1==var->paran[ig15]) {
+          G__ST_p1_optimize(var,ig15,pc,inst);
+        }
+        else if(paran==var->paran[ig15]) {
+          G__ST_pn_optimize(var,ig15,pc,inst);
+        }
+        else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
+          G__ST_P10_optimize(var,ig15,pc,inst);
+        }
       }
       pc+=5;
       break;
@@ -8392,7 +7262,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: REWINDSTACK %d\n" ,pc,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3lx: REWINDSTACK %d\n" ,pc,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -8409,7 +7279,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: CND1JMP  to %x\n" ,pc ,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3lx: CND1JMP  to %x\n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -8436,7 +7306,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_IFUNC %s paran=%d\n" ,pc
-			     ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
+                             ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       /* need optimization, later */
       pc+=8;
@@ -8453,7 +7323,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: NEWALLOC size(%d)\n"
-			     ,pc,G__asm_inst[pc+1]);
+                             ,pc,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
       pc+=3;
@@ -8519,7 +7389,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: BASECONV %d %d\n",pc
-			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                             ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
       pc+=3;
@@ -8549,8 +7419,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: ALLOCTEMP %s\n",pc
-		,G__struct.name[G__asm_inst[pc+1]]);
+        G__fprinterr(G__serr,"%3lx: ALLOCTEMP %s\n",pc
+                ,G__struct.name[G__asm_inst[pc+1]]);
       }
 #endif
       /* no optimization */
@@ -8567,11 +7437,11 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	if(-1!=G__asm_inst[pc+1])
-	  G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
-		       ,G__struct.name[G__asm_inst[pc+1]]);
-	else 
-	  G__fprinterr(G__serr,"%3lx: POPTEMP -1\n" ,pc);
+        if(-1!=G__asm_inst[pc+1])
+          G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
+                       ,G__struct.name[G__asm_inst[pc+1]]);
+        else 
+          G__fprinterr(G__serr,"%3lx: POPTEMP -1\n" ,pc);
       }
 #endif
       /* no optimization */
@@ -8591,7 +7461,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: REORDER paran=%d ig25=%d\n"
-			     ,pc ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                             ,pc ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
       pc+=3;
@@ -8608,7 +7478,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_THIS %s\n"
-			     ,pc ,G__struct.name[G__tagnum]);
+                             ,pc ,G__struct.name[G__tagnum]);
 #endif
       /* no optimization */
       pc+=2;
@@ -8624,7 +7494,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: RTN_FUNC %d\n" ,pc ,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3lx: RTN_FUNC %d\n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -8683,8 +7553,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: BASECONSTRUCT tagnum=%d isarray=%d\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+        G__fprinterr(G__serr,"%3lx: BASECONSTRUCT tagnum=%d isarray=%d\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]);
       }
 #endif
       /* no optimization */
@@ -8804,7 +7674,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TRY %lx %lx\n",pc
-				  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
+                                  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
 #endif
       /* no optimization */
       pc+=3;
@@ -9011,7 +7881,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: MEMSETINT %ld %ld\n",pc
-				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                                  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
       pc+=G__asm_inst[pc+2]*2+3;
@@ -9026,7 +7896,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMPIFVIRTUALOBJ %lx %lx\n",pc
-				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                                  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
       pc+=3;
@@ -9042,7 +7912,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: VIRTUALADDSTROS %lx %lx\n",pc
-				  ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
+                                  ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       /* no optimization */
       pc+=4;
@@ -9078,7 +7948,7 @@ int *start;
       * never happen.
       ***************************************/
       G__fprinterr(G__serr,"%3x: illegal instruction 0x%lx\t%ld\n"
-	      ,pc,G__asm_inst[pc],G__asm_inst[pc]);
+              ,pc,G__asm_inst[pc],G__asm_inst[pc]);
       ++pc;
       ++illegal;
       return(1);
@@ -9096,9 +7966,7 @@ int *start;
 *  Disassembler
 *
 ****************************************************************/
-int G__dasm(fout,isthrow)
-FILE *fout;
-int isthrow;
+int G__dasm(FILE *fout,int isthrow)
 {
   unsigned int pc;               /* instruction program counter */
   int illegal=0;
@@ -9123,11 +7991,11 @@ int isthrow;
       * sp          <-
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LDST_VAR_P index=%ld %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LDST_VAR_P index=%ld %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9144,11 +8012,11 @@ int isthrow;
       * sp          <-
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LDST_MSTR_P index=%ld %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LDST_MSTR_P index=%ld %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9167,11 +8035,11 @@ int isthrow;
       * sp          <-
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+6];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LDST_VAR_INDEX index=%ld %s\n"
-		,pc,G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+3]]);
+        var = (struct G__var_array*)G__asm_inst[pc+6];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LDST_VAR_INDEX index=%ld %s\n"
+                ,pc,G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+3]]);
       }
       pc+=G__asm_inst[pc+4];
       break;
@@ -9192,11 +8060,11 @@ int isthrow;
       * sp          <-
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+8];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LDST_VAR_INDEX_OPR index=%ld %s\n"
-		,pc,G__asm_inst[pc+5]
-		,var->varnamebuf[G__asm_inst[pc+5]]);
+        var = (struct G__var_array*)G__asm_inst[pc+8];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LDST_VAR_INDEX_OPR index=%ld %s\n"
+                ,pc,G__asm_inst[pc+5]
+                ,var->varnamebuf[G__asm_inst[pc+5]]);
       }
       pc+=G__asm_inst[pc+6];
       break;
@@ -9212,7 +8080,7 @@ int isthrow;
       * sp    G__null
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: OP2_OPTIMIZED \n",pc);
+        fprintf(fout,"%3x: OP2_OPTIMIZED \n",pc);
       }
       pc+=2;
       break;
@@ -9227,7 +8095,7 @@ int isthrow;
       * sp    G__null     <-
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: OP1_OPTIMIZED \n",pc);
+        fprintf(fout,"%3x: OP1_OPTIMIZED \n",pc);
       }
       pc+=2;
       break;
@@ -9247,12 +8115,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LD_VAR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LD_VAR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9267,10 +8135,10 @@ int isthrow;
       * sp+1             <-
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LD %g from %lx \n"
-		,pc
-		,G__double(G__asm_stack[G__asm_inst[pc+1]])
-		,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: LD %g from %lx \n"
+                ,pc
+                ,G__double(G__asm_stack[G__asm_inst[pc+1]])
+                ,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9281,9 +8149,9 @@ int isthrow;
       *  clear stack pointer
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CL %s:%ld\n",pc
-		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
-				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+        fprintf(fout,"%3x: CL %s:%ld\n",pc
+                 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
+                                  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
       }
       pc+=2;
       break;
@@ -9299,11 +8167,11 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	if(isprint(G__asm_inst[pc+1]))
-	  fprintf(fout,"%3x: OP2 '%c'%ld \n" ,pc
-		  ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1]);
-	else
-	  fprintf(fout,"%3x: OP2 %ld \n",pc,G__asm_inst[pc+1]);
+        if(isprint(G__asm_inst[pc+1]))
+          fprintf(fout,"%3x: OP2 '%c'%ld \n" ,pc
+                  ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1]);
+        else
+          fprintf(fout,"%3x: OP2 %ld \n",pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9323,12 +8191,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: ST_VAR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: ST_VAR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9348,12 +8216,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LD_MSTR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LD_MSTR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9367,11 +8235,11 @@ int isthrow;
       * 4 next_pc
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
-		,pc
-		,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
-		,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
-		,G__asm_inst[pc+4]);
+        fprintf(fout,"%3x: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
+                ,pc
+                ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
+                ,G__asm_inst[pc+4]);
       }
       pc+=5;
       break;
@@ -9384,7 +8252,7 @@ int isthrow;
       * sp           <- sp-paran
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: PUSHSTROS\n" ,pc);
+        fprintf(fout,"%3x: PUSHSTROS\n" ,pc);
       }
       ++pc;
       break;
@@ -9398,7 +8266,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SETSTROS\n",pc);
+        fprintf(fout,"%3x: SETSTROS\n",pc);
       }
       ++pc;
       break;
@@ -9411,7 +8279,7 @@ int isthrow;
       * sp           <- sp-paran
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: POPSTROS\n" ,pc);
+        fprintf(fout,"%3x: POPSTROS\n" ,pc);
       }
       ++pc;
       break;
@@ -9431,12 +8299,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: ST_MSTR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: ST_MSTR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9449,9 +8317,9 @@ int isthrow;
       * 3 next_pc
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: INCJMP *(int*)0x%lx+%ld to %lx\n"
-		,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
-		,G__asm_inst[pc+3]);
+        fprintf(fout,"%3x: INCJMP *(int*)0x%lx+%ld to %lx\n"
+                ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
+                ,G__asm_inst[pc+3]);
       }
       pc+=4;
       break;
@@ -9465,7 +8333,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CNDJMP to %lx\n" ,pc ,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: CNDJMP to %lx\n" ,pc ,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9479,7 +8347,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CMP2 '%c' \n" ,pc ,(char)G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: CMP2 '%c' \n" ,pc ,(char)G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9490,7 +8358,7 @@ int isthrow;
       * 1 next_pc
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: JMP %lx\n" ,pc,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: JMP %lx\n" ,pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9504,7 +8372,7 @@ int isthrow;
       * sp+1            <-
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: PUSHCPY\n",pc);
+        fprintf(fout,"%3x: PUSHCPY\n",pc);
       }
       ++pc;
       break;
@@ -9518,7 +8386,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: POP\n" ,pc);
+        fprintf(fout,"%3x: POP\n" ,pc);
       }
       ++pc;
       break;
@@ -9538,12 +8406,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	if(G__asm_inst[pc+1]<G__MAXSTRUCT)
-	  fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
-		  ,"compiled",G__asm_inst[pc+3]);
-	else
-	  fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
-		  ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
+        if(G__asm_inst[pc+1]<G__MAXSTRUCT)
+          fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
+                  ,"compiled",G__asm_inst[pc+3]);
+        else
+          fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
+                  ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
       pc+=5;
       break;
@@ -9553,7 +8421,7 @@ int isthrow;
       * 0 RETURN
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: RETURN\n" ,pc);
+        fprintf(fout,"%3x: RETURN\n" ,pc);
       }
       pc++;
       return(0);
@@ -9571,8 +8439,8 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CAST to %c type%ld tag%ld\n" ,pc
-		,(char)G__asm_inst[pc+1],G__asm_inst[pc+2],G__asm_inst[pc+3]);
+        fprintf(fout,"%3x: CAST to %c type%ld tag%ld\n" ,pc
+                ,(char)G__asm_inst[pc+1],G__asm_inst[pc+2],G__asm_inst[pc+3]);
       }
       pc+=5;
       break;
@@ -9587,11 +8455,11 @@ int isthrow;
       * sp    G__null     <-
       ***************************************/
       if(0==isthrow) {
-	if(isprint(G__asm_inst[pc+1]))
-	  fprintf(fout,"%3x: OP1 '%c'%ld\n",pc
-		  ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1] );
-	else
-	  fprintf(fout,"%3x: OP1 %ld\n",pc,G__asm_inst[pc+1]);
+        if(isprint(G__asm_inst[pc+1]))
+          fprintf(fout,"%3x: OP1 '%c'%ld\n",pc
+                  ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1] );
+        else
+          fprintf(fout,"%3x: OP1 %ld\n",pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9606,7 +8474,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LETVVAL\n" ,pc);
+        fprintf(fout,"%3x: LETVVAL\n" ,pc);
       }
       ++pc;
       break;
@@ -9618,7 +8486,7 @@ int isthrow;
       * 1 addoffset
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: ADDSTROS %ld\n" ,pc,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: ADDSTROS %ld\n" ,pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9633,7 +8501,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LETPVAL\n" ,pc);
+        fprintf(fout,"%3x: LETPVAL\n" ,pc);
       }
       ++pc;
       break;
@@ -9643,7 +8511,7 @@ int isthrow;
       * 0 FREETEMP
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: FREETEMP\n" ,pc);
+        fprintf(fout,"%3x: FREETEMP\n" ,pc);
       }
       ++pc;
       break;
@@ -9653,7 +8521,7 @@ int isthrow;
       * 0 SETTEMP
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SETTEMP\n" ,pc);
+        fprintf(fout,"%3x: SETTEMP\n" ,pc);
       }
       ++pc;
       break;
@@ -9664,7 +8532,7 @@ int isthrow;
       * 0 GETRSVD
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: GETRSVD\n" ,pc);
+        fprintf(fout,"%3x: GETRSVD\n" ,pc);
       }
       ++pc;
       break;
@@ -9678,7 +8546,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: TOPNTR\n" ,pc);
+        fprintf(fout,"%3x: TOPNTR\n" ,pc);
       }
       ++pc;
       break;
@@ -9688,7 +8556,7 @@ int isthrow;
       * 0 NOT
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: NOT\n" ,pc);
+        fprintf(fout,"%3x: NOT\n" ,pc);
       }
       ++pc;
       break;
@@ -9698,7 +8566,7 @@ int isthrow;
       * 0 BOOL
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: BOOL\n" ,pc);
+        fprintf(fout,"%3x: BOOL\n" ,pc);
       }
       ++pc;
       break;
@@ -9709,7 +8577,7 @@ int isthrow;
       * 1 next_pc
       ***************************************/
       if(0==isthrow) {
-	G__fprinterr(G__serr,"%3x: !ISDEFAULTPARA JMP %lx\n",pc,G__asm_inst[pc+1]);
+        G__fprinterr(G__serr,"%3x: !ISDEFAULTPARA JMP %lx\n",pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9727,11 +8595,11 @@ int isthrow;
       * sp          <-
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LDST_LVAR_P index=%ld %s\n"
-		,pc,G__asm_inst[pc+1]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LDST_LVAR_P index=%ld %s\n"
+                ,pc,G__asm_inst[pc+1]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9751,12 +8619,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: LD_LVAR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: LD_LVAR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9776,12 +8644,12 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	var = (struct G__var_array*)G__asm_inst[pc+4];
-	if(!var) return(1);
-	fprintf(fout,"%3x: ST_LVAR index=%ld paran=%ld point %c %s\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
-		,(char)G__asm_inst[pc+3]
-		,var->varnamebuf[G__asm_inst[pc+1]]);
+        var = (struct G__var_array*)G__asm_inst[pc+4];
+        if(!var) return(1);
+        fprintf(fout,"%3x: ST_LVAR index=%ld paran=%ld point %c %s\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
+                ,(char)G__asm_inst[pc+3]
+                ,var->varnamebuf[G__asm_inst[pc+1]]);
       }
       pc+=5;
       break;
@@ -9798,7 +8666,7 @@ int isthrow;
       * sp              <- ..
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: REWINDSTACK %ld\n" ,pc,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: REWINDSTACK %ld\n" ,pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9812,7 +8680,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CND1JMP  to %lx\n" ,pc ,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: CND1JMP  to %lx\n" ,pc ,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -9836,8 +8704,8 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LD_IFUNC %s paran=%ld\n" ,pc
-		,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
+        fprintf(fout,"%3x: LD_IFUNC %s paran=%ld\n" ,pc
+                ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
       pc+=8;
       break;
@@ -9852,8 +8720,8 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: NEWALLOC size(%ld)\n"
-		,pc,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: NEWALLOC size(%ld)\n"
+                ,pc,G__asm_inst[pc+1]);
       }
       pc+=3;
       break;
@@ -9868,7 +8736,7 @@ int isthrow;
       * sp       <-
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SET_NEWALLOC\n" ,pc);
+        fprintf(fout,"%3x: SET_NEWALLOC\n" ,pc);
       }
       pc+=3;
       break;
@@ -9880,7 +8748,7 @@ int isthrow;
       * 1 isarray  0: simple free, 1: array, 2: virtual free
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: DELETEFREE\n",pc);
+        fprintf(fout,"%3x: DELETEFREE\n",pc);
       }
       pc+=2;
       break;
@@ -9895,7 +8763,7 @@ int isthrow;
       * sp       <-   sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SWAP\n",pc);
+        fprintf(fout,"%3x: SWAP\n",pc);
       }
       ++pc;
       break;
@@ -9914,8 +8782,8 @@ int isthrow;
       * sp       <-   sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: BASECONV %ld %ld\n",pc
-		,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+        fprintf(fout,"%3x: BASECONV %ld %ld\n",pc
+                ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
       }
       pc+=3;
       break;
@@ -9928,7 +8796,7 @@ int isthrow;
       * sp       <-  sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: STORETEMP\n",pc);
+        fprintf(fout,"%3x: STORETEMP\n",pc);
       }
       ++pc;
       break;
@@ -9942,7 +8810,7 @@ int isthrow;
       * sp       <-  sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: ALLOCTEMP %s\n",pc,G__struct.name[G__asm_inst[pc+1]]);
+        fprintf(fout,"%3x: ALLOCTEMP %s\n",pc,G__struct.name[G__asm_inst[pc+1]]);
       }
       pc+=2;
       break;
@@ -9956,11 +8824,11 @@ int isthrow;
       * sp      <-  sp
       ***************************************/
       if(0==isthrow) {
-	if(-1!=G__asm_inst[pc+1])
-	  fprintf(fout,"%3x: POPTEMP %s\n" 
-		  ,pc,G__struct.name[G__asm_inst[pc+1]]);
-	else
-	  fprintf(fout,"%3x: POPTEMP -1\n",pc);
+        if(-1!=G__asm_inst[pc+1])
+          fprintf(fout,"%3x: POPTEMP %s\n" 
+                  ,pc,G__struct.name[G__asm_inst[pc+1]]);
+        else
+          fprintf(fout,"%3x: POPTEMP -1\n",pc);
       }
       pc+=2;
       break;
@@ -9977,8 +8845,8 @@ int isthrow;
       * sp      <-  sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: REORDER paran=%ld ig25=%ld\n"
-		,pc ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+        fprintf(fout,"%3x: REORDER paran=%ld ig25=%ld\n"
+                ,pc ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
       }
       pc+=3;
       break;
@@ -9993,8 +8861,8 @@ int isthrow;
       * sp+1   <-
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LD_THIS %s\n"
-		,pc ,G__struct.name[G__tagnum]);
+        fprintf(fout,"%3x: LD_THIS %s\n"
+                ,pc ,G__struct.name[G__tagnum]);
       }
       pc+=2;
       break;
@@ -10008,7 +8876,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: RTN_FUNC %ld\n" ,pc ,G__asm_inst[pc+1]);
+        fprintf(fout,"%3x: RTN_FUNC %ld\n" ,pc ,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -10018,7 +8886,7 @@ int isthrow;
       * 0 SETMEMFUNCENV:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SETMEMFUNCENV\n",pc);
+        fprintf(fout,"%3x: SETMEMFUNCENV\n",pc);
       }
       pc+=1;
       break;
@@ -10028,7 +8896,7 @@ int isthrow;
       * 0 RECMEMFUNCENV:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: RECMEMFUNCENV\n" ,pc);
+        fprintf(fout,"%3x: RECMEMFUNCENV\n" ,pc);
       }
       pc+=1;
       break;
@@ -10038,7 +8906,7 @@ int isthrow;
       * 0 ADDALLOCTABLE:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: ADDALLOCTABLE\n" ,pc);
+        fprintf(fout,"%3x: ADDALLOCTABLE\n" ,pc);
       }
       pc+=1;
       break;
@@ -10048,7 +8916,7 @@ int isthrow;
       * 0 DELALLOCTABLE:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: DELALLOCTABLE\n" ,pc);
+        fprintf(fout,"%3x: DELALLOCTABLE\n" ,pc);
       }
       pc+=1;
       break;
@@ -10060,8 +8928,8 @@ int isthrow;
       * 2 isarray
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: BASECONSTRUCT tagnum=%ld isarray=%ld\n"
-		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+        fprintf(fout,"%3x: BASECONSTRUCT tagnum=%ld isarray=%ld\n"
+                ,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]);
       }
       pc+=3;
       break;
@@ -10073,7 +8941,7 @@ int isthrow;
       * 2 var
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: REDECL\n",pc);
+        fprintf(fout,"%3x: REDECL\n",pc);
       }
       pc+=3;
       break;
@@ -10083,7 +8951,7 @@ int isthrow;
       * 0 TOVALUE:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: TOVALUE\n",pc);
+        fprintf(fout,"%3x: TOVALUE\n",pc);
       }
       pc+=2;
       break;
@@ -10103,7 +8971,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INIT_REF\n",pc);
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INIT_REF\n",pc);
       }
       pc+=5;
       break;
@@ -10118,7 +8986,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: LETNEWVAL\n" ,pc);
+        fprintf(fout,"%3x: LETNEWVAL\n" ,pc);
       }
       ++pc;
       break;
@@ -10133,8 +9001,8 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: SETGVP\n" ,pc);
-	/* no optimization */
+        fprintf(fout,"%3x: SETGVP\n" ,pc);
+        /* no optimization */
       }
       pc+=2;
       break;
@@ -10144,7 +9012,7 @@ int isthrow;
       * 0 TOPVALUE:
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: TOPVALUE\n",pc);
+        fprintf(fout,"%3x: TOPVALUE\n",pc);
       }
       ++pc;
       break;
@@ -10159,7 +9027,7 @@ int isthrow;
       * 3 mode, 0 local block scope, 1 member offset
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CTOR_SETGVP\n",pc);
+        fprintf(fout,"%3x: CTOR_SETGVP\n",pc);
       }
       pc+=4;
       break;
@@ -10174,7 +9042,7 @@ int isthrow;
       ***************************************/
       if(0==isthrow) {
          fprintf(fout,"%3x: TRY %lx %lx\n",pc
-		  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
+                  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
       }
       pc+=3;
       break;
@@ -10229,7 +9097,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: THROW\n" ,pc);
+        fprintf(fout,"%3x: THROW\n" ,pc);
       }
       pc+=1;
       break;
@@ -10244,34 +9112,34 @@ int isthrow;
       * 4  "
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: CATCH\n" ,pc);
+        fprintf(fout,"%3x: CATCH\n" ,pc);
       }
       else {
-	fpos_t store_pos;
-	struct G__input_file store_ifile = G__ifile;
-	char statement[G__LONGLINE];
+        fpos_t store_pos;
+        struct G__input_file store_ifile = G__ifile;
+        char statement[G__LONGLINE];
 #if defined(G__NONSCALARFPOS2)
-	fpos_t pos;
-	pos.__pos = (off_t)G__asm_inst[pc+3];
+        fpos_t pos;
+        pos.__pos = (off_t)G__asm_inst[pc+3];
 #elif defined(G__NONSCALARFPOS_QNX)
-	fpos_t pos;
-	pos._Off = (off_t)G__asm_inst[pc+3];
+        fpos_t pos;
+        pos._Off = (off_t)G__asm_inst[pc+3];
 #else
-	fpos_t pos = (fpos_t)G__asm_inst[pc+3];
+        fpos_t pos = (fpos_t)G__asm_inst[pc+3];
 #endif
-	fgetpos(G__ifile.fp,&store_pos);
-	G__ifile.filenum = (short)G__asm_inst[pc+1];
-	G__ifile.line_number = G__asm_inst[pc+2];
-	strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
-	G__ifile.fp = G__srcfile[G__ifile.filenum].fp;
-	fsetpos(G__ifile.fp,&pos);
-	G__asm_exec = 0;
-	G__return=G__RETURN_NON;
-	G__exec_catch(statement);
+        fgetpos(G__ifile.fp,&store_pos);
+        G__ifile.filenum = (short)G__asm_inst[pc+1];
+        G__ifile.line_number = G__asm_inst[pc+2];
+        strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
+        G__ifile.fp = G__srcfile[G__ifile.filenum].fp;
+        fsetpos(G__ifile.fp,&pos);
+        G__asm_exec = 0;
+        G__return=G__RETURN_NON;
+        G__exec_catch(statement);
 
-	G__ifile = store_ifile;
-	fsetpos(G__ifile.fp,&store_pos);
-	return(G__CATCH);
+        G__ifile = store_ifile;
+        fsetpos(G__ifile.fp,&store_pos);
+        return(G__CATCH);
       }
       pc+=5;
       break;
@@ -10283,7 +9151,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	G__fprinterr(G__serr,"%3x: SETARYINDEX\n",pc);
+        G__fprinterr(G__serr,"%3x: SETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -10295,7 +9163,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",pc);
+        G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -10306,7 +9174,7 @@ int isthrow;
       * 0 GETARYINDEX
       ***************************************/
       if(isthrow) {
-	G__fprinterr(G__serr,"%3x: GETARYINDEX\n",pc);
+        G__fprinterr(G__serr,"%3x: GETARYINDEX\n",pc);
       }
       ++pc;
       break;
@@ -10377,7 +9245,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: MEMCPY\n" ,pc);
+        fprintf(fout,"%3x: MEMCPY\n" ,pc);
       }
       ++pc;
       break;
@@ -10396,7 +9264,7 @@ int isthrow;
       ***************************************/
 #ifdef G__ASM_DBG
       if(0==isthrow) fprintf(fout,"%3x: MEMSETINT %ld %ld\n",pc
-			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                             ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       pc+=G__asm_inst[pc+2]*2+3;
       break;
@@ -10410,7 +9278,7 @@ int isthrow;
       ***************************************/
 #ifdef G__ASM_DBG
       if(0==isthrow) fprintf(fout,"%3x: JMPIFVIRTUALOBJ %lx %lx\n",pc
-			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+                             ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       pc+=3;
       break;
@@ -10425,7 +9293,7 @@ int isthrow;
       ***************************************/
 #ifdef G__ASM_DBG
       if(0==isthrow) fprintf(fout,"%3x: VIRTUALADDSTROS %lx %lx\n",pc
-			     ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
+                             ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       pc+=4;
       break;
@@ -10436,7 +9304,7 @@ int isthrow;
       * 0 PAUSe
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: PAUSE\n" ,pc);
+        fprintf(fout,"%3x: PAUSE\n" ,pc);
       }
       ++pc;
       break;
@@ -10447,7 +9315,7 @@ int isthrow;
       * 0 NOP
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: NOP\n" ,pc);
+        fprintf(fout,"%3x: NOP\n" ,pc);
       }
       ++pc;
       break;
@@ -10459,7 +9327,7 @@ int isthrow;
       * never happen.
       ***************************************/
       fprintf(fout,"%3x: illegal instruction 0x%lx\t%ld\n"
-	      ,pc,G__asm_inst[pc],G__asm_inst[pc]);
+              ,pc,G__asm_inst[pc],G__asm_inst[pc]);
       ++pc;
       ++illegal;
       if(illegal>20) return(0);
@@ -10470,7 +9338,7 @@ int isthrow;
 
   return(0);
 }
-
+} /* extern "C" */
 
 /*
  * Local Variables:

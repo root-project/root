@@ -2,6 +2,7 @@
 * stdstrct.c
 ********************************************************/
 #include "stdstrct.h"
+
 void G__c_reset_tagtableG__stdstrct();
 void G__set_c_environmentG__stdstrct() {
   G__add_compiledheader("stdstr.h");
@@ -164,7 +165,8 @@ void G__c_setup_tagtableG__stdstrct() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__stdstrctLN_dAdiv_t),sizeof(div_t),-2,0,(char*)NULL,G__setup_memvardAdiv_t,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__stdstrctLN_dAldiv_t),sizeof(ldiv_t),-2,0,(char*)NULL,G__setup_memvardAldiv_t,NULL);
 }
-void G__c_setupG__stdstrct() {
+
+extern "C" void G__c_setupG__stdstrct() {
   G__check_setup_version(30051515,"G__c_setupG__stdstrct()");
   G__set_c_environmentG__stdstrct();
   G__c_setup_tagtableG__stdstrct();

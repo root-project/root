@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 
+extern "C" {
 
 /***********************************************************************
 * getopt();
@@ -30,10 +31,7 @@
 int optind=1;
 char *optarg;
 
-int getopt(argc, argv,optlist)
-int argc;
-char **argv;
-char *optlist;
+int getopt(int argc, char **argv,char *optlist)
 {
   int optkey;
   char *p;
@@ -42,27 +40,27 @@ char *optlist;
       optkey = argv[optind][1] ;
       p = optlist;
       while(*p) {
-	if( (*p) == optkey ) {
-	  ++p;
-	  if(':'==(*p)) { /* option with argument */
-	    if(argv[optind][2]) { /* -aARGUMENT */
-	      optarg=argv[optind]+2;
-	      optind+=1;
-	      return(argv[optind-1][1]);
-	    }
-	    else { /* -a ARGUMENT */
-	      optarg=argv[optind+1];
-	      optind+=2;
-	      return(argv[optind-2][1]);
-	    }
-	  }
-	  else { /* option without argument */
-	    ++optind;
-	    optarg=(char*)NULL;
-	    return(argv[optind-1][1]);
-	  }
-	}
-	++p;
+        if( (*p) == optkey ) {
+          ++p;
+          if(':'==(*p)) { /* option with argument */
+            if(argv[optind][2]) { /* -aARGUMENT */
+              optarg=argv[optind]+2;
+              optind+=1;
+              return(argv[optind-1][1]);
+            }
+            else { /* -a ARGUMENT */
+              optarg=argv[optind+1];
+              optind+=2;
+              return(argv[optind-2][1]);
+            }
+          }
+          else { /* option without argument */
+            ++optind;
+            optarg=(char*)NULL;
+            return(argv[optind-1][1]);
+          }
+        }
+        ++p;
       }
       fprintf(stderr,"Error: Unknown option %s\n",argv[optind]);
       ++optind;
@@ -81,8 +79,9 @@ char *optlist;
 * alarm()
 *
 ***********************************************************************/
-void alarm(iwait)
-int iwait;
+void alarm(int /* iwait */ )
 {
   ;
 }
+
+} /* extern "C" */

@@ -103,6 +103,8 @@ typedef void* G__SHLHANDLE;
 
 #endif /* G__SHAREDLIB */
 
+extern "C" {
+
 G__SHLHANDLE G__sl_handle[G__MAX_SL];
 short G__allsl=0;
 
@@ -112,7 +114,7 @@ static int G__sym_underscore=1;
 static int G__sym_underscore=0;
 #endif
 
-void G__set_sym_underscore(x) int x; { G__sym_underscore=x; }
+void G__set_sym_underscore(int x) { G__sym_underscore=x; }
 int G__get_sym_underscore() { return(G__sym_underscore); }
 
 
@@ -168,8 +170,7 @@ G__DLLINIT G__initpermanentsl ;
 /**************************************************************************
 * G__loadsystemfile
 **************************************************************************/
-int G__loadsystemfile(filename) 
-char *filename;
+int G__loadsystemfile(const char *filename) 
 {
   int result;
   int len = strlen(filename);
@@ -177,15 +178,15 @@ char *filename;
   char soext[]=SOEXT;
 #endif
   if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
-	       strcmp(filename+len-3,".dl")==0 ||
-	       strcmp(filename+len-3,".so")==0)) ||
+               strcmp(filename+len-3,".dl")==0 ||
+               strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
-	       strcmp(filename+len-4,".DLL")==0)) ||
+               strcmp(filename+len-4,".DLL")==0)) ||
 #if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
-	       strcmp(filename+len-2,".A")==0))
+               strcmp(filename+len-2,".A")==0))
      ) {
   }
   else {
@@ -219,8 +220,7 @@ void G__Set_RTLD_LAZY() {
 * G__dlopen()
 *
 ***********************************************************************/
-G__SHLHANDLE G__dlopen(path)
-char *path;
+G__SHLHANDLE G__dlopen(char *path)
 {
   G__SHLHANDLE handle;
 #ifdef G__SHAREDLIB
@@ -295,10 +295,11 @@ TYPE_PROCEDURE);
 * G__shl_findsym()
 *
 ***********************************************************************/
-void *G__shl_findsym(phandle,sym,type)
-G__SHLHANDLE *phandle;
-char *sym;
-short type;
+#if defined(__hpux) || defined(_HIUX_SOURCE)
+void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short type)
+#else
+void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short /* type */)
+#endif
 {
   void *func = (void*)NULL;
 
@@ -312,10 +313,6 @@ short type;
   struct dsc$descriptor_s phandle_d;
 #endif
   char sym_underscore[G__ONELINE];
-
-#ifndef G__OLDIMPLEMENTATION1911
-  if(0 && type) return((void*)NULL);
-#endif
 
   if(G__sym_underscore) {
     sym_underscore[0]='_';
@@ -426,8 +423,7 @@ printf("\nfile_s %s sym_s %s phandle_s %s",file_s,sym_s,phandle_s);
 * G__dlclose()
 *
 ***********************************************************************/
-int G__dlclose(handle)
-G__SHLHANDLE handle;
+int G__dlclose(G__SHLHANDLE handle)
 {
   if(!handle) return(0);
 
@@ -489,8 +485,7 @@ TYPE_PROCEDURE);
 /***********************************************************************
 * G__smart_shl_unload()
 ***********************************************************************/
-void G__smart_shl_unload(allsl)
-int allsl;
+void G__smart_shl_unload(int allsl)
 {
   if(G__sl_handle[allsl]) {
     if(G__dlclose(G__sl_handle[allsl]) == -1) {
@@ -507,8 +502,7 @@ int allsl;
 *  Can replace G__free_shl()
 *
 ***********************************************************************/
-int G__free_shl_upto(allsl)
-int allsl;
+int G__free_shl_upto(int allsl)
 {
   /*************************************************************
    * Unload shared library
@@ -530,14 +524,13 @@ int allsl;
 /**************************************************************************
 * G__findsym()
 **************************************************************************/
-void* G__findsym(fname)
-char* fname;
+void* G__findsym(const char *fname)
 {
 #ifdef G__SHAREDLIB
   int i;
   void *p;
   for(i=0;i<G__allsl;i++) {
-    p = (void*)G__shl_findsym(&G__sl_handle[i],fname,TYPE_PROCEDURE);
+    p = (void*)G__shl_findsym(&G__sl_handle[i],(char*)fname,TYPE_PROCEDURE);
     if(p) return(p);
   }
 #endif
@@ -548,8 +541,7 @@ char* fname;
 /**************************************************************************
 * G__revprint()
 **************************************************************************/
-int G__revprint(fp)
-FILE *fp;
+int G__revprint(FILE *fp)
 {
   G__cintrevision(fp);
   G__list_sut(fp);
@@ -577,14 +569,12 @@ extern int G__call_setup_funcs();
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
-void G__show_dllrev(shlfile,sharedlib_func)
-char *shlfile;
-int (*sharedlib_func)();
+void G__show_dllrev(char *shlfile,int (*sharedlib_func)())
 {
   G__fprinterr(G__serr,"%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
   G__fprinterr(G__serr,"  This cint accepts DLLREV=%d~%d and creates %d\n"
-	  ,G__ACCEPTDLLREV_FROM,G__ACCEPTDLLREV_UPTO
-	  ,G__CREATEDLLREV);
+          ,G__ACCEPTDLLREV_FROM,G__ACCEPTDLLREV_UPTO
+          ,G__CREATEDLLREV);
 }
 
 /**************************************************************************
@@ -592,189 +582,187 @@ int (*sharedlib_func)();
  **************************************************************************/
 #if !defined(G__OLDIMPLEMENTATION1485)
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
 #elif !defined(G__OLDIMPLEMENTATION1546)
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
 #else
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*,void*,void*,void*,void*,void*,void*,void*));
 #endif
 
 /**************************************************************************
 * G__SetCIntApiPointers
 *
 **************************************************************************/
-void G__SetCintApiPointers(pslhandle,fname)
-G__SHLHANDLE *pslhandle;
-char *fname;
+void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,char *fname)
 {
   G__SetCintApiPointers_t SetCintApi;
   SetCintApi = (G__SetCintApiPointers_t)
     G__shl_findsym(pslhandle,fname,TYPE_PROCEDURE);
   if(SetCintApi)
     (*SetCintApi)(
-	G__main,
-	G__setothermain,
-	G__getnumbaseclass,
-	G__setnewtype,
-	G__setnewtypeindex,
-	G__resetplocal,
-	G__getgvp,
-	G__resetglobalenv,
-	G__lastifuncposition,
-	G__resetifuncposition,
-	G__setnull,
-	G__getstructoffset,
-	G__getaryconstruct,
-	G__gettempbufpointer,
-	G__setsizep2memfunc,
-	G__getsizep2memfunc,
-	G__get_linked_tagnum,
-	G__tagtable_setup,
-	G__search_tagname,
-	G__search_typename,
-	G__defined_typename,
-	G__tag_memvar_setup,
-	G__memvar_setup,
-	G__tag_memvar_reset,
-	G__tag_memfunc_setup,
-	G__memfunc_setup,
-	G__memfunc_next,
-	G__memfunc_para_setup,
-	G__tag_memfunc_reset,
-	G__letint,
-	G__letdouble,
-	G__store_tempobject,
-	G__inheritance_setup,
-	G__add_compiledheader,
-	G__add_ipath,
-	G__add_macro,
-	G__check_setup_version,
-	G__int,
-	G__double,
-	G__calc,
-	G__loadfile,
-	G__unloadfile,
-	G__init_cint,
-	G__scratch_all,
-	G__setdouble,
-	G__setint,
-	G__stubstoreenv,
-	G__stubrestoreenv,
-	G__getstream,
-	G__type2string,
-	G__alloc_tempobject,
-	G__set_p2fsetup,
-	G__free_p2fsetup,
-	G__genericerror,
-	G__tmpnam,
-	G__setTMPDIR,
-	G__setPrerun,
-	G__readline,
-	G__getFuncNow,
-	G__getIfileFp,
-	G__incIfileLineNumber,
-	G__setReturn,
-	G__getPrerun,
-	G__getDispsource,
-	G__getSerr,
-	G__getIsMain,
-	G__setIsMain,
-	G__setStep,
-	G__getStepTrace,
-	G__setDebug,
-	G__getDebugTrace,
-	G__set_asm_noverflow,
-	G__get_no_exec,
-	G__get_no_exec_compile,
-	G__setdebugcond,
-	G__init_process_cmd,
-	G__process_cmd,
-	G__pause,
-	G__input,
-	G__split,
-	G__getIfileLineNumber,
-	G__addpragma,
-	G__add_setup_func,
-	G__remove_setup_func,
-	G__setgvp,
-	G__set_stdio_handle,
-	G__setautoconsole,
-	G__AllocConsole,
-	G__FreeConsole,
-	G__getcintready,
-	G__security_recover,
-	G__breakkey,
-	G__stepmode,
-	G__tracemode,
-	G__getstepmode,
-	G__gettracemode,
-	G__printlinenum,
-	G__search_typename2,
-	G__set_atpause,
-	G__set_aterror,
-	G__p2f_void_void,
-	G__setglobalcomp,
-	G__getmakeinfo,
-	G__get_security_error,
-	G__map_cpp_name,
-	G__Charref,
-	G__Shortref,
-	G__Intref,
-	G__Longref,
-	G__UCharref,
-	G__UShortref,
-	G__UIntref,
-	G__ULongref,
-	G__Floatref,
-	G__Doubleref,
-	G__loadsystemfile,
-	G__set_ignoreinclude,
-	G__exec_tempfile,
-	G__exec_text,
-	G__lasterror_filename,
-	G__lasterror_linenum,
-	G__va_arg_put
+        (void*)G__main,
+        (void*)G__setothermain,
+        (void*)G__getnumbaseclass,
+        (void*)G__setnewtype,
+        (void*)G__setnewtypeindex,
+        (void*)G__resetplocal,
+        (void*)G__getgvp,
+        (void*)G__resetglobalenv,
+        (void*)G__lastifuncposition,
+        (void*)G__resetifuncposition,
+        (void*)G__setnull,
+        (void*)G__getstructoffset,
+        (void*)G__getaryconstruct,
+        (void*)G__gettempbufpointer,
+        (void*)G__setsizep2memfunc,
+        (void*)G__getsizep2memfunc,
+        (void*)G__get_linked_tagnum,
+        (void*)G__tagtable_setup,
+        (void*)G__search_tagname,
+        (void*)G__search_typename,
+        (void*)G__defined_typename,
+        (void*)G__tag_memvar_setup,
+        (void*)G__memvar_setup,
+        (void*)G__tag_memvar_reset,
+        (void*)G__tag_memfunc_setup,
+        (void*)G__memfunc_setup,
+        (void*)G__memfunc_next,
+        (void*)G__memfunc_para_setup,
+        (void*)G__tag_memfunc_reset,
+        (void*)G__letint,
+        (void*)G__letdouble,
+        (void*)G__store_tempobject,
+        (void*)G__inheritance_setup,
+        (void*)G__add_compiledheader,
+        (void*)G__add_ipath,
+        (void*)G__add_macro,
+        (void*)G__check_setup_version,
+        (void*)G__int,
+        (void*)G__double,
+        (void*)G__calc,
+        (void*)G__loadfile,
+        (void*)G__unloadfile,
+        (void*)G__init_cint,
+        (void*)G__scratch_all,
+        (void*)G__setdouble,
+        (void*)G__setint,
+        (void*)G__stubstoreenv,
+        (void*)G__stubrestoreenv,
+        (void*)G__getstream,
+        (void*)G__type2string,
+        (void*)G__alloc_tempobject,
+        (void*)G__set_p2fsetup,
+        (void*)G__free_p2fsetup,
+        (void*)G__genericerror,
+        (void*)G__tmpnam,
+        (void*)G__setTMPDIR,
+        (void*)G__setPrerun,
+        (void*)G__readline,
+        (void*)G__getFuncNow,
+        (void*)G__getIfileFp,
+        (void*)G__incIfileLineNumber,
+        (void*)G__setReturn,
+        (void*)G__getPrerun,
+        (void*)G__getDispsource,
+        (void*)G__getSerr,
+        (void*)G__getIsMain,
+        (void*)G__setIsMain,
+        (void*)G__setStep,
+        (void*)G__getStepTrace,
+        (void*)G__setDebug,
+        (void*)G__getDebugTrace,
+        (void*)G__set_asm_noverflow,
+        (void*)G__get_no_exec,
+        (void*)G__get_no_exec_compile,
+        (void*)G__setdebugcond,
+        (void*)G__init_process_cmd,
+        (void*)G__process_cmd,
+        (void*)G__pause,
+        (void*)G__input,
+        (void*)G__split,
+        (void*)G__getIfileLineNumber,
+        (void*)G__addpragma,
+        (void*)G__add_setup_func,
+        (void*)G__remove_setup_func,
+        (void*)G__setgvp,
+        (void*)G__set_stdio_handle,
+        (void*)G__setautoconsole,
+        (void*)G__AllocConsole,
+        (void*)G__FreeConsole,
+        (void*)G__getcintready,
+        (void*)G__security_recover,
+        (void*)G__breakkey,
+        (void*)G__stepmode,
+        (void*)G__tracemode,
+        (void*)G__getstepmode,
+        (void*)G__gettracemode,
+        (void*)G__printlinenum,
+        (void*)G__search_typename2,
+        (void*)G__set_atpause,
+        (void*)G__set_aterror,
+        (void*)G__p2f_void_void,
+        (void*)G__setglobalcomp,
+        (void*)G__getmakeinfo,
+        (void*)G__get_security_error,
+        (void*)G__map_cpp_name,
+        (void*)G__Charref,
+        (void*)G__Shortref,
+        (void*)G__Intref,
+        (void*)G__Longref,
+        (void*)G__UCharref,
+        (void*)G__UShortref,
+        (void*)G__UIntref,
+        (void*)G__ULongref,
+        (void*)G__Floatref,
+        (void*)G__Doubleref,
+        (void*)G__loadsystemfile,
+        (void*)G__set_ignoreinclude,
+        (void*)G__exec_tempfile,
+        (void*)G__exec_text,
+        (void*)G__lasterror_filename,
+        (void*)G__lasterror_linenum,
+        (void*)G__va_arg_put
 #ifndef G__OLDIMPLEMENTATION1546
-	,G__load_text
-	,G__set_emergencycallback
+        ,(void*)G__load_text
+        ,(void*)G__set_emergencycallback
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
-	,G__set_errmsgcallback
+        ,(void*)G__set_errmsgcallback
 #endif
-   ,G__get_ifile
-	);
+   ,(void*)G__get_ifile
+        );
 }
 
 
@@ -784,8 +772,7 @@ char *fname;
 * Comment:
 *  This function can handle both old and new style DLL.
 **************************************************************************/
-int G__shl_load(shlfile)
-char *shlfile;
+int G__shl_load(char *shlfile)
 {
   /* int fail = 0; */
   int store_globalcomp;
@@ -822,8 +809,8 @@ char *shlfile;
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
       if(G__dispmsg>=G__DISPWARN) {
-	G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
-	G__printlinenum();
+        G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
+        G__printlinenum();
       }
       --G__allsl;
       return(-1);
@@ -997,12 +984,12 @@ char *shlfile;
   if(G__ispermanentsl) {
     if(!G__initpermanentsl)
       G__initpermanentsl = 
-	(void (*)())G__shl_findsym(&G__sl_handle[allsl],"G__cpp_setup"
-				   ,TYPE_PROCEDURE); 
+        (void (*)())G__shl_findsym(&G__sl_handle[allsl],"G__cpp_setup"
+                                   ,TYPE_PROCEDURE); 
     if(!G__initpermanentsl) {
       sprintf(dllid,"G__cpp_setup%s",dllidheader);
       G__initpermanentsl =
-	(void (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE); 
+        (void (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE); 
     }
     --G__allsl;
   }
@@ -1012,7 +999,7 @@ char *shlfile;
 
 
   strcpy(G__ifile.name,"");
-  return(EXIT_SUCCESS);
+  return(allsl);
 }
 #endif
 
@@ -1021,33 +1008,22 @@ char *shlfile;
 * G__listshlfunc()
 *
 *******************************************************************/
-void G__listshlfunc(fout)
-FILE *fout;
+void G__listshlfunc(FILE * /* fout */)
 {
-#ifndef G__OLDIMPLEMENTATION1911
-  if(0 && fout) return;
-#endif
 }
 /*******************************************************************
 * G__listshl()
 *
 *******************************************************************/
-void G__listshl(G__temp)
-FILE *G__temp;
+void G__listshl(FILE * /* G__temp */)
 {
-#ifndef G__OLDIMPLEMENTATION1911
-  if(0 && G__temp) return;
-#endif
 }
 
 #ifdef G__TRUEP2F
 /******************************************************************
 * G__p2f2funchandle()
 ******************************************************************/
-struct G__ifunc_table* G__p2f2funchandle(p2f,p_ifunc,pindex)
-void *p2f;
-struct G__ifunc_table* p_ifunc;
-int* pindex;
+struct G__ifunc_table* G__p2f2funchandle(void *p2f,struct G__ifunc_table* p_ifunc,int* pindex)
 {
   struct G__ifunc_table *ifunc;
   int ig15;
@@ -1055,15 +1031,15 @@ int* pindex;
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
       if(
-	 ifunc->pentry[ig15] && 
-	 ifunc->pentry[ig15]->tp2f==p2f) {
-	*pindex = ig15;
-	return(ifunc);
+         ifunc->pentry[ig15] && 
+         ifunc->pentry[ig15]->tp2f==p2f) {
+        *pindex = ig15;
+        return(ifunc);
       }
       if(ifunc->pentry[ig15] && 
-	 ifunc->pentry[ig15]->bytecode==p2f) {
-	*pindex = ig15;
-	return(ifunc);
+         ifunc->pentry[ig15]->bytecode==p2f) {
+        *pindex = ig15;
+        return(ifunc);
       }
     }
   } while((ifunc=ifunc->next)) ;
@@ -1074,8 +1050,7 @@ int* pindex;
 /******************************************************************
 * G__p2f2funcname()
 ******************************************************************/
-char* G__p2f2funcname(p2f)
-void *p2f;
+char* G__p2f2funcname(void *p2f)
 {
   int tagnum;
   struct G__ifunc_table *ifunc;
@@ -1097,8 +1072,7 @@ void *p2f;
 /******************************************************************
 * G__isinterpretedfunc()
 ******************************************************************/
-int G__isinterpretedp2f(p2f)
-void *p2f;
+int G__isinterpretedp2f(void *p2f)
 {
   struct G__ifunc_table *ifunc;
   int ig15;
@@ -1108,18 +1082,18 @@ void *p2f;
        -1 != ifunc->pentry[ig15]->size
        ) {
       if(ifunc->pentry[ig15]->bytecode) {
-	return(G__BYTECODEFUNC);
+        return(G__BYTECODEFUNC);
       }
       else {
-	return(G__INTERPRETEDFUNC);
+        return(G__INTERPRETEDFUNC);
       }
     }
     else {
       if(ifunc->pentry[ig15]->p==ifunc->pentry[ig15]->tp2f) {
-	return(G__COMPILEDINTERFACEMETHOD);
+        return(G__COMPILEDINTERFACEMETHOD);
       }
       else {
-	return(G__COMPILEDTRUEFUNC);
+        return(G__COMPILEDTRUEFUNC);
       }
     }
   }
@@ -1136,11 +1110,7 @@ void *p2f;
 *
 * Calling fucntion by pointer to function
 ******************************************************************/
-G__value G__pointer2func(obj_p2f,parameter0,parameter1,known3)
-G__value *obj_p2f;
-char *parameter0 ;
-char *parameter1;
-int *known3;
+G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,int *known3)
 {
   G__value result3;
   char result7[G__ONELINE];
@@ -1165,8 +1135,8 @@ int *known3;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+        G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+        G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -1205,9 +1175,9 @@ int *known3;
 
   if(result3.obj.i==0) {
     G__fprinterr(G__serr,
-	    "Error: Can not access pointer to function 0x%lx from interpreter(1) FILE:%s LINE:%d\n"
-	    ,G__int(result3)
-	    ,G__ifile.name,G__ifile.line_number);
+            "Error: Can not access pointer to function 0x%lx from interpreter(1) FILE:%s LINE:%d\n"
+            ,G__int(result3)
+            ,G__ifile.name,G__ifile.line_number);
     return(G__null);
   }
 
@@ -1222,8 +1192,8 @@ int *known3;
     for(itag=0;itag<G__struct.alltag;itag++) {
       ifunc=G__p2f2funchandle((void*)result3.obj.i,G__struct.memfunc[itag],&ig15);
       if(ifunc && ifunc->staticalloc[ig15]) {
-	sprintf(result7,"%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
-	break;
+        sprintf(result7,"%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
+        break;
       }
     }
   }
@@ -1233,7 +1203,7 @@ int *known3;
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
       if(strcmp(ifunc->funcname[ig15],(char *)result3.obj.i)==0){
-	sprintf(result7,"%s%s",(char *)result3.obj.i,parameter1);
+        sprintf(result7,"%s%s",(char *)result3.obj.i,parameter1);
       }
     }
   } while(ifunc=ifunc->next) ;
@@ -1245,10 +1215,10 @@ int *known3;
     ig15=0;
     ig35=0;
     while( (((long)(G__completionlist[ig15].name))!=0) &&
-	  (ig35==0)) {
+          (ig35==0)) {
       if((long)G__completionlist[ig15].pfunc==result3.obj.i){
-	sprintf(result7,"%s%s" ,G__completionlist[ig15].name ,parameter1);
-	ig35=1;
+        sprintf(result7,"%s%s" ,G__completionlist[ig15].name ,parameter1);
+        ig35=1;
       }
       ++ig15;
     }
@@ -1261,10 +1231,10 @@ int *known3;
     ig15=0;
     ig35=0;
     while( (((long)(G__completionlist[ig15].name))!=0) &&
-	  (ig35==0)) {
+          (ig35==0)) {
       if(strcmp(G__completionlist[ig15].name,(char *)result3.obj.i)==0) {
-	sprintf(result7,"%s%s",G__completionlist[ig15].name,parameter1);
-	ig35=1;
+        sprintf(result7,"%s%s",G__completionlist[ig15].name,parameter1);
+        ig35=1;
       }
       ++ig15;
     }
@@ -1273,9 +1243,9 @@ int *known3;
   /* appropreate function not found */
   if(result7[0]=='\0') {
     G__fprinterr(G__serr,
-	    "Error: Can not access pointer to function 0x%lx from interpreter(2) FILE:%s LINE:%d\n"
-	    ,G__int(result3)
-	    ,G__ifile.name,G__ifile.line_number);
+            "Error: Can not access pointer to function 0x%lx from interpreter(2) FILE:%s LINE:%d\n"
+            ,G__int(result3)
+            ,G__ifile.name,G__ifile.line_number);
     return(G__null);
   }
 
@@ -1285,8 +1255,7 @@ int *known3;
 /******************************************************************
 * G__removetagid()
 ******************************************************************/
-void G__removetagid(buf)
-char *buf;
+void G__removetagid(char *buf)
 {
   int i;
   if(strncmp("class ",buf,6)==0 || strncmp("union ",buf,6)==0) {
@@ -1309,9 +1278,7 @@ char *buf;
 /******************************************************************
 * G__getp2ftype()
 ******************************************************************/
-int G__getp2ftype(ifunc,ifn)
-struct G__ifunc_table *ifunc;
-int ifn;
+int G__getp2ftype(struct G__ifunc_table *ifunc,int ifn)
 {
   char temp[G__MAXNAME*2],temp1[G__MAXNAME];
   char *p;
@@ -1319,8 +1286,8 @@ int ifn;
   int i;
 
   strcpy(temp1, G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
-				 ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
-				 ,ifunc->isconst[ifn]));
+                                 ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
+                                 ,ifunc->isconst[ifn]));
   G__removetagid(temp1);
 
   if(isupper(ifunc->type[ifn])) sprintf(temp,"%s *(*)(",temp1);
@@ -1329,10 +1296,10 @@ int ifn;
   for(i=0;i<ifunc->para_nu[ifn];i++) {
     if(i) *p++ = ',';
     strcpy(temp1,G__type2string(ifunc->para_type[ifn][i]
-				,ifunc->para_p_tagtable[ifn][i]
-				,ifunc->para_p_typetable[ifn][i]
-				,ifunc->para_reftype[ifn][i]
-				,ifunc->para_isconst[ifn][i]));
+                                ,ifunc->para_p_tagtable[ifn][i]
+                                ,ifunc->para_p_typetable[ifn][i]
+                                ,ifunc->para_reftype[ifn][i]
+                                ,ifunc->para_isconst[ifn][i]));
     G__removetagid(temp1);
     strcpy(p,temp1);
     p = temp + strlen(temp);
@@ -1353,9 +1320,7 @@ int ifn;
 *  Used to return pointer to function. Cint handles pointer to
 * function as pointer to char which contains function name.
 ******************************************************************/
-char *G__search_func(funcname,buf)
-char *funcname;
-G__value *buf;
+char *G__search_func(char *funcname,G__value *buf)
 {
   int i=0;
   struct G__ifunc_table *ifunc;
@@ -1373,32 +1338,32 @@ G__value *buf;
   do {
     for(i=0;i<ifunc->allifunc;i++) {
       if(
-	 ifunc->funcname[i] && funcname &&
-	 strcmp(ifunc->funcname[i],funcname)==0) {
+         ifunc->funcname[i] && funcname &&
+         strcmp(ifunc->funcname[i],funcname)==0) {
 #ifdef G__TRUEP2F
-	if(
-	   -1 == ifunc->pentry[i]->size
-	   ) { /* precompiled function */
+        if(
+           -1 == ifunc->pentry[i]->size
+           ) { /* precompiled function */
 #ifndef G__OLDIMPLEMENTATION2191
-	  G__letint(buf,'1',(long)ifunc->pentry[i]->tp2f);
+          G__letint(buf,'1',(long)ifunc->pentry[i]->tp2f);
 #else
-	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
+          G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
 #endif
-	  buf->typenum = G__getp2ftype(ifunc,i);
-	}
+          buf->typenum = G__getp2ftype(ifunc,i);
+        }
 #ifdef G__ASM_WHOLEFUNC
-	else if(ifunc->pentry[i]->bytecode) { /* bytecode function */
-	  G__letint(buf,'Y',(long)ifunc->pentry[i]->tp2f);
-	  buf->typenum = G__getp2ftype(ifunc,i);
-	}
+        else if(ifunc->pentry[i]->bytecode) { /* bytecode function */
+          G__letint(buf,'Y',(long)ifunc->pentry[i]->tp2f);
+          buf->typenum = G__getp2ftype(ifunc,i);
+        }
 #endif
-	else { /* interpreted function */
-	  G__letint(buf,'C',(long)ifunc->pentry[i]->tp2f);
-	}
+        else { /* interpreted function */
+          G__letint(buf,'C',(long)ifunc->pentry[i]->tp2f);
+        }
 #else
-	G__letint(buf,'C',(long)ifunc->funcname[i]);
+        G__letint(buf,'C',(long)ifunc->funcname[i]);
 #endif
-	return(ifunc->funcname[i]);
+        return(ifunc->funcname[i]);
       }
     }
   } while((ifunc=ifunc->next)) ;
@@ -1418,13 +1383,13 @@ G__value *buf;
        strcmp(G__completionlist[i].name,funcname)==0) {
       if((long)G__completionlist[i].pfunc!=0) {
 #ifndef G__OLDIMPLEMENTATION2191
-	G__letint(buf,'1',(long)G__completionlist[i].pfunc);
+        G__letint(buf,'1',(long)G__completionlist[i].pfunc);
 #else
-	G__letint(buf,'Q',(long)G__completionlist[i].pfunc);
+        G__letint(buf,'Q',(long)G__completionlist[i].pfunc);
 #endif
       }
       else {
-	G__letint(buf,'C',(long)G__completionlist[i].name);
+        G__letint(buf,'C',(long)G__completionlist[i].name);
       }
       return(G__completionlist[i].name);
     }
@@ -1443,9 +1408,7 @@ G__value *buf;
 * Search variable and function name within the scope
 *******************************************************************/
 
-char *G__search_next_member(text,state)
-char *text;
-int state;
+char *G__search_next_member(char *text,int state)
 {
   static int list_index,len,index_item  /* ,cbp */;
   static char completionbuf[G__ONELINE];
@@ -1487,46 +1450,46 @@ int state;
       isstruct = 1;
 
       if(scope>dot && scope>point) {
-	strcpy(memtext,scope+2);
-	*scope='\0';
-	if(dot<point) dot = point+2;
-	else if(dot)  ++dot;
-	else          dot = completionbuf;
-	buf.tagnum = G__defined_tagname(dot,0);
-	*scope=':';
-	*(scope+2)='\0';
-      }	
+        strcpy(memtext,scope+2);
+        *scope='\0';
+        if(dot<point) dot = point+2;
+        else if(dot)  ++dot;
+        else          dot = completionbuf;
+        buf.tagnum = G__defined_tagname(dot,0);
+        *scope=':';
+        *(scope+2)='\0';
+      }        
       else if(dot>point) {
-	scope = (char*)NULL;
-	strcpy(memtext,dot+1);
-	*dot='\0';
-	buf = G__calc_internal(completionbuf);
-	*dot='.';
-	*(dot+1)='\0';
+        scope = (char*)NULL;
+        strcpy(memtext,dot+1);
+        *dot='\0';
+        buf = G__calc_internal(completionbuf);
+        *dot='.';
+        *(dot+1)='\0';
       }
       else {
-	scope = (char*)NULL;
-	strcpy(memtext,point+2);
-	*point='\0';
-	buf = G__calc_internal(completionbuf);
-	*point='-';
-	*(point+2)='\0';
+        scope = (char*)NULL;
+        strcpy(memtext,point+2);
+        *point='\0';
+        buf = G__calc_internal(completionbuf);
+        *point='-';
+        *(point+2)='\0';
       }
       /**********************************************************
        * if tag can not be identified, no completion candidates.
        **********************************************************/
       if(buf.tagnum<0) {
-	return((char *)NULL);
+        return((char *)NULL);
       }
       /**********************************************************
        * if tag can be identified, set tag member table to var.
        **********************************************************/
       else {
-	G__incsetup_memvar(buf.tagnum);
-	var = G__struct.memvar[buf.tagnum] ;
-	len = strlen(memtext);
-	G__incsetup_memfunc(buf.tagnum);
-	ifunc = G__struct.memfunc[buf.tagnum];
+        G__incsetup_memvar(buf.tagnum);
+        var = G__struct.memvar[buf.tagnum] ;
+        len = strlen(memtext);
+        G__incsetup_memfunc(buf.tagnum);
+        ifunc = G__struct.memfunc[buf.tagnum];
       }
     }
 
@@ -1555,119 +1518,119 @@ int state;
     while(flag) {
       switch(index_item) {
       case 0: /* struct member */
-	G__ASSERT(var);
-	if(list_index<var->allvar) {
-	  name = var->varnamebuf[list_index] ;
-	  break;
-	}
-	else {
-	  if(var->next) {
-	    var = var->next;
-	    G__ASSERT(var->allvar>0);
-	    list_index=0;
-	    name = var->varnamebuf[list_index] ;
-	    break;
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    var = (struct G__var_array *)NULL;
-	    /* don't break */
-	  }
-	}
+        G__ASSERT(var);
+        if(list_index<var->allvar) {
+          name = var->varnamebuf[list_index] ;
+          break;
+        }
+        else {
+          if(var->next) {
+            var = var->next;
+            G__ASSERT(var->allvar>0);
+            list_index=0;
+            name = var->varnamebuf[list_index] ;
+            break;
+          }
+          else {
+            index_item++;
+            list_index=0;
+            var = (struct G__var_array *)NULL;
+            /* don't break */
+          }
+        }
       case 1: /* member function */
-	G__ASSERT(ifunc);
-	if(list_index<ifunc->allifunc) {
-	  name = ifunc->funcname[list_index];
-	  break;
-	}
-	else {
-	  if(ifunc->next) {
-	    ifunc=ifunc->next;
-	    G__ASSERT(ifunc->allifunc>0);
-	    list_index = 0;
-	    name = ifunc->funcname[list_index];
-	    break;
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    ifunc=(struct G__ifunc_table *)NULL;
-	    /* do not break */
-	  }
-	}
+        G__ASSERT(ifunc);
+        if(list_index<ifunc->allifunc) {
+          name = ifunc->funcname[list_index];
+          break;
+        }
+        else {
+          if(ifunc->next) {
+            ifunc=ifunc->next;
+            G__ASSERT(ifunc->allifunc>0);
+            list_index = 0;
+            name = ifunc->funcname[list_index];
+            break;
+          }
+          else {
+            index_item++;
+            list_index=0;
+            ifunc=(struct G__ifunc_table *)NULL;
+            /* do not break */
+          }
+        }
       case 2: /* class name */
-	if(list_index<G__struct.alltag) {
-	  if(scope) {
-	    name =(char*)NULL;
-	    do {
-	      if(G__struct.parent_tagnum[list_index]==buf.tagnum) {
-		name = G__struct.name[list_index];
-		break;
-	      }
-	    } while(list_index++<G__struct.alltag) ;
-	  }
-	  else {
-	    name = G__struct.name[list_index];
-	  }
-	  break;
-	}
-	else {
-	  index_item++;
-	  list_index=0;
-	}
+        if(list_index<G__struct.alltag) {
+          if(scope) {
+            name =(char*)NULL;
+            do {
+              if(G__struct.parent_tagnum[list_index]==buf.tagnum) {
+                name = G__struct.name[list_index];
+                break;
+              }
+            } while(list_index++<G__struct.alltag) ;
+          }
+          else {
+            name = G__struct.name[list_index];
+          }
+          break;
+        }
+        else {
+          index_item++;
+          list_index=0;
+        }
       case 3: /* typedef name */
-	if(list_index<G__newtype.alltype) {
-	  if(scope) {
-	    name =(char*)NULL;
-	    do {
-	      if(G__newtype.parent_tagnum[list_index]==buf.tagnum) {
-		name = G__newtype.name[list_index];
-		break;
-	      }
-	    } while(list_index++<G__newtype.alltype) ;
-	  }
-	  else {
-	    name = G__newtype.name[list_index];
-	  }
-	  break;
-	}
-	else {
-	  index_item++;
-	  list_index=0;
-	}
+        if(list_index<G__newtype.alltype) {
+          if(scope) {
+            name =(char*)NULL;
+            do {
+              if(G__newtype.parent_tagnum[list_index]==buf.tagnum) {
+                name = G__newtype.name[list_index];
+                break;
+              }
+            } while(list_index++<G__newtype.alltype) ;
+          }
+          else {
+            name = G__newtype.name[list_index];
+          }
+          break;
+        }
+        else {
+          index_item++;
+          list_index=0;
+        }
       default:
-	flag=0;
-	name=(char *)NULL;
+        flag=0;
+        name=(char *)NULL;
       }
       list_index++;
 
       if(name!=NULL) {
-	if(strncmp(name,memtext,(size_t)len) ==0) {
-	  /***************************************************
-	   * BUG FIX, return value has to be malloced pointer
-	   ***************************************************/
-	  switch(index_item) {
-	  case 0:
-	  case 2:
-	  case 3:
-	    if(1 || G__PUBLIC==var->access[list_index-1]) {
-	      result = (char *)malloc((strlen(completionbuf)+strlen(name)+1));
-	      sprintf(result,"%s%s",completionbuf,name);
-	      return(result);
-	    }
-	    break;
-	  case 1:
-	    if(1 || G__PUBLIC==ifunc->access[list_index-1]) {
-	      result = (char *)malloc((strlen(completionbuf)+strlen(name)+2));
-	      sprintf(result,"%s%s(",completionbuf,name);
-	      return(result);
-	    }
-	    break;
-	  default:
-	    return((char *)NULL);
-	  }
-	}
+        if(strncmp(name,memtext,(size_t)len) ==0) {
+          /***************************************************
+           * BUG FIX, return value has to be malloced pointer
+           ***************************************************/
+          switch(index_item) {
+          case 0:
+          case 2:
+          case 3:
+            if(1 || G__PUBLIC==var->access[list_index-1]) {
+              result = (char *)malloc((strlen(completionbuf)+strlen(name)+1));
+              sprintf(result,"%s%s",completionbuf,name);
+              return(result);
+            }
+            break;
+          case 1:
+            if(1 || G__PUBLIC==ifunc->access[list_index-1]) {
+              result = (char *)malloc((strlen(completionbuf)+strlen(name)+2));
+              sprintf(result,"%s%s(",completionbuf,name);
+              return(result);
+            }
+            break;
+          default:
+            return((char *)NULL);
+          }
+        }
       }
     }
   }
@@ -1676,157 +1639,157 @@ int state;
       switch(index_item) {
       case 0: /* compiled function name */
 #ifdef G__NEVER /* G__SHAREDLIB */
-	name = completionlist[list_index].name;
-	if(name==NULL) {
-	  if(isl<G__allsl) {
-	    completionlist=(G__COMPLETIONLIST*)G__shl_findsym(&G__sl_handle[isl]
-							      ,G__COMPLETION
-							      ,TYPE_DATA);
-	    list_index = -1;
-	    isl++;
-	    break;
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    ifunc=G__p_ifunc;
-	  }
-	}
-	else break;
+        name = completionlist[list_index].name;
+        if(name==NULL) {
+          if(isl<G__allsl) {
+            completionlist=(G__COMPLETIONLIST*)G__shl_findsym(&G__sl_handle[isl]
+                                                              ,G__COMPLETION
+                                                              ,TYPE_DATA);
+            list_index = -1;
+            isl++;
+            break;
+          }
+          else {
+            index_item++;
+            list_index=0;
+            ifunc=G__p_ifunc;
+          }
+        }
+        else break;
 #else
-	name = G__completionlist[list_index].name;
-	if(name==NULL) {
-	  index_item++;
-	  list_index=0;
-	  ifunc=G__p_ifunc;
-	}
-	else break;
+        name = G__completionlist[list_index].name;
+        if(name==NULL) {
+          index_item++;
+          list_index=0;
+          ifunc=G__p_ifunc;
+        }
+        else break;
 #endif
       case 1: /* interpreted function name */
-	G__ASSERT(ifunc);
-	if(list_index<ifunc->allifunc) {
-	  name = ifunc->funcname[list_index];
-	  break;
-	}
-	else {
-	  if(ifunc->next) {
-	    ifunc=ifunc->next;
-	    if(0==ifunc->allifunc) {
-	      index_item++;
-	      list_index=0;
-	      ifunc=(struct G__ifunc_table *)NULL;
-	      /* do not break */
-	    }
-	    else {
-	      list_index = 0;
-	      name = ifunc->funcname[list_index];
-	      break;
-	    }
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    ifunc=(struct G__ifunc_table *)NULL;
-	    /* do not break */
-	  }
-	}
-	var = &G__global;
+        G__ASSERT(ifunc);
+        if(list_index<ifunc->allifunc) {
+          name = ifunc->funcname[list_index];
+          break;
+        }
+        else {
+          if(ifunc->next) {
+            ifunc=ifunc->next;
+            if(0==ifunc->allifunc) {
+              index_item++;
+              list_index=0;
+              ifunc=(struct G__ifunc_table *)NULL;
+              /* do not break */
+            }
+            else {
+              list_index = 0;
+              name = ifunc->funcname[list_index];
+              break;
+            }
+          }
+          else {
+            index_item++;
+            list_index=0;
+            ifunc=(struct G__ifunc_table *)NULL;
+            /* do not break */
+          }
+        }
+        var = &G__global;
       case 2: /* global variables */
-	G__ASSERT(var);
-	if(list_index<var->allvar) {
-	  name = var->varnamebuf[list_index] ;
-	  break;
-	}
-	else {
-	  if(var->next) {
-	    var = var->next;
-	    G__ASSERT(var->allvar>0);
-	    list_index=0;
-	    name = var->varnamebuf[list_index] ;
-	    break;
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    var = (struct G__var_array *)NULL;
-	    /* don't break */
-	  }
-	}
-	var = G__p_local;
+        G__ASSERT(var);
+        if(list_index<var->allvar) {
+          name = var->varnamebuf[list_index] ;
+          break;
+        }
+        else {
+          if(var->next) {
+            var = var->next;
+            G__ASSERT(var->allvar>0);
+            list_index=0;
+            name = var->varnamebuf[list_index] ;
+            break;
+          }
+          else {
+            index_item++;
+            list_index=0;
+            var = (struct G__var_array *)NULL;
+            /* don't break */
+          }
+        }
+        var = G__p_local;
       case 3: /* local variables */
-	if(!var) {
-	  index_item++;
-	  list_index=0;
-	}
-	else if(list_index<var->allvar) {
-	  name = var->varnamebuf[list_index] ;
-	  break;
-	}
-	else {
-	  if(var->next) {
-	    var = var->next;
-	    G__ASSERT(var->allvar>0);
-	    list_index=0;
-	    name = var->varnamebuf[list_index] ;
-	    break;
-	  }
-	  else {
-	    index_item++;
-	    list_index=0;
-	    var = (struct G__var_array *)NULL;
-	    /* don't break */
-	  }
-	}
+        if(!var) {
+          index_item++;
+          list_index=0;
+        }
+        else if(list_index<var->allvar) {
+          name = var->varnamebuf[list_index] ;
+          break;
+        }
+        else {
+          if(var->next) {
+            var = var->next;
+            G__ASSERT(var->allvar>0);
+            list_index=0;
+            name = var->varnamebuf[list_index] ;
+            break;
+          }
+          else {
+            index_item++;
+            list_index=0;
+            var = (struct G__var_array *)NULL;
+            /* don't break */
+          }
+        }
       case 4: /* class name */
-	if(list_index<G__struct.alltag) {
-	  name = G__struct.name[list_index];
-	  break;
-	}
-	else {
-	  index_item++;
-	  list_index=0;
-	}
+        if(list_index<G__struct.alltag) {
+          name = G__struct.name[list_index];
+          break;
+        }
+        else {
+          index_item++;
+          list_index=0;
+        }
       case 5: /* template name */
-	if(list_index<G__newtype.alltype) {
-	  name = G__newtype.name[list_index];
-	  break;
-	}
-	else {
-	  index_item++;
-	  list_index=0;
-	}
+        if(list_index<G__newtype.alltype) {
+          name = G__newtype.name[list_index];
+          break;
+        }
+        else {
+          index_item++;
+          list_index=0;
+        }
       default:
-	flag=0;
-	name=(char *)NULL;
-			break;
+        flag=0;
+        name=(char *)NULL;
+                        break;
       }
       list_index++;
 
       if(name!=NULL) {
-	if(strncmp(name,text,(size_t)len) ==0) {
-	  /***************************************************
-	   * BUG FIX, return value has to be malloced pointer
-	   ***************************************************/
-	  switch(index_item) {
-	  case 0:
-	  case 1:
-	    result = (char *)malloc((strlen(name)+2));
-	    sprintf(result,"%s(",name);
-	    return(result);
-	  case 2:
-	  case 3:
-	  case 4:
-	  case 5:
-	    result = (char *)malloc((strlen(name)+1));
-	    strcpy(result,name);
-	    return(result);
-	  default:
-	    return((char *)NULL);
-	  }
-	  /***************************************************
-	   * BUG FIX, return value has to be malloced pointer
-	   ***************************************************/
-	}
+        if(strncmp(name,text,(size_t)len) ==0) {
+          /***************************************************
+           * BUG FIX, return value has to be malloced pointer
+           ***************************************************/
+          switch(index_item) {
+          case 0:
+          case 1:
+            result = (char *)malloc((strlen(name)+2));
+            sprintf(result,"%s(",name);
+            return(result);
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+            result = (char *)malloc((strlen(name)+1));
+            strcpy(result,name);
+            return(result);
+          default:
+            return((char *)NULL);
+          }
+          /***************************************************
+           * BUG FIX, return value has to be malloced pointer
+           ***************************************************/
+        }
       }
     }
   }
@@ -1878,8 +1841,7 @@ int G__GetShlFilenum()
 /**************************************************************************
  * G__SetShlHandle
  **************************************************************************/
-void* G__SetShlHandle(filename)
-char *filename;
+void* G__SetShlHandle(char *filename)
 {
 #ifdef G__SHAREDLIB
   int i,isl;
@@ -1887,12 +1849,12 @@ char *filename;
     if(0==strcmp(G__srcfile[i].filename,filename)) {
       isl = G__srcfile[i].slindex;
       if(-1!=isl) {
-	G__Shlfilenum = i;
-	G__ShlHandle = G__sl_handle[isl];
-	return((void*)G__ShlHandle);
+        G__Shlfilenum = i;
+        G__ShlHandle = G__sl_handle[isl];
+        return((void*)G__ShlHandle);
       }
       else {
-	return 0;
+        return 0;
       }
     }
   }
@@ -1903,10 +1865,7 @@ char *filename;
 /**************************************************************************
  * G__GccNameMangle
  **************************************************************************/
-char* G__GccNameMangle(buf,ifunc,ifn)
-char* buf;
-struct G__ifunc_table *ifunc;
-int ifn;
+char* G__GccNameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
 {
   char *funcname = ifunc->funcname[ifn];
   char tmp[4];
@@ -1949,11 +1908,7 @@ int ifn;
  * type * PA, const type* PB, type *const QA, const type* const QB
  * type& AA, const type& AB, 
  **************************************************************************/
-char* G__Vc6TypeMangle(type,tagnum,reftype,isconst)
-int type;
-int tagnum;
-int reftype;
-int isconst;
+char* G__Vc6TypeMangle(int type,int tagnum,int reftype,int isconst)
 {
   static char buf[G__MAXNAME];
   buf[0] = 0;
@@ -1962,20 +1917,20 @@ int isconst;
        (G__PCONSTVAR&isconst) &&
        (G__PARAREFERENCE!=reftype)) strcat(buf,"QB");
     else if(0==(G__CONSTVAR&isconst) && 
-	    (G__PCONSTVAR&isconst) &&
-	    (G__PARAREFERENCE!=reftype)) strcat(buf,"QA");
+            (G__PCONSTVAR&isconst) &&
+            (G__PARAREFERENCE!=reftype)) strcat(buf,"QA");
     else if((G__CONSTVAR&isconst) && 
-	    (0==(G__PCONSTVAR&isconst)) &&
-	    (G__PARAREFERENCE!=reftype)) strcat(buf,"PB");
+            (0==(G__PCONSTVAR&isconst)) &&
+            (G__PARAREFERENCE!=reftype)) strcat(buf,"PB");
     else if((0==(G__CONSTVAR&isconst)) && 
-	    (0==(G__PCONSTVAR&isconst)) &&
-	    (G__PARAREFERENCE!=reftype)) strcat(buf,"PA");
+            (0==(G__PCONSTVAR&isconst)) &&
+            (G__PARAREFERENCE!=reftype)) strcat(buf,"PA");
     else if((G__CONSTVAR&isconst) && 
-	    (0==(G__PCONSTVAR&isconst)) &&
-	    (G__PARAREFERENCE==reftype)) strcat(buf,"AB");
+            (0==(G__PCONSTVAR&isconst)) &&
+            (G__PARAREFERENCE==reftype)) strcat(buf,"AB");
     else if((0==(G__CONSTVAR&isconst)) && 
-	    (0==(G__PCONSTVAR&isconst)) &&
-	    (G__PARAREFERENCE==reftype)) strcat(buf,"AA");
+            (0==(G__PCONSTVAR&isconst)) &&
+            (G__PARAREFERENCE==reftype)) strcat(buf,"AA");
     else strcat(buf,"PA");
   }
   switch(tolower(type)) {
@@ -2004,10 +1959,7 @@ int isconst;
  * ?[fname]@[tagname]@YA[ret][a1][a2]...@Z
  * ?[fname]@[tagname]@YA[ret]XZ
  **************************************************************************/
-char* G__Vc6NameMangle(buf,ifunc,ifn)
-char* buf;
-struct G__ifunc_table *ifunc;
-int ifn;
+char* G__Vc6NameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
 {
   char *funcname = ifunc->funcname[ifn];
   int i;
@@ -2021,16 +1973,16 @@ int ifn;
 
   /* return type */
   strcat(buf,G__Vc6TypeMangle(ifunc->type[ifn]
-			      ,ifunc->p_tagtable[ifn]
-			      ,ifunc->reftype[ifn]
-			      ,ifunc->isconst[ifn]));
+                              ,ifunc->p_tagtable[ifn]
+                              ,ifunc->reftype[ifn]
+                              ,ifunc->isconst[ifn]));
 
   /* arguments */
   for(i=0;i<ifunc->para_nu[ifn];i++) {
     strcat(buf,G__Vc6TypeMangle(ifunc->para_type[ifn][i]
-				,ifunc->para_p_tagtable[ifn][i]
-				,ifunc->para_reftype[ifn][i]
-				,ifunc->para_isconst[ifn][i]));
+                                ,ifunc->para_p_tagtable[ifn][i]
+                                ,ifunc->para_reftype[ifn][i]
+                                ,ifunc->para_isconst[ifn][i]));
   }
   if(0==ifunc->para_nu[ifn]) strcat(buf,"X");
   else strcat(buf,"@");
@@ -2044,9 +1996,7 @@ int ifn;
 /**************************************************************************
  * G__FindSymbol
  **************************************************************************/
-void* G__FindSymbol(ifunc,ifn)
-struct G__ifunc_table *ifunc;
-int ifn;
+void* G__FindSymbol(struct G__ifunc_table *ifunc,int ifn)
 {
 #ifdef G__SHAREDLIB
   char *funcname=ifunc->funcname[ifn];
@@ -2067,15 +2017,15 @@ int ifn;
     /* GCC , C++ function */
     if(!p2f) {
       p2f = (void*)G__shl_findsym(&G__ShlHandle
-				  ,G__GccNameMangle(buf,ifunc,ifn)
-				  ,TYPE_PROCEDURE);
+                                  ,G__GccNameMangle(buf,ifunc,ifn)
+                                  ,TYPE_PROCEDURE);
     }
 
     /* VC++ , C++ function */
     if(!p2f) {
       p2f = (void*)G__shl_findsym(&G__ShlHandle
-				  ,G__Vc6NameMangle(buf,ifunc,ifn)
-				  ,TYPE_PROCEDURE);
+                                  ,G__Vc6NameMangle(buf,ifunc,ifn)
+                                  ,TYPE_PROCEDURE);
     }
   }
   return(p2f);
@@ -2087,9 +2037,7 @@ int ifn;
 /**************************************************************************
  * G__FindSym
  **************************************************************************/
-void* G__FindSym(filename,funcname)
-char *filename;
-char *funcname;
+void* G__FindSym(char *filename,char *funcname)
 {
 #ifdef G__SHAREDLIB
   void *p2f=0;
@@ -2104,6 +2052,8 @@ char *funcname;
   return((void*)0);
 #endif
 }
+
+} /* extern "C" */
 
 /*
  * Local Variables:
