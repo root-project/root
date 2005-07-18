@@ -118,7 +118,7 @@ D: port to MacOS X
 
 N: Christophe Delaere
 E: Christophe.Delaere@cern.ch
-D: TLimit TLimitDataSource TConfidenceLevel classes
+D: TLimit TLimitDataSource TConfidenceLevel and TMultiLayerPerceptron classes
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
