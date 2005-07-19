@@ -24,7 +24,7 @@ void fitcont()
    gr12->Draw("alp");
    c2->cd(2);
    //Get contour for parameter 0 versus parameter 2  for ERRDEF=2 
-   gMinuit->SetErrorDef(2);
+   gMinuit->SetErrorDef(4); //note 4 and not 2!
    TGraph *gr2 = (TGraph*)gMinuit->Contour(80,0,2);
    gr2->SetFillColor(42);
    gr2->Draw("alf");

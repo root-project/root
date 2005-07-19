@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.46 2004/11/09 06:31:17 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.47 2004/11/29 22:32:53 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -871,6 +871,8 @@ Int_t TMinuit::Release( Int_t parNo)
 //______________________________________________________________________________
 Int_t TMinuit::SetErrorDef( Double_t up )
 {
+// To get the n-sigma contour the error def parameter "up" has to set to n^2.
+   
      Int_t err;
 
      mnexcm( "SET ERRDEF", &up, 1, err );
