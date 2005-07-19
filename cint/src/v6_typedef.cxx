@@ -476,7 +476,8 @@ void G__define_type()
     /* int tmptypenum; */
     if (strlen(type_name)>=5) {
       /* Rewind. */
-      fseek(G__ifile.fp,-1-(strlen(type_name) - strlen("long")) ,SEEK_CUR);
+      long rewindlen = 1 + (strlen(type_name) - strlen("long"));
+      fseek(G__ifile.fp, -rewindlen ,SEEK_CUR);
     }
     if('l'==type) {
       type = 'n';
@@ -493,7 +494,8 @@ void G__define_type()
      ) {
      if (strlen(type_name)>strlen("double")) {
        /* Rewind. */
-        fseek(G__ifile.fp,-1-(strlen(type_name) - strlen("double")) ,SEEK_CUR);
+        long rewindlen = 1 + (strlen(type_name) - strlen("double"));
+        fseek(G__ifile.fp, -rewindlen ,SEEK_CUR);
      }
     if('l'==type) {
       /* int tmptypenum; */
@@ -514,7 +516,8 @@ void G__define_type()
      ) {
      if (strlen(type_name)>=4) {
        /* Rewind. */
-       fseek(G__ifile.fp,-1-(strlen(type_name) - strlen("int")) ,SEEK_CUR);
+       long rewindlen = 1 + (strlen(type_name) - strlen("int"));
+       fseek(G__ifile.fp,-rewindlen ,SEEK_CUR);
      }
     c=G__fgetstream(type_name,";,[");
   }
