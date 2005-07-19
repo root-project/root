@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.18 2005/04/12 16:26:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.19 2005/07/19 06:38:53 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -3565,7 +3565,7 @@ void TMultiDimFit::Print(Option_t *option) const
 	  switch(fPolyType) {
 	  case kLegendre:  cout << " * L_" << p-1 << "(y_" << j << ")"; break;
 	  case kChebyshev: cout << " * C_" << p-1 << "(y_" << j << ")"; break;
-	  default:         cout << " * y_" << j << "^" << p; break;
+	  default:         cout << " * y_" << j << "^" << p-1; break;
 	  }
 	}
 			  
