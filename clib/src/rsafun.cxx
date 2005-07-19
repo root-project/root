@@ -1,4 +1,4 @@
-// @(#)root/clib:$Name:  $:$Id: TSocket.cxx,v 1.10 2002/05/18 08:22:00 brun Exp $
+// @(#)root/clib:$Name:  $:$Id: rsafun.cxx,v 1.1 2003/08/29 10:38:18 rdm Exp $
 // Author:
 
 /*******************************************************************************
@@ -47,6 +47,17 @@ rsa_num_sget_t rsa_fun::fg_rsa_num_sget;
 rsa_num_fget_t rsa_fun::fg_rsa_num_fget;
 rsa_assign_t   rsa_fun::fg_rsa_assign;
 rsa_cmp_t      rsa_fun::fg_rsa_cmp;
+
+rsa_genprim_t  rsa_fun::rsa_genprim() { return fg_rsa_genprim; }
+rsa_genrsa_t   rsa_fun::rsa_genrsa() { return fg_rsa_genrsa; }
+rsa_encode_t   rsa_fun::rsa_encode() { return fg_rsa_encode; }
+rsa_decode_t   rsa_fun::rsa_decode() { return fg_rsa_decode; }
+rsa_num_sput_t rsa_fun::rsa_num_sput() { return fg_rsa_num_sput; }
+rsa_num_fput_t rsa_fun::rsa_num_fput() { return fg_rsa_num_fput; }
+rsa_num_sget_t rsa_fun::rsa_num_sget() { return fg_rsa_num_sget; }
+rsa_num_fget_t rsa_fun::rsa_num_fget() { return fg_rsa_num_fget; }
+rsa_assign_t   rsa_fun::rsa_assign() { return fg_rsa_assign; }
+rsa_cmp_t      rsa_fun::rsa_cmp() { return fg_rsa_cmp; }
 
 // Static instantiation to load hooks during dynamic load
 static rsa_fun  rsa_init(&rsa_genprim,&rsa_genrsa,&rsa_encode,&rsa_decode,

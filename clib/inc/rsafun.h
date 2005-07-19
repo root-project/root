@@ -1,4 +1,4 @@
-// @(#)root/clib:$Name:  $:$Id: rsafun.h,v 1.1 2003/08/29 10:38:18 rdm Exp $
+// @(#)root/clib:$Name:  $:$Id: rsafun.h,v 1.2 2003/08/29 17:23:31 rdm Exp $
 // Author: Gerardo Ganis  07/07/2003
 
 /*******************************************************************************
@@ -47,7 +47,7 @@ typedef  int    (*rsa_cmp_t)(rsa_NUMBER *, rsa_NUMBER *);
 
 class rsa_fun {
 
-public:
+private:
    static rsa_genprim_t   fg_rsa_genprim;
    static rsa_genrsa_t    fg_rsa_genrsa;
    static rsa_encode_t    fg_rsa_encode;
@@ -58,6 +58,18 @@ public:
    static rsa_num_fget_t  fg_rsa_num_fget;
    static rsa_assign_t    fg_rsa_assign;
    static rsa_cmp_t       fg_rsa_cmp;
+
+public:
+   static rsa_genprim_t   rsa_genprim();
+   static rsa_genrsa_t    rsa_genrsa();
+   static rsa_encode_t    rsa_encode();
+   static rsa_decode_t    rsa_decode();
+   static rsa_num_sput_t  rsa_num_sput();
+   static rsa_num_fput_t  rsa_num_fput();
+   static rsa_num_sget_t  rsa_num_sget();
+   static rsa_num_fget_t  rsa_num_fget();
+   static rsa_assign_t    rsa_assign();
+   static rsa_cmp_t       rsa_cmp();
 
    rsa_fun(rsa_genprim_t, rsa_genrsa_t, rsa_encode_t, rsa_decode_t,
            rsa_num_sput_t, rsa_num_fput_t, rsa_num_sget_t, rsa_num_fget_t, rsa_assign_t, rsa_cmp_t);

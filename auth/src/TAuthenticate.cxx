@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.75 2005/06/23 06:24:27 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -3375,7 +3375,7 @@ Int_t TAuthenticate::GenRSAKeys()
 #endif
 
    // This is the local RSA implementation
-   if (!rsa_fun::fg_rsa_genprim) {
+   if (!rsa_fun::rsa_genprim()) {
       char *p;
       if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
          delete [] p;
@@ -3442,29 +3442,29 @@ Int_t TAuthenticate::GenRSAKeys()
       }
 
       // Valid pair of primes
-      p1 = rsa_fun::fg_rsa_genprim(thePrimeLen, thePrimeExp);
-      p2 = rsa_fun::fg_rsa_genprim(thePrimeLen+1, thePrimeExp);
+      p1 = rsa_fun::rsa_genprim()(thePrimeLen, thePrimeExp);
+      p2 = rsa_fun::rsa_genprim()(thePrimeLen+1, thePrimeExp);
 
       // Retry if equal
       Int_t NPrimes = 0;
-      while (rsa_fun::fg_rsa_cmp(&p1, &p2) == 0 && NPrimes < kMAXRSATRIES) {
+      while (rsa_fun::rsa_cmp()(&p1, &p2) == 0 && NPrimes < kMAXRSATRIES) {
          NPrimes++;
          if (gDebug > 2)
             Info("GenRSAKeys", "equal primes: regenerate (%d times)",NPrimes);
          srand(rand());
-         p1 = rsa_fun::fg_rsa_genprim(thePrimeLen, thePrimeExp);
-         p2 = rsa_fun::fg_rsa_genprim(thePrimeLen+1, thePrimeExp);
+         p1 = rsa_fun::rsa_genprim()(thePrimeLen, thePrimeExp);
+         p2 = rsa_fun::rsa_genprim()(thePrimeLen+1, thePrimeExp);
       }
 #if R__RSADEB
       if (gDebug > 3) {
-         rsa_fun::fg_rsa_num_sput(&p1, buf, rsa_STRLEN);
+         rsa_fun::rsa_num_sput()(&p1, buf, rsa_STRLEN);
          Info("GenRSAKeys", "local: p1: '%s' ", buf);
-         rsa_fun::fg_rsa_num_sput(&p2, buf, rsa_STRLEN);
+         rsa_fun::rsa_num_sput()(&p2, buf, rsa_STRLEN);
          Info("GenRSAKeys", "local: p2: '%s' ", buf);
       }
 #endif
       // Generate keys
-      if (rsa_fun::fg_rsa_genrsa(p1, p2, &rsa_n, &rsa_e, &rsa_d)) {
+      if (rsa_fun::rsa_genrsa()(p1, p2, &rsa_n, &rsa_e, &rsa_d)) {
          if (gDebug > 2 && NAttempts > 1)
             Info("GenRSAKeys"," genrsa: unable to generate keys (%d)",
                  NAttempts);
@@ -3472,11 +3472,11 @@ Int_t TAuthenticate::GenRSAKeys()
       }
 
       // Get equivalent strings and determine their lengths
-      rsa_fun::fg_rsa_num_sput(&rsa_n, buf_n, rsa_STRLEN);
+      rsa_fun::rsa_num_sput()(&rsa_n, buf_n, rsa_STRLEN);
       l_n = strlen(buf_n);
-      rsa_fun::fg_rsa_num_sput(&rsa_e, buf_e, rsa_STRLEN);
+      rsa_fun::rsa_num_sput()(&rsa_e, buf_e, rsa_STRLEN);
       l_e = strlen(buf_e);
-      rsa_fun::fg_rsa_num_sput(&rsa_d, buf_d, rsa_STRLEN);
+      rsa_fun::rsa_num_sput()(&rsa_d, buf_d, rsa_STRLEN);
       l_d = strlen(buf_d);
 
 #if R__RSADEB
@@ -3486,9 +3486,9 @@ Int_t TAuthenticate::GenRSAKeys()
          Info("GenRSAKeys", "local: d: '%s' length: %d", buf_d, l_d);
       }
 #endif
-      if (rsa_fun::fg_rsa_cmp(&rsa_n, &rsa_e) <= 0)
+      if (rsa_fun::rsa_cmp()(&rsa_n, &rsa_e) <= 0)
          continue;
-      if (rsa_fun::fg_rsa_cmp(&rsa_n, &rsa_d) <= 0)
+      if (rsa_fun::rsa_cmp()(&rsa_n, &rsa_d) <= 0)
          continue;
 
       // Now we try the keys
@@ -3506,13 +3506,13 @@ Int_t TAuthenticate::GenRSAKeys()
       buf[lTes] = 0;
 
       // Try encryption with private key
-      int lout = rsa_fun::fg_rsa_encode(buf, lTes, rsa_n, rsa_e);
+      int lout = rsa_fun::rsa_encode()(buf, lTes, rsa_n, rsa_e);
       if (gDebug > 3)
          Info("GenRSAKeys",
               "local: length of crypted string: %d bytes", lout);
 
       // Try decryption with public key
-      rsa_fun::fg_rsa_decode(buf, lout, rsa_n, rsa_d);
+      rsa_fun::rsa_decode()(buf, lout, rsa_n, rsa_d);
       buf[lTes] = 0;
       if (gDebug > 3)
          Info("GenRSAKeys", "local: after private/public : '%s' ", buf);
@@ -3525,13 +3525,13 @@ Int_t TAuthenticate::GenRSAKeys()
       buf[lTes] = 0;
 
       // Try encryption with public key
-      lout = rsa_fun::fg_rsa_encode(buf, lTes, rsa_n, rsa_d);
+      lout = rsa_fun::rsa_encode()(buf, lTes, rsa_n, rsa_d);
       if (gDebug > 3)
          Info("GenRSAKeys", "local: length of crypted string: %d bytes ",
               lout);
 
       // Try decryption with private key
-      rsa_fun::fg_rsa_decode(buf, lout, rsa_n, rsa_e);
+      rsa_fun::rsa_decode()(buf, lout, rsa_n, rsa_e);
       buf[lTes] = 0;
       if (gDebug > 3)
          Info("GenRSAKeys", "local: after public/private : '%s' ", buf);
@@ -3543,12 +3543,12 @@ Int_t TAuthenticate::GenRSAKeys()
    }
 
    // Save Private key
-   rsa_fun::fg_rsa_assign(&fgRSAPriKey.n, &rsa_n);
-   rsa_fun::fg_rsa_assign(&fgRSAPriKey.e, &rsa_e);
+   rsa_fun::rsa_assign()(&fgRSAPriKey.n, &rsa_n);
+   rsa_fun::rsa_assign()(&fgRSAPriKey.e, &rsa_e);
 
    // Save Public key
-   rsa_fun::fg_rsa_assign(&fgRSAPubKey.n, &rsa_n);
-   rsa_fun::fg_rsa_assign(&fgRSAPubKey.e, &rsa_d);
+   rsa_fun::rsa_assign()(&fgRSAPubKey.n, &rsa_n);
+   rsa_fun::rsa_assign()(&fgRSAPubKey.e, &rsa_d);
 
 #if R__RSADEB
    if (gDebug > 2) {
@@ -3670,11 +3670,11 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
       buftmp[slen] = 0;
 
       if (enc == 1)
-         ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, fgRSAPriKey.n,
-                                                     fgRSAPriKey.e);
+         ttmp = rsa_fun::rsa_encode()(buftmp, slen, fgRSAPriKey.n,
+                                                    fgRSAPriKey.e);
       else if (enc == 2)
-         ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, fgRSAPubKey.n,
-                                                     fgRSAPubKey.e);
+         ttmp = rsa_fun::rsa_encode()(buftmp, slen, fgRSAPubKey.n,
+                                                    fgRSAPubKey.e);
       else
          return nsen;
    } else if (key == 1) {
@@ -3743,9 +3743,9 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
       return nrec;
    if (key == 0) {
       if (dec == 1)
-         rsa_fun::fg_rsa_decode(buftmp, len, fgRSAPriKey.n, fgRSAPriKey.e);
+         rsa_fun::rsa_decode()(buftmp, len, fgRSAPriKey.n, fgRSAPriKey.e);
       else if (dec == 2)
-         rsa_fun::fg_rsa_decode(buftmp, len, fgRSAPubKey.n, fgRSAPubKey.e);
+         rsa_fun::rsa_decode()(buftmp, len, fgRSAPubKey.n, fgRSAPubKey.e);
       else
          return -1;
 
@@ -3834,8 +3834,8 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n
                ::Info("TAuthenticate::DecodeRSAPublic",
                       "got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
 
-            rsa_fun::fg_rsa_num_sget(&RSA_n, RSA_n_exp);
-            rsa_fun::fg_rsa_num_sget(&RSA_d, RSA_d_exp);
+            rsa_fun::rsa_num_sget()(&RSA_n, RSA_n_exp);
+            rsa_fun::rsa_num_sget()(&RSA_d, RSA_d_exp);
 
             if (RSA_n_exp)
                if (RSA_n_exp) delete[] RSA_n_exp;
@@ -3941,8 +3941,8 @@ Int_t TAuthenticate::SetRSAPublic(const char *RSAPubExport, Int_t klen)
          RSAKey = TAuthenticate::DecodeRSAPublic(RSAPubExport,RSA_n,RSA_d);
 
          // Save Public key
-         rsa_fun::fg_rsa_assign(&fgRSAPubKey.n, &RSA_n);
-         rsa_fun::fg_rsa_assign(&fgRSAPubKey.e, &RSA_d);
+         rsa_fun::rsa_assign()(&fgRSAPubKey.n, &RSA_n);
+         rsa_fun::rsa_assign()(&fgRSAPubKey.e, &RSA_d);
 
       } else {
          RSAKey = 1;
@@ -3999,7 +3999,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    if (key == 0) {
       strncpy(buftmp,fgRSAPubExport[key].keys,slen);
       buftmp[slen] = 0;
-      ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, RSA_n, RSA_d);
+      ttmp = rsa_fun::rsa_encode()(buftmp, slen, RSA_n, RSA_d);
       sprintf(buflen, "%d", ttmp);
    } else if (key == 1) {
 #ifdef R__SSL

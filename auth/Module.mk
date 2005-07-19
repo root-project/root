@@ -17,9 +17,10 @@ RAUTHDS      := $(MODDIRS)/G__RootAuth.cxx
 RAUTHDO      := $(RAUTHDS:.cxx=.o)
 RAUTHDH      := $(RAUTHDS:.cxx=.h)
 
-RAUTHC       := TAuthenticate THostAuth TRootAuth TRootSecContext
-RAUTHH       := $(patsubst %,$(MODDIRI)/%.h,$(RAUTHC))
-RAUTHS       := $(patsubst %,$(MODDIRS)/%.cxx,$(RAUTHC))
+RAUTHS1      := TAuthenticate THostAuth TRootAuth TRootSecContext AuthConst
+RAUTHS2      := TAuthenticate THostAuth TRootAuth TRootSecContext
+RAUTHH       := $(patsubst %,$(MODDIRI)/%.h,$(RAUTHS1))
+RAUTHS       := $(patsubst %,$(MODDIRS)/%.cxx,$(RAUTHS2))
 RAUTHO       := $(RAUTHS:.cxx=.o)
 
 RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d)
@@ -49,10 +50,10 @@ INCLUDEFILES += $(RAUTHDEP)
 include/%.h:    $(AUTHDIRI)/%.h
 		cp $< $@
 
-$(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(MAINLIBS)
+$(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(MAINLIBS) $(RAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRootAuth.$(SOEXT) $@ "$(RAUTHO) $(RAUTHDO)" \
-		   "$(EXTRA_RAUTHLIBS)"
+		   "$(RAUTHLIBEXTRA) $(EXTRA_RAUTHLIBS)"
 
 $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
