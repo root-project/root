@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.1 2005/06/23 10:21:06 brun Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -53,19 +53,13 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * Name,
   }
 
   if ( ! ScopeNth.IsNamespace() ) throw RuntimeError("Declaring ScopeNth is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
-                                                                                                       TypeNth,
-                                                                                                       stubFP,
-                                                                                                       stubCtx,
-                                                                                                       params,
-                                                                                                       modifiers | STATIC,
-                                                                                                       ScopeNth ));
-  else                                        fFunction = Member(new FunctionMember(funcName.c_str(), 
-                                                                                     TypeNth, 
-                                                                                     stubFP, 
-                                                                                     stubCtx, 
-                                                                                     params, 
-                                                                                     modifiers  | STATIC));
+  if ( Tools::IsTemplated( funcName.c_str()))
+    fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
+                        TypeNth, stubFP, stubCtx, params, modifiers | STATIC,
+                        ScopeNth ));
+  else
+    fFunction = Member(new FunctionMember(funcName.c_str(), 
+                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC));
   ScopeNth.AddFunctionMember(fFunction);
 }
 
@@ -122,19 +116,13 @@ ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & TypeNth,
     ScopeNth = (new Namespace(declScope.c_str()))->ScopeGet();
   }
   if ( ! ScopeNth.IsNamespace() ) throw RuntimeError("2Declaring ScopeNth is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
-                                                                                                       TypeNth,
-                                                                                                       stubFP,
-                                                                                                       stubCtx,
-                                                                                                       params,
-                                                                                                       modifiers | STATIC,
-                                                                                                       ScopeNth ));
-  else                                 fFunction = Member(new FunctionMember( funcName.c_str(), 
-                                                                               TypeNth, 
-                                                                               stubFP, 
-                                                                               stubCtx, 
-                                                                               params, 
-                                                                               modifiers  | STATIC));
+  if ( Tools::IsTemplated( funcName.c_str()))
+    fFunction = Member(new FunctionMemberTemplateInstance(funcName.c_str(),
+                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC,
+                       ScopeNth ));
+  else
+    fFunction = Member(new FunctionMember(funcName.c_str(), 
+                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC));
   ScopeNth.AddFunctionMember(fFunction);
 }
 

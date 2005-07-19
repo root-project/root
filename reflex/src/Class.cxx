@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.1 2005/06/23 10:21:06 brun Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -362,11 +362,13 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
           functionMembers.push_back( fm );
         }
       }
-      if ( bType ) (dynamic_cast<const Class*>(bType.TypeBaseNth()))->UpdateMembers2( members,
-                                                                                   dataMembers, 
-                                                                                   functionMembers,
-                                                                                   pathsToBase,
-                                                                                   basePath );
+      if ( bType )
+        (dynamic_cast<const Class*>(bType.TypeBaseNth()))->UpdateMembers2(
+                                    members,
+                                    dataMembers, 
+                                    functionMembers,
+                                    pathsToBase,
+                                    basePath);
     }
     basePath.pop_back();
   }
