@@ -28,7 +28,7 @@ CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual \
 CINTCFLAGS    = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -fexceptions -DG__STD_EXCEPTION
+                -DG__STD_EXCEPTION
 COMPILER      = gnu
 
 # Linker:
