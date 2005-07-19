@@ -61,7 +61,7 @@ class G__fstream {
   int rewindpos() ;
   unsigned long getpos() { return((unsigned long)0 /* m_pos */ ); } //not used
   void setspos(unsigned long pos) { 
-#if defined(__linux) && !(G__GNUC_VER<=2095)
+#if defined(__linux) && !(__GNUC__<3)
      m_pos.__pos = pos;
 #else
      m_pos=pos; 
