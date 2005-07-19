@@ -55,6 +55,7 @@ GLBSLIBS      := $(GLOBUSLIBDIR) $(GLOBUSLIB)
 SRVAUTHS      += $(MODDIRS)/globus.cxx
 SRVAUTHO      += $(MODDIRS)/globus.o
 else
+GLBSFLAGS     := $(SSLINCDIR:%=-I%)
 RPDUTILS      := $(filter-out $(MODDIRS)/globus.cxx,$(RPDUTILS))
 RPDUTILO      := $(filter-out $(MODDIRS)/globus.o,$(RPDUTILO))
 GLBSLIBS      += $(SSLLIBDIR) $(SSLLIB)
@@ -62,7 +63,7 @@ endif
 
 # Combined...
 AUTHFLAGS     := $(EXTRA_AUTHFLAGS) $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) \
-                 $(KRB5FLAGS) $(GLBSFLAGS) $(SSLFLAGS)
+                 $(KRB5FLAGS) $(GLBSFLAGS)
 AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
                  $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
                  $(CRYPTOLIBDIR) $(CRYPTOLIB)

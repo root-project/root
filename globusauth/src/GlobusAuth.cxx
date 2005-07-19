@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.18 2005/02/02 17:37:51 brun Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.19 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -51,7 +51,7 @@ Int_t GlobusAuthenticate(TAuthenticate *, TString &, TString &);
 Int_t GlobusCertFile(Int_t, TString &);
 Int_t GlobusCheckSecContext(const char *, gss_ctx_id_t);
 Int_t GlobusCheckSecContext(const char *, gss_ctx_id_t);
-Int_t GlobusCheckSecCtx(const char *, TSecContext *);
+Int_t GlobusCheckSecCtx(const char *, TRootSecContext *);
 Int_t GlobusCleanupContext(gss_ctx_id_t);
 void  GlobusCleanupShm();
 void  GlobusError(char *, OM_uint32, OM_uint32, Int_t);
@@ -377,7 +377,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    }
 
    // Create SecContext object
-   TSecContext *ctx =
+   TRootSecContext *ctx =
       Auth->GetHostAuth()->CreateSecContext((const char *)lUser,
           hostFQDN, (Int_t)TAuthenticate::kGlobus, OffSet,
           details, (const char *)Token, ExpDate,
@@ -1031,7 +1031,7 @@ Int_t GlobusCleanupContext(gss_ctx_id_t ctx)
 }
 
 //______________________________________________________________________________
-Int_t GlobusCheckSecCtx(const char *subj, TSecContext *ctx)
+Int_t GlobusCheckSecCtx(const char *subj, TRootSecContext *ctx)
 {
    // Globus version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if Subj matches the one in Ctx
