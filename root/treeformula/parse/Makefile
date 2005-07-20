@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake*
 
 #Set the list of target to make while testing
-TEST_TARGETS += aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean \
+TEST_TARGETS += gaus aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean \
 	templateBase
 
 # adjust the location of Rules.mk as needed.
@@ -58,4 +58,7 @@ templateBase: templateBase.log
 	$(TestDiff)
 
 aliases: aliases.log
+	$(TestDiff)
+
+gaus: gaus.log
 	$(TestDiff)
