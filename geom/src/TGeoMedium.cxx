@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.3 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.4 2005/06/14 15:47:02 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -48,16 +48,16 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
              :TNamed(name,"")
 {
 // constructor
-   fName = fName.Strip();
+   //fName = fName.Strip();
    fId    = numed;
    TIter next (gGeoManager->GetListOfMaterials());
    TGeoMaterial *mat;
    while ((mat = (TGeoMaterial*)next())) {
      if (mat->GetUniqueID() == (UInt_t)imat) break;
    }
-   if (mat->GetUniqueID() != (UInt_t)imat) {
+   if (!mat || (mat->GetUniqueID() != (UInt_t)imat)) {
       fMaterial = 0;
-      Error("TGeoMedium: %s, material number %d does not exist",name,imat);
+      Error("TGeoMedium", "%s, material number %d does not exist",name,imat);
       return;
    }
    fMaterial = (TGeoMaterial*)mat;
