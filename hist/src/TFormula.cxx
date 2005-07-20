@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.96 2005/05/18 12:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.97 2005/07/01 14:07:11 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1370,7 +1370,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                    actionCode = kint;
                    SetAction(fNoper,actionCode,actionParam);
                    fNoper++;;
-                } else if (chaine(0,4) == "rndm") {
+                } else if (chaine == "rndm" || chaine(0,5) == "rndm(") {
                    fExpr[fNoper] = "rndm";
                    actionCode = krndm;
                    SetAction(fNoper,actionCode,actionParam);
@@ -1385,7 +1385,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
 //*-*- Look for an exponential
 //*-*  =======================
-                } else if (chaine(0,4)=="expo" || chaine(1,4)=="expo" || chaine(2,4)=="expo") {
+                } else if ( chaine == "expo" || chaine(0,5)=="expo(" 
+                            || (lchain==5 && chaine(1,4)=="expo") 
+                            || (lchain==6 && chaine(2,4)=="expo")
+                            || chaine(1,5)=="expo(" || chaine(2,5)=="expo(" ) {
                   chaine1ST=chaine;
                   if (chaine(1,4) == "expo") {
                     ctemp=chaine(0,1);
@@ -1467,7 +1470,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                       }
 //*-*- Look for gaus, xgaus,ygaus,xygaus
 //*-*  =================================
-          } else if (chaine(0,4)=="gaus" || chaine(1,4)=="gaus" || chaine(2,4)=="gaus") {
+          } else if (chaine=="gaus" 
+                     || (lchain==5 && chaine(1,4)=="gaus") 
+                     || (lchain==6 && chaine(2,4)=="gaus")
+                     || chaine(0,5)=="gaus(" || chaine(1,5)=="gaus(" || chaine(2,5)=="gaus(") {
             chaine1ST=chaine;
             if (chaine(1,4) == "gaus") {
                ctemp=chaine(0,1);
@@ -1548,7 +1554,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      }
 //*-*- Look for landau, xlandau,ylandau,xylandau
 //*-*  =================================
-          } else if (chaine(0,6)=="landau" || chaine(1,6)=="landau" || chaine(2,6)=="landau") {
+          } else if (chaine=="landau" || (lchain==7 && chaine(1,6)=="landau") 
+                     || (lchain==8 && chaine(2,6)=="landau")
+                     || chaine(0,7)=="landau(" || chaine(1,7)=="landau(" || chaine(2,7)=="landau(") {
             chaine1ST=chaine;
             if (chaine(1,6) == "landau") {
                ctemp=chaine(0,1);
