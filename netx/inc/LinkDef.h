@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.2 2004/08/20 22:16:33 rdm Exp $ */
+/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.3 2004/12/16 19:23:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -14,16 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TXNetFile-;
-#pragma link C++ class TXNetConn-;
-#pragma link C++ class TXSocket;
-#pragma link C++ class TXMessage;
-#pragma link C++ class TXUrl;
-#pragma link C++ class TXConnectionMgr;
-#pragma link C++ class TXLogConnection;
-#pragma link C++ class TXPhyConnection;
-#pragma link C++ class TXInputBuffer;
-
-#pragma link C++ class TXAbsNetCommon;
+#pragma link C++ class TXNetFile;
 
 #endif

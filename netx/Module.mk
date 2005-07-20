@@ -18,7 +18,6 @@ NETXDO       := $(NETXDS:.cxx=.o)
 NETXDH       := $(NETXDS:.cxx=.h)
 
 NETXH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-NETXH1       := $(filter-out $(MODDIRI)/TXProtocol.h,$(NETXH))
 NETXS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 NETXO        := $(NETXS:.cxx=.o)
 
@@ -36,18 +35,23 @@ INCLUDEFILES += $(NETXDEP)
 # Xrootd includes
 NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 
+# Xrootd client libs
+NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
+		$(XROOTDDIRL)/libXrdSec.a $(XROOTDDIRL)/libXrdNet.a
+
 ##### local rules #####
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XROOTDETAG)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XROOTDETAG) \
+		$(NETXLIBEXTRA)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		"$(NETXLIBEXTRA)"
 
 $(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTDETAG) 
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH1) $(NETXL)
+		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
 $(NETXDO):      $(NETXDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(NETXINCEXTRA) -o $@ -c $<

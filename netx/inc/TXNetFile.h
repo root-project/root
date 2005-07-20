@@ -1,6 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
-// Author: Alvise Dorigo, Fabrizio Furano
-
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.3 2005/05/01 10:00:07 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -15,12 +13,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TXNetFile                                                            //
+// TXNetFile                                                           //
 //                                                                      //
 // Authors: Alvise Dorigo, Fabrizio Furano                              //
 //          INFN Padova, 2003                                           //
+// Interfaced to the posix client: G. Ganis, CERN                       //
 //                                                                      //
-// TXNetFile is an extension of TNetFile able to deal with new xrootd   //
+// TXNetFile is an extension of TNetFile able to deal with new xrootd  //
 // server. Its new features are:                                        //
 //  - Automatic server kind recognition (xrootd load balancer, xrootd   //
 //    data server, old rootd)                                           //
@@ -31,9 +30,9 @@
 //  - Internal connection timeout (tunable indipendently from the OS    //
 //    one) handled by threads                                           //
 //  - handling of redirections from server                              //
-//  - Single TCP physical channel for multiple TXNetFile's instances    //
+//  - Single TCP physical channel for multiple TXNetFile's instances   //
 //    inside the same application                                       //
-//    So, each TXNetFile object client must send messages containing    //
+//    So, each TXNetFile object client must send messages containing   //
 //    its ID (streamid). The server, of course, will respond with       //
 //    messages containing the client's ID, in order to make the client  //
 //    able to recognize its message by matching its streamid with that  //
@@ -48,81 +47,49 @@
 #ifndef ROOT_TNetFile
 #include "TNetFile.h"
 #endif
-#ifndef ROOT_TXAbsNetCommon
-#include "TXAbsNetCommon.h"
-#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
 
-#define DFLT_TRYCONNECTSERVERSLIST	240
+class XrdClient;
 
-class TXNetConn;
-
-//
-// Just a container for the last parameters passed to the Open() method
-//
-struct Params_Open {
-   Bool_t FileOpened;
-   TString option;
-   TString fTitle;
-   Int_t compress;
-   Int_t netopt;
-};
-
-class TXNetFile : public TNetFile, public TXAbsNetCommon {
+class TXNetFile : public TNetFile {
 
 private:
 
-   Bool_t     fAlreadyStated;
-   Bool_t     fAlreadyDetected;
-   TXNetConn* fConnModule;
-   Bool_t     fCreateMode;
-   char       fHandle[4];          // The file handle returned by the server,
-                                   // to use for successive requests
-   Bool_t     fIsROOT;
-   struct Params_Open fOpenPars;   // Just a container for the last parameters
-                                   // passed to a Open method
-   Bool_t     fOpenWithRefresh;
-   Long64_t   fSize;
+   // Members
+   XrdClient     *fClient;       // Handle to the client object
+   Long64_t       fSize;         // File size
+   Bool_t         fIsRootd;      // Nature of remote file server
 
-   static Bool_t fgTagAlreadyPrinted;
+   // Static members
+   static Bool_t  fgInitDone;    // Avoid initializing more than once
+   static Bool_t  fgRootdBC;     // Control rootd backward compatibility 
 
-   void    CreateTXNf(const char *url, Option_t *option, const char* ftitle,
-                         Int_t compress, Int_t netopt);
-   Bool_t  LowOpen(const char* file, Option_t *option, const char* ftitle,
-                   Int_t compress, Int_t netopt,
-	           Bool_t DoInit, Bool_t refresh_open = kFALSE);
+   // Methods
+   void    FormUrl(char *uut, TString &uu);
+   void    CreateXClient(const char *url, Option_t *option, Int_t netopt);
+   void    Open(Option_t *option);
    Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
                    Long_t* modtime);
    Int_t   SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t   SysClose(Int_t fd);
 
 public:
-
+   TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0; }
    TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
-             Int_t compress = 1, Int_t netopt = -1);
+              Int_t compress = 1, Int_t netopt = -1);
    virtual ~TXNetFile();
 
-   Bool_t         OpenFileWhenRedirected(char *newfhandle, Bool_t &wasopen);
-   Bool_t         ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
-                                        TXMessage *unsolmsg);
    virtual void   Close(const Option_t *opt ="");
    virtual void   Flush();
-   virtual Long_t GetRemoteFile(void**);
    virtual Bool_t IsOpen() const;
-   Int_t          LastBytesRecv(void);
-   Int_t          LastBytesSent(void);
-   Int_t          LastDataBytesRecv(void);
-   Int_t          LastDataBytesSent(void);
-   Bool_t         Open(Option_t *option, const char* fTitle, Int_t compress,
-                       Int_t netopt, Bool_t DoInit);
    virtual Bool_t ReadBuffer(char *buf, Int_t len);
    virtual Int_t  ReOpen(const Option_t *mode);
    Long64_t       Size(void);
    virtual Bool_t WriteBuffer(const char *buffer, Int_t BufferLength);
 
-   ClassDef(TXNetFile, 1) //A TNetFile extension able to deal with new xrootd server.
+   ClassDef(TXNetFile,0) // TFile implementation to deal with new xrootd server.
 };
 
 #endif

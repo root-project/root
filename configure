@@ -2328,31 +2328,54 @@ fi
 # conflicts.
 #
 if test "x$enable_ssl" = "xyes" ; then
-    libssl="libssl libcrypto"
-    if test "x$enable_globus" = "xyes" ; then
-        libssl="libssl_$flavour libcrypto_$flavour"
+     #
+     # libssl
+     #
+     libssl="libssl"
+     if test "x$enable_globus" = "xyes" ; then
+        libssl="libssl_$flavour"
         tmpglbslibdir="$globusdir/lib"
-    else
+     else
         tmpglbslibdir=$ssllibdir
-    fi
+     fi
+     check_library "$libssl" "$enable_shared" "$tmpglbslibdir" \
+         $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+     if test "x$found_lib" = "x" ; then
+         ssllib=""
+         ssllibdir=""
+         enable_ssl="no"
+         break
+     else
+         ssllib="$found_lib"
+         ssllibdir="$found_dir"
+     fi
 
-    for i in $libssl ; do
-        check_library "$i" "$enable_shared" "$tmpglbslibdir" \
-            $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
-        if test "x$found_lib" = "x" ; then
-            ssllib=""
-            ssllibdir=""
-            enable_ssl="no"
-            break
-        fi
-        if test "x$ssllib" = "x" ; then
-            ssllib="$found_lib"
-            ssllibdir="$found_dir"
-        else
-            ssllib="$ssllib $found_lib"
+     #
+     # libcrypto, in the same dir
+     #
+     libcrypto="libcrypto"
+     if test "x$enable_globus" = "xyes" ; then
+        libcrypto="libcrypto_$flavour"
+        tmpglbslibdir="$globusdir/lib"
+     else
+        tmpglbslibdir=$ssllibdir
+     fi
+     check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
+         $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+     if test "x$found_lib" = "x" ; then
+         ssllib=""
+         ssllibdir=""
+         enable_ssl="no"
+         break
+     else
+         ssllib="$ssllib $found_lib"
+         ssllibdir="$found_dir"
+         if test ! "x$found_dir" = "x$ssllibdir" ; then
+            message "Checking for openssl"
+            echo "warning: paths to libcrypto and libssl do not match"  
             ssllibdir="$ssllibdir $found_dir"
-        fi
-    done
+         fi
+     fi
 fi
 
 if test "x$enable_ssl" = "xyes" ; then

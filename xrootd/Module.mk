@@ -6,7 +6,7 @@
 MODDIR     := xrootd
 MODDIRS    := $(MODDIR)/src
 
-XROOTDVERS := xrootd-20050328-0656
+XROOTDVERS := xrootd-20050623-0016-root
 XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
@@ -28,7 +28,7 @@ XRDSOEXT    = $(SOEXT)
 endif
 
 ##### Xrootd executables #####
-XRDEXEC     = xrootd olbd
+XRDEXEC     = xrootd olbd xrdpwdadmin xrdgsiproxy
 XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
@@ -110,6 +110,13 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		esac; \
 		if [ "x$(KRB5LIB)" = "x" ] ; then \
 		   xopt="$$xopt --disable-krb4 --disable-krb5"; \
+		fi; \
+		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
+		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
+		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
+		fi; \
+		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
+		   xopt="$$xopt --with-ssl-incdir=$(SSLINCDIR)"; \
 		fi; \
 		xopt="$$xopt --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
