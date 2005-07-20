@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.215 2005/05/11 11:31:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.217 2005/06/16 17:53:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -568,7 +568,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (fH->GetDimension() > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 2;
-   if (fH->GetSumw2N()) Hoption.Error = 2;
+   if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
 
    l = strstr(chopt,"SAMES");
    if (l) {
@@ -3031,7 +3031,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    Double_t xyerror = gStyle->GetErrorX();
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
-      y  = fH->GetBinCenter(j);
+      y  = fYaxis->GetBinCenter(j);
       ey = fYaxis->GetBinWidth(j)*xyerror;
       y1 = y-ey;
       y2 = y+ey;
@@ -3045,7 +3045,7 @@ void THistPainter::Paint2DErrors(Option_t *)
       }
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          Int_t bin = fH->GetBin(i,j);
-         x  = fH->GetBinCenter(i);
+         x  = fXaxis->GetBinCenter(i);
          ex = fXaxis->GetBinWidth(i)*xyerror;
          x1 = x-ex;
          x2 = x+ex;
