@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.14 2005/04/20 14:59:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.16 2005/05/02 17:20:28 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -155,168 +155,187 @@ void TArrow::Paint(Option_t *option)
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this arrow with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-//
-//                                               (P2)
-//                                                -
-//                                                .  -
-//                                                .     -
-//                                                .        -
-//     -------------------------------------------.(P0)------- (P1)
-//                                                .        -
-//                                                .     -
-//                                                .  -
-//                                                -
-//                                               (P3)
-//
-//
+   // Draw this arrow
+   //
+   //
+   //                             +
+   //                             |.
+   //                             | .
+   //                             |  .
+   //     +-----------------------|---+------------------+
+   //  (x1,y1)                    |  .                (x2,y2)
+   //                             | .
+   //                             |.
+   //                             +
 
+   Int_t i;
+
+   // Option and attributes
    TString opt = option;
    opt.ToLower();
    TAttLine::Modify();
    TAttFill::Modify();
 
-//*-*- take u1,v1 as origin. take arrow line as new x axis
-   Int_t px1    = gPad->XtoAbsPixel(x1);
-   Int_t py1    = gPad->YtoAbsPixel(y1);
-   Int_t px2    = gPad->XtoAbsPixel(x2);
-   Int_t py2    = gPad->YtoAbsPixel(y2);
-   Float_t lp   = TMath::Sqrt(Double_t((px2-px1)*(px2-px1) + (py2-py1)*(py2-py1)));
-   Float_t rSiz = arrowsize*gPad->GetAbsHNDC()*gPad->GetWh();
-   Float_t dSiz = rSiz*TMath::Tan(3.141592*fAngle/360);
-   if (lp <= 0) return;
-   Double_t ct = (px2-px1)/lp;
-   Double_t st = (py1-py2)/lp;
-   Int_t P2x,P2y,P3x,P3y,P0x,P0y;
+   // Compute the gPad coordinates in TRUE normalized space (NDC)
+   Int_t ix1,iy1,ix2,iy2;
+   Int_t iw = gPad->GetWw();
+   Int_t ih = gPad->GetWh();
+   Double_t x1p,y1p,x2p,y2p;
+   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   ix1 = (Int_t)(iw*x1p);
+   iy1 = (Int_t)(ih*y1p);
+   ix2 = (Int_t)(iw*x2p);
+   iy2 = (Int_t)(ih*y2p);
+   Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
+   Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
+   Double_t rh    = hndc/(Double_t)ih;
+   Double_t rw    = wndc/(Double_t)iw;
+   Double_t x1ndc = (Double_t)ix1*rw;
+   Double_t y1ndc = (Double_t)iy1*rh;
+   Double_t x2ndc = (Double_t)ix2*rw;
+   Double_t y2ndc = (Double_t)iy2*rh;
 
-// Draw the start and end bars if needed
+   // Ratios to convert user space in TRUE normalized space (NDC)
+   Double_t rx1,ry1,rx2,ry2;
+   gPad->GetRange(rx1,ry1,rx2,ry2);
+   Double_t Rx = (x2ndc-x1ndc)/(rx2-rx1);
+   Double_t Ry = (y2ndc-y1ndc)/(ry2-ry1);
+
+   // Arrow position and arrow's middle in NDC space
+   Double_t x1n, y1n, x2n, y2n, xm, ym;
+   x1n = Rx*(x1-rx1)+x1ndc;
+   x2n = Rx*(x2-rx1)+x1ndc;
+   y1n = Ry*(y1-ry1)+y1ndc;
+   y2n = Ry*(y2-ry1)+y1ndc;
+   xm  = (x1n+x2n)/2;
+   ym  = (y1n+y2n)/2;
+
+   // Arrow heads size
+   Double_t length = TMath::Sqrt(Double_t((x2n-x1n)*(x2n-x1n)+(y2n-y1n)*(y2n-y1n)));
+   Double_t rSize  = 0.7*arrowsize;
+   Double_t dSize  = rSize*TMath::Tan(TMath::Pi()*fAngle/360);
+   Double_t cosT   = (x2n-x1n)/length;
+   Double_t sinT   = (y2n-y1n)/length;
+
+   // Arrays holding the arrows coordinates
+   Double_t x1ar[4], y1ar[4];
+   Double_t x2ar[4], y2ar[4];
+
+   // Draw the start and end bars if needed
    if (opt.BeginsWith("|-")) {
-      gPad->PaintLine(gPad->AbsPixeltoX(px1+Int_t(-st*dSiz+0.5)),
-                      gPad->AbsPixeltoY(py1+Int_t(-ct*dSiz+0.5)),
-                      gPad->AbsPixeltoX(px1+Int_t( st*dSiz+0.5)),
-                      gPad->AbsPixeltoY(py1+Int_t( ct*dSiz+0.5)));
+      x1ar[0] = x1n-sinT*dSize;
+      y1ar[0] = y1n+cosT*dSize;
+      x1ar[1] = x1n+sinT*dSize;
+      y1ar[1] = y1n-cosT*dSize;
+      // NDC to user coordinates
+      for (i=0; i<2; i++) {
+         x1ar[i] = (1/Rx)*(x1ar[i]-x1ndc)+rx1;
+         y1ar[i] = (1/Ry)*(y1ar[i]-y1ndc)+ry1;
+      }
+      gPad->PaintLine(x1ar[0],y1ar[0],x1ar[1],y1ar[1]);
       opt(0) = ' ';
    }
    if (opt.EndsWith("-|")) {
-      gPad->PaintLine(gPad->AbsPixeltoX(px2+Int_t(-st*dSiz+0.5)),
-                      gPad->AbsPixeltoY(py2+Int_t(-ct*dSiz+0.5)),
-                      gPad->AbsPixeltoX(px2+Int_t( st*dSiz+0.5)),
-                      gPad->AbsPixeltoY(py2+Int_t( ct*dSiz+0.5)));
+      x2ar[0] = x2n-sinT*dSize;
+      y2ar[0] = y2n+cosT*dSize;
+      x2ar[1] = x2n+sinT*dSize;
+      y2ar[1] = y2n-cosT*dSize;
+      // NDC to user coordinates
+      for (i=0; i<2; i++) {
+         x2ar[i] = (1/Rx)*(x2ar[i]-x1ndc)+rx1;
+         y2ar[i] = (1/Ry)*(y2ar[i]-y1ndc)+ry1;
+      }
+      gPad->PaintLine(x2ar[0],y2ar[0],x2ar[1],y2ar[1]);
       opt(opt.Length()-1) = ' ';
    }
 
-// Otto start:  define default line  before move of origin of arrow
-   Double_t XP0;
-   Double_t YP0;
-   Double_t XP0L;
-   Double_t YP0L;
-   XP0  = gPad->AbsPixeltoX(px2);
-   YP0  = gPad->AbsPixeltoY(py2);
-   XP0L = gPad->AbsPixeltoX(px1);
-   YP0L = gPad->AbsPixeltoY(py1);
-// move origin of arrow
+   // Move arrow head's position if needed
+   Double_t x1h = x1n;
+   Double_t y1h = y1n;
+   Double_t x2h = x2n;
+   Double_t y2h = y2n;
    if (opt.Contains("->-") || opt.Contains("-|>-")) {
-      px1 = Int_t(0.5 *(px2 + px1) + ct*rSiz/2);
-      py1 = Int_t(0.5 *(py2 + py1) - st*rSiz/2);
-      px2 = px1;
-      py2 = py1;
+      x2h = xm + cosT*rSize/2;
+      y2h = ym + sinT*rSize/2;
    }
    if (opt.Contains("-<-") || opt.Contains("-<|-")) {
-      px1 = Int_t(0.5 *(px2 + px1) - ct*rSiz/2);
-      py1 = Int_t(0.5 *(py2 + py1) + st*rSiz/2);
-      px2 = px1;
-      py2 = py1;
+      x1h = xm - cosT*rSize/2;
+      y1h = ym - sinT*rSize/2;
    }
-// ----------
+   
+   // Define the arrow's head coordinates
    if (opt.Contains(">")) {
-      P2x = px2 - Int_t(rSiz*ct+st*dSiz-0.5);
-      P2y = py2 + Int_t(rSiz*st-ct*dSiz+0.5);
-      P3x = px2 - Int_t(rSiz*ct-st*dSiz-0.5);
-      P3y = py2 + Int_t(rSiz*st+ct*dSiz+0.5);
-      P0x = px2 - Int_t(rSiz*ct-0.5);
-      P0y = py2 + Int_t(rSiz*st+0.5);
-   } else {
-      P2x = px2;
-      P2y = py2;
-      P3x = px2;
-      P3y = py2;
-      P0x = px2;
-      P0y = py2;
+      x2ar[0] = x2h - rSize*cosT - sinT*dSize;
+      y2ar[0] = y2h - rSize*sinT + cosT*dSize;
+      x2ar[1] = x2h;
+      y2ar[1] = y2h;
+      x2ar[2] = x2h - rSize*cosT + sinT*dSize;
+      y2ar[2] = y2h - rSize*sinT - cosT*dSize;
+      x2ar[3] = x2ar[0];
+      y2ar[3] = y2ar[0];
    }
-   Int_t P2xL,P2yL,P3xL,P3yL,P0xL,P0yL;
 
    if (opt.Contains("<")) {
-      P2xL = px1 + Int_t(rSiz*ct-st*dSiz+0.5);
-      P2yL = py1 - Int_t(rSiz*st+ct*dSiz-0.5);
-      P3xL = px1 + Int_t(rSiz*ct+st*dSiz+0.5);
-      P3yL = py1 - Int_t(rSiz*st-ct*dSiz-0.5);
-      P0xL = px1 + Int_t(rSiz*ct+0.5);
-      P0yL = py1 - Int_t(rSiz*st-0.5);
-   } else {
-      P2xL = px1;
-      P2yL = py1;
-      P3xL = px1;
-      P3yL = py1;
-      P0xL = px1;
-      P0yL = py1;
-   }
-   Double_t XP2  = gPad->AbsPixeltoX(P2x);
-   Double_t YP2  = gPad->AbsPixeltoY(P2y);
-   Double_t XP3  = gPad->AbsPixeltoX(P3x);
-   Double_t YP3  = gPad->AbsPixeltoY(P3y);
-   Double_t XP2L = gPad->AbsPixeltoX(P2xL);
-   Double_t YP2L = gPad->AbsPixeltoY(P2yL);
-   Double_t XP3L = gPad->AbsPixeltoX(P3xL);
-   Double_t YP3L = gPad->AbsPixeltoY(P3yL);
-//   move up
-   if (opt.Contains("|") && !opt.Contains("-")) {
-      XP0  = gPad->AbsPixeltoX(P0x);
-      YP0  = gPad->AbsPixeltoY(P0y);
-      XP0L = gPad->AbsPixeltoX(P0xL);
-      YP0L = gPad->AbsPixeltoY(P0yL);
+      x1ar[0] = x1h + rSize*cosT + sinT*dSize;
+      y1ar[0] = y1h + rSize*sinT - cosT*dSize;
+      x1ar[1] = x1h;
+      y1ar[1] = y1h;
+      x1ar[2] = x1h + rSize*cosT - sinT*dSize;
+      y1ar[2] = y1h + rSize*sinT + cosT*dSize;
+      x1ar[3] = x1ar[0];
+      y1ar[3] = y1ar[0];
    }
 
-   gPad->PaintLine(XP0,YP0,XP0L,YP0L);
+   // Paint Arrow body
+   if (opt.Contains("|>") && !opt.Contains("-|>-")) {
+      x2n = x2n-cosT*rSize;
+      y2n = y2n-sinT*rSize;
+   }
+   if (opt.Contains("<|") && !opt.Contains("-<|-")) {
+      x1n = x1n+cosT*rSize;
+      y1n = y1n+sinT*rSize;
+   }
+   x1n = (1/Rx)*(x1n-x1ndc)+rx1;
+   y1n = (1/Ry)*(y1n-y1ndc)+ry1;
+   x2n = (1/Rx)*(x2n-x1ndc)+rx1;
+   y2n = (1/Ry)*(y2n-y1ndc)+ry1;
+   gPad->PaintLine(x1n,y1n,x2n,y2n);
 
-//*-*- Convert points to pad reference system
-   Double_t xp1[4],yp1[4],xp2[4],yp2[4];
-
-   xp1[0] = XP2;                    yp1[0] = YP2;
-   xp1[1] = gPad->AbsPixeltoX(px2); yp1[1] = gPad->AbsPixeltoY(py2);
-   xp1[2] = XP3;                    yp1[2] = YP3;
-   xp1[3] = XP2;                    yp1[3] = YP2;
-   
-   xp2[0] = XP2L;                   yp2[0] = YP2L;
-   xp2[1] = gPad->AbsPixeltoX(px1); yp2[1] = gPad->AbsPixeltoY(py1);
-   xp2[2] = XP3L;                   yp2[2] = YP3L;
-   xp2[3] = XP2L;                   yp2[3] = YP2L;
-
+   // Draw the arrow's head(s)
    if (opt.Contains(">")) {
+      // NDC to user coordinates
+      for (i=0; i<4; i++) {
+         x2ar[i] = (1/Rx)*(x2ar[i]-x1ndc)+rx1;
+         y2ar[i] = (1/Ry)*(y2ar[i]-y1ndc)+ry1;
+      }
       if (opt.Contains("|>")) {
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,xp1,yp1);
-            gPad->PaintPolyLine(4,xp1,yp1);
+            gPad->PaintFillArea(3,x2ar,y2ar);
+            gPad->PaintPolyLine(4,x2ar,y2ar);
          } else {
-            gPad->PaintPolyLine(4,xp1,yp1);
+            gPad->PaintPolyLine(4,x2ar,y2ar);
          }
       } else {
-         gPad->PaintPolyLine(3,xp1,yp1);
+         gPad->PaintPolyLine(3,x2ar,y2ar);
       }
    }
    if (opt.Contains("<")) {
+      // NDC to user coordinates
+      for (i=0; i<4; i++) {
+         x1ar[i] = (1/Rx)*(x1ar[i]-x1ndc)+rx1;
+         y1ar[i] = (1/Ry)*(y1ar[i]-y1ndc)+ry1;
+      }
       if (opt.Contains("<|")) {
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,xp2,yp2);
-            gPad->PaintPolyLine(4,xp2,yp2);
+            gPad->PaintFillArea(3,x1ar,y1ar);
+            gPad->PaintPolyLine(4,x1ar,y1ar);
          } else {
-            gPad->PaintPolyLine(4,xp2,yp2);
+            gPad->PaintPolyLine(4,x1ar,y1ar);
          }
       } else {
-         gPad->PaintPolyLine(3,xp2,yp2);
+         gPad->PaintPolyLine(3,x1ar,y1ar);
       }
    }
-
 }
 
 //______________________________________________________________________________
@@ -342,6 +361,7 @@ void TArrow::SavePrimitive(ofstream &out, Option_t *)
     
    out<<"   arrow->Draw();"<<endl;
 }
+
 //______________________________________________________________________________
 void TArrow::SetDefaultAngle(Float_t Angle)
 {
@@ -367,4 +387,3 @@ Option_t *TArrow::GetDefaultOption()
 {
    return fgDefaultOption.Data();
 }  
-
