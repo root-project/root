@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.256 2005/06/22 17:01:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.257 2005/07/15 21:36:40 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4090,6 +4090,7 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
          Error("ReadFile","Error reading file: %s",filename);
          return 0;
       }
+      in.ignore(8192,'\n');
       nch = strlen(bd);
    } else {
       strcpy(bd,branchDescriptor);
