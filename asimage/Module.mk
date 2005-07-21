@@ -247,7 +247,7 @@ $(ASIMAGEGUIDO): $(ASIMAGEGUIDS) $(ASTEPLIB)
 
 ##### libASImageGS #####
 $(ASIMAGEGSLIB):  $(ASIMAGEGSO) $(ASIMAGEGSDO) $(ASTEPDEP) $(FREETYPEDEP) \
-                   $(MAINLIBS) $(ASIMAGEGSLIBDEP)
+                  $(MAINLIBS) $(ASIMAGEGSLIBDEP)
 ifeq ($(PLATFORM),win32)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImageGS.$(SOEXT) $@ \

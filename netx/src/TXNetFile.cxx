@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.10 2005/07/20 15:13:51 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.11 2005/07/21 14:08:06 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -59,8 +59,8 @@ Bool_t TXNetFile::fgRootdBC = kTRUE;
 
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
-                       Int_t compress, Int_t netopt) :
-                       TNetFile(url, ftitle, compress, kFALSE)
+                     Int_t compress, Int_t netopt) :
+                     TNetFile(url, ftitle, compress, kFALSE)
 {
    // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
    // (from which the former derives) except that the protocol is extended to
