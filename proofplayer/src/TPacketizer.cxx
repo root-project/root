@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.25 2005/04/06 10:01:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.26 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -809,41 +809,21 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num)
 {
    // Creates a new TDSetElement from from base packet starting from first entry with num entries.
-   // For each friend of the TDSet from the base element a TDSetElement will be created which
-   // corresponds to the given range. The same for friends of the friends etc.
-   // All the TDSetElements will be connected in a friendship graph which corresponds to 
-   // the graph of their parent TDSet. 
-   // Note that no TDSets and TDSetElements are changed. 
    // The function returns a new created objects which have to be deleted.
 
+   TDSetElement* elem = new TDSetElement(base->GetFileName(), base->GetObjName(),
+                                         base->GetDirectory(), first, num);
 
-   // find out the number of the base element on the list in its TDSet
-   TIter next(base->GetSet()->GetListOfElements());
-   Int_t elemNumber = -1;
-   Int_t tmp = 0;
-   while (TObject* o = next()) {
-      if (o != base)
-         tmp++;
-      else {
-         elemNumber = tmp;
-         break;
-      }
-   }
-   Assert(elemNumber != -1);
-
-   TDSetElement* elem = new TDSetElement(0, base->GetFileName(), base->GetObjName(),
-                                          base->GetDirectory(), first, num);
-
-   // create TDSetElements for all the TDSets in the friendship graph
-   TDSet::FriendsList_t *friends = base->GetSet()->GetListOfFriends();
-   for (TDSet::FriendsList_t::iterator i = friends->begin(); i != friends->end(); ++i) {
-      TDSetElement* friendElem = dynamic_cast<TDSetElement*>
-                                   ((i->first)->GetListOfElements()->At(elemNumber));
-      elem->AddFriend(new TDSetElement(0, friendElem->GetFileName(), friendElem->GetObjName(),
-                                          friendElem->GetDirectory(), first, num), i->second);
+   // create TDSetElements for all the friends of elem.
+   TDSetElement::FriendsList_t *friends = base->GetListOfFriends();
+   for (TDSetElement::FriendsList_t::iterator i = friends->begin(); i != friends->end(); ++i) {
+      TDSetElement* friendElem = i->first;
+      elem->AddFriend(new TDSetElement(friendElem->GetFileName(), friendElem->GetObjName(),
+                                       friendElem->GetDirectory(), first, num), i->second);
    }
    return elem;
 }
+
 
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)

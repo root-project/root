@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.22 2005/07/14 14:34:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.23 2005/07/18 15:28:20 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -66,14 +66,12 @@ ClassImp(TDSetElement)
 ClassImp(TDSet)
 
 //______________________________________________________________________________
-TDSetElement::TDSetElement(const TDSet *dset, const char *file,
-                           const char *objname, const char *dir,
+TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,
                            Long64_t first, Long64_t num,
                            const char *msd)
 {
    // Create a TDSet element.
 
-   fSet      = dset;
    fFileName = file;
    if (first < 0) {
       Warning("TDSetElement", "first must be >= 0, %d is not allowed - setting to 0", first);
@@ -100,6 +98,24 @@ TDSetElement::TDSetElement(const TDSet *dset, const char *file,
 }
 
 //______________________________________________________________________________
+TDSetElement::TDSetElement(const TDSetElement& elem) : TObject()
+{
+   // copy constructor
+   fFileName = elem.GetFileName();
+   fObjName = elem.GetObjName();
+   fDirectory = elem.GetDirectory();
+   fFirst = elem.fFirst;
+   fNum = elem.fNum;
+   fMsd = elem.fMsd;
+   fTDSetOffset = elem.fTDSetOffset;
+   fEventList = 0;
+   fValid = elem.fValid;
+   fEntries = elem.fEntries;
+   fIsTree = elem.fIsTree;
+   fFriends = 0;
+}
+
+//______________________________________________________________________________
 TDSetElement::~TDSetElement()
 {
    // Clean up the element.
@@ -111,8 +127,6 @@ const char *TDSetElement::GetObjName() const
 {
    // Return object name.
 
-   if (fSet && fObjName.IsNull())
-      return fSet->GetObjName();
    return fObjName;
 }
 
@@ -121,8 +135,6 @@ const char *TDSetElement::GetDirectory() const
 {
    // Return directory where to look for object.
 
-   if (fSet && fDirectory.IsNull())
-      return fSet->GetDirectory();
    return fDirectory;
 }
 
@@ -145,34 +157,29 @@ void TDSetElement::Print(Option_t *opt) const
 }
 
 //______________________________________________________________________________
-void TDSetElement::Validate()
+void TDSetElement::Validate(Bool_t isTree)
 {
    // Validate by opening the file.
 
-   if (fSet) {
-      Long64_t entries = TDSet::GetEntries(fSet->IsTree(), fFileName,
-                                           fDirectory, fObjName);
-      if (entries < 0) return; // Error should be reported by GetEntries()
-      if (fFirst < entries) {
-         if (fNum == -1) {
-            fNum = entries - fFirst;
+   Long64_t entries = TDSet::GetEntries(isTree, fFileName,
+                                        fDirectory, fObjName);
+   if (entries < 0) return; // Error should be reported by GetEntries()
+   if (fFirst < entries) {
+      if (fNum == -1) {
+         fNum = entries - fFirst;
+         fValid = kTRUE;
+      } else {
+         if (fNum <= entries - fFirst) {
             fValid = kTRUE;
          } else {
-            if (fNum <= entries - fFirst) {
-               fValid = kTRUE;
-            } else {
-               Error("Validate", "TDSetElement has only %d entries starting"
-                     " with entry %d, while %d were requested",
-                     entries - fFirst, fFirst, fNum);
-            }
+            Error("Validate", "TDSetElement has only %d entries starting"
+                  " with entry %d, while %d were requested",
+                  entries - fFirst, fFirst, fNum);
          }
-      } else {
-         Error("Validate", "TDSetElement has only %d entries with"
-               " first entry requested as %d", entries, fFirst);
       }
    } else {
-      Error("Validate", "No TDSet associated with TDSetElement"
-            " - cannot figure out type");
+      Error("Validate", "TDSetElement has only %d entries with"
+            " first entry requested as %d", entries, fFirst);
    }
 }
 
@@ -253,8 +260,7 @@ Int_t TDSetElement::Compare(const TObject *obj) const
 //______________________________________________________________________________
 void TDSetElement::AddFriend(TDSetElement *friendElement, const char* alias)
 {
-   // Add friend TDSetElement to this set. The friend element will be owned by this
-   // object and will be deleted in this TDSetElement's dectructor.
+   // Add friend TDSetElement to this set. The friend element will be copied to this object.
 
    if (!friendElement) {
       Error("AddFriend", "The friend TDSetElement is null!");
@@ -262,7 +268,7 @@ void TDSetElement::AddFriend(TDSetElement *friendElement, const char* alias)
    }
    if (!fFriends)
       fFriends = new FriendsList_t;
-   fFriends->push_back(std::make_pair(friendElement, TString(alias)));
+   fFriends->push_back(std::make_pair(new TDSetElement(*friendElement), TString(alias)));
 }
 
 //______________________________________________________________________________
@@ -290,7 +296,6 @@ TDSet::TDSet()
    fIterator  = 0;
    fCurrent   = 0;
    fEventList = 0;
-   fFriends   = 0;
 }
 
 //______________________________________________________________________________
@@ -313,7 +318,6 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    fIterator = 0;
    fCurrent  = 0;
    fEventList = 0;
-   fFriends = 0;
 
    if (!type || !*type) {
       Error("TDSet", "type name must be specified");
@@ -341,10 +345,8 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
 TDSet::~TDSet()
 {
    // Cleanup.
-   DeleteFriends();
    delete fElements;
    delete fIterator;
-   delete fFriends;
 }
 
 
@@ -468,8 +470,12 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
          return kFALSE;
       }
    }
+   if (!objname)
+      objname = GetObjName();
+   if (!dir)
+      dir = GetDirectory();
 
-   fElements->Add(new TDSetElement(this, file, objname, dir, first, num, msd));
+   fElements->Add(new TDSetElement(file, objname, dir, first, num, msd));
 
    return kTRUE;
 }
@@ -516,9 +522,25 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
       Error("AddFriend", "a friend set can only be added to a TTree TDSet");
       return;
    }
-
-   if (!fFriends) fFriends = new FriendsList_t;
-   fFriends->push_back(std::make_pair(friendset, TString(alias)));
+   TList* thisList = GetListOfElements();
+   TList* friendsList = friendset->GetListOfElements();
+   if (thisList->GetSize() != friendsList->GetSize() && friendsList->GetSize() != 1) {
+      Error("AddFriend", "The friend Set has %d elements while the main one has %d", 
+            thisList->GetSize(), friendsList->GetSize());
+      return;
+   }
+   TIter next(thisList);
+   TIter next2(friendsList);
+   TDSetElement* friendElem = 0;
+   TString aliasString(alias);
+   if (friendsList->GetSize() == 1)
+      friendElem = dynamic_cast<TDSetElement*> (friendsList->First());
+   while(TDSetElement* e = dynamic_cast<TDSetElement*> (next())) {
+      if (friendElem) // just one elem in the friend TDSet
+         e->AddFriend(friendElem, aliasString);
+      else
+         e->AddFriend(dynamic_cast<TDSetElement*> (next2()), aliasString);
+   }
 }
 
 //______________________________________________________________________________
@@ -698,7 +720,7 @@ void TDSet::Validate()
 
    TIter NextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
-      if (!elem->GetValid()) elem->Validate();
+      if (!elem->GetValid()) elem->Validate(IsTree());
    }
 
 }
@@ -753,15 +775,4 @@ void TDSet::Validate(TDSet* dset)
    }
 }
 
-//______________________________________________________________________________
-void TDSet::DeleteFriends() 
-{
-   // Deletes the list of friends and all the friends on the list.
-   if (!fFriends)
-      return;
-   for (FriendsList_t::iterator i = fFriends->begin(); i != fFriends->end(); ++i)
-      delete i->first;
-   delete fFriends;
-   fFriends = 0;
-}
 

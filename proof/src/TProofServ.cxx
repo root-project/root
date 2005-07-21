@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.99 2005/07/12 15:57:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.100 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -741,22 +741,6 @@ void TProofServ::HandleSocketInput()
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
             (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl;
-
-            if (IsMaster()) {
-               // update the field fSet in each element of the each dataset
-               // in the friendship graph
-               TDSet::FriendsList_t friends = *(dset->GetListOfFriends());
-               // implicit conversion from const char* -> TString is broken
-               // on RedHat 7.3 (gcc 2.96)
-               friends.push_front(std::make_pair(dset, TString("")));
-               for (TDSet::FriendsList_t::iterator i = friends.begin();
-                    i != friends.end(); ++i) {
-                  i->first->Reset();
-                  while (TDSetElement *e = i->first->Next())
-                     e->SetSet(i->first);
-                  i->first->Reset();
-               }
-            }
 
             if (evl)
                dset->SetEventList(evl);
