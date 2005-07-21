@@ -43,7 +43,7 @@ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XROOTDETAG)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
@@ -52,7 +52,7 @@ $(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTDETAG)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
-$(NETXDO):      $(NETXDS)
+$(NETXDO):      $(NETXDS) $(XROOTDETAG)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(NETXINCEXTRA) -o $@ -c $<
 
 all-netx:       $(NETXLIB)
@@ -74,5 +74,5 @@ distclean-netx: clean-netx
 distclean::     distclean-netx
 
 ##### extra rules ######
-$(NETXO): %.o: %.cxx
+$(NETXO): %.o: %.cxx $(XROOTDETAG)
 	$(CXX) $(OPT) $(CXXFLAGS) $(NETXINCEXTRA) -o $@ -c $<
