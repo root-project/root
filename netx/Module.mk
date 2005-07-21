@@ -43,11 +43,10 @@ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XROOTDETAG) \
-		$(NETXLIBEXTRA)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XROOTDETAG)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
-		"$(NETXLIBEXTRA)"
+		   "$(NETXLIBEXTRA)"
 
 $(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTDETAG) 
 		@echo "Generating dictionary $@..."
