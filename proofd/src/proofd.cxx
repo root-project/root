@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.76 2005/07/04 14:58:22 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.77 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -387,6 +387,51 @@ const char *RerouteUser()
 }
 
 //______________________________________________________________________________
+int RpdProofGetAuthSetup(char **abuf)
+{
+   // Receive buffer for final setup of authentication related stuff
+   // This is base 64 string to decoded by proofserv, if needed
+   int nrec = -1;
+
+   int ap = RpdGetAuthProtocol();
+   if (ap < 0 || ap > 5) {
+      // Unknown protocol index
+      ErrorInfo("RpdProofGetAuthSetup:  unknown protocol index: %d", ap);
+      return -1;
+   }
+
+   if (ap != 5 ) {
+      if ((nrec = RpdSecureRecv(abuf)) < 0) {
+         ErrorInfo("RpdProofGetAuthSetup: sec: problems receiving buf");
+         return -1;
+      }
+   } else {
+      // No key: receive plainly
+      EMessageTypes kind;
+      char buflen[20];
+      if (NetRecv(buflen, 20, kind) < 0) {
+         ErrorInfo("RpdProofGetAuthSetup: plain: problems receiving buf length");
+         return -1;
+      }
+      int len = atoi(buflen);
+
+      // receive the buffer
+      *abuf = new char[len + 1];
+      if ((nrec = NetRecvRaw(*abuf, len)) < 0) {
+         ErrorInfo("RpdProofGetAuthSetup: plain: problems receiving buf");
+         delete[] *abuf;
+         return -1;
+      }
+      (*abuf)[len] = 0;
+   }
+
+   if (gDebug > 1)
+      ErrorInfo("RpdProofGetAuthSetup: proto: %d len: %d", ap, nrec);
+
+   return nrec;
+}
+
+//______________________________________________________________________________
 void ProofdExec()
 {
    // Authenticate the user and exec the proofserv program.
@@ -455,14 +500,15 @@ void ProofdExec()
    // This is base 64 string to decoded by proofserv, if needed
    if (RpdGetClientProtocol() > 12) {
       char *authbuff = 0;
-      if (RpdSecureRecv(&authbuff) > 0) {
+      int lab = 0;
+      if ((lab = RpdProofGetAuthSetup(&authbuff)) > 0) {
          // Save it in an environment variable
          char *rootproofauthsetup = new char[20+strlen(authbuff)];
          sprintf(rootproofauthsetup, "ROOTPROOFAUTHSETUP=%s", authbuff);
          putenv(rootproofauthsetup);
          delete[] authbuff;
-      } else {
-         ErrorInfo("ProofdExec: problems secure-receiving auth buffer");
+      } else if (lab < 0) {
+         ErrorInfo("ProofdExec: problems receiving auth buffer");
       }
    }
 

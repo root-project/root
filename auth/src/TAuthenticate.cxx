@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.2 2005/07/19 00:10:16 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -128,7 +128,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    R__LOCKGUARD2(gAuthenticateMutex);
 
    // In PROOF decode the buffer sent by the client, if any
-   if (strstr(gROOT->GetApplication()->ApplicationName(),"proof"))
+   if (strstr(gROOT->GetApplication()->Argv(0),"proof"))
       ProofAuthSetup();
 
    // Use the ID of the starting thread as unique identifier
@@ -5113,10 +5113,27 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
    TString messb64;
    TAuthenticate::EncodeBase64(mbuf, mlen, messb64);
 
+   if (gDebug > 2) 
+      ::Info("ProofAuthSetup","sending %d bytes", messb64.Length());
+
    // Send it over
-   if (TAuthenticate::SecureSend(sock, 1, keytyp, messb64.Data()) == -1) {
-      ::Error("ProofAuthSetup","problems secure-sending message buffer");
-      return -1;
+   if (sc->GetMethod() != TAuthenticate::kRfio) {
+      if (TAuthenticate::SecureSend(sock, 1, keytyp, messb64.Data()) == -1) {
+         ::Error("ProofAuthSetup","problems secure-sending message buffer");
+         return -1;
+      }
+   } else {
+      // There is encryption key: send it plain
+      char buflen[20];
+      snprintf(buflen,20, "%d", messb64.Length());
+      if (sock->Send(buflen, kMESS_ANY) < 0) {
+         ::Error("ProofAuthSetup","plain: problems sending message length");
+         return -1;
+      }
+      if (sock->SendRaw(messb64.Data(), messb64.Length())) {
+         ::Error("ProofAuthSetup","problems sending message buffer");
+         return -1;
+      }
    }
 
    // We are done

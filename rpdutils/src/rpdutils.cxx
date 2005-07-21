@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.80 2005/04/28 16:14:28 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.81 2005/07/18 16:20:53 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -273,6 +273,7 @@ static std::string gTmpDir = "/tmp";
 
 //
 // Local global vars
+static int gAuthProtocol = -1;  // Protocol used fro a successful authentication 
 static char gBufOld[kMAXRECVBUF] = {0}; // msg sync for old client (<=3.05/07)
 static bool gCheckHostsEquiv = 1;
 static int gClientOld = 0;              // msg sync for old client (<=3.05/07)
@@ -518,6 +519,14 @@ int RpdGetClientProtocol()
    // Return protocol version run by the client.
    // Used by proofd.
    return gClientProtocol;
+}
+
+//______________________________________________________________________________
+int RpdGetAuthProtocol()
+{
+   // Return authentication protocol used for the handshake.
+   // Used by proofd.
+   return gAuthProtocol;
 }
 
 #ifdef R__KRB5
@@ -5158,7 +5167,8 @@ int RpdSecureRecv(char **str)
    if (gRSAKey == 1) {
       rsa_decode(buftmp, len, gRSA_n, gRSA_d);
       if (gDebug > 2)
-         ErrorInfo("RpdSecureRecv: Local: decoded string is %d bytes long", strlen(buftmp));
+         ErrorInfo("RpdSecureRecv: Local: decoded string is %d bytes long",
+                   strlen(buftmp));
 
       // Prepare output
       *str = new char[strlen(buftmp) + 1];
@@ -5554,7 +5564,6 @@ int RpdAuthenticate()
 {
    // Handle user authentication.
    char buf[kMAXRECVBUF];
-   int meth;
    EMessageTypes kind;
 
 //#define R__DEBUG
@@ -5593,7 +5602,7 @@ int RpdAuthenticate()
       }
 
       // Decode the method ...
-      meth = RpdGetAuthMethod(kind);
+      gAuthProtocol = RpdGetAuthMethod(kind);
 
       if (gDebug > 2) {
          if (kind != kROOTD_PASS) {
@@ -5609,16 +5618,17 @@ int RpdAuthenticate()
 
       // If the client supports it check if we accept the method proposed;
       // if not send back the list of accepted methods, if any ...
-      if (meth != -1 && gClientProtocol > 8) {
+      if (gAuthProtocol != -1 && gClientProtocol > 8) {
 
          // Check if accepted ...
-         if (RpdCheckAuthAllow(meth, gOpenHost.c_str())) {
+         if (RpdCheckAuthAllow(gAuthProtocol, gOpenHost.c_str())) {
             if (gNumAllow>0) {
                if (gAuthListSent == 0) {
                   if (gDebug > 0)
                      ErrorInfo("Authenticate: %s method not"
                                " accepted from host: %s",
-                                kAuthMeth[meth].c_str(), gOpenHost.c_str());
+                                kAuthMeth[gAuthProtocol].c_str(),
+                                gOpenHost.c_str());
                   NetSend(kErrNotAllowed, kROOTD_ERR);
                   RpdSendAuthList();
                   gAuthListSent = 1;
@@ -5684,11 +5694,11 @@ int RpdAuthenticate()
          // Don't do this if this was a SSH notification failure
          // because in such a case it was already done in the
          // appropriate daemon child
-         int doneg = (meth != -1 || kind == kROOTD_PASS) &&
+         int doneg = (gAuthProtocol != -1 || kind == kROOTD_PASS) &&
                      (gRemPid > 0 || kind != kROOTD_SSH);
          if (gDebug > 2 && doneg)
             ErrorInfo("RpdAuthenticate: kind:%d meth:%d auth:%d gNumLeft:%d",
-                      kind, meth, auth, gNumLeft);
+                      kind, gAuthProtocol, auth, gNumLeft);
 
          // If authentication failure, check if other methods could be tried ...
          if (auth == 0 && doneg) {

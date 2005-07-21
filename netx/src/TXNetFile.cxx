@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.9 2005/05/12 12:25:26 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.10 2005/07/20 15:13:51 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -56,7 +56,7 @@ ClassImp(TXNetFile);
 
 Bool_t TXNetFile::fgInitDone = kFALSE;
 Bool_t TXNetFile::fgRootdBC = kTRUE;
-  
+
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
                        Int_t compress, Int_t netopt) :
@@ -84,7 +84,7 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    // servers calling Connect() method, getting a valid access to the remote
    // server the client is connected to using GetAccessToSrv() method,
    // recognizing the remote server (if an old rootd the TNetFile's Create
-   // method will be called)
+   // method will be called).
 
    if (!fgInitDone) {
 
@@ -243,7 +243,8 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
 //_____________________________________________________________________________
 TXNetFile::~TXNetFile()
 {
-   // Destructor
+   // Destructor.
+
    if (IsOpen())
       Close(0);
 
@@ -255,9 +256,9 @@ TXNetFile::~TXNetFile()
 //_____________________________________________________________________________
 void TXNetFile::FormUrl(char *uut, TString &uus)
 {
-   // Form url for rootd socket
+   // Form url for rootd socket.
 
-   // We need something to work on 
+   // We need something to work on
    if (!uut) return;
 
    // raw url
@@ -293,7 +294,7 @@ void TXNetFile::FormUrl(char *uut, TString &uus)
 //_____________________________________________________________________________
 void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
 {
-   // The real creation work is done here
+   // The real creation work is done here.
 
    // Init members
    fSize = 0;
@@ -343,7 +344,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
                      len, fUrl.GetHost(), fUrl.GetPort());
                goto zombie;
             }
-            
+
             // Get the remote protocol
             Int_t ibuf[2] = {0};
             len = sizeof(ibuf);
@@ -389,7 +390,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
             // Set rootd flag
             fIsRootd = kTRUE;
             //
-            // Now we can check if we can create a TNetFile on the 
+            // Now we can check if we can create a TNetFile on the
             // open connection
             if (rproto > 13) {
                //
@@ -419,13 +420,12 @@ zombie:
    // error in file opening occured, make this object a zombie
    MakeZombie();
    gDirectory = gROOT;
-
 }
 
 //_____________________________________________________________________________
 void TXNetFile::Open(Option_t *option)
 {
-   // The real creation work is done here
+   // The real creation work is done here.
 
    //
    // Parse options
@@ -623,7 +623,7 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
 //_____________________________________________________________________________
 Bool_t TXNetFile::IsOpen() const
 {
-   // Return kTRUE if the file is open, kFALSE otherwise
+   // Return kTRUE if the file is open, kFALSE otherwise.
 
    if (fIsRootd) {
       if (gDebug > 1)
@@ -638,7 +638,7 @@ Bool_t TXNetFile::IsOpen() const
 Int_t TXNetFile::ReOpen(const Option_t *Mode)
 {
    // Re-open the file (see TNetFile::ReOpen() or TFile::ReOpen()
-   // for more details)
+   // for more details).
 
    if (fIsRootd) {
       if (gDebug > 1)
@@ -655,7 +655,7 @@ Int_t TXNetFile::ReOpen(const Option_t *Mode)
 void TXNetFile::Close(const Option_t *opt)
 {
    // Close the file (see TNetFile::Close() or TFile::Close()
-   // for more details)
+   // for more details).
 
    if (fIsRootd) {
       if (gDebug > 1)
@@ -673,7 +673,7 @@ void TXNetFile::Close(const Option_t *opt)
 //_____________________________________________________________________________
 void TXNetFile::Flush()
 {
-   // Flushes un-written data
+   // Flushes un-written data.
 
    if (IsZombie()) {
       Error("Flush", "Flush is not possible because object is"
@@ -710,7 +710,7 @@ void TXNetFile::Flush()
 Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                           Long_t *modtime)
 {
-   // Override TNetFile::SysStat (see parent's method for more details)
+   // Override TNetFile::SysStat (see parent's method for more details).
 
    if (IsZombie()) {
       Error("SysStat", "SysStat is not possible because object is"
@@ -733,7 +733,6 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
-
 
    //
    // Flush via the remote xrootd
@@ -761,7 +760,7 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 //_____________________________________________________________________________
 Int_t TXNetFile::SysClose(Int_t fd)
 {
-   // Override TNetFile::SysClose (see parent's method for more details)
+   // Override TNetFile::SysClose (see parent's method for more details).
 
    if (IsZombie()) {
       Error("SysClose", "SysClose is not possible because object is"
@@ -785,7 +784,7 @@ Int_t TXNetFile::SysClose(Int_t fd)
 //_____________________________________________________________________________
 Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
 {
-   // Override TNetFile::SysOpen (see parent's method for more details)
+   // Override TNetFile::SysOpen (see parent's method for more details).
 
    if (fIsRootd) {
       if (gDebug > 1)
@@ -808,7 +807,7 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
 //_____________________________________________________________________________
 Long64_t TXNetFile::Size(void)
 {
-   // Return file size
+   // Return file size.
 
    Long64_t size;
    Long_t i, f, m;
