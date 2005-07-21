@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.65 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.66 2005/06/23 06:24:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -274,6 +274,107 @@ void TDirectory::Build()
 }
 
 //______________________________________________________________________________
+TDirectory *TDirectory::GetDirectory(const char *apath,
+                                     Bool_t printError, const char *funcname) 
+{
+   // Find a directory using apath.
+   // It apath is null or empty, returns "this" directory. 
+   // Otherwie use apath to find a directory.
+   // The absolute path syntax is:
+   //    file.root:/dir1/dir2
+   // where file.root is the file and /dir1/dir2 the desired subdirectory
+   // in the file. Relative syntax is relative to "this" directory. E.g:
+   // ../aa. 
+   // Returns 0 in case path does not exist.
+   // If printError is true, use Error with 'funcname' to issue an error message.
+
+   Int_t nch = 0;
+   if (apath) nch = strlen(apath);
+   if (!nch) {
+      return this;
+   }
+
+   if (funcname==0 || strlen(funcname)==0) funcname = "GetDirectory";
+
+   TDirectory *savdir = gDirectory;
+   TDirectory *result = this;
+
+   char *path = new char[nch+1]; path[0] = 0;
+   if (nch) strcpy(path,apath);
+   char *s = (char*)strchr(path, ':');
+   if (s) {
+      *s = '\0';
+      R__LOCKGUARD2(gROOTMutex);
+      TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
+      if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
+      if (s) *s = ':';
+      if (f) {
+         result = f;
+         if (s && *(s+1)) result = f->GetDirectory(s+1,printError,funcname);
+         delete [] path; return result;
+      } else {
+         if (printError) Error(funcname, "No such file %s", path);
+         delete [] path; return 0;
+      }
+   }
+
+   // path starts with a slash (assumes current file)
+   if (path[0] == '/') {
+      TDirectory *td = fFile;
+      if (!fFile) td = gROOT;
+      result = td->GetDirectory(path+1,printError,funcname);
+      delete [] path; return result;
+   }
+
+   TObject *obj;
+   char *slash = (char*)strchr(path,'/');
+   if (!slash) {                     // we are at the lowest level
+      if (!strcmp(path, "..")) {
+         if (fMother && fMother->InheritsFrom(TDirectory::Class()))
+            result = ((TDirectory*)fMother);
+         delete [] path; return result;
+      }
+      obj = Get(path);
+      if (!obj) {
+         if (printError) Error(funcname,"Unknown directory %s", path);
+         delete [] path; return 0;
+      }
+
+      //Check return object is a directory
+      if (!obj->InheritsFrom(TDirectory::Class())) {
+         if (printError) Error(funcname,"Object %s is not a directory", path);
+         delete [] path; return 0;
+      }
+      delete [] path; return (TDirectory*)obj;
+   }
+
+   char subdir[kMaxLen];
+   strcpy(subdir,path);
+   slash = (char*)strchr(subdir,'/');
+   *slash = 0;
+   //Get object with path from current directory/file
+   if (!strcmp(subdir, "..")) {
+      if (fMother && fMother->InheritsFrom(TDirectory::Class())) {
+         result = ((TDirectory*)fMother)->GetDirectory(slash+1,printError,funcname);
+      }
+      delete [] path; return result;
+   }
+   obj = Get(subdir);
+   if (!obj) {
+      if (printError) Error(funcname,"Unknown directory %s", subdir);
+      delete [] path; return 0;
+   }
+
+   //Check return object is a directory
+   if (!obj->InheritsFrom(TDirectory::Class())) {
+      if (printError) Error(funcname,"Object %s is not a directory", subdir);
+      delete [] path; return 0;
+   }
+   result = ((TDirectory*)obj)->GetDirectory(slash+1,printError,funcname);
+   delete [] path; return result;
+}
+
+//______________________________________________________________________________
 Bool_t TDirectory::cd(const char *path)
 {
    // Change current directory to "this" directory . Using path one can
@@ -304,100 +405,12 @@ Bool_t TDirectory::cd1(const char *apath)
       return kTRUE;
    }
 
-   TDirectory *savdir = gDirectory;
-
-   char *path = new char[nch+1]; path[0] = 0;
-   if (nch) strcpy(path,apath);
-   char *s = (char*)strchr(path, ':');
-   if (s) {
-      *s = '\0';
-      R__LOCKGUARD2(gROOTMutex);
-      TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
-      if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
-      if (s) *s = ':';
-      if (f) {
-         f->cd();
-         if (s && *(s+1))
-            if (!gDirectory->cd1(s+1)) {
-               gDirectory = savdir;
-               delete [] path; return kFALSE;
-            }
-         delete [] path; return kTRUE;
-      } else {
-         Error("cd", "No such file %s", path);
-         delete [] path; return kFALSE;
-      }
+   TDirectory *where = GetDirectory(apath,kTRUE,"cd");
+   if (where) {
+      where->cd();
+      return kTRUE;
    }
-
-   // path starts with a slash (assumes current file)
-   if (path[0] == '/') {
-      TDirectory *td = fFile;
-      if (!fFile) td = gROOT;
-#ifdef cxxbug
-      //this special case to circumvent one more bug in the alpha cxx compiler.
-      //seems to be same bug also found in Btree.
-      td->cd(path+1);
-#else
-      if (!td->cd1(path+1)) {
-         gDirectory = savdir;
-         delete [] path; return kFALSE;
-      }
-#endif
-      delete [] path; return kTRUE;
-   }
-
-   TObject *obj;
-   char *slash = (char*)strchr(path,'/');
-   if (!slash) {                     // we are at the lowest level
-      if (!strcmp(path, "..")) {
-         if (fMother && fMother->InheritsFrom(TDirectory::Class()))
-            ((TDirectory*)fMother)->cd();
-         delete [] path; return kTRUE;
-      }
-      obj = Get(path);
-      if (!obj) {
-         Error("cd","Unknown directory %s", path);
-         delete [] path; return kFALSE;
-      }
-
-      //Check return object is a directory
-      if (!obj->InheritsFrom(TDirectory::Class())) {
-         Error("cd","Object %s is not a directory", path);
-         delete [] path; return kFALSE;
-      }
-      ((TDirectory*)obj)->cd();
-      delete [] path; return kTRUE;
-   }
-
-   char subdir[kMaxLen];
-   strcpy(subdir,path);
-   slash = (char*)strchr(subdir,'/');
-   *slash = 0;
-   //Get object with path from current directory/file
-   if (!strcmp(subdir, "..")) {
-      if (fMother && fMother->InheritsFrom(TDirectory::Class()))
-         if (!((TDirectory*)fMother)->cd1(slash+1)) {
-             gDirectory = savdir;
-             delete [] path; return kFALSE;
-         }
-      delete [] path; return kTRUE;
-   }
-   obj = Get(subdir);
-   if (!obj) {
-      Error("cd","Unknown directory %s", subdir);
-      delete [] path; return kFALSE;
-   }
-
-   //Check return object is a directory
-   if (!obj->InheritsFrom(TDirectory::Class())) {
-      Error("cd","Object %s is not a directory", subdir);
-      delete [] path; return kFALSE;
-   }
-   if (!((TDirectory*)obj)->cd1(slash+1)) {
-      gDirectory = savdir;
-      delete [] path; return kFALSE;
-   }
-   delete [] path; return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -425,95 +438,12 @@ Bool_t TDirectory::Cd1(const char *apath)
    if (apath) nch = strlen(apath);
    if (!nch) return kTRUE;
 
-   TDirectory *savdir = gDirectory;
-
-   char *path = new char[nch+1]; path[0] = 0;
-   if (nch) strcpy(path,apath);
-   char *s = (char*)strchr(path, ':');
-   if (s) {
-      *s = '\0';
-      R__LOCKGUARD2(gROOTMutex);
-      TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
-      if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
-      if (s) *s = ':';
-      if (f) {
-         f->cd();
-         if (s && *(s+1))
-            if (!TDirectory::Cd1(s+1)) {
-               gDirectory = savdir;
-               delete [] path; return kFALSE;
-            }
-         delete [] path; return kTRUE;
-      } else {
-         ::Error("TDirectory::Cd", "No such file %s", path);
-         delete [] path; return kFALSE;
-      }
+   TDirectory *where = gDirectory->GetDirectory(apath,kTRUE,"Cd");
+   if (where) {
+      where->cd();
+      return kTRUE;
    }
-
-   // path starts with a slash (assumes current file)
-   if (path[0] == '/') {
-      if (!TDirectory::Cd1(path+1)) {
-         gDirectory = savdir;
-         delete [] path; return kFALSE;
-      }
-      delete [] path; return kTRUE;
-   }
-
-   TObject *obj;
-   char *slash = (char*)strchr(path,'/');
-   if (!slash) {                     // we are at the lowest level
-      if (!strcmp(path, "..")) {
-         if (gDirectory->fMother && gDirectory->fMother->InheritsFrom(TDirectory::Class()))
-            ((TDirectory*)gDirectory->fMother)->cd();
-         delete [] path; return kTRUE;
-      }
-      obj = gDirectory->Get(path);
-      if (!obj) {
-         ::Error("TDirectory::Cd","Unknown directory %s", path);
-         delete [] path; return kFALSE;
-      }
-
-      //Check return object is a directory
-      if (!obj->InheritsFrom(TDirectory::Class())) {
-         ::Error("TDirectory::Cd","Object %s is not a directory", path);
-         delete [] path; return kFALSE;
-      }
-      ((TDirectory*)obj)->cd();
-      delete [] path; return kTRUE;
-   }
-
-   char subdir[kMaxLen];
-   strcpy(subdir,path);
-   slash = strchr(subdir,'/');
-   *slash = 0;
-   //Get object with path from current directory/file
-   if (!strcmp(subdir, "..")) {
-      if (gDirectory->fMother && gDirectory->fMother->InheritsFrom(TDirectory::Class())) {
-         ((TDirectory*)gDirectory->fMother)->cd();
-         if (!TDirectory::Cd1(slash+1)) {
-            gDirectory = savdir;
-            delete [] path; return kFALSE;
-         }
-      }
-      delete [] path; return kTRUE;
-   }
-   obj = gDirectory->Get(subdir);
-   if (!obj) {
-      ::Error("TDirectory::Cd","Unknown directory %s", subdir);
-      delete [] path; return kFALSE;
-   }
-
-   //Check return object is a directory
-   if (!obj->InheritsFrom(TDirectory::Class())) {
-      ::Error("TDirectory::Cd","Object %s is not a directory", subdir);
-      delete [] path; return kFALSE;
-   }
-   ((TDirectory*)obj)->cd();
-   if (!TDirectory::Cd1(slash+1)) {
-      gDirectory = savdir;
-      delete [] path; return kFALSE;
-   }
-   delete [] path; return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________

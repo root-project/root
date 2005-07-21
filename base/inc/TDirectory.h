@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.26 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.27 2005/05/19 17:28:15 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -116,6 +116,7 @@ public:
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle); 
+   virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory"); 
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
          ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));
