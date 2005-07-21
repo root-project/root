@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.211 2005/06/13 23:26:45 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.212 2005/07/01 20:11:01 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3588,7 +3588,7 @@ void WriteShadowClass(G__ClassInfo &cl)
       G__BaseClassInfo b(cl);
       bool first = true;
       while (b.Next()) {
-         if (  (b.Property() & G__BIT_ISVIRTUAL) &&
+         if (  (b.Property() & G__BIT_ISVIRTUALBASE) &&
               !(b.Property() & G__BIT_ISDIRECTINHERIT)) {
             // CINT duplicates the remote virtual base class in the list scanned
             // by G__BaseClassInfo, we need to skip them.
@@ -3600,7 +3600,7 @@ void WriteShadowClass(G__ClassInfo &cl)
          } else {
             fprintf(fp, ", ");
          }
-         if (b.Property() & G__BIT_ISVIRTUAL)
+         if (b.Property() & G__BIT_ISVIRTUALBASE)
             fprintf(fp, " virtual");
          if (b.Property() & G__BIT_ISPRIVATE)
             fprintf(fp, " private ");
