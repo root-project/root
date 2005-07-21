@@ -1,3 +1,3 @@
- *Dict* .def 
+ *.log *Dict* .def 
 .success.log
 constMemberDict_o_cxx.build.log templateKeyword.log templateKeyword_C.build.log testDict_o_cxx.build.log templateKeyword_C.so templateKeyword_h.so *.dll *.def *.exp *.lib *.pdb constMemberDict_o_cxx.build.log templateKeyword.log templateKeyword_C.build.log testDict_o_cxx.build.log templateKeyword_C.d *.ilk

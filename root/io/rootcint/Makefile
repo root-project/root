@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += templateKeyword mytest rootcintIntTest constMemberTest
+TEST_TARGETS += virtualbase templateKeyword mytest rootcintIntTest constMemberTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -32,4 +32,9 @@ constMemberTest: constMemberDict.$(ObjSuf)
 templateKeyword.log: templateKeyword_C.$(DllSuf)
 
 templateKeyword: templateKeyword.log
+	$(TestDiff)
+
+virtualbase.log: virtualbase_h.$(DllSuf)
+
+virtualbase: virtualbase.log
 	$(TestDiff)
