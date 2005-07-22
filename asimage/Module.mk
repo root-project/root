@@ -196,21 +196,12 @@ endif
 ##### libASImage #####
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
                 $(MAINLIBS) $(ASIMAGELIBDEP)
-ifeq ($(PLATFORM),win32)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
-		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) \
-                    $(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(ASEXTRALIBDIR) $(ASEXTRALIB)"
-else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
 		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) \
                     $(FREETYPELDFLAGS) $(FREETYPELIB) \
 		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
-endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -222,21 +213,12 @@ $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
 ##### libASImageGui #####
 $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
                    $(MAINLIBS) $(ASIMAGEGUILIBDEP)
-ifeq ($(PLATFORM),win32)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libASImageGui.$(SOEXT) $@ \
-		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
-		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) \
-                    $(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(ASEXTRALIBDIR) $(ASEXTRALIB)"
-else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImageGui.$(SOEXT) $@ \
 		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
 		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) \
                     $(FREETYPELDFLAGS) $(FREETYPELIB) \
 		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
-endif
 
 $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -248,21 +230,12 @@ $(ASIMAGEGUIDO): $(ASIMAGEGUIDS) $(ASTEPLIB)
 ##### libASImageGS #####
 $(ASIMAGEGSLIB):  $(ASIMAGEGSO) $(ASIMAGEGSDO) $(ASTEPDEP) $(FREETYPEDEP) \
                   $(MAINLIBS) $(ASIMAGEGSLIBDEP)
-ifeq ($(PLATFORM),win32)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImageGS.$(SOEXT) $@ \
 		   "$(ASIMAGEGSO) $(ASIMAGEGSDO)" \
 		   "$(ASIMAGEGSLIBEXTRA) $(ASTEPLIB) \
                     $(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(ASEXTRALIBDIR) $(ASEXTRALIB)"
-else
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libASImageGS.$(SOEXT) $@ \
-		   "$(ASIMAGEGSO) $(ASIMAGEGSDO)" \
-		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) \
-                    $(FREETYPELDFLAGS) $(FREETYPELIB) \
 		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
-endif
 
 $(ASIMAGEGSDS): $(ASIMAGEGSH) $(ASIMAGEGSL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
