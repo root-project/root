@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.65 2005/02/05 01:33:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.66 2005/02/10 07:32:27 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -357,8 +357,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                fFiles->Add(new TObjString(argv[i]));
                argv[i] = 0;
                delete [] mac;
-            } else 
-               // only warn if we're plain root, 
+            } else
+               // only warn if we're plain root,
                // other progs might have their own params
                if (!strcmp(GetName(),"Rint"))
                   Warning("GetOptions", "Macro %s not found.", s);
@@ -600,13 +600,12 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 
    if (!line || !*line) return 0;
 
-    if (!strncmp(line, ".qqqqqqq", 7) || !strncmp(line, ".QQQQQQQ", 7)) {
+    if (!strncasecmp(line, ".qqqqqqq", 7)) {
        gSystem->Abort();
-    } else if (!strncmp(line, ".qqqqq", 5) || !strncmp(line, ".QQQQQ", 5)) {
+    } else if (!strncasecmp(line, ".qqqqq", 5)) {
        Info("ProcessLine", "Bye... (try '.qqqqqqq' if still running)");
        gSystem->Exit(1);
-    } else if (!strncmp(line, ".exit", 4) || !strncmp(line, ".quit", 2) ||
-               !strncmp(line, ".QUIT", 2)) {
+    } else if (!strncasecmp(line, ".exit", 4) || !strncasecmp(line, ".quit", 2)) {
       gInterpreter->ResetGlobals();
       Terminate(0);
       return 0;
