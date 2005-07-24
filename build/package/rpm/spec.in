@@ -39,6 +39,7 @@ possible ROOT packages on this system.
 ROOT web-site: http://root.cern.ch
 
 %files 
+%defattr(-,root,root)
 %{_defaultdocdir}/README
 
 ######################################################################
@@ -101,14 +102,11 @@ sed -e "s,/usr/local,%_prefix,g" \
 build/package/lib/makelists.sh rpm %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
-NEWEXT=`cat /usr/lib/rpm/brp-compress | grep COMPRESS_EXT=`
-NEWEXT=`echo ${NEWEXT} |sed 's/^COMPRESS_EXT=//'`
-OLDEXT=1
-NEWEXT=${OLDEXT}${NEWEXT}
+EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' /usr/lib/rpm/brp-compress  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\.1\2/')
 for i in rpm/*.install ; do 
     if test ! -f $i ; then continue ; fi
     echo "Fixing $i"
-    sed -e "s/${OLDEXT}$/${NEWEXT}/g" \
+    sed -e "s/\.1$/${EXT}/g" \
 	-e "s,%_sysconfdir,%config %_sysconfdir," \
 	-e "s,%_defaultdocdir,%doc %_defaultdocdir," \
 	< $i > $i.tmp
