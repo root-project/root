@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.9 2002/07/08 14:41:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.10 2003/07/15 14:25:22 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -178,10 +178,10 @@ void TTVLVEntry::PrependTilde()
 void TTVLVEntry::SetItemName(const char* name)
 {
 // redraw this entry with new name
-   if (fName) delete fName;
-   fName = new TGString(name);
+   if (fItemName) delete fItemName;
+   fItemName = new TGString(name);
    Int_t max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fItemName->GetString(), fItemName->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    gVirtualX->ClearWindow(fId);

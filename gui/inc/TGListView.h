@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.23 2004/12/08 17:13:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.24 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ class TGLVContainer;
 class TGLVEntry : public TGFrame {
 
 protected:
-   TGString           *fName;        // name of item
+   TGString           *fItemName;    // name of item
    TGString          **fSubnames;    // sub names of item (details)
    Int_t              *fCpos;        // position of sub names
    Int_t              *fJmode;       // alignment for sub names
@@ -84,7 +84,7 @@ protected:
 public:
    TGLVEntry(const TGWindow *p = 0,
              const TGPicture *bigpic = 0, const TGPicture *smallpic = 0,
-             TGString *name = 0, TGString **subnames = 0, 
+             TGString *name = 0, TGString **subnames = 0,
              EListViewMode ViewMode = kLVDetails,
              UInt_t options = kChildFrame,
              Pixel_t back = GetWhitePixel());
@@ -99,10 +99,10 @@ public:
 
    virtual void        Activate(Bool_t a);
    Bool_t              IsActive() const { return fActive; }
-   TGString           *GetItemName() const { return fName; }
-   virtual const char *GetTitle() const { return fName->GetString(); }
-   virtual void  SetTitle(const char *text) { *fName = text; }
-   void                SetItemName(const char *name) { *fName = name; }
+   TGString           *GetItemName() const { return fItemName; }
+   virtual const char *GetTitle() const { return fItemName->GetString(); }
+   virtual void        SetTitle(const char *text) { *fItemName = text; }
+   void                SetItemName(const char *name) { *fItemName = name; }
    const TGPicture    *GetPicture() const { return fCurrent; }
    EListViewMode       GetViewMode() const { return fViewMode; }
    void                SetUserData(void *userData) { fUserData = userData; }

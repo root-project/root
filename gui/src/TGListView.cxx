@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.30 2005/05/25 17:56:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.31 2005/05/27 12:24:44 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fBigPic   = bigpic;
    fSmallPic = smallpic;
 
-   fName = name;
+   fItemName = name;
    fSubnames = subnames;
    fUserData = 0;
 
@@ -89,8 +89,8 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    Int_t max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct,
-                                  fName ? fName->GetString() : "",
-                                  fName ? fName->GetLength() : 0);
+                                  fItemName ? fItemName->GetString() : "",
+                                  fItemName ? fItemName->GetLength() : 0);
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
@@ -137,7 +137,7 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
       fSmallPic = fClient->GetPicture("doc_t.xpm");
    }
 
-   fName = new TGString(name);
+   fItemName = new TGString(name);
    fSubnames = subnames;
    fUserData = 0;
 
@@ -150,7 +150,7 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
    fNormGC     = GetDefaultGC()();
 
    Int_t max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fItemName->GetString(), fItemName->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
@@ -177,7 +177,7 @@ TGLVEntry::~TGLVEntry()
 {
    // Delete a list view item.
 
-   if (fName) delete fName;
+   if (fItemName) delete fItemName;
    if (fSelPic) delete fSelPic;
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
@@ -322,7 +322,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    Int_t max_ascent, max_descent;
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fItemName->GetString(), fItemName->GetLength());
    fTHeight = max_ascent + max_descent;
 
    if (fViewMode == kLVLargeIcons) {
@@ -349,7 +349,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    }
 
-   fName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+   fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
    gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 
    if (fViewMode == kLVDetails) {
