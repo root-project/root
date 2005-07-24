@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.55 2005/07/05 12:36:06 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.56 2005/07/11 15:50:42 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1950,7 +1950,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    if (btn!=kButton1) return;
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kWatch));
 
-   TString name(f->GetName());
+   TString name(f->GetTitle());
    const char* fname = (const char*)f->GetUserData();
 
    if (fname) {

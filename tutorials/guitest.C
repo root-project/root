@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.58 2005/07/05 12:36:07 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.59 2005/07/11 15:50:42 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1919,7 +1919,7 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
 
    if ((btn!=kButton1) || !item || (Bool_t)item->GetUserData()) return;
 
-   // use  UserData to indicate that item was already browsed
+   // use UserData to indicate that item was already browsed
    item->SetUserData((void*)1);
 
    TSystemDirectory dir(item->GetText(),DirName(item));
@@ -2082,7 +2082,7 @@ void TestFileList::OnDoubleClick(TGLVEntry *f, Int_t btn)
    ULong_t cur = gVirtualX->CreateCursor(kWatch);
    gVirtualX->SetCursor(fContents->GetId(), cur);
 
-   TString name(f->GetName());
+   TString name(f->GetTitle());
    const char* fname = (const char*)f->GetUserData();
 
    if (fname) {
