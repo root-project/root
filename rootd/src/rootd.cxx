@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.105 2005/04/15 17:26:09 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.106 2005/07/04 14:58:22 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -927,8 +927,8 @@ void RootdFstat(const char *buf)
    if (gClientProtocol > 11) {
       if (rc >= 0)
          sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)statbuf.st_dev,
-                 (long)statbuf.st_ino, statbuf.st_mode, statbuf.st_uid,
-                 statbuf.st_gid, (Long64_t)statbuf.st_size, statbuf.st_mtime,
+                 (long)statbuf.st_ino, statbuf.st_mode, (int)(statbuf.st_uid),
+                 (int)(statbuf.st_gid), (Long64_t)statbuf.st_size, statbuf.st_mtime,
                  islink);
       else
          sprintf(msg, "-1 -1 -1 -1 -1 -1 -1 -1");
