@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.193 2005/07/06 19:13:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.194 2005/07/18 13:35:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2414,12 +2414,39 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 //      and dynamically loaded. At next call, if file.C is older than file.o
 //      and file.so, the file.C is not compiled, only file.so is loaded.
 //
-//  NOTE
+//  NOTE1
 //  It may be more interesting to invoke directly the other Process function
 //  accepting a TSelector* as argument.eg
 //     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 //     selector->CallSomeFunction(..);
 //     mytree.Process(selector,..);
+//
+//  NOTE2
+//  One should not call this function twice with the same selector file
+//  in the same script. If this is required, proceed as indicated in NOTE1,
+//  by getting a pointer to the corresponding TSelector,eg
+//    workaround 1
+//    ------------
+//void stubs1() {
+//   TSelector *selector = TSelector::GetSelector("h1test.C");
+//   TFile *f1 = new TFile("stubs_nood_le1.root");
+//   TTree *h1 = (TTree*)f1->Get("h1");
+//   h1->Process(selector);
+//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+//   TTree *h2 = (TTree*)f2->Get("h1");
+//   h2->Process(selector);
+//}
+//  or use ACLIC to compile the selector
+//   workaround 2
+//   ------------
+//void stubs2() {
+//   TFile *f1 = new TFile("stubs_nood_le1.root");
+//   TTree *h1 = (TTree*)f1->Get("h1");
+//   h1->Process("h1test.C+");
+//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+//   TTree *h2 = (TTree*)f2->Get("h1");
+//   h2->Process("h1test.C+");
+//}
 
 
    DeleteSelectorFromFile(); //delete previous selector if any

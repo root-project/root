@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.257 2005/07/15 21:36:40 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.258 2005/07/20 17:38:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3979,12 +3979,39 @@ Long64_t TTree::Process(const char *filename,Option_t *option,Long64_t nentries,
 //   The function returns the number of processed entries. It returns -1
 //   in case of an error.
 //
-//  NOTE
+//  NOTE1
 //  It may be more interesting to invoke directly the other Process function
 //  accepting a TSelector* as argument.eg
 //     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 //     selector->CallSomeFunction(..);
 //     mytree.Process(selector,..);
+//
+//  NOTE2
+//  One should not call this function twice with the same selector file
+//  in the same script. If this is required, proceed as indicated in NOTE1,
+//  by getting a pointer to the corresponding TSelector,eg
+//    workaround 1
+//    ------------
+//void stubs1() {
+//   TSelector *selector = TSelector::GetSelector("h1test.C");
+//   TFile *f1 = new TFile("stubs_nood_le1.root");
+//   TTree *h1 = (TTree*)f1->Get("h1");
+//   h1->Process(selector);
+//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+//   TTree *h2 = (TTree*)f2->Get("h1");
+//   h2->Process(selector);
+//}
+//  or use ACLIC to compile the selector
+//   workaround 2
+//   ------------
+//void stubs2() {
+//   TFile *f1 = new TFile("stubs_nood_le1.root");
+//   TTree *h1 = (TTree*)f1->Get("h1");
+//   h1->Process("h1test.C+");
+//   TFile *f2 = new TFile("stubs_nood_le1_coarse.root");
+//   TTree *h2 = (TTree*)f2->Get("h1");
+//   h2->Process("h1test.C+");
+//}
 
 
    GetPlayer();
