@@ -104,6 +104,8 @@ ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                       lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = lib/libReflex.lib
+KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
+KRB5AUTHLIBEXTRA    = lib/libRootAuth.lib
 
 else
 
@@ -198,5 +200,7 @@ ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB)\
 ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = -Llib -lReflex
+KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
+KRB5AUTHLIBEXTRA    = -Llib -lRootAuth
 
 endif
