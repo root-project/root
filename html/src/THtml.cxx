@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.75 2005/05/02 21:46:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.76 2005/05/30 13:47:13 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -154,8 +154,8 @@ enum EFileType { kSource, kInclude, kTree };
 // a sensible, automatically generated title. If the header is generated for a
 // class, occurrences of %CLASS% will be replaced by the current class's name, 
 // %SRCFILE% and %INCFILE% by the name of the source and header file, resp. 
-// (as given by TClass::GetImplFileName(), TClass::GetDeclFiuleName()).
-// If the header is not generated for a class, they will be relpaced by "". 
+// (as given by TClass::GetImplFileName(), TClass::GetDeclFileName()).
+// If the header is not generated for a class, they will be replaced by "". 
 //
 // Root's footer starts with the tag "<!--SIGNATURE-->". It includes the
 // author(s), last update, copyright, the links to the Root home page, to the
@@ -3165,7 +3165,13 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 //*-*      =================================
    if(!name1) return 0;
    // no doc for internal classes
-   if (strstr(name1,"ROOT::")==name1) return 0;
+   if (strstr(name1,"ROOT::")==name1) {
+      Bool_t ret = kTRUE;
+      if (strstr(name1,"Math::"))   ret = kFALSE;
+      if (strstr(name1,"Reflex::")) ret = kFALSE;
+      if (strstr(name1,"Cintex::")) ret = kFALSE;
+      if (ret) return 0;
+   }
 
    Int_t n = strlen(name1);
    if (!n) return 0;
