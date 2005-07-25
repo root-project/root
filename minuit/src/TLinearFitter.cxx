@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.10 2005/06/06 13:44:10 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.11 2005/06/23 10:04:08 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -591,10 +591,32 @@ void TLinearFitter::Eval()
       return;
    }
    //
+   fParams.ResizeTo(fNfunctions);
+   fTValues.ResizeTo(fNfunctions);
+   fParSign.ResizeTo(fNfunctions);
+   fParCovar.ResizeTo(fNfunctions,fNfunctions);
+
+   fChisquare=0;
+
    if (!fIsSet){
       Bool_t update = UpdateMatrix();
-      if (!update)
+      if (!update){
+         //no points to fit
+         fParams.Zero();
+         fParCovar.Zero();
+         fTValues.Zero();
+         fParSign.Zero();
+         fChisquare=0;
+         if (fInputFunction){
+            ((TF1*)fInputFunction)->SetParameters(fParams.GetMatrixArray());
+            for (Int_t i=0; i<fNfunctions; i++)
+               ((TF1*)fInputFunction)->SetParError(i, 0);
+            ((TF1*)fInputFunction)->SetChisquare(0);
+            ((TF1*)fInputFunction)->SetNDF(0);
+            ((TF1*)fInputFunction)->SetNumberFitPoints(0);
+         }
          return;
+      }
    }
    //
 
@@ -613,12 +635,6 @@ void TLinearFitter::Eval()
 
    fY2+=fY2Temp;
    fY2Temp=0;
-   fParams.ResizeTo(fNfunctions);
-   fTValues.ResizeTo(fNfunctions);
-   fParSign.ResizeTo(fNfunctions);
-   fParCovar.ResizeTo(fNfunctions,fNfunctions);
-
-   fChisquare=0;
 
    //fixing fixed parameters, if there are any
    Int_t i, ii, j=0;
@@ -656,6 +672,8 @@ void TLinearFitter::Eval()
    if (!ok){
       fParams.Zero();
       fParCovar.Zero();
+      fTValues.Zero();
+      fParSign.Zero();
       return;
    }
    fParams=coef;
@@ -1027,10 +1045,9 @@ Bool_t TLinearFitter::UpdateMatrix()
            AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
         }
         return 1;
-     } else {
-        Error("UpdateMatrix", "matrix can't be updated - input points not stored");
+     } else 
         return 0;
-     }
+     
 }
 
 //______________________________________________________________________________
@@ -1984,4 +2001,5 @@ Double_t TLinearFitter::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work
       }
    }
 }
+
 
