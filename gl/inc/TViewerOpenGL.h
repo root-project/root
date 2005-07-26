@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.31 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.32 2005/06/23 15:08:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -12,12 +12,6 @@
 #ifndef ROOT_TViewerOpenGL
 #define ROOT_TViewerOpenGL
 
-#include <utility>
-#include <vector>
-
-#ifndef ROOT_TVirtualViewer3D
-#include "TVirtualViewer3D.h"
-#endif
 #ifndef ROOT_TGLViewer
 #include "TGLViewer.h"
 #endif
@@ -31,10 +25,6 @@
 #include "TPoint.h"
 #endif
 
-#ifndef ROOT_CsgOps
-#include "CsgOps.h"
-#endif
-
 class TGLGeometryEditor;
 class TGShutterItem;
 class TGShutter;
@@ -46,13 +36,12 @@ class TGPopupMenu;
 class TGLColorEditor;
 class TGLSceneEditor;
 class TGLLightEditor;
-class TBuffer3D;
 class TGMenuBar;
 class TGCanvas;
-class TGLFaceSet;
 
-// TODO: Derv from TGLViewer or ag. as viewport?
-class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame, public TGLViewer 
+// Must derive from TGLViewer first, as this implements our
+// TVirtualViewer3D interface, which we are cast to externally
+class TViewerOpenGL : public TGLViewer, public TGMainFrame
 {
 private:
    // GUI components
@@ -85,30 +74,11 @@ private:
    TPoint            fLastPos;
    UInt_t            fActiveButtonID;
 
-   // Scene management - TODO: Most of this can probably be moved down to
-   // TGLViewer?
-   Bool_t            fInternalRebuild;      //! internal scene rebuild in progress?
-   Bool_t            fAcceptedAllPhysicals; //! did we take all physicals offered in AddObject()
-   Bool_t            fInternalPIDs;         //! using internal physical IDs
-   UInt_t            fNextInternalPID;      //! next internal physical ID (from 1 - 0 reserved)
-
    // Lighting
    Int_t             fLightMask;
 
    // External handles
    TVirtualPad      *fPad;
-
-   // Composite Shape specific
-   mutable TGLFaceSet     *fComposite; //! Paritally created composite
-   typedef std::pair<UInt_t, RootCsg::BaseMesh *> CSPART_t;
-   UInt_t                  fCSLevel;
-   std::vector<CSPART_t>   fCSTokens;
-
-   RootCsg::BaseMesh *BuildComposite();
-
-   // Tracing for scene rebuilds
-   UInt_t                  fAcceptedPhysicals;
-   UInt_t                  fRejectedPhysicals;
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -119,17 +89,6 @@ private:
 public:
    TViewerOpenGL(TVirtualPad * pad);
    ~TViewerOpenGL();
-
-   // TVirtualViewer3D interface
-   virtual Bool_t PreferLocalFrame() const;
-   virtual void   BeginScene();
-   virtual Bool_t BuildingScene() const { return fScene.CurrentLock() == TGLScene::kModifyLock; }
-   virtual void   EndScene();
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual void   CloseComposite();
-   virtual void   AddCompositeOp(UInt_t operation);
 
    Bool_t HandleContainerEvent(Event_t *ev);
    Bool_t HandleContainerButton(Event_t *ev);
@@ -149,13 +108,7 @@ private:
    virtual void   Invalidate(UInt_t redrawLOD = kMed);
    virtual void   MakeCurrent() const;
    virtual void   SwapBuffers() const;
-   virtual Bool_t RebuildScene();
-
-   // Scene Object Management
-   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const;
-   TGLLogicalShape *  CreateNewLogical(const TBuffer3D & buffer) const;
-   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
-                                        const TGLLogicalShape & logical) const;
+   virtual void   FillScene();
 
    void DoSelect(Event_t *event, Bool_t invokeContext);
    void DoRedraw(); // from TGMainFrame
