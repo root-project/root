@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.79 2005/04/19 10:11:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.80 2005/04/21 06:24:47 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -29,6 +29,9 @@
 #include "TRef.h"
 #include "Api.h"
 #include "TInterpreter.h"
+
+#include <string>
+namespace std {} using namespace std;
 
 const Int_t kMaxLen = 1024;
 static char gIncludeName[kMaxLen];
@@ -1559,8 +1562,8 @@ Int_t TStreamerSTLstring::GetSize() const
 {
    //returns size of anyclass in bytes
    
-   if (fArrayLength) return fArrayLength*12;
-   return 12;
+   if (fArrayLength) return fArrayLength*sizeof(string);
+   return sizeof(string);
 }
 
 //______________________________________________________________________________
