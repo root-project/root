@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.12 2005/04/18 19:41:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.13 2005/05/23 17:02:45 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -30,87 +30,92 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-/// Build a Streamer for an emulated vector whose type is 'name'.
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
-: TGenCollectionProxy(copy)
+   : TGenCollectionProxy(copy)
 {
+   // Build a Streamer for an emulated vector whose type is 'name'.
 }
 
-/// Build a Streamer for a collection whose type is described by 'collectionClass'.
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
 : TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
 {
-  fName = cl_name;
-  this->TEmulatedCollectionProxy::InitializeEx();
+   // Build a Streamer for a collection whose type is described by 'collectionClass'.
+
+   fName = cl_name;
+   this->TEmulatedCollectionProxy::InitializeEx();
 }
 
-/// Standard destructor
-TEmulatedCollectionProxy::~TEmulatedCollectionProxy()   {
+TEmulatedCollectionProxy::~TEmulatedCollectionProxy()
+{
+   // Standard destructor
 }
 
-/// Virtual copy constructor
-TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const  {
-  if ( !fClass ) Initialize();
-  return new TEmulatedCollectionProxy(*this);
+TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
+{
+   // Virtual copy constructor
+
+   if ( !fClass ) Initialize();
+   return new TEmulatedCollectionProxy(*this);
 }
 
-/// Proxy initializer
-TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
-  fClass = gROOT->GetClass(fName.c_str());
-  fEnv = 0;
-  fKey = 0;
-  if ( fClass )  {
-     int nested = 0;
-     std::vector<std::string> inside;
-     fPointers  = false;
-     int num = TClassEdit::GetSplit(fName.c_str(),inside,nested);
-     if ( num > 1 )  {
-        std::string nam;
-        if ( inside[0].find("stdext::hash_") != std::string::npos ) {
-           inside[0].replace(3,10,"::");
-        }
-        if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos ) {
-           inside[0].replace(0,16,"std::");
-        }
-        fSTL_type = TClassEdit::STLKind(inside[0].c_str());
-        // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-        int slong = sizeof(void*);
-        switch ( fSTL_type )  {
-         case TClassEdit::kMap:
-           case TClassEdit::kMultiMap:
-              nam = "pair<"+inside[1]+","+inside[2];
-              nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-              fValue = new Value(nam);
-              fKey   = new Value(inside[1]);
-              fVal   = new Value(inside[2]);
-              fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
-              if ( 0 == fValDiff )  {
-                 fValDiff = fKey->fSize + fVal->fSize;
-                 fValDiff += (slong - fKey->fSize%slong)%slong;
-                 fValDiff += (slong - fValDiff%slong)%slong;
+TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() 
+{
+   // Proxy initializer
 
-              }
-              if ( 0 == fValOffset )  {
-                 fValOffset  = fKey->fSize;
-                 fValOffset += (slong - fKey->fSize%slong)%slong;
-              }
-              break;
-           default:
-              fValue = new Value(inside[1]);
-              fVal   = new Value(*fValue);
-              if ( 0 == fValDiff )  {
-                 fValDiff  = fVal->fSize;
-                 fValDiff += (slong - fValDiff%slong)%slong;
-              }
-              break;
-        }
-        fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
-        return this;
-    }
-    Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",fClass->GetName());
-  }
-  Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
-  return 0;
+   fClass = gROOT->GetClass(fName.c_str());
+   fEnv = 0;
+   fKey = 0;
+   if ( fClass )  {
+      int nested = 0;
+      std::vector<std::string> inside;
+      fPointers  = false;
+      int num = TClassEdit::GetSplit(fName.c_str(),inside,nested);
+      if ( num > 1 )  {
+         std::string nam;
+         if ( inside[0].find("stdext::hash_") != std::string::npos ) {
+            inside[0].replace(3,10,"::");
+         }
+         if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos ) {
+            inside[0].replace(0,16,"std::");
+         }
+         fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+         // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
+         int slong = sizeof(void*);
+         switch ( fSTL_type )  {
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap:
+               nam = "pair<"+inside[1]+","+inside[2];
+               nam += (nam[nam.length()-1]=='>') ? " >" : ">";
+               fValue = new Value(nam);
+               fKey   = new Value(inside[1]);
+               fVal   = new Value(inside[2]);
+               fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
+               if ( 0 == fValDiff )  {
+                  fValDiff = fKey->fSize + fVal->fSize;
+                  fValDiff += (slong - fKey->fSize%slong)%slong;
+                  fValDiff += (slong - fValDiff%slong)%slong;
+               }
+               if ( 0 == fValOffset )  {
+                  fValOffset  = fKey->fSize;
+                  fValOffset += (slong - fKey->fSize%slong)%slong;
+               }
+               break;
+            default:
+               fValue = new Value(inside[1]);
+               fVal   = new Value(*fValue);
+               if ( 0 == fValDiff )  {
+                  fValDiff  = fVal->fSize;
+                  fValDiff += (slong - fValDiff%slong)%slong;
+               }
+               break;
+         }
+         fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
+         return this;
+      }
+      Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",fClass->GetName());
+   }
+   Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
+   return 0;
 }
 
 UInt_t TEmulatedCollectionProxy::Size() const   
@@ -132,7 +137,8 @@ void TEmulatedCollectionProxy::Clear(const char* opt)
 
 void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )  
 {
-   /// Shrink the container
+   // Shrink the container
+
    typedef std::string  String_t;
    PCont_t c   = PCont_t(fEnv->object);
    char* addr  = ((char*)fEnv->start) + fValDiff*left;
@@ -228,146 +234,157 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
    return;
 }
 
-/// Expand the container
-void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)  {
-  size_t i;
-  PCont_t c   = PCont_t(fEnv->object);
-  c->resize(left*fValDiff,0);
-  fEnv->start = left>0 ? &(*c->begin()) : 0;
-  char* addr = ((char*)fEnv->start) + fValDiff*nCurr;
-  switch ( fSTL_type )  {
-    case TClassEdit::kMap:
-    case TClassEdit::kMultiMap:
-      switch(fKey->fCase)  {
-        case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-        case G__BIT_ISENUM:
-          break;
-        case G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )
-            fKey->fType->New(addr);
-          break;
-        case R__BIT_ISSTRING:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )
-            ::new(addr) std::string();
-          break;
-        case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-        case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )
-            *(void**)addr = 0;
-          break;
-      }
-      addr = ((char*)fEnv->start)+fValOffset+fValDiff*nCurr;
-      // DO NOT break; just continue
-
-    // General case for all values
-    default:
-      switch(fVal->fCase)  {
-        case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-        case G__BIT_ISENUM:
-          break;
-        case G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff ) {
-            fVal->fType->New(addr);
-          }
+void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
+{
+   // Expand the container
+   size_t i;
+   PCont_t c   = PCont_t(fEnv->object);
+   c->resize(left*fValDiff,0);
+   fEnv->start = left>0 ? &(*c->begin()) : 0;
+   char* addr = ((char*)fEnv->start) + fValDiff*nCurr;
+   switch ( fSTL_type )  {
+      case TClassEdit::kMap:
+      case TClassEdit::kMultiMap:
+         switch(fKey->fCase)  {
+            case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+            case G__BIT_ISENUM:
+               break;
+            case G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )
+                  fKey->fType->New(addr);
+               break;
+            case R__BIT_ISSTRING:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )
+                  ::new(addr) std::string();
+               break;
+            case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )
+                  *(void**)addr = 0;
+               break;
+         }
+         addr = ((char*)fEnv->start)+fValOffset+fValDiff*nCurr;
+         // DO NOT break; just continue
+         
+         // General case for all values
+      default:
+         switch(fVal->fCase)  {
+            case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+            case G__BIT_ISENUM:
+               break;
+            case G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff ) {
+                  fVal->fType->New(addr);
+               }
+               break;
+            case R__BIT_ISSTRING:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )
+                  ::new(addr) std::string();
+               break;
+            case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )
+                  *(void**)addr = 0;
+               break;
+         }
          break;
-        case R__BIT_ISSTRING:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )
-            ::new(addr) std::string();
-          break;
-        case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-        case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-          for( i=nCurr; i<left; ++i, addr += fValDiff )
-            *(void**)addr = 0;
-          break;
+   }
+}
+
+void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
+{
+   // Resize the container
+
+   if ( fEnv && fEnv->object )   {
+      size_t nCurr = Size();
+      PCont_t c = PCont_t(fEnv->object);
+      fEnv->start = nCurr>0 ? &(*c->begin()) : 0;
+      if ( left == nCurr )  {
+         return;
       }
-      break;
-  }
-}
-/// Resize the container
-void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)  {
-  if ( fEnv && fEnv->object )   {
-    size_t nCurr = Size();
-    PCont_t c = PCont_t(fEnv->object);
-    fEnv->start = nCurr>0 ? &(*c->begin()) : 0;
-    if ( left == nCurr )  {
+      else if ( left < nCurr )  {
+         Shrink(nCurr, left, force);
+         return;
+      }
+      Expand(nCurr, left);
       return;
-    }
-    else if ( left < nCurr )  {
-      Shrink(nCurr, left, force);
-      return;
-    }
-    Expand(nCurr, left);
-    return;
-  }
-  Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
+   }
+   Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
 }
 
-/// Return the address of the value at index 'idx'
-void* TEmulatedCollectionProxy::At(UInt_t idx)   {
-  if ( fEnv && fEnv->object )   {
-    PCont_t c = PCont_t(fEnv->object);
-    size_t  s = c->size();
-    if ( idx >= (s/fValDiff) )  {
-      return 0;
-    }
-    return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
-  }
-  Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
-  return 0;
+void* TEmulatedCollectionProxy::At(UInt_t idx)
+{
+   // Return the address of the value at index 'idx'
+   if ( fEnv && fEnv->object )   {
+      PCont_t c = PCont_t(fEnv->object);
+      size_t  s = c->size();
+      if ( idx >= (s/fValDiff) )  {
+         return 0;
+      }
+      return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
+   }
+   Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
+   return 0;
 }
 
-void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)  {
-  Resize(n, forceDelete);
-  return fEnv;
+void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)  
+{
+   Resize(n, forceDelete);
+   return fEnv;
 }
 
 void TEmulatedCollectionProxy::Commit(void* /* env */ )  {
 }
 
-/// Object input streamer
-void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
-  bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
-  StreamHelper* itm = (StreamHelper*)At(0);
-  switch (fVal->fCase) {
-    case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way
-    case G__BIT_ISENUM:
-      switch( int(fVal->fKind) )   {
-        case kBool_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
-        case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;
-        case kShort_t:   b.ReadFastArray(&itm->s_short   , nElements); break;
-        case kInt_t:     b.ReadFastArray(&itm->s_int     , nElements); break;
-        case kLong_t:    b.ReadFastArray(&itm->s_long    , nElements); break;
-        case kLong64_t:  b.ReadFastArray(&itm->s_longlong, nElements); break;
-        case kFloat_t:   b.ReadFastArray(&itm->flt       , nElements); break;
-        case kDouble_t:  b.ReadFastArray(&itm->dbl       , nElements); break;
-        case kBOOL_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
-        case kUChar_t:   b.ReadFastArray(&itm->u_char    , nElements); break;
-        case kUShort_t:  b.ReadFastArray(&itm->u_short   , nElements); break;
-        case kUInt_t:    b.ReadFastArray(&itm->u_int     , nElements); break;
-        case kULong_t:   b.ReadFastArray(&itm->u_long    , nElements); break;
-        case kULong64_t: b.ReadFastArray(&itm->u_longlong, nElements); break;
-        case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements); break;
-        case kchar:
-        case kNoType_t:
-        case kOther_t:
-          Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
-      }
-      break;
+void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
+{
+   // Object input streamer
+   bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
+   StreamHelper* itm = (StreamHelper*)At(0);
+   switch (fVal->fCase) {
+      case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way
+      case G__BIT_ISENUM:
+         switch( int(fVal->fKind) )   {
+            case kBool_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
+            case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;
+            case kShort_t:   b.ReadFastArray(&itm->s_short   , nElements); break;
+            case kInt_t:     b.ReadFastArray(&itm->s_int     , nElements); break;
+            case kLong_t:    b.ReadFastArray(&itm->s_long    , nElements); break;
+            case kLong64_t:  b.ReadFastArray(&itm->s_longlong, nElements); break;
+            case kFloat_t:   b.ReadFastArray(&itm->flt       , nElements); break;
+            case kDouble_t:  b.ReadFastArray(&itm->dbl       , nElements); break;
+            case kBOOL_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
+            case kUChar_t:   b.ReadFastArray(&itm->u_char    , nElements); break;
+            case kUShort_t:  b.ReadFastArray(&itm->u_short   , nElements); break;
+            case kUInt_t:    b.ReadFastArray(&itm->u_int     , nElements); break;
+            case kULong_t:   b.ReadFastArray(&itm->u_long    , nElements); break;
+            case kULong64_t: b.ReadFastArray(&itm->u_longlong, nElements); break;
+            case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements); break;
+            case kchar:
+            case kNoType_t:
+            case kOther_t:
+               Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
+         }
+         break;
+
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-    case G__BIT_ISCLASS:
-      DOLOOP( b.StreamObject(i,fVal->fType) );
-    case R__BIT_ISSTRING:
-      DOLOOP( i->read_std_string(b) );
-    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-      DOLOOP( i->read_any_object(fVal,b) );
-    case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-      DOLOOP( i->read_std_string_pointer(b) );
-    case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-      DOLOOP( i->read_tstring_pointer(vsn3,b) );
-  }
+
+      case G__BIT_ISCLASS:
+         DOLOOP( b.StreamObject(i,fVal->fType) );
+      case R__BIT_ISSTRING:
+         DOLOOP( i->read_std_string(b) );
+      case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+          DOLOOP( i->read_any_object(fVal,b) );
+      case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+         DOLOOP( i->read_std_string_pointer(b) );
+      case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+         DOLOOP( i->read_tstring_pointer(vsn3,b) );
+   }
+
 #undef DOLOOP
+
 }
 
 /// Object output streamer
@@ -414,23 +431,24 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
 #undef DOLOOP
 }
 
-/// TClassStreamer IO overload
-void TEmulatedCollectionProxy::Streamer(TBuffer &b) {
-  if ( b.IsReading() ) {  //Read mode
-    int nElements = 0;
-    b >> nElements;
-    if ( fEnv->object )  {
-      Resize(nElements,true);
-    }
-    if ( nElements > 0 )  {
-      ReadItems(nElements, b);
-    }
-  }
-  else {     // Write case
-    int nElements = fEnv->object ? *(size_t*)fSize.invoke(fEnv) : 0;
-    b << nElements;
-    if ( nElements > 0 )  {
-      WriteItems(nElements, b);
-    }
-  }
+void TEmulatedCollectionProxy::Streamer(TBuffer &b) 
+{
+   // TClassStreamer IO overload
+   if ( b.IsReading() ) {  //Read mode
+      int nElements = 0;
+      b >> nElements;
+      if ( fEnv->object )  {
+         Resize(nElements,true);
+      }
+      if ( nElements > 0 )  {
+         ReadItems(nElements, b);
+      }
+   }
+   else {     // Write case
+      int nElements = fEnv->object ? Size() : 0;
+      b << nElements;
+      if ( nElements > 0 )  {
+         WriteItems(nElements, b);
+      }
+   }
 }
