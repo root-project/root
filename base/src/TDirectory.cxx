@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.66 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.67 2005/07/21 20:52:25 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -296,7 +296,6 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 
    if (funcname==0 || strlen(funcname)==0) funcname = "GetDirectory";
 
-   TDirectory *savdir = gDirectory;
    TDirectory *result = this;
 
    char *path = new char[nch+1]; path[0] = 0;
