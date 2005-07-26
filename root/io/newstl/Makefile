@@ -20,10 +20,10 @@ FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP) result.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += emptyCollection stlIoTest 
+TEST_TARGETS += emptyCollection stlIoTest emulatedWrite
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -160,4 +160,10 @@ samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
 emptyCollection.log: directories samplerootfile.root $(LIBDIR)sample_bx_classes_C.$(DllSuf) sample_reader.C
 
 emptyCollection: emptyCollection.log
+	$(TestDiff)
+
+emulatedWrite.log: $(ROOT_LOC)/bin/hadd$(ExeSuf)
+	$(CMDECHO) hadd -f result.root cmsJets_?.root > emulatedWrite.log
+
+emulatedWrite: emulatedWrite.log
 	$(TestDiff)
