@@ -729,7 +729,8 @@ void G__gen_cpplink()
          strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 || 
          strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
          strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 || 
-         strcmp(fname,"queue")==0) {
+         strcmp(fname,"queue")==0 || strcmp(fname,"climits")==0 ||
+         strcmp(fname,"valarray")==0) {
         algoflag |= 1;
       }
       if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 || 
@@ -3898,6 +3899,10 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffun
     fprintf(fp,"      ");
     sprintf(endoffunc,";");
     return(0);
+  case '1':
+    fprintf(fp,"      G__letint(result7,%d,(long)",type);
+    sprintf(endoffunc,");");
+    return(0);     
   case 'e':
   case 'c':
   case 's':
