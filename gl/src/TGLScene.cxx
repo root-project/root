@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.12 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.13 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -607,7 +607,10 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
    // Create the select buffer. This will work as we have a flat set of physical shapes.
    // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
    // has same 4 GLuint format
-   static std::vector<GLuint> selectBuffer(fPhysicalShapes.size()*4);
+   static std::vector<GLuint> selectBuffer;
+   if (selectBuffer.size() < fPhysicalShapes.size()*4) {
+      selectBuffer.resize(fPhysicalShapes.size()*4);
+   }
    glSelectBuffer(selectBuffer.size(), &selectBuffer[0]);
 
    // Enter picking mode
