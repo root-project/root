@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.195 2005/07/25 07:45:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.196 2005/07/27 08:17:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1218,6 +1218,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       lenb = strlen(blen);
@@ -1285,6 +1287,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       if (branch->IsA() == TBranchObject::Class()) {
@@ -1303,6 +1307,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          while (*bname) {
             if (*bname == '.') *bname='_';
             if (*bname == ':') *bname='_'; 
+            if (*bname == '<') *bname='_'; 
+            if (*bname == '>') *bname='_'; 
             bname++;
          }
          lenb = strlen(blen);
@@ -1405,6 +1411,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             while (*bname) {
                if (*bname == '.') *bname='_';
                if (*bname == ':') *bname='_'; 
+               if (*bname == '<') *bname='_'; 
+               if (*bname == '>') *bname='_'; 
                bname++;
             }
             leafcountName = b2len;
@@ -1466,6 +1474,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       fprintf(fp,"   TBranch        *b_%s;   //!\n",branchname);
@@ -1624,6 +1634,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          while (*bname) {
             if (*bname == '.') *bname='_';
             if (*bname == ':') *bname='_'; 
+            if (*bname == '<') *bname='_'; 
+            if (*bname == '>') *bname='_'; 
             bname++;
          }
          fprintf(fp,"   %s = 0;\n",branchname );
@@ -1665,6 +1677,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       if (branch->IsA() == TBranchObject::Class()) {
@@ -1733,6 +1747,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       if (branch->IsA() == TBranchObject::Class()) {
@@ -2053,6 +2069,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       if (branch->IsA() == TBranchObject::Class()) {
@@ -2118,6 +2136,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       while (*bname) {
          if (*bname == '.') *bname='_';
          if (*bname == ':') *bname='_'; 
+         if (*bname == '<') *bname='_'; 
+         if (*bname == '>') *bname='_'; 
          bname++;
       }
       char *brak = strstr(branchname,"[");
