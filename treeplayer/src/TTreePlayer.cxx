@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.194 2005/07/18 13:35:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.195 2005/07/25 07:45:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1215,7 +1215,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       strcpy(blen,leaf->GetName());
       bname = &blen[0];
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       lenb = strlen(blen);
       if (blen[lenb-1] == '_') {
          blen[lenb-1] = 0;
@@ -1278,7 +1282,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1; continue;}
          leafobj = (TLeafObject*)leaf;
@@ -1292,7 +1300,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (len<=0) len = 1;
          strcpy(blen,leafcount->GetName());
          bname = &blen[0];
-         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         while (*bname) {
+            if (*bname == '.') *bname='_';
+            if (*bname == ':') *bname='_'; 
+            bname++;
+         }
          lenb = strlen(blen);
          if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
          else                     sprintf(blen,"%d",len);
@@ -1390,7 +1402,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
             strcpy(b2len,l2->GetName());
             bname = &b2len[0];
-            while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+            while (*bname) {
+               if (*bname == '.') *bname='_';
+               if (*bname == ':') *bname='_'; 
+               bname++;
+            }
             leafcountName = b2len;
          }
          if (dimensions) {
@@ -1447,7 +1463,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
       if (twodim) *twodim = 0;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       fprintf(fp,"   TBranch        *b_%s;   //!\n",branchname);
    }
 
@@ -1601,7 +1621,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             strcpy(branchname,((TLeaf*)obj)->GetName() );
          }
          bname = branchname;
-         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         while (*bname) {
+            if (*bname == '.') *bname='_';
+            if (*bname == ':') *bname='_'; 
+            bname++;
+         }
          fprintf(fp,"   %s = 0;\n",branchname );
       }
    }
@@ -1638,7 +1662,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       bname = branchname;
       char *brak = strstr(branchname,"[");     if (brak) *brak = 0;
       char *twodim = (char*)strstr(bname,"["); if (twodim) *twodim = 0;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
             fprintf(fp,"   fChain->SetBranchAddress(\"%s\",(void*)-1);\n",branch->GetName());
@@ -1702,7 +1730,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"["); if (twodim) *twodim = 0;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
             fprintf(fp,"   b_%s = fChain->GetBranch(\"%s\");\n",branchname,branch->GetName());
@@ -2018,7 +2050,11 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       if (branch->IsA() == TBranchObject::Class()) {
          leafobj = (TLeafObject*)leaf;
          if (leafobj->GetClass()) head = headOK;
@@ -2079,7 +2115,11 @@ Int_t TTreePlayer::MakeCode(const char *filename)
          else           strcpy(branchname,leaf->GetTitle());
       }
       bname = branchname;
-      while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ':') *bname='_'; 
+         bname++;
+      }
       char *brak = strstr(branchname,"[");
       if (brak) *brak = 0;
       head = headOK;
