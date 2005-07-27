@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.196 2005/07/27 08:17:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.197 2005/07/27 15:34:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1823,7 +1823,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//by  b_branchname->GetEntry(ientry); //read only this branch\n");
       fprintf(fpc,"   if (fChain == 0) return;\n");
       fprintf(fpc,"\n   Long64_t nentries = fChain->GetEntriesFast();\n");
-      fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
+      fprintf(fpc,"\n   Long64_t nbytes = 0, nb = 0;\n");
       fprintf(fpc,"   for (Long64_t jentry=0; jentry<nentries;jentry++) {\n");
       fprintf(fpc,"      Long64_t ientry = LoadTree(jentry);\n");
       fprintf(fpc,"      if (ientry < 0) break;\n");
@@ -2159,7 +2159,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    fprintf(fp,"// %s->SetBranchStatus(\"*\",0);  // disable all branches\n",fTree->GetName());
    fprintf(fp,"// %s->SetBranchStatus(\"branchname\",1);  // activate branchname\n",GetName());
    fprintf(fp,"\n   Long64_t nentries = %s->GetEntries();\n",fTree->GetName());
-   fprintf(fp,"\n   Int_t nbytes = 0;\n");
+   fprintf(fp,"\n   Long64_t nbytes = 0;\n");
    fprintf(fp,"//   for (Long64_t i=0; i<nentries;i++) {\n");
    fprintf(fp,"//      nbytes += %s->GetEntry(i);\n",fTree->GetName());
    fprintf(fp,"//   }\n");
