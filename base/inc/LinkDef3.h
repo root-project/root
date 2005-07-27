@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.18 2005/02/21 09:42:34 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.19 2005/07/18 16:20:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -184,12 +184,24 @@
 #pragma link C++ class std::pair<string,float>+;
 #pragma link C++ class std::pair<string,double>+;
 #pragma link C++ class std::pair<string,void*>+;
+#pragma link C++ class std::pair<int,int>+;
+#pragma link C++ class std::pair<int,long>+;
+#pragma link C++ class std::pair<int,float>+;
+#pragma link C++ class std::pair<int,double>+;
+#pragma link C++ class std::pair<int,void*>+;
+#pragma link C++ class std::pair<int,char*>+;
 #pragma link C++ class std::pair<long,int>+;
 #pragma link C++ class std::pair<long,long>+;
 #pragma link C++ class std::pair<long,float>+;
 #pragma link C++ class std::pair<long,double>+;
 #pragma link C++ class std::pair<long,void*>+;
 #pragma link C++ class std::pair<long,char*>+;
+#pragma link C++ class std::pair<float,int>+;
+#pragma link C++ class std::pair<float,long>+;
+#pragma link C++ class std::pair<float,float>+;
+#pragma link C++ class std::pair<float,double>+;
+#pragma link C++ class std::pair<float,void*>+;
+#pragma link C++ class std::pair<float,char*>+;
 #pragma link C++ class std::pair<double,int>+;
 #pragma link C++ class std::pair<double,long>+;
 #pragma link C++ class std::pair<double,float>+;
@@ -208,12 +220,24 @@
 #pragma link C++ class std::pair<const string,float>+;
 #pragma link C++ class std::pair<const string,double>+;
 #pragma link C++ class std::pair<const string,void*>+;
+#pragma link C++ class std::pair<const int,int>+;
+#pragma link C++ class std::pair<const int,long>+;
+#pragma link C++ class std::pair<const int,float>+;
+#pragma link C++ class std::pair<const int,double>+;
+#pragma link C++ class std::pair<const int,void*>+;
+#pragma link C++ class std::pair<const int,char*>+;
 #pragma link C++ class std::pair<const long,int>+;
 #pragma link C++ class std::pair<const long,long>+;
 #pragma link C++ class std::pair<const long,float>+;
 #pragma link C++ class std::pair<const long,double>+;
 #pragma link C++ class std::pair<const long,void*>+;
 #pragma link C++ class std::pair<const long,char*>+;
+#pragma link C++ class std::pair<const float,int>+;
+#pragma link C++ class std::pair<const float,long>+;
+#pragma link C++ class std::pair<const float,float>+;
+#pragma link C++ class std::pair<const float,double>+;
+#pragma link C++ class std::pair<const float,void*>+;
+#pragma link C++ class std::pair<const float,char*>+;
 #pragma link C++ class std::pair<const double,int>+;
 #pragma link C++ class std::pair<const double,long>+;
 #pragma link C++ class std::pair<const double,float>+;
