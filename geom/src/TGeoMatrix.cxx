@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.39 2005/04/05 08:54:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.40 2005/06/30 13:09:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -845,7 +845,7 @@ void TGeoRotation::FastRotZ(Double_t *sincos)
 Double_t TGeoRotation::GetPhiRotation() const
 {
 //--- Returns rotation angle about Z axis in degrees.
-   Double_t phi = 180.*TMath::ATan2(fRotationMatrix[1], fRotationMatrix[0])/TMath::Pi();
+   Double_t phi = 180.*TMath::ATan2(fRotationMatrix[3], fRotationMatrix[0])/TMath::Pi();
    return phi;
 }   
 
