@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.23 2005/01/03 09:50:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.24 2005/07/07 06:54:06 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -121,14 +121,17 @@ TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *optio
 {
   // Add a new entry to this legend
   // obj is the object to be represented
-  // label is the text you wish to associate with obj in the legend
+  // label is the text you wish to associate with obj in the legend.
+  // if label is null or empty, the title of the object will be used.
   // Options are:
   //    L draw line associated w/ TAttLine if obj inherits from TAttLine
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
   //    E draw vertical error bar if option "P" is also specified
   //
-  TLegendEntry *newentry = new TLegendEntry( obj, label, option );
+  const char *lab = label;
+  if (obj && !label || strlen(label)==0) lab = obj->GetTitle();
+  TLegendEntry *newentry = new TLegendEntry( obj, lab, option );
   if ( !fPrimitives ) fPrimitives = new TList;
   fPrimitives->Add(newentry);
   return newentry;
@@ -140,6 +143,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
   // Add a new entry to this legend
   // name is the name of an object in the pad to be represented
   // label is the text you wish to associate with obj in the legend
+  // if label is null or empty, the title of the object will be used.
   // Options are:
   //    L draw line associated w/ TAttLine if obj inherits from TAttLine
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
