@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.75 2005/05/10 20:12:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.76 2005/06/24 20:44:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1707,16 +1707,19 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
   h1->SetMarkerColor(this->GetMarkerColor());
   h1->SetMarkerStyle(this->GetMarkerStyle());
 
+//
 // Fill the profile histogram
-  Double_t cont;
+  Double_t cont, err;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         if (ncuts) {
            if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont =  GetCellContent(binx,biny);
+        err = GetCellError(binx, biny);
+
         if (cont) {
-           h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont);
+           h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), err*err);
         }
      }
   }
@@ -1816,15 +1819,16 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
   h1->SetMarkerStyle(this->GetMarkerStyle());
 
 // Fill the profile histogram
-  Double_t cont;
+  Double_t cont, err;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         if (ncuts) {
            if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont =  GetCellContent(binx,biny);
+        err = GetCellError(binx, biny);
         if (cont) {
-           h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
+           h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), err*err);
         }
      }
   }
