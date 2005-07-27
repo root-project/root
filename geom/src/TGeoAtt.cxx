@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.5 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.6 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -27,6 +27,8 @@ TGeoAtt::TGeoAtt()
 // Default constructor
    fGeoAtt = 0;
    if (!gGeoManager) return;
+   SetActivity(kTRUE);
+   SetActiveDaughters(kTRUE);
    SetVisibility(kTRUE);
    SetVisDaughters(kTRUE);
    SetVisStreamed(kFALSE);
@@ -37,6 +39,8 @@ TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t *
 {
 // constructor
    fGeoAtt = 0;
+   SetActivity(kTRUE);
+   SetActiveDaughters(kTRUE);
    SetVisibility(kTRUE);
    SetVisDaughters(kTRUE);
    SetVisStreamed(kFALSE);

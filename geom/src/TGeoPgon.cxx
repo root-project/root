@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.50 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.51 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -648,15 +648,15 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
    Int_t incseg = (dir[2]>0)?1:-1; // dir[2] is never 0 here
    // Compute the projected radius from starting point
    Int_t iplstart = ipl;
-   Int_t iphcrt;
-   Double_t apr, bpr, db;
-   Double_t rpg, rnew, znew;
-   Double_t rpgin,rpgout,apgin,apgout,bpgin,bpgout;
+   Int_t iphcrt = 0;
+   Double_t apr=0, bpr=0, db=0;
+   Double_t rpg=0, rnew=0, znew=0;
+   Double_t rpgin=0,rpgout=0,apgin=0,apgout=0,bpgin=0,bpgout=0;
    Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
    Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi, dz;
-   Double_t cosph, sinph;
-   Double_t distz, distr, din, dout;
+   Double_t phi=0, dz=0;
+   Double_t cosph=0, sinph=0;
+   Double_t distz=0, distr=0, din=0, dout=0;
    Double_t invdir = 1./dir[2];
    memcpy(pt,point,3*sizeof(Double_t));
    for (iphcrt=iphstart; iphcrt<nphi; iphcrt++) {

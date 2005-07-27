@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.62 2005/06/15 11:53:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.63 2005/06/16 13:25:22 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -87,6 +87,7 @@ private :
    Bool_t                fDrawExtra;        //! flag that the list of physical nodes has to be drawn
    Bool_t                fMatrixTransform;  //! flag for using GL matrix
    Bool_t                fMatrixReflection; //! flag for GL reflections
+   Bool_t                fActivity;         //! switch ON/OFF volume activity (default OFF - all volumes active))
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
 
@@ -333,6 +334,8 @@ public:
    Double_t               Safety(Bool_t inside=kFALSE);
    TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
+   void                   DisableInactiveVolumes() {fActivity=kTRUE;}
+   void                   EnableInactiveVolumes()  {fActivity=kFALSE;}
    void                   SetCurrentTrack(Int_t i) {fCurrentTrack = (TVirtualGeoTrack*)fTracks->At(i);}
    void                   SetCurrentTrack(TVirtualGeoTrack *track) {fCurrentTrack=track;}
    Int_t                  GetNtracks() const {return fNtracks;}
@@ -368,6 +371,7 @@ public:
    Bool_t                 IsOutside() const            {return fIsOutside;} 
    Bool_t                 IsOnBoundary() const         {return fIsOnBoundary;}
    Bool_t                 IsNullStep() const           {return fIsNullStep;}
+   Bool_t                 IsActivityEnabled() const    {return fActivity;}
    void                   SetOutside(Bool_t flag=kTRUE) {fIsOutside = flag;}
    void                   UpdateCurrentPosition(Double_t *nextpoint);
    

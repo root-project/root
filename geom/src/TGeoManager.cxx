@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.119 2005/06/15 11:53:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.120 2005/06/16 13:25:22 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -505,6 +505,7 @@ TGeoManager::TGeoManager()
       fPath = "";
       fCache = 0;
       fPainter = 0;
+      fActivity = kFALSE;
       fIsEntering = kFALSE;
       fIsExiting = kFALSE;
       fIsStepEntering = kFALSE;
@@ -618,6 +619,7 @@ void TGeoManager::Init()
    fPath = "";
    fCache = 0;
    fPainter = 0;
+   fActivity = kFALSE;
    fIsEntering = kFALSE;
    fIsExiting = kFALSE;
    fIsStepEntering = kFALSE;
@@ -2084,6 +2086,7 @@ Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point,
          if (check_list[i]==ovlps[j]) {
          // overlapping node in voxel -> check if touched
             current = fCurrentNode->GetDaughter(check_list[i]);
+            if (fActivity && !current->GetVolume()->IsActive()) continue;
             current->MasterToLocal(point, &local[0]);
             if (current->GetVolume()->Contains(&local[0])) {
                result[ntotal++]=check_list[i];
@@ -2658,8 +2661,11 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // we are looking upwards until inside current node or exit
       if (fStartSafe) GotoSafeLevel();
       vol=fCurrentNode->GetVolume();
-      fCache->MasterToLocal(fPoint, point);
-      inside_current = vol->Contains(point);
+      // check if activity is switched on
+      if (!fActivity || vol->IsActive()) {
+         fCache->MasterToLocal(fPoint, point);
+         inside_current = vol->Contains(point);
+      }   
       if (!inside_current) {
          fIsSameLocation = kFALSE;
          TGeoNode *skip = fCurrentNode;
@@ -2706,6 +2712,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    Int_t nd = vol->GetNdaughters();
    // in case there are no daughters
    if (!nd) return fCurrentNode;
+   if (fActivity && !vol->IsActiveDaughters()) return fCurrentNode;
 
    TGeoPatternFinder *finder = vol->GetFinder();
    // point is inside the current node
@@ -2734,6 +2741,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       for (Int_t id=0; id<ncheck; id++) {
          node = vol->GetNode(check_list[id]);
          if (node==skipnode) continue;
+         if (fActivity && !node->GetVolume()->IsActive()) continue;
          if ((id<(ncheck-1)) && node->IsOverlapping()) {
          // make the cluster of overlaps
             if (ncheck+fOverlapMark > fOverlapSize) {
@@ -2763,6 +2771,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // if there are no voxels just loop all daughters
    Int_t id = 0;
    while ((node=fCurrentNode->GetDaughter(id++))) {
+      if (fActivity && !node->GetVolume()->IsActive()) continue;
       if (node==skipnode) {
          if (id==nd) return fCurrentNode;
          continue;
@@ -2959,6 +2968,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
    TGeoVolume *vol = fCurrentNode->GetVolume();
    Int_t nd = vol->GetNdaughters();
    if (!nd) return 0;  // No daughter 
+   if (fActivity && !vol->IsActiveDaughters()) return 0;
    Double_t lpoint[3], ldir[3];
    TGeoNode *current = 0;
    Int_t i=0;
@@ -3007,6 +3017,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
    if (nd<5 || !voxels) {
       for (i=0; i<nd; i++) {
          current = vol->GetNode(i);
+         if (fActivity && !current->GetVolume()->IsActive()) continue;
          current->cd();
          if (voxels && voxels->IsSafeVoxel(point, i, fStep)) continue;
          current->MasterToLocal(point, lpoint);
@@ -3036,6 +3047,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
    while ((vlist=voxels->GetNextVoxel(point, dir, ncheck))) {
       for (i=0; i<ncheck; i++) {
          current = vol->GetNode(vlist[i]);
+         if (fActivity && !current->GetVolume()->IsActive()) continue;
          current->cd();
          current->MasterToLocal(point, lpoint);
          current->MasterToLocalVect(dir, ldir);
