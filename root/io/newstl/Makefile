@@ -163,7 +163,7 @@ emptyCollection: emptyCollection.log
 	$(TestDiff)
 
 emulatedWrite.log: $(ROOT_LOC)/bin/hadd$(ExeSuf)
-	$(CMDECHO) hadd -f result.root cmsJets_?.root > emulatedWrite.log
+	$(CMDECHO) hadd -f result.root cmsJets_?.root > emulatedWrite.log 2>&1
 
 emulatedWrite: emulatedWrite.log
 	$(TestDiff)
