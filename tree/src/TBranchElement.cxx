@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.175 2005/06/20 14:09:15 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.176 2005/07/15 21:35:45 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1631,16 +1631,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
        }
        fNdata = n[0];
        if ( fType == 4)   {
-          // Note: Proxy-helper needs to "embrace" the entire
-          //       streaming of this STL container if the container
-          //       is a set/multiset/map/multimap (what we do not
-          //       know here).
-          //       For vector/list/deque Allocate == Resize
-          //                         and Commit   == noop.
-          // TODO: Exception safety a la TPushPop
-          TVirtualCollectionProxy* proxy = GetCollectionProxy();
-          TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
-          void* env = proxy->Allocate(fNdata,true);
           Int_t i, nbranches = fBranches.GetEntriesFast();
           switch(fSTLtype)  {
             case TClassEdit::kSet:
@@ -1656,7 +1646,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
             default:
               break;
           }
-          proxy->Commit(env);
        }
        return;
      } else if (fType == 31 || fType == 41) {    // sub branch of a TClonesArray
