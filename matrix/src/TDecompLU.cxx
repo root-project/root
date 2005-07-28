@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.20 2005/04/05 12:47:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.21 2005/06/22 12:37:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -754,6 +754,9 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
 Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 {
   // Calculate matrix inversion through in place forward/backward substitution
+
+  if (det)
+    *det = 0.0;
 
   if (lu.GetNrows() != lu.GetNcols() || lu.GetRowLwb() != lu.GetColLwb()) {
     ::Error("TDecompLU::InvertLU","matrix should be square");
