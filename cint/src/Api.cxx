@@ -268,6 +268,15 @@ int G__IncludePathInfo::Next() {
 }
 ////////////////////////////////////////////////////////////////////
 
+#ifdef G__EXCEPTIONWRAPPER
+#ifdef G__STD_EXCEPTION
+#include <exception>
+#include <typeinfo>
+#include <string>
+#if !defined(__hpux) || __HP_aCC >= 53000
+using namespace std;
+#endif
+#endif
 /*********************************************************************
 * G__DemangleClassname
 *********************************************************************/
@@ -347,15 +356,6 @@ static int G__DemangleClassname(char *buf,const char *orig)
   
 }
 
-#ifdef G__EXCEPTIONWRAPPER
-#ifdef G__STD_EXCEPTION
-#include <exception>
-#include <typeinfo>
-#include <string>
-#if !defined(__hpux) || __HP_aCC >= 53000
-using namespace std;
-#endif
-#endif
 /*********************************************************************
 * G__ExceptionWrapper
 *********************************************************************/

@@ -53,7 +53,7 @@ void G__autoobject::disp(void) const {
  *************************************************************************/
 /////////////////////////////////////////////////////////////////////////
 void G__autoobjectstack::disp(int scopelevel) const {
-  fprintf(G__serr,"autostack=%d scope=%d ",m_ctnr.size(),scopelevel);
+   fprintf(G__serr,"autostack=%d scope=%d ",(int)m_ctnr.size(),scopelevel);
   list<G__autoobject*>::const_iterator i;
   for(i=m_ctnr.begin();i!=m_ctnr.end();++i) {
     (*i)->disp();

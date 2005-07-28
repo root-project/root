@@ -1926,7 +1926,7 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
         G__security |= G__SECURE_GARBAGECOLLECTION;
         fprintf(G__sout,"!!!new/delete reference count control turned on");
       }
-      fprintf(G__sout,"  0x%x\n",G__security);
+      fprintf(G__sout,"  0x%x\n",(unsigned int)G__security);
     }
 
 #endif /* G__SECURITY */
