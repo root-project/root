@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root
+CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root *.clog
 
 #Set the list of target to make while testing
 TEST_TARGETS += vectorInVector indexLoad vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
