@@ -669,6 +669,8 @@ install: all
 		 $(INSTALLDATA) $(GDKDLLS)      $(DESTDIR)$(BINDIR); \
 	      fi; \
 	   fi; \
+	   $(INSTALLDATA) include/*.pri         $(DESTDIR)$(INCDIR); \
+	   $(INSTALLDATA) include/*.cw          $(DESTDIR)$(INCDIR); \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*.h           $(DESTDIR)$(INCDIR); \
