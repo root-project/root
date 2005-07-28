@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.22 2005/06/14 15:47:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.23 2005/06/21 12:16:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -131,17 +131,19 @@ char *TGeoMaterial::GetPointerName() const
 //-----------------------------------------------------------------------------
 void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
 {
-// Set radiation/absorbtion lengths
-   fRadLen = radlen;
-   fIntLen = intlen;
-/*
-   if (fA > 0 && fRadLen <= 0) {
+// Set radiation/absorbtion lengths. If the values are negative, their absolute value
+// is taken, otherwise radlen is recomputed using G3 formula.
+   fRadLen = TMath::Abs(radlen);
+   fIntLen = TMath::Abs(intlen);
+   // compute radlen systematically with G3 formula for a valid material
+   if (fA > 0 && fZ > 0 && radlen>0) {
       //taken grom Geant3 routine GSMATE
       const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
       fRadLen = fA/(ALR2AV*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
              (AL183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
-   }
-*/
+   } else {
+      if (radlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
+   }   
 }   
 
 //-----------------------------------------------------------------------------
