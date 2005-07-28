@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.11 2005/07/21 14:08:06 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.12 2005/07/21 23:49:08 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -91,30 +91,25 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
       // Set debug level
       EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
 
-      // Local domain
-      TInetAddress loc(gSystem->GetHostByName(gSystem->HostName()));
-      TString localDomain = loc.GetHostName();
-      localDomain.Remove(0,localDomain.Index('.'));
-
       // List of domains where redirection is allowed
-      TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE",
-                                        localDomain.Data());
-      EnvPutString(NAME_REDIRDOMAINALLOW_RE, allowRE.Data());
+      TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE", "");
+      if (allowRE.Length() > 0)
+         EnvPutString(NAME_REDIRDOMAINALLOW_RE, allowRE.Data());
 
       // List of domains where redirection is denied
-      TString denyRE  = gEnv->GetValue("XNet.RedirDomainDenyRE",
-                                       "<unknown>");
-      EnvPutString(NAME_REDIRDOMAINDENY_RE, denyRE.Data());
+      TString denyRE  = gEnv->GetValue("XNet.RedirDomainDenyRE", "");
+      if (denyRE.Length() > 0)
+         EnvPutString(NAME_REDIRDOMAINDENY_RE, denyRE.Data());
 
       // List of domains where connection is allowed
-      TString allowCO = gEnv->GetValue("XNet.ConnectDomainAllowRE",
-                                       localDomain.Data());
-      EnvPutString(NAME_CONNECTDOMAINALLOW_RE, allowCO.Data());
+      TString allowCO = gEnv->GetValue("XNet.ConnectDomainAllowRE", "");
+      if (allowCO.Length() > 0)
+         EnvPutString(NAME_CONNECTDOMAINALLOW_RE, allowCO.Data());
 
       // List of domains where connection is denied
-      TString denyCO  = gEnv->GetValue("XNet.ConnectDomainDenyRE",
-                                       "<unknown>");
-      EnvPutString(NAME_CONNECTDOMAINDENY_RE, denyCO.Data());
+      TString denyCO  = gEnv->GetValue("XNet.ConnectDomainDenyRE", "");
+      if (denyCO.Length() > 0)
+         EnvPutString(NAME_CONNECTDOMAINDENY_RE, denyCO.Data());
 
       // Connect Timeout
       Int_t connTO = gEnv->GetValue("XNet.ConnectTimeout",
@@ -142,8 +137,7 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
       EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
 
       // Whether to use a separate thread for reading
-      Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous",
-                                      DFLT_GOASYNC);
+      Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
       EnvPutInt(NAME_GOASYNC, goAsync);
 
       // Read ahead size
