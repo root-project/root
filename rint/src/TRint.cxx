@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.46 2005/06/06 12:47:49 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.47 2005/06/06 12:48:37 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -217,6 +217,9 @@ void TRint::Run(Bool_t retrn)
 
    // Process shell command line input files
    if (InputFiles()) {
+      // Make sure that calls into the event loop
+      // ignore end-of-file on the terminal.
+      fInputHandler->DeActivate();
       Bool_t needGetlinemInit = kFALSE;
       TIter next(InputFiles());
       RETRY {
@@ -254,6 +257,10 @@ void TRint::Run(Bool_t retrn)
             if (error != 0) break;
          }
       } ENDTRY;
+
+      // Allow end-of-file on the terminal to be noticed
+      // after we finish processing the command line input files.
+      fInputHandler->Activate();
 
       if (QuitOpt()) {
          if (retrn) return;
