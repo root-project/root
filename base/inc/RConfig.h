@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.83 2005/06/10 18:12:55 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.84 2005/06/22 17:04:45 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -166,7 +166,7 @@
 #      define R__B64
 #      undef R__SEEK64
 #   endif
-#   if !defined(__GNUC__) && !defined(__KCC)
+#   if !defined(__KCC)
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif
