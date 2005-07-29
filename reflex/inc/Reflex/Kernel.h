@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.1 2005/06/23 10:21:06 brun Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -44,7 +44,7 @@
 #ifdef _WIN32
   typedef __int64 longlong;
   typedef unsigned __int64 ulonglong;
-#elif defined(__linux) || defined(sun) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux))
+#elif defined(__linux) || defined(sun) || defined(__sgi) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux))
   typedef long long int longlong;
   typedef unsigned long long int ulonglong;
 #endif
