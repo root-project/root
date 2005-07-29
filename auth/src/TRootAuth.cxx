@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:$:$Id:$
+// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerardo Ganis   08/07/05
 
 /*************************************************************************
@@ -160,11 +160,3 @@ void TRootAuth::ErrorMsg(const char *where, Int_t ecode)
 
    TAuthenticate::AuthError(where, ecode);
 }
-
-extern "C" {
-TVirtualAuth *GetRootAuthobject()
-{
-   // Instantiate a TRootAuth and return it
-
-   return (new TRootAuth());
-}}

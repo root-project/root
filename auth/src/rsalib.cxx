@@ -1,4 +1,3 @@
-/* @(#)root/clib:$Name:  $:$Id: rsalib.c,v 1.2 2003/08/30 18:24:52 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -121,6 +120,12 @@ int rsa_genrsa(rsa_NUMBER p1, rsa_NUMBER p2, rsa_NUMBER *n, rsa_NUMBER *e, rsa_N
 
 }
 
+int rsa_encode_size(rsa_NUMBER n)
+{
+   // Returns length unit block of output 
+
+    return ( n_bitlen( &n) + 7) / 8;
+}
 
 int rsa_encode(char *bufin, int lin, rsa_NUMBER n, rsa_NUMBER e)
 {
@@ -233,8 +238,8 @@ int rsa_decode(char *bufin, int lin, rsa_NUMBER n, rsa_NUMBER e)
  */
 
 
-static char *HEX="0123456789ABCDEF";
-static char *hex="0123456789abcdef";
+static const char *HEX="0123456789ABCDEF";
+static const char *hex="0123456789abcdef";
 
 static rsa_NUMBER bits[9];
 static rsa_NUMBER gint16[16];
@@ -361,7 +366,7 @@ int rsa_num_sget(rsa_NUMBER *n, char *s)
 {
 #if rsa_MAXINT == ( (1 << rsa_MAXBIT) - 1 )
 	rsa_INT *p;
-	char *hp;
+	const char *hp;
 	int bi,ab,i;
 	long b;
 	int first = 1;

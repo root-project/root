@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.81 2005/07/18 16:20:53 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.82 2005/07/21 14:08:06 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -180,10 +180,8 @@ extern krb5_deltat krb5_clockskew;
 #endif
 
 #include "rpdp.h"
-extern "C" {
-   #include "rsadef.h"
-   #include "rsalib.h"
-}
+#include "rsadef.h"
+#include "rsalib.h"
 //
 // To improve error logging for UsrPwd on the client side
 static ERootdErrors kUsrPwdErr[4][4] = {

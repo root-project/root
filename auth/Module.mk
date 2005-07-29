@@ -17,10 +17,12 @@ RAUTHDS      := $(MODDIRS)/G__RootAuth.cxx
 RAUTHDO      := $(RAUTHDS:.cxx=.o)
 RAUTHDH      := $(RAUTHDS:.cxx=.h)
 
-RAUTHS1      := TAuthenticate THostAuth TRootAuth TRootSecContext AuthConst
-RAUTHS2      := TAuthenticate THostAuth TRootAuth TRootSecContext
-RAUTHH       := $(patsubst %,$(MODDIRI)/%.h,$(RAUTHS1))
-RAUTHS       := $(patsubst %,$(MODDIRS)/%.cxx,$(RAUTHS2))
+RAUTHH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+RAUTHS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+
+RAUTHH       := $(filter-out $(MODDIRI)/DaemonUtils.h,$(RAUTHH))
+RAUTHS       := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(RAUTHS))
+
 RAUTHO       := $(RAUTHS:.cxx=.o)
 
 RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d)
@@ -29,6 +31,9 @@ RAUTHLIB     := $(LPATH)/libRootAuth.$(SOEXT)
 
 #### for libSrvAuth (built in rpdutils/Module.mk) ####
 DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
+
+#### for rootd and proofd ####
+RSAO         := $(AUTHDIRS)/rsaaux.o $(AUTHDIRS)/rsalib.o $(AUTHDIRS)/rsafun.o
 
 # Add SSL flags, if required
 EXTRA_RAUTHFLAGS = $(EXTRA_AUTHFLAGS)

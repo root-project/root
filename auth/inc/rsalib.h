@@ -1,4 +1,5 @@
-/* @(#)root/clib:$Name:  $:$Id: rsalib.h,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
+// $Id: rsalib.hh,v 1.1 2005/06/22 08:09:01 ganis Exp $
+/* @(#)root/clib:$Name:  $:$Id: rsalib.hh,v 1.1 2005/06/22 08:09:01 ganis Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -29,6 +30,7 @@ int    rsa_genrsa(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER
 int    rsa_encode(char *, int, rsa_NUMBER, rsa_NUMBER);
 int    rsa_decode(char *, int, rsa_NUMBER, rsa_NUMBER);
 
+int    rsa_encode_size(rsa_NUMBER);
 
 /******************
  * nio.h          *

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.18 2005/06/10 17:49:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.19 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -40,8 +40,6 @@
 #include "TSecContext.h"
 #endif
 
-typedef TVirtualAuth *(*Auth_t)();
-
 enum ESockOptions {
    kSendBuffer,        // size of send buffer
    kRecvBuffer,        // size of receive buffer
@@ -71,7 +69,6 @@ class TSocket : public TNamed {
 friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
 friend class TServerSocket;
 friend class TSlave;       // to be able to call SendHostAuth()
-friend class TXSocket;
 
 public:
    enum EInterest { kRead = 1, kWrite = 2 };
@@ -106,7 +103,6 @@ protected:
 private:
    void          operator=(const TSocket &);  // not implemented
    Option_t     *GetOption() const { return TObject::GetOption(); }
-   TVirtualAuth *LoadAuth(const char *alib);
 
 public:
    TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);

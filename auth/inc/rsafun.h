@@ -1,4 +1,3 @@
-// @(#)root/clib:$Name:  $:$Id: rsafun.h,v 1.2 2003/08/29 17:23:31 rdm Exp $
 // Author: Gerardo Ganis  07/07/2003
 
 /*******************************************************************************
@@ -26,11 +25,9 @@
 #ifndef ROOT_rsafun
 #define ROOT_rsafun
 
-extern "C" {
 #ifndef _RSADEF_H
 #include "rsadef.h"
 #endif
-}
 
 
 typedef  rsa_NUMBER (*rsa_genprim_t)(int, int);
@@ -41,7 +38,7 @@ typedef  int	(*rsa_num_sput_t)(rsa_NUMBER*, char*, int );
 typedef  int	(*rsa_num_fput_t)(rsa_NUMBER*, FILE* );
 typedef  int	(*rsa_num_sget_t)(rsa_NUMBER*, char* );
 typedef  int	(*rsa_num_fget_t)(rsa_NUMBER*, FILE* );
-typedef  int    (*rsa_assign_t)(rsa_NUMBER *, rsa_NUMBER *);
+typedef  void   (*rsa_assign_t)(rsa_NUMBER *, rsa_NUMBER *);
 typedef  int    (*rsa_cmp_t)(rsa_NUMBER *, rsa_NUMBER *);
 
 

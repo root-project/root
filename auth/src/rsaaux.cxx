@@ -1,4 +1,3 @@
-/* @(#)root/clib:$Name:  $:$Id: rsaaux.c,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -20,13 +19,24 @@
 *       Internal rsa funtions                                                  *
 *									       *
 *******************************************************************************/
-#include	<stdio.h>
-#include	<ctype.h>
-#include	<string.h>
-#include	<stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-#include	"rsaaux.h"
-#include	"rsalib.h"
+#ifdef WIN32
+#  include <io.h>
+   typedef long off_t;
+#else
+#  include <unistd.h>
+#endif
+
+#include "rsaaux.h"
+#include "rsalib.h"
 
 /*******************************************************************************
 *									       *
@@ -940,7 +950,7 @@ void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 
 void gen_number(int len, rsa_NUMBER *n)
 {
-	char *hex = "0123456789ABCDEF" ;
+	const char *hex = "0123456789ABCDEF" ;
 	char num[ rsa_MAXLEN*rsa_MAXBIT/4 +1 ];
 	char *p;
 	int i,l;
@@ -962,11 +972,17 @@ void gen_number(int len, rsa_NUMBER *n)
 
 void init_rnd()
 {
-	long time();
-	unsigned int seed;
+   const char *randdev = "/dev/urandom";
 
-	seed = (unsigned int) time((long *)0);
-	(void)srand( seed );
+   int fd;
+   unsigned int seed;
+   if ((fd = open(randdev, O_RDONLY)) != -1) {
+      read(fd, &seed, sizeof(seed));
+      close(fd);
+   } else {
+      seed = (unsigned int)time(0);   //better use times() + win32 equivalent
+   }
+   srand( seed );
 }
 
 

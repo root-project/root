@@ -99,6 +99,3 @@ distclean::     distclean-rpdutils
 ##### extra rules ######
 $(RPDUTILO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
-
-$(DAEMONUTILSO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.33 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.34 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TError.h"
 #include "TMessage.h"
 #include "TPSocket.h"
+#include "TPluginManager.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TSystem.h"
@@ -810,13 +811,23 @@ Bool_t TSocket::Authenticate(const char *user)
          alib = "Root";
       } 
 
-      // Load the authentication libraries
-      TVirtualAuth *auth = LoadAuth(alib);
-      if (!auth) {
+      // Load the plugin
+      TPluginHandler *h =
+         gROOT->GetPluginManager()->FindHandler("TVirtualAuth", alib);
+      if (!h || h->LoadPlugin() != 0) {
          Error("Authenticate",
-               "could not load properly %s authentication lib", alib.Data());
+               "could not load properly %s authentication plugin", alib.Data());
          return rc;
       }
+
+      // Get an instance of the interface class
+      TVirtualAuth *auth = (TVirtualAuth *)(h->ExecPlugin(0));
+      if (!auth) {
+         Error("Authenticate", "could not instantiate the interface class");
+         return rc;
+      }
+      if (gDebug > 1)
+         Info("Authenticate", "class for '%s' authentication loaded", alib.Data());
 
       Option_t *opts = (gROOT->IsProofServ()) ? "P" : "";
       if (!(auth->Authenticate(this, host, user, opts))) {
@@ -1110,75 +1121,4 @@ void TSocket::NetError(const char *where, Int_t err)
 
    if (gDebug > 0)
       ::Error(where, "%s", gRootdErrStr[err]);
-}
-
-//______________________________________________________________________________
-TVirtualAuth *TSocket::LoadAuth(const char *alib)
-{
-   // Load the authentication library and the symbols needed 
-   static Int_t       alibNum     = 2;
-   static const char *authLibs[2] = { "Root", "Xrd"};
-   static Auth_t      authHook[2] = { 0 };
-   static TVirtualAuth *authObj[2] = { 0 };
-
-   // Locate index
-   Int_t ia = 0;
-   for(; ia < alibNum; ia++) {
-      if (!strcmp(alib, authLibs[ia]))
-         break;
-   }
-   if (ia == alibNum) {
-      if (gDebug > 0)
-         Error("LoadAuth", "unknown lib name: %s", alib);
-      return (TVirtualAuth *)0;
-   }
-
-   // Load libs
-   if (authHook[ia] == 0) {
-      // Prepare libname ...
-      TString authlib = Form("/lib%sAuth",alib);
-#ifdef ROOTLIBDIR
-      authlib.Prepend(ROOTLIBDIR);
-#else
-      authlib.Prepend("/lib");
-      authlib.Prepend(gRootDir);
-#endif
-      Bool_t ok = kTRUE;
-      char *p = 0;
-      if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
-         delete[] p;
-         if (gSystem->Load(authlib) == -1) {
-            if (gDebug > 0)
-               Info("LoadAuth", "can't load %s",authlib.Data());
-            ok = kFALSE;
-         }
-      } else {
-         if (gDebug > 0)
-            Info("LoadAuth", "can't locate %s",authlib.Data());
-         ok = kFALSE;
-      }
-      //
-      // Locate symbol for object loader
-      if (ok) {
-         TString loader = Form("Get%sAuthobject", alib);
-         Func_t f = gSystem->DynFindSymbol(authlib, loader);
-         if (f)
-            authHook[ia] = (Auth_t)(f);
-         else {
-            if (gDebug > 0)
-               Info("LoadAuth", "can't find %s", loader.Data());
-            ok = kFALSE;
-         }
-      }
-      if (ok && gDebug > 0)
-         Info("LoadAuth", "loader for %s lib loaded", alib);
-   }
-
-   //
-   // Get object instance (only once)
-   if (authHook[ia] != 0 && authObj[ia] == 0)
-      authObj[ia] = (*(authHook[ia]))();
-   
-   // Return the object
-   return authObj[ia];
 }

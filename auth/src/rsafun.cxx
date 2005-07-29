@@ -1,4 +1,3 @@
-// @(#)root/clib:$Name:  $:$Id: rsafun.cxx,v 1.1 2003/08/29 10:38:18 rdm Exp $
 // Author:
 
 /*******************************************************************************
@@ -23,19 +22,16 @@
 
 #include "rsafun.h"
 
-
-extern "C" {
-   rsa_NUMBER rsa_genprim(int, int);
-   int    rsa_genrsa(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
-   int    rsa_encode(char *, int, rsa_NUMBER, rsa_NUMBER);
-   int    rsa_decode(char *, int, rsa_NUMBER, rsa_NUMBER);
-   int	  rsa_num_sput( rsa_NUMBER*, char*, int );
-   int	  rsa_num_fput( rsa_NUMBER*, FILE* );
-   int	  rsa_num_sget( rsa_NUMBER*, char* );
-   int	  rsa_num_fget( rsa_NUMBER*, FILE* );
-   int	  rsa_assign( rsa_NUMBER*, rsa_NUMBER* );
-   int	  rsa_cmp( rsa_NUMBER*, rsa_NUMBER* );
-}
+rsa_NUMBER rsa_genprim(int, int);
+int rsa_genrsa(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
+int rsa_encode(char *, int, rsa_NUMBER, rsa_NUMBER);
+int rsa_decode(char *, int, rsa_NUMBER, rsa_NUMBER);
+int rsa_num_sput( rsa_NUMBER*, char*, int );
+int rsa_num_fput( rsa_NUMBER*, FILE* );
+int rsa_num_sget( rsa_NUMBER*, char* );
+int rsa_num_fget( rsa_NUMBER*, FILE* );
+void rsa_assign( rsa_NUMBER*, rsa_NUMBER* );
+int rsa_cmp( rsa_NUMBER*, rsa_NUMBER* );
 
 rsa_genprim_t  rsa_fun::fg_rsa_genprim;
 rsa_genrsa_t   rsa_fun::fg_rsa_genrsa;

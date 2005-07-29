@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.41 2005/06/23 10:51:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.42 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -193,17 +193,19 @@ void TSlave::Close(Option_t *)
 {
    // Close slave socket.
 
-   // deactivate used sec context if talking to proofd daemon running
-   // an old protocol (sec context disactivated remotely)
-   TSecContext *sc = fSocket->GetSecContext();
-   if (sc && sc->IsActive()) {
-      TIter last(sc->GetSecContextCleanup(), kIterBackward);
-      TSecContextCleanup *nscc = 0;
-      while ((nscc = (TSecContextCleanup *)last())) {
-         if (nscc->GetType() == TSocket::kPROOFD &&
-             nscc->GetProtocol() < 9) {
-            sc->DeActivate("");
-            break;
+   if (fSocket) {
+      // deactivate used sec context if talking to proofd daemon running
+      // an old protocol (sec context disactivated remotely)
+      TSecContext *sc = fSocket->GetSecContext();
+      if (sc && sc->IsActive()) {
+         TIter last(sc->GetSecContextCleanup(), kIterBackward);
+         TSecContextCleanup *nscc = 0;
+         while ((nscc = (TSecContextCleanup *)last())) {
+            if (nscc->GetType() == TSocket::kPROOFD &&
+                nscc->GetProtocol() < 9) {
+               sc->DeActivate("");
+               break;
+            }
          }
       }
    }
