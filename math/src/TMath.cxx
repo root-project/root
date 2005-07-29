@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.100 2005/06/13 13:31:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.101 2005/07/24 20:47:09 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2270,8 +2270,11 @@ Double_t TMath::RMS(Long64_t n, const Short_t *a)
 
    if (n <= 0 || !a) return 0;
 
-   Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t tot = 0, tot2 =0, adouble;
+   for (Long64_t i=0;i<n;i++) {
+      adouble=Double_t(a[i]); 
+      tot += adouble; tot2 += adouble*adouble; 
+   }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
@@ -2285,8 +2288,12 @@ Double_t TMath::RMS(Long64_t n, const Int_t *a)
 
    if (n <= 0 || !a) return 0;
 
-   Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t tot = 0, tot2 =0, adouble;
+   for (Long64_t i=0;i<n;i++) {
+      adouble=Double_t(a[i]); 
+      tot += adouble; tot2 += adouble*adouble; 
+      printf("tot2=%f\n", tot2);
+   }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
@@ -2300,8 +2307,12 @@ Double_t TMath::RMS(Long64_t n, const Float_t *a)
 
    if (n <= 0 || !a) return 0;
 
-   Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t tot = 0, tot2 =0, adouble;
+
+   for (Long64_t i=0;i<n;i++) {
+      adouble=Double_t(a[i]); 
+      tot += adouble; tot2 += adouble*adouble; 
+   }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
@@ -2316,7 +2327,7 @@ Double_t TMath::RMS(Long64_t n, const Double_t *a)
    if (n <= 0 || !a) return 0;
 
    Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i]; }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
@@ -2330,8 +2341,11 @@ Double_t TMath::RMS(Long64_t n, const Long_t *a)
 
    if (n <= 0 || !a) return 0;
 
-   Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t tot = 0, tot2 =0, adouble;
+   for (Long64_t i=0;i<n;i++) {
+      adouble=Double_t(a[i]); 
+      tot += adouble; tot2 += adouble*adouble; 
+   }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
@@ -2345,8 +2359,11 @@ Double_t TMath::RMS(Long64_t n, const Long64_t *a)
 
    if (n <= 0 || !a) return 0;
 
-   Double_t tot = 0, tot2 =0;
-   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t tot = 0, tot2 =0, adouble;
+   for (Long64_t i=0;i<n;i++) {
+      adouble=Double_t(a[i]); 
+      tot += adouble; tot2 += adouble*adouble; 
+   }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
    Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
