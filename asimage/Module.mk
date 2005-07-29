@@ -130,11 +130,7 @@ else
 		echo "*** Building $@..."; \
 		cd $(ASIMAGEDIRS); \
 		if [ ! -d $(ASTEPVERS) ]; then \
-			if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-				gtar zxf $(ASTEPVERS).tar.gz; \
-			else \
-				gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
-			fi; \
+			gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
 		fi; \
 		cd $(ASTEPVERS); \
 		ACC=$(CC); \

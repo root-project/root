@@ -56,7 +56,7 @@ ROOFITH3     := RooNameReg.h RooNameSet.h RooNLLVar.h RooNonCPEigenDecay.h RooNo
                 RooSetPair.h RooSetProxy.h RooSimGenContext.h RooSimPdfBuilder.h RooSimultaneous.h RooStreamParser.h \
                 RooStringVar.h RooSuperCategory.h RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h \
                 RooTrace.h RooTreeData.h RooTruthModel.h RooUnblindCPAsymVar.h RooUnblindOffset.h RooUnblindPrecision.h \
-                RooUnblindUniform.h RooUniformBinning.h RooVoigtian.h 
+                RooUnblindUniform.h RooUniformBinning.h RooVoigtian.h
 
 ROOFITH1     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH1))
 ROOFITH2     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH2))
@@ -84,11 +84,7 @@ $(ROOFITETAG): $(ROOFITSRCS)
 		@(if [ ! -d src ]; then \
 		   echo "*** Extracting roofit source ..."; \
 		   cd roofit ; \
-		   if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-		      gtar xzf $(ROOFITVERS).src.tgz; \
-		   else \
-		      gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
-		   fi; \
+		   gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
 		   etag=`basename $(ROOFITETAG)` ; \
 		   touch $$etag ; \
 		fi)

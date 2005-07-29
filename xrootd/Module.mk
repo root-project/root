@@ -50,11 +50,7 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		cd $(XROOTDDIRS); \
 		if [ ! -d xrootd ]; then \
 		   echo "*** Extracting xrootd source ..."; \
-		   if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-		      gtar zxf $(XROOTDVERS).src.tgz; \
-		   else \
-		      gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
-		   fi; \
+		   gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
 		   etag=`basename $(XROOTDETAG)` ; \
 		   touch $$etag ; \
 		fi)
