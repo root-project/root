@@ -30,7 +30,7 @@ COMPILER      = gnu
 
 # Linker:
 LD            = g++ $(EXTRA_LDFLAGS)
-LDFLAGS       = $(OPT) -lm -L/usr/lib32
+LDFLAGS       = $(OPT) -lm -lgen -L/usr/lib32
 SOFLAGS       = -shared
 SOEXT         = so
 
