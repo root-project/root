@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: SpecFunc.cxx,v 1.3 2005/06/24 21:30:57 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: SpecFunc.cxx,v 1.4 2005/06/28 09:55:13 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -14,7 +14,7 @@
 
 //#include "MathCore/SpecFunc.h"
 //#include "SpecFunc.h"
-#if defined(__sun) || defined(_WIN32) || defined(_AIX) || defined(__alpha) 
+#if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX) || defined(__alpha) 
 #define NOT_HAVE_TGAMMA
 #endif
 
