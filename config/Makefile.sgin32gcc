@@ -1,6 +1,7 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for SGI IRIX 6.x with GCC 2.95.2 compiler
+# Makefile of ROOT for SGI IRIX 6.4 and 6.5 with gcc compiler for n32 ABI
+# contributed by Martin Weber
 
 PLATFORM      = sgi
 
@@ -17,34 +18,32 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -fsigned-char -Wall -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -fsigned-char -fPIC $(EXTRA_CFLAGS)
+CXXFLAGS      = -fsigned-char -Wall -fPIC -DIRIX64 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fsigned-char -Wall -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -fsigned-char -Wall -fPIC -DG__REGEXP1 \
                 -DG__UNIX -DG__SIGNEDCHAR -DG__SHAREDLIB -DG__OSFDLL \
                 -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -fsigned-char -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR \
+CINTCFLAGS    = -fsigned-char -Wall -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR \
                 -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
                 -DG__REDIRECTIO $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:
-LD            = g++
-LDFLAGS       = $(OPT)  -Wl,-u,__builtin_new -Wl,-u,__builtin_delete \
-                -Wl,-u,__nw__FUiPv $(EXTRA_LDFLAGS)
+LD            = g++ $(EXTRA_LDFLAGS)
+LDFLAGS       = $(OPT) -lm -L/usr/lib32
 SOFLAGS       = -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lgen -lstdc++ -lm $(OSTHREADLIBDIR) $(OSTHREADLIB)
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
-CILIBS        = -lm -lgen -lbsd -lstdc++
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -L/usr/lib32 -lX11
+CILIBS        = -lm -lgen
 
 # Fortran:
-F77LIBS       = -lftn
+
 
 # Override default in Makefile.config
 INSTALL      := cp -pR
 INSTALLDATA  := cp -pR
 
 # Extras
-
