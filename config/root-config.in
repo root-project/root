@@ -120,13 +120,13 @@ sgicc64)
    auxcflags="-64 -LANG:std"
    auxlibs="-lm"
    ;;
-sgiegcs)
-   # SGI 6.x with EGCS
+sgigcc)
+   # SGI 6.x with gcc
    auxcflags="-fsigned-char"
    auxlibs="-lgen -lstdc++ -lm -ldl"
    ;;
-sgin32egcs)
-   # SGI 6.x with EGCS with n32 ABI
+sgin32gcc)
+   # SGI 6.x with gcc with n32 ABI
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl"
    ;;
