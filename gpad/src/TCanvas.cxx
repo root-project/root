@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.89 2005/04/23 10:55:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.90 2005/06/24 12:27:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -464,6 +464,10 @@ void TCanvas::Build()
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
       fContextMenu = new TContextMenu("ContextMenu");
+   } else {
+      // Make sure that batch interactive canvas sizes are the same 
+      fCw -= 4;
+      fCh -= 28;
    }
    gROOT->GetListOfCanvases()->Add(this);
 
