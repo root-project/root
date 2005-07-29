@@ -38,9 +38,9 @@ mklinux              for MkLinux gcc and glibc
 openbsd              for OpenBSD >= 3.7
 sgicc                for SGI IRIX 6.x CC
 sgicc64              for SGI IRIX 6.x CC 64 bits
-sgigcc               for SGI IRIX 6.x egcs 1.1.x
+sgigcc               for SGI IRIX 6.x gcc
 sgikcc               for SGI IRIX 6.x KCC
-sgin32gcc            for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
+sgin32gcc            for SGI IRIX 6.4 gcc using n32 ABI
 solaris              for Solaris CC
 solarisCC5           for Solaris CC 5.0
 solarisgcc           for Solaris gcc
