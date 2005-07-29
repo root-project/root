@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.48 2005/07/08 15:47:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.49 2005/07/29 11:25:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -642,7 +642,7 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 //______________________________________________________________________________
 void TStyle::SetColorModelPS(Int_t c)
 {
-// Define the color model use by TPostScript (RGB or CMYK).
+// Define the color model use by TPostScript and TPDF (RGB or CMYK).
 // CMY and CMYK models are subtractive color models unlike RGB which is an
 // additive. They are mainly used for printing purposes. CMY means Cyan Magenta
 // Yellow to convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
@@ -654,10 +654,10 @@ void TStyle::SetColorModelPS(Int_t c)
 // Double_t Yellow  = (1-Blue-Black)/(1-Black);
 //
 // CMYK add the black component which allows to have a better quality for black
-// printing. PostScript support the CMYK model.
+// printing. PostScript and PDF support the CMYK model.
 //
-// c = 0 means TPostScript will use RGB color model (default)
-// c = 1 means TPostScript will use CMYK color model
+// c = 0 means TPostScript and TPDF will use RGB color model (default)
+// c = 1 means TPostScript and TPDF will use CMYK color model
 
    fColorModelPS = c;
 }

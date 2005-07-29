@@ -1237,7 +1237,11 @@ void TPDF::PatternEncode()
    Int_t PatternNb = kObjPattern;
 
    NewObject(kObjColorSpace);
-   PrintStr("[/Pattern /DeviceRGB]@");
+   if (gStyle->GetColorModelPS()) {
+      PrintStr("[/Pattern /DeviceCMYK]@");
+   } else {
+      PrintStr("[/Pattern /DeviceRGB]@");
+   }
    PrintStr("endobj@");
    NewObject(kObjPatternResourses);
    PrintStr("<</ProcSet[/PDF]>>@");
@@ -1750,19 +1754,46 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
    fRed   = r;
    fGreen = g;
    fBlue  = b;
-   if (fRed   <= 0.000001) fRed=0;
-   if (fGreen <= 0.000001) fGreen=0;
-   if (fBlue  <= 0.000001) fBlue=0;
+   if (fRed   <= 0.000001) fRed   = 0;
+   if (fGreen <= 0.000001) fGreen = 0;
+   if (fBlue  <= 0.000001) fBlue  = 0;
 
-   WriteReal(fRed);
-   WriteReal(fGreen);
-   WriteReal(fBlue);
-   PrintFast(3," RG");
-
-   WriteReal(fRed);
-   WriteReal(fGreen);
-   WriteReal(fBlue);
-   PrintFast(3," rg");
+   if (gStyle->GetColorModelPS()) {
+      Double_t Cyan, Magenta, Yellow;
+      Double_t Black = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
+      if (Black==1) {
+         Cyan    = 0;
+         Magenta = 0;
+         Yellow  = 0;
+      } else {
+         Cyan    = (1-fRed-Black)/(1-Black);
+         Magenta = (1-fGreen-Black)/(1-Black);
+         Yellow  = (1-fBlue-Black)/(1-Black);
+      }
+      if (Cyan    <= 0.000001) Cyan    = 0;
+      if (Magenta <= 0.000001) Magenta = 0;
+      if (Yellow  <= 0.000001) Yellow  = 0;
+      if (Black   <= 0.000001) Black   = 0;
+      WriteReal(Cyan);
+      WriteReal(Magenta);
+      WriteReal(Yellow);
+      WriteReal(Black);
+      PrintFast(2," K");
+      WriteReal(Cyan);
+      WriteReal(Magenta);
+      WriteReal(Yellow);
+      WriteReal(Black);
+      PrintFast(2," k");
+   } else {
+      WriteReal(fRed);
+      WriteReal(fGreen);
+      WriteReal(fBlue);
+      PrintFast(3," RG");
+      WriteReal(fRed);
+      WriteReal(fGreen);
+      WriteReal(fBlue);
+      PrintFast(3," rg");
+   }
 }
 
 
@@ -1784,9 +1815,30 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
    char cpat[10];
    PrintStr(" /Cs8 cs");
    TColor *col = gROOT->GetColor(color);
-   WriteReal(col->GetRed());
-   WriteReal(col->GetGreen());
-   WriteReal(col->GetBlue());
+   Double_t Red   = col->GetRed();
+   Double_t Green = col->GetGreen();
+   Double_t Blue  = col->GetBlue();
+   if (gStyle->GetColorModelPS()) {
+      Double_t Black = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+      if (Black==1) {
+         WriteReal(0);
+         WriteReal(0);
+         WriteReal(0);
+         WriteReal(Black);
+      } else {
+         Double_t Cyan    = (1-Red-Black)/(1-Black);
+         Double_t Magenta = (1-Green-Black)/(1-Black);
+         Double_t Yellow  = (1-Blue-Black)/(1-Black);
+         WriteReal(Cyan);
+         WriteReal(Magenta);
+         WriteReal(Yellow);
+         WriteReal(Black);
+      }
+   } else {
+      WriteReal(Red);
+      WriteReal(Green);
+      WriteReal(Blue);
+   }
    sprintf(cpat, " /P%2.2d scn", ipat);
    PrintStr(cpat);
 }
