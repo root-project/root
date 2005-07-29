@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.101 2005/07/24 20:47:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.102 2005/07/29 08:53:30 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2292,7 +2292,6 @@ Double_t TMath::RMS(Long64_t n, const Int_t *a)
    for (Long64_t i=0;i<n;i++) {
       adouble=Double_t(a[i]); 
       tot += adouble; tot2 += adouble*adouble; 
-      printf("tot2=%f\n", tot2);
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
