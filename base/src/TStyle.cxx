@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.47 2005/07/07 06:54:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.48 2005/07/08 15:47:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -360,6 +360,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
+   ((TStyle&)obj).fColorModelPS   = fColorModelPS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
 
@@ -467,6 +468,7 @@ void TStyle::Reset(Option_t *)
    fAttDate.SetTextSize(0.025);
    fAttDate.SetTextAlign(11);
    SetLineScalePS();
+   SetColorModelPS();
    SetLineStyleString(1," ");
    SetLineStyleString(2,"12 12");
    SetLineStyleString(3,"4 8");
@@ -635,6 +637,29 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
    if (ax == 2) return fYaxis.GetTitleSize();
    if (ax == 3) return fZaxis.GetTitleSize();
    return fTitleFontSize;
+}
+
+//______________________________________________________________________________
+void TStyle::SetColorModelPS(Int_t c)
+{
+// Define the color model use by TPostScript (RGB or CMYK).
+// CMY and CMYK models are subtractive color models unlike RGB which is an
+// additive. They are mainly used for printing purposes. CMY means Cyan Magenta
+// Yellow to convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
+// CMYK has one more component K (black). The conversion from RGB to CMYK is:
+//
+// Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+// Double_t Cyan    = (1-Red-Black)/(1-Black);
+// Double_t Magenta = (1-Green-Black)/(1-Black);
+// Double_t Yellow  = (1-Blue-Black)/(1-Black);
+//
+// CMYK add the black component which allows to have a better quality for black
+// printing. PostScript support the CMYK model.
+//
+// c = 0 means TPostScript will use RGB color model (default)
+// c = 1 means TPostScript will use CMYK color model
+
+   fColorModelPS = c;
 }
 
 //______________________________________________________________________________

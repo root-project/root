@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.23 2005/07/07 06:54:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.24 2005/07/08 15:47:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -54,6 +54,7 @@ private:
         TAttAxis      fZaxis;             //Z axis attributes
         Float_t       fBarWidth;          //width of bar for graphs
         Float_t       fBarOffset;         //offset of bar for graphs
+        Int_t         fColorModelPS;      //PostScript color model: 0 = RGB, 1 = CMYK
         Int_t         fDrawBorder;        //flag to draw border(=1) or not (0)
         Int_t         fOptLogx;           //=1 if log scale in X
         Int_t         fOptLogy;           //=1 if log scale in y
@@ -190,6 +191,7 @@ public:
         Int_t            GetCanvasDefX() const      {return fCanvasDefX;}
         Int_t            GetCanvasDefY() const      {return fCanvasDefY;}
         Int_t            GetColorPalette(Int_t i) const;
+        Int_t            GetColorModelPS() const    {return fColorModelPS;}
         Float_t          GetDateX()  const          {return fDateX;}
         Float_t          GetDateY() const           {return fDateY;}
         const char      *GetFitFormat()       const {return fFitFormat.Data();}
@@ -277,6 +279,7 @@ public:
         Float_t          GetLineScalePS() const {return fLineScalePS;}
         virtual void     Reset(Option_t *option="");
 
+        void             SetColorModelPS(Int_t c=0);
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
         void             SetHeaderPS(const char *header);
         void             SetHatchesLineWidth(Int_t l) {fHatchesLineWidth = l;}

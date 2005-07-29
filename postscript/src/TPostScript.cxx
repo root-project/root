@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.55 2005/05/09 17:00:15 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.56 2005/05/18 10:28:08 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -189,6 +189,26 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
    gSystem-&gt;Exec("gs file.ps");
 }
 </pre>
+
+<H2>Color Model</H2>
+TPostScript support two color model RGB and CMYK. CMY and CMYK models are 
+subtractive color models unlike RGB which is an additive. They are mainly
+used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
+to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
+component K (black). The conversion from RGB to CMYK is:
+
+ Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+ Double_t Cyan    = (1-Red-Black)/(1-Black);
+ Double_t Magenta = (1-Green-Black)/(1-Black);
+ Double_t Yellow  = (1-Blue-Black)/(1-Black);
+
+CMYK add the black component which allows to have a better quality for black
+printing. PostScript support the CMYK model.
+
+To change the color model use gStyle->SetColorModelPS(c).
+
+c = 0 means TPostScript will use RGB color model (default)
+c = 1 means TPostScript will use CMYK color model
 */
 //End_Html
 // The picture below shows fancy text with national accents or
@@ -502,7 +522,7 @@ void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
    } else {
       if (fNBSameColorCell != 0 ) {
          WriteInteger(fNBSameColorCell+300);
-	 fNBSameColorCell = 0;
+         fNBSameColorCell = 0;
       }
       WriteInteger(r);
       WriteInteger(g);
@@ -1472,7 +1492,7 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
-	 if (!strchr(pstitle,'\n')) {
+         if (!strchr(pstitle,'\n')) {
          PrintFast(2,": ");
          PrintStr(pstitle);
       }
@@ -1499,8 +1519,12 @@ void TPostScript::Initialize()
    PrintStr("/s {stroke} def /l {lineto} def /m {moveto} def /t {translate} def@");
    PrintStr("/sw {stringwidth} def /r {rotate} def /rl {roll}  def /R {repeat} def@");
    PrintStr("/d {rlineto} def /rm {rmoveto} def /gr {grestore} def /f {eofill} def@");
-   PrintStr("/c {setrgbcolor} def /lw {setlinewidth} def /sd {setdash} def@");
-   PrintStr("/cl {closepath} def /sf {scalefont setfont} def /black {0 setgray} def@");
+   if (gStyle->GetColorModelPS()) {
+      PrintStr("/c {setcmykcolor} def /black {0 0 0 1 setcmykcolor} def /sd {setdash} def@");
+   } else {
+      PrintStr("/c {setrgbcolor} def /black {0 setgray} def /sd {setdash} def@");
+   }
+   PrintStr("/cl {closepath} def /sf {scalefont setfont} def /lw {setlinewidth} def@");
    PrintStr("/box {m dup 0 exch d exch 0 d 0 exch neg d cl} def@");
    PrintStr("/NC{systemdict begin initclip end}def/C{NC box clip newpath}def@");
    PrintStr("/bl {box s} def /bf {box f} def /Y { 0 exch d} def /X { 0 d} def @");
@@ -2156,8 +2180,13 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 
    // Define the macro cs and FA if they are not yet defined.
    if (fPatterns[26] == 0) {
-      PrintStr(" /cs {[/Pattern /DeviceRGB] setcolorspace} def");
-      PrintStr(" /FA {f [/DeviceRGB] setcolorspace} def");
+      if (gStyle->GetColorModelPS()) {
+         PrintStr(" /cs {[/Pattern /DeviceCMYK] setcolorspace} def");
+         PrintStr(" /FA {f [/DeviceCMYK] setcolorspace} def");
+      } else {
+         PrintStr(" /cs {[/Pattern /DeviceRGB] setcolorspace} def");
+         PrintStr(" /FA {f [/DeviceRGB] setcolorspace} def");
+      }
       fPatterns[26] = 1;
    }
 
@@ -2165,9 +2194,30 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    PrintFast(3," cs");
    TColor *col = gROOT->GetColor(color);
    if (col) {
-      WriteReal(col->GetRed());
-      WriteReal(col->GetGreen());
-      WriteReal(col->GetBlue());
+      Double_t Red   = col->GetRed();
+      Double_t Green = col->GetGreen();
+      Double_t Blue  = col->GetBlue();
+      if (gStyle->GetColorModelPS()) {
+         Double_t Black = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+         if (Black==1) {
+            WriteReal(0);
+            WriteReal(0);
+            WriteReal(0);
+            WriteReal(Black);
+         } else {
+            Double_t Cyan    = (1-Red-Black)/(1-Black);
+            Double_t Magenta = (1-Green-Black)/(1-Black);
+            Double_t Yellow  = (1-Blue-Black)/(1-Black);
+            WriteReal(Cyan);
+            WriteReal(Magenta);
+            WriteReal(Yellow);
+            WriteReal(Black);
+         }
+      } else {
+         WriteReal(Red);
+         WriteReal(Green);
+         WriteReal(Blue);
+      }
    }
    PrintFast(4,cpat);
    PrintFast(9," setcolor");
@@ -2275,9 +2325,20 @@ void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
    if (fRed <= 0 && fGreen <= 0 && fBlue <= 0 ) {
       PrintFast(6," black");
    } else {
-      WriteReal(fRed);
-      WriteReal(fGreen);
-      WriteReal(fBlue);
+      if (gStyle->GetColorModelPS()) {
+         Double_t Black   = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
+         Double_t Cyan    = (1-fRed-Black)/(1-Black);
+         Double_t Magenta = (1-fGreen-Black)/(1-Black);
+         Double_t Yellow  = (1-fBlue-Black)/(1-Black);
+         WriteReal(Cyan);
+         WriteReal(Magenta);
+         WriteReal(Yellow);
+         WriteReal(Black);
+      } else {
+         WriteReal(fRed);
+         WriteReal(fGreen);
+         WriteReal(fBlue);
+      }
       PrintFast(2," c");
    }
 }
@@ -2586,7 +2647,7 @@ L60:
          if (font != 12) { 
             if (char2[inew] == '\345') char2[inew] = '\357';  //a Angstroem
             if (char2[inew] == '\305') char2[inew] = '\362';  //A Angstroem
-	 }
+         }
          inew++;
       }
 LOOPEND:
