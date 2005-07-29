@@ -40,7 +40,7 @@ LDFLAGS       = +DD64 -O -z
 SOFLAGS       = -b
 endif
 
-ifeq ($(ARCH),hpuxegcs)
+ifeq ($(ARCH),hpuxgcc)
 # HP-UX 10.x with g++
 CXXFLAGS      = -O -fPIC
 CXX           = g++
@@ -80,7 +80,7 @@ ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 
-ifeq ($(ARCH),aixegcs)
+ifeq ($(ARCH),aixgcc)
 # IBM AIX with GCC
 CXX           = g++
 CXXFLAGS      = -O
@@ -179,8 +179,8 @@ LDFLAGS       = -O
 SOFLAGS       =
 endif
 
-ifeq ($(ARCH),alphaegcs)
-# Alpha/OSF with egcs
+ifeq ($(ARCH),alphagcc)
+# Alpha/OSF with gcc
 CXX           = g++
 CXXFLAGS      = -O2 -Wall -fPIC
 LD            = g++
@@ -230,15 +230,6 @@ CXX           = g++
 CXXFLAGS      = -O1 -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O1
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxdeb2)
-# Linux with gcc 2.7.2.x
-CXX           = g++
-CXXFLAGS      = -O2 -Wall -fPIC
-LD            = g++
-LDFLAGS       = -O2
 SOFLAGS       = -shared
 endif
 
@@ -296,8 +287,8 @@ endif
 endif
 endif
 
-ifeq ($(ARCH),linuxppcegcs)
-# MkLinux with egcs/glibc
+ifeq ($(ARCH),linuxppcgcc)
+# MkLinux with gcc and glibc
 CXX           = g++
 CXXFLAGS      = -O2 -Wall -fPIC
 LD            = g++
@@ -368,8 +359,8 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),linuxalphaegcs)
-# Alpha Linux with egcs
+ifeq ($(ARCH),linuxalphagcc)
+# Alpha Linux with gcc
 CXX           = g++
 CXXFLAGS      = -O2 -Wall -fPIC
 LD            = g++

@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for ARM/Linux with glibc and egcs (RH5.1)
+# Makefile of ROOT for ARM/Linux with glibc and gcc
 
 PLATFORM      = linux
 

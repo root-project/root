@@ -105,7 +105,7 @@ endif
 ifeq ($(PLATFORM),alpha)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
-ifeq ($(PLATFORM),alphaegcs)
+ifeq ($(PLATFORM),alphagcc)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 endif

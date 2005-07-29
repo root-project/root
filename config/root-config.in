@@ -60,7 +60,7 @@ hpuxacc | hpuxia64acc)
    auxcflags=
    auxlibs="-lm -ldld"
    ;;
-hpuxegcs)
+hpuxgcc)
    # HP-UX 10.x with g++
    auxcflags=
    auxlibs="-lm -ldld"
@@ -75,7 +75,7 @@ aix | aix5)
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
    ;;
-aixegcs)
+aixgcc)
    # IBM AIX with g++
    auxcflags="-fsigned-char"
    auxlibs=
@@ -84,11 +84,6 @@ solaris)
    # Solaris
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl -lsunmath"
-   ;;
-solarisegcs)
-   # Solaris egcs
-   auxcflags=
-   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
    ;;
 solarisgcc)
    # Solaris g++ 2.8.x
@@ -141,8 +136,8 @@ alphagcc)
    auxcflags=
    auxlibs="-lg++ -lm"
    ;;
-alphaegcs)
-   # Alpha/OSF with egcs
+alphagcc)
+   # Alpha/OSF with gcc
    auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
    auxlibs="-ltermcap -lm"
    ;;
@@ -167,19 +162,14 @@ linuxrh42 | linuxrh51)
    auxlibs="-lg++ -lm -ldl -rdynamic"
    ;;
 linux)
-   # Linux with egcs, gcc 2.9x, gcc 3.x
+   # Linux with gcc 2.9x, gcc 3.x
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxdeb | linuxsuse6)
-   # Linux with egcs on Debian and SuSE
+   # Linux with gcc on Debian and SuSE
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxdeb2)
-   # Linux with egcs (Debian 2)
-   auxcflags=
-   auxlibs="-lnsl -lm -ldl -rdynamic"
    ;;
 linuxdeb2ppc)
    # Debian/Linux on PPC
@@ -196,7 +186,7 @@ linuxicc)
    auxcflags=
    auxlibs="-lm -ldl"
    ;;
-linuxppcegcs)
+linuxppcgcc)
    # PPC Linux with gcc
    auxcflags="-fsigned-char -I/usr/X11/include"
    auxlibs="-lm -ldl -rdynamic"
@@ -233,13 +223,13 @@ linuxx8664icc)
    auxcflags=
    auxlibs="-lm -ldl"
    ;;
-linuxalphaegcs)
-   # Alpha Linux with egcs
+linuxalphagcc)
+   # Alpha Linux with gcc
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm)
-   # ARM Linux with egcs
+   # ARM Linux with gcc
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
    ;;

@@ -1,8 +1,8 @@
 # -*- mode: makefile -*-
 #
-# Makefile to build ROOT for DEC unix with egcs1.1
+# Makefile to build ROOT for DEC unix with gcc
 
-PLATFORM      = alphaegcs
+PLATFORM      = alphagcc
 
 DEBUGFLAGS    = -g
 OPTFLAGS      = -O2

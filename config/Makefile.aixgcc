@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for AIX 4.x with glibc and egcs1.1
+# Makefile of ROOT for AIX 4.x with glibc and gcc
 # origin Richard Dubois & Donald Benton
 
 PLATFORM      = aix

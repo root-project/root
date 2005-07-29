@@ -543,10 +543,10 @@ guess_architecture () {
         hurd*:*:*)             arch=hurddeb         ;;
         linux:ia64:*)          arch=linuxia64gcc    ;;
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
-        linux:alpha:*)         arch=linuxalphaegcs  ;;
+        linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
-        linux:ppc*:*)          arch=linuxppcegcs    ;;
+        linux:ppc*:*)          arch=linuxppcgcc     ;;
         linux:i*86:*)          arch=linux           ;;
         openbsd*:*:*)          arch=openbsd         ;;
         lynx:*:*)              arch=lynxos          ;;

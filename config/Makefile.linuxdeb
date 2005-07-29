@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for Linux (Debian) with glibc and egcs
+# Makefile of ROOT for Linux (Debian) with glibc and gcc
 
 PLATFORM      = linux
 
