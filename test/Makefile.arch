@@ -152,8 +152,8 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),sgiegcs)
-# SGI 6.x with EGCS
+ifeq ($(ARCH),sgigcc)
+# SGI 6.x with gcc
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
@@ -161,12 +161,12 @@ LDFLAGS       = -O -Wl,-u,__builtin_new -Wl,-u,__builtin_delete -Wl,-u,__nw__FUi
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),sgin32egcs)
-# SGI 6.x with EGCS for n32 ABI
+ifeq ($(ARCH),sgin32gcc)
+# SGI 6.x with gcc for n32 ABI
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
-LDFLAGS       = -O -L/usr/lib32 -Wl,-woff,134
+LDFLAGS       = -O -L/usr/lib32 -Wl,-woff,134 -lgen
 SOFLAGS       = -shared
 endif
 
