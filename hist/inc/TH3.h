@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.30 2004/09/13 10:03:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.31 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
-#include "TH1.h"
+#ifndef ROOT_TProfile2D
+#include "TProfile2D.h"
 #endif
 
 #ifndef ROOT_TAtt3D
@@ -93,6 +93,7 @@ public:
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
                                  Int_t lastybin=-1, Option_t *option="") const; // *MENU*
           TH1     *Project3D(Option_t *option="x") const; // *MENU*
+   TProfile2D     *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
 
