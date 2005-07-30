@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.64 2005/03/21 09:15:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.65 2005/05/20 06:54:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -404,6 +404,11 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (axisNumber == 1) SetRange(bin1,bin2);
             if (axisNumber == 2 && hobj) {
                if (hobj->GetDimension() == 1) {
+                  if (hobj->GetNormFactor() != 0) {
+                     Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                     xmin *= norm;
+                     xmax *= norm;
+                  }
                   hobj->SetMinimum(xmin);
                   hobj->SetMaximum(xmax);
                   hobj->SetBit(TH1::kIsZoomed);
