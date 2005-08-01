@@ -113,10 +113,24 @@ G__value G__new_operator(char *expression)
     }
   }
   if(initializer) *initializer = 0;
-  basictype = G__strrstr(type,"::");
+
+  basictype = type; 
+  {
+    unsigned int len = strlen(type);
+    unsigned int nest = 0;
+    for(unsigned int ind=len-1; ind>0; --ind) {
+      switch(type[ind]) {
+        case '<': --nest; break;
+        case '>': ++nest; break;
+        case ':': if (nest==0 && type[ind-1]==':') {
+          basictype = &(type[ind+1]);
+          ind = 1;
+          break;
+        }
+      }
+    }
+  }
   if(initializer) *initializer = '(';
-  if(!basictype) basictype = type;
-  else basictype += 2;
   typenum = G__defined_typename(type);
   if(-1!=typenum) tagnum = G__newtype.tagnum[typenum];
   else tagnum = -1;
@@ -148,7 +162,7 @@ G__value G__new_operator(char *expression)
       pinc=1;
       if(-1==tagnum) {
         *initializer = 0;
-        tagnum = G__defined_tagname(basictype,1);
+        tagnum = G__defined_tagname(basictype,2);
         *initializer = '(';
       }
       if(-1!=tagnum) sprintf(construct,"%s%s"
