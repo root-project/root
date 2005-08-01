@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.124 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.125 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -942,7 +942,15 @@ again:
             p = buff;
          }
          if (!p) {                      // too bad, nothing can help
-           ier++; x++[0] = c[0];
+#ifdef WIN32
+           // if we're on windows, we can have \\SomeMachine\C$ - don't complain about that, 
+           // if '$' is followed by nothing or a path delimiter.
+           if (c[1] && c[1]!='\\' && c[1]!=';' && c[1]!='/')
+             ier++;
+#else
+           ier++;
+#endif
+           x++[0] = c[0];
          } else {                       // It is OK, copy result
            strcpy(x,p); x += strlen(p); c = (b==c+1) ? e-1 : e;
          }
