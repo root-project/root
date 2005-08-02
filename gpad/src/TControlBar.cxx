@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.5 2003/10/07 13:41:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.6 2004/02/19 07:56:42 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 //                 "Prints an estimated ROOTMARKS for your machine");
 //   bar.AddButton("edit_hsimple",     ".!ved hsimple.C &",
 //                 "Invokes the text editor on file hsimple.C");
-//   bar.AddButton("Close Bar",        "gROOT.Reset("a")",
+//   bar.AddButton("Close Bar",        "gROOT.Reset(\"a\")",
 //                 "Close ControlBar");
 //   bar.Show();
 //   gROOT.SaveContext();

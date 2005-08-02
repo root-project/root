@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.157 2005/07/18 15:56:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.158 2005/07/18 16:20:52 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1770,7 +1770,7 @@ void TROOT::RemoveClass(TClass *oldcl)
 }
 
 //______________________________________________________________________________
-void TROOT::Reset(Option_t *)
+void TROOT::Reset(Option_t *option)
 {
    // Delete all global interpreter objects created since the last call to Reset
    //
@@ -1781,10 +1781,10 @@ void TROOT::Reset(Option_t *)
    // to clean the environment.
 
    if (fInterpreter) {
-     // if (!strncmp(option, "a", 1)) {
-     //    fInterpreter->Reset();
-     //    fInterpreter->SaveContext();
-     // } else
+      if (!strncmp(option, "a", 1)) {
+         fInterpreter->Reset();
+         fInterpreter->SaveContext();
+      } else
          gInterpreter->ResetGlobals();
 
       if (fGlobals) fGlobals->Delete();
