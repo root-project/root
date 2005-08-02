@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.7 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.8 2002/08/13 13:05:33 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -65,6 +65,7 @@ ClassImp(TButton)
 //   button = new TButton("",".x tutorials/graph.C",0.15,0.15,0.85,0.38);
 //   button->SetFillColor(42);
 //   button->Draw();
+//   button->SetEditable(kTRUE);
 //   button->cd();
 //
 //   Double_t x[8] = {0.08,0.21,0.34,0.48,0.61,0.7,0.81,0.92};
