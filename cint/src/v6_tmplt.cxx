@@ -1916,11 +1916,8 @@ int G__instantiate_templateclass(char *tagnamein)
 #ifndef G__OLDIMPLEMENTATION1712
   int store_templatearg_enclosedscope;
 #endif
-#define G__OLDIMPLEMENTATION778
-  char *tagname_pass;
   char tagname[G__LONGLINE];
   strcpy(tagname,tagnamein);
-  tagname_pass=tagname;
 
   typenum =G__defined_typename(tagname);
   if(-1!=typenum) return(G__newtype.tagnum[typenum]);
@@ -2101,8 +2098,8 @@ int G__instantiate_templateclass(char *tagnamein)
      ) {
     int i=0;
     char *p = strrchr(templatename,':');
-    tagname_pass += (p-templatename)+1;
     while(*p) templatename[i++] = *(++p);
+    sprintf(tagname,"%s<%s",templatename,arg);
   }
 
   /* resolve template specialization */
@@ -2117,7 +2114,7 @@ int G__instantiate_templateclass(char *tagnamein)
   G__def_tagnum = G__tagdefining = deftmpclass->parent_tagnum;
 
   /* string substitution and parse substituted template class definition */
-  G__replacetemplate(templatename,tagname_pass,&call_para
+  G__replacetemplate(templatename,tagname,&call_para
                      ,deftmpclass->def_fp
                      ,deftmpclass->line
                      ,deftmpclass->filenum
@@ -2134,7 +2131,7 @@ int G__instantiate_templateclass(char *tagnamein)
     parent_tagnum = G__struct.parent_tagnum[parent_tagnum];
   deftmpmemfunc= &(deftmpclass->memfunctmplt);
   while(deftmpmemfunc->next) {
-    G__replacetemplate(templatename,tagname_pass,&call_para
+    G__replacetemplate(templatename,tagname,&call_para
                        ,deftmpmemfunc->def_fp
                        ,deftmpmemfunc->line
                        ,deftmpmemfunc->filenum
