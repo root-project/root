@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.13 2005/05/23 17:02:45 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.14 2005/07/26 22:03:00 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -24,11 +24,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEmulatedCollectionProxy.h"
+#include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"
 #include "Riostream.h"
+
+// 
+// Utility function to allow the creation of a TClass for a std::pair without
+// a dictionary (See end of file for implementation
+//
+
+static TStreamerElement* R__CreateEmulatedElement(const char *dmFull, const char *dmName);   
+static TStreamerInfo *R__GenerateTClassForPair(const string &f, const string &s); 
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
    : TGenCollectionProxy(copy)
@@ -58,6 +67,7 @@ TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
    return new TEmulatedCollectionProxy(*this);
 }
 
+
 TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() 
 {
    // Proxy initializer
@@ -86,6 +96,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
             case TClassEdit::kMultiMap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
+               if (0==gROOT->GetClass(nam.c_str())) {
+                  // We need to emulate the pair
+                  R__GenerateTClassForPair(inside[1],inside[2]);
+               }
                fValue = new Value(nam);
                fKey   = new Value(inside[1]);
                fVal   = new Value(inside[2]);
@@ -335,7 +349,8 @@ void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
    return fEnv;
 }
 
-void TEmulatedCollectionProxy::Commit(void* /* env */ )  {
+void TEmulatedCollectionProxy::Commit(void* /* env */ )
+{
 }
 
 void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
@@ -387,47 +402,48 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
 
 }
 
-/// Object output streamer
-void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
-  StreamHelper* itm = (StreamHelper*)At(0);
-  switch (fVal->fCase) {
-    case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-    case G__BIT_ISENUM:
-      itm = (StreamHelper*)At(0);
-      switch( int(fVal->fKind) )   {
-        case kBool_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
-        case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
-        case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
-        case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
-        case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
-        case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
-        case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
-        case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
-        case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
-        case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
-        case kUShort_t:  b.WriteFastArray(&itm->u_short   , nElements); break;
-        case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
-        case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
-        case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
-        case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
-        case kchar:
-        case kNoType_t:
-        case kOther_t:
-          Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
-      }
-      break;
+void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
+{
+   // Object output streamer
+   StreamHelper* itm = (StreamHelper*)At(0);
+   switch (fVal->fCase) {
+     case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+     case G__BIT_ISENUM:
+       itm = (StreamHelper*)At(0);
+       switch( int(fVal->fKind) )   {
+          case kBool_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
+          case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
+          case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
+          case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
+          case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
+          case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
+          case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
+          case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
+          case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
+          case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
+          case kUShort_t:  b.WriteFastArray(&itm->u_short   , nElements); break;
+          case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
+          case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
+          case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
+          case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
+          case kchar:
+          case kNoType_t:
+          case kOther_t:
+             Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
+        }
+        break;
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
     case G__BIT_ISCLASS:
-      DOLOOP( b.StreamObject(i,fVal->fType) );
-    case R__BIT_ISSTRING:
-      DOLOOP( TString(i->c_str()).Streamer(b) );
-    case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-      DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
-    case R__BIT_ISSTRING|G__BIT_ISPOINTER:
-      DOLOOP( i->write_std_string_pointer(b) );
-    case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
-      DOLOOP( i->write_tstring_pointer(b) );
-  }
+       DOLOOP( b.StreamObject(i,fVal->fType) );
+     case R__BIT_ISSTRING:
+       DOLOOP( TString(i->c_str()).Streamer(b) );
+     case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+       DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
+     case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+       DOLOOP( i->write_std_string_pointer(b) );
+     case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+       DOLOOP( i->write_tstring_pointer(b) );
+   }
 #undef DOLOOP
 }
 
@@ -451,4 +467,80 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
          WriteItems(nElements, b);
       }
    }
+}
+
+//
+// Utility functions
+// 
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull) 
+{
+   // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
+   
+   TString s1( TClassEdit::ShortType(dmFull,0) );
+   TString dmType( TClassEdit::ShortType(dmFull,1) );
+   bool dmIsPtr = (s1 != dmType);
+   const char *dmTitle = "emulation";
+   Int_t offset = 0;
+
+   TDataType *dt = gROOT->GetType(dmType);
+   if (dt) {  // found a basic type
+      Int_t dsize,dtype;
+      dtype = dt->GetType();
+      dsize = dt->Size();
+      if (dmIsPtr && dtype != kCharStar) {
+         Error("Pair Emulation Buildind","%s is not yet support in pair emulation",
+            dmFull);
+         return 0;
+      } else {
+         return new TStreamerBasicType(dmName,"emulation",0,dtype,dmFull);
+      }
+   } else {
+
+      static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+      if (strcmp(dmType,"string") == 0 || strcmp(dmType,full_string_name)==0 ) {
+         return new TStreamerSTLstring(dmName,dmTitle,offset,dmFull,dmIsPtr);
+      }
+      if (TClassEdit::IsSTLCont(dmType)) {
+         return new TStreamerSTL(dmName,dmTitle,offset,dmFull,dmFull,dmIsPtr);
+      }
+      TClass *clm = gROOT->GetClass(dmType);
+      if (!clm) {
+         Error("Build","%s, unknow type: %s %s\n",dmFull,dmName);
+         return 0;
+      }
+      // a pointer to a class
+      if ( dmIsPtr ) {
+         if (clm->InheritsFrom(TObject::Class())) {
+            return new TStreamerObjectPointer(dmName,dmTitle,offset,dmFull);
+         } else {
+            return new TStreamerObjectAnyPointer(dmName,dmTitle,offset,dmFull);
+         }
+      }
+      // a class
+      if (clm->InheritsFrom(TObject::Class())) {
+         return new TStreamerObject(dmName,dmTitle,offset,dmFull);
+      } else if(clm == TString::Class() && !dmIsPtr) {
+         return new TStreamerString(dmName,dmTitle,offset);
+      } else {
+         return new TStreamerObjectAny(dmName,dmTitle,offset,dmFull);
+      }
+   }
+}
+
+
+static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string &sname) 
+{
+   // Generate a TStreamerInfo for a pair<fname,sname>
+   // This TStreamerInfo is then used as if it was read from a file to generate
+   // and emulated TClass.
+
+   TStreamerInfo *i = (TStreamerInfo*)gROOT->GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
+   i->SetName(Form("pair<%s,%s>",fname.c_str(),sname.c_str()));
+   i->SetClass(0);
+   i->GetElements()->Clear();
+   i->GetElements()->Add( R__CreateEmulatedElement("first", fname.c_str()) );
+   i->GetElements()->Add( R__CreateEmulatedElement("second", sname.c_str()) );
+   i->BuildCheck();
+   i->BuildOld();
+   return i;
 }
