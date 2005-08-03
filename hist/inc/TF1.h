@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.49 2005/04/30 12:51:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.50 2005/07/05 22:23:17 pcanal Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
    TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
+   TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
 #endif
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);

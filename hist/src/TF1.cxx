@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.103 2005/04/30 12:51:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.104 2005/07/05 22:28:10 pcanal Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -453,6 +453,80 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fType       = 1;
    fMethodCall = 0;
    fFunction   = fcn;
+
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+   fChisquare  = 0;
+   fIntegral   = 0;
+   fAlpha      = 0;
+   fBeta       = 0;
+   fGamma      = 0;
+   fNsave      = 0;
+   fSave       = 0;
+   fParent     = 0;
+   fNpfits     = 0;
+   fNDF        = 0;
+   fHistogram  = 0;
+   fMinimum    = -1111;
+   fMaximum    = -1111;
+   fNdim       = 1;
+//*-*- Store formula in linked list of formula in ROOT
+
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
+   SetName(name);
+   gROOT->GetListOfFunctions()->Add(this);
+
+   if (!gStyle) return;
+   SetLineColor(gStyle->GetFuncColor());
+   SetLineWidth(gStyle->GetFuncWidth());
+   SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
+
+}
+
+//______________________________________________________________________________
+TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+//*-*-*-*-*-*-*F1 constructor using a pointer to real function*-*-*-*-*-*-*-*
+//*-*          ===============================================
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*   This constructor creates a function of type C when invoked
+//*-*   with the normal C++ compiler.
+//*-*
+//*-*   see test program test/stress.cxx (function stress1) for an example.
+//*-*   note the interface with an intermediate pointer.
+//*-*
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fXmin       = xmin;
+   fXmax       = xmax;
+   fNpx        = 100;
+
+   fType       = 1;
+   fMethodCall = 0;
+   typedef Double_t (*Function_t) (Double_t *, Double_t *);
+   fFunction   = (Function_t)fcn;
 
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {

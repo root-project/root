@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.17 2003/08/20 07:00:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.18 2005/07/05 22:23:17 pcanal Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    TF2(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
 #ifndef __CINT__
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
+   TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
 #endif
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);

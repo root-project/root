@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.14 2005/07/05 22:23:17 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.15 2005/07/07 07:33:50 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -42,6 +42,8 @@ public:
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
 #ifndef __CINT__
    TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
+   TF3(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
 #endif
 

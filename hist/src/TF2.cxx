@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.27 2004/08/16 09:31:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.28 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ ClassImp(TF2)
 //
 
 //______________________________________________________________________________
-TF2::TF2(): TF1()
+TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 {
 //*-*-*-*-*-*-*-*-*-*-*F2 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
@@ -106,6 +106,29 @@ TF2::TF2(const char *name, void *fcn, Double_t xmin, Double_t xmax, Double_t ymi
 
 //______________________________________________________________________________
 TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
+      : TF1(name, fcn, xmin, xmax, npar)
+{
+//*-*-*-*-*-*-*F2 constructor using a pointer to a compiled function*-*-*-*-*
+//*-*          =====================================================
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*   This constructor creates a function of type C when invoked
+//*-*   with the normal C++ compiler.
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fNdim   = 2;
+   fContour.Set(0);
+
+}
+
+//______________________________________________________________________________
+TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
       : TF1(name, fcn, xmin, xmax, npar)
 {
 //*-*-*-*-*-*-*F2 constructor using a pointer to a compiled function*-*-*-*-*

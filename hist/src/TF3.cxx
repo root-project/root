@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.20 2005/07/07 09:49:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.21 2005/07/07 10:48:39 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -85,6 +85,28 @@ TF3::TF3(const char *name,void *fcn, Double_t xmin, Double_t xmax, Double_t ymin
 
 //______________________________________________________________________________
 TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
+      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
+{
+//*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
+//*-*          ===============================================
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*  For example, for a 3-dim function with 3 parameters, the user function
+//*-*      looks like:
+//*-*    Double_t fun1(Double_t *x, Double_t *par)
+//*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fZmin   = zmin;
+   fZmax   = zmax;
+   fNpz    = 30;
+   fNdim   = 3;
+}
+
+//______________________________________________________________________________
+TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
 {
 //*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
