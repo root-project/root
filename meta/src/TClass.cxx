@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.171 2005/06/09 16:41:15 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.172 2005/06/22 20:18:11 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1047,6 +1047,12 @@ Bool_t TClass::CanSplit() const
          if (!valueClass->CanSplit()) return kFALSE;
          if (valueClass->GetCollectionProxy() != 0) return kFALSE;
 
+         Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
+         if ((stl==TClassEdit::kMap || stl==TClassEdit::kMultiMap) 
+              && valueClass->GetClassInfo()==0)
+         {
+            return kFALSE;
+         }
       }
    }
 
