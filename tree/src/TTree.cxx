@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.258 2005/07/20 17:38:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.259 2005/07/25 07:45:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1404,13 +1404,16 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       }
 
       if (splitlevel > 0 && inklass && inklass->GetCollectionProxy()==0) {
-         G__ClassInfo *classinfo = inklass->GetClassInfo();
-         if (!classinfo) {
-           Error("Bronch","Container with no dictionary defined in branch: %s",name);
-            return 0;
+         Int_t stl = -TClassEdit::IsSTLCont(cl->GetName(), 0);
+         if (!(stl==TClassEdit::kMap || stl==TClassEdit::kMultiMap)) {
+            G__ClassInfo *classinfo = inklass->GetClassInfo();
+            if (!classinfo) {
+               Error("Bronch","Container with no dictionary defined in branch: %s",name);
+               return 0;
+            }
+            if (classinfo->RootFlag() & 1)
+               Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inklass->GetName());
          }
-         if (classinfo->RootFlag() & 1)
-            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inklass->GetName());
       }
       TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
       fBranches.Add(branch);
