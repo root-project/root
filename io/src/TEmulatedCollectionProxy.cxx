@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.14 2005/07/26 22:03:00 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.15 2005/08/03 19:34:49 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -479,7 +479,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
    TString s1( TClassEdit::ShortType(dmFull,0) );
    TString dmType( TClassEdit::ShortType(dmFull,1) );
    bool dmIsPtr = (s1 != dmType);
-   const char *dmTitle = "emulation";
+   const char *dmTitle = "Emulation";
    Int_t offset = 0;
 
    TDataType *dt = gROOT->GetType(dmType);
@@ -488,11 +488,11 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       dtype = dt->GetType();
       dsize = dt->Size();
       if (dmIsPtr && dtype != kCharStar) {
-         Error("Pair Emulation Buildind","%s is not yet support in pair emulation",
+         Error("Pair Emulation Building","%s is not yet supported in pair emulation",
             dmFull);
          return 0;
       } else {
-         return new TStreamerBasicType(dmName,"emulation",0,dtype,dmFull);
+         return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
       }
    } else {
 
@@ -505,8 +505,10 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       }
       TClass *clm = gROOT->GetClass(dmType);
       if (!clm) {
-         Error("Build","%s, unknow type: %s %s\n",dmFull,dmName);
-         return 0;
+          // either we have an Emulated enum or a really unknown class!
+          // let's just claim its an enum :(
+         Int_t dtype = kInt_t;
+         return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
       }
       // a pointer to a class
       if ( dmIsPtr ) {
@@ -540,7 +542,11 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    i->GetElements()->Clear();
    i->GetElements()->Add( R__CreateEmulatedElement("first", fname.c_str()) );
    i->GetElements()->Add( R__CreateEmulatedElement("second", sname.c_str()) );
+   Int_t oldlevel = gErrorIgnoreLevel;
+   // Hide the warning about the missing pair dictionary.
+   gErrorIgnoreLevel = kError;
    i->BuildCheck();
+   gErrorIgnoreLevel = oldlevel;
    i->BuildOld();
    return i;
 }
