@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.50 2005/03/23 12:41:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.51 2005/05/12 07:56:08 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -726,7 +726,7 @@ void TSelectorDraw::Begin(TTree *tree)
          }
       }
       // An Event List
-   } else {
+   } else if (elist) {
       fAction = 5;
       fOldEstimate = fTree->GetEstimate();
       fTree->SetEstimate(1);
