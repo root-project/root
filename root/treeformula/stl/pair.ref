@@ -20,7 +20,6 @@ Warning in <TClass::TClass>: no dictionary for class edmreftest::Thing is availa
 Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<vector<edmreftest::Thing> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::Provenance is available
 Warning in <TClass::TClass>: no dictionary for class edm::EventProvenance is available
-Warning in <TClass::TClass>: no dictionary for class pair<edm::BranchKey,edm::ProductDescription> is available
 **************************************
 *    Row   * Instance * ProductDescr *
 **************************************
