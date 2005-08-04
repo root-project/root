@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.259 2005/07/25 07:45:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.260 2005/08/03 21:19:38 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2590,6 +2590,9 @@ TBranch *TTree::FindBranch(const char* branchname)
       if (dim) dim[0]='\0';
       if (!strcmp(branchname,name)) return branch;
       if (subbranch && !strcmp(subbranch,name)) return branch;
+   }
+   next.Reset();
+   while ((branch = (TBranch*)next())) {
       TBranch *nestedbranch = branch->FindBranch(branchname);
       if (nestedbranch) return nestedbranch;
    }
