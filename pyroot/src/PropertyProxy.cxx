@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.4 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.5 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -26,8 +26,15 @@ namespace {
 //= PyROOT property proxy property behaviour =================================
    PyObject* pp_get( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* )
    {
+   // special case to allow access at class-level (e.g. MyClass.fProperty) to succeed
+      if ( ! ( pyobj || (pyprop->fDataMember->Property() & G__BIT_ISSTATIC) ) ) {
+         Py_INCREF( (PyObject*)pyprop );
+         return (PyObject*)pyprop;
+      }
+
+   // normal getter access
       long address = pyprop->GetAddress( pyobj );
-      if ( address < 0 )
+      if ( PyErr_Occurred() || address == 0 )
          return 0;
 
    // for fixed size arrays
@@ -68,7 +75,7 @@ namespace {
       const int errret = -1;
 
       long address = pyprop->GetAddress( pyobj );
-      if ( address < 0 )
+      if ( PyErr_Occurred() )
          return errret;
 
    // for fixed size arrays
@@ -175,8 +182,6 @@ void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
 
 //____________________________________________________________________________
 long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
-   const int errret = -1;
-
 // get offsets from CINT
    G__ClassInfo* clInfo = fDataMember->GetClass()->GetClassInfo();
 
@@ -191,13 +196,13 @@ long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    if ( ! ObjectProxy_Check( pyobj ) ) {
       PyErr_Format( PyExc_TypeError,
          "object instance required for access to property \"%s\"", fName.c_str() );
-      return errret;
+      return 0;
    }
 
    void* obj = pyobj->GetObject();
    if ( ! obj ) {
       PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-      return errret;
+      return 0;
    }
 
    long offset = G__isanybase(
