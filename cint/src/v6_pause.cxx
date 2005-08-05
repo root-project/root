@@ -713,6 +713,11 @@ int G__reloadfile(char *filename)
             /* do not take the tempfile in consideration! */
             && (G__srcfile[j].included_from<=G__gettempfilenum())
             ) {
+        if (G__srcfile[G__srcfile[j].included_from].filename==0) {
+           /* It is possibly a closed temporary file let's ignore
+              it to */
+           break;
+        }
         j=G__srcfile[j].included_from;
       }
       break;
