@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.76 2005/05/30 13:47:13 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.77 2005/07/25 13:53:57 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3140,16 +3140,14 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
       if (found) {
          tmp = StrDup(classPtr->GetName());
          NameSpace2FileName(tmp);
-         char *tmp1 = gSystem->ConcatFileName(htmlFileName, tmp);
-         ret = StrDup(tmp1, 16);
+         ret = StrDup(htmlFileName, strlen(tmp)+7);
+         strcat(ret, "/");
+         strcat(ret, tmp);
          strcat(ret, ".html");
 
          if (tmp)
             delete[]tmp;
          tmp = 0;
-         if (tmp1)
-            delete[]tmp1;
-         tmp1 = 0;
       } else
          ret = 0;
 
