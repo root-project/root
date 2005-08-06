@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.61 2005/06/08 06:53:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.62 2005/06/13 16:32:40 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -798,6 +798,9 @@ void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_
       AddBinContent(bin, z*y[i]);
       fSumw2.fArray[bin] += z*y[i]*y[i];
       fBinEntries.fArray[bin] += w[i];
+      if (bin == 0 || bin > fXaxis.GetNbins()) {
+         if (!fgStatOverflows) continue;
+      }
       fTsumw   += z;
       fTsumw2  += z*z;
       fTsumwx  += z*x[i];
