@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.44 2005/06/22 15:37:47 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.45 2005/07/05 12:36:05 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -5175,7 +5175,36 @@ void TASImage::Streamer(TBuffer &b)
       if (version == 0) { //dumb prototype for scheema evolution
          return;
       }
-
+      	
+      if ( version == 1 ) {
+         TObject * parent = b.GetParent();
+         if ( parent->IsA() == TFile::Class() ) {
+            Int_t file_version = ((TFile*)parent)->GetVersion();
+            if ( file_version < 50000 ) {
+               TImage::Streamer(b);
+               b >> fMaxValue;
+               b >> fMinValue;
+               b >> fZoomOffX;
+               b >> fZoomOffY;
+               b >> fZoomWidth;
+               b >> fZoomHeight;
+               if ( file_version < 40200 ) {
+                  Bool_t zoomUpdate;
+                  b >> zoomUpdate;
+                  fZoomUpdate = zoomUpdate;
+               } else {
+                  b >> fZoomUpdate;
+                  b >> fEditable;
+                  Bool_t paintMode;
+                  b >> paintMode;
+                  fPaintMode = paintMode;
+               }
+               b.CheckByteCount(R__s, R__c, TASImage::IsA());
+               return;
+            }
+         }
+      }
+      	
       TNamed::Streamer(b);
       b >> image_type;
 

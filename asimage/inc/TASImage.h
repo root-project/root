@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.14 2005/06/21 18:15:13 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.15 2005/07/05 12:36:05 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -212,7 +212,7 @@ public:
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
    static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y);
 
-   ClassDef(TASImage,1)  // image processing class
+   ClassDef(TASImage,2)  // image processing class
 };
 
 #endif
