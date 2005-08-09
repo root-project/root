@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.49 2005/07/29 11:25:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.50 2005/07/29 16:32:31 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -365,8 +365,18 @@ void TStyle::Copy(TObject &obj) const
 }
 
 //______________________________________________________________________________
+Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+{
+// Function used by the TStyle manager when drawing a canvas showing the current style
+   
+   gPad->SetSelected(this);
+   return 0;
+}
+
+//______________________________________________________________________________
 void TStyle::Reset(Option_t *)
 {
+   fIsReading = kTRUE;
    TAttLine::ResetAttLine();
    TAttFill::ResetAttFill();
    TAttText::ResetAttText();
@@ -640,6 +650,14 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 }
 
 //______________________________________________________________________________
+void TStyle::Paint(Option_t *option)
+{
+   //show the options from the current style
+   //if (gROOT->GetClass("TStyleManager")) gSystem->Load("libGed");
+   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%x,\"%s\")",this,option));
+}
+
+//______________________________________________________________________________
 void TStyle::SetColorModelPS(Int_t c)
 {
 // Define the color model use by TPostScript and TPDF (RGB or CMYK).
@@ -738,6 +756,17 @@ void TStyle::SetHeaderPS(const char *header)
 // This information is used in TPostScript::Initialize
 
    fHeaderPS = header;
+}
+
+//______________________________________________________________________________
+void TStyle::SetIsReading(Bool_t reading)
+{
+// Sets the fIsReading member to reading (default=kTRUE)
+// fIsReading (used via gStyle->IsReading()) can be used in
+// the functions myclass::UseCurrentStyle to read from the current style
+// or write to the current style
+   
+   fIsReading = reading;
 }
 
 //______________________________________________________________________________

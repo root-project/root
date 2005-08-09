@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.24 2005/07/08 15:47:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.25 2005/07/29 11:25:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -149,7 +149,7 @@ private:
         TString       fPaintTextFormat;   //Printing format for TH2::PaintText
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
         Double_t      fTimeOffset;        //Time offset to the beginning of an axis
-
+        Bool_t        fIsReading;         //!Set to FALSE when userclass::UseCurrentStyle is called by the style manager
 public:
         enum EPaperSize { kA4, kUSLetter };
 
@@ -165,6 +165,7 @@ public:
 
         static Int_t     CreateGradientColorTable(UInt_t Number, Double_t* Length,
                               Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
+        virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         Int_t            GetNdivisions(Option_t *axis="X") const;
         TAttText        *GetAttDate() {return &fAttDate;}
         Color_t          GetAxisColor(Option_t *axis="X") const;
@@ -277,6 +278,8 @@ public:
         const char      *GetTitlePS()  const {return fTitlePS.Data();}
         const char      *GetLineStyleString(Int_t i=1) const;
         Float_t          GetLineScalePS() const {return fLineScalePS;}
+        Bool_t           IsReading() const {return fIsReading;}
+        virtual void     Paint(Option_t *option="");
         virtual void     Reset(Option_t *option="");
 
         void             SetColorModelPS(Int_t c=0);
@@ -388,7 +391,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             ToggleEditor() { fShowEditor = fShowEditor ? 0 : 1; }
         void             ToggleToolBar() { fShowToolBar = fShowToolBar ? 0 : 1; }
-
+        void             SetIsReading(Bool_t reading=kTRUE);
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
         ClassDef(TStyle,11)  //A collection of all graphics attributes
