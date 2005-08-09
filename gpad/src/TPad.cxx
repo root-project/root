@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.185 2005/06/24 12:27:29 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.186 2005/07/06 08:42:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4873,21 +4873,38 @@ void TPad::UseCurrentStyle()
 //*-*-*-*-*-*Force a copy of current style for all objects in pad*-*-*-*-*
 //*-*        ====================================================
 
-   SetFillColor(gStyle->GetPadColor());
-   SetBottomMargin(gStyle->GetPadBottomMargin());
-   SetTopMargin(gStyle->GetPadTopMargin());
-   SetLeftMargin(gStyle->GetPadLeftMargin());
-   SetRightMargin(gStyle->GetPadRightMargin());
-   fBorderSize = gStyle->GetPadBorderSize();
-   fBorderMode = gStyle->GetPadBorderMode();
-   fGridx = gStyle->GetPadGridX();
-   fGridy = gStyle->GetPadGridY();
-   fTickx = gStyle->GetPadTickX();
-   fTicky = gStyle->GetPadTickY();
-   fLogx  = gStyle->GetOptLogx();
-   fLogy  = gStyle->GetOptLogy();
-   fLogz  = gStyle->GetOptLogz();
-
+   if (gStyle->IsReading()) {
+      SetFillColor(gStyle->GetPadColor());
+      SetBottomMargin(gStyle->GetPadBottomMargin());
+      SetTopMargin(gStyle->GetPadTopMargin());
+      SetLeftMargin(gStyle->GetPadLeftMargin());
+      SetRightMargin(gStyle->GetPadRightMargin());
+      fBorderSize = gStyle->GetPadBorderSize();
+      fBorderMode = gStyle->GetPadBorderMode();
+      fGridx = gStyle->GetPadGridX();
+      fGridy = gStyle->GetPadGridY();
+      fTickx = gStyle->GetPadTickX();
+      fTicky = gStyle->GetPadTickY();
+      fLogx  = gStyle->GetOptLogx();
+      fLogy  = gStyle->GetOptLogy();
+      fLogz  = gStyle->GetOptLogz();
+   } else {
+      gStyle->SetPadColor(GetFillColor());
+      gStyle->SetPadBottomMargin(GetBottomMargin());
+      gStyle->SetPadTopMargin(GetTopMargin());
+      gStyle->SetPadLeftMargin(GetLeftMargin());
+      gStyle->SetPadRightMargin(GetRightMargin());
+      gStyle->SetPadBorderSize(GetBorderSize());
+      gStyle->SetPadBorderMode(GetBorderMode());
+      gStyle->SetPadGridX(fGridx);
+      gStyle->SetPadGridY(fGridy);
+      gStyle->SetPadTickX(fTickx);
+      gStyle->SetPadTickY(fTickx);
+      gStyle->SetOptLogx (fLogx);
+      gStyle->SetOptLogy (fLogy);
+      gStyle->SetOptLogz (fLogz);
+   }
+   
    TIter next(GetListOfPrimitives());
    TObject *obj;
 
@@ -4897,33 +4914,58 @@ void TPad::UseCurrentStyle()
 
    TPaveText *stats  = (TPaveText*)FindObject("stats");
    if (stats) {
-      stats->SetFillStyle(gStyle->GetStatStyle());
-      stats->SetFillColor(gStyle->GetStatColor());
-      stats->SetTextFont(gStyle->GetStatFont());
-      stats->SetTextColor(gStyle->GetStatTextColor());
-      stats->SetBorderSize(gStyle->GetStatBorderSize());
-      if (!gStyle->GetOptStat()) delete stats;
+      if (gStyle->IsReading()) {
+         stats->SetFillStyle(gStyle->GetStatStyle());
+         stats->SetFillColor(gStyle->GetStatColor());
+         stats->SetTextFont(gStyle->GetStatFont());
+         stats->SetTextColor(gStyle->GetStatTextColor());
+         stats->SetBorderSize(gStyle->GetStatBorderSize());
+         if (!gStyle->GetOptStat()) delete stats;
+      } else {
+         gStyle->SetStatStyle(stats->GetFillStyle());
+         gStyle->SetStatColor(stats->GetFillColor());
+         gStyle->SetStatFont(stats->GetTextFont());
+         gStyle->SetStatTextColor(stats->GetTextColor());
+         gStyle->SetStatBorderSize(stats->GetBorderSize());
+      }
    }
 
    TPaveText *title  = (TPaveText*)FindObject("title");
    if (title) {
-      title->SetFillColor(gStyle->GetTitleFillColor());
-      title->SetTextFont(gStyle->GetTitleFont(""));
-      title->SetTextColor(gStyle->GetTitleTextColor());
-      title->SetBorderSize(gStyle->GetTitleBorderSize());
-      if (!gStyle->GetOptTitle()) delete title;
+      if (gStyle->IsReading()) {
+         title->SetFillColor(gStyle->GetTitleFillColor());
+         title->SetTextFont(gStyle->GetTitleFont(""));
+         title->SetTextColor(gStyle->GetTitleTextColor());
+         title->SetBorderSize(gStyle->GetTitleBorderSize());
+         if (!gStyle->GetOptTitle()) delete title;
+      } else {
+         gStyle->SetTitleFillColor(title->GetFillColor());
+         gStyle->SetTitleFont(title->GetTextFont());
+         gStyle->SetTitleTextColor(title->GetTextColor());
+         gStyle->SetTitleBorderSize(title->GetBorderSize());
+      }
    }
    if (fFrame) {
-      fFrame->SetFillColor(gStyle->GetFrameFillColor());
-      fFrame->SetFillStyle(gStyle->GetFrameFillStyle());
-      fFrame->SetLineColor(gStyle->GetFrameLineColor());
-      fFrame->SetLineStyle(gStyle->GetFrameLineStyle());
-      fFrame->SetLineWidth(gStyle->GetFrameLineWidth());
-      fFrame->SetBorderSize(gStyle->GetFrameBorderSize());
-      fFrame->SetBorderMode(gStyle->GetFrameBorderMode());
+      if (gStyle->IsReading()) {
+         fFrame->SetFillColor(gStyle->GetFrameFillColor());
+         fFrame->SetFillStyle(gStyle->GetFrameFillStyle());
+         fFrame->SetLineColor(gStyle->GetFrameLineColor());
+         fFrame->SetLineStyle(gStyle->GetFrameLineStyle());
+         fFrame->SetLineWidth(gStyle->GetFrameLineWidth());
+         fFrame->SetBorderSize(gStyle->GetFrameBorderSize());
+         fFrame->SetBorderMode(gStyle->GetFrameBorderMode());
+      } else {
+         gStyle->SetFrameFillColor(fFrame->GetFillColor());
+         gStyle->SetFrameFillStyle(fFrame->GetFillStyle());
+         gStyle->SetFrameLineColor(fFrame->GetLineColor());
+         gStyle->SetFrameLineStyle(fFrame->GetLineStyle());
+         gStyle->SetFrameLineWidth(fFrame->GetLineWidth());
+         gStyle->SetFrameBorderSize(fFrame->GetBorderSize());
+         gStyle->SetFrameBorderMode(fFrame->GetBorderMode());
+      }
    }
 
-   Modified();
+   if (gStyle->IsReading()) Modified();
 }
 
 //______________________________________________________________________________

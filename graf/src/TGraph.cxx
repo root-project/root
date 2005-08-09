@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.163 2005/05/18 12:31:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.164 2005/06/23 10:04:08 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4199,14 +4199,25 @@ void TGraph::UseCurrentStyle()
    // This function is called when either TCanvas::UseCurrentStyle
    // or TROOT::ForceStyle have been invoked.
 
-   SetFillColor(gStyle->GetHistFillColor());
-   SetFillStyle(gStyle->GetHistFillStyle());
-   SetLineColor(gStyle->GetHistLineColor());
-   SetLineStyle(gStyle->GetHistLineStyle());
-   SetLineWidth(gStyle->GetHistLineWidth());
-   SetMarkerColor(gStyle->GetMarkerColor());
-   SetMarkerStyle(gStyle->GetMarkerStyle());
-   SetMarkerSize(gStyle->GetMarkerSize());
+   if (gStyle->IsReading()) {
+      SetFillColor(gStyle->GetHistFillColor());
+      SetFillStyle(gStyle->GetHistFillStyle());
+      SetLineColor(gStyle->GetHistLineColor());
+      SetLineStyle(gStyle->GetHistLineStyle());
+      SetLineWidth(gStyle->GetHistLineWidth());
+      SetMarkerColor(gStyle->GetMarkerColor());
+      SetMarkerStyle(gStyle->GetMarkerStyle());
+      SetMarkerSize(gStyle->GetMarkerSize());
+   } else {
+      gStyle->SetHistFillColor(GetFillColor());
+      gStyle->SetHistFillStyle(GetFillStyle());
+      gStyle->SetHistLineColor(GetLineColor());
+      gStyle->SetHistLineStyle(GetLineStyle());
+      gStyle->SetHistLineWidth(GetLineWidth());
+      gStyle->SetMarkerColor(GetMarkerColor());
+      gStyle->SetMarkerStyle(GetMarkerStyle());
+      gStyle->SetMarkerSize(GetMarkerSize());
+   }
    if (fHistogram) fHistogram->UseCurrentStyle();
 }
 

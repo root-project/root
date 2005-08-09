@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.242 2005/06/15 13:57:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.243 2005/07/05 10:29:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5035,25 +5035,38 @@ void TH1::SavePrimitiveHelp(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TH1::UseCurrentStyle()
 {
-//   -*-*-*-*Replace current attributes by current style*-*-*-*-*
-//           ===========================================
+//   Copy current attributes from/to current style
 
-   fXaxis.ResetAttAxis("X");
-   fYaxis.ResetAttAxis("Y");
-   fZaxis.ResetAttAxis("Z");
-   SetBarOffset(gStyle->GetBarOffset());
-   SetBarWidth(gStyle->GetBarWidth());
-   SetFillColor(gStyle->GetHistFillColor());
-   SetFillStyle(gStyle->GetHistFillStyle());
-   SetLineColor(gStyle->GetHistLineColor());
-   SetLineStyle(gStyle->GetHistLineStyle());
-   SetLineWidth(gStyle->GetHistLineWidth());
-   SetMarkerColor(gStyle->GetMarkerColor());
-   SetMarkerStyle(gStyle->GetMarkerStyle());
-   SetMarkerSize(gStyle->GetMarkerSize());
-   Int_t dostat = gStyle->GetOptStat();
-   if (gStyle->GetOptFit() && !dostat) dostat = 10000001;
-   SetStats(dostat);
+   if (gStyle->IsReading()) {
+      fXaxis.ResetAttAxis("X");
+      fYaxis.ResetAttAxis("Y");
+      fZaxis.ResetAttAxis("Z");
+      SetBarOffset(gStyle->GetBarOffset());
+      SetBarWidth(gStyle->GetBarWidth());
+      SetFillColor(gStyle->GetHistFillColor());
+      SetFillStyle(gStyle->GetHistFillStyle());
+      SetLineColor(gStyle->GetHistLineColor());
+      SetLineStyle(gStyle->GetHistLineStyle());
+      SetLineWidth(gStyle->GetHistLineWidth());
+      SetMarkerColor(gStyle->GetMarkerColor());
+      SetMarkerStyle(gStyle->GetMarkerStyle());
+      SetMarkerSize(gStyle->GetMarkerSize());
+      Int_t dostat = gStyle->GetOptStat();
+      if (gStyle->GetOptFit() && !dostat) dostat = 10000001;
+      SetStats(dostat);
+   } else {
+      gStyle->SetBarOffset(fBarOffset);
+      gStyle->SetBarWidth(fBarWidth);
+      gStyle->SetHistFillColor(GetFillColor());
+      gStyle->SetHistFillStyle(GetFillStyle());
+      gStyle->SetHistLineColor(GetLineColor());
+      gStyle->SetHistLineStyle(GetLineStyle());
+      gStyle->SetHistLineWidth(GetLineWidth());
+      gStyle->SetMarkerColor(GetMarkerColor());
+      gStyle->SetMarkerStyle(GetMarkerStyle());
+      gStyle->SetMarkerSize(GetMarkerSize());
+      gStyle->SetOptStat(TestBit(kNoStats));
+   }
 }
 
 //______________________________________________________________________________
