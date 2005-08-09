@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.37 2005/05/18 12:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.38 2005/06/13 16:32:40 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -279,7 +279,7 @@ void TProfile2D::Add(const TH1 *h1, Double_t c1)
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
-         fArray[bin]             +=  c1*cu1[bin];
+         fArray[bin]             += c1*cu1[bin];
          fSumw2.fArray[bin]      += ac1*er1[bin];
          if (!fScaling) fBinEntries.fArray[bin] += ac1*en1[bin];
       }
@@ -347,7 +347,7 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
-         fArray[bin]             =  c1*cu1[bin] +  c2*cu2[bin];
+         fArray[bin]             = c1*cu1[bin] +  c2*cu2[bin];
          fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
          if (fScaling) {
             fBinEntries.fArray[bin] = en1[bin];
@@ -626,9 +626,9 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
    Double_t *er2 = p2->GetW2();
    Double_t *en1 = p1->GetB();
    Double_t *en2 = p2->GetB();
-   Double_t b1,b2,w,z,x,y,d1,d2;
-   d1 = c1*c1;
-   d2 = c2*c2;
+   Double_t b1,b2,w,z,x,y,ac1,ac2;
+   ac1 = TMath::Abs(c1);
+   ac2 = TMath::Abs(c2);
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
@@ -652,13 +652,14 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
          fTsumwz2 += z*z;
          Double_t e1 = er1[bin];
          Double_t e2 = er2[bin];
-         Double_t b22= b2*b2*d2;
+       //Double_t b22= b2*b2*d2;
+         Double_t b22= b2*b2*TMath::Abs(c2);
          if (!b2) fSumw2.fArray[bin] = 0;
          else {
             if (binomial) {
                fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));
             } else {
-               fSumw2.fArray[bin] = d1*d2*(e1*b2*b2 + e2*b1*b1)/(b22*b22);
+               fSumw2.fArray[bin] = ac1*ac2*(e1*b2*b2 + e2*b1*b1)/(b22*b22);
             }
          }
          if (!en2[bin]) fBinEntries.fArray[bin] = 0;
@@ -978,31 +979,47 @@ void TProfile2D::GetStats(Stat_t *stats) const
    // stats[7] = sumwz
    // stats[8] = sumwz2
    //
-   // The function recomputes the statistics quantities
+   // If no axis-subrange is specified (via TAxis::SetRange), the array stats
+   // is simply a copy of the statistics quantities computed at filling time.
+   // If a sub-range is specified, the function recomputes these quantities
    // from the bin contents in the current axis range.
 
+   if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
+
    // Loop on bins
-   Int_t bin, binx, biny;
-   Stat_t w;
-   Axis_t x,y;
-   for (bin=0;bin<9;bin++) stats[bin] = 0;
-   if (!fBinEntries.fArray) return;
-   for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
-      y = fYaxis.GetBinCenter(biny);
-      for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
-         bin = GetBin(binx,biny);
-         w         = fBinEntries.fArray[bin];
-         x         = fXaxis.GetBinCenter(binx);
-         stats[0] += w;
-         stats[1] += w*w;
-         stats[2] += w*x;
-         stats[3] += w*x*x;
-         stats[4] += w*y;
-         stats[5] += w*y*y;
-         stats[6] += w*x*y;
-         stats[7] += fArray[bin];
-         stats[8] += fSumw2.fArray[bin];
+   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+      Int_t bin, binx, biny;
+      Stat_t w;
+      Axis_t x,y;
+      for (bin=0;bin<9;bin++) stats[bin] = 0;
+      if (!fBinEntries.fArray) return;
+      for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+         y = fYaxis.GetBinCenter(biny);
+         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+            bin = GetBin(binx,biny);
+            w         = fBinEntries.fArray[bin];
+            x         = fXaxis.GetBinCenter(binx);
+            stats[0] += w;
+            stats[1] += w*w;
+            stats[2] += w*x;
+            stats[3] += w*x*x;
+            stats[4] += w*y;
+            stats[5] += w*y*y;
+            stats[6] += w*x*y;
+            stats[7] += fArray[bin];
+            stats[8] += fSumw2.fArray[bin];
+         }
       }
+   } else {
+      stats[0] = fTsumw;
+      stats[1] = fTsumw2;
+      stats[2] = fTsumwx;
+      stats[3] = fTsumwx2;
+      stats[4] = fTsumwy;
+      stats[5] = fTsumwy2;
+      stats[6] = fTsumwxy;
+      stats[7] = fTsumwz;
+      stats[8] = fTsumwz2;
    }
 }
 
@@ -1497,6 +1514,22 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
   }
   h1->SetEntries(fEntries);
   return h1;
+}
+
+//______________________________________________________________________________
+void TProfile2D::PutStats(Stat_t *stats)
+{
+   // Replace current statistics with the values in array stats
+
+   fTsumw   = stats[0];
+   fTsumw2  = stats[1];
+   fTsumwx  = stats[2];
+   fTsumwx2 = stats[3];
+   fTsumwy  = stats[4];
+   fTsumwy2 = stats[5];
+   fTsumwxy = stats[6];
+   fTsumwz  = stats[7];
+   fTsumwz2 = stats[8];
 }
 
 //______________________________________________________________________________
