@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.45 2005/04/19 19:39:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.46 2005/06/13 19:18:11 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -89,6 +89,7 @@ protected:
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
    TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
    Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
+   Bool_t      fNeedLoading;      //!  If true, the current entry has not been loaded yet.
    
 
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
@@ -177,6 +178,7 @@ public:
    virtual void        SetAxis(TAxis *axis=0);
            void        SetQuickLoad(Bool_t quick) { fQuickLoad = quick; }
    virtual void        SetTree(TTree *tree) {fTree = tree;}
+   virtual void        ResetLoading();
    virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 

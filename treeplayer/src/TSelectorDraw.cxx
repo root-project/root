@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.51 2005/05/12 07:56:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.52 2005/08/03 16:47:25 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -989,23 +989,36 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 
    // Always call EvalInstance(0) to insure the loading
    // of the branches.
-   if (fVar1) {
-      fV1[fNfill] = fVar1->EvalInstance(0);
-      if (fVar2) {
-         fV2[fNfill] = fVar2->EvalInstance(0);
-         if (fVar3) {
-            fV3[fNfill] = fVar3->EvalInstance(0);
-            if (fVar4) {
-               fV4[fNfill] = fVar4->EvalInstance(0);
+   if (fW[fNfill]) {
+      if (fVar1) {
+         fV1[fNfill] = fVar1->EvalInstance(0);
+         if (fVar2) {
+            fV2[fNfill] = fVar2->EvalInstance(0);
+            if (fVar3) {
+               fV3[fNfill] = fVar3->EvalInstance(0);
+               if (fVar4) {
+                  fV4[fNfill] = fVar4->EvalInstance(0);
+               }
             }
          }
       }
-   }
-   if (fW[fNfill]) {
       fNfill++;
       if (fNfill >= fTree->GetEstimate()) {
          TakeAction();
          fNfill = 0;
+      }
+   } else {
+      if (fVar1) {
+         fVar1->ResetLoading();
+         if (fVar2) {
+            fVar2->ResetLoading();
+            if (fVar3) {
+               fVar3->ResetLoading();
+               if (fVar4) {
+                  fVar4->ResetLoading();
+               }
+            }
+         }
       }
    }
    Double_t ww = fW[nfill0];
