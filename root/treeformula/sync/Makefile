@@ -1,5 +1,5 @@
 CLEAN_TARGETS += main *Dict* Event.root *~ Event$(ExeSuf) createfile.out readfile.out libEvent.$(DllSuf) Event.h $(ALL_LIBRARIES)
-TEST_TARGETS += Simple
+TEST_TARGETS += load Simple
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -27,3 +27,8 @@ ifeq ($(FAIL),)
 else
 	$(CMDECHO) root.exe -l -b -q 'Run.C(0)' > readfile.out
 endif
+
+load.log: loadcode_C.$(DllSuf)
+
+load: load.log
+	$(TestDiff)
