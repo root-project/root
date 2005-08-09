@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.38 2005/06/13 16:32:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.39 2005/08/09 10:52:20 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -262,7 +262,7 @@ void TProfile2D::Add(const TH1 *h1, Double_t c1)
    Double_t ac1 = TMath::Abs(c1);
    fEntries += ac1*p1->GetEntries();
    fTsumw   += ac1*p1->fTsumw;
-   fTsumw2  += ac1*p1->fTsumw2;
+   fTsumw2  += c1*c1*p1->fTsumw2;
    fTsumwx  += ac1*p1->fTsumwx;
    fTsumwx2 += ac1*p1->fTsumwx2;
    fTsumwy  += ac1*p1->fTsumwy;
@@ -327,7 +327,7 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    Double_t ac2 = TMath::Abs(c2);
    fEntries = ac1*p1->GetEntries() + ac2*p2->GetEntries();
    fTsumw   = ac1*p1->fTsumw       + ac2*p2->fTsumw;
-   fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
+   fTsumw2  = c1*c1*p1->fTsumw2    + c2*c2*p2->fTsumw2;
    fTsumwx  = ac1*p1->fTsumwx      + ac2*p2->fTsumwx;
    fTsumwx2 = ac1*p1->fTsumwx2     + ac2*p2->fTsumwx2;
    fTsumwy  = ac1*p1->fTsumwy      + ac2*p2->fTsumwy;
