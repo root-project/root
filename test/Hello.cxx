@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.5 2003/01/31 15:42:19 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.6 2004/08/04 04:34:08 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -64,6 +64,8 @@ Hello::Hello(const char *text) : TTimer(40, kTRUE)
    else
       fPad = (TPad*)gPad;
 
+   Connect(fPad, "Closed()", "TTimer", this, "TurnOff()");
+
    while(text[fI]) {               // create  list of characters
       ch = new TChar(text[fI]);
       ch->SetTextFont(72);         // times-bold-r-normal
@@ -73,7 +75,6 @@ Hello::Hello(const char *text) : TTimer(40, kTRUE)
       fList->Add(ch);
    }
 
-   SetBit(kCanDelete);
    Draw();                         // append this to current pad
    Paint();                        // calculate new coordinates of chars and paint it
    gSystem->AddTimer(this);        // start timer= start animation
