@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.172 2005/06/22 20:18:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.173 2005/08/03 21:18:30 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2193,6 +2193,27 @@ void *TClass::New(ENewType defConstructor)
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor. For meaning of
    // defConstructor, see TClass::IsCallingNew().
+   //
+   // The constructor actually called here can be customized by
+   // using the rootcint pragma:
+   //    #pragma link C++ ioctortype UserClass;
+   // For example, with this pragma and a class named MyClass,
+   // this method will called the first of the following 3 
+   // constructors which exists and is public:
+   //    MyClass(UserClass*);
+   //    MyClass(TRootIoCtor*);
+   //    MyClass(); // Or a constructor with all its arguments defaulted.
+   // 
+   // When more than one pragma ioctortype is used, the first seen as priority
+   // For example with:
+   //    #pragma link C++ ioctortype UserClass1;
+   //    #pragma link C++ ioctortype UserClass2;
+   // We look in the following order:
+   //    MyClass(UserClass1*);
+   //    MyClass(UserClass2*);
+   //    MyClass(TRootIoCtor*);
+   //    MyClass(); // Or a constructor with all its arguments defaulted.
+   //
 
    if (fNew) {
       fgCallingNew = defConstructor;
