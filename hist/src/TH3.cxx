@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.63 2005/06/06 06:39:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.64 2005/07/30 15:14:12 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1928,7 +1928,6 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
   char *title = new char[nch];
   sprintf(title,"%s_p%s",GetTitle(),option);
   delete gROOT->FindObject(name);
-  const TArrayD *bins;
   const TArrayD *xbins;
   const TArrayD *ybins;
   const TArrayD *zbins;
