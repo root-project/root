@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.212 2005/07/01 20:11:01 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.213 2005/07/21 22:06:00 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -113,6 +113,26 @@
 // 2) Note that the LinkDef file name MUST contain the string:          //
 //    LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine    //
 //    just like, linkdef1.h. Linkdef.h is case sensitive.               //
+//                                                                      //
+// The default constructor used by the ROOT I/O can be customized by    //
+// using the rootcint pragma:                                           //
+//    #pragma link C++ ioctortype UserClass;                            //
+// For example, with this pragma and a class named MyClass,             //
+// this method will called the first of the following 3                 //
+// constructors which exists and is public:                             //
+//    MyClass(UserClass*);                                              //
+//    MyClass(TRootIoCtor*);                                            //
+//    MyClass(); // Or a constructor with all its arguments defaulted.  //
+//                                                                      // 
+// When more than one pragma ioctortype is used, the first seen has     // 
+// priority.  For example with:                                         //
+//    #pragma link C++ ioctortype UserClass1;                           //
+//    #pragma link C++ ioctortype UserClass2;                           //
+// We look in the following order:                                      //
+//    MyClass(UserClass1*);                                             //
+//    MyClass(UserClass2*);                                             //
+//    MyClass(TRootIoCtor*);                                            //
+//    MyClass(); // Or a constructor with all its arguments defaulted.  //
 //                                                                      //
 // ----------- historical ---------                                     //
 //                                                                      //
@@ -293,6 +313,13 @@ char *StrDup(const char *str);
 
 typedef map<string,bool> funcMap_t;
 funcMap_t gFunMap;
+
+vector<string> gIoConstructorTypes;
+void AddConstructorType(const char *arg) 
+{ 
+   if (arg) gIoConstructorTypes.push_back(string(arg));
+}
+extern "C" void G__set_ioctortype_handler( void (*)(const char*) );
 
 //const char* root_style()  {
 //  static const char* s = ::getenv("MY_ROOT");
@@ -883,7 +910,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 
 bool HasCustomOperatorNew(G__ClassInfo& cl);
 bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
-bool HasDefaultConstructor(G__ClassInfo& cl);
+bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
 bool NeedConstructor(G__ClassInfo& cl);
 
 //______________________________________________________________________________
@@ -972,78 +999,99 @@ bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
-bool HasDefaultConstructor(G__ClassInfo& cl)
+bool CheckConstructor(G__MethodInfo &methodinfo, int argRequested) 
+{
+   // Return true if the method is a valid, public constructor.
+
+   if (    methodinfo.NArg()==(argRequested+methodinfo.NDefaultArg())
+      && (methodinfo.Property() & G__BIT_ISPUBLIC)) {
+      if (argRequested) {
+         if (methodinfo.ifunc()) {
+            // filter out constructor taking a void* or char*
+            G__MethodArgInfo args( methodinfo );
+            args.Next();
+            if (args.Type()->Tagnum() == -1 ) {
+               return false;
+            }
+            //switch ( args.Type()->Type() ) {
+            //   case 'B': /* unsigned char* */
+            //   case 'C': /* signed char* */
+            //   case 'Y': /* void* */
+            //      return false;
+            //   default:
+            //      ;
+            //};
+         }
+      }
+      return true;
+   }
+   return false;
+}
+
+
+
+//______________________________________________________________________________
+bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
 {
    // return true if we can find an constructor calleable without any arguments
 
-   bool result = true;
+   bool result = false;
    long offset;
-   const char *proto = "";
 
    if (cl.Property() & G__BIT_ISNAMESPACE) return false;
+   if (cl.Property() & G__BIT_ISABSTRACT) return false;
 
-   G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto,&offset);
-   G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto,&offset);
+   for(unsigned int i=0; i<gIoConstructorTypes.size(); ++i) {
+      string proto( gIoConstructorTypes[i] );
+      int extra = (proto.size()==0) ? 0 : 1;
+      if (extra==0) {
+         // Looking for default constructor
+         result = true;
+      } else {
+         proto += '*';
+      }
+      G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
+      G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
 
-   if (methodinfo.IsValid()) {
-      /*
-        fprintf(stderr,"found a constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
-               cl.Name(),methodinfo.GetPrototype(),
-               cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
-               methodinfo.NArg(),methodinfo.NDefaultArg());
-      */
-      // proto = methodinfo.GetPrototype();
-      // if ( proto[strlen(proto)-2]!='(' && error) *error = true;
-      if (methodinfo.NArg()!=methodinfo.NDefaultArg()) result = false;
+      if (methodinfo.IsValid()) {
 
-      if (!(methodinfo.Property() & G__BIT_ISPUBLIC)) {
-         if (!NeedConstructor(cl) ) {
-            // If we do not need the constructor and it is not public,
-            // let's not write the stub (a classical case, is to explictly make the constructor private
-            // and NOT implement it).
-            result = false;
-         } else {
-            // For now we do not try to circunvant the access mode of the constructor.
+         result = CheckConstructor( methodinfo, extra);
+         if (result && extra && arg) {
+            *arg = "( (";
+            *arg += proto;
+            *arg += ")0 )";
+         }
+
+      } else if (tmethodinfo.IsValid()) {
+
+         // exactly same as above with a function with the full template name
+         result = CheckConstructor( tmethodinfo, extra);
+         if (result && extra && arg) {
+            *arg = "( (";
+            *arg += proto;
+            *arg += ")0 )";
+         }
+
+      } else if (extra==0) {
+         // Case where the default constructor is explicitly 
+         // declared but we could not get a hold of it (i.e. it is not
+         // accessible.
+         if (cl.HasMethod(cl.TmpltName())) result = false;
+         if (cl.HasMethod(cl.Name())) result = false;
+      }
+
+      // Check for private operator new   
+      if (result) {
+         const char *name = "operator new";
+         proto = "size_t";
+         methodinfo = cl.GetMethod(name,proto.c_str(),&offset);
+         if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
             result = false;
          }
+         if (result) return true;
       }
-   } else if (tmethodinfo.IsValid()) {
-
-      /*
-        fprintf(stderr,"found a template constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
-               cl.Name(),tmethodinfo.GetPrototype(),
-               cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
-               tmethodinfo.NArg(),tmethodinfo.NDefaultArg());
-      */
-      // exactly same as above with a function with the full template name
-
-      if (tmethodinfo.NArg()!=tmethodinfo.NDefaultArg()) result = false;
-      if (!(tmethodinfo.Property() & G__BIT_ISPUBLIC)) {
-         if (!NeedConstructor(cl) ) result = false;
-         else result = false;
-      }
-
-   } else {
-      /*
-        fprintf(stderr,"did not find a constructor for %s %s and %s and %s\n",
-              cl.TmpltName(), cl.Name(),
-              cl.HasMethod(cl.TmpltName())? "has constructor" : "has no constructor",
-              cl.HasMethod(cl.Name())? "has template constructor" : "has no template constructor"
-              );
-      */
-      if (cl.HasMethod(cl.TmpltName())) result = false;
-      if (cl.HasMethod(cl.Name())) result = false;
    }
-
-   // Check for private operator new
-   const char *name = "operator new";
-   proto = "size_t";
-   methodinfo = cl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
-      result = false;
-   }
-
-   return result && !(cl.Property() & G__BIT_ISABSTRACT);
+   return result;
 }
 
 //______________________________________________________________________________
@@ -1330,22 +1378,25 @@ void WriteAuxFunctions(G__ClassInfo &cl)
 
    fprintf(fp, "namespace ROOT {\n");
 
-   if (HasDefaultConstructor(cl)) {
+   string args;
+   if (HasDefaultConstructor(cl,&args)) {
       // write the constructor wrapper only for concrete classes
       fprintf(fp, "   // Wrappers around operator new\n");
       fprintf(fp, "   static void *new_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      return  p ? ");
       if (HasCustomOperatorNewPlacement(cl)) {
-        fprintf(fp, "new(p) %s : ",classname.c_str());
+        fprintf(fp, "new(p) %s%s : ",classname.c_str(),args.c_str());
       } else {
-        fprintf(fp, "::new((::ROOT::TOperatorNewHelper*)p) %s : ",classname.c_str());
+        fprintf(fp, "::new((::ROOT::TOperatorNewHelper*)p) %s%s : ",classname.c_str(),args.c_str());
       }
-      fprintf(fp, "new %s;\n",classname.c_str());
+      fprintf(fp, "new %s%s;\n",classname.c_str(),args.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   static void *newArray_%s(Long_t size) {\n",mappedname.c_str());
-      fprintf(fp, "      return new %s[size];\n",classname.c_str());
-      fprintf(fp, "   }\n");
+      if (args.size()==0) {
+         fprintf(fp, "   static void *newArray_%s(Long_t size) {\n",mappedname.c_str());
+         fprintf(fp, "      return new %s[size];\n",classname.c_str());
+         fprintf(fp, "   }\n");
+      }
    }
 
    if (NeedDestructor(cl)) {
@@ -2118,6 +2169,8 @@ void WriteClassInit(G__ClassInfo &cl)
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
    string csymbol = classname;
+   string args;
+
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
       // Prefix the full class name with '::' except for the STL
@@ -2135,9 +2188,9 @@ void WriteClassInit(G__ClassInfo &cl)
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
       fprintf(fp, "   static void %s_Dictionary();\n",mappedname.c_str());
 
-   if (HasDefaultConstructor(cl)) {
+   if (HasDefaultConstructor(cl,&args)) {
       fprintf(fp, "   static void *new_%s(void *p = 0);\n",mappedname.c_str());
-      fprintf(fp, "   static void *newArray_%s(Long_t size);\n",mappedname.c_str());
+      if (args.size()==0) fprintf(fp, "   static void *newArray_%s(Long_t size);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
       fprintf(fp, "   static void delete_%s(void *p);\n",mappedname.c_str());
@@ -2243,9 +2296,9 @@ void WriteClassInit(G__ClassInfo &cl)
 
    fprintf(fp, "isa_proxy, %d,\n", cl.RootFlag());
    fprintf(fp, "                  sizeof(%s) );\n", csymbol.c_str());
-   if (HasDefaultConstructor(cl)) {
+   if (HasDefaultConstructor(cl,&args)) {
       fprintf(fp, "      instance.SetNew(&new_%s);\n",mappedname.c_str());
-      fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",mappedname.c_str());
+      if (args.size()==0) fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
      fprintf(fp, "      instance.SetDelete(&delete_%s);\n",mappedname.c_str());
@@ -4396,6 +4449,7 @@ int main(int argc, char **argv)
       argvv[argcc++] = autold;
    }
    G__setothermain(2);
+   G__set_ioctortype_handler( AddConstructorType );
    if (gLiblistPrefix.length()) G__set_beforeparse_hook (EnableAutoLoading);
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
@@ -4483,6 +4537,55 @@ int main(int argc, char **argv)
    // Loop over all classes and write the Shadow class if needed
    //
 
+   // Open LinkDef file for reading, so that we can process classes
+   // in order of appearence in this file (STK)
+   FILE *fpld = 0;
+   if (!il) {
+      // Open auto-generated file
+      fpld = fopen(autold, "r");
+   } else {
+      // Open file specified on command line
+      fpld = fopen(Which(argv[il]), "r");
+   }
+   if (!fpld) {
+      Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
+      if (use_preprocessor) remove(bundlename.c_str());
+      if (!il) remove(autold);
+      if (ifl) {
+         remove(tname.c_str());
+         remove(argv[ifl]);
+      }
+      return 1;
+   }
+
+   // Read LinkDef file and process the #pragma link C++ ioctortype
+   char consline[256];
+   while (fgets(consline, 256, fpld)) {
+      bool constype = false;
+      if ((strcmp(strtok(consline, " "), "#pragma") == 0) &&
+          (strcmp(strtok(0, " "), "link") == 0) &&
+          (strcmp(strtok(0, " "), "C++") == 0) &&
+          (strcmp(strtok(0, " " ), "ioctortype") == 0)) {
+
+         constype = true;
+      }
+
+      if (constype) {
+
+         char *request = strtok(0, "-!+;");
+         // just in case remove trailing space and tab
+         while (*request == ' ') request++;
+         int len = strlen(request)-1;
+         while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
+         request = Compress(request); //no space between tmpl arguments allowed
+         AddConstructorType(request);
+      
+      }
+   }
+   rewind(fpld);
+   AddConstructorType("TRootIoCtor");
+   AddConstructorType("");
+
    G__ClassInfo cl;
 
    fprintf(fp, "namespace ROOT {\n   namespace Shadow {\n");
@@ -4516,27 +4619,6 @@ int main(int argc, char **argv)
       } else if (((cl.Property() & (G__BIT_ISNAMESPACE)) && cl.Linkage() == G__CPPLINK)) {
          WriteNamespaceInit(cl);
       }
-   }
-
-   // Open LinkDef file for reading, so that we can process classes
-   // in order of appearence in this file (STK)
-   FILE *fpld = 0;
-   if (!il) {
-      // Open auto-generated file
-      fpld = fopen(autold, "r");
-   } else {
-      // Open file specified on command line
-      fpld = fopen(Which(argv[il]), "r");
-   }
-   if (!fpld) {
-      Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
-      if (use_preprocessor) remove(bundlename.c_str());
-      if (!il) remove(autold);
-      if (ifl) {
-         remove(tname.c_str());
-         remove(argv[ifl]);
-      }
-      return 1;
    }
 
    cl.Init();
@@ -4641,7 +4723,7 @@ int main(int argc, char **argv)
          force = false;
 
       }
-
+          
       if (!skip) {
 
          // Create G__ClassInfo object for this class and process. Be
