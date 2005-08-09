@@ -530,6 +530,12 @@ int G__iscastexpr_body(char *ebuf,int lenbuf)
     }                                                                  \
     else if('&'==unaopr[up]) {    /* ON717 */                          \
       vstack[sp-1] = G__toXvalue(vstack[sp-1],'P');                    \
+    } else if ('-'==unaopr[up]&&oprin=='@') {                          \
+        vstack[sp] = vstack[sp-1];                                     \
+        vstack[sp-1] = G__getitem("-1");                               \
+        sp++;                                                          \
+        opr[op] = '*';                                                 \
+        prec[op++] = G__PREC_MULT;                                     \
     }                                                                  \
     else {                                                             \
       vstack[sp] = vstack[sp-1];                                       \
@@ -657,7 +663,7 @@ int G__iscastexpr_body(char *ebuf,int lenbuf)
     else if(lenbuf) {                                                 \
       char *pebuf;                                                    \
       if('e'==tolower(expression[ig1-1])&&                            \
-         'x'!=tolower(expression[1]) &&   /* 2201 */                  \
+         !(expression[0]=='0' && 'x'==tolower(expression[1])) &&   /* Properly handle 0x0E */ \
          (isdigit(ebuf[0])||'.'==ebuf[0]||                            \
          ('('==ebuf[0]&&(pebuf=strchr(ebuf,')'))&&                    \
           (isdigit(*++pebuf)||'.'==(*pebuf))))) {                     \
@@ -1168,14 +1174,11 @@ G__value G__getexpr(char *expression)
             /* **a */
             ++ig1;
             G__exec_unaopr(c);
-            /* it is questionable whether to change following to 
-             * G__exec_unaopr(c); */
              G__exec_unaopr(c);
           }
         }
         else if(lenbuf) {
           ebuf[lenbuf]=0;
-#define G__OLDIMPLEMENTATION792 /* BAD CHANGE */
           if(!G__iscastexpr(ebuf)) {
             /* a*b */
             G__exec_binopr(c,G__PREC_MULT);
@@ -1187,9 +1190,6 @@ G__value G__getexpr(char *expression)
         }
         else {
           /* *a */
-          /* it is questionable whether to change following to 
-           * G__exec_unaopr(c); */
-#define G__OLDIMPLEMENTATION1619
            G__exec_unaopr(c);
         }
       }
