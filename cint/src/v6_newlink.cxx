@@ -48,6 +48,22 @@ extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode) {
 # define fopen(A,B) FOpenAndSleep((A),(B))
 #endif
 
+#ifdef G__ROOT
+
+/******************************************************************
+ * G__set_class_autoloading
+ ******************************************************************/
+int (*G__p_ioctortype_handler) G__P((const char*));
+
+/************************************************************************
+* G__set_class_autoloading_callback
+************************************************************************/
+extern "C" void G__set_ioctortype_handler(int (*p2f) G__P((const char*)))
+{
+  G__p_ioctortype_handler = p2f;
+}
+#endif
+
 extern "C" {
 
 #define G__OLDIMPLEMENTATION1702
@@ -6883,6 +6899,9 @@ static void G__linknestedtypedef(int tagnum,int globalcomp)
 *
 * #pragma link postprocess file func;
 *
+* For ROOT only:
+* #praga link C++ ioctortype ClassName;
+*
 **************************************************************************/
 void G__specify_link(int link_stub)
 {
@@ -7645,7 +7664,15 @@ void G__specify_link(int link_stub)
       }
     }
   }
-
+#ifdef G__ROOT
+  /*************************************************************************
+  * #pragma link [spec] ioctortype [item];
+  *************************************************************************/
+  else if(strncmp(buf,"ioctortype",3)==0) {
+      c = G__fgetname(buf,";\n\r");
+      if (G__p_ioctortype_handler) G__p_ioctortype_handler(buf);
+  }
+#endif
   /*************************************************************************
   * #pragma link [spec] defined_in [item];
   *************************************************************************/
