@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.29 2005/04/29 20:34:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.30 2005/05/14 16:20:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #endif
 #include "TFormulaPrimitive.h"
 
-const Int_t kMAXFOUND = 200;
+const Int_t kMAXFOUND = 500;
 const Int_t kTFOperMask = 0x7fffff;
 const UChar_t kTFOperShift = 23;
 

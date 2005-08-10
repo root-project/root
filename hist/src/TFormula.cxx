@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.97 2005/07/01 14:07:11 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.98 2005/07/20 20:41:23 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2036,8 +2036,8 @@ Int_t TFormula::Compile(const char *expression)
 
 
   MAXOP   = 1000;
-  MAXPAR  = 100;
-  MAXCONST= 100;
+  MAXPAR  = 1000;
+  MAXCONST= 1000;
 
   fExpr   = new TString[MAXOP];
   fConst  = new Double_t[MAXCONST];
@@ -3455,13 +3455,13 @@ void TFormula::Optimize()
    //
    for (i=0;i<fNoper;i++){   
       if (fExprOptimized[i].Data()) {
-         //printf("%s\n",fExprOptimized[i].Data());
          MakePrimitive(fExprOptimized[i].Data(), i);
       }
    }  
    //
-   Int_t *offset    = new Int_t[kMAXFOUND*16];
-   Int_t *optimized = new Int_t[kMAXFOUND];
+   Int_t maxfound   = fNoper+1;
+   Int_t *offset    = new Int_t[maxfound*16];
+   Int_t *optimized = new Int_t[maxfound];
    //
    //
    TFormulaPrimitive*  primitive[10];
@@ -3656,8 +3656,8 @@ void TFormula::Optimize()
    // 
    Int_t operO=0;
    TString expr="";
-   Int_t map0[kMAXFOUND];      //remapping of the operands
-   Int_t map1[kMAXFOUND];      //remapping of the operands
+   Int_t *map0 = new Int_t[maxfound];   //remapping of the operands
+   Int_t *map1 = new Int_t[maxfound];   //remapping of the operands
    for (i=0;i<fNoper;i++){
       map0[i]     =  operO;
       map1[operO] =  i;
@@ -3701,6 +3701,8 @@ void TFormula::Optimize()
       }
    }
 
+   delete [] map1;
+   delete [] map0;
    delete [] offset;
    delete [] optimized;
 }
