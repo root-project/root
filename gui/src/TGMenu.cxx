@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.50 2005/04/01 13:51:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.51 2005/04/06 06:09:26 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -489,14 +489,16 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                if (!hot || (hot != keysym)) continue;
 
                menu->Activate(ce);
-               gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
-               fCurrent->SetState(kFALSE);
-               menu->fStick = kFALSE;
-               Event_t ev;
-               ev.fType = kButtonRelease;
-               ev.fWindow = menu->GetId();
-               fCurrent = 0;
-               return menu->HandleButton(&ev);
+               if(ce->GetType() != kMenuPopup) {
+                  gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+                  fCurrent->SetState(kFALSE);
+                  menu->fStick = kFALSE;
+                  Event_t ev;
+                  ev.fType = kButtonRelease;
+                  ev.fWindow = menu->GetId();
+                  fCurrent = 0;
+                  return menu->HandleButton(&ev);
+               }
             }
 
             ce = menu->GetCurrent();
