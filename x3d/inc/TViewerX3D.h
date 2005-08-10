@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.10 2005/05/25 14:25:17 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.11 2005/08/10 16:26:36 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
+#ifndef ROOT_TX3DFrame
 #include "TX3DFrame.h"
 #endif
 #ifndef ROOT_TVirtualViewer3D
