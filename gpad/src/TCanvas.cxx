@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.90 2005/06/24 12:27:29 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.91 2005/07/29 08:21:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -149,9 +149,9 @@ void TCanvas::Constructor()
    fSelected    = 0;
    fSelectedPad = 0;
    fPadSave     = 0;
-   fAutoExec    = kTRUE;
-   fShowEditor  = kFALSE;
-   fShowToolBar = kFALSE;
+   SetBit(kAutoExec);
+   SetBit(kShowEditor);
+   SetBit(kShowToolBar);
 }
 
 //______________________________________________________________________________
@@ -170,7 +170,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fWindowHeight = wh;
    fCw           = ww + 4;
    fCh           = wh +28;
-   fMenuBar      = kFALSE;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
 
@@ -215,10 +214,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    }
 
    Init();
-   fMenuBar = kTRUE;
+   SetBit(kMenuBar,1);
    if (form < 0) {
       form     = -form;
-      fMenuBar = kFALSE;
+      SetBit(kMenuBar,0);
    }
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
@@ -247,7 +246,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 3) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
-      fCanvasImp->ShowMenuBar(fMenuBar);
+      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
       fBatch = kFALSE;
    }
    SetName(name);
@@ -286,10 +285,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    }
 
    Init();
-   fMenuBar = kTRUE;
+   SetBit(kMenuBar,1);
    if (ww < 0) {
       ww       = -ww;
-      fMenuBar = kFALSE;
+      SetBit(kMenuBar,0);
    }
    fCw       = ww;
    fCh       = wh;
@@ -307,7 +306,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    } else {
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
-      fCanvasImp->ShowMenuBar(fMenuBar);
+      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
       fBatch = kFALSE;
    }
    SetName(name);
@@ -351,10 +350,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    }
 
    Init();
-   fMenuBar = kTRUE;
+   SetBit(kMenuBar,1);
    if (wtopx < 0) {
       wtopx    = -wtopx;
-      fMenuBar = kFALSE;
+      SetBit(kMenuBar,0);
    }
    fCw       = ww;
    fCh       = wh;
@@ -372,7 +371,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    } else {                   //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
-      fCanvasImp->ShowMenuBar(fMenuBar);
+      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
       fBatch = kFALSE;
    }
    SetName(name);
@@ -394,13 +393,13 @@ void TCanvas::Init()
       TApplication::CreateApplication();
 
    // Get some default from .rootrc. Used in fCanvasImp->InitWindow().
-   fMoveOpaque      = gEnv->GetValue("Canvas.MoveOpaque", 0);
-   fResizeOpaque    = gEnv->GetValue("Canvas.ResizeOpaque", 0);
-   fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", kRed);
-   fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
-   fShowToolBar     = gEnv->GetValue("Canvas.ShowToolBar", kFALSE);
-   fShowEditor      = gEnv->GetValue("Canvas.ShowEditor", kFALSE);
-   fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
+   fHighLightColor     = gEnv->GetValue("Canvas.HighLightColor", kRed);
+   SetBit(kMoveOpaque,   gEnv->GetValue("Canvas.MoveOpaque", 0));
+   SetBit(kResizeOpaque, gEnv->GetValue("Canvas.ResizeOpaque", 0));
+   if (gEnv->GetValue("Canvas.ShowEventStatus", kFALSE)) SetBit(kShowEventStatus);
+   if (gEnv->GetValue("Canvas.ShowToolBar", kFALSE)) SetBit(kShowToolBar);
+   if (gEnv->GetValue("Canvas.ShowEditor", kFALSE)) SetBit(kShowEditor);
+   if (gEnv->GetValue("Canvas.AutoExec", kTRUE)) SetBit(kAutoExec);
 
    // Fill canvas ROOT data structure
    fXsizeUser = 0;
@@ -495,14 +494,13 @@ void TCanvas::Build()
 
    // transient canvases have typically no menubar and should not get
    // by default the event status bar (if set by default)
-   if (fShowEventStatus && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowStatusBar(fShowEventStatus);
-   // ... and toolbar + editor
-   if (fShowToolBar && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowToolBar(fShowToolBar);
-   if (fShowEditor && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowEditor(fShowEditor);
-
+   if (TestBit(kMenuBar) && fCanvasImp) {
+      if (TestBit(kShowEventStatus)) fCanvasImp->ShowStatusBar(kTRUE);
+      // ... and toolbar + editor
+      if (TestBit(kShowToolBar))     fCanvasImp->ShowToolBar(kTRUE);
+      if (TestBit(kShowEditor))      fCanvasImp->ShowEditor(kTRUE);
+   }
+   
 #if defined(WIN32) && !defined(GDK_WIN32)
    if (!strcmp(gVirtualX->GetName(), "Win32"))
       gVirtualX->UpdateWindow(1);
@@ -696,7 +694,7 @@ void TCanvas::Draw(Option_t *)
    if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
-   fCanvasImp->ShowMenuBar(fMenuBar);
+   fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
    fCanvasImp->Show();
 
    Build();
@@ -789,7 +787,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    const Int_t kTMAX=256;
    static char atext[kTMAX];
 
-   if (!fShowEventStatus || !selected) return;
+   if (!TestBit(kShowEventStatus) || !selected) return;
 
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
 
@@ -832,7 +830,7 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
       gPad = prevSelPad;
       prevSelObj->ExecuteEvent(kMouseLeave, fEventX, fEventY);
       fEvent = kMouseLeave;
-      if (fAutoExec) RunAutoExec();
+      RunAutoExec();
       ProcessedEvent(kMouseLeave, fEventX, fEventY, prevSelObj);  // emit signal
    }
 
@@ -841,7 +839,7 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
    if (fSelected) {
       fSelected->ExecuteEvent(kMouseEnter, fEventX, fEventY);
       fEvent = kMouseEnter;
-      if (fAutoExec) RunAutoExec();
+      RunAutoExec();
       ProcessedEvent(kMouseEnter, fEventX, fEventY, fSelected);  // emit signal
    }
 
@@ -984,7 +982,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fAutoExec) RunAutoExec();
+      RunAutoExec();
 
       break;
 
@@ -1023,7 +1021,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       FeedbackMode(kTRUE);   // to draw in rubberband mode
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fAutoExec) RunAutoExec();
+      RunAutoExec();
 
       break;
 
@@ -1041,13 +1039,13 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
             if (fSelected->InheritsFrom(TVirtualPad::Class()))
                resize = ((TVirtualPad*)fSelected)->IsBeingResized();
 
-            if ((!resize && fMoveOpaque) || (resize && fResizeOpaque)) {
+            if ((!resize && TestBit(kMoveOpaque)) || (resize && TestBit(kResizeOpaque))) {
                gPad = fPadSave;
                Update();
                FeedbackMode(kTRUE);
             }
          }
-         if (fAutoExec) RunAutoExec();
+         RunAutoExec();
       }
 
       break;
@@ -1059,7 +1057,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          fSelected->ExecuteEvent(event, px, py);
 
-         if (fAutoExec) RunAutoExec();
+         RunAutoExec();
 
          if (fPadSave->TestBit(kNotDeleted))
             gPad = fPadSave;
@@ -1144,7 +1142,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fAutoExec) RunAutoExec();
+      RunAutoExec();
 
       break;
 
@@ -1214,7 +1212,7 @@ void TCanvas::MoveOpaque(Int_t set)
 //  The option opaque produces the best effect. It requires however a
 //  a reasonably fast workstation or response time.
 //
-   fMoveOpaque = set;
+   SetBit(kMoveOpaque,set);
 }
 
 //______________________________________________________________________________
@@ -1388,10 +1386,25 @@ void TCanvas::Resize(Option_t *)
 }
 
 //______________________________________________________________________________
+void TCanvas::ResizeOpaque(Int_t set)
+{
+//*-*-*-*-*-*-*-*-*Set option to resize objects/pads in a canvas*-*-*-*-*-*-*-*
+//*-*              ===========================================
+//
+//  if set = 1 (default) graphics objects are resized in opaque mode
+//         = 0 only the outline of objects is drawn when resizing them
+//  The option opaque produces the best effect. It requires however a
+//  a reasonably fast workstation or response time.
+//
+   SetBit(kResizeOpaque,set);
+}
+
+//______________________________________________________________________________
 void TCanvas::RunAutoExec()
 {
    // Execute the list of TExecs in the current pad.
 
+   if (!TestBit(kAutoExec)) return;
    if (!gPad) return;
    ((TPad*)gPad)->AutoExec();
 }
@@ -1748,16 +1761,16 @@ void TCanvas::Streamer(TBuffer &b)
          fWindowHeight = fCh;
       }
       fCatt.Streamer(b);
-      b >> fMoveOpaque;
-      b >> fResizeOpaque;
+      Bool_t dummy;
+      b >> dummy; if (dummy) MoveOpaque(1);
+      b >> dummy; if (dummy) ResizeOpaque(1);
       b >> fHighLightColor;
-      b >> fBatch;
-      fBatch = gROOT->IsBatch();
+      b >> dummy; //was fBatch
       if (v < 2) return;
-      b >> fShowEventStatus;
-      if (v > 3)
-         b >> fAutoExec;
-      b >> fMenuBar;
+      b >> dummy; if (dummy) SetBit(kShowEventStatus);
+      if (v > 3) {b >> dummy; if (dummy) SetBit(kAutoExec);}
+      b >> dummy; if (dummy) SetBit(kMenuBar);
+      fBatch = gROOT->IsBatch();
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
       //save list of colors
@@ -1790,13 +1803,13 @@ void TCanvas::Streamer(TBuffer &b)
       b << fCw;
       b << fCh;
       fCatt.Streamer(b);
-      b << fMoveOpaque;
-      b << fResizeOpaque;
+      b << TestBit(kMoveOpaque);      //please remove in ROOT version 6
+      b << TestBit(kResizeOpaque);    //please remove in ROOT version 6
       b << fHighLightColor;
-      b << fBatch;
-      b << fShowEventStatus;
-      b << fAutoExec;
-      b << fMenuBar;
+      b << fBatch;                    //please remove in ROOT version 6
+      b << TestBit(kShowEventStatus); //please remove in ROOT version 6
+      b << TestBit(kAutoExec);        //please remove in ROOT version 6
+      b << TestBit(kMenuBar);         //please remove in ROOT version 6
       b.SetByteCount(R__c, kTRUE);
    }
 }
@@ -1806,7 +1819,8 @@ void TCanvas::ToggleAutoExec()
 {
    // Toggle pad auto execution of list of TExecs.
 
-   fAutoExec = fAutoExec ? kFALSE : kTRUE;
+   Bool_t AutoExec = TestBit(kAutoExec);
+   SetBit(kAutoExec,!AutoExec);
 }
 
 //______________________________________________________________________________
@@ -1814,29 +1828,30 @@ void TCanvas::ToggleEventStatus()
 {
    // Toggle event statusbar.
 
-   fShowEventStatus = fShowEventStatus ? kFALSE : kTRUE;
+   Bool_t ShowEventStatus = !TestBit(kShowEventStatus);
+   SetBit(kShowEventStatus,ShowEventStatus);
 
-   if (fCanvasImp) fCanvasImp->ShowStatusBar(fShowEventStatus);
+   if (fCanvasImp) fCanvasImp->ShowStatusBar(ShowEventStatus);
 }
 
 //______________________________________________________________________________
 void TCanvas::ToggleToolBar()
 {
    // Toggle toolbar.
+   Bool_t ShowToolBar = !TestBit(kShowToolBar);
+   SetBit(kShowToolBar,ShowToolBar);
 
-   fShowToolBar = fShowToolBar ? kFALSE : kTRUE;
-
-   if (fCanvasImp) fCanvasImp->ShowToolBar(fShowToolBar);
+   if (fCanvasImp) fCanvasImp->ShowToolBar(ShowToolBar);
 }
 
 //______________________________________________________________________________
 void TCanvas::ToggleEditor()
 {
    // Toggle editor.
+   Bool_t ShowEditor = !TestBit(kShowEditor);
+   SetBit(kShowEditor,ShowEditor);
 
-   fShowEditor = fShowEditor ? kFALSE : kTRUE;
-
-   if (fCanvasImp) fCanvasImp->ShowEditor(fShowEditor);
+   if (fCanvasImp) fCanvasImp->ShowEditor(ShowEditor);
 }
 
 //______________________________________________________________________________

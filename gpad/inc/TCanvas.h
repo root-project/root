@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.31 2005/04/23 10:55:06 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.32 2005/05/30 22:47:27 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -81,15 +81,7 @@ protected:
    Bool_t        fBatch;           //!True when in batchmode
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
-   Bool_t        fShowEventStatus; //Show event status panel
-   Bool_t        fAutoExec;        //To auto exec the list of pad TExecs
-   Bool_t        fMoveOpaque;      //Move objects in opaque mode
-   Bool_t        fResizeOpaque;    //Resize objects in opaque mode
-   Bool_t        fMenuBar;         //False if no menubar is displayed
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
-
-   Bool_t        fShowToolBar;     //Show toolbar
-   Bool_t        fShowEditor;      //Show side frame or old Editor
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
@@ -112,6 +104,17 @@ protected:
    void Init();
 
 public:
+   // TCanvas status bits
+   enum {
+      kShowEventStatus  = BIT(15),
+      kAutoExec         = BIT(16),
+      kMenuBar          = BIT(17),
+      kShowToolBar      = BIT(18),
+      kShowEditor       = BIT(19),
+      kMoveOpaque       = BIT(20),
+      kResizeOpaque     = BIT(21)
+   };
+      
    TCanvas(Bool_t build=kTRUE);
    TCanvas(const char *name, const char *title="", Int_t form=1);
    TCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
@@ -148,10 +151,10 @@ public:
    Int_t             GetSelectedY() const {return fSelectedY;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
    TVirtualPad      *GetSelectedPad() const { return fSelectedPad; }
-   Bool_t            GetShowEventStatus() const { return fShowEventStatus; }
-   Bool_t            GetShowToolBar() const { return fShowToolBar; }
-   Bool_t            GetShowEditor() const { return fShowEditor; }
-   Bool_t            GetAutoExec() const { return fAutoExec; }
+   Bool_t            GetShowEventStatus() const { return TestBit(kShowEventStatus); }
+   Bool_t            GetShowToolBar() const { return TestBit(kShowToolBar); }
+   Bool_t            GetShowEditor() const { return TestBit(kShowEditor); }
+   Bool_t            GetAutoExec() const { return TestBit(kAutoExec); }
    Size_t            GetXsizeUser() const {return fXsizeUser;}
    Size_t            GetYsizeUser() const {return fYsizeUser;}
    Size_t            GetXsizeReal() const {return fXsizeReal;}
@@ -167,15 +170,15 @@ public:
    virtual void      GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &wh)
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);
-   Bool_t            HasMenuBar() const { return fMenuBar; }
+   Bool_t            HasMenuBar() const { return TestBit(kMenuBar); }
    void              Iconify() { fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsFolder() const;
    Bool_t            IsRetained() const { return fRetained; }
    virtual void      ls(Option_t *option="") const;
    void              MoveOpaque(Int_t set=1);
-   Bool_t            OpaqueMoving() const { return fMoveOpaque; }
-   Bool_t            OpaqueResizing() const { return fResizeOpaque; }
+   Bool_t            OpaqueMoving() const { return TestBit(kMoveOpaque); }
+   Bool_t            OpaqueResizing() const { return TestBit(kResizeOpaque); }
    virtual void      Paint(Option_t *option="");
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) { return TPad::Pick(px, py, pickobj); }
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
@@ -185,7 +188,7 @@ public:
    virtual void      Closed();                                                         // *SIGNAL*
    void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
    virtual void      Resize(Option_t *option="");
-   void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
+   void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
    void              SavePrimitive(ofstream &out, Option_t *option);
    virtual void      SetCursor(ECursor cursor);
@@ -211,7 +214,7 @@ public:
 
    static void       MakeDefCanvas();
 
-   ClassDef(TCanvas,5)  //Graphics canvas
+   ClassDef(TCanvas,6)  //Graphics canvas
 };
 
 #endif
