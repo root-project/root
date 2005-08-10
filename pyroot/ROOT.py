@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.26 2005/06/10 14:30:22 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.27 2005/06/24 07:19:03 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/20/05
+# Last: 08/01/05
 
 """PyROOT user module.
 
@@ -83,7 +83,7 @@ sys.setcheckinterval( 100 )
 __version__ = '3.1.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad',
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
                     'AddressOf', 'NULL', 'MakeNullPointer',
                     'Template', 'std' ]
 
@@ -148,22 +148,25 @@ std = _STD()
 del _STD
 
 
-### special case for gPad (is a C++ macro) --------------------------------------
-TVirtualPad = makeRootClass( "TVirtualPad" )
+### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
+class _ExpandMacroFunction( object ):
+   def __init__( self, klass, func ):
+      c = makeRootClass( klass )
+      self.func = getattr( c, func )
 
-class _TVirtualPad( object ):
-   def __getattribute__( self, what ):
-      return getattr( TVirtualPad.Pad(), what )
+   def __getattr__( self, what ):
+      return getattr( self.__dict__[ 'func' ](), what )
 
    def __cmp__( self, other ):
-      return cmp( TVirtualPad.Pad(), other )
+      return cmp( self.func(), other )
 
    def __len__( self ):
-      if TVirtualPad.Pad():
+      if self.func():
          return 1
       return 0
 
-gPad = _TVirtualPad()
+gPad      = _ExpandMacroFunction( "TVirtualPad", "Pad" )
+gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -175,6 +178,21 @@ def _excepthook( exctype, value, traceb ):
     # mimic ROOT/CINT commands
       if cmd == '.q':
          sys.exit( 0 )
+      elif cmd == '.?' or cmd == '.help':
+         print """PyROOT emulation of CINT commands.
+All emulated commands must be preceded by a . (dot).
+===========================================================================
+Help:        ?         : this help
+             help      : this help
+Shell:       ![shell]  : execute shell command
+Evaluation:  x [file]  : load [file] and evaluate {statements} in the file
+Load/Unload: L [lib]   : load [lib]
+Quit:        q         : quit python session
+
+The standard python help system is available through a call to 'help()' or
+'help(<id>)' where <id> is an identifier, e.g. a class or function such as
+TPad or TPad.cd, etc."""
+         return
       elif cmd == '.!' and arg:
          return os.system( arg )
       elif cmd == '.x' and arg:
@@ -182,7 +200,7 @@ def _excepthook( exctype, value, traceb ):
          fn = os.path.expanduser( os.path.expandvars( arg ) )
          execfile( fn, __main__.__dict__, __main__.__dict__ )
          return
-      elif cmd == '.L' and 3 < len(arg) and arg[-3:] == '.so':
+      elif cmd == '.L':
          return gSystem.Load( arg )
       elif cmd == '.cd' and arg:
          os.chdir( arg )
@@ -198,6 +216,10 @@ def _excepthook( exctype, value, traceb ):
 if not __builtins__.has_key( '__IPYTHON__' ):
  # IPython has its own ways of executing shell commands etc.
    sys.excepthook = _excepthook
+else:
+ # IPython's FakeModule hack otherwise prevents usage of python from CINT
+   gROOT.ProcessLine( 'TPython::Exec( "" )' )
+   sys.modules[ '__main__' ].__builtins__ = __builtins__
 
 
 ### call EndOfLineAction after each interactive command (to update display etc.)

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.33 2005/06/14 05:06:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.34 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -27,6 +27,7 @@
 #include "TBaseClass.h"
 #include "TInterpreter.h"
 #include "TGlobal.h"
+#include "TSeqCollection.h"
 #include "DllImport.h"
 
 // CINT
@@ -53,7 +54,32 @@ namespace {
       PyROOTApplication( const char* acn, int* argc, char** argv ) :
             TApplication( acn, argc, argv )
       {
-         SetReturnFromRun( kTRUE );          // prevents ROOT from exiting python
+      // follow TRint to minimize differences with CINT
+         ProcessLine( "#include <iostream>", kTRUE );
+         ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
+         ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
+         ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able
+                                                      //  to properly unload these files
+
+      // allow the usage of ClassDef and ClassImp in interpreted macros
+         ProcessLine( "#include <RtypesCint.h>", kTRUE );
+
+      // disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+         ProcessLine( "#define ROOT_Rtypes 0", kTRUE );
+         ProcessLine( "#define ROOT_TError 0", kTRUE );
+         ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
+
+      // the following libs are also useful to have, make sure they are loaded...
+         gROOT->LoadClass("TMinuit",     "Minuit");
+         gROOT->LoadClass("TPostScript", "Postscript");
+         gROOT->LoadClass("THtml",       "Html");
+
+      // save current interpreter context
+         gInterpreter->SaveContext();
+         gInterpreter->SaveGlobalsContext();
+
+      // prevent ROOT from exiting python
+         SetReturnFromRun( kTRUE );
       }
    };
 
@@ -68,7 +94,7 @@ namespace {
       InitSTLTypes()
       {
          const char* stlTypes[] = { "complex", "exception",
-            "deque", "list", "queue", "stack", "vector",
+            "deque", "list", "queue", "stack", /* "vector", : preloaded */
             "map", "multimap", "set", "multiset" };
          std::string nss = "std::";
          for ( int i = 0; i < int(sizeof(stlTypes)/sizeof(stlTypes[0])); ++i ) {
@@ -80,22 +106,27 @@ namespace {
 
    void LoadDictionaryForSTLType( const std::string& tname )
    {
+   // if name is of a known STL class, load the appropriate CINT dll(s)
        std::string sub = tname.substr( 0, tname.find( "<" ) );
        if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
           if ( sub.substr( 0, 5 ) == "std::" )
              sub = sub.substr( 5, std::string::npos );
 
           if ( 0 <= G__loadfile( (sub+".dll").c_str() ) ) {
+          // special case for map and multimap, which are spread over 2 files
              if ( sub == "map" || sub == "multimap" ) {
                 G__loadfile( (sub+"2.dll").c_str() );
              }
+
+          // success; prevent second attempt to load by erasing name
              gSTLTypes.erase( sub );
              gSTLTypes.erase( "std::" + sub );
+
           } else {
              PyErr_Warn( PyExc_RuntimeWarning,
                 const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
           }
-       } 
+       }
    }
 
 } // unnamed namespace
@@ -368,14 +399,21 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
          return 0;
    }
 
-// special action for STL classes to load dict lib (must be done before GetClass())
-   LoadDictionaryForSTLType( name );
-
 // retrieve ROOT class (this verifies name)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
    TClass* klass = gROOT->GetClass( lookup.c_str() );
+   if ( ! klass || ( klass != 0 && klass->GetNmethods() == 0 ) ) {
+   // removal is required or the dictionary can't be updated properly
+      if ( klass != 0 ) gROOT->RemoveClass( klass );
 
-   if ( klass == 0 ) {
+   // special action for STL classes to enforce loading dict lib
+      LoadDictionaryForSTLType( name );
+
+   // lookup again, if this was an STL class, we (may) now have a full dictionary
+      klass = gROOT->GetClass( lookup.c_str() );
+   }
+
+   if ( ! klass ) {
    // in case a "naked" templated class is requested, return callable proxy for instantiations
       if ( G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
          PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
@@ -658,7 +696,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
          klass = TGlobal::Class();
    }
 
-   if ( Utility::IsPointer( gbl->GetFullTypeName() ) )
+   if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
       return BindRootObject( (void*)gbl->GetAddress(), klass, true );
 
    return BindRootObject( (void*)gbl->GetAddress(), klass );

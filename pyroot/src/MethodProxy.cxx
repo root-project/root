@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.6 2005/05/06 10:26:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.7 2005/06/12 17:21:53 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -54,6 +54,7 @@ namespace {
       return PyString_FromString( meth->GetName().c_str() );
    }
 
+//____________________________________________________________________________
    PyObject* mp_doc( MethodProxy* meth, void* )
    {
       MethodProxy::Methods_t& methods = meth->fMethodInfo->fMethods;
@@ -77,6 +78,7 @@ namespace {
       return doc;
    }
 
+//____________________________________________________________________________
    PyGetSetDef mp_getset[] = {
       { (char*)"__name__", (getter)mp_name, NULL, NULL, NULL },
       { (char*)"__doc__", (getter)mp_doc, NULL, NULL, NULL },

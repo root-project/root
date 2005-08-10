@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.12 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.13 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -212,7 +212,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 //____________________________________________________________________________
 bool PyROOT::VoidConverter::SetArg( PyObject*, G__CallFunc* )
 {
-   PyErr_SetString( PyExc_SystemError, "void arguments can\'t be set" );
+   PyErr_SetString( PyExc_SystemError, "void/unknown arguments can\'t be set" );
    return false;
 }
 
@@ -467,6 +467,11 @@ bool PyROOT::RootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
    // set pointer (may be null) and declare success
       func->SetArg( reinterpret_cast< long >( obj ) + offset );
       return true;
+
+   } else if ( ! fClass.GetClass()->GetClassInfo() ) {
+   // assume "user knows best" to allow anonymous pointer passing
+      func->SetArg( reinterpret_cast< long >( pyobj->GetObject() ) );
+      return true;
    }
 
    return false;
@@ -591,59 +596,80 @@ bool PyROOT::PyObjectConverter::ToMemory( PyObject* value, void* address )
 //- factories -----------------------------------------------------------------
 PyROOT::Converter* PyROOT::CreateConverter( const std::string& fullType, long user )
 {
-   Converter* result = 0;
+// The matching of the fulltype to a converter factory goes in five steps:
+//   1) full, exact match
+//   2) match of decorated, unqualified type
+//   3) accept const ref as by value
+//   4) accept ref as pointer
+//   5) generalized cases (covers basically all ROOT classes)
+//
+// If all fails, void is used, which will generate a run-time warning when used.
 
+// resolve typedefs etc.
    G__TypeInfo ti( fullType.c_str() );
-   std::string realType = TClassEdit::ShortType( ti.TrueName(), 1 );
-   int isp = Utility::IsPointer( fullType );
+   std::string resolvedType = ti.TrueName();
 
-// first, look for an explicit (user-installed) converter factory
-   const char* q = "";
-   if ( isp == 1 )
-      q = "*";
-   else if ( isp == 10 )
-      q = "&";
-   else if ( isp == 11 )
-      q = "*&";
+// an exactly matching converter is preferred
+   ConvFactories_t::iterator h = gConvFactories.find( resolvedType );
+   if ( h != gConvFactories.end() )
+      return (h->second)( user );
 
-   ConvFactories_t::iterator h = gConvFactories.find( realType + q );
+//-- nothing? ok, collect information about the type and possible qualifiers/decorators
+   const std::string& cpd = Utility::Compound( resolvedType );
+   std::string realType   = TClassEdit::ShortType( resolvedType.c_str(), 1 );
 
-// TODO: fix this hack ...
-   if ( h == gConvFactories.end() && isp == 10 )
+// accept unqualified type (as python does not know about qualifiers)
+   h = gConvFactories.find( realType + cpd );
+   if ( h != gConvFactories.end() )
+      return (h->second)( user );
+
+//-- nothing? collect qualifier information
+   bool isConst = resolvedType.find( "const" ) != std::string::npos;
+
+// accept const <type>& as converter by value (as python copies most types)
+   if ( isConst && cpd == "&" ) {
       h = gConvFactories.find( realType );
+      if ( h != gConvFactories.end() )
+         return (h->second)( user );
+   }
 
-// use a general converter if nothing installed
-   if ( h == gConvFactories.end() ) {
-   // handle memory according to user settings
-      bool control = true;
-      if ( Utility::gMemoryPolicy == Utility::kHeuristics )
-         control = isp == 10 || fullType.find( "const" ) != std::string::npos;
+//-- still nothing? try pointer instead of ref, if ref
+   if ( cpd == "&" ) {
+      h = gConvFactories.find( realType + "*" );
+      if ( h != gConvFactories.end() )
+         return (h->second)( user );
+   }
 
-      if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
-         if ( isp == 2 || isp == 11 )        // meaning '**' or '*&'
-            result = new RootObjectPtrConverter( klass, control );
-         else if ( isp == 1 || isp == 10 )   // case of '*' or '&'
-            result = new RootObjectConverter( klass, control );
-         else if ( isp == 0 )                // by value
-            result = new RootObjectConverter( klass, true );
-         else                                // TODO: this may cause pbs ...
-            result = new VoidArrayConverter( control );
+//-- still nothing? use a generalized converter
+   bool control = true;
+   if ( Utility::gMemoryPolicy == Utility::kHeuristics )
+      control = cpd == "&" || isConst;
 
-      } else if ( ti.Property() & G__BIT_ISENUM ) {
-      // special case; represent enums as unsigned integers
-         if ( isp == 10 )
-            h = gConvFactories.find( "long&" );
-         else
-            h = gConvFactories.find( "UInt_t" );
-      } else if ( 0 < isp )        // pointer and reference types treated as void*'s
-         result = new VoidArrayConverter( control );
+// converters for known/ROOT classes and default (void*)
+   Converter* result = 0;
+   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+      if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
+         result = new RootObjectPtrConverter( klass, control );
+      else if ( cpd == "*" || cpd == "&" )
+         result = new RootObjectConverter( klass, control );
+      else if ( cpd == "" )               // by value
+         result = new RootObjectConverter( klass, true );
+
+   } else if ( ti.Property() & G__BIT_ISENUM ) {
+   // special case (CINT): represent enums as unsigned integers
+      if ( cpd == "&" )
+         h = gConvFactories.find( "long&" );
+      else
+         h = gConvFactories.find( "UInt_t" );
    }
 
    if ( ! result && h != gConvFactories.end() )
    // converter factory available, use it to create converter
       result = (h->second)( user );
+   else if ( ! result )
+      result = new VoidConverter();               // fails on use
 
-   return result;                  // may still be null
+   return result;
 }
 
 //____________________________________________________________________________
@@ -689,6 +715,7 @@ namespace {
    PYROOT_ARRAY_CONVERTER_FACTORY( ULongArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( FloatArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( DoubleArray )
+   PYROOT_BASIC_CONVERTER_FACTORY( VoidArray )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
    PYROOT_BASIC_CONVERTER_FACTORY( TString )
    PYROOT_BASIC_CONVERTER_FACTORY( STLString )
@@ -716,8 +743,6 @@ namespace {
       ncp_t( "double",             &CreateDoubleConverter             ),
       ncp_t( "double&",            &CreateDoubleRefConverter          ),
       ncp_t( "void",               &CreateVoidConverter               ),
-      ncp_t( "const char*",        &CreateCStringConverter            ),
-      ncp_t( "char*",              &CreateCStringConverter            ),
 
    // pointer/array factories
       ncp_t( "short*",             &CreateShortArrayConverter         ),
@@ -729,23 +754,28 @@ namespace {
       ncp_t( "float*",             &CreateFloatArrayConverter         ),
       ncp_t( "double*",            &CreateDoubleArrayConverter        ),
       ncp_t( "long long*",         &CreateLongLongArrayConverter      ),
+      ncp_t( "void*",              &CreateVoidArrayConverter          ),
 
    // factories for special cases
+      ncp_t( "const char*",        &CreateCStringConverter            ),
+      ncp_t( "char*",              &CreateCStringConverter            ),
       ncp_t( "TString",            &CreateTStringConverter            ),
+      ncp_t( "TString&",           &CreateTStringConverter            ),
       ncp_t( "std::string",        &CreateSTLStringConverter          ),
       ncp_t( "string",             &CreateSTLStringConverter          ),
+      ncp_t( "std::string&",       &CreateSTLStringConverter          ),
+      ncp_t( "string&",            &CreateSTLStringConverter          ),
       ncp_t( "void*&",             &CreateVoidPtrRefConverter         ),
       ncp_t( "PyObject*",          &CreatePyObjectConverter           ),
       ncp_t( "_object*",           &CreatePyObjectConverter           )
    };
 
-   const int nFactories_ = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
-
    class InitConvFactories_ {
    public:
       InitConvFactories_()
       {
-         for ( int i = 0; i < nFactories_; ++i ) {
+         int nf = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
+         for ( int i = 0; i < nf; ++i ) {
             gConvFactories[ factories_[ i ].first ] = factories_[ i ].second;
          }
       }

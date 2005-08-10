@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.8 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.9 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -96,7 +96,7 @@ namespace PyROOT {
 // pointer/array conversions
    class VoidArrayConverter : public Converter {
    public:
-      VoidArrayConverter( bool keepControl = false ) { fKeepControl = keepControl; }
+      VoidArrayConverter( bool keepControl = true ) { fKeepControl = keepControl; }
       virtual bool SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
       virtual bool ToMemory( PyObject* value, void* address );

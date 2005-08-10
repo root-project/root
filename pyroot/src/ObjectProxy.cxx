@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.5 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.6 2005/06/14 05:06:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -14,7 +14,20 @@ namespace PyROOT {
 
 namespace {
 
-//= PyROOT method proxy construction/destruction =============================
+//= PyROOT object proxy nullness checking ====================================
+   PyObject* op_nonzero( ObjectProxy* self, void* )
+   {
+      return PyInt_FromLong( self->GetObject() ? 1 : 0 );
+   }
+
+//____________________________________________________________________________
+   PyMethodDef op_methods[] = {
+      { (char*)"__nonzero__", (PyCFunction)op_nonzero, METH_NOARGS, NULL },
+      { (char*)NULL, NULL, 0, NULL }
+   };
+
+
+//= PyROOT object proxy construction/destruction =============================
    ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
    {
       ObjectProxy* pyobj = (ObjectProxy*)subtype->tp_alloc( subtype, 0 );
@@ -70,7 +83,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_weaklistoffset
    0,                         // tp_iter
    0,                         // tp_iternext
-   0,                         // tp_methods
+   op_methods,                // tp_methods
    0,                         // tp_members
    0,                         // tp_getset
    0,                         // tp_base

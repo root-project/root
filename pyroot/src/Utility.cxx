@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.19 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.20 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -16,6 +16,7 @@
 // Standard
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 
 //- data _____________________________________________________________________
@@ -180,8 +181,8 @@ PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& na
 
    std::string shortName = TClassEdit::ShortType( ti.TrueName(), 1 );
 
-   const int isp = IsPointer( name );
-   const int mask = isp == 1 ? kPtrMask : 0;
+   const std::string& cpd = Compound( name );
+   const int mask = cpd == "*" ? kPtrMask : 0;
 
    if ( shortName == "bool" )
       effType = EDataType( (int) kBool | mask );
@@ -205,7 +206,7 @@ PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& na
       effType = EDataType( (int) kDouble | mask );
    else if ( shortName == "void" )
       effType = EDataType( (int) kVoid | mask );
-   else if ( shortName == "string" && isp == 0 )
+   else if ( shortName == "string" && cpd == "" )
       effType = kSTLString;
    else if ( name == "#define" ) {
       effType = kMacro;
@@ -217,20 +218,17 @@ PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& na
 }
 
 //____________________________________________________________________________
-int PyROOT::Utility::IsPointer( const std::string& name )
+const std::string PyROOT::Utility::Compound( const std::string& name )
 {
-// yields 1 for '*', 2 for '**', 10 for '&', and 11 for '*&' (etc.)
-   int isp = 0;
-   for ( std::string::const_reverse_iterator it = name.rbegin(); it != name.rend(); ++it ) {
-      if ( *it == '*' )
-         isp += 1;
-      else if ( *it == '&' )
-         isp += 10;
-      else if ( isalnum( *it ) )
-         break;
+   std::string compound = "";
+   for ( int pos = (int)name.size()-1; 0 <= pos; --pos ) {
+      if ( isspace( name[pos] ) ) continue;
+      if ( isalnum( name[pos] ) ) break;
+
+      compound = name[pos] + compound;
    }
 
-   return isp;
+   return compound;
 }
 
 //____________________________________________________________________________

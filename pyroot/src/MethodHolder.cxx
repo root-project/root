@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.37 2005/06/22 20:18:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.38 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -144,12 +144,30 @@ inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
 }
 
 //____________________________________________________________________________
-inline void PyROOT::MethodHolder::SetPyError_( PyObject* msg )
+void PyROOT::MethodHolder::SetPyError_( PyObject* msg )
 {
 // helper to report errors in a consistent format (derefs msg)
+   PyObject *etype, *evalue, *etrace;
+   PyErr_Fetch( &etype, &evalue, &etrace );
+
+   std::string details = "";
+   if ( evalue ) {
+      PyObject* s = PyObject_Str( evalue );
+      details = PyString_AS_STRING( s );
+      Py_DECREF( s );
+   }
+
+   Py_XDECREF( etype ); Py_XDECREF( evalue ); Py_XDECREF( etrace );
+
    PyObject* doc = GetDocString();
-   PyErr_Format( PyExc_TypeError,
-      "%s =>\n    %s", PyString_AS_STRING( doc ), PyString_AS_STRING( msg ) );
+
+   if ( details != "" ) {
+      PyErr_Format( PyExc_TypeError, "%s =>\n    %s (%s)",
+          PyString_AS_STRING( doc ), PyString_AS_STRING( msg ), details.c_str() );
+   } else {
+      PyErr_Format( PyExc_TypeError, "%s =>\n    %s",
+          PyString_AS_STRING( doc ), PyString_AS_STRING( msg ) );
+   }
 
    Py_DECREF( doc );
    Py_DECREF( msg );

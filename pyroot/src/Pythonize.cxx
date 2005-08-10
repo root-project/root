@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.22 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.23 2005/07/11 16:11:59 rdm Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1044,6 +1044,7 @@ namespace {
 //____________________________________________________________________________
    class TF1InitWithPyFunc : public PyCallable {
       static int fgCount;
+      typedef std::pair< PyObject*, int > pairPyObjInt_t;
 
    public:
       TF1InitWithPyFunc( int ntf = 1 ) : m_nArgs( 2 + 2*ntf ) {}
@@ -1079,43 +1080,60 @@ namespace {
          if ( PyErr_Occurred() )
             return 0;
 
-      // offset counter
-         fgCount += 1;
-
       // build CINT function placeholder
-         G__lastifuncposition();
-
-         G__ClassInfo gcl;
-         gcl.AddMethod( "D", name, "double*, double*" );    // boundary safe (call first)
-
-         G__memfunc_setup(                                  // not boundary safe!
-            name, 444, (G__InterfaceMethod)NULL,
-            100, -1, -1, 0, 2, 1, 1, 0, "D - - 0 - - D - - 0 - -",
-            (char*)NULL, (void*)((long)this + fgCount), 0 );
-         G__resetifuncposition();
+         G__ClassInfo gcl;                   // global namespace
 
          long offset = 0;
          G__MethodInfo m = gcl.GetMethod( name, "double*, double*", &offset );
 
+         if ( ! m.IsValid() ) {
+            G__lastifuncposition();
+            gcl.AddMethod( "D", name, "double*, double*" );      // boundary safe
+            G__resetifuncposition();
+
+         // offset counter from this that services to associate pyobject with tp2f
+            fgCount += 1;
+
+         // setup association for CINT
+            m = gcl.GetMethod( name, "double*, double*", &offset );
+
+            G__ifunc_table* ifunc = m.ifunc();
+            int index = m.Index();
+
+            ifunc->pentry[index]->size        = -1;
+            ifunc->pentry[index]->filenum     = -1;
+            ifunc->pentry[index]->line_number = -1;
+            ifunc->pentry[index]->tp2f = (void*)((long)this + fgCount);
+            ifunc->pentry[index]->p    = (void*)PyFuncCallback;
+
+         // setup association for ourselves
+            int tag = -1 - fgCount;
+            ifunc->p_tagtable[index] = tag;
+         }
+
+      // get proper table block of "interpreted" functions and the index into it
          G__ifunc_table* ifunc = m.ifunc();
          int index = m.Index();
 
-         ifunc->pentry[index]->size        = -1;
-         ifunc->pentry[index]->filenum     = -1;
-         ifunc->pentry[index]->line_number = -1;
-         ifunc->pentry[index]->tp2f = (void*)PyFuncCallback;
-         ifunc->pentry[index]->p    = (void*)PyFuncCallback;
-
-      // setup association
-         int tag = -1 - fgCount;
-         ifunc->p_tagtable[index] = tag;
-         Py_INCREF( pyfunc );
-
+      // verify/setup the callback parameters
          int npar = 0;             // default value if not given
          if ( argc == m_nArgs+1 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, m_nArgs ) );
 
-         ifunc->userparam[index] = (void*) new std::pair< PyObject*, int >( pyfunc, npar );
+         if ( ! ifunc->userparam[index] ) {
+         // no func yet, install current one
+            Py_INCREF( pyfunc );
+            ifunc->userparam[index] = (void*)new pairPyObjInt_t( pyfunc, npar );
+         } else {
+         // old func: flip if different, keep if same
+            pairPyObjInt_t* oldp = (pairPyObjInt_t*)ifunc->userparam[index];
+            if ( oldp->first != pyfunc ) {
+               Py_INCREF( pyfunc ); Py_DECREF( oldp->first );
+               oldp->first = pyfunc;
+            }
+
+            oldp->second = npar;             // setting is quicker than checking
+         }
 
       // get constructor
          MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
@@ -1131,7 +1149,7 @@ namespace {
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
                PyTuple_SET_ITEM( newArgs, iarg,
-                  BindRootObjectNoCast( (void*)((long)this + fgCount), TObject::Class() ) );
+                  BindRootObjectNoCast( (void*)ifunc->pentry[index]->tp2f, TObject::Class() ) );
             }
          }
 
@@ -1250,7 +1268,10 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
-      Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
+      if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "at" ) ) )
+         Utility::AddToClass( pyclass, "_vector__at", "at" );
+      else
+         Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
 
       Utility::AddToClass( pyclass, "__len__",     "size" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );

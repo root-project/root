@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.9 2005/06/14 05:37:00 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.10 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -151,7 +151,7 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
    if ( ! pyobj )
       return 0;
 
-// let python ref counting will now control the object life span
+// python ref counting will now control the object life span
    pyobj->fFlags |= ObjectProxy::kIsOwner;
    return (PyObject*)pyobj;
 }
@@ -171,16 +171,15 @@ PyROOT::Executor* PyROOT::CreateExecutor( const std::string& fullType )
    std::string realType = TClassEdit::ShortType( G__TypeInfo( fullType.c_str() ).TrueName(), 1 );
 
 // select and set executor
-   const char* q = "";
-   int isPointer = Utility::IsPointer( fullType );
-   if ( isPointer == 1 )
-      q = "*";
+   const std::string& cpd = Utility::Compound( fullType );
+   const char* q = cpd == "*" ? "*" : "";
 
    ExecFactories_t::iterator h = gExecFactories.find( realType + q );
    if ( h == gExecFactories.end() ) {
       TClass* klass = gROOT->GetClass( realType.c_str() );
       if ( klass != 0 ) {
-         result = isPointer ? new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
+         result = cpd != ""  ? \
+            new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
       } else {
       // could still be an enum ...
          G__TypeInfo ti( fullType.c_str() );
@@ -272,13 +271,12 @@ namespace {
       ncp_t( "__init__",           &CreateConstructorExecutor         )
    };
 
-   const int nFactories_ = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
-
    class InitExecFactories_ {
    public:
       InitExecFactories_()
       {
-         for ( int i = 0; i < nFactories_; ++i ) {
+         int nf = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
+         for ( int i = 0; i < nf; ++i ) {
             gExecFactories[ factories_[ i ].first ] = factories_[ i ].second;
          }
       }

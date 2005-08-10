@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.15 2005/06/17 19:14:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.16 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -24,6 +24,7 @@ namespace {
 
    using namespace PyROOT;
 
+//____________________________________________________________________________
    PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, long hash )
    {
    // first search dictionary itself
@@ -210,9 +211,21 @@ namespace {
          return gNullObject;
       }
 
-   // check argument for either class object or string name
-      PyObject* pyname = PyObject_Str( PyTuple_GET_ITEM( args, 0 ) );
+   // check argument for either string name, or named python object
+      PyObject* pyname = PyTuple_GET_ITEM( args, 0 );
+      if ( ! PyString_Check( pyname ) ) {
+         PyObject* nattr = PyObject_GetAttrString( pyname, "__name__" );
+         if ( nattr )
+            pyname = nattr;
+         pyname = PyObject_Str(	pyname );
+         Py_XDECREF( nattr );
+      } else {
+         Py_INCREF( pyname );
+      }
+
       TClass* klass = gROOT->GetClass( PyString_AS_STRING( pyname ) );
+      Py_DECREF( pyname );
+
       if ( ! klass ) {
          PyErr_SetString( PyExc_TypeError,
             "MakeNullPointer expects a valid class or class name as an argument" );

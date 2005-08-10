@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.7 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.8 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -72,8 +72,10 @@ namespace {
                                                                              \
    PyObject* name##_buffer_item( PyObject* self, int idx ) {                 \
       const char* buf = get_buffer( self, idx, sizeof( type ) );             \
-      if ( ! buf )                                                           \
+      if ( ! buf ) {                                                         \
+         PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );\
          return 0;                                                           \
+      }                                                                      \
                                                                              \
       return F1( (stype)*((type*)buf + idx) );                               \
    }

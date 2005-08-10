@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.2 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.3 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -14,25 +14,30 @@ namespace PyROOT {
 
 namespace {
 
-  PyObject* pt_getattro( PyObject* pyclass, PyObject* name )
-  {
-  // normal type lookup
-     PyObject* attr = PyType_Type.tp_getattro( pyclass, name );
+   PyObject* pt_getattro( PyObject* pyclass, PyObject* name )
+   {
+   // normal type lookup
+      PyObject* attr = PyType_Type.tp_getattro( pyclass, name );
 
-  // extra ROOT lookup in case of failure (e.g. for inner classes on demand)
-     if ( ! attr && PyString_CheckExact( name ) ) {
-        PyErr_Clear();
+   // extra ROOT lookup in case of failure (e.g. for inner classes on demand)
+      if ( ! attr && PyString_CheckExact( name ) ) {
+         PyObject *etype, *value, *trace;
+         PyErr_Fetch( &etype, &value, &trace );         // clears current exception
 
       // filter for python specials and lookup qualified class
-        std::string atName = PyString_AS_STRING( name );
-        if ( atName.size() <= 2 || atName.substr( 0, 2 ) != "__" )
-           attr = MakeRootClassFromString( atName, pyclass );
+         std::string atName = PyString_AS_STRING( name );
+         if ( atName.size() <= 2 || atName.substr( 0, 2 ) != "__" )
+            attr = MakeRootClassFromString( atName, pyclass );
 
-     // attribute is cached, if found
-     }
+      // if failed, then the original error is likely to be more instructive
+         if ( ! attr )
+            PyErr_Restore( etype, value, trace );
 
-     return attr;
-  }
+      // attribute is cached, if found
+      }
+
+      return attr;
+   }
 
 } // unnamed namespace
 
