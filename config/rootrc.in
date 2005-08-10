@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.108 2005/07/05 12:36:06 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.109 2005/07/29 14:26:51 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -453,7 +453,8 @@ Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDial
 Plugin.TVirtualPadEditor:  GedOld TPadEditorOld GedOld    "TPadEditorOld()"
 +Plugin.TVirtualPadEditor: Ged    TGedEditor    Ged       "TGedEditor(TCanvas*)"
 Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL   "TViewerOpenGL(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogl TGLSAViewer RGL   "TGLSAViewer(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogle TGLViewer  RGL   "TGLViewer(TVirtualPad*)"
 +Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
 Plugin.TVirtualDragManager: *   TGuiBldDragManager GuiBld "TGuiBldDragManager()"
 Plugin.TGuiBuilder:         *   TRootGuiBuilder    GuiBld "TRootGuiBuilder()"

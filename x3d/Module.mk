@@ -17,7 +17,7 @@ X3DDS        := $(MODDIRS)/G__X3D.cxx
 X3DDO        := $(X3DDS:.cxx=.o)
 X3DDH        := $(X3DDS:.cxx=.h)
 
-X3DH1        := $(MODDIRI)/TViewerX3D.h
+X3DH1        := $(MODDIRI)/TViewerX3D.h $(MODDIRI)/TX3DFrame.h
 X3DH2        := $(MODDIRI)/x3d.h
 X3DH         := $(X3DH1) $(X3DH2)
 X3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))

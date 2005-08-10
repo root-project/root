@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.13 2005/03/11 17:22:21 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.14 2005/03/16 17:18:13 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -142,14 +142,13 @@ ClassImp(TViewerX3D)
 //______________________________________________________________________________
 TViewerX3D::TViewerX3D(TVirtualPad *pad)
    : TVirtualViewer3D(),
-     TGMainFrame(gClient->GetRoot(), 800, 600),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
      fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
-
+   fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = "x3d";
    fX3DWin = 0;
    fWidth  = 800;
@@ -164,14 +163,13 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad)
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
-     TGMainFrame(gClient->GetRoot(), width, height),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
      fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
-
+   fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = option;
    fX3DWin = 0;
    fWidth  = width;
@@ -186,14 +184,13 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
-     TGMainFrame(gClient->GetRoot(), width, height),
      fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
      fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
      fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
-
+   fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
    fOption = option;
    fX3DWin = 0;
    fWidth  = width;
@@ -223,12 +220,13 @@ TViewerX3D::~TViewerX3D()
    delete fMenuBar;   
    delete fContainer;
    delete fCanvas;
+   delete fMainFrame;
    fgCreated = kFALSE;
 }
 
 
 //______________________________________________________________________________
-void TViewerX3D::CloseWindow()
+void TViewerX3D::Close()
 {
    assert(!fBuildingScene);
    fPad->ReleaseViewer3D();      
@@ -242,7 +240,7 @@ void TViewerX3D::CreateViewer(const char *name)
    // Create the actual canvas.
 
    // Create menus
-   fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu = new TGPopupMenu(fMainFrame->GetClient()->GetRoot());
    fFileMenu->AddEntry("&New Viewer",         kFileNewViewer);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("Save",                kFileSave);
@@ -258,14 +256,14 @@ void TViewerX3D::CreateViewer(const char *name)
    fFileMenu->DisableEntry(kFileSaveAs);
    fFileMenu->DisableEntry(kFilePrint);
 
-   fHelpMenu = new TGPopupMenu(fClient->GetRoot());
+   fHelpMenu = new TGPopupMenu(fMainFrame->GetClient()->GetRoot());
    fHelpMenu->AddEntry("&About ROOT...",           kHelpAbout);
    fHelpMenu->AddSeparator();
    fHelpMenu->AddEntry("Help On X3D Viewer...", kHelpOnViewer);
 
    // This main frame will process the menu commands
-   fFileMenu->Associate(this);
-   fHelpMenu->Associate(this);
+   fFileMenu->Associate(fMainFrame);
+   fHelpMenu->Associate(fMainFrame);
 
    // Create menubar layout hints
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
@@ -273,14 +271,14 @@ void TViewerX3D::CreateViewer(const char *name)
    fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
    // Create menubar
-   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
+   fMenuBar = new TGMenuBar(fMainFrame, 1, 1, kHorizontalFrame);
    fMenuBar->AddPopup("&File",    fFileMenu,    fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
 
-   AddFrame(fMenuBar, fMenuBarLayout);
+   fMainFrame->AddFrame(fMenuBar, fMenuBarLayout);
 
    // Create canvas and canvas container that will host the ROOT graphics
-   fCanvas = new TGCanvas(this, GetWidth()+4, GetHeight()+4,
+   fCanvas = new TGCanvas(fMainFrame, fMainFrame->GetWidth()+4, fMainFrame->GetHeight()+4,
                           kSunkenFrame | kDoubleBorder);
    InitX3DWindow();
    if (!fX3DWin) {
@@ -291,23 +289,23 @@ void TViewerX3D::CreateViewer(const char *name)
    fContainer = new TX3DContainer(this, fX3DWin, fCanvas->GetViewPort());
    fCanvas->SetContainer(fContainer);
    fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   AddFrame(fCanvas, fCanvasLayout);
+   fMainFrame->AddFrame(fCanvas, fCanvasLayout);
 
    // Misc
 
-   SetWindowName(name);
-   SetIconName(name);
-   SetClassHints("X3DViewer", "X3DViewer");
+   fMainFrame->SetWindowName(name);
+   fMainFrame->SetIconName(name);
+   fMainFrame->SetClassHints("X3DViewer", "X3DViewer");
 
-   SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
+   fMainFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
-   MapSubwindows();
+   fMainFrame->MapSubwindows();
 
    // we need to use GetDefaultSize() to initialize the layout algorithm...
-   Resize(GetDefaultSize());
+   fMainFrame->Resize(fMainFrame->GetDefaultSize());
 
-   MoveResize(fXPos, fYPos, fWidth, fHeight);
-   SetWMPosition(fXPos, fYPos);
+   fMainFrame->MoveResize(fXPos, fYPos, fWidth, fHeight);
+   fMainFrame->SetWMPosition(fXPos, fYPos);
    fgCreated = kTRUE;
 }
 
@@ -385,7 +383,7 @@ void  TViewerX3D::EndScene()
       new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
                    "X3D Viewer", "Cannot display this content in the X3D viewer",
                    kMBIconExclamation, kMBOk, &retval);
-      CloseWindow();
+      Close();
    }
 }
 
@@ -590,7 +588,7 @@ void TViewerX3D::Update()
 
 
 //______________________________________________________________________________
-Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TViewerX3D::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Handle menu and other command generated by the user.
 
@@ -615,7 +613,7 @@ Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFilePrint:
                      break;
                   case kFileCloseViewer:
-                     SendCloseMessage();
+                     fMainFrame->SendCloseMessage();
                      break;
 
                   // Handle Help menu items...
@@ -623,13 +621,13 @@ Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      {
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
-                        hd = new TRootHelpDialog(this, str, 600, 400);
+                        hd = new TRootHelpDialog(fMainFrame, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
                      }
                      break;
                   case kHelpOnViewer:
-                     hd = new TRootHelpDialog(this, "Help on X3D Viewer...", 600, 400);
+                     hd = new TRootHelpDialog(fMainFrame, "Help on X3D Viewer...", 600, 400);
                      hd->SetText(gHelpX3DViewer);
                      hd->Popup();
                      break;

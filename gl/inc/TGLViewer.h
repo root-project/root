@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.6 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.7 2005/07/26 08:27:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -27,14 +27,24 @@
 #ifndef ROOT_TTimer
 #include "TTimer.h"
 #endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
 #ifndef ROOT_CsgOps
 #include "CsgOps.h"
 #endif
-
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
+#ifndef ROOT_RQ_OBJECT
+#include "RQ_OBJECT.h"
+#endif
 #include <vector>
 
 class TGLFaceSet;
 class TGLRedrawTimer;
+class TGLWindow; // Remove - TGLManager
+class TContextMenu;
 
 /*************************************************************************
  * TGLViewer - TODO
@@ -44,13 +54,30 @@ class TGLRedrawTimer;
  *************************************************************************/
 class TGLViewer : public TVirtualViewer3D
 {
+   RQ_OBJECT("TGLViewer")
 public:
-   enum ECamera { kPerspective, kXOY, kYOZ, kXOZ };
+
+   enum ECamera { kCameraPerspective, kCameraXOY, kCameraYOZ, kCameraXOZ };
+   enum ELight  { kLightFront =  0x00000001, 
+                  kLightTop   =  0x00000002, 
+                  kLightBottom = 0x00000004,
+                  kLightLeft   = 0x00000008,
+                  kLightRight  = 0x00000010, 
+                  kLightMask   = 0x0000001f}; 
 
 private:
+   // TODO: Consider what to push up to protected, pull out to TGLScene
+   // TGLCamera or other external helpers
+
    ///////////////////////////////////////////////////////////////////////
    // Fields
    ///////////////////////////////////////////////////////////////////////
+
+   // External handles
+   TVirtualPad  * fPad;            //! external pad - remove replace with signal
+   
+   // GUI Handles
+   TContextMenu       * fContextMenu; //!
 
    // Cameras
    // TODO: Put in vector and allow external creation
@@ -60,45 +87,27 @@ private:
    TGLOrthoCamera       fOrthoXOZCamera;     //!
    TGLCamera          * fCurrentCamera;      //!
 
-   // Scene management
+   // Scene management - to TGLScene or helper object?
    Bool_t            fInternalRebuild;       //! internal scene rebuild in progress?
    Bool_t            fAcceptedAllPhysicals;  //! did we take all physicals offered in AddObject()
    Bool_t            fInternalPIDs;          //! using internal physical IDs
    UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
 
-   // Composite shape specific
+   // Composite shape specific - to TGLScene or helper object?
    typedef std::pair<UInt_t, RootCsg::BaseMesh *> CSPart_t;
    mutable TGLFaceSet     *fComposite; //! Paritally created composite
    UInt_t                  fCSLevel;
    std::vector<CSPart_t>   fCSTokens;
 
-   // Debug tracing (for scene rebuilds)
-   UInt_t                  fAcceptedPhysicals;
-   UInt_t                  fRejectedPhysicals;
+   // Interaction - push most into TGLCamera
+   enum EAction         { kNone, kRotate, kTruck, kDolly, kDrag };
+   EAction              fAction;
+   TPoint               fStartPos;
+   TPoint               fLastPos;
+   UInt_t               fActiveButtonID;
 
-   ///////////////////////////////////////////////////////////////////////
-   // Methods
-   ///////////////////////////////////////////////////////////////////////
-
-   void PreDraw();
-   void PostDraw();
-
-   // Scene management
-   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const;
-   TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
-   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
-                                        const TGLLogicalShape & logical) const;
-   RootCsg::BaseMesh *BuildComposite();
-
-   // Non-copyable class
-   TGLViewer(const TGLViewer &);
-   TGLViewer & operator=(const TGLViewer &);
-
-protected:
-   ///////////////////////////////////////////////////////////////////////
-   // Fields
-   ///////////////////////////////////////////////////////////////////////
-   // Move back to private when gVirtualGL removed
+   // Drawing
+   EDrawStyle           fDrawStyle;          //! current draw style (Fill/Outline/WireFrame)  
    TGLRedrawTimer     * fRedrawTimer;        //!
    UInt_t               fNextSceneLOD;       //!
 
@@ -106,41 +115,60 @@ protected:
    // In future it will be shaped between multiple viewers
    TGLScene       fScene;          //! the GL scene - owned by viewer at present
    TGLRect        fViewport;       //! viewport - drawn area
+   UInt_t         fLightState;     //! light states (on/off) mask
    TGLPlane       fClipPlane;      //! current clip plane
    Bool_t         fUseClipPlane;   //! use current clipping plane
    Bool_t         fDrawAxes;       //! draw scene axes
    Bool_t         fInitGL;         //! has GL been initialised?
+
+   // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;      //! viewer in debug mode (forced rebuild + draw scene/frustum/interest boxes)
+   UInt_t         fAcceptedPhysicals;
+   UInt_t         fRejectedPhysicals;
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
    ///////////////////////////////////////////////////////////////////////
-   
-   // Concrete class must implement - TGLManager will replace most
-   // fPad call in FillScene
-   virtual void   InitGL()                            = 0;
-   virtual void   MakeCurrent()  const                = 0;
-   virtual void   SwapBuffers()  const                = 0;
-   virtual void   FillScene()                         = 0;
+   // Drawing - can tidy up/remove lots when TGLManager added
+   void PreDraw();
+   void PostDraw();
+   void InitGL();
+   void MakeCurrent()  const;
+   void SwapBuffers()  const;
 
-   // Scene management
-   Bool_t         RebuildScene();
+   // Scene management - to TGLScene or helper object?
+   Bool_t             RebuildScene();
+   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const;
+   TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
+   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
+                                        const TGLLogicalShape & logical) const;
+   RootCsg::BaseMesh *BuildComposite();
 
-   // Viewport and Camera
-   void         SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
-   void         SetupCameras(const TGLBoundingBox & box);
-   void         SetCurrentCamera(ECamera camera);
-   TGLCamera &  CurrentCamera() const { return *fCurrentCamera; }
+   // Cameras
+   void        SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
+   void        SetupCameras(const TGLBoundingBox & box);
+   TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
+
+   // Lights
+   void        SetupLights();
 
    // Coordinate conversion
    void WindowToGL(TGLRect & rect)      const { rect.Y() = fViewport.Height() - rect.Y(); }
    void WindowToGL(TGLVertex3 & vertex) const { vertex.Y() = fViewport.Height() - vertex.Y(); }
 
+   // Non-copyable class
+   TGLViewer(const TGLViewer &);
+   TGLViewer & operator=(const TGLViewer &);
+
+protected:
+   TGLWindow * fGLWindow;    //! remove - replace with TGLManager
+
 public:
-   TGLViewer();
+   TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TGLViewer();
 
    // TVirtualViewer3D interface
+   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Bool_t PreferLocalFrame() const;
    virtual void   BeginScene();
    virtual Bool_t BuildingScene() const { return fScene.CurrentLock() == TGLScene::kModifyLock; }
@@ -151,13 +179,33 @@ public:
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 
-   // Once TVirtualGL dropped these can move back to protected
-   void   Draw();
-   Bool_t Select(const TGLRect & rect); // Window coords origin top left
+   // Manipulation interface - e.g. external GUI component bindings
+   void  SetCurrentCamera(ECamera camera);
+   void  ToggleLight(ELight light);
+   void  ToggleAxes();
+   void  ToggleClip();
+   void  SetClipPlaneEq(const TGLPlane & eqn);
+   void  SetSelectedColor(const Float_t rgba[4]);
+   void  SetColorOnSelectedFamily(const Float_t rgba[4]);
+   void  SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
+   const TGLPhysicalShape * GetSelected() const { return fScene.GetSelected(); }
+   
+   virtual void SelectionChanged(); // *SIGNAL*
 
-   // TODO: Once better solution to TGLRedrawTimer found make this
-   // protected again.
-   virtual void Invalidate(UInt_t redrawLOD = kMed) = 0;
+   // Draw and selection
+   void DoDraw();
+   void RequestDraw(UInt_t redrawLOD = kMed); // Cross thread draw request
+   Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
+   void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
+
+   // Interaction - events to ExecuteEvent are passed on to these
+   Bool_t HandleEvent(Event_t *ev);
+   Bool_t HandleButton(Event_t *ev);
+   Bool_t HandleDoubleClick(Event_t *ev);
+   Bool_t HandleConfigureNotify(Event_t *ev);
+   Bool_t HandleKey(Event_t *ev);
+   Bool_t HandleMotion(Event_t *ev);
+   Bool_t HandleExpose(Event_t *ev);
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
 };
@@ -175,7 +223,7 @@ class TGLRedrawTimer : public TTimer
          fRedrawLOD = redrawLOD;
          TTimer::Start(milliSec, kTRUE);
       }
-      Bool_t Notify() { TurnOff(); fViewer.Invalidate(kHigh); return kTRUE; }
+      Bool_t Notify() { TurnOff(); fViewer.RequestDraw(kHigh); return kTRUE; }
 };
 
 #endif // ROOT_TGLViewer

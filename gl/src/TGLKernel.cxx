@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.32 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.33 2005/06/15 15:40:30 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TColor.h"
 #include "TPoints3DABC.h"
 #include "TGLViewer.h"
+#include "TGLOutput.h"
 #include "TGLRenderArea.h"
 #include "TSystem.h"
 
@@ -1456,15 +1457,15 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
 void TGLKernel::DrawViewer(TGLViewer *viewer)
 {
    if (gDebug>3) {
-      Info("TGLKernel::DrawViewer", "got reqeust to draw viewer = %d", viewer);
+      Info("TGLKernel::DrawViewer", "got request to draw viewer = %d", viewer);
    }
-   viewer->Draw();
+   viewer->DoDraw();
 }
 
 //______________________________________________________________________________
 Bool_t TGLKernel::SelectViewer(TGLViewer *viewer, const TGLRect * rect)
 {
-   return viewer->Select(*rect);
+   return viewer->DoSelect(*rect);
 }
 
 //______________________________________________________________________________
@@ -1530,44 +1531,7 @@ void TGLKernel::DrawSphere(const Float_t *rgba)
 }
 
 //______________________________________________________________________________
-void TGLKernel::PrintObjects(Int_t format, Int_t sort, TGLViewer *viewer, TGLWindow *glWin, 
-                             Float_t rad, Float_t yc, Float_t zc)
+void TGLKernel::CaptureViewer(TGLViewer * viewer, Int_t format, const char * filePath)
 {
-   // Generates a PostScript or PDF output of the OpenGL scene. They are vector
-   // graphics files and can be huge and long to generate.
-
-   char *pFileName = "viewer.eps";
-   if (format == GL2PS_PDF) pFileName = "viewer.pdf";
-   Info("Print", "Start creating %s. Please wait ...", pFileName);
-
-   if (FILE *output = fopen (pFileName, "w+b"))
-   {
-      int buffsize = 0, state = GL2PS_OVERFLOW;
-      while (state == GL2PS_OVERFLOW) {
-         glWin->MakeCurrent();
-         buffsize += 1024*1024;
-         gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
-         format, sort, GL2PS_USE_CURRENT_VIEWPORT
-         | GL2PS_SIMPLE_LINE_OFFSET | GL2PS_SILENT
-         | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
-         | 0,
-         GL_RGBA, 0, NULL,0, 0, 0,
-         buffsize, output, NULL);
-         gVirtualGL->NewMVGL();
-         Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-         Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
-      
-         gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
-         gVirtualGL->PushGLMatrix();
-         gVirtualGL->TranslateGL(0., rad + yc, -rad - zc);
-         gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
-         gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
-         gVirtualGL->PopGLMatrix();
-         DrawViewer(viewer);
-         state = gl2psEndPage();
-      }
-      fclose (output);
-      if (!gSystem->AccessPathName(pFileName))
-         Info("Print", "ROOT file %s has been created", pFileName);
-   }
+   TGLOutput::Capture(*viewer, TGLOutput::EFormat(format), filePath);
 }

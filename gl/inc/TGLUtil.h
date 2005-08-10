@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.9 2005/07/13 15:27:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.10 2005/07/14 14:34:41 pcanal Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -32,6 +32,8 @@
  *
  *************************************************************************/
 
+// TODO: Split these into own h/cxx files
+
 // TODO: Where should these enums live?
 enum  ELODPresets {
    kLow = 20,
@@ -50,6 +52,16 @@ enum EOverlap
    kInside = 0,
    kPartial,
    kOutside
+};
+
+// TODO: Put this into a proper draw style flag UInt_t
+// seperated into viewer/scene/physical/logical sections
+// modify TGLDrawable to cache on shape subset
+enum EDrawStyle
+{
+   kFill = 0, 
+   kOutline, 
+   kWireFrame
 };
 
 // TODO: Namespace
@@ -394,11 +406,13 @@ private:
 
 public:
    TGLPlane();
+   TGLPlane(const TGLPlane & other);
    TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
    TGLPlane(Double_t eq[4], Bool_t norm = kTRUE);
    TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
 
+   void Set(const TGLPlane & other);
    void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
    void Set(Double_t eq[4], Bool_t norm = kTRUE);
    void Set(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE); 
@@ -417,6 +431,15 @@ public:
 
    ClassDef(TGLPlane,0) // GL plane helper/wrapper class
 };
+
+//______________________________________________________________________________
+inline void TGLPlane::Set(const TGLPlane & other)
+{
+   fVals[0] = other.fVals[0];
+   fVals[1] = other.fVals[1];
+   fVals[2] = other.fVals[2];
+   fVals[3] = other.fVals[3];
+}
 
 //______________________________________________________________________________
 inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise)

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.13 2005/06/24 14:53:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.14 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -147,7 +147,7 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    vertex[7] = Intersection(fFrustumPlanes[kFAR], fFrustumPlanes[kTOP],    fFrustumPlanes[kLEFT]);
 
    if (asBox) {
-      // Now find the matching four verticies for above, which are the nearest ones on near clip plane
+      // Now find the matching four verticies for above, projected onto near clip plane
       // As near and far clip planes are parallel this forms a orientated box encompassing the frustum
       vertex[0] = fFrustumPlanes[kNEAR].NearestOn(vertex[4]);
       vertex[1] = fFrustumPlanes[kNEAR].NearestOn(vertex[5]);

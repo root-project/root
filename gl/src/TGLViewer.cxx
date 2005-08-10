@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.10 2005/07/14 19:13:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.11 2005/07/26 08:27:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,23 +16,34 @@
 #include "TGLIncludes.h"
 #include "TGLStopwatch.h"
 #include "TGLDisplayListCache.h"
-#include "TError.h"
-
-
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
 
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLStopwatch.h"
 #include "TGLSceneObject.h" // For TGLFaceSet
 
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+
+#include "TVirtualPad.h" // Remove when pad removed - use signal
+
 #include "TColor.h"
+#include "TError.h"
+
+// Remove - replace with TGLManager
+#include "TVirtualGL.h"
+#include "TGLRenderArea.h"
+
+#include "KeySymbols.h"
+#include "TContextMenu.h"
 
 ClassImp(TGLViewer)
 
 //______________________________________________________________________________
-TGLViewer::TGLViewer() :
+TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, 
+                     UInt_t width, UInt_t height) :
+   fPad(pad),
+   fContextMenu(0),
    fPerspectiveCamera(),
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
    fOrthoYOZCamera(TGLOrthoCamera::kYOZ),
@@ -43,22 +54,30 @@ TGLViewer::TGLViewer() :
    fInternalPIDs(kFALSE), 
    fNextInternalPID(1), // 0 reserved
    fComposite(0), fCSLevel(0),
-   fAcceptedPhysicals(0), 
-   fRejectedPhysicals(0),
+   fAction(kNone), fStartPos(0,0), fLastPos(0,0), fActiveButtonID(0),
+   fDrawStyle(kFill),
    fRedrawTimer(0),
    fNextSceneLOD(kHigh),
+   fLightState(kLightMask), // All on
    fClipPlane(1.0, 0.0, 0.0, 0.0),
    fUseClipPlane(kFALSE),
    fDrawAxes(kFALSE),
    fInitGL(kFALSE),
-   fDebugMode(kFALSE)
+   fDebugMode(kFALSE),
+   fAcceptedPhysicals(0), 
+   fRejectedPhysicals(0),
+   fGLWindow(0)
 {
    fRedrawTimer = new TGLRedrawTimer(*this);
+   SetViewport(x, y, width, height);
 }
 
 //______________________________________________________________________________
 TGLViewer::~TGLViewer()
 {
+   delete fContextMenu;
+   delete fRedrawTimer;
+   fPad->ReleaseViewer3D();   
 }
 
 //______________________________________________________________________________
@@ -134,7 +153,7 @@ void TGLViewer::EndScene()
       if (!fScene.BoundingBox().IsEmpty()) {
          SetupCameras(fScene.BoundingBox());
       }
-      Invalidate();
+      RequestDraw();
    } else if (fInternalRebuild) {
       fInternalRebuild = kFALSE;
    }      
@@ -187,7 +206,9 @@ Bool_t TGLViewer::RebuildScene()
    }
 
    // Request a scene fill
-   FillScene();
+   // TODO: Just marking modified doesn't seem to result in pad repaint - need to check on
+   //fPad->Modified();
+   fPad->Paint();
 
    if (gDebug>2 || fDebugMode) {
       Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
@@ -619,19 +640,120 @@ RootCsg::BaseMesh *TGLViewer::BuildComposite()
 }
 
 //______________________________________________________________________________
-void TGLViewer::Draw()
+void TGLViewer::InitGL
+()
+{
+   assert(!fInitGL);
+
+   // GL initialisation 
+   glEnable(GL_LIGHTING);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_BLEND);
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glClearColor(0.0, 0.0, 0.0, 0.0);
+   glClearDepth(1.0);
+
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+   Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
+   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelAmb);
+   
+   TGLUtil::CheckError();
+   fInitGL = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetupCameras(const TGLBoundingBox & box)
+{
+   if (fScene.IsLocked()) {
+      Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
+
+   fPerspectiveCamera.Setup(box);
+   fOrthoXOYCamera.Setup(box);
+   fOrthoYOZCamera.Setup(box);
+   fOrthoXOZCamera.Setup(box);
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetupLights()
+{
+   // Setup lights
+
+   // Locate static light source positions - this is done once only
+   // after the scene has been populated 
+   if (!fScene.BoundingBox().IsEmpty()) {
+      // Find camera offset to scene bounding box so lights can be
+      // arranged round it
+
+      // Apply camera so can extract the eye point
+      fCurrentCamera->Apply(fScene.BoundingBox());
+      TGLBoundingBox box = fScene.BoundingBox();
+      TGLVector3 lightVector = fCurrentCamera->EyePoint() - box.Center();
+
+      // Reset the modelview to lights are placed in fixed eye space
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+
+      // Calculate a light Z distance - to center of box in eye coords
+      // Pull forward slightly (0.85) to avoid to sharp a cutoff
+      Double_t lightZ = lightVector.Mag() * 0.85;
+
+      // Calculate a sphere radius to arrange lights round
+      Double_t lightRadius = box.Extents().Mag() * 3.0;
+
+      // 0: Front
+      // 1: Top   
+      // 2: Bottom
+      // 3: Left
+      // 4: Right
+      Float_t pos0[] = {     0.0,              0.0,     0.0, 1.0};
+      Float_t pos1[] = {     0.0,      lightRadius, -lightZ, 1.0};
+      Float_t pos2[] = {     0.0,     -lightRadius, -lightZ, 1.0};
+      Float_t pos3[] = {-lightRadius,          0.0, -lightZ, 1.0};
+      Float_t pos4[] = { lightRadius,          0.0, -lightZ, 1.0};
+
+      Float_t frontLightColor[] = {0.35, 0.35, 0.35, 1.0};
+      Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};
+      glLightfv(GL_LIGHT0, GL_POSITION, pos0);
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, frontLightColor);
+      glLightfv(GL_LIGHT1, GL_POSITION, pos1);
+      glLightfv(GL_LIGHT1, GL_DIFFUSE, sideLightColor);
+      glLightfv(GL_LIGHT2, GL_POSITION, pos2);
+      glLightfv(GL_LIGHT2, GL_DIFFUSE, sideLightColor);
+      glLightfv(GL_LIGHT3, GL_POSITION, pos3);
+      glLightfv(GL_LIGHT3, GL_DIFFUSE, sideLightColor);
+      glLightfv(GL_LIGHT4, GL_POSITION, pos4);
+      glLightfv(GL_LIGHT4, GL_DIFFUSE, sideLightColor);
+   }
+
+   // TODO: Could detect state change and only adjust if a change
+   for (UInt_t light = 0; (1<<light) < kLightMask; light++) {
+      if ((1<<light) & fLightState) {
+         glEnable(GL_LIGHT0 + light);
+      } else {
+         glDisable(GL_LIGHT0 + light);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::DoDraw()
 {
    // Draw out the the current viewer/scene
 
    // Locking mainly for Win32 mutli thread safety - but no harm in all using it
-   // During normal draws a draw lock is taken in other thread (Win32) in TViewerOpenGL
+   // During normal draws a draw lock is taken in other thread (Win32) in RequestDraw()
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
    // If no draw lock taken get one now
    if (fScene.CurrentLock() != TGLScene::kDrawLock) {
       if (!fScene.TakeLock(TGLScene::kDrawLock)) {
-         Error("TGLViewer::Draw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+         Error("TGLViewer::DirectDraw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
    }
+
+   fRedrawTimer->Stop();
 
    TGLStopwatch timer;
    UInt_t drawn = 0;
@@ -639,10 +761,13 @@ void TGLViewer::Draw()
       timer.Start();
    }
 
+   // GL pre draw setup
    PreDraw();
 
-   // Apply current camera projection (always as scene may be empty now but rebuilt
-   // in which case camera must have been applied)
+   SetupLights();
+
+   // Apply current camera projection - always do this even if scene is empty and we don't draw, 
+   // as scene will likely be rebuilt, requiring camera interest and caching needs to be established
    fCurrentCamera->Apply(fScene.BoundingBox());
 
    // Something to draw?
@@ -663,10 +788,10 @@ void TGLViewer::Draw()
 
       if (fNextSceneLOD == kHigh) {
          // High quality (final pass) draws have unlimited time to complete
-         drawn = fScene.Draw(*fCurrentCamera, fNextSceneLOD);
+         drawn = fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD);
       } else {
          // Other (interactive) draws terminate after 100 msec
-         drawn = fScene.Draw(*fCurrentCamera, fNextSceneLOD, 100.0);
+         drawn = fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, 100.0);
       }
 
       // Debug mode - draw some extra boxes
@@ -684,7 +809,7 @@ void TGLViewer::Draw()
    PostDraw();
 
    if (gDebug>2) {
-      Info("TGLViewer::Draw()", "Drew %i at %i LOD in %f msec", drawn, fNextSceneLOD, timer.End());
+      Info("TGLViewer::DirectDraw()", "Took %f msec", timer.End());
       if (gDebug>3) {
          TGLDisplayListCache::Instance().Dump();
       }
@@ -726,6 +851,37 @@ void TGLViewer::PreDraw()
       InitGL();
    }
 
+   // Setup GL for current draw style - fill, wireframe, outline
+   // Any GL modifications need to be defered until drawing time - 
+   // to ensure we are in correct thread/context under Windows
+   // TODO: Could detect change and only mod if changed for speed
+   switch (fDrawStyle) {
+      case (kFill): {
+         glEnable(GL_LIGHTING);
+         glEnable(GL_CULL_FACE);
+         glPolygonMode(GL_FRONT, GL_FILL);
+         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
+         break;
+      }
+      case (kWireFrame): {
+         glDisable(GL_CULL_FACE);
+         glDisable(GL_LIGHTING);
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
+         break;
+      }
+      case (kOutline): {
+         glEnable(GL_LIGHTING);
+         glEnable(GL_CULL_FACE);
+         glPolygonMode(GL_FRONT, GL_FILL);
+         glClearColor(1.0, 1.0, 1.0, 1.0); // White
+         break;
+      }
+      default: {
+         assert(kFALSE);
+      }
+   }
+
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    TGLUtil::CheckError();
@@ -744,39 +900,87 @@ void TGLViewer::PostDraw()
 }
 
 //______________________________________________________________________________
-void TGLViewer::Invalidate(UInt_t redrawLOD)
+void TGLViewer::MakeCurrent() const
 {
-   fNextSceneLOD = redrawLOD;
-   fRedrawTimer->Stop();
+   fGLWindow->MakeCurrent();
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::Select(const TGLRect & rect)
+void TGLViewer::SwapBuffers() const
+{
+   if (fScene.CurrentLock() != TGLScene::kDrawLock && 
+      fScene.CurrentLock() != TGLScene::kSelectLock) {
+      Error("TGLViewer::MakeCurrent", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
+   }
+   fGLWindow->SwapBuffers();
+}
+
+//______________________________________________________________________________
+void TGLViewer::RequestDraw(UInt_t LOD)
+{
+   fNextSceneLOD = LOD;
+   fRedrawTimer->Stop();
+   
+   // Take scene lock - to be revisited
+   if (!fScene.TakeLock(TGLScene::kDrawLock)) {
+      // If taking drawlock fails the previous draw is still in progress
+      // set timer to do this one later
+      if (gDebug>3) {
+         Info("TGLViewer::DoRedraw", "scene drawlocked - requesting another draw");
+      }
+      fRedrawTimer->RequestDraw(100, fNextSceneLOD);
+      return;
+   }
+   
+   gVirtualGL->DrawViewer(this);
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::DoSelect(const TGLRect & rect)
 {
    // Select lock should already been taken in other thread in 
-   // TViewerOpenGL::DoSelect()
+   // TGLViewer::DoSelect()
    if (fScene.CurrentLock() != TGLScene::kSelectLock) {
       Error("TGLViewer::Draw", "expected kSelectLock, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return kFALSE;
    }
 
+   MakeCurrent();
+
    TGLRect glRect(rect);
    WindowToGL(glRect);
    fCurrentCamera->Apply(fScene.BoundingBox(), &glRect);
 
-   MakeCurrent();
-   Bool_t changed = fScene.Select(*fCurrentCamera);
+   Bool_t changed = fScene.Select(*fCurrentCamera, fDrawStyle);
 
    // Release select lock on scene before invalidation
    fScene.ReleaseLock(TGLScene::kSelectLock);
 
    if (changed) {
-      Invalidate(kHigh);
+      RequestDraw(kHigh);
+
+      // Inform external client selection has been modified
+      SelectionChanged();
    }
 
    return changed;
 }
 
+//______________________________________________________________________________
+void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
+{
+   // Take select lock on scene immediately we enter here - it is released
+   // in the other (drawing) thread - see TGLViewer::Select()
+   // Removed when gVirtualGL removed
+   if (!fScene.TakeLock(TGLScene::kSelectLock)) {
+      return;
+   }
+
+   // TODO: Check only the GUI thread ever enters here & DoSelect.
+   // Then TVirtualGL and TGLKernel can be obsoleted.
+   TGLRect selectRect(x, y, 3, 3); // TODO: Constant somewhere
+   gVirtualGL->SelectViewer(this, &selectRect); 
+}
 //______________________________________________________________________________
 void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
@@ -786,7 +990,9 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
    }
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
-   Invalidate();
+
+   // Can't do this until gVirtualGL has been setup - change with TGLManager
+   //RequestDraw();
 }
 
 //______________________________________________________________________________
@@ -798,19 +1004,19 @@ void TGLViewer::SetCurrentCamera(ECamera camera)
    }
 
    switch(camera) {
-      case(kPerspective): {
+      case(kCameraPerspective): {
          fCurrentCamera = &fPerspectiveCamera;
          break;
       }
-      case(kXOY): {
+      case(kCameraXOY): {
          fCurrentCamera = &fOrthoXOYCamera;
          break;
       }
-      case(kYOZ): {
+      case(kCameraYOZ): {
          fCurrentCamera = &fOrthoYOZCamera;
          break;
       }
-      case(kXOZ): {
+      case(kCameraXOZ): {
          fCurrentCamera = &fOrthoXOZCamera;
          break;
       }
@@ -822,18 +1028,404 @@ void TGLViewer::SetCurrentCamera(ECamera camera)
 
    // Ensure any viewport has been propigated to the current camera
    fCurrentCamera->SetViewport(fViewport);
+
+   // And viewer is redrawn
+   RequestDraw();
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetupCameras(const TGLBoundingBox & box)
+void TGLViewer::ToggleLight(ELight light)
 {
-   if (fScene.IsLocked()) {
-      Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
+   // Toggle supplied light on/off
+
+   // N.B. We can't directly call glEnable here as may not be in correct gl context
+   // adjust mask and set when drawing
+   if (light >= kLightMask) {
+      assert(kFALSE);
       return;
    }
 
-   fPerspectiveCamera.Setup(box);
-   fOrthoXOYCamera.Setup(box);
-   fOrthoYOZCamera.Setup(box);
-   fOrthoXOZCamera.Setup(box);
+   fLightState ^= light;
+
+   RequestDraw();
 }
+
+//______________________________________________________________________________
+void TGLViewer::ToggleAxes()
+{
+   fDrawAxes = !fDrawAxes;
+   RequestDraw();
+}
+
+//______________________________________________________________________________
+void TGLViewer::ToggleClip()
+{
+   fUseClipPlane = !fUseClipPlane;
+   RequestDraw();
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetClipPlaneEq(const TGLPlane & eqn)
+{
+   fClipPlane.Set(eqn);
+   RequestDraw();
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetSelectedColor(const Float_t rgba[4])
+{
+   if (fScene.SetSelectedColor(rgba)) {
+      RequestDraw();
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetColorOnSelectedFamily(const Float_t rgba[4])
+{
+   if (fScene.SetColorOnSelectedFamily(rgba)) {
+      RequestDraw();
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale)
+{
+   if (fScene.SetSelectedGeom(trans, scale)) {
+      RequestDraw();
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::SelectionChanged() 
+{ 
+   Emit("SelectionChanged()"); 
+}
+
+//______________________________________________________________________________
+void TGLViewer::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+{
+   // Translate the event types defined in EEventType (base/inc/Buttons.h)
+   // to Event_t structure (base/inc/GuiTypes.h)
+
+   /*enum EEventType {
+   kNoEvent       =  0,
+   kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
+   kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13, kKeyUp    = 14,
+   kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24,
+   kButton1Locate = 41, kButton2Locate = 42, kButton3Locate = 43,
+   kMouseMotion   = 51, kMouseEnter    = 52, kMouseLeave    = 53,
+   kButton1Double = 61, kButton2Double = 62, kButton3Double = 63*/
+   
+   //Event_t eventSt;
+   /*Bool_t HandleEvent(Event_t *ev);
+   Bool_t HandleButton(Event_t *ev);
+   Bool_t HandleDoubleClick(Event_t *ev);
+   Bool_t HandleConfigureNotify(Event_t *ev);
+   Bool_t HandleKey(Event_t *ev);
+   Bool_t HandleMotion(Event_t *ev);
+   Bool_t HandleExpose(Event_t *ev);*/
+
+   //TODO!
+};
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleEvent(Event_t *event)
+{
+   if (event->fType == kFocusIn) {
+      assert(fAction == kNone);
+      fAction = kNone;
+   }
+   if (event->fType == kFocusOut) {
+      fAction = kNone;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleButton(Event_t *event)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>2) {
+         Info("TGLViewer::HandleButton", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   // Only process one action/button down/up pairing - block others
+   if (fAction != kNone) {
+      if (event->fType == kButtonPress ||
+          (event->fType == kButtonRelease && event->fCode != fActiveButtonID)) {
+         return kFALSE;
+      }
+   }
+   
+   // Button DOWN
+   if (event->fType == kButtonPress) {
+      Bool_t grabPointer = kFALSE;
+
+      // Record active button for release
+      fActiveButtonID = event->fCode;
+
+      // Record mouse start
+      fStartPos.fX = fLastPos.fX = event->fX;
+      fStartPos.fY = fLastPos.fY = event->fY;
+      
+      switch(event->fCode) {
+         // LEFT mouse button
+         case(kButton1): {
+            if (event->fState & kKeyShiftMask) {
+               RequestSelect(event->fX, event->fY);
+
+               // TODO: If no selection start a box select
+            } else {
+               fAction = kRotate;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+         // MID mouse button
+         case(kButton2): {
+            if (event->fState & kKeyShiftMask) {
+               RequestSelect(event->fX, event->fY);
+               // Start object drag
+               if (fScene.GetSelected()) {
+                  fAction = kDrag;
+                  grabPointer = kTRUE;
+               }
+            } else {
+               fAction = kTruck;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+         // RIGHT mouse button
+         case(kButton3): {
+            // Shift + Right mouse - select+context menu
+            if (event->fState & kKeyShiftMask) {
+               RequestSelect(event->fX, event->fY);
+               const TGLPhysicalShape * selected = fScene.GetSelected();
+               if (selected) {
+                  if (!fContextMenu) {
+                     fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
+                  }
+                  selected->InvokeContextMenu(*fContextMenu, event->fX, event->fY);
+               }
+            } else {
+               fAction = kDolly;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+      }
+   }
+   // Button UP
+   else if (event->fType == kButtonRelease) {
+      // TODO: Check on Linux - on Win32 only see button release events
+      // for mouse wheel
+      switch(event->fCode) {
+         // Buttons 4/5 are mouse wheel
+         case(kButton4): {
+            // Zoom out (adjust camera FOV)
+            if (CurrentCamera().Zoom(-30, event->fState & kKeyControlMask, 
+                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
+               RequestDraw();
+            }
+            break;
+         }
+         case(kButton5): {
+            // Zoom in (adjust camera FOV)
+            if (CurrentCamera().Zoom(+30, event->fState & kKeyControlMask, 
+                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
+               RequestDraw();
+            }
+            break;
+         }
+      }
+      fAction = kNone;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>3) {
+         Info("TGLViewer::HandleDoubleClick", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   // Reset interactive camera mode on button double
+   // click (unless mouse wheel)
+   if (event->fCode != kButton4 && event->fCode != kButton5) {
+      CurrentCamera().Reset();
+      fStartPos.fX = fLastPos.fX = event->fX;
+      fStartPos.fY = fLastPos.fY = event->fY;
+      RequestDraw();
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>3) {
+         Info("TGLViewer::HandleConfigure", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   if (event) {
+      SetViewport(event->fX, event->fY, event->fWidth, event->fHeight);
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleKey(Event_t *event)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>3) {
+         Info("TGLViewer::HandleKey", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   char tmp[10] = {0};
+   UInt_t keysym = 0;
+
+   gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   
+   Bool_t redraw = kFALSE;
+
+   switch (keysym) {
+   case kKey_Plus:
+   case kKey_J:
+   case kKey_j:
+      redraw = CurrentCamera().Dolly(10, event->fState & kKeyControlMask, 
+                                         event->fState & kKeyShiftMask); //TODO : val static const somewhere
+      break;
+   case kKey_Minus:
+   case kKey_K:
+   case kKey_k:
+      redraw = CurrentCamera().Dolly(-10, event->fState & kKeyControlMask, 
+                                          event->fState & kKeyShiftMask); //TODO : val static const somewhere
+      break;
+   case kKey_R:
+   case kKey_r:
+      fDrawStyle = kFill;
+      redraw = kTRUE;
+      break;
+   case kKey_W:
+   case kKey_w:
+      fDrawStyle = kWireFrame;
+      redraw = kTRUE;
+      break;
+   case kKey_T:
+   case kKey_t:
+      fDrawStyle = kOutline;
+      redraw = kTRUE;
+      break;
+   case kKey_Up:
+      redraw = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 0, 5);
+      break;
+   case kKey_Down:
+      redraw = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 0, -5);
+      break;
+   case kKey_Left:
+      redraw = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), -5, 0);
+      break;
+   case kKey_Right:
+      redraw = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 5, 0);
+      break;
+   // Toggle debugging mode
+   case kKey_D:
+   case kKey_d:
+      fDebugMode = !fDebugMode;
+      redraw = kTRUE;
+      Info("OpenGL viewer debug mode : ", fDebugMode ? "ON" : "OFF");
+      break;
+   // Forced rebuild for debugging mode
+   case kKey_Space:
+      if (fDebugMode) {
+         Info("OpenGL viewer FORCED rebuild", "");
+         RebuildScene();
+      }
+   }
+
+   if (redraw) {
+      RequestDraw();
+   }
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleMotion(Event_t *event)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>3) {
+         Info("TGLViewer::HandleMotion", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   if (!event) {
+      return kFALSE;
+   }
+   
+   Bool_t redraw = kFALSE;
+   
+   Int_t xDelta = event->fX - fLastPos.fX;
+   Int_t yDelta = event->fY - fLastPos.fY;
+   
+   // Camera interface requires GL coords - Y inverted
+   if (fAction == kRotate) {
+      redraw = CurrentCamera().Rotate(xDelta, -yDelta);
+   } else if (fAction == kTruck) {
+      redraw = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
+   } else if (fAction == kDolly) {
+      redraw = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask, 
+                                                 event->fState & kKeyShiftMask);
+   } else if (fAction == kDrag) {
+      const TGLPhysicalShape * selected = fScene.GetSelected();
+      if (selected) {
+         TGLVector3 shift = CurrentCamera().ProjectedShift(selected->BoundingBox().Center(), xDelta, -yDelta);
+
+         // Don't modify selected directly as scene needs to invalidate bounding box
+         // hence will only give us a const handle on selected
+         redraw = fScene.ShiftSelected(shift);
+
+         // Inform external client selection has been modified
+         SelectionChanged();
+      }
+   }
+
+   fLastPos.fX = event->fX;
+   fLastPos.fY = event->fY;
+   
+   if (redraw) {
+      RequestDraw();
+   }
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::HandleExpose(Event_t *)
+{
+   if (fScene.IsLocked()) {
+      if (gDebug>3) {
+         Info("TGLViewer::HandleExpose", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
+   RequestDraw(kHigh);
+   return kTRUE;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.18 2005/01/27 14:51:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.19 2005/05/25 14:25:16 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -136,11 +136,10 @@ public:
    void SetTrueColorMode(Bool_t flag=kTRUE) { fTrueColorMode = flag; }
    Bool_t GetRootLight() {return fRootLight;}
    Bool_t GetTrueColorMode() {return fTrueColorMode;}
+   void DrawSphere(const Float_t *rgba);
    void DrawViewer(TGLViewer *viewer);
    Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect);
-   void DrawSphere(const Float_t *rgba);
-   void PrintObjects(Int_t format, Int_t sort, TGLViewer *viewer, TGLWindow *glWin,
-                     Float_t rad, Float_t yc, Float_t zc);
+   void CaptureViewer(TGLViewer *viewer, Int_t format, const char * filePath = 0);
 
 private:
    void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);

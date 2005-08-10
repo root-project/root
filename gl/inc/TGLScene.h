@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.10 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.11 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -38,8 +38,6 @@ class TGLPhysicalShape;
 class TGLScene
 {
 public:
-   enum EDrawMode{kFill, kOutline, kWireFrame};
-
    enum ELock { kUnlocked,                // Unlocked 
                 kDrawLock,                // Locked for draw, cannot select or modify
                 kSelectLock,              // Locked for select, cannot modify (draw part of select)
@@ -73,7 +71,6 @@ private:
    mutable TGLBoundingBox fBoundingBox;      //! bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
    mutable Bool_t         fBoundingBoxValid; //! bounding box valid?
    UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
-   EDrawMode              fDrawMode;         //! current draw style (Fill/Outline/WireFrame)  
    TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
 
    // Methods
@@ -96,12 +93,11 @@ public:
    TGLScene();
    virtual ~TGLScene(); // ClassDef introduces virtual fns
 
-   // Drawing
+   // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const;
-   void                   SetDrawMode(EDrawMode mode){fDrawMode = mode;}
-   UInt_t                 Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout = 0.0);
+   UInt_t                 Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLOD, Double_t timeout = 0.0);
    void                   DrawAxes() const;
-   Bool_t                 Select(const TGLCamera & camera);
+   Bool_t                 Select(const TGLCamera & camera, EDrawStyle style);
 
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);
@@ -115,9 +111,14 @@ public:
    Bool_t                   DestroyPhysical(ULong_t ID);
    UInt_t                   DestroyPhysicals(Bool_t incModified, const TGLCamera * camera = 0);
    TGLPhysicalShape *       FindPhysical(ULong_t ID) const;
-   void                     SetPhysicalsColorByLogical(ULong_t logicalID, const Float_t rgba[4]);
-   TGLPhysicalShape *       GetSelected() const { return fSelectedPhysical; }
-   void                     SelectedModified();
+
+   // Selected Object
+   const TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
+   Bool_t                   SetSelectedColor(const Float_t rgba[4]);
+   Bool_t                   SetColorOnSelectedFamily(const Float_t rgba[4]);
+   Bool_t                   ShiftSelected(const TGLVector3 & shift);
+   Bool_t                   SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
+
 
    // Locking
    Bool_t TakeLock(ELock lock) const;

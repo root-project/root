@@ -28,14 +28,22 @@
 #include "Rtypes.h"
 #endif
 
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+
 class TBuffer3D;
 class TVirtualPad;
 
-class TVirtualViewer3D
+class TVirtualViewer3D : public TObject
 {
 public:
    virtual ~TVirtualViewer3D() {};
-   
+
    // Viewers must always handle master (absolute) positions - and
    // buffer producers must be able to supply them. Some viewers may 
    // prefer local frame & translation - and producers can optionally
@@ -57,9 +65,9 @@ public:
    virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
-
+   
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
-
+   
    ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers
 };
 

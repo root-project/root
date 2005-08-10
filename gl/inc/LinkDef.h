@@ -35,6 +35,8 @@
 
 #pragma link C++ class TGLStopwatch;
 #pragma link C++ class TGLViewer;
+#pragma link C++ class TGLSAViewer;
+#pragma link C++ class TGLSAFrame;
 
 #pragma link C++ class TGLColorEditor;
 #pragma link C++ class TGLGeometryEditor;
@@ -51,7 +53,6 @@
 #pragma link C++ class TGLPolyMarker;
 #pragma link C++ class TGLCylinder;
 #pragma link C++ class TGLSphere;
-#pragma link C++ class TViewerOpenGL;
 #ifndef _WIN32
 #pragma link C++ class TX11GL;
 #endif

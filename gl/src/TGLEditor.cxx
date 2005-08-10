@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.13 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.14 2005/06/01 12:38:25 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 #include "TGSlider.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
-#include "TViewerOpenGL.h"
+#include "TGLSAViewer.h"
 
 #include "TGLEditor.h"
 
@@ -69,7 +69,7 @@ enum EGLEditorIdent {
 };
 
 //______________________________________________________________________________
-TGLColorEditor::TGLColorEditor(const TGWindow *parent, TViewerOpenGL *v)
+TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
                :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
                 fViewer(v), fRedSlider(0), fGreenSlider(0), fBlueSlider(0), 
                 fAlphaSlider(0), fApplyButton(0), fIsActive(kFALSE), 
@@ -230,7 +230,7 @@ void TGLColorEditor::DoButton()
    case kTBaf:
       fApplyButton->SetState(kButtonDisabled);
       fApplyFamily->SetState(kButtonDisabled);
-      fViewer->ModifyScene(id);
+      fViewer->ProcessGUIEvent(id);
       break;
    }
    DrawSphere();
@@ -389,7 +389,7 @@ void TGLColorEditor::SwapBuffers()const
 }
 
 //______________________________________________________________________________
-TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *v)
+TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TGLSAViewer *v)
                      :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
                       fViewer(v)
 {
@@ -440,7 +440,7 @@ void TGLGeometryEditor::DoButton()
 {
    if (TGButton *btn = (TGButton *)gTQSender) {
       Int_t wid = btn->WidgetId();
-      fViewer->ModifyScene(wid);
+      fViewer->ProcessGUIEvent(wid);
       if (wid == kTBa1) {
          fApplyButton->SetState(kButtonDisabled);
       } 
@@ -532,7 +532,7 @@ void TGLGeometryEditor::CreateStretchControls()
 }
 
 //______________________________________________________________________________
-TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *v)
+TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TGLSAViewer *v)
                      :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
                       fViewer(v)
 {
@@ -614,7 +614,7 @@ void TGLSceneEditor::DoButton()
 {
    if (TGButton *btn = (TGButton *)gTQSender) {
       Int_t wid = btn->WidgetId();
-      fViewer->ModifyScene(wid);
+      fViewer->ProcessGUIEvent(wid);
       if (wid == kTBcpm) {
          fApplyButton->SetState(kButtonDisabled);
       } 
@@ -631,7 +631,7 @@ void TGLSceneEditor::GetPlaneEqn(Double_t *eqn)
 }
 
 //______________________________________________________________________________
-TGLLightEditor::TGLLightEditor(const TGWindow *parent, TViewerOpenGL *v)
+TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
                :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
                 fViewer(v)
 {
@@ -656,7 +656,7 @@ TGLLightEditor::TGLLightEditor(const TGWindow *parent, TViewerOpenGL *v)
    fTrash.Add(fLights[kRight]);
    fLights[kBottom] = new TGCheckButton(ligFrame, "Bottom", kTBBottom);
    fLights[kBottom]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
-//   fLights[kBottom]->SetState(kButtonDown);
+   fLights[kBottom]->SetState(kButtonDown);
    fTrash.Add(fLights[kBottom]);
    fLights[kLeft] = new TGCheckButton(ligFrame, "Left", kTBLeft);
    fLights[kLeft]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
@@ -678,5 +678,5 @@ void TGLLightEditor::DoButton()
 {
    TGButton *btn = (TGButton *) gTQSender;
    Int_t id = btn->WidgetId();
-   fViewer->ModifyScene(id);
+   fViewer->ProcessGUIEvent(id);
 }

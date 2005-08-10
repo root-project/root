@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.9 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.10 2005/06/01 12:38:25 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -22,8 +22,9 @@
 #include "TList.h"
 #endif
 
+class TGLStandalone;
+class TGLSAViewer;
 class TGCheckButton;
-class TViewerOpenGL;
 class TGLayoutHints;
 class TGNumberEntry;
 class TGLMatView;
@@ -49,7 +50,7 @@ enum EApplyButtonIds {
 class TGLColorEditor : public TGCompositeFrame {
    friend class TGLMatView;
 private:
-   TViewerOpenGL *fViewer;
+   TGLSAViewer   *fViewer;
    TGLMatView    *fMatView;
    TGLayoutHints *fFrameLayout;
 
@@ -74,7 +75,7 @@ private:
 
    TList fTrash;
 public:
-   TGLColorEditor(const TGWindow *parent, TViewerOpenGL *viewer);
+   TGLColorEditor(const TGWindow *parent, TGLSAViewer *viewer);
    ~TGLColorEditor();
    void SetRGBA(const Float_t *rgba);
    const Float_t *GetRGBA()const
@@ -114,7 +115,7 @@ private:
       kTot
    };
 
-   TViewerOpenGL  *fViewer;
+   TGLSAViewer   *fViewer;
    TList          fTrash;
    TGLayoutHints  *fL1, *fL2;
    TGNumberEntry  *fGeomData[kTot];
@@ -122,7 +123,7 @@ private:
    Bool_t         fIsActive;
 
 public:
-   TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *viewer);
+   TGLGeometryEditor(const TGWindow *parent, TGLSAViewer *viewer);
 
    void SetCenter(const Double_t *center);
    void SetScale(const Double_t *scale);
@@ -151,7 +152,7 @@ private:
       kTot
    };
 
-   TViewerOpenGL  *fViewer;
+   TGLSAViewer   *fViewer;
    TList          fTrash;
    TGLayoutHints  *fL1, *fL2;
    TGNumberEntry  *fGeomData[kTot];
@@ -160,7 +161,7 @@ private:
    TGCheckButton  *fAxesCheck;
 
 public:
-   TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *viewer);   
+   TGLSceneEditor(const TGWindow *parent, TGLSAViewer *viewer);   
 
    void GetPlaneEqn(Double_t *eqn);
    void DoButton();
@@ -187,11 +188,11 @@ private:
    };
    
    TGButton       *fLights[kTot];
-   TViewerOpenGL  *fViewer;
-   TList          fTrash;
+   TGLSAViewer    *fViewer;
+   TList           fTrash;
    
 public:
-   TGLLightEditor(const TGWindow *parent, TViewerOpenGL *viewer);
+   TGLLightEditor(const TGWindow *parent, TGLSAViewer *viewer);
    
    void DoButton();
    

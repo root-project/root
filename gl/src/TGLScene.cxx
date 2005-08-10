@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.13 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.14 2005/07/27 12:31:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -32,7 +32,7 @@ ClassImp(TGLScene)
 TGLScene::TGLScene() :
    fLock(kUnlocked), fDrawList(1000), 
    fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
-   fLastDrawLOD(kHigh), fDrawMode(kFill), fSelectedPhysical(0)
+   fLastDrawLOD(kHigh), fSelectedPhysical(0)
 {
 }
 
@@ -246,30 +246,8 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-void TGLScene::SetPhysicalsColorByLogical(ULong_t logicalID, const Float_t rgba[4])
-{
-   if (fLock != kModifyLock) {
-      Error("TGLScene::SetPhysicalsColorByLogical", "expected ModifyLock");
-      return;
-   }
-   PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
-   TGLPhysicalShape * physical;
-   while (physicalShapeIt != fPhysicalShapes.end()) {
-      physical = physicalShapeIt->second;
-      if (physical) {
-         if (physical->GetLogical().ID() == logicalID) {
-            physical->SetColor(rgba);
-         }
-      } else {
-         assert(kFALSE);
-      }
-      ++physicalShapeIt;
-   }
-}
-
-//______________________________________________________________________________
 //TODO: Merge axes flag and LOD into general draw flag
-UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
+UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLOD, Double_t timeout)
 {
    UInt_t drawn = 0;
    if (fLock != kDrawLock && fLock != kSelectLock) {
@@ -278,9 +256,11 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeou
 
    void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
 
-   if (fDrawMode)
-      fDrawMode == kWireFrame ? drawPtr = &TGLPhysicalShape::DrawWireFrame :
-                                drawPtr = &TGLPhysicalShape::DrawOutline;
+   if (style == kWireFrame) {
+      drawPtr = &TGLPhysicalShape::DrawWireFrame;
+   } else if (style == kOutline) {
+      drawPtr = &TGLPhysicalShape::DrawOutline;
+   }
 
    TGLStopwatch stopwatch;
    stopwatch.Start();
@@ -391,7 +371,7 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeou
 
       //BBOX is white for wireframe mode and fill,
       //red for outlines
-      switch (fDrawMode) {
+      switch (style) {
       case kFill:
       case kWireFrame :
          glColor3d(1., 1., 1.);
@@ -403,14 +383,14 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeou
          break;
       }
 
-      if (fDrawMode == kFill || fDrawMode == kOutline) {
+      if (style == kFill || style == kOutline) {
          glDisable(GL_LIGHTING);
       }
       glDisable(GL_DEPTH_TEST);
 
       fSelectedPhysical->BoundingBox().Draw();
 
-      if (fDrawMode == kFill || fDrawMode == kOutline) {
+      if (style == kFill || style == kOutline) {
          glEnable(GL_LIGHTING);
       }
       glEnable(GL_DEPTH_TEST);
@@ -597,9 +577,9 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::Select(const TGLCamera & camera)
+Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
 {
-   Bool_t redrawReq = kFALSE;
+   Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
       Error("TGLScene::Draw", "expected SelectLock");
    }
@@ -607,10 +587,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
    // Create the select buffer. This will work as we have a flat set of physical shapes.
    // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
    // has same 4 GLuint format
-   static std::vector<GLuint> selectBuffer;
-   if (selectBuffer.size() < fPhysicalShapes.size()*4) {
-      selectBuffer.resize(fPhysicalShapes.size()*4);
-   }
+   std::vector<GLuint> selectBuffer(fPhysicalShapes.size()*4);
    glSelectBuffer(selectBuffer.size(), &selectBuffer[0]);
 
    // Enter picking mode
@@ -618,15 +595,18 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
    glInitNames();
    glPushName(0);
 
-   // Draw out scene at last visible quality
-   Draw(camera, kHigh, kFALSE); // No axes
+   // Draw out scene at best quality
+   Draw(camera, style, kHigh, kFALSE); // No axes
 
    // Retrieve the hit count and return to render
    GLint hits = glRenderMode(GL_RENDER);
 
    if (hits < 0) {
       Error("TGLScene::Select", "selection buffer overflow");
-   } else if (hits > 0) {
+      return changed;
+   }
+
+   if (hits > 0) {
       // Every hit record has format (GLuint per item) - see above for selectBuffer
       // for reason. Format is:
       //
@@ -660,28 +640,80 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
          }
          fSelectedPhysical = selected;
          fSelectedPhysical->Select(kTRUE);
-         redrawReq = kTRUE;
+         changed = kTRUE;
       }
    } else { // 0 hits
       if (fSelectedPhysical) {
          fSelectedPhysical->Select(kFALSE);
          fSelectedPhysical = 0;
-         redrawReq = kTRUE;
+         changed = kTRUE;
       }
    }
 
-   return redrawReq;
+   return changed;
 }
 
 //______________________________________________________________________________
-void TGLScene::SelectedModified() 
+Bool_t TGLScene::SetSelectedColor(const Float_t rgba[4])
 {
-   // External modification - no locking
+   if (fSelectedPhysical) {
+      fSelectedPhysical->SetColor(rgba);
+      return kTRUE;
+   } else {
+      assert(kFALSE);
+      return kFALSE;
+   }
+}
 
-   // The selected object was modified external - our bounding box
-   // is potentially invalid
-   if (fSelectedPhysical && BoundingBox().Overlap(fSelectedPhysical->BoundingBox()) != kInside) {
+//______________________________________________________________________________
+Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t rgba[4])
+{
+   if (fSelectedPhysical) {
+      TGLPhysicalShape * physical;
+      PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
+      while (physicalShapeIt != fPhysicalShapes.end()) {
+         physical = physicalShapeIt->second;
+         if (physical) {
+            if (physical->GetLogical().ID() == fSelectedPhysical->GetLogical().ID()) {
+               physical->SetColor(rgba);
+            }
+         } else {
+            assert(kFALSE);
+         }
+         ++physicalShapeIt;
+      }
+      return kTRUE;
+   } else {
+      assert(kFALSE);
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLScene::ShiftSelected(const TGLVector3 & shift)
+{
+   if (fSelectedPhysical) {
+      fSelectedPhysical->Shift(shift);
       fBoundingBoxValid = kFALSE;
+      return kTRUE;
+   }
+   else {
+      assert(kFALSE);
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale)
+{
+   if (fSelectedPhysical) {
+      fSelectedPhysical->SetTranslation(trans);
+      fSelectedPhysical->SetScale(scale);
+      fBoundingBoxValid = kFALSE;
+      return kTRUE;
+   } else {
+      assert(kFALSE);
+      return kFALSE;
    }
 }
 

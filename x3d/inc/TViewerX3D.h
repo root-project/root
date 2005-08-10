@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.9 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.10 2005/05/25 14:25:17 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGFrame
-#include "TGFrame.h"
+#include "TX3DFrame.h"
 #endif
 #ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
@@ -35,12 +35,13 @@ class TGPopupMenu;
 class TGLayoutHints;
 class TX3DContainer;
 
-
-class TViewerX3D : public TVirtualViewer3D, public TGMainFrame {
+class TViewerX3D : public TVirtualViewer3D
+{
 
 friend class TX3DContainer;
 
 private:
+   TX3DFrame      *fMainFrame;          // the main GUI frame
    TString         fOption;             // option string to be passed to X3D
    TString         fTitle;              // viewer title
    Window_t        fX3DWin;             // X3D window
@@ -81,7 +82,8 @@ public:
    Int_t    ExecCommand(Int_t px, Int_t py, char command);
    void     GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi);
    void     Iconify() { }
-   void     Show() { MapRaised(); }
+   void     Show() { fMainFrame->MapRaised(); }
+   void     Close();
    void     Update();
 
    void     PaintPolyMarker(const TBuffer3D & buffer) const;
@@ -100,9 +102,7 @@ public:
    virtual void   CloseComposite() {};
    virtual void   AddCompositeOp(UInt_t /*operation*/) {};
 
-   // overridden from TGMainFrame
-   void     CloseWindow();
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t   ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    ClassDef(TViewerX3D,0)  //Interface to the X3D viewer
 };
