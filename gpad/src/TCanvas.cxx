@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.91 2005/07/29 08:21:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.92 2005/08/10 07:58:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -812,6 +812,30 @@ void TCanvas::EditorBar()
 //   TVirtualPadEditor::GetPadEditor()->LoadEditor();
 
    TVirtualPadEditor::GetPadEditor();
+}
+
+//______________________________________________________________________________
+void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
+{
+   // Embedded a canvas into a TRootEmbeddedCanvas. This method is only called 
+   // via TRootEmbeddedCanvas::AdoptCanvas.
+
+   // If fCanvasImp already exists, no need to go further.
+   if(fCanvasImp) return;
+
+   fCanvasID     = winid;
+   fWindowTopX   = 0;
+   fWindowTopY   = 0;
+   fWindowWidth  = ww;
+   fWindowHeight = wh;
+   fCw           = ww;
+   fCh           = wh;
+   fBatch        = kFALSE;
+   fUpdating     = kFALSE;
+
+   fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, GetName(), fCw, fCh);
+   Build();
+   Resize();
 }
 
 //______________________________________________________________________________

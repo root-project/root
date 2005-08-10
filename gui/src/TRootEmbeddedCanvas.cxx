@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.14 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.15 2004/10/26 09:39:23 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -123,6 +123,16 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
       delete fCanvas;
       delete fCanvasContainer;
    }
+}
+
+//______________________________________________________________________________
+void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c) 
+{
+   //
+
+   if(c == 0) return;
+   c->EmbedInto(fCWinId, fWidth, fHeight);
+   fCanvas = c;
 }
 
 //______________________________________________________________________________

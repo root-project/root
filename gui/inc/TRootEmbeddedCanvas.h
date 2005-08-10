@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.8 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.9 2004/09/21 11:18:19 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TRootEmbeddedCanvas();
 
-   void       AdoptCanvas(TCanvas *c) { fCanvas = c; }
+   void       AdoptCanvas(TCanvas *c);
    TCanvas   *GetCanvas() const { return fCanvas; }
    Int_t      GetCanvasWindowId() const { return fCWinId; }
    Bool_t     GetAutoFit() const { return fAutoFit; }
