@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.245 2005/08/11 06:43:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.246 2005/08/11 09:38:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1046,10 +1046,14 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   //  "Chi2/ndf" : the function returns the Chi2/ndf
   //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
   //  the Pearson test, ie probability.
-
-  //algorithm taken from "Numerical Recipes in C++"
+  //
+  // algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
-
+  //
+  //  A good description of the Chi2test can be seen at:
+  //     http://www.itl.nist.gov/div898/handbook/eda/section3/eda35f.htm
+  //  See also TH1::KolmogorovTest (including NOTE2)
+  
   Int_t i, i_start, i_end;
 
   TString opt = option;
@@ -5387,6 +5391,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
 //  Statistical test of compatibility in shape between
 //  THIS histogram and h2, using Kolmogorov test.
+//
 //     Default: Ignore under- and overflow bins in comparison
 //
 //     option is a character string to specify options
@@ -5410,6 +5415,15 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //       (much less than one means NOT compatible)
 //
 //  Code adapted by Rene Brun from original HBOOK routine HDIFF
+//
+//  NOTE1
+//  A good description of the Kolmogorov test can be seen at:
+//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm 
+//
+//  NOTE2
+//  see also alternative function TH1::Chi2Test
+//  The Kolmogorov test is assumed to give better results than Chi2Test
+//  in case of histograms with low statistics.
 
    TString opt = option;
    opt.ToUpper();
