@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.64 2005/07/30 15:14:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.65 2005/08/09 10:51:57 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -979,7 +979,7 @@ Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t b
 }
         
 //______________________________________________________________________________
-Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
+Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
 //  Statistical test of compatibility in shape between
 //  THIS histogram and h2, using Kolmogorov test.

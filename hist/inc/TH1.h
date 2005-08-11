@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.66 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.67 2005/04/26 13:03:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -137,7 +137,7 @@ public:
     static  void     AddDirectory(Bool_t add=kTRUE);
     static  Bool_t   AddDirectoryStatus();
     virtual void     Browse(TBrowser *b);
-    virtual Double_t Chi2Test(TH1 *h, Option_t *option, Int_t constraint =0 );
+    virtual Double_t Chi2Test(const TH1 *h, Option_t *option, Int_t constraint =0 ) const;
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
     virtual void     Divide(TF1 *f1, Double_t c1=1);
@@ -241,7 +241,7 @@ public:
     virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") const {return 0;}
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) const {return 0;}
-    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
+    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
     virtual void     LabelsDeflate(Option_t *axis="X");
     virtual void     LabelsInflate(Option_t *axis="X");
     virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");

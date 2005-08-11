@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.77 2005/07/27 19:23:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.78 2005/08/11 06:43:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -224,7 +224,7 @@ Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 }
 
 //______________________________________________________________________________
-Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
+Double_t TH2::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
 {
   //The Chi2 (Pearson's) test for differences between h and this histogram.
   //a small value of prob indicates a significant difference between the distributions
@@ -1115,7 +1115,7 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 }
 
 //______________________________________________________________________________
-Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
+Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
 //  Statistical test of compatibility in shape between
 //  THIS histogram and h2, using Kolmogorov test.
