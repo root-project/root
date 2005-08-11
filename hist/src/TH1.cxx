@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.243 2005/07/05 10:29:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.244 2005/08/09 13:42:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1037,12 +1037,15 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   //their number
   //
   ///options:
-  //"O" -overflows included
-  //"U" - underflows included
+  //  "O" : overflows included
+  //  "U" : underflows included
+  //  by default underflows and overflows are not included
   //
-  //"P" - print information about number of degrees of freedom and
-  //the value of chi2
-  //by default underflows and overflows are not included
+  //  "P"        : print information about number of degrees of freedom and the value of chi2
+  //  "Chi2"     : the function returns the Chisquare instead of the probability
+  //  "Chi2/ndf" : the function returns the Chi2/ndf
+  //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
+  //  the Pearson test, ie probability.
 
   //algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
@@ -1126,6 +1129,13 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 
   if (opt.Contains("P")){
      Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chsq,prob,ndf);
+  }
+  if (opt.Contains("chi2/ndf")){
+     if (ndf == 0) return 0;
+     return chsq/ndf;
+  }
+  if (opt.Contains("chi2")){
+     return chsq;
   }
 
   return prob;

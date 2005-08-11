@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.76 2005/06/24 20:44:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.77 2005/07/27 19:23:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -222,6 +222,8 @@ Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
    fBuffer[0] += 1;
    return -3;
 }
+
+//______________________________________________________________________________
 Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 {
   //The Chi2 (Pearson's) test for differences between h and this histogram.
@@ -235,17 +237,20 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   //their number
   //
   ///options:
-  //"O" -overflows included
-  //"U" - underflows included
+  //  "O" : overflows included
+  //  "U" : underflows included
+  //  by default underflows and overflows are not included
   //
-  //"P" - print information about number of degrees of freedom and
-  //the value of chi2
-  //by default underflows and overflows are not included
+  //  "P"        : print information about number of degrees of freedom and the value of chi2
+  //  "Chi2"     : the function returns the Chisquare instead of the probability
+  //  "Chi2/ndf" : the function returns the Chi2/ndf
+  //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
+  //  the Pearson test, ie probability.
 
   //algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
 
-  Int_t df;
+  Int_t ndf;
   Double_t chsq = 0;
   Double_t prob;
   Double_t temp;
@@ -309,16 +314,16 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   //check options
   i_start=1; j_start=1;
   i_end = nbinx1; j_end = nbiny1;
-  df = nbinx1 * nbiny1-constraint; //total number of bins
+  ndf = nbinx1 * nbiny1-constraint; //total number of bins
   if (opt.Contains("U")) {
      i_start = 0;
      j_start = 0;
-     df      +=nbinx1 + nbiny1;
+     ndf     +=nbinx1 + nbiny1;
   }
   if (opt.Contains("O")) {
      i_end = nbinx1+1;
      j_end = nbiny1+1;
-     df   += nbinx1 + nbiny1;
+     ndf  += nbinx1 + nbiny1;
   }
 
   //the test
@@ -337,7 +342,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
         bin1 = this->GetCellContent(i, j);
         bin2 = h->GetCellContent(i, j);
         if (bin1==0 && bin2==0){
-           --df; //no data means one less degree of freedom
+           --ndf; //no data means one less degree of freedom
         } else{
            temp  = koef1*bin1 - koef2 *bin2;
            chsq += temp*temp/(bin1+bin2);
@@ -345,12 +350,17 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
      }
   }
 
-   prob = TMath::Prob(0.5*chsq, Int_t(0.5*df));
+   prob = TMath::Prob(0.5*chsq, Int_t(0.5*ndf));
 
   if (opt.Contains("P")){
-     Printf("the value of chi2 = %f\n", chsq);
-     Printf("the number of degrees of freedom = %d\n", df);
-
+     Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chsq,prob,ndf);
+  }
+  if (opt.Contains("chi2/ndf")){
+     if (ndf == 0) return 0;
+     return chsq/ndf;
+  }
+  if (opt.Contains("chi2")){
+     return chsq;
   }
 
   return prob;
