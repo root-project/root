@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.77 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.78 2005/07/21 14:08:06 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -56,7 +56,7 @@
 // private account (no root system priviliges needed). For example to   //
 // start proofd listening on port 5252 just type:                       //
 //                                                                      //
-// prootf -p 5252 $ROOTSYS                                              //
+// prootd -p 5252 $ROOTSYS                                              //
 //                                                                      //
 // Notice: no & is needed. Proofd will go in background by itself.      //
 //                                                                      //
@@ -573,7 +573,7 @@ void ProofdExec()
    putenv(roothomeauthrc);
    if (gDebug > 2)
       ErrorInfo("ProofdExec: setting: %s", roothomeauthrc);
-   
+
 #ifdef R__GLBS
    // ID of shm with exported credentials
    char *shmidcred = new char[25];
