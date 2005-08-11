@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -28,7 +29,7 @@
 Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * filePath)
 {
    switch(format) {
-      case(kEPS_SIMPLE): 
+      case(kEPS_SIMPLE):
       case(kEPS_BSP):
       case(kPDF_SIMPLE):
       case(kPDF_BSP): {
@@ -39,7 +40,7 @@ Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * fileP
    assert(kFALSE);
    return kFALSE;
 }
-   
+
 //______________________________________________________________________________
 Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const char * filePath)
 {

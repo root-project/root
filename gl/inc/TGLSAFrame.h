@@ -1,4 +1,5 @@
-// Author:  Richard Maunder
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *

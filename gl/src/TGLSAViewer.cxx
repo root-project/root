@@ -1,5 +1,5 @@
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
-// Replaces TViewerOpenGL.cxx
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
 #include "TRootHelpDialog.h"
@@ -115,11 +116,11 @@ const Int_t TGLSAViewer::fgInitH = 670;
 TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
-   fCompositeFrame(0), fV1(0), fV2(0), fShutter(0), fShutItem1(0), fShutItem2(0), 
+   fCompositeFrame(0), fV1(0), fV2(0), fShutter(0), fShutItem1(0), fShutItem2(0),
    fShutItem3(0), fShutItem4(0), fL1(0), fL2(0), fL3(0), fL4(0),
    fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fViewMenu(0), fHelpMenu(0),
    fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
-   fCanvasWindow(0), 
+   fCanvasWindow(0),
    fColorEditor(0), fGeomEditor(0), fSceneEditor(0), fLightEditor(0)
 {
    // First create gVirtualGL/kernel - to be replaced with TGLManager
@@ -211,7 +212,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
    fGLArea = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
    fGLWindow = fGLArea->GetGLWindow();
-   
+
    // Direct events from the TGWindow directly to the base viewer
    Bool_t ok = kTRUE;
    ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
@@ -222,7 +223,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
    assert(ok);
-   
+
    fCanvasWindow->SetContainer(fGLWindow);
    fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fV2->AddFrame(fCanvasWindow, fCanvasLayout);
@@ -275,7 +276,7 @@ void TGLSAViewer::Show()
 }
 
 //______________________________________________________________________________
-void TGLSAViewer::Close() 
+void TGLSAViewer::Close()
 {
    // Commit suicide when contained GUI is closed
    delete this;

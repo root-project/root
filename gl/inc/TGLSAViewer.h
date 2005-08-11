@@ -1,5 +1,5 @@
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
-// Replaces TViewerOpenGL.h
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -70,7 +70,7 @@ private:
    static const Int_t fgInitY;
    static const Int_t fgInitW;
    static const Int_t fgInitH;
-   
+
    static const char * fgHelpText;
 
 public:
