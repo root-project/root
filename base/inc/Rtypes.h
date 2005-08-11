@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.51 2005/05/27 16:42:58 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.52 2005/08/09 19:13:50 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,7 +41,7 @@ class TBuffer;
 class TMemberInspector;
 class TObject;
 class TNamed;
-class TRootIoCtor;
+class TRootIOCtor;
 
 //---- types -------------------------------------------------------------------
 

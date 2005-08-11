@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TRootIoCtor.h,v 1.7 2005/06/08 21:13:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TRootIoCtor.h,v 1.1 2005/08/09 19:13:50 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRootIoCtor
-#define ROOT_TRootIoCtor
+#ifndef ROOT_TRootIOCtor
+#define ROOT_TRootIOCtor
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TRootIoCtor                                                          //
+// TRootIOCtor                                                          //
 //                                                                      //
 // Helper class used to mark a constructor to be used by ROOT instead   //
 // of the default constructor.                                          //
 // If rootcint sees in a class declaration of the class MyClass:        //
-//    MyClass(TRootIoCtor*);                                            //
+//    MyClass(TRootIOCtor*);                                            //
 // This constructor will be used instead of the default constructor.    //
 //                                                                      //
 // Also the pragma:                                                     //
@@ -29,7 +29,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TRootIoCtor 
+class TRootIOCtor 
 {
    // For now intentionally empty.
 };

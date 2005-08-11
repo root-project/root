@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.213 2005/07/21 22:06:00 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.214 2005/08/09 19:15:34 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -121,7 +121,7 @@
 // this method will called the first of the following 3                 //
 // constructors which exists and is public:                             //
 //    MyClass(UserClass*);                                              //
-//    MyClass(TRootIoCtor*);                                            //
+//    MyClass(TRootIOCtor*);                                            //
 //    MyClass(); // Or a constructor with all its arguments defaulted.  //
 //                                                                      // 
 // When more than one pragma ioctortype is used, the first seen has     // 
@@ -131,7 +131,7 @@
 // We look in the following order:                                      //
 //    MyClass(UserClass1*);                                             //
 //    MyClass(UserClass2*);                                             //
-//    MyClass(TRootIoCtor*);                                            //
+//    MyClass(TRootIOCtor*);                                            //
 //    MyClass(); // Or a constructor with all its arguments defaulted.  //
 //                                                                      //
 // ----------- historical ---------                                     //
@@ -4583,7 +4583,7 @@ int main(int argc, char **argv)
       }
    }
    rewind(fpld);
-   AddConstructorType("TRootIoCtor");
+   AddConstructorType("TRootIOCtor");
    AddConstructorType("");
 
    G__ClassInfo cl;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.173 2005/08/03 21:18:30 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.174 2005/08/09 20:08:49 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2201,7 +2201,7 @@ void *TClass::New(ENewType defConstructor)
    // this method will called the first of the following 3 
    // constructors which exists and is public:
    //    MyClass(UserClass*);
-   //    MyClass(TRootIoCtor*);
+   //    MyClass(TRootIOCtor*);
    //    MyClass(); // Or a constructor with all its arguments defaulted.
    // 
    // When more than one pragma ioctortype is used, the first seen as priority
@@ -2211,7 +2211,7 @@ void *TClass::New(ENewType defConstructor)
    // We look in the following order:
    //    MyClass(UserClass1*);
    //    MyClass(UserClass2*);
-   //    MyClass(TRootIoCtor*);
+   //    MyClass(TRootIOCtor*);
    //    MyClass(); // Or a constructor with all its arguments defaulted.
    //
 
