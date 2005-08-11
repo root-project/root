@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.56 2005/07/11 15:50:42 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.57 2005/07/24 09:58:18 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -2062,6 +2062,8 @@ void TestProgress::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
+   // Interrupt Progress bars increment.
+   gROOT->SetInterrupt();
    DeleteWindow();
 }
 
@@ -2102,8 +2104,8 @@ Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                               fHProg3->Increment(inc4);
                            }
                            gSystem->Sleep(100);
-                           gSystem->ProcessEvents();
                            // if user closed window return
+                           if (gSystem->ProcessEvents()) break;
                            if (!fGO) return kTRUE;
                         }
                      }
