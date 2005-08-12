@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.29 2005/05/31 18:52:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.30 2005/06/01 12:35:55 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -168,6 +168,8 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
 TGComboBox::~TGComboBox()
 {
    // Delete a combo box widget.
+
+   fClient->FreePicture(fBpic);
 
    if (!MustCleanup()) {
       delete fDDButton;
