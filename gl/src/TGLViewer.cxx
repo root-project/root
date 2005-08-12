@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.11 2005/07/26 08:27:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.12 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -749,7 +749,7 @@ void TGLViewer::DoDraw()
    // If no draw lock taken get one now
    if (fScene.CurrentLock() != TGLScene::kDrawLock) {
       if (!fScene.TakeLock(TGLScene::kDrawLock)) {
-         Error("TGLViewer::DirectDraw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+         Error("TGLViewer::DoDraw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
    }
 
@@ -809,7 +809,7 @@ void TGLViewer::DoDraw()
    PostDraw();
 
    if (gDebug>2) {
-      Info("TGLViewer::DirectDraw()", "Took %f msec", timer.End());
+      Info("TGLViewer::DoDraw()", "Took %f msec", timer.End());
       if (gDebug>3) {
          TGLDisplayListCache::Instance().Dump();
       }

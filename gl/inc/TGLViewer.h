@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.7 2005/07/26 08:27:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.8 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -122,9 +122,9 @@ private:
    Bool_t         fInitGL;         //! has GL been initialised?
 
    // Debug tracing (for scene rebuilds)
-   Bool_t         fDebugMode;      //! viewer in debug mode (forced rebuild + draw scene/frustum/interest boxes)
-   UInt_t         fAcceptedPhysicals;
-   UInt_t         fRejectedPhysicals;
+   Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
+   UInt_t         fAcceptedPhysicals;     //! number of physicals accepted in last rebuild
+   UInt_t         fRejectedPhysicals;     //! number of physicals rejected in last rebuild
 
    ///////////////////////////////////////////////////////////////////////
    // Methods

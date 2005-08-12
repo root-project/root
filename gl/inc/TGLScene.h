@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.11 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.12 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -84,6 +84,9 @@ private:
    UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape,
                           const TGLCamera & camera,
                           UInt_t sceneLOD) const;
+
+   // Draw stats (debug)
+   const std::map<std::string, UInt_t> & UpdateDrawStats(const TGLPhysicalShape * drawnShape = 0) const;
 
    // Non-copyable class
    TGLScene(const TGLScene &);

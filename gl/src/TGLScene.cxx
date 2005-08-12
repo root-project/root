@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.14 2005/07/27 12:31:05 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -23,6 +23,7 @@
 #include "TError.h"
 #include "TString.h"
 #include "Riostream.h"
+#include "TClass.h" // For non-TObject reflection
 
 #include <algorithm>
 
@@ -249,7 +250,7 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 //TODO: Merge axes flag and LOD into general draw flag
 UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLOD, Double_t timeout)
 {
-   UInt_t drawn = 0;
+   UInt_t opaqueDrawn = 0;
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::Draw", "expected Draw or Select Lock");
    }
@@ -321,12 +322,23 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
 
          //Draw, DrawWireFrame, DrawOutline
          (drawShape->*drawPtr)(shapeLOD);
-         ++drawn;
+         ++opaqueDrawn;
+
+         // Debug stats
+         if (gDebug>3) {
+            UpdateDrawStats(drawShape);
+         }
       }
 
-      // Terminate the draw is over timeout
-      if (timeout > 0.0 && stopwatch.Lap() > timeout) {
-         run = kFALSE;
+      // Terminate the draw if over opaque fraction timeout
+      if (timeout > 0.0) {
+         Double_t opaqueTimeFraction = 1.0;
+         if (opaqueDrawn > 0) {
+            opaqueTimeFraction = (transDrawList.size() + opaqueDrawn) / opaqueDrawn; 
+         }
+         if (stopwatch.Lap() * opaqueTimeFraction > timeout) {
+            run = kFALSE;
+         }   
       }
    }
 
@@ -336,10 +348,17 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
       if (!fSelectedPhysical->IsTransparent()) {
          UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
          (fSelectedPhysical->*drawPtr)(shapeLOD);
-         ++drawn;
+         ++opaqueDrawn;
+
+         // Debug stats
+         if (gDebug>3) {
+            UpdateDrawStats(fSelectedPhysical);
+         }
       } else {
-         // Ensure transparent selected physical will get drawn
-         transDrawList.push_back(fSelectedPhysical);
+         // Ensure transparent selected physical will get drawn once only
+         if (count(transDrawList.begin(), transDrawList.end(), fSelectedPhysical) == 0) {
+            transDrawList.push_back(fSelectedPhysical);
+         }
       }
    }
 
@@ -350,8 +369,7 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-   // We assume there are <<< of these than opaque so time will be negligible
-   // TODO: Record transparent % and reserve time for these 
+   UInt_t transparentDrawn = 0;
    for (drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
       drawShape = *drawIt;
 
@@ -359,7 +377,11 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
 
       //Draw, DrawWireFrame, DrawOutline
       (drawShape->*drawPtr)(shapeLOD);
-      ++drawn;
+      ++transparentDrawn;
+      // Debug stats
+      if (gDebug>2) {
+         UpdateDrawStats(drawShape);
+      }
    }
 
    // Reset these after transparent done
@@ -405,7 +427,20 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    // be ignored if all can be done. Pass back bool to indicate if whole scene could be drawn
    // at desired quality. Need a fixed target time so valid across multiple draws
 
-   return drawn;
+   if (gDebug>2) {
+      Info("TGLScene::Draw()", "Drew %i Opaque %i Trans at %i LOD", opaqueDrawn, transparentDrawn, sceneLOD);
+   }
+   if (gDebug>3) {
+      const std::map<std::string, UInt_t> & stats = UpdateDrawStats();
+      std::map<std::string, UInt_t>::const_iterator it = stats.begin();
+      while (it != stats.end()) {
+         std::cout << it->first << " (" << it->second << ")\t";
+         it++;
+      }
+      std::cout << std::endl;
+   }
+
+   return opaqueDrawn + transparentDrawn;
 }
 
 //______________________________________________________________________________
@@ -587,7 +622,8 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
    // Create the select buffer. This will work as we have a flat set of physical shapes.
    // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
    // has same 4 GLuint format
-   std::vector<GLuint> selectBuffer(fPhysicalShapes.size()*4);
+   static std::vector<GLuint> selectBuffer;
+   selectBuffer.resize(fPhysicalShapes.size()*4);
    glSelectBuffer(selectBuffer.size(), &selectBuffer[0]);
 
    // Enter picking mode
@@ -607,31 +643,38 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
    }
 
    if (hits > 0) {
-      // Every hit record has format (GLuint per item) - see above for selectBuffer
-      // for reason. Format is:
+      // Every hit record has format (GLuint per item) - format is:
       //
       // no of names in name block (1 always)
       // minDepth
       // maxDepth
       // name(s) (1 always)
-      assert(selectBuffer[0] == 1);
-      UInt_t minDepth = selectBuffer[1];
-      UInt_t minDepthName = selectBuffer[3];
 
-      // Find the nearest picked object
-      // TODO: Put back transparency picking stuff
-      for (Int_t i = 1; i < hits; ++i) {
-         assert(selectBuffer[i*4] == 1); // Single name per record
-         if (selectBuffer[i*4 + 1] < minDepth) {
-            minDepth = selectBuffer[i*4 + 1];
-            minDepthName = selectBuffer[i*4 + 3];
+      // Sort the hits by minimum depth (closest part of object)
+      static std::vector<std::pair<UInt_t, Int_t> > sortedHits;
+      sortedHits.resize(hits);
+      Int_t i;
+      for (i = 0; i < hits; i++) {
+         assert(selectBuffer[i * 4] == 1); // expect a single name per record
+         sortedHits[i].first = selectBuffer[i * 4 + 1]; // hit object minimum depth
+         sortedHits[i].second = selectBuffer[i * 4 + 3]; // hit object name
+      }
+      std::sort(sortedHits.begin(), sortedHits.end());
+
+      // Find first (closest) non-transparent object in the hit stack
+      TGLPhysicalShape * selected = 0;
+      for (i = 0; i < hits; i++) {
+         selected = FindPhysical(sortedHits[i].second);
+         if (!selected->IsTransparent()) {
+            break;
          }
       }
-
-      TGLPhysicalShape * selected = FindPhysical(minDepthName);
-      if (!selected) {
-         assert(kFALSE);
+      // If we failed to find a non-transparent object use the first
+      // (closest) transparent one
+      if (selected->IsTransparent()) {
+         selected = FindPhysical(sortedHits[0].second);
       }
+      assert(selected);
 
       // Swap any selection
       if (selected != fSelectedPhysical) {
@@ -789,3 +832,35 @@ UInt_t TGLScene::SizeOf() const
 
    return size;
 }
+
+//______________________________________________________________________________
+const std::map<std::string, UInt_t> & TGLScene::UpdateDrawStats(const TGLPhysicalShape * drawnShape) const
+{  
+   // Update the draw stats for supplied shape draw, and return cuurent stats
+   // If no drawnShape passed reset the stats
+   static Bool_t reset = kTRUE;
+   static std::map<std::string, UInt_t> stats;
+   
+   // No shape - flag for reset
+   if (!drawnShape) {
+      reset = kTRUE;
+      return stats;
+   }
+   
+   if (reset) {
+      stats.clear();
+      reset = kFALSE;
+   }
+
+   // Update the stats 
+   std::string shapeType = drawnShape->GetLogical().IsA()->GetName();
+   std::map<std::string, UInt_t>::iterator statIt = stats.find(shapeType);
+
+   if (statIt == stats.end()) {
+      statIt = stats.insert(stats.begin(), std::make_pair(shapeType, 0));
+   }
+
+   statIt->second++;
+   return stats;
+}
+
