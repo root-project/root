@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.7 2004/10/15 16:55:06 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.9 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 #include "TObjArray.h"
 #include "TString.h"
 #include "Rtypes.h"
-
+#include "TSystem.h"
 
 ClassImp(TAlienFile)
 
@@ -56,32 +56,37 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
-   if (option[0] == '-') {
-      fOption = option+1;
-   } else {
-      fOption = option;
-   }
-
    TUrl lUrl(url);
-   TString name(lUrl.GetFile());
-   TString nname = name(name.Last('/'), name.Length());
 
-   SetName(nname.Remove(TString::kLeading, '/'));
+   TString name(TString("alien://")+TString(lUrl.GetFile()));
+   SetName(name);
 
-   TFile::TFile(url, "-NET", ftitle, compress);
+   TFile::TFile("dummy", "NET", ftitle, compress);
 
-   TString newurl = AccessURL(url, fOption, ftitle, compress);
+   fOption = option;
+
+   TString newurl = AccessURL(lUrl.GetUrl(), fOption, ftitle, compress);
+
+   TUrl nUrl(newurl.Data());
+   TString oldopt;
+   TString newopt;
+
    if (newurl == "")
       goto zombie;
 
-   fOption = "-" + fOption;
+   oldopt = lUrl.GetOptions();
 
-   fSubFile = TFile::Open(newurl, fOption, ftitle, compress);
+   newopt = nUrl.GetOptions();
 
-   if (!fSubFile) {
+   // add the original options from the alien URL
+   nUrl.SetOptions(newopt + oldopt);
+   fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
+
+   if ((!fSubFile) || (fSubFile->IsZombie())) {
        Error("TAlienFile", "cannot open %s!", url);
        goto zombie;
    }
+   fSubFile->SetName(name);
    return;
 
 zombie:
@@ -101,8 +106,6 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    Bool_t update;
    Bool_t read;
 
-   gSystem->Setenv("GCLIENT_EXTRA_ARG", "");
-
    TUrl purl(url);
 
    // find out the storage element and the lfn from the given url
@@ -121,7 +124,7 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
          TString key   =  ((TObjString*)objTags->At(0))->GetName();
          TString value =  ((TObjString*)objTags->At(1))->GetName();
          if ( (key == "se") || (key == "SE") || (key == "Se") ) {
-	    storageelement = value;
+            storageelement = value;
          }
       }
       delete objTags;
@@ -209,8 +212,8 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
       command += storageelement;
    }
 
-   fLfn = purl.GetFile();
-   result = gGrid->Command(command.Data(),kFALSE);
+   fLfn = file;
+   result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
    alienResult = dynamic_cast<TAlienResult*>(result);
    list = dynamic_cast<TList*>(alienResult);
    if (!list) {
@@ -317,17 +320,21 @@ void TAlienFile::Close(Option_t *option)
 {
    // Close file.
 
-   if (fSubFile) {
-      fSubFile->Close(option);
-   }
-
    // set GCLIENT_EXTRA_ARG environment
    gSystem->Setenv("GCLIENT_EXTRA_ARG",fAuthz.Data());
 
    // commit the envelope
    TString command("commit ");
+
+   command += (Long_t)fSubFile->GetSize();
+   command += " ";
    command += fLfn;
-   TGridResult* result = gGrid->Command(command, kFALSE);
+
+   if (fSubFile) {
+      fSubFile->Close(option);
+   }
+
+   TGridResult* result = gGrid->Command(command, kFALSE,TAlien::kOUTPUT);
    TAlienResult* alienResult = dynamic_cast<TAlienResult*>(result);
    TList* list = dynamic_cast<TList*>(alienResult);
    if (!list) {
@@ -336,21 +343,18 @@ void TAlienFile::Close(Option_t *option)
       }
       Error("Close", "cannot commit envelope for %s", fLfn.Data());
    }
-
    TIterator* iter = list->MakeIterator();
    TObject* object = 0;
    if (fWritable) {
       while ((object = iter->Next()) != 0) {
          TMap* map = dynamic_cast<TMap*>(object);
-
          TObject* commitObject = map->GetValue(fLfn.Data());
          if (commitObject) {
-	    TObjString* commitStr = dynamic_cast<TObjString*>(commitObject);
-
-	    if (!(strcmp(commitStr->GetName(),"1"))) {
-	       // the file has been committed
-	       break;
-	    }
+            TObjString* commitStr = dynamic_cast<TObjString*>(commitObject);
+            if (!(strcmp(commitStr->GetName(),"1"))) {
+               // the file has been committed
+               break;
+            }
          }
 
          Error("Close", "cannot register %s!", fLfn.Data());
@@ -360,4 +364,6 @@ void TAlienFile::Close(Option_t *option)
       delete iter;
       delete result;
    }
+
+   gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 }

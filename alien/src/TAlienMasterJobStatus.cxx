@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.cxx,v 1.4 2004/11/04 14:56:00 dfeich Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -41,12 +41,12 @@ void TAlienMasterJobStatus::Browse(TBrowser* b)
    // Browser interface.
 
    if (b) {
-      TString status("");
-      status += GetStatus();
-      b->Add(new TNamed(status, TString("overall status")));
-      status = "";
-      status += PercentFinished();
-      b->Add(new TNamed(status, TString("percentage finished")));
+     //      TString status("");
+     //      status += GetStatus();
+     //      b->Add(new TNamed(status, TString("overall status")));
+     //      status = "";
+     //      status += PercentFinished();
+     //      b->Add(new TNamed(status, TString("percentage finished")));
 
       TIterator* iter = fJobs.MakeIterator();
 

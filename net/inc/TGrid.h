@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.12 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.13 2005/05/27 13:47:37 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -71,7 +71,8 @@ public:
    virtual void Stderr() { MayNotUse("Stderr"); }
 
    virtual TGridResult *Command(const char * /*command*/,
-                                Bool_t /*interactive*/ = kFALSE)
+                                Bool_t /*interactive*/ = kFALSE,
+                                UInt_t /*stream*/ = kFALSE)
       { MayNotUse("Command"); return 0; }
 
    virtual TGridResult *Query(const char * /*path*/, const char * /*pattern*/,
@@ -86,11 +87,29 @@ public:
                                 const char * /*options*/)
       { MayNotUse("Query2Dataset"); return kFALSE; }
 
-   //--- job Submission Interface
-   virtual TGridJob *Submit(const char * /*jdl*/) { MayNotUse("Submit"); return 0; }
-   virtual TGridJDL *GetJDLGenerator() { MayNotUse("GetJDLGenerator"); return 0; }
+   //--- Catalogue Interface
+   virtual TGridResult *Ls(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Ls"); return 0; }
+   virtual const char  *Pwd(Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Pwd"); return 0; }
+   virtual Bool_t Cd(const char* /*ldn*/ ="",Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Cd"); return kFALSE; }
+   virtual Bool_t Mkdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Mkdir"); return kFALSE; }
+   virtual Bool_t Rmdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Mkdir"); return kFALSE; }
+   virtual Bool_t Register(const char* /*lfn*/ , const char* /*turl*/ , Long_t /*size*/ =-1, const char* /*se*/ =0, const char* /*guid*/ =0, Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Mkdir"); return kFALSE; }
+   virtual Bool_t Rm(const char* /*lfn*/ , Option_t* /*option*/ ="", Bool_t /*verbose*/ =kFALSE)
+      { MayNotUse("Mkdir"); return kFALSE; }
 
-   //--- load desired plugin and setup conection to GRID
+   //--- Job Submission Interface
+   virtual TGridJob *Submit(const char * /*jdl*/)
+      { MayNotUse("Submit"); return 0; }
+   virtual TGridJDL *GetJDLGenerator()
+      { MayNotUse("GetJDLGenerator"); return 0; }
+
+   //--- Load desired plugin and setup conection to GRID
    static TGrid *Connect(const char *grid, const char *uid = 0,
                          const char *pw = 0, const char *options = 0);
 

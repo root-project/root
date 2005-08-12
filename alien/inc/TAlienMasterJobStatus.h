@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.h,v 1.3 2004/11/01 17:38:08 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/10/2004
 
 /*************************************************************************
@@ -42,16 +42,19 @@ private:
                                  // TAlienJobStatus objects
 
 public:
-   TAlienMasterJobStatus() : fMasterJob(0) { }
+   TAlienMasterJobStatus(UInt_t jobid) : fMasterJob(0)
+      { TString name; name += jobid; SetName(name); SetTitle(name); }
    virtual ~TAlienMasterJobStatus();
 
-   virtual EGridJobStatus GetStatus() const;
-   virtual void Print(Option_t *) const;
+   EGridJobStatus GetStatus() const;
+   void Print(Option_t *) const;
 
    Float_t PercentFinished();
 
    Bool_t IsFolder() const { return kTRUE; }
-   void Browse(TBrowser *b);
+   void   Browse(TBrowser *b);
+   TMap  *GetJobs() { return &fJobs; }
+   Int_t  GetNSubJobs() const { return fJobs.GetSize(); }
 
    ClassDef(TAlienMasterJobStatus,1)  // Status of Alien master job
 };

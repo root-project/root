@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.6 2004/11/04 14:56:00 dfeich Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -120,7 +120,7 @@ Bool_t TAlienJDL::SubmitTest()
    SetExecutable("/bin/date");
    SetArguments("-R");
    TGridJob* job = gGrid->Submit(Generate());
-
+   printf("Sending:\n%s\n",Generate().Data());
    if (job == 0) {
       Error("SubmitTest", "submitting failed");
       return kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.8 2004/11/04 14:56:00 dfeich Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "TObjString.h"
 #include "TBrowser.h"
 #include "TNamed.h"
-
+#include "TAlienDirectory.h"
 
 ClassImp(TAlienJobStatus)
 
@@ -59,18 +59,70 @@ void TAlienJobStatus::Browse(TBrowser* b)
          TObjString* valueStr = dynamic_cast<TObjString*>(value);
 
          if (keyStr->GetString() == TString("jdl")) {
-	    TString valueParsed(valueStr->GetString());
-	    valueParsed.ReplaceAll("\n", 1);
-	    valueParsed.ReplaceAll("  ", 2);
+            TString valueParsed(valueStr->GetString());
+            valueParsed.ReplaceAll("\n", 1);
+            valueParsed.ReplaceAll("  ", 2);
+            b->Add(new TPair(new TObjString("jdl"), new TObjString(valueParsed)));
 
-	    b->Add(new TPair(new TObjString("jdl"), new TObjString(valueParsed)));
+            // list sandboxes
+            const char* outputdir = GetJdlKey("OutputDir");
+
+            TString sandbox;
+            if (outputdir) {
+               sandbox = outputdir;
+            } else {
+               sandbox = TString("/proc/") + TString(GetKey("user")) + TString("/") + TString(GetKey("queueId")) + TString("/job-output");
+            }
+
+            b->Add(new TAlienDirectory(sandbox.Data(),"job-output"));
+
          } else {
-	    if (keyStr && valueStr)
-	       b->Add(new TNamed(valueStr->GetString(), keyStr->GetString()));
+            if (keyStr && valueStr)
+               b->Add(new TNamed(valueStr->GetString(), keyStr->GetString()));
          }
       }
       delete iter;
    }
+}
+
+
+//______________________________________________________________________________
+const char *TAlienJobStatus::GetJdlKey(const char* key)
+{
+   const char *jdl = GetKey("jdl");
+   if (!jdl)
+      return 0;
+   const char* jdltagbegin = strstr(jdl,key);
+   const char* jdltagquote = strchr(jdltagbegin,'"');
+   const char* jdltagend   = strchr(jdltagbegin,';');
+
+   if (!jdltagend) {
+      return 0;
+   }
+   if (!jdltagquote) {
+      return 0;
+   }
+   jdltagquote++;
+   const char* jdltagquote2 = strchr(jdltagquote,'"');
+   if (!jdltagquote2) {
+      return 0;
+   }
+   fJdlTag = TString(jdltagquote);
+   fJdlTag = fJdlTag(0,jdltagquote2-jdltagquote);
+
+   return fJdlTag.Data();
+}
+
+//______________________________________________________________________________
+const char *TAlienJobStatus::GetKey(const char* key)
+{
+   TObject* obj = fStatus.FindObject(key);
+   TPair* pair = dynamic_cast<TPair*>(obj);
+   if (pair) {
+      TObjString* string = dynamic_cast<TObjString*> (pair->Value());
+      return string->GetName();
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -88,20 +140,20 @@ TGridJobStatus::EGridJobStatus TAlienJobStatus::GetStatus() const
          const char* status = string->GetString().Data();
 
          if (strcmp(status, "INSERTING") == 0 ||
-	     strcmp(status, "WAITING") == 0 ||
-	     strcmp(status, "QUEUED") == 0 ||
-	     strcmp(status, "ASSIGNED") == 0)
-	    return kWAITING;
+             strcmp(status, "WAITING") == 0 ||
+             strcmp(status, "QUEUED") == 0 ||
+             strcmp(status, "ASSIGNED") == 0)
+            return kWAITING;
          else if (strcmp(status, "STARTED") == 0 ||
-	          strcmp(status, "SAVING") == 0 ||
-	          strcmp(status, "SPLITTING") == 0 ||
-	          strcmp(status, "RUNNING") == 0 ||
-	          strcmp(status, "SPLIT") == 0)
-	    return kRUNNING;
+                  strcmp(status, "SAVING") == 0 ||
+                  strcmp(status, "SPLITTING") == 0 ||
+                  strcmp(status, "RUNNING") == 0 ||
+                  strcmp(status, "SPLIT") == 0)
+            return kRUNNING;
          else if (strcmp(status, "EXPIRED") == 0 ||
-	          string->GetString().BeginsWith("ERROR_") == kTRUE ||
-	          strcmp(status, "FAILED") == 0 ||
-	          strcmp(status, "ZOMBIE") == 0)
+                  string->GetString().BeginsWith("ERROR_") == kTRUE ||
+                  strcmp(status, "FAILED") == 0 ||
+                  strcmp(status, "ZOMBIE") == 0)
             return kFAIL;
          else if (strcmp(status, "KILLED") == 0)
             return kABORTED;

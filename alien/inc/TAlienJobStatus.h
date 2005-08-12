@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.h,v 1.5 2004/11/01 17:38:08 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -37,8 +37,9 @@ friend class TAlienJob;
 friend class TAlienMasterJob;
 
 private:
-   TMap fStatus; // Contains the status information of the job.
-                 // In the Alien implementation this is a string, string map.
+   TMap fStatus;     // Contains the status information of the job.
+                     // In the Alien implementation this is a string, string map.
+   TString fJdlTag;  // JdlTag
 
    void ClearSetStatus(const char *status);
 
@@ -47,12 +48,16 @@ public:
    TAlienJobStatus(TMap *status);
    virtual ~TAlienJobStatus();
 
+   const char *GetJdlKey(const char *key);
+   const char *GetKey(const char *key);
+
    virtual EGridJobStatus GetStatus() const;
    virtual void Print(Option_t *) const;
+
    void PrintJob(Bool_t full = kTRUE) const;
 
    Bool_t IsFolder() const { return kTRUE;}
-   void Browse(TBrowser* b);
+   void Browse(TBrowser *b);
 
    ClassDef(TAlienJobStatus,1)  // Alien implementation of TGridJobStatus
 };

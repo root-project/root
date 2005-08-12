@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.5 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
    TString jobID;
    jobID += (static_cast<ULong_t>(fJobID));
 
-   GLITE_JOBARRAY *gjobarray = glite_queryjobs("-", "-", "-", "-", "-", "-",
+   GLITE_JOBARRAY *gjobarray = glite_queryjobs("-", "%", "-", "-", "-", "-",
                                                jobID.Data(), "-", "-");
 
    if (!gjobarray)

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.8 2003/11/13 17:01:15 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.9 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -43,21 +43,29 @@
 #include "TDSet.h"
 #endif
 
+#ifndef ROOT_TMap
+#include "TMap.h"
+#endif
+
 class GliteUI;
 class TGridJob;
 
 
 class TAlien : public TGrid {
 
+public:
+   enum { kSTDOUT = 0, kSTDERR = 1 , kOUTPUT = 2, kENVIR = 3 };
+
 private:
    // Stream content types.
    // The streams are originally defined in the CODEC.h of
    // the external gliteUI library.
-   enum {kSTDOUT = 0, kSTDERR = 1 , kOUTPUT = 2, kENVIR = 3};
 
    GliteUI   *fGc;    // the GliteUI object implementing the communication layer
+   TString    fPwd;   // working directory
 
-   TGridResult         *Command(const char *command, bool interactive = kFALSE);
+   TGridResult         *Command(const char *command, bool interactive = kFALSE,
+                                UInt_t stream = kOUTPUT);
    virtual TGridResult *Query(const char *path, const char *pattern,
                               const char *conditions, const char *options);
    virtual TGridResult *LocateSites();
@@ -73,9 +81,25 @@ public:
    void Stdout();          // print the stdout of the last executed command
    void Stderr();          // print the stderr of the last executed command
 
+   TMap  *GetColumn(UInt_t stream=0, UInt_t column=0);
+   UInt_t GetNColumns(UInt_t stream);
+
+   const char *GetStreamFieldValue(UInt_t stream, UInt_t column, UInt_t row);
+   const char *GetStreamFieldKey(UInt_t stream, UInt_t column, UInt_t row);
+
    TString Escape(const char *input);
    virtual TGridJob *Submit(const char *jdl); // submit a grid job
    virtual TGridJDL *GetJDLGenerator();       // get a AliEn grid JDL object
+
+   //--- catalogue Interface
+   virtual TGridResult *Ls(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
+   virtual const char  *Pwd(Bool_t verbose=kFALSE);
+   virtual Bool_t Cd(const char *ldn="", Bool_t verbose=kFALSE);
+   virtual Bool_t Mkdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
+   virtual Bool_t Rmdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
+   virtual Bool_t Register(const char *lfn, const char *turl, Long_t size=-1,
+                           const char *se=0, const char *guid=0, Bool_t verbose=kFALSE);
+   virtual Bool_t Rm(const char *lfn, Option_t *option="", Bool_t verbose=kFALSE);
 
    ClassDef(TAlien,0)  // Interface to Alien GRID services
 };

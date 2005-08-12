@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.2 2004/10/01 12:45:23 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.4 2005/05/20 11:13:30 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -28,8 +28,17 @@
 #endif
 
 class TAlienResult : public TGridResult {
+
+private:
+   mutable TString fFilePath;  // file path
+
 public:
-   void DumpResult();
+   virtual void DumpResult();
+
+   virtual const char *GetFileName(UInt_t i) const;             // returns the file name of list item i
+   virtual const char *GetFileNamePath(UInt_t i) const;         // returns the full path + file name of list item i
+   virtual const char *GetPath(UInt_t i) const;                 // returns the file path of list item i
+   virtual const char *GetKey(UInt_t i, const char *key) const; // returns the key value of list item i
 
    ClassDef(TAlienResult,0)  // Alien query result set
 };

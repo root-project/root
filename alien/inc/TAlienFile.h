@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.6 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.7 2005/06/10 18:01:36 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -75,6 +75,8 @@ public:
                 { return ((fSubFile)?fSubFile->cd(path):kFALSE); }
    const char *GetPath() const
                 { return ((fSubFile)?fSubFile->GetPath():0); }
+
+   TFile      *GetSubFile() const { return fSubFile; }
 
    ClassDef(TAlienFile,1)  //A ROOT file that reads/writes via AliEn services and sub protocols
 };

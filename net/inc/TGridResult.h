@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.4 2005/05/12 13:19:39 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -33,6 +33,15 @@ class TGridResult : public TList {
 public:
    TGridResult() : TList() { }
    virtual ~TGridResult() { }
+
+   virtual const char *GetFileName(UInt_t) const
+      { MayNotUse("GetFileName"); return 0; }
+   virtual const char *GetFileNamePath(UInt_t) const
+      { MayNotUse("GetFileNamePath"); return 0; }
+   virtual const char *GetPath(UInt_t) const
+      { MayNotUse("GetPath"); return 0; }
+   virtual const char *GetKey(UInt_t, const char*) const
+      { MayNotUse("GetKey"); return 0; }
 
    ClassDef(TGridResult,1)  // ABC defining interface to GRID result set
 };

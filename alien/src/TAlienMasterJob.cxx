@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.cxx,v 1.5 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   27/10/2004
 
 /*************************************************************************
@@ -26,8 +26,23 @@
 #include "TAlienJob.h"
 #include "TObjString.h"
 #include "glite_job_operations.h"
+#include "Riostream.h"
+#include "TGridResult.h"
+#include "TAlien.h"
+#include "TFileMerger.h"
+#include "TBrowser.h"
 
 ClassImp(TAlienMasterJob)
+
+//______________________________________________________________________________
+void TAlienMasterJob::Browse(TBrowser* b)
+{
+   // Browser interface.
+
+   if (b) {
+      b->Add(GetJobStatus());
+   }
+}
 
 //______________________________________________________________________________
 TGridJobStatus *TAlienMasterJob::GetJobStatus() const
@@ -38,7 +53,7 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
    TString jobID;
    jobID += (static_cast<ULong_t>(fJobID));
 
-   GLITE_JOBARRAY* gjobarray = glite_queryjobs("-", "-", "-", "-", jobID.Data(),
+   GLITE_JOBARRAY* gjobarray = glite_queryjobs("-", "%", "-", "-", jobID.Data(),
                                                "-", "-", "-", "-");
 
    if (!gjobarray)
@@ -49,7 +64,7 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
       return 0;
    }
 
-   TAlienMasterJobStatus *status = new TAlienMasterJobStatus();
+   TAlienMasterJobStatus *status = new TAlienMasterJobStatus(fJobID);
 
    TAlienJob masterJob(fJobID);
    status->fMasterJob = dynamic_cast<TAlienJobStatus*>(masterJob.GetJobStatus());
@@ -75,4 +90,102 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
    }
 
    return status;
+}
+
+//______________________________________________________________________________
+void TAlienMasterJob::Print(Option_t* options) const
+{
+   std::cout << " ------------------------------------------------ " << std::endl;
+   std::cout << " Master Job ID                   : " << fJobID << std::endl;
+   std::cout << " ------------------------------------------------ " << std::endl;
+   TAlienMasterJobStatus* status = (TAlienMasterJobStatus*)(GetJobStatus());
+   if (!status) {
+      Error("Print","Cannot get the information for this masterjob");
+      return;
+   }
+
+   std::cout << " N of Subjobs                    : " << status->GetNSubJobs() << std::endl;
+   std::cout << " % finished                      : " << status->PercentFinished()*100 << std::endl;
+   std::cout << " ------------------------------------------------ " << std::endl;
+   TIterator* iter = status->GetJobs()->MakeIterator();
+
+   TObjString* obj = 0;
+   while ((obj = (TObjString*)iter->Next()) != 0) {
+      TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
+      printf(" SubJob: [%-7s] %-10s %20s@%s  RunTime: %s\n",substatus->GetKey("queueId"),substatus->GetKey("status"),substatus->GetKey("node"),substatus->GetKey("site"),substatus->GetKey("runtime"));
+   }
+   std::cout << " ------------------------------------------------ " << std::endl;
+   iter->Reset();
+   if ( strchr(options,'l') ) {
+      while ((obj = (TObjString*)iter->Next()) != 0) {
+         TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
+         // list sandboxes
+         const char* outputdir = substatus->GetJdlKey("OutputDir");
+
+         TString sandbox;
+         if (outputdir) {
+            sandbox = outputdir;
+         } else {
+            sandbox = TString("/proc/") + TString(substatus->GetKey("user")) + TString("/") + TString(substatus->GetKey("queueId")) + TString("/job-output");
+         }
+
+         printf(" Sandbox [%-7s] %s \n", substatus->GetKey("queueId"),sandbox.Data());
+         std::cout << " ================================================ " << std::endl;
+
+         if (!gGrid->Cd(sandbox)) {
+            continue;
+         }
+
+         TGridResult* dirlist = gGrid->Ls(sandbox);
+         dirlist->Sort(kTRUE);
+         Int_t i =0;
+         while (dirlist->GetFileName(i)) {
+            printf("%-24s ",dirlist->GetFileName(i++));
+            if (!(i%4)) {
+               printf("\n");
+            }
+         }
+         printf("\n");
+         if (dirlist)
+            delete dirlist;
+      }
+   }
+   std::cout << " ----------LITE_JOB_OPERATIONS-------------------------------------- " << std::endl;
+   delete status;
+}
+
+//______________________________________________________________________________
+Bool_t TAlienMasterJob::Merge()
+{
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TAlienMasterJob::Merge(const char* inputname,const char* mergeoutput)
+{
+   TFileMerger merger;
+
+   TAlienMasterJobStatus* status = (TAlienMasterJobStatus*)(GetJobStatus());
+   TIterator* iter = status->GetJobs()->MakeIterator();
+
+   TObjString* obj = 0;
+   while ((obj = (TObjString*)iter->Next()) != 0) {
+      TAlienJobStatus* substatus = (TAlienJobStatus*)status->GetJobs()->GetValue(obj->GetName());
+      TString sandbox;// list sandboxes
+      const char* outputdir = substatus->GetJdlKey("OutputDir");
+      printf(" Sandbox [%-7s] %s \n", substatus->GetKey("queueId"),sandbox.Data());
+      std::cout << " ================================================ " << std::endl;
+      if (outputdir) {
+         sandbox = outputdir;
+      } else {
+         sandbox = TString("/proc/") + TString(substatus->GetKey("user")) + TString("/") + TString(substatus->GetKey("queueId")) + TString("/job-output");
+      }
+      merger.AddFile(TString("alien://")+sandbox+ TString("/") + TString(inputname));
+   }
+
+   if (mergeoutput) {
+      merger.OutputFile(mergeoutput);
+   }
+
+   return merger.Merge();
 }

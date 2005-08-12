@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.8 2003/11/13 17:01:15 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.12 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -15,16 +15,46 @@
 //                                                                      //
 // Class defining interface to TAlien GRID services.                    //
 //                                                                      //
-// To start a local API Grid service, use                               //
-//   - TGrid::Connect("alien://localhost");                             //
-//   - TGrid::Connect("alien://");                                      //
-//                                                                      //
 // To force to connect to a running API Service, use                    //
-//   - TGrid::Connect("alien://<apihosturl>/?direct");                  //
+//   - TGrid::Connect("alien://<apihosturl>/","user");                  //
 //                                                                      //
-// To get a remote API Service from the API factory service, use        //
-//   - TGrid::Connect("alien://<apifactoryurl>");                       //
+// If you want to use TGrid::Connect("alien://");                       //
+// you have to set the environment variables                            //
+// export alien_API_HOST=<host>                                         //
+// export alien_API_PORT=<port>                                         //
+// export alien_API_USER=<user>                                         //
+// => these are automatically set via the gShell or alien_VO command    //
 //                                                                      //
+//                                                                      //
+// some examples:                                                       //
+// -------------------------------------------------------------------- //
+// connect in an initialized gShell environemnt (see above)             //
+// > TGrid::Connect("alien://");                                        //
+// -------------------------------------------------------------------- //
+// change the working directory                                         //
+// > gGrid->Cd("/alice"); //=> returns 1 for success, 0 for error       //
+//                                                                      //
+//                                                                      //
+// -------------------------------------------------------------------- //
+// get the working directory                                            //
+// > printf("Working Directory is %d",gGrid->Pwd());                    //
+//                                                                      //
+//                                                                      //
+// -------------------------------------------------------------------- //
+// get a filename list of the working directory and print it            //
+// > TGridResult* result = gGrid->Ls("/alice");                         //
+// > Int_t i=0;                                                         //
+// > while (result->GetFileName(i))\                                    //
+// printf("File %s\n",result->GetFileName(i++));                        //
+// -------------------------------------------------------------------- //
+//                                                                      //
+// get all file permissions                                             //
+// > TGridResult* result = gGrid->Ls("/alice","-la");                   //
+// > while (result->GetFileName(i))\                                    //
+// printf("The permissions are %s\n",result->GetKey(i++,"permissions")  //
+//                                                                      //
+// => the defined keys for GetKey can be seen using result->Print();    //
+// -------------------------------------------------------------------- //
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -34,6 +64,7 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TMap.h"
+#include "TSystem.h"
 #include "TAlienJDL.h"
 #include "TAlienResult.h"
 #include "TAlienJob.h"
@@ -43,33 +74,64 @@
 using namespace std;
 
 
+
 ClassImp(TAlien)
 
 //______________________________________________________________________________
-TAlien::TAlien(const char *gridurl, const char *uid, const char * /*passwd*/,
+TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
                const char *options)
 {
+   gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
+
    // Connect to the AliEn grid.
 
    TUrl *gurl = new TUrl(gridurl);
 
    fGridUrl = gridurl;
    fGrid    = "alien";
-   fHost    = gurl->GetHost();
-   fPort    = gurl->GetPort();
-   fUser    = uid;
+   if (!strlen(gurl->GetHost())) {
+      if (gSystem->Getenv("alien_API_HOST"))
+         fHost = gSystem->Getenv("alien_API_HOST");
+      else
+         fHost = "";
+   } else {
+      fHost = gurl->GetHost();
+   }
+
+   if (gurl->GetPort()<=0) {
+      if (gSystem->Getenv("alien_API_PORT"))
+         fPort = atoi(gSystem->Getenv("alien_API_PORT"));
+      else
+         fPort = 0;
+   } else {
+      fPort = gurl->GetPort();
+   }
+
+   if (!strlen(uid)) {
+      if (gSystem->Getenv("alien_API_USER")) {
+         fUser = gSystem->Getenv("alien_API_USER");
+      }
+   } else {
+      fUser = uid;
+   }
+
    fOptions = options;
 
    if (gDebug > 1)
       Info("TAlien", "%s => %s port: %d user: %s",gridurl,fHost.Data(),fPort,fUser.Data());
 
    fGc = GliteUI::MakeGliteUI(kFALSE);
-   fGc->Connect(fHost, fPort, fUser);
    if (!fGc) {
       Error("TAlien", "could not connect to a alien service at:");
       Error("TAlien", "host: %s port: %d user: %s", fHost.Data(), fPort, fUser.Data());
       MakeZombie();
    } else {
+      if (passwd) {
+         if (!strlen(passwd)) {
+            passwd=0;
+         }
+      }
+      fGc->Connect(fHost.Data(), fPort, fUser.Data(), passwd);
       if (!fGc->Connected()) {
          Error("TAlien", "could not authenticate at:");
          Error("TAlien", "host: %s port: %d user: %s",fHost.Data(),fPort,fUser.Data());
@@ -79,6 +141,8 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * /*passwd*/,
          Command("motd");
          Stdout();
       }
+      // export this UI to all POSIX functions like glite_dir_xxx glite_job_xxx
+      fGc->SetGliteUI(fGc);
    }
 }
 
@@ -122,11 +186,12 @@ TGridJob *TAlien::Submit(const char *jdl)
       return 0;
 
    TString command("submit =< ");
-   command += Escape(jdl);
+   //command += Escape(jdl);
+   command += jdl;
 
    cout << command << endl;
 
-   TGridResult* result = Command(command);
+   TGridResult* result = Command(command,kFALSE,kOUTPUT);
    TAlienResult* alienResult = dynamic_cast<TAlienResult*>(result);
    TList* list = dynamic_cast<TList*>(alienResult);
    if (!list) {
@@ -170,13 +235,12 @@ TGridJDL *TAlien::GetJDLGenerator()
 }
 
 //______________________________________________________________________________
-TGridResult *TAlien::Command(const char *command, bool interactive)
+TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t stream)
 {
    // Execute AliEn command. Returns 0 in case or error.
 
    if (fGc) {
       if (fGc->Command(command)) {
-         Int_t stream = kOUTPUT;
          // command successful
          TAlienResult* gresult = new TAlienResult();
 
@@ -198,6 +262,7 @@ TGridResult *TAlien::Command(const char *command, bool interactive)
    }
    return 0;
 }
+
 
 //______________________________________________________________________________
 TGridResult *TAlien::LocateSites()
@@ -234,4 +299,221 @@ TGridResult *TAlien::OpenDataset(const char *lfn, const char *options)
 {
    TString cmdline = TString("getdataset") + TString(" ") + TString(options) + TString(" ") + TString(lfn);
    return Command(cmdline.Data(),kTRUE);
+}
+
+//______________________________________________________________________________
+TMap *TAlien::GetColumn(UInt_t stream, UInt_t column)
+{
+   TMap *gmap = new TMap();
+   for (Int_t row = 0; row < fGc->GetStreamRows(stream,column); row++) {
+      gmap->Add((TObject*)(new TObjString(fGc->GetStreamFieldKey(stream,column,row))),
+                (TObject*)(new TObjString(fGc->GetStreamFieldValue(stream,column,row))));
+   }
+   return gmap;
+}
+
+//______________________________________________________________________________
+const char *TAlien::GetStreamFieldValue(UInt_t stream, UInt_t column, UInt_t row)
+{
+   return fGc->GetStreamFieldValue(stream,column,row);
+}
+
+//______________________________________________________________________________
+const char *TAlien::GetStreamFieldKey(UInt_t stream, UInt_t column, UInt_t row)
+{
+   return fGc->GetStreamFieldKey(stream,column,row);
+}
+
+//______________________________________________________________________________
+UInt_t TAlien::GetNColumns(UInt_t stream)
+{
+   return fGc->GetStreamColumns(stream);
+}
+
+//--- catalogue Interface
+
+//______________________________________________________________________________
+TGridResult *TAlien::Ls(const char* ldn, Option_t* options, Bool_t verbose)
+{
+   TString cmdline = TString("ls") + TString(" ") + TString(options) + TString(" ") + TString(ldn);
+
+   return Command(cmdline.Data(),verbose);
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Cd(const char* ldn, Bool_t verbose)
+{
+   TString cmdline = TString("cd") + TString(" ") + TString(ldn);
+
+   Command(cmdline.Data(),kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   const char* result = (GetStreamFieldValue(kOUTPUT,0,0));
+   if (result) {
+      if (strlen(result) > 0) {
+         if (atoi(result) == 1) {
+            return kTRUE;
+         }
+      }
+   }
+
+   Error("Cd","Cannot change to directory %s\n",ldn);
+   if (!verbose) Stdout();
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+const char* TAlien::Pwd(Bool_t verbose)
+{
+   TString cmdline = TString("pwd");
+
+   TGridResult* result = Command(cmdline.Data(),kFALSE,kENVIR);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   if (result) {
+      TMap* resultmap = ((TMap*)result->At(0));
+      if (resultmap) {
+         TObjString* pwd = (TObjString*)resultmap->GetValue("pwd");
+         if (pwd) {
+            fPwd = pwd->GetName();
+            delete resultmap;
+            return fPwd;
+         } else {
+            delete resultmap;
+            return 0;
+         }
+      }
+   }
+
+   Error("pwd","Cannot get current working directory\n");
+   if (!verbose) Stdout();
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Mkdir(const char* ldn, Option_t* options, Bool_t verbose)
+{
+   TString cmdline = TString("mkdir");
+   if (strlen(options)) {
+      cmdline +=  (TString(" ") + TString(options));
+   } else {
+      cmdline += (TString(" -s ") + TString(ldn));
+   }
+
+   Command(cmdline.Data(),kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   const char* result = (GetStreamFieldValue(kOUTPUT,0,0));
+   if (result) {
+      if (strlen(result) > 0) {
+         if (atoi(result) == 1) {
+            return kTRUE;
+         }
+      }
+   }
+
+   Error("Mkdir","Cannot create directory %s\n",ldn);
+   if (!verbose) Stdout();
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Rmdir(const char* ldn, Option_t* options, Bool_t verbose)
+{
+   TString cmdline = TString("rmdir");
+   if (strlen(options)) {
+      cmdline +=  (TString(" ") + TString(options));
+   } else {
+      cmdline += (TString(" -s ") + TString(ldn));
+   }
+
+   Command(cmdline.Data(),kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   const char* result = (GetStreamFieldValue(kOUTPUT,0,0));
+   if (result) {
+      if (strlen(result) > 0) {
+         if (atoi(result) == 1) {
+            return kTRUE;
+         }
+      }
+   }
+
+   Error("Rmdir","Cannot remove directory %s\n",ldn);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Register(const char* lfn, const char* turl, Long_t size, const char* se, const char* guid, Bool_t verbose)
+{
+   TString cmdline = TString("register") + TString(" ") + TString(lfn) + TString(" ") + TString(turl);
+   if (se) {
+      cmdline += TString(" ");
+      cmdline += size;
+      cmdline += TString(" ");
+      cmdline += TString(se);
+      if (guid) {
+         cmdline += TString(" ");
+         cmdline += TString(guid);
+      }
+   }
+
+   Command(cmdline.Data(),kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   const char* result = (GetStreamFieldValue(kOUTPUT,0,0));
+   if (result) {
+      if (strlen(result) > 0) {
+         if (atoi(result) == 1) {
+            return kTRUE;
+         }
+      }
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Rm(const char* lfn, Option_t* options, Bool_t verbose)
+{
+   TString cmdline = TString("rm") + TString(" -s ") + TString(options) + TString(" ") + TString(lfn);
+
+   Command(cmdline.Data(),kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   const char* result = (GetStreamFieldValue(kOUTPUT,0,0));
+   if (result) {
+      if (strlen(result) > 0) {
+         if (atoi(result) == 1) {
+            return kTRUE;
+         }
+      }
+   }
+
+   Error("Rm","Cannot remove %s\n",lfn);
+   return kFALSE;
 }

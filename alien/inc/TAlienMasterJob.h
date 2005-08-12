@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.h,v 1.4 2004/11/01 17:38:08 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  27/10/2004
 
 /*************************************************************************
@@ -35,6 +35,11 @@ public:
    virtual ~TAlienMasterJob() { }
 
    virtual TGridJobStatus *GetJobStatus() const;
+
+   void   Print(Option_t *) const;
+   Bool_t Merge();
+   Bool_t Merge(const char *inputname, const char *mergeoutput = 0);
+   void   Browse(TBrowser* b);
 
    ClassDef(TAlienMasterJob,1) // Special Alien grid job controlling results of job splitting
 };

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJobStatus.h,v 1.1 2005/05/12 13:19:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJobStatus.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -20,12 +20,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 
-class TGridJobStatus : public TObject {
+class TGridJobStatus : public TNamed {
 
 public:
    // Subset of Grid job states for common GetStatus function
