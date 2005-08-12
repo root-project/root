@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.8 2004/09/06 08:18:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.9 2004/10/11 16:25:10 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1904,6 +1904,9 @@ TGNumberEntry::~TGNumberEntry()
 {
    // Destructs a numeric entry widget
 
+   gClient->FreePicture(fPicUp);
+   gClient->FreePicture(fPicDown);
+
    Cleanup();
 }
 
@@ -2000,7 +2003,7 @@ void TGNumberEntry::ValueChanged(Long_t val)
 //______________________________________________________________________________
 void TGNumberEntry::ValueSet(Long_t val)
 {
-   // Emit ValueSet(Long_t) signal. This signal is emitted when the  
+   // Emit ValueSet(Long_t) signal. This signal is emitted when the
    // number entry value is changed. The val has the following meaning:
    // val % 100 is the step size
    // val % 10000 / 100 != 0 indicates log step
