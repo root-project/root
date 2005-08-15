@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.47 2005/03/07 16:18:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.48 2005/04/18 10:54:58 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -65,7 +65,10 @@ protected:
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
    // Default ctor
-   TBuffer() : fMode(0), fBuffer(0) { fMap = 0; fParent = 0;}
+   TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
+               fBufCur(0), fBufMax(0), fMapCount(0), fMapSize(0),
+               fDisplacement(0), fMap(0), fClassMap(0), fParent(0),
+               fInfo(0),  fInfos() {}
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented
@@ -196,6 +199,7 @@ public:
 
    virtual   void     ReadFastArray(Bool_t    *b, Int_t n);
    virtual   void     ReadFastArray(Char_t    *c, Int_t n);
+   virtual   void     ReadFastArrayString(Char_t    *c, Int_t n);
    virtual   void     ReadFastArray(UChar_t   *c, Int_t n);
    virtual   void     ReadFastArray(Short_t   *h, Int_t n);
    virtual   void     ReadFastArray(UShort_t  *h, Int_t n);
@@ -228,6 +232,7 @@ public:
 
    virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteFastArray(const Char_t    *c, Int_t n);
+   virtual   void     WriteFastArrayString(const Char_t    *c, Int_t n);
    virtual   void     WriteFastArray(const UChar_t   *c, Int_t n);
    virtual   void     WriteFastArray(const Short_t   *h, Int_t n);
    virtual   void     WriteFastArray(const UShort_t  *h, Int_t n);
