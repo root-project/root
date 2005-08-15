@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.40 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.41 2005/06/23 10:54:06 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1146,6 +1146,24 @@ TString operator+(const TString &s, ULong_t i)
 }
 
 //______________________________________________________________________________
+TString operator+(const TString &s, Long64_t i)
+{
+   // Add integer to string.
+
+   const char *si = ::Form("%lld", i);
+   return TString(s.Data(), s.Length(), si, strlen(si));
+}
+
+//______________________________________________________________________________
+TString operator+(const TString &s, ULong64_t i)
+{
+   // Add integer to string.
+
+   const char *si = ::Form("%llu", i);
+   return TString(s.Data(), s.Length(), si, strlen(si));
+}
+
+//______________________________________________________________________________
 TString operator+(char c, const TString &s)
 {
    // Add string to integer.
@@ -1168,6 +1186,24 @@ TString operator+(ULong_t i, const TString &s)
    // Add string to integer.
 
    const char *si = ::Form("%lu", i);
+   return TString(si, strlen(si), s.Data(), s.Length());
+}
+
+//______________________________________________________________________________
+TString operator+(Long64_t i, const TString &s)
+{
+   // Add string to integer.
+
+   const char *si = ::Form("%lld", i);
+   return TString(si, strlen(si), s.Data(), s.Length());
+}
+
+//______________________________________________________________________________
+TString operator+(ULong64_t i, const TString &s)
+{
+   // Add string to integer.
+
+   const char *si = ::Form("%llu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 

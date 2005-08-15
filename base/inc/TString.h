@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.38 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.39 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -60,9 +60,13 @@ TString operator+(const char *cs, const TString &s);
 TString operator+(const TString &s, char c);
 TString operator+(const TString &s, Long_t i);
 TString operator+(const TString &s, ULong_t i);
+TString operator+(const TString &s, Long64_t i);
+TString operator+(const TString &s, ULong64_t i);
 TString operator+(char c, const TString &s);
 TString operator+(Long_t i, const TString &s);
 TString operator+(ULong_t i, const TString &s);
+TString operator+(Long64_t i, const TString &s);
+TString operator+(ULong64_t i, const TString &s);
 Bool_t  operator==(const TString &s1, const TString &s2);
 Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
@@ -176,9 +180,13 @@ friend TString operator+(const char *cs, const TString &s);
 friend TString operator+(const TString &s, char c);
 friend TString operator+(const TString &s, Long_t i);
 friend TString operator+(const TString &s, ULong_t i);
+friend TString operator+(const TString &s, Long64_t i);
+friend TString operator+(const TString &s, ULong64_t i);
 friend TString operator+(char c, const TString &s);
 friend TString operator+(Long_t i, const TString &s);
 friend TString operator+(ULong_t i, const TString &s);
+friend TString operator+(Long64_t i, const TString &s);
+friend TString operator+(ULong64_t i, const TString &s);
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
 
@@ -255,6 +263,8 @@ public:
    TString    &operator+=(ULong_t i);
    TString    &operator+=(Float_t f);
    TString    &operator+=(Double_t f);
+   TString    &operator+=(Long64_t i);
+   TString    &operator+=(ULong64_t i);
 
    // Indexing operators
    char         &operator[](Ssiz_t i);         // Indexing with bounds checking
@@ -460,6 +470,12 @@ inline TString &TString::operator+=(Double_t f)
 
 inline TString &TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
+
+inline TString &TString::operator+=(Long64_t l)
+{ return operator+=(::Form("%lld", l)); }
+
+inline TString &TString::operator+=(ULong64_t ul)
+{ return operator+=(::Form("%llu", ul)); }
 
 inline Bool_t TString::BeginsWith(const char *s, ECaseCompare cmp) const
 { return Index(s, s ? strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }
