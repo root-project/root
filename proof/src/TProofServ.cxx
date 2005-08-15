@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.100 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.101 2005/07/21 17:41:32 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -259,7 +259,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
      Fatal("TProofServ", "Invalid socket descriptor number (%d)", sock);
      exit(1);
    }
-   
+
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
    SetErrorHandler(ProofServErrorHandler);
@@ -985,10 +985,10 @@ void TProofServ::HandleSocketInput()
       case kPROOF_SENDFILE:
          mess->ReadString(str, sizeof(str));
          {
-            Long_t size;
-            Int_t  bin;
-            char   name[1024];
-            sscanf(str, "%s %d %ld", name, &bin, &size);
+            Long64_t size;
+            Int_t    bin, fw;
+            char     name[1024];
+            sscanf(str, "%s %d %lld %d", name, &bin, &size, &fw);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
             if (size > 0) {
@@ -996,7 +996,7 @@ void TProofServ::HandleSocketInput()
                gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
                UnlockCache();
             }
-            if (IsMaster())
+            if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
          }
          break;
@@ -1735,7 +1735,7 @@ void TProofServ::Reset(const char *dir)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
+Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
 {
    // Receive a file, either sent by a client or a master server.
    // If bin is true it is a binary file, other wise it is an ASCII
@@ -1754,8 +1754,8 @@ Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
    char buf[kMAXBUF], cpy[kMAXBUF];
 
-   Int_t  left, r;
-   Long_t filesize = 0;
+   Int_t    left, r;
+   Long64_t filesize = 0;
 
    while (filesize < size) {
       left = Int_t(size - filesize);

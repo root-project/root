@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.27 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.28 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -82,19 +82,21 @@ private:
    TStopwatch    fLatency;          //measures latency of packet requests
    TStopwatch    fCompute;          //measures time spend processing a packet
 
-   void        Setup();
-   void        RedirectOutput();
-   Int_t       CatMotd();
-   Int_t       LockDir(const TString &lock);
-   Int_t       UnlockDir(const TString &lock);
-   Int_t       LockCache() { return LockDir(fCacheLock); }
-   Int_t       UnlockCache() { return UnlockDir(fCacheLock); }
-   Int_t       LockPackage() { return LockDir(fPackageLock); }
-   Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
-   Int_t       UnloadPackage(const char *package);
-   Int_t       UnloadPackages();
-   void        HandleSocketInputDuringProcess();
-   Int_t       OldAuthSetup(TString &wconf);
+   void          RedirectOutput();
+   Int_t         CatMotd();
+   Int_t         LockDir(const TString &lock);
+   Int_t         UnlockDir(const TString &lock);
+   Int_t         LockCache() { return LockDir(fCacheLock); }
+   Int_t         UnlockCache() { return UnlockDir(fCacheLock); }
+   Int_t         LockPackage() { return LockDir(fPackageLock); }
+   Int_t         UnlockPackage() { return UnlockDir(fPackageLock); }
+   Int_t         UnloadPackage(const char *package);
+   Int_t         UnloadPackages();
+   Int_t         OldAuthSetup(TString &wconf);
+
+protected:
+   virtual void  HandleSocketInputDuringProcess();
+   virtual void  Setup();
 
 public:
    TProofServ(Int_t *argc, char **argv);
@@ -117,9 +119,9 @@ public:
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
 
-   void           HandleSocketInput();
-   void           HandleUrgentData();
-   void           HandleSigPipe();
+   virtual void   HandleSocketInput();
+   virtual void   HandleUrgentData();
+   virtual void   HandleSigPipe();
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsMaster() const { return fMasterServ; }
    Bool_t         IsParallel() const;
@@ -132,7 +134,7 @@ public:
    TObject       *Get(const char *namecycle);
    TDSetElement  *GetNextPacket();
    void           Reset(const char *dir);
-   Int_t          ReceiveFile(const char *file, Bool_t bin, Long_t size);
+   Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
    void           SendLogFile(Int_t status = 0);
    void           SendStatistics();
    void           SendParallel();

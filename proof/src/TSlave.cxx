@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.42 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.43 2005/07/29 14:26:51 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TVirtualMutex.h"
 #include "TThread.h"
 #include "TSocket.h"
+#include "TPluginManager.h"
 
 ClassImp(TSlave)
 
@@ -39,7 +40,7 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
                const char *image, TProof *proof, ESlaveType stype,
                const char *workdir, const char *conffile, const char *msd)
   : fName(host), fImage(image), fProofWorkDir(workdir),
-    fWorkDir(workdir), fUser(), fPort(port),
+    fWorkDir(workdir), fPort(port),
     fOrdinal(ord), fPerfIdx(perf),
     fProtocol(0), fSocket(0), fProof(proof),
     fInput(0), fBytesRead(0), fRealTime(0),
@@ -48,26 +49,57 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
+   Init(host, port, stype, conffile);
+}
+
+//______________________________________________________________________________
+TSlave::TSlave()
+{
+   // Default constructor used by derived classes
+
+   fPort      = -1;
+   fOrdinal   = "-1";
+   fPerfIdx   = -1;
+   fProof     = 0;
+   fSlaveType = kMaster;
+   fProtocol  = 0;
+   fSocket    = 0;
+   fInput     = 0;
+   fBytesRead = 0;
+   fRealTime  = 0;
+   fCpuTime   = 0;
+   fStatus    = 0;
+   fParallel  = 0;
+}
+
+//______________________________________________________________________________
+void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
+                  const char *conffile)
+{
+   // Init a PROOF slave object. Called via the TSlave ctor.
+   // The Init method is technology specific and is overwritten by derived
+   // classes.
+
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
-   TString hurl(proof->GetUrlProtocol());
+   TString hurl(fProof->GetUrlProtocol());
    hurl.Insert(5, 'd');
    // Add host, port (and user) information
-   if (proof->GetUser() && strlen(proof->GetUser())) {
-      hurl += TString(Form("://%s@%s:%d", proof->GetUser(), host, port));
+   if (fProof->GetUser() && strlen(fProof->GetUser())) {
+      hurl += TString(Form("://%s@%s:%d", fProof->GetUser(), host, port));
    } else {
       hurl += TString(Form("://%s:%d", host, port));
    }
 
    // Add information about our status (Client or Master)
    TString iam;
-   if (proof->IsMaster() && stype == kSlave) {
+   if (fProof->IsMaster() && stype == kSlave) {
       iam = "Master";
       hurl += TString("/?SM");
-   } else if (proof->IsMaster() && stype == kMaster) {
+   } else if (fProof->IsMaster() && stype == kMaster) {
       iam = "Master";
       hurl += TString("/?MM");
-   } else if (!proof->IsMaster() && stype == kMaster) {
+   } else if (!fProof->IsMaster() && stype == kMaster) {
       iam = "Local Client";
       hurl += TString("/?MC");
    } else {
@@ -76,8 +108,11 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
    }
 
    // Open authenticated connection to remote PROOF slave server.
+   // If a connection was already open (fSocket != 0), re-use it
+   // to perform authentication (optimization needed to avoid a double
+   // opening in case this is called by TXSlave).
    Int_t wsize = 65536;
-   fSocket = TSocket::CreateAuthSocket(hurl, 0, wsize);
+   fSocket = TSocket::CreateAuthSocket(hurl, 0, wsize, fSocket);
 
    if (!fSocket || !fSocket->IsAuthenticated()) {
       SafeDelete(fSocket);
@@ -88,7 +123,6 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
    // representing all slave sockets, will be added to this list. This will
    // ensure the correct termination of all proof servers in case the
    // root session terminates.
-
    {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
@@ -98,7 +132,7 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 
    // Fill some useful info
    fUser              = fSocket->GetSecContext()->GetUser();
-   proof->fUser       = fUser;
+   fProof->fUser      = fUser;
    PDB(kGlobal,3) {
       Info("TSlave","%s: fUser is .... %s", iam.Data(), fUser.Data());
    }
@@ -147,8 +181,8 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
       return;
    }
 
-   proof->fProtocol   = fProtocol;   // protocol of last slave on master
-   proof->fUser       = fUser;
+   fProof->fProtocol   = fProtocol;   // protocol of last slave on master
+   fProof->fUser       = fUser;
 
    if (fProtocol < 5) {
       //
@@ -178,6 +212,15 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 
    // set some socket options
    fSocket->SetOption(kNoDelay, 1);
+}
+
+//______________________________________________________________________________
+void TSlave::Init(TSocket *s, ESlaveType stype, const char *conffile)
+{
+   // Init a PROOF slave object using the connection opened via s. Used to
+   // avoid double opening when an attempt via TXSlave found a remote proofd.
+
+   Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype, conffile);
 }
 
 //______________________________________________________________________________
@@ -318,5 +361,166 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
    } else {
       Error("OldAuthSetup", "hook to method OldSlaveAuthSetup is undefined");
       return -1;
+   }
+}
+
+//______________________________________________________________________________
+TSlave *TSlave::Create(const char *host, Int_t port, const char *ord, Int_t perf,
+                       const char *image, TProof *proof, ESlaveType stype,
+                       const char *workdir, const char *conffile, const char *msd)
+{
+   // Static method returning the appropriate TSlave object for the remote
+   // server.
+
+   TSlave *s = 0;
+
+   // If we have TXSlave the plugin manager will find it
+   TPluginHandler *h = 0;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TSlave")) &&
+       h->LoadPlugin() == 0) {
+      s = (TSlave *) h->ExecPlugin(10, host, port, ord, perf, image, proof, stype,
+                                       workdir, conffile, msd);
+   } else {
+      s = new TSlave(host, port, ord, perf, image, proof, stype, workdir,
+                     conffile, msd);
+   }
+
+   return s;
+}
+
+//______________________________________________________________________________
+Int_t TSlave::Ping()
+{
+   // Ping the remote master or slave servers.
+   // Returns 0 if ok, -1 in case of error
+
+   if (!IsValid()) return -1;
+
+   TMessage mess(kPROOF_PING | kMESS_ACK);
+   fSocket->Send(mess);
+   if (fSocket->Send(mess) == -1) {
+      Warning("Ping","%s: acknowledgement not received", GetOrdinal());
+      return -1;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+void TSlave::Interrupt(Int_t type)
+{
+   // Send interrupt OOB byte to master or slave servers.
+   // Returns 0 if ok, -1 in case of error
+
+   if (!IsValid()) return;
+
+   char oobc = (char) type;
+   const int kBufSize = 1024;
+   char waste[kBufSize];
+
+   // Send one byte out-of-band message to server
+   if (fSocket->SendRaw(&oobc, 1, kOob) <= 0) {
+      Error("Interrupt", "error sending oobc to slave %s", GetOrdinal());
+      return;
+   }
+
+   if (type == TProof::kHardInterrupt) {
+      char  oob_byte;
+      int   n, nch, nbytes = 0, nloop = 0;
+
+      // Receive the OOB byte
+      while ((n = fSocket->RecvRaw(&oob_byte, 1, kOob)) < 0) {
+         if (n == -2) {   // EWOULDBLOCK
+            //
+            // The OOB data has not yet arrived: flush the input stream
+            //
+            // In some systems (Solaris) regular recv() does not return upon
+            // receipt of the oob byte, which makes the below call to recv()
+            // block indefinitely if there are no other data in the queue.
+            // FIONREAD ioctl can be used to check if there are actually any
+            // data to be flushed.  If not, wait for a while for the oob byte
+            // to arrive and try to read it again.
+            //
+            fSocket->GetOption(kBytesToRead, nch);
+            if (nch == 0) {
+               gSystem->Sleep(1000);
+               continue;
+            }
+
+            if (nch > kBufSize) nch = kBufSize;
+            n = fSocket->RecvRaw(waste, nch);
+            if (n <= 0) {
+               Error("Interrupt", "error receiving waste from slave %s",
+                     GetOrdinal());
+               break;
+            }
+            nbytes += n;
+         } else if (n == -3) {   // EINVAL
+            //
+            // The OOB data has not arrived yet
+            //
+            gSystem->Sleep(100);
+            if (++nloop > 100) {  // 10 seconds time-out
+               Error("Interrupt", "server %s does not respond", GetOrdinal());
+               break;
+            }
+         } else {
+            Error("Interrupt", "error receiving OOB from server %s",
+                  GetOrdinal());
+            break;
+         }
+      }
+
+      //
+      // Continue flushing the input socket stream until the OOB
+      // mark is reached
+      //
+      while (1) {
+         int atmark;
+
+         fSocket->GetOption(kAtMark, atmark);
+
+         if (atmark)
+            break;
+
+         // find out number of bytes to read before atmark
+         fSocket->GetOption(kBytesToRead, nch);
+         if (nch == 0) {
+            gSystem->Sleep(1000);
+            continue;
+         }
+
+         if (nch > kBufSize) nch = kBufSize;
+         n = fSocket->RecvRaw(waste, nch);
+         if (n <= 0) {
+            Error("Interrupt", "error receiving waste (2) from slave %s",
+                  GetOrdinal());
+            break;
+         }
+         nbytes += n;
+      }
+      if (nbytes > 0) {
+         if (fProof->IsMaster())
+            Info("Interrupt", "slave %s:%s synchronized: %d bytes discarded",
+                 GetName(), GetOrdinal(), nbytes);
+         else
+            Info("Interrupt", "PROOF synchronized: %d bytes discarded", nbytes);
+      }
+
+      // Get log file from master or slave after a hard interrupt
+      fProof->Collect(this);
+
+   } else if (type == TProof::kSoftInterrupt) {
+
+      // Get log file from master or slave after a soft interrupt
+      fProof->Collect(this);
+
+   } else if (type == TProof::kShutdownInterrupt) {
+
+      ; // nothing expected to be returned
+
+   } else {
+
+      // Unexpected message, just receive log file
+      fProof->Collect(this);
    }
 }

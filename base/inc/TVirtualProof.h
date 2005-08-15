@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.14 2005/03/17 09:29:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.15 2005/03/17 15:00:47 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -81,7 +81,7 @@ public:
    virtual Int_t       ClearPackages() = 0;
    virtual Int_t       ClearPackage(const char *package) = 0;
    virtual Int_t       EnablePackage(const char *package) = 0;
-   virtual Int_t       UploadPackage(const char *par, Int_t parallel = 1) = 0;
+   virtual Int_t       UploadPackage(const char *par) = 0;
 
    virtual const char *GetMaster() const = 0;
    virtual const char *GetConfDir() const = 0;

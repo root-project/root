@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.97 2005/07/14 17:59:48 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.98 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -709,11 +709,11 @@ TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
                             Int_t perf, const char *image, const char *workdir)
 {
    // Create a new TSlave of type TSlave::kSlave.
-   // Note: constructor of TSlave is private with TProof as a friend.
+   // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
-   TSlave* sl = new TSlave(host, port, ord, perf, image,
-                           this, TSlave::kSlave, workdir, 0, 0);
+   TSlave* sl = TSlave::Create(host, port, ord, perf, image,
+                               this, TSlave::kSlave, workdir, 0, 0);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -731,11 +731,11 @@ TSlave *TProof::CreateSubmaster(const char *host, Int_t port, const char *ord,
                                 const char *msd)
 {
    // Create a new TSlave of type TSlave::kMaster.
-   // Note: constructor of TSlave is private with TProof as a friend.
+   // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
-   TSlave *sl = new TSlave(host, port, ord, 100, image, this,
-                           TSlave::kMaster, 0, conffile, msd);
+   TSlave *sl = TSlave::Create(host, port, ord, 100, image, this,
+                               TSlave::kMaster, 0, conffile, msd);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -919,8 +919,6 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 
    if (!IsValid()) return;
 
-   char oobc = (char) type;
-
    TList *slaves = 0;
    if (list == kAll)    slaves = fSlaves;
    if (list == kActive) slaves = fActiveSlaves;
@@ -928,123 +926,14 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 
    if (slaves->GetSize() == 0) return;
 
-   const int kBufSize = 1024;
-   char waste[kBufSize];
-
    TSlave *sl;
    TIter   next(slaves);
 
    while ((sl = (TSlave *)next())) {
       if (sl->IsValid()) {
-         TSocket *s = sl->GetSocket();
 
-         // Send one byte out-of-band message to server
-         if (s->SendRaw(&oobc, 1, kOob) <= 0) {
-            Error("Interrupt", "error sending oobc to slave %s", sl->GetOrdinal());
-            continue;
-         }
-
-         if (type == kHardInterrupt) {
-            char  oob_byte;
-            int   n, nch, nbytes = 0, nloop = 0;
-
-            // Receive the OOB byte
-            while ((n = s->RecvRaw(&oob_byte, 1, kOob)) < 0) {
-               if (n == -2) {   // EWOULDBLOCK
-                  //
-                  // The OOB data has not yet arrived: flush the input stream
-                  //
-                  // In some systems (Solaris) regular recv() does not return upon
-                  // receipt of the oob byte, which makes the below call to recv()
-                  // block indefinitely if there are no other data in the queue.
-                  // FIONREAD ioctl can be used to check if there are actually any
-                  // data to be flushed.  If not, wait for a while for the oob byte
-                  // to arrive and try to read it again.
-                  //
-                  s->GetOption(kBytesToRead, nch);
-                  if (nch == 0) {
-                     gSystem->Sleep(1000);
-                     continue;
-                  }
-
-                  if (nch > kBufSize) nch = kBufSize;
-                  n = s->RecvRaw(waste, nch);
-                  if (n <= 0) {
-                     Error("Interrupt", "error receiving waste from slave %s",
-                           sl->GetOrdinal());
-                     break;
-                  }
-                  nbytes += n;
-               } else if (n == -3) {   // EINVAL
-                  //
-                  // The OOB data has not arrived yet
-                  //
-                  gSystem->Sleep(100);
-                  if (++nloop > 100) {  // 10 seconds time-out
-                     Error("Interrupt", "server %s does not respond", sl->GetOrdinal());
-                     break;
-                  }
-               } else {
-                  Error("Interrupt", "error receiving OOB from server %s",
-                        sl->GetOrdinal());
-                  break;
-               }
-            }
-
-            //
-            // Continue flushing the input socket stream until the OOB
-            // mark is reached
-            //
-            while (1) {
-               int atmark;
-
-               s->GetOption(kAtMark, atmark);
-
-               if (atmark)
-                  break;
-
-               // find out number of bytes to read before atmark
-               s->GetOption(kBytesToRead, nch);
-               if (nch == 0) {
-                  gSystem->Sleep(1000);
-                  continue;
-               }
-
-               if (nch > kBufSize) nch = kBufSize;
-               n = s->RecvRaw(waste, nch);
-               if (n <= 0) {
-                  Error("Interrupt", "error receiving waste (2) from slave %s",
-                        sl->GetOrdinal());
-                  break;
-               }
-               nbytes += n;
-            }
-            if (nbytes > 0) {
-               if (IsMaster())
-                  Info("Interrupt", "slave %s:%s synchronized: %d bytes discarded",
-                       sl->GetName(), sl->GetOrdinal(), nbytes);
-               else
-                  Info("Interrupt", "PROOF synchronized: %d bytes discarded", nbytes);
-            }
-
-            // Get log file from master or slave after a hard interrupt
-            Collect(sl);
-
-         } else if (type == kSoftInterrupt) {
-
-            // Get log file from master or slave after a soft interrupt
-            Collect(sl);
-
-         } else if (type == kShutdownInterrupt) {
-
-            ; // nothing expected to be returned
-
-         } else {
-
-            // Unexpected message, just receive log file
-            Collect(sl);
-
-         }
+         // Ask slave to progate the interrupt request
+         sl->Interrupt((Int_t)type);
       }
    }
 }
@@ -1435,17 +1324,6 @@ Int_t TProof::Collect(TMonitor *mon)
                PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                if (out) {
-
-
-            TIter no(out);
-            TObject *ob = 0;
-            Int_t io = 0;
-            while ((ob = no())) {
-               io++;   
-            }
-
-
-
                   out->SetOwner();
                   fPlayer->StoreOutput(out); // Adopts the list
                } else {
@@ -1672,8 +1550,27 @@ Int_t TProof::Ping(ESlaves list)
 {
    // Ping PROOF slaves. Returns the number of slaves that responded.
 
-   TMessage mess(kPROOF_PING | kMESS_ACK);
-   return Broadcast(mess, list);
+   TList *slaves = 0;
+   if (list == kAll)    slaves = fSlaves;
+   if (list == kActive) slaves = fActiveSlaves;
+   if (list == kUnique) slaves = fUniqueSlaves;
+
+   if (slaves->GetSize() == 0) return 0;
+
+   int   nsent = 0;
+   TIter next(slaves);
+
+   TSlave *sl;
+   while ((sl = (TSlave *)next())) {
+      if (sl->IsValid()) {
+         if (sl->Ping() == -1)
+            MarkBad(sl);
+         else
+            nsent++;
+      }
+   }
+
+   return nsent;
 }
 
 //______________________________________________________________________________
@@ -1979,7 +1876,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       char *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
-            if (SendFile(fn, kFALSE) < 0) {
+            if (SendFile(fn, kAscii | kForward) < 0) {
                Error("Exec", "file %s could not be transfered", fn);
                delete [] fn;
                return -1;
@@ -2050,30 +1947,19 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Long_t TProof::CheckFile(const char *file, TSlave *slave)
+Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
 {
    // Check if a file needs to be send to the slave. Use the following
    // algorithm:
    //   - check if file appears in file map
    //     - if yes, get file's modtime and check against time in map,
    //       if modtime not same get md5 and compare against md5 in map,
-   //       if not same return size
+   //       if not same return kTRUE.
    //     - if no, get file's md5 and modtime and store in file map, ask
-   //       slave if file exists with specific md5, if yes return 0,
-   //       if no return file's size
-   // Returns size of file in case file needs to be send, returns 0 in case
-   // file is already on remote and -1 in case of error.
-
-   Long64_t size;
-   Long_t id, flags, modtime;
-   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
-      Error("CheckFile", "cannot stat file %s", file);
-      return -1;
-   }
-   if (size == 0) {
-      Error("CheckFile", "empty file %s", file);
-      return -1;
-   }
+   //       slave if file exists with specific md5, if yes return kFALSE,
+   //       if no return kTRUE.
+   // Returns kTRUE in case file needs to be send, returns kFALSE in case
+   // file is already on remote node.
 
    Bool_t sendto = kFALSE;
 
@@ -2104,7 +1990,7 @@ Long_t TProof::CheckFile(const char *file, TSlave *slave)
             if (IsMaster()) {
                sendto = kFALSE;
                TMessage mess(kPROOF_CHECKFILE);
-               mess << TString(gSystem->BaseName(file)) << md.fMD5;
+               mess << TString(file) << md.fMD5;
                slave->GetSocket()->Send(mess);
 
                TMessage *reply;
@@ -2125,7 +2011,7 @@ Long_t TProof::CheckFile(const char *file, TSlave *slave)
       fFileMap[sn] = md;
       delete md5;
       TMessage mess(kPROOF_CHECKFILE);
-      mess << TString(gSystem->BaseName(file)) << md.fMD5;
+      mess << TString(file) << md.fMD5;
       slave->GetSocket()->Send(mess);
 
       TMessage *reply;
@@ -2135,19 +2021,28 @@ Long_t TProof::CheckFile(const char *file, TSlave *slave)
       delete reply;
    }
 
-   if (sendto)
-      return size;
-
-   return 0;
+   return sendto;
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendFile(const char *file, Bool_t bin)
+Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile)
 {
    // Send a file to master or slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
-   // file system image, -1 in case of error. If bin is true binary
-   // file transfer is used, otherwise ASCII mode.
+   // file system image, -1 in case of error.
+   // If defined, the full path of the remote path will be rfile.
+   // The mask 'opt' is an or of ESendFileOpt:
+   //
+   //       kAscii  (0x0)      if set true ascii file transfer is used
+   //       kBinary (0x1)      if set true binary file transfer is used
+   //       kForce  (0x2)      if not set an attempt is done to find out
+   //                          whether the file really needs to be downloaded
+   //                          (a valid copy may already exist in the cache
+   //                          from a previous run); the bit is set by
+   //                          UploadPackage, since the check is done elsewhere.
+   //       kForward (0x4)     if set, ask server to forward the file to slave
+   //                          or submaster (meaningless for slave servers).
+   //
 
    if (!IsValid()) return -1;
 
@@ -2165,21 +2060,43 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
       return -1;
    }
 
+   // Get info about the file
+   Long64_t size;
+   Long_t id, flags, modtime;
+   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
+      Error("SendFile", "cannot stat file %s", file);
+      return -1;
+   }
+   if (size == 0) {
+      Error("SendFile", "empty file %s", file);
+      return -1;
+   }
+
+   // Decode options
+   Bool_t bin   = (opt & kBinary)  ? kTRUE : kFALSE;
+   Bool_t force = (opt & kForce)   ? kTRUE : kFALSE;
+   Bool_t fw    = (opt & kForward) ? kTRUE : kFALSE;
+
    const Int_t kMAXBUF = 32768;  //16384  //65536;
    char buf[kMAXBUF];
    Int_t nsl = 0;
 
    TIter next(slaves);
    TSlave *sl;
+   const char *fnam = (rfile) ? rfile : gSystem->BaseName(file);
    while ((sl = (TSlave *)next())) {
       if (!sl->IsValid())
          continue;
 
-      Long_t size = CheckFile(file, sl);
-      // Don't send the kPROOF_SENDFILE command to real slaves when size=0.
-      // Masters might still need to send the file to newly added slaves.
-      if (sl->fSlaveType == TSlave::kSlave && size == 0)
+      Bool_t sendto = force ? kTRUE : CheckFile(fnam, sl, modtime);
+      // Don't send the kPROOF_SENDFILE command to real slaves when sendto
+      // is false. Masters might still need to send the file to newly added
+      // slaves.
+      if (sl->fSlaveType == TSlave::kSlave && !sendto)
          continue;
+      // The value of 'size' is used as flag remotely, so we need to
+      // reset it to 0 if we are not going to send the file
+      size = sendto ? size : 0;
 
       PDB(kPackage,2)
          if (size > 0) {
@@ -2188,13 +2105,13 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
             printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal());
          }
 
-      sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
+      sprintf(buf, "%s %d %lld %d", fnam, bin, size, fw);
       if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
          MarkBad(sl);
          continue;
       }
 
-      if (size == 0)
+      if (!sendto)
          continue;
 
       lseek(fd, 0, SEEK_SET);
@@ -2750,7 +2667,7 @@ Int_t TProof::EnablePackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
+Int_t TProof::UploadPackage(const char *tpar)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -2760,8 +2677,7 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
    // BUILD.sh to be called to build the package, in case of a binary PAR
    // file don't specify a build script or make it a no-op. Then there is
    // SETUP.C which sets the right environment variables to use the package,
-   // like LD_LIBRARY_PATH, etc. Parallel is the number of parallel streams
-   // that can be used to upload the package to the master server.
+   // like LD_LIBRARY_PATH, etc.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -2805,16 +2721,13 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
       TMessage *reply;
       sl->GetSocket()->Recv(reply);
       if (reply->What() != kPROOF_CHECKFILE) {
-         // remote directory is locked, upload file via TFTP
-         if (IsMaster())
-            parallel = 1;  // assume LAN
-         {
-            TFTP ftp(TString("root://")+sl->GetName(), parallel);
-            if (!ftp.IsZombie()) {
-               ftp.cd(Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir));
-               ftp.put(par, gSystem->BaseName(par));
-            }
-         }
+
+         // remote directory is locked, upload file over the open channel
+         if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
+                      sl->GetProofWorkDir(), kPROOF_PackDir,
+                      gSystem->BaseName(par))) < 0)
+            Warning("UploadPackage", "problems uploading file %s", par.Data());
+
          // install package and unlock dir
          sl->GetSocket()->Send(mess2);
          delete reply;

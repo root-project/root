@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.59 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.60 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -222,6 +222,12 @@ private:
       kUnloadPackages = 17,
       kDisablePackages = 18
    };
+   enum ESendFileOpt {
+      kAscii         = 0x0,
+      kBinary        = 0x1,
+      kForce         = 0x2,
+      kForward       = 0x4
+   };
 
    Bool_t          fValid;          //is this a valid proof object
    TString         fMaster;         //name of master server (use "" if this is a master)
@@ -278,8 +284,9 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Long_t   CheckFile(const char *file, TSlave *sl);
-   Int_t    SendFile(const char *file, Bool_t bin = kTRUE);
+   Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime);
+   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward),
+                     const char *rfile = 0);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
    Int_t    SendInitialState();
@@ -382,7 +389,7 @@ public:
    Int_t       ClearPackages();
    Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package);
-   Int_t       UploadPackage(const char *par, Int_t parallel = 1);
+   Int_t       UploadPackage(const char *par);
 
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }

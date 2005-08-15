@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.15 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.16 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -38,9 +38,9 @@ class TFileHandler;
 class TProof;
 
 // Hook to external function setting up authentication related stuff
-// for old versions.
-// For backward compatibility
+// for old versions. For backward compatibility.
 typedef Int_t (*OldSlaveAuthSetup_t)(TSocket *, Bool_t, TString, TString);
+
 
 class TSlave : public TObject {
 
@@ -72,7 +72,6 @@ private:
    Int_t         fParallel;  //number of active slaves
    TString       fMsd;       //mass storage domain of slave
 
-   TSlave() { fOrdinal = "-1"; fSocket = 0; fProof = 0; }
    TSlave(const TSlave &s) : TObject(s) { }
    void operator=(const TSlave &) { }
 
@@ -80,7 +79,19 @@ private:
           const char *image, TProof *proof, ESlaveType stype,
           const char *workdir, const char *conffile, const char *msd);
 
-   Int_t         OldAuthSetup(Bool_t master, TString wconf);
+   void  Init(TSocket *s, ESlaveType stype, const char *conffile);
+   Int_t OldAuthSetup(Bool_t master, TString wconf);
+
+   static TSlave *Create(const char *host, Int_t port, const char *ord, Int_t perf,
+                         const char *image, TProof *proof, ESlaveType stype,
+                         const char *workdir, const char *conffile, const char *msd);
+
+protected:
+   TSlave();
+   virtual void  Init(const char *host,
+                      Int_t port, ESlaveType stype, const char *conffile);
+   virtual void  Interrupt(Int_t type);
+   virtual Int_t Ping();
 
 public:
    virtual ~TSlave();
