@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.102 2005/07/29 08:53:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.103 2005/07/29 15:43:05 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <algorithm>
 #include "Riostream.h"
+#include "TString.h"
 
 //const Double_t
 //   TMath::Pi = 3.14159265358979323846,
@@ -946,6 +947,104 @@ Double_t TMath::KolmogorovProb(Double_t z)
    }
    return p;
    }
+
+//______________________________________________________________________________
+Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Double_t *b, Option_t *option)
+{
+//  Statistical test whether two one-dimensional sets of points are compatible 
+//  with coming from the same parent distribution, using the Kolmogorov test. 
+//  That is, it is used to compare two experimental distributions of unbinned data.
+//
+//  Input:
+//  a,b: One-dimensional arrays of length na, nb, respectively. 
+//       The elements of a and b must be given in ascending order.
+//  option is a character string to specify options
+//         "D" Put out a line of "Debug" printout
+//         "M" Return the Maximum Kolmogorov distance instead of prob
+//
+//  Output:
+// The returned value prob is a calculated confidence level which gives a 
+// statistical test for compatibility of a and b. 
+// Values of prob close to zero are taken as indicating a small probability 
+// of compatibility. For two point sets drawn randomly from the same parent 
+// distribution, the value of prob should be uniformly distributed between 
+// zero and one.
+//   in case of error the function return -1
+//   If the 2 sets have a different number of points, the minimum of 
+//   the two sets is used.
+//
+// Method:
+// The Kolmogorov test is used. The test statistic is the maximum deviation 
+// between the two integrated distribution functions, multiplied by the 
+// normalizing factor (rdmax*sqrt(na*nb/(na+nb)).
+//
+//  Code adapted by Rene Brun from CERNLIB routine TKOLMO (Fred James)
+//   (W.T. Eadie, D. Drijard, F.E. James, M. Roos and B. Sadoulet, 
+//      Statistical Methods in Experimental Physics, (North-Holland, 
+//      Amsterdam 1971) 269-271) 
+//
+//  NOTE1
+//  A good description of the Kolmogorov test can be seen at:
+//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm 
+
+   TString opt = option;
+   opt.ToUpper();
+
+   Double_t prob = -1;
+//      Require at least two points in each graph
+   if (!a || !b || na <= 2 || nb <= 2) {
+      Error("KolmogorovTest","Sets must have more than 2 points");
+      return prob;
+   }
+//     Constants needed
+   Double_t rna = na;
+   Double_t rnb = nb;
+   Double_t sa  = 1./rna;
+   Double_t sb  = 1./rnb;
+   Double_t rdiff;
+   Int_t ia,ib;
+//     Starting values for main loop
+   if (a[0] < b[0]) {
+      rdiff = -sa;
+      ia = 2;
+      ib = 1;
+   } else {
+      rdiff = sb;
+      ib = 2;
+      ia = 1;
+   }
+   Double_t rdmax = TMath::Abs(rdiff);
+
+//    Main loop over point sets to find max distance
+//    rdiff is the running difference, and rdmax the max.
+   Bool_t ok = kFALSE;
+   for (Int_t i=0;i<na+nb;i++) {
+      if (a[ia-1] < b[ib-1]) {
+         rdiff -= sa;
+         ia++;
+         if (ia > na) {ok = kTRUE; break;}
+      } else {
+         rdiff += sb;
+         ib++;
+         if (ib > nb) {ok = kTRUE; break;}
+      }
+      rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
+   }
+//    Should never terminate this loop with ok = kFALSE!
+
+   if (ok) {
+      rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
+      Double_t z = rdmax * TMath::Sqrt(rna*rnb/(rna+rnb));
+      prob = TMath::KolmogorovProb(z);
+   }
+      // debug printout
+   if (opt.Contains("D")) {
+      printf(" Kolmogorov Probability = %g, Max Dist = %g\n",prob,rdmax);
+   }
+   if(opt.Contains("M")) return rdmax;
+   else                  return prob;
+}
+
 
 //______________________________________________________________________________
 Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)

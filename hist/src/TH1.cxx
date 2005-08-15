@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.246 2005/08/11 09:38:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.247 2005/08/11 19:35:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5424,11 +5424,39 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //  see also alternative function TH1::Chi2Test
 //  The Kolmogorov test is assumed to give better results than Chi2Test
 //  in case of histograms with low statistics.
+//
+//  NOTE3 (Jan Conrad, Fred James)
+//  "The returned value PROB is calculated such that it will be
+//  uniformly distributed between zero and one for compatible histograms,
+//  provided the data are not binned (or the number of bins is very large
+//  compared with the number of events). Users who have access to unbinned
+//  data and wish exact confidence levels should therefore not put their data
+//  into histograms, but should call directly TMath::KolmogorovTest. On
+//  the other hand, since TH1 is a convenient way of collecting data and
+//  saving space, this function has been provided. However, the values of
+//  PROB for binned data will be shifted slightly higher than expected,
+//  depending on the effects of the binning. For example, when comparing two
+//  uniform distributions of 500 events in 100 bins, the values of PROB,
+//  instead of being exactly uniformly distributed between zero and one, have
+//  a mean value of about 0.56. We can apply a useful
+//  rule: As long as the bin width is small compared with any significant
+//  physical effect (for example the experimental resolution) then the binning
+//  cannot have an important effect. Therefore, we believe that for all
+//  practical purposes, the probability value PROB is calculated correctly
+//  provided the user is aware that:  
+//     1. The value of PROB should not be expected to have exactly the correct
+//  distribution for binned data.
+//     2. The user is responsible for seeing to it that the bin widths are
+//  small compared with any physical phenomena of interest.
+//     3. The effect of binning (if any) is always to make the value of PROB
+//  slightly too big. That is, setting an acceptance criterion of (PROB>0.05
+//  will assure that at most 5% of truly compatible histograms are rejected,
+//  and usually somewhat less."
 
    TString opt = option;
    opt.ToUpper();
 
-   Double_t prb = 0;
+   Double_t prob = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
    TAxis *axis1 = h1->GetXaxis();
@@ -5543,19 +5571,19 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    else if (afunc2) z = dfmax*TMath::Sqrt(esum1);
    else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
 
-   prb = TMath::KolmogorovProb(z);
+   prob = TMath::KolmogorovProb(z);
 
    if (opt.Contains("N")) {
       // Combine probabilities for shape and normalization,
-      prb1 = prb;
+      prb1 = prob;
       Double_t resum1 = esum1;  if (afunc1) resum1 = 0;
       Double_t resum2 = esum2;  if (afunc2) resum2 = 0;
       Double_t d12    = esum1-esum2;
       Double_t chi2   = d12*d12/(resum1+resum2);
       prb2 = TMath::Prob(chi2,1);
       // see Eadie et al., section 11.6.2
-      if (prb > 0 && prb2 > 0) prb *= prb2*(1-TMath::Log(prb*prb2));
-      else                     prb = 0;
+      if (prob > 0 && prb2 > 0) prob *= prb2*(1-TMath::Log(prob*prb2));
+      else                      prob = 0;
    }
       // X option. Pseudo-experiments post-processor to determine KS probability
    const Int_t NEXPT = 1000;
@@ -5580,13 +5608,13 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
       // debug printout
    if (opt.Contains("D")) {
-     printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
-      printf(" Kolmo Probabil = %g, Max Dist = %g\n",prb,dfmax);
+      printf(" Kolmo Prob     = %g, Max Dist = %g\n",prob,dfmax);
       if (opt.Contains("N"))
-      printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+      printf(" Kolmo Prob     = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
       if (opt.Contains("X"))
-      printf(" Kolmo Probabil = %f with %d pseudo-experiments\n",prb3,NEXPT);
+      printf(" Kolmo Prob     = %f with %d pseudo-experiments\n",prb3,NEXPT);
    }
       // This numerical error condition should never occur:
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
@@ -5594,7 +5622,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    if(opt.Contains("M"))      return dfmax;
    else if(opt.Contains("X")) return prb3;
-   else                       return prb;
+   else                       return prob;
 }
 
 //______________________________________________________________________________

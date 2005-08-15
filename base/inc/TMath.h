@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.62 2005/05/19 08:26:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.63 2005/06/13 13:21:04 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -358,6 +358,7 @@ namespace TMath {
           Double_t Gamma(Double_t a,Double_t x);
           Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
           Double_t KolmogorovProb(Double_t z);
+          Double_t KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Double_t *b, Option_t *option);
           Double_t LandauI(Double_t x); 
           Double_t LaplaceDist(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LaplaceDistI(Double_t x, Double_t alpha=0, Double_t beta=1);
