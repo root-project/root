@@ -5,7 +5,7 @@ version=$1 	; shift
 prefix=$1  	; shift
 sysconfdir=$1	; shift
 pkgdocdir=$1	; shift
-
+sovers=`echo $version | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 rm -f $outdir/*.install
 
 #
@@ -31,7 +31,8 @@ for d in * ; do
     # Deal with some special directories.  For each directory, check
     # if it's libraries and such should go into some special package. 
     # 
-    case $d in 							
+    case $d in 		
+	auth)       lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	base)       lib=libroot             ; dev=libroot-dev; bin=root-bin
 	            extra="ALLLIBS=/usr/lib/root/libCore.so" ;;  	
 	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
@@ -52,8 +53,9 @@ for d in * ; do
 	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
 	rootd|proofd) 
 	    	    lib=root-$d             ; dev=$lib       ; bin=$lib ;;
-	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib 
-	    	    extra="ALLLIBS= NOVERS=1" ;;  	
+	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib ;
+	            xrdlibs=
+	    	    extra="ALLLIBS= NOVERS=1" ;;     
 	build|freetype|win*|main) continue ;; 			
 	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
     esac 
@@ -62,7 +64,8 @@ for d in * ; do
     # Update package list for based on the Module.mk in thie currenly
     # investiaged directory 
     #
-    echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
+    # echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
+    echo "Making list for $d"
     build/package/lib/makelist DIRS=$d DEV=$dev LIB=$lib BIN=$bin  \
 	VERSION=$version PREFIX=$prefix OUT=$outdir $extra  \
 	--no-print-directory all
@@ -79,6 +82,7 @@ for i in build/package/common/*.install.in ; do
     sed -e "s|@prefix@|${prefix}|g" 		\
 	-e "s|@sysconfdir@|${sysconfdir}|g"	\
 	-e "s|@pkgdocdir@|${pkgdocdir}|g"	\
+	-e "s|@version@|${sovers}|g"		\
 	< $i > $b.tmp
     if test -f $b.install ; then 
 	cat $b.tmp $b.install > $b.tmp2

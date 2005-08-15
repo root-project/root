@@ -1,3 +1,4 @@
+@sysconfdir@/root/system.rootrc
 @prefix@/share/root/macros/Dialogs.C
 @prefix@/share/root/icons/
 @prefix@/bin/ssh2rpd

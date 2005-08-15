@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.8 2005/03/24 17:14:30 rdm Exp $
+# $Id: makerpmspec.sh,v 1.9 2005/07/14 13:42:31 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -30,7 +30,7 @@ dpkglist="`echo $pkglist | sed -e 's/ *ttf-root[-a-z]* *//g' -e 's/ /, /g'`, roo
 
 # ROOT version 
 version=`cat build/version_number | tr '/' '.'`
-
+major=`echo $version | sed 's/\([[:digit:]]*\)\.[[:digit:]]*\.([[:digit:]]/\1/'`
 ### echo %%% make sure we've got a fresh file 
 rm -f root.spec
 
@@ -43,13 +43,18 @@ sed -e "s/@version@/${version}/" \
 # Write out sub-package information 
 for p in $pkglist ; do 
     if test "x$p" = "xttf-root-installer" ; then continue ; fi
-    echo "Adding package $p to spec file"
+    if test "x$p" = "xlibroot" ; then 
+	pp="$p$major"
+    else
+	pp=$p
+    fi
+    echo "Adding package $p ($pp) to spec file"
     short=`sed -n 's/Description: //p' < build/package/common/$p.control`
     long=`sed -n -e 's/^ \./ /' -e 's/^ //p' < build/package/common/$p.control`
     cat >> root.spec <<-EOF
 	# -----------------------------------------------
-	# Package $p
-	%package -n $p
+	# Package $pp
+	%package -n $pp
 	Summary: $short
 	Group: Applications/Physics
 	EOF
@@ -62,11 +67,13 @@ for p in $pkglist ; do
 	    ;;
 	*minuit|*fumili)
 	    echo "Provides: root-fitter"			>> root.spec
+	libroot)
+	    echo "Provides: libroot"				>> root.spec
 	    ;;
     esac
     case $p in 
 	root-bin) 
-	    echo "Requires: root-fitter, libroot-dev" 		>> root.spec 
+	    echo "Requires: root-fitter"   		        >> root.spec 
 	    ;;
 	libroot) 
 	    echo "Requires: root-ttf"				>> root.spec 
@@ -76,10 +83,10 @@ for p in $pkglist ; do
 	    ;; 
     esac
     cat >> root.spec <<-EOF
-	%description -n $p
+	%description -n $pp
 	$long
 
-	%files -n $p -f rpm/$p.install
+	%files -n $pp -f rpm/$p.install
 	%defattr(-,root,root)
 
 	EOF

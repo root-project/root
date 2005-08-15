@@ -1,8 +1,11 @@
 root (5.03.01) unstable; urgency=low
 
   * New upstream version
+  * Make links in /usr/lib/root/<version> to shared libraries, so that
+    we can have many versions of the libraries installed, and we do not
+    need libroot-dev
 
- -- Christian Holm Christensen <cholm@cholm>  Wed,  6 Jul 2005 12:28:25 +0200
+ -- Christian Holm Christensen <cholm@cholm>  Mon, 15 Aug 2005 00:46:18 +0200
 
 root (5.01.01-1) unstable; urgency=low
 

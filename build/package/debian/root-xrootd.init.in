@@ -60,7 +60,7 @@ fi
 if test "x$XROOTD_USER" = "xroot" ; then 
     :
 elif test "x$XROOTD_USER" != "x" ; then 
-    USER=XROOTD_USER
+    USER=$XROOTD_USER
 fi
 
 case $enable_rootd:$enable_olbd in 
@@ -69,30 +69,45 @@ case $enable_rootd:$enable_olbd in
     *) exit 0;;
 esac
 
-set -e
 
 startitx ()
 {
     start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
 	--pidfile /var/run/$XNAME.pid --exec $XDAEMON \
 	--background -- $XDAEMON_OPTS
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 startito ()
 {
     start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
 	--pidfile /var/run/$XNAME.pid --exec $ODAEMON \
 	---background - $ODAEMON_OPTS
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 
 stopitx() 
 {
     start-stop-daemon --user $USER --stop --quiet --pidfile \
 	/var/run/$XNAME.pid --exec $XDAEMON 
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 stopito()
 {
     start-stop-daemon --user $USER --stop --quiet --pidfile \
 	/var/run/$ONAME.pid --exec $ODAEMON 
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 case "$1" in
   start)

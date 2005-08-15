@@ -53,17 +53,23 @@ case `echo $ENABLE_PROOFD | tr '[:upper:]' '[:lower:]'` in
     *) exit 0;;
 esac
 
-set -e
-
 startit ()
 {
     start-stop-daemon --make-pidfile --start --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS $PROOF_DIR
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 stopit ()
 {
     start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON $REDIR
+    if test $? -ne 0 ; then 
+	echo "Failed" 
+	exit 1
+    fi
 }
 
 case "$1" in

@@ -7,7 +7,9 @@ set -e
 
 case "$1" in
     remove)
-	update-inetd --remove rootd
+	if grep ^rootd /etc/inetd.conf > /dev/null 2>&1 ; then
+	  update-inetd --remove rootd
+	fi
 	;;
     upgrade|deconfigure)
 	# Nothing to be done here 

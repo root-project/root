@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 #
 # skeleton	Written by Miquel van Smoorenburg <miquels@cistron.nl>.
 #		Modified for Debian 
@@ -22,10 +22,10 @@ fi
 if test ! "x$ROOTD_USER" = "x" ; then 
     USER=$ROOTD_USER
 fi
-if test "x$ROOTD_PORT" = "x" ; then 
+if test ! "x$ROOTD_PORT" = "x" ; then 
     DAEMON_OPTS="-p $ROOTD_PORT"
 fi
-if test "x$SSH_PORT" = "x" ; then 
+if test ! "x$SSH_PORT" = "x" ; then 
     DAEMON_OPTS="-s $SSH_PORT"
 fi
 
@@ -64,14 +64,17 @@ case `echo $ENABLE_ROOTD | tr '[:upper:]' '[:lower:]'` in
     *) exit 0;;
 esac
 
-set -e
-
 	
 startit() 
 {
     o=`start-stop-daemon --chuid $USER --start --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS`
+    if test $? -ne 0 ; then 
+	echo "Failed: $o" 
+	exit 1
+    fi
     eval $o
+    echo " (pid: $ROOTD_PID) "
     echo $ROOTD_PID > /var/run/$NAME.pid
 }
 
@@ -79,6 +82,10 @@ stopit()
 {
     start-stop-daemon --user $USER --stop --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON
+    if test $? -ne 0 ; then 
+	echo "Failed: $o" 
+	exit 1
+    fi
     rm -f /var/run/$NAME.pid
 }
 

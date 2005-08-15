@@ -35,13 +35,16 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-afs					\
 		  --disable-srp					\
 		  --disable-builtin-freetype			\
-		  --disable-builtin-afterimage			\
-		  --with-globus=/opt/globus
+		  --disable-builtin-afterimage			
+#		  --with-globus=/opt/globus
 VERSION		= $(shell cat build/version_number | tr '/' '.')
-PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n 's/packages: //p')
+MAJOR   	= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
+MINOR   	= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+SOVERS		= $(MAJOR).$(MINOR)
+PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
 BUILDDEP	:= $(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))
 TEMPLATES	:= $(wildcard debian/*.in)
-SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer,$(PKGLIST))
+SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer libroot,$(PKGLIST)) libroot$(MAJOR)
 IPKGLIST	:= root-doc ttf-root ttf-root-installer root
 DPKGLIST	:= $(SPKGLIST:%=%,) root-doc, root-ttf
 #root-plugins root-extra-plugins
@@ -65,16 +68,17 @@ debian/%:debian/%.in
 
 debian/control:debian/control.in
 	@echo "Making $@ (special)"
-	@sed -e 's,@prefix@,$(PREFIX),g' \
-		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
-		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
-		-e 's/@builddepends@/$(BUILDDEP)/' \
-		-e 's/@pkglist@/$(DPKGLIST)/' < $< > $@.tmp
+	@cp $< $@.tmp
 	@for p in $(PKGLIST) ; do \
 	  if test -f build/package/common/$$p.control ; then \
 	    echo "Adding package $$p to control file" ; \
 	    cat build/package/common/$$p.control >> $@.tmp ; fi ; done 
-	@mv $@.tmp $@
+	@sed -e 's,@prefix@,$(PREFIX),g' \
+		-e 's,@libvers@,$(MAJOR),g' \
+		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
+		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
+		-e 's/@builddepends@/$(BUILDDEP)/' \
+		-e 's/@pkglist@/$(DPKGLIST)/' < $@.tmp > $@
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
@@ -86,6 +90,7 @@ config.status: configure
 		    --cintincdir=$(PREFIX)/lib/root/cint	\
 		    --etcdir=$(SYSCONFDIR)/root			\
 		    --with-sys-iconpath=$(PREFIX)/share/pixmaps	\
+		    --libdir=$(PREFIX)/lib/root/$(SOVERS)	\
 		    $(CONFOPTIONS)
 	touch configure-stamp
 
@@ -134,6 +139,9 @@ clean:  $(TEMPLATES:%.in=%)
 pkglists:
 	build/package/lib/makelists.sh debian \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
+	for i in debian/libroot.* ; do \
+	  cp $$i `echo $$i | sed 's/libroot\.\(.*\)/libroot$(MAJOR).\1/'` ; \
+	done 
 
 install: install-indep install-arch
 install-indep: 
@@ -149,6 +157,7 @@ install-indep:
 	dh_install $(IPKGOPTS) --sourcedir=debian/tmp
 
 install-arch: 
+	@echo $(SPKGLIST)
 	dh_testdir
 	dh_testroot
 	dh_clean -k -s -Xdebian/tmp
@@ -158,17 +167,33 @@ install-arch:
 	# debian/tmp.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 
-	 # Remove the CVS directories if present
+	# Make ROOT look in `/usr/lib/root/<version>' for loadable module 
+	# sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$(SOVER)|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
+	# mv tmp.systemrc debian/tmp/etc/root/system.rootrc
+
+	# Remove the CVS directories if present
 	find debian/tmp -name "CVS" | xargs rm -fr
 	find debian/tmp -name ".cvsignore" | xargs rm -fr
 
 	./debian/rules pkglists
+	# Make symlinks in `<prefix>/lib/root/<version>'
+	mkdir -p debian/tmp/usr/lib/root
+	(cd debian/tmp/usr/lib/root && \
+	  for i in $(SOVERS)/*.so.$(SOVERS) $(SOVERS)/libXrd*.so ; do \
+		ln -fs $$i . ; ln -fs $$i `basename $$i .$(SOVERS)` ; done)
 
 	dh_install --list-missing \
 		--sourcedir=debian/tmp $(SPKGOPTS) \
 		-Xetc/root/rootd \
 		-Xusr/include/root/config.h \
-		-Xusr/share/man/man1/rlibmap.1 
+		-Xusr/share/man/man1/rlibmap.1 \
+		-Xusr/lib/root/*/libAfterImage.a \
+		-Xusr/include/root/rootcint.pri \
+		-Xusr/include/root/rootcintrule.pri \
+		-Xusr/include/root/rootlibs.pri \
+		-Xusr/include/root/TQtWidget.cw \
+		-Xusr/share/root/fonts \
+		-Xusr/share/doc/root
 
 	# Fix some permissions 
 	find debian/root-bin/usr/share/root/icons \
@@ -177,8 +202,7 @@ install-arch:
 		-perm 755 -and -not -type d | xargs chmod a-x 
 	chmod a+x debian/root-cint/usr/lib/root/cint/lib/pthread/setup
 	chmod a+x debian/root-cint/usr/lib/root/cint/include/makehpib
-	-chmod a-x debian/root-plugin-python/usr/lib/root/ROOT.py
-
+	-chmod a-x debian/root-plugin-python/usr/lib/root/$(SOVERS)/ROOT.py
 
 	# This is for alternatives registration, if one want's to install
         # Richard Kreckels cint package next to ROOT

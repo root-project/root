@@ -7,7 +7,9 @@ set -e
 
 case "$1" in
     remove)
-	update-inetd --remove proofd
+	if grep ^proofd /etc/inetd.conf > /dev/null 2>&1 ; then
+	  update-inetd --remove proofd
+	fi
 	;;
     upgrade|deconfigure)
 	# Nothing to be done here 

@@ -1282,9 +1282,11 @@ if test ! "x$enable_pgsql" = "xno"; then
     # Check for PgSQL include and library
     check_header "libpq-fe.h" "$pgsqlincdir" $PGSQL $PGSQL/include \
 	/usr/include /usr/local/include /usr/local/pgsql/include \
-        /usr/include/pgsql /usr/include/postgresql /usr/pgsql/include \
+        /usr/include/pgsql /usr/include/postgresql \
+	/usr/include/postgresql/8.0 /usr/pgsql/include \
         /usr/local/include/pgsql /usr/local/include/postgresql \
-	/usr/pgsql /usr/local/pgsql /opt/pgsql /opt/pgsql/include
+	/usr/include/postgresql/8.0 /usr/pgsql /usr/local/pgsql \
+	/opt/pgsql /opt/pgsql/include
     pgsqlinc=$found_hdr
     pgsqlincdir=$found_dir
 

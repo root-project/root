@@ -8,6 +8,7 @@ MPATH   = $(PREFIX)/share/man/man1
 SOEXT	= so
 MAJOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
 MINOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+SOVER	= $(MAJOR).$(MINOR)
 
 ifneq ($(DIRS),)
 include $(foreach i, $(DIRS), $(i)/Module.mk)
@@ -24,12 +25,30 @@ endif
 all:	liblist devlist binlist
 
 ifneq ($(LIB),)
+ifneq ($(LIB),$(DEV))
+PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(MAJOR)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(SOVER)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
+	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR)) 
+DEVLIBS := $(ALLLIBS) 
+else
 ifneq ($(NOVERS),1)
-PKGLIBS	:= $(ALLLIBS) $(ALLLIBS:%.so=%.so.$(MAJOR)) \
-	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR))
+PKGLIBS	:= $(ALLLIBS) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(MAJOR)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(SOVER)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
+	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR)) 
 else 
-PKGLIBS	:= $(ALLLIBS) 
+ifeq ($(DIRS), xrootd)
+XRDLIBS := $(patsubst lib/%, $(LPATH)/%, $(wildcard lib/libXrd*.so))
+PKGLIBS	:= $(XRDLIBS) \
+	   $(XRDLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
+else
+PKGLIBS	:= $(ALLLIBS) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
+endif
 endif 
+endif
 liblist:
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
 else
@@ -37,7 +56,7 @@ liblist:
 endif
 
 ifneq ($(DEV),)
-PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) 
+PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) $(DEVLIBS)
 devlist:
 	@for f in $(filter-out %.cw %.pri, $(PKGHDRS))  ; do echo $$f ; done >> $(OUT)/$(DEV).install
 else

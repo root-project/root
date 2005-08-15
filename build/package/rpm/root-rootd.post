@@ -3,29 +3,29 @@
 #
 # Add INETD line to configuration file, if not already present 
 #
-if test -f /etc/inetd.conf ; then 
-  if ! grep -qs ^rootd /etc/inetd.conf ; then 
-    echo 'rootd stream tcp nowait root %{_prefix}/bin/rootd rootd -i' \
-      >> /etc/inetd.conf
-  fi
-fi
+# if test -f /etc/inetd.conf ; then 
+#   if ! grep -qs ^rootd /etc/inetd.conf ; then 
+#     echo 'rootd stream tcp nowait root %{_prefix}/bin/rootd rootd -i' \
+#       >> /etc/inetd.conf
+#   fi
+# fi
 #
 # Add a file to /etc/xinet.d if it exists
 #
-if test -d /etc/xinetd.d ; then 
-    rm -f /etc/xinetd.d/rootd 
-    cat > /etc/xinetd.d/rootd <<EOF 
-service rootd 
-{
-	disable		= no
-	flags		= REUSE
-	socket_type	= stream
-	wait		= no
-	user		= root
-	server		= %_prefix/bin/rootd
-	server_args	= -i
-}
-EOF
+# if test -d /etc/xinetd.d ; then 
+#     rm -f /etc/xinetd.d/rootd 
+#     cat > /etc/xinetd.d/rootd <<EOF 
+# service rootd 
+# {
+# 	disable		= no
+# 	flags		= REUSE
+# 	socket_type	= stream
+# 	wait		= no
+# 	user		= root
+# 	server		= %_prefix/bin/rootd
+# 	server_args	= -i
+# }
+# EOF
 fi
 #
 # Install lines in /etc/services 

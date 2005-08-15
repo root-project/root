@@ -94,6 +94,14 @@ make cintdlls
 rm -rf ${RPM_BUILD_ROOT}
 make install DESTDIR=${RPM_BUILD_ROOT}
 find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
+sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
+mkdir -p ${RPM_BUILD_ROOT}/usr/lib/root
+(cd ${RPM_BUILD_ROOT}/usr/lib/root && \ 
+    for i in ${sovers}/*.so.${sovers} ${sovers}/libXrd*.so ; do  \
+	ln -sf $$i . ; \
+        ln -sf $$i `basename $$i .${sovers}` ; done) 
+#sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$sover|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
+#	mv tmp.systemrc debian/tmp/etc/root/system.rootrc
 mkdir -p rpm
 mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
 sed -e "s,/usr/local,%_prefix,g" \
