@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.89 2005/05/31 19:47:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.90 2005/06/08 21:19:36 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -779,9 +779,9 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(fReadBasket);
    if (!basket) {
       basket = GetBasket(fReadBasket);
-      basket->PrepareBasket(entry);
       if (!basket) return -1;
    }
+   basket->PrepareBasket(entry);
    TBuffer *buf    = basket->GetBufferRef();
 //     This test necessary to read very old Root files (NvE)
    if (!buf) {
