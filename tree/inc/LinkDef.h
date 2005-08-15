@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.28 2005/05/12 12:15:24 rdm Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.29 2005/07/09 04:03:23 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,9 @@
 #pragma link C++ class TBranchElement-;
 #pragma link C++ class TBranchObject-;
 #pragma link C++ class TBranchRef+;
+#pragma link C++ class TTreeSQL+;
+#pragma link C++ class TBufferSQL+;
+#pragma link C++ class TBasketSQL+;
 #pragma link C++ class TChain-;
 #pragma link C++ class TChainElement;
 #pragma link C++ class TCut+;
