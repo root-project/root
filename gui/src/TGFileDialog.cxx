@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.20 2005/01/21 18:38:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.21 2005/02/18 09:26:54 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -422,8 +422,25 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
                         fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      } else {
+                        if (!strcmp(fOk->GetTitle(), "Save") && 
+                            (!(fOverWR->GetState() == kButtonDown))) {
+                           
+                           Int_t ret;
+                           txt = Form("File name %s already exists, OK to overwrite it?",
+                                      fTbfname->GetString());
+                           new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                                        "File Name Exist", txt, kMBIconExclamation,
+                                        kMBYes | kMBNo, &ret);
+                           if (ret == kMBNo)
+                              return kTRUE;
+                        }
                         fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                        fTbfname->GetString());
+                        if (fOverWR && (fOverWR->GetState() == kButtonDown))
+                           fFileInfo->fOverwrite = kTRUE;
+                        else
+                           fFileInfo->fOverwrite = kFALSE;
+
                         DeleteWindow();
                      }
                   }
