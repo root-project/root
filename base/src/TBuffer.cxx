@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.81 2005/04/20 07:17:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.82 2005/07/05 15:23:00 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1336,6 +1336,34 @@ void TBuffer::ReadFastArray(Char_t *c, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::ReadFastArrayString(Char_t *c, Int_t n)
+{
+   // Read array of n characters from the I/O buffer.
+
+   Int_t len;
+   UChar_t lenchar;
+   *this >> lenchar;
+   if (lenchar < 255) {
+      len = lenchar;
+   } else {
+      *this >> len;
+   }
+   if (len) {
+      if (len >= n) len = n-1;
+
+      if (n <= 0 || n > fBufSize) return;
+
+      Int_t l = sizeof(Char_t)*n;
+      memcpy(c, fBufCur, l);
+      fBufCur += l;
+
+      c[len] = 0;
+   } else {
+      c[0] = 0;
+   }
+}
+
+//______________________________________________________________________________
 void TBuffer::ReadFastArray(Short_t *h, Int_t n)
 {
    // Read array of n shorts from the I/O buffer.
@@ -1800,6 +1828,27 @@ void TBuffer::WriteFastArray(const Bool_t *b, Int_t n)
 void TBuffer::WriteFastArray(const Char_t *c, Int_t n)
 {
    // Write array of n characters into the I/O buffer.
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(Char_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   memcpy(fBufCur, c, l);
+   fBufCur += l;
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteFastArrayString(const Char_t *c, Int_t n)
+{
+   // Write array of n characters into the I/O buffer.
+
+   if (n < 255) {
+      *this << (UChar_t)n;
+   } else {
+      *this << (UChar_t)255;
+      *this << n;
+   }
 
    if (n <= 0) return;
 
