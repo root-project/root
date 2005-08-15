@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.12 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.13 2005/08/12 07:38:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -29,6 +29,10 @@
 
 #include "TColor.h"
 #include "TError.h"
+
+// For event type translation ExecuteEvent
+#include "Buttons.h"
+#include "GuiTypes.h"
 
 // Remove - replace with TGLManager
 #include "TVirtualGL.h"
@@ -1102,11 +1106,17 @@ void TGLViewer::SelectionChanged()
 }
 
 //______________________________________________________________________________
-void TGLViewer::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-   // Translate the event types defined in EEventType (base/inc/Buttons.h)
-   // to Event_t structure (base/inc/GuiTypes.h)
+   // Can't track the indvidual objects in rollover. Just set the viewer as the
+   // selected object, and return 0 (object identified) so we receive ExecuteEvent calls
+   gPad->SetSelected(this);
+   return 0;
+}
 
+//______________________________________________________________________________
+void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
    /*enum EEventType {
    kNoEvent       =  0,
    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
@@ -1114,18 +1124,70 @@ void TGLViewer::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
    kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24,
    kButton1Locate = 41, kButton2Locate = 42, kButton3Locate = 43,
    kMouseMotion   = 51, kMouseEnter    = 52, kMouseLeave    = 53,
-   kButton1Double = 61, kButton2Double = 62, kButton3Double = 63*/
+   kButton1Double = 61, kButton2Double = 62, kButton3Double = 63
    
-   //Event_t eventSt;
-   /*Bool_t HandleEvent(Event_t *ev);
-   Bool_t HandleButton(Event_t *ev);
-   Bool_t HandleDoubleClick(Event_t *ev);
-   Bool_t HandleConfigureNotify(Event_t *ev);
-   Bool_t HandleKey(Event_t *ev);
-   Bool_t HandleMotion(Event_t *ev);
-   Bool_t HandleExpose(Event_t *ev);*/
+   enum EGEventType {
+   kGKeyPress, kKeyRelease, kButtonPress, kButtonRelease,
+   kMotionNotify, kEnterNotify, kLeaveNotify, kFocusIn, kFocusOut,
+   kExpose, kConfigureNotify, kMapNotify, kUnmapNotify, kDestroyNotify,
+   kClientMessage, kSelectionClear, kSelectionRequest, kSelectionNotify,
+   kColormapNotify, kButtonDoubleClick, kOtherEvent*/
 
-   //TODO!
+   // Map our event EEventType (base/inc/Buttons.h) back to Event_t (base/inc/GuiTypes.h)
+   // structure, and call appropriate HandleXXX() function 
+   Event_t eventSt;
+   eventSt.fX = px;
+   eventSt.fY = py;
+
+   switch (event) {
+      case kButton1Down:
+      case kButton1Up:
+      {
+         eventSt.fCode = kButton1;
+         eventSt.fType = kButton1Down ? kButtonPress:kButtonRelease;
+         HandleButton(&eventSt);
+      }
+      case kButton2Down:
+      case kButton2Up:
+      {
+         eventSt.fCode = kButton2;
+         eventSt.fType = kButton2Down ? kButtonPress:kButtonRelease;
+         HandleButton(&eventSt);
+      }
+      case kButton3Down:
+      case kButton3Up:
+      {
+         eventSt.fCode = kButton3;
+         eventSt.fType = kButton3Down ? kButtonPress:kButtonRelease;
+         HandleButton(&eventSt);
+      }
+      case kButton1Double:
+      case kButton2Double:
+      case kButton3Double:
+      {
+         eventSt.fCode = kButton1Double ? kButton1 : kButton2Double ? kButton2 : kButton3;
+         eventSt.fType = kButtonDoubleClick;
+         HandleDoubleClick(&eventSt);
+      }
+      case kButton1Motion:
+      case kButton2Motion:
+      case kButton3Motion:
+      {
+         eventSt.fCode = kButton1Motion ? kButton1 : kButton2Motion ? kButton2 : kButton3;
+         eventSt.fType = kMotionNotify;
+         HandleMotion(&eventSt);
+      }
+      case kKeyPress: // We only care about full key 'presses' not individual down/up
+      {
+         eventSt.fType = kKeyRelease;
+         eventSt.fCode = px; // px contains key code - need modifiers from somewhere
+         HandleKey(&eventSt);
+      }
+      default: 
+      {
+         assert(kFALSE);
+      }
+   }
 };
 
 //______________________________________________________________________________

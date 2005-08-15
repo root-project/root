@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.8 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.9 2005/08/12 07:38:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -168,6 +168,7 @@ public:
    virtual ~TGLViewer();
 
    // TVirtualViewer3D interface
+   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Bool_t PreferLocalFrame() const;
    virtual void   BeginScene();
