@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.260 2005/08/03 21:19:38 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.261 2005/08/04 20:10:06 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4256,6 +4256,7 @@ void TTree::Reset(Option_t *option)
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       branch->Reset(option);
    }
+   if (fBranchRef) fBranchRef->Reset();
 }
 
 //______________________________________________________________________________
