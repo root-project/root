@@ -43,7 +43,8 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    TTree(table.Data(), "Database read from table: " + table, 0), fDB(DB),
    fTable(table.Data()),
    fResult(0), fRow(0),
-   fServer(server)
+   fServer(server),
+   fBranchChecked(kFALSE)
 {
    // Constructor with an explicit TSQLServer
 
@@ -210,7 +211,7 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
       str += "__";
       str += leafName;
 
-      for (int i; i< rs->GetFieldCount(); ++i) {
+      for (int i=0; i< rs->GetFieldCount(); ++i) {
          if (strcmp(rs->GetFieldName(i), str.Data()) == 0) return kTRUE;
       }
       // We assume that if ONE of the leaf is in the table, then ALL the leaf are in
@@ -525,11 +526,14 @@ Int_t TTreeSQL::Fill()
       CheckBasket(branch);
    }
 
-   for(int i=0;i<nb;i++) {
-      branch = (TBranch*)fBranches.UncheckedAt(i);
-      if(!CheckBranch(branch)) {
-         Error("Fill","CheckBranch for %s failed",branch->GetName());
+   if (!fBranchChecked) {
+      for(int i=0;i<nb;i++) {
+         branch = (TBranch*)fBranches.UncheckedAt(i);
+         if (!CheckBranch(branch)) {
+            Error("Fill","CheckBranch for %s failed",branch->GetName());
+         }
       }
+      fBranchChecked = kTRUE;
    }
    ResetQuery();
    

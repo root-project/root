@@ -51,6 +51,7 @@ protected:
    TSQLResult            *fResult;
    TSQLRow               *fRow;
    TSQLServer            *fServer;
+   Bool_t                 fBranchChecked;
 
            void           CheckBasket(TBranch * tb);
            Bool_t         CheckBranch(TBranch * tb);
