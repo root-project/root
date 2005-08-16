@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.16 2005/08/12 07:38:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -91,7 +91,7 @@ UInt_t TGLScene::DestroyLogicals()
 {
    UInt_t count = 0;
    if (fLock != kModifyLock) {
-      Error("TGLScene::DestroyAllLogicals", "expected ModifyLock");
+      Error("TGLScene::DestroyLogicals", "expected ModifyLock");
       return count;
    }
 
@@ -279,6 +279,7 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    // Step 1: Loop through the main sorted draw list 
    Bool_t                   run = kTRUE;
    const TGLPhysicalShape * drawShape;
+   Bool_t                   doSelected = (fSelectedPhysical != 0);
 
    // Transparent list built on fly
    static DrawList_t transDrawList;
@@ -298,6 +299,12 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
       {
          assert(kFALSE);
          continue;
+      }
+
+      // Selected physical should always be drawn once only if visible, 
+      // regardless of timeout object drop outs
+      if (drawShape == fSelectedPhysical) {
+         doSelected = kFALSE;
       }
 
       // TODO: Do small skipping first? Probably cheaper than frustum check
@@ -342,9 +349,9 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
       }
    }
 
-   // Step 2: Deal with selected physical
-   if (fSelectedPhysical) {
-      // Draw now if non-transparent (may already have been done)
+   // Step 2: Deal with selected physical in case skipped by timeout of above loop
+   if (doSelected) {
+      // Draw now if non-transparent
       if (!fSelectedPhysical->IsTransparent()) {
          UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
          (fSelectedPhysical->*drawPtr)(shapeLOD);
@@ -355,10 +362,8 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
             UpdateDrawStats(fSelectedPhysical);
          }
       } else {
-         // Ensure transparent selected physical will get drawn once only
-         if (count(transDrawList.begin(), transDrawList.end(), fSelectedPhysical) == 0) {
-            transDrawList.push_back(fSelectedPhysical);
-         }
+         // Add to transparent drawlist
+         transDrawList.push_back(fSelectedPhysical);
       }
    }
 
@@ -483,7 +488,7 @@ Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const T
 void TGLScene::DrawAxes() const
 {
    if (fLock != kDrawLock && fLock != kSelectLock) {
-      Error("TGLScene::Draw", "expected Draw or Select Lock");
+      Error("TGLScene::DrawAxes", "expected Draw or Select Lock");
    }
    // Draw out the scene axes
    // Taken directly from TGLRender by Timur Pocheptsov
@@ -548,7 +553,7 @@ void TGLScene::DrawAxes() const
 void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const
 {
    if (fLock != kDrawLock && fLock != kSelectLock) {
-      Error("TGLScene::Draw", "expected Draw or Select Lock");
+      Error("TGLScene::DrawNumber", "expected Draw or Select Lock");
    }
    static const UChar_t
       digits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
@@ -616,7 +621,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
 {
    Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
-      Error("TGLScene::Draw", "expected SelectLock");
+      Error("TGLScene::Select", "expected SelectLock");
    }
 
    // Create the select buffer. This will work as we have a flat set of physical shapes.
