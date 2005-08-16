@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.26 2004/07/15 23:46:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.27 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -78,6 +78,7 @@ class TTimer;
 class TGMenuEntry : public TObject {
 
 friend class TGPopupMenu;
+friend class TGMenuBar;
 
 protected:
    Int_t             fEntryId;   // the entry id (used for event processing)

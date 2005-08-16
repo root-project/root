@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.52 2005/08/10 14:21:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.53 2005/08/10 16:47:46 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -410,7 +410,6 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
                                    kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
-      fKeyNavigate = kFALSE;
    }
 
    if (event->fType == kButtonRelease) {
@@ -429,8 +428,10 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
       if (fCurrent != 0) {
          target   = fCurrent; // tricky, because WaitFor
          fCurrent = 0;
-         target->DoSendMessage();
+         if (!fKeyNavigate)
+            target->DoSendMessage();
       }
+      fKeyNavigate = kFALSE;
    }
 
    return kTRUE;
@@ -444,6 +445,8 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
    TGMenuTitle *target = 0;
    TGFrameElement *el;
    void *dummy;
+   Int_t    ax, ay;
+   Window_t wdummy;
    TIter next(fList);
 
    if (event->fType == kGKeyPress) {
@@ -457,6 +460,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             target = (TGMenuTitle *) el->fFrame;
             if ((Int_t)event->fCode == target->GetHotKeyCode()) {
                RequestFocus();
+               fKeyNavigate = kTRUE;
                break;
             }
          }
@@ -499,6 +503,13 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   fCurrent = 0;
                   return menu->HandleButton(&ev);
                }
+               else {
+                  gVirtualX->TranslateCoordinates(menu->fId,
+                                 (ce->fPopup->GetParent())->GetId(),
+                                  ce->fEx+menu->fMenuWidth, ce->fEy,
+                                  ax, ay, wdummy);
+                  ce->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
+               }
             }
 
             ce = menu->GetCurrent();
@@ -512,7 +523,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             }
             switch ((EKeySym)keysym) {
                case kKey_Left:
-                  if (submenu) {
+                  if ((submenu) && (submenu->fPoppedUp)) {
                      submenu->EndMenu(dummy);
                      break;
                   }
@@ -521,10 +532,20 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   break;
                case kKey_Right:
                   if (submenu) {
-                     if (!submenu->GetCurrent()) {
-                        ce = (TGMenuEntry*)submenu->GetListOfEntries()->First();
-                     } else {
-                        submenu->EndMenu(dummy);
+                     if (submenu->fPoppedUp) {
+                        if (!submenu->GetCurrent()) {
+                           ce = (TGMenuEntry*)submenu->GetListOfEntries()->First();
+                        } else {
+                           submenu->EndMenu(dummy);
+                        }
+                     }
+                     else {
+                        gVirtualX->TranslateCoordinates(menu->fId,
+                                       (submenu->GetParent())->GetId(),
+                                       ce->fEx+menu->fMenuWidth, ce->fEy,
+                                       ax, ay, wdummy);
+
+                        submenu->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
                      }
                      break;
                   }
@@ -592,6 +613,19 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                    kPointerMotionMask, kNone, fDefaultCursor);
+
+            TGMenuEntry *ptr;
+            TIter nexte(target->GetMenu()->GetListOfEntries());
+
+            while ((ptr = (TGMenuEntry *) nexte())) {
+               if ((ptr->GetStatus() & kMenuEnableMask) &&
+                  !(ptr->GetStatus() & kMenuHideMask) &&
+                   (ptr->GetType() != kMenuSeparator) &&
+                   (ptr->GetType() != kMenuLabel)) break;
+            }
+            if (ptr)
+               target->GetMenu()->Activate(ptr);
+
             return kTRUE;
          }
       } else {
@@ -1049,6 +1083,7 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
    } else {
       Activate((TGMenuEntry*)0);
    }
+   if (fMenuBar) fMenuBar->fKeyNavigate = kFALSE;
 
    return kTRUE;
 }
