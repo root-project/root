@@ -82,6 +82,7 @@ void GTitleFrame::ChangeRightLogo(Int_t frame)
     sprintf(name,"%02d.xpm",frame);
     theRightLogoFilename.Append("/anim/anim");
     theRightLogoFilename.Append(name);
+    gClient->FreePicture(fRightIconPicture);
     fRightIconPicture = (TGPicture *)gClient->GetPicture(theRightLogoFilename);
     fRightIcon->SetPicture(fRightIconPicture);
 }
@@ -90,14 +91,13 @@ void GTitleFrame::ChangeRightLogo(Int_t frame)
 GTitleFrame::~GTitleFrame()
 {
     // Destroy GTitleFrame object. Delete all created widgets
+    gClient->FreePicture(fLeftIconPicture);
+    gClient->FreePicture(fRightIconPicture);
     delete fTextLabel1;
-
     delete fTextLabel2;
-
     delete fTextFrame;
     delete fTextLabelLayout;
     delete fTextFrameLayout;
-
     delete fLeftLogoLayout;
     delete fRightLogoLayout;
 }
