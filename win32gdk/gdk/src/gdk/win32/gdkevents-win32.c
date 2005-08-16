@@ -529,6 +529,10 @@ gdk_pointer_grab(GdkWindow * window,
          DestroyCursor (p_grab_cursor);
       }
       p_grab_cursor = CopyCursor(xcursor);
+      if(p_grab_cursor) {
+         SetCursor(p_grab_cursor);
+         ShowCursor(TRUE);
+      }
    }
 
    return return_val;
