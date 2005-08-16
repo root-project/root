@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.158 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.159 2005/08/02 16:43:21 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1780,6 +1780,7 @@ void TROOT::Reset(Option_t *option)
    // This function is typically used at the beginning (or end) of a macro
    // to clean the environment.
 
+   if (IsLineProcessing()) return;
    if (fInterpreter) {
       if (!strncmp(option, "a", 1)) {
          fInterpreter->Reset();
