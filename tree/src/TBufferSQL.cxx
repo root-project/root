@@ -34,8 +34,6 @@ TBufferSQL::TBufferSQL(EMode mode, vector<Int_t> *vc,
    TBuffer(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
-   int vc_size = (vc)?vc->size():0;
-
    fIter = fColumnVec->begin();
 }
 
@@ -45,8 +43,6 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
    TBuffer(mode,bufsiz), 
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
-   int vc_size = (vc)?vc->size():0;
-
    fIter = fColumnVec->begin();
 }
 
@@ -57,8 +53,6 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
    TBuffer(mode,bufsiz,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
-   int vc_size = (vc)?vc->size():0;
-
    fIter = fColumnVec->begin();
 }
 
@@ -357,7 +351,7 @@ void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
 }
 
 //________________________________________________________________________
-void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t n)
+void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
 {
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += c;
@@ -498,18 +492,6 @@ void TBufferSQL::ReadFastArray(Bool_t *b, Int_t n)
    }
 }
 
-/*
-//________________________________________________________________________
-void     TBufferSQL::ReadFastArray(Char_t    *c, Int_t n)
-{
-   if (n <= 0) return;
-   Int_t l = sizeof(Char_t)*n;
-   TString temp = (*fRowPtrs)->GetString(Collumn);
-   Int_t min = l < temp.Length() ? l : temp.Length();
-   memcpy(c,temp.Data(),min);
-}
-*/
-
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Char_t *c, Int_t n)
 {
@@ -520,7 +502,7 @@ void TBufferSQL::ReadFastArray(Char_t *c, Int_t n)
 }
 
 //________________________________________________________________________
-void TBufferSQL::ReadFastArrayString(Char_t *c, Int_t n)
+void TBufferSQL::ReadFastArrayString(Char_t *c, Int_t /* n */)
 {
    strcpy(c,((*fRowPtr)->GetField(*fIter)));
    ++fIter;
