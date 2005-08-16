@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.68 2005/08/11 09:38:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.1 2005/08/16 12:57:57 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -61,21 +61,29 @@ TMacro::TMacro(): TNamed()
 
 
 //______________________________________________________________________________
-TMacro::TMacro(const char*name, const char *title)
+TMacro::TMacro(const char *name, const char *title)
        :TNamed(name,title)
 {
    // create a macro with a name and a title.
    // if name is the name of a file, the macro is automatically filled
-   // by reading all the lines in the file. In thsi case, if the title
-   // is empty, it will be the name of teh file.
+   // by reading all the lines in the file. In this case, if the title
+   // is empty, it will be the name of the file.
    
    fLines = new TList();
-   const char *dot = strstr(name,".");
+   if (!name) return;
+   Int_t nch = strlen(name);
+   char *s = new char[nch+1];
+   strcpy(s,name);
+   char *dot   = (char*)strchr(s,'.');
+   char *slash = (char*)strrchr(s,'/');
    if (dot) {
-      fName.ReplaceAll(dot,"");
+      *dot = 0;
+      if (slash) fName = slash+1;
+      else       fName = s;
       if (fTitle.Length() == 0) fTitle = name;
       ReadFile(name);
    }
+   delete [] s;
 }
 
 //______________________________________________________________________________
@@ -125,19 +133,21 @@ void TMacro::Browse(TBrowser * /*b*/)
 void TMacro::Exec(const char *params)
 {
    // execute this macro with params
+   // if params is null, default parameters (set via SetParams)  are used
    
-   //the current implementation uses a file in /tmp
+   //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
    char fname[1000];
-   sprintf(fname,"/tmp/%s.C",GetName());
+   sprintf(fname,"%s.Cexec",GetName());
    SaveSource(fname);
    //disable a possible call to gROOT->Reset from the executed script
-   gROOT->SetLineIsProcessing();
+   gROOT->SetExecutingMacro(kTRUE);
    //execute script in /tmp
+   if (!params) params = fParams.Data();
    if (params) gROOT->ProcessLine(Form(".x %s(%s)",fname,params));
    else        gROOT->ProcessLine(Form(".x %s",fname));
    //enable gROOT->Reset
-   gROOT->SetLineHasBeenProcessed();
+   gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
    gSystem->Unlink(fname);
 }
@@ -243,4 +253,13 @@ void TMacro::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   macro->AddLine("<<quote<<s.Data()<<quote<<");"<<endl;
    }
    out<<"   macro->Draw("<<quote<<option<<quote<<");"<<endl;
+}
+     
+
+//______________________________________________________________________________
+void TMacro::SetParams(const char *params)
+{
+  //set default parameters to execute this macro
+   
+   if (params) fParams = params;
 }

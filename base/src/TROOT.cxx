@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.159 2005/08/02 16:43:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.160 2005/08/16 12:56:26 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -416,6 +416,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
    //fCleanups->Add(fInterpreter);
 
+   fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
    fReadingObject = kFALSE;
@@ -1780,7 +1781,7 @@ void TROOT::Reset(Option_t *option)
    // This function is typically used at the beginning (or end) of a macro
    // to clean the environment.
 
-   if (IsLineProcessing()) return;
+   if (IsExecutingMacro()) return;  //True when TMacro::Exec runs
    if (fInterpreter) {
       if (!strncmp(option, "a", 1)) {
          fInterpreter->Reset();

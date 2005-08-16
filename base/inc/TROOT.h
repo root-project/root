@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.47 2005/07/05 12:36:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.48 2005/07/18 16:20:52 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    Bool_t          fReadingObject;        //True while reading an object
    Bool_t          fForceStyle;           //Force setting of current style when reading objects
    Bool_t          fInterrupt;            //True if macro should be interrupted
+   Bool_t          fExecutingMacro;       //True while executing a TMacro
    Int_t           fEditorMode;           //Current Editor mode
    TObject         *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
@@ -205,6 +206,7 @@ public:
    void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
    Bool_t            IsFolder() const { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
@@ -230,6 +232,7 @@ public:
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
    void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }
    void              SetEditorMode(const char *mode = "");
+   void              SetExecutingMacro(Bool_t flag = kTRUE) { fExecutingMacro = flag; }
    void              SetFromPopUp(Bool_t flag = kTRUE) { fFromPopUp = flag; }
    void              SetInterrupt(Bool_t flag = kTRUE) { fInterrupt = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }

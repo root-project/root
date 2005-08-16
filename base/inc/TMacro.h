@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.68 2005/08/11 09:38:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.1 2005/08/16 12:57:57 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -35,6 +35,8 @@ class TMacro : public TNamed {
 
 protected:
     TList         *fLines;      //collection of lines
+    TString        fParams;     //default string of macro parameters
+    
 public:
 
     TMacro();
@@ -44,14 +46,15 @@ public:
     virtual TObjString  *AddLine(const char *text);
     virtual void         Browse(TBrowser *b);
     virtual TObjString  *GetLineWith(const char *text) const;
-    virtual void         Exec(const char *params="");  //*MENU*
+    virtual void         Exec(const char *params=0);  //*MENU*
     TList               *GetListOfLines() const {return fLines;}
     virtual void         Paint(Option_t *option="");
     virtual void         Print(Option_t *option="") const;
     virtual Int_t        ReadFile(const char *filename);
     virtual void         SaveSource(const char *filename);  //*MENU*
     virtual void         SavePrimitive(ofstream &out, Option_t *option);
-    
+    virtual void         SetParams(const char *params=0); //*MENU*
+        
     ClassDef(TMacro,1)  //class supporting a collection of lines with C++ code.
 };
 
