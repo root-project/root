@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.1 2005/08/16 12:57:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.2 2005/08/16 15:58:15 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -56,7 +56,8 @@ TMacro::TMacro(): TNamed()
 {
    // create an empty macro
    // use AddLine or ReadFile to fill this macro.
-   fLines = 0;
+   fLines  = 0;
+   fParams = "";
 }
 
 
@@ -69,7 +70,8 @@ TMacro::TMacro(const char *name, const char *title)
    // by reading all the lines in the file. In this case, if the title
    // is empty, it will be the name of the file.
    
-   fLines = new TList();
+   fLines  = new TList();
+   fParams = "";
    if (!name) return;
    Int_t nch = strlen(name);
    char *s = new char[nch+1];
@@ -144,8 +146,8 @@ void TMacro::Exec(const char *params)
    gROOT->SetExecutingMacro(kTRUE);
    //execute script in /tmp
    if (!params) params = fParams.Data();
-   if (params) gROOT->ProcessLine(Form(".x %s(%s)",fname,params));
-   else        gROOT->ProcessLine(Form(".x %s",fname));
+   if (strlen(params) > 0) gROOT->ProcessLine(Form(".x %s(%s)",fname,params));
+   else                    gROOT->ProcessLine(Form(".x %s",fname));
    //enable gROOT->Reset
    gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
