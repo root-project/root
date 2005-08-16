@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.92 2005/08/10 07:58:06 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.93 2005/08/10 14:00:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -246,7 +246,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 3) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
-      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
+      fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
    SetName(name);
@@ -306,7 +306,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    } else {
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
-      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
+      fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
    SetName(name);
@@ -371,7 +371,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    } else {                   //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
-      if (TestBit(kMenuBar)) fCanvasImp->ShowMenuBar(1);
+      fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
    SetName(name);
