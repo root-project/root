@@ -685,7 +685,7 @@ enable/disable options, prefix with either --enable- or --disable-
   python             Python ROOT bindings, requires python >= 2.1
   qt                 Qt graphics backend, requires libqt >= 3
   reflex             Build the libReflex dictionary library
-  rfio               CASTOR support, requires libshift from CASTOR
+  rfio               CASTOR support, requires libshift from CASTOR >= 2.0.0
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
@@ -735,7 +735,7 @@ with options, prefix with --with-, enables corresponding support
   ruby-libdir        Ruby support, location of libruby
   sapdb-incdir       SapDB support, location of sql.h
   sapdb-libdir       SapDB support, location of libsqlod
-  shift-incdir       CASTOR support, location of rfio_api.h
+  shift-incdir       CASTOR support, location of stager_api.h
   shift-libdir       CASTOR support, location of libshift
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
@@ -1387,29 +1387,17 @@ fi
 #
 # (See http://castor.web.cern.ch/castor/)
 #
-# Check for rfio_api.h and libshift.a
+# Check for stager_api.h and libshift.a
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
     # Check for RFIO include and library
-    check_header "rfio_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
+    check_header "stager_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
 	/cern/pro/include /cern/new/include /cern/old/include \
 	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
 	/usr/local/include/shift /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
-
-    if test ! "x$shiftincdir" = "x"; then
-        message "Checking whether rfio_fchmod declared in $shiftinc"
-        if `grep rfio_fchmod $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
-            echo "yes"
-        else
-            shiftincdir=""
-            shiftold="yes"
-            echo "no"
-            echo "### Found old version of libshift, please uprade to >=1.5.2"
-        fi
-    fi
 
     check_library "libshift shiftmd shift" "$enable_shared" "$shiftlibdir" \
 	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
@@ -1417,6 +1405,12 @@ if test ! "x$enable_rfio" = "xno" ; then
 	/usr/local/lib/shift /usr/lib /usr/local/lib
     shiftlib=$found_lib
     shiftlibdir=$found_dir
+
+    if test ! "x$shiftlib" = "x" && test "x$shiftincdir" = "x"; then
+         shiftlib=""
+         shiftold="yes"
+         echo "### Found old version of libshift, please uprade to >=2.0.0"
+    fi
 
     if test "x$shiftincdir" = "x" || test "x$shiftlib" = "x"; then
         enable_rfio="no"
@@ -1470,7 +1464,7 @@ if test ! "x$enable_cern" = "xno"; then
             if test  $found_symbol -eq 0 ; then
                 echo "### Need libshift with this version of $packlib"
                 if test "x$shiftold" = "xyes"; then
-                    echo "### Found old version of libshift, please uprade to >=1.5.2"
+                    echo "### Found old version of libshift, please uprade to >=2.0.0"
                 else
                     echo "### Run configure with --enable-rfio or set --with-shift-libdir"
                 fi
@@ -2137,10 +2131,10 @@ if test "x$enable_globus" = "xyes"; then
          done
       fi
    fi
-   case $platform in 
-       linux*) 
+   case $platform in
+       linux*)
 	   tmplibdir=$globuslibdir
-	   for i in $tmplibdir ; do 
+	   for i in $tmplibdir ; do
 	       extra=`echo $i | sed 's/-L/-Wl,-rpath,/'`
 	       globuslibdir="$globuslibdir $extra"
 	   done
@@ -2374,7 +2368,7 @@ if test "x$enable_ssl" = "xyes" ; then
          ssllibdir="$found_dir"
          if test ! "x$found_dir" = "x$ssllibdir" ; then
             message "Checking for openssl"
-            echo "warning: paths to libcrypto and libssl do not match"  
+            echo "warning: paths to libcrypto and libssl do not match"
             ssllibdir="$ssllibdir $found_dir"
          fi
      fi
