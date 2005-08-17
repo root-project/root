@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.3 2005/03/08 05:48:55 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.4 2005/06/24 12:27:30 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -30,6 +30,7 @@ TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, WFlag
 {
    // TQtClientWidget object factory
    TQtClientWidget *w =  new TQtClientWidget(this,parent,name,f);
+   // w->setBackgroundMode(Qt::NoBackground);
    Add(w);
    return  w;
 }
@@ -89,7 +90,7 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
             }
          }
       }
-      Disconnect(w);
+      // redundant disconnect // Disconnect(w);
    }
 }
 

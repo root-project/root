@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.3 2005/06/17 00:56:19 fine Exp $
+# $Id: rootlibs.pri,v 1.6 2005/07/01 21:14:19 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -61,7 +61,7 @@ win32 {
    exists( $(ROOTSYS)/lib/libTable.lib ) {
       LIBS	+=  "$(ROOTSYS)/lib/libTable.lib"
    }   
-    
+       
    exists( $(ROOTSYS)/lib/libQtGui.so ) {
       LIBS	+=  "$(ROOTSYS)/lib/libQtGui.lib"
    }   
@@ -76,7 +76,7 @@ mac {
     }   
 
     exists( $(ROOTSYS)/lib/libQtGui.so ) {
-        LIBS	+=  -u _G__cpp_setupG__QtGUI     
+#        LIBS	+=  -u _G__cpp_setupG__QtGUI     
     }   
    
     LIBS	   +=  -lGQt 
@@ -86,16 +86,18 @@ mac {
 }
 
 unix {
-    LIBS	+= $$system(root-config --glibs) -lGQt 
+    LIBS	+= $$system(root-config --glibs)
     
     exists( $(ROOTSYS)/lib/libTable.so ) {
         LIBS	+= -lTable    
     }   
     
-    LIBS += -lGQt 
+    exists( $(ROOTSYS)/lib/libQtGui.so ) {
+          LIBS += -lGQt 
+    }   
     
     exists( $(ROOTSYS)/lib/libQtGui.so ) {
           LIBS	+=  -lQtGui  
           message ( "Found Qt extensions library !!!") 
-      }   
+    }   
 }

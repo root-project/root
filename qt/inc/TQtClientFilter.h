@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.16 2005/04/06 09:32:11 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.25 2005/07/10 00:34:57 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TQClientFilter
 #define ROOT_TQClientFilter
 
@@ -17,6 +18,10 @@
 
 #ifndef __CINT__
 #  include <qobject.h>
+#if (QT_VERSION > 0x039999)
+// Added by qt3to4:
+#  include <QEvent>
+#endif 
 #  include <qptrqueue.h>
 #  include <qptrlist.h>
 #  include <qintdict.h>

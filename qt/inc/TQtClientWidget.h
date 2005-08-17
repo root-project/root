@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.36 2005/04/14 01:10:28 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.37 2005/07/10 00:34:57 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -13,6 +13,10 @@
 
 #ifndef __CINT__
 #  include <qframe.h>
+#  if (QT_VERSION > 0x039999)
+//    Added by qt3to4:
+#    include <QCloseEvent>
+#  endif
 #  include <qcursor.h>
 #else
   class QFrame;

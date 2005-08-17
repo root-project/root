@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.53 2005/04/05 15:53:43 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.57 2005/08/17 17:40:57 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -16,8 +16,10 @@
 #include <qapplication.h>
 #include "TQtWidget.h"
 #include "TQtTimer.h"
+#include "TQtLock.h"
 
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TRint.h"
 #include "TSystem.h"
 #include "Getline.h"
@@ -64,7 +66,7 @@ ClassImp(TQtWidget)
 //    CanvasPainted();  // Signal the TCanvas has been painted onto the screen
 //    Saved(bool ok);   // Signal the TCanvas has been saved into the file
 //    RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
-//                     // Signal the Qt mouse/keybord events have been process by ROOT
+//                     // Signal the Qt mouse/keyboard event has been process by ROOT
 // 
 //
 //  For example to create the custom responce to the mouse crossing TCanvas
@@ -123,12 +125,14 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
-    static int argc;
+    static int argc   =0;
     if (!gApplication) {
         argc = qApp->argc();
-        TRint *rint = new TRint("Rint", &argc ,qApp->argv());
+        TRint *rint = new TRint("Rint", &argc, qApp->argv(),0,0,kTRUE);
         // To mimic what TRint::Run(kTRUE) does.
-        Getlinem(kInit, rint->GetPrompt());
+        const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
+        if (prompt)
+            Getlinem(kInit, rint->GetPrompt());
         TQtTimer::Create()->start(0,TRUE);
     }
     Bool_t batch = gROOT->IsBatch();
@@ -137,7 +141,6 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     fCanvas = new TCanvas(name, 4, 4, TGQt::RegisterWid(this));
     // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable());
     gROOT->SetBatch(batch);
-    connect(this, SIGNAL(destroyed()),SLOT(Disconnect()));
   }
   fSizeHint = QWidget::sizeHint();
   setSizePolicy (QSizePolicy::Expanding ,QSizePolicy::Expanding );
@@ -158,17 +161,20 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
 //______________________________________________________________________________
 TQtWidget::~TQtWidget()
 {
-  qApp->lock();
-  TCanvas *savCanvas = fCanvas; fCanvas = 0;
-  qApp->unlock();
-
+  TCanvas *c = 0;
+  // to block the double deleting from
   TGQt::UnRegisterWid(this);
+  qApp->lock();
   if (fEmbedded) {
-      TGQt::UnRegisterWid(this); // to block the double deleting from the 
-                                 // TQt::Delete
-      if (savCanvas  && savCanvas->GetCanvasID()) 
-             delete savCanvas;
-   }
+     // one has to set CanvasID = 0 to disconnect things properly.
+     c = fCanvas; 
+     fCanvas = 0; 
+     qApp->unlock();
+     delete c;
+  } else {
+      fCanvas = 0;
+      qApp->unlock();
+  }
 }
 
 //_____________________________________________________________________________
@@ -199,20 +205,18 @@ void TQtWidget::cd()
 void TQtWidget::cd(int subpadnumber)
 {
  // [slot] to make this embedded canvas / pad the current one
-  qApp->lock();
+  TQtLock lock;
   TCanvas *c = fCanvas;
   if (c) c->cd(subpadnumber);
-  qApp->unlock();
 }
 //______________________________________________________________________________
 void TQtWidget::Disconnect()
 {
-   // [slot] Disconnect the Qt widget from CTanvas object before deleting
+   // [slot] Disconnect the Qt widget from TCanvas object before deleting
    // to avoid the dead lock
-  qApp->lock();
- // one has to set CanvasID = 0 to disconnect things properly.
-  TCanvas *c = fCanvas; fCanvas = 0; delete c;
-  qApp->unlock();
+   // one has to set CanvasID = 0 to disconnect things properly.
+   TQtLock lock;
+   fCanvas = 0;
 }
 //_____________________________________________________________________________
 void TQtWidget::Refresh()

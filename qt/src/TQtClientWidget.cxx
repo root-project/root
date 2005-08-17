@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.6 2005/05/31 18:42:24 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.7 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -42,7 +42,9 @@ TQtClientWidget::~TQtClientWidget()
 {
    // fprintf(stderr, "dtor %p\n", this);
    // remove the event filter
-   removeEventFilter(gQt->QClientFilter());
+   TQtClientFilter *f = gQt->QClientFilter();
+   removeEventFilter(f);
+   f->SetPointerGrabber(0);
    disconnect();
    if (fGuard) fGuard->DisconnectChildren(this);
    fPointerCursor = 0; // to prevent the cursor shape restoring

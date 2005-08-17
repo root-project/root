@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.23 2005/07/13 06:04:13 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.24 2005/07/13 20:10:12 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -625,8 +625,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   //
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.23 2005/07/13 06:04:13 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.107 2005/07/19 16:57:27 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1821,7 +1820,12 @@ void  TGQt::SetFillStyle(Style_t fstyle)
    // Set fill area style.
    // fstyle   : compound fill area interior style
    //    fstyle = 1000*interiorstyle + styleindex
-
+   
+  //  The current fill area color is used to paint some pixels in a small
+  //  rectangle the other pixels are not paint.
+  //    Olivier Couet
+  //            Thursday, July 14, 2005
+   
    if (fFillStyle != fstyle)
    {
       fFillStyle = fstyle;

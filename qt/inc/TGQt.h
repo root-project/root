@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.10 2005/06/21 17:09:26 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.11 2005/06/24 12:27:29 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -28,6 +28,10 @@
 #include <map>
 
 #include <qnamespace.h>
+#if (QT_VERSION > 0x039999)
+# include <QPixmap>
+# include <QEvent>
+#endif 
 #include <qobject.h>
 #include <qmap.h>
 #include <qcolor.h>
@@ -96,6 +100,8 @@ class TGQt  : public TVirtualX  {
    friend class TQtClientWidget;
    friend class TQtImage;
    friend class TQtClientGuard;
+   friend class TQtClientFilter;
+   
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
@@ -240,6 +246,7 @@ public:
       static QString QtFileFormat(const char *selector);
       static QString QtFileFormat(const QString &selector);
 #endif
+
 
    ClassDef(TGQt,0)  //Interface to Qt GUI
 };

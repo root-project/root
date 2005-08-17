@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.9 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.10 2005/03/07 07:44:12 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -22,6 +22,17 @@
 
 #ifndef __CINT__
 #  include <qwidget.h>
+#  if (QT_VERSION > 0x039999)
+//Added by qt3to4:
+#     include <QMouseEvent>
+#     include <QCustomEvent>
+#     include <QShowEvent>
+#     include <QFocusEvent>
+#     include <QKeyEvent>
+#     include <QResizeEvent>
+#     include <QEvent>
+#     include <QPaintEvent>
+#  endif
 #  include <qpixmap.h>
 #else
   // List of the fake classes to the fake RootCint happy.
