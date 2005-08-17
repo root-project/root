@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.106 2005/07/04 14:58:22 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.107 2005/07/25 14:50:18 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -84,11 +84,15 @@
 //                     with the new approach for authentication tab     //
 //                     files this option is dummy.                      //
 //   -f                do not run as daemon, run in the foreground      //
+//   -F filename       Specify that rootd is in CASTOR mode and should  //
+//                     serve this file.                                 //
 //   -G gridmapfile    defines the gridmap file to be used for globus   //
 //                     authentication if different from globus default  //
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
 //   -h                print usage message                              //
+//   -H reqid          In CASTOR mode, specify the ID of the request    //
+//                     that should be accepted                          //
 //   -i                says we were started by inetd                    //
 //   -noauth           do not require client authentication             //
 //   -p port#          specifies a different port to listen on.         //
@@ -353,6 +357,11 @@ static int gWritable             = 0;
 static int gReadOnly             = 0;
 static std::string gUser;
 static std::string gPasswd;
+
+// CASTOR specific
+static int gCastorFlag           = 0;
+static std::string gCastorFile;
+static std::string gCastorReqId;
 
 using namespace ROOT;
 
@@ -1003,12 +1012,30 @@ void RootdOpen(const char *msg)
 
    sscanf(msg, "%s %s", file, option);
 
-   if (file[0] == '/')
-      strcpy(gFile, &file[1]);
-   else
-      strcpy(gFile, file);
+   if (gCastorFlag) {
 
-   gFile[strlen(file)] = '\0';
+      // Checking the CASTOR Request ID
+      if (gCastorReqId.length() > 0) {
+         if (strstr(file, gCastorReqId.c_str()) == 0) {
+            Error(ErrFatal, kErrNoAccess,
+                  "RootdOpen: Bad CASTOR Request ID: %s rather than %s",
+                  file, gCastorReqId.c_str());
+         }
+      }
+
+      ErrorInfo("RootdOpen: CASTOR Flag on, file: %s", gCastorFile.c_str());
+      strncpy(gFile, gCastorFile.c_str(), kMAXPATHLEN-1);
+      gFile[kMAXPATHLEN-1] = '\0';
+
+   } else {
+
+      if (file[0] == '/')
+         strcpy(gFile, &file[1]);
+      else
+         strcpy(gFile, file);
+
+      gFile[strlen(file)] = '\0';
+   }
 
    strcpy(gOption, option);
 
@@ -2229,6 +2256,20 @@ int main(int argc, char **argv)
                }
                foregroundflag = 1;
                break;
+
+            case 'F':
+               gCastorFlag = 1;
+               gInetdFlag  = 1;
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-F requires a file path name for the"
+                             " CASTOR disk file to be accessed\n");
+                  Error(ErrFatal, kErrFatal,"-D requires a file path name"
+                        " for the CASTOR disk file to be accessed");
+               }
+               gCastorFile = std::string(*++argv);
+               break;
+
 #ifdef R__GLBS
             case 'G':
                if (--argc <= 0) {
@@ -2240,6 +2281,15 @@ int main(int argc, char **argv)
 #endif
             case 'h':
                Usage(progname, 0);
+               break;
+
+            case 'H':
+               if (--argc <= 0) {
+                  if (!gInetdFlag && !gCastorFlag)
+                     fprintf(stderr,"-H requires the CASTOR request ID");
+                  Error(ErrFatal, kErrFatal,"-H requires the CASTOR request ID");
+               }
+               gCastorReqId = std::string(*++argv);
                break;
 
             case 'i':
@@ -2472,6 +2522,8 @@ int main(int argc, char **argv)
       }
 
       // parent waits for another client to connect
+      // (except in CASTOR mode)
+      if (gCastorFlag) break;
 
    }
 
