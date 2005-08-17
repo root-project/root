@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.2 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.3 2004/08/16 10:00:45 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -39,6 +39,36 @@ public:
    void     SwapBuffers(Window_t wind);
 
    ClassDef(TGWin32GL,0);
+};
+
+class TGWin32GLManager : public TGLManager {
+private:
+	class TGWin32GLImpl;
+	TGWin32GLImpl *fPimpl;
+
+public:
+	TGWin32GLManager();
+	~TGWin32GLManager();
+
+	Int_t InitGLWindow(Window_t winId, Bool_t isOffScreen);
+	Int_t CreateGLContext(Int_t winInd);
+	Int_t OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h);	
+
+	void ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+	void SelectGLPixmap(Int_t pixInd);
+	Int_t GetVirtualXInd(Int_t pixInd);
+	void MarkForDirectCopy(Int_t pixInd, Bool_t isDirect);
+
+	Bool_t MakeCurrent(Int_t deviceInd);
+	void Flush(Int_t deviceInd, Int_t x, Int_t y);
+	void DeletePaintDevice(Int_t deviceInd);
+	void ExtractViewport(Int_t deviceInd, Int_t *viewport);
+   void DrawViewer(TVirtualViewer3D *v);
+   TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
+private:
+	Bool_t CreateGLPixmap(Int_t wid, UInt_t w, UInt_t h, Int_t prevInd = -1);
+
+	ClassDef(TGWin32GLManager, 0)
 };
 
 #endif

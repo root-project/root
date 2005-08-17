@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.2 2004/08/09 15:35:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.3 2004/08/09 22:11:00 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,27 @@ TVirtualGL *& TVirtualGL::Instance()
 
    if(gPtr2VirtualGL) {
       instance = gPtr2VirtualGL();
+   }
+
+   return instance;
+}
+
+ClassImp(TGLManager)
+
+TGLManager * (*gPtr2GLManager)() = 0;
+
+//____________________________________________________________________________
+TGLManager::TGLManager() : TNamed("gGLManager", "")
+{
+}
+
+//____________________________________________________________________________
+TGLManager *&TGLManager::Instance()
+{
+   static TGLManager *instance = 0;
+
+   if(gPtr2GLManager) {
+      instance = gPtr2GLManager();
    }
 
    return instance;

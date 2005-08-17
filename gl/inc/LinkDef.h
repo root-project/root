@@ -55,6 +55,7 @@
 #pragma link C++ class TGLSphere;
 #ifndef _WIN32
 #pragma link C++ class TX11GL;
+#pragma link C++ class TX11GLManager;
 #endif
 
 #endif

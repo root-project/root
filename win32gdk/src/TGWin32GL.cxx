@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.4 2004/09/06 10:29:38 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -17,9 +17,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <deque>
+
 #include "TGWin32GL.h"
 #include "TGWin32VirtualGLProxy.h"
+#include "TVirtualViewer3D.h"
+#include "TVirtualX.h"
 #include "TError.h"
+#include "TROOT.h"
 
 #include "Windows4root.h"
 #include "gdk/gdk.h"
@@ -150,4 +155,328 @@ void TGWin32GL::SwapBuffers(Window_t wind)
    ::wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
    ::glFinish();
    ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind), hdc);
+}
+
+///////////////////////////////////////////////////////////////
+//New Win32 GL stuff
+//////////////////////////////
+
+namespace {
+	struct PaintDevice {
+		Int_t fWindowIndex;
+		Int_t fPixmapIndex;//-1 for double buffered
+		//
+		HDC fDC;
+		HBITMAP fHBitmap;
+		HGLRC fGLContext;
+		//
+		UInt_t fRealW;
+		UInt_t fRealH;
+		//
+		UInt_t fCurrW;
+		UInt_t fCurrH;
+		//
+		Int_t fX;
+		Int_t fY;
+		//
+		Bool_t fDirect;
+      HBITMAP fOldBitmap;
+	};
+
+	PaintDevice emptyDev;
+}
+
+const PIXELFORMATDESCRIPTOR
+doubleBufferDesc = {
+	sizeof doubleBufferDesc,		// size of this pfd
+	1,                              // version number
+	PFD_DRAW_TO_WINDOW |            // support window
+	PFD_SUPPORT_OPENGL |            // support OpenGL
+	PFD_DOUBLEBUFFER,               // double buffered
+      
+	PFD_TYPE_RGBA,                  // RGBA type
+	24,                             // 24-bit color depth
+	0, 0, 0, 0, 0, 0,               // color bits ignored
+	0,                              // no alpha buffer
+	0,                              // shift bit ignored
+	0,                              // no accumulation buffer
+	0, 0, 0, 0,                     // accum bits ignored
+	32,                             // 32-bit z-buffer
+	0,                              // no stencil buffer
+	0,                              // no auxiliary buffer
+	PFD_MAIN_PLANE                  // main layer
+};
+
+const PIXELFORMATDESCRIPTOR
+offScreenDesc = {
+	sizeof offScreenDesc,			// size of this pfd
+	1,                              // version number
+	PFD_DRAW_TO_BITMAP |			// draw into bitmap
+	PFD_SUPPORT_OPENGL ,            // support OpenGL
+	
+	PFD_TYPE_RGBA,                  // RGBA type
+	24,                             // 24-bit color depth
+	0, 0, 0, 0, 0, 0,               // color bits ignored
+	0,                              // no alpha buffer
+	0,                              // shift bit ignored
+	0,                              // no accumulation buffer
+	0, 0, 0, 0,                     // accum bits ignored
+	32,                             // 32-bit z-buffer
+	0,                              // no stencil buffer
+	0,                              // no auxiliary buffer
+	PFD_MAIN_PLANE                  // main layer
+};
+
+class TGWin32GLManager::TGWin32GLImpl {
+public:
+	~TGWin32GLImpl(){}//should clean-up
+	std::deque<PaintDevice> fPaintDevices;
+};
+
+ClassImp(TGWin32GLManager)
+
+//______________________________________________________________________________
+TGWin32GLManager::TGWin32GLManager() : fPimpl(new TGWin32GLImpl)
+{
+   gPtr2GLManager = &TGWin32GLManagerProxy::ProxyObject;
+   gROOT->GetListOfSpecials()->AddLast(this);
+   gGLManager = this;
+}
+
+//______________________________________________________________________________
+TGWin32GLManager::~TGWin32GLManager()
+{
+	delete fPimpl;
+}
+
+//______________________________________________________________________________
+Int_t TGWin32GLManager::InitGLWindow(Window_t winId, Bool_t)
+{
+	return gVirtualX->InitWindow(winId);
+}
+
+//______________________________________________________________________________
+Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
+{
+   Window_t winID = gVirtualX->GetWindowID(winInd);
+   HDC hDC = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID));
+
+   if (!hDC) {
+      Error("CreateGLContext", "GetWindowDC failed\n");
+
+      return -1; 
+   }
+
+   if (Int_t pixFormat = ChoosePixelFormat(hDC, &doubleBufferDesc)) {
+      if (SetPixelFormat(hDC, pixFormat, &doubleBufferDesc)) {
+         HGLRC glCtx = wglCreateContext(hDC);
+
+         if (glCtx) {
+            PaintDevice newDevice = {winInd, -1, hDC, 0, glCtx};
+            //ex
+            fPimpl->fPaintDevices.push_back(newDevice);
+   
+            return fPimpl->fPaintDevices.size() - 1;
+         } else
+            Error("CreateGLContext", "wglCreateContext failed\n");
+      } else
+         Error("CreateGLContext", "SetPixelFormat failed\n");
+   } else 
+      Error("CreateGLContext", "ChoosePixelFormat failed\n");
+
+   //some error occured
+   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID), hDC);
+
+   return -1;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32GLManager::CreateGLPixmap(Int_t winInd, UInt_t w, UInt_t h, Int_t prevInd)
+{
+	HDC dibDC = CreateCompatibleDC(0);// new DC in memory
+
+   if (!dibDC) {
+      Error("CreateGLPixmap", "CreateCompatibleDC failed\n");
+
+      return kFALSE;
+   }
+	
+   BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, w, h, 1, 24, BI_RGB};
+	void *bmpCnt = 0;
+	HBITMAP hDIB = CreateDIBSection(dibDC, (BITMAPINFO*)&bmpHeader, DIB_RGB_COLORS, &bmpCnt, 0, 0);
+   
+	if (hDIB) {
+		HBITMAP hOldDIB = (HBITMAP)SelectObject(dibDC, hDIB);
+
+		if (Int_t pixelFormat = ChoosePixelFormat(dibDC, &offScreenDesc)) {
+			if (SetPixelFormat(dibDC, pixelFormat, &offScreenDesc)) {
+				HGLRC glrc = wglCreateContext(dibDC);
+
+				if (glrc) {
+               if (prevInd == -1) {
+					   PaintDevice dev = {winInd, gVirtualX->AddPixmap((ULong_t)hDIB, w, h),
+                                     dibDC, hDIB, glrc, w, h, w, h, 0, 0, kFALSE, hOldDIB}; //0, 0, kFALSE
+                  fPimpl->fPaintDevices.push_back(dev);
+               } else {
+                  //a new pixmap replaces old one. HGLRC and HDC are freed here
+                  //GdkPixmap * is freed by TGWin32::AddPixmap
+                  gVirtualX->AddPixmap((ULong_t)hDIB, w, h, fPimpl->fPaintDevices[prevInd].fPixmapIndex);
+
+                  PaintDevice &dev = fPimpl->fPaintDevices[prevInd];
+
+                  wglDeleteContext(dev.fGLContext), DeleteDC(dev.fDC);
+                  dev.fGLContext = glrc, dev.fDC = dibDC;
+                  dev.fRealW = w, dev.fRealH = h, dev.fCurrW = w, dev.fCurrH = h;
+                  dev.fHBitmap = hDIB;
+                  dev.fOldBitmap = hOldDIB;
+               }
+
+					return kTRUE; 
+				} else
+					Error("OpenGLPixmap", "wglCreateContext failed");
+			} else
+				Error("OpenGLPixmap", "SetPixelFormat failed\n");
+		} else
+			Error("OpenGLPixmap", "ChoosePixelFormat Failed");
+	}
+	
+	if (hDIB) 
+		DeleteObject(hDIB);
+
+   DeleteDC(dibDC);
+
+	return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TGWin32GLManager::OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+	if (CreateGLPixmap(winInd, w, h)) {
+		fPimpl->fPaintDevices.back().fX = x;
+		fPimpl->fPaintDevices.back().fY = y;
+
+		return Int_t(fPimpl->fPaintDevices.size()) - 1;
+	}
+
+	return -1;
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   PaintDevice &dev = fPimpl->fPaintDevices[pixInd];
+
+   dev.fX = x;
+   dev.fY = y;
+
+   if (w - dev.fRealW > 1 || h - dev.fRealH > 1) {
+      //destroy old DIB with such index and create new in place
+      CreateGLPixmap(dev.fWindowIndex, w, h, pixInd);
+   } else {
+      //simply change size-description
+      dev.fCurrW = w;
+      dev.fCurrH = h;
+      gVirtualX->AddPixmap(0, w, h, dev.fPixmapIndex);
+   }
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::SelectGLPixmap(Int_t pixInd)
+{
+	gVirtualX->SelectWindow(fPimpl->fPaintDevices[pixInd].fPixmapIndex);
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::MarkForDirectCopy(Int_t pixInd, Bool_t isDirect)
+{
+	if (fPimpl->fPaintDevices[pixInd].fPixmapIndex != -1) {
+		//pixmap and context, not simply context
+		fPimpl->fPaintDevices[pixInd].fDirect = isDirect;
+	}
+}
+
+//______________________________________________________________________________
+Int_t TGWin32GLManager::GetVirtualXInd(Int_t pixInd)
+{
+   //this HBITMAP will be used outside of gl code
+   //but HBITMAP can can be selected only into
+   //one dc at a time, so deselect from curr dc first
+   PaintDevice &currDev = fPimpl->fPaintDevices[pixInd];
+
+   if (currDev.fOldBitmap != currDev.fHBitmap) {
+      currDev.fOldBitmap = (HBITMAP)SelectObject(currDev.fDC, currDev.fOldBitmap);
+   }
+
+	return fPimpl->fPaintDevices[pixInd].fPixmapIndex;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32GLManager::MakeCurrent(Int_t devInd)
+{
+   PaintDevice &currDev = fPimpl->fPaintDevices[devInd];
+   //fDC can be HDC obtained by GetWindowDC or CreateCompatibleDC (the later
+   //is for gl-to-bitmap mode)
+   if (currDev.fPixmapIndex != -1) {
+      //select HBITMAP into dc
+      if (currDev.fOldBitmap == currDev.fHBitmap) {
+         currDev.fOldBitmap = (HBITMAP)SelectObject(currDev.fDC, currDev.fHBitmap);
+       }
+   }
+   return (Bool_t)wglMakeCurrent(currDev.fDC, currDev.fGLContext);
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::Flush(Int_t devInd, Int_t, Int_t)
+{
+   PaintDevice &currDev = fPimpl->fPaintDevices[devInd];
+
+   if (currDev.fPixmapIndex == -1) {
+      //doube-buffered OpenGL
+      wglSwapLayerBuffers(currDev.fDC, WGL_SWAP_MAIN_PLANE);
+   } else if (currDev.fDirect) {
+      //DIB is flushed by viewer directly
+      Window_t winID = gVirtualX->GetWindowID(currDev.fWindowIndex);
+      HDC hDC = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID));
+  
+      if (!BitBlt(hDC, currDev.fX, currDev.fY, currDev.fCurrW, 
+                  currDev.fCurrH, currDev.fDC, 0, 0, SRCCOPY))
+      {
+         currDev.fDirect = kFALSE;
+      }
+
+      ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID), hDC);
+   }
+   //nothing done for non-direct DIB, it will
+   //be copied by pad.
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::DeletePaintDevice(Int_t deviceInd)
+{
+//not implemented yet
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::ExtractViewport(Int_t devInd, Int_t *viewport)
+{
+   PaintDevice &dev = fPimpl->fPaintDevices[devInd];
+
+   if (dev.fPixmapIndex != -1) {
+      viewport[0] = 0;
+      viewport[1] = dev.fRealH - dev.fCurrH;
+      viewport[2] = dev.fCurrW;
+      viewport[3] = dev.fCurrH;
+   }
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::DrawViewer(TVirtualViewer3D *vv)
+{
+   vv->DrawViewer();
+}
+
+//______________________________________________________________________________
+TObject *TGWin32GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
+{
+   return vv->SelectObject(x, y);
 }

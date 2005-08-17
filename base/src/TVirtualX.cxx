@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.13 2005/05/18 16:58:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.14 2005/06/21 17:09:26 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -415,6 +415,17 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 
    return 0;
 }
+
+//______________________________________________________________________________
+Int_t TVirtualX::AddPixmap(ULong_t /*pixind*/, UInt_t /*w*/, UInt_t /*h*/, Int_t /*prevind*/)
+{
+   // Registers a pixmap created by TGLManager as a ROOT pixmap
+   //
+   // w, h - the width and height, which define the pixmap size
+
+   return 0;
+}
+
 
 //______________________________________________________________________________
 void TVirtualX::RemoveWindow(ULong_t /*qwid*/)

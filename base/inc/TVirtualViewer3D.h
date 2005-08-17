@@ -65,6 +65,9 @@ public:
    virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
+
+   virtual TObject *SelectObject(Int_t, Int_t){return 0;}
+   virtual void   DrawViewer(){}
    
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
    

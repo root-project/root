@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.29 2005/01/23 22:11:38 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.30 2005/05/27 03:00:04 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -152,6 +152,7 @@
 #pragma link C++ class TPadView3D;
 #pragma link C++ class TVirtualGL;
 #pragma link C++ class TVirtualGLImp;
+#pragma link C++ class TGLManager;
 #pragma link C++ class TVirtualPS;
 #pragma link C++ class TVirtualUtil3D;
 #pragma link C++ class TVirtualUtilHist;

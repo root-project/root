@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.11 2005/06/17 14:07:16 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.12 2005/08/10 16:26:36 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -118,4 +118,35 @@ VOID_METHOD_ARG1(VirtualGL, DrawSphere, const Float_t *, color, 1)
 VOID_METHOD_ARG1(VirtualGL, DrawViewer, TGLViewer *, viewer, 1)
 RETURN_METHOD_ARG2(VirtualGL, Bool_t, SelectViewer, TGLViewer *, viewer, const TGLRect *, rect)
 VOID_METHOD_ARG3(VirtualGL, CaptureViewer, TGLViewer *, viewer, Int_t, format, const char *, filePath, 1)
+
+static TGLManager *gManager = 0;
+
+//____________________________________________________________________________
+TGLManager *TGWin32GLManagerProxy::RealObject()
+{
+   if (!gManager) {
+      gManager = (TGLManager *)gROOT->GetListOfSpecials()->FindObject("gGLManager");
+   }
+
+   return gManager;
+}
+
+TGWin32GLManagerProxy::TGWin32GLManagerProxy()
+{
+}
+
+RETURN_PROXY_OBJECT(GLManager)
+RETURN_METHOD_ARG2(GLManager, Int_t, InitGLWindow, Window_t, winID, Bool_t, isOffScreen)
+RETURN_METHOD_ARG1(GLManager, Int_t, CreateGLContext, Int_t, winInd)
+RETURN_METHOD_ARG5(GLManager, Int_t, OpenGLPixmap, Int_t, winInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h)
+VOID_METHOD_ARG5(GLManager, ResizeGLPixmap, Int_t, pixInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h, 1)
+VOID_METHOD_ARG1(GLManager, SelectGLPixmap, Int_t, pixInd, 1)
+RETURN_METHOD_ARG1(GLManager, Int_t, GetVirtualXInd, Int_t, pixInd)
+VOID_METHOD_ARG2(GLManager, MarkForDirectCopy, Int_t, pixInd, Bool_t, direct, 1)
+RETURN_METHOD_ARG1(GLManager, Bool_t, MakeCurrent, Int_t, devInd)
+VOID_METHOD_ARG3(GLManager, Flush, Int_t, devInd, Int_t, x, Int_t, y, 1)
+VOID_METHOD_ARG1(GLManager, DeletePaintDevice, Int_t, devInd, 1)
+VOID_METHOD_ARG2(GLManager, ExtractViewport, Int_t, pixInd, Int_t *, vp, 1)
+VOID_METHOD_ARG1(GLManager, DrawViewer, TVirtualViewer3D *, vv, 1)
+RETURN_METHOD_ARG3(GLManager, TObject *, Select, TVirtualViewer3D *, w, Int_t, x, Int_t, y)
 

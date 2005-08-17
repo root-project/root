@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.1 2004/08/09 22:09:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.2 2004/08/16 10:00:45 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -50,5 +50,43 @@ public:
 
    ClassDef(TX11GL, 0);
 };
+
+class TX11GLManager : public TGLManager {
+private:
+   class TX11GLPimpl;
+   TX11GLPimpl *fPimpl;
+   
+public:
+   TX11GLManager();
+   ~TX11GLManager();
+   
+   Int_t    InitGLWindow(Window_t winId, Bool_t isOffScreen);
+   Int_t    CreateGLContext(Int_t winInd);
+   Int_t    OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     SelectGLPixmap(Int_t pixInd);
+   void     MarkForDirectCopy(Int_t pixInd, Bool_t pix);
+   Int_t    GetVirtualXInd(Int_t glPix);
+
+   //The same for direct-rendering and offscreen
+   Bool_t   MakeCurrent(Int_t deviceInd);
+   //swaps buffers or copies pixmap.
+   void     Flush(Int_t deviceInd, Int_t x, Int_t y);
+   //deletes context or pixmap and context
+   void     DeletePaintDevice(Int_t deviceInd);
+   void     ExtractViewport(Int_t pixId, Int_t *viewport);
+   
+private:
+   //Used internally by OpenPixmap and ResizePixmap
+   Bool_t CreateGLPixmap(Int_t winId, UInt_t w, UInt_t h, Int_t preferInd = -1);
+   
+   //implicit copy-ctor/assignment generation
+   // was already disabled by base class, but to be explicit ...
+   TX11GLManager(const TX11GLManager &);
+   TX11GLManager &operator = (const TX11GLManager &);
+
+   ClassDef(TX11GLManager, 0);
+};
+
 
 #endif
