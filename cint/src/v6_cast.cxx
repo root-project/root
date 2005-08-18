@@ -361,10 +361,34 @@ G__value G__castvalue(char *casttype,G__value result3)
       result3.typenum = -1;
       break;
     }
+    if(strcmp(casttype,"signedint")==0) {
+      type='i'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
     break;
   case 10:
     if(strcmp(casttype,"longdouble")==0) {
       type='q'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signedchar")==0) {
+      type='c'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signed int")==0) {
+      type='i'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signedlong")==0) {
+      type='l'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
       break;
@@ -379,6 +403,24 @@ G__value G__castvalue(char *casttype,G__value result3)
     }
     if(strcmp(casttype,"long double")==0) {
       type='q'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signed char")==0) {
+      type='c'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signedshort")==0) {
+      type='s'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signed long")==0) {
+      type='l'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
       break;
@@ -399,6 +441,12 @@ G__value G__castvalue(char *casttype,G__value result3)
     }
     if(strcmp(casttype,"unsigned int")==0) {
       type='h'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"signed short")==0) {
+      type='s'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
       break;
@@ -432,6 +480,13 @@ G__value G__castvalue(char *casttype,G__value result3)
       break;
     }
     break;
+    if(strcmp(casttype,"signedlonglong")==0) {
+      type='n'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    break;
   case 16:
     if(strcmp(casttype,"unsignedlonglong")==0) {
       type='m'+castflag;
@@ -439,6 +494,13 @@ G__value G__castvalue(char *casttype,G__value result3)
       result3.typenum = -1;
       break;
     }
+    if(strcmp(casttype,"signed long long")==0) {
+      type='n'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    break;
   case 18:
     if(strcmp(casttype,"unsigned long long")==0) {
       type='m'+castflag;
