@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.19 2005/07/06 18:44:08 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.20 2005/07/07 06:10:49 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -707,6 +707,7 @@ namespace ROOT {
                      dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
                      break;
                   }
+                  if (current==momSmom) break; // avoid infinite recursion
                   current = momSmom;
                   momInfo = momSmom->GetInfo();
                   bid = momSmom->GetID();
@@ -753,8 +754,8 @@ namespace ROOT {
             cname = mom->GetClonesName();
          }
          Debug(4,"Seeing br=%s, td=%s name=%s cl=%s -%s- -%s-\n",
-               branch->GetName(),topdesc->GetTitle(),name.Data(),
-               cname.Data(),topdesc->GetSubBranchPrefix(),brprefix.Data());
+               branch->GetName(),topdesc ? topdesc->GetTitle() : " no topdesc ",name.Data(),
+               cname.Data(),topdesc ? topdesc->GetSubBranchPrefix() : " no topdesc ",brprefix.Data());
 //          TString brprefix = mom->GetName();
          if (brprefix.Length() && brprefix[brprefix.Length()-1]!='.') brprefix += ".";
          brprefix += name;
@@ -770,7 +771,7 @@ namespace ROOT {
 
             TStreamerElement* branchStreamerElem = 0;
 
-            TStreamerInfo *momInfo = topdesc->GetInfo();
+            TStreamerInfo *momInfo = topdesc ? topdesc->GetInfo() : ((TBranchElement*)branch->GetMother())->GetInfo();
             if (cname != momInfo->GetName()) {
                // We do not have the correct TStreamerInfo, this is
                // because there is no proper 'branch' holding this sub-object
@@ -890,7 +891,6 @@ namespace ROOT {
                branchName.Remove(pos);
             }
          }
-
       }
 
       if ( extraLookedAt==0 && topdesc 
