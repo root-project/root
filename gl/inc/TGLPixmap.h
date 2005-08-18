@@ -1,3 +1,14 @@
+// @(#)root/gl:$Name:  $:$Id: TGFrame.h,v 1.59 2005/01/12 18:39:29 brun Exp $
+// Author: Timur Pocheptsov 18/08/2005
+
+/*************************************************************************
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGLPixmap
 #define ROOT_TGLPixmap
 
@@ -40,7 +51,7 @@ private:
 
    UInt_t            fNbShapes;
    TPoint            fLastPos;
-   
+
    Int_t x_, y_;
    UInt_t w_, h_;
    Int_t devInd_;

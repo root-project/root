@@ -1,3 +1,14 @@
+// @(#)root/gl:$Name:  $:$Id: TGFrame.h,v 1.59 2005/01/12 18:39:29 brun Exp $
+// Author: Timur Pocheptsov 18/08/2005
+
+/*************************************************************************
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <algorithm>
 #include <iostream>
 #include <utility>
@@ -62,11 +73,11 @@ private:
    TObject              *fRealObject;
 
 public:
-   GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve, 
+   GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
    GLSceneObject(const TBuffer3D &buffer,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
-	GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *realObj);
+   GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *realObj);
 
    virtual Bool_t IsTransparent()const;
 
@@ -214,11 +225,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
 
 //______________________________________________________________________________
 GLSceneObject::GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
-							: fColor(),
-							  fIsSelected(kFALSE),
-							  fGLName(glName),
-							  fNextT(0),
-							  fRealObject(obj)
+   : fColor(), fIsSelected(kFALSE), fGLName(glName), fNextT(0), fRealObject(obj)
 {
    SetColor(color, kTRUE);
    fColor[3] = 1.f - trans / 100.f;
@@ -243,9 +250,9 @@ void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
          fColor[2] = color[2];
       } else {
          //for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
-			fColor[0] = 1.f;
-			fColor[1] = .3f;
-			fColor[2] = .0f;
+         fColor[0] = 1.f;
+         fColor[1] = .3f;
+         fColor[2] = .0f;
       }
       //ambient
       fColor[4] = fColor[5] = fColor[6] = 0.f;
@@ -257,7 +264,7 @@ void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
       fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
       //shininess
       if (color) fColor[16] = 60.f;
-		else fColor[16] = 10.f;
+      else fColor[16] = 10.f;
    }
 }
 
@@ -284,22 +291,23 @@ void GLSceneObject::SetBBox(const TBuffer3D & buffer)
 void GLSceneObject::SetBBox()
 {
    // Use the buffer bounding box if provided
+
    if (fVertices.size() >= 3) {
-		Double_t xmin = fVertices[0], xmax = xmin;
-		Double_t ymin = fVertices[1], ymax = ymin;
-		Double_t zmin = fVertices[2], zmax = zmin;
+      Double_t xmin = fVertices[0], xmax = xmin;
+      Double_t ymin = fVertices[1], ymax = ymin;
+      Double_t zmin = fVertices[2], zmax = zmin;
 
-		for (UInt_t nv = 3; nv < fVertices.size(); nv += 3) {
-			xmin = TMath::Min(xmin, fVertices[nv]);
-			xmax = TMath::Max(xmax, fVertices[nv]);
-			ymin = TMath::Min(ymin, fVertices[nv + 1]);
-			ymax = TMath::Max(ymax, fVertices[nv + 1]);
-			zmin = TMath::Min(zmin, fVertices[nv + 2]);
-			zmax = TMath::Max(zmax, fVertices[nv + 2]);
-		}
+      for (UInt_t nv = 3; nv < fVertices.size(); nv += 3) {
+         xmin = TMath::Min(xmin, fVertices[nv]);
+         xmax = TMath::Max(xmax, fVertices[nv]);
+         ymin = TMath::Min(ymin, fVertices[nv + 1]);
+         ymax = TMath::Max(ymax, fVertices[nv + 1]);
+         zmin = TMath::Min(zmin, fVertices[nv + 2]);
+         zmax = TMath::Max(zmax, fVertices[nv + 2]);
+      }
 
-		fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
-	}
+      fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
+   }
 }
 
 //______________________________________________________________________________
@@ -396,7 +404,7 @@ void GLFaceSet::GLDraw()const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-   
+
    glDisable(GL_POLYGON_OFFSET_FILL);
    glDisable(GL_LIGHTING);
    glColor3d(0., 0., 0.);
@@ -652,7 +660,7 @@ public:
    GLSceneObject *SelectObject(Int_t x, Int_t y, Int_t);
 
    Int_t GetSize()const{return fGLObjects.GetEntriesFast();}
-   
+
 private:
    void DrawScene();
    void DrawAxes();
@@ -831,7 +839,7 @@ TGLPixmap::TGLPixmap(TPad * pad, Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_
 {
    x_ = x, y_ = y, w_ = w, h_ = h;
    devInd_ = devInd;
-   
+
    fLightMask = 0x1b;
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
@@ -948,11 +956,11 @@ TObject *TGLPixmap::SelectObject(Int_t x, Int_t y)
    fActiveViewport[1] = 0;
    GLSceneObject *obj = fRender->SelectObject(x, y, 0);
    fActiveViewport[1] = tmpVal;
-   
+
    if (obj) {
-      return obj->GetRealObject();      
+      return obj->GetRealObject();
    }
-   
+
    return 0;
 }
 
@@ -961,21 +969,21 @@ Int_t TGLPixmap::DistancetoPrimitive(Int_t x, Int_t y)
    TObject *selection = gGLManager->Select(this, x, y);
    if(selection) gPad->SetSelected(selection);
    else gPad->SetSelected(this);
-   
+
    return 0;
 }
 
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewports()
 {
-   gGLManager->ExtractViewport(devInd_, fActiveViewport);   
+   gGLManager->ExtractViewport(devInd_, fActiveViewport);
 }
 
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewvolumes()
 {
    CalculateViewports();
-   
+
    if (fRender->GetSize()) {
       Double_t xdiff = fRangeX.second - fRangeX.first;
       Double_t ydiff = fRangeY.second - fRangeY.first;
@@ -988,7 +996,7 @@ void TGLPixmap::CalculateViewvolumes()
          frx = fActiveViewport[2] / double(fActiveViewport[3]);
       else if (fActiveViewport[2] < fActiveViewport[3])
          fry = fActiveViewport[3] / double(fActiveViewport[2]);
-         
+
       fViewVolume[0] = max / 1.9 * frx;
       fViewVolume[1] = max / 1.9 * fry;
       fViewVolume[2] = max * 0.707;
@@ -1024,7 +1032,7 @@ void TGLPixmap::BeginScene()
       assert(kFALSE);
       return;
    }
-   
+
    // Clear any existing scene contents
    fRender->RemoveAllObjects();
    fNbShapes = 0;
@@ -1041,15 +1049,15 @@ void TGLPixmap::EndScene()
       Double_t xdiff = fRangeX.second - fRangeX.first;
       Double_t ydiff = fRangeY.second - fRangeY.first;
       Double_t zdiff = fRangeZ.second - fRangeZ.first;
-   
+
       fXc = fRangeX.first + xdiff / 2;
       fYc = fRangeY.first + ydiff / 2;
       fZc = fRangeZ.first + zdiff / 2;
-   
+
       CreateCameras();
       fFirstScene = kFALSE;
    }
-   
+
    fBuildingScene = kFALSE;
    gGLManager->DrawViewer(this);
 }
@@ -1061,14 +1069,14 @@ Int_t TGLPixmap::AddObject(const TBuffer3D &buffer, Bool_t *addChildren)
    }
 
    UInt_t reqSections = TBuffer3D::kCore|TBuffer3D::kRawSizes|TBuffer3D::kRaw;
-   
+
    if (!buffer.SectionsValid(reqSections)) {
       return reqSections;
    }
 
    Float_t rgba[] = {.4f, .4f, .4f, 1.f};
    TColor *c = gROOT->GetColor(buffer.fColor);
-   
+
       if (c && buffer.fColor > 1) {
          c->GetRGB(rgba[0], rgba[1], rgba[2]);
       }
