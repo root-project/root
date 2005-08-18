@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.197 2005/07/27 15:34:09 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.198 2005/07/27 16:09:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1009,7 +1009,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       for (Int_t col=0;col<ncolors;col++) {
          if (!pms) continue;
          TPolyMarker3D *pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
-         pm3d->Draw();
+         if (draw) pm3d->Draw();
       }
    }
 
