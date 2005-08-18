@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.5 2003/11/29 01:47:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.8 2005/08/17 12:58:40 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TCastorFile.h"
+#include "TError.h"
 
 #include <stdlib.h>
 #include <errno.h>
@@ -37,7 +38,9 @@
 #include <WinSock2.h>
 #endif
 
-#include <stager_api.h>       // For the new CASTOR Stager
+#ifdef R__CASTOR2
+#include <stager_api.h>       // For the new CASTOR 2 Stager
+#endif
 #define RFIO_KERNEL           // Get access to extra symbols in the headers
 #include <stage_api.h>        // Dial with CASTOR stager
 #include <rfio_api.h>         // Util routines from rfio
@@ -50,18 +53,28 @@ extern "C" { char *getconfent(char *, char *, int); }
 //______________________________________________________________________________
 static int UseCastor2API()
 {
-   // Function that checks whetehr we should use the old or new stager API.
+   // Function that checks whether we should use the old or new stager API.
 
    char *p;
 
    if (((p = getenv(RFIO_USE_CASTOR_V2)) == 0) &&
        ((p = getconfent("RFIO","USE_CASTOR_V2",0)) == 0)) {
       // Variable not set: compat mode
-      return(0);
+      return 0;
    }
    if ((strcmp(p,"YES") == 0) || (strcmp(p,"yes") == 0) || (atoi(p) == 1)) {
+#ifdef R__CASTOR2
       // Variable set to yes or 1 : new mode
       return 1;
+#else
+      // Variable set to yes or 1 but old CASTOR 1: compat mode + warning
+      static int once = 0;
+      if (!once) {
+         ::Warning("UseCastor2API", "asked to use CASTOR 2, but linked with CASTOR 1");
+         once = 1;
+      }
+      return 0;
+#endif
    }
    // Variable set but not to 1 : compat mode
    return 0;
@@ -250,7 +263,10 @@ void TCastorFile::FindServerAndPath()
       // server 'host', e.g. it is fDiskServer:fInternalPath
       fInternalPath = stcp_output->ipath;
       free(stcp_output);
+
    } else {
+
+#ifdef R__CASTOR2
       // We use the new stager API
       int flags = O_RDONLY;
       int rc;
@@ -318,6 +334,8 @@ void TCastorFile::FindServerAndPath()
       if (response) free(response);
       if (url) free(url);
       if (requestId) free(requestId);
+#endif
+
    }
 
    fIsCastor = kTRUE;

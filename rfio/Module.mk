@@ -69,8 +69,9 @@ distclean::     distclean-rfio
 ##### extra rules ######
 $(RFIOO): %.o: %.cxx
 ifeq ($(PLATFORM),win32)
-	$(CXX) $(OPT) $(CXXFLAGS) -D__INSIDE_CYGWIN__ $(SHIFTINCDIR:%=-I%) \
-	   -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(SHIFTCFLAGS) -D__INSIDE_CYGWIN__ \
+	   $(SHIFTINCDIR:%=-I%) -o $@ -c $<
 else
-	$(CXX) $(OPT) $(CXXFLAGS) $(SHIFTINCDIR:%=-I%) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) \
+	   -o $@ -c $<
 endif

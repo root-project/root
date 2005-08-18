@@ -685,7 +685,7 @@ enable/disable options, prefix with either --enable- or --disable-
   python             Python ROOT bindings, requires python >= 2.1
   qt                 Qt graphics backend, requires libqt >= 3
   reflex             Build the libReflex dictionary library
-  rfio               CASTOR support, requires libshift from CASTOR >= 2.0.0
+  rfio               CASTOR support, requires libshift from CASTOR >= 1.5.2
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
@@ -1387,17 +1387,40 @@ fi
 #
 # (See http://castor.web.cern.ch/castor/)
 #
-# Check for stager_api.h and libshift.a
+# Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift.a
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
     # Check for RFIO include and library
-    check_header "stager_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
+    keepincdir=$shiftincdir
+    check_header "rfio_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
 	/cern/pro/include /cern/new/include /cern/old/include \
 	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
 	/usr/local/include/shift /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
+
+    if test ! "x$shiftincdir" = "x"; then
+        message "Checking whether rfio_fchmod declared in $shiftinc"
+        if `grep rfio_fchmod $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
+            echo "yes"
+        else
+            shiftincdir=""
+            shiftold="yes"
+            echo "no"
+            echo "### Found old version of libshift, please uprade to >=1.5.2"
+        fi
+    fi
+
+    check_header "stager_api.h" "$keepincdir" $RFIO $RFIO/include $RFIO/h \
+	/cern/pro/include /cern/new/include /cern/old/include \
+	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+	/usr/local/include/shift /usr/include /usr/local/include
+    stagerinc=$found_hdr
+
+    if test ! "x$stagerinc" = "x"; then
+       shiftcflags=-DR__CASTOR2
+    fi
 
     check_library "libshift shiftmd shift" "$enable_shared" "$shiftlibdir" \
 	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
@@ -1405,12 +1428,6 @@ if test ! "x$enable_rfio" = "xno" ; then
 	/usr/local/lib/shift /usr/lib /usr/local/lib
     shiftlib=$found_lib
     shiftlibdir=$found_dir
-
-    if test ! "x$shiftlib" = "x" && test "x$shiftincdir" = "x"; then
-         shiftlib=""
-         shiftold="yes"
-         echo "### Found old version of libshift, please uprade to >=2.0.0"
-    fi
 
     if test "x$shiftincdir" = "x" || test "x$shiftlib" = "x"; then
         enable_rfio="no"
@@ -1464,7 +1481,7 @@ if test ! "x$enable_cern" = "xno"; then
             if test  $found_symbol -eq 0 ; then
                 echo "### Need libshift with this version of $packlib"
                 if test "x$shiftold" = "xyes"; then
-                    echo "### Found old version of libshift, please uprade to >=2.0.0"
+                    echo "### Found old version of libshift, please uprade to >=1.5.2"
                 else
                     echo "### Run configure with --enable-rfio or set --with-shift-libdir"
                 fi
@@ -1878,7 +1895,7 @@ if test ! "x$enable_xml" = "xno" ; then
     else
        echo "not found"
        # fall back in case xml2-config is not found
-       keepinc=$xmlincdir
+       keepincdir=$xmlincdir
        check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
            /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
        xmlincdir=$found_dir
@@ -1890,7 +1907,7 @@ if test ! "x$enable_xml" = "xno" ; then
        xmllibdir=$found_dir
 
        if test "x$platform" = "xwin32"; then
-          check_header "iconv.h" "$keepinc" $ICONVDIR $ICONVDIR/include \
+          check_header "iconv.h" "$keepincdir" $ICONVDIR $ICONVDIR/include \
               $XMLDIR $XMLDIR/include \
               /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
           iconvincdir=$found_dir
@@ -3214,6 +3231,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@shiftincdir@|$shiftincdir|"          \
     -e "s|@shiftlib@|$shiftlib|"                \
     -e "s|@shiftlibdir@|$shiftlibdir|"          \
+    -e "s|@shiftcflags@|$shiftcflags|"          \
     -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@srpincdir@|$srpincdir|"              \
     -e "s|@srplib@|$srplib|"                    \
