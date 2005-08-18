@@ -88,9 +88,10 @@ QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
 QTMOCEXE       := @qtmocexe@
 
 BUILDSHIFT     := @buildshift@
-SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
+SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
+SHIFTCFLAGS    := @shiftcflags@
 
 BUILDDCAP      := @builddcap@
 DCAPLIBDIR     := @dcaplibdir@
