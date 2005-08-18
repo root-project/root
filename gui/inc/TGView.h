@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.11 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -95,6 +95,8 @@ public:
    virtual void   SetSBRange(Int_t direction);
    virtual void   SetHsbPosition(Long_t newPos);
    virtual void   SetVsbPosition(Long_t newPos);
+   virtual void   ShowBottom();
+   virtual void   ShowTop();
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);

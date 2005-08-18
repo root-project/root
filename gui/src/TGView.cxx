@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.12 2004/10/22 07:31:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.13 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -573,6 +573,32 @@ void TGView::SetVsbPosition(Long_t newPos)
       fVsb->SetPosition(Int_t(newPos));
    else
       SetVisibleStart(Int_t(newPos * fScrollVal.fY), kVertical);
+}
+
+//______________________________________________________________________________
+void TGView::ShowBottom()
+{
+   // Show bottom of the page.
+
+   Int_t  tch;
+   Long_t lines, newPos;
+
+   tch = fCanvas->GetHeight();
+   lines = ReturnHeighestColHeight();
+   if (lines > tch) {
+      newPos = lines / fScrollVal.fY;
+      SetVsbPosition(newPos);
+   }
+   Layout();
+}
+
+//______________________________________________________________________________
+void TGView::ShowTop()
+{
+   // Show top of the page.
+
+   SetVsbPosition(0);
+   Layout();
 }
 
 //______________________________________________________________________________
