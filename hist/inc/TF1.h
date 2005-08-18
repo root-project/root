@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.50 2005/07/05 22:23:17 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.51 2005/08/03 17:40:34 pcanal Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -72,6 +72,9 @@ protected:
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
+
+   Double_t MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xmiddle, Double_t fy, Bool_t &ok) const;
+   Double_t MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const;
          
 public:
     // TF1 status bits
