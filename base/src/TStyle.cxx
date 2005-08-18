@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.50 2005/07/29 16:32:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.51 2005/08/09 13:02:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -386,6 +386,7 @@ void TStyle::Reset(Option_t *)
    fXaxis.ResetAttAxis("X");
    fYaxis.ResetAttAxis("Y");
    fZaxis.ResetAttAxis("Z");
+   fCanvasPreferGL = kFALSE;
    fCanvasColor    = 19;
    fCanvasBorderSize= 2;
    fCanvasBorderMode= 1;

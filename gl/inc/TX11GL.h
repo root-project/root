@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.2 2004/08/16 10:00:45 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.3 2005/08/17 09:10:44 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -75,6 +75,9 @@ public:
    //deletes context or pixmap and context
    void     DeletePaintDevice(Int_t deviceInd);
    void     ExtractViewport(Int_t pixId, Int_t *viewport);
+
+   void     DrawViewer(TVirtualViewer3D *v);
+   TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
    
 private:
    //Used internally by OpenPixmap and ResizePixmap

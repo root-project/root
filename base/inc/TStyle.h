@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.25 2005/07/29 11:25:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.26 2005/08/09 13:02:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -96,7 +96,8 @@ private:
         Style_t       fHistLineStyle;     //histogram line style
         Width_t       fHistLineWidth;     //histogram line width
         Bool_t        fHistMinimumZero;   //true if default minimum is 0, false if minimum is automatic
-        Color_t       fCanvasColor;       //canvas color
+        Bool_t        fCanvasPreferGL;    //if true, rendering in canvas is with GL
+	Color_t       fCanvasColor;       //canvas color
         Width_t       fCanvasBorderSize;  //canvas border size
         Int_t         fCanvasBorderMode;  //canvas border mode
         Int_t         fCanvasDefH;        //default canvas height
@@ -184,7 +185,8 @@ public:
         Int_t            GetDrawBorder() const {return fDrawBorder;}
         Float_t          GetEndErrorSize() const {return fEndErrorSize;}
         Float_t          GetErrorX() const {return fErrorX;}
-        Color_t          GetCanvasColor() const {return fCanvasColor;}
+        Bool_t           GetCanvasPreferGL() const {return fCanvasPreferGL;}
+	Color_t          GetCanvasColor() const {return fCanvasColor;}
         Width_t          GetCanvasBorderSize() const {return fCanvasBorderSize;}
         Int_t            GetCanvasBorderMode() const {return fCanvasBorderMode;}
         Int_t            GetCanvasDefH() const      {return fCanvasDefH;}
@@ -319,7 +321,8 @@ public:
         void             SetDateY(Float_t y=0.01) {fDateY = y;}
         void             SetEndErrorSize(Float_t np=2);
         void             SetErrorX(Float_t errorx=0.5) {fErrorX = errorx;}
-        void             SetDrawBorder(Int_t drawborder=1) {fDrawBorder = drawborder;}
+        void             SetCanvasPreferGL(Bool_t prefer = kTRUE) {fCanvasPreferGL=prefer;}
+	void             SetDrawBorder(Int_t drawborder=1) {fDrawBorder = drawborder;}
         void             SetCanvasColor(Color_t color=19) {fCanvasColor = color;}
         void             SetCanvasBorderSize(Width_t size=1) {fCanvasBorderSize = size;}
         void             SetCanvasBorderMode(Int_t mode=1) {fCanvasBorderMode = mode;}
@@ -394,7 +397,7 @@ public:
         void             SetIsReading(Bool_t reading=kTRUE);
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,11)  //A collection of all graphics attributes
+        ClassDef(TStyle,12)  //A collection of all graphics attributes
 };
 
 

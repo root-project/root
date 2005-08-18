@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.3 2004/08/16 10:00:45 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.4 2005/08/17 09:10:44 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -66,7 +66,8 @@ public:
    void DrawViewer(TVirtualViewer3D *v);
    TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
 private:
-	Bool_t CreateGLPixmap(Int_t wid, UInt_t w, UInt_t h, Int_t prevInd = -1);
+	Bool_t CreateGLPixmap(Int_t wid, Int_t x, Int_t y, UInt_t w, 
+                         UInt_t h, Int_t prevInd = -1);
 
 	ClassDef(TGWin32GLManager, 0)
 };

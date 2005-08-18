@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.33 2005/08/10 07:58:06 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.34 2005/08/10 14:00:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -81,6 +81,8 @@ protected:
    Bool_t        fBatch;           //!True when in batchmode
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
+   Bool_t        fUseGL;           //!True when rendering is with GL
+   
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
 
 private:
@@ -212,7 +214,8 @@ public:
    virtual void      ToggleToolBar();
    virtual void      ToggleEditor();
    virtual void      Update();
-
+   virtual Bool_t    UseGL() const {return fUseGL;}
+   
    static void       MakeDefCanvas();
 
    ClassDef(TCanvas,6)  //Graphics canvas

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.93 2005/08/10 14:00:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.94 2005/08/16 14:44:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -31,7 +31,8 @@
 #include "TApplication.h"
 #include "TColor.h"
 #include "TVirtualPadEditor.h"
-
+#include "TVirtualViewer3D.h"
+#include "TVirtualGL.h"
 
 // This small class and the static object makedefcanvas_init make sure that
 // the TCanvas::MakeDefCanvas method is registered with TROOT as soon as
@@ -144,7 +145,8 @@ void TCanvas::Constructor()
    fCanvasImp = 0;
    fBatch     = kTRUE;
    fUpdating  = kFALSE;
-
+   fUseGL     = gStyle->GetCanvasPreferGL();
+   
    fContextMenu = 0;
    fSelected    = 0;
    fSelectedPad = 0;
@@ -172,6 +174,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCh           = wh +28;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
+   fUseGL        = gStyle->GetCanvasPreferGL();
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
@@ -205,6 +208,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
 
+   fUseGL     = gStyle->GetCanvasPreferGL();
+   
    if (gThreadXAR) {
       void *arr[6];
       static Int_t ww = 500;
@@ -278,6 +283,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
 
+   fUseGL     = gStyle->GetCanvasPreferGL();
+
    if (gThreadXAR) {
        void *arr[6];
        arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
@@ -341,6 +348,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    //  the canvas (if wtopx < 0) the menubar is not shown)
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
+
+   fUseGL     = gStyle->GetCanvasPreferGL();
 
    if (gThreadXAR) {
       void *arr[8];
@@ -1042,16 +1051,25 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
 
-      FeedbackMode(kTRUE);   // to draw in rubberband mode
-      fSelected->ExecuteEvent(event, px, py);
+      if (fSelected && fSelected->InheritsFrom(TVirtualViewer3D::Class()) && UseGL()) {
+         py -= Int_t((1 - fSelectedPad->GetHNDC() - fSelectedPad->GetYlowNDC()) * GetWh());
+         px -= Int_t(fSelectedPad->GetXlowNDC() * GetWw());
+         fSelected->ExecuteEvent(event, px, py); //will start rotation
+      } else {
+         FeedbackMode(kTRUE);   // to draw in rubberband mode
+         fSelected->ExecuteEvent(event, px, py);
 
-      RunAutoExec();
+         RunAutoExec();
+      }
 
       break;
 
    case kButton1Motion:
-
-      if (fSelected) {
+      if (fSelected && fSelected->InheritsFrom(TVirtualViewer3D::Class()) && UseGL()) {
+         py -= Int_t((1 - fSelectedPad->GetHNDC() - fSelectedPad->GetYlowNDC()) * GetWh());
+         px -= Int_t(fSelectedPad->GetXlowNDC() * GetWw());
+         fSelected->ExecuteEvent(kButton1Motion, px, py);
+      } else if (fSelected) {
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
@@ -1069,6 +1087,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                FeedbackMode(kTRUE);
             }
          }
+
          RunAutoExec();
       }
 
@@ -1915,3 +1934,4 @@ void TCanvas::DisconnectWidget()
    fCanvasID    = 0;
    fContextMenu = 0;
 }
+

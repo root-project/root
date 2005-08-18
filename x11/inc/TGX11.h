@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.24 2005/05/18 16:58:42 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.25 2005/06/21 18:15:13 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -193,6 +193,7 @@ public:
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind);
    void      RemoveWindow(ULong_t qwid);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenDisplay(Display *display);

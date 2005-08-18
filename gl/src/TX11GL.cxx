@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.5 2005/03/10 22:26:15 rdm Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.6 2005/08/17 09:10:44 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include <deque>
 #include <map>
 
+#include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
 #include "TX11GL.h"
 #include "TError.h"
@@ -469,4 +470,15 @@ void TX11GLManager::ExtractViewport(Int_t pixId, Int_t *viewport)
    }
 }
 
+//______________________________________________________________________________
+void TX11GLManager::DrawViewer(TVirtualViewer3D *vv)
+{
+   vv->DrawViewer();
+}
+
+//______________________________________________________________________________
+TObject *TX11GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
+{
+   return vv->SelectObject(x, y);
+}
 

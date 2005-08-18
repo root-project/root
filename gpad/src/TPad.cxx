@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.186 2005/07/06 08:42:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.187 2005/08/09 13:42:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -56,7 +56,7 @@
 #include "TBuffer3DTypes.h"
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
-
+#include "TAtt3D.h"
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 
@@ -133,6 +133,7 @@ TPad::TPad()
    fMother     = 0;
    fPadPaint   = 0;
    fPixmapID   = -1;
+   fGLDevice   = -1;
    fTheta      = 30;
    fPhi        = 30;
    fNumber     = 0;
@@ -225,6 +226,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fPadPaint   = 0;
    fPadView3D  = 0;
    fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
+   fGLDevice   = -1;
    fNumber     = 0;
    fAbsCoord   = kFALSE;
    fEditable   = kTRUE;
@@ -699,7 +701,14 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
    gVirtualX->CopyPixmap(fPixmapID, px, py);
+
    if (this == gPad) HighLight(gPad->GetHighLightColor());
+
+   if (fViewer3D && fCanvas->UseGL()) {
+      Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
+      Int_t realInd = gGLManager->GetVirtualXInd(fGLDevice);
+      gVirtualX->CopyPixmap(realInd, px + borderSize, py + borderSize);
+   }
 }
 
 //______________________________________________________________________________
@@ -3361,8 +3370,23 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    // found we can terminate the loop.
    Bool_t gotPrim = kFALSE;      // true if found a non pad primitive
    TObjLink *lnk = GetListOfPrimitives()->LastLink();
+
+   //We can have 3d stuff in pad. If canvas prefers to draw
+   //such stuff with OpenGL, the selection of 3d objects is
+   //a gl viewer business so, in first cycle we do not 
+   //call DistancetoPrimitive for TAtt3D descendants.
+   //In case of gl we first try to select 2d object first.
+
    while (lnk) {
       TObject *obj = lnk->GetObject();
+
+      //If canvas prefers GL, all 3d objects must be drawn/selected by
+      //gl viewer
+      if (fCanvas->UseGL() && obj->InheritsFrom(TAtt3D::Class())) {
+         lnk = lnk->Prev();
+         continue;
+      }
+
       fPadPointer  = obj;
       if (obj->InheritsFrom(TPad::Class())) {
          pick = ((TPad*)obj)->Pick(px, py, pickobj);
@@ -3389,10 +3413,26 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    //if no primitive found, check if we have a TView
    //if yes, return the view except if you are in the lower or upper X range
    //of the pad.
+   //In case canvas prefers gl, fView existance
+   //automatically means viewer3d existance. (?)
+
    if (fView && !gotPrim) {
       Double_t dx = 0.05*(fUxmax-fUxmin);
-      if ((x > fUxmin +dx) && (x < fUxmax-dx)) dummyLink.SetObject(fView);
+      if ((x > fUxmin + dx) && (x < fUxmax-dx)) {
+
+         if (fCanvas->UseGL()) {
+            //No 2d stuff was selected, but we have gl-viewer. Let it select an object in
+            //scene (or select itself). In any case it'll internally call
+            //gPad->SetSelected(ptr) as, for example, hist painter does.
+            py -= Int_t((1 - GetHNDC() - GetYlowNDC()) * GetWh());
+            px -= Int_t(GetXlowNDC() * GetWw());
+            fViewer3D->DistancetoPrimitive(px, py);
+         }
+         else 
+            dummyLink.SetObject(fView);
+      }
    }
+
    if (picked->InheritsFrom(TButton::Class())) {
       TButton *button = (TButton*)picked;
       if (!button->IsEditable()) pickobj = 0;
@@ -4130,10 +4170,22 @@ void TPad::ResizePad(Option_t *option)
             Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
             h = 10;
          }
-         if (fPixmapID == -1)       // this case is handled via the ctor
+         if (fPixmapID == -1) {      // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
-         else
-            if (gVirtualX->ResizePixmap(fPixmapID, w, h)) Modified(kTRUE);
+         } else {
+            if (fViewer3D && fCanvas->UseGL()) {
+               Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
+               Int_t ww = w - 2 * borderSize;
+               Int_t hh = h - 2 * borderSize;
+               Int_t px = 0, py = 0;
+               XYtoAbsPixel(fX1, fY2, px, py);
+               gGLManager->ResizeGLPixmap(fGLDevice, px + borderSize, py + borderSize, ww, hh);
+            }
+
+            if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+               Modified(kTRUE);
+            }
+         }
       }
    }
    if (fView) {
@@ -5156,9 +5208,9 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    Bool_t createdExternal = kFALSE;
 
   // External viewers need to be created via plugin manager via interface...
-   if (!strstr(type,"pad"))
-   {
+   if (!strstr(type,"pad")) {
       newViewer = TVirtualViewer3D::Viewer3D(this,type);
+
       if (!newViewer) {
          Error("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
 
@@ -5166,11 +5218,40 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          return fViewer3D;
       }
       createdExternal = kTRUE;
-   }
-   else {
-      newViewer = new TViewer3DPad(*this);
-   }
 
+   } else {
+      if (fCanvas->UseGL() && gGLManager) {
+         Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
+         UInt_t w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1)) - 2 * borderSize;
+         UInt_t h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1)) - 2 * borderSize;
+         Int_t px = 0, py = 0;
+         XYtoAbsPixel(fX1, fY2, px, py);
+         px += borderSize, py += borderSize;
+
+         fGLDevice = gGLManager->OpenGLPixmap(fCanvas->GetCanvasID(), px, py, w, h);
+
+         if (fGLDevice != -1) {
+            //TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLViewer");
+            TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLPixmap");
+
+            if (ph && ph->LoadPlugin() != -1)
+               newViewer = (TVirtualViewer3D *)ph->ExecPlugin(6, this, fGLDevice, px, py, w, h);
+            
+            if (newViewer) {
+               Info("GetViewer3D", "pixmap gl render created sucsessfully\n");
+            } else
+               Error("GetViewer3D", "Error with plugin manager for pixmap gl render\n");
+         } else {
+            Error(
+                  "GetViewer3D", 
+                  "Cannot create off-screen gl device, will use default instead\n"
+                 );
+         }
+      }
+
+      if (!newViewer)
+         newViewer = new TViewer3DPad(*this);
+   }
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
    // c.f. ReleaseViewer3D

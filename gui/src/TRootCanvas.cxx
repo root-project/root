@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.79 2005/06/08 17:05:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.80 2005/06/10 07:02:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -55,6 +55,9 @@
 #include "TGuiBuilder.h"
 #include "TImage.h"
 #include "TError.h"
+
+#include "TPluginManager.h"
+#include "TVirtualGL.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -500,7 +503,35 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create canvas and canvas container that will host the ROOT graphics
    fCanvasWindow = new TGCanvas(fMainFrame, GetWidth()+4, GetHeight()+4,
                                 kSunkenFrame | kDoubleBorder);
-   fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
+             
+   fCanvasID = -1;             
+                                
+   if (fCanvas->UseGL()) {
+      //first, initialize GL (if not yet)
+      if (!gGLManager) {
+         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
+         
+         if (ph && ph->LoadPlugin() != -1) {
+            if (!ph->ExecPlugin(0))
+               Warning(
+                       "CreateCanvas", 
+                       "Can not load GL, will use default canvas imp instead\n"
+                      );
+         }
+      }
+      
+      if (gGLManager) {
+         fCanvasID = gGLManager->InitGLWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId(), kTRUE);
+         if (fCanvasID != -1)
+            Info("CreateCanvas", "InitGLWindow OK\n");
+         else
+            Warning("CreateCanvas", "Cannot init gl window, will use default instead\n");
+      }
+   }
+   
+   if (fCanvasID == -1)
+      fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
+      
    Window_t win = gVirtualX->GetWindowID(fCanvasID);
    fCanvasContainer = new TRootContainer(this, win, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);

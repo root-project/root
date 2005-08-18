@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.48 2005/05/19 20:39:39 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.49 2005/06/21 18:15:13 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3236,4 +3236,63 @@ Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
    return (Pixmap_t)0;
 }
 
+//______________________________________________________________________________
+Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
+{
+   // Register pixmap created by gVirtualGL
+   // w,h : Width and height of the pixmap.
+
+   if (prevind == -1) {
+      //register new pixmap
+      Int_t wid = 0;
+
+      // Select next free window number
+      for (; wid < fMaxNumberOfWindows; ++wid) 
+         if (!fWindows[wid].open)
+            break;
+      
+      if (wid == fMaxNumberOfWindows) {
+         Int_t newsize = fMaxNumberOfWindows + 10;
+         fWindows = (XWindow_t*) TStorage::ReAlloc(
+                                                   fWindows, newsize * sizeof(XWindow_t),
+                                                   fMaxNumberOfWindows*sizeof(XWindow_t)
+                                                  );
+                                                  
+         for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
+            fWindows[i].open = 0;
+         
+         fMaxNumberOfWindows = newsize;
+      }
+      
+      fWindows[wid].open = 1;
+      gCws = fWindows + wid;
+      gCws->window = pixid;
+      gCws->drawing = gCws->window;
+      gCws->buffer = 0;
+      gCws->double_buffer = 0;
+      gCws->ispixmap = 1;
+      gCws->clip = 0;
+      gCws->width = w;
+      gCws->height = h;
+      gCws->new_colors = 0;
+      gCws->shared = kFALSE;
+      
+      return wid;
+
+   } else if (pixid != 0) {
+   //replace drawing
+      gCws = fWindows + prevind; //do I really need this ???
+      gCws->window = pixid;
+      gCws->drawing = gCws->window;
+      gCws->width = w;
+      gCws->height = h;
+   } else {
+   //change sizes
+      gCws = fWindows + prevind; //do I really need this ???
+      gCws->width = w;
+      gCws->height = h;
+   }
+   
+   return prevind;
+}
 

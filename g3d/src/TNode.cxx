@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.25 2005/04/21 08:13:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.26 2005/05/25 14:25:16 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -651,6 +651,7 @@ void TNode::Paint(Option_t *option)
          if (reqSections != TBuffer3D::kNone)
          {
             fShape->GetBuffer3D(reqSections);
+            const_cast<TBuffer3D &>(buffer).fID = this;
             viewer3D->AddObject(buffer, &viewerWantsSons);
          }
       }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.35 2005/06/17 08:16:19 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.36 2005/06/23 16:13:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,6 +84,7 @@ protected:
    Double_t      fAspectRatio;     //  ratio of w/h in case of fixed ratio
 
    Int_t         fPixmapID;        //! Off-screen pixmap identifier
+   Int_t         fGLDevice;        //! OpenGL off-screen pixmap identifier
    Int_t         fNumber;          //  pad number identifier
    Int_t         fTickx;           //  Set to 1 if tick marks along X
    Int_t         fTicky;           //  Set to 1 if tick marks along Y
@@ -225,6 +226,7 @@ public:
    virtual TObject  *GetPadPointer() const {return fPadPointer;}
    TVirtualPad      *GetPadSave() const;
    TVirtualPad      *GetSelectedPad() const;
+   Int_t             GetGLDevice()const {return fGLDevice;}
    TView            *GetView() const {return fView;}
    TPadView3D       *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
    Int_t             GetLogx() const {return fLogx;}
