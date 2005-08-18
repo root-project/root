@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.119 2005/05/03 13:17:55 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.120 2005/05/12 07:59:39 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -493,11 +493,8 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
                           ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-         if (gConsoleEvent) {
+         if (gConsoleEvent)
             ::ResetEvent(gConsoleEvent);
-            ::CloseHandle(gConsoleEvent);
-            gConsoleEvent = 0;
-         }
       } else {
          static int i = 0;
          ::SleepEx(100, 1);
@@ -579,6 +576,11 @@ TWinNTSystem::~TWinNTSystem()
    }
 
 #ifdef GDK_WIN32
+   if (gConsoleEvent) {
+      ::ResetEvent(gConsoleEvent);
+      ::CloseHandle(gConsoleEvent);
+      gConsoleEvent = 0;
+   }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
 #else
    ::CloseHandle(fhTermInputEvent);
@@ -1190,12 +1192,6 @@ void TWinNTSystem::ExitLoop()
 #ifndef GDK_WIN32
    // Release Dispatch one event
    if (fhTermInputEvent) ::SetEvent(fhTermInputEvent);
-#else
-   if(gConsoleThreadHandle) {
-      TerminateThread(gConsoleThreadHandle, 0);
-      ::CloseHandle(gConsoleThreadHandle);
-      gConsoleThreadHandle = 0;
-   }
 #endif
 }
 
