@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.1 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -32,7 +32,7 @@ ClassImp(TAlienDirectoryEntry)
 void TAlienDirectoryEntry::Browse(TBrowser* b)
 {
    if (b) {
-      TAlienFile* newfile  = (new TAlienFile(fLfn.Data()));
+      TAlienFile* newfile  = new TAlienFile(fLfn);
       b->Add(newfile);
    }
 }
@@ -56,10 +56,10 @@ TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
 
    SetTitle(ldn);
 
-   TGridResult *dirlist = gGrid->Ls(ldn,"-la");
+   TGridResult *dirlist = gGrid->Ls(ldn, "-la");
    if (dirlist) {
       dirlist->Sort();
-      Int_t i =0;
+      Int_t i = 0;
       while (dirlist->GetFileName(i)) {
          if (!strcmp(".",dirlist->GetFileName(i))) {
             i++;
@@ -73,7 +73,7 @@ TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
          if (dirlist->GetKey(i,"permissions")[0] == 'd') {
             fEntries.Add(new TAlienDirectory(dirlist->GetFileNamePath(i)));
          } else {
-            fEntries.Add(new TAlienDirectoryEntry(dirlist->GetFileNamePath(i),dirlist->GetFileName(i)));
+            fEntries.Add(new TAlienDirectoryEntry(dirlist->GetFileNamePath(i), dirlist->GetFileName(i)));
          }
          i++;
       }
@@ -87,12 +87,11 @@ void TAlienDirectory::Browse(TBrowser *b)
    // Browser interface to ob status.
 
    if (b) {
-      TIterator *iter = fEntries.MakeIterator();
+      TIter next(fEntries);
       TObject *obj = 0;
-      while ((obj = iter->Next()) != 0) {
+      while ((obj = next())) {
          b->Add(obj);
       }
-      delete iter;
    }
 }
 

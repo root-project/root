@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.7 2005/06/10 18:01:36 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.8 2005/08/12 15:46:40 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
    TAlienFile() : fUrl("dummy") { }
 
 public:
-   TAlienFile(const char *url, Option_t * option = "",
+   TAlienFile(const char *url, Option_t *option = "",
               const char *ftitle = "", Int_t compress = 1);
    virtual ~TAlienFile();
 
@@ -62,19 +62,19 @@ public:
    void      Close(Option_t *option="");
 
    Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const
-                { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
+                { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
    Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0)
-                { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
+                { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
    Long64_t  GetBytesRead() const
-                { return ((fSubFile)?fSubFile->GetBytesRead():-1); }
+                { return (fSubFile) ? fSubFile->GetBytesRead() : -1; }
    Long64_t  GetBytesWritten() const
-                { return ((fSubFile)?fSubFile->GetBytesWritten():-1); }
+                { return (fSubFile) ? fSubFile->GetBytesWritten() : -1; }
    Long64_t  GetSize() const
-                { return ((fSubFile)?fSubFile->GetSize():-1); }
+                { return (fSubFile) ? fSubFile->GetSize() : -1; }
    Bool_t    cd(const char *path)
-                { return ((fSubFile)?fSubFile->cd(path):kFALSE); }
+                { return (fSubFile) ? fSubFile->cd(path) : kFALSE; }
    const char *GetPath() const
-                { return ((fSubFile)?fSubFile->GetPath():0); }
+                { return (fSubFile) ? fSubFile->GetPath() : 0; }
 
    TFile      *GetSubFile() const { return fSubFile; }
 
