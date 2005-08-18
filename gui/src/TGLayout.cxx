@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.16 2004/10/21 12:07:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.17 2004/10/25 12:39:56 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -960,8 +960,10 @@ void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
 
    if (!GetLayoutHints()) return;
 
-   if ((fLayoutHints == kLHintsNormal) && (pad == 0)) return;
-
+   if ((fLayoutHints == kLHintsNormal) && (pad == 0)) {
+      out << ", new TGLayoutHints(kLHintsNormal)";
+      return;
+   }
    if (fLayoutHints & kLHintsLeft) {
       if (hints.Length() == 0) hints  = "kLHintsLeft";
 			   else                     hints += " | kLHintsLeft";

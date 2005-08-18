@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.21 2005/01/31 17:20:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.22 2005/02/07 22:47:43 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -525,6 +525,12 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
    TIter next(GetList());
    while ((f = (TGFrameElement *)next())) {
       f->fFrame->SavePrimitive(out,option);
+      if (f->fFrame->InheritsFrom("TGButton")) continue;
+      else {
+         out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
+         f->fLayout->SavePrimitive(out, option);
+         out << ");"<< endl;
+      }
    }
 
    if (IsExclusive())
@@ -597,6 +603,12 @@ void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
    TIter next(GetList());
    while ((f = (TGFrameElement *)next())) {
       f->fFrame->SavePrimitive(out,option);
+      if (f->fFrame->InheritsFrom("TGButton")) continue;
+      else {
+         out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
+         f->fLayout->SavePrimitive(out, option);
+         out << ");"<< endl;
+      }
    }
 
    if (IsExclusive())
@@ -667,6 +679,12 @@ void TGVButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
    TIter next(GetList());
    while ((f = (TGFrameElement *)next())) {
       f->fFrame->SavePrimitive(out,option);
+      if (f->fFrame->InheritsFrom("TGButton")) continue;
+      else {
+         out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
+         f->fLayout->SavePrimitive(out, option);
+         out << ");"<< endl;
+      }
    }
 
    if (IsExclusive())
