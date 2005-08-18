@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.8 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.9 2005/08/18 14:16:28 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -52,29 +52,39 @@ public:
               const char *ftitle = "", Int_t compress = 1);
    virtual ~TAlienFile();
 
-   TString   AccessURL(const char *url, Option_t *option = "",
-                       const char *ftitle = "", Int_t compress = 1);
+   TString    AccessURL(const char *url, Option_t *option = "",
+                        const char *ftitle = "", Int_t compress = 1);
 
-   Bool_t    ReadBuffer(char *buf, Int_t len);
-   Bool_t    WriteBuffer(const char *buf, Int_t len);
+   Bool_t     ReadBuffer(char *buf, Int_t len);
+   Bool_t     WriteBuffer(const char *buf, Int_t len);
 
-   void      Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   void      Close(Option_t *option="");
+   void       Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   void       Close(Option_t *option="");
 
-   Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const
-                { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
-   Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0)
-                { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
-   Long64_t  GetBytesRead() const
-                { return (fSubFile) ? fSubFile->GetBytesRead() : -1; }
-   Long64_t  GetBytesWritten() const
-                { return (fSubFile) ? fSubFile->GetBytesWritten() : -1; }
-   Long64_t  GetSize() const
-                { return (fSubFile) ? fSubFile->GetSize() : -1; }
-   Bool_t    cd(const char *path)
-                { return (fSubFile) ? fSubFile->cd(path) : kFALSE; }
+   Int_t      Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const
+                 { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
+   Int_t      Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0)
+                 { return (fSubFile) ? fSubFile->Write(name,opt,bufsiz) : -1; }
+   Long64_t   GetBytesRead() const
+                 { return (fSubFile) ? fSubFile->GetBytesRead() : -1; }
+   Long64_t   GetBytesWritten() const
+                 { return (fSubFile) ? fSubFile->GetBytesWritten() : -1; }
+   Long64_t   GetSize() const
+                 { return (fSubFile) ? fSubFile->GetSize() : -1; }
+   Bool_t     cd(const char *path)
+                 { return (fSubFile) ? fSubFile->cd(path) : kFALSE; }
    const char *GetPath() const
-                { return (fSubFile) ? fSubFile->GetPath() : 0; }
+                 { return (fSubFile) ? fSubFile->GetPath() : 0; }
+   TObject    *Get(const char *namecycle)
+                 { return (fSubFile) ? fSubFile->Get(namecycle) : 0; }
+   TFile      *GetFile() const
+                 { return (fSubFile) ? fSubFile->GetFile() : 0; }
+   TKey       *GetKey(const char *name, Short_t cycle=9999) const
+                 { return (fSubFile) ? fSubFile->GetKey(name, cycle) : 0; };
+   TList      *GetList() const
+                 { return (fSubFile) ? fSubFile->GetList() : 0; }
+   TList      *GetListOfKeys() const
+                 { return (fSubFile) ? fSubFile->GetListOfKeys() : 0; }
 
    TFile      *GetSubFile() const { return fSubFile; }
 

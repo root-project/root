@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.1 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienDirectory.cxx,v 1.2 2005/08/18 14:16:28 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -87,7 +87,7 @@ void TAlienDirectory::Browse(TBrowser *b)
    // Browser interface to ob status.
 
    if (b) {
-      TIter next(fEntries);
+      TIter next(&fEntries);
       TObject *obj = 0;
       while ((obj = next())) {
          b->Add(obj);
