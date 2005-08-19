@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.26 2004/08/24 10:41:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.27 2005/01/28 05:45:41 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -58,6 +58,14 @@
 // in addition to the TObject part of TRef (fBits,fUniqueID).
 // When the TRef is read, its pointer fPID is set to the value
 // stored in the TObjArray of TFile::fProcessIDs (fProcessIDs[pidf]).
+// The pidf is stored in the bits 24->31 of the fUniqueID of the TRef.
+// This implies that the number of TRefs in one process should not
+// exceed 2**23 = 8388608 and that the number of processes (different jobs)
+// writing TRefs to one file should be less than 256.
+// See section "ObjectNumber" below for a recipee to minimize the object count.
+// If the objectnumber exceeds this limit, it could be the sign that:
+//   -The object count is never reset (see below)
+//   -TRef is misused.
 //
 // When a referenced object robj is written, TObject::Streamer writes
 // in addition to the standard (fBits,fUniqueID) the pidf.
@@ -65,9 +73,13 @@
 // At this point, robj is entered into the table of objects of the TProcessID
 // corresponding to pidf.
 //
-// WARNING: If MyClass is the class of the referenced object, The TObject
+// WARNING1: If MyClass is the class of the referenced object, The TObject
 //          part of MyClass must be Streamed. One should not
 //          call MyClass::Class()->IgnoreTObjectStreamer()
+//
+//
+// WARNING2: A TRef cannot point to another TRef.
+//
 //
 // ObjectNumber
 // ------------
