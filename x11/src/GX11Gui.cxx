@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.41 2005/02/11 18:40:09 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.42 2005/06/08 07:07:43 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -290,7 +290,7 @@ void TGX11::MoveWindow(Window_t id, Int_t x, Int_t y)
    // Move a window.
 
    if (!id) return;
-   
+
    XMoveWindow(fDisplay, (Window) id, x, y);
 }
 
@@ -997,7 +997,7 @@ void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 
    if (!mask) {
       // in this case copy all fields
-      mask = kMaxULong;
+      mask = kMaxUInt;
    }
 
    gval.fMask = mask;  // only set fMask used to convert to xmask
@@ -2048,7 +2048,7 @@ void TGX11::GetGCValues(GContext_t gc, GCValues_t &gval)
 
    if (!gval.fMask) {
       // in this case copy all fields
-      gval.fMask = kMaxULong;
+      gval.fMask = kMaxUInt;
    }
 
    MapGCValues(gval, xmask, xgval);
