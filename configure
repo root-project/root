@@ -1878,7 +1878,8 @@ fi
 if test ! "x$enable_xml" = "xno" ; then
     # Check for xml include and library
     checking_msg "xml2-config"
-    if `which xml2-config > /dev/null 2>&1` && \
+    xml2_config=`which xml2-config 2> /dev/null`
+    if test ! "x$xml2_config" = "x" && test -x "$xml2_config" && \
        test ! "x$platform" = "xwin32" ; then
        which xml2-config
        # we found xml2-config - now check the version number
