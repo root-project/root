@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGFrame.h,v 1.59 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.2 2005/08/18 12:06:36 rdm Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -1096,6 +1096,9 @@ Bool_t TGLPixmap::OpenComposite(const TBuffer3D &, Bool_t *)
 
 void TGLPixmap::CloseComposite()
 {
+   //py -= Int_t((1 - fPad->GetHNDC() - fPad->GetYlowNDC()) * fPad->GetWh());
+   //px -= Int_t(fPad->GetXlowNDC() * fPad->GetWw());
+
 }
 
 void TGLPixmap::AddCompositeOp(UInt_t)

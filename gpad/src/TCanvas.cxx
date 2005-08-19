@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.94 2005/08/16 14:44:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.95 2005/08/18 11:12:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1051,11 +1051,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
 
-      if (fSelected && fSelected->InheritsFrom(TVirtualViewer3D::Class()) && UseGL()) {
-         py -= Int_t((1 - fSelectedPad->GetHNDC() - fSelectedPad->GetYlowNDC()) * GetWh());
-         px -= Int_t(fSelectedPad->GetXlowNDC() * GetWw());
-         fSelected->ExecuteEvent(event, px, py); //will start rotation
-      } else {
+      if (fSelected) {
          FeedbackMode(kTRUE);   // to draw in rubberband mode
          fSelected->ExecuteEvent(event, px, py);
 
@@ -1065,11 +1061,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-      if (fSelected && fSelected->InheritsFrom(TVirtualViewer3D::Class()) && UseGL()) {
-         py -= Int_t((1 - fSelectedPad->GetHNDC() - fSelectedPad->GetYlowNDC()) * GetWh());
-         px -= Int_t(fSelectedPad->GetXlowNDC() * GetWw());
-         fSelected->ExecuteEvent(kButton1Motion, px, py);
-      } else if (fSelected) {
+      if (fSelected) {
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);

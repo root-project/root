@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.187 2005/08/09 13:42:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.188 2005/08/18 11:12:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4180,6 +4180,7 @@ void TPad::ResizePad(Option_t *option)
                Int_t px = 0, py = 0;
                XYtoAbsPixel(fX1, fY2, px, py);
                gGLManager->ResizeGLPixmap(fGLDevice, px + borderSize, py + borderSize, ww, hh);
+               gGLManager->DrawViewer(fViewer3D);
             }
 
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
