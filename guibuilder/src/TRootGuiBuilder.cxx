@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.14 2005/05/02 11:01:04 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.15 2005/06/08 17:05:56 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -450,7 +450,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
-   SetIconPixmap("bld_rgb.xpm");
+   fIconPic = SetIconPixmap("bld_rgb.xpm");
    SetClassHints("GuiBuilder", "GuiBuilder");
 
    fSelected = 0;
@@ -475,6 +475,7 @@ TRootGuiBuilder::~TRootGuiBuilder()
 {
    // destructor
 
+   if (fIconPic) gClient->FreePicture(fIconPic);
    delete fMenuFile;
    delete fMenuWindow;
    delete fMenuHelp;

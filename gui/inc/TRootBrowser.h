@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.17 2005/05/30 10:21:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.18 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -78,6 +78,7 @@ private:
    TList               *fWidgets;
    TList               *fHistory;            // history of browsing
    TObject             *fHistoryCursor;      // current hsitory position
+   const TGPicture     *fIconPic;            // icon picture
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);

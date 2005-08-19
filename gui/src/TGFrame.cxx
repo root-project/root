@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.110 2005/07/14 14:13:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.111 2005/07/15 00:31:52 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1534,7 +1534,7 @@ void TGMainFrame::SetIconName(const char *name)
 }
 
 //______________________________________________________________________________
-void TGMainFrame::SetIconPixmap(const char *iconName)
+const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 {
    // Set window icon pixmap by name. This is typically done via the window
    // manager.
@@ -1544,7 +1544,9 @@ void TGMainFrame::SetIconPixmap(const char *iconName)
    if (iconPic) {
       Pixmap_t pic = iconPic->GetPicture();
       gVirtualX->SetIconPixmap(fId, pic);
-   }
+      return iconPic;
+   } else 
+      return 0;
 }
 
 //______________________________________________________________________________

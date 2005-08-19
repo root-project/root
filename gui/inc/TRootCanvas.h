@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.17 2005/05/30 22:47:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.18 2005/06/08 17:05:56 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -80,7 +80,8 @@ private:
    TGLayoutHints       *fVertical2Layout;    // layout hints for separator
    TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
    TGDockableFrame     *fToolDock;
-
+   const TGPicture     *fIconPic;            // icon picture
+   
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas

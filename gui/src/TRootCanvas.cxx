@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.80 2005/06/10 07:02:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.81 2005/08/18 11:12:59 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -552,7 +552,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Misc
    SetWindowName(name);
    SetIconName(name);
-   SetIconPixmap("macro_s.xpm");
+   fIconPic = SetIconPixmap("macro_s.xpm");
    SetClassHints("Canvas", "Canvas");
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
@@ -577,6 +577,7 @@ TRootCanvas::~TRootCanvas()
    // Delete ROOT basic canvas. Order is significant. Delete in reverse
    // order of creation.
 
+   if (fIconPic) gClient->FreePicture(fIconPic);
    if (fEditor) delete fEditor;
 
    if (!MustCleanup()) {

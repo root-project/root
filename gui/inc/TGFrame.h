@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.58 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.59 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -474,7 +474,7 @@ public:
    void DontCallClose();
    void SetWindowName(const char *name = 0);
    void SetIconName(const char *name);
-   void SetIconPixmap(const char *iconName);
+   const TGPicture *SetIconPixmap(const char *iconName);
    void SetClassHints(const char *className, const char *resourceName);
    void SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input);
    void SetWMPosition(Int_t x, Int_t y);

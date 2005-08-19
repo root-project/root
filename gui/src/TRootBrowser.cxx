@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.76 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.77 2005/07/05 18:06:31 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -799,6 +799,9 @@ TRootBrowser::~TRootBrowser()
    // Browser destructor.
 
    UnmapWindow();
+
+   if (fIconPic) gClient->FreePicture(fIconPic);
+
    delete fToolBarSep;
    delete fToolBar;
    delete fFSComboBox;
@@ -1072,7 +1075,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    // Misc
    SetWindowName(name);
    SetIconName(name);
-   SetIconPixmap("rootdb_s.xpm");
+   fIconPic = SetIconPixmap("rootdb_s.xpm");
    SetClassHints("Browser", "Browser");
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.1 2004/10/15 15:34:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.2 2004/12/09 22:55:06 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -56,6 +56,7 @@ private:
    TGFrame           *fSelected;    //  selected frame
    TGMdiFrame        *fEditable;    //  mdi frame where editted frame is  located
    TGuiBldEditor     *fEditor;      // frame property editor
+   const TGPicture   *fIconPic;     // icon picture
 
    void InitMenu();
    void EnableLassoButtons(Bool_t on = kTRUE);
