@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.2 2005/08/18 12:06:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.3 2005/08/19 10:47:10 brun Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -1096,8 +1096,6 @@ Bool_t TGLPixmap::OpenComposite(const TBuffer3D &, Bool_t *)
 
 void TGLPixmap::CloseComposite()
 {
-   //py -= Int_t((1 - fPad->GetHNDC() - fPad->GetYlowNDC()) * fPad->GetWh());
-   //px -= Int_t(fPad->GetXlowNDC() * fPad->GetWw());
 
 }
 
@@ -1107,6 +1105,8 @@ void TGLPixmap::AddCompositeOp(UInt_t)
 
 void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+   py -= Int_t((1 - fPad->GetHNDC() - fPad->GetYlowNDC()) * fPad->GetWh());
+   px -= Int_t(fPad->GetXlowNDC() * fPad->GetWw());
    switch(event) {
    case kButton1Down:
       //fix arc ball first
