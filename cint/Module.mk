@@ -290,10 +290,10 @@ $(CINTDIRS)/accstrm.o: $(CINTDIRS)/accstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm -o $@ -c $<
 
 $(CINTDIRS)/v6_stdstrct.o: $(CINTDIRS)/v6_stdstrct.cxx
-	$(CXX) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
 
 $(CINTDIRS)/v6_loadfile_tmp.o: $(CINTDIRS)/v6_loadfile.cxx
-	$(CXX) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
 
 $(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
 	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<
@@ -301,7 +301,7 @@ $(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
 $(CINTDIRT)/makecint_tmp.o: $(CINTDIRT)/makecint.c
 	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
 
-$(CINTDIRS)/loadfile_tmp.d: $(CINTDIRS)/loadfile.c $(RMKDEP)
-	@cp $(CINTDIRS)/loadfile.c $(CINTDIRS)/loadfile_tmp.c
-	$(MAKEDEP) $@ "$(CFLAGS)" $(CINTDIRS)/loadfile_tmp.c > $@
-	@rm -f $(CINTDIRS)/loadfile_tmp.c
+$(CINTDIRS)/v6_loadfile_tmp.d: $(CINTDIRS)/v6_loadfile.cxx $(RMKDEP)
+	@cp $(CINTDIRS)/v6_loadfile.cxx $(CINTDIRS)/v6_loadfile_tmp.cxx
+	$(MAKEDEP) $@ "$(CXXFLAGS)" $(CINTDIRS)/v6_loadfile_tmp.cxx > $@
+	@rm -f $(CINTDIRS)/v6_loadfile_tmp.cxx
