@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.174 2005/08/09 20:08:49 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.175 2005/08/11 21:19:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -879,8 +879,9 @@ void TClass::BuildRealData(void *pointer)
 
    // Create an instance of this class
    if (!realDataObject) {
-      if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
-      else                            realDataObject = New();
+      if (!strcmp(GetName(),"TROOT"))        realDataObject = gROOT;
+      else if (!strcmp(GetName(),"TGWin32")) realDataObject = gVirtualX;
+      else                                   realDataObject = New();
    }
 
    // The following statement will call recursively all the subclasses
@@ -962,7 +963,8 @@ void TClass::BuildRealData(void *pointer)
       }
    }
 
-   if( !pointer && realDataObject && realDataObject != gROOT) {
+   if (!pointer && realDataObject && realDataObject != gROOT
+        && realDataObject != gVirtualX) {
       Int_t delta = GetBaseClassOffset(TObject::Class());
       if (delta>=0) {
          TObject *tobj = (TObject*) ( ( (char*)realDataObject ) + delta );

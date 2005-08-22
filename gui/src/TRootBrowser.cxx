@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.77 2005/07/05 18:06:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.78 2005/08/19 09:46:37 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "THashTable.h"
+#include "TMethod.h"
 
 #include "HelpText.h"
 
@@ -523,6 +524,15 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    fCurrentList->Add(obj);
    fCurrentList->UpdateName();
    fIsEmpty = kFALSE;
+
+   TGFrameElement *el;
+   TIter next(fList);
+   while ((el = (TGFrameElement *) next())) {
+      TGLVEntry *f = (TGLVEntry *) el->fFrame;
+      if (f->GetUserData() == obj) {
+         return;
+      }
+   }
 
    if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
       fCurrentName->SetString(fCurrentList->GetName());
@@ -2082,11 +2092,15 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 {
    // Default action when double clicking on icon.
 
+   Bool_t browsable = kFALSE;
    const char *dirname = 0; 
    if (obj) {
       TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
 
       Bool_t useLock = kTRUE;
+
+      if (obj->IsA()->GetListOfMethods()->FindObject("Browse"))
+         browsable = kTRUE;
 
       if (obj->IsA() == TSystemDirectory::Class()) {
          useLock = kFALSE;
@@ -2157,10 +2171,12 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          }
       }
 
-      if (useLock) fTreeLock = kTRUE;
-      Emit("BrowseObj(TObject*)", (Long_t)obj);
-      obj->Browse(fBrowser);
-      if (useLock) fTreeLock = kFALSE;
+      if (browsable) {
+         if (useLock) fTreeLock = kTRUE;
+         Emit("BrowseObj(TObject*)", (Long_t)obj);
+         obj->Browse(fBrowser);
+         if (useLock) fTreeLock = kFALSE;
+      }
 
 out:
       if (obj->IsA() != TSystemFile::Class()) {
