@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.134 2004/09/15 17:09:51 rdm Exp $
+// @(#)root/base:$Name: v4-04-02-patches $:$Id: TFile.cxx,v 1.135 2004/09/21 15:41:14 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -60,7 +60,7 @@ ClassImp(TFile)
 //*-*x17 macros/layout_file
 
 //______________________________________________________________________________
-TFile::TFile() : TDirectory()
+TFile::TFile() : TDirectory(), fInfoCache(0)
 {
    // File default Constructor.
 
@@ -84,7 +84,7 @@ TFile::TFile() : TDirectory()
 
 //1_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectory()
+           : TDirectory(), fInfoCache(0)
 {
    // Opens or creates a local ROOT file whose name is fname1. It is
    // recommended to specify fname1 as "<file>.root". The suffix ".root"
@@ -360,7 +360,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-TFile::TFile(const TFile &file) : TDirectory()
+TFile::TFile(const TFile &file) : TDirectory(), fInfoCache(0)
 {
    ((TFile&)file).Copy(*this);
 }
@@ -377,6 +377,7 @@ TFile::~TFile()
    SafeDelete(fFree);
    SafeDelete(fCache);
    SafeDelete(fArchive);
+   SafeDelete(fInfoCache);
 
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
@@ -898,6 +899,13 @@ Long64_t TFile::GetSize() const
 }
 
 //______________________________________________________________________________
+const TList *TFile::GetStreamerInfoCache()   
+{
+   // Returns the cached list of StreamerInfos used in this file.
+   return fInfoCache ?  fInfoCache : (fInfoCache=GetStreamerInfoList());
+}
+
+//______________________________________________________________________________
 TList *TFile::GetStreamerInfoList()
 {
 // Read the list of TStreamerInfo objects written to this file.
@@ -1279,6 +1287,7 @@ Int_t TFile::Recover()
          key->ReadBuffer(bufread);
          if (!strcmp(key->GetName(),"StreamerInfo")) {
             fSeekInfo = seekkey;
+            SafeDelete(fInfoCache);
             fNbytesInfo = nbytes;
          } else {
             AppendKey(key);
@@ -1665,6 +1674,7 @@ void TFile::WriteHeader()
 //*-*-*-*-*-*-*-*-*-*-*-*Write File Header*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =================
 //
+   SafeDelete(fInfoCache);
    TFree *lastfree = (TFree*)fFree->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
    const char *root = "root";
@@ -2003,6 +2013,8 @@ void TFile::WriteStreamerInfo()
    //no need to update the index if no new classes added to the file
    if (fClassIndex->fArray[0] == 0) return;
    if (gDebug > 0) Info("WriteStreamerInfo", "called for file %s",GetName());
+
+   SafeDelete(fInfoCache);
 
    // build a temporary list with the marked files
    TIter next(gROOT->GetListOfStreamerInfo());

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.80 2005/04/18 10:54:58 brun Exp $
+// @(#)root/base:$Name: v4-04-02-patches $:$Id: TBuffer.cxx,v 1.81 2005/04/20 07:17:28 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2489,11 +2489,17 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
             cl->GetStreamerInfos()->GetLast()>1 ) {
 
-            TList *list = ((TFile*)fParent)->GetStreamerInfoList();
-            TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
-            UInt_t checksum = local->GetCheckSum();
-            delete list;
-            version = R__FindStreamerInfoVersion(cl,checksum);
+            const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
+            const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            if ( local )  {
+               UInt_t checksum = local->GetCheckSum();
+               version = R__FindStreamerInfoVersion(cl,checksum);
+            }
+            else  {
+               Error("ReadVersion", "Class %s not known to file %s.", 
+                 cl->GetName(), ((TFile*)fParent)->GetName());
+               version = 0;
+            }
          }
       }
    }
