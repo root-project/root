@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.37 2005/05/31 13:57:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.38 2005/06/10 18:01:35 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -62,6 +62,8 @@ protected:
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
    Bool_t        fIsRootFile;     //!True is this is a ROOT file
+   
+   TList        *fInfoCache;      //!Cached list of the streamer infos in this file
 
    static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t fgBytesRead;   //Number of bytes read by all TFile objects
@@ -129,6 +131,7 @@ public:
    virtual Long64_t  GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t  GetSize() const;
    virtual TList    *GetStreamerInfoList();
+     const TList    *GetStreamerInfoCache();
    virtual void      IncrementProcessIDs() {fNProcessIDs++;}
    virtual Bool_t    IsArchive() const { return fIsArchive; }
    virtual Bool_t    IsOpen() const;
