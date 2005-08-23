@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.8 2004/12/15 09:27:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.9 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -59,6 +59,10 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    // search instructions. Ret_code is kTRUE when sstruct has been set,
    // kFALSE otherwise (like when dialog was canceled).
 
+   if (!p && !main) {
+      MakeZombie();
+      return;
+   }
    fRetCode = ret_code;
    fType = sstruct;
 
@@ -167,6 +171,7 @@ TGSearchDialog::~TGSearchDialog()
 {
    // Clean up search dialog.
 
+   if (IsZombie()) return;
    delete fSearchButton;
    delete fCancelButton;
    delete fDirectionRadio[0]; delete fDirectionRadio[1];
@@ -291,6 +296,10 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    // printerName and printProg have been set and cancel was not pressed,
    // kFALSE otherwise.
 
+   if (!p && !main) {
+      MakeZombie();
+      return;
+   }
    fPrinter      = printerName;
    fPrintCommand = printProg;
    fRetCode      = ret_code;
@@ -380,6 +389,7 @@ TGPrintDialog::~TGPrintDialog()
 {
    // Clean up print dialog.
 
+   if (IsZombie()) return;
    delete fPrinterIcon;
    delete fPrintButton;
    delete fCancelButton;
@@ -460,6 +470,10 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
    // cancel was pressed. If on input *ret_code is > 0 then this value
    // will be used as default value.
 
+   if (!p && !main) {
+      MakeZombie();
+      return;
+   }
    fRetCode = ret_code;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
@@ -524,6 +538,7 @@ TGGotoDialog::~TGGotoDialog()
 {
    // Clean up goto dialog
 
+   if (IsZombie()) return;
    delete fGotoButton;
    delete fCancelButton;
    delete fGoTo;

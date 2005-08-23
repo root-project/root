@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.78 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.79 2005/08/22 20:02:44 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -786,7 +786,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, UInt_t h
    CreateBrowser(name);
 
    Resize(width, height);
-   Show();
+   if (b) Show();
 }
 
 //______________________________________________________________________________
@@ -800,7 +800,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 
    MoveResize(x, y, width, height);
    SetWMPosition(x, y);
-   Show();
+   if (b) Show();
 }
 
 //______________________________________________________________________________
@@ -913,12 +913,14 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->CheckEntry(kViewToolBar);
    fViewMenu->CheckEntry(kViewStatusBar);
 
-   if (gEnv->GetValue("Browser.ShowHidden", 0)) {
-      fViewMenu->CheckEntry(kViewHidden);
-      fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
-   } else {
-      fViewMenu->UnCheckEntry(kViewHidden);
-      fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
+   if (fBrowser) {
+      if (gEnv->GetValue("Browser.ShowHidden", 0)) {
+         fViewMenu->CheckEntry(kViewHidden);
+         fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
+      } else {
+         fViewMenu->UnCheckEntry(kViewHidden);
+         fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
+      }
    }
 
    fOptionMenu = new TGPopupMenu(fClient->GetDefaultRoot());

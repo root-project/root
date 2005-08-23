@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.44 2005/04/28 08:30:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.45 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -112,7 +112,7 @@ TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
 
    int max_ascent, max_descent;
 
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   if (fText) fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(fTWidth, fTHeight + 1);

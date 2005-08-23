@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.8 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.9 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -213,6 +213,10 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
 {
    // Create a shutter item.
 
+   if (!p && !s) {
+      MakeZombie();
+      return;
+   }
    fButton = new TGTextButton(this, s, id);
    fCanvas = new TGCanvas(this, 10, 10, kChildFrame);
    fContainer = new TGVerticalFrame(fCanvas->GetViewPort(), 10, 10, kOwnBackground);
@@ -230,7 +234,7 @@ TGShutterItem::~TGShutterItem()
 {
    // Clan up shutter item.
 
-   if (!MustCleanup()) {
+   if (!IsZombie() && !MustCleanup()) {
       delete fL1;
       delete fL2;
       delete fButton;

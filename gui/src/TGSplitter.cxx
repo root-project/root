@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.7 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.8 2004/09/22 09:28:47 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -47,11 +47,11 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSplitCursor = kNone;
 
-   if (!p->InheritsFrom(TGCompositeFrame::Class())) {
+   if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGVSplitter", "parent must inherit from a TGCompositeFrame");
       return;
    }
-   if (!(((TGCompositeFrame*)p)->GetOptions() & kHorizontalFrame)) {
+   if (p && !(((TGCompositeFrame*)p)->GetOptions() & kHorizontalFrame)) {
       Error("TGVSplitter", "parent must have a horizontal layout manager");
       return;
    }
@@ -180,11 +180,11 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSplitCursor = kNone;
 
-   if (!p->InheritsFrom(TGCompositeFrame::Class())) {
+   if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGHSplitter", "parent must inherit from a TGCompositeFrame");
       return;
    }
-   if (!(((TGCompositeFrame*)p)->GetOptions() & kVerticalFrame)) {
+   if (p && !(((TGCompositeFrame*)p)->GetOptions() & kVerticalFrame)) {
       Error("TGVSplitter", "parent must have a vertical layout manager");
       return;
    }

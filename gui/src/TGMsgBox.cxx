@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.8 2004/09/13 09:29:03 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -46,8 +46,11 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
    TGTransientFrame(p, main, 10, 10, options)
 {
    // Create a message dialog box.
-
-   PMsgBox(title, msg, icon, buttons, ret_code);
+   
+   if (p && main)
+      PMsgBox(title, msg, icon, buttons, ret_code);
+   else
+      MakeZombie();
 }
 
 //______________________________________________________________________________
@@ -86,7 +89,10 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
          break;
    }
 
-   PMsgBox(title, msg, icon_pic, buttons, ret_code);
+   if (p && main)
+      PMsgBox(title, msg, icon_pic, buttons, ret_code);
+   else
+      MakeZombie();
 }
 
 //______________________________________________________________________________
@@ -264,6 +270,7 @@ TGMsgBox::~TGMsgBox()
 {
    // Destroy message dialog box.
 
+   if (IsZombie()) return;
    if (fYes)     delete fYes;
    if (fNo)      delete fNo;
    if (fOK)      delete fOK;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.19 2005/03/15 09:38:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.20 2005/04/19 09:10:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -66,7 +66,8 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fEditDisabled = kTRUE;
 
    int max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   if (fText)
+      fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);

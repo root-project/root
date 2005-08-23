@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.17 2005/01/18 11:06:11 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.18 2005/02/04 07:57:27 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -96,8 +96,10 @@ TInspectCanvas::~TInspectCanvas()
  //  delete fBackward;
  //  delete fForward;
 
-   fObjects->Clear("nodelete");
-   delete fObjects;
+   if (fObjects) {
+      fObjects->Clear("nodelete");
+      delete fObjects;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.53 2005/08/10 16:47:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.54 2005/08/16 10:44:39 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1642,19 +1642,20 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fTitleId    = -1;
 
    Int_t hotchar;
-   if ((hotchar = s->GetHotChar()) != 0)
+   if (s && (hotchar = s->GetHotChar()) != 0)
       fHkeycode = gVirtualX->KeysymToKeycode(hotchar);
    else
       fHkeycode = 0;
 
    UInt_t tw;
    Int_t  max_ascent, max_descent;
-   tw = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
+   if (fLabel)
+      tw = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    Resize(tw + 8, max_ascent + max_descent + 7);
 
-   if (p->InheritsFrom(TGMenuBar::Class())) {
+   if (p && p->InheritsFrom(TGMenuBar::Class())) {
       TGMenuBar *bar = (TGMenuBar*)p;
       fMenu->SetMenuBar(bar);
    }

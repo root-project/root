@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.13 2004/12/08 12:04:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.14 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
    // Create a tree (i.e. entry can be indented) listbox entry.
    // The strings text and path are adopted by the entry.
 
-   if (!pic)
+   if (text && !pic)
       Error("TGTreeLBEntry", "icon not found for entry %s", text->GetString());
 
    fPic    = pic;
@@ -94,7 +94,8 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
    fActive = kFALSE;
 
    int max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   if (fText)
+      fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    SetWindowName();

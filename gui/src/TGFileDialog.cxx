@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.21 2005/02/18 09:26:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.22 2005/08/15 12:57:18 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -72,6 +72,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    int i;
 
+   if (!p && !main) {
+      MakeZombie();
+      return;
+   }
    if (!file_info) {
       Error("TGFileDialog", "file_info argument not set");
       fFileInfo = &gInfo;
@@ -272,6 +276,7 @@ TGFileDialog::~TGFileDialog()
 {
    // Delete file dialog.
 
+   if (IsZombie()) return;
    delete fOk; delete fCancel; delete fOverWR;
    delete fName;
    delete fTypes;

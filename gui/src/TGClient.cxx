@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.43 2004/09/13 09:03:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.44 2004/10/30 07:30:28 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@ TGClient::TGClient(const char *dpyName)
 
    if (gClient) {
       Error("TGClient", "only one instance of TGClient allowed");
+      MakeZombie();
       return;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.15 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.16 2005/01/18 21:07:26 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -402,6 +402,10 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
 
    fNColors = 0;
 
+   if (!p) {
+      MakeZombie();
+      return;
+   }
    CreateImages();
    gVirtualX->GetImageSize(fLimage, iw, ih);
 
@@ -425,6 +429,7 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
 //________________________________________________________________________________
 TGColorPick::~TGColorPick()
 {
+   if (IsZombie()) return;
    gVirtualX->DeleteImage(fHSimage);
    gVirtualX->DeleteImage(fLimage);
    FreeColors();
@@ -1019,6 +1024,10 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fRetc = retc;
    fRetColor = color;
 
+   if (!p && !m) {
+      MakeZombie();
+      return;
+   }
    if (fRetc) *fRetc = kMBCancel;
 
    TGVerticalFrame *vf1 = new TGVerticalFrame(this, 20, 20);

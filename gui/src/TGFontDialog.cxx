@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.7 2004/09/14 09:22:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.8 2004/10/22 15:21:19 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -124,6 +124,10 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fSample       = 0;
    fHitOK        = kFALSE;
 
+   if (!p && !t) {
+      MakeZombie();
+      return;
+   }
    if (!fontProp) {
       Error("TGFontDialog", "fontProp argument may not be 0");
       return;
@@ -353,7 +357,6 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                               kMWMFuncMinimize,
                kMWMInputModeless);
 
-
    MapWindow();
 
    fFontNames->GetScrollBar()->SetPosition(fFontNames->GetSelected()-3);
@@ -370,6 +373,7 @@ TGFontDialog::~TGFontDialog()
 {
    // Delete all widgets.
 
+   if (IsZombie()) return;
    fClient->FreeFont(fLabelFont);
    fClient->FreeGC(fSampleTextGC);
 }

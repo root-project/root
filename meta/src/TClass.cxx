@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.175 2005/08/11 21:19:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.176 2005/08/22 20:02:44 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -881,6 +881,7 @@ void TClass::BuildRealData(void *pointer)
    if (!realDataObject) {
       if (!strcmp(GetName(),"TROOT"))        realDataObject = gROOT;
       else if (!strcmp(GetName(),"TGWin32")) realDataObject = gVirtualX;
+      else if (!strcmp(GetName(),"TGQt"))    realDataObject = gVirtualX;
       else                                   realDataObject = New();
    }
 
