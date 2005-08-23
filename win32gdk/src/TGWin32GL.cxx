@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.5 2005/08/17 09:10:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.6 2005/08/18 11:12:59 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -377,25 +377,28 @@ Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
       if (SetPixelFormat(hDC, pixFormat, &doubleBufferDesc)) {
          HGLRC glCtx = wglCreateContext(hDC);
 
-         if (glCtx) {
-            PaintDevice newDevice = {winInd, -1, hDC, 0, glCtx};
-
-            if (PaintDevice *dev = fPimpl->fNextFreeDevice) {
-               Int_t ind = dev->fWindowIndex;
-               *dev = newDevice;
-               dcGuard.Stop();
-               
-               return ind;
-            } else {
-               WGLGuard wglGuard(glCtx);
-               fPimpl->fPaintDevices.push_back(newDevice);
-               wglGuard.Stop();
-               dcGuard.Stop();
-
-               return fPimpl->fPaintDevices.size() - 1;
-            }
-         } else
+         if (!glCtx) {
             Error("CreateGLContext", "wglCreateContext failed\n");
+            return -1;
+         }
+
+         PaintDevice newDevice = {winInd, -1, hDC, 0, glCtx};
+
+         if (PaintDevice *dev = fPimpl->fNextFreeDevice) {
+            Int_t ind = dev->fWindowIndex;
+            fPimpl->fNextFreeDevice = fPimpl->fNextFreeDevice->fNextFreeDevice;
+            *dev = newDevice;
+            dcGuard.Stop();
+               
+            return ind;
+         } else {
+            WGLGuard wglGuard(glCtx);
+            fPimpl->fPaintDevices.push_back(newDevice);
+            wglGuard.Stop();
+            dcGuard.Stop();
+
+            return fPimpl->fPaintDevices.size() - 1;
+         }
       } else
          Error("CreateGLContext", "SetPixelFormat failed\n");
    } else
@@ -432,33 +435,37 @@ Bool_t TGWin32GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w
       if (SetPixelFormat(dibDC, pixelFormat, &offScreenDesc)) {
          HGLRC glrc = wglCreateContext(dibDC);
 
-         if (glrc) {
-            PaintDevice newDev = {winInd, -1, dibDC, hDIB, glrc, w, h, w, h, x, y, kFALSE, hOldDIB, 0};
+         if (!glrc) {
+            Error("CreateGLPixmap", "wglCreateContext failed\n");
+            return kFALSE;
+         }
+
+         PaintDevice newDev = {winInd, -1, dibDC, hDIB, glrc, w, h, w, h, x, y, kFALSE, hOldDIB, 0};
+
+         if (prevInd == -1 || !fPimpl->fPaintDevices[prevInd].fGLContext) {
+            newDev.fPixmapIndex = gVirtualX->AddPixmap((ULong_t)hDIB, w, h);
 
             if (prevInd == -1) {
                WGLGuard wglGuard(glrc);
-               newDev.fPixmapIndex = gVirtualX->AddPixmap((ULong_t)hDIB, w, h);
                fPimpl->fPaintDevices.push_back(newDev);
                wglGuard.Stop();
-            } else if (fPimpl->fPaintDevices[prevInd].fGLContext){
-               //resize existing pixmap
-               gVirtualX->AddPixmap((ULong_t)hDIB, w, h, fPimpl->fPaintDevices[prevInd].fPixmapIndex);
-               newDev.fPixmapIndex = fPimpl->fPaintDevices[prevInd].fPixmapIndex;
-               wglDeleteContext(fPimpl->fPaintDevices[prevInd].fGLContext);
-               DeleteDC(fPimpl->fPaintDevices[prevInd].fDC);
-               fPimpl->fPaintDevices[prevInd] = newDev;
             } else {
-               //reuse existing place in fPaintDevices, add new pixmap to TVirtualX
-               newDev.fPixmapIndex = gVirtualX->AddPixmap((ULong_t)hDIB, w, h);
+               newDev.fNextFreeDevice = fPimpl->fPaintDevices[prevInd].fNextFreeDevice;
                fPimpl->fPaintDevices[prevInd] = newDev;
             }
+         } else {
+            //resize existing pixmap
+            gVirtualX->AddPixmap((ULong_t)hDIB, w, h, fPimpl->fPaintDevices[prevInd].fPixmapIndex);
+            newDev.fPixmapIndex = fPimpl->fPaintDevices[prevInd].fPixmapIndex;
+            wglDeleteContext(fPimpl->fPaintDevices[prevInd].fGLContext);
+            DeleteDC(fPimpl->fPaintDevices[prevInd].fDC);
+            fPimpl->fPaintDevices[prevInd] = newDev;
+         }
 
-            bmpGuard.Stop();
-            dcGuard.Stop();
-               
-            return kTRUE; 
-         } else
-            Error("OpenGLPixmap", "wglCreateContext failed");
+         bmpGuard.Stop();
+         dcGuard.Stop();
+
+         return kTRUE; 
       } else
          Error("OpenGLPixmap", "SetPixelFormat failed\n");
    } else
@@ -491,18 +498,18 @@ void TGWin32GLManager::ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, 
 {
    PaintDevice &dev = fPimpl->fPaintDevices[pixInd];
 
-   if (w - dev.fRealW > 1 || h - dev.fRealH > 1) {
+   if (w > dev.fRealW || h > dev.fRealH) {
       //destroy old DIB with such index and create new in place
       CreateGLPixmap(dev.fWindowIndex, x, y, w, h, pixInd);
    } else {
       //simply change size-description
       dev.fCurrW = w;
       dev.fCurrH = h;
+      dev.fX = x;
+      dev.fY = y;
+
       gVirtualX->AddPixmap(0, w, h, dev.fPixmapIndex);
    }
-
-   dev.fX = x;
-   dev.fY = y;
 }
 
 //______________________________________________________________________________

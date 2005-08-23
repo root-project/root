@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.188 2005/08/18 11:12:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.189 2005/08/19 10:47:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -294,6 +294,9 @@ TPad::~TPad()
    SafeDelete(fPrimitives);
    SafeDelete(fExecs);
    delete fViewer3D;
+   
+   if (fGLDevice != -1)
+      gGLManager->DeletePaintDevice(fGLDevice);
 }
 
 //______________________________________________________________________________
@@ -4179,6 +4182,8 @@ void TPad::ResizePad(Option_t *option)
                Int_t hh = h - 2 * borderSize;
                Int_t px = 0, py = 0;
                XYtoAbsPixel(fX1, fY2, px, py);
+               if (ww < 0) ww = 1;//not to get HUGE pixmap :)
+               if (hh < 0) hh = 1;//not to get HUGE pixmap :)
                gGLManager->ResizeGLPixmap(fGLDevice, px + borderSize, py + borderSize, ww, hh);
                gGLManager->DrawViewer(fViewer3D);
             }

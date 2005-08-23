@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.3 2005/08/17 09:10:44 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.4 2005/08/18 11:12:58 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -53,8 +53,8 @@ public:
 
 class TX11GLManager : public TGLManager {
 private:
-   class TX11GLPimpl;
-   TX11GLPimpl *fPimpl;
+   class TX11GLImpl;
+   TX11GLImpl *fPimpl;
    
 public:
    TX11GLManager();
@@ -81,7 +81,7 @@ public:
    
 private:
    //Used internally by OpenPixmap and ResizePixmap
-   Bool_t CreateGLPixmap(Int_t winId, UInt_t w, UInt_t h, Int_t preferInd = -1);
+   Bool_t CreateGLPixmap(Int_t winId, Int_t x, Int_t y, UInt_t w, UInt_t h, Int_t preferInd = -1);
    
    //implicit copy-ctor/assignment generation
    // was already disabled by base class, but to be explicit ...

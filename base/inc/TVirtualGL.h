@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.18 2005/08/10 16:26:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.19 2005/08/17 09:10:43 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -181,30 +181,31 @@ public:
 
    //index returned can be used as a result of gVirtualX->InitWindow
    //isOffScreen important only for GLX, not for WGL
-   virtual Int_t    InitGLWindow(Window_t winId, Bool_t isOffScreen = kFALSE) = 0;
+   virtual Int_t    InitGLWindow(Window_t winID, Bool_t isOffScreen = kFALSE) = 0;
+   //virtual void     CloseGLWindow(Int_t winInd) = 0;
    //double-buffered on-screen rendering
    virtual Int_t    CreateGLContext(Int_t winInd) = 0;
    //off-screen rendering into pixmap (DIB section)
    //this pixmap cannot be used directly with gVirtualX
    virtual Int_t    OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
-   virtual void     ResizeGLPixmap(Int_t pix, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
+   virtual void     ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
 
    //instead of gVirtualX->SelectWindow(fPixmapID) => gVirtualGL->SelectGLPixmap(fPixmapID)
    //after that gVirtualX can draw into this pixmap
    virtual void     SelectGLPixmap(Int_t pixInd) = 0;
    //GLX pixmap or DIB can be used directly by TVirtualX,
    //obtain correct index first
-   virtual Int_t    GetVirtualXInd(Int_t pixID) = 0;
+   virtual Int_t    GetVirtualXInd(Int_t pixInd) = 0;
    //copy pixmap into window directly, without gVirtualX (which copies into buffer first
    // and requires gVirtualX->UpdateWindow)
    virtual void     MarkForDirectCopy(Int_t pixInd, Bool_t) = 0;
    //can be used with gl context and gl pixmaps
-   virtual Bool_t   MakeCurrent(Int_t deviceInd) = 0;
+   virtual Bool_t   MakeCurrent(Int_t devInd) = 0;
    //can be used with gl context and gl pixmap and context
-   virtual void     Flush(Int_t deviceInd, Int_t x = 0, Int_t y = 0) = 0;
-   virtual void     DeletePaintDevice(Int_t deviceInd) = 0;
+   virtual void     Flush(Int_t devInd, Int_t x = 0, Int_t y = 0) = 0;
+   virtual void     DeletePaintDevice(Int_t devInd) = 0;
    //viewport extracted only for pixmap
-   virtual void     ExtractViewport(Int_t pixId, Int_t *vp) = 0;
+   virtual void     ExtractViewport(Int_t devInd, Int_t *vp) = 0;
    
    //functions to switch between threads in win32
    //used by viewer
