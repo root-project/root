@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.27 2005/06/27 14:49:40 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.28 2005/08/24 12:52:09 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1854,7 +1854,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 	 //        the changes to the current code and this seemed the best way 
 	 //        to do it
 //         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
-         TString name = s1;   
+         TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():]*$");
 
          IfDebug(cerr << endl);
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
@@ -2366,7 +2366,13 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 	          memberName.Data(), pclass->GetName());
           
 	  // Check if it's a member
-          TDataMember *dmptr = pclass->GetDataMember(memberName.Data());
+          TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
+          TList  *dlist = pclass->GetListOfDataMembers();
+          TIter   next(pclass->GetListOfAllPublicDataMembers());
+          while ((dmptr = (TDataMember *) next())) {
+             if (memberName == dmptr->GetName()) break;
+          }
+          delete dlist;
           if (dmptr)
           {
 	      if (0) printf("It's a member!\n");
@@ -2382,7 +2388,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
           // Check if it's a proto: must have ()
 	  // This might not be too safe to use   :(
-          char *parentesis_ptr = strrchr(memberName.Data(), '(');
+          char *parentesis_ptr = (char*)strrchr(memberName.Data(), '(');
           if (parentesis_ptr) *parentesis_ptr = 0;
 
 
@@ -2390,7 +2396,14 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 	          memberName.Data(), pclass->GetName());
 
           // Check if it's a method
-	  TMethod *mptr = pclass->GetMethodAny(memberName.Data());
+	  TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data()); 
+          TList  *mlist = pclass->GetListOfAllPublicMethods();
+          next = mlist;
+          while ((mptr = (TMethod *) next())) {
+             if (strcmp(memberName.Data(),mptr->GetName())==0) break;
+          }
+          delete mlist;
+
 	  if (mptr)
 	  {
               TString returnName = mptr->GetReturnTypeName();
