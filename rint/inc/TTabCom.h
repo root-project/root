@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.5 2003/06/05 14:22:51 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -206,8 +206,10 @@ private: // member functions
    void       InitPatterns();
    TClass*    MakeClassFromClassName( const char className[] ) const;
    TClass*    TryMakeClassFromClassName( const char className[] ) const;
-   TClass*    MakeClassFromVarName( const char varName[], EContext_t& context );
+   TClass*    MakeClassFromVarName( const char varName[], EContext_t& context, 
+                  int iter=0);
    void       SetPattern( EContext_t handle, const char regexp[] );
+   int        ParseReverse(const char *var_str, int start);
 
 private: // data members
    TSeqCol* fpClasses;
@@ -226,6 +228,8 @@ private: // data members
 
    Pattern_t   fPat[ kNUM_PAT ][ MAX_LEN_PAT ];  // array of patterns
    const char* fRegExp[ kNUM_PAT ];              // corresponding regular expression plain text
+   bool  fVarIsPointer;                          // frodo: pointer or not flag
+   int   fLastIter;                              // frodo: iteration counter for recursive MakeClassFromVarName
 
    ClassDef(TTabCom,0)  //Perform comand line completion when hitting <TAB>
 };
