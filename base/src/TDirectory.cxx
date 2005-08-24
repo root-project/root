@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.67 2005/07/21 20:52:25 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.68 2005/07/26 22:01:57 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -543,6 +543,7 @@ void TDirectory::Delete(const char *namecycle)
    if(strlen(namecycle) == 0){ deleteall = 1; deletetree = 1;}
    TRegexp re(name,kTRUE);
    TString s;
+   Int_t deleteOK = 0;
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
@@ -550,16 +551,18 @@ void TDirectory::Delete(const char *namecycle)
       TNamed *idcur;
       TIter   next(fList);
       while ((idcur = (TNamed *) next())) {
-         Int_t deleteOK = 0;
+         deleteOK = 0;
          s = idcur->GetName();
          if (deleteall || s.Index(re) != kNPOS) {
             deleteOK = 1;
             if (idcur->IsA() == TDirectory::Class()) {
+               deleteOK = 2;
                if (!deletetree && deleteall) deleteOK = 0;
             }
          }
          if (deleteOK != 0) idcur->Delete(name);
       }
+      if (deleteOK == 2) delete fList->FindObject(name); //deleting a TDirectory
    }
 //*-*---------------------Case of Key---------------------
 //                        ===========
@@ -568,7 +571,7 @@ void TDirectory::Delete(const char *namecycle)
          TKey *key;
          TIter nextkey(GetListOfKeys());
          while ((key = (TKey *) nextkey())) {
-            Int_t deleteOK = 0;
+            deleteOK = 0;
             s = key->GetName();
             if (deleteall || s.Index(re) != kNPOS) {
                if (cycle == key->GetCycle()) deleteOK = 1;
