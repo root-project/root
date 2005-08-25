@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.18 2005/06/08 17:05:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.19 2005/08/19 09:46:37 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -103,6 +103,7 @@ public:
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootCanvas();
 
+   void     AdjustSize();
    void     Close();
    void     ForceUpdate() { Layout(); }
    void     FitCanvas();

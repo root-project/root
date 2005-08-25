@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.82 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.83 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -474,10 +474,12 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    fHorizontal1 = new TGHorizontal3DLine(this);
    fHorizontal1Layout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
+   AddFrame(fHorizontal1, fHorizontal1Layout);
 
    // Create toolbar dock
    fToolDock = new TGDockableFrame(this);
-   AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
+   fToolDock->EnableHide(kFALSE);
+   AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX));
 
    // will alocate it later
    fToolBar = 0;
@@ -489,14 +491,13 @@ void TRootCanvas::CreateCanvas(const char *name)
    fToolBarSep = new TGHorizontal3DLine(this);
    fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX);
    AddFrame(fToolBarSep, fToolBarLayout);
-   AddFrame(fHorizontal1, fHorizontal1Layout);
 
    fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4,
                                       kHorizontalFrame);
    fMainFrameLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
 
    // Create editor frame that will host the pad editor
-   fEditorFrame = new TGCompositeFrame(fMainFrame, 170, fMainFrame->GetHeight()+4, kFixedWidth);
+   fEditorFrame = new TGCompositeFrame(fMainFrame, 175, fMainFrame->GetHeight()+4, kFixedWidth);
    fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
    fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
 
@@ -561,6 +562,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // by default status bar, tool bar and pad editor are hidden
    HideFrame(fStatusBar);
+   HideFrame(fToolDock);
    HideFrame(fToolBarSep);
    HideFrame(fHorizontal1);
 
@@ -579,6 +581,10 @@ TRootCanvas::~TRootCanvas()
 
    if (fIconPic) gClient->FreePicture(fIconPic);
    if (fEditor) delete fEditor;
+   if (fToolBar) {
+      Disconnect(fToolDock, "Docked()",   this, "AdjustSize()");
+      Disconnect(fToolDock, "Undocked()", this, "AdjustSize()");
+   }
 
    if (!MustCleanup()) {
       delete fStatusBar;
@@ -1291,7 +1297,7 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
    // Show or hide statusbar.
 
    UInt_t h = GetHeight();
-   UInt_t sh = fStatusBar->GetHeight();
+   UInt_t sh = fStatusBar->GetHeight()+2;
 
    if (show) {
       ShowFrame(fStatusBar);
@@ -1324,17 +1330,21 @@ void TRootCanvas::ShowEditor(Bool_t show)
       if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
             TVirtualPadEditor::HideEditor();
       }
-      ShowFrame(fHorizontal1);
+      if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+         ShowFrame(fHorizontal1);
+         h = h + s;
+      }
       fMainFrame->ShowFrame(fEditorFrame);
       fViewMenu->CheckEntry(kViewEditor);
       w = w + e;
-      h = h + s;
    } else {
-      HideFrame(fHorizontal1);
+      if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+         HideFrame(fHorizontal1);
+         h = h - s;
+      }
       fMainFrame->HideFrame(fEditorFrame);
       fViewMenu->UnCheckEntry(kViewEditor);
       w = w - e;
-      h = h - s;
    }
    Resize(w, h);
 
@@ -1366,19 +1376,12 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 {
    // Show or hide toolbar.
 
-   Int_t i;
-
-   if (show) {
-      ShowFrame(fToolDock);
-   } else {
-      HideFrame(fToolDock); 
-   }
-
    if (show && !fToolBar) {
+
       fToolBar = new TGToolBar(fToolDock, 60, 20, kHorizontalFrame);
       fToolDock->AddFrame(fToolBar, fHorizontal1Layout);
 
-      int spacing = 6;
+      Int_t spacing = 6, i;
       for (i = 0; gToolBarData[i].fPixmap; i++) {
          if (strlen(gToolBarData[i].fPixmap) == 0) {
             spacing = 6;
@@ -1390,7 +1393,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
       fVertical1 = new TGVertical3DLine(fToolBar);
       fVertical2 = new TGVertical3DLine(fToolBar);
       fVertical1Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 4,2,0,0);
-      fVertical2Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0);
+      fVertical2Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
       fToolBar->AddFrame(fVertical1, fVertical1Layout);
       fToolBar->AddFrame(fVertical2, fVertical2Layout);
 
@@ -1404,24 +1407,68 @@ void TRootCanvas::ShowToolBar(Bool_t show)
          spacing = 0;
       }
       fToolDock->MapSubwindows();
+      fToolDock->Layout();
       fToolDock->SetWindowName(Form("ToolBar: %s", GetWindowName()));
+      fToolDock->Connect("Docked()", "TRootCanvas", this, "AdjustSize()");
+      fToolDock->Connect("Undocked()", "TRootCanvas", this, "AdjustSize()");
    }
 
    if (!fToolBar) return;
 
    UInt_t h = GetHeight();
-   UInt_t th = fToolBar->GetHeight() + fToolBarSep->GetHeight();
+   UInt_t sh = fToolBarSep->GetHeight();
+   UInt_t dh = fToolBar->GetHeight();
 
    if (show) {
-      ShowFrame(fToolBar);
+      ShowFrame(fToolDock);
+      if (!fViewMenu->IsEntryChecked(kViewEditor)) {
+         ShowFrame(fHorizontal1);
+         h = h + sh;
+      }
       ShowFrame(fToolBarSep);
       fViewMenu->CheckEntry(kViewToolbar);
-      h = h + th;
+      h = h + dh + sh;
    } else {
-      HideFrame(fToolBar);
+      if (fToolDock->IsUndocked()) {
+         fToolDock->DockContainer();
+         h = h + 2*sh;
+      } else h = h - dh;
+         
+      HideFrame(fToolDock);
+      if (!fViewMenu->IsEntryChecked(kViewEditor)) {
+         HideFrame(fHorizontal1);
+         h = h - sh;
+      }
       HideFrame(fToolBarSep);
-      fViewMenu->UnCheckEntry(kViewToolbar);
-      h = h - th;
+      h = h - sh;
+      fViewMenu->UnCheckEntry(kViewToolbar); 
+   }
+   Resize(GetWidth(), h);
+}
+
+//______________________________________________________________________________
+void TRootCanvas::AdjustSize()
+{
+   // Keep the same canvas size while docking/undocking toolbar. 
+   
+   UInt_t h = GetHeight();
+   UInt_t dh = fToolBar->GetHeight();
+   UInt_t sh = fHorizontal1->GetHeight();
+   
+   if (fToolDock->IsUndocked()) {
+      if (!fViewMenu->IsEntryChecked(kViewEditor)) {
+         HideFrame(fHorizontal1);
+         h = h - sh;
+      }
+      HideFrame(fToolBarSep);
+      h = h - dh - sh;
+   } else {
+      if (!fViewMenu->IsEntryChecked(kViewEditor)) {
+         ShowFrame(fHorizontal1);
+         h = h + sh;
+      }
+      ShowFrame(fToolBarSep);
+      h = h + dh + sh;
    }
    Resize(GetWidth(), h);
 }
