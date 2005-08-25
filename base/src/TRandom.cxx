@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.19 2004/06/09 06:46:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.20 2005/01/27 20:14:09 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -663,9 +663,9 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong)
 
    Double_t a=0,b=0,c=0,r2=1;
    while (r2 > 0.25) {
-      a  = gRandom->Rndm() - 0.5;
-      b  = gRandom->Rndm() - 0.5;
-      c  = gRandom->Rndm() - 0.5;
+      a  = Rndm() - 0.5;
+      b  = Rndm() - 0.5;
+      c  = Rndm() - 0.5;
       r2 =  a*a+b*b+c*c;
    } 
 	
