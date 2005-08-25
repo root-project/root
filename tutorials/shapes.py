@@ -9,6 +9,7 @@ c1 = ROOT.TCanvas( 'c1', 'Geometry Shapes', 200, 10, 700, 500 )
 
 # delete previous geometry objects in case this script is reexecuted
 if ROOT.gGeometry:
+   print ROOT.gGeometry
    ROOT.gGeometry.GetListOfNodes().Delete()
    ROOT.gGeometry.GetListOfShapes().Delete()
 
@@ -85,7 +86,7 @@ c1.Update()
 #  Draw the geometry using the x3d viewver.
 #  Note that this viewver may also be invoked from the "View" menu in
 #  the canvas tool bar
-c1.x3d( 'ogl' )
+c1.GetViewer3D( 'ogl' )
 #
 # once in x3d viewer, type m to see the menu.
 # For example typing r will show a solid model of this geometry.

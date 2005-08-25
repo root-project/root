@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.16 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.17 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -252,6 +252,20 @@ namespace {
       return 0;
   }
 
+//____________________________________________________________________________
+   PyObject* SetOwnership( PyObject*, PyObject* args )
+   {
+      ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
+                &ObjectProxy_Type, (PyObject*)&pyobj, &PyInt_Type, &pykeep ) )
+         return 0;
+
+      (bool)PyLong_AsLong( pykeep ) ? pyobj->HoldOn() : pyobj->Release();
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
 } // unnamed namespace
 
 
@@ -271,6 +285,8 @@ static PyMethodDef PyROOTMethods[] = {
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
      METH_VARARGS, (char*) "Determines object ownership model" },
+   { (char*) "SetOwnership", (PyCFunction)SetOwnership,
+     METH_VARARGS, (char*) "Modify held C++ object ownership" },
    { NULL, NULL, 0, NULL }
 };
 

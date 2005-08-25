@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.2 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_OBJECTPROXY_H
@@ -50,6 +50,7 @@ namespace PyROOT {
          return fClass.GetClass();                        // may return null
       }
 
+      void HoldOn() { fFlags |= kIsOwner; }
       void Release() { fFlags &= ~kIsOwner; }
 
    public:               // public, as the python C-API works with C structs

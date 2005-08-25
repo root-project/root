@@ -46,7 +46,7 @@ gBenchmark.Start( 'hsimple' )
 
 # Initialize random number generator.
 gRandom.SetSeed()
-gauss, rndm = gRandom.Gaus, gRandom.Rndm
+rannor, rndm = gRandom.Rannor, gRandom.Rndm
 
 # For speed, bind and cache the Fill member functions,
 histos = [ 'hpx', 'hpxpy', 'hprof', 'ntuple' ]
@@ -54,11 +54,11 @@ for name in histos:
    exec '%sFill = %s.Fill' % (name,name)
 
 # Fill histograms randomly.
+px, py = 0.1, 0.101
 kUPDATE = 1000
 for i in xrange( 25000 ):
  # Generate random values.
-   px = gauss()
-   py = gauss()
+   rannor( px, py )
    pz = px*px + py*py
    random = rndm(1)
 

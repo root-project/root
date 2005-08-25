@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.27 2005/06/24 07:19:03 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.28 2005/08/10 05:25:41 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 08/01/05
+# Last: 08/24/05
 
 """PyROOT user module.
 
@@ -86,11 +86,12 @@ __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 __pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
                     'AddressOf', 'NULL', 'MakeNullPointer',
                     'Template', 'std' ]
+__all__         = []                         # purposedly empty
 
 _orig_ehook = sys.excepthook
 
 ## for setting memory policies; not exported
-_memPolicyAPI = [ 'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict' ]
+_memPolicyAPI = [ 'SetMemoryPolicy', 'SetOwnership', 'kMemoryHeuristics', 'kMemoryStrict' ]
 kMemoryHeuristics = 1
 kMemoryStrict     = 2
 
@@ -270,8 +271,8 @@ class ModuleFacade:
        # make the distionary of the calling module ROOT lazy
          _thismodule.setRootLazyLookup( caller.__dict__ )
 
-       # pretend it was a failure to prevent further copying
-         raise AttributeError( name )
+       # the actual __all__ is empty
+         return _thismodule.__all__
 
     # block search for privates
       if name[0:2] == '__':

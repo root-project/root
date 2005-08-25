@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.13 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.14 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -565,6 +565,28 @@ bool PyROOT::VoidPtrRefConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 }
 
 //____________________________________________________________________________
+bool PyROOT::VoidPtrPtrConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   if ( ObjectProxy_Check( pyobject ) ) {
+   // this is a ROOT object, take and set its address
+      func->SetArg( reinterpret_cast< long >( &((ObjectProxy*)pyobject)->fObject ) );
+      return true;
+   }
+
+// buffer objects are allowed under "user knows best"
+   void* buf = 0;
+   int buflen = Utility::GetBuffer( pyobject, '*', 1, buf, false );
+
+// ok if buffer exists (can't perform any useful size checks)
+   if ( buf && buflen != 0 ) {
+      func->SetArg( (long)buf );
+      return true;
+   }
+
+   return false;
+}
+
+//____________________________________________________________________________
 bool PyROOT::PyObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
 // by definition: set and declare success
@@ -666,8 +688,12 @@ PyROOT::Converter* PyROOT::CreateConverter( const std::string& fullType, long us
    if ( ! result && h != gConvFactories.end() )
    // converter factory available, use it to create converter
       result = (h->second)( user );
-   else if ( ! result )
-      result = new VoidConverter();               // fails on use
+   else if ( ! result ) {
+      if ( cpd != "" )
+         result = new VoidArrayConverter();       // "user knows best"
+      else
+         result = new VoidConverter();            // fails on use
+   }
 
    return result;
 }
@@ -720,6 +746,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( TString )
    PYROOT_BASIC_CONVERTER_FACTORY( STLString )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrRef )
+   PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrPtr )
    PYROOT_BASIC_CONVERTER_FACTORY( PyObject )
 
 // converter factories for ROOT types
@@ -766,6 +793,7 @@ namespace {
       ncp_t( "std::string&",       &CreateSTLStringConverter          ),
       ncp_t( "string&",            &CreateSTLStringConverter          ),
       ncp_t( "void*&",             &CreateVoidPtrRefConverter         ),
+      ncp_t( "void**",             &CreateVoidPtrPtrConverter         ),
       ncp_t( "PyObject*",          &CreatePyObjectConverter           ),
       ncp_t( "_object*",           &CreatePyObjectConverter           )
    };
