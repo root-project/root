@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.3 2005/08/19 10:47:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.4 2005/08/19 19:26:45 brun Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -13,7 +13,6 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-#include <cassert>
 
 #ifdef WIN32
 #include "Windows4root.h"
@@ -919,7 +918,6 @@ void TGLPixmap::DrawObjects()const
 //______________________________________________________________________________
 void TGLPixmap::UpdateRange(const GLSelection *box)
 {
-   assert(fBuildingScene);
    const Double_t *X = box->GetRangeX();
    const Double_t *Y = box->GetRangeY();
    const Double_t *Z = box->GetRangeZ();
@@ -1027,12 +1025,6 @@ Bool_t TGLPixmap::PreferLocalFrame() const
 
 void TGLPixmap::BeginScene()
 {
-   // Scene builds can't be nested
-   if (fBuildingScene) {
-      assert(kFALSE);
-      return;
-   }
-
    // Clear any existing scene contents
    fRender->RemoveAllObjects();
    fNbShapes = 0;

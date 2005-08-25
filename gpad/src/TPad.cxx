@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.189 2005/08/19 10:47:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.190 2005/08/23 11:29:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -707,7 +707,7 @@ void TPad::CopyPixmap()
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
 
-   if (fViewer3D && fCanvas->UseGL()) {
+   if (fViewer3D && fGLDevice != -1) {
       Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
       Int_t realInd = gGLManager->GetVirtualXInd(fGLDevice);
       gVirtualX->CopyPixmap(realInd, px + borderSize, py + borderSize);
@@ -3385,7 +3385,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
       //If canvas prefers GL, all 3d objects must be drawn/selected by
       //gl viewer
-      if (fCanvas->UseGL() && obj->InheritsFrom(TAtt3D::Class())) {
+      if (fCanvas->UseGL() && obj->InheritsFrom(TAtt3D::Class()) && fGLDevice != -1) {
          lnk = lnk->Prev();
          continue;
       }
@@ -3423,7 +3423,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       Double_t dx = 0.05*(fUxmax-fUxmin);
       if ((x > fUxmin + dx) && (x < fUxmax-dx)) {
 
-         if (fCanvas->UseGL()) {
+         if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
             //No 2d stuff was selected, but we have gl-viewer. Let it select an object in
             //scene (or select itself). In any case it'll internally call
             //gPad->SetSelected(ptr) as, for example, hist painter does.
@@ -4176,7 +4176,7 @@ void TPad::ResizePad(Option_t *option)
          if (fPixmapID == -1) {      // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
          } else {
-            if (fViewer3D && fCanvas->UseGL()) {
+            if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
                Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
                Int_t ww = w - 2 * borderSize;
                Int_t hh = h - 2 * borderSize;
@@ -5225,6 +5225,12 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
       }
       createdExternal = kTRUE;
 
+      if (fGLDevice != -1) {
+         gGLManager->DeletePaintDevice(fGLDevice);
+         fCanvas->SetSelected(this);
+         fGLDevice = -1;
+      }
+
    } else {
       if (fCanvas->UseGL() && gGLManager) {
          Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
@@ -5261,10 +5267,10 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
    // c.f. ReleaseViewer3D
-   delete fViewer3D;
-
-   // Set and return new viewer
+   //"Workaround" for gl-in-pad :(
+   TVirtualViewer3D *tmp = fViewer3D;
    fViewer3D = newViewer;
+   delete tmp;
 
    // Ensure any new external viewer is painted
    // For internal TViewer3DPad type we assume this is being
