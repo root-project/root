@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.54 2005/08/16 10:44:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.55 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1647,7 +1647,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    else
       fHkeycode = 0;
 
-   UInt_t tw;
+   UInt_t tw = 0;
    Int_t  max_ascent, max_descent;
    if (fLabel)
       tw = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
