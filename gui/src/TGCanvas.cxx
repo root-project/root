@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.33 2005/01/20 15:37:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.34 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1152,7 +1152,7 @@ Bool_t TGContainer::HandleKey(Event_t *event)
 //______________________________________________________________________________
 TGFrame *TGContainer::FindFrameByName(const char *name)
 {
-   // find frame by name
+   // Find frame by name.
 
    if (!IsMapped()) return 0;
 
@@ -1173,10 +1173,12 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
       fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
 
       if (!fe) {
-         sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
-         gVirtualX->Bell(20);
-         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
-                       kMBIconExclamation, kMBOk, 0);
+         if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
+            sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
+            gVirtualX->Bell(20);
+            new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
+                          kMBIconExclamation, kMBOk, 0);
+         }
          return 0;
       } else {
          if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
@@ -1202,7 +1204,7 @@ void TGContainer::Search(Bool_t close)
 
    TGSearchType *srch = new TGSearchType;
    srch->fClose = close;
- 
+
    if (!close) {
       if (!TGSearchDialog::gDialog()) {
          TGSearchDialog::gDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
