@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.218 2005/07/20 13:07:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.219 2005/08/18 13:49:41 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2869,7 +2869,7 @@ void THistPainter::PaintErrors(Option_t *)
      //  marker will not be drawn and the error bars will be readjusted.
 
       drawmarker = kTRUE;
-      if (!option0) {   // <=====Please check
+      if (!option0 && !option3) {
          if (yi1 < ymin || yi1 > ymax) goto L30;
          if (Hoption.Error != 0 && yp == 0 && ey1 <= 0) drawmarker = kFALSE;
       }
