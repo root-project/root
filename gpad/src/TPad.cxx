@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.191 2005/08/25 08:04:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.192 2005/08/26 09:08:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2616,6 +2616,7 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
 
 //*-*- Paint the fill area with hatches
    Int_t fillstyle = gVirtualX->GetFillStyle();
+   if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
    if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, x, y, fillstyle);
       delete [] x;
@@ -2710,6 +2711,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 
 //*-*- Paint the fill area with hatches
    Int_t fillstyle = gVirtualX->GetFillStyle();
+   if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
    if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, x, y, fillstyle);
       delete [] x;
@@ -2758,7 +2760,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
   //
   //    i (1-9) : specify the space between each hatch
   //              1 = minimum  9 = maximum
-  //              the final spaing is i*GetHatchesSpacing() the hatches spacing
+  //              the final spacing is i*GetHatchesSpacing(). The hatches spacing
   //              is set by SetHatchesSpacing()
   //
   //    j (0-9) : specify angle between 0 and 90 degrees
