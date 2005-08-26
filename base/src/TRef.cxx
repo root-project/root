@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.27 2005/01/28 05:45:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.28 2005/08/19 07:32:15 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -137,7 +137,11 @@
 //    looks in the file catalog (GRID).
 //  - compute a pointer to the referenced object and communicate this pointer
 //    back to the calling function TRef::GetObject via:
-//      TRef::SetObject(object).
+//      TRef::SetStaticObject(object).
+//    When the TExec is called, it has access to the dereferencing TRef 
+//    by calling GetStaticObject() (TRef::GetObject() sets fgObject to "this"
+//    before the call to TExec). This can be useful for accessing the TRef's
+//    fUniqueID.
 // As soon as an object is returned to GetObject, the fUniqueID of the TRef is set
 // to the fUniqueID of the referenced object. At the next call to GetObject,
 // the pointer stored in fPid:fObjects[fUniqueID] will be returned directly.
@@ -154,7 +158,7 @@
 //       TH1 *h6 = (TH1*)gDirectory->Get("h6");
 //       h6->SetDirectory(0);
 //       delete f;
-//       TRef::SetObject(h6);
+//       TRef::SetStaticObject(h6);
 //    }
 // In the above example, a call to fWebHistogram.GetObject() executes the
 // script with the function GetWebHistogram. This script connects a file
@@ -345,10 +349,12 @@ TObject *TRef::GetObject() const
          execid = execid>>16;
          TExec *exec = (TExec*)fgExecs->At(execid-1);
          if (exec) {
-            //we expect the object to be returned via TRef::SetObject
-            fgObject = 0;
+            //we expect the object to be returned via TRef::SetStaticObject
+            fgObject = const_cast<TRef*>(this);
             exec->Exec();
-            obj = fgObject;
+            if ((const TRef* const)fgObject!=this)
+               obj = fgObject;
+            else obj=0;
             if (obj){
                uid = TProcessID::AssignID(obj);
                ((TRef*)this)->SetUniqueID(uid);
@@ -404,13 +410,30 @@ void TRef::SetAction(TObject *parent)
       return;
    }
 }
+ 
+ //______________________________________________________________________________
+TObject *TRef::GetStaticObject() {
+   // Returns the static object.
+   return fgObject;
+}
 
 //______________________________________________________________________________
 void TRef::SetObject(TObject *obj)
 {
+   // static Obsolete function kept for back compatibility.
+   // In the near future will print a Warning, then will be deleted.
+
+   SetStaticObject(obj);
+}
+
+//______________________________________________________________________________
+void TRef::SetStaticObject(TObject *obj)
+{
    // Static function to set the object found on the Action on Demand function.
    // This function may be called by the user in the function called
    // when a "EXEC:" keyword is specified in the data member field of the TRef.
+   // The function can get access to the dereferencing TRef (i.e. this)using 
+   // the static function GetStaticObject().
 
    fgObject = obj;
 }

@@ -10,5 +10,5 @@ void GetWebHistogram()
    TH1 *h6 = (TH1*)gDirectory->Get("h6");
    h6->SetDirectory(0);
    delete f;
-   TRef::SetObject(h6);
+   TRef::SetStaticObject(h6);
 }

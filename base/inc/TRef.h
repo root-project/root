@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.5 2001/12/02 15:20:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.6 2002/03/25 20:21:05 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -37,7 +37,7 @@ protected:
    TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
 
    static TObjArray  *fgExecs;  //List of execs
-   static TObject    *fgObject; //Pointer to object (set in Action on Demand)
+   static TObject    *fgObject; //In: this, Out: pointer to object (used by Action on Demand)
       
 public:
    //status bits
@@ -53,9 +53,12 @@ public:
           TObject    *GetObject() const;
    static TObjArray  *GetListOfExecs();
    TProcessID        *GetPID() const {return fPID;}
-   Bool_t             IsValid() const {return GetUniqueID()!=0 ? kTRUE : kFALSE;}virtual void       SetAction(const char *name);
+   Bool_t             IsValid() const {return GetUniqueID()!=0 ? kTRUE : kFALSE;}
+   virtual void       SetAction(const char *name);
    virtual void       SetAction(TObject *parent);
    static  void       SetObject(TObject *obj);
+   static  void       SetStaticObject(TObject *obj);
+   static  TObject   *GetStaticObject();
    
    friend Bool_t operator==(const TRef &r1, const TRef &r2);
    friend Bool_t operator!=(const TRef &r1, const TRef &r2);
