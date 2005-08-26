@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.190 2005/08/23 11:29:06 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.191 2005/08/25 08:04:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1812,14 +1812,31 @@ again:
 //______________________________________________________________________________
 TObject *TPad::FindObject(const char *name) const
 {
+  //search if object named name is inside this pad.
+  //note that the pads inside this pad are not searched.
+  // see other prototype below
+   
    if (fPrimitives) return fPrimitives->FindObject(name);
    return 0;
 }
 
 //______________________________________________________________________________
-TObject *TPad::FindObject(const TObject *) const
+TObject *TPad::FindObject(const TObject *obj) const
 {
-   //not implemented yet
+   //search if obj is in pad or in pads inside this pad
+   //In case obj is in several subpads the first one is returned.
+   
+   if (!fPrimitives) return 0;
+   TObject *found = fPrimitives->FindObject(obj);
+   if (found) return found;
+   TObject *cur;
+   TIter    next(GetListOfPrimitives());
+   while ((cur = next())) {
+      if (cur->InheritsFrom(TPad::Class())) {
+         found = ((TPad*)cur)->FindObject(obj);
+         if (found) return found;
+      }
+   }
    return 0;
 }
 
