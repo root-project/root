@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.16 2005/08/12 07:38:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.17 2005/08/16 15:59:47 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -862,7 +862,7 @@ const std::map<std::string, UInt_t> & TGLScene::UpdateDrawStats(const TGLPhysica
    std::map<std::string, UInt_t>::iterator statIt = stats.find(shapeType);
 
    if (statIt == stats.end()) {
-      statIt = stats.insert(stats.begin(), std::make_pair(shapeType, 0));
+      statIt = stats.insert(stats.begin(), std::make_pair(shapeType, 0u));
    }
 
    statIt->second++;
