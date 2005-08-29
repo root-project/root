@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.192 2005/08/26 09:08:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.193 2005/08/26 09:42:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -486,14 +486,14 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
 //
 //  x[2], y[2] : New segment coordinates
 //
-   const Float_t P=10000;
+   const Float_t kP=10000;
    Int_t clip = 0;
 
    for (Int_t i=0;i<2;i++) {
-      if (TMath::Abs(xclipl-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipl;
-      if (TMath::Abs(xclipr-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipr;
-      if (TMath::Abs(yclipb-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipb;
-      if (TMath::Abs(yclipt-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipt;
+      if (TMath::Abs(xclipl-x[i]) <= TMath::Abs(xclipr-xclipl)/kP) x[i] = xclipl;
+      if (TMath::Abs(xclipr-x[i]) <= TMath::Abs(xclipr-xclipl)/kP) x[i] = xclipr;
+      if (TMath::Abs(yclipb-y[i]) <= TMath::Abs(yclipt-yclipb)/kP) y[i] = yclipb;
+      if (TMath::Abs(yclipt-y[i]) <= TMath::Abs(yclipt-yclipb)/kP) y[i] = yclipt;
    }
 
 //Compute the first endpoint codes.
@@ -563,14 +563,14 @@ Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Dou
 //
 //  x[2], y[2] : New segment coordinates
 //
-   const Double_t P=10000;
+   const Double_t kP=10000;
    Int_t clip = 0;
 
    for (Int_t i=0;i<2;i++) {
-      if (TMath::Abs(xclipl-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipl;
-      if (TMath::Abs(xclipr-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipr;
-      if (TMath::Abs(yclipb-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipb;
-      if (TMath::Abs(yclipt-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipt;
+      if (TMath::Abs(xclipl-x[i]) <= TMath::Abs(xclipr-xclipl)/kP) x[i] = xclipl;
+      if (TMath::Abs(xclipr-x[i]) <= TMath::Abs(xclipr-xclipl)/kP) x[i] = xclipr;
+      if (TMath::Abs(yclipb-y[i]) <= TMath::Abs(yclipt-yclipb)/kP) y[i] = yclipb;
+      if (TMath::Abs(yclipt-y[i]) <= TMath::Abs(yclipt-yclipb)/kP) y[i] = yclipt;
    }
 
 //Compute the first endpoint codes.
@@ -976,8 +976,8 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
    //End_Html
 
    char dname[256];
-   const Int_t MAXLEVELS = 10;
-   TClass *clevel[MAXLEVELS], *cl, *cll;
+   const Int_t kMAXLEVELS = 10;
+   TClass *clevel[kMAXLEVELS], *cl, *cll;
    TBaseClass *base, *cinherit;
    TText *ptext = 0;
    TString opt=option;
@@ -1283,26 +1283,26 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //*-*                  =========================================
 //  This member function is called when a TPad object is clicked.
 //
-//  If the mouse is clicked in one of the 4 corners of the pad (PA,PB,PC,PD)
+//  If the mouse is clicked in one of the 4 corners of the pad (pA,pB,pC,pD)
 //  the pad is resized with the rubber rectangle.
 //
 //  If the mouse is clicked inside the pad, the pad is moved.
 //
-//  If the mouse is clicked on the 4 edges (L,R,T,B), the pad is scaled
+//  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the pad is scaled
 //  parallel to this edge.
 //
-//    PA                    T                       PB
+//    pA                   pTop                     pB
 //     +--------------------------------------------+
 //     |                                            |
 //     |                                            |
 //     |                                            |
-//    L|                  INSIDE                    |R
+//   pL|                 pINSIDE                    |pR
 //     |                                            |
 //     |                                            |
 //     |                                            |
 //     |                                            |
 //     +--------------------------------------------+
-//    PD                    B                      PC
+//    pD                   pBot                     pC
 //
 //
 //  Note that this function duplicates on purpose the functionality
@@ -1320,7 +1320,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t pxorg, pyorg;
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
-   static Bool_t PA, PB, PC, PD, T, L, R, B, INSIDE;
+   static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
    Int_t  wx, wy;
    Bool_t opaque  = OpaqueMoving();
    Bool_t ropaque = OpaqueResizing();
@@ -1459,56 +1459,56 @@ again:
          pytp = py1p;
       }
 
-      PA = PB = PC = PD = T = L = R = B = INSIDE = kFALSE;
+      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
 
-                                                         // case PA
+                                                         // case pA
       if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxl; pyold = pyl; PA = kTRUE;
+         pxold = pxl; pyold = pyl; pA = kTRUE;
          SetCursor(kTopLeft);
       }
-                                                         // case PB
+                                                         // case pB
       if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxt; pyold = pyl; PB = kTRUE;
+         pxold = pxt; pyold = pyl; pB = kTRUE;
          SetCursor(kTopRight);
       }
-                                                         // case PC
+                                                         // case pC
       if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxt; pyold = pyt; PC = kTRUE;
+         pxold = pxt; pyold = pyt; pC = kTRUE;
          SetCursor(kBottomRight);
       }
-                                                         // case PD
+                                                         // case pD
       if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxl; pyold = pyt; PD = kTRUE;
+         pxold = pxl; pyold = pyt; pD = kTRUE;
          SetCursor(kBottomLeft);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
-         pxold = pxl; pyold = pyl; T = kTRUE;
+         pxold = pxl; pyold = pyl; pTop = kTRUE;
          SetCursor(kTopSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
-         pxold = pxt; pyold = pyt; B = kTRUE;
+         pxold = pxt; pyold = pyt; pBot = kTRUE;
          SetCursor(kBottomSide);
       }
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
-         pxold = pxl; pyold = pyl; L = kTRUE;
+         pxold = pxl; pyold = pyl; pL = kTRUE;
          SetCursor(kLeftSide);
       }
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; R = kTRUE;
+          pxold = pxt; pyold = pyt; pR = kTRUE;
           SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
-         pxold = px; pyold = py; INSIDE = kTRUE;
+         pxold = px; pyold = py; pINSIDE = kTRUE;
          if (event == kButton1Down)
             SetCursor(kMove);
          else
@@ -1516,10 +1516,10 @@ again:
       }
 
       fResizing = kFALSE;
-      if (PA || PB || PC || PD || T || L || R || B)
+      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
          fResizing = kTRUE;
 
-      if (!PA && !PB && !PC && !PD && !T && !L && !R && !B && !INSIDE)
+      if (!pA && !pB && !pC && !pD && !pTop && !pL && !pR && !pBot && !pINSIDE)
          SetCursor(kCross);
 
       break;
@@ -1528,7 +1528,7 @@ again:
 
       wx = wy = 0;
 
-      if (PA) {
+      if (pA) {
          if (!ropaque) gVirtualX->DrawBox(pxold, pyt, pxt, pyold, TVirtualX::kHollow);  // draw the old box
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
@@ -1549,7 +1549,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px   , pyt, pxt, py,    TVirtualX::kHollow);  // draw the new box
       }
-      if (PB) {
+      if (pB) {
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, pxold, pyold, TVirtualX::kHollow);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
@@ -1570,7 +1570,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
       }
-      if (PC) {
+      if (pC) {
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, pxold, pyold, TVirtualX::kHollow);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
@@ -1591,7 +1591,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, px ,   py,    TVirtualX::kHollow);
       }
-      if (PD) {
+      if (pD) {
          if (!ropaque) gVirtualX->DrawBox(pxold, pyold, pxt, pyl, TVirtualX::kHollow);
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
@@ -1612,7 +1612,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px   , py ,   pxt, pyl, TVirtualX::kHollow);
       }
-      if (T) {
+      if (pTop) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
@@ -1628,7 +1628,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (B) {
+      if (pBot) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
@@ -1644,7 +1644,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (L) {
+      if (pL) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
@@ -1661,7 +1661,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (R) {
+      if (pR) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
@@ -1678,7 +1678,7 @@ again:
          }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (INSIDE) {
+      if (pINSIDE) {
          if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
@@ -1709,41 +1709,41 @@ again:
 
    case kButton1Up:
 
-      if (PA) {
+      if (pA) {
          fX1 = AbsPixeltoX(pxold);
          fY1 = AbsPixeltoY(pyt);
          fX2 = AbsPixeltoX(pxt);
          fY2 = AbsPixeltoY(pyold);
       }
-      if (PB) {
+      if (pB) {
          fX1 = AbsPixeltoX(pxl);
          fY1 = AbsPixeltoY(pyt);
          fX2 = AbsPixeltoX(pxold);
          fY2 = AbsPixeltoY(pyold);
       }
-      if (PC) {
+      if (pC) {
          fX1 = AbsPixeltoX(pxl);
          fY1 = AbsPixeltoY(pyold);
          fX2 = AbsPixeltoX(pxold);
          fY2 = AbsPixeltoY(pyl);
       }
-      if (PD) {
+      if (pD) {
          fX1 = AbsPixeltoX(pxold);
          fY1 = AbsPixeltoY(pyold);
          fX2 = AbsPixeltoX(pxt);
          fY2 = AbsPixeltoY(pyl);
       }
-      if (T || B || L || R || INSIDE) {
+      if (pTop || pBot || pL || pR || pINSIDE) {
          fX1 = AbsPixeltoX(px1);
          fY1 = AbsPixeltoY(py1);
          fX2 = AbsPixeltoX(px2);
          fY2 = AbsPixeltoY(py2);
       }
 
-      if (INSIDE)
+      if (pINSIDE)
          if (!doing_again) gPad->SetCursor(kCross);
 
-      if (PA || PB || PC || PD || T || L || R || B)
+      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
          Modified(kTRUE);
 
       gVirtualX->SetLineColor(-1);
@@ -2788,14 +2788,14 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
   //              8 = 100
   //              9 = 90
 
-   static Double_t Ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
-   static Double_t Ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
+   static Double_t ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
+   static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
 
    Int_t fasi  = FillStyle%1000;
-   Int_t IDSPA = (Int_t)(fasi/100);
-   Int_t IAng2 = (Int_t)((fasi-100*IDSPA)/10);
-   Int_t IAng1 = fasi%10;
-   Double_t dy = 0.003*(Double_t)(IDSPA)*gStyle->GetHatchesSpacing();
+   Int_t idSPA = (Int_t)(fasi/100);
+   Int_t iAng2 = (Int_t)((fasi-100*idSPA)/10);
+   Int_t iAng1 = fasi%10;
+   Double_t dy = 0.003*(Double_t)(idSPA)*gStyle->GetHatchesSpacing();
    Int_t lw = gStyle->GetHatchesLineWidth();
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineStyle(1);
@@ -2805,8 +2805,8 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
       gVirtualPS->SetLineStyle(1);
       gVirtualPS->SetLineWidth(Short_t(lw));
    }
-   if (Ang1[IAng1] != 5.) PaintHatches(dy, Ang1[IAng1], nn, xx, yy);
-   if (Ang2[IAng2] != 5.) PaintHatches(dy, Ang2[IAng2], nn, xx, yy);
+   if (ang1[iAng1] != 5.) PaintHatches(dy, ang1[iAng1], nn, xx, yy);
+   if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 }
 
 //______________________________________________________________________________
@@ -2825,12 +2825,12 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
    Double_t ll, x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
 
-   Double_t RWxmin = gPad->GetX1();
-   Double_t RWxmax = gPad->GetX2();
-   Double_t RWymin = gPad->GetY1();
-   Double_t RWymax = gPad->GetY2();
-   ratio1 = 1/(RWxmax-RWxmin);
-   ratio2 = 1/(RWymax-RWymin);
+   Double_t rwxmin = gPad->GetX1();
+   Double_t rwxmax = gPad->GetX2();
+   Double_t rwymin = gPad->GetY1();
+   Double_t rwymax = gPad->GetY2();
+   ratio1 = 1/(rwxmax-rwxmin);
+   ratio2 = 1/(rwymax-rwymin);
 
    Double_t sina = TMath::Sin(angr), sinb;
    Double_t cosa = TMath::Cos(angr), cosb;
@@ -2843,8 +2843,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    ymin = 1.;
    ymax = 0.;
    for (i=1; i<=nn; i++) {
-      x    = ratio1*(xx[i-1]-RWxmin);
-      y    = ratio2*(yy[i-1]-RWymin);
+      x    = ratio1*(xx[i-1]-rwxmin);
+      y    = ratio2*(yy[i-1]-rwymin);
       yrot = sina*x+cosa*y;
       if (yrot > ymax) ymax = yrot;
       if (yrot < ymin) ymin = yrot;
@@ -2857,10 +2857,10 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          i2 = i;
          i1 = i-1;
          if (i == nn+1) i2=1;
-         x1  = ratio1*(xx[i1-1]-RWxmin);
-         y1  = ratio2*(yy[i1-1]-RWymin);
-         x2  = ratio1*(xx[i2-1]-RWxmin);
-         y2  = ratio2*(yy[i2-1]-RWymin);
+         x1  = ratio1*(xx[i1-1]-rwxmin);
+         y1  = ratio2*(yy[i1-1]-rwymin);
+         x2  = ratio1*(xx[i2-1]-rwxmin);
+         y2  = ratio2*(yy[i2-1]-rwymin);
          xt1 = cosa*x1-sina*y1;
          yt1 = sina*x1+cosa*y1;
          xt2 = cosa*x2-sina*y2;

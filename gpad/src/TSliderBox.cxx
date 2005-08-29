@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -65,7 +65,7 @@ void TSliderBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p;
-   static Bool_t  L, R, T, B, INSIDE;
+   static Bool_t  pL, pR, pTop, pBot, pINSIDE;
    Int_t  wx, wy;
    Bool_t doing_again = kFALSE;
    Bool_t opaque  = gPad->OpaqueMoving();
@@ -125,35 +125,35 @@ again:
       px2p = pxpadmax;
       py2p = pypadmax;
 
-      L = R  = T = B = INSIDE = kFALSE;
+      pL = pR  = pTop = pBot = pINSIDE = kFALSE;
 
       if (vertical && (px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
-         pxold = pxl; pyold = pyl; T = kTRUE;
+         pxold = pxl; pyold = pyl; pTop = kTRUE;
          gPad->SetCursor(kTopSide);
       }
 
       if (vertical && (px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
-         pxold = pxt; pyold = pyt; B = kTRUE;
+         pxold = pxt; pyold = pyt; pBot = kTRUE;
          gPad->SetCursor(kBottomSide);
       }
 
       if (!vertical && (py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
-         pxold = pxl; pyold = pyl; L = kTRUE;
+         pxold = pxl; pyold = pyl; pL = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
 
       if (!vertical && (py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; R = kTRUE;
+          pxold = pxt; pyold = pyt; pR = kTRUE;
           gPad->SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
-         pxold = px; pyold = py; INSIDE = kTRUE;
+         pxold = px; pyold = py; pINSIDE = kTRUE;
          if (event == kButton1Down)
             gPad->SetCursor(kMove);
          else
@@ -161,10 +161,10 @@ again:
       }
 
       fResizing = kFALSE;
-      if ( L || R || T || B)
+      if ( pL || pR || pTop || pBot)
          fResizing = kTRUE;
 
-      if ( !L && !R && !T && !B && !INSIDE)
+      if ( !pL && !pR && !pTop && !pBot && !pINSIDE)
          gPad->SetCursor(kCross);
 
       break;
@@ -173,35 +173,35 @@ again:
 
       wx = wy = 0;
 
-      if (T) {
+      if (pTop) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (B) {
+      if (pBot) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (L) {
+      if (pL) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (R) {
+      if (pR) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (INSIDE) {
+      if (pINSIDE) {
          if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
@@ -222,7 +222,7 @@ again:
       pxold = px;
       pyold = py;
 
-      if ((INSIDE && opaque) || (fResizing && ropaque)) {
+      if ((pINSIDE && opaque) || (fResizing && ropaque)) {
          event = kButton1Up;
          doing_again = kTRUE;
          goto again;
@@ -232,21 +232,21 @@ again:
 
    case kButton1Up:
 
-      if (T || B || L || R || INSIDE) {
+      if (pTop || pBot || pL || pR || pINSIDE) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fX2 = gPad->AbsPixeltoX(px2);
          fY2 = gPad->AbsPixeltoY(py2);
       }
 
-      if (INSIDE) {
+      if (pINSIDE) {
          // if it was not a pad that was moved then it must have been
          // a box or something like that so we have to redraw the pad
          if (parent == gPad) gPad->Modified(kTRUE);
          if (!doing_again) gPad->SetCursor(kCross);
       }
 
-      if (T || B ||  L || R )
+      if (pTop || pBot ||  pL || pR )
          gPad->Modified(kTRUE);
 
       // Restore original event type

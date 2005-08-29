@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.4 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -814,10 +814,10 @@ void TClassTree::ScanClasses(Int_t iclass)
    sourceFile.open( sourceName, ios::in );
    Int_t nlines = 0;
    if( sourceFile.good() ) {
-      const Int_t MAXLEN=500;
-      char line[MAXLEN];
+      const Int_t kMAXLEN=500;
+      char line[kMAXLEN];
       while( !sourceFile.eof() ) {
-         sourceFile.getline( line, MAXLEN-1 );
+         sourceFile.getline( line, kMAXLEN-1 );
          if( sourceFile.eof() ) break;
          Int_t nblank = strspn(line," ");
          if (!strncmp(&line[nblank],"//",2)) continue;

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.95 2005/08/18 11:12:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.96 2005/08/19 10:47:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1854,8 +1854,8 @@ void TCanvas::ToggleAutoExec()
 {
    // Toggle pad auto execution of list of TExecs.
 
-   Bool_t AutoExec = TestBit(kAutoExec);
-   SetBit(kAutoExec,!AutoExec);
+   Bool_t autoExec = TestBit(kAutoExec);
+   SetBit(kAutoExec,!autoExec);
 }
 
 //______________________________________________________________________________
@@ -1863,30 +1863,30 @@ void TCanvas::ToggleEventStatus()
 {
    // Toggle event statusbar.
 
-   Bool_t ShowEventStatus = !TestBit(kShowEventStatus);
-   SetBit(kShowEventStatus,ShowEventStatus);
+   Bool_t showEventStatus = !TestBit(kShowEventStatus);
+   SetBit(kShowEventStatus,showEventStatus);
 
-   if (fCanvasImp) fCanvasImp->ShowStatusBar(ShowEventStatus);
+   if (fCanvasImp) fCanvasImp->ShowStatusBar(showEventStatus);
 }
 
 //______________________________________________________________________________
 void TCanvas::ToggleToolBar()
 {
    // Toggle toolbar.
-   Bool_t ShowToolBar = !TestBit(kShowToolBar);
-   SetBit(kShowToolBar,ShowToolBar);
+   Bool_t showToolBar = !TestBit(kShowToolBar);
+   SetBit(kShowToolBar,showToolBar);
 
-   if (fCanvasImp) fCanvasImp->ShowToolBar(ShowToolBar);
+   if (fCanvasImp) fCanvasImp->ShowToolBar(showToolBar);
 }
 
 //______________________________________________________________________________
 void TCanvas::ToggleEditor()
 {
    // Toggle editor.
-   Bool_t ShowEditor = !TestBit(kShowEditor);
-   SetBit(kShowEditor,ShowEditor);
+   Bool_t showEditor = !TestBit(kShowEditor);
+   SetBit(kShowEditor,showEditor);
 
-   if (fCanvasImp) fCanvasImp->ShowEditor(ShowEditor);
+   if (fCanvasImp) fCanvasImp->ShowEditor(showEditor);
 }
 
 //______________________________________________________________________________
