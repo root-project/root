@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.180 2005/05/18 21:04:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.181 2005/08/09 20:11:53 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -91,15 +91,15 @@ inline static void R__LoadBranch(TBranch *br, Long64_t entry, Bool_t quickLoad)
 //
 // This class is a small helper class to help in keeping track of the array
 // dimensions encountered in the analysis of the expression.
-class DimensionInfo : public TObject {
+class TDimensionInfo : public TObject {
 public:
    Int_t fCode;  // Location of the leaf in TTreeFormula::fCode
    Int_t fOper;  // Location of the Operation using the leaf in TTreeFormula::fOper
    Int_t fSize;
    TFormLeafInfoMultiVarDim* fMultiDim;
-   DimensionInfo(Int_t code, Int_t oper, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
+   TDimensionInfo(Int_t code, Int_t oper, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
       : fCode(code), fOper(oper), fSize(size), fMultiDim(multiDim) {};
-   ~DimensionInfo() {};
+   ~TDimensionInfo() {};
 };
 
 //______________________________________________________________________________
@@ -388,7 +388,7 @@ Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code)
 Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim) {
    // This method stores the dimension information for later usage.
 
-   DimensionInfo * info = new DimensionInfo(code,fNoper,size,multidim);
+   TDimensionInfo * info = new TDimensionInfo(code,fNoper,size,multidim);
    fDimensionSetup->Add(info);
    fCumulSizes[code][fNdimensions[code]] = size;
    fNdimensions[code] ++;
@@ -435,10 +435,10 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
       ndim = 1;
       size = -1;
 
-      TClass * ClonesClass = TClonesArray::Class();
+      TClass * clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = ClonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
-      leafinfo->fCounter = new TFormLeafInfo(ClonesClass,c_offset,counter);
+      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      leafinfo->fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
 
    } else if (!useCollectionObject && elem->GetClassPointer() && elem->GetClassPointer()->GetCollectionProxy() ) {
 
@@ -746,11 +746,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
       TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
       cl = gROOT->GetClass(bobj->GetClassName());
    } else if (leaf->InheritsFrom("TLeafElement")) {
-      TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
-      BranchEl->SetupAddresses();
-      TStreamerInfo *info = BranchEl->GetInfo();
+      TBranchElement *branchEl = (TBranchElement *)leaf->GetBranch();
+      branchEl->SetupAddresses();
+      TStreamerInfo *info = branchEl->GetInfo();
       TStreamerElement *element = 0;
-      Int_t type = BranchEl->GetStreamerType();
+      Int_t type = branchEl->GetStreamerType();
       switch(type) {
          case TStreamerInfo::kBase:
          case TStreamerInfo::kObject:
@@ -764,7 +764,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          case TStreamerInfo::kSTLp:
          case TStreamerInfo::kObjectp:
          case TStreamerInfo::kObjectP: {
-            element = (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
+            element = (TStreamerElement *)info->GetElems()[branchEl->GetID()];
             if (element) cl = element->GetClassPointer();
          }
          break;
@@ -776,7 +776,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
-            element = (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
+            element = (TStreamerElement *)info->GetElems()[branchEl->GetID()];
             if (element){
                cl = element->GetClassPointer();
             }
@@ -790,8 +790,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
       // If we got a class object, we need to verify whether it is on a
       // split TClonesArray sub branch.
-      if (cl && BranchEl->GetBranchCount()) {
-         if (BranchEl->GetType()==31) {
+      if (cl && branchEl->GetBranchCount()) {
+         if (branchEl->GetType()==31) {
             // This is inside a TClonesArray.
 
             if (!element) {
@@ -822,14 +822,14 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kSTLp ||
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp ||
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP) {
-               previnfo = new TFormLeafInfoPointer(cl,offset+BranchEl->GetOffset(),element);
+               previnfo = new TFormLeafInfoPointer(cl,offset+branchEl->GetOffset(),element);
             } else {
-               previnfo = new TFormLeafInfo(cl,offset+BranchEl->GetOffset(),element);
+               previnfo = new TFormLeafInfo(cl,offset+branchEl->GetOffset(),element);
             }
             maininfo->fNext = previnfo;
             unwindCollection = kTRUE;
 
-         } else if (BranchEl->GetType()==41) {
+         } else if (branchEl->GetType()==41) {
 
             // This is inside a Collection
 
@@ -838,7 +838,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                return -2;
             }
             // First we need to recover the collection.
-            TBranchElement *count = BranchEl->GetBranchCount();
+            TBranchElement *count = branchEl->GetBranchCount();
             TFormLeafInfo* collectioninfo;
             if ( count->GetID() >= 0 ) {
                TStreamerElement *collectionElement = 
@@ -874,15 +874,15 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kSTLp ||
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp ||
                   type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP) {
-               previnfo = new TFormLeafInfoPointer(cl,offset+BranchEl->GetOffset(),element);
+               previnfo = new TFormLeafInfoPointer(cl,offset+branchEl->GetOffset(),element);
             } else {
-               previnfo = new TFormLeafInfo(cl,offset+BranchEl->GetOffset(),element);
+               previnfo = new TFormLeafInfo(cl,offset+branchEl->GetOffset(),element);
             }
             maininfo->fNext = previnfo;
             unwindCollection = kTRUE;
          }
 
-      } else if ( BranchEl->GetType()==3) {
+      } else if ( branchEl->GetType()==3) {
          TFormLeafInfo* clonesinfo;
          if (useLeafCollectionObject) {
             clonesinfo = new TFormLeafInfoCollectionObject(cl);
@@ -895,7 +895,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          maininfo = clonesinfo;
          previnfo = maininfo;
 
-      } else if (!useLeafCollectionObject && BranchEl->GetType()==4) {
+      } else if (!useLeafCollectionObject && branchEl->GetType()==4) {
 
          TFormLeafInfo* collectioninfo;
          if (useLeafCollectionObject) {
@@ -909,7 +909,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          maininfo = collectioninfo;
          previnfo = maininfo;
 
-      } else if (BranchEl->GetStreamerType()==-1 && cl && cl->GetCollectionProxy()) {
+      } else if (branchEl->GetStreamerType()==-1 && cl && cl->GetCollectionProxy()) {
 
          if (useLeafCollectionObject) {
 
@@ -1011,7 +1011,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
          } else if (!element->IsaPointer()) {
 
-            maininfo = new TFormLeafInfoDirect(BranchEl);
+            maininfo = new TFormLeafInfoDirect(branchEl);
             previnfo = maininfo;
 
          }
@@ -2477,16 +2477,16 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
       } else if (leafcur->InheritsFrom("TLeafElement") && leafcur->IsOnTerminalBranch()) {
          TLeafElement * lElem = (TLeafElement*) leafcur;
          if (lElem->IsOnTerminalBranch()) {
-            TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
-            Int_t type = BranchEl->GetStreamerType();
+            TBranchElement *branchEl = (TBranchElement *)leafcur->GetBranch();
+            Int_t type = branchEl->GetStreamerType();
             if (type==-1) {
-               cl =  BranchEl->GetInfo()->GetClass();
+               cl =  branchEl->GetInfo()->GetClass();
             } else if (type>60 || type==0) {
                // Case of an object data member.  Here we allow for the
                // variable name to be ommitted.  Eg, for Event.root with split
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
                TStreamerElement* element = (TStreamerElement*)
-                  BranchEl->GetInfo()->GetElems()[BranchEl->GetID()];
+                  branchEl->GetInfo()->GetElems()[branchEl->GetID()];
                if (element) cl = element->GetClassPointer();
                else cl = 0;
             }
@@ -2562,11 +2562,11 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   } else if (branch->IsA()==TBranchElement::Class()
                              && ((TBranchElement*)branch)->GetType()==31) {
                      // Case of a sub branch of a TClonesArray
-                     TBranchElement *BranchEl = (TBranchElement*)branch;
-                     TStreamerInfo *info = BranchEl->GetInfo();
+                     TBranchElement *branchEl = (TBranchElement*)branch;
+                     TStreamerInfo *info = branchEl->GetInfo();
                      TClass * mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
                      TStreamerElement *element =
-                        (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
+                        (TStreamerElement *)info->GetElems()[branchEl->GetID()];
                      leafinfo = new TFormLeafInfoClones(mother_cl, 0, element, kTRUE);
                   }
 
@@ -4044,7 +4044,7 @@ void TTreeFormula::ResetDimensions() {
    TIter next(fDimensionSetup);
    Int_t last_code = -1;
    Int_t virt_dim = 0;
-   for(DimensionInfo * info; (info = (DimensionInfo*)next()); ) {
+   for(TDimensionInfo * info; (info = (TDimensionInfo*)next()); ) {
       if (last_code!=info->fCode) {
          // We know that the list is ordered by code number then by
          // dimension.  Thus a different code means that we need to
@@ -4058,10 +4058,10 @@ void TTreeFormula::ResetDimensions() {
 
          // We have a string used as a string (and not an array of number)
          // We need to determine which is the last dimension and skip it.
-         DimensionInfo *nextinfo = (DimensionInfo*)next();
+         TDimensionInfo *nextinfo = (TDimensionInfo*)next();
          while(nextinfo && nextinfo->fCode==info->fCode) {
             DefineDimensions(info->fCode,info->fSize, info->fMultiDim, virt_dim);
-            nextinfo = (DimensionInfo*)next();
+            nextinfo = (TDimensionInfo*)next();
          }
          if (!nextinfo) break;
 

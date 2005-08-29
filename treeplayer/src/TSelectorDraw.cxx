@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.52 2005/08/03 16:47:25 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.53 2005/08/09 20:11:53 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -139,8 +139,8 @@ void TSelectorDraw::Begin(TTree *tree)
    //   fOldHistogram     - pointer to hist hname
    //   elist     - pointer to selection list of hname
 
-   Bool_t CanRebin = kTRUE;
-   if (optSame) CanRebin = kFALSE;
+   Bool_t canRebin = kTRUE;
+   if (optSame) canRebin = kFALSE;
 
    Int_t nbinsx=0, nbinsy=0, nbinsz=0;
    Double_t xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0;
@@ -441,7 +441,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fAction   = -1;
             fVmin[0] = xmin;
             fVmax[0] = xmax;
-            if (xmin < xmax) CanRebin = kFALSE;
+            if (xmin < xmax) canRebin = kFALSE;
          }
       }
       if (fOldHistogram) {
@@ -457,7 +457,7 @@ void TSelectorDraw::Begin(TTree *tree)
          hist->SetMarkerStyle(fTree->GetMarkerStyle());
          hist->SetMarkerColor(fTree->GetMarkerColor());
          hist->SetMarkerSize(fTree->GetMarkerSize());
-         if (CanRebin)hist->SetBit(TH1::kCanRebin);
+         if (canRebin)hist->SetBit(TH1::kCanRebin);
          if (!hkeep) {
             hist->SetBit(kCanDelete);
             if (!opt.Contains("goff")) hist->SetDirectory(0);
@@ -497,7 +497,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = xmax;
             fVmin[0] = ymin;
             fVmax[0] = ymax;
-            if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
+            if (xmin < xmax && ymin < ymax) canRebin = kFALSE;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -510,7 +510,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fAction = -4;
                fVmin[1] = xmin;
                fVmax[1] = xmax;
-               if (xmin < xmax) CanRebin = kFALSE;
+               if (xmin < xmax) canRebin = kFALSE;
             }
             if (fAction == 2) {
                //we come here when option = "same prof"
@@ -543,7 +543,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerStyle(fTree->GetMarkerStyle());
             hp->SetMarkerColor(fTree->GetMarkerColor());
             hp->SetMarkerSize(fTree->GetMarkerSize());
-            if (CanRebin)hp->SetBit(TH1::kCanRebin);
+            if (canRebin)hp->SetBit(TH1::kCanRebin);
          }
          fVar2->SetAxis(hp->GetXaxis());
          fObject = hp;
@@ -560,7 +560,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
             h2->SetMarkerColor(fTree->GetMarkerColor());
             h2->SetMarkerSize(fTree->GetMarkerSize());
-            if (CanRebin)h2->SetBit(TH1::kCanRebin);
+            if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
@@ -629,7 +629,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = ymax;
             fVmin[0] = zmin;
             fVmax[0] = zmax;
-            if (xmin < xmax && ymin < ymax && zmin < zmax) CanRebin = kFALSE;
+            if (xmin < xmax && ymin < ymax && zmin < zmax) canRebin = kFALSE;
          }
       }
       if ((fDimension == 3) && (profile || opt.Contains("prof"))) {
@@ -644,7 +644,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[2] = xmax;
                fVmin[1] = ymin;
                fVmax[1] = ymax;
-               if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
+               if (xmin < xmax && ymin < ymax) canRebin = kFALSE;
             }
             if (opt.Contains("profs")) {
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
@@ -667,7 +667,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerStyle(fTree->GetMarkerStyle());
             hp->SetMarkerColor(fTree->GetMarkerColor());
             hp->SetMarkerSize(fTree->GetMarkerSize());
-            if (CanRebin)hp->SetBit(TH1::kCanRebin);
+            if (canRebin)hp->SetBit(TH1::kCanRebin);
          }
          fVar2->SetAxis(hp->GetYaxis());
          fVar3->SetAxis(hp->GetXaxis());
@@ -684,7 +684,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
             h2->SetMarkerColor(fTree->GetMarkerColor());
             h2->SetMarkerSize(fTree->GetMarkerSize());
-            if (CanRebin)h2->SetBit(TH1::kCanRebin);
+            if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
@@ -707,7 +707,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h3->SetMarkerStyle(fTree->GetMarkerStyle());
             h3->SetMarkerColor(fTree->GetMarkerColor());
             h3->SetMarkerSize(fTree->GetMarkerSize());
-            if (CanRebin)h3->SetBit(TH1::kCanRebin);
+            if (canRebin)h3->SetBit(TH1::kCanRebin);
             if (!hkeep) {
                h3->SetBit(kCanDelete);
                h3->SetBit(TH1::kNoStats);
@@ -793,10 +793,10 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    //
    //  Return kFALSE if any of the variable is not compilable.
 
-   const Int_t MAXCOL = 4;
+   const Int_t nMAXCOL = 4;
    TString title;
    Int_t i,nch,ncols;
-   Int_t index[MAXCOL];
+   Int_t index[nMAXCOL];
 
    // Compile selection expression if there is one
    fDimension = 0;
@@ -1384,7 +1384,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________3D scatter plot with option col_______________________
    } else if (fAction == 33) {
       TH2 *h2 = (TH2*)fObject;
-      bool process2 = kFALSE;
+      Bool_t process2 = kFALSE;
       if (h2->TestBit(TH1::kCanRebin)) {
          if (vminOld[2] == FLT_MAX)
             process2 = kTRUE;
