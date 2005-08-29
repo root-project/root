@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.219 2005/08/18 13:49:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.220 2005/08/26 16:26:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2138,12 +2138,12 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    if (dz <= 0) return;
    if (fH->GetMinimumStored() == -1111) {
-       Double_t YMARGIN = 0.05;
+       Double_t yMARGIN = 0.05;
        if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
-         else           zmin -= YMARGIN*(zmax-zmin);
+         else           zmin -= yMARGIN*(zmax-zmin);
       } else {
-         Double_t dzmin = YMARGIN*(zmax-zmin);
+         Double_t dzmin = yMARGIN*(zmax-zmin);
          if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
          else                                zmin -= dzmin;
       }
@@ -2526,7 +2526,7 @@ void THistPainter::PaintContour(Option_t *option)
    Int_t istart;
    Int_t first = ncontour;
    Int_t *polysort = 0;
-   Int_t ContListNb;
+   Int_t contListNb;
    if (Hoption.Contour != 1) goto theEND;
 
    //The 2 points line generated above are now sorted/merged to generate
@@ -2547,12 +2547,12 @@ void THistPainter::PaintContour(Option_t *option)
    for (ipoly=first-1;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
    for (ipoly=first;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
    // we can now draw sorted contours
-   ContListNb = 0;
+   contListNb = 0;
    for (k=0;k<ncontour;k++) {
       ipoly = polysort[k];
       if (np[ipoly] == 0) continue;
-      if (Hoption.List) list = (TList*)contours->At(ContListNb);
-      ContListNb++;
+      if (Hoption.List) list = (TList*)contours->At(contListNb);
+      contListNb++;
       poly = polys[ipoly];
       xx = poly->GetX();
       yy = poly->GetY();
@@ -2717,7 +2717,7 @@ void THistPainter::PaintErrors(Option_t *)
 //End_Html
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   const Int_t BASEMARKER=8;
+   const Int_t kBASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
    Double_t delta;
    Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror, sbase;
@@ -2749,7 +2749,7 @@ void THistPainter::PaintErrors(Option_t *)
    xerror      = gStyle->GetErrorX();
    symbolsize  = fH->GetMarkerSize();
    if (errormarker == 1) symbolsize = 0.01;
-   sbase       = symbolsize*BASEMARKER;
+   sbase       = symbolsize*kBASEMARKER;
    // set the graphics attributes
 
    fH->TAttLine::Modify();
@@ -3396,7 +3396,7 @@ Int_t THistPainter::PaintInit()
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
    static const char *where = "PaintInit";
-   Double_t YMARGIN = 0.05;
+   Double_t yMARGIN = 0.05;
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -3432,9 +3432,9 @@ Int_t THistPainter::PaintInit()
    }
 
 //     Compute Y axis parameters
-   Double_t BIGP = TMath::Power(10,32);
-   Double_t ymax = -BIGP;
-   Double_t ymin = BIGP;
+   Double_t bigp = TMath::Power(10,32);
+   Double_t ymax = -bigp;
+   Double_t ymin = bigp;
    Double_t c1, e1;
    Double_t xv[1];
    Double_t fval;
@@ -3442,7 +3442,7 @@ Int_t THistPainter::PaintInit()
    TObject *f;
    TF1 *f1;
    Stat_t allchan = 0;
-   Int_t NonNullErrors = 0;
+   Int_t nonNullErrors = 0;
    TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
@@ -3454,7 +3454,7 @@ Int_t THistPainter::PaintInit()
       }
       if (Hoption.Error) {
          e1 = fH->GetBinError(i);
-         if (e1 > 0) NonNullErrors++;
+         if (e1 > 0) nonNullErrors++;
          ymax = TMath::Max(ymax,c1+e1);
          if (Hoption.Logy) {
             if (c1-e1>0.01*TMath::Abs(c1)) ymin = TMath::Min(ymin,c1-e1);
@@ -3479,7 +3479,7 @@ Int_t THistPainter::PaintInit()
       }
       allchan += c1;
    }
-   if (!NonNullErrors) {
+   if (!nonNullErrors) {
       if (Hoption.Error) {
          if (!Hoption.Mark && !Hoption.Line && !Hoption.Star && !Hoption.Curve) Hoption.Hist = 2;
          Hoption.Error=0;
@@ -3568,9 +3568,9 @@ Int_t THistPainter::PaintInit()
    if (!minimum) {
       if (gStyle->GetHistMinimumZero()) {
          if (ymin >= 0) ymin = 0;
-         else           ymin -= YMARGIN*(ymax-ymin);
+         else           ymin -= yMARGIN*(ymax-ymin);
       } else {
-         Double_t dymin = YMARGIN*(ymax-ymin);
+         Double_t dymin = yMARGIN*(ymax-ymin);
          if (ymin >= 0 && (ymin-dymin <= 0)) ymin  = 0;
          else                                ymin -= dymin;
       }
@@ -3581,7 +3581,7 @@ Int_t THistPainter::PaintInit()
 //         has not been called.
 //    ----
    if (!maximum && !Hoption.Plus) {
-      ymax += YMARGIN*(ymax-ymin);
+      ymax += yMARGIN*(ymax-ymin);
    }
    Hparam.ymin = ymin;
    Hparam.ymax = ymax;
@@ -3595,7 +3595,7 @@ Int_t THistPainter::PaintInitH()
 //    for a rotated pad
 
    static const char *where = "PaintInitH";
-   Double_t YMARGIN = 0.05;
+   Double_t yMARGIN = 0.05;
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -3630,9 +3630,9 @@ Int_t THistPainter::PaintInitH()
    }
 
 //     Compute Y axis parameters
-   Double_t BIGP = TMath::Power(10,32);
-   Double_t xmax = -BIGP;
-   Double_t xmin = BIGP;
+   Double_t bigp = TMath::Power(10,32);
+   Double_t xmax = -bigp;
+   Double_t xmin = bigp;
    Double_t c1, e1;
    Double_t xv[1];
    Double_t fval;
@@ -3742,7 +3742,7 @@ Int_t THistPainter::PaintInitH()
 //    ----
    if (!minimum) {
       if (xmin >= 0) xmin = 0;
-      else           xmin -= YMARGIN*(xmax-xmin);
+      else           xmin -= yMARGIN*(xmax-xmin);
    }
 //    ----
 //         final adjustment of YMAXI for linear scale (if not option "Same"):
@@ -3750,7 +3750,7 @@ Int_t THistPainter::PaintInitH()
 //         has not been called.
 //    ----
    if (!maximum && !Hoption.Plus) {
-      xmax += YMARGIN*(xmax-xmin);
+      xmax += yMARGIN*(xmax-xmin);
    }
    Hparam.xmin = xmin;
    Hparam.xmax = xmax;
@@ -4393,12 +4393,12 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       }
    }
    if (fH->GetMinimumStored() == -1111) {
-       Double_t YMARGIN = 0.05;
+       Double_t yMARGIN = 0.05;
        if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
-         else           zmin -= YMARGIN*(zmax-zmin);
+         else           zmin -= yMARGIN*(zmax-zmin);
       } else {
-         Double_t dzmin = YMARGIN*(zmax-zmin);
+         Double_t dzmin = yMARGIN*(zmax-zmin);
          if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
          else                                zmin -= dzmin;
       }
@@ -5106,7 +5106,7 @@ void THistPainter::PaintSurface(Option_t *)
 //     Draw the filled contour on top
    Int_t icol1 = fH->GetFillColor();
 
-   Int_t Hoption35 = Hoption.Surf;
+   Int_t hoption35 = Hoption.Surf;
    if (Hoption.Surf == 13 || Hoption.Surf == 15) {
       DefineColorLevels(ndivz);
       Hoption.Surf = 23;
@@ -5117,7 +5117,7 @@ void THistPainter::PaintSurface(Option_t *)
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
       if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
-      Hoption.Surf = Hoption35;
+      Hoption.Surf = hoption35;
       fLego->SetMesh(1);
    }
 
@@ -5840,7 +5840,7 @@ Int_t THistPainter::TableInit()
    static const char *where = "TableInit";
 
    Int_t first, last;
-   Double_t YMARGIN= 0.05;
+   Double_t yMARGIN= 0.05;
    Double_t zmin, zmax;
    Int_t maximum = 0;
    Int_t minimum = 0;
@@ -5907,9 +5907,9 @@ Int_t THistPainter::TableInit()
 
 
 //    -----------------  Compute Z axis parameters
-   Double_t BIGP = TMath::Power(10,32);
-   zmax = -BIGP;
-   zmin = BIGP;
+   Double_t bigp = TMath::Power(10,32);
+   zmax = -bigp;
+   zmin = bigp;
    Double_t c1, e1;
    Stat_t allchan = 0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -5988,19 +5988,19 @@ Int_t THistPainter::TableInit()
 //         (default is 90%).
 //    ----
    if (!maximum && !Hoption.Plus) {
-      zmax += YMARGIN*(zmax-zmin);
+      zmax += yMARGIN*(zmax-zmin);
    }
 //    ----
 //         final adjustment of ymin for linear scale.
 //         if minimum is not set , then ymin is set to zero if >0
-//         or to ymin - YMARGIN if <0.
+//         or to ymin - yMARGIN if <0.
 //    ----
    if (!minimum) {
       if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
-         else           zmin -= YMARGIN*(zmax-zmin);
+         else           zmin -= yMARGIN*(zmax-zmin);
       } else {
-         Double_t dzmin = YMARGIN*(zmax-zmin);
+         Double_t dzmin = yMARGIN*(zmax-zmin);
          if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
          else                                zmin -= dzmin;
       }

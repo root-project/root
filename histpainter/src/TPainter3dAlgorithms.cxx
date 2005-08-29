@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.18 2004/10/05 10:28:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.19 2005/02/04 12:53:03 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -265,7 +265,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
    // The grid levels are aligned on the  Z axis' main tick marks.
 
    Int_t i, nbins;
-   Double_t BinLow, BinHigh, BinWidth;
+   Double_t binLow, binHigh, binWidth;
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -278,17 +278,17 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
    Double_t *rmax = view->GetRmax();
    if (ndivz > 0) {
       THLimitsFinder::Optimize(rmin[2], rmax[2], ndivz,
-                               BinLow, BinHigh, nbins, BinWidth, " ");
+                               binLow, binHigh, nbins, binWidth, " ");
    } else {
       nbins = TMath::Abs(ndivz);
-      BinLow = rmin[2];
-      BinHigh = rmax[2];
-      BinWidth = (BinHigh-BinLow)/nbins;
+      binLow = rmin[2];
+      binHigh = rmax[2];
+      binWidth = (binHigh-binLow)/nbins;
    }
 
    // Define the grid levels
    fNlevel = nbins+1;
-   for (i = 0; i < fNlevel; ++i) fFunLevel[i] = BinLow+i*BinWidth;
+   for (i = 0; i < fNlevel; ++i) fFunLevel[i] = binLow+i*binWidth;
 }
 
 //______________________________________________________________________________
@@ -3545,13 +3545,13 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
 
 //*-*-          S E T  S P E C T R
 
-    const Int_t MAXCOL = 50;
+    const Int_t kMAXCOL = 50;
     delf    = (fmax - fmin) / nl;
     fNlevel = -(nl + 1);
     for (i = 1; i <= nl+1; ++i) {
 	fFunLevel[i - 1] = fmin + (i - 1)*delf;
 	fColorLevel[i] = ic + (i - 1)*idc;
-	if (ic <= MAXCOL && fColorLevel[i] > MAXCOL) fColorLevel[i] -= MAXCOL;
+	if (ic <= kMAXCOL && fColorLevel[i] > kMAXCOL) fColorLevel[i] -= kMAXCOL;
     }
     fColorLevel[0] = fColorLevel[1];
     fColorLevel[nl + 1] = fColorLevel[nl];
@@ -3639,23 +3639,23 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
 		xyz[i*3 - 2] = f[i*3 - 2]*sina;
 		xyz[i*3 - 1] = f[i*3 - 1];
 		// added EJB -->
-		double Al, Ab;
+		double al, ab;
 		if (Hoption.Proj == 1 ) {
-		    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
-		    xyz[i*3 - 3] = Al;
-		    xyz[i*3 - 2] = Ab;
+		    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+		    xyz[i*3 - 3] = al;
+		    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 2 ) {
-		    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
-		    xyz[i*3 - 3] = Al;
-		    xyz[i*3 - 2] = Ab;
+		    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+		    xyz[i*3 - 3] = al;
+		    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 3) {
-		    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
-		    xyz[i*3 - 3] = Al;
-		    xyz[i*3 - 2] = Ab;
+		    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+		    xyz[i*3 - 3] = al;
+		    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 4) {
-		    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
-		    xyz[i*3 - 3] = Al;
-		    xyz[i*3 - 2] = Ab;
+		    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+		    xyz[i*3 - 3] = al;
+		    xyz[i*3 - 2] = ab;
                 }
 	    }
 	    icodes[0] = ix;

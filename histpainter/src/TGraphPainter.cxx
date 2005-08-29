@@ -124,12 +124,12 @@ TList *TGraphPainter::GetContourList(Double_t contour)
 
    // Find all the segments making the contour
  
-   Double_t R21, R20, R10;
-   Int_t P0, P1, P2;
-   Double_t X0, Y0, Z0;
-   Double_t X1, Y1, Z1;
-   Double_t X2, Y2, Z2;
-   Int_t T[3],IT,I0,I1,I2;
+   Double_t r21, r20, r10;
+   Int_t p0, p1, p2;
+   Double_t x0, y0, z0;
+   Double_t x1, y1, z1;
+   Double_t x2, y2, z2;
+   Int_t t[3],it,i0,i1,i2;
 
    // Allocate space to store the segments. They cannot be more than the
    // number of triangles.
@@ -138,171 +138,171 @@ TList *TGraphPainter::GetContourList(Double_t contour)
    Double_t *ys0 = new Double_t[fNdt];
    Double_t *xs1 = new Double_t[fNdt];
    Double_t *ys1 = new Double_t[fNdt];
-   Int_t NbSeg   = 0;
+   Int_t nbSeg   = 0;
 
    // Loop over all the triangles in order to find all the line segments
    // making the contour.
-   for(IT=0; IT<fNdt; IT++) {
-      T[0] = fPTried[IT];
-      T[1] = fNTried[IT];
-      T[2] = fMTried[IT];
-      P0   = T[0]-1;
-      P1   = T[1]-1;
-      P2   = T[2]-1;
-      X0   = fX[P0]; X2 = fX[P0];
-      Y0   = fY[P0]; Y2 = fY[P0];
-      Z0   = fZ[P0]; Z2 = fZ[P0];
+   for(it=0; it<fNdt; it++) {
+      t[0] = fPTried[it];
+      t[1] = fNTried[it];
+      t[2] = fMTried[it];
+      p0   = t[0]-1;
+      p1   = t[1]-1;
+      p2   = t[2]-1;
+      x0   = fX[p0]; x2 = fX[p0];
+      y0   = fY[p0]; y2 = fY[p0];
+      z0   = fZ[p0]; z2 = fZ[p0];
    
-      // Order along Z axis the points (Xi,Yi,Zi) where "i" belongs to {0,1,2}
-      // After this Z0 < Z1 < Z2
-      I0=0, I1=0, I2=0;
-      if (fZ[P1]<=Z0) {Z0=fZ[P1]; X0=fX[P1]; Y0=fY[P1]; I0=1;}
-      if (fZ[P1]>Z2)  {Z2=fZ[P1]; X2=fX[P1]; Y2=fY[P1]; I2=1;}
-      if (fZ[P2]<=Z0) {Z0=fZ[P2]; X0=fX[P2]; Y0=fY[P2]; I0=2;}
-      if (fZ[P2]>Z2)  {Z2=fZ[P2]; X2=fX[P2]; Y2=fY[P2]; I2=2;}
-      I1 = 3-I2-I0;
-      X1 = fX[T[I1]-1];
-      Y1 = fY[T[I1]-1];
-      Z1 = fZ[T[I1]-1];
+      // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+      // After this z0 < z1 < z2
+      i0=0, i1=0, i2=0;
+      if (fZ[p1]<=z0) {z0=fZ[p1]; x0=fX[p1]; y0=fY[p1]; i0=1;}
+      if (fZ[p1]>z2)  {z2=fZ[p1]; x2=fX[p1]; y2=fY[p1]; i2=1;}
+      if (fZ[p2]<=z0) {z0=fZ[p2]; x0=fX[p2]; y0=fY[p2]; i0=2;}
+      if (fZ[p2]>z2)  {z2=fZ[p2]; x2=fX[p2]; y2=fY[p2]; i2=2;}
+      i1 = 3-i2-i0;
+      x1 = fX[t[i1]-1];
+      y1 = fY[t[i1]-1];
+      z1 = fZ[t[i1]-1];
 
       if (Hoption.Logz) {
-         Z0 = TMath::Log10(Z0);
-         Z1 = TMath::Log10(Z1);
-         Z2 = TMath::Log10(Z2);
+         z0 = TMath::Log10(z0);
+         z1 = TMath::Log10(z1);
+         z2 = TMath::Log10(z2);
       }
 
-      if(contour >= Z0 && contour <=Z2) {
-         R20 = (contour-Z0)/(Z2-Z0);
-         xs0c = R20*(X2-X0)+X0;
-         ys0c = R20*(Y2-Y0)+Y0;
-         if(contour >= Z1 && contour <=Z2) {
-            R21 = (contour-Z1)/(Z2-Z1);
-            xs1c = R21*(X2-X1)+X1;
-            ys1c = R21*(Y2-Y1)+Y1;
+      if(contour >= z0 && contour <=z2) {
+         r20 = (contour-z0)/(z2-z0);
+         xs0c = r20*(x2-x0)+x0;
+         ys0c = r20*(y2-y0)+y0;
+         if(contour >= z1 && contour <=z2) {
+            r21 = (contour-z1)/(z2-z1);
+            xs1c = r21*(x2-x1)+x1;
+            ys1c = r21*(y2-y1)+y1;
          } else {
-            R10 = (contour-Z0)/(Z1-Z0);
-            xs1c = R10*(X1-X0)+X0;
-            ys1c = R10*(Y1-Y0)+Y0;
+            r10 = (contour-z0)/(z1-z0);
+            xs1c = r10*(x1-x0)+x0;
+            ys1c = r10*(y1-y0)+y0;
          }
          // do not take the segments equal to a point
          if(xs0c != xs1c || ys0c != ys1c) {
-            NbSeg++;
-            xs0[NbSeg-1] = xs0c;
-            ys0[NbSeg-1] = ys0c;
-            xs1[NbSeg-1] = xs1c;
-            ys1[NbSeg-1] = ys1c;
+            nbSeg++;
+            xs0[nbSeg-1] = xs0c;
+            ys0[nbSeg-1] = ys0c;
+            xs1[nbSeg-1] = xs1c;
+            ys1[nbSeg-1] = ys1c;
          }
       }
    }
 
-   Bool_t *SegUsed = new Bool_t[fNdt];
-   for(Int_t i=0; i<fNdt; i++) SegUsed[i]=kFALSE;
+   Bool_t *segUsed = new Bool_t[fNdt];
+   for(Int_t i=0; i<fNdt; i++) segUsed[i]=kFALSE;
 
    // Find all the graphs making the contour. There is two kind of graphs,
    // either they are "opened" or they are "closed"
 
    // Find the opened graphs
    Double_t xc=0, yc=0, xnc=0, ync=0;
-   Bool_t FindNew;
+   Bool_t findNew;
    Bool_t s0, s1;
-   Int_t IS, JS;
-   for (IS=0; IS<NbSeg; IS++) {
-      if (SegUsed[IS]) continue;
+   Int_t is, js;
+   for (is=0; is<nbSeg; is++) {
+      if (segUsed[is]) continue;
       s0 = s1 = kFALSE;
 
-      // Find to which segment IS is connected. It can be connected
+      // Find to which segment is is connected. It can be connected
       // via 0, 1 or 2 vertices.
-      for (JS=0; JS<NbSeg; JS++) {
-         if (IS==JS) continue;
-         if (xs0[IS]==xs0[JS] && ys0[IS]==ys0[JS]) s0 = kTRUE;
-         if (xs0[IS]==xs1[JS] && ys0[IS]==ys1[JS]) s0 = kTRUE;
-         if (xs1[IS]==xs0[JS] && ys1[IS]==ys0[JS]) s1 = kTRUE;
-         if (xs1[IS]==xs1[JS] && ys1[IS]==ys1[JS]) s1 = kTRUE;
+      for (js=0; js<nbSeg; js++) {
+         if (is==js) continue;
+         if (xs0[is]==xs0[js] && ys0[is]==ys0[js]) s0 = kTRUE;
+         if (xs0[is]==xs1[js] && ys0[is]==ys1[js]) s0 = kTRUE;
+         if (xs1[is]==xs0[js] && ys1[is]==ys0[js]) s1 = kTRUE;
+         if (xs1[is]==xs1[js] && ys1[is]==ys1[js]) s1 = kTRUE;
       }
 
-      // Segment IS is alone, not connected. It is stored in the
+      // Segment is is alone, not connected. It is stored in the
       // list and the next segment is examined.
       if (!s0 && !s1) {
          graph = new TGraph();
-         graph->SetPoint(npg,xs0[IS],ys0[IS]); npg++;
-         graph->SetPoint(npg,xs1[IS],ys1[IS]); npg++;
-         SegUsed[IS] = kTRUE;
+         graph->SetPoint(npg,xs0[is],ys0[is]); npg++;
+         graph->SetPoint(npg,xs1[is],ys1[is]); npg++;
+         segUsed[is] = kTRUE;
          list->Add(graph); npg = 0;
          continue;
       }
 
-      // Segment IS is connected via 1 vertex only and can be considered
+      // Segment is is connected via 1 vertex only and can be considered
       // as the starting point of an opened contour.
       if (!s0 || !s1) {
-         // Find all the segments connected to segment IS
+         // Find all the segments connected to segment is
          graph = new TGraph();
-         if (s0) {xc = xs0[IS]; yc = ys0[IS]; xnc = xs1[IS]; ync = ys1[IS];}
-         if (s1) {xc = xs1[IS]; yc = ys1[IS]; xnc = xs0[IS]; ync = ys0[IS];}
+         if (s0) {xc = xs0[is]; yc = ys0[is]; xnc = xs1[is]; ync = ys1[is];}
+         if (s1) {xc = xs1[is]; yc = ys1[is]; xnc = xs0[is]; ync = ys0[is];}
          graph->SetPoint(npg,xnc,ync); npg++;
-         SegUsed[IS] = kTRUE;
-         JS = 0;
+         segUsed[is] = kTRUE;
+         js = 0;
 L01:
-         FindNew = kFALSE;
-         if (SegUsed[JS] && JS<NbSeg) {
-            JS++;
+         findNew = kFALSE;
+         if (segUsed[js] && js<nbSeg) {
+            js++;
             goto L01;
-         } else if (xc==xs0[JS] && yc==ys0[JS]) {
-            xc      = xs1[JS];
-            yc      = ys1[JS];
-            FindNew = kTRUE;
-         } else if (xc==xs1[JS] && yc==ys1[JS]) {
-            xc      = xs0[JS];
-            yc      = ys0[JS];
-            FindNew = kTRUE;
+         } else if (xc==xs0[js] && yc==ys0[js]) {
+            xc      = xs1[js];
+            yc      = ys1[js];
+            findNew = kTRUE;
+         } else if (xc==xs1[js] && yc==ys1[js]) {
+            xc      = xs0[js];
+            yc      = ys0[js];
+            findNew = kTRUE;
          }
-         if (FindNew) {
-            SegUsed[JS] = kTRUE;
+         if (findNew) {
+            segUsed[js] = kTRUE;
             graph->SetPoint(npg,xc,yc); npg++;
-            JS = 0;
+            js = 0;
             goto L01;
          }
-         JS++; 
-         if (JS<NbSeg) goto L01;
+         js++; 
+         if (js<nbSeg) goto L01;
          list->Add(graph); npg = 0;
       }
    }
 
    // Find the closed graphs. At this point all the remaining graphs
    // are closed. Any segment can be used to start the search. 
-   for (IS=0; IS<NbSeg; IS++) {
-      if (SegUsed[IS]) continue;
+   for (is=0; is<nbSeg; is++) {
+      if (segUsed[is]) continue;
 
-      // Find all the segments connected to segment IS
+      // Find all the segments connected to segment is
       graph = new TGraph();
-      SegUsed[IS] = kTRUE;
-      xc = xs0[IS];
-      yc = ys0[IS];
-      JS = 0;
+      segUsed[is] = kTRUE;
+      xc = xs0[is];
+      yc = ys0[is];
+      js = 0;
       graph->SetPoint(npg,xc,yc); npg++;
 L02:
-      FindNew = kFALSE;
-      if (SegUsed[JS] && JS<NbSeg) {
-         JS++;
+      findNew = kFALSE;
+      if (segUsed[js] && js<nbSeg) {
+         js++;
          goto L02;
-      } else if (xc==xs0[JS] && yc==ys0[JS]) {
-         xc      = xs1[JS];
-         yc      = ys1[JS];
-         FindNew = kTRUE;
-      } else if (xc==xs1[JS] && yc==ys1[JS]) {
-         xc      = xs0[JS];
-         yc      = ys0[JS];
-         FindNew = kTRUE;
+      } else if (xc==xs0[js] && yc==ys0[js]) {
+         xc      = xs1[js];
+         yc      = ys1[js];
+         findNew = kTRUE;
+      } else if (xc==xs1[js] && yc==ys1[js]) {
+         xc      = xs0[js];
+         yc      = ys0[js];
+         findNew = kTRUE;
       }
-      if (FindNew) {
-         SegUsed[JS] = kTRUE;
+      if (findNew) {
+         segUsed[js] = kTRUE;
          graph->SetPoint(npg,xc,yc); npg++;
-         JS = 0;
+         js = 0;
          goto L02;
       }
-      JS++; 
-      if (JS<NbSeg) goto L02;
+      js++; 
+      if (js<nbSeg) goto L02;
       // Close the contour
-      graph->SetPoint(npg,xs0[IS],ys0[IS]); npg++;
+      graph->SetPoint(npg,xs0[is],ys0[is]); npg++;
       list->Add(graph); npg = 0;
    }
    
@@ -310,7 +310,7 @@ L02:
    delete [] ys0;
    delete [] xs1;
    delete [] ys1;
-   delete [] SegUsed;
+   delete [] segUsed;
    return list;
 }
 
@@ -325,11 +325,11 @@ void TGraphPainter::Paint(Option_t *option)
    //            painted with the current fill area color. The edges of each
    //            triangles are painted with the current line color.
    //   "TRIW" : The Delaunay triangles are drawn as wire frame
-   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+   //   "TRi1" : The Delaunay triangles are painted with color levels. The edges
    //            of each triangles are painted with the current line color.
-   //   "TRI2" : the Delaunay triangles are painted with color levels.
+   //   "TRi2" : the Delaunay triangles are painted with color levels.
    //   "P"    : Draw a marker at each vertex
-   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
+   //   "p0"   : Draw a circle at each vertex. Each circle background is white.
    //   "PCOL" : Draw a marker at each vertex. The color of each marker is 
    //            defined according to its Z position. 
    //   "CONT" : Draw contours
@@ -410,62 +410,62 @@ void TGraphPainter::PaintContour(Option_t * /*option*/)
 
 
 //______________________________________________________________________________
-void TGraphPainter::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
+void TGraphPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
                            Int_t nblev, Double_t *glev)
 {
    // Paints one triangle.
    // nblev  = 0 : paint the color levels
    // nblev != 0 : paint the grid
 
-   Int_t i, FC, ncolors, theColor0, theColor2;
+   Int_t i, fillColor, ncolors, theColor0, theColor2;
    
-   Int_t P0=T[0]-1;
-   Int_t P1=T[1]-1;
-   Int_t P2=T[2]-1;
+   Int_t p0=t[0]-1;
+   Int_t p1=t[1]-1;
+   Int_t p2=t[2]-1;
    Double_t xl[2],yl[2];
-   Double_t Zl, R21, R20, R10;
-   Double_t X0 = x[0]  , X2 = x[0];
-   Double_t Y0 = y[0]  , Y2 = y[0];
-   Double_t Z0 = fZ[P0], Z2 = fZ[P0];
+   Double_t zl, r21, r20, r10;
+   Double_t x0 = x[0]  , x2 = x[0];
+   Double_t y0 = y[0]  , y2 = y[0];
+   Double_t z0 = fZ[p0], z2 = fZ[p0];
 
-   // Order along Z axis the points (Xi,Yi,Zi) where "i" belongs to {0,1,2}
-   // After this Z0 < Z1 < Z2
-   Int_t I0=0, I1=0, I2=0;
-   if (fZ[P1]<=Z0) {Z0=fZ[P1]; X0=x[1]; Y0=y[1]; I0=1;}
-   if (fZ[P1]>Z2)  {Z2=fZ[P1]; X2=x[1]; Y2=y[1]; I2=1;}
-   if (fZ[P2]<=Z0) {Z0=fZ[P2]; X0=x[2]; Y0=y[2]; I0=2;}
-   if (fZ[P2]>Z2)  {Z2=fZ[P2]; X2=x[2]; Y2=y[2]; I2=2;}
-   I1 = 3-I2-I0;
-   Double_t X1 = x[I1];
-   Double_t Y1 = y[I1];
-   Double_t Z1 = fZ[T[I1]-1];
+   // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+   // After this z0 < z1 < z2
+   Int_t i0=0, i1=0, i2=0;
+   if (fZ[p1]<=z0) {z0=fZ[p1]; x0=x[1]; y0=y[1]; i0=1;}
+   if (fZ[p1]>z2)  {z2=fZ[p1]; x2=x[1]; y2=y[1]; i2=1;}
+   if (fZ[p2]<=z0) {z0=fZ[p2]; x0=x[2]; y0=y[2]; i0=2;}
+   if (fZ[p2]>z2)  {z2=fZ[p2]; x2=x[2]; y2=y[2]; i2=2;}
+   i1 = 3-i2-i0;
+   Double_t x1 = x[i1];
+   Double_t y1 = y[i1];
+   Double_t z1 = fZ[t[i1]-1];
 
-   // Zi  = Z values of the stripe number i
-   // Zip = Previous Zi 
-   Double_t Zi=0, Zip=0;
+   // zi  = Z values of the stripe number i
+   // zip = Previous zi 
+   Double_t zi=0, zip=0;
 
    if (nblev <= 0) {
       // Paint the colors levels
 
-      // Compute the color associated to Z0 (theColor0) and Z2 (theColor2)
+      // Compute the color associated to z0 (theColor0) and z2 (theColor2)
       ncolors   = gStyle->GetNumberOfColors();
-      theColor0 = (Int_t)( ((Z0-fZmin)/(fZmax-fZmin))*(ncolors-1) );
-      theColor2 = (Int_t)( ((Z2-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+      theColor0 = (Int_t)( ((z0-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+      theColor2 = (Int_t)( ((z2-fZmin)/(fZmax-fZmin))*(ncolors-1) );
 
       // The stripes drawn to fill the triangles may have up to 5 points
       Double_t xp[5], yp[5];
 
-      // Rl = Ratio between Z0 and Z2 (long) 
-      // Rs = Ratio between Z0 and Z1 or Z1 and Z2 (short) 
-      Double_t Rl,Rs;
+      // rl = Ratio between z0 and z2 (long) 
+      // rs = Ratio between z0 and z1 or z1 and z2 (short) 
+      Double_t rl,rs;
 
-      // Ci = Color of the stripe number i
+      // ci = Color of the stripe number i
       // npf = number of point needed to draw the current stripe
-      Int_t Ci,npf;
+      Int_t ci,npf;
 
-      FC = fGraph2D->GetFillColor();
+      fillColor = fGraph2D->GetFillColor();
 
-      // If the Z0's color and Z2's colors are the same, the whole triangle
+      // If the z0's color and z2's colors are the same, the whole triangle
       // can be painted in one go.
       if(theColor0 == theColor2) {
          fGraph2D->SetFillColor(gStyle->GetColorPalette(theColor0));
@@ -474,53 +474,53 @@ void TGraphPainter::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
 
       // The triangle must be painted with several colors
       } else {
-         for(Ci=theColor0; Ci<=theColor2; Ci++) {
-            fGraph2D->SetFillColor(gStyle->GetColorPalette(Ci));
+         for(ci=theColor0; ci<=theColor2; ci++) {
+            fGraph2D->SetFillColor(gStyle->GetColorPalette(ci));
             fGraph2D->TAttFill::Modify();
-            if (Ci==theColor0) {
-               Zi    = (((Ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
-               xp[0] = X0;
-               yp[0] = Y0;
-               Rl    = (Zi-Z0)/(Z2-Z0);
-               xp[1] = Rl*(X2-X0)+X0;
-               yp[1] = Rl*(Y2-Y0)+Y0;
-               if (Zi>=Z1 || Z0==Z1) {
-                  Rs    = (Zi-Z1)/(Z2-Z1);
-                  xp[2] = Rs*(X2-X1)+X1;
-                  yp[2] = Rs*(Y2-Y1)+Y1;
-                  xp[3] = X1;
-                  yp[3] = Y1;
+            if (ci==theColor0) {
+               zi    = (((ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
+               xp[0] = x0;
+               yp[0] = y0;
+               rl    = (zi-z0)/(z2-z0);
+               xp[1] = rl*(x2-x0)+x0;
+               yp[1] = rl*(y2-y0)+y0;
+               if (zi>=z1 || z0==z1) {
+                  rs    = (zi-z1)/(z2-z1);
+                  xp[2] = rs*(x2-x1)+x1;
+                  yp[2] = rs*(y2-y1)+y1;
+                  xp[3] = x1;
+                  yp[3] = y1;
                   npf   = 4;
                 } else {
-                  Rs    = (Zi-Z0)/(Z1-Z0);
-                  xp[2] = Rs*(X1-X0)+X0;
-                  yp[2] = Rs*(Y1-Y0)+Y0;
+                  rs    = (zi-z0)/(z1-z0);
+                  xp[2] = rs*(x1-x0)+x0;
+                  yp[2] = rs*(y1-y0)+y0;
                   npf   = 3;
                }
-            } else if (Ci==theColor2) {
+            } else if (ci==theColor2) {
                xp[0] = xp[1];
                yp[0] = yp[1];
-               xp[1] = X2;
-               yp[1] = Y2;
-               if (Zi<Z1 || Z2==Z1) {
+               xp[1] = x2;
+               yp[1] = y2;
+               if (zi<z1 || z2==z1) {
                   xp[3] = xp[2];
                   yp[3] = yp[2];
-                  xp[2] = X1;
-                  yp[2] = Y1;
+                  xp[2] = x1;
+                  yp[2] = y1;
                   npf   = 4;
                } else {
                   npf   = 3;
                }
             } else {
-               Zi    = (((Ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
+               zi    = (((ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
                xp[0] = xp[1];
                yp[0] = yp[1];
-               Rl    = (Zi-Z0)/(Z2-Z0);
-               xp[1] = Rl*(X2-X0)+X0;
-               yp[1] = Rl*(Y2-Y0)+Y0;
-               if ( Zi>=Z1 && Zip<=Z1) {
-                  xp[3] = X1;
-                  yp[3] = Y1;
+               rl    = (zi-z0)/(z2-z0);
+               xp[1] = rl*(x2-x0)+x0;
+               yp[1] = rl*(y2-y0)+y0;
+               if ( zi>=z1 && zip<=z1) {
+                  xp[3] = x1;
+                  yp[3] = y1;
                   xp[4] = xp[2];
                   yp[4] = yp[2];
                   npf   = 5;
@@ -529,22 +529,22 @@ void TGraphPainter::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
                   yp[3] = yp[2];
                   npf   = 4;
                }
-               if (Zi<Z1) {
-                  Rs    = (Zi-Z0)/(Z1-Z0);
-                  xp[2] = Rs*(X1-X0)+X0;
-                  yp[2] = Rs*(Y1-Y0)+Y0;
+               if (zi<z1) {
+                  rs    = (zi-z0)/(z1-z0);
+                  xp[2] = rs*(x1-x0)+x0;
+                  yp[2] = rs*(y1-y0)+y0;
                } else {
-                  Rs    = (Zi-Z1)/(Z2-Z1);
-                  xp[2] = Rs*(X2-X1)+X1;
-                  yp[2] = Rs*(Y2-Y1)+Y1;
+                  rs    = (zi-z1)/(z2-z1);
+                  xp[2] = rs*(x2-x1)+x1;
+                  yp[2] = rs*(y2-y1)+y1;
                }
             }
-            Zip = Zi;
+            zip = zi;
             // Paint a stripe
             gPad->PaintFillArea(npf,xp,yp);
          }
       }
-      fGraph2D->SetFillColor(FC);
+      fGraph2D->SetFillColor(fillColor);
       fGraph2D->TAttFill::Modify();
 
    } else {
@@ -552,19 +552,19 @@ void TGraphPainter::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
       fGraph2D->SetLineStyle(3);
       fGraph2D->TAttLine::Modify();
       for(i=0; i<nblev; i++){
-         Zl=glev[i];
-         if(Zl >= Z0 && Zl <=Z2) {
-            R21=(Zl-Z1)/(Z2-Z1);
-            R20=(Zl-Z0)/(Z2-Z0);
-            R10=(Zl-Z0)/(Z1-Z0);
-            xl[0]=R20*(X2-X0)+X0;
-            yl[0]=R20*(Y2-Y0)+Y0;
-            if(Zl >= Z1 && Zl <=Z2) {
-               xl[1]=R21*(X2-X1)+X1;
-               yl[1]=R21*(Y2-Y1)+Y1;
+         zl=glev[i];
+         if(zl >= z0 && zl <=z2) {
+            r21=(zl-z1)/(z2-z1);
+            r20=(zl-z0)/(z2-z0);
+            r10=(zl-z0)/(z1-z0);
+            xl[0]=r20*(x2-x0)+x0;
+            yl[0]=r20*(y2-y0)+y0;
+            if(zl >= z1 && zl <=z2) {
+               xl[1]=r21*(x2-x1)+x1;
+               yl[1]=r21*(y2-y1)+y1;
             } else {
-               xl[1]=R10*(X1-X0)+X0;
-               yl[1]=R10*(Y1-Y0)+Y0;
+               xl[1]=r10*(x1-x0)+x0;
+               yl[1]=r10*(y1-y0)+y0;
             }
             gPad->PaintPolyLine(2,xl,yl);
          }
@@ -593,18 +593,18 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
    Bool_t markers0 = opt.Contains("p0");
    Bool_t colors   = opt.Contains("pcol");
    Int_t  ncolors  = gStyle->GetNumberOfColors();
-   Int_t  IT, theColor;
+   Int_t  it, theColor;
 
    Double_t *xm = new Double_t[fNpoints]; 
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
-   for (IT=0; IT<fNpoints; IT++) {
-      if(fX[IT] < fXmin || fX[IT] > fXmax) continue;
-      if(fY[IT] < fYmin || fY[IT] > fYmax) continue;
+   for (it=0; it<fNpoints; it++) {
+      if(fX[it] < fXmin || fX[it] > fXmax) continue;
+      if(fY[it] < fYmin || fY[it] > fYmax) continue;
       npd++;
-      temp1[0] = fX[IT];
-      temp1[1] = fY[IT];
-      temp1[2] = fZ[IT];
+      temp1[0] = fX[it];
+      temp1[1] = fY[it];
+      temp1[2] = fZ[it];
       temp1[0] = TMath::Max(temp1[0],fXmin);
       temp1[1] = TMath::Max(temp1[1],fYmin);
       temp1[2] = TMath::Max(temp1[2],fZmin);
@@ -613,17 +613,17 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
       if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
       if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
       view->WCtoNDC(temp1, &temp2[0]);
-      xm[IT] = temp2[0];
-      ym[IT] = temp2[1];
+      xm[it] = temp2[0];
+      ym[it] = temp2[1];
    }
    if (markers0) {
       PaintPolyMarker0(npd,xm,ym);
    } else if (colors) {
-      for (IT=0; IT<fNpoints; IT++) {
-         theColor = (Int_t)( ((fZ[IT]-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+      for (it=0; it<fNpoints; it++) {
+         theColor = (Int_t)( ((fZ[it]-fZmin)/(fZmax-fZmin))*(ncolors-1) );
          fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
          fGraph2D->TAttMarker::Modify();
-         gPad->PaintPolyMarker(1,&xm[IT],&ym[IT]);
+         gPad->PaintPolyMarker(1,&xm[it],&ym[it]);
       }
    } else {
       fGraph2D->SetMarkerStyle(fGraph2D->GetMarkerStyle());
@@ -643,14 +643,14 @@ void TGraphPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
    // Paints a circle at each vertex. Each circle background is white. 
 
    fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
-   Int_t MC = fGraph2D->GetMarkerColor();
+   Int_t mc = fGraph2D->GetMarkerColor();
    for (Int_t i=0; i<n; i++) {
       fGraph2D->SetMarkerStyle(20);
       fGraph2D->SetMarkerColor(0);
       fGraph2D->TAttMarker::Modify();
       gPad->PaintPolyMarker(1,&x[i],&y[i]);
       fGraph2D->SetMarkerStyle(24);
-      fGraph2D->SetMarkerColor(MC);
+      fGraph2D->SetMarkerColor(mc);
       fGraph2D->TAttMarker::Modify();
       gPad->PaintPolyMarker(1,&x[i],&y[i]);
    }
@@ -663,7 +663,7 @@ void TGraphPainter::PaintTriangles(Option_t *option)
    // Paints the 2D graph as triangles
 
    Double_t x[4], y[4], temp1[3],temp2[3];
-   Int_t IT,T[3];
+   Int_t it,t[3];
    Int_t *order = 0;
    Double_t *dist = 0;
 
@@ -688,7 +688,7 @@ void TGraphPainter::PaintTriangles(Option_t *option)
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;
-      Double_t BinLow, BinHigh, BinWidth;
+      Double_t binLow, binHigh, binWidth;
 
       // Find the main tick marks positions.
       Double_t *r0 = view->GetRmin();
@@ -696,17 +696,17 @@ void TGraphPainter::PaintTriangles(Option_t *option)
 
       if (ndivz > 0) {
          THLimitsFinder::Optimize(r0[2], r1[2], ndivz,
-                                  BinLow, BinHigh, nbins, BinWidth, " ");
+                                  binLow, binHigh, nbins, binWidth, " ");
       } else {
          nbins = TMath::Abs(ndivz);
-         BinLow = r0[2];
-         BinHigh = r1[2];
-         BinWidth = (BinHigh-BinLow)/nbins;
+         binLow = r0[2];
+         binHigh = r1[2];
+         binWidth = (binHigh-binLow)/nbins;
       }
       // Define the grid levels
       nblev = nbins+1;
       glev = new Double_t[nblev];
-      for (Int_t i = 0; i < nblev; ++i) glev[i] = BinLow+i*BinWidth;
+      for (Int_t i = 0; i < nblev; ++i) glev[i] = binLow+i*binWidth;
    }
    
    // Initialize the levels on the Z axis
@@ -728,23 +728,23 @@ void TGraphPainter::PaintTriangles(Option_t *option)
    order = new Int_t[fNdt];
    dist  = new Double_t[fNdt];
    Double_t xd,yd;
-   Int_t P, N, M;
+   Int_t p, n, m;
    Bool_t o = kFALSE;
-   for (IT=0; IT<fNdt; IT++) {
-      P = fPTried[IT];
-      N = fNTried[IT];
-      M = fMTried[IT];
-      xd = (fXN[P]+fXN[N]+fXN[M])/3;
-      yd = (fYN[P]+fYN[N]+fYN[M])/3;
+   for (it=0; it<fNdt; it++) {
+      p = fPTried[it];
+      n = fNTried[it];
+      m = fMTried[it];
+      xd = (fXN[p]+fXN[n]+fXN[m])/3;
+      yd = (fYN[p]+fYN[n]+fYN[m])/3;
       if ((cp >= 0) && (sp >= 0.)) {
-         dist[IT] = -(fXNmax-xd+fYNmax-yd);
+         dist[it] = -(fXNmax-xd+fYNmax-yd);
       } else if ((cp <= 0) && (sp >= 0.)) {
-         dist[IT] = -(fXNmax-xd+yd-fYNmin);
+         dist[it] = -(fXNmax-xd+yd-fYNmin);
          o = kTRUE;
       } else if ((cp <= 0) && (sp <= 0.)) {
-         dist[IT] = -(xd-fXNmin+yd-fYNmin);
+         dist[it] = -(xd-fXNmin+yd-fYNmin);
       } else {
-         dist[IT] = -(xd-fXNmin+fYNmax-yd);
+         dist[it] = -(xd-fXNmin+fYNmax-yd);
          o = kTRUE;
       }
    }
@@ -752,22 +752,22 @@ void TGraphPainter::PaintTriangles(Option_t *option)
    
    // Draw the triangles and markers if requested
    fGraph2D->SetFillColor(fGraph2D->GetFillColor());
-   Int_t FS = fGraph2D->GetFillStyle();
+   Int_t fs = fGraph2D->GetFillStyle();
    fGraph2D->SetFillStyle(1001);
    fGraph2D->TAttFill::Modify();
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
-   Int_t LS = fGraph2D->GetLineStyle();
-   for (IT=0; IT<fNdt; IT++) {
-      T[0] = fPTried[order[IT]];
-      T[1] = fNTried[order[IT]];
-      T[2] = fMTried[order[IT]];
-      for (Int_t t=0; t<3; t++) {
-         if(fX[T[t]-1] < fXmin || fX[T[t]-1] > fXmax) goto endloop;
-         if(fY[T[t]-1] < fYmin || fY[T[t]-1] > fYmax) goto endloop;
-         temp1[0] = fX[T[t]-1];
-         temp1[1] = fY[T[t]-1];
-         temp1[2] = fZ[T[t]-1];
+   Int_t ls = fGraph2D->GetLineStyle();
+   for (it=0; it<fNdt; it++) {
+      t[0] = fPTried[order[it]];
+      t[1] = fNTried[order[it]];
+      t[2] = fMTried[order[it]];
+      for (Int_t k=0; k<3; k++) {
+         if(fX[t[k]-1] < fXmin || fX[t[k]-1] > fXmax) goto endloop;
+         if(fY[t[k]-1] < fYmin || fY[t[k]-1] > fYmax) goto endloop;
+         temp1[0] = fX[t[k]-1];
+         temp1[1] = fY[t[k]-1];
+         temp1[2] = fZ[t[k]-1];
          temp1[0] = TMath::Max(temp1[0],fXmin);
          temp1[1] = TMath::Max(temp1[1],fYmin);
          temp1[2] = TMath::Max(temp1[2],fZmin);
@@ -776,15 +776,15 @@ void TGraphPainter::PaintTriangles(Option_t *option)
          if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
          if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
          view->WCtoNDC(temp1, &temp2[0]);
-         x[t] = temp2[0];
-         y[t] = temp2[1];
+         x[k] = temp2[0];
+         y[k] = temp2[1];
       }
       x[3] = x[0];
       y[3] = y[0];
-      if (tri1 || tri2) PaintLevels(T,x,y);
+      if (tri1 || tri2) PaintLevels(t,x,y);
       if (!tri1 && !tri2 && !wire) {
          gPad->PaintFillArea(3,x,y);
-         PaintLevels(T,x,y,nblev,glev);
+         PaintLevels(t,x,y,nblev,glev);
       }
       if (!tri2) gPad->PaintPolyLine(4,x,y);
       if (markers) {
@@ -801,8 +801,8 @@ void TGraphPainter::PaintTriangles(Option_t *option)
 endloop:
       continue;
    }
-   fGraph2D->SetFillStyle(FS);
-   fGraph2D->SetLineStyle(LS);
+   fGraph2D->SetFillStyle(fs);
+   fGraph2D->SetLineStyle(ls);
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
    delete [] order;
