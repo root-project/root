@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.23 2005/07/18 15:28:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.24 2005/07/21 17:41:33 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -705,8 +705,8 @@ Bool_t TDSet::ElementsValid() const
 {
    // Check if all elemnts are valid.
 
-   TIter NextElem(GetListOfElements());
-   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+   TIter nextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
       if (!elem->GetValid()) return kFALSE;
    }
    return kTRUE;
@@ -718,8 +718,8 @@ void TDSet::Validate()
 {
    // Validate the TDSet by opening files.
 
-   TIter NextElem(GetListOfElements());
-   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+   TIter nextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
       if (!elem->GetValid()) elem->Validate(IsTree());
    }
 
@@ -731,43 +731,43 @@ void TDSet::Validate(TDSet* dset)
    // Validate the TDSet against another TDSet.
    // Only validates elements in common from input TDSet.
 
-   THashList BestElements;
-   BestElements.SetOwner();
-   TList NamedHolder;
-   NamedHolder.SetOwner();
-   TIter NextOtherElem(dset->GetListOfElements());
-   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextOtherElem())) {
+   THashList bestElements;
+   bestElements.SetOwner();
+   TList namedHolder;
+   namedHolder.SetOwner();
+   TIter nextOtherElem(dset->GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextOtherElem())) {
       if (!elem->GetValid()) continue;
       TString dir_file_obj = elem->GetDirectory();
       dir_file_obj += "_";
       dir_file_obj += elem->GetFileName();
       dir_file_obj += "_";
       dir_file_obj += elem->GetObjName();
-      TPair *p = dynamic_cast<TPair*>(BestElements.FindObject(dir_file_obj));
+      TPair *p = dynamic_cast<TPair*>(bestElements.FindObject(dir_file_obj));
       if (p) {
          TDSetElement *prevelem = dynamic_cast<TDSetElement*>(p->Value());
          Long64_t entries = prevelem->GetFirst()+prevelem->GetNum();
          if (entries<elem->GetFirst()+elem->GetNum()) {
-            BestElements.Remove(p);
-            BestElements.Add(new TPair(p->Key(), elem));
+            bestElements.Remove(p);
+            bestElements.Add(new TPair(p->Key(), elem));
             delete p;
          }
       } else {
          TNamed* named = new TNamed(dir_file_obj, dir_file_obj);
-         NamedHolder.Add(named);
-         BestElements.Add(new TPair(named, elem));
+         namedHolder.Add(named);
+         bestElements.Add(new TPair(named, elem));
       }
    }
 
-   TIter NextElem(GetListOfElements());
-   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+   TIter nextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
       if (!elem->GetValid()) {
          TString dir_file_obj = elem->GetDirectory();
          dir_file_obj += "_";
          dir_file_obj += elem->GetFileName();
          dir_file_obj += "_";
          dir_file_obj += elem->GetObjName();
-         if (TPair *p = dynamic_cast<TPair*>(BestElements.FindObject(dir_file_obj))) {
+         if (TPair *p = dynamic_cast<TPair*>(bestElements.FindObject(dir_file_obj))) {
             TDSetElement* validelem = dynamic_cast<TDSetElement*>(p->Value());
             elem->Validate(validelem);
          }

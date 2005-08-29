@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.176 2005/07/15 21:35:45 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.177 2005/07/27 15:32:16 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2673,18 +2673,18 @@ TVirtualCollectionProxy *TBranchElement::GetCollectionProxy()
 {
    if (fCollProxy) return fCollProxy;
 
-   TBranchElement *This = const_cast<TBranchElement*>(this);
+   TBranchElement *thiscast = const_cast<TBranchElement*>(this);
    if (fType==4 ) {
 
       const char *ty;
-      if (fID>=0) ty = ((TStreamerElement*)This->GetInfo()->GetElems()[fID])->GetTypeName();
+      if (fID>=0) ty = ((TStreamerElement*)thiscast->GetInfo()->GetElems()[fID])->GetTypeName();
       else ty = fClassName.Data();
       TClass *cl = gROOT->GetClass(ty);
       fCollProxy = cl->GetCollectionProxy()->Generate();
       fSTLtype   = TClassEdit::IsSTLCont(ty);
       if ( fSTLtype<0 ) fSTLtype = -fSTLtype;
    } else if(fType==41) {
-      This->fCollProxy = fBranchCount->fCollProxy;
+      thiscast->fCollProxy = fBranchCount->fCollProxy;
    }
    return fCollProxy;
 }

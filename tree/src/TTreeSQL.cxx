@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.2 2005/08/16 13:51:49 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -605,7 +605,7 @@ Long64_t  TTreeSQL::GetEntries() const
    if (fServer==0) return GetEntriesFast();
    if (!CheckTable(fTable.Data())) return 0;
 
-   TTreeSQL* This = (TTreeSQL*)this;
+   TTreeSQL* thisvar = (TTreeSQL*)this;
 
    // What if the user already started to call GetEntry
    // What about the initial value of fEntries is it really 0?
@@ -614,12 +614,12 @@ Long64_t  TTreeSQL::GetEntries() const
    TSQLResult *count = fServer->Query(counting);
 
    if (count==0) {
-      This->fEntries = 0;
+      thisvar->fEntries = 0;
    } else {
       TString val = count->Next()->GetField(0);
       Long_t ret;
       sscanf(val.Data(), "%ld",&(ret) );
-      This->fEntries = ret;
+      thisvar->fEntries = ret;
    }
    return fEntries;
 }
@@ -661,7 +661,7 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
       fCurrentEntry = -1;
    }
 
-   bool reset = false;
+   Bool_t reset = false;
    while ( fCurrentEntry < entry ) {
       ++fCurrentEntry;
       fRow = fResult->Next();

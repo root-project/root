@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.16 2005/02/21 09:41:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.17 2005/06/07 20:28:32 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -138,13 +138,13 @@ TSelector *TSelector::GetSelector(const char *filename)
    if (dot) dot[0] = 0;
 
    G__ClassInfo cl;
-   Bool_t OK = kFALSE;
+   Bool_t ok = kFALSE;
    while (cl.Next()) {
       if (strcmp(cl.Name(),localname)) continue;
-      if (cl.IsBase("TSelector")) OK = kTRUE;
+      if (cl.IsBase("TSelector")) ok = kTRUE;
       break;
    }
-   if (!OK) {
+   if (!ok) {
       if ( fromFile ) {
          ::Error("TSelector::GetSelector",
          "file %s does not have a valid class deriving from TSelector",filename);
