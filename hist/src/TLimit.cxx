@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.10 2004/10/05 17:41:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.11 2004/11/11 07:48:31 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -271,7 +271,7 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
    // re-toss all random numbers if any background or signal
    // goes negative.  (background = 0 is bad too, so put a little protection
    // around it -- must have at least 10% of the bg estimate).
-   bool retoss = kTRUE;
+   Bool_t retoss   = kTRUE;
    Double_t *serrf = NULL;
    Double_t *berrf = NULL;
    do {

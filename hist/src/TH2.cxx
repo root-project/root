@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.78 2005/08/11 06:43:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.79 2005/08/11 09:38:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1547,29 +1547,29 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
    // save the TAttAxis members (reset by SetBins) for x axis
-        Int_t    NXdivisions  = fXaxis.GetNdivisions();
-        Color_t  XAxisColor   = fXaxis.GetAxisColor();
-        Color_t  XLabelColor  = fXaxis.GetLabelColor();
-        Style_t  XLabelFont   = fXaxis.GetLabelFont();
-        Float_t  XLabelOffset = fXaxis.GetLabelOffset();
-        Float_t  XLabelSize   = fXaxis.GetLabelSize();
-        Float_t  XTickLength  = fXaxis.GetTickLength();
-        Float_t  XTitleOffset = fXaxis.GetTitleOffset();
-        Float_t  XTitleSize   = fXaxis.GetTitleSize();
-        Color_t  XTitleColor  = fXaxis.GetTitleColor();
-        Style_t  XTitleFont   = fXaxis.GetTitleFont();
+        Int_t    nXdivisions  = fXaxis.GetNdivisions();
+        Color_t  xAxisColor   = fXaxis.GetAxisColor();
+        Color_t  xLabelColor  = fXaxis.GetLabelColor();
+        Style_t  xLabelFont   = fXaxis.GetLabelFont();
+        Float_t  xLabelOffset = fXaxis.GetLabelOffset();
+        Float_t  xLabelSize   = fXaxis.GetLabelSize();
+        Float_t  xTickLength  = fXaxis.GetTickLength();
+        Float_t  xTitleOffset = fXaxis.GetTitleOffset();
+        Float_t  xTitleSize   = fXaxis.GetTitleSize();
+        Color_t  xTitleColor  = fXaxis.GetTitleColor();
+        Style_t  xTitleFont   = fXaxis.GetTitleFont();
    // save the TAttAxis members (reset by SetBins) for y axis
-        Int_t    NYdivisions  = fYaxis.GetNdivisions();
-        Color_t  YAxisColor   = fYaxis.GetAxisColor();
-        Color_t  YLabelColor  = fYaxis.GetLabelColor();
-        Style_t  YLabelFont   = fYaxis.GetLabelFont();
-        Float_t  YLabelOffset = fYaxis.GetLabelOffset();
-        Float_t  YLabelSize   = fYaxis.GetLabelSize();
-        Float_t  YTickLength  = fYaxis.GetTickLength();
-        Float_t  YTitleOffset = fYaxis.GetTitleOffset();
-        Float_t  YTitleSize   = fYaxis.GetTitleSize();
-        Color_t  YTitleColor  = fYaxis.GetTitleColor();
-        Style_t  YTitleFont   = fYaxis.GetTitleFont();
+        Int_t    nYdivisions  = fYaxis.GetNdivisions();
+        Color_t  yAxisColor   = fYaxis.GetAxisColor();
+        Color_t  yLabelColor  = fYaxis.GetLabelColor();
+        Style_t  yLabelFont   = fYaxis.GetLabelFont();
+        Float_t  yLabelOffset = fYaxis.GetLabelOffset();
+        Float_t  yLabelSize   = fYaxis.GetLabelSize();
+        Float_t  yTickLength  = fYaxis.GetTickLength();
+        Float_t  yTitleOffset = fYaxis.GetTitleOffset();
+        Float_t  yTitleSize   = fYaxis.GetTitleSize();
+        Color_t  yTitleColor  = fYaxis.GetTitleColor();
+        Style_t  yTitleFont   = fYaxis.GetTitleFont();
 
 
    // copy merged bin contents (ignore under/overflows)
@@ -1611,29 +1611,29 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    }
 
    // Restore x axis attributes
-   fXaxis.SetNdivisions(NXdivisions);
-   fXaxis.SetAxisColor(XAxisColor);
-   fXaxis.SetLabelColor(XLabelColor);
-   fXaxis.SetLabelFont(XLabelFont);
-   fXaxis.SetLabelOffset(XLabelOffset);
-   fXaxis.SetLabelSize(XLabelSize);
-   fXaxis.SetTickLength(XTickLength);
-   fXaxis.SetTitleOffset(XTitleOffset);
-   fXaxis.SetTitleSize(XTitleSize);
-   fXaxis.SetTitleColor(XTitleColor);
-   fXaxis.SetTitleFont(XTitleFont);
+   fXaxis.SetNdivisions(nXdivisions);
+   fXaxis.SetAxisColor(xAxisColor);
+   fXaxis.SetLabelColor(xLabelColor);
+   fXaxis.SetLabelFont(xLabelFont);
+   fXaxis.SetLabelOffset(xLabelOffset);
+   fXaxis.SetLabelSize(xLabelSize);
+   fXaxis.SetTickLength(xTickLength);
+   fXaxis.SetTitleOffset(xTitleOffset);
+   fXaxis.SetTitleSize(xTitleSize);
+   fXaxis.SetTitleColor(xTitleColor);
+   fXaxis.SetTitleFont(xTitleFont);
    // Restore y axis attributes
-   fYaxis.SetNdivisions(NYdivisions);
-   fYaxis.SetAxisColor(YAxisColor);
-   fYaxis.SetLabelColor(YLabelColor);
-   fYaxis.SetLabelFont(YLabelFont);
-   fYaxis.SetLabelOffset(YLabelOffset);
-   fYaxis.SetLabelSize(YLabelSize);
-   fYaxis.SetTickLength(YTickLength);
-   fYaxis.SetTitleOffset(YTitleOffset);
-   fYaxis.SetTitleSize(YTitleSize);
-   fYaxis.SetTitleColor(YTitleColor);
-   fYaxis.SetTitleFont(YTitleFont);
+   fYaxis.SetNdivisions(nYdivisions);
+   fYaxis.SetAxisColor(yAxisColor);
+   fYaxis.SetLabelColor(yLabelColor);
+   fYaxis.SetLabelFont(yLabelFont);
+   fYaxis.SetLabelOffset(yLabelOffset);
+   fYaxis.SetLabelSize(yLabelSize);
+   fYaxis.SetTickLength(yTickLength);
+   fYaxis.SetTitleOffset(yTitleOffset);
+   fYaxis.SetTitleSize(yTitleSize);
+   fYaxis.SetTitleColor(yTitleColor);
+   fYaxis.SetTitleFont(yTitleFont);
 
    hnew->SetEntries(entries); //was modified by SetBinContent
 

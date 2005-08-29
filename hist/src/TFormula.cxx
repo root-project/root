@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.98 2005/07/20 20:41:23 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.99 2005/08/10 12:47:48 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #pragma optimize("",off)
 #endif
 
-static Int_t MAXOP,MAXPAR,MAXCONST;
+static Int_t nMAXOP,nMAXPAR,nMAXCONST;
 const Int_t kMAXSTRINGFOUND = 10;
 
 ClassImp(TFormula)
@@ -328,7 +328,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    TObjArray argArr;
    //fprintf(stderr,"args are '%s'\n",args.Data());
 
-   bool inString = false;
+   Bool_t inString = false;
    int paran = 0;
    int brack = 0;
    int prevComma = 0;
@@ -337,7 +337,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
       if (args[i]=='"') inString = !inString;
       if (inString) continue;
 
-      bool foundArg = false;
+      Bool_t foundArg = false;
       switch(args[i]) {
 
          case '(': paran++; break;
@@ -1162,7 +1162,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         }
                      }
                   }
-                  if (fNconst >= MAXCONST) err = 27;
+                  if (fNconst >= nMAXCONST) err = 27;
                   if (!err) {
                      if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
                      else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
@@ -1425,7 +1425,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
             }
             if (lchain == 4) {
-                if (fNpar>=MAXPAR) err=7; // too many parameters
+                if (fNpar>=nMAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
                    actionCode = kexpo + inter2;
@@ -1433,7 +1433,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                    SetAction(fNoper,actionCode,actionParam);
                    if (inter2 == 5+offset && fNpar < 3+offset) fNpar = 3+offset;
                    if (fNpar < 2+offset) fNpar = 2+offset;
-                   if (fNpar>=MAXPAR) err=7; // too many parameters
+                   if (fNpar>=nMAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
@@ -1459,7 +1459,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                             SetAction(fNoper,actionCode,actionParam);
                             if (inter2 == 5) inter++;
                             if (inter+2>fNpar) fNpar = inter+2;
-                            if (fNpar>=MAXPAR) err=7; // too many parameters
+                            if (fNpar>=nMAXPAR) err=7; // too many parameters
                             if (!err) fNoper++;
                             if (fNpar == 2) SetNumber(200);
                          } else err=20;
@@ -1509,7 +1509,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
             }
             if (lchain == 4 && err==0) {
-                if (fNpar>=MAXPAR) err=7; // too many parameters
+                if (fNpar>=nMAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
                    actionCode = kgaus + inter2;
@@ -1517,7 +1517,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                    SetAction(fNoper,actionCode,actionParam);
                    if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
                    if (3+offset>fNpar) fNpar = 3+offset;
-                   if (fNpar>=MAXPAR) err=7; // too many parameters
+                   if (fNpar>=nMAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
@@ -1543,7 +1543,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                              SetAction(fNoper,actionCode,actionParam);
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
-                             if (fNpar>=MAXPAR) err=7; // too many parameters
+                             if (fNpar>=nMAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
                              if(fNpar == 3) SetNumber(100);
                          } else err = 20; // non integer value for parameter number
@@ -1592,7 +1592,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
             }
             if (lchain == 6 && err==0) {
-                if (fNpar>=MAXPAR) err=7; // too many parameters
+                if (fNpar>=nMAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
                    actionCode = klandau + inter2;
@@ -1600,7 +1600,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                    SetAction(fNoper,actionCode,actionParam);
                    if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
                    if (3+offset>fNpar) fNpar = 3+offset;
-                   if (fNpar>=MAXPAR) err=7; // too many parameters
+                   if (fNpar>=nMAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
@@ -1626,7 +1626,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                              SetAction(fNoper,actionCode,actionParam);
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
-                             if (fNpar>=MAXPAR) err=7; // too many parameters
+                             if (fNpar>=nMAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
                              if (fNpar == 3) SetNumber(400);
                          } else err = 20; // non integer value for parameter number
@@ -1696,7 +1696,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               actionParam = n*100+inter+2;
               SetAction(fNoper,actionCode,actionParam);
               if (inter+n+1>=fNpar) fNpar = inter + n + 2;
-              if (fNpar>=MAXPAR) err=7; // too many parameters
+              if (fNpar>=nMAXPAR) err=7; // too many parameters
               if (!err) {
                  fNoper++;
                  if (fNdim < 1) fNdim = 1;
@@ -1899,7 +1899,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //     if (nomb == -10) err = 13; //{variables z et x sans y }
 
     //*-*- Overflows
-    if (fNoper>=MAXOP) err=6; // too many operators
+    if (fNoper>=nMAXOP) err=6; // too many operators
 
   }
 
@@ -2035,29 +2035,29 @@ Int_t TFormula::Compile(const char *expression)
   }
 
 
-  MAXOP   = 1000;
-  MAXPAR  = 1000;
-  MAXCONST= 1000;
+  nMAXOP   = 1000;
+  nMAXPAR  = 1000;
+  nMAXCONST= 1000;
 
-  fExpr   = new TString[MAXOP];
-  fConst  = new Double_t[MAXCONST];
-  fParams = new Double_t[MAXPAR];
-  fNames  = new TString[MAXPAR];
-  fOper   = new Int_t[MAXOP];
-  for (i=0; i<MAXPAR; i++) {
+  fExpr   = new TString[nMAXOP];
+  fConst  = new Double_t[nMAXCONST];
+  fParams = new Double_t[nMAXPAR];
+  fNames  = new TString[nMAXPAR];
+  fOper   = new Int_t[nMAXOP];
+  for (i=0; i<nMAXPAR; i++) {
      fParams[i] = 0;
      fNames[i] = "";
   }
-  for (i=0; i<MAXOP; i++) {
+  for (i=0; i<nMAXOP; i++) {
       fExpr[i] = "";
       fOper[i] = 0;
   }
-  for (i=0; i<MAXCONST; i++)
+  for (i=0; i<nMAXCONST; i++)
       fConst[i] = 0;
 
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
-  bool inString = false;
+  Bool_t inString = false;
   for (i=1; i<=chaine.Length(); i++) {
     lc =chaine.Length();
     if (chaine(i-1,1) == "\"") inString = !inString;
@@ -3152,7 +3152,7 @@ void TFormula::Streamer(TBuffer &b)
       if (v > 1) b >> fNval;
       if (v > 2) b >> fNstring;
       fNpar   = b.ReadArray(fParams);
-      fOper = new Int_t[MAXOP];
+      fOper = new Int_t[nMAXOP];
       fNoper  = b.ReadArray(fOper);
       fNconst = b.ReadArray(fConst);
       if (fNoper) {

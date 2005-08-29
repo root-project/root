@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.19 2005/07/19 06:38:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.20 2005/07/19 07:17:42 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2186,9 +2186,9 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
     for (j = 0; j < fNVariables; j++) {
       // Evaluate the factor (polynomial) in the j-th variable.
       Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
-      Double_t X  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
+      Double_t y  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
 	* (x[j] - fMaxVariables(j));
-      term        *= EvalFactor(p,X);
+      term        *= EvalFactor(p,y);
     }
     // Add this term to the final result
     returnValue += term;
@@ -2691,44 +2691,44 @@ void TMultiDimFit::MakeCorrelation()
   fCorrelationMatrix.ResizeTo(fNVariables,fNVariables+1);
 
   Double_t d2      = 0;
-  Double_t DdotXi  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
-  Double_t XiNorm  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
-  Double_t XidotXj = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
-  Double_t XjNorm  = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
+  Double_t ddotXi  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
+  Double_t xiNorm  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
+  Double_t xidotXj = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
+  Double_t xjNorm  = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
 
   Int_t i, j, k, l, m;  // G.Q. added m variable
   for (i = 0; i < fSampleSize; i++)
     d2 += fQuantity(i) * fQuantity(i);
 
   for (i = 0; i < fNVariables; i++) {
-    DdotXi = 0.; // G.Q. reinitialisation
-    XiNorm = 0.; // G.Q. reinitialisation
+    ddotXi = 0.; // G.Q. reinitialisation
+    xiNorm = 0.; // G.Q. reinitialisation
     for (j = 0; j< fSampleSize; j++) {
       // Index of sample j of variable i
       k =  j * fNVariables + i;
-      DdotXi += fQuantity(j) * (fVariables(k) - fMeanVariables(i));
-      XiNorm += (fVariables(k) - fMeanVariables(i))
+      ddotXi += fQuantity(j) * (fVariables(k) - fMeanVariables(i));
+      xiNorm += (fVariables(k) - fMeanVariables(i))
 	* (fVariables(k) - fMeanVariables(i));
     }
-    fCorrelationMatrix(i,0) = DdotXi / TMath::Sqrt(d2 * XiNorm);
+    fCorrelationMatrix(i,0) = ddotXi / TMath::Sqrt(d2 * xiNorm);
 
     for (j = 0; j < i; j++) {
-      XidotXj = 0.; // G.Q. reinitialisation
-      XjNorm = 0.; // G.Q. reinitialisation
+      xidotXj = 0.; // G.Q. reinitialisation
+      xjNorm = 0.; // G.Q. reinitialisation
       for (k = 0; k < fSampleSize; k++) {
 	// Index of sample j of variable i
 	// l =  j * fNVariables + k;  // G.Q.
 	l =  k * fNVariables + j; // G.Q.
 	m =  k * fNVariables + i; // G.Q.
-	// G.Q.	XidotXj += (fVariables(i) - fMeanVariables(i))
+	// G.Q.	xidotXj += (fVariables(i) - fMeanVariables(i))
 	// G.Q.	  * (fVariables(l) - fMeanVariables(j));
-	XidotXj += (fVariables(m) - fMeanVariables(i))
+	xidotXj += (fVariables(m) - fMeanVariables(i))
 	  * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
-	XjNorm  += (fVariables(l) - fMeanVariables(j))
+	xjNorm  += (fVariables(l) - fMeanVariables(j))
 	  * (fVariables(l) - fMeanVariables(j));
       }
-      //fCorrelationMatrix(i+1,j) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
-      fCorrelationMatrix(i,j+1) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
+      //fCorrelationMatrix(i+1,j) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
+      fCorrelationMatrix(i,j+1) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
     }
   }
 }

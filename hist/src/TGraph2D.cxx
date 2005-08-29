@@ -162,7 +162,7 @@ TGraph2D::TGraph2D()
    fMaxIter   = 100000;
    fPainter   = 0;
    fFunctions = new TList;
-   kUserHisto = kFALSE;
+   fUserHisto = kFALSE;
 }
 
 
@@ -176,10 +176,10 @@ TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = (Double_t)x[N];
-      fY[N] = (Double_t)y[N];
-      fZ[N] = (Double_t)z[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = (Double_t)x[n];
+      fY[n] = (Double_t)y[n];
+      fZ[n] = (Double_t)z[n];
    }
 }
 
@@ -194,10 +194,10 @@ TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = x[N];
-      fY[N] = y[N];
-      fZ[N] = z[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = x[n];
+      fY[n] = y[n];
+      fZ[n] = z[n];
    }
 }
 
@@ -212,10 +212,10 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = x[N];
-      fY[N] = y[N];
-      fZ[N] = z[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = x[n];
+      fY[n] = y[n];
+      fZ[n] = z[n];
    }
 }
 
@@ -235,10 +235,10 @@ TGraph2D::TGraph2D(TH2 *h2)
 
    TAxis *xaxis = h2->GetXaxis();
    TAxis *yaxis = h2->GetYaxis();
-   Int_t Xfirst = xaxis->GetFirst();
-   Int_t Xlast  = xaxis->GetLast();
-   Int_t Yfirst = yaxis->GetFirst();
-   Int_t Ylast  = yaxis->GetLast();
+   Int_t xfirst = xaxis->GetFirst();
+   Int_t xlast  = xaxis->GetLast();
+   Int_t yfirst = yaxis->GetFirst();
+   Int_t ylast  = yaxis->GetLast();
 
    Double_t hmin = h2->GetMinimum();
    Double_t hmax = h2->GetMaximum();
@@ -246,8 +246,8 @@ TGraph2D::TGraph2D(TH2 *h2)
    Double_t x, y, z;
    Int_t k=0;
 
-   for (Int_t i=Xfirst; i<= Xlast; i++) {
-      for (Int_t j=Yfirst; j<= Ylast; j++) {
+   for (Int_t i=xfirst; i<= xlast; i++) {
+      for (Int_t j=yfirst; j<= ylast; j++) {
          x = xaxis->GetBinCenter(i);
          y = yaxis->GetBinCenter(j);
          z = h2->GetBinContent(i,j);
@@ -276,10 +276,10 @@ TGraph2D::TGraph2D(const char *name,const char *title,
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = x[N];
-      fY[N] = y[N];
-      fZ[N] = z[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = x[n];
+      fY[n] = y[n];
+      fZ[n] = z[n];
    }
 }
 
@@ -334,10 +334,10 @@ TGraph2D::TGraph2D(const TGraph2D &g)
    fNpoints = g.fNpoints;
    Build(fNpoints);
 
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = g.fX[N];
-      fY[N] = g.fY[N];
-      fZ[N] = g.fZ[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = g.fX[n];
+      fY[n] = g.fY[n];
+      fZ[n] = g.fZ[n];
    }
 }
 
@@ -380,10 +380,10 @@ TGraph2D TGraph2D::operator=(const TGraph2D &g)
    fNpoints = g.fNpoints;
    Build(fNpoints);
 
-   for (Int_t N=0; N<fNpoints; N++) {
-      fX[N] = g.fX[N];
-      fY[N] = g.fY[N];
-      fZ[N] = g.fZ[N];
+   for (Int_t n=0; n<fNpoints; n++) {
+      fX[n] = g.fX[n];
+      fY[n] = g.fY[n];
+      fZ[n] = g.fZ[n];
    }
    return g;
 }
@@ -414,7 +414,7 @@ void TGraph2D::Build(Int_t n)
    fMaxIter   = 100000;
    fFunctions = new TList;
    fPainter   = 0;
-   kUserHisto = kFALSE;
+   fUserHisto = kFALSE;
 
    Bool_t add = TH1::AddDirectoryStatus();
    if (add && gDirectory) {
@@ -728,29 +728,29 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
    char l[]="TLinearFitter";
    Int_t strdiff = 0;
-   Bool_t IsSet = kFALSE;
+   Bool_t isSet = kFALSE;
    if (TVirtualFitter::GetFitter()){
       //Is a fitter already set? Is it linear?
-      IsSet=kTRUE;
+      isSet=kTRUE;
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
-      if (IsSet && strdiff!=0) {
+      if (isSet && strdiff!=0) {
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet) {
+      if (!isSet) {
 	//TLinearFitter *lf=(TLinearFitter *)cl->New();
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
-      if (IsSet && strdiff==0){
+      if (isSet && strdiff==0){
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet)
+      if (!isSet)
 	 TVirtualFitter::SetFitter(0);
    }
 
@@ -1008,7 +1008,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 
    if (fHistogram) {
       if (!empty && fHistogram->GetEntries()==0) {
-         if (!kUserHisto) {
+         if (!fUserHisto) {
             delete fHistogram;
             fHistogram = 0;
          }
@@ -1020,7 +1020,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    Double_t hxmax, hymax, hxmin, hymin;
 
    // Book fHistogram if needed. It is not added in the current directory
-   if (!kUserHisto) {
+   if (!fUserHisto) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
       Double_t xmax  = GetXmax();
@@ -1397,7 +1397,7 @@ void TGraph2D::SetHistogram(TH2 *h)
 {
    // Sets the histogram to be filled
 	                                                                                   
-   kUserHisto = kTRUE;
+   fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
    fNpy       = h->GetNbinsY();

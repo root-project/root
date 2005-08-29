@@ -162,9 +162,9 @@ void TGraphDelaunay::CreateTrianglesDataStructure()
    fYNmin        = (ymin+fYoffset)*fScaleFactor;
    fXN           = new Double_t[fNpoints+1];
    fYN           = new Double_t[fNpoints+1];
-   for (Int_t N=0; N<fNpoints; N++) {
-      fXN[N+1] = (fX[N]+fXoffset)*fScaleFactor;
-      fYN[N+1] = (fY[N]+fYoffset)*fScaleFactor;
+   for (Int_t n=0; n<fNpoints; n++) {
+      fXN[n+1] = (fX[n]+fXoffset)*fScaleFactor;
+      fYN[n+1] = (fY[n]+fYoffset)*fScaleFactor;
    }
 
    // If needed, creates the arrays to hold the Delaunay triangles.
@@ -178,78 +178,78 @@ void TGraphDelaunay::CreateTrianglesDataStructure()
 
 
 //______________________________________________________________________________
-Bool_t TGraphDelaunay::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t E) const
+Bool_t TGraphDelaunay::Enclose(Int_t t1, Int_t t2, Int_t t3, Int_t e) const
 {
-   // Is point E inside the triangle T1-T2-T3 ?
+   // Is point e inside the triangle t1-t2-t3 ?
 
-   Int_t A = 0, B = 0;
-   Double_t dx1,dx2,dx3,dy1,dy2,dy3,U,V;
+   Int_t a = 0, b = 0;
+   Double_t dx1,dx2,dx3,dy1,dy2,dy3,u,v;
 
-   // First ask if point E is colinear with any pair of the triangle points
-   if (((fXN[T1]-fXN[E])*(fYN[T1]-fYN[T2])) == ((fYN[T1]-fYN[E])*(fXN[T1]-fXN[T2]))) {
-      // E is colinear with T1 and T2
-      A = T1;
-      B = T2;
-   } else if (((fXN[T1]-fXN[E])*(fYN[T1]-fYN[T3])) == ((fYN[T1]-fYN[E])*(fXN[T1]-fXN[T3]))) {
-      // E is colinear with T1 and T3
-      A = T1;
-      B = T3;
-   } else if (((fXN[T2]-fXN[E])*(fYN[T2]-fYN[T3])) == ((fYN[T2]-fYN[E])*(fXN[T2]-fXN[T3]))) {
-      // E is colinear with T2 and T3
-      A = T2;
-      B = T3;
+   // First ask if point e is colinear with any pair of the triangle points
+   if (((fXN[t1]-fXN[e])*(fYN[t1]-fYN[t2])) == ((fYN[t1]-fYN[e])*(fXN[t1]-fXN[t2]))) {
+      // e is colinear with t1 and t2
+      a = t1;
+      b = t2;
+   } else if (((fXN[t1]-fXN[e])*(fYN[t1]-fYN[t3])) == ((fYN[t1]-fYN[e])*(fXN[t1]-fXN[t3]))) {
+      // e is colinear with t1 and t3
+      a = t1;
+      b = t3;
+   } else if (((fXN[t2]-fXN[e])*(fYN[t2]-fYN[t3])) == ((fYN[t2]-fYN[e])*(fXN[t2]-fXN[t3]))) {
+      // e is colinear with t2 and t3
+      a = t2;
+      b = t3;
    }
-   if (A != 0) {
-      // point E is colinear with 2 of the triangle points, if it lies 
+   if (a != 0) {
+      // point e is colinear with 2 of the triangle points, if it lies 
       // between them it's in the circle otherwise it's outside
-      if (fXN[A] != fXN[B]) {
-         if (((fXN[E]-fXN[A])*(fXN[E]-fXN[B])) <= 0) return kTRUE;
+      if (fXN[a] != fXN[b]) {
+         if (((fXN[e]-fXN[a])*(fXN[e]-fXN[b])) <= 0) return kTRUE;
       } else {
-         if (((fYN[E]-fYN[A])*(fYN[E]-fYN[B])) <= 0) return kTRUE;
+         if (((fYN[e]-fYN[a])*(fYN[e]-fYN[b])) <= 0) return kTRUE;
       }
       // point is outside the triangle
       return kFALSE;
    }
 
-   // E is not colinear with any pair of triangle points, if it is inside
-   // the triangle then the vector from E to one of the corners must be 
+   // e is not colinear with any pair of triangle points, if it is inside
+   // the triangle then the vector from e to one of the corners must be 
    // expressible as a sum with positive coefficients of the vectors from 
-   // the two other corners to E. Say vector3=U*vector1+V*vector2
+   // the two other corners to e. Say vector3=u*vector1+v*vector2
 
-   // vector1==T1->E
-   dx1 = fXN[E]-fXN[T1];
-   dy1 = fYN[E]-fYN[T1];
-   // vector2==T2->E
-   dx2 = fXN[E]-fXN[T2];
-   dy2 = fYN[E]-fYN[T2];
-   // vector3==E->T3
-   dx3 = fXN[T3]-fXN[E];
-   dy3 = fYN[T3]-fYN[E];
+   // vector1==t1->e
+   dx1 = fXN[e]-fXN[t1];
+   dy1 = fYN[e]-fYN[t1];
+   // vector2==t2->e
+   dx2 = fXN[e]-fXN[t2];
+   dy2 = fYN[e]-fYN[t2];
+   // vector3==e->t3
+   dx3 = fXN[t3]-fXN[e];
+   dy3 = fYN[t3]-fYN[e];
 
-   U = (dx2*dy3-dx3*dy2)/(dx2*dy1-dx1*dy2);
-   V = (dx1*dy3-dx3*dy1)/(dx1*dy2-dx2*dy1);
+   u = (dx2*dy3-dx3*dy2)/(dx2*dy1-dx1*dy2);
+   v = (dx1*dy3-dx3*dy1)/(dx1*dy2-dx2*dy1);
 
-   if ((U>=0) && (V>=0)) return kTRUE;
+   if ((u>=0) && (v>=0)) return kTRUE;
 
    return kFALSE;
 }
 
 
 //______________________________________________________________________________
-void TGraphDelaunay::FileIt(Int_t P, Int_t N, Int_t M)
+void TGraphDelaunay::FileIt(Int_t p, Int_t n, Int_t m)
 {
-   // Files the triangle defined by the 3 vertices P, N and M into the 
+   // Files the triangle defined by the 3 vertices p, n and m into the 
    // fxTried arrays. If these arrays are to small they are automatically
    // expanded.
 
    Bool_t swap;
-   Int_t tmp, Ps = P, Ns = N, Ms = M;
+   Int_t tmp, ps = p, ns = n, ms = m;
 
    // order the vertices before storing them
 L1:
    swap = kFALSE;
-   if (Ns > Ps) { tmp = Ps; Ps = Ns; Ns = tmp; swap = kTRUE;}
-   if (Ms > Ns) { tmp = Ns; Ns = Ms; Ms = tmp; swap = kTRUE;}
+   if (ns > ps) { tmp = ps; ps = ns; ns = tmp; swap = kTRUE;}
+   if (ms > ns) { tmp = ns; ns = ms; ms = tmp; swap = kTRUE;}
    if (swap) goto L1;
 
    // expand the triangles storage if needed
@@ -275,9 +275,9 @@ L1:
 
    // store a new Delaunay triangle
    fNdt++;
-   fPTried[fNdt-1] = Ps;
-   fNTried[fNdt-1] = Ns;
-   fMTried[fNdt-1] = Ms;
+   fPTried[fNdt-1] = ps;
+   fNTried[fNdt-1] = ns;
+   fMTried[fNdt-1] = ms;
 }
 
 
@@ -298,8 +298,8 @@ void TGraphDelaunay::FindAllTriangles()
    if (fAllTri) return; else fAllTri = kTRUE;
 
    Double_t xcntr,ycntr,xm,ym,xx,yy;
-   Double_t sx,sy,nx,ny,mx,my,mdotn,nn,A;
-   Int_t T1,T2,Pa,Na,Ma,Pb,Nb,Mb,P1=0,P2=0,M,N,P3=0;
+   Double_t sx,sy,nx,ny,mx,my,mdotn,nn,a;
+   Int_t t1,t2,pa,na,ma,pb,nb,mb,p1=0,p2=0,m,n,p3=0;
    Bool_t s[3];
    Double_t alittlebit = 0.0001;
 
@@ -309,9 +309,9 @@ void TGraphDelaunay::FindAllTriangles()
    // found none of them.
    xcntr = 0;
    ycntr = 0;
-   for (N=1; N<=fNhull; N++) {
-      xcntr = xcntr+fXN[fHullPoints[N-1]];
-      ycntr = ycntr+fYN[fHullPoints[N-1]];
+   for (n=1; n<=fNhull; n++) {
+      xcntr = xcntr+fXN[fHullPoints[n-1]];
+      ycntr = ycntr+fYN[fHullPoints[n-1]];
    }
    xcntr = xcntr/fNhull+alittlebit;
    ycntr = ycntr/fNhull+alittlebit;
@@ -322,68 +322,68 @@ void TGraphDelaunay::FindAllTriangles()
    // produced within the loop) and check to see if their 3 sides also 
    // correspond to the sides of other Delaunay triangles, i.e. that they 
    // have all their neighbours.
-   T1 = 1;
-   while (T1 <= fNdt) {
+   t1 = 1;
+   while (t1 <= fNdt) {
       // get the three points that make up this triangle
-      Pa = fPTried[T1-1];
-      Na = fNTried[T1-1];
-      Ma = fMTried[T1-1];
+      pa = fPTried[t1-1];
+      na = fNTried[t1-1];
+      ma = fMTried[t1-1];
 
       // produce three integers which will represent the three sides
       s[0]  = kFALSE;
       s[1]  = kFALSE;
       s[2]  = kFALSE;
       // loop over all other Delaunay triangles
-      for (T2=1; T2<=fNdt; T2++) {
-         if (T2 != T1) {
+      for (t2=1; t2<=fNdt; t2++) {
+         if (t2 != t1) {
             // get the points that make up this triangle
-            Pb = fPTried[T2-1];
-            Nb = fNTried[T2-1];
-            Mb = fMTried[T2-1];
-            // do triangles T1 and T2 share a side?
-            if ((Pa==Pb && Na==Nb) || (Pa==Pb && Na==Mb) || (Pa==Nb && Na==Mb)) {
+            pb = fPTried[t2-1];
+            nb = fNTried[t2-1];
+            mb = fMTried[t2-1];
+            // do triangles t1 and t2 share a side?
+            if ((pa==pb && na==nb) || (pa==pb && na==mb) || (pa==nb && na==mb)) {
                // they share side 1
                s[0] = kTRUE;
-            } else if ((Pa==Pb && Ma==Nb) || (Pa==Pb && Ma==Mb) || (Pa==Nb && Ma==Mb)) {
+            } else if ((pa==pb && ma==nb) || (pa==pb && ma==mb) || (pa==nb && ma==mb)) {
                // they share side 2
                s[1] = kTRUE;
-            } else if ((Na==Pb && Ma==Nb) || (Na==Pb && Ma==Mb) || (Na==Nb && Ma==Mb)) {
+            } else if ((na==pb && ma==nb) || (na==pb && ma==mb) || (na==nb && ma==mb)) {
                // they share side 3
                s[2] = kTRUE;
             }
          }
-         // if T1 shares all its sides with other Delaunay triangles then 
+         // if t1 shares all its sides with other Delaunay triangles then 
          // forget about it
          if (s[0] && s[1] && s[2]) continue;
       }
-      // Looks like T1 is missing a neighbour on at least one side.
+      // Looks like t1 is missing a neighbour on at least one side.
       // For each side, take a point a little bit beyond it and calculate 
       // the Delaunay triangle for that point, this should be the triangle 
       // which shares the side.
-      for (M=1; M<=3; M++) {
-         if (!s[M-1]) {
+      for (m=1; m<=3; m++) {
+         if (!s[m-1]) {
             // get the two points that make up this side
-            if (M == 1) {
-               P1 = Pa;
-               P2 = Na;
-               P3 = Ma;
-            } else if (M == 2) {
-               P1 = Pa;
-               P2 = Ma;
-               P3 = Na;
-            } else if (M == 3) {
-               P1 = Na;
-               P2 = Ma;
-               P3 = Pa;
+            if (m == 1) {
+               p1 = pa;
+               p2 = na;
+               p3 = ma;
+            } else if (m == 2) {
+               p1 = pa;
+               p2 = ma;
+               p3 = na;
+            } else if (m == 3) {
+               p1 = na;
+               p2 = ma;
+               p3 = pa;
             }
             // get the coordinates of the centre of this side
-            xm = (fXN[P1]+fXN[P2])/2.;
-            ym = (fYN[P1]+fYN[P2])/2.;
+            xm = (fXN[p1]+fXN[p2])/2.;
+            ym = (fYN[p1]+fYN[p2])/2.;
             // we want to add a little to these coordinates to get a point just
             // outside the triangle; (sx,sy) will be the vector that represents 
             // the side
-            sx = fXN[P1]-fXN[P2];
-            sy = fYN[P1]-fYN[P2];
+            sx = fXN[p1]-fXN[p2];
+            sy = fYN[p1]-fYN[p2];
             // (nx,ny) will be the normal to the side, but don't know if it's 
             // pointing in or out yet
             nx    = sy;
@@ -391,8 +391,8 @@ void TGraphDelaunay::FindAllTriangles()
             nn    = TMath::Sqrt(nx*nx+ny*ny);
             nx    = nx/nn;
             ny    = ny/nn;
-            mx    = fXN[P3]-xm;
-            my    = fYN[P3]-ym;
+            mx    = fXN[p3]-xm;
+            my    = fYN[p3]-ym;
             mdotn = mx*nx+my*ny;
             if (mdotn > 0) {
                // (nx,ny) is pointing in, we want it pointing out
@@ -402,17 +402,17 @@ void TGraphDelaunay::FindAllTriangles()
             // increase/decrease xm and ym a little to produce a point 
             // just outside the triangle (ensuring that the amount added will 
             // be large enough such that it won't be lost in rounding errors)
-            A  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
-            xx = xm+nx*A;
-            yy = ym+ny*A;
+            a  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
+            xx = xm+nx*a;
+            yy = ym+ny*a;
             // try and find a new Delaunay triangle for this point
             Interpolate(xx,yy);
 
-            // this side of T1 should now, hopefully, if it's not part of the 
+            // this side of t1 should now, hopefully, if it's not part of the 
             // hull, be shared with a new Delaunay triangle just calculated by Interpolate
          }
       }
-      T1++;
+      t1++;
    }
 }      
 
@@ -426,22 +426,22 @@ void TGraphDelaunay::FindHull()
    // over all the nails it would form the shape of the convex hull. Those
    // nails in contact with it are the points that make up the hull.
 
-   Int_t N,nhull_tmp;
+   Int_t n,nhull_tmp;
    Bool_t in;
 
    if (!fHullPoints) fHullPoints = new Int_t[fNpoints];
 
    nhull_tmp = 0;
-   for(N=1; N<=fNpoints; N++) {
+   for(n=1; n<=fNpoints; n++) {
       // if the point is not inside the hull of the set of all points 
       // bar it, then it is part of the hull of the set of all points 
       // including it
-      in = InHull(N,N);
+      in = InHull(n,n);
       if (!in) {
          // cannot increment fNhull directly - InHull needs to know that 
          // the hull has not yet been completely found
          nhull_tmp++;
-         fHullPoints[nhull_tmp-1] = N;
+         fHullPoints[nhull_tmp-1] = n;
       }
    }
    fNhull = nhull_tmp;
@@ -449,43 +449,43 @@ void TGraphDelaunay::FindHull()
 
 
 //______________________________________________________________________________
-Bool_t TGraphDelaunay::InHull(Int_t E, Int_t X) const
+Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
 {
-   // Is point E inside the hull defined by all points apart from X ?
+   // Is point e inside the hull defined by all points apart from x ?
 
-   Int_t n1,n2,N,M,Ntry;
+   Int_t n1,n2,n,m,ntry;
    Double_t lastdphi,dd1,dd2,dx1,dx2,dx3,dy1,dy2,dy3;
-   Double_t U,V,vNv1,vNv2,phi1,phi2,dphi,xx,yy;
+   Double_t u,v,vNv1,vNv2,phi1,phi2,dphi,xx,yy;
 
-   Bool_t DTinhull = kFALSE;
+   Bool_t deTinhull = kFALSE;
 
-   xx = fXN[E];
-   yy = fYN[E];
+   xx = fXN[e];
+   yy = fYN[e];
 
    if (fNhull > 0) {
       //  The hull has been found - no need to use any points other than 
       //  those that make up the hull
-      Ntry = fNhull;
+      ntry = fNhull;
    } else {
       //  The hull has not yet been found, will have to try every point
-      Ntry = fNpoints;
+      ntry = fNpoints;
    }
 
-   //  N1 and N2 will represent the two points most separated by angle
-   //  from point E. Initially the angle between them will be <180 degs.
-   //  But subsequent points will increase the N1-E-N2 angle. If it 
-   //  increases above 180 degrees then point E must be surrounded by 
+   //  n1 and n2 will represent the two points most separated by angle
+   //  from point e. Initially the angle between them will be <180 degs.
+   //  But subsequent points will increase the n1-e-n2 angle. If it 
+   //  increases above 180 degrees then point e must be surrounded by 
    //  points - it is not part of the hull.
    n1 = 1;
    n2 = 2;
-   if (n1 == X) {
+   if (n1 == x) {
       n1 = n2;
       n2++;
-   } else if (n2 == X) {
+   } else if (n2 == x) {
       n2++;
    }
 
-   //  Get the angle N1-E-N2 and set it to lastdphi
+   //  Get the angle n1-e-n2 and set it to lastdphi
    dx1  = xx-fXN[n1];
    dy1  = yy-fYN[n1];
    dx2  = xx-fXN[n2];
@@ -495,49 +495,49 @@ Bool_t TGraphDelaunay::InHull(Int_t E, Int_t X) const
    dphi = (phi1-phi2)-((Int_t)((phi1-phi2)/TMath::TwoPi())*TMath::TwoPi());
    if (dphi < 0) dphi = dphi+TMath::TwoPi();
    lastdphi = dphi;
-   for (N=1; N<=Ntry; N++) {
+   for (n=1; n<=ntry; n++) {
       if (fNhull > 0) {
-         // Try hull point N
-         M = fHullPoints[N-1];
+         // Try hull point n
+         m = fHullPoints[n-1];
       } else {
-         M = N;
+         m = n;
       }
-      if ((M!=n1) && (M!=n2) && (M!=X)) {
-         // Can the vector E->M be represented as a sum with positive 
-         // coefficients of vectors E->N1 and E->N2?
+      if ((m!=n1) && (m!=n2) && (m!=x)) {
+         // Can the vector e->m be represented as a sum with positive 
+         // coefficients of vectors e->n1 and e->n2?
          dx1 = xx-fXN[n1];
          dy1 = yy-fYN[n1];
          dx2 = xx-fXN[n2];
          dy2 = yy-fYN[n2];
-         dx3 = xx-fXN[M];
-         dy3 = yy-fYN[M];
+         dx3 = xx-fXN[m];
+         dy3 = yy-fYN[m];
 
          dd1 = (dx2*dy1-dx1*dy2);
          dd2 = (dx1*dy2-dx2*dy1);
 
          if (dd1*dd2!=0) {
-            U = (dx2*dy3-dx3*dy2)/dd1;
-            V = (dx1*dy3-dx3*dy1)/dd2;
-            if ((U<0) || (V<0)) {
-               // No, it cannot - point M does not lie inbetween N1 and N2 as 
-               // viewed from E. Replace either N1 or N2 to increase the 
-               // N1-E-N2 angle. The one to replace is the one which makes the
-               // smallest angle with E->M
+            u = (dx2*dy3-dx3*dy2)/dd1;
+            v = (dx1*dy3-dx3*dy1)/dd2;
+            if ((u<0) || (v<0)) {
+               // No, it cannot - point m does not lie inbetween n1 and n2 as 
+               // viewed from e. Replace either n1 or n2 to increase the 
+               // n1-e-n2 angle. The one to replace is the one which makes the
+               // smallest angle with e->m
                vNv1 = (dx1*dx3+dy1*dy3)/TMath::Sqrt(dx1*dx1+dy1*dy1);
                vNv2 = (dx2*dx3+dy2*dy3)/TMath::Sqrt(dx2*dx2+dy2*dy2);
                if (vNv1 > vNv2) {
-                  n1   = M;
+                  n1   = m;
                   phi1 = TMath::ATan2(dy3,dx3);
                   phi2 = TMath::ATan2(dy2,dx2);
                } else {
-                  n2   = M;
+                  n2   = m;
                   phi1 = TMath::ATan2(dy1,dx1);
                   phi2 = TMath::ATan2(dy3,dx3);
                }
                dphi = (phi1-phi2)-((Int_t)((phi1-phi2)/TMath::TwoPi())*TMath::TwoPi());
                if (dphi < 0) dphi = dphi+TMath::TwoPi();
                if (((dphi-TMath::Pi())*(lastdphi-TMath::Pi())) < 0) {
-                  // The addition of point M means the angle N1-E-N2 has risen 
+                  // The addition of point m means the angle n1-e-n2 has risen 
                   // above 180 degs, the point is in the hull.
                   goto L10;
                }
@@ -546,50 +546,50 @@ Bool_t TGraphDelaunay::InHull(Int_t E, Int_t X) const
          }
       }
    }
-   // Point E is not surrounded by points - it is not in the hull.
+   // Point e is not surrounded by points - it is not in the hull.
    goto L999;
 L10:
-   DTinhull = kTRUE;
+   deTinhull = kTRUE;
 L999:
-   return DTinhull;
+   return deTinhull;
 }
 
 
 //______________________________________________________________________________
-Double_t TGraphDelaunay::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const
+Double_t TGraphDelaunay::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t e) const
 {
-   // Finds the z-value at point E given that it lies 
-   // on the plane defined by T1,T2,T3
+   // Finds the z-value at point e given that it lies 
+   // on the plane defined by t1,t2,t3
 
    Int_t tmp;
    Bool_t swap;
-   Double_t x1,x2,x3,y1,y2,y3,f1,f2,f3,U,V,W;
+   Double_t x1,x2,x3,y1,y2,y3,f1,f2,f3,u,v,w;
 
-   Int_t T1 = TI1;
-   Int_t T2 = TI2;
-   Int_t T3 = TI3;
+   Int_t t1 = TI1;
+   Int_t t2 = TI2;
+   Int_t t3 = TI3;
 
    // order the vertices
 L1:
    swap = kFALSE;
-   if (T2 > T1) { tmp = T1; T1 = T2; T2 = tmp; swap = kTRUE;}
-   if (T3 > T2) { tmp = T2; T2 = T3; T3 = tmp; swap = kTRUE;}
+   if (t2 > t1) { tmp = t1; t1 = t2; t2 = tmp; swap = kTRUE;}
+   if (t3 > t2) { tmp = t2; t2 = t3; t3 = tmp; swap = kTRUE;}
    if (swap) goto L1;
 
-   x1 = fXN[T1];
-   x2 = fXN[T2];
-   x3 = fXN[T3];
-   y1 = fYN[T1];
-   y2 = fYN[T2];
-   y3 = fYN[T3];
-   f1 = fZ[T1-1];
-   f2 = fZ[T2-1];
-   f3 = fZ[T3-1];
-   U  = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2));
-   V  = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2));
-   W  = f1-U*x1-V*y1;
+   x1 = fXN[t1];
+   x2 = fXN[t2];
+   x3 = fXN[t3];
+   y1 = fYN[t1];
+   y2 = fYN[t2];
+   y3 = fYN[t3];
+   f1 = fZ[t1-1];
+   f2 = fZ[t2-1];
+   f3 = fZ[t3-1];
+   u  = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2));
+   v  = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2));
+   w  = f1-u*x1-v*y1;
 
-   return U*fXN[E]+V*fYN[E]+W;
+   return u*fXN[e]+v*fYN[e]+w;
 }
 
 
@@ -602,15 +602,15 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
 
    Double_t thevalue;
 
-   Int_t IT, ntris_tried, P, N, M;
-   Int_t I,J,K,L,Z,F,D,O1,O2,A,B,T1,T2,T3;
+   Int_t it, ntris_tried, p, n, m;
+   Int_t i,j,k,l,z,f,d,o1,o2,a,b,t1,t2,t3;
    Int_t ndegen=0,degen=0,fdegen=0,o1degen=0,o2degen=0;
    Double_t vxN,vyN;
    Double_t d1,d2,d3,c1,c2,dko1,dko2,dfo1;
    Double_t dfo2,sin_sum,cfo1k,co2o1k,co2o1f;
 
    Bool_t shouldbein;
-   Double_t dx1,dx2,dx3,dy1,dy2,dy3,U,V,dxz[3],dyz[3];
+   Double_t dx1,dx2,dx3,dy1,dy2,dy3,u,v,dxz[3],dyz[3];
 
    // initialise the Delaunay algorithm
    if (!fInit) {
@@ -639,15 +639,15 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
    if ((xx>fXNmax) || (xx<fXNmin) || (yy>fYNmax) || (yy<fYNmin)) return thevalue;
 
    // check existing Delaunay triangles for a good one
-   for (IT=1; IT<=fNdt; IT++) {
-      P = fPTried[IT-1];
-      N = fNTried[IT-1];
-      M = fMTried[IT-1];
-      // P, N and M form a previously found Delaunay triangle, does it 
+   for (it=1; it<=fNdt; it++) {
+      p = fPTried[it-1];
+      n = fNTried[it-1];
+      m = fMTried[it-1];
+      // p, n and m form a previously found Delaunay triangle, does it 
       // enclose the point?
-      if (Enclose(P,N,M,0)) {
+      if (Enclose(p,n,m,0)) {
          // yes, we have the triangle
-         thevalue = InterpolateOnPlane(P,N,M,0);
+         thevalue = InterpolateOnPlane(p,n,m,0);
          return thevalue;
       }
    }
@@ -659,40 +659,40 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
    // it must be in a Delaunay triangle - find it...
 
    // order mass points by distance in mass plane from desired point
-   for (IT=1; IT<=fNpoints; IT++) {
-      vxN = fXN[IT];
-      vyN = fYN[IT];
-      fDist[IT-1] = TMath::Sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
+   for (it=1; it<=fNpoints; it++) {
+      vxN = fXN[it];
+      vyN = fYN[it];
+      fDist[it-1] = TMath::Sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
    }
 
    // sort array 'fDist' to find closest points
    TMath::Sort(fNpoints, fDist, fOrder, kFALSE);
-   for (IT=0; IT<fNpoints; IT++) fOrder[IT]++;
+   for (it=0; it<fNpoints; it++) fOrder[it]++;
 
    // loop over triplets of close points to try to find a triangle that 
    // encloses the point.
-   for (K=3; K<=fNpoints; K++) {
-      M = fOrder[K-1];
-      for (J=2; J<=K-1; J++) {
-         N = fOrder[J-1];
-         for (I=1; I<=J-1; I++) {
-            P = fOrder[I-1];
+   for (k=3; k<=fNpoints; k++) {
+      m = fOrder[k-1];
+      for (j=2; j<=k-1; j++) {
+         n = fOrder[j-1];
+         for (i=1; i<=j-1; i++) {
+            p = fOrder[i-1];
             if (ntris_tried > fMaxIter) {
                // perhaps this point isn't in the hull after all
 ///            Warning("Interpolate", 
-///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated Z-value) for point %g %g"
+///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated z-value) for point %g %g"
 ///                    ,xx,yy);
                return thevalue;
             }
             ntris_tried++;
             // check the points aren't colinear
-            d1 = TMath::Sqrt((fXN[P]-fXN[N])*(fXN[P]-fXN[N])+(fYN[P]-fYN[N])*(fYN[P]-fYN[N]));
-            d2 = TMath::Sqrt((fXN[P]-fXN[M])*(fXN[P]-fXN[M])+(fYN[P]-fYN[M])*(fYN[P]-fYN[M]));
-            d3 = TMath::Sqrt((fXN[N]-fXN[M])*(fXN[N]-fXN[M])+(fYN[N]-fYN[M])*(fYN[N]-fYN[M]));
+            d1 = TMath::Sqrt((fXN[p]-fXN[n])*(fXN[p]-fXN[n])+(fYN[p]-fYN[n])*(fYN[p]-fYN[n]));
+            d2 = TMath::Sqrt((fXN[p]-fXN[m])*(fXN[p]-fXN[m])+(fYN[p]-fYN[m])*(fYN[p]-fYN[m]));
+            d3 = TMath::Sqrt((fXN[n]-fXN[m])*(fXN[n]-fXN[m])+(fYN[n]-fYN[m])*(fYN[n]-fYN[m]));
             if ((d1+d2<=d3) || (d1+d3<=d2) || (d2+d3<=d1)) goto L90;
 
             // does the triangle enclose the point?
-            if (!Enclose(P,N,M,0)) goto L90;
+            if (!Enclose(p,n,m,0)) goto L90;
 
             // is it a Delaunay triangle? (ie. are there any other points 
             // inside the circle that is defined by its vertices?)
@@ -702,21 +702,21 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
             // loop over all other points testing each to see if it's 
             // inside the triangle's circle
             ndegen = 0;
-            for ( Z=1; Z<=fNpoints; Z++) {
-               if ((Z==P) || (Z==N) || (Z==M)) goto L50;
-               // An easy first check is to see if point Z is inside the triangle 
+            for ( z=1; z<=fNpoints; z++) {
+               if ((z==p) || (z==n) || (z==m)) goto L50;
+               // An easy first check is to see if point z is inside the triangle 
                // (if it's in the triangle it's also in the circle)
 
-               // point Z cannot be inside the triangle if it's further from (xx,yy) 
+               // point z cannot be inside the triangle if it's further from (xx,yy) 
                // than the furthest pointing making up the triangle - test this
-               for (L=1; L<=fNpoints; L++) {
-                  if (fOrder[L-1] == Z) {
-                     if ((L<I) || (L<J) || (L<K)) {
-                        // point Z is nearer to (xx,yy) than M, N or P - it could be in the 
+               for (l=1; l<=fNpoints; l++) {
+                  if (fOrder[l-1] == z) {
+                     if ((l<i) || (l<j) || (l<k)) {
+                        // point z is nearer to (xx,yy) than m, n or p - it could be in the 
                         // triangle so call enclose to find out
 
                         // if it is inside the triangle this can't be a Delaunay triangle
-                        if (Enclose(P,N,M,Z)) goto L90;
+                        if (Enclose(p,n,m,z)) goto L90;
                      } else {
                         // there's no way it could be in the triangle so there's no point 
                         // calling enclose
@@ -724,138 +724,138 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
                      }
                   }
                }
-               // is point Z colinear with any pair of the triangle points?
+               // is point z colinear with any pair of the triangle points?
 L1:
-               if (((fXN[P]-fXN[Z])*(fYN[P]-fYN[N])) == ((fYN[P]-fYN[Z])*(fXN[P]-fXN[N]))) {
-                  // Z is colinear with P and N
-                  A = P;
-                  B = N;
-               } else if (((fXN[P]-fXN[Z])*(fYN[P]-fYN[M])) == ((fYN[P]-fYN[Z])*(fXN[P]-fXN[M]))) {
-                  // Z is colinear with P and M
-                  A = P;
-                  B = M;
-               } else if (((fXN[N]-fXN[Z])*(fYN[N]-fYN[M])) == ((fYN[N]-fYN[Z])*(fXN[N]-fXN[M]))) {
-                  // Z is colinear with N and M
-                  A = N;
-                  B = M;
+               if (((fXN[p]-fXN[z])*(fYN[p]-fYN[n])) == ((fYN[p]-fYN[z])*(fXN[p]-fXN[n]))) {
+                  // z is colinear with p and n
+                  a = p;
+                  b = n;
+               } else if (((fXN[p]-fXN[z])*(fYN[p]-fYN[m])) == ((fYN[p]-fYN[z])*(fXN[p]-fXN[m]))) {
+                  // z is colinear with p and m
+                  a = p;
+                  b = m;
+               } else if (((fXN[n]-fXN[z])*(fYN[n]-fYN[m])) == ((fYN[n]-fYN[z])*(fXN[n]-fXN[m]))) {
+                  // z is colinear with n and m
+                  a = n;
+                  b = m;
                } else {
-                  A = 0;
-                  B = 0;
+                  a = 0;
+                  b = 0;
                }
-               if (A != 0) {
-                  // point Z is colinear with 2 of the triangle points, if it lies 
+               if (a != 0) {
+                  // point z is colinear with 2 of the triangle points, if it lies 
                   // between them it's in the circle otherwise it's outside
-                  if (fXN[A] != fXN[B]) {
-                     if (((fXN[Z]-fXN[A])*(fXN[Z]-fXN[B])) < 0) {
+                  if (fXN[a] != fXN[b]) {
+                     if (((fXN[z]-fXN[a])*(fXN[z]-fXN[b])) < 0) {
                         goto L90;
-                     } else if (((fXN[Z]-fXN[A])*(fXN[Z]-fXN[B])) == 0) {
+                     } else if (((fXN[z]-fXN[a])*(fXN[z]-fXN[b])) == 0) {
                         // At least two points are sitting on top of each other, we will
                         // treat these as one and not consider this a 'multiple points lying
                         // on a common circle' situation. It is a sign something could be
                         // wrong though, especially if the two coincident points have
                         // different fZ's. If they don't then this is harmless.
-                        Warning("Interpolate", "Two of these three points are coincident %d %d %d",A,B,Z);
+                        Warning("Interpolate", "Two of these three points are coincident %d %d %d",a,b,z);
                      }
                   } else {
-                     if (((fYN[Z]-fYN[A])*(fYN[Z]-fYN[B])) < 0) {
+                     if (((fYN[z]-fYN[a])*(fYN[z]-fYN[b])) < 0) {
                         goto L90;
-                     } else if (((fYN[Z]-fYN[A])*(fYN[Z]-fYN[B])) == 0) {
+                     } else if (((fYN[z]-fYN[a])*(fYN[z]-fYN[b])) == 0) {
                         // At least two points are sitting on top of each other - see above.
-                        Warning("Interpolate", "Two of these three points are coincident %d %d %d",A,B,Z);
+                        Warning("Interpolate", "Two of these three points are coincident %d %d %d",a,b,z);
                      }
                   }
                   // point is outside the circle, move to next point
                   goto L50;
                }
 
-               // if point Z were to look at the triangle, which point would it see 
+               // if point z were to look at the triangle, which point would it see 
                // lying between the other two? (we're going to form a quadrilateral 
                // from the points, and then demand certain properties of that
                // quadrilateral)
-               dxz[0] = fXN[P]-fXN[Z];
-               dyz[0] = fYN[P]-fYN[Z];
-               dxz[1] = fXN[N]-fXN[Z];
-               dyz[1] = fYN[N]-fYN[Z];
-               dxz[2] = fXN[M]-fXN[Z];
-               dyz[2] = fYN[M]-fYN[Z];
-               for(L=1; L<=3; L++) {
-                  dx1 = dxz[L-1];
-                  dx2 = dxz[L%3];
-                  dx3 = dxz[(L+1)%3];
-                  dy1 = dyz[L-1];
-                  dy2 = dyz[L%3];
-                  dy3 = dyz[(L+1)%3];
+               dxz[0] = fXN[p]-fXN[z];
+               dyz[0] = fYN[p]-fYN[z];
+               dxz[1] = fXN[n]-fXN[z];
+               dyz[1] = fYN[n]-fYN[z];
+               dxz[2] = fXN[m]-fXN[z];
+               dyz[2] = fYN[m]-fYN[z];
+               for(l=1; l<=3; l++) {
+                  dx1 = dxz[l-1];
+                  dx2 = dxz[l%3];
+                  dx3 = dxz[(l+1)%3];
+                  dy1 = dyz[l-1];
+                  dy2 = dyz[l%3];
+                  dy3 = dyz[(l+1)%3];
 
-                  U = (dy3*dx2-dx3*dy2)/(dy1*dx2-dx1*dy2);
-                  V = (dy3*dx1-dx3*dy1)/(dy2*dx1-dx2*dy1);
+                  u = (dy3*dx2-dx3*dy2)/(dy1*dx2-dx1*dy2);
+                  v = (dy3*dx1-dx3*dy1)/(dy2*dx1-dx2*dy1);
 
-                  if ((U>=0) && (V>=0)) {
+                  if ((u>=0) && (v>=0)) {
                      // vector (dx3,dy3) is expressible as a sum of the other two vectors 
                      // with positive coefficents -> i.e. it lies between the other two vectors
-                     if (L == 1) {
-                        F  = M;
-                        O1 = P;
-                        O2 = N;
-                     } else if (L == 2) {
-                        F  = P;
-                        O1 = N;
-                        O2 = M;
+                     if (l == 1) {
+                        f  = m;
+                        o1 = p;
+                        o2 = n;
+                     } else if (l == 2) {
+                        f  = p;
+                        o1 = n;
+                        o2 = m;
                      } else {
-                        F  = N;
-                        O1 = M;
-                        O2 = P;
+                        f  = n;
+                        o1 = m;
+                        o2 = p;
                      }
                      goto L2;
                   }
                }
 ///            Error("Interpolate", "Should not get to here");
                // may as well soldier on
-               F  = M;
-               O1 = P;
-               O2 = N;
+               f  = m;
+               o1 = p;
+               o2 = n;
 L2:
                // this is not a valid quadrilateral if the diagonals don't cross, 
-               // check that points F and Z lie on opposite side of the line O1-O2,
-               // this is true if the angle F-O1-Z is greater than O2-O1-Z and O2-O1-F
-               cfo1k  = ((fXN[F]-fXN[O1])*(fXN[Z]-fXN[O1])+(fYN[F]-fYN[O1])*(fYN[Z]-fYN[O1]))/
-                        TMath::Sqrt(((fXN[F]-fXN[O1])*(fXN[F]-fXN[O1])+(fYN[F]-fYN[O1])*(fYN[F]-fYN[O1]))*
-                        ((fXN[Z]-fXN[O1])*(fXN[Z]-fXN[O1])+(fYN[Z]-fYN[O1])*(fYN[Z]-fYN[O1])));
-               co2o1k = ((fXN[O2]-fXN[O1])*(fXN[Z]-fXN[O1])+(fYN[O2]-fYN[O1])*(fYN[Z]-fYN[O1]))/
-                        TMath::Sqrt(((fXN[O2]-fXN[O1])*(fXN[O2]-fXN[O1])+(fYN[O2]-fYN[O1])*(fYN[O2]-fYN[O1]))*
-                        ((fXN[Z]-fXN[O1])*(fXN[Z]-fXN[O1])  + (fYN[Z]-fYN[O1])*(fYN[Z]-fYN[O1])));
-               co2o1f = ((fXN[O2]-fXN[O1])*(fXN[F]-fXN[O1])+(fYN[O2]-fYN[O1])*(fYN[F]-fYN[O1]))/
-                        TMath::Sqrt(((fXN[O2]-fXN[O1])*(fXN[O2]-fXN[O1])+(fYN[O2]-fYN[O1])*(fYN[O2]-fYN[O1]))*
-                        ((fXN[F]-fXN[O1])*(fXN[F]-fXN[O1]) + (fYN[F]-fYN[O1])*(fYN[F]-fYN[O1]) ));
+               // check that points f and z lie on opposite side of the line o1-o2,
+               // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
+               cfo1k  = ((fXN[f]-fXN[o1])*(fXN[z]-fXN[o1])+(fYN[f]-fYN[o1])*(fYN[z]-fYN[o1]))/
+                        TMath::Sqrt(((fXN[f]-fXN[o1])*(fXN[f]-fXN[o1])+(fYN[f]-fYN[o1])*(fYN[f]-fYN[o1]))*
+                        ((fXN[z]-fXN[o1])*(fXN[z]-fXN[o1])+(fYN[z]-fYN[o1])*(fYN[z]-fYN[o1])));
+               co2o1k = ((fXN[o2]-fXN[o1])*(fXN[z]-fXN[o1])+(fYN[o2]-fYN[o1])*(fYN[z]-fYN[o1]))/
+                        TMath::Sqrt(((fXN[o2]-fXN[o1])*(fXN[o2]-fXN[o1])+(fYN[o2]-fYN[o1])*(fYN[o2]-fYN[o1]))*
+                        ((fXN[z]-fXN[o1])*(fXN[z]-fXN[o1])  + (fYN[z]-fYN[o1])*(fYN[z]-fYN[o1])));
+               co2o1f = ((fXN[o2]-fXN[o1])*(fXN[f]-fXN[o1])+(fYN[o2]-fYN[o1])*(fYN[f]-fYN[o1]))/
+                        TMath::Sqrt(((fXN[o2]-fXN[o1])*(fXN[o2]-fXN[o1])+(fYN[o2]-fYN[o1])*(fYN[o2]-fYN[o1]))*
+                        ((fXN[f]-fXN[o1])*(fXN[f]-fXN[o1]) + (fYN[f]-fYN[o1])*(fYN[f]-fYN[o1]) ));
                if ((cfo1k>co2o1k) || (cfo1k>co2o1f)) {
-                  // not a valid quadrilateral - point Z is definitely outside the circle
+                  // not a valid quadrilateral - point z is definitely outside the circle
                   goto L50;
                }
                // calculate the 2 internal angles of the quadrangle formed by joining
-               // points Z and F to points O1 and O2, at Z and F. If they sum to less
-               // than 180 degrees then Z lies outside the circle
-               dko1    = TMath::Sqrt((fXN[Z]-fXN[O1])*(fXN[Z]-fXN[O1])+(fYN[Z]-fYN[O1])*(fYN[Z]-fYN[O1]));
-               dko2    = TMath::Sqrt((fXN[Z]-fXN[O2])*(fXN[Z]-fXN[O2])+(fYN[Z]-fYN[O2])*(fYN[Z]-fYN[O2]));
-               dfo1    = TMath::Sqrt((fXN[F]-fXN[O1])*(fXN[F]-fXN[O1])+(fYN[F]-fYN[O1])*(fYN[F]-fYN[O1]));
-               dfo2    = TMath::Sqrt((fXN[F]-fXN[O2])*(fXN[F]-fXN[O2])+(fYN[F]-fYN[O2])*(fYN[F]-fYN[O2]));
-               c1      = ((fXN[Z]-fXN[O1])*(fXN[Z]-fXN[O2])+(fYN[Z]-fYN[O1])*(fYN[Z]-fYN[O2]))/dko1/dko2;
-               c2      = ((fXN[F]-fXN[O1])*(fXN[F]-fXN[O2])+(fYN[F]-fYN[O1])*(fYN[F]-fYN[O2]))/dfo1/dfo2;
+               // points z and f to points o1 and o2, at z and f. If they sum to less
+               // than 180 degrees then z lies outside the circle
+               dko1    = TMath::Sqrt((fXN[z]-fXN[o1])*(fXN[z]-fXN[o1])+(fYN[z]-fYN[o1])*(fYN[z]-fYN[o1]));
+               dko2    = TMath::Sqrt((fXN[z]-fXN[o2])*(fXN[z]-fXN[o2])+(fYN[z]-fYN[o2])*(fYN[z]-fYN[o2]));
+               dfo1    = TMath::Sqrt((fXN[f]-fXN[o1])*(fXN[f]-fXN[o1])+(fYN[f]-fYN[o1])*(fYN[f]-fYN[o1]));
+               dfo2    = TMath::Sqrt((fXN[f]-fXN[o2])*(fXN[f]-fXN[o2])+(fYN[f]-fYN[o2])*(fYN[f]-fYN[o2]));
+               c1      = ((fXN[z]-fXN[o1])*(fXN[z]-fXN[o2])+(fYN[z]-fYN[o1])*(fYN[z]-fYN[o2]))/dko1/dko2;
+               c2      = ((fXN[f]-fXN[o1])*(fXN[f]-fXN[o2])+(fYN[f]-fYN[o1])*(fYN[f]-fYN[o2]))/dfo1/dfo2;
                sin_sum = c1*TMath::Sqrt(1-c2*c2)+c2*TMath::Sqrt(1-c1*c1);
 
                // sin_sum doesn't always come out as zero when it should do.
                if (sin_sum < -1.E-6) {
-                  // Z is inside the circle, this is not a Delaunay triangle
+                  // z is inside the circle, this is not a Delaunay triangle
                   goto L90;
                } else if (TMath::Abs(sin_sum) <= 1.E-6) {
-                  // point Z lies on the circumference of the circle (within rounding errors) 
+                  // point z lies on the circumference of the circle (within rounding errors) 
                   // defined by the triangle, so there is potential for degeneracy in the 
                   // triangle set (Delaunay triangulation does not give a unique way to split
                   // a polygon whose points lie on a circle into constituent triangles). Make
                   // a note of the additional point number.
                   ndegen++;
-                  degen   = Z;
-                  fdegen  = F;
-                  o1degen = O1;
-                  o2degen = O2;
+                  degen   = z;
+                  fdegen  = f;
+                  o1degen = o1;
+                  o2degen = o2;
                }
 L50:
             continue;
@@ -867,51 +867,51 @@ L50:
 ///            if (ndegen > 1) {
 ///               Error("Interpolate", 
 ///                     "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
-///                     P,N,M,degen);
+///                     p,n,m,degen);
 ///               return thevalue;
 ///            }
 
                // we have a quadrilateral which can be split down either diagonal
-               // (D<->F or O1<->O2) to form valid Delaunay triangles. Choose diagonal
+               // (d<->f or o1<->o2) to form valid Delaunay triangles. Choose diagonal
                // with highest average z-value. Whichever we choose we will have
                // verified two triangles as good and two as bad, only note the good ones
-               D  = degen;
-               F  = fdegen;
-               O1 = o1degen;
-               O2 = o2degen;
-               if ((fZ[O1-1]+fZ[O2-1]) > (fZ[D-1]+fZ[F-1])) {
+               d  = degen;
+               f  = fdegen;
+               o1 = o1degen;
+               o2 = o2degen;
+               if ((fZ[o1-1]+fZ[o2-1]) > (fZ[d-1]+fZ[f-1])) {
                   // best diagonalisation of quadrilateral is current one, we have 
                   // the triangle
-                  T1 = P;
-                  T2 = N;
-                  T3 = M;
+                  t1 = p;
+                  t2 = n;
+                  t3 = m;
                   // file the good triangles
-                  FileIt(P, N, M);
-                  FileIt(D, O1, O2);
+                  FileIt(p, n, m);
+                  FileIt(d, o1, o2);
                } else {
                   // use other diagonal to split quadrilateral, use triangle formed by 
-                  // point F, the degnerate point D and whichever of O1 and O2 create 
+                  // point f, the degnerate point d and whichever of o1 and o2 create 
                   // an enclosing triangle
-                  T1 = F;
-                  T2 = D;
-                  if (Enclose(F,D,O1,0)) {
-                     T3 = O1;
+                  t1 = f;
+                  t2 = d;
+                  if (Enclose(f,d,o1,0)) {
+                     t3 = o1;
                   } else {
-                     T3 = O2;
+                     t3 = o2;
                   }
                   // file the good triangles
-                  FileIt(F, D, O1);
-                  FileIt(F, D, O2);
+                  FileIt(f, d, o1);
+                  FileIt(f, d, o2);
                }
             } else {
                // this is a Delaunay triangle, file it
-               FileIt(P, N, M);
-               T1 = P;
-               T2 = N;
-               T3 = M;
+               FileIt(p, n, m);
+               t1 = p;
+               t2 = n;
+               t3 = m;
             }
             // do the interpolation
-            thevalue = InterpolateOnPlane(T1,T2,T3,0);
+            thevalue = InterpolateOnPlane(t1,t2,t3,0);
             return thevalue;
 L90:
             continue;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.65 2005/05/20 06:54:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.66 2005/07/30 09:37:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -130,7 +130,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 
    const char *formatstr;
    Int_t reasformat = 0;
-   Int_t ndiv,nx1,nx2,N;
+   Int_t ndiv,nx1,nx2,n;
    Double_t awidth;
    Double_t length;
 
@@ -147,8 +147,8 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
       ndiv = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsWNDC());
    }
    ndiv = TMath::Abs(ndiv);
-   N = ndiv - (ndiv/100)*100;
-   awidth = length/N;
+   n = ndiv - (ndiv/100)*100;
+   awidth = length/n;
 
 //  width in seconds ?
    if (awidth>=.5) {
@@ -632,9 +632,9 @@ const char *TAxis::GetTimeFormatOnly() const
 {
    // Return *only* the time format from the string fTimeFormat
    static TString timeformat;
-   Int_t IdF = fTimeFormat.Index("%F");
-   if (IdF>=0) {
-      timeformat = fTimeFormat(0,IdF);
+   Int_t idF = fTimeFormat.Index("%F");
+   if (idF>=0) {
+      timeformat = fTimeFormat(0,idF);
    } else {
       timeformat = fTimeFormat;
    }
@@ -1050,10 +1050,10 @@ void TAxis::SetTimeFormat(const char *tformat)
       return;
    }
 
-   Int_t IdF = fTimeFormat.Index("%F");
-   if (IdF>=0) {
-      Int_t LnF = fTimeFormat.Length();
-      TString stringtimeoffset = fTimeFormat(IdF,LnF);
+   Int_t idF = fTimeFormat.Index("%F");
+   if (idF>=0) {
+      Int_t lnF = fTimeFormat.Length();
+      TString stringtimeoffset = fTimeFormat(idF,lnF);
       fTimeFormat = tformat;
       fTimeFormat.Append(stringtimeoffset);
    } else {
@@ -1078,8 +1078,8 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    char tmp[20];
    time_t timeoff;
    struct tm* utctis;
-   Int_t IdF = fTimeFormat.Index("%F");
-   if (IdF>=0) fTimeFormat.Remove(IdF);
+   Int_t idF = fTimeFormat.Index("%F");
+   if (idF>=0) fTimeFormat.Remove(idF);
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));

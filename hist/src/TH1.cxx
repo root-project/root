@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.247 2005/08/11 19:35:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.248 2005/08/15 08:42:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -681,8 +681,8 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Bool_t Integral = kFALSE;
-   if (opt.Contains("i") && fDimension ==1) Integral = kTRUE;
+   Bool_t integral = kFALSE;
+   if (opt.Contains("i") && fDimension ==1) integral = kTRUE;
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -713,7 +713,7 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
             if (!f1->IsInside(xx)) continue;
             TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            if (Integral) {
+            if (integral) {
                xx[0] = fXaxis.GetBinLowEdge(binx);
                cu  = c1*f1->EvalPar(xx);
                cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx),fXaxis.GetBinUpEdge(binx))*fXaxis.GetBinWidth(binx);
@@ -2300,28 +2300,28 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
    char l[] ="TLinearFitter";
    Int_t strdiff = 0;
-   Bool_t IsSet = kFALSE;
+   Bool_t isSet = kFALSE;
    if (TVirtualFitter::GetFitter()){
       //Is a fitter already set? Is it linear?
-      IsSet=kTRUE;
+      isSet=kTRUE;
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
-      if (IsSet && strdiff!=0) {
+      if (isSet && strdiff!=0) {
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet) {
+      if (!isSet) {
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
-      if (IsSet && strdiff==0){
+      if (isSet && strdiff==0){
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet)
+      if (!isSet)
 	 TVirtualFitter::SetFitter(0);
    }
 
@@ -2378,7 +2378,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       }
 
       //   - Set error criterion for chisquare or likelihood methods
-      //   -  MINUIT ERRDEF should not be set to 0.5 in case of loglikelihood fit.
+      //   -  MINUIT ErrDEF should not be set to 0.5 in case of loglikelihood fit.
       //   -  because the FCN is already multiplied by 2 in H1FitLikelihood
       //   -  if Hoption.User is specified, assume that the user has already set
       //   -  his minimization function via SetFCN.
@@ -2388,7 +2388,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       } else {
 	 if (!Foption.User) hFitter->SetFitMethod("H1FitChisquare");
       }
-      hFitter->ExecuteCommand("SET ERR",arglist,1);
+      hFitter->ExecuteCommand("SET Err",arglist,1);
 
       //   - Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
@@ -4183,17 +4183,17 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
    // save the TAttAxis members (reset by SetBins)
-        Int_t    Ndivisions  = fXaxis.GetNdivisions();
-        Color_t  AxisColor   = fXaxis.GetAxisColor();
-        Color_t  LabelColor  = fXaxis.GetLabelColor();
-        Style_t  LabelFont   = fXaxis.GetLabelFont();
-        Float_t  LabelOffset = fXaxis.GetLabelOffset();
-        Float_t  LabelSize   = fXaxis.GetLabelSize();
-        Float_t  TickLength  = fXaxis.GetTickLength();
-        Float_t  TitleOffset = fXaxis.GetTitleOffset();
-        Float_t  TitleSize   = fXaxis.GetTitleSize();
-        Color_t  TitleColor  = fXaxis.GetTitleColor();
-        Style_t  TitleFont   = fXaxis.GetTitleFont();
+        Int_t    nDivisions  = fXaxis.GetNdivisions();
+        Color_t  axisColor   = fXaxis.GetAxisColor();
+        Color_t  labelColor  = fXaxis.GetLabelColor();
+        Style_t  labelFont   = fXaxis.GetLabelFont();
+        Float_t  labelOffset = fXaxis.GetLabelOffset();
+        Float_t  labelSize   = fXaxis.GetLabelSize();
+        Float_t  tickLength  = fXaxis.GetTickLength();
+        Float_t  titleOffset = fXaxis.GetTitleOffset();
+        Float_t  titleSize   = fXaxis.GetTitleSize();
+        Color_t  titleColor  = fXaxis.GetTitleColor();
+        Style_t  titleFont   = fXaxis.GetTitleFont();
 
    if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
       Axis_t *bins = new Axis_t[newbins+1];
@@ -4205,17 +4205,17 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    }
 
    // Restore axis attributes
-        fXaxis.SetNdivisions(Ndivisions);
-        fXaxis.SetAxisColor(AxisColor);
-        fXaxis.SetLabelColor(LabelColor);
-        fXaxis.SetLabelFont(LabelFont);
-        fXaxis.SetLabelOffset(LabelOffset);
-        fXaxis.SetLabelSize(LabelSize);
-        fXaxis.SetTickLength(TickLength);
-        fXaxis.SetTitleOffset(TitleOffset);
-        fXaxis.SetTitleSize(TitleSize);
-        fXaxis.SetTitleColor(TitleColor);
-        fXaxis.SetTitleFont(TitleFont);
+        fXaxis.SetNdivisions(nDivisions);
+        fXaxis.SetAxisColor(axisColor);
+        fXaxis.SetLabelColor(labelColor);
+        fXaxis.SetLabelFont(labelFont);
+        fXaxis.SetLabelOffset(labelOffset);
+        fXaxis.SetLabelSize(labelSize);
+        fXaxis.SetTickLength(tickLength);
+        fXaxis.SetTitleOffset(titleOffset);
+        fXaxis.SetTitleSize(titleSize);
+        fXaxis.SetTitleColor(titleColor);
+        fXaxis.SetTitleFont(titleFont);
 
    // copy merged bin contents (ignore under/overflows)
    Int_t oldbin = 0;
@@ -4424,23 +4424,23 @@ void TH1::SetTitle(const char *title)
 
    // Decode fTitle. It may contain X, Y and Z titles
    TString str1 = fTitle, str2;
-   Int_t Isc = str1.Index(";");
-   Int_t Lns = str1.Length();
-   if (Isc >=0 ) {
-      fTitle = str1(0,Isc);
-      str1   = str1(Isc+1, Lns);
-      Isc    = str1.Index(";");
-      if (Isc >=0 ) {
-         str2 = str1(0,Isc);
+   Int_t isc = str1.Index(";");
+   Int_t lns = str1.Length();
+   if (isc >=0 ) {
+      fTitle = str1(0,isc);
+      str1   = str1(isc+1, lns);
+      isc    = str1.Index(";");
+      if (isc >=0 ) {
+         str2 = str1(0,isc);
          fXaxis.SetTitle(str2.Data());
-         Lns  = str1.Length();
-         str1 = str1(Isc+1, Lns);
-         Isc  = str1.Index(";");
-         if (Isc >=0 ) {
-            str2 = str1(0,Isc);
+         lns  = str1.Length();
+         str1 = str1(isc+1, lns);
+         isc  = str1.Index(";");
+         if (isc >=0 ) {
+            str2 = str1(0,isc);
             fYaxis.SetTitle(str2.Data());
-            Lns  = str1.Length();
-            str1 = str1(Isc+1, Lns);
+            lns  = str1.Length();
+            str1 = str1(isc+1, lns);
             fZaxis.SetTitle(str1.Data());
          } else {
             fYaxis.SetTitle(str1.Data());
@@ -4454,23 +4454,23 @@ void TH1::SetTitle(const char *title)
 }
 
 // -------------------------------------------------------------------------
-void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
+void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 {
-// smooth array XX, translation of Hbook routine hsmoof.F
+// smooth array xx, translation of Hbook routine hsmoof.F
 // based on algorithm 353QH twice presented by J. Friedman
 // in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
    Int_t ii, jj, ik, jk, kk, nn1, nn2;
    Double_t hh[6] = {0,0,0,0,0,0};
-   Double_t *YY = new Double_t[NN];
-   Double_t *ZZ = new Double_t[NN];
-   Double_t *RR = new Double_t[NN];
+   Double_t *yy = new Double_t[nn];
+   Double_t *zz = new Double_t[nn];
+   Double_t *rr = new Double_t[nn];
 
    for (Int_t pass=0;pass<ntimes;pass++) {
       // first copy original data into temp array
 
-      for (ii = 0; ii < NN; ii++) {
-         YY[ii] = XX[ii];
+      for (ii = 0; ii < nn; ii++) {
+         yy[ii] = xx[ii];
       }
 
 //  do 353 i.e. running median 3, 5, and 3 in a single loop
@@ -4478,69 +4478,69 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
          ik = 0;
          if  (kk == 2)  ik = 1;
          nn1 = ik + 2;
-         nn2 = NN - ik - 1;
+         nn2 = nn - ik - 1;
        // do all elements beside the first and last point for median 3
        //  and first two and last 2 for median 5
          for  (ii = nn1; ii <= nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++)   {
-               hh[jj] = YY[ii + jj - 1];
+               hh[jj] = yy[ii + jj - 1];
             }
-            ZZ[ii] = TMath::Median(3 + 2*ik, hh);
+            zz[ii] = TMath::Median(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
 // first point
-            hh[0] = 3*YY[1] - 2*YY[2];
-            hh[1] = YY[0];
-            hh[2] = YY[2];
-            ZZ[0] = TMath::Median(3, hh);
+            hh[0] = 3*yy[1] - 2*yy[2];
+            hh[1] = yy[0];
+            hh[2] = yy[2];
+            zz[0] = TMath::Median(3, hh);
 // last point
-            hh[0] = YY[NN - 2];
-            hh[1] = YY[NN - 1];
-            hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::Median(3, hh);
+            hh[0] = yy[nn - 2];
+            hh[1] = yy[nn - 1];
+            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
+            zz[nn - 1] = TMath::Median(3, hh);
          }
          if  (kk == 2)  {   //  median 5
   //  first point remains the same
-            ZZ[0] = YY[0];
+            zz[0] = yy[0];
             for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = YY[ii];
+               hh[ii] = yy[ii];
             }
-            ZZ[1] = TMath::Median(3, hh);
+            zz[1] = TMath::Median(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = YY[NN +nn2 -1 + ii];
+               hh[ii] = yy[nn +nn2 -1 + ii];
             }
-            ZZ[NN - 2] = TMath::Median(3, hh);
-            ZZ[NN - 1] = YY[NN - 1];
+            zz[nn - 2] = TMath::Median(3, hh);
+            zz[nn - 1] = yy[nn - 1];
          }
       }
 
 // quadratic interpolation for flat segments
       nn2 = nn2 - 2;
       for (ii = nn1; ii <= nn2; ii++) {
-         if  (ZZ[ii - 1] != ZZ[ii]) continue;
-         if  (ZZ[ii] != ZZ[ii + 1]) continue;
-         hh[0] = ZZ[ii - 2] - ZZ[ii];
-         hh[1] = ZZ[ii + 2] - ZZ[ii];
+         if  (zz[ii - 1] != zz[ii]) continue;
+         if  (zz[ii] != zz[ii + 1]) continue;
+         hh[0] = zz[ii - 2] - zz[ii];
+         hh[1] = zz[ii + 2] - zz[ii];
          if  (hh[0] * hh[1] < 0) continue;
          jk = 0;
          if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         YY[ii] = -0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk] /6.;
-         YY[ii + jk] = 0.5*(ZZ[ii + 2*jk] - ZZ[ii - 2*jk]) + ZZ[ii - jk];
+         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii - jk]/0.75 + zz[ii + 2*jk] /6.;
+         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii - jk];
       }
 
 // running means
-      for  (ii = 1; ii < NN - 1; ii++) {
-         RR[ii] = 0.25*YY[ii - 1] + 0.5*YY[ii] + 0.25*YY[ii + 1];
+      for  (ii = 1; ii < nn - 1; ii++) {
+         rr[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
       }
-      RR[0] = YY[0];
-      RR[NN - 1] = YY[NN - 1];
+      rr[0] = yy[0];
+      rr[nn - 1] = yy[nn - 1];
 
 // now do the same for residuals
 
-      for  (ii = 0; ii < NN; ii++)  {
-         YY[ii] = XX[ii] - RR[ii];
+      for  (ii = 0; ii < nn; ii++)  {
+         yy[ii] = xx[ii] - rr[ii];
       }
 
 //  do 353 i.e. running median 3, 5, and 3 in a single loop
@@ -4548,75 +4548,75 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
          ik = 0;
          if  (kk == 2)  ik = 1;
          nn1 = ik + 1;
-         nn2 = NN - ik - 1;
+         nn2 = nn - ik - 1;
        // do all elements beside the first and last point for median 3
        //  and first two and last 2 for median 5
          for  (ii = nn1; ii <= nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++) {
-               hh[jj] = YY[ii + jj - 1];
+               hh[jj] = yy[ii + jj - 1];
             }
-            ZZ[ii] = TMath::Median(3 + 2*ik, hh);
+            zz[ii] = TMath::Median(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
 // first point
-            hh[0] = 3*YY[1] - 2*YY[2];
-            hh[1] = YY[0];
-            hh[2] = YY[2];
-            ZZ[0] = TMath::Median(3, hh);
+            hh[0] = 3*yy[1] - 2*yy[2];
+            hh[1] = yy[0];
+            hh[2] = yy[2];
+            zz[0] = TMath::Median(3, hh);
 // last point
-            hh[0] = YY[NN - 2];
-            hh[1] = YY[NN - 1];
-            hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::Median(3, hh);
+            hh[0] = yy[nn - 2];
+            hh[1] = yy[nn - 1];
+            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
+            zz[nn - 1] = TMath::Median(3, hh);
          }
          if  (kk == 2)  {   //  median 5
 //  first point remains the same
-            ZZ[0] = YY[0];
+            zz[0] = yy[0];
             for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = YY[ii];
+               hh[ii] = yy[ii];
             }
-            ZZ[1] = TMath::Median(3, hh);
+            zz[1] = TMath::Median(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = YY[NN - 3 + ii];
+               hh[ii] = yy[nn - 3 + ii];
             }
-            ZZ[NN - 2] = TMath::Median(3, hh);
-            ZZ[NN - 1] = YY[NN - 1];
+            zz[nn - 2] = TMath::Median(3, hh);
+            zz[nn - 1] = yy[nn - 1];
          }
       }
 
 // quadratic interpolation for flat segments
       nn2 = nn2 - 1;
       for (ii = nn1 + 1; ii <= nn2; ii++) {
-         if  (ZZ[ii - 1] != ZZ[ii]) continue;
-         if  (ZZ[ii] != ZZ[ii + 1]) continue;
-         hh[0] = ZZ[ii - 2] - ZZ[ii];
-         hh[1] = ZZ[ii + 2] - ZZ[ii];
+         if  (zz[ii - 1] != zz[ii]) continue;
+         if  (zz[ii] != zz[ii + 1]) continue;
+         hh[0] = zz[ii - 2] - zz[ii];
+         hh[1] = zz[ii + 2] - zz[ii];
          if  (hh[0] * hh[1] < 0) continue;
          jk = 0;
          if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         YY[ii] = -0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk]/6.;
-         YY[ii + jk] = 0.5*(ZZ[ii + 2*jk] - ZZ[ii - 2*jk]) + ZZ[ii - jk];
+         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii - jk]/0.75 + zz[ii + 2*jk]/6.;
+         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii - jk];
       }
 
 // running means
-      for  (ii = 1; ii <= NN - 1; ii++) {
-         ZZ[ii] = 0.25*YY[ii - 1] + 0.5*YY[ii] + 0.25*YY[ii + 1];
+      for  (ii = 1; ii <= nn - 1; ii++) {
+         zz[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
       }
-      ZZ[0] = YY[0];
-      ZZ[NN - 1] = YY[NN - 1];
+      zz[0] = yy[0];
+      zz[nn - 1] = yy[nn - 1];
 
-//  add smoothed XX and smoothed residuals
+//  add smoothed xx and smoothed residuals
 
-      for  (ii = 0; ii < NN; ii++) {
-         if (XX[ii] < 0) XX[ii] = RR[ii] + ZZ[ii];
-         else            XX[ii] = TMath::Abs(RR[ii] + ZZ[ii]);
+      for  (ii = 0; ii < nn; ii++) {
+         if (xx[ii] < 0) xx[ii] = rr[ii] + zz[ii];
+         else            xx[ii] = TMath::Abs(rr[ii] + zz[ii]);
       }
    }
-   delete [] YY;
-   delete [] ZZ;
-   delete [] RR;
+   delete [] yy;
+   delete [] zz;
+   delete [] rr;
 }
 
 
@@ -4638,18 +4638,18 @@ void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
    if (lastbin  < 0) lastbin  = nbins;
    if (lastbin  > nbins+1) lastbin  = nbins;
    nbins = lastbin - firstbin + 1;
-   Double_t *XX = new Double_t[nbins];
+   Double_t *xx = new Double_t[nbins];
    Int_t i;
    for (i=0;i<nbins;i++) {
-      XX[i] = GetBinContent(i+firstbin);
+      xx[i] = GetBinContent(i+firstbin);
    }
 
-   TH1::SmoothArray(nbins,XX,ntimes);
+   TH1::SmoothArray(nbins,xx,ntimes);
 
    for (i=0;i<nbins;i++) {
-      SetBinContent(i+firstbin,XX[i]);
+      SetBinContent(i+firstbin,xx[i]);
    }
-   delete [] XX;
+   delete [] xx;
 
    if (gPad) gPad->Modified();
 }
@@ -5406,7 +5406,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //             to the parent distribution. Bin the KS distances in a histogram,
 //             and then take the integral of all the KS values above the value
 //             obtained from the original data to Monte Carlo distribution.
-//             The number of pseudo-experiments NEXPT is currently fixed at 1000.
+//             The number of pseudo-experiments nEXPT is currently fixed at 1000.
 //             The function returns the integral.
 //             (thanks to Ben Kilminster to submit this procedure). Note that
 //             this option "X" is much slower.
@@ -5586,24 +5586,24 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       else                      prob = 0;
    }
       // X option. Pseudo-experiments post-processor to determine KS probability
-   const Int_t NEXPT = 1000;
+   const Int_t nEXPT = 1000;
    if (opt.Contains("X")) {
-      Double_t KSEXPT;
+      Double_t dSEXPT;
       Bool_t addStatus = fgAddDirectory;
       fgAddDirectory = kFALSE;
-      TH1F *HDistValues = new TH1F("HDistValues","KS distances",200,0,1);
-      TH1 *HExpt = (TH1*)Clone();
+      TH1F *hDistValues = new TH1F("hDistValues","KS distances",200,0,1);
+      TH1 *hExpt = (TH1*)Clone();
       fgAddDirectory = addStatus;
-      // make NEXPT experiments (this should be a parameter)
-      for (Int_t i=0; i < NEXPT; i++) {
-         HExpt->Reset();
-         HExpt->FillRandom(h1,(Int_t)ne2);
-         KSEXPT = KolmogorovTest(HExpt,"M");
-         HDistValues->Fill(KSEXPT);
+      // make nEXPT experiments (this should be a parameter)
+      for (Int_t i=0; i < nEXPT; i++) {
+         hExpt->Reset();
+         hExpt->FillRandom(h1,(Int_t)ne2);
+         dSEXPT = KolmogorovTest(hExpt,"M");
+         hDistValues->Fill(dSEXPT);
       }
-      prb3 = HDistValues->Integral(HDistValues->FindBin(dfmax),200)/HDistValues->Integral();
-      delete HDistValues;
-      delete HExpt;
+      prb3 = hDistValues->Integral(hDistValues->FindBin(dfmax),200)/hDistValues->Integral();
+      delete hDistValues;
+      delete hExpt;
    }
 
       // debug printout
@@ -5614,7 +5614,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       if (opt.Contains("N"))
       printf(" Kolmo Prob     = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
       if (opt.Contains("X"))
-      printf(" Kolmo Prob     = %f with %d pseudo-experiments\n",prb3,NEXPT);
+      printf(" Kolmo Prob     = %f with %d pseudo-experiments\n",prb3,nEXPT);
    }
       // This numerical error condition should never occur:
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.7 2003/09/30 19:04:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.8 2003/12/12 17:57:05 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -181,19 +181,19 @@ void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &
    Double_t timemulti = 1;
    Int_t roundmode =0;
 
-   Int_t OptionTime;
-   if(strchr(option,'t')) OptionTime = 1;  else OptionTime = 0;
+   Int_t optionTime;
+   if(strchr(option,'t')) optionTime = 1;  else optionTime = 0;
 
-   Double_t AL = TMath::Min(A1,A2);
-   Double_t AH = TMath::Max(A1,A2);
-   if (AL == AH) AH = AL+1;
+   Double_t al = TMath::Min(A1,A2);
+   Double_t ah = TMath::Max(A1,A2);
+   if (al == ah) ah = al+1;
    // if nold  ==  -1 , program uses binwidth input from calling routine
    if (nold == -1 && BinWidth > 0 ) goto L90;
    ntemp = TMath::Max(nold,2);
    if (ntemp < 1) ntemp = 1;
 
 L20:
-   awidth = (AH-AL)/Double_t(ntemp);
+   awidth = (ah-al)/Double_t(ntemp);
    timemulti = 1;
    if (awidth >= FLT_MAX) goto LOK;  //in float.h
    if (awidth <= 0)       goto LOK;
@@ -201,7 +201,7 @@ L20:
 //      If time representation, bin width should be rounded to seconds
 //      minutes, hours or days
 
-   if (OptionTime && awidth>=60) { // if width in seconds, treat it as normal
+   if (optionTime && awidth>=60) { // if width in seconds, treat it as normal
       //   width in minutes
       awidth /= 60; timemulti *=60;
       roundmode = 1; // round minutes (60)
@@ -236,7 +236,7 @@ L20:
       nbins    = 100;
       return;
    }
-   if (awidth <= 1 && (!OptionTime || timemulti==1) ) jlog--;
+   if (awidth <= 1 && (!optionTime || timemulti==1) ) jlog--;
    sigfig = awidth*TMath::Power(10,-jlog) -1e-10;
    //in the above statement, it is important to substract 1e-10
    //to avoid precision problems if the tests below
@@ -280,29 +280,29 @@ L20:
 //      Round mantissa up to 1, 2, 2.5, 5, or 10 in case of decimal number
          if      (sigfig <= 1)    siground = 1;
          else if (sigfig <= 2)    siground = 2;
-         else if (sigfig <= 5 && (!OptionTime || jlog<1))  siground = 5;
-         else if (sigfig <= 6 && OptionTime && jlog==1)    siground = 6;
+         else if (sigfig <= 5 && (!optionTime || jlog<1))  siground = 5;
+         else if (sigfig <= 6 && optionTime && jlog==1)    siground = 6;
          else                    {siground = 1;   jlog++; }
          break;
    }
 
    BinWidth = siground*TMath::Power(10,jlog);
-   if (OptionTime) BinWidth *= timemulti;
+   if (optionTime) BinWidth *= timemulti;
 
 //      Get new bounds from new width BinWidth
 
 L90:
-   alb  = AL/BinWidth;
+   alb  = al/BinWidth;
    if (TMath::Abs(alb) > 1e9) {
-      BinLow  = AL;
-      BinHigh = AH;
+      BinLow  = al;
+      BinHigh = ah;
       if (nbins > 10*nold && nbins > 10000) nbins = nold;
       return;
    }
    lwid   = Int_t(alb);
    if (alb < 0) lwid--;
    BinLow     = BinWidth*Double_t(lwid);
-   alb        = AH/BinWidth + 1.00001;
+   alb        = ah/BinWidth + 1.00001;
    kwid = Int_t(alb);
    if (alb < 0) kwid--;
    BinHigh = BinWidth*Double_t(kwid);
@@ -314,7 +314,7 @@ L90:
       nbins    = 1;
       goto LOK;
    }
-   if (2*nbins == nold && !OptionTime) {ntemp++; goto L20; }
+   if (2*nbins == nold && !optionTime) {ntemp++; goto L20; }
 
 LOK:
    Double_t oldBinLow = BinLow;
@@ -324,22 +324,22 @@ LOK:
    Double_t atest = BinWidth*0.0001;
    //if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; } //replaced by Damir in 3.10/02
    //if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; } //by the next two lines
-   if (AL-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
-   if (BinHigh-AH >= atest) { BinHigh -= BinWidth;  nbins--; }
-   if (!OptionTime && BinLow >= BinHigh) {
+   if (al-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
+   if (BinHigh-ah >= atest) { BinHigh -= BinWidth;  nbins--; }
+   if (!optionTime && BinLow >= BinHigh) {
       //this case may happen when nbins <=5
       BinLow = oldBinLow;
       BinHigh = oldBinHigh;
       nbins = oldnbins;
    }
-   else if (OptionTime && BinLow>=BinHigh) {
+   else if (optionTime && BinLow>=BinHigh) {
       nbins = 2*oldnbins;
       BinHigh = oldBinHigh;
       BinLow = oldBinLow;
       BinWidth = (oldBinHigh - oldBinLow)/nbins;
       Double_t atest = BinWidth*0.0001;
-      if (AL-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
-      if (BinHigh-AH >= atest) { BinHigh -= BinWidth;  nbins--; }
+      if (al-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
+      if (BinHigh-ah >= atest) { BinHigh -= BinWidth;  nbins--; }
    }
 }
 

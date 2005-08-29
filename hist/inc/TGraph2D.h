@@ -65,7 +65,7 @@ protected:
 
 private:
 
-   Bool_t      kUserHisto;   // True when SetHistogram has been called
+   Bool_t      fUserHisto;   // True when SetHistogram has been called
 
 public:
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.105 2005/08/03 17:40:34 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.106 2005/08/18 17:50:47 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -768,7 +768,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
   //
   // Author: Anna Kreshuk
   
-  const Double_t C1 = 1e-15;
+  const Double_t kC1 = 1e-15;
    
   if(eps< 1e-10 || eps > 1e-2) {
      Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1e-2], reset to 0.001",eps);
@@ -790,10 +790,10 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 
   //compute the central differences
   Double_t h2    = 1/(2.*h);
-  Double_t D0    = f1 - f2;
-  Double_t D2    = 2*(g1 - g2);
-  ErrorTF1       = C1*h2*fx;  //compute the error
-  Double_t deriv = h2*(4*D2 - D0)/3.;  
+  Double_t d0    = f1 - f2;
+  Double_t d2    = 2*(g1 - g2);
+  ErrorTF1       = kC1*h2*fx;  //compute the error
+  Double_t deriv = h2*(4*d2 - d0)/3.;  
   return deriv;
 }
 
@@ -829,7 +829,7 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
   //
   // Author: Anna Kreshuk
 
-  const Double_t C1 = 2*1e-15;
+  const Double_t kC1 = 2*1e-15;
    
   if(eps< 1e-6 || eps > 1e-2) {
      Warning("Derivative2","parameter esp=%g out of allowed range[1e-6,1e-2], reset to 0.001",eps);
@@ -851,10 +851,10 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 
   //compute the central differences
   Double_t hh    = 1/(h*h);
-  Double_t D0    = f3 - 2*f2 + f1;
-  Double_t D2    = 4*g3 - 8*f2 +4*g1;
-  ErrorTF1       = C1*hh*f2;  //compute the error
-  Double_t deriv = hh*(4*D2 - D0)/3.;
+  Double_t d0    = f3 - 2*f2 + f1;
+  Double_t d2    = 4*g3 - 8*f2 +4*g1;
+  ErrorTF1       = kC1*hh*f2;  //compute the error
+  Double_t deriv = hh*(4*d2 - d0)/3.;
   return deriv;
 }
 
@@ -891,7 +891,7 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
   // Author: Anna Kreshuk
 
   //const Double_t C1 = (1e-16)*TMath::Sqrt(5./2.)*TMath::Sqrt(16*64 + 1.)/3;
-  const Double_t C1 = 1e-15;
+  const Double_t kC1 = 1e-15;
 
   if(eps< 1e-4 || eps > 1e-2) {
      Warning("Derivative3","parameter esp=%g out of allowed range[1e-4,1e-2], reset to 0.001",eps);
@@ -914,10 +914,10 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 
   //compute the central differences
   Double_t hhh  = 1/(h*h*h);
-  Double_t D0   = 0.5*f1 - f2 +f3 - 0.5*f4;
-  Double_t D2   = 4*f2 - 8*g2 +8*g3 - 4*f3;
-  ErrorTF1      = C1*hhh*fx;   //compute the error
-  Double_t deriv = hhh*(4*D2 - D0)/3.;
+  Double_t d0   = 0.5*f1 - f2 +f3 - 0.5*f4;
+  Double_t d2   = 4*f2 - 8*g2 +8*g3 - 4*f3;
+  ErrorTF1      = kC1*hhh*fx;   //compute the error
+  Double_t deriv = hhh*(4*d2 - d0)/3.;
   return deriv;
 }
 
@@ -2057,9 +2057,8 @@ be used when these values are undefined.
 //End_Html
 //---------------------------------------------------------------
 
-  const Double_t Z1 = 1;
-  const Double_t HF = Z1/2;
-  const Double_t CST = 5*Z1/1000;
+  const Double_t kHF = 0.5;
+  const Double_t kCST = 5./1000;
 
   Double_t x[12] = { 0.96028985649753623,  0.79666647741362674,
                      0.52553240991632899,  0.18343464249564980,
@@ -2083,14 +2082,14 @@ be used when these values are undefined.
 
   h = 0;
   if (b == a) return h;
-  aconst = CST/TMath::Abs(b-a);
+  aconst = kCST/TMath::Abs(b-a);
   bb = a;
 CASE1:
   aa = bb;
   bb = b;
 CASE2:
-  c1 = HF*(bb+aa);
-  c2 = HF*(bb-aa);
+  c1 = kHF*(bb+aa);
+  c2 = kHF*(bb-aa);
   s8 = 0;
   for (i=0;i<4;i++) {
      u     = c2*x[i];

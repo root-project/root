@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.9 2004/08/17 10:57:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.10 2004/08/18 12:29:44 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -615,8 +615,8 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
 
 	// Solve for the "predictions"
 	int k0;
-	Double_t Ti; Double_t Aki;
-	FindPrediction(bin, fFractions, Ti, k0, Aki);
+	Double_t ti; Double_t aki;
+	FindPrediction(bin, fFractions, ti, k0, aki);
 
 	Double_t prediction = 0;
 	for (mc = 0; mc < fNpar; ++mc) {
@@ -626,9 +626,9 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
 	  Double_t binContent = h->GetBinContent(bin);
 	  Double_t weight = hw ? hw->GetBinContent(bin) : 1;
 	  if (k0 >= 0 && fFractions[mc] == fFractions[k0]) {
-	     binPrediction = Aki;
+	     binPrediction = aki;
 	  } else {
-	     binPrediction = binContent > 0 ? binContent / (1+weight*fFractions[mc]*Ti) : 0;
+	     binPrediction = binContent > 0 ? binContent / (1+weight*fFractions[mc]*ti) : 0;
 	  }
 
 	  prediction += fFractions[mc]*weight*binPrediction;
@@ -657,7 +657,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
 }
 
 //______________________________________________________________________________
-void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti, int& k0, Double_t &Aki) const {
+void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &ti, int& k0, Double_t &aki) const {
   // Function used internally to obtain the template prediction in the individual bins
 
   // Sanity check: none of the fractions should be =0
@@ -675,9 +675,9 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
 
   // Case data = 0
   if (TMath::Nint(fData->GetBinContent(bin)) == 0) {
-     Ti = 1;
+     ti = 1;
      k0 = -1;
-     Aki=0;
+     aki=0;
      return;
   }
 
@@ -707,51 +707,51 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
         contentsMax += ((TH1*)fMCs.At(par))->GetBinContent(bin);
      }
   }
-  Double_t Tmin = -1/refWeightedFraction;
+  Double_t tmin = -1/refWeightedFraction;
 
   if (contentsMax == 0) {
-     Aki = fData->GetBinContent(bin)/(1+refWeightedFraction);
+     aki = fData->GetBinContent(bin)/(1+refWeightedFraction);
      for (par = 0; par < fNpar; ++par) {
         hw = (TH1*)fWeights.At(par);
         if (par != k0) {
 	   Double_t weightedFraction = hw ?
 	     hw->GetBinContent(bin) * fractions[par] : fractions[par];
 	   if (weightedFraction != refWeightedFraction)
-	     Aki -= ((TH1*)fMCs.At(par))->GetBinContent(bin)*weightedFraction/ (refWeightedFraction - weightedFraction);
+	     aki -= ((TH1*)fMCs.At(par))->GetBinContent(bin)*weightedFraction/ (refWeightedFraction - weightedFraction);
         }
      }
-     if (Aki > 0) {
-        if (nMax) Aki /= nMax;
-        Ti = Tmin;
+     if (aki > 0) {
+        if (nMax) aki /= nMax;
+        ti = tmin;
         return;
      }
   }
   k0 = -1;
 
   // Case of nonzero histogram contents: solve for Ti using Newton's method
-  Ti = 0;
+  ti = 0;
   for (Double_t step = 0.2;;) {
-     if (Ti >= 1 || Ti < Tmin) {
+     if (ti >= 1 || ti < tmin) {
         step /= 10;
-        Ti = 0;
+        ti = 0;
      }
-     Double_t Function   = - fData->GetBinContent(bin)/(1-Ti);
-     Double_t Derivative = Function / (1-Ti);
+     Double_t aFunction   = - fData->GetBinContent(bin)/(1-ti);
+     Double_t aDerivative = aFunction / (1-ti);
      for (par = 0; par < fNpar; ++par) {
         TH1 *h = (TH1*)fMCs.At(par);
         hw = (TH1*)fWeights.At(par);
         Double_t weightedFraction = hw ?
 	  hw->GetBinContent(bin) * fractions[par] : fractions[par];
-        Double_t D = 1/(Ti+1/weightedFraction);
-        Function   += h->GetBinContent(bin)*D;
-        Derivative -= h->GetBinContent(bin)*D*D;
+        Double_t d = 1/(ti+1/weightedFraction);
+        aFunction   += h->GetBinContent(bin)*d;
+        aDerivative -= h->GetBinContent(bin)*d*d;
      }
-     if (TMath::Abs(Function) < 1e-12) break;
-     Double_t Delta = -Function/Derivative;
-     if (TMath::Abs(Delta) > step)
-        Delta = (Delta > 0) ? step : -step;
-     Ti += Delta;
-     if (TMath::Abs(Delta) < 1e-13) break;
+     if (TMath::Abs(aFunction) < 1e-12) break;
+     Double_t delta = -aFunction/aDerivative;
+     if (TMath::Abs(delta) > step)
+        delta = (delta > 0) ? step : -step;
+     ti += delta;
+     if (TMath::Abs(delta) < 1e-13) break;
   }
 
   return;
@@ -847,8 +847,8 @@ Double_t TFractionFitter::GetChisquare() const
 	    if(di != 0) logLmn += di * TMath::Log(di) - di;
 	    for(Int_t j = 0; j < fNpar; j++) {
 	       Double_t aji = ((TH1*)fMCs.At(j))->GetBinContent(x, y, z);
-	       Double_t Aji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
-	       if(Aji != 0) logLyn += aji * TMath::Log(Aji) - aji;
+	       Double_t bji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
+	       if(bji != 0) logLyn += aji * TMath::Log(bji) - aji;
 	       if(aji != 0) logLmn += aji * TMath::Log(aji) - aji;
 	    }
 	 }
