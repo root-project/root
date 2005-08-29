@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.66 2005/02/10 07:32:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.67 2005/07/22 16:52:03 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -487,13 +487,13 @@ void TApplication::InitializeColors()
       //   In Root hue takes values from 0 to 360.
       Float_t  saturation = 1;
       Float_t  lightness = 0.5;
-      Float_t  MaxHue = 280;
-      Float_t  MinHue = 0;
-      Int_t    MaxPretty = 50;
+      Float_t  maxHue = 280;
+      Float_t  minHue = 0;
+      Int_t    maxPretty = 50;
       Float_t  hue;
 
-      for (i=0 ; i<MaxPretty ; i++) {
-         hue = MaxHue-(i+1)*((MaxHue-MinHue)/MaxPretty);
+      for (i=0 ; i<maxPretty ; i++) {
+         hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
          TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
          new TColor(i+51, r, g, b);
       }

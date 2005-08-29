@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.51 2005/08/09 13:02:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.52 2005/08/18 11:12:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1233,11 +1233,11 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
 
   UInt_t g, c;
-  UInt_t NPalette = 0;
-  Int_t *Palette = new Int_t[NColors+1];
-  UInt_t NColorsGradient;
-  TColor *Color;
-  Int_t HighestIndex = 0;
+  UInt_t nPalette = 0;
+  Int_t *palette = new Int_t[NColors+1];
+  UInt_t nColorsGradient;
+  TColor *color;
+  Int_t highestIndex = 0;
 
   // Check if all RGB values are between 0.0 and 1.0 and
   // Length goes from 0.0 to 1.0 in increasing order.
@@ -1248,14 +1248,14 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
         Length[c] < 0 || Length[c] > 1.0) {
       //Error("CreateGradientColorTable",
       //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
-      delete [] Palette;
+      delete [] palette;
       return -1;
     }
     if (c >= 1) {
       if (Length[c-1] > Length[c]) {
         //Error("CreateGradientColorTable",
         //      "The interval lengths have to be in increasing order");
-        delete [] Palette;
+        delete [] palette;
         return -1;
       }
     }
@@ -1263,41 +1263,41 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
 
   // Search for the highest color index not used in ROOT:
   // We do not want to overwrite some colors...
-  TSeqCollection *ColorTable = gROOT->GetListOfColors();
-  if ((Color = (TColor *) ColorTable->Last()) != 0) {
-    if (Color->GetNumber() > HighestIndex) {
-      HighestIndex = Color->GetNumber();
+  TSeqCollection *colorTable = gROOT->GetListOfColors();
+  if ((color = (TColor *) colorTable->Last()) != 0) {
+    if (color->GetNumber() > highestIndex) {
+      highestIndex = color->GetNumber();
     }
-    while ((Color = (TColor *) (ColorTable->Before(Color))) != 0) {
-      if (Color->GetNumber() > HighestIndex) {
-      HighestIndex = Color->GetNumber();
+    while ((color = (TColor *) (colorTable->Before(color))) != 0) {
+      if (color->GetNumber() > highestIndex) {
+      highestIndex = color->GetNumber();
       }
     }
   }
-  HighestIndex++;
+  highestIndex++;
 
   // Now create the colors and add them to the default palette:
 
   // For each defined gradient...
   for (g = 1; g < Number; g++) {
     // create the colors...
-    NColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
-    for (c = 0; c < NColorsGradient; c++) {
-      Color = new TColor(HighestIndex,
-                         Red[g-1] + c * (Red[g] - Red[g-1])/ NColorsGradient,
-                         Green[g-1] + c * (Green[g] - Green[g-1])/ NColorsGradient,
-                         Blue[g-1] + c * (Blue[g] - Blue[g-1])/ NColorsGradient,
+    nColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
+    for (c = 0; c < nColorsGradient; c++) {
+      color = new TColor(highestIndex,
+                         Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,
+                         Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
+                         Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
                          "  ");
-      Palette[NPalette] = HighestIndex;
-      NPalette++;
-      HighestIndex++;
+      palette[nPalette] = highestIndex;
+      nPalette++;
+      highestIndex++;
     }
   }
 
-  gStyle->SetPalette(NPalette, Palette);
-  delete [] Palette;
+  gStyle->SetPalette(nPalette, palette);
+  delete [] palette;
 
-  return HighestIndex - NColors;
+  return highestIndex - NColors;
 }
 
 //______________________________________________________________________________
@@ -1337,7 +1337,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //  The color parameters can be changed via TColor::SetRGB.
 
    Int_t i;
-   static Int_t PaletteType = 0;
+   static Int_t paletteType = 0;
    Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
                         21,22,23,24,25,26,27,28,29,30, 8,
                         31,32,33,34,35,36,37,38,39,40, 9,
@@ -1348,7 +1348,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
-      PaletteType = 1;
+      paletteType = 1;
       return;
    }
 
@@ -1357,20 +1357,20 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
-      PaletteType = 2;
+      paletteType = 2;
       return;
    }
 
    // set DeepSea palette
    if (colors == 0 && ncolors > 50) {
-      if (ncolors == fPalette.fN && PaletteType == 3) return; 
-      const Int_t NRGBs = 5;
-      Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-      Double_t Red[NRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-      Double_t Green[NRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-      Double_t Blue[NRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
-      PaletteType = 3;
+      if (ncolors == fPalette.fN && paletteType == 3) return; 
+      const Int_t nRGBs = 5;
+      Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+      Double_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
+      Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
+      Double_t blue[nRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
+      CreateGradientColorTable(nRGBs, stops, red, green, blue, ncolors);
+      paletteType = 3;
       return;
    }
 
@@ -1378,7 +1378,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
-   PaletteType = 4;
+   paletteType = 4;
 }
 
 //______________________________________________________________________________

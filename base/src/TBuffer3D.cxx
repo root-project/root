@@ -307,22 +307,22 @@ TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
 }
 
 //CS specific
-UInt_t TBuffer3D::fCSLevel = 0;
+UInt_t TBuffer3D::fgCSLevel = 0;
 
 //______________________________________________________________________________
 UInt_t TBuffer3D::GetCSLevel()
 {
-   return fCSLevel;
+   return fgCSLevel;
 }
 
 //______________________________________________________________________________
 void TBuffer3D::IncCSLevel()
 {
-   ++fCSLevel;
+   ++fgCSLevel;
 }
 
 //______________________________________________________________________________
 UInt_t TBuffer3D::DecCSLevel()
 {
-   return --fCSLevel;
+   return --fgCSLevel;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.9 2004/09/13 16:39:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.10 2005/04/26 16:36:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -142,16 +142,16 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    Double_t yy1   = y  - y1;
    Double_t yy2   = y  - y2;
    Double_t y1y2  = y1 - y2;
-   Double_t A     = xx1*xx1   + yy1*yy1;
-   Double_t B     = xx2*xx2   + yy2*yy2;
-   Double_t C     = x1x2*x1x2 + y1y2*y1y2;
-   if (C <= 0)  return 9999;
-   Double_t c     = TMath::Sqrt(C);
-   Double_t u     = (A - B + C)/(2*c);
-   Double_t D     = TMath::Abs(A - u*u);
-   if (D < 0)   return 9999;
+   Double_t a     = xx1*xx1   + yy1*yy1;
+   Double_t b     = xx2*xx2   + yy2*yy2;
+   Double_t c     = x1x2*x1x2 + y1y2*y1y2;
+   if (c <= 0)  return 9999;
+   Double_t v     = TMath::Sqrt(c);
+   Double_t u     = (a - b + c)/(2*v);
+   Double_t d     = TMath::Abs(a - u*u);
+   if (d < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(D) - 0.5*Double_t(fLineWidth));
+   return Int_t(TMath::Sqrt(d) - 0.5*Double_t(fLineWidth));
 }
 
 //______________________________________________________________________________

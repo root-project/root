@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.26 2005/04/20 14:08:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.27 2005/04/25 21:12:08 rdm Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1026,15 +1026,15 @@ Int_t TView::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio)
    Double_t yy1   = y  - y1;
    Double_t yy2   = y  - y2;
    Double_t y1y2  = y1 - y2;
-   Double_t A     = xx1*xx1   + yy1*yy1;
-   Double_t B     = xx2*xx2   + yy2*yy2;
-   Double_t C     = x1x2*x1x2 + y1y2*y1y2;
-   if (C <= 0) return 9999;
-   Double_t c     = TMath::Sqrt(C);
-   Double_t u     = (A - B + C)/(2*c);
-   Double_t D     = TMath::Abs(A - u*u);
+   Double_t a     = xx1*xx1   + yy1*yy1;
+   Double_t b     = xx2*xx2   + yy2*yy2;
+   Double_t c     = x1x2*x1x2 + y1y2*y1y2;
+   if (c <= 0) return 9999;
+   Double_t v     = TMath::Sqrt(c);
+   Double_t u     = (a - b + c)/(2*v);
+   Double_t d     = TMath::Abs(a - u*u);
 
-   Int_t dist = Int_t(TMath::Sqrt(D) - 0.5);
+   Int_t dist = Int_t(TMath::Sqrt(d) - 0.5);
    ratio = u/c;
    return dist;
 }

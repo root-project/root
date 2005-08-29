@@ -46,7 +46,7 @@ private:
    const TBuffer3D & operator=(const TBuffer3D &);
 
    //CS specific
-   static UInt_t fCSLevel;
+   static UInt_t fgCSLevel;
    ///////////////////////////////
 public:
    //CS specific
