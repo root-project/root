@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.68 2005/07/26 22:01:57 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.69 2005/08/24 13:42:13 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ ClassImp(TDirectory)
 //
 
 //______________________________________________________________________________
-TDirectory::TDirectory() : TNamed()
+TDirectory::TDirectory() : TNamed(), fMother(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
@@ -70,7 +70,7 @@ TDirectory::TDirectory() : TNamed()
 
 //______________________________________________________________________________
 TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
-           : TNamed(name, title)
+           : TNamed(name, title), fMother(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ======================
@@ -154,6 +154,20 @@ TDirectory::~TDirectory()
    }
 
    TCollection::EmptyGarbageCollection();
+
+   if (gDirectory==this) {
+      if (gFile!=this) gFile->cd();
+      else {
+         gDirectory = gROOT;
+         gFile = 0;
+      }
+   }
+
+   if (fMother && fMother->InheritsFrom(TDirectory::Class())) {
+      TDirectory *mom = (TDirectory*)fMother;
+      if (!mom->TestBit(TDirectory::kCloseDirectory))
+         mom->GetList()->Remove(this);
+   }
 
    if (gDebug)
       Info("~TDirectory", "dtor called for %s", GetName());
