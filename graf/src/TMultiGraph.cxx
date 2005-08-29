@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.22 2005/05/06 15:40:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.23 2005/06/23 10:04:08 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -448,27 +448,27 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
    char l[]="TLinearFitter";
    Int_t strdiff = 0;
-   Bool_t IsSet = kFALSE;
+   Bool_t isSet = kFALSE;
    if (TVirtualFitter::GetFitter()){
       //Is a fitter already set? Is it linear?
-      IsSet = kTRUE;
+      isSet = kTRUE;
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
       TClass *cl = gROOT->GetClass("TLinearFitter");
-      if (IsSet && strdiff!=0) {
+      if (isSet && strdiff!=0) {
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet) {
+      if (!isSet) {
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
-      if (IsSet && strdiff==0){
+      if (isSet && strdiff==0){
 	 delete TVirtualFitter::GetFitter();
-	 IsSet=kFALSE;
+	 isSet=kFALSE;
       }
-      if (!IsSet)
+      if (!isSet)
 	 TVirtualFitter::SetFitter(0);
    }
 

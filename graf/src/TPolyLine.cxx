@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.20 2005/01/03 10:49:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.21 2005/05/18 12:31:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;
-   static Bool_t MIDDLE;
+   static Bool_t middle;
    static Int_t ipoint, pxp, pyp;
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
@@ -288,22 +288,22 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
 
-      MIDDLE = kTRUE;
+      middle = kTRUE;
       for (i=0;i<np;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
          d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) MIDDLE = kFALSE;
+         if (d < kMaxDiff) middle = kFALSE;
       }
 
 
 //*-*- check if point is close to an axis
-      if (MIDDLE) gPad->SetCursor(kMove);
+      if (middle) gPad->SetCursor(kMove);
       else gPad->SetCursor(kHand);
       break;
 
    case kButton1Motion:
-      if (MIDDLE) {
+      if (middle) {
          for(i=0;i<np-1;i++) {
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
@@ -380,7 +380,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                      ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
 
-      if (MIDDLE) {
+      if (middle) {
          for(i=0;i<np;i++) {
             fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
             fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));

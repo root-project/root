@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.18 2004/11/04 12:09:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.19 2005/01/13 21:39:40 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -185,13 +185,13 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    const Int_t kMinSize = 25;
    const Int_t np = 40;
    static Int_t x[np+2], y[np+2];
-   static Int_t px1,py1,npe,R1,R2,sav1,sav2;
+   static Int_t px1,py1,npe,r1,r2,sav1,sav2;
    static Int_t pxold, pyold;
    static Int_t sig,impair;
    Int_t i, dpx, dpy;
    Double_t angle,dx,dy,dphi,ct,st,fTy,fBy,fLx,fRx;
-   static Bool_t T, L, R, B, INSIDE;
-   static Int_t Tx,Ty,Lx,Ly,Rx,Ry,Bx,By;
+   static Bool_t pTop, pL, pR, pBot, pINSIDE;
+   static Int_t pTx,pTy,pLx,pLy,pRx,pRy,pBx,pBy;
 
    if (!gPad->IsEditable()) return;
 
@@ -224,133 +224,133 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       impair = 0;
       px1 = gPad->XtoAbsPixel(fX1);
       py1 = gPad->YtoAbsPixel(fY1);
-      Tx = Bx = px1;
-      Ly = Ry = py1;
-      Ty = gPad->YtoAbsPixel(fR2+fY1);
-      By = gPad->YtoAbsPixel(-fR2+fY1);
-      Lx = gPad->XtoAbsPixel(-fR1+fX1);
-      Rx = gPad->XtoAbsPixel(fR1+fX1);
-      R2 = (By-Ty)/2;
-      R1 = (Rx-Lx)/2;
-      gVirtualX->DrawLine(Rx+4, py1+4, Rx-4, py1+4);
-      gVirtualX->DrawLine(Rx-4, py1+4, Rx-4, py1-4);
-      gVirtualX->DrawLine(Rx-4, py1-4, Rx+4, py1-4);
-      gVirtualX->DrawLine(Rx+4, py1-4, Rx+4, py1+4);
-      gVirtualX->DrawLine(Lx+4, py1+4, Lx-4, py1+4);
-      gVirtualX->DrawLine(Lx-4, py1+4, Lx-4, py1-4);
-      gVirtualX->DrawLine(Lx-4, py1-4, Lx+4, py1-4);
-      gVirtualX->DrawLine(Lx+4, py1-4, Lx+4, py1+4);
-      gVirtualX->DrawLine(px1+4, By+4, px1-4, By+4);
-      gVirtualX->DrawLine(px1-4, By+4, px1-4, By-4);
-      gVirtualX->DrawLine(px1-4, By-4, px1+4, By-4);
-      gVirtualX->DrawLine(px1+4, By-4, px1+4, By+4);
-      gVirtualX->DrawLine(px1+4, Ty+4, px1-4, Ty+4);
-      gVirtualX->DrawLine(px1-4, Ty+4, px1-4, Ty-4);
-      gVirtualX->DrawLine(px1-4, Ty-4, px1+4, Ty-4);
-      gVirtualX->DrawLine(px1+4, Ty-4, px1+4, Ty+4);
+      pTx = pBx = px1;
+      pLy = pRy = py1;
+      pTy = gPad->YtoAbsPixel(fR2+fY1);
+      pBy = gPad->YtoAbsPixel(-fR2+fY1);
+      pLx = gPad->XtoAbsPixel(-fR1+fX1);
+      pRx = gPad->XtoAbsPixel(fR1+fX1);
+      r2 = (pBy-pTy)/2;
+      r1 = (pRx-pLx)/2;
+      gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
+      gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
+      gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
+      gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
+      gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
+      gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
+      gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
+      gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
+      gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
+      gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
+      gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
+      gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
+      gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
+      gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
+      gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
+      gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
       // No break !!!
 
    case kMouseMotion:
       px1 = gPad->XtoAbsPixel(fX1);
       py1 = gPad->YtoAbsPixel(fY1);
-      Tx = Bx = px1;
-      Ly = Ry = py1;
-      Ty = gPad->YtoAbsPixel(fR2+fY1);
-      By = gPad->YtoAbsPixel(-fR2+fY1);
-      Lx = gPad->XtoAbsPixel(-fR1+fX1);
-      Rx = gPad->XtoAbsPixel(fR1+fX1);
-      T = L = R = B = INSIDE = kFALSE;
-      if ((TMath::Abs(px - Tx) < kMaxDiff) &&
-          (TMath::Abs(py - Ty) < kMaxDiff)) {             // top edge
-         T = kTRUE;
+      pTx = pBx = px1;
+      pLy = pRy = py1;
+      pTy = gPad->YtoAbsPixel(fR2+fY1);
+      pBy = gPad->YtoAbsPixel(-fR2+fY1);
+      pLx = gPad->XtoAbsPixel(-fR1+fX1);
+      pRx = gPad->XtoAbsPixel(fR1+fX1);
+      pTop = pL = pR = pBot = pINSIDE = kFALSE;
+      if ((TMath::Abs(px - pTx) < kMaxDiff) &&
+          (TMath::Abs(py - pTy) < kMaxDiff)) {             // top edge
+         pTop = kTRUE;
          gPad->SetCursor(kTopSide);
       }
       else
-      if ((TMath::Abs(px - Bx) < kMaxDiff) &&
-          (TMath::Abs(py - By) < kMaxDiff)) {             // bottom edge
-         B = kTRUE;
+      if ((TMath::Abs(px - pBx) < kMaxDiff) &&
+          (TMath::Abs(py - pBy) < kMaxDiff)) {             // bottom edge
+         pBot = kTRUE;
          gPad->SetCursor(kBottomSide);
       }
       else
-      if ((TMath::Abs(py - Ly) < kMaxDiff) &&
-          (TMath::Abs(px - Lx) < kMaxDiff)) {             // left edge
-         L = kTRUE;
+      if ((TMath::Abs(py - pLy) < kMaxDiff) &&
+          (TMath::Abs(px - pLx) < kMaxDiff)) {             // left edge
+         pL = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
       else
-      if ((TMath::Abs(py - Ry) < kMaxDiff) &&
-          (TMath::Abs(px - Rx) < kMaxDiff)) {             // right edge
-         R = kTRUE;
+      if ((TMath::Abs(py - pRy) < kMaxDiff) &&
+          (TMath::Abs(px - pRx) < kMaxDiff)) {             // right edge
+         pR = kTRUE;
          gPad->SetCursor(kRightSide);
       }
-      else {INSIDE= kTRUE; gPad->SetCursor(kMove); }
+      else {pINSIDE= kTRUE; gPad->SetCursor(kMove); }
       pxold = px;  pyold = py;
 
       break;
 
    case kButton1Motion:
-      gVirtualX->DrawLine(Rx+4, py1+4, Rx-4, py1+4);
-      gVirtualX->DrawLine(Rx-4, py1+4, Rx-4, py1-4);
-      gVirtualX->DrawLine(Rx-4, py1-4, Rx+4, py1-4);
-      gVirtualX->DrawLine(Rx+4, py1-4, Rx+4, py1+4);
-      gVirtualX->DrawLine(Lx+4, py1+4, Lx-4, py1+4);
-      gVirtualX->DrawLine(Lx-4, py1+4, Lx-4, py1-4);
-      gVirtualX->DrawLine(Lx-4, py1-4, Lx+4, py1-4);
-      gVirtualX->DrawLine(Lx+4, py1-4, Lx+4, py1+4);
-      gVirtualX->DrawLine(px1+4, By+4, px1-4, By+4);
-      gVirtualX->DrawLine(px1-4, By+4, px1-4, By-4);
-      gVirtualX->DrawLine(px1-4, By-4, px1+4, By-4);
-      gVirtualX->DrawLine(px1+4, By-4, px1+4, By+4);
-      gVirtualX->DrawLine(px1+4, Ty+4, px1-4, Ty+4);
-      gVirtualX->DrawLine(px1-4, Ty+4, px1-4, Ty-4);
-      gVirtualX->DrawLine(px1-4, Ty-4, px1+4, Ty-4);
-      gVirtualX->DrawLine(px1+4, Ty-4, px1+4, Ty+4);
+      gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
+      gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
+      gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
+      gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
+      gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
+      gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
+      gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
+      gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
+      gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
+      gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
+      gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
+      gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
+      gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
+      gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
+      gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
+      gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
       for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      if (T) {
+      if (pTop) {
          sav1 = py1;
-         sav2 = R2;
+         sav2 = r2;
          py1 += (py - pyold)/2;
-         R2 -= (py - pyold)/2;
+         r2 -= (py - pyold)/2;
          if (TMath::Abs(pyold-py)%2==1) impair++;
          if (py-pyold>0) sig=+1;
          else sig=-1;
-         if (impair==2) { impair = 0; py1 += sig; R2 -= sig;}
-         if (py1 > By-kMinSize) {py1 = sav1; R2 = sav2; py = pyold;}
+         if (impair==2) { impair = 0; py1 += sig; r2 -= sig;}
+         if (py1 > pBy-kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
       }
-      if (B) {
+      if (pBot) {
          sav1 = py1;
-         sav2 = R2;
+         sav2 = r2;
          py1 += (py - pyold)/2;
-         R2 += (py - pyold)/2;
+         r2 += (py - pyold)/2;
          if (TMath::Abs(pyold-py)%2==1) impair++;
          if (py-pyold>0) sig=+1;
          else sig=-1;
-         if (impair==2) { impair = 0; py1 += sig; R2 += sig;}
-         if (py1 < Ty+kMinSize) {py1 = sav1; R2 = sav2; py = pyold;}
+         if (impair==2) { impair = 0; py1 += sig; r2 += sig;}
+         if (py1 < pTy+kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
       }
-      if (L) {
+      if (pL) {
          sav1 = px1;
-         sav2 = R1;
+         sav2 = r1;
          px1 += (px - pxold)/2;
-         R1 -= (px - pxold)/2;
+         r1 -= (px - pxold)/2;
          if (TMath::Abs(pxold-px)%2==1) impair++;
          if (px-pxold>0) sig=+1;
          else sig=-1;
-         if (impair==2) { impair = 0; px1 += sig; R1 -= sig;}
-         if (px1 > Rx-kMinSize) {px1 = sav1; R1 = sav2; px = pxold;}
+         if (impair==2) { impair = 0; px1 += sig; r1 -= sig;}
+         if (px1 > pRx-kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
       }
-      if (R) {
+      if (pR) {
          sav1 = px1;
-         sav2 = R1;
+         sav2 = r1;
          px1 += (px - pxold)/2;
-         R1 += (px - pxold)/2;
+         r1 += (px - pxold)/2;
          if (TMath::Abs(pxold-px)%2==1) impair++;
          if (px-pxold>0) sig=+1;
          else sig=-1;
-         if (impair==2) { impair = 0; px1 += sig; R1 += sig;}
-         if (px1 < Lx+kMinSize) {px1 = sav1; R1 = sav2; px = pxold;}
+         if (impair==2) { impair = 0; px1 += sig; r1 += sig;}
+         if (px1 < pLx+kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
       }
-      if (T || B || L || R) {
+      if (pTop || pBot || pL || pR) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();
          dphi = (fPhimax-fPhimin)*kPI/(180*np);
@@ -358,8 +358,8 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          st   = TMath::Sin(kPI*fTheta/180);
          for (i=0;i<np;i++) {
             angle = fPhimin*kPI/180 + Double_t(i)*dphi;
-            dx    = R1*TMath::Cos(angle);
-            dy    = R2*TMath::Sin(angle);
+            dx    = r1*TMath::Cos(angle);
+            dy    = r2*TMath::Sin(angle);
             x[i]  = px1 + Int_t(dx*ct - dy*st);
             y[i]  = py1 + Int_t(dx*st + dy*ct);
          }
@@ -376,34 +376,34 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
          for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      if (INSIDE) {
+      if (pINSIDE) {
           dpx  = px-pxold;  dpy = py-pyold;
           px1 += dpx; py1 += dpy;
           for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
           for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      Tx = Bx = px1;
-      Rx = px1+R1;
-      Lx = px1-R1;
-      Ry = Ly = py1;
-      Ty = py1-R2;
-      By = py1+R2;
-      gVirtualX->DrawLine(Rx+4, py1+4, Rx-4, py1+4);
-      gVirtualX->DrawLine(Rx-4, py1+4, Rx-4, py1-4);
-      gVirtualX->DrawLine(Rx-4, py1-4, Rx+4, py1-4);
-      gVirtualX->DrawLine(Rx+4, py1-4, Rx+4, py1+4);
-      gVirtualX->DrawLine(Lx+4, py1+4, Lx-4, py1+4);
-      gVirtualX->DrawLine(Lx-4, py1+4, Lx-4, py1-4);
-      gVirtualX->DrawLine(Lx-4, py1-4, Lx+4, py1-4);
-      gVirtualX->DrawLine(Lx+4, py1-4, Lx+4, py1+4);
-      gVirtualX->DrawLine(px1+4, By+4, px1-4, By+4);
-      gVirtualX->DrawLine(px1-4, By+4, px1-4, By-4);
-      gVirtualX->DrawLine(px1-4, By-4, px1+4, By-4);
-      gVirtualX->DrawLine(px1+4, By-4, px1+4, By+4);
-      gVirtualX->DrawLine(px1+4, Ty+4, px1-4, Ty+4);
-      gVirtualX->DrawLine(px1-4, Ty+4, px1-4, Ty-4);
-      gVirtualX->DrawLine(px1-4, Ty-4, px1+4, Ty-4);
-      gVirtualX->DrawLine(px1+4, Ty-4, px1+4, Ty+4);
+      pTx = pBx = px1;
+      pRx = px1+r1;
+      pLx = px1-r1;
+      pRy = pLy = py1;
+      pTy = py1-r2;
+      pBy = py1+r2;
+      gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
+      gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
+      gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
+      gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
+      gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
+      gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
+      gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
+      gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
+      gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
+      gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
+      gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
+      gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
+      gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
+      gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
+      gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
+      gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
       pxold = px;
       pyold = py;
       break;
@@ -411,10 +411,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       fX1 = gPad->AbsPixeltoX(px1);
       fY1 = gPad->AbsPixeltoY(py1);
-      fBy = gPad->AbsPixeltoY(py1+R2);
-      fTy = gPad->AbsPixeltoY(py1-R2);
-      fLx = gPad->AbsPixeltoX(px1+R1);
-      fRx = gPad->AbsPixeltoX(px1-R1);
+      fBy = gPad->AbsPixeltoY(py1+r2);
+      fTy = gPad->AbsPixeltoY(py1-r2);
+      fLx = gPad->AbsPixeltoX(px1+r1);
+      fRx = gPad->AbsPixeltoX(px1-r1);
       fR1 = TMath::Abs(fRx-fLx)/2;
       fR2 = TMath::Abs(fTy-fBy)/2;
       gPad->Modified(kTRUE);

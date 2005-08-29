@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.16 2005/05/02 17:20:28 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.17 2005/07/20 08:58:45 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -198,15 +198,15 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    // Ratios to convert user space in TRUE normalized space (NDC)
    Double_t rx1,ry1,rx2,ry2;
    gPad->GetRange(rx1,ry1,rx2,ry2);
-   Double_t Rx = (x2ndc-x1ndc)/(rx2-rx1);
-   Double_t Ry = (y2ndc-y1ndc)/(ry2-ry1);
+   Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
+   Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
    // Arrow position and arrow's middle in NDC space
    Double_t x1n, y1n, x2n, y2n, xm, ym;
-   x1n = Rx*(x1-rx1)+x1ndc;
-   x2n = Rx*(x2-rx1)+x1ndc;
-   y1n = Ry*(y1-ry1)+y1ndc;
-   y2n = Ry*(y2-ry1)+y1ndc;
+   x1n = rx*(x1-rx1)+x1ndc;
+   x2n = rx*(x2-rx1)+x1ndc;
+   y1n = ry*(y1-ry1)+y1ndc;
+   y2n = ry*(y2-ry1)+y1ndc;
    xm  = (x1n+x2n)/2;
    ym  = (y1n+y2n)/2;
 
@@ -229,8 +229,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       y1ar[1] = y1n-cosT*dSize;
       // NDC to user coordinates
       for (i=0; i<2; i++) {
-         x1ar[i] = (1/Rx)*(x1ar[i]-x1ndc)+rx1;
-         y1ar[i] = (1/Ry)*(y1ar[i]-y1ndc)+ry1;
+         x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
+         y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
       gPad->PaintLine(x1ar[0],y1ar[0],x1ar[1],y1ar[1]);
       opt(0) = ' ';
@@ -242,8 +242,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       y2ar[1] = y2n-cosT*dSize;
       // NDC to user coordinates
       for (i=0; i<2; i++) {
-         x2ar[i] = (1/Rx)*(x2ar[i]-x1ndc)+rx1;
-         y2ar[i] = (1/Ry)*(y2ar[i]-y1ndc)+ry1;
+         x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
+         y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
       gPad->PaintLine(x2ar[0],y2ar[0],x2ar[1],y2ar[1]);
       opt(opt.Length()-1) = ' ';
@@ -295,18 +295,18 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       x1n = x1n+cosT*rSize;
       y1n = y1n+sinT*rSize;
    }
-   x1n = (1/Rx)*(x1n-x1ndc)+rx1;
-   y1n = (1/Ry)*(y1n-y1ndc)+ry1;
-   x2n = (1/Rx)*(x2n-x1ndc)+rx1;
-   y2n = (1/Ry)*(y2n-y1ndc)+ry1;
+   x1n = (1/rx)*(x1n-x1ndc)+rx1;
+   y1n = (1/ry)*(y1n-y1ndc)+ry1;
+   x2n = (1/rx)*(x2n-x1ndc)+rx1;
+   y2n = (1/ry)*(y2n-y1ndc)+ry1;
    gPad->PaintLine(x1n,y1n,x2n,y2n);
 
    // Draw the arrow's head(s)
    if (opt.Contains(">")) {
       // NDC to user coordinates
       for (i=0; i<4; i++) {
-         x2ar[i] = (1/Rx)*(x2ar[i]-x1ndc)+rx1;
-         y2ar[i] = (1/Ry)*(y2ar[i]-y1ndc)+ry1;
+         x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
+         y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("|>")) {
          if (GetFillColor()) {
@@ -322,8 +322,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    if (opt.Contains("<")) {
       // NDC to user coordinates
       for (i=0; i<4; i++) {
-         x1ar[i] = (1/Rx)*(x1ar[i]-x1ndc)+rx1;
-         y1ar[i] = (1/Ry)*(y1ar[i]-y1ndc)+ry1;
+         x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
+         y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("<|")) {
          if (GetFillColor()) {

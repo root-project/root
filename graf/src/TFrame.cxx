@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.8 2003/07/22 16:06:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.9 2005/02/21 12:04:18 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -89,19 +89,19 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t ymax         = gPad->GetUymax();
    Double_t dx           = xmax-xmin;
    Double_t dy           = ymax-ymin;
-   Double_t LeftMargin   = (fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
-   Double_t TopMargin    = (gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1());
-   Double_t RightMargin  = (gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1());
-   Double_t BottomMargin = (fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   Double_t leftMargin   = (fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   Double_t topMargin    = (gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1());
+   Double_t rightMargin  = (gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1());
+   Double_t bottomMargin = (fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
    // margin may get very small negative values
-   if (LeftMargin   < 0) LeftMargin   = 0;
-   if (TopMargin    < 0) TopMargin    = 0;
-   if (RightMargin  < 0) RightMargin  = 0;
-   if (BottomMargin < 0) BottomMargin = 0;
-   gPad->SetLeftMargin(LeftMargin);
-   gPad->SetRightMargin(RightMargin);
-   gPad->SetBottomMargin(BottomMargin);
-   gPad->SetTopMargin(TopMargin);
+   if (leftMargin   < 0) leftMargin   = 0;
+   if (topMargin    < 0) topMargin    = 0;
+   if (rightMargin  < 0) rightMargin  = 0;
+   if (bottomMargin < 0) bottomMargin = 0;
+   gPad->SetLeftMargin(leftMargin);
+   gPad->SetRightMargin(rightMargin);
+   gPad->SetBottomMargin(bottomMargin);
+   gPad->SetTopMargin(topMargin);
    Double_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
    Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.48 2005/05/24 17:37:03 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.49 2005/06/13 10:10:29 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -500,7 +500,7 @@ void TGraphErrors::Paint(Option_t *option)
    Int_t if1 = 0;
    Int_t if2 = 0;
 
-   const Int_t BASEMARKER=8;
+   const Int_t kBASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
@@ -553,7 +553,7 @@ void TGraphErrors::Paint(Option_t *option)
    box.SetFillStyle(GetFillStyle());
 
    symbolsize  = GetMarkerSize();
-   sbase       = symbolsize*BASEMARKER;
+   sbase       = symbolsize*kBASEMARKER;
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
    Double_t cy  = 0;
@@ -568,7 +568,7 @@ void TGraphErrors::Paint(Option_t *option)
    Int_t dxend = Int_t(gStyle->GetEndErrorSize());
    tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
    ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
-   Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
+   Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
    for (Int_t i=0;i<fNpoints;i++) {

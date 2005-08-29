@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.48 2005/01/13 10:24:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.49 2005/03/03 22:01:43 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ ClassImp(TLatex)
 //   Subscripts and superscripts are made with the _ and ^ commands.  These commands
 //   can be combined to make complicated subscript and superscript expressions.
 //   You may choose how to display subscripts and superscripts using the 2 functions
-//   SetIndiceSize(Double_t) and SetLimitIndiceSize(Int_t).
+//   SetindiceSize(Double_t) and SetLimitindiceSize(Int_t).
 //Begin_Html
 /*p
 <img src="gif/latex_subscripts.gif">
@@ -366,29 +366,29 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
 
       if (fError != 0) return FormSize(0,0,0);
 
-      Int_t NbBlancDeb=0,NbBlancFin=0,l_NbBlancDeb=0,l_NbBlancFin=0;
+      Int_t nBlancDeb=0,nBlancFin=0,l_nBlancDeb=0,l_nBlancFin=0;
       Int_t i,k;
       Int_t min=0, max=0;
       Bool_t cont = kTRUE;
       while(cont) {
          // count leading blanks
-         //while(NbBlancDeb+NbBlancFin<length && t[NbBlancDeb]==' ') NbBlancDeb++;
+         //while(nBlancDeb+nBlancFin<length && t[nBlancDeb]==' ') nBlancDeb++;
 
-         if (NbBlancDeb==length) return FormSize(0,0,0); // empty string
+         if (nBlancDeb==length) return FormSize(0,0,0); // empty string
 
          // count trailing blanks
-         //while(NbBlancDeb+NbBlancFin<length && t[length-NbBlancFin-1]==' ') NbBlancFin++;
+         //while(nBlancDeb+nBlancFin<length && t[length-nBlancFin-1]==' ') nBlancFin++;
 
-         if (NbBlancDeb==l_NbBlancDeb && NbBlancFin==l_NbBlancFin) cont = kFALSE;
+         if (nBlancDeb==l_nBlancDeb && nBlancFin==l_nBlancFin) cont = kFALSE;
 
          // remove characters { }
-         if (t[NbBlancDeb]=='{' && t[length-NbBlancFin-1]=='}') {
-            Int_t NbBrackets = 0;
+         if (t[nBlancDeb]=='{' && t[length-nBlancFin-1]=='}') {
+            Int_t nBrackets = 0;
             Bool_t sameBrackets = kTRUE;
-            for(i=NbBlancDeb;i<length-NbBlancFin;i++) {
-               if (t[i] == '{' && !(i>0 && t[i-1] == '@')) NbBrackets++;
-               if (t[i] == '}' && t[i-1]!= '@') NbBrackets--;
-               if (NbBrackets==0 && i<length-NbBlancFin-2) {
+            for(i=nBlancDeb;i<length-nBlancFin;i++) {
+               if (t[i] == '{' && !(i>0 && t[i-1] == '@')) nBrackets++;
+               if (t[i] == '}' && t[i-1]!= '@') nBrackets--;
+               if (nBrackets==0 && i<length-nBlancFin-2) {
                   sameBrackets=kFALSE;
                   break;
                }
@@ -396,59 +396,59 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
 
             if (sameBrackets) {
                // begin and end brackets match
-               NbBlancDeb++;
-               NbBlancFin++;
-               if (NbBlancDeb+NbBlancFin==length) return FormSize(0,0,0); // empty string
+               nBlancDeb++;
+               nBlancFin++;
+               if (nBlancDeb+nBlancFin==length) return FormSize(0,0,0); // empty string
                cont = kTRUE;
             }
 
          }
 
-         l_NbBlancDeb = NbBlancDeb;
-         l_NbBlancFin = NbBlancFin;
+         l_nBlancDeb = nBlancDeb;
+         l_nBlancFin = nBlancFin;
       }
 
       // make a copy of the current processed chain of characters
       // removing leading and trailing blanks
-      length -= NbBlancFin+NbBlancDeb; // length of string without blanks
+      length -= nBlancFin+nBlancDeb; // length of string without blanks
       Char_t* text = new Char_t[length+1];
-      strncpy(text,t+NbBlancDeb,length);
+      strncpy(text,t+nBlancDeb,length);
       text[length] = 0;
 
       // compute size of subscripts and superscripts
-      Double_t IndiceSize = spec.size/fFactorSize;
-      if(IndiceSize<fOriginSize/TMath::Exp(fLimitFactorSize*TMath::Log(fFactorSize))-0.001f)
-         IndiceSize = spec.size;
+      Double_t indiceSize = spec.size/fFactorSize;
+      if(indiceSize<fOriginSize/TMath::Exp(fLimitFactorSize*TMath::Log(fFactorSize))-0.001f)
+         indiceSize = spec.size;
       // substract 0.001 because of rounding errors
       TextSpec_t specNewSize = spec;
-      specNewSize.size       = IndiceSize;
+      specNewSize.size       = indiceSize;
 
       // recherche des operateurs
-      Int_t OpPower         = -1;   // Position of first ^ (power)
-      Int_t OpUnder         = -1;   // Position of first _ (indice)
-      Int_t OpFrac          = -1;   // Position of first \frac
-      Int_t OpSqrt          = -1;   // Position of first \sqrt
-      Int_t NbBrackets      = 0;    // Nesting level in { }
-      Int_t NbCroch         = 0;    // Nesting level in [ ]
-      Int_t OpCurlyCurly    = -1;   // Position of first }{
-      Int_t OpSquareCurly   = -1;   // Position of first ]{
-      Int_t OpCloseCurly    = -2;   // Position of first }
-      Int_t OpColor         = -1;   // Position of first \color
-      Int_t OpFont          = -1;   // Position of first \font
-      Int_t OpGreek         = -1;   // Position of a Greek letter
-      Int_t OpSpec          = -1;   // position of a special character
-      Int_t OpAbove         = -1;   // position of a vector/overline
-      Int_t OpSquareBracket = 0 ;   // position of a "[]{" operator (#[]{arg})
-      Int_t OpBigCurly      = 0 ;   // position of a "{}{" operator (big curly bracket #{}{arg})
-      Int_t OpAbs           = 0 ;   // position of a "||{" operator (absolute value) (#||{arg})
-      Int_t OpParen         = 0 ;   // position of a "(){" operator (big parenthesis #(){arg})
-      Int_t AbovePlace      = 0 ;   // true if subscripts must be written above and not after
-      Int_t OpBox           = 0 ;   // position of #Box
-      Int_t Operp           = 0;    // position of #perp
-      Int_t OpOdot          = 0;    // position of #odot
-      Int_t Oparallel       = 0;    // position of #parallel
-      Int_t OpSplitLine     = -1;   // Position of first \splitline
-      Bool_t OpFound = kFALSE;
+      Int_t opPower         = -1;   // Position of first ^ (power)
+      Int_t opUnder         = -1;   // Position of first _ (indice)
+      Int_t opFrac          = -1;   // Position of first \frac
+      Int_t opSqrt          = -1;   // Position of first \sqrt
+      Int_t nBrackets      = 0;    // Nesting level in { }
+      Int_t nCroch         = 0;    // Nesting level in [ ]
+      Int_t opCurlyCurly    = -1;   // Position of first }{
+      Int_t opSquareCurly   = -1;   // Position of first ]{
+      Int_t opCloseCurly    = -2;   // Position of first }
+      Int_t opColor         = -1;   // Position of first \color
+      Int_t opFont          = -1;   // Position of first \font
+      Int_t opGreek         = -1;   // Position of a Greek letter
+      Int_t opSpec          = -1;   // position of a special character
+      Int_t opAbove         = -1;   // position of a vector/overline
+      Int_t opSquareBracket = 0 ;   // position of a "[]{" operator (#[]{arg})
+      Int_t opBigCurly      = 0 ;   // position of a "{}{" operator (big curly bracket #{}{arg})
+      Int_t opAbs           = 0 ;   // position of a "||{" operator (absolute value) (#||{arg})
+      Int_t opParen         = 0 ;   // position of a "(){" operator (big parenthesis #(){arg})
+      Int_t abovePlace      = 0 ;   // true if subscripts must be written above and not after
+      Int_t opBox           = 0 ;   // position of #Box
+      Int_t opPerp           = 0;    // position of #perp
+      Int_t opOdot          = 0;    // position of #odot
+      Int_t opParallel       = 0;    // position of #parallel
+      Int_t opSplitLine     = -1;   // Position of first \splitline
+      Bool_t opFound = kFALSE;
       Bool_t quote1 = kFALSE, quote2 = kFALSE ;
 
       for(i=0;i<length;i++) {
@@ -458,37 +458,37 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          //if (quote1 || quote2) continue ;
          switch (text[i]) {
-         case '{': if (NbCroch==0) {
-                      if (!(i>0 && text[i-1] == '@')) NbBrackets++;
+         case '{': if (nCroch==0) {
+                      if (!(i>0 && text[i-1] == '@')) nBrackets++;
                    }
                    break;
-         case '}': if (NbCroch==0) {
-                      if (!(i>0 && text[i-1] == '@')) NbBrackets--;
-              /*    if (NbBrackets<0) {  marthe
+         case '}': if (nCroch==0) {
+                      if (!(i>0 && text[i-1] == '@')) nBrackets--;
+              /*    if (nBrackets<0) {  marthe
                      // more "}" than "{"
                      fError = "Missing \"{\"";
                      return FormSize(0,0,0);
                   }*/
-                     if (NbBrackets==0) {
-                       if (i<length-1) if (text[i+1]=='{' && OpCurlyCurly==-1) OpCurlyCurly=i;
+                     if (nBrackets==0) {
+                       if (i<length-1) if (text[i+1]=='{' && opCurlyCurly==-1) opCurlyCurly=i;
                        if (i<length-2) {
                           if (text[i+1]!='{' && !(text[i+2]=='{' && (text[i+1]=='^' || text[i+1]=='_'))
-                              && OpCloseCurly==-2) OpCloseCurly=i;
+                              && opCloseCurly==-2) opCloseCurly=i;
                        }
                        else if (i<length-1) {
-                           if (text[i+1]!='{' && OpCloseCurly==-2) OpCloseCurly=i;
+                           if (text[i+1]!='{' && opCloseCurly==-2) opCloseCurly=i;
                        }
-                       else if (OpCloseCurly==-2) OpCloseCurly=i;
+                       else if (opCloseCurly==-2) opCloseCurly=i;
                      }
                  }
                  break;
-         case '[': if (NbBrackets==0) {
-                      if (!(i>0 && text[i-1] == '@')) NbCroch++;
+         case '[': if (nBrackets==0) {
+                      if (!(i>0 && text[i-1] == '@')) nCroch++;
                    }
                    break;
-         case ']': if (NbBrackets==0) {
-                      if (!(i>0 && text[i-1] == '@')) NbCroch--;
-                      if (NbCroch<0) {
+         case ']': if (nBrackets==0) {
+                      if (!(i>0 && text[i-1] == '@')) nCroch--;
+                      if (nCroch<0) {
                      // more "]" than "["
                         fError = "Missing \"[\"";
                         return FormSize(0,0,0);
@@ -500,44 +500,44 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             Char_t buf[2];
             strncpy(buf,&text[i],2);
             if (strncmp(buf,"^{",2)==0) {
-               if (OpPower==-1 && NbBrackets==0 && NbCroch==0) OpPower=i;
+               if (opPower==-1 && nBrackets==0 && nCroch==0) opPower=i;
                if (i>3) {
                   Char_t buf[4];
                   strncpy(buf,&text[i-4],4);
-                  if (strncmp(buf,"#int",4)==0) AbovePlace = 1;
-                  if (strncmp(buf,"#sum",4)==0) AbovePlace = 2;
+                  if (strncmp(buf,"#int",4)==0) abovePlace = 1;
+                  if (strncmp(buf,"#sum",4)==0) abovePlace = 2;
                }
             }
             if (strncmp(buf,"_{",2)==0) {
-               if (OpUnder==-1 && NbBrackets==0 && NbCroch==0) OpUnder=i;
+               if (opUnder==-1 && nBrackets==0 && nCroch==0) opUnder=i;
                if (i>3) {
                   Char_t buf[4];
                   strncpy(buf,&text[i-4],4);
-                  if (strncmp(buf,"#int",4)==0) AbovePlace = 1;
-                  if (strncmp(buf,"#sum",4)==0) AbovePlace = 2;
+                  if (strncmp(buf,"#int",4)==0) abovePlace = 1;
+                  if (strncmp(buf,"#sum",4)==0) abovePlace = 2;
                }
             }
             if (strncmp(buf,"]{",2)==0)
-               if (OpSquareCurly==-1 && NbBrackets==0 && NbCroch==0) OpSquareCurly=i;
+               if (opSquareCurly==-1 && nBrackets==0 && nCroch==0) opSquareCurly=i;
          }
          // detect other operators
-         if (text[i]=='\\' || text[i]=='#' && !OpFound && NbBrackets==0 && NbCroch==0) {
+         if (text[i]=='\\' || text[i]=='#' && !opFound && nBrackets==0 && nCroch==0) {
 
             if (length>i+10 ) {
                Char_t buf[10];
                strncpy(buf,&text[i+1],10);
                if (strncmp(buf,"splitline{",10)==0) {
-                  OpSplitLine=i; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opSplitLine=i; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
             }
             if (length>i+8 ) {
                Char_t buf[8];
                strncpy(buf,&text[i+1],8);
-               if (!Oparallel && strncmp(buf,"parallel",8)==0) {
-                  Oparallel=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+               if (!opParallel && strncmp(buf,"parallel",8)==0) {
+                  opParallel=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
             }
@@ -545,8 +545,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Char_t buf[6];
                strncpy(buf,&text[i+1],6);
                if (strncmp(buf,"color[",6)==0 || strncmp(buf,"color{",6)==0) {
-                  OpColor=i; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opColor=i; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue ;
                }
             }
@@ -554,32 +554,32 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Char_t buf[5];
                strncpy(buf,&text[i+1],5);
                if (strncmp(buf,"frac{",5)==0) {
-                  OpFrac=i; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opFrac=i; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
                if (strncmp(buf,"sqrt{",5)==0 || strncmp(buf,"sqrt[",5)==0) {
-                  OpSqrt=i; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opSqrt=i; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
                if (strncmp(buf,"font{",5)==0 || strncmp(buf,"font[",5)==0) {
-                  OpFont=i; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opFont=i; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
             }
             if (length>i+4 ) {
                Char_t buf[4];
                strncpy(buf,&text[i+1],4);
-               if (!OpOdot && strncmp(buf,"odot",4)==0) {
-                  OpOdot=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+               if (!opOdot && strncmp(buf,"odot",4)==0) {
+                  opOdot=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
-               if (!Operp && strncmp(buf,"perp",4)==0) {
-                  Operp=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+               if (!opPerp && strncmp(buf,"perp",4)==0) {
+                  opPerp=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
             }
@@ -587,64 +587,64 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Char_t buf[3];
                strncpy(buf,&text[i+1],3);
                if (strncmp(buf,"[]{",3)==0) {
-                  OpSquareBracket=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opSquareBracket=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                    continue;   }
                if (strncmp(buf,"{}{",3)==0 ) {
-                  OpBigCurly=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opBigCurly=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
                if (strncmp(buf,"||{",3)==0) {
-                  OpAbs=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opAbs=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
                if (strncmp(buf,"(){",3)==0) {
-                  OpParen=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  opParen=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
-               if (!OpBox && strncmp(buf,"Box",3)==0) {
-                  OpBox=1; OpFound = kTRUE;
-                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+               if (!opBox && strncmp(buf,"Box",3)==0) {
+                  opBox=1; opFound = kTRUE;
+                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   continue;
                }
             }
             for(k=0;k<54;k++) {
-               if (!OpFound && UInt_t(length)>i+strlen(tab[k])) {
+               if (!opFound && UInt_t(length)>i+strlen(tab[k])) {
                   if (strncmp(&text[i+1],tab[k],strlen(tab[k]))==0) {
-                     OpGreek=k;
-                     OpFound = kTRUE;
-                     if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                     opGreek=k;
+                     opFound = kTRUE;
+                     if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   }
                }
             }
             for(k=0;k<10;k++) {
-               if (!OpFound && UInt_t(length)>i+strlen(tab3[k])) {
+               if (!opFound && UInt_t(length)>i+strlen(tab3[k])) {
                   if (strncmp(&text[i+1],tab3[k],strlen(tab3[k]))==0) {
-                     OpAbove=k;
-                     OpFound = kTRUE;
-                     if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                     opAbove=k;
+                     opFound = kTRUE;
+                     if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   }
                }
             }
             UInt_t lastsize = 0;
-            if (!OpFound)
+            if (!opFound)
             for(k=0;k<80;k++) {
-               if ((OpSpec==-1 || strlen(tab2[k])>lastsize) && UInt_t(length)>i+strlen(tab2[k])) {
+               if ((opSpec==-1 || strlen(tab2[k])>lastsize) && UInt_t(length)>i+strlen(tab2[k])) {
                   if (strncmp(&text[i+1],tab2[k],strlen(tab2[k]))==0) {
                      lastsize = strlen(tab2[k]);
-                     OpSpec=k;
-                     OpFound = kTRUE;
-                     if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                     opSpec=k;
+                     opFound = kTRUE;
+                     if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                   }
                }
             }
          }
       }
 
-  /*    if (NbBrackets>0) {
+  /*    if (nBrackets>0) {
          // More "{" than "}"
          fError = "Missing \"}\"";
          return FormSize(0,0,0);
@@ -656,26 +656,26 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
       FormSize result;
 
       // analysis of operators found
-      if (OpCloseCurly>-1 && OpCloseCurly<length-1) { // separator } found
+      if (opCloseCurly>-1 && opCloseCurly<length-1) { // separator } found
          if(!fShow) {
-            fs1 = Anal1(spec,text,OpCloseCurly+1);
-            fs2 = Anal1(spec,text+OpCloseCurly+1,length-OpCloseCurly-1);
+            fs1 = Anal1(spec,text,opCloseCurly+1);
+            fs2 = Anal1(spec,text+opCloseCurly+1,length-opCloseCurly-1);
             Savefs(&fs1);
          } else {
             fs1 = Readfs();
-            Analyse(x+fs1.Width(),y,spec,text+OpCloseCurly+1,length-OpCloseCurly-1);
-            Analyse(x,y,spec,text,OpCloseCurly+1);
+            Analyse(x+fs1.Width(),y,spec,text+opCloseCurly+1,length-opCloseCurly-1);
+            Analyse(x,y,spec,text,opCloseCurly+1);
          }
          result = fs1+fs2;
       }
 
 
-      else if (OpPower>-1 && OpUnder>-1) { // ^ and _ found
-         min = TMath::Min(OpPower,OpUnder);
-         max = TMath::Max(OpPower,OpUnder);
+      else if (opPower>-1 && opUnder>-1) { // ^ and _ found
+         min = TMath::Min(opPower,opUnder);
+         max = TMath::Max(opPower,opUnder);
          Double_t xfpos = 0. ; //GetHeight()*spec.size/5.;
          Double_t prop=1, propU=1; // scale factor for #sum & #int
-         switch (AbovePlace) {
+         switch (abovePlace) {
             case 1 :
                prop = .8 ; propU = 1.75 ; // Int
                break;
@@ -706,9 +706,9 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             fs2 = Readfs();
             fs1 = Readfs();
             Double_t pos = 0;
-            if (!AbovePlace) {
+            if (!abovePlace) {
                Double_t addW = fs1.Width()+xfpos, addH1, addH2;
-               if (OpPower<OpUnder) {
+               if (opPower<opUnder) {
                   addH1 = -fs1.Dessus()*(fFactorPos)-fs2.Dessous();
                   addH2 = fs1.Dessous()+fs3.Dessus()*(fFactorPos);
                } else {
@@ -721,18 +721,18 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Double_t addW1, addW2, addH1, addH2;
                Double_t m = TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width()));
                pos = (m-fs1.Width())/2;
-               if (OpPower<OpUnder) {
+               if (opPower<opUnder) {
                   addH1 = -fs1.Dessus()*propU-fs2.Dessous();
                   addW1 = (m-fs2.Width())/2;
                   addH2 = fs1.Dessous()*prop+fs3.Dessus();
                   addW2 = (m-fs3.Width())/2;
- //                 if (AbovePlace == 1) addW1 = pos  ;
+ //                 if (abovePlace == 1) addW1 = pos  ;
                } else {
                   addH1 = fs1.Dessous()*prop+fs2.Dessus();
                   addW1 = (m-fs2.Width())/2;
                   addH2 = -fs1.Dessus()*propU-fs3.Dessous();
                   addW2 = (m-fs3.Width())/2;
- //                 if (AbovePlace == 1) addW2 = pos ;
+ //                 if (abovePlace == 1) addW2 = pos ;
                }
 
                Analyse(x+addW2,y+addH2,specNewSize,text+max+1,length-max-1);
@@ -747,8 +747,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             }
          }
 
-         if (!AbovePlace) {
-            if (OpPower<OpUnder) {
+         if (!abovePlace) {
+            if (opPower<opUnder) {
                result.Set(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
                           fs1.Dessus()*fFactorPos+fs2.Height(),
                           fs1.Dessous()+fs3.Height()-fs3.Dessus()*(1-fFactorPos));
@@ -758,7 +758,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                           fs1.Dessous()+fs2.Height()-fs2.Dessus()*(1-fFactorPos));
             }
          } else {
-            if (OpPower<OpUnder) {
+            if (opPower<opUnder) {
                result.Set(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
                           fs1.Dessus()*propU+fs2.Height(),fs1.Dessous()*prop+fs3.Height());
             } else {
@@ -767,10 +767,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             }
          }
       }
-      else if (OpPower>-1) { // ^ found
+      else if (opPower>-1) { // ^ found
         Double_t prop=1;
         Double_t xfpos = 0. ; //GetHeight()*spec.size/5. ;
-        switch (AbovePlace) {
+        switch (abovePlace) {
            case 1 : //int
               prop = 1.75 ; break ;
            case 2 : // sum
@@ -778,7 +778,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
         }
         // When increasing prop, the upper indice position is higher
         if(!fShow) {
-            Int_t ltext = OpPower ;
+            Int_t ltext = opPower ;
             if (ltext >= 2 && strncmp(&text[ltext-2],"{}",2)==0) {
                // upper and lower indice before the character
                // like with chemical element
@@ -786,17 +786,17 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                ltext-- ;
             }
             fs1 = Anal1(spec,text,ltext);
-            fs2 = Anal1(specNewSize,text+OpPower+1,length-OpPower-1);
+            fs2 = Anal1(specNewSize,text+opPower+1,length-opPower-1);
             Savefs(&fs1);
             Savefs(&fs2);
          } else {
             fs2 = Readfs();
             fs1 = Readfs();
             Int_t pos = 0;
-            if (!AbovePlace){
+            if (!abovePlace){
                Double_t dessus = fs1.Dessus();
                if (dessus <= 0) dessus = 1.5*fs2.Dessus();
-               Analyse(x+fs1.Width()+xfpos,y-dessus*fFactorPos-fs2.Dessous(),specNewSize,text+OpPower+1,length-OpPower-1);
+               Analyse(x+fs1.Width()+xfpos,y-dessus*fFactorPos-fs2.Dessous(),specNewSize,text+opPower+1,length-opPower-1);
             } else {
                Int_t pos2=0;
                if (fs2.Width()>fs1.Width())
@@ -804,30 +804,30 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                else
                   pos2=Int_t((fs1.Width()-fs2.Width())/2);
 
-               Analyse(x+pos2,y-fs1.Dessus()*prop-fs2.Dessous(),specNewSize,text+OpPower+1,length-OpPower-1);
+               Analyse(x+pos2,y-fs1.Dessus()*prop-fs2.Dessous(),specNewSize,text+opPower+1,length-opPower-1);
             }
-            if (OpPower >= 2 && strncmp(&text[OpPower-2],"{}",2)==0) {
-               sprintf(&text[OpPower-2],"  ") ;
-               Analyse(x+pos,y,spec,text,OpPower-1);
+            if (opPower >= 2 && strncmp(&text[opPower-2],"{}",2)==0) {
+               sprintf(&text[opPower-2],"  ") ;
+               Analyse(x+pos,y,spec,text,opPower-1);
             } else {
-               Analyse(x+pos,y,spec,text,OpPower);
+               Analyse(x+pos,y,spec,text,opPower);
             }
          }
 
-         if (!AbovePlace)
+         if (!abovePlace)
              result.Set(fs1.Width()+xfpos+fs2.Width(),
                         fs1.Dessus()*fFactorPos+fs2.Dessus(),fs1.Dessous());
          else
              result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus()*prop+fs2.Height(),fs1.Dessous());
 
       }
-      else if (OpUnder>-1) { // _ found
+      else if (opUnder>-1) { // _ found
          Double_t prop = .9; // scale factor for #sum & #frac
          Double_t xfpos = 0.;//GetHeight()*spec.size/5. ;
          Double_t fpos = fFactorPos ;
          // When increasing prop, the lower indice position is lower
          if(!fShow) {
-            Int_t ltext = OpUnder ;
+            Int_t ltext = opUnder ;
             if (ltext >= 2 && strncmp(&text[ltext-2],"{}",2)==0) {
                // upper and lower indice before the character
                // like with chemical element
@@ -835,15 +835,15 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                ltext-- ;
             }
             fs1 = Anal1(spec,text,ltext);
-            fs2 = Anal1(specNewSize,text+OpUnder+1,length-OpUnder-1);
+            fs2 = Anal1(specNewSize,text+opUnder+1,length-opUnder-1);
             Savefs(&fs1);
             Savefs(&fs2);
          } else {
             fs2 = Readfs();
             fs1 = Readfs();
             Int_t pos = 0;
-            if (!AbovePlace)
-               Analyse(x+fs1.Width()+xfpos,y+fs1.Dessous()+fs2.Dessus()*fpos,specNewSize,text+OpUnder+1,length-OpUnder-1);
+            if (!abovePlace)
+               Analyse(x+fs1.Width()+xfpos,y+fs1.Dessous()+fs2.Dessus()*fpos,specNewSize,text+opUnder+1,length-opUnder-1);
             else {
                Int_t pos2=0;
                if (fs2.Width()>fs1.Width())
@@ -851,22 +851,22 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                else
                   pos2=Int_t((fs1.Width()-fs2.Width())/2);
 
-               Analyse(x+pos2,y+fs1.Dessous()*prop+fs2.Dessus(),specNewSize,text+OpUnder+1,length-OpUnder-1);
+               Analyse(x+pos2,y+fs1.Dessous()*prop+fs2.Dessus(),specNewSize,text+opUnder+1,length-opUnder-1);
             }
-            if (OpUnder >= 2 && strncmp(&text[OpUnder-2],"{}",2)==0) {
-               sprintf(&text[OpUnder-2],"  ") ;
-               Analyse(x+pos,y,spec,text,OpUnder-1);
+            if (opUnder >= 2 && strncmp(&text[opUnder-2],"{}",2)==0) {
+               sprintf(&text[opUnder-2],"  ") ;
+               Analyse(x+pos,y,spec,text,opUnder-1);
             } else {
-               Analyse(x+pos,y,spec,text,OpUnder);
+               Analyse(x+pos,y,spec,text,opUnder);
             }
          }
-         if (!AbovePlace)
+         if (!abovePlace)
              result.Set(fs1.Width()+xfpos+fs2.Width(),fs1.Dessus(),
                         fs1.Dessous()+fs2.Dessous()+fs2.Dessus()*fpos);
          else
             result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus(),fs1.Dessous()*prop+fs2.Height());
       }
-      else if (OpBox) {
+      else if (opBox) {
          Double_t square = GetHeight()*spec.size/2;
          if (!fShow) {
             fs1 = Anal1(spec,text+4,length-4);
@@ -884,7 +884,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result = fs1 + FormSize(square,square,0);
       }
-      else if (OpOdot) {
+      else if (opOdot) {
          Double_t square = GetHeight()*spec.size/2;
          if (!fShow) {
             fs1 = Anal1(spec,text+5,length-5);
@@ -898,7 +898,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result = fs1 + FormSize(square,square,0);
       }
-      else if (Operp) {
+      else if (opPerp) {
          Double_t square = GetHeight()*spec.size/1.4;
          if (!fShow) {
             fs1 = Anal1(spec,text+5,length-5);
@@ -914,7 +914,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result = fs1;
       }
-      else if (Oparallel) {
+      else if (opParallel) {
          Double_t square = GetHeight()*spec.size/1.4;
          if (!fShow) {
             fs1 = Anal1(spec,text+9,length-9);
@@ -929,75 +929,75 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result = fs1 + FormSize(square,square,0);
       }
-      else if (OpGreek>-1) {
-         TextSpec_t NewSpec = spec;
-         NewSpec.font = 122;
-         char letter = 97 + OpGreek;
+      else if (opGreek>-1) {
+         TextSpec_t newSpec = spec;
+         newSpec.font = 122;
+         char letter = 97 + opGreek;
  //        Double_t yoffset = GetHeight()*spec.size/20.; // Greek letter too low
          Double_t yoffset = 0.; // Greek letter too low
-         if (OpGreek>25) letter -= 58;
-         if (OpGreek == 52) letter = '\241'; //varUpsilon
-         if (OpGreek == 53) letter = '\316'; //epsilon
+         if (opGreek>25) letter -= 58;
+         if (opGreek == 52) letter = '\241'; //varUpsilon
+         if (opGreek == 53) letter = '\316'; //epsilon
          if (!fShow) {
-            fs1 = Anal1(NewSpec,&letter,1);
-            fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
+            fs1 = Anal1(newSpec,&letter,1);
+            fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
             Savefs(&fs1);
          } else {
             fs1 = Readfs();
-            Analyse(x+fs1.Width(),y,spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
-            Analyse(x,y-yoffset,NewSpec,&letter,1);
+            Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+            Analyse(x,y-yoffset,newSpec,&letter,1);
          }
          fs1.add_Dessus(FormSize(0,yoffset,0)) ;
          result = fs1+fs2;
       }
 
-      else if (OpSpec>-1) {
-         TextSpec_t NewSpec = spec;
-         NewSpec.font = 122;
-         char letter = '\243' + OpSpec;
-         if(OpSpec == 75 || OpSpec == 76) {
-            NewSpec.font = GetTextFont();
-            if (OpSpec == 75) letter = '\305'; // AA Angstroem
-            if (OpSpec == 76) letter = '\345'; // aa Angstroem
+      else if (opSpec>-1) {
+         TextSpec_t newSpec = spec;
+         newSpec.font = 122;
+         char letter = '\243' + opSpec;
+         if(opSpec == 75 || opSpec == 76) {
+            newSpec.font = GetTextFont();
+            if (opSpec == 75) letter = '\305'; // AA Angstroem
+            if (opSpec == 76) letter = '\345'; // aa Angstroem
          }
          Double_t props, propi;
          props = 1.8 ; // scale factor for #sum(66)
          propi = 2.3 ; // scale factor for  #int(79)
 
-         if (OpSpec==66 ) {
-            NewSpec.size = spec.size*props;
-         } else if (OpSpec==79) {
-            NewSpec.size = spec.size*propi;
+         if (opSpec==66 ) {
+            newSpec.size = spec.size*props;
+         } else if (opSpec==79) {
+            newSpec.size = spec.size*propi;
          }
          if (!fShow) {
-            fs1 = Anal1(NewSpec,&letter,1);
-            if (OpSpec == 79 || OpSpec == 66)
+            fs1 = Anal1(newSpec,&letter,1);
+            if (opSpec == 79 || opSpec == 66)
                  fs1.Set(fs1.Width(),fs1.Dessus()*0.45,fs1.Dessus()*0.45);
 
-            fs2 = Anal1(spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
+            fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
             Savefs(&fs1);
          } else {
             fs1 = Readfs();
-            Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
-            if (OpSpec!=66 && OpSpec!=79)
-               Analyse(x,y,NewSpec,&letter,1);
+            Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
+            if (opSpec!=66 && opSpec!=79)
+               Analyse(x,y,newSpec,&letter,1);
             else {
-                  Analyse(x,y+fs1.Dessous()/2.,NewSpec,&letter,1);
+                  Analyse(x,y+fs1.Dessous()/2.,newSpec,&letter,1);
             }
          }
          result = fs1+fs2;
       }
-      else if (OpAbove>-1) {
+      else if (opAbove>-1) {
          if (!fShow) {
-            fs1 = Anal1(spec,text+strlen(tab3[OpAbove])+1,length-strlen(tab3[OpAbove])-1);
+            fs1 = Anal1(spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
             Savefs(&fs1);
          } else {
             fs1 = Readfs();
-            Analyse(x,y,spec,text+strlen(tab3[OpAbove])+1,length-strlen(tab3[OpAbove])-1);
+            Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
 //            Double_t sub = GetHeight()*spec.size/12;
             Double_t sub = GetHeight()*spec.size/14;
             Double_t x1 , y1 , x2, y2, x3, x4;
-            switch(OpAbove) {
+            switch(opAbove) {
             case 0: // bar
                Double_t ypos  ;
                ypos = y-fs1.Dessus()-sub ;//-GetHeight()*spec.size/4. ;
@@ -1065,17 +1065,17 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                {
                   Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
                   Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
-                  Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-                  Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
-                  Double_t X  = gPad->AbsPixeltoX(Int_t((x2-Xorigin)*cosang+(y2-Yorigin)*sinang+Xorigin));
-                  Double_t Y  = gPad->AbsPixeltoY(Int_t((x2-Xorigin)*-sinang+(y2-Yorigin)*cosang+Yorigin));
+                  Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+                  Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+                  Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+                  Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
                   TText tilde;
                   tilde.SetTextFont(fTextFont);
                   tilde.SetTextColor(fTextColor);
                   tilde.SetTextSize(0.9*spec.size);
                   tilde.SetTextAlign(22);
                   tilde.SetTextAngle(fTextAngle);
-                  tilde.PaintText(X,Y,"~");
+                  tilde.PaintText(xx,yy,"~");
                }
                break;
             case 9: // slash
@@ -1088,10 +1088,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
            }
          }
          Double_t div = 3;
-         if (OpAbove==1) div=4;
+         if (opAbove==1) div=4;
          result.Set(fs1.Width(),fs1.Dessus()+GetHeight()*spec.size/div,fs1.Dessous());
       }
-      else if (OpSquareBracket) { // operator #[]{arg}
+      else if (opSquareBracket) { // operator #[]{arg}
          Double_t l = GetHeight()*spec.size/4;
          Double_t l2 = l/2 ;
          if (!fShow) {
@@ -1109,7 +1109,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result.Set(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
       }
-      else if (OpParen) {  // operator #(){arg}
+      else if (opParen) {  // operator #(){arg}
          Double_t l = GetHeight()*spec.size/4;
          Double_t radius2,radius1 , dw, l2 = l/2 ;
          Double_t angle = 35 ;
@@ -1134,7 +1134,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
         // result = FormSize(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
          result.Set(fs1.Width()+3*l+2*dw,fs1.Dessus(),fs1.Dessous());
       }
-      else if (OpAbs) {  // operator #||{arg}
+      else if (opAbs) {  // operator #||{arg}
          Double_t l = GetHeight()*spec.size/4;
          Double_t l2 = l/2 ;
          if (!fShow) {
@@ -1148,7 +1148,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result.Set(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
       }
-      else if (OpBigCurly) { // big curly bracket  #{}{arg}
+      else if (opBigCurly) { // big curly bracket  #{}{arg}
          Double_t l = GetHeight()*spec.size/4;
          Double_t l2 = l/2 ;
          Double_t l8 , ltip;
@@ -1190,16 +1190,16 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          result.Set(fs1.Width()+3*l+2*ltip,fs1.Dessus(),fs1.Dessous()) ;;
       }
-      else if (OpFrac>-1) { // \frac found
-         if (OpCurlyCurly==-1) { // }{ not found
+      else if (opFrac>-1) { // \frac found
+         if (opCurlyCurly==-1) { // }{ not found
             // arguments missing for \frac
             fError = "Missing denominator for #frac";
             return FormSize(0,0,0);
          }
          Double_t height = GetHeight()*spec.size/8;
          if (!fShow) {
-            fs1 = Anal1(spec,text+OpFrac+6,OpCurlyCurly-OpFrac-6);
-            fs2 = Anal1(spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);
+            fs1 = Anal1(spec,text+opFrac+6,opCurlyCurly-opFrac-6);
+            fs2 = Anal1(spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
             Savefs(&fs1);
             Savefs(&fs2);
          } else {
@@ -1213,8 +1213,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                addW1 = 0;
                addW2 = (fs1.Width()-fs2.Width())/2;
             }
-            Analyse(x+addW2,y+fs2.Dessus()-height,spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);  // denominator
-            Analyse(x+addW1,y-fs1.Dessous()-3*height,spec,text+OpFrac+6,OpCurlyCurly-OpFrac-6); //numerator
+            Analyse(x+addW2,y+fs2.Dessus()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // denominator
+            Analyse(x+addW1,y-fs1.Dessous()-3*height,spec,text+opFrac+6,opCurlyCurly-opFrac-6); //numerator
 
             DrawLine(x,y-2*height,x+TMath::Max(fs1.Width(),fs2.Width()),y-2*height,spec);
          }
@@ -1222,45 +1222,45 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
       }
-      else if (OpSplitLine>-1) { // \splitline found
-         if (OpCurlyCurly==-1) { // }{ not found
+      else if (opSplitLine>-1) { // \splitline found
+         if (opCurlyCurly==-1) { // }{ not found
             // arguments missing for \splitline
             fError = "Missing second line for #splitline";
             return FormSize(0,0,0);
          }
          Double_t height = GetHeight()*spec.size/8;
          if (!fShow) {
-            fs1 = Anal1(spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11);
-            fs2 = Anal1(spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);
+            fs1 = Anal1(spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11);
+            fs2 = Anal1(spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
             Savefs(&fs1);
             Savefs(&fs2);
          } else {
             fs2 = Readfs();
             fs1 = Readfs();
-            Analyse(x,y+fs2.Dessus()-height,spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);  // second line
-            Analyse(x,y-fs1.Dessous()-3*height,spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11); //first line
+            Analyse(x,y+fs2.Dessus()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // second line
+            Analyse(x,y-fs1.Dessous()-3*height,spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11); //first line
          }
 
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
       }
-      else if (OpSqrt>-1) { // \sqrt found
+      else if (opSqrt>-1) { // \sqrt found
          if (!fShow) {
-            if (OpSquareCurly>-1) {
+            if (opSquareCurly>-1) {
                // power nth  #sqrt[n]{arg}
-               fs1 = Anal1(specNewSize,text+OpSqrt+6,OpSquareCurly-OpSqrt-6);
-               fs2 = Anal1(spec,text+OpSquareCurly+1,length-OpSquareCurly-1);
+               fs1 = Anal1(specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6);
+               fs2 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
                Savefs(&fs1);
                Savefs(&fs2);
                result.Set(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width()),
                           fs2.Dessus()+fs1.Height()+GetHeight()*spec.size/4,fs2.Dessous());
             } else {
-               fs1 = Anal1(spec,text+OpSqrt+5,length-OpSqrt-5);
+               fs1 = Anal1(spec,text+opSqrt+5,length-opSqrt-5);
                Savefs(&fs1);
                result.Set(fs1.Width()+GetHeight()*spec.size/2,fs1.Dessus()+GetHeight()*spec.size/4,fs1.Dessous());
             }
          } else {
-            if (OpSquareCurly>-1) { // ]{
+            if (opSquareCurly>-1) { // ]{
                fs2 = Readfs();
                fs1 = Readfs();
                Double_t pas = TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width());
@@ -1268,8 +1268,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Double_t y1 = y-fs2.Dessus() ;
                Double_t y2 = y+fs2.Dessous() ;
                Double_t y3 = y1-GetHeight()*spec.size/4;
-               Analyse(x+pas2,y,spec,text+OpSquareCurly+1,length-OpSquareCurly-1);
-               Analyse(x,y-fs2.Dessus()-fs1.Dessous(),specNewSize,text+OpSqrt+6,OpSquareCurly-OpSqrt-6); // indice
+               Analyse(x+pas2,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+               Analyse(x,y-fs2.Dessus()-fs1.Dessous(),specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6); // indice
                DrawLine(x,y1,x+pas,y2,spec);
                DrawLine(x+pas,y2,x+pas,y3,spec);
                DrawLine(x+pas,y3,x+pas2+fs2.Width(),y3,spec);
@@ -1281,7 +1281,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                Double_t y2 = y+fs1.Dessous() ;
                Double_t y3 = y1-GetHeight()*spec.size/4;
 
-               Analyse(x+GetHeight()*spec.size/2,y,spec,text+OpSqrt+6,length-OpSqrt-7);
+               Analyse(x+GetHeight()*spec.size/2,y,spec,text+opSqrt+6,length-opSqrt-7);
                DrawLine(x,y1,x1,y2,spec);
                DrawLine(x1,y2,x1,y3,spec);
                DrawLine(x1,y3,x2,y3,spec);
@@ -1289,16 +1289,16 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             }
          }
       }
-      else if (OpColor>-1) { // \color found
-         if (OpSquareCurly==-1) {
+      else if (opColor>-1) { // \color found
+         if (opSquareCurly==-1) {
             // color number is not specified
             fError = "Missing color number. Syntax is #color[(Int_t)nb]{ ... }";
             return FormSize(0,0,0);
          }
-         TextSpec_t NewSpec = spec;
-         Char_t *nb = new Char_t[OpSquareCurly-OpColor-7];
-         strncpy(nb,text+OpColor+7,OpSquareCurly-OpColor-7);
-         if (sscanf(nb,"%d",&NewSpec.color) < 1) {
+         TextSpec_t newSpec = spec;
+         Char_t *nb = new Char_t[opSquareCurly-opColor-7];
+         strncpy(nb,text+opColor+7,opSquareCurly-opColor-7);
+         if (sscanf(nb,"%d",&newSpec.color) < 1) {
             delete[] nb;
             // color number is invalid
             fError = "Invalid color number. Syntax is #color[(Int_t)nb]{ ... }";
@@ -1306,21 +1306,21 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          delete[] nb;
          if (!fShow) {
-            result = Anal1(NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
+            result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
          } else {
-            Analyse(x,y,NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
+            Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
          }
       }
-      else if (OpFont>-1) { // \font found
-         if (OpSquareCurly==-1) {
+      else if (opFont>-1) { // \font found
+         if (opSquareCurly==-1) {
             // font number is not specified
             fError = "Missing font number. Syntax is #font[nb]{ ... }";
             return FormSize(0,0,0);
          }
-         TextSpec_t NewSpec = spec;
-         Char_t *nb = new Char_t[OpSquareCurly-OpFont-6];
-         strncpy(nb,text+OpFont+6,OpSquareCurly-OpFont-6);
-         if (sscanf(nb,"%d",&NewSpec.font) < 1) {
+         TextSpec_t newSpec = spec;
+         Char_t *nb = new Char_t[opSquareCurly-opFont-6];
+         strncpy(nb,text+opFont+6,opSquareCurly-opFont-6);
+         if (sscanf(nb,"%d",&newSpec.font) < 1) {
             delete[] nb;
             // font number is invalid
             fError = "Invalid font number. Syntax is #font[(Int_t)nb]{ ... }";
@@ -1328,9 +1328,9 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          delete[] nb;
          if (!fShow) {
-            result = Anal1(NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
+            result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
          } else {
-            Analyse(x,y,NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
+            Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
          }
       } else { // no operators found, it is a character string
          SetTextSize(spec.size);
@@ -1383,12 +1383,12 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
 
          if (fShow) {
             // paint the Latex sub-expression per sub-expression
-            Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-            Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
+            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
             Double_t angle   = kPI*spec.angle/180.;
-            Double_t X = gPad->AbsPixeltoX(Int_t((x-Xorigin)*TMath::Cos(angle)+(y-Yorigin)*TMath::Sin(angle)+Xorigin));
-            Double_t Y = gPad->AbsPixeltoY(Int_t((x-Xorigin)*TMath::Sin(-angle)+(y-Yorigin)*TMath::Cos(angle)+Yorigin));
-            gPad->PaintText(X,Y,text);
+            Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+            Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+            gPad->PaintText(xx,yy,text);
          }
 
          result = fs1;
@@ -1419,19 +1419,19 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 // Draw a line in a Latex formula
       Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
       Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
-      Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-      Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
-      Double_t X  = gPad->AbsPixeltoX(Int_t((x1-Xorigin)*cosang+(y1-Yorigin)*sinang+Xorigin));
-      Double_t Y  = gPad->AbsPixeltoY(Int_t((x1-Xorigin)*-sinang+(y1-Yorigin)*cosang+Yorigin));
+      Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+      Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+      Double_t xx  = gPad->AbsPixeltoX(Int_t((x1-xOrigin)*cosang+(y1-yOrigin)*sinang+xOrigin));
+      Double_t yy  = gPad->AbsPixeltoY(Int_t((x1-xOrigin)*-sinang+(y1-yOrigin)*cosang+yOrigin));
 
-      Double_t X2 = gPad->AbsPixeltoX(Int_t((x2-Xorigin)*cosang+(y2-Yorigin)*sinang+Xorigin));
-      Double_t Y2 = gPad->AbsPixeltoY(Int_t((x2-Xorigin)*-sinang+(y2-Yorigin)*cosang+Yorigin));
+      Double_t xx2 = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+      Double_t yy2 = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
 
 //      Short_t lw = Short_t(GetHeight()*spec.size/8);
 //      SetLineWidth(lw);
       SetLineColor(spec.color);
       TAttLine::Modify();
-      gPad->PaintLine(X,Y,X2,Y2);
+      gPad->PaintLine(xx,yy,xx2,yy2);
 }
 
 //______________________________________________________________________________
@@ -1442,8 +1442,8 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
-   Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
 
    const Int_t np = 40;
    Double_t dphi = 2*kPI/np;
@@ -1455,10 +1455,10 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 
    for (Int_t i=0;i<=np;i++) {
       angle = Double_t(i)*dphi;
-      dx    = r*TMath::Cos(angle) +x1 -Xorigin;
-      dy    = r*TMath::Sin(angle) +y1 -Yorigin;
-      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+ dy*sinang +Xorigin));
-      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+ dy*cosang +Yorigin));
+      dx    = r*TMath::Cos(angle) +x1 -xOrigin;
+      dy    = r*TMath::Sin(angle) +y1 -yOrigin;
+      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+ dy*sinang +xOrigin));
+      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+ dy*cosang +yOrigin));
    }
    gPad->PaintPolyLine(np+1,x,y);
 
@@ -1474,8 +1474,8 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
-   Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
 
    const Int_t np = 40;
    Double_t dphi = (phimax-phimin)*kPI/(180*np);
@@ -1487,10 +1487,10 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 
    for (Int_t i=0;i<=np;i++) {
       angle = phimin*kPI/180 + Double_t(i)*dphi;
-      dx    = r1*TMath::Cos(angle) +x1 -Xorigin;
-      dy    = r2*TMath::Sin(angle) +y1 -Yorigin;
-      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +Xorigin));
-      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +Yorigin));
+      dx    = r1*TMath::Cos(angle) +x1 -xOrigin;
+      dy    = r2*TMath::Sin(angle) +y1 -yOrigin;
+      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +xOrigin));
+      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +yOrigin));
    }
    gPad->PaintPolyLine(np+1,x,y);
 
@@ -1577,14 +1577,14 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       spec.font  = GetTextFont();
       Short_t halign = fTextAlign/10;
       Short_t valign = fTextAlign - 10*halign;
-      TextSpec_t NewSpec = spec;
+      TextSpec_t newSpec = spec;
       if (fError != 0) {
          cout<<"*ERROR<TLatex>: "<<fError<<endl;
          cout<<"==> "<<text<<endl;
       } else {
          fShow = kTRUE;
          Double_t mul = 1;
-         NewSpec.size = mul*size;
+         newSpec.size = mul*size;
 
          switch (valign) {
             case 0: y -= fs.Dessous()*mul; break;
@@ -1596,7 +1596,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
             case 2: x -= fs.Width()*mul/2  ; break;
             case 3: x -= fs.Width()*mul    ;   break;
          }
-         Analyse(x,y,NewSpec,text,length);
+         Analyse(x,y,newSpec,text,length);
       }
 
       SetTextSize(saveSize);
@@ -1631,7 +1631,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                       5,5,5,5,6,7,7,7} ;
    Int_t lkWord2[] = {7,6,6,7,6,6} ;
    Int_t lkWord3[] = {6,6,11,11} ;
-   Int_t NkWord1 = 36, NkWord2 = 6, NkWord3 = 4 ;
+   Int_t nkWord1 = 36, nkWord2 = 6, nkWord3 = 4 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
@@ -1705,7 +1705,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
          strncpy(buf,&text[i],TMath::Min(11,length-i));
          opFound = kFALSE ;
 
-         for(k=0;k<NkWord1;k++) {
+         for(k=0;k<nkWord1;k++) {
             if (strncmp(buf,kWord1[k],lkWord1[k])==0) {
                nOfKW1++ ;
                i+=lkWord1[k] ;
@@ -1716,7 +1716,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
          }
          if (opFound) continue ;
 
-         for(k=0;k<NkWord2;k++) {
+         for(k=0;k<nkWord2;k++) {
             if (strncmp(buf,kWord2[k],lkWord2[k])==0) {
                nOfKW2++ ;
                i+=lkWord2[k] ;
@@ -1727,7 +1727,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
          }
          if (opFound) continue ;
 
-         for(k=0;k<NkWord3;k++) {
+         for(k=0;k<nkWord3;k++) {
             if (strncmp(buf,kWord3[k],lkWord3[k])==0) {
                nOfKW3++ ;
                i+=lkWord3[k] ;

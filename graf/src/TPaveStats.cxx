@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.19 2005/03/23 15:26:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.20 2005/03/29 10:06:52 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -260,24 +260,24 @@ void TPaveStats::Paint(Option_t *option)
            }
 	 // Draw the 2D under/overflow
          } else if (strpbrk(sl, "|") !=0) {
-           Double_t Yline1 = ytext+yspace/2.;
-           Double_t Yline2 = ytext-yspace/2.;
-           Double_t Xline1 = (fX2-fX1)/3+fX1;
-           Double_t Xline2 = 2*(fX2-fX1)/3+fX1;
-           gPad->PaintLine(fX1,Yline1,fX2,Yline1);
-           gPad->PaintLine(Xline1,Yline1,Xline1,Yline2);
-           gPad->PaintLine(Xline2,Yline1,Xline2,Yline2);
+           Double_t yline1 = ytext+yspace/2.;
+           Double_t yline2 = ytext-yspace/2.;
+           Double_t xline1 = (fX2-fX1)/3+fX1;
+           Double_t xline2 = 2*(fX2-fX1)/3+fX1;
+           gPad->PaintLine(fX1,yline1,fX2,yline1);
+           gPad->PaintLine(xline1,yline1,xline1,yline2);
+           gPad->PaintLine(xline2,yline1,xline2,yline2);
            st = strtok(sl, "|");
-	   Int_t Index = 0;
+	   Int_t theIndex = 0;
            while ( st !=0 ) {
               latex->SetTextAlign(22);
-	      if (Index == 0) xtext = 0.5*(fX1+Xline1);
-	      if (Index == 1) xtext = 0.5*(fX1+fX2);
-	      if (Index == 2) xtext = 0.5*(Xline2+fX2);
+	      if (theIndex == 0) xtext = 0.5*(fX1+xline1);
+	      if (theIndex == 1) xtext = 0.5*(fX1+fX2);
+	      if (theIndex == 2) xtext = 0.5*(xline2+fX2);
               latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                             latex->GetTextSize(),
                                             st);
-              Index++;
+              theIndex++;
               st = strtok(0, "|");
            }
 	 // Draw the histogram identifier

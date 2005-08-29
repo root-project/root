@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.6 2002/08/05 21:12:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.7 2003/09/30 10:09:38 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -107,21 +107,21 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //
 //  If the mouse is clicked inside the diamond, the diamond is moved.
 //
-//  If the mouse is clicked on the 4 tops (L,R,T,B), the diamond is rscaled.
+//  If the mouse is clicked on the 4 tops (pL,pR,pTop,pBot), the diamond is rscaled.
 //
 //
-//                             T
+//                           pTop
 //                        +---------+
 //                        |   / \   |
 //                        |  /   \  |
 //                        | /     \ |
-//                       L|/ inside\|R
+//                      pL|/pinside\|pR
 //                        |\       /|
 //                        | \     / |
 //                        |  \   /  |
 //                        |   \ /   |
 //                        +---------+
-//                             B
+//                            pBot
 //
 
    const Int_t kMaxDiff = 5;
@@ -129,9 +129,9 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p;
-   static Int_t Tx,Ty,Lx,Ly,Rx,Ry,Bx,By;
-   static Double_t X1c,X2c,X3c,X4c;
-   static Bool_t T, L, R, B, INSIDE;
+   static Int_t pTx,pTy,pLx,pLy,pRx,pRy,pBx,pBy;
+   static Double_t x1c,x2c,x3c,x4c;
+   static Bool_t pTop, pL, pR, pBot, pINSIDE;
    static Int_t i,x[5], y[5];
    Int_t  wx, wy;
    TVirtualPad  *parent;
@@ -186,47 +186,47 @@ again:
       px2p = parent->XtoAbsPixel(parent->GetX2()) - parent->GetBorderSize();
       py2p = parent->YtoAbsPixel(parent->GetY2()) + parent->GetBorderSize();
 
-      Tx = Bx = (pxl+pxt)/2;
-      Ly = Ry = (pyl+pyt)/2;
-      Ty = pyl;
-      By = pyt;
-      Lx = pxl;
-      Rx = pxt;
+      pTx = pBx = (pxl+pxt)/2;
+      pLy = pRy = (pyl+pyt)/2;
+      pTy = pyl;
+      pBy = pyt;
+      pLx = pxl;
+      pRx = pxt;
 
-      T = L = R = B = INSIDE = kFALSE;
+      pTop = pL = pR = pBot = pINSIDE = kFALSE;
 
       if ((TMath::Abs(px-(pxl+pxt)/2) < kMaxDiff) &&
           (TMath::Abs(py - pyl) < kMaxDiff)) {             // top edge
-         pxold = pxl; pyold = pyl; T = kTRUE;
+         pxold = pxl; pyold = pyl; pTop = kTRUE;
          gPad->SetCursor(kTopSide);
       }
 
       if ((TMath::Abs(px-(pxl+pxt)/2) < kMaxDiff) &&
           (TMath::Abs(py - pyt) < kMaxDiff)) {             // bottom edge
-         pxold = pxt; pyold = pyt; B = kTRUE;
+         pxold = pxt; pyold = pyt; pBot = kTRUE;
          gPad->SetCursor(kBottomSide);
       }
 
       if ((TMath::Abs(py-(pyl+pyt)/2) < kMaxDiff) &&
           (TMath::Abs(px - pxl) < kMaxDiff)) {             // left edge
-         pxold = pxl; pyold = pyl; L = kTRUE;
+         pxold = pxl; pyold = pyl; pL = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
 
       if ((TMath::Abs(py-(pyl+pyt)/2) < kMaxDiff) &&
           (TMath::Abs(px - pxt) < kMaxDiff)) {             // right edge
-          pxold = pxt; pyold = pyt; R = kTRUE;
+          pxold = pxt; pyold = pyt; pR = kTRUE;
           gPad->SetCursor(kRightSide);
       }
 
-      X1c = (py-Ty)*(Tx-Lx)/(Ty-Ly)+Tx;
-      X2c = (py-Ty)*(Rx-Tx)/(Ry-Ty)+Tx;
-      X3c = (py-Ry)*(Rx-Bx)/(Ry-By)+Rx;
-      X4c = (py-By)*(Bx-Lx)/(By-Ly)+Bx;
+      x1c = (py-pTy)*(pTx-pLx)/(pTy-pLy)+pTx;
+      x2c = (py-pTy)*(pRx-pTx)/(pRy-pTy)+pTx;
+      x3c = (py-pRy)*(pRx-pBx)/(pRy-pBy)+pRx;
+      x4c = (py-pBy)*(pBx-pLx)/(pBy-pLy)+pBx;
 
-      if (px > X1c+kMaxDiff && px < X2c-kMaxDiff &&
-          px > X4c+kMaxDiff && px < X3c-kMaxDiff) {    // inside box
-         pxold = px; pyold = py; INSIDE = kTRUE;
+      if (px > x1c+kMaxDiff && px < x2c-kMaxDiff &&
+          px > x4c+kMaxDiff && px < x3c-kMaxDiff) {    // inside box
+         pxold = px; pyold = py; pINSIDE = kTRUE;
          if (event == kButton1Down)
             gPad->SetCursor(kMove);
          else
@@ -234,10 +234,10 @@ again:
       }
 
       fResizing = kFALSE;
-      if (T || L || R || B)
+      if (pTop || pL || pR || pBot)
          fResizing = kTRUE;
 
-      if (!T && !L && !R && !B && !INSIDE)
+      if (!pTop && !pL && !pR && !pBot && !pINSIDE)
          gPad->SetCursor(kCross);
 
       break;
@@ -251,7 +251,7 @@ again:
       y[0] = y[4] = py1;
       y[2] = py2;
       y[1] = y[3] = (py1+py2)/2;
-      if (T) {
+      if (pTop) {
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
@@ -260,7 +260,7 @@ again:
          y[1] = y[3] = (py1+py2)/2;
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      if (B) {
+      if (pBot) {
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
@@ -269,7 +269,7 @@ again:
          y[1] = y[3] = (py1+py2)/2;
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      if (L) {
+      if (pL) {
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
@@ -278,7 +278,7 @@ again:
          x[0] = x[2] = x[4] = (px1+px2)/2;
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      if (R) {
+      if (pR) {
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
@@ -287,7 +287,7 @@ again:
           x[0] = x[2] = x[4] = (px1+px2)/2;
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
-      if (INSIDE) {
+      if (pINSIDE) {
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
@@ -314,7 +314,7 @@ again:
       pxold = px;
       pyold = py;
 
-      if ((INSIDE && opaque) || (fResizing && ropaque)) {
+      if ((pINSIDE && opaque) || (fResizing && ropaque)) {
          event = kButton1Up;
          doing_again = kTRUE;
          goto again;
@@ -324,21 +324,21 @@ again:
 
    case kButton1Up:
 
-      if (T || B || L || R || INSIDE) {
+      if (pTop || pBot || pL || pR || pINSIDE) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fX2 = gPad->AbsPixeltoX(px2);
          fY2 = gPad->AbsPixeltoY(py2);
       }
 
-      if (INSIDE) {
+      if (pINSIDE) {
          // if it was not a pad that was moved then it must have been
          // a box or something like that so we have to redraw the pad
          if (parent == gPad) gPad->Modified(kTRUE);
          if (!doing_again) gPad->SetCursor(kCross);
       }
 
-      if (T || L || R || B)
+      if (pTop || pL || pR || pBot)
          gPad->Modified(kTRUE);
 
       gVirtualX->SetLineColor(-1);
@@ -370,7 +370,7 @@ void TDiamond::Paint(Option_t *)
 //*-*-*-*-*-*-*-*-*-*-*Paint this diamond with its current attributes*-*-*-*-*
 //*-*                  ==============================================
 
-   Double_t x[7],y[7],Depx,Depy;
+   Double_t x[7],y[7],depx,depy;
    Double_t x1 = fX1;
    Double_t y1 = fY1;
    Double_t x2 = fX2;
@@ -383,23 +383,23 @@ void TDiamond::Paint(Option_t *)
      Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
      //*-*- Draw the frame top right
      if (y2-y1>x2-x1) {
-        Depx = wx;
-        Depy = 0;
+        depx = wx;
+        depy = 0;
         }
      else if (y2-y1<x2-x1) {
-        Depx = 0;
-        Depy = -wy;
+        depx = 0;
+        depy = -wy;
         }
      else {
-        Depx = wx;
-        Depy = -wy;
+        depx = wx;
+        depy = -wy;
      }
-     x[0] = x[2] = (x1+x2)/2+Depx;
-     x[1] = x2+Depx;
-     x[3] = x1+Depx;
-     y[0] = y2+Depy;
-     y[2] = y1+Depy;
-     y[1] = y[3] =(y1+y2)/2+Depy;
+     x[0] = x[2] = (x1+x2)/2+depx;
+     x[1] = x2+depx;
+     x[3] = x1+depx;
+     y[0] = y2+depy;
+     y[2] = y1+depy;
+     y[1] = y[3] =(y1+y2)/2+depy;
      x[4] = x[0]; y[4] = y[0];
      SetFillStyle(fillstyle);
      SetFillColor(linecolor);

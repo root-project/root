@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.10 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.11 2003/10/23 09:36:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -124,7 +124,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
-   static Bool_t P1, P2, L;
+   static Bool_t p1, p2, pL;
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
 
@@ -151,24 +151,24 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          px2 = gPad->XtoAbsPixel(gPad->XtoPad(fX2));
          py2 = gPad->YtoAbsPixel(gPad->YtoPad(fY2));
       }
-      P1 = P2 = L = kFALSE;
+      p1 = p2 = pL = kFALSE;
 
       d1  = abs(px1 - px) + abs(py1-py); //simply take sum of pixels differences
       if (d1 < kMaxDiff) { //*-*================>OK take point number 1
          px1old = px1; py1old = py1;
-         P1 = kTRUE;
+         p1 = kTRUE;
          gPad->SetCursor(kPointer);
          return;
       }
       d2  = abs(px2 - px) + abs(py2-py); //simply take sum of pixels differences
       if (d2 < kMaxDiff) { //*-*================>OK take point number 2
          px2old = px2; py2old = py2;
-         P2 = kTRUE;
+         p2 = kTRUE;
          gPad->SetCursor(kPointer);
          return;
       }
 
-      L = kTRUE;
+      pL = kTRUE;
       pxold = px; pyold = py;
       gPad->SetCursor(kMove);
 
@@ -176,19 +176,19 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
 
-      if (P1) {
+      if (p1) {
          gVirtualX->DrawLine(px1old, py1old, px2, py2);
          gVirtualX->DrawLine(px, py, px2, py2);
          px1old = px;
          py1old = py;
       }
-      if (P2) {
+      if (p2) {
          gVirtualX->DrawLine(px1, py1, px2old, py2old);
          gVirtualX->DrawLine(px1, py1, px, py);
          px2old = px;
          py2old = py;
       }
-      if (L) {
+      if (pL) {
          gVirtualX->DrawLine(px1, py1, px2, py2);
          dx = px-pxold;  dy = py-pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
@@ -205,30 +205,30 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dpy  = gPad->GetY2() - gPad->GetY1();
          xp1  = gPad->GetX1();
          yp1  = gPad->GetY1();
-         if (P1) {
+         if (p1) {
             fX1 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
             fY1 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
          }
-         if (P2) {
+         if (p2) {
             fX2 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
             fY2 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
          }
-         if (L) {
+         if (pL) {
             fX1 = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
             fY1 = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
             fX2 = (gPad->AbsPixeltoX(px2)-xp1)/dpx;
             fY2 = (gPad->AbsPixeltoY(py2)-yp1)/dpy;
          }
       } else {
-         if (P1) {
+         if (p1) {
             fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
             fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          }
-         if (P2) {
+         if (p2) {
             fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
             fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          }
-         if (L) {
+         if (pL) {
             fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px1));
             fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py1));
             fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px2));

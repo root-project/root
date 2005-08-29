@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.6 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.7 2002/12/02 18:50:02 rdm Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -276,7 +276,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    y--;
    ys--;
 
-   Double_t *RW  = ((TGraphErrors*)fGout)->GetEX();
+   Double_t *rw  = ((TGraphErrors*)fGout)->GetEX();
    Double_t *res = ((TGraphErrors*)fGout)->GetEY();
 
 // at least two, at most n poInt_ts
@@ -308,7 +308,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 	   // fitted value at x[i]
          Bool_t iterg1 = iiter>1;
          Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
-                      res, iterg1, RW, ok);
+                      res, iterg1, rw, ok);
 	      if (!ok) ys[i] = y[i];
 
 	   // all weights zero copy over value (all rw==0)
@@ -348,18 +348,18 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
       if (iiter > iter)
 	      break;
 	   for(i=0 ; i<n ; i++)
-	      RW[i] = TMath::Abs(res[i]);
+	      rw[i] = TMath::Abs(res[i]);
 
 	// compute cmad := 6 * median(rw[], n)
    	m1 = n/2;
 	// partial sort, for m1 & m2
-	   Psort(RW, n, m1);
+	   Psort(rw, n, m1);
 	   if(n % 2 == 0) {
 	      m2 = n-m1-1;
-	      Psort(RW, n, m2);
-	      cmad = 3.*(RW[m1]+RW[m2]);
+	      Psort(rw, n, m2);
+	      cmad = 3.*(rw[m1]+rw[m2]);
 	   } else { /* n odd */
-	      cmad = 6.*RW[m1];
+	      cmad = 6.*rw[m1];
 	   }
 
 	   c9 = 0.999*cmad;
@@ -367,11 +367,11 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 	   for(i=0 ; i<n ; i++) {
 	      r = TMath::Abs(res[i]);
 	      if (r <= c1)
-		      RW[i] = 1.;
+		      rw[i] = 1.;
 	      else if (r <= c9)
-		      RW[i] = (1.-(r/cmad)*(r/cmad))*(1.-(r/cmad)*(r/cmad));
+		      rw[i] = (1.-(r/cmad)*(r/cmad))*(1.-(r/cmad)*(r/cmad));
 	      else
-		      RW[i] = 0.;
+		      rw[i] = 0.;
 	   }
 	   iiter++;
    }
@@ -533,15 +533,15 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
    }
 
 // temporary storage array
-   Int_t NTmp = (fNin+1)*8;
-   Double_t *Tmp = new Double_t[NTmp];
-   for (i=0; i<NTmp; i++) {
-      Tmp[i] = 0;
+   Int_t nTmp = (fNin+1)*8;
+   Double_t *tmp = new Double_t[nTmp];
+   for (i=0; i<nTmp; i++) {
+      tmp[i] = 0;
    }
 
-   BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), Tmp);
+   BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), tmp);
 
-   delete [] Tmp;
+   delete [] tmp;
    delete [] weight;
 
    return fGout;
@@ -885,8 +885,8 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 }
 
 //______________________________________________________________________
-void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &Ylow,
-     Double_t &Yhigh, Int_t rule, Int_t iTies)
+void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
+     Double_t &yhigh, Int_t rule, Int_t iTies)
 {
 //*-*-*-*-*-*-*-*-*Sort data points and eliminate double x values*-*-*-*
 //                 ==============================================
@@ -958,12 +958,12 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &Ylow,
 // interpolate outside interval [min(x),max(x)]
    switch(rule) {
       case 1:
-         Ylow  = 0;   // = nan("NAN") ??
-         Yhigh = 0;   // = nan("NAN") ??
+         ylow  = 0;   // = nan("NAN") ??
+         yhigh = 0;   // = nan("NAN") ??
 	 break;
       case 2:
-         Ylow  = fGin->GetY()[0];
-         Yhigh = fGin->GetY()[fNin-1];
+         ylow  = fGin->GetY()[0];
+         yhigh = fGin->GetY()[fNin-1];
 	 break;
       default:
 	 break;
@@ -1060,9 +1060,9 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    }
 
 // input X, Y
-   Double_t Ylow  = yleft;
-   Double_t Yhigh = yright;
-   Approxin(grin, iKind, Ylow, Yhigh, rule, iTies);
+   Double_t ylow  = yleft;
+   Double_t yhigh = yright;
+   Approxin(grin, iKind, ylow, yhigh, rule, iTies);
 
 // output X, Y
    Double_t delta = 0;
@@ -1078,7 +1078,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    for (Int_t i=0;i<fNout;i++) {
       if (xout == 0) x = fMinX + i*delta;
       else           x = xout[i];
-      Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, Ylow, Yhigh);
+      Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, ylow, yhigh);
       fGout->SetPoint(i,x, yout);
    }
 
@@ -1087,7 +1087,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 
 //______________________________________________________________________
 Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
-         Int_t n, Int_t iKind, Double_t Ylow, Double_t Yhigh)
+         Int_t n, Int_t iKind, Double_t ylow, Double_t yhigh)
 {
 //*-*-*-*-*-*-*-*-*Approximate one data point*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
@@ -1101,8 +1101,8 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
    Int_t j = n - 1;
 
 // handle out-of-domain points
-   if(v < x[i]) return Ylow;
-   if(v > x[j]) return Yhigh;
+   if(v < x[i]) return ylow;
+   if(v > x[j]) return yhigh;
 
 // find the correct interval by bisection
    while(i < j - 1) {
@@ -1143,17 +1143,17 @@ void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
 //
 
    Double_t v, w;
-   Int_t L, R, i, j;
+   Int_t pL, pR, i, j;
 
-   for (L = 0, R = n - 1; L < R; ) {
+   for (pL = 0, pR = n - 1; pL < pR; ) {
 	   v = x[k];
-	   for(i = L, j = R; i <= j;) {
+	   for(i = pL, j = pR; i <= j;) {
 	      while (TGraphSmooth::Rcmp(x[i], v) < 0) i++;
 	      while (TGraphSmooth::Rcmp(v, x[j]) < 0) j--;
 	      if (i <= j) { w = x[i]; x[i++] = x[j]; x[j--] = w; }
 	   }
-	   if (j < k) L = i;
-	   if (k < i) R = j;
+	   if (j < k) pL = i;
+	   if (k < i) pR = j;
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.7 2005/02/07 14:35:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.8 2005/04/20 14:59:38 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -59,8 +59,8 @@ void TCurlyLine::Build()
 //*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) line*-*-*-*-*-*
 //*-*                  ===========================================
 //---
-   Double_t PixeltoX = 1;
-   Double_t PixeltoY = 1;
+   Double_t pixeltoX = 1;
+   Double_t pixeltoY = 1;
 //---
    Double_t wavelengthPix,amplitudePix, lengthPix, hPix;
    Double_t px1, py1, px2, py2;
@@ -72,11 +72,11 @@ void TCurlyLine::Build()
    	Double_t xrange  = gPad->GetX2() - gPad->GetX1();
    	Double_t yrange  = gPad->GetY2() - gPad->GetY1();
 
-//    PixeltoX  = gPad->GetPixeltoX(); 
-//    PixeltoY  = gPad->GetPixeltoY(); 
+//    pixeltoX  = gPad->GetPixeltoX(); 
+//    pixeltoY  = gPad->GetPixeltoY(); 
 
-   	PixeltoX  = xrange / pxrange;
-   	PixeltoY  = yrange/pyrange;
+   	pixeltoX  = xrange / pxrange;
+   	pixeltoY  = yrange/pyrange;
       hPix  = TMath::Max(gPad->GetAbsHNDC() * gPad->GetWh(), gPad->GetAbsWNDC() * gPad->GetWw());
       px1      = gPad->XtoAbsPixel(fX1);
       py1      = gPad->YtoAbsPixel(fY1);
@@ -145,8 +145,8 @@ void TCurlyLine::Build()
       xx = xv[i] * cosang - yv[i] * sinang;
       yy = xv[i] * sinang + yv[i] * cosang;
       if (gPad) {
-        xx *= PixeltoX;
-        yy *= PixeltoY;
+        xx *= pixeltoX;
+        yy *= pixeltoY;
       }
       xv[i] = xx + fX1;
       yv[i] = yy + fY1;
@@ -180,7 +180,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
-   static Bool_t P1, P2, L;
+   static Bool_t p1, p2, pL;
    Int_t dx, dy;
 
 
@@ -199,24 +199,24 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       px2 = gPad->XtoAbsPixel(fX2);
       py2 = gPad->YtoAbsPixel(fY2);
 
-      P1 = P2 = L = kFALSE;
+      p1 = p2 = pL = kFALSE;
 
       d1  = TMath::Abs(px1 - px) + TMath::Abs(py1-py); //simply take sum of pixels differences
       if (d1 < kMaxDiff) { //*-*================>OK take point number 1
          px1old = px1; py1old = py1;
-         P1 = kTRUE;
+         p1 = kTRUE;
          gPad->SetCursor(kPointer);
          return;
       }
       d2  = TMath::Abs(px2 - px) + TMath::Abs(py2-py); //simply take sum of pixels differences
       if (d2 < kMaxDiff) { //*-*================>OK take point number 2
          px2old = px2; py2old = py2;
-         P2 = kTRUE;
+         p2 = kTRUE;
          gPad->SetCursor(kPointer);
          return;
       }
 
-      L = kTRUE;
+      pL = kTRUE;
       pxold = px; pyold = py;
       gPad->SetCursor(kMove);
 
@@ -224,19 +224,19 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
 
-      if (P1) {
+      if (p1) {
          gVirtualX->DrawLine(px1old, py1old, px2, py2);
          gVirtualX->DrawLine(px, py, px2, py2);
          px1old = px;
          py1old = py;
       }
-      if (P2) {
+      if (p2) {
          gVirtualX->DrawLine(px1, py1, px2old, py2old);
          gVirtualX->DrawLine(px1, py1, px, py);
          px2old = px;
          py2old = py;
       }
-      if (L) {
+      if (pL) {
          gVirtualX->DrawLine(px1, py1, px2, py2);
          dx = px-pxold;  dy = py-pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
@@ -248,15 +248,15 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
 
-      if (P1) {
+      if (p1) {
          fX1 = gPad->AbsPixeltoX(px);
          fY1 = gPad->AbsPixeltoY(py);
       }
-      if (P2) {
+      if (p2) {
          fX2 = gPad->AbsPixeltoX(px);
          fY2 = gPad->AbsPixeltoY(py);
       }
-      if (L) {
+      if (pL) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fX2 = gPad->AbsPixeltoX(px2);
