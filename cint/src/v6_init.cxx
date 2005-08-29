@@ -1384,7 +1384,7 @@ int G__main(int argc,char **argv)
       G__argpointer[iarg-optind] = (long)argv[iarg];
     }
     while(iarg<G__MAXARG) {
-      G__argpointer[iarg-optind] = (long)NULL;
+      G__argpointer[iarg-optind] = (long)0;
       ++iarg;
     }
 

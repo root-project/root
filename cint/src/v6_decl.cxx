@@ -1033,7 +1033,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
          ) {
         G__globalvarpointer = G__ansipara.ref;
         reg=G__null;
-        if(G__globalvarpointer==(long)NULL && 'u'==G__ansipara.type &&
+        if(G__globalvarpointer==(long)0 && 'u'==G__ansipara.type &&
            (G__prerun==0 && 0==G__no_exec_compile)) {
           G__referencetypeerror(new_name);
         }
@@ -1742,7 +1742,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         G__reftype=store_reftype;
         G__globalvarpointer = reg.ref;
         reg=G__null;
-        if(G__globalvarpointer==(long)NULL && 'u'==G__ansipara.type &&
+        if(G__globalvarpointer==(long)0 && 'u'==G__ansipara.type &&
            (G__prerun==0 && 0==G__no_exec_compile)) {
           G__referencetypeerror(new_name);
         }

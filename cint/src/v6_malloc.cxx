@@ -235,7 +235,7 @@ long G__malloc(int n,int bsize,char *item) /* used to be int */
       else {
         if(G__prerun) allocmem=(long)calloc((size_t)n ,(size_t)bsize);
         else          allocmem=(long)malloc((size_t)size);
-        if(allocmem==(long)NULL) G__malloc_error(item);
+        if(allocmem==(long)0) G__malloc_error(item);
       }
       return(allocmem);
     }
@@ -261,7 +261,7 @@ long G__malloc(int n,int bsize,char *item) /* used to be int */
           }
           else {
             allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-            if(allocmem==(long)NULL) G__malloc_error(item);
+            if(allocmem==(long)0) G__malloc_error(item);
           }
           return(allocmem);
         }
@@ -299,7 +299,7 @@ long G__malloc(int n,int bsize,char *item) /* used to be int */
        ***********************************/
       else if(G__struct.type[G__tagdefining]=='n') {
         allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-        if(allocmem==(long)NULL) G__malloc_error(item);
+        if(allocmem==(long)0) G__malloc_error(item);
         return(allocmem);
       }
     }

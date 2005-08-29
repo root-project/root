@@ -842,7 +842,7 @@ long G__get_classinfo(char *item,int tagnum)
     buf = (char*)G__p_tempbuf->obj.obj.i;
 
     baseclass = G__struct.baseclass[tagnum];
-    if(!baseclass) return((long)NULL);
+    if(!baseclass) return((long)0);
     p=0;
     buf[0]='\0';
     for(i=0;i<baseclass->basen;i++) {
@@ -982,7 +982,7 @@ long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum)
     }
     else {
       G__genericerror("Error: title only supported for class/struct member");
-      return((long)NULL);
+      return((long)0);
     }
   }
   return(0);
@@ -1114,7 +1114,7 @@ long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
     }
     else {
       G__genericerror("Error: title only supported for class/struct member");
-      return((long)NULL);
+      return((long)0);
     }
   }
   return(0);

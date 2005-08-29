@@ -287,7 +287,7 @@ G__value G__new_operator(char *expression)
 #endif
       }
     }
-    if(pointer==(long)NULL && 0==G__no_exec_compile) {
+    if(pointer==(long)0 && 0==G__no_exec_compile) {
       G__fprinterr(G__serr,"Error: memory allocation for %s %s size=%d pinc=%d FILE:%s LINE:%d\n"
               ,type,expression,size,pinc,G__ifile.name,G__ifile.line_number);
       G__tagnum=store_tagnum;
