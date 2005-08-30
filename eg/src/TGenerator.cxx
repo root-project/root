@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.7 2002/01/24 11:39:27 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -154,8 +154,8 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
 //  If the option = "All", all the particles are stored.
 //
   if (particles == 0) return 0;
-  TClonesArray &Particles = *particles;
-  Particles.Clear();
+  TClonesArray &clonesParticles = *particles;
+  clonesParticles.Clear();
   Int_t numpart = HEPEVT.nhep;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
     for (Int_t i = 0; i<numpart; i++) {
@@ -163,7 +163,7 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
 //
 //  Use the common block values for the TParticle constructor
 //
-        new(Particles[i]) TParticle(
+        new(clonesParticles[i]) TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
@@ -184,7 +184,7 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
   }
   else if (!strcmp(option,"All")) {
     for (Int_t i = 0; i<numpart; i++) {
-      new(Particles[i]) TParticle(
+      new(clonesParticles[i]) TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
@@ -268,14 +268,14 @@ void TGenerator::Draw(Option_t *option)
    const Int_t kColorElectrons = 0;
    const Int_t kColorGamma     = 18;
 
-   Int_t NProtons    = 0;
-   Int_t NNeutrons   = 0;
-   Int_t NAntiProtons= 0;
-   Int_t NPionPlus   = 0;
-   Int_t NPionMinus  = 0;
-   Int_t NKaons      = 0;
-   Int_t NElectrons  = 0;
-   Int_t NGammas     = 0;
+   Int_t nProtons    = 0;
+   Int_t nNeutrons   = 0;
+   Int_t nAntiProtons= 0;
+   Int_t nPionPlus   = 0;
+   Int_t nPionMinus  = 0;
+   Int_t nKaons      = 0;
+   Int_t nElectrons  = 0;
+   Int_t nGammas     = 0;
 
    Int_t ntracks = fParticles->GetEntriesFast();
    Int_t i,lwidth,color,lstyle;
@@ -302,15 +302,15 @@ void TGenerator::Draw(Option_t *option)
       color = 0;
       name = ap->GetName();
       if (!strcmp(name,"n"))     { if (!fShowNeutrons) continue;
-                                   color = kColorNeutron;    NNeutrons++;}
-      if (!strcmp(name,"p"))     { color = kColorProton;     NProtons++;}
-      if (!strcmp(name,"p bar")) { color = kColorAntiProton; NAntiProtons++;}
-      if (!strcmp(name,"pi+"))   { color = kColorPionPlus;   NPionPlus++;}
-      if (!strcmp(name,"pi-"))   { color = kColorPionMinus;  NPionMinus++;}
-      if (!strcmp(name,"e+"))    { color = kColorElectrons;  NElectrons++;}
-      if (!strcmp(name,"e-"))    { color = kColorElectrons;  NElectrons++;}
-      if (!strcmp(name,"gamma")) { color = kColorGamma;      NGammas++; lstyle = 3; }
-      if ( strstr(name,"K"))     { color = kColorKaons;      NKaons++;}
+                                   color = kColorNeutron;    nNeutrons++;}
+      if (!strcmp(name,"p"))     { color = kColorProton;     nProtons++;}
+      if (!strcmp(name,"p bar")) { color = kColorAntiProton; nAntiProtons++;}
+      if (!strcmp(name,"pi+"))   { color = kColorPionPlus;   nPionPlus++;}
+      if (!strcmp(name,"pi-"))   { color = kColorPionMinus;  nPionMinus++;}
+      if (!strcmp(name,"e+"))    { color = kColorElectrons;  nElectrons++;}
+      if (!strcmp(name,"e-"))    { color = kColorElectrons;  nElectrons++;}
+      if (!strcmp(name,"gamma")) { color = kColorGamma;      nGammas++; lstyle = 3; }
+      if ( strstr(name,"K"))     { color = kColorKaons;      nKaons++;}
       p->SetLineColor(color);
       p->SetLineStyle(lstyle);
       p->SetLineWidth(lwidth);
@@ -348,19 +348,19 @@ void TGenerator::Draw(Option_t *option)
    char tcount[32];
    sprintf(tcount,"%d",ntracks);      text->DrawText(-0.55,-0.47,tcount);
    sprintf(tcount,"%d",ninvol);       text->DrawText(-0.55,-0.52,tcount);
-   sprintf(tcount,"%d",NGammas);      text->DrawText(-0.55,-0.57,tcount);
-   sprintf(tcount,"%d",NProtons);     text->DrawText(-0.55,-0.62,tcount);
-   sprintf(tcount,"%d",NNeutrons);    text->DrawText(-0.55,-0.67,tcount);
-   sprintf(tcount,"%d",NAntiProtons); text->DrawText(-0.55,-0.72,tcount);
-   sprintf(tcount,"%d",NPionPlus);    text->DrawText(-0.55,-0.77,tcount);
-   sprintf(tcount,"%d",NPionMinus);   text->DrawText(-0.55,-0.82,tcount);
-   sprintf(tcount,"%d",NKaons);       text->DrawText(-0.55,-0.87,tcount);
-   sprintf(tcount,"%d",NElectrons);   text->DrawText(-0.55,-0.92,tcount);
+   sprintf(tcount,"%d",nGammas);      text->DrawText(-0.55,-0.57,tcount);
+   sprintf(tcount,"%d",nProtons);     text->DrawText(-0.55,-0.62,tcount);
+   sprintf(tcount,"%d",nNeutrons);    text->DrawText(-0.55,-0.67,tcount);
+   sprintf(tcount,"%d",nAntiProtons); text->DrawText(-0.55,-0.72,tcount);
+   sprintf(tcount,"%d",nPionPlus);    text->DrawText(-0.55,-0.77,tcount);
+   sprintf(tcount,"%d",nPionMinus);   text->DrawText(-0.55,-0.82,tcount);
+   sprintf(tcount,"%d",nKaons);       text->DrawText(-0.55,-0.87,tcount);
+   sprintf(tcount,"%d",nElectrons);   text->DrawText(-0.55,-0.92,tcount);
 
-   sprintf(tcount,"Protons/Pions= %4f",Float_t(NProtons)/Float_t(NPionPlus+NPionMinus));
+   sprintf(tcount,"Protons/Pions= %4f",Float_t(nProtons)/Float_t(nPionPlus+nPionMinus));
    text->SetTextAlign(12);
    text->DrawText(-0.45,-0.92,tcount);
-   sprintf(tcount,"Kaons/Pions= %4f",Float_t(NKaons)/Float_t(NPionPlus+NPionMinus));
+   sprintf(tcount,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
    text->DrawText(0.30,-0.92,tcount);
 }
 
