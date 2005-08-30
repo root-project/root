@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.24 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -511,10 +511,10 @@ const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
 
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments();
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 8*n;
-      Int_t NbPols = 4*n;      
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 8*n;
+      Int_t nbPols = 4*n;      
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

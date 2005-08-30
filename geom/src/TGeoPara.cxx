@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.25 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.26 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -579,17 +579,17 @@ void TGeoPara::SetPoints(Double_t *points) const
 {
 // create sphere mesh points
    if (!points) return;
-   Double_t TXY = fTxy;
-   Double_t TXZ = fTxz;
-   Double_t TYZ = fTyz;
-   *points++ = -fZ*TXZ-TXY*fY-fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ+TXY*fY-fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ+TXY*fY+fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ-TXY*fY+fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = +fZ*TXZ-TXY*fY-fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ+TXY*fY-fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ+TXY*fY+fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ-TXY*fY+fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
+   Double_t txy = fTxy;
+   Double_t txz = fTxz;
+   Double_t tyz = fTyz;
+   *points++ = -fZ*txz-txy*fY-fX; *points++ = -fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz+txy*fY-fX; *points++ = +fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz+txy*fY+fX; *points++ = +fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz-txy*fY+fX; *points++ = -fY-fZ*tyz; *points++ = -fZ;
+   *points++ = +fZ*txz-txy*fY-fX; *points++ = -fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz+txy*fY-fX; *points++ = +fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz+txy*fY+fX; *points++ = +fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz-txy*fY+fX; *points++ = -fY+fZ*tyz; *points++ = +fZ;
 }
 
 //_____________________________________________________________________________
@@ -597,17 +597,17 @@ void TGeoPara::SetPoints(Float_t *points) const
 {
 // create sphere mesh points
    if (!points) return;
-   Double_t TXY = fTxy;
-   Double_t TXZ = fTxz;
-   Double_t TYZ = fTyz;
-   *points++ = -fZ*TXZ-TXY*fY-fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ+TXY*fY-fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ+TXY*fY+fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = -fZ*TXZ-TXY*fY+fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
-   *points++ = +fZ*TXZ-TXY*fY-fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ+TXY*fY-fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ+TXY*fY+fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
-   *points++ = +fZ*TXZ-TXY*fY+fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
+   Double_t txy = fTxy;
+   Double_t txz = fTxz;
+   Double_t tyz = fTyz;
+   *points++ = -fZ*txz-txy*fY-fX; *points++ = -fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz+txy*fY-fX; *points++ = +fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz+txy*fY+fX; *points++ = +fY-fZ*tyz; *points++ = -fZ;
+   *points++ = -fZ*txz-txy*fY+fX; *points++ = -fY-fZ*tyz; *points++ = -fZ;
+   *points++ = +fZ*txz-txy*fY-fX; *points++ = -fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz+txy*fY-fX; *points++ = +fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz+txy*fY+fX; *points++ = +fY+fZ*tyz; *points++ = +fZ;
+   *points++ = +fZ*txz-txy*fY+fX; *points++ = -fY+fZ*tyz; *points++ = +fZ;
 }
 
 //_____________________________________________________________________________

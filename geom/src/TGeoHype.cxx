@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.8 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.9 2005/05/13 16:20:38 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -419,12 +419,12 @@ TBuffer3D *TGeoHype::MakeBuffer3D() const
 
    Int_t n = gGeoManager->GetNsegments();
    Bool_t hasRmin = HasInner();
-   Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
-   Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-   Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+   Int_t nbPnts = (hasRmin)?(2*n*n):(n*n+2);
+   Int_t nbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
+   Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
    {
       SetPoints(buff->fPnts);
@@ -892,10 +892,10 @@ const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments();
       Bool_t hasRmin = HasInner();
-      Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
-      Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-      Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = (hasRmin)?(2*n*n):(n*n+2);
+      Int_t nbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
+      Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

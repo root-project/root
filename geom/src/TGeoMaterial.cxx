@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.23 2005/06/21 12:16:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.24 2005/07/28 11:57:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -138,9 +138,9 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    // compute radlen systematically with G3 formula for a valid material
    if (fA > 0 && fZ > 0 && radlen>0) {
       //taken grom Geant3 routine GSMATE
-      const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
-      fRadLen = fA/(ALR2AV*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
-             (AL183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+      const Double_t alr2av=1.39621E-03, al183=5.20948;
+      fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
+             (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
    } else {
       if (radlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
    }   
@@ -154,14 +154,14 @@ Double_t TGeoMaterial::Coulomb(Double_t z)
    //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
    //                        FORMULA 2.7.17
    
-   const Double_t ALPHA = 7.29927E-03;
+   const Double_t alpha = 7.29927E-03;
 
-   Double_t AZ    = ALPHA*z;
-   Double_t AZ2   = AZ*AZ;
-   Double_t AZ4   =   AZ2 * AZ2;
-   Double_t FP    = ( 0.0083*AZ4 + 0.20206 + 1./(1.+AZ2) ) * AZ2;
-   Double_t FM    = ( 0.0020*AZ4 + 0.0369  ) * AZ4;
-   return FP - FM;
+   Double_t az    = alpha*z;
+   Double_t az2   = az*az;
+   Double_t az4   =   az2 * az2;
+   Double_t fp    = ( 0.0083*az4 + 0.20206 + 1./(1.+az2) ) * az2;
+   Double_t fm    = ( 0.0020*az4 + 0.0369  ) * az4;
+   return fp - fm;
 }
 
 
@@ -290,7 +290,7 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
    GetElement(i)->SetDefined();
    
    //compute equivalent radiation length (taken from Geant3/GSMIXT)
-   const Double_t ALR2AV = 1.39621E-03 , AL183 =5.20948;
+   const Double_t alr2av = 1.39621E-03 , al183 =5.20948;
    Double_t radinv = 0;
    fA = 0;
    fZ = 0;
@@ -301,10 +301,10 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
       Double_t zc = fZmixture[j];
       Double_t alz = TMath::Log(zc)/3.;
       Double_t xinv = zc*(zc+TGeoMaterial::ScreenFactor(zc))*
-         (AL183-alz-TGeoMaterial::Coulomb(zc))/fAmixture[j];
+         (al183-alz-TGeoMaterial::Coulomb(zc))/fAmixture[j];
       radinv += xinv*fWeights[j];
    }
-   radinv *= ALR2AV*fDensity;
+   radinv *= alr2av*fDensity;
    if (radinv > 0) fRadLen = 1/radinv;
 }
 
@@ -412,9 +412,9 @@ Double_t TGeoMaterial::ScreenFactor(Double_t z)
    //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
    //                        FORMULA 2.7.22
    
-   const Double_t AL183= 5.20948 , AL1440 = 7.27239;
-   Double_t ALZ  = TMath::Log(z)/3.;
-   Double_t factor = (AL1440 - 2*ALZ) / (AL183 - ALZ - TGeoMaterial::Coulomb(z));
+   const Double_t al183= 5.20948 , al1440 = 7.27239;
+   Double_t alz  = TMath::Log(z)/3.;
+   Double_t factor = (al1440 - 2*alz) / (al183 - alz - TGeoMaterial::Coulomb(z));
    return factor;
 }
 

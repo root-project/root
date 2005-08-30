@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.41 2005/04/20 15:22:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.42 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -845,16 +845,16 @@ TBuffer3D *TGeoSphere::MakeBuffer3D() const
    Double_t ph2 = GetPhi2();
    Int_t nz     = GetNz()+1;
    if (nz < 2) return 0;
-   Int_t NbPnts = 2*n*nz;
-   if (NbPnts <= 0) return 0;
+   Int_t nbPnts = 2*n*nz;
+   if (nbPnts <= 0) return 0;
 
    Bool_t specialCase = kFALSE;
    if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
 
-   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
 
    if (buff)
    {
@@ -1292,16 +1292,16 @@ const TBuffer3D & TGeoSphere::GetBuffer3D(Int_t reqSections, Bool_t localFrame) 
       Int_t n = GetNumberOfDivisions()+1;
 
       Int_t nz     = GetNz()+1;
-      Int_t NbPnts = 2*n*nz;
-      if (nz < 2 || NbPnts <= 0) {
+      Int_t nbPnts = 2*n*nz;
+      if (nz < 2 || nbPnts <= 0) {
          assert(kFALSE);
       }
       else {
          Bool_t specialCase = (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01);
-         Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-         Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+         Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+         Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
 
-         if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
             buffer.SetSectionsValid(TBuffer3D::kRawSizes);
          }
       }

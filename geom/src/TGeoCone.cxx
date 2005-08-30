@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.50 2005/04/05 10:17:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.51 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -667,13 +667,13 @@ TBuffer3D *TGeoCone::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments();
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 8*n;
-   Int_t NbPols = 4*n; 
+   Int_t nbPnts = 4*n;
+   Int_t nbSegs = 8*n;
+   Int_t nbPols = 4*n; 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts,
-                                   NbSegs, 3*NbSegs,
-                                   NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts,
+                                   nbSegs, 3*nbSegs,
+                                   nbPols, 6*nbPols);
 
    if (buff)
    {
@@ -1015,10 +1015,10 @@ const TBuffer3D & TGeoCone::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
 
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments();
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 8*n;
-      Int_t NbPols = 4*n;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 8*n;
+      Int_t nbPols = 4*n;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
@@ -1856,13 +1856,13 @@ TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 2*NbPnts;
-   Int_t NbPols = NbPnts-2; 
+   Int_t nbPnts = 4*n;
+   Int_t nbSegs = 2*nbPnts;
+   Int_t nbPols = nbPnts-2; 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, 
-                                   NbSegs, 3*NbSegs,
-                                   NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, 
+                                   nbSegs, 3*nbSegs,
+                                   nbPols, 6*nbPols);
 
    if (buff)
    {
@@ -2198,10 +2198,10 @@ const TBuffer3D & TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
 
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments()+1;
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 2*NbPnts;
-      Int_t NbPols = NbPnts-2;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 2*nbPnts;
+      Int_t nbPols = nbPnts-2;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

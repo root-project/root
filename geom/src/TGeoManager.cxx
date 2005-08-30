@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.120 2005/06/16 13:25:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.121 2005/07/27 10:32:28 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2151,8 +2151,8 @@ void TGeoManager::DefaultColors()
        TGeoMedium *med = vol->GetMedium();
        if (!med) continue;
        TGeoMaterial *mat = med->GetMaterial();
-       Int_t A = (Int_t)mat->GetA();
-       vol->SetLineColor(col[A]);
+       Int_t matA = (Int_t)mat->GetA();
+       vol->SetLineColor(col[matA]);
    }
 }
 

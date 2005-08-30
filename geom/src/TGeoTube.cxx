@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.62 2005/05/17 13:23:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.63 2005/05/25 14:25:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -590,11 +590,11 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments();
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 8*n;
-   Int_t NbPols = 4*n;
+   Int_t nbPnts = 4*n;
+   Int_t nbSegs = 8*n;
+   Int_t nbPols = 4*n;
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
    {
       SetPoints(buff->fPnts);
@@ -1018,15 +1018,15 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    }
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments();
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 8*n;
-      Int_t NbPols = 4*n;
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 8*n;
+      Int_t nbPols = 4*n;
       if (!HasRmin()) {
-         NbPnts = 2*(n+1);
-         NbSegs = 5*n;
-         NbPols = 3*n;
+         nbPnts = 2*(n+1);
+         nbSegs = 5*n;
+         nbPols = 3*n;
       }   
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
@@ -1729,12 +1729,12 @@ TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 2*NbPnts;
-   Int_t NbPols = NbPnts-2;
+   Int_t nbPnts = 4*n;
+   Int_t nbSegs = 2*nbPnts;
+   Int_t nbPols = nbPnts-2;
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
    {
       SetPoints(buff->fPnts);
@@ -2055,10 +2055,10 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
    }
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments()+1;
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 2*NbPnts;
-      Int_t NbPols = NbPnts-2;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 2*nbPnts;
+      Int_t nbPols = nbPnts-2;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
@@ -2802,10 +2802,10 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    }
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments()+1;
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 2*NbPnts;
-      Int_t NbPols = NbPnts-2;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 2*nbPnts;
+      Int_t nbPols = nbPnts-2;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

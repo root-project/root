@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.26 2005/06/17 20:31:52 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -501,25 +501,25 @@ TBuffer3D *TGeoTorus::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = n*(n-1);
+   Int_t nbPnts = n*(n-1);
    Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
    Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) NbPnts *= 2;
-   else if (hasphi) NbPnts += 2;
+   if (hasrmin) nbPnts *= 2;
+   else if (hasphi) nbPnts += 2;
 
-   Int_t NbSegs = (2*n-1)*(n-1);
-   Int_t NbPols = (n-1)*(n-1);
+   Int_t nbSegs = (2*n-1)*(n-1);
+   Int_t nbPols = (n-1)*(n-1);
    if (hasrmin) {
-      NbSegs += (2*n-1)*(n-1);
-      NbPols += (n-1)*(n-1);
+      nbSegs += (2*n-1)*(n-1);
+      nbPols += (n-1)*(n-1);
    }
    if (hasphi) {
-      NbSegs += 2*(n-1);
-      NbPols += 2*(n-1);
+      nbSegs += 2*(n-1);
+      nbPols += 2*(n-1);
    }
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
    {
       SetPoints(buff->fPnts);   
@@ -535,12 +535,12 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D &buff) const
 // Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = n*(n-1);
+   Int_t nbPnts = n*(n-1);
    Int_t indx, indp, startcap=0;
    Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
    Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) NbPnts *= 2;
-   else if (hasphi) NbPnts += 2;
+   if (hasrmin) nbPnts *= 2;
+   else if (hasphi) nbPnts += 2;
    Int_t c = GetBasicColor();
 
    indp = n*(n-1); // start index for points on inner surface
@@ -1062,24 +1062,24 @@ const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) c
 
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments()+1;
-      Int_t NbPnts = n*(n-1);
+      Int_t nbPnts = n*(n-1);
       Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
       Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
-      if (hasrmin) NbPnts *= 2;
-      else if (hasphi) NbPnts += 2;
+      if (hasrmin) nbPnts *= 2;
+      else if (hasphi) nbPnts += 2;
 
-      Int_t NbSegs = (2*n-1)*(n-1);
-      Int_t NbPols = (n-1)*(n-1);
+      Int_t nbSegs = (2*n-1)*(n-1);
+      Int_t nbPols = (n-1)*(n-1);
       if (hasrmin) {
-         NbSegs += (2*n-1)*(n-1);
-         NbPols += (n-1)*(n-1);
+         nbSegs += (2*n-1)*(n-1);
+         nbPols += (n-1)*(n-1);
       }
       if (hasphi) {
-         NbSegs += 2*(n-1);
-         NbPols += 2*(n-1);
+         nbSegs += 2*(n-1);
+         nbPols += 2*(n-1);
       }
 
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

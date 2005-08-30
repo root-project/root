@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.51 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.52 2005/07/27 10:32:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1256,16 +1256,16 @@ TBuffer3D *TGeoPgon::MakeBuffer3D() const
    const Int_t n = GetNsegments()+1;
    Int_t nz = GetNz();
    if (nz < 2) return 0;
-   Int_t NbPnts = nz*2*n;
-   if (NbPnts <= 0) return 0;
+   Int_t nbPnts = nz*2*n;
+   if (nbPnts <= 0) return 0;
    Double_t dphi = GetDphi();
    Bool_t specialCase = kFALSE;
    if (dphi == 360) specialCase = kTRUE;
-   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);      
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);      
    if (buff)
    {
       SetPoints(buff->fPnts);
@@ -1283,8 +1283,8 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
    const Int_t n = GetNsegments()+1;
    Int_t nz = GetNz();
    if (nz < 2) return;
-   Int_t NbPnts = nz*2*n;
-   if (NbPnts <= 0) return;
+   Int_t nbPnts = nz*2*n;
+   if (nbPnts <= 0) return;
    Double_t dphi = GetDphi();
    Bool_t specialCase = kFALSE;
    if (dphi == 360) specialCase = kTRUE;
@@ -1768,12 +1768,12 @@ const TBuffer3D & TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    if (reqSections & TBuffer3D::kRawSizes) {
       const Int_t n = GetNsegments()+1;
       Int_t nz = GetNz();
-      Int_t NbPnts = nz*2*n;
-      if (nz >= 2 && NbPnts > 0) {
+      Int_t nbPnts = nz*2*n;
+      if (nz >= 2 && nbPnts > 0) {
          Bool_t specialCase = (GetDphi() == 360);
-         Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-         Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-         if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+         Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
+         if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
             buffer.SetSectionsValid(TBuffer3D::kRawSizes);
          }
       }

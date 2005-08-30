@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.4 2004/03/05 11:53:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.5 2004/06/30 10:31:59 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -366,9 +366,9 @@ Int_t TGeoTrack::GetPoint(Double_t tof, Double_t *point, Int_t istart) const
    Int_t i;
    Int_t j = ip<<2;
    Int_t k = (ip+1)<<2;
-   Double_t dt = tof-fPoints[j+3];
-   Double_t Dt = fPoints[k+3]-fPoints[j+3];
-   for (i=0; i<3; i++) point[i] = fPoints[j+i] +(fPoints[k+i]-fPoints[j+i])*dt/Dt;
+   Double_t dt  = tof-fPoints[j+3];
+   Double_t ddt = fPoints[k+3]-fPoints[j+3];
+   for (i=0; i<3; i++) point[i] = fPoints[j+i] +(fPoints[k+i]-fPoints[j+i])*dt/ddt;
    return ip;
 }   
 

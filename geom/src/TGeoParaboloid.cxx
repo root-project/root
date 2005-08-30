@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.15 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.16 2005/05/13 16:20:38 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -285,12 +285,12 @@ TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments();
-   Int_t NbPnts = n*(n+1)+2;
-   Int_t NbSegs = n*(2*n+3);
-   Int_t NbPols = n*(n+2);
+   Int_t nbPnts = n*(n+1)+2;
+   Int_t nbSegs = n*(2*n+3);
+   Int_t nbPols = n*(n+2);
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 2*n*5 + n*n*6);
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 2*n*5 + n*n*6);
 
    if (buff)
    {
@@ -549,10 +549,10 @@ const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFra
 
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments();
-      Int_t NbPnts = n*(n+1)+2;
-      Int_t NbSegs = n*(2*n+3);
-      Int_t NbPols = n*(n+2);
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 2*n*5 + n*n*6)) {
+      Int_t nbPnts = n*(n+1)+2;
+      Int_t nbSegs = n*(2*n+3);
+      Int_t nbPols = n*(n+2);
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 2*n*5 + n*n*6)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

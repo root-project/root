@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.34 2005/05/26 12:54:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.35 2005/05/26 13:20:26 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -778,9 +778,9 @@ void TGeoCacheDummy::MasterToLocalBomb(const Double_t *master, Double_t *local) 
 }
 
 
-const Int_t TGeoNodeArray::kGeoArrayMaxSize  = 1000000;
-const Int_t TGeoNodeArray::kGeoArrayInitSize = 1000;
-const Int_t TGeoNodeArray::kGeoReleasedSpace = 1000;
+const Int_t TGeoNodeArray::fgGeoArrayMaxSize  = 1000000;
+const Int_t TGeoNodeArray::fgGeoArrayInitSize = 1000;
+const Int_t TGeoNodeArray::fgGeoReleasedSpace = 1000;
 
 /*************************************************************************
  * TGeoNodeArray - base class for physical nodes arrays
@@ -823,8 +823,8 @@ TGeoNodeArray::TGeoNodeArray(Int_t ndaughters, Int_t size)
    if ((ndaughters<0) || (ndaughters>254)) return;
    fNdaughters = ndaughters;
    fSize = size;
-   if ((size<kGeoArrayInitSize) || (size>kGeoArrayMaxSize))
-      fSize = kGeoArrayInitSize;
+   if ((size<fgGeoArrayInitSize) || (size>fgGeoArrayMaxSize))
+      fSize = fgGeoArrayInitSize;
    // number of integers stored in a node
    fNodeSize = 3+fNdaughters;
    fFirstFree = 0;
@@ -972,9 +972,9 @@ void TGeoNodeArray::IncreaseArray()
       return;
    }
    if (free_space<fSize) new_size = fSize+free_space;
-//   new_size = (new_size>kGeoArrayMaxSize)?kGeoArrayMaxSize:new_size;
+//   new_size = (new_size>fgGeoArrayMaxSize)?fgGeoArrayMaxSize:new_size;
 /*
-   if ((gGeoManager->GetCache()->GetSize()+new_size-fSize) > TGeoNodeCache::kGeoCacheMaxSize) {
+   if ((gGeoManager->GetCache()->GetSize()+new_size-fSize) > TGeoNodeCache::fgGeoCacheMaxSize) {
       gGeoManager->GetCache()->CleanCache();
       IncreaseArray();
       return;
@@ -1029,8 +1029,8 @@ TGeoNodeObjArray::TGeoNodeObjArray(Int_t size)
 // default ctor
    fSize = size;
    fIndex = 0;
-   if (size<TGeoNodeArray::kGeoArrayInitSize)
-      fSize = TGeoNodeArray::kGeoArrayInitSize;
+   if (size<TGeoNodeArray::fgGeoArrayInitSize)
+      fSize = TGeoNodeArray::fgGeoArrayInitSize;
    fObjArray = new TObjArray(fSize);
    for (Int_t i=0; i<fSize; i++) fObjArray->AddAt(new TGeoNodePos(), i);
    fBitsArray  = new TBits(fSize);
@@ -1161,9 +1161,9 @@ void TGeoNodeObjArray::IncreaseArray()
  *
  *************************************************************************/
 
-const Int_t TGeoNodePos::kPersistentNodeMask   = 0x80000000;
-const UChar_t TGeoNodePos::kPersistentMatrixMask = 64;
-const UInt_t  TGeoNodePos::kNoMatrix = 1000000000;
+const Int_t   TGeoNodePos::fgPersistentNodeMask   = 0x80000000;
+const UChar_t TGeoNodePos::fgPersistentMatrixMask = 64;
+const UInt_t  TGeoNodePos::fgNoMatrix = 1000000000;
 
 ClassImp(TGeoNodePos)
 
@@ -1262,8 +1262,8 @@ void TGeoNodePos::Map(TGeoNode *node)
 void TGeoNodePos::SetPersistency(Bool_t flag)
 {
 // set this node persistent in cache
-   if (flag) fCount |= kPersistentNodeMask;
-   else      fCount &= !kPersistentNodeMask;
+   if (flag) fCount |= fgPersistentNodeMask;
+   else      fCount &= !fgPersistentNodeMask;
 }
 
 /*************************************************************************

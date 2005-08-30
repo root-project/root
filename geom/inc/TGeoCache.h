@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.20 2004/05/26 15:11:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.21 2005/05/26 12:54:56 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -317,9 +317,9 @@ public:
 class TGeoNodePos : public TObject
 {
 public:
-   static const Int_t  kPersistentNodeMask; // byte mask for persistent nodes
-   static const UChar_t  kPersistentMatrixMask; // byte mask for persistent matrices
-   static const UInt_t   kNoMatrix;     // initial value for fGlobalMatrix
+   static const Int_t    fgPersistentNodeMask;   // byte mask for persistent nodes
+   static const UChar_t  fgPersistentMatrixMask; // byte mask for persistent matrices
+   static const UInt_t   fgNoMatrix;             // initial value for fGlobalMatrix
 private:
    Int_t                 fNdaughters;   // number of daughters
    Int_t                 fMatrix;       // index of global matrix
@@ -343,10 +343,10 @@ public:
    Int_t                 GetUsageCount() const      {return (fCount & 0x7FFFFFFF);}
    Bool_t                HasDaughters() const;
    Bool_t                IsPersistent() const
-                            {return (((fCount & kPersistentNodeMask)==0)?kFALSE:kTRUE);}
+                            {return (((fCount & fgPersistentNodeMask)==0)?kFALSE:kTRUE);}
    void                  IncrementUsageCount()     {fCount++;}
    void                  Map(TGeoNode *node);
-   void                  ResetCount()         {fCount &= kPersistentNodeMask;}
+   void                  ResetCount()         {fCount &= fgPersistentNodeMask;}
    void                  SetMatrix(Int_t mat_ind) {fMatrix = mat_ind;}
    void                  SetPersistency(Bool_t flag=kTRUE);
 
@@ -373,9 +373,9 @@ public:
 class TGeoNodeArray : public TObject
 {
 public:
-   static const Int_t   kGeoArrayMaxSize;   // maximum cache size
-   static const Int_t   kGeoArrayInitSize;  // initial cache size
-   static const Int_t   kGeoReleasedSpace;  // default number of nodes released on cleaning
+   static const Int_t   fgGeoArrayMaxSize;   // maximum cache size
+   static const Int_t   fgGeoArrayInitSize;  // initial cache size
+   static const Int_t   fgGeoReleasedSpace;  // default number of nodes released on cleaning
 private:
    Int_t                fNodeSize;    // size of a node in bytes
    Int_t                fNdaughters;  // number of daughters for nodes in this array

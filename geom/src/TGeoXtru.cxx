@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.26 2005/05/17 12:00:23 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -661,12 +661,12 @@ TBuffer3D *TGeoXtru::MakeBuffer3D() const
    // Coordinates are in local reference frame.
    Int_t nz = GetNz();
    Int_t nvert = GetNvert();
-   Int_t NbPnts = nz*nvert;
-   Int_t NbSegs = nvert*(2*nz-1);
-   Int_t NbPols = nvert*(nz-1)+2;
+   Int_t nbPnts = nz*nvert;
+   Int_t nbSegs = nvert*(2*nz-1);
+   Int_t nbPols = nvert*(nz-1)+2;
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+nvert));
+                                   nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*(nbPols-2)+2*(2+nvert));
    if (buff)
    {
       SetPoints(buff->fPnts);   
@@ -1007,10 +1007,10 @@ const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t nz = GetNz();
       Int_t nvert = GetNvert();
-      Int_t NbPnts = nz*nvert;
-      Int_t NbSegs = nvert*(2*nz-1);
-      Int_t NbPols = nvert*(nz-1)+2;            
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+nvert))) {
+      Int_t nbPnts = nz*nvert;
+      Int_t nbSegs = nvert*(2*nz-1);
+      Int_t nbPols = nvert*(nz-1)+2;            
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*(nbPols-2)+2*(2+nvert))) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
