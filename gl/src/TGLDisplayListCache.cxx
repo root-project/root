@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.4 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.5 2005/06/15 15:40:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -20,23 +20,23 @@
 
 ClassImp(TGLDisplayListCache)
 
-TGLDisplayListCache * TGLDisplayListCache::fInstance = 0;
-const UInt_t TGLDisplayListCache::INVALID_DL_NAME = 0;
+TGLDisplayListCache * TGLDisplayListCache::fgInstance = 0;
+const UInt_t TGLDisplayListCache::fgInvalidDLName = 0;
 
 //______________________________________________________________________________
 TGLDisplayListCache & TGLDisplayListCache::Instance()
 {
-   if (!fInstance) {
-      fInstance = new TGLDisplayListCache();
+   if (!fgInstance) {
+      fgInstance = new TGLDisplayListCache();
    }
 
-   return *fInstance;
+   return *fgInstance;
 }
 
 //______________________________________________________________________________
 TGLDisplayListCache::TGLDisplayListCache(Bool_t enable, UInt_t size) :
       fSize(size), fInit(kFALSE), fEnabled(enable), fCaptureOpen(kFALSE),
-      fDLBase(INVALID_DL_NAME), fDLNextFree(INVALID_DL_NAME)
+      fDLBase(fgInvalidDLName), fDLNextFree(fgInvalidDLName)
 {
 }
 
@@ -65,7 +65,7 @@ Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, UInt_t LOD) const
    // TODO: Cache the lookup here ? As may have many calls of same draw/qual in a row
    UInt_t drawList = Find(MakeCacheID(drawable, LOD));
 
-   if (drawList == INVALID_DL_NAME) {
+   if (drawList == fgInvalidDLName) {
       if (gDebug>4) {
          Info("TGLDisplayListCache::Draw", "no cache for drawable %d LOD %d", &drawable, LOD);
       }
@@ -187,7 +187,7 @@ UInt_t TGLDisplayListCache::Find(CacheID_t cacheID) const
    if (cacheDLMapIt != fCacheDLMap.end()) {
       return (*cacheDLMapIt).second;
    }
-   return INVALID_DL_NAME;
+   return fgInvalidDLName;
 
 }
 

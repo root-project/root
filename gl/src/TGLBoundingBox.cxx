@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.10 2005/07/13 15:27:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.11 2005/07/14 19:13:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -294,16 +294,16 @@ EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 
    // TODO: Cheaper sphere test
    // Test all 8 box vertices against plane
-   Int_t VerticesInsidePlane = 8;
+   Int_t verticesInsidePlane = 8;
    for (UInt_t v = 0; v < 8; v++) {
       if (plane.DistanceTo(fVertex[v]) < 0.0) {
-         VerticesInsidePlane--;
+         verticesInsidePlane--;
       }
    }
 
-   if ( VerticesInsidePlane == 0 ) {
+   if ( verticesInsidePlane == 0 ) {
       return kOutside;
-   } else if ( VerticesInsidePlane == 8 ) {
+   } else if ( verticesInsidePlane == 8 ) {
       return kInside;
    } else {
       return kPartial;

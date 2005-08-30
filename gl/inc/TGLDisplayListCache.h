@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.4 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -41,8 +41,8 @@ private:
    CacheDLMap_t   fCacheDLMap;   //!
 
    // Static Fields
-   static TGLDisplayListCache * fInstance; //! the singleton cache instance
-   static const UInt_t INVALID_DL_NAME;
+   static TGLDisplayListCache * fgInstance; //! the singleton cache instance
+   static const UInt_t fgInvalidDLName;
 
    // Methods
    TGLDisplayListCache(Bool_t enable = true, UInt_t size = 10000);

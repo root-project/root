@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.14 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -20,7 +20,7 @@
 
 ClassImp(TGLCamera)
 
-const Double_t TGLCamera::fInterestBoxExpansion = 1.3;
+const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
 
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
@@ -198,26 +198,26 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
    // will be regarded incorrectly as intersecting (kPartial)
    // TODO: Improve this - have a reliable test (seperating axes).
 
-   Int_t PlanesInside = 0; // Assume outside to start
-   for (Int_t PlaneIndex = 0; PlaneIndex < kPlanesPerFrustum; ++PlaneIndex) {
-      EOverlap planeOverlap = box.Overlap(fFrustumPlanes[PlaneIndex]);
+   Int_t planesInside = 0; // Assume outside to start
+   for (Int_t planeIndex = 0; planeIndex < kPlanesPerFrustum; ++planeIndex) {
+      EOverlap planeOverlap = box.Overlap(fFrustumPlanes[planeIndex]);
 
 	  // Special case - any object which comes through the near clipping
      // plane is completely removed - disabled at present
      // TODO: In future may want to fade object (opacity) as they approach
       // near clip - how will this be returned? template pair?
-      /*if (PlaneIndex == kNEAR && planeOverlap == kPartial) {
+      /*if (planeIndex == kNEAR && planeOverlap == kPartial) {
          return kOutside;
       }*/
       // Once we find a single plane which shape is outside, we are outside the frustum
       if ( planeOverlap == kOutside ) {
          return kOutside;
       } else if ( planeOverlap == kInside ) {
-         PlanesInside++;
+         planesInside++;
       }
    }
    // Completely inside frustum
-   if ( PlanesInside == kPlanesPerFrustum ) {
+   if ( planesInside == kPlanesPerFrustum ) {
       return kInside;
    } else {
       return kPartial;
@@ -330,11 +330,11 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
    // For interest box we want to expand to ensure it is at least size
    // of smaller X/Y to avoid excessive interest box recalculations
    TGLVector3 frustumExtents = frustumBox.Extents();
-   Double_t minBoxLength = frustumExtents.Mag() * fInterestBoxExpansion;
+   Double_t minBoxLength = frustumExtents.Mag() * fgInterestBoxExpansion;
    newInterestBox.Scale(minBoxLength/frustumExtents[0], minBoxLength/frustumExtents[1], minBoxLength/frustumExtents[2]);
 
    // Expand the interest box
-   //newInterestBox.Scale(fInterestBoxExpansion);
+   //newInterestBox.Scale(fgInterestBoxExpansion);
 
    // Calculate volume ratio of new to old
    Double_t volRatio = 0.0;

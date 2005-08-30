@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.9 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.10 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -53,7 +53,7 @@ private:
    TGLBoundingBox   fInterestFrustumAsBox; //! frustum basis (as box) of current interest box (DEBUG)
 
    
-   static const Double_t fInterestBoxExpansion; //! expansion c.f. aligned current frustum box
+   static const Double_t fgInterestBoxExpansion; //! expansion c.f. aligned current frustum box
 
    // Methods
    TGLBoundingBox Frustum(Bool_t asBox = kTRUE) const; // current frustum

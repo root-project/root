@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.6 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.7 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -80,22 +80,22 @@ void Matrix3dSetRotationFromQuat4d(Double_t *NewObj, const Double_t *q1)
 //______________________________________________________________________________
 void Matrix3dMulMatrix3d(Double_t *NewObj, const Double_t *m1)
 {
-   Double_t Result[9];
+   Double_t result[9];
 
-   Result[0] = (NewObj[0] * m1[0]) + (NewObj[3] * m1[1]) + (NewObj[6] * m1[2]);
-   Result[3] = (NewObj[0] * m1[3]) + (NewObj[3] * m1[4]) + (NewObj[6] * m1[5]);
-   Result[6] = (NewObj[0] * m1[6]) + (NewObj[3] * m1[7]) + (NewObj[6] * m1[8]);
+   result[0] = (NewObj[0] * m1[0]) + (NewObj[3] * m1[1]) + (NewObj[6] * m1[2]);
+   result[3] = (NewObj[0] * m1[3]) + (NewObj[3] * m1[4]) + (NewObj[6] * m1[5]);
+   result[6] = (NewObj[0] * m1[6]) + (NewObj[3] * m1[7]) + (NewObj[6] * m1[8]);
 
-   Result[1] = (NewObj[1] * m1[0]) + (NewObj[4] * m1[1]) + (NewObj[7] * m1[2]);
-   Result[4] = (NewObj[1] * m1[3]) + (NewObj[4] * m1[4]) + (NewObj[7] * m1[5]);
-   Result[7] = (NewObj[1] * m1[6]) + (NewObj[4] * m1[7]) + (NewObj[7] * m1[8]);
+   result[1] = (NewObj[1] * m1[0]) + (NewObj[4] * m1[1]) + (NewObj[7] * m1[2]);
+   result[4] = (NewObj[1] * m1[3]) + (NewObj[4] * m1[4]) + (NewObj[7] * m1[5]);
+   result[7] = (NewObj[1] * m1[6]) + (NewObj[4] * m1[7]) + (NewObj[7] * m1[8]);
 
-   Result[2] = (NewObj[2] * m1[0]) + (NewObj[5] * m1[1]) + (NewObj[8] * m1[2]);
-   Result[5] = (NewObj[2] * m1[3]) + (NewObj[5] * m1[4]) + (NewObj[8] * m1[5]);
-   Result[8] = (NewObj[2] * m1[6]) + (NewObj[5] * m1[7]) + (NewObj[8] * m1[8]);
+   result[2] = (NewObj[2] * m1[0]) + (NewObj[5] * m1[1]) + (NewObj[8] * m1[2]);
+   result[5] = (NewObj[2] * m1[3]) + (NewObj[5] * m1[4]) + (NewObj[8] * m1[5]);
+   result[8] = (NewObj[2] * m1[6]) + (NewObj[5] * m1[7]) + (NewObj[8] * m1[8]);
 
    for (Int_t i = 0; i < 9; ++i)
-      NewObj[i] = Result[i];
+      NewObj[i] = result[i];
 }
 
 //______________________________________________________________________________
@@ -187,23 +187,23 @@ void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 //______________________________________________________________________________
 inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 {
-   Double_t TempPt[] = {NewPt.fX, NewPt.fY};
+   Double_t tempPt[] = {NewPt.fX, NewPt.fY};
    //Adjust point coords and scale down to range of [-1 ... 1]
-   TempPt[0]  = TempPt[0] * fAdjustWidth  - 1.;
-   TempPt[1]  = 1. - TempPt[1] * fAdjustHeight;
+   tempPt[0]  = tempPt[0] * fAdjustWidth  - 1.;
+   tempPt[1]  = 1. - tempPt[1] * fAdjustHeight;
    //Compute the square of the length of the vector to the point from the center
-   Double_t length = TempPt[0] * TempPt[0] + TempPt[1] * TempPt[1];
+   Double_t length = tempPt[0] * tempPt[0] + tempPt[1] * tempPt[1];
    //If the point is mapped outside of the sphere... (length > radius squared)
    if (length > 1.) {
       Double_t norm = 1.0f / TMath::Sqrt(length);
       //Return the "normalized" vector, a point on the sphere
-      NewVec[0] = TempPt[0] * norm;
-      NewVec[1] = TempPt[1] * norm;
+      NewVec[0] = tempPt[0] * norm;
+      NewVec[1] = tempPt[1] * norm;
       NewVec[2] = 0.;
    } else {   //Else it's on the inside
     //Return a vector to a point mapped inside the sphere sqrt(radius squared - length)
-      NewVec[0] = TempPt[0];
-      NewVec[1] = TempPt[1];
+      NewVec[0] = tempPt[0];
+      NewVec[1] = tempPt[1];
       NewVec[2] = TMath::Sqrt(1. - length);
    }
 }
@@ -235,22 +235,22 @@ void TArcBall::Drag(const TPoint &NewPt)
    //Mouse drag, calculate rotation
    MapToSphere(NewPt, fEnVec);
    //Return the quaternion equivalent to the rotation
-   Double_t NewRot[4] = {0.};
-   Double_t Perp[3] = {0.};
+   Double_t newRot[4] = {0.};
+   Double_t perp[3] = {0.};
 
-   Vector3dCross(Perp, fStVec, fEnVec);
+   Vector3dCross(perp, fStVec, fEnVec);
    //Compute the length of the perpendicular vector
-   if (Vector3dLength(Perp) > Epsilon) {
+   if (Vector3dLength(perp) > Epsilon) {
    //We're ok, so return the perpendicular vector as the transform after all
-      NewRot[0] = Perp[0];
-      NewRot[1] = Perp[1];
-      NewRot[2] = Perp[2];
+      newRot[0] = perp[0];
+      newRot[1] = perp[1];
+      newRot[2] = perp[2];
       //In the quaternion values, w is cosine (theta / 2), where theta is rotation angle
-      NewRot[3]= Vector3dDot(fStVec, fEnVec);
+      newRot[3]= Vector3dDot(fStVec, fEnVec);
    } else  //if it's zero
-      NewRot[0] = NewRot[1] = NewRot[2] = NewRot[3] = 0.;
+      newRot[0] = newRot[1] = newRot[2] = newRot[3] = 0.;
 
-   Matrix3dSetRotationFromQuat4d(fThisRot, NewRot);
+   Matrix3dSetRotationFromQuat4d(fThisRot, newRot);
    Matrix3dMulMatrix3d(fThisRot, fLastRot);
    Matrix4dSetRotationFromMatrix3d(fTransform, fThisRot);
 }

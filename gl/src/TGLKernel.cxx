@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.33 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.34 2005/08/10 16:26:35 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -269,14 +269,14 @@ void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
       Double_t z     = direction[3];
       RotateGL(angle,x,y,z);
    } else {
-//*-* Double_t Theta   - polar angle for the axis x`
-//*-* Double_t Phi     - azimutal angle for the axis x`
-//*-* Double_t Psi     - azimutal angle for the axis y`
+//*-* Double_t theta   - polar angle for the axis x`
+//*-* Double_t phi     - azimutal angle for the axis x`
+//*-* Double_t psi     - azimutal angle for the axis y`
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-      Double_t Theta = direction[0];
-      Double_t Phi   = direction[1];
-      Double_t Psi   = direction[2];
-      RotateGL(Theta,Phi,Psi);
+      Double_t theta = direction[0];
+      Double_t phi   = direction[1];
+      Double_t psi   = direction[2];
+      RotateGL(theta,phi,psi);
    }
 }
 
@@ -292,16 +292,16 @@ void TGLKernel::RotateGL(Double_t angle, Double_t x,Double_t y,Double_t z)
 }
 
 //______________________________________________________________________________
-void TGLKernel::RotateGL(Double_t Theta, Double_t Phi, Double_t Psi)
+void TGLKernel::RotateGL(Double_t theta, Double_t phi, Double_t psi)
 {
-   //*-* Double_t Theta   - polar angle for the axis x`
-   //*-* Double_t Phi     - azimutal angle for the axis x`
-   //*-* Double_t Psi     - azimutal angle for the axis y`
+   //*-* Double_t theta   - polar angle for the axis x`
+   //*-* Double_t phi     - azimutal angle for the axis x`
+   //*-* Double_t psi     - azimutal angle for the axis y`
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (TMath::Abs(90-Theta) > 0.00001) RotateGL(Theta-90, 1, 0, 0);
-   if (TMath::Abs(90-Psi)   > 0.00001) RotateGL(90-Psi,0, 1, 0);
-   if (TMath::Abs(Phi)      > 0.00001) RotateGL(Phi, 0, 0, 1);
+   if (TMath::Abs(90-theta) > 0.00001) RotateGL(theta-90, 1, 0, 0);
+   if (TMath::Abs(90-psi)   > 0.00001) RotateGL(90-psi,0, 1, 0);
+   if (TMath::Abs(phi)      > 0.00001) RotateGL(phi, 0, 0, 1);
 }
 
 //______________________________________________________________________________
@@ -843,20 +843,20 @@ Float_t *Normal2Line(Float_t *p1, Float_t *p2, Float_t *normal)
    //*-*     v*normal = 0;
    //*-*
    //*-*          a2*(a2-a1) + b2*(b2-b1) + c2*(c2-c1)
-   //*-*     Z = -------------------------------------
+   //*-*     z = -------------------------------------
    //*-*                         c2-c1
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Float_t Z = 0;
+   Float_t z = 0;
    Int_t i;
 
    for(i=0;i<3;i++) {
       normal[i] = p2[i];
-      Z += p2[i]*(p2[i]-p1[i]);
+      z += p2[i]*(p2[i]-p1[i]);
    }
-   Z /= p2[2]-p1[2];
+   z /= p2[2]-p1[2];
 
-   normal[2] -= Z;
+   normal[2] -= z;
 
    TMath::Normalize(normal);
 
