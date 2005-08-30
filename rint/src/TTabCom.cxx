@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.28 2005/08/24 12:52:09 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.29 2005/08/24 21:04:29 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1048,11 +1048,11 @@ TString TTabCom::GetSysIncludePath()
    // ----------------------------------------------
 
 #ifndef CINTINCDIR
-   TString CINTSYSDIR("$ROOTSYS/cint");
+   TString sCINTSYSDIR("$ROOTSYS/cint");
 #else
-   TString CINTSYSDIR(CINTINCDIR);
+   TString sCINTSYSDIR(CINTINCDIR);
 #endif
-   path.Append(":" + CINTSYSDIR + "/include");
+   path.Append(":" + sCINTSYSDIR + "/include");
 //   path.Append(":"+CINTSYSDIR+"/stl");
 //   path.Append(":"+CINTSYSDIR+"/msdev/include");
 //   path.Append(":"+CINTSYSDIR+"/sc/include");
@@ -1385,7 +1385,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // ---------------------------------------
    {
       int i = strlen(fBuf);     // old EOL position is i
-      int L = strlen(match) - (loc - start);  // new EOL position will be i+L
+      int l = strlen(match) - (loc - start);  // new EOL position will be i+L
 
       // first check for overflow
       if (strlen(fBuf) + strlen(match) + 1 > BUF_SIZE) {
@@ -1395,19 +1395,19 @@ Int_t TTabCom::Complete(const TRegexp & re,
       }
       // debugging output
       IfDebug(cerr << "  i=" << i << endl);
-      IfDebug(cerr << "  L=" << L << endl);
+      IfDebug(cerr << "  L=" << l << endl);
       IfDebug(cerr << "loc=" << loc << endl);
 
       // slide everything (including the null terminator) over to make space
       for (; i >= loc; i -= 1) {
-         fBuf[i + L] = fBuf[i];
+         fBuf[i + l] = fBuf[i];
       }
 
       // insert match
       strncpy(fBuf + start, match, strlen(match));
 
       pos = loc;                // position of first change in "fBuf"
-      *fpLoc = loc + L;         // new cursor position
+      *fpLoc = loc + l;         // new cursor position
    }
 
  done:                         // <----- goto label
@@ -2100,16 +2100,16 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCXX_Global:
       {
          // first need to veto a few possibilities.
-         int L2 = s2.Length(), L3 = s3.Length();
+         int l2 = s2.Length(), l3 = s3.Length();
 
          // "abc().whatever[TAB]"
-         if (L2 > L3 && s2[L2 - L3 - 1] == '.') {
+         if (l2 > l3 && s2[l2 - l3 - 1] == '.') {
             cerr << endl <<
                 "tab completion not implemented for this context" << endl;
             break;              // veto
          }
          // "abc()->whatever[TAB]"
-         if (L2 > L3 + 1 && s2(L2 - L3 - 2, 2) == "->") {
+         if (l2 > l3 + 1 && s2(l2 - l3 - 2, 2) == "->") {
             cerr << endl <<
                 "tab completion not implemented for this context" << endl;
             break;              // veto
