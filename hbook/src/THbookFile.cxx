@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.20 2004/02/11 18:05:42 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.21 2004/02/19 21:48:06 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -86,7 +86,7 @@ const Int_t kNRH  = 6;
 const Int_t kMIN1 = 7;
 const Int_t kMAX1 = 8;
 
-static Int_t lastentry = -1;
+static Int_t gLastEntry = -1;
 
 //  Define the names of the Fortran subroutine and functions for the different OSs
 
@@ -513,8 +513,8 @@ Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id)
 {
 // Read in memory only the branch bname
 
-   if (entry == lastentry) return 0;
-   lastentry = entry;
+   if (entry == gLastEntry) return 0;
+   gLastEntry = entry;
    Int_t ier = 0;
    //uses the fast read method using the Hbook tables computed in InitLeaves
    hgntf(id,entry+1,ier);
@@ -620,7 +620,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 {
 // Convert the Column-Wise-Ntuple id to a Root Tree
 
-  const int Nchar=9;
+  const int nchar=9;
   int nvar;
   int i,j;
   int nsub,itype,isize,ielem;
@@ -637,19 +637,19 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 #else
   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
-  chtag_out = new char[nvar*Nchar+1];
+  chtag_out = new char[nvar*nchar+1];
   Int_t *charflag = new Int_t[nvar];
   Int_t *lenchar  = new Int_t[nvar];
   Int_t *boolflag = new Int_t[nvar];
   Int_t *lenbool  = new Int_t[nvar];
   UChar_t *boolarr = new UChar_t[10000];
 
-  chtag_out[nvar*Nchar]=0;
+  chtag_out[nvar*nchar]=0;
   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,Nchar);
+  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,Nchar,rmin[0],rmax[0]);
+  hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
 #endif
 
   Int_t bufpos = 0;
@@ -690,7 +690,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 #else
      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
 #endif
-     TString HbookName = name;
+     TString hbookName = name;
 
      for (j=30;j>0;j--) {
         if(golower) name[j] = tolower(name[j]);
@@ -774,7 +774,7 @@ TObject *THbookFile::ConvertRWN(Int_t id)
 {
 // Convert the Row-Wise-Ntuple id to a Root Tree
 
-  const int Nchar=9;
+  const int nchar=9;
   int nvar;
   int i,j;
   char *chtag_out;
@@ -791,15 +791,15 @@ TObject *THbookFile::ConvertRWN(Int_t id)
   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
 
-  chtag_out = new char[nvar*Nchar+1];
+  chtag_out = new char[nvar*nchar+1];
 
   Int_t golower  = 1;
-  chtag_out[nvar*Nchar]=0;
+  chtag_out[nvar*nchar]=0;
   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,Nchar);
+  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,Nchar,rmin[0],rmax[0]);
+  hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
 #endif
   hgnpar(id,"?",1);
   char *name = chtag_out;
@@ -812,11 +812,11 @@ TObject *THbookFile::ConvertRWN(Int_t id)
 
   Int_t first,last;
   for(i=0; i<nvar;i++) {
-    name[Nchar-1] = 0;
+    name[nchar-1] = 0;
     first = last = 0;
-    TString HbookName = name;
+    TString hbookName = name;
     // suppress trailing blanks
-    for (j=Nchar-2;j>0;j--) {
+    for (j=nchar-2;j>0;j--) {
        if(golower) name[j] = tolower(name[j]);
        if (name[j] == ' ' && last == 0) name[j] = 0;
        else last = j;
@@ -824,7 +824,7 @@ TObject *THbookFile::ConvertRWN(Int_t id)
     if (golower == 2) name[0] = tolower(name[0]);
 
     // suppress heading blanks
-    for (j=0;j<Nchar;j++) {
+    for (j=0;j<nchar;j++) {
        if (name[j] != ' ') break;
        first = j+1;
     }
@@ -832,9 +832,9 @@ TObject *THbookFile::ConvertRWN(Int_t id)
     //tree->Branch(&name[first],&x[i],&name[first],bufsize);
     THbookBranch *branch = new THbookBranch(&name[first],&x[4*i],&name[first],bufsize);
     branch->SetAddress(&x[i]);
-    branch->SetBlockName(HbookName.Data());
+    branch->SetBlockName(hbookName.Data());
     tree->GetListOfBranches()->Add(branch);
-    name += Nchar;
+    name += nchar;
   }
   tree->SetEntries(nentries);
   return tree;
