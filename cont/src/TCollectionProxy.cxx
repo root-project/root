@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.3 2004/11/05 14:32:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.4 2005/05/23 17:02:45 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -47,7 +47,7 @@ namespace {
       return TClassEdit::kNotSTL;
    }
 
-   static TEmulatedCollectionProxy* genEmulation(const char* class_name)  {
+   static TEmulatedCollectionProxy* GenEmulation(const char* class_name)  {
       if ( class_name )  {
          std::string cl = class_name;
          if ( cl.find("stdext::hash_") != std::string::npos )
@@ -70,32 +70,32 @@ namespace {
 
 /// Generate emulated collection proxy for a given class
 TVirtualCollectionProxy* 
-TCollectionProxy::genEmulatedProxy(const char* class_name)  
+TCollectionProxy::GenEmulatedProxy(const char* class_name)  
 {
-  return genEmulation(class_name);
+  return GenEmulation(class_name);
 }
 
 /// Generate emulated class streamer for a given collection class
 TClassStreamer* 
-TCollectionProxy::genEmulatedClassStreamer(const char* class_name)
+TCollectionProxy::GenEmulatedClassStreamer(const char* class_name)
 {
   TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptStreamer(genEmulation(class_name));
+  s->AdoptStreamer(GenEmulation(class_name));
   return s;
 }
 
 /// Generate emulated member streamer for a given collection class
 TMemberStreamer* 
-TCollectionProxy::genEmulatedMemberStreamer(const char* class_name)
+TCollectionProxy::GenEmulatedMemberStreamer(const char* class_name)
 {
   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptStreamer(genEmulation(class_name));
+  s->AdoptStreamer(GenEmulation(class_name));
   return s;
 }
 
 /// Generate proxy from static functions
 TCollectionProxy::Proxy_t* 
-TCollectionProxy::genExplicitProxy( Info_t info,
+TCollectionProxy::GenExplicitProxy( Info_t info,
                                     size_t iter_size,
                                     size_t value_diff,
                                     int    value_offset,
@@ -128,7 +128,7 @@ TCollectionProxy::genExplicitProxy( Info_t info,
 
 /// Generate streamer from static functions
 TGenCollectionStreamer* 
-TCollectionProxy::genExplicitStreamer(  Info_t  info,
+TCollectionProxy::GenExplicitStreamer(  Info_t  info,
                                         size_t  iter_size,
                                         size_t  value_diff,
                                         int     value_offset,
@@ -161,7 +161,7 @@ TCollectionProxy::genExplicitStreamer(  Info_t  info,
 
 /// Generate class streamer from static functions
 TClassStreamer* 
-TCollectionProxy::genExplicitClassStreamer( Info_t info,
+TCollectionProxy::GenExplicitClassStreamer( Info_t info,
                                             size_t iter_size,
                                             size_t value_diff,
                                             int    value_offset,
@@ -177,7 +177,7 @@ TCollectionProxy::genExplicitClassStreamer( Info_t info,
                                             )
 {
   TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptStreamer(genExplicitStreamer(info, 
+  s->AdoptStreamer(GenExplicitStreamer(info, 
                                     iter_size,
                                     value_diff,
                                     value_offset,
@@ -195,7 +195,7 @@ TCollectionProxy::genExplicitClassStreamer( Info_t info,
 
 /// Generate member streamer from static functions
 TMemberStreamer* 
-TCollectionProxy::genExplicitMemberStreamer(Info_t info,
+TCollectionProxy::GenExplicitMemberStreamer(Info_t info,
                                             size_t iter_size,
                                             size_t value_diff,
                                             int    value_offset,
@@ -211,7 +211,7 @@ TCollectionProxy::genExplicitMemberStreamer(Info_t info,
                                             )
 {
   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptStreamer(genExplicitStreamer(info, 
+  s->AdoptStreamer(GenExplicitStreamer(info, 
                                     iter_size,
                                     value_diff,
                                     value_offset,

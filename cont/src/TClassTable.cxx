@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.32 2004/10/05 15:41:04 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.33 2005/06/22 17:01:55 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 
 TClassTable *gClassTable;
 
-ClassRec_t **TClassTable::fgTable;
-ClassRec_t **TClassTable::fgSortedTable;
+TClassRec  **TClassTable::fgTable;
+TClassRec  **TClassTable::fgSortedTable;
 int          TClassTable::fgSize;
 int          TClassTable::fgTally;
 Bool_t       TClassTable::fgSorted;
@@ -57,16 +57,16 @@ namespace ROOT {
      // TROOT.h header file.
    public:
 #ifdef R__GLOBALSTL
-      typedef map<string,ClassRec_t*>           IdMap_t;
+      typedef map<string, TClassRec*>           IdMap_t;
 #else
-      typedef std::map<std::string,ClassRec_t*> IdMap_t;
+      typedef std::map<std::string, TClassRec*> IdMap_t;
 #endif
       typedef IdMap_t::key_type                 key_type;
       typedef IdMap_t::const_iterator           const_iterator;
       typedef IdMap_t::size_type                size_type;
 #ifdef R__WIN32
       // Window's std::map does NOT defined mapped_type
-      typedef ClassRec_t*                       mapped_type;
+      typedef TClassRec*                        mapped_type;
 #else
       typedef IdMap_t::mapped_type              mapped_type;
 #endif
@@ -99,14 +99,14 @@ namespace ROOT {
    private:
       TMap fMap;
    public:
-      void Add(const char *key, ClassRec_t *&obj) {
+      void Add(const char *key, TClassRec *&obj) {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, (TObject*)obj);
       }
 
-      ClassRec_t *Find(const char *key) const {
+      TClassRec *Find(const char *key) const {
          const TPair *a = (const TPair *)fMap.FindObject(key);
-         if (a) return (ClassRec_t*) a->Value();
+         if (a) return (TClassRec*) a->Value();
          return 0;
       }
 
@@ -122,9 +122,9 @@ namespace ROOT {
          TObjString *key;
          while((key = (TObjString*)next())) {
             printf("Key: %s\n",key->String().Data());
-            ClassRec_t *data = (ClassRec_t*)fMap.GetValue(key);
+            TClassRec *data = (TClassRec*)fMap.GetValue(key);
             if (data) {
-               printf("  class: %s %d\n",data->name,data->id);
+               printf("  class: %s %d\n",data->fName,data->fId);
             } else {
                printf("  no class: \n");
             }
@@ -142,9 +142,9 @@ TClassTable::TClassTable()
    if (gClassTable) return;
 
    fgSize  = (int)TMath::NextPrime(1000);
-   fgTable = new ClassRec_t* [fgSize];
+   fgTable = new TClassRec* [fgSize];
    fgIdMap = new IdMap_t;
-   memset(fgTable, 0, fgSize*sizeof(ClassRec_t*));
+   memset(fgTable, 0, fgSize*sizeof(TClassRec*));
    gClassTable = this;
 }
 
@@ -157,10 +157,10 @@ TClassTable::~TClassTable()
    if (gClassTable != this) return;
 
    for (Int_t i = 0; i < fgSize; i++) {
-      ClassRec_t *r = fgTable[i];
+      TClassRec *r = fgTable[i];
       while (r) {
-         delete [] r->name;
-         ClassRec_t *next = r->next;
+         delete [] r->fName;
+         TClassRec *next = r->fNext;
          delete r;
          r = next;
       }
@@ -193,16 +193,16 @@ void TClassTable::Print(Option_t *option) const
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
    for (int i = 0; i < fgTally; i++) {
-      ClassRec_t *r = fgSortedTable[i];
+      TClassRec *r = fgSortedTable[i];
       n++;
-      TString s = r->name;
-      if (nch && strcmp(option,r->name) && s.Index(re) == kNPOS) continue;
+      TString s = r->fName;
+      if (nch && strcmp(option,r->fName) && s.Index(re) == kNPOS) continue;
       nl++;
-      if (gROOT->GetClass(r->name, kFALSE)) {
+      if (gROOT->GetClass(r->fName, kFALSE)) {
          ninit++;
-         Printf("%-35s %6d %7d       Yes", r->name, r->id, r->bits);
+         Printf("%-35s %6d %7d       Yes", r->fName, r->fId, r->fBits);
       } else
-         Printf("%-35s %6d %7d       No",  r->name, r->id, r->bits);
+         Printf("%-35s %6d %7d       No",  r->fName, r->fId, r->fBits);
    }
    Printf("----------------------------------------------------------------");
    Printf("Listed Classes: %4d  Total classes: %4d   initialized: %4d",nl, n, ninit);
@@ -218,7 +218,7 @@ int   TClassTable::Classes() { return fgTally; }
 //______________________________________________________________________________
 void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
-namespace ROOT { class fornamespace {}; } // Dummy class to give a typeid to namespace
+namespace ROOT { class TFornamespace {}; } // Dummy class to give a typeid to namespace
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
@@ -230,10 +230,10 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       new TClassTable;
 
   // check if already in table, if so return
-   ClassRec_t *r = FindElement(cname, kTRUE);
-   if (r->name) {
-      if ( strcmp(r->info->name(),typeid(ROOT::fornamespace).name())==0
-           && strcmp(info.name(),typeid(ROOT::fornamespace).name())==0 ) {
+   TClassRec *r = FindElement(cname, kTRUE);
+   if (r->fName) {
+      if ( strcmp(r->fInfo->name(),typeid(ROOT::TFornamespace).name())==0
+           && strcmp(info.name(),typeid(ROOT::TFornamespace).name())==0 ) {
          // We have a namespace being reloaded.
          // This okay we just keep the old one.
          return;
@@ -245,11 +245,11 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       return;
    }
 
-   r->name = StrDup(cname);
-   r->id   = id;
-   r->bits = pragmabits;
-   r->dict = dict;
-   r->info = &info;
+   r->fName = StrDup(cname);
+   r->fId   = id;
+   r->fBits = pragmabits;
+   r->fDict = dict;
+   r->fInfo = &info;
 
    fgIdMap->Add(info.name(),r);
 
@@ -272,16 +272,16 @@ void TClassTable::Remove(const char *cname)
    if (slot < 0) slot = -slot;
    slot %= fgSize;
 
-   ClassRec_t *r;
-   ClassRec_t *prev = 0;
-   for (r = fgTable[slot]; r; r = r->next) {
-      if (!strcmp(r->name, cname)) {
+   TClassRec *r;
+   TClassRec *prev = 0;
+   for (r = fgTable[slot]; r; r = r->fNext) {
+      if (!strcmp(r->fName, cname)) {
          if (prev)
-            prev->next = r->next;
+            prev->fNext = r->fNext;
          else
-            fgTable[slot] = r->next;
-         fgIdMap->Remove(r->info->name());
-         delete [] r->name;
+            fgTable[slot] = r->fNext;
+         fgIdMap->Remove(r->fInfo->name());
+         delete [] r->fName;
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -292,7 +292,7 @@ void TClassTable::Remove(const char *cname)
 }
 
 //______________________________________________________________________________
-ClassRec_t *TClassTable::FindElement(const char *cname, Bool_t insert)
+TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
@@ -307,19 +307,19 @@ ClassRec_t *TClassTable::FindElement(const char *cname, Bool_t insert)
    if (slot < 0) slot = -slot;
    slot %= fgSize;
 
-   ClassRec_t *r;
+   TClassRec *r;
 
-   for (r = fgTable[slot]; r; r = r->next)
-      if (!strcmp(r->name, cname)) return r;
+   for (r = fgTable[slot]; r; r = r->fNext)
+      if (!strcmp(r->fName, cname)) return r;
 
    if (!insert) return 0;
 
-   r = new ClassRec_t;
-   r->name = 0;
-   r->id   = 0;
-   r->dict = 0;
-   r->info = 0;
-   r->next = fgTable[slot];
+   r = new TClassRec;
+   r->fName = 0;
+   r->fId   = 0;
+   r->fDict = 0;
+   r->fInfo = 0;
+   r->fNext = fgTable[slot];
    fgTable[slot] = r;
 
    return r;
@@ -330,8 +330,8 @@ Version_t TClassTable::GetID(const char *cname)
 {
    // Returns the ID of a class.
 
-   ClassRec_t *r = FindElement(cname);
-   if (r) return r->id;
+   TClassRec *r = FindElement(cname);
+   if (r) return r->fId;
    return -1;
 }
 
@@ -340,8 +340,8 @@ Int_t TClassTable::GetPragmaBits(const char *cname)
 {
    // Returns the pragma bits as specified in the LinkDef.h file.
 
-   ClassRec_t *r = FindElement(cname);
-   if (r) return r->bits;
+   TClassRec *r = FindElement(cname);
+   if (r) return r->fBits;
    return 0;
 }
 
@@ -356,8 +356,8 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
       fgIdMap->Print();
    }
 
-   ClassRec_t *r = FindElement(cname);
-   if (r) return r->dict;
+   TClassRec *r = FindElement(cname);
+   if (r) return r->fDict;
    return 0;
 }
 
@@ -372,8 +372,8 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
       fgIdMap->Print();
    }
 
-   ClassRec_t *r = fgIdMap->Find(info.name());
-   if (r) return r->dict;
+   TClassRec *r = fgIdMap->Find(info.name());
+   if (r) return r->fDict;
    return 0;
 }
 
@@ -384,7 +384,7 @@ extern "C" {
    {
       // Function used for sorting classes alphabetically.
 
-      return strcmp((*(ClassRec_t **)a)->name, (*(ClassRec_t **)b)->name);
+      return strcmp((*(TClassRec **)a)->fName, (*(TClassRec **)b)->fName);
    }
 }
 
@@ -394,8 +394,8 @@ char *TClassTable::Next()
     // Returns next class from sorted class table.
 
     if (fgCursor < fgTally) {
-       ClassRec_t *r = fgSortedTable[fgCursor++];
-       return r->name;
+       TClassRec *r = fgSortedTable[fgCursor++];
+       return r->fName;
     } else
        return 0;
 }
@@ -418,13 +418,13 @@ void TClassTable::PrintTable()
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
    for (int i = 0; i < fgTally; i++) {
-      ClassRec_t *r = fgSortedTable[i];
+      TClassRec *r = fgSortedTable[i];
       n++;
-      if (gROOT->GetClass(r->name, kFALSE)) {
+      if (gROOT->GetClass(r->fName, kFALSE)) {
          ninit++;
-         Printf("%-35s %6d %7d       Yes", r->name, r->id, r->bits);
+         Printf("%-35s %6d %7d       Yes", r->fName, r->fId, r->fBits);
       } else
-         Printf("%-35s %6d %7d       No",  r->name, r->id, r->bits);
+         Printf("%-35s %6d %7d       No",  r->fName, r->fId, r->fBits);
    }
    Printf("----------------------------------------------------------------");
    Printf("Total classes: %4d   initialized: %4d", n, ninit);
@@ -440,14 +440,14 @@ void TClassTable::SortTable()
 
    if (!fgSorted) {
       delete [] fgSortedTable;
-      fgSortedTable = new ClassRec_t* [fgTally];
+      fgSortedTable = new TClassRec* [fgTally];
 
       int j = 0;
       for (int i = 0; i < fgSize; i++)
-         for (ClassRec_t *r = fgTable[i]; r; r = r->next)
+         for (TClassRec *r = fgTable[i]; r; r = r->fNext)
             fgSortedTable[j++] = r;
 
-      ::qsort(fgSortedTable, fgTally, sizeof(ClassRec_t *), ::ClassComp);
+      ::qsort(fgSortedTable, fgTally, sizeof(TClassRec *), ::ClassComp);
       fgSorted = kTRUE;
    }
 }
@@ -459,11 +459,11 @@ void TClassTable::Terminate()
 
    if (gClassTable) {
       for (int i = 0; i < fgSize; i++)
-         for (ClassRec_t *r = fgTable[i]; r; ) {
-            ClassRec_t *t = r;
-            r = r->next;
-            fgIdMap->Remove(r->info->name());
-            delete [] t->name;
+         for (TClassRec *r = fgTable[i]; r; ) {
+            TClassRec *t = r;
+            r = r->fNext;
+            fgIdMap->Remove(r->fInfo->name());
+            delete [] t->fName;
             delete t;
          }
       delete [] fgTable; fgTable = 0;
@@ -493,8 +493,8 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    // This is called via the RootClassVersion macro.
 
    if (cname) {
-      ClassRec_t *r = TClassTable::FindElement(cname,kFALSE);
-      if (r) r->id = newid;
+      TClassRec *r = TClassTable::FindElement(cname,kFALSE);
+      if (r) r->fId = newid;
    }
    if (cl) {
       if (cl->fVersionUsed) {

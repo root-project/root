@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.8 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.9 2005/06/01 15:43:18 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -103,12 +103,12 @@ public:
 #endif
 
 
-  template <class T, class Q> struct pair_holder {
+  template <class T, class Q> struct PairHolder {
     T first;
     Q second;
-    pair_holder() {}
-    pair_holder(const pair_holder& c) : first(c.first), second(c.second) {}
-    ~pair_holder() {}
+    PairHolder() {}
+    PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
+    ~PairHolder() {}
   };
 
   template <class T> struct Address {
@@ -314,16 +314,16 @@ public:
   };
 
   /// Generate emulated collection proxy for a given class
-  static TVirtualCollectionProxy* genEmulatedProxy(const char* class_name);
+  static TVirtualCollectionProxy* GenEmulatedProxy(const char* class_name);
 
   /// Generate emulated class streamer for a given collection class
-  static TClassStreamer* genEmulatedClassStreamer(const char* class_name);
+  static TClassStreamer* GenEmulatedClassStreamer(const char* class_name);
 
   /// Generate emulated member streamer for a given collection class
-  static TMemberStreamer* genEmulatedMemberStreamer(const char* class_name);
+  static TMemberStreamer* GenEmulatedMemberStreamer(const char* class_name);
 
   /// Generate proxy from static functions
-  static Proxy_t* genExplicitProxy( Info_t info,
+  static Proxy_t* GenExplicitProxy( Info_t info,
                                     size_t iter_size,
                                     size_t value_diff,
                                     int    value_offset,
@@ -339,10 +339,10 @@ public:
                                     );
 
   /// Generate proxy from template
-  template <class T> static Proxy_t* genProxy(const T&)  {
-    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
-    return genExplicitProxy(typeid(TYPENAME T::Cont_t),
+  template <class T> static Proxy_t* GenProxy(const T&)  {
+    PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    return GenExplicitProxy(typeid(TYPENAME T::Cont_t),
                             sizeof(TYPENAME T::Iter_t),
                             (((char*)&p->second)-((char*)&p->first)),
                             T::value_offset(),
@@ -359,7 +359,7 @@ public:
 
   /// Generate streamer from static functions
   static TGenCollectionStreamer* 
-    genExplicitStreamer(  Info_t  info,
+    GenExplicitStreamer(  Info_t  info,
                           size_t  iter_size,
                           size_t  value_diff,
                           int     value_offset,
@@ -376,7 +376,7 @@ public:
 
   /// Generate class streamer from static functions
   static TClassStreamer* 
-    genExplicitClassStreamer( Info_t  info,
+    GenExplicitClassStreamer( Info_t  info,
                               size_t  iter_size,
                               size_t  value_diff,
                               int     value_offset,
@@ -392,10 +392,10 @@ public:
                               );
 
   /// Generate class streamer from template
-  template <class T> static TClassStreamer* genClassStreamer(const T&)  {
-    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
-    return genExplicitClassStreamer(typeid(TYPENAME T::Cont_t),
+  template <class T> static TClassStreamer* GenClassStreamer(const T&)  {
+    PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    return GenExplicitClassStreamer(typeid(TYPENAME T::Cont_t),
                                     sizeof(TYPENAME T::Iter_t),
                                     (((char*)&p->second)-((char*)&p->first)),
                                     T::value_offset(),
@@ -412,7 +412,7 @@ public:
 
   /// Generate member streamer from static functions
   static TMemberStreamer* 
-    genExplicitMemberStreamer(Info_t  info,
+    GenExplicitMemberStreamer(Info_t  info,
                               size_t  iter_size,
                               size_t  value_diff,
                               int     value_offset,
@@ -428,10 +428,10 @@ public:
                               );
 
   /// Generate member streamer from template
-  template <class T> static TMemberStreamer* genMemberStreamer(const T&)  {
-    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
-    return genExplicitMemberStreamer( typeid(TYPENAME T::Cont_t),
+  template <class T> static TMemberStreamer* GenMemberStreamer(const T&)  {
+    PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    return GenExplicitMemberStreamer( typeid(TYPENAME T::Cont_t),
                                       sizeof(TYPENAME T::Iter_t),
                                       (((char*)&p->second)-((char*)&p->first)),
                                       T::value_offset(),

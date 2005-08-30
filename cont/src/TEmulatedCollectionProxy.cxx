@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.15 2005/08/03 19:34:49 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.16 2005/08/03 21:19:15 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -356,7 +356,7 @@ void TEmulatedCollectionProxy::Commit(void* /* env */ )
 void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
 {
    // Object input streamer
-   bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
+   Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
    StreamHelper* itm = (StreamHelper*)At(0);
    switch (fVal->fCase) {
       case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way

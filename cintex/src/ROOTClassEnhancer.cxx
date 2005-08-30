@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.1 2005/06/23 10:33:20 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -344,7 +344,7 @@ namespace ROOT { namespace Cintex {
             }
             std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().AddressGet());
             std::auto_ptr<TCollectionProxy::Proxy_t> proxy(
-              TCollectionProxy::genExplicitProxy(tid,
+              TCollectionProxy::GenExplicitProxy(tid,
               m->iter_size,
               m->value_diff,
               m->value_offset,
@@ -359,7 +359,7 @@ namespace ROOT { namespace Cintex {
               m->collect_func
               ));
             str = std::auto_ptr<TClassStreamer>(
-              TCollectionProxy::genExplicitClassStreamer(tid,
+              TCollectionProxy::GenExplicitClassStreamer(tid,
               m->iter_size,
               m->value_diff,
               m->value_offset,

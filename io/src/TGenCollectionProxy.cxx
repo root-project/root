@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.19 2005/03/24 14:27:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.20 2005/06/01 15:43:18 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -181,7 +181,7 @@ public:
   virtual ~TGenMapProxy() {
   }
   /// Call to delete/destruct individual item
-  virtual void DeleteItem(bool /* force */, void* ptr)  const  {
+  virtual void DeleteItem(Bool_t /* force */, void* ptr)  const  {
     if ( fKey->fCase&G__BIT_ISPOINTER )  {
       fKey->DeleteItem(*(void**)ptr);
     }
@@ -269,7 +269,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
           }
        }
        else {
-          long P = ti.Property();
+          Long_t P = ti.Property();
           if ( P&G__BIT_ISPOINTER ) {
              fSize = sizeof(void*);
           }
@@ -759,7 +759,7 @@ void TGenCollectionProxy::PopProxy()
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::DeleteItem(bool force, void* ptr) const
+void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
 {
    // Call to delete/destruct individual item
    if ( force && ptr )  {

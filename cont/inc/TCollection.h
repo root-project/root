@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.17 2005/06/22 20:18:11 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.18 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -159,9 +159,9 @@ public:
 
 #define ForEach(type,proc) \
     SetCurrentCollection(); \
-    TIter _NAME3_(type,proc,_nxt)(TCollection::GetCurrentCollection()); \
-    type *_NAME3_(type,proc,_obj); \
-    while ((_NAME3_(type,proc,_obj) = (type*) _NAME3_(type,proc,_nxt)())) \
-       _NAME3_(type,proc,_obj)->proc
+    TIter _NAME3_(nxt_,type,proc)(TCollection::GetCurrentCollection()); \
+    type *_NAME3_(obj_,type,proc); \
+    while ((_NAME3_(obj_,type,proc) = (type*) _NAME3_(nxt_,type,proc)())) \
+       _NAME3_(obj_,type,proc)->proc
 
 #endif

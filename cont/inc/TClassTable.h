@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.7 2002/05/10 21:32:09 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.8 2004/02/13 11:25:37 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -29,13 +29,13 @@
 #include "TString.h"
 #endif
 
-struct ClassRec_t {
-   char            *name;
-   Version_t        id;
-   Int_t            bits;
-   VoidFuncPtr_t    dict;
-   const type_info *info;
-   ClassRec_t      *next;
+struct TClassRec {
+   char            *fName;
+   Version_t        fId;
+   Int_t            fBits;
+   VoidFuncPtr_t    fDict;
+   const type_info *fInfo;
+   TClassRec       *fNext;
 };
 
 namespace ROOT {
@@ -49,8 +49,8 @@ friend  void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
 
-   static ClassRec_t **fgTable;
-   static ClassRec_t **fgSortedTable;
+   static TClassRec  **fgTable;
+   static TClassRec  **fgSortedTable;
    static IdMap_t     *fgIdMap;
    static int          fgSize;
    static int          fgTally;
@@ -59,7 +59,7 @@ private:
 
    TClassTable();
 
-   static ClassRec_t  *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
 public:

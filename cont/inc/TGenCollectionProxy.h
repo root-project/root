@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.7 2005/03/24 14:27:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.8 2005/06/01 15:43:18 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
     * @date    10/10/2004
     */
   union StreamHelper  {
-    bool         boolean;
+    Bool_t       boolean;
     Char_t       s_char;
     Short_t      s_short;
     Int_t        s_int;
@@ -162,7 +162,7 @@ public:
       set( b.ReadObjectAny(v->fType) );
     }
 
-    void read_tstring_pointer(bool vsn3, TBuffer& b)  {
+    void read_tstring_pointer(Bool_t vsn3, TBuffer& b)  {
       TString* s = (TString*)ptr();
       if ( vsn3 )  {
         if ( !s ) s = new TString();
@@ -202,7 +202,7 @@ protected:
   typedef std::vector<Env_t*>     Proxies_t;
 
   std::string   fName;      // Name of the class being proxied.    
-  bool          fPointers;  // Flag to indicate if containee has pointers (key or value)
+  Bool_t        fPointers;  // Flag to indicate if containee has pointers (key or value)
   Method        fClear;     // Method cache for container accessors: clear container
   Method        fSize;      // Container accessors: size of container
   Method        fResize;    // Container accessors: resize container
@@ -228,7 +228,7 @@ protected:
   /// Some hack to avoid const-ness
   virtual TGenCollectionProxy* InitializeEx();
   /// Call to delete/destruct individual contained item
-  virtual void DeleteItem(bool force, void* ptr) const;
+  virtual void DeleteItem(Bool_t force, void* ptr) const;
   /// Allow to check function pointers
   void CheckFunctions()  const;
 

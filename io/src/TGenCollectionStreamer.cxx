@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.6 2005/04/18 10:54:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.7 2005/04/18 19:41:22 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -56,7 +56,7 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const  {
 void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
   size_t len = fValDiff*nElements;
   char   buffer[8096];
-  bool   feed = false;
+  Bool_t   feed = false;
   void*  memory = 0;
   StreamHelper* itm = 0;
   fEnv->size = nElements;
@@ -103,7 +103,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
 
 /// Object input streamer
 void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
-  bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
+  Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
   size_t len = fValDiff*nElements;
   StreamHelper* itm = 0;
   char   buffer[8096];
@@ -194,7 +194,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
 
 /// Map input streamer
 void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)  {
-  bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
+  Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
   size_t len = fValDiff*nElements;
   Value  *v;
   char buffer[8096], *addr, *temp;

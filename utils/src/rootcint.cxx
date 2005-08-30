@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.214 2005/08/09 19:15:34 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.215 2005/08/11 21:19:05 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2312,18 +2312,18 @@ void WriteClassInit(G__ClassInfo &cl)
         case TClassEdit::kVector:
         case TClassEdit::kList:
         case TClassEdit::kDeque:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
           break;
         case TClassEdit::kMap:
         case TClassEdit::kMultiMap:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
           break;
         case TClassEdit::kSet:
         case TClassEdit::kMultiSet:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
+          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
           break;
       }
    }

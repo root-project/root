@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.176 2005/08/22 20:02:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.177 2005/08/23 17:00:41 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -697,10 +697,10 @@ void TClass::Init(const char *name, Version_t cversion,
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-     fCollectionProxy = TCollectionProxy::genEmulatedProxy( GetName() );
+     fCollectionProxy = TCollectionProxy::GenEmulatedProxy( GetName() );
      fSizeof = fCollectionProxy->Sizeof();
      if (fStreamer==0) {
-       fStreamer =  TCollectionProxy::genEmulatedClassStreamer( GetName() );
+       fStreamer =  TCollectionProxy::GenEmulatedClassStreamer( GetName() );
      }
    }
 

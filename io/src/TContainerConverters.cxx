@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.1 2004/11/17 06:29:22 brun Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.2 2004/11/17 19:48:19 brun Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -49,7 +49,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
    TString s;
    char classv[256];
    void *env;
-   UInt_t R__s, R__c;
+   UInt_t start, bytecount;
 
    Assert(b.IsReading());
 
@@ -151,14 +151,14 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       if (fIsPointer) obj = *(void**)addr;
       else obj = addr;
 
-      TObject TObjDummy;
-      Version_t v = b.ReadVersion(&R__s, &R__c);
+      TObject objdummy;
+      Version_t v = b.ReadVersion(&start, &bytecount);
 
       //if (v == 3) {
       //   const int_t koldbypassstreamer = bit(14);
       //   if (testbit(koldbypassstreamer)) bypassstreamer();
       //}
-      if (v > 2) TObjDummy.Streamer(b);
+      if (v > 2) objdummy.Streamer(b);
       TString fName;
       if (v > 1) fName.Streamer(b);
       s.Streamer(b);
@@ -172,7 +172,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       TClass *cl = gROOT->GetClass(classv);
       if (!cl) {
          printf("TClonesArray::Streamer expecting class %s\n", classv);
-         b.CheckByteCount(R__s, R__c,TClonesArray::Class());
+         b.CheckByteCount(start, bytecount, TClonesArray::Class());
          return;
       }
 
@@ -185,7 +185,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       TVirtualCollectionProxy::TPushPop helper( fProxy, obj );
       env = fProxy->Allocate(nobjects,true);
 
-      if (TObjDummy.TestBit(TClonesArray::kBypassStreamer)) {
+      if (objdummy.TestBit(TClonesArray::kBypassStreamer)) {
 
          subinfo->ReadBufferSTL(b,fProxy,nobjects,-1,0);
 
@@ -199,6 +199,6 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          }
       }
       fProxy->Commit(env);
-      b.CheckByteCount(R__s, R__c,TClonesArray::Class());
+      b.CheckByteCount(start, bytecount,TClonesArray::Class());
    }
 }
