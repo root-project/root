@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.15 2005/03/05 14:20:05 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.16 2005/03/16 08:35:19 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,8 +298,8 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 //
 
   if (particles == 0) return 0;
-  TClonesArray &Particles = *particles;
-  Particles.Clear();
+  TClonesArray &clonesParticles = *particles;
+  clonesParticles.Clear();
   Int_t numpart = fPyjets->N;
   Int_t nparts=0;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
@@ -309,7 +309,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 //
 //  Use the common block values for the TParticle constructor
 //
-        new(Particles[nparts]) TParticle(
+        new(clonesParticles[nparts]) TParticle(
 			    fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
@@ -334,7 +334,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
   }
   else if (!strcmp(option,"All")) {
     for (Int_t i = 0; i<numpart; i++) {
-        new(Particles[i]) TParticle(
+        new(clonesParticles[i]) TParticle(
                             fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
