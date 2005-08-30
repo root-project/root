@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.14 2003/07/10 15:35:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.15 2003/07/12 08:08:37 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -100,18 +100,18 @@
 //  will draw all axice and labels with yellow color.
 //
 
-const Char_t *TAxis3D::rulerName = "axis3druler";
+const Char_t *TAxis3D::fgRulerName = "axis3druler";
 ClassImp(TAxis3D)
 
 //______________________________________________________________________________
-TAxis3D::TAxis3D() : TNamed(TAxis3D::rulerName,"ruler"){
+TAxis3D::TAxis3D() : TNamed(TAxis3D::fgRulerName,"ruler"){
   fSelected = 0;
   fZoomMode = kFALSE;
   fStickyZoom = kFALSE;
   InitSet();
 }
 //______________________________________________________________________________
-TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::rulerName,"ruler")
+TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 {
   fSelected = 0;
   InitSet();
@@ -639,7 +639,7 @@ TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
   if (!thisPad) thisPad = gPad;
   if (thisPad) {
     // Find axis in the current thisPad
-    obj = thisPad->FindObject(TAxis3D::rulerName);
+    obj = thisPad->FindObject(TAxis3D::fgRulerName);
     if (!(obj && obj->InheritsFrom(Class()->GetName()))) obj = 0;
   }
   return (TAxis3D *)obj;
@@ -684,7 +684,7 @@ TAxis3D *TAxis3D::ToggleZoom(TVirtualPad *pad)
   if (thisPad && thisPad->GetView()) {
     // Find axis in the current thisPad
     TList *l = thisPad->GetListOfPrimitives();
-    TObject *o = l->FindObject(TAxis3D::rulerName);
+    TObject *o = l->FindObject(TAxis3D::fgRulerName);
     if (o && o->InheritsFrom(Class()->GetName())) { // Find axis
       if (o != l->Last()) { // make sure the TAxis3D is the last object of the Pad.
         l->Remove(o);

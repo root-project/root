@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.9 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.10 2005/03/18 08:03:27 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -87,8 +87,7 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
 //______________________________________________________________________________
 void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn can use
 {
-   const Double_t PI  = TMath::ATan(1) * 4.0;
-   const Double_t TWOPI  =2*PI;
+   const Double_t pi  = TMath::ATan(1) * 4.0;
 
    Int_t j;
    Int_t n = GetNumberOfDivisions ();
@@ -107,7 +106,7 @@ void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn
       return;
    }
 
-   Double_t range = TWOPI;
+   Double_t range = 2*pi;
 
    Double_t angstep = range/n;
 
@@ -319,10 +318,10 @@ const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
 	// leave up to viewer to work out
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = GetNumberOfDivisions();
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 8*n;
-      Int_t NbPols = 4*n;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 8*n;
+      Int_t nbPols = 4*n;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

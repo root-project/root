@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.7 2003/07/10 15:35:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.8 2004/08/03 16:01:17 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.7 2003/07/10 15:35:34 brun Exp $
+// $Id: TAxis3D.h,v 1.8 2004/08/03 16:01:17 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -55,16 +55,16 @@ private:
     void    Build();
 
 protected:
-    TAxis           fAxis[3];             //X/Y/Z axis
-    TString         fOption;              // Options (is not use yet)
-    static  const Char_t *rulerName;      // The default object name
-    TAxis          *fSelected;            //!  The selected axis to play with
-    Bool_t  fZoomMode;            // Zoom mode for the entire parent TPad
-    Bool_t  fStickyZoom;          // StickyZoom mode:  zoom will not be disabled    after zooming attempt if true  
+    TAxis            fAxis[3];             //X/Y/Z axis
+    TString          fOption;              // Options (is not use yet)
+ static  const char *fgRulerName;          // The default object name
+    TAxis           *fSelected;            //!  The selected axis to play with
+    Bool_t           fZoomMode;            // Zoom mode for the entire parent TPad
+    Bool_t           fStickyZoom;          // StickyZoom mode:  zoom will not be disabled    after zooming attempt if true  
 
-    virtual void    Copy(TObject &hnew) const;
-            void    InitSet();
-            Bool_t  SwitchZoom();
+    virtual void     Copy(TObject &hnew) const;
+            void     InitSet();
+            Bool_t   SwitchZoom();
 
 public:
     TAxis3D();

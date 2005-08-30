@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.4 2004/08/17 11:06:22 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.5 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -66,28 +66,28 @@ void TPARA::SetPoints(Double_t *points) const
 
    if (!points) return;
    Float_t dx, dy, dz, theta, phi, alpha;
-   const Float_t PI = Float_t (TMath::Pi());
+   const Float_t pi = Float_t (TMath::Pi());
 
-   alpha = fAlpha * PI/180.0;
-   theta = fTheta * PI/180.0;
-   phi   = fPhi   * PI/180.0;
+   alpha = fAlpha * pi/180.0;
+   theta = fTheta * pi/180.0;
+   phi   = fPhi   * pi/180.0;
 
    dx = TBRIK::fDx;
    dy = TBRIK::fDy;
    dz = TBRIK::fDz;
 
    // Parallelepiped change angles to tangents (by Pavel Nevski 12/04/99)
-   Double_t TXY = TMath::Tan(alpha);
-   Double_t TTH = TMath::Tan(theta);
-   Double_t TXZ = TTH*TMath::Cos(phi);
-   Double_t TYZ = TTH*TMath::Sin(phi);
+   Double_t txy = TMath::Tan(alpha);
+   Double_t tth = TMath::Tan(theta);
+   Double_t txz = tth*TMath::Cos(phi);
+   Double_t tyz = tth*TMath::Sin(phi);
 
-   *points++ = -dz*TXZ-TXY*dy-dx ; *points++ = -dy-dz*TYZ ; *points++ = -dz;
-   *points++ = -dz*TXZ+TXY*dy-dx ; *points++ = +dy-dz*TYZ ; *points++ = -dz; //3
-   *points++ = -dz*TXZ+TXY*dy+dx ; *points++ = +dy-dz*TYZ ; *points++ = -dz;
-   *points++ = -dz*TXZ-TXY*dy+dx ; *points++ = -dy-dz*TYZ ; *points++ = -dz;//1
-   *points++ = +dz*TXZ-TXY*dy-dx ; *points++ = -dy+dz*TYZ ; *points++ = +dz;
-   *points++ = +dz*TXZ+TXY*dy-dx ; *points++ = +dy+dz*TYZ ; *points++ = +dz;//7
-   *points++ = +dz*TXZ+TXY*dy+dx ; *points++ = +dy+dz*TYZ ; *points++ = +dz;
-   *points++ = +dz*TXZ-TXY*dy+dx ; *points++ = -dy+dz*TYZ ; *points++ = +dz;//5
+   *points++ = -dz*txz-txy*dy-dx ; *points++ = -dy-dz*tyz ; *points++ = -dz;
+   *points++ = -dz*txz+txy*dy-dx ; *points++ = +dy-dz*tyz ; *points++ = -dz; //3
+   *points++ = -dz*txz+txy*dy+dx ; *points++ = +dy-dz*tyz ; *points++ = -dz;
+   *points++ = -dz*txz-txy*dy+dx ; *points++ = -dy-dz*tyz ; *points++ = -dz;//1
+   *points++ = +dz*txz-txy*dy-dx ; *points++ = -dy+dz*tyz ; *points++ = +dz;
+   *points++ = +dz*txz+txy*dy-dx ; *points++ = +dy+dz*tyz ; *points++ = +dz;//7
+   *points++ = +dz*txz+txy*dy+dx ; *points++ = +dy+dz*tyz ; *points++ = +dz;
+   *points++ = +dz*txz-txy*dy+dx ; *points++ = -dy+dz*tyz ; *points++ = +dz;//5
 }

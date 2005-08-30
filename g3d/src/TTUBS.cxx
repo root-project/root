@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.6 2005/01/20 09:26:00 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.7 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -71,9 +71,8 @@ TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t 
 //______________________________________________________________________________
 void TTUBS::MakeTableOfCoSin() const
 {
-   const Double_t PI  = TMath::ATan(1) * 4.0;
-   const Double_t TWOPI  =2*PI;
-   const Double_t ragrad  = PI/180.0;
+   const Double_t pi  = TMath::ATan(1) * 4.0;
+   const Double_t ragrad  = pi/180.0;
 
    Int_t j;
    Int_t n = GetNumberOfDivisions () + 1;
@@ -91,7 +90,7 @@ void TTUBS::MakeTableOfCoSin() const
    Double_t phi1    = Double_t(fPhi1  * ragrad);
    Double_t phi2    = Double_t(fPhi2  * ragrad);
 
-   if (phi1 > phi2 ) phi2 += TWOPI;
+   if (phi1 > phi2 ) phi2 += 2*pi;
 
    Double_t range = phi2- phi1;
 
@@ -192,11 +191,11 @@ const TBuffer3D & TTUBS::GetBuffer3D(Int_t reqSections) const
 
    if (reqSections & TBuffer3D::kRawSizes) {
       const Int_t n = GetNumberOfDivisions()+1;
-      Int_t NbPnts = 4*n;
-      Int_t NbSegs = 2*NbPnts;
-      Int_t NbPols = NbPnts-2;
+      Int_t nbPnts = 4*n;
+      Int_t nbSegs = 2*nbPnts;
+      Int_t nbPols = nbPnts-2;
 
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

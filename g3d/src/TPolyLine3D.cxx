@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.22 2005/03/21 17:22:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.23 2005/05/18 12:31:08 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -321,27 +321,27 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
 {
    // Draw cube outline with 3d polylines.
    //
-   //      x = fRmin[0]        X = fRmax[0]
-   //      y = fRmin[1]        Y = fRmax[1]
-   //      z = fRmin[2]        Z = fRmax[2]
+   //      xmin = fRmin[0]        xmax = fRmax[0]
+   //      ymin = fRmin[1]        ymax = fRmax[1]
+   //      zmin = fRmin[2]        zmax = fRmax[2]
    //
    //
-   //            (x,Y,Z) +---------+ (X,Y,Z)
-   //                   /         /|
-   //                  /         / |
-   //                 /         /  |
-   //        (x,y,Z) +---------+   |
-   //                |         |   + (X,Y,z)
-   //                |         |  /
-   //                |         | /
-   //                |         |/
-   //                +---------+
-   //             (x,y,z)   (X,y,z)
+   //    (xmin,ymax,zmax) +---------+ (xmax,ymax,zmax)
+   //                    /         /|
+   //                   /         / |
+   //                  /         /  |
+   //(xmin,ymin,zmax) +---------+   |
+   //                 |         |   + (xmax,ymax,zmin)
+   //                 |         |  /
+   //                 |         | /
+   //                 |         |/
+   //                 +---------+
+   //  (xmin,ymin,zmin)         (xmax,ymin,zmin)
    //
 
-   Double_t x = rmin[0];     Double_t X = rmax[0];
-   Double_t y = rmin[1];     Double_t Y = rmax[1];
-   Double_t z = rmin[2];     Double_t Z = rmax[2];
+   Double_t xmin = rmin[0];     Double_t xmax = rmax[0];
+   Double_t ymin = rmin[1];     Double_t ymax = rmax[1];
+   Double_t zmin = rmin[2];     Double_t zmax = rmax[2];
 
    TPolyLine3D *pl3d = (TPolyLine3D *)outline->First();
    if (!pl3d) {
@@ -364,31 +364,31 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
 
    pl3d = (TPolyLine3D *)outline->First();
 
-   pl3d->SetPoint(0, x, y, z);
-   pl3d->SetPoint(1, X, y, z);
-   pl3d->SetPoint(2, X, Y, z);
-   pl3d->SetPoint(3, x, Y, z);
+   pl3d->SetPoint(0, xmin, ymin, zmin);
+   pl3d->SetPoint(1, xmax, ymin, zmin);
+   pl3d->SetPoint(2, xmax, ymax, zmin);
+   pl3d->SetPoint(3, xmin, ymax, zmin);
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, X, y, z);
-   pl3d->SetPoint(1, X, y, Z);
-   pl3d->SetPoint(2, X, Y, Z);
-   pl3d->SetPoint(3, X, Y, z);
+   pl3d->SetPoint(0, xmax, ymin, zmin);
+   pl3d->SetPoint(1, xmax, ymin, zmax);
+   pl3d->SetPoint(2, xmax, ymax, zmax);
+   pl3d->SetPoint(3, xmax, ymax, zmin);
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, X, y, Z);
-   pl3d->SetPoint(1, x, y, Z);
-   pl3d->SetPoint(2, x, Y, Z);
-   pl3d->SetPoint(3, X, Y, Z);
+   pl3d->SetPoint(0, xmax, ymin, zmax);
+   pl3d->SetPoint(1, xmin, ymin, zmax);
+   pl3d->SetPoint(2, xmin, ymax, zmax);
+   pl3d->SetPoint(3, xmax, ymax, zmax);
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, x, y, Z);
-   pl3d->SetPoint(1, x, y, z);
-   pl3d->SetPoint(2, x, Y, z);
-   pl3d->SetPoint(3, x, Y, Z);
+   pl3d->SetPoint(0, xmin, ymin, zmax);
+   pl3d->SetPoint(1, xmin, ymin, zmin);
+   pl3d->SetPoint(2, xmin, ymax, zmin);
+   pl3d->SetPoint(3, xmin, ymax, zmax);
 }
 
 //______________________________________________________________________________
@@ -494,9 +494,9 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
    }
    
    if (reqSections & TBuffer3D::kRawSizes) {
-      Int_t NbPnts = Size();
-      Int_t NbSegs = NbPnts-1;
-      if (!buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, 0, 0)) {
+      Int_t nbPnts = Size();
+      Int_t nbSegs = nbPnts-1;
+      if (!buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, 0, 0)) {
          return;
       }
       buffer.SetSectionsValid(TBuffer3D::kRawSizes);

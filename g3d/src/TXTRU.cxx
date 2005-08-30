@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.17 2004/11/18 14:35:25 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.18 2005/03/09 18:19:26 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -785,10 +785,10 @@ const TBuffer3D & TXTRU::GetBuffer3D(Int_t reqSections) const
           fZOrdering    == kUncheckedZ) {
          const_cast<TXTRU *>(this)->CheckOrdering();
       }
-      Int_t NbPnts = fNz*fNxy;
-      Int_t NbSegs = fNxy*(2*fNz-1);
-      Int_t NbPols = fNxy*(fNz-1)+2;
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+fNxy))) {
+      Int_t nbPnts = fNz*fNxy;
+      Int_t nbSegs = fNxy*(2*fNz-1);
+      Int_t nbPols = fNxy*(fNz-1)+2;
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*(nbPols-2)+2*(2+fNxy))) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

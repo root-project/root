@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.11 2004/09/24 08:21:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.12 2005/03/09 18:19:26 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -166,10 +166,10 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    }
    
    if (reqSections & TBuffer3D::kRawSizes) {
-      Int_t NbPnts = 8;
-      Int_t NbSegs = 12;
-      Int_t NbPols = 6;
-      if (!buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 8;
+      Int_t nbSegs = 12;
+      Int_t nbPols = 6;
+      if (!buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          return;
       }
       buffer.SetSectionsValid(TBuffer3D::kRawSizes);
@@ -380,18 +380,18 @@ void TMarker3DBox::SetPoints(Double_t *points) const
       // Matrix to convert from fruit frame to master frame
       //
    
-      Double_t M[9];
-      M[0] =  costh * cosfi;       M[1] = -sinfi;          M[2] = sinth*cosfi;
-      M[3] =  costh * sinfi;       M[4] =  cosfi;          M[5] = sinth*sinfi;
-      M[6] = -sinth;               M[7] =  0;              M[8] = costh;
+      Double_t m[9];
+      m[0] =  costh * cosfi;       m[1] = -sinfi;          m[2] = sinth*cosfi;
+      m[3] =  costh * sinfi;       m[4] =  cosfi;          m[5] = sinth*sinfi;
+      m[6] = -sinth;               m[7] =  0;              m[8] = costh;
       for (Int_t i = 0; i < 8; i++) {
          x = points[3*i];
          y = points[3*i+1];
          z = points[3*i+2];
    
-         points[3*i]   = fX + M[0] * x + M[1] * y + M[2] * z;
-         points[3*i+1] = fY + M[3] * x + M[4] * y + M[5] * z;
-         points[3*i+2] = fZ + M[6] * x + M[7] * y + M[8] * z;
+         points[3*i]   = fX + m[0] * x + m[1] * y + m[2] * z;
+         points[3*i+1] = fY + m[3] * x + m[4] * y + m[5] * z;
+         points[3*i+2] = fZ + m[6] * x + m[7] * y + m[8] * z;
       }
    }
 }

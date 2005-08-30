@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -83,11 +83,11 @@ void TTRAP::SetPoints(Double_t *points) const
 {
    // Create TRAP points
 
-   const Float_t PI = Float_t (TMath::Pi());
-   Float_t alpha1 = fAlpha1    * PI/180.0;
-   Float_t alpha2 = fAlpha2    * PI/180.0;
-   Float_t theta  = TBRIK::fDx * PI/180.0;
-   Float_t phi    = TBRIK::fDy * PI/180.0;
+   const Float_t pi = Float_t (TMath::Pi());
+   Float_t alpha1 = fAlpha1    * pi/180.0;
+   Float_t alpha2 = fAlpha2    * pi/180.0;
+   Float_t theta  = TBRIK::fDx * pi/180.0;
+   Float_t phi    = TBRIK::fDy * pi/180.0;
    Float_t tth    = TMath::Tan(theta);
    Float_t tx     = tth*TMath::Cos(phi);
    Float_t ty     = tth*TMath::Sin(phi);

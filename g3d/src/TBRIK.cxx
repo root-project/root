@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.5 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.6 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic 17/09/95 
 
 /*************************************************************************
@@ -107,10 +107,10 @@ const TBuffer3D & TBRIK::GetBuffer3D(Int_t reqSections) const
    // No kShapeSpecific or kBoundingBox
 
    if (reqSections & TBuffer3D::kRawSizes) {
-      Int_t NbPnts = 8;
-      Int_t NbSegs = 12;
-      Int_t NbPols = 6;
-      if (buffer.SetRawSizes(NbPnts, NbPnts*3, NbSegs, NbSegs*3, NbPols, NbPols*6)) {
+      Int_t nbPnts = 8;
+      Int_t nbSegs = 12;
+      Int_t nbPols = 6;
+      if (buffer.SetRawSizes(nbPnts, nbPnts*3, nbSegs, nbSegs*3, nbPols, nbPols*6)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

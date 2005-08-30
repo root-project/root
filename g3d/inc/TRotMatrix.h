@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.h,v 1.2 2000/11/21 20:14:07 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -26,10 +26,6 @@
 #include "TNamed.h"
 #endif
 
-enum {
-   kReflection = BIT(23)    //  "Reflection" bit
-};
-
 
 class TRotMatrix  : public TNamed {
 private:
@@ -44,6 +40,12 @@ protected:
    Double_t     fMatrix[9];   //Rotation matrix
 
 public:
+
+   //TRotMatrix status bits
+   enum {
+      kReflection = BIT(23)    //  "Reflection" bit
+   };
+      
    TRotMatrix();
    TRotMatrix(const char *name, const char *title, Double_t *matrix);
    TRotMatrix(const char *name, const char *title, Double_t theta, Double_t phi, Double_t psi);

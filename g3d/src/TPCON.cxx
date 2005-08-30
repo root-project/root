@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.8 2004/11/16 13:17:21 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.9 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -84,8 +84,8 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
 //______________________________________________________________________________
 void TPCON::MakeTableOfCoSin() const
 {
-   const Double_t PI  = TMath::ATan(1) * 4.0;
-   const Double_t ragrad  = PI/180.0;
+   const Double_t pi  = TMath::ATan(1) * 4.0;
+   const Double_t ragrad  = pi/180.0;
 
    Int_t n = GetNumberOfDivisions () + 1;
    if (fCoTab)
@@ -267,12 +267,12 @@ const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
    if (reqSections & TBuffer3D::kRawSizes)
    {
       const Int_t n = GetNumberOfDivisions()+1;
-      Int_t NbPnts = fNz*2*n;
+      Int_t nbPnts = fNz*2*n;
       Bool_t specialCase = (fDphi1 == 360);
-      Int_t NbSegs = 4*(fNz*n-1+(specialCase == kTRUE));
-      Int_t NbPols = 2*(fNz*n-1+(specialCase == kTRUE));
+      Int_t nbSegs = 4*(fNz*n-1+(specialCase == kTRUE));
+      Int_t nbPols = 2*(fNz*n-1+(specialCase == kTRUE));
 
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }

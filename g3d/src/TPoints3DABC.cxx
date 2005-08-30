@@ -1,7 +1,7 @@
-// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.3 2003/08/23 00:08:12 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   04/05/99
 
-// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.3 2003/08/23 00:08:12 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 #include "TPoints3DABC.h"
@@ -52,16 +52,16 @@ Int_t TPoints3DABC::DistancetoLine(Int_t px, Int_t py, Float_t x1, Float_t y1, F
 //*-*                     I
 //*-*                    M(x,y)
 //*-*
-//*-*  Let us call  a = distance AM     A=a**2
-//*-*               b = distance BM     B=b**2
-//*-*               c = distance AB     C=c**2
-//*-*               d = distance PM     D=d**2
-//*-*               u = distance AP     U=u**2
-//*-*               v = distance BP     V=v**2     c = u + v
+//*-*  Let us call  a = distance AM     a2=a**2
+//*-*               b = distance BM     b2=b**2
+//*-*               c = distance AB     c2=c**2
+//*-*               d = distance PM     d2=d**2
+//*-*               u = distance AP     u2=u**2
+//*-*               v = distance BP     v2=v**2     c = u + v
 //*-*
-//*-*  D = A - U
-//*-*  D = B - V  = B -(c-u)**2
-//*-*     ==> u = (A -B +C)/2c
+//*-*  d2 = a2 - u2
+//*-*  d2 = b2 - v2  = b2 -(c-u)**2
+//*-*     ==> u = (a2 -b2 +c2)/2c
 //*-*
 //*-*   Float_t x1    = gPad->XtoAbsPixel(xp1);
 //*-*   Float_t y1    = gPad->YtoAbsPixel(yp1);
@@ -83,16 +83,16 @@ Int_t TPoints3DABC::DistancetoLine(Int_t px, Int_t py, Float_t x1, Float_t y1, F
    Float_t yy1   = y  - y1;
    Float_t yy2   = y  - y2;
    Float_t y1y2  = y1 - y2;
-   Float_t A     = xx1*xx1   + yy1*yy1;
-   Float_t B     = xx2*xx2   + yy2*yy2;
-   Float_t C     = x1x2*x1x2 + y1y2*y1y2;
-   if (C <= 0)  return 9999;
-   Float_t c     = TMath::Sqrt(C);
-   Float_t u     = (A - B + C)/(2*c);
-   Float_t D     = TMath::Abs(A - u*u);
-   if (D < 0)   return 9999;
+   Float_t a2    = xx1*xx1   + yy1*yy1;
+   Float_t b2    = xx2*xx2   + yy2*yy2;
+   Float_t c2    = x1x2*x1x2 + y1y2*y1y2;
+   if (c2 <= 0)  return 9999;
+   Float_t c     = TMath::Sqrt(c2);
+   Float_t u     = (a2 - b2 + c2)/(2*c);
+   Float_t d2    = TMath::Abs(a2 - u*u);
+   if (d2 < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(D) - 0.5*float(lineWidth));
+   return Int_t(TMath::Sqrt(d2) - 0.5*float(lineWidth));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.9 2003/07/07 16:14:37 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.10 2004/08/03 16:01:18 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -88,17 +88,17 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
    // Calculate initial position and velocity in helix frame
    //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    fW    = w;
-   Double_t * M = fRotMat->GetMatrix();
+   Double_t * m = fRotMat->GetMatrix();
    Double_t vx0, vy0, vz0;
-   vx0   = v[0] * M[0] + v[1] * M[1] + v[2] * M[2];
-   vy0   = v[0] * M[3] + v[1] * M[4] + v[2] * M[5];
-   vz0   = v[0] * M[6] + v[1] * M[7] + v[2] * M[8];
+   vx0   = v[0] * m[0] + v[1] * m[1] + v[2] * m[2];
+   vy0   = v[0] * m[3] + v[1] * m[4] + v[2] * m[5];
+   vz0   = v[0] * m[6] + v[1] * m[7] + v[2] * m[8];
    fVt   = TMath::Sqrt(vx0*vx0 + vy0*vy0);
    fPhi0 = TMath::ATan2(vy0,vx0);
    fVz   = vz0;
-   fX0   = p[0] * M[0] +  p[1] * M[1] +  p[2] * M[2];
-   fY0   = p[0] * M[3] +  p[1] * M[4] +  p[2] * M[5];
-   fZ0   = p[0] * M[6] +  p[1] * M[7] +  p[2] * M[8];
+   fX0   = p[0] * m[0] +  p[1] * m[1] +  p[2] * m[2];
+   fY0   = p[0] * m[3] +  p[1] * m[4] +  p[2] * m[5];
+   fZ0   = p[0] * m[6] +  p[1] * m[7] +  p[2] * m[8];
    if (fW != 0) {
       fX0 += fVt / fW * TMath::Sin(fPhi0);
       fY0 -= fVt / fW * TMath::Cos(fPhi0);
@@ -519,12 +519,12 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
 
    Float_t xg, yg,zg;     // global coordinates
                           // must be Float_t to call TPolyLine3D::SetPoint()
-   Double_t * M = fRotMat->GetMatrix();
+   Double_t * m = fRotMat->GetMatrix();
    TPolyLine3D::SetPolyLine(nSeg+1);
-   for (i=0; i<=nSeg; i++) {                    // M^{-1} = transpose of M
-      xg =  xl[i] * M[0]  +  yl[i] * M[3]  +  zl[i] * M[6] ;
-      yg =  xl[i] * M[1]  +  yl[i] * M[4]  +  zl[i] * M[7] ;
-      zg =  xl[i] * M[2]  +  yl[i] * M[5]  +  zl[i] * M[8] ;
+   for (i=0; i<=nSeg; i++) {                    // m^{-1} = transpose of m
+      xg =  xl[i] * m[0]  +  yl[i] * m[3]  +  zl[i] * m[6] ;
+      yg =  xl[i] * m[1]  +  yl[i] * m[4]  +  zl[i] * m[7] ;
+      zg =  xl[i] * m[2]  +  yl[i] * m[5]  +  zl[i] * m[8] ;
       TPolyLine3D::SetPoint(i,xg,yg,zg);
    }
 

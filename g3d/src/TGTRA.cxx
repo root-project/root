@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -104,13 +104,13 @@ void TGTRA::SetPoints (Double_t *points) const
    // Create GTRA points
 
    Double_t x, y, dx, dy, dx1, dx2, dz, theta, phi, alpha1, alpha2, twist;
-   const Float_t PI = Float_t (TMath::Pi());
+   const Float_t pi = Float_t (TMath::Pi());
 
-   alpha1 = fAlpha1    * PI/180.0;
-   alpha2 = fAlpha2    * PI/180.0;
-   theta  = TBRIK::fDx * PI/180.0;
-   phi    = TBRIK::fDy * PI/180.0;
-   twist  = fTwist     * PI/180.0;
+   alpha1 = fAlpha1    * pi/180.0;
+   alpha2 = fAlpha2    * pi/180.0;
+   theta  = TBRIK::fDx * pi/180.0;
+   phi    = TBRIK::fDy * pi/180.0;
+   twist  = fTwist     * pi/180.0;
 
    dx  = 2*fDz*TMath::Sin(theta)*TMath::Cos(phi);
    dy  = 2*fDz*TMath::Sin(theta)*TMath::Sin(phi);

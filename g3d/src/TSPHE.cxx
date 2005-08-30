@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.14 2005/03/18 08:03:27 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.15 2005/05/25 14:25:16 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -212,8 +212,8 @@ void TSPHE::Sizeof3D() const
 //______________________________________________________________________________
 void TSPHE::MakeTableOfCoSin() const
 {
-    const Double_t PI  = TMath::ATan(1) * 4.0;
-    const Double_t ragrad  = PI/180.0;
+    const Double_t pi  = TMath::ATan(1) * 4.0;
+    const Double_t ragrad  = pi/180.0;
 
     Float_t dphi = fPhimax - fPhimin;
     while (dphi > 360) dphi -= 360;
@@ -341,10 +341,10 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
    Bool_t specialCase = (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01);
 
    if (reqSections & TBuffer3D::kRawSizes) {
-      Int_t NbPnts = 2*n*nz;
-      Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-      Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+      Int_t nbPnts = 2*n*nz;
+      Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+      Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
