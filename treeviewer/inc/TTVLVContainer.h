@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.6 2002/07/18 10:34:25 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.7 2002/12/03 11:20:10 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -173,7 +173,7 @@ private:
    TGTextButton      *fCANCEL;        // cancel button
 
 protected:
-   static TGSelectBox *fInstance;// pointer to this select box
+   static TGSelectBox *fgInstance;// pointer to this select box
 
 public:
    TGSelectBox(const TGWindow *p, const TGWindow *main, UInt_t w = 10, UInt_t h = 10);

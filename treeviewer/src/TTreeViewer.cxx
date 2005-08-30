@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.46 2005/02/09 11:47:27 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.47 2005/03/11 17:57:45 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2220,11 +2220,11 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
    // Map current tree and expand its content in the lists.
 
    if (!tree) return;
-   TObjArray *Branches = tree->GetListOfBranches();
+   TObjArray *branches = tree->GetListOfBranches();
    TBranch   *branch;
    // loop on branches
-   for (Int_t id=0; id<Branches->GetEntries(); id++) {
-      branch = (TBranch *)Branches->At(id);
+   for (Int_t id=0; id<branches->GetEntries(); id++) {
+      branch = (TBranch *)branches->At(id);
       if (branch->TestBit(kDoNotProcess))  continue;
       TString name = branch->GetName();
       if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
@@ -2277,11 +2277,11 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                pic = gClient->GetPicture("branch_t.xpm");
                spic = gClient->GetPicture("branch_t.xpm");
                branchItem = fLt->AddItem(parent, EmptyBrackets(branch->GetName()), itemType,pic, spic);
-               TObjArray *Leaves = branch->GetListOfLeaves();
+               TObjArray *leaves = branch->GetListOfLeaves();
                TLeaf *leaf = 0;
                TString leafName;
-               for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
-                  leaf = (TLeaf *)Leaves->At(lf);
+               for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
+                  leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
                   leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
                   itemType = new ULong_t(kLTLeafType);
@@ -2344,11 +2344,11 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                entry->MapWindow();
                entry->SetAlias(textEntry->GetString());
 
-               TObjArray *Leaves = branch->GetListOfLeaves();
+               TObjArray *leaves = branch->GetListOfLeaves();
                TLeaf *leaf = 0;
                TString leafName;
-               for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
-                  leaf = (TLeaf *)Leaves->At(lf);
+               for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
+                  leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
                   leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
                   textEntry = new TGString(leafName.Data());
@@ -2377,12 +2377,12 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
       }
    }
 
-   TObjArray *Branches = branch->GetListOfBranches();
+   TObjArray *branches = branch->GetListOfBranches();
    TBranch   *branchDaughter = 0;
 
    // loop all sub-branches
-   for (ind=0; ind<Branches->GetEntries(); ind++) {
-      branchDaughter = (TBranch *)Branches->UncheckedAt(ind);
+   for (ind=0; ind<branches->GetEntries(); ind++) {
+      branchDaughter = (TBranch *)branches->UncheckedAt(ind);
       // map also all sub-branches
       MapBranch(branchDaughter, branchItem, listIt);
    }

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.10 2003/07/15 14:25:22 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.11 2005/07/24 09:55:52 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -622,7 +622,7 @@ enum ETransientFrameCommands {
    kTFCancel
 };
 
-TGSelectBox* TGSelectBox::fInstance = 0;
+TGSelectBox* TGSelectBox::fgInstance = 0;
 
 //______________________________________________________________________________
 TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
@@ -631,8 +631,8 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
 {
    // TGSelectBox constructor
 
-   if (!fInstance) {
-      fInstance = this;
+   if (!fgInstance) {
+      fgInstance = this;
       fViewer = (TTreeViewer *)fMain;
       if (!fViewer) Error("TGSelectBox", "Must be started from viewer");
       fEntry = 0;
@@ -685,7 +685,7 @@ TGSelectBox::~TGSelectBox()
 {
    // TGSelectBox destructor
 
-   fInstance = 0;
+   fgInstance = 0;
    delete fLabel;
    delete fTe;
    delete fLabelAlias;
@@ -712,7 +712,7 @@ TGSelectBox * TGSelectBox::GetInstance()
 {
    // return the pointer to the instantiated singleton
 
-   return fInstance;
+   return fgInstance;
 }
 
 //______________________________________________________________________________
