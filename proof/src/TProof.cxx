@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.99 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.100 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1837,8 +1837,8 @@ Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       }
    }
 
-   // Resolve query type
-   fSync = (GetQueryType(option) == kSync);
+   // Resolve query mode
+   fSync = (GetQueryMode(option) == kSync);
 
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
@@ -1883,43 +1883,43 @@ Int_t TProof::Archive(Int_t, const char *)
 }
 
 //_____________________________________________________________________________
-void TProof::SetQueryType(EQueryType type)
+void TProof::SetQueryMode(EQueryMode mode)
 {
-   // Change query running type to the one specified by 'type'.
+   // Change query running mode to the one specified by 'mode'.
 
-   fQueryType = type;
+   fQueryMode = mode;
 
    if (gDebug > 0)
-      Info("SetQueryType","query type is set to: %s", fQueryType == kSync ?
+      Info("SetQueryMode","query mode is set to: %s", fQueryMode == kSync ?
            "Sync" : "Async");
 }
 
 //_____________________________________________________________________________
-TProof::EQueryType TProof::GetQueryType() const
+TProof::EQueryMode TProof::GetQueryMode() const
 {
-   // Get query running type.
+   // Get query running mode.
 
    if (gDebug > 0)
-      Info("GetDefaultType","query type is set to: %s", fQueryType == kSync ?
+      Info("GetQueryMode","query mode is set to: %s", fQueryMode == kSync ?
            "Sync" : "Async");
 
-   return fQueryType;
+   return fQueryMode;
 }
 
 //______________________________________________________________________________
-TProof::EQueryType TProof::GetQueryType(Option_t *opt) const
+TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 {
-   // Find out the query type based on the current setting and 'opt'.
+   // Find out the query mode based on the current setting and 'mode'.
 
-   EQueryType qtyp = fQueryType;
+   EQueryMode qmode = fQueryMode;
 
-   if (opt) {
-      if (strchr(opt,'A'))
-         qtyp = kAsync;
-      if (strchr(opt,'S'))
-         qtyp = kSync;
+   if (mode) {
+      if (strchr(mode, 'A'))
+         qmode = kAsync;
+      if (strchr(mode, 'S'))
+         qmode = kSync;
    }
-   return qtyp;
+   return qmode;
 }
 
 //______________________________________________________________________________

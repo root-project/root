@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.16 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.17 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -42,10 +42,10 @@ class TChain;
 class TVirtualProof : public TObject, public TQObject {
 
 public:
-   enum EQueryType { kSync = 0, kAsync = 1 };
+   enum EQueryMode { kSync = 0, kAsync = 1 };
 
 protected:
-   EQueryType   fQueryType;    // default query type
+   EQueryMode   fQueryMode;    // default query mode
 
    TVirtualProof() { }
 
@@ -105,8 +105,8 @@ public:
    virtual Int_t       GetParallel() const = 0;
    virtual TList      *GetSlaveInfo() = 0;
 
-   virtual EQueryType  GetQueryType() const { return fQueryType; }
-   virtual void        SetQueryType(EQueryType type) { fQueryType = type; }
+   virtual EQueryMode  GetQueryMode() const { return fQueryMode; }
+   virtual void        SetQueryType(EQueryMode mode) { fQueryMode = mode; }
 
    virtual Long64_t    GetBytesRead() const = 0;
    virtual Float_t     GetRealTime() const = 0;

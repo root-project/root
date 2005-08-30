@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.62 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -436,9 +436,9 @@ public:
    Int_t       GetParallel() const;
    TList      *GetSlaveInfo();
 
-   EQueryType  GetQueryType() const;
-   EQueryType  GetQueryType(Option_t *opt) const;
-   void        SetQueryType(EQueryType type);
+   EQueryMode  GetQueryMode() const;
+   EQueryMode  GetQueryMode(Option_t *mode) const;
+   void        SetQueryMode(EQueryMode mode);
 
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }

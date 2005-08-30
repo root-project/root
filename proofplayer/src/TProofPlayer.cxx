@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.61 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.62 2005/08/30 10:25:29 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -394,7 +394,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TString fn(gSystem->BaseName(selector_file));
 
    // Parse option
-   Bool_t sync = (fProof->GetQueryType(option) == TProof::kSync);
+   Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
 
    TDSet *set = dset;
    if (fProof->IsMaster()) {
@@ -459,7 +459,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    if (!fProof->IsMaster() && set->GetEventList()) {
       elist = set->GetEventList();
    }
-   mesg << set << fn << fInput << opt << nentries << first << elist; 
+   mesg << set << fn << fInput << opt << nentries << first << elist;
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
@@ -479,10 +479,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       } else {
          PDB(kGlobal,1) Info("Process","Calling Collect");
          fProof->Collect();
-      
+
          HandleTimer(0); // force an update of final result
          StopFeedback();
-      
+
          return Finalize();
       }
    } else {
@@ -494,7 +494,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // at the time it was called)
       if (IsClient())
          fProof->fRedirLog = kFALSE;
-      
+
       if (!IsClient()) HandleTimer(0); // force an update of final result
       StopFeedback();
 
