@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.11 2005/02/03 20:32:55 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.12 2005/07/18 15:30:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -142,8 +142,8 @@ void TMLPAnalyzer::CheckNetwork()
    // Checks if some input variable is not needed
    char var[64], sel[64];
    for (Int_t i = 0; i < GetNeurons(1); i++) {
-      sprintf(var,"Diff>>tmp%d",i);
-      sprintf(sel,"InNeuron==%d",i);
+      sprintf(var,"diff>>tmp%d",i);
+      sprintf(sel,"inNeuron==%d",i);
       fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       cout << GetInputNeuronTitle(i)
@@ -163,17 +163,17 @@ void TMLPAnalyzer::GatherInformations()
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
    Int_t nEvents = test->GetN();
-   Int_t NN = GetNeurons(1);
-   Double_t* params = new Double_t[NN];
-   Double_t* rms    = new Double_t[NN];
-   TTreeFormula** formulas = new TTreeFormula*[NN];
-   Int_t* index = new Int_t[NN];
+   Int_t nn = GetNeurons(1);
+   Double_t* params = new Double_t[nn];
+   Double_t* rms    = new Double_t[nn];
+   TTreeFormula** formulas = new TTreeFormula*[nn];
+   Int_t* index = new Int_t[nn];
    TString formula;
    TRegexp re("{[0-9]+}$");
    Ssiz_t len = formula.Length();
    Ssiz_t pos = -1;
    Int_t i(0), j(0), k(0), l(0);
-   for(i=0; i<NN; i++){
+   for(i=0; i<nn; i++){
       formula = GetNeuronFormula(i);
       pos = re.Index(formula,&len);
       if(pos==-1 || len<3) {
@@ -191,13 +191,13 @@ void TMLPAnalyzer::GatherInformations()
       data->Draw(Form("%s>>tmpb",formula.Data()),"","goff");
       rms[i]  = tmp.GetRMS();
    }
-   Int_t InNeuron = 0;
-   Double_t Diff = 0.;
+   Int_t inNeuron = 0;
+   Double_t diff = 0.;
    if(fAnalysisTree) delete fAnalysisTree;
    fAnalysisTree = new TTree("result","analysis");
    fAnalysisTree->SetDirectory(0);
-   fAnalysisTree->Branch("InNeuron",&InNeuron,"InNeuron/I");
-   fAnalysisTree->Branch("Diff",&Diff,"Diff/D");
+   fAnalysisTree->Branch("inNeuron",&inNeuron,"inNeuron/I");
+   fAnalysisTree->Branch("diff",&diff,"diff/D");
    Int_t numOutNodes=GetNeurons(GetLayers());
    Double_t *outVal=new Double_t[numOutNodes];
    Double_t *trueVal=new Double_t[numOutNodes];
@@ -206,7 +206,7 @@ void TMLPAnalyzer::GatherInformations()
    fIOTree=new TTree("MLP_iotree","MLP_iotree");
    fIOTree->SetDirectory(0);
    TString leaflist;
-   for (i=0; i<NN; i++)
+   for (i=0; i<nn; i++)
       leaflist+=Form("In%d/D:",i);
    leaflist.Remove(leaflist.Length()-1);
    fIOTree->Branch("In", params, leaflist);
@@ -239,19 +239,19 @@ void TMLPAnalyzer::GatherInformations()
 
       // Loop on the input neurons
       for (i = 0; i < GetNeurons(1); i++) {
-         InNeuron = i;
-         Diff = 0;
+         inNeuron = i;
+         diff = 0;
          // Loop on the neurons in the output layer
          for(l=0; l<GetNeurons(GetLayers()); l++){
             params[i] += shift*rms[i];
             v1 = fNetwork->Evaluate(l,params);
             params[i] -= 2*shift*rms[i];
             v2 = fNetwork->Evaluate(l,params);
-	    Diff += (v1-v2)*(v1-v2);
+	    diff += (v1-v2)*(v1-v2);
             // reset to original vealue
             params[i] += shift*rms[i];
 	 }
-         Diff = TMath::Sqrt(Diff);
+         diff = TMath::Sqrt(diff);
          fAnalysisTree->Fill();
       }
    }
@@ -273,8 +273,8 @@ void TMLPAnalyzer::DrawDInput(Int_t i)
    // the ith input.
 
    char sel[64];
-   sprintf(sel, "InNeuron==%d", i);
-   fAnalysisTree->Draw("Diff", sel);
+   sprintf(sel, "inNeuron==%d", i);
+   fAnalysisTree->Draw("diff", sel);
 }
 
 //______________________________________________________________________________
@@ -289,8 +289,8 @@ void TMLPAnalyzer::DrawDInputs()
    TH1F* tmp = NULL;
    char var[64], sel[64];
    for(Int_t i = 0; i < GetNeurons(1); i++) {
-      sprintf(var, "Diff>>tmp%d", i);
-      sprintf(sel, "InNeuron==%d", i);
+      sprintf(var, "diff>>tmp%d", i);
+      sprintf(sel, "inNeuron==%d", i);
       fAnalysisTree->Draw(var, sel, "goff");
       tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       tmp->SetDirectory(0);

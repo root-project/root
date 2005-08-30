@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.27 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.28 2005/07/18 12:02:02 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -709,11 +709,11 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       verbosity += 1;
    if (opt.Contains("graph"))
       verbosity += 2;
-   Int_t DisplayStepping = 1;
+   Int_t displayStepping = 1;
    if (opt.Contains("update=")) {
       TRegexp reg("update=[0-9]*");
       TString out = opt(reg);
-      DisplayStepping = atoi(out.Data() + 7);
+      displayStepping = atoi(out.Data() + 7);
    }
    TCanvas *canvas = NULL;
    TMultiGraph *residual_plot = NULL;
@@ -752,7 +752,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    Double_t *dir = new Double_t[els];
    for (i = 0; i < els; i++)
       buffer[i] = 0;
-   TMatrixD BFGSH(els, els);
+   TMatrixD bfgsh(els, els);
    TMatrixD gamma(els, 1);
    TMatrixD delta(els, 1);
    // Epoch loop. Here is the training itself.
@@ -784,9 +784,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                SteepestDir(dir);
             } else {
                Double_t norm = 0;
-               Double_t Onorm = 0;
+               Double_t onorm = 0;
                for (i = 0; i < els; i++)
-                  Onorm += dir[i] * dir[i];
+                  onorm += dir[i] * dir[i];
                Double_t prod = 0;
                Int_t idx = 0;
                TNeuron *neuron = NULL;
@@ -803,7 +803,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                   prod -= dir[idx++] * synapse->GetDEDw();
                   norm += synapse->GetDEDw() * synapse->GetDEDw();
                }
-               ConjugateGradientsDir(dir, (norm - prod) / Onorm);
+               ConjugateGradientsDir(dir, (norm - prod) / onorm);
             }
             if (LineSearch(dir, buffer))
                MLP_Batch(buffer);
@@ -816,9 +816,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                SteepestDir(dir);
             } else {
                Double_t norm = 0;
-               Double_t Onorm = 0;
+               Double_t onorm = 0;
                for (i = 0; i < els; i++)
-                  Onorm += dir[i] * dir[i];
+                  onorm += dir[i] * dir[i];
                TNeuron *neuron = NULL;
                TSynapse *synapse = NULL;
                Int_t nentries = fNetwork.GetEntriesFast();
@@ -831,7 +831,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                   synapse = (TSynapse *) fSynapses.UncheckedAt(i);
                   norm += synapse->GetDEDw() * synapse->GetDEDw();
                }
-               ConjugateGradientsDir(dir, norm / Onorm);
+               ConjugateGradientsDir(dir, norm / onorm);
             }
             if (LineSearch(dir, buffer))
                MLP_Batch(buffer);
@@ -842,21 +842,21 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
             SetGammaDelta(gamma, delta, buffer);
             if (!(iepoch % fReset)) {
                SteepestDir(dir);
-               BFGSH.UnitMatrix();
+               bfgsh.UnitMatrix();
             } else {
-               if (GetBFGSH(BFGSH, gamma, delta)) {
+               if (GetBFGSH(bfgsh, gamma, delta)) {
                   SteepestDir(dir);
-                  BFGSH.UnitMatrix();
+                  bfgsh.UnitMatrix();
                } else {
-                  BFGSDir(BFGSH, dir);
+                  BFGSDir(bfgsh, dir);
                }
             }
             if (DerivDir(dir) > 0) {
                SteepestDir(dir);
-               BFGSH.UnitMatrix();
+               bfgsh.UnitMatrix();
             }
             if (LineSearch(dir, buffer)) {
-               BFGSH.UnitMatrix();
+               bfgsh.UnitMatrix();
                SteepestDir(dir);
                if (LineSearch(dir, buffer)) {
                   Error("TMultiLayerPerceptron::Train()","Line search fail");
@@ -876,7 +876,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       // 1/1000 sec/evt on a mobile AMD Athlon(tm) XP 1500+
       gSystem->ProcessEvents();
       // Intermediate graph and text output
-      if ((verbosity % 2) && ((!(iepoch % DisplayStepping))
+      if ((verbosity % 2) && ((!(iepoch % displayStepping))
           || (iepoch == nEpoch - 1)))
          cout << "Epoch: " << iepoch
 		   << " learn="
@@ -901,7 +901,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                test_residual_plot->SetPoint(i, i, tep);
             }
          }
-         if ((!(iepoch % DisplayStepping)) || (iepoch == nEpoch - 1)) {
+         if ((!(iepoch % displayStepping)) || (iepoch == nEpoch - 1)) {
             residual_plot->GetYaxis()->UnZoom();
             residual_plot->GetYaxis()->SetTitleOffset(1.4);
             residual_plot->GetYaxis()->SetDecimals();
@@ -2106,7 +2106,7 @@ void TMultiLayerPerceptron::ConjugateGradientsDir(Double_t * dir, Double_t beta)
 }
 
 //______________________________________________________________________________
-bool TMultiLayerPerceptron::GetBFGSH(TMatrixD & BFGSH, TMatrixD & gamma, TMatrixD & delta)
+bool TMultiLayerPerceptron::GetBFGSH(TMatrixD & bfgsh, TMatrixD & gamma, TMatrixD & delta)
 {
    // Computes the hessian matrix using the BFGS update algorithm.
    // from gamma (g_{(t+1)}-g_{(t)}) and delta (w_{(t+1)}-w_{(t)}).
@@ -2116,19 +2116,19 @@ bool TMultiLayerPerceptron::GetBFGSH(TMatrixD & BFGSH, TMatrixD & gamma, TMatrix
    TMatrixD gd(gamma, TMatrixD::kTransposeMult, delta);
    if ((Double_t) gd[0][0] == 0.)
       return true;
-   TMatrixD Hg(BFGSH, TMatrixD::kMult, gamma);
-   TMatrixD tmp(gamma, TMatrixD::kTransposeMult, BFGSH);
-   TMatrixD gHg(gamma, TMatrixD::kTransposeMult, Hg);
+   TMatrixD aHg(bfgsh, TMatrixD::kMult, gamma);
+   TMatrixD tmp(gamma, TMatrixD::kTransposeMult, bfgsh);
+   TMatrixD gHg(gamma, TMatrixD::kTransposeMult, aHg);
    Double_t a = 1 / (Double_t) gd[0][0];
    Double_t f = 1 + ((Double_t) gHg[0][0] * a);
    TMatrixD res( TMatrixD(delta, TMatrixD::kMult,
                 TMatrixD(TMatrixD::kTransposed, delta)));
    res *= f;
    res -= (TMatrixD(delta, TMatrixD::kMult, tmp) +
-           TMatrixD(Hg, TMatrixD::kMult,
+           TMatrixD(aHg, TMatrixD::kMult,
                    TMatrixD(TMatrixD::kTransposed, delta)));
    res *= a;
-   BFGSH += res;
+   bfgsh += res;
    return false;
 }
 
@@ -2197,10 +2197,10 @@ Double_t TMultiLayerPerceptron::DerivDir(Double_t * dir)
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::BFGSDir(TMatrixD & BFGSH, Double_t * dir)
+void TMultiLayerPerceptron::BFGSDir(TMatrixD & bfgsh, Double_t * dir)
 {
    // Computes the direction for the BFGS algorithm as the product
-   // between the Hessian estimate (BFGSH) and the dir.
+   // between the Hessian estimate (bfgsh) and the dir.
 
    Int_t els = fNetwork.GetEntriesFast() + fSynapses.GetEntriesFast();
    TMatrixD dedw(els, 1);
@@ -2218,7 +2218,7 @@ void TMultiLayerPerceptron::BFGSDir(TMatrixD & BFGSH, Double_t * dir)
       synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       dedw[idx++][0] = synapse->GetDEDw();
    }
-   TMatrixD direction(BFGSH, TMatrixD::kMult, dedw);
+   TMatrixD direction(bfgsh, TMatrixD::kMult, dedw);
    for (Int_t i = 0; i < els; i++)
       dir[i] = -direction[i][0];
    //direction.GetElements(dir,"F");
