@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.15 2005/06/08 17:05:56 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.16 2005/08/19 09:46:37 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -110,19 +110,19 @@
 
 
 enum EMenuIds {
-   M_FILE_NEW,
-   M_FILE_CLOSE,
-   M_FILE_EXIT,
+   kFILE_NEW,
+   kFILE_CLOSE,
+   kFILE_EXIT,
 
-   M_WINDOW_HOR,
-   M_WINDOW_VERT,
-   M_WINDOW_CASCADE,
-   M_WINDOW_OPAQUE,
-   M_WINDOW_ARRANGE,
+   kWINDOW_HOR,
+   kWINDOW_VERT,
+   kWINDOW_CASCADE,
+   kWINDOW_OPAQUE,
+   kWINDOW_ARRANGE,
 
-   M_HELP_CONTENTS,
-   M_HELP_ABOUT,
-   M_HELP_BUG
+   kHELP_CONTENTS,
+   kHELP_ABOUT,
+   kHELP_BUG
 };
 
 const char gHelpBuilder[] = "\
@@ -590,32 +590,32 @@ void TRootGuiBuilder::InitMenu()
 
    fMenuFile = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuFile->SetEditDisabled(kTRUE);
-   fMenuFile->AddEntry(new TGHotString("&New Window"), M_FILE_NEW);
-   fMenuFile->AddEntry(new TGHotString("&Close Window"), M_FILE_CLOSE);
+   fMenuFile->AddEntry(new TGHotString("&New Window"), kFILE_NEW);
+   fMenuFile->AddEntry(new TGHotString("&Close Window"), kFILE_CLOSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(new TGHotString("E&xit"), M_FILE_EXIT);
+   fMenuFile->AddEntry(new TGHotString("E&xit"), kFILE_EXIT);
 
    fMenuWindow = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuWindow->SetEditDisabled(kTRUE);
-   fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), M_WINDOW_HOR);
-   fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), M_WINDOW_VERT);
-   fMenuWindow->AddEntry(new TGHotString("&Cascade"), M_WINDOW_CASCADE);
+   fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), kWINDOW_HOR);
+   fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), kWINDOW_VERT);
+   fMenuWindow->AddEntry(new TGHotString("&Cascade"), kWINDOW_CASCADE);
    fMenuWindow->AddSeparator();
    //fMenuWindow->AddPopup(new TGHotString("&Windows"), fMain->GetWinListMenu());
    fMenuWindow->AddSeparator();
-   fMenuWindow->AddEntry(new TGHotString("&Arrange icons"), M_WINDOW_ARRANGE);
+   fMenuWindow->AddEntry(new TGHotString("&Arrange icons"), kWINDOW_ARRANGE);
    fMenuWindow->AddSeparator();
-   fMenuWindow->AddEntry(new TGHotString("&Opaque resize"), M_WINDOW_OPAQUE);
+   fMenuWindow->AddEntry(new TGHotString("&Opaque resize"), kWINDOW_OPAQUE);
 
-   fMenuWindow->CheckEntry(M_WINDOW_OPAQUE);
+   fMenuWindow->CheckEntry(kWINDOW_OPAQUE);
 
    fMenuHelp = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuHelp->SetEditDisabled(kTRUE);
-   fMenuHelp->AddEntry(new TGHotString("&Contents"), M_HELP_CONTENTS);
+   fMenuHelp->AddEntry(new TGHotString("&Contents"), kHELP_CONTENTS);
    fMenuHelp->AddSeparator();
-   fMenuHelp->AddEntry(new TGHotString("&About"), M_HELP_ABOUT);
+   fMenuHelp->AddEntry(new TGHotString("&About"), kHELP_ABOUT);
    //fMenuHelp->AddSeparator();
-   //fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), M_HELP_BUG);
+   //fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), kHELP_BUG);
 
    fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -989,11 +989,11 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
    TRootHelpDialog *hd;
 
    switch (id) {
-      case M_FILE_NEW:
+      case kFILE_NEW:
          NewProject();
          break;
 
-      case M_FILE_CLOSE:
+      case kFILE_CLOSE:
          fEditable = FindEditableMdiFrame(root);
          if (fEditable && (fEditable == fMain->GetCurrent())) {
             root->SetEditable(kFALSE);
@@ -1001,36 +1001,36 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          fMain->Close(fMain->GetCurrent());
          break;
 
-      case M_FILE_EXIT:
+      case kFILE_EXIT:
          CloseWindow();
          break;
 
-      case M_WINDOW_HOR:
+      case kWINDOW_HOR:
          fMain->TileHorizontal();
          break;
 
-      case M_WINDOW_VERT:
+      case kWINDOW_VERT:
          fMain->TileVertical();
          break;
 
-      case M_WINDOW_CASCADE:
+      case kWINDOW_CASCADE:
          fMain->Cascade();
          break;
 
-      case M_WINDOW_ARRANGE:
+      case kWINDOW_ARRANGE:
          fMain->ArrangeMinimized();
          break;
 
-      case M_WINDOW_OPAQUE:
-         if (fMenuWindow->IsEntryChecked(M_WINDOW_OPAQUE)) {
-            fMenuWindow->UnCheckEntry(M_WINDOW_OPAQUE);
+      case kWINDOW_OPAQUE:
+         if (fMenuWindow->IsEntryChecked(kWINDOW_OPAQUE)) {
+            fMenuWindow->UnCheckEntry(kWINDOW_OPAQUE);
             fMain->SetResizeMode(kMdiNonOpaque);
          } else {
-            fMenuWindow->CheckEntry(M_WINDOW_OPAQUE);
+            fMenuWindow->CheckEntry(kWINDOW_OPAQUE);
             fMain->SetResizeMode(kMdiOpaque);
          }
          break;
-      case  M_HELP_CONTENTS:
+      case  kHELP_CONTENTS:
          root->SetEditable(kFALSE);
          hd = new TRootHelpDialog(this, "Help on Gui Builder...", 600, 400);
          hd->SetText(gHelpBuilder);
@@ -1038,7 +1038,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          hd->Popup();
          root->SetEditable(kTRUE);
          break;
-      case  M_HELP_ABOUT:
+      case  kHELP_ABOUT:
          root->SetEditable(kFALSE);
          hd = new TRootHelpDialog(this, "About Gui Builder...", 520, 160);
          hd->SetEditDisabled();
