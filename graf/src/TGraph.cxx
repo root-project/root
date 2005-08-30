@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.164 2005/06/23 10:04:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.165 2005/08/09 13:42:11 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -691,7 +691,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;
-   static Bool_t MIDDLE, BADCASE;
+   static Bool_t middle, badcase;
    static Int_t ipoint, pxp, pyp;
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
@@ -704,7 +704,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
-      BADCASE = kFALSE;
+      badcase = kFALSE;
       gVirtualX->SetLineColor(-1);
       TAttLine::Modify();  //Change line attributes only if necessary
       px1 = gPad->XtoAbsPixel(gPad->GetX1());
@@ -722,7 +722,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
          if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
              pyp < -kMaxPixel || pyp >= kMaxPixel) {
-            BADCASE = kTRUE;
+            badcase = kTRUE;
             continue;
          }
          gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
@@ -763,22 +763,22 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
 
-      MIDDLE = kTRUE;
+      middle = kTRUE;
       for (i=0;i<fNpoints;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
          d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) MIDDLE = kFALSE;
+         if (d < kMaxDiff) middle = kFALSE;
       }
 
 
 //*-*- check if point is close to an axis
-      if (MIDDLE) gPad->SetCursor(kMove);
+      if (middle) gPad->SetCursor(kMove);
       else gPad->SetCursor(kHand);
       break;
 
    case kButton1Motion:
-      if (MIDDLE) {
+      if (middle) {
          for(i=0;i<fNpoints-1;i++) {
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
@@ -859,9 +859,9 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                       ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
 
-      if (MIDDLE) {
+      if (middle) {
          for(i=0;i<fNpoints;i++) {
-            if (BADCASE) continue;  //do not update if big zoom and points moved
+            if (badcase) continue;  //do not update if big zoom and points moved
             if (x) fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
             if (y) fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
@@ -880,7 +880,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             }
          }
       }
-      BADCASE = kFALSE;
+      badcase = kFALSE;
       delete [] x; x = 0;
       delete [] y; y = 0;
       gPad->Modified(kTRUE);
@@ -1232,28 +1232,28 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    char l[] = "TLinearFitter";
    Int_t strdiff = 0;
-   Bool_t IsSet = kFALSE;
+   Bool_t isSet = kFALSE;
    if (TVirtualFitter::GetFitter()){
       //Is a fitter already set? Is it linear?
-      IsSet = kTRUE;
+      isSet = kTRUE;
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
-      if (IsSet && strdiff!=0) {
+      if (isSet && strdiff!=0) {
 	 delete TVirtualFitter::GetFitter();
-	 IsSet = kFALSE;
+	 isSet = kFALSE;
       }
-      if (!IsSet) {
+      if (!isSet) {
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
-      if (IsSet && strdiff==0){
+      if (isSet && strdiff==0){
 	 delete TVirtualFitter::GetFitter();
-	 IsSet = kFALSE;
+	 isSet = kFALSE;
       }
-      if (!IsSet)
+      if (!isSet)
 	 TVirtualFitter::SetFitter(0);
    }
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
@@ -1298,7 +1298,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       //*-*- Set error criterion for chisquare
       arglist[0] = TVirtualFitter::GetErrorDef();
       if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
-      fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
+      fitResult = grFitter->ExecuteCommand("SET err",arglist,1);
       if (fitResult != 0) {
 	 //   Abnormal termination, MIGRAD might not have converged on a
 	 //   minimum.
@@ -2071,9 +2071,9 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 //
 //
 
-   Int_t OptionLine , OptionAxis , OptionCurve, OptionStar ,OptionMark;
-   Int_t OptionBar  , OptionR    , OptionOne  , OptionE;
-   Int_t OptionFill , OptionZ    , OptionCurveFill;
+   Int_t optionLine , optionAxis , optionCurve, optionStar ,optionMark;
+   Int_t optionBar  , optionR    , optionOne  , optionE;
+   Int_t optionFill , optionZ    , optionCurveFill;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
@@ -2092,32 +2092,32 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    opt.ToUpper();
    opt.ReplaceAll("SAME","");
 
-   if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
-   if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
-   if(opt.Contains("C")) OptionCurve= 1;  else OptionCurve= 0;
-   if(opt.Contains("*")) OptionStar = 1;  else OptionStar = 0;
-   if(opt.Contains("P")) OptionMark = 1;  else OptionMark = 0;
-   if(opt.Contains("B")) OptionBar  = 1;  else OptionBar  = 0;
-   if(opt.Contains("R")) OptionR    = 1;  else OptionR    = 0;
-   if(opt.Contains("1")) OptionOne  = 1;  else OptionOne  = 0;
-   if(opt.Contains("F")) OptionFill = 1;  else OptionFill = 0;
+   if(opt.Contains("L")) optionLine = 1;  else optionLine = 0;
+   if(opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
+   if(opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
+   if(opt.Contains("*")) optionStar = 1;  else optionStar = 0;
+   if(opt.Contains("P")) optionMark = 1;  else optionMark = 0;
+   if(opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
+   if(opt.Contains("R")) optionR    = 1;  else optionR    = 0;
+   if(opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
+   if(opt.Contains("F")) optionFill = 1;  else optionFill = 0;
    if(opt.Contains("2") || opt.Contains("3") ||
-      opt.Contains("4")) OptionE = 1;  else OptionE = 0;
-   OptionZ    = 0;
+      opt.Contains("4")) optionE = 1;  else optionE = 0;
+   optionZ    = 0;
 //*-*           If no "drawing" option is selected and if chopt<>' '
 //*-*           nothing is done.
 
-  if (OptionLine+OptionFill+OptionCurve+OptionStar+OptionMark+OptionBar+OptionE == 0) {
-     if (strlen(chopt) == 0)  OptionLine=1;
+  if (optionLine+optionFill+optionCurve+optionStar+optionMark+optionBar+optionE == 0) {
+     if (strlen(chopt) == 0)  optionLine=1;
      else   return;
   }
 
-  if (OptionStar) SetMarkerStyle(3);
+  if (optionStar) SetMarkerStyle(3);
 
-  OptionCurveFill = 0;
-  if (OptionCurve && OptionFill) {
-     OptionCurveFill = 1;
-     OptionFill      = 0;
+  optionCurveFill = 0;
+  if (optionCurve && optionFill) {
+     optionCurveFill = 1;
+     optionFill      = 0;
   }
 
 
@@ -2125,7 +2125,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
   Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
 
-  if (OptionAxis) {
+  if (optionAxis) {
 
      if (fHistogram) {
         rwxmin    = gPad->GetUxmin();
@@ -2264,13 +2264,13 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
   gxworkl = new Double_t[2*npoints+10];
   gyworkl = new Double_t[2*npoints+10];
 
-  if (OptionLine || OptionFill) {
+  if (optionLine || optionFill) {
      x1       = x[0];
      xn       = x[npoints-1];
      y1       = y[0];
      yn       = y[npoints-1];
      nloop = npoints;
-     if (OptionFill && (xn != x1 || yn != y1)) nloop++;
+     if (optionFill && (xn != x1 || yn != y1)) nloop++;
      npt = 0;
      for (i=1;i<=nloop;i++) {
         if (i > npoints) {
@@ -2280,17 +2280,17 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            npt++;
         }
         if (i == nloop) {
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            Int_t bord = gStyle->GetDrawBorder();
-           if (OptionR) {
-              if (OptionFill) {
+           if (optionR) {
+              if (optionFill) {
                  gPad->PaintFillArea(npt,gyworkl,gxworkl);
                  if (bord) gPad->PaintPolyLine(npt,gyworkl,gxworkl);
               }
               else         gPad->PaintPolyLine(npt,gyworkl,gxworkl);
            }
            else {
-              if (OptionFill) {
+              if (optionFill) {
                  gPad->PaintFillArea(npt,gxworkl,gyworkl);
                  if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
               }
@@ -2304,18 +2304,18 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
 //*-*-           Draw the graph with a smooth Curve. Smoothing via Smooth
 
-  if (OptionCurve) {
+  if (optionCurve) {
      x1 = x[0];
      xn = x[npoints-1];
      y1 = y[0];
      yn = y[npoints-1];
      drawtype = 1;
      nloop = npoints;
-     if (OptionCurveFill) {
+     if (optionCurveFill) {
         drawtype += 1000;
         if (xn != x1 || yn != y1) nloop++;
      }
-     if (!OptionR) {
+     if (!optionR) {
         npt = 0;
         for (i=1;i<=nloop;i++) {
            if (i > npoints) {
@@ -2324,10 +2324,10 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
               gxwork[npt] = x[i-1];      gywork[npt] = y[i-1];
               npt++;
            }
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            if (gyworkl[npt-1] < rwymin || gyworkl[npt-1] > rwymax) {
               if (npt > 2) {
-                 ComputeLogs(npt, OptionZ);
+                 ComputeLogs(npt, optionZ);
                  Smooth(npt,gxworkl,gyworkl,drawtype);
               }
               gxwork[0] = gxwork[npt-1]; gywork[0] = gywork[npt-1];
@@ -2336,7 +2336,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            }
         }  //endfor (i=0;i<nloop;i++)
         if (npt > 1) {
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            Smooth(npt,gxworkl,gyworkl,drawtype);
         }
      }
@@ -2352,10 +2352,10 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
               gxwork[npt] = x[i-1];      gywork[npt] = y[i-1];
               npt++;
            }
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            if (gxworkl[npt-1] < rwxmin || gxworkl[npt-1] > rwxmax) {
               if (npt > 2) {
-                 ComputeLogs(npt, OptionZ);
+                 ComputeLogs(npt, optionZ);
                  Smooth(npt,gxworkl,gyworkl,drawtype);
               }
               gxwork[0] = gxwork[npt-1]; gywork[0] = gywork[npt-1];
@@ -2364,7 +2364,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            }
         } //endfor (i=1;i<=nloop;i++)
         if (npt > 1) {
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            Smooth(npt,gxworkl,gyworkl,drawtype);
         }
      }
@@ -2372,7 +2372,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
 //*-*-           Draw the graph with a '*' on every points
 
-  if (OptionStar) {
+  if (optionStar) {
      SetMarkerStyle(3);
      npt = 0;
      for (i=1;i<=npoints;i++) {
@@ -2381,8 +2381,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            npt++;
         }
         if (i == npoints) {
-           ComputeLogs(npt, OptionZ);
-           if (OptionR)  gPad->PaintPolyMarker(npt,gyworkl,gxworkl);
+           ComputeLogs(npt, optionZ);
+           if (optionR)  gPad->PaintPolyMarker(npt,gyworkl,gxworkl);
            else          gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
            npt = 0;
         }
@@ -2392,7 +2392,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 //*-*-           Draw the graph with the current polymarker on
 //*-*-           every points
 
-  if (OptionMark) {
+  if (optionMark) {
      npt = 0;
      for (i=1;i<=npoints;i++) {
         if (y[i-1] >= minimum && y[i-1] <= maximum && x[i-1] >= uxmin  && x[i-1] <= uxmax) {
@@ -2400,8 +2400,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            npt++;
         }
         if (i == npoints) {
-           ComputeLogs(npt, OptionZ);
-           if (OptionR) gPad->PaintPolyMarker(npt,gyworkl,gxworkl);
+           ComputeLogs(npt, optionZ);
+           if (optionR) gPad->PaintPolyMarker(npt,gyworkl,gxworkl);
            else         gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
            npt = 0;
         }
@@ -2410,8 +2410,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
 //*-*-           Draw the graph as a bar chart
 
-  if (OptionBar) {
-     if (!OptionR) {
+  if (optionBar) {
+     if (!optionR) {
         barxmin = x[0];
         barxmax = x[0];
         for (i=1;i<npoints;i++) {
@@ -2430,20 +2430,20 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
         bdelta = (barymax-barymin)/Double_t(npoints);
      }
      dbar  = 0.5*bdelta*gStyle->GetBarWidth();
-     if (!OptionR) {
+     if (!optionR) {
         for (i=1;i<=npoints;i++) {
            xlow  = x[i-1] - dbar;
            xhigh = x[i-1] + dbar;
            yhigh = y[i-1];
            if (xlow  < uxmin) continue;
            if (xhigh > uxmax) continue;
-           if (!OptionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
+           if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
            else            ylow = gPad->GetUymin();
            gxwork[0] = xlow;
            gywork[0] = ylow;
            gxwork[1] = xhigh;
            gywork[1] = yhigh;
-           ComputeLogs(2, OptionZ);
+           ComputeLogs(2, optionZ);
            if (gyworkl[0] < gPad->GetUymin()) gyworkl[0] = gPad->GetUymin();
            if (gyworkl[1] < gPad->GetUymin()) continue;
            if (gyworkl[1] > gPad->GetUymax()) gyworkl[1] = gPad->GetUymax();
@@ -2462,7 +2462,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            gywork[0] = ylow;
            gxwork[1] = xhigh;
            gywork[1] = yhigh;
-           ComputeLogs(2, OptionZ);
+           ComputeLogs(2, optionZ);
            gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
         }
      }
@@ -2548,10 +2548,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
    const char *where = "PaintGraphHist";
 
-   Int_t OptionLine , OptionAxis , OptionCurve, OptionStar , OptionMark;
-   Int_t OptionBar  , OptionRot  , OptionOne  , OptionOff;
-   Int_t OptionFill , OptionZ;
-   Int_t OptionHist , OptionBins , OptionMarker;
+   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
+   Int_t optionBar  , optionRot  , optionOne  , optionOff;
+   Int_t optionFill , optionZ;
+   Int_t optionHist , optionBins , optionMarker;
    Int_t i, j, npt;
    Int_t drawtype=0, drawborder, drawbordersav;
    Double_t xlow, xhigh, ylow, yhigh;
@@ -2572,34 +2572,34 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    }
    TString opt = chopt;
    opt.ToUpper();
-   if(opt.Contains("H"))  OptionHist = 1;  else OptionHist = 0;
-   if(opt.Contains("F"))  OptionFill = 1;  else OptionFill = 0;
-   if(opt.Contains("C"))  OptionCurve= 1;  else OptionCurve= 0;
-   if(opt.Contains("*"))  OptionStar = 1;  else OptionStar = 0;
-   if(opt.Contains("R"))  OptionRot  = 1;  else OptionRot  = 0;
-   if(opt.Contains("1"))  OptionOne  = 1;  else OptionOne  = 0;
-   if(opt.Contains("B"))  OptionBar  = 1;  else OptionBar  = 0;
-   if(opt.Contains("N"))  OptionBins = 1;  else OptionBins = 0;
-   if(opt.Contains("L"))  OptionLine = 1;  else OptionLine = 0;
-   if(opt.Contains("P"))  OptionMark = 1;  else OptionMark = 0;
-   if(opt.Contains("A"))  OptionAxis = 1;  else OptionAxis = 0;
-   if(opt.Contains("][")) OptionOff  = 1;  else OptionOff  = 0;
-   if(opt.Contains("P0")) OptionMark = 10;
+   if(opt.Contains("H"))  optionHist = 1;  else optionHist = 0;
+   if(opt.Contains("F"))  optionFill = 1;  else optionFill = 0;
+   if(opt.Contains("C"))  optionCurve= 1;  else optionCurve= 0;
+   if(opt.Contains("*"))  optionStar = 1;  else optionStar = 0;
+   if(opt.Contains("R"))  optionRot  = 1;  else optionRot  = 0;
+   if(opt.Contains("1"))  optionOne  = 1;  else optionOne  = 0;
+   if(opt.Contains("B"))  optionBar  = 1;  else optionBar  = 0;
+   if(opt.Contains("N"))  optionBins = 1;  else optionBins = 0;
+   if(opt.Contains("L"))  optionLine = 1;  else optionLine = 0;
+   if(opt.Contains("P"))  optionMark = 1;  else optionMark = 0;
+   if(opt.Contains("A"))  optionAxis = 1;  else optionAxis = 0;
+   if(opt.Contains("][")) optionOff  = 1;  else optionOff  = 0;
+   if(opt.Contains("P0")) optionMark = 10;
 
-   Int_t OptionFill2 = 0;
+   Int_t optionFill2 = 0;
    if(opt.Contains("F") && opt.Contains("2")) {
-      OptionFill = 0; OptionFill2 = 1;
+      optionFill = 0; optionFill2 = 1;
    }
 
 //*-*  Set Clipping option
-  Option_t *NoClip;
-  if (TestBit(kClipFrame)) NoClip = "";
-  else                     NoClip = "C";
+  Option_t *noClip;
+  if (TestBit(kClipFrame)) noClip = "";
+  else                     noClip = "C";
   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
 
-  OptionZ = 1;
+  optionZ = 1;
 
-  if (OptionStar) SetMarkerStyle(3);
+  if (optionStar) SetMarkerStyle(3);
 
   first = 1;
   last  = npoints;
@@ -2617,7 +2617,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   Double_t uxmax     = gPad->PadtoX(rwxmax);
   Double_t rounding  = (uxmax-uxmin)*1.e-5;
   drawborder         = gStyle->GetDrawBorder();
-  if (OptionAxis) {
+  if (optionAxis) {
      Int_t nx1, nx2, ndivx, ndivy, ndiv;
      choptaxis[0]  = 0;
      Double_t rwmin  = rwxmin;
@@ -2686,10 +2686,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 //*-*-       Min-Max scope
 
-  if (!OptionRot) {wmin = x[0];   wmax = x[1];}
+  if (!optionRot) {wmin = x[0];   wmax = x[1];}
   else            {wmin = y[0];   wmax = y[1];}
 
-  if (!OptionBins) delta = (wmax - wmin)/ Double_t(nbins);
+  if (!optionBins) delta = (wmax - wmin)/ Double_t(nbins);
 
   Int_t fwidth = gPad->GetFrameLineWidth();
   TFrame *frame = gPad->GetFrame();
@@ -2709,16 +2709,16 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   gxworkl = new Double_t[2*npoints+10];
   gyworkl = new Double_t[2*npoints+10];
 
-  if (OptionFill && !OptionCurve) {
+  if (optionFill && !optionCurve) {
      fillarea = kTRUE;
-     if (!OptionRot) {
+     if (!optionRot) {
         gxwork[0] = vxmin;
-        if (!OptionOne) gywork[0] = TMath::Min(TMath::Max((Double_t)0,gPad->GetUymin())
+        if (!optionOne) gywork[0] = TMath::Min(TMath::Max((Double_t)0,gPad->GetUymin())
                                               ,gPad->GetUymax());
         else            gywork[0] = gPad->GetUymin();
         npt = 2;
         for (j=first; j<=last;j++) {
-           if (!OptionBins) {
+           if (!optionBins) {
               gxwork[npt-1]   = gxwork[npt-2];
               gxwork[npt]     = wmin+((j-first+1)*delta);
               if (gxwork[npt] < gxwork[0]) gxwork[npt] = gxwork[0];
@@ -2747,11 +2747,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
               //transform to log ?
-              ComputeLogs(npt, OptionZ);
+              ComputeLogs(npt, optionZ);
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
               if (drawborder) {
                  if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,NoClip);
+                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,noClip);
               }
               continue;
            }
@@ -2759,11 +2759,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
      }
      else {
         gywork[0] = wmin;
-        if (!OptionOne) gxwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
+        if (!optionOne) gxwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
         else            gxwork[0] = gPad->GetUxmin();
         npt = 2;
         for (j=first; j<=last;j++) {
-           if (!OptionBins) {
+           if (!optionBins) {
               gywork[npt-1] = gywork[npt-2];
               gywork[npt]   = wmin+((j-first+1)*delta);
            }
@@ -2781,11 +2781,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            if (j == last) {
               gywork[npt-1] = gywork[npt-2];
               gxwork[npt-1] = gxwork[0];
-              ComputeLogs(npt, OptionZ);
+              ComputeLogs(npt, optionZ);
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
               if (drawborder) {
                  if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,NoClip);
+                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,noClip);
               }
               continue;
            }
@@ -2797,14 +2797,14 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 //*-*-      Draw a standard Histogram (default)
 
-  if ((OptionHist) || strlen(chopt) == 0) {
-     if (!OptionRot) {
+  if ((optionHist) || strlen(chopt) == 0) {
+     if (!optionRot) {
         gxwork[0] = wmin;
         gywork[0] = gPad->GetUymin();
         ywmin    = gywork[0];
         npt      = 2;
         for (i=first; i<=last;i++) {
-           if (!OptionBins) {
+           if (!optionBins) {
               gxwork[npt-1] = gxwork[npt-2];
               gxwork[npt]   = wmin+((i-first+1)*delta);
            }
@@ -2830,31 +2830,31 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
               if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
-              ComputeLogs(npt, OptionZ);
+              ComputeLogs(npt, optionZ);
 
               //do not draw the two vertical lines on the edges
               Int_t npoints = npt-2;
               Int_t point1  = 1;
-              if (OptionOff) {
+              if (optionOff) {
                  // remove points before the low cutoff
-                 Int_t Ip;
-                 for (Ip=point1; Ip<=npoints; Ip++) {
-                    if (gyworkl[Ip] != ywmin) {
-                       point1 = Ip;
+                 Int_t ip;
+                 for (ip=point1; ip<=npoints; ip++) {
+                    if (gyworkl[ip] != ywmin) {
+                       point1 = ip;
                        break;
                     }
                  }
                  // remove points after the high cutoff
 		 Int_t point2 = npoints;
-                 for (Ip=point2; Ip>=point1; Ip--) {
-                    if (gyworkl[Ip] != ywmin) {
-                       point2 = Ip;
+                 for (ip=point2; ip>=point1; ip--) {
+                    if (gyworkl[ip] != ywmin) {
+                       point2 = ip;
                        break;
                     }
                  }
 			  npoints = point2-point1+1;
 		    }
-              gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1],NoClip);
+              gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1],noClip);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
@@ -2865,7 +2865,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         xwmin    = gxwork[0];
         npt      = 2;
         for (i=first; i<=last;i++) {
-           if (!OptionBins) {
+           if (!optionBins) {
               gywork[npt-1]   = gywork[npt-2];
               gywork[npt] = wmin+((i-first+1)*delta);
            }
@@ -2883,8 +2883,8 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            if (i == last) {
               gywork[npt-1] = gywork[npt-2];
               gxwork[npt-1] = xwmin;
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
+              ComputeLogs(npt, optionZ);
+              gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
@@ -2892,19 +2892,19 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   }
 
 //*-*-              Draw the histogram with a smooth Curve. The computing
-//*-*-              of the smoothing is done by the routine IGRAP1
+//*-*-              of the smoothing is done by the routine IGRAp1
 
-  if (OptionCurve) {
-     if (!OptionFill) drawtype = 1;
+  if (optionCurve) {
+     if (!optionFill) drawtype = 1;
      else {
-        if (!OptionOne) drawtype = 2;
+        if (!optionOne) drawtype = 2;
         else            drawtype = 3;
      }
-     if (!OptionRot) {
+     if (!optionRot) {
         npt = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+           if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
            else {
               xi1 = x[i];      xi  = x[i-1];
               if (xi1 < xi) {
@@ -2919,10 +2919,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               continue;
            }
            gywork[npt-1] = y[i-1];
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            if ((gyworkl[npt-1] < rwymin) || (gyworkl[npt-1] > rwymax)) {
               if (npt > 2) {
-                 ComputeLogs(npt, OptionZ);
+                 ComputeLogs(npt, optionZ);
                  Smooth(npt,gxworkl,gyworkl,drawtype);
               }
               gxwork[0] = gxwork[npt-1];
@@ -2931,7 +2931,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               continue;
            }
            if (npt >= 50) {
-              ComputeLogs(50, OptionZ);
+              ComputeLogs(50, optionZ);
               Smooth(50,gxworkl,gyworkl,drawtype);
               gxwork[0] = gxwork[npt-1];
               gywork[0] = gywork[npt-1];
@@ -2939,7 +2939,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
         }  //endfor (i=first; i<=last;i++)
         if (npt > 1) {
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            Smooth(npt,gxworkl,gyworkl,drawtype);
         }
      }
@@ -2948,7 +2948,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         npt   = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gywork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+           if (!optionBins) gywork[npt-1] = wmin+(i-first)*delta+0.5*delta;
            else {
               yi1 = y[i];      yi = y[i-1];
               if (yi1 < yi) {
@@ -2959,10 +2959,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gywork[npt-1] = y[i-1] + 0.5*(y[i]-y[i-1]);
            }
            gxwork[npt-1] = x[i-1];
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            if ((gxworkl[npt] < uxmin) || (gxworkl[npt] > uxmax)) {
               if (npt > 2) {
-                 ComputeLogs(npt, OptionZ);
+                 ComputeLogs(npt, optionZ);
                  Smooth(npt,gxworkl,gyworkl,drawtype);
               }
               gxwork[0] = gxwork[npt-1];
@@ -2971,7 +2971,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               continue;
            }
            if (npt >= 50) {
-              ComputeLogs(50, OptionZ);
+              ComputeLogs(50, optionZ);
               Smooth(50,gxworkl,gyworkl,drawtype);
               gxwork[0] = gxwork[npt-1];
               gywork[0] = gywork[npt-1];
@@ -2979,7 +2979,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
         }  //endfor (i=first; i<=last;i++)
         if (npt > 1) {
-           ComputeLogs(npt, OptionZ);
+           ComputeLogs(npt, optionZ);
            Smooth(npt,gxworkl,gyworkl,drawtype);
         }
      }
@@ -2987,9 +2987,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 //*-*-    Draw the histogram with a simple line or/and a marker
 
-  OptionMarker = 0;
-  if ((OptionStar) || (OptionMark))OptionMarker=1;
-  if ((OptionMarker) || (OptionLine)) {
+  optionMarker = 0;
+  if ((optionStar) || (optionMark))optionMarker=1;
+  if ((optionMarker) || (optionLine)) {
     wminstep = wmin + 0.5*delta;
     Axis_t ax1,ax2,ay1,ay2;
     gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
@@ -3000,7 +3000,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
     Int_t ay2Pix = gPad->YtoAbsPixel(ay2);
 
     Int_t nrPix;
-    if (!OptionRot)
+    if (!optionRot)
       nrPix = ax2Pix-ax1Pix+1;
     else
       nrPix = ay2Pix-ay1Pix+1;
@@ -3010,7 +3010,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
     if (3*nrPix < last-first+1) {
       lowRes = 1;
     }
-    if (OptionFill2)       lowRes = 0;
+    if (optionFill2)       lowRes = 0;
     if (opt.Contains("9")) lowRes = 0;
     if (lowRes) {
       Double_t *minPix   = new Double_t[nrPix];
@@ -3026,10 +3026,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
       for (ip = first; ip < last; ip++) {
         Double_t xw;
-        if (!OptionBins) xw = wminstep + (ip-first)*delta+0.5*delta;
+        if (!optionBins) xw = wminstep + (ip-first)*delta+0.5*delta;
         else             xw = x[ip-1] + 0.5*(x[ip]-x[ip-1]);;
 
-        if (!OptionRot) {
+        if (!optionRot) {
           Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
           if (ix < 0) ix = 0;
           if (ix >= nrPix) ix = nrPix-1;
@@ -3066,7 +3066,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
       for (ipix = 0; ipix < nrPix; ipix++) {
         if (minPix[ipix] <= maxPix[ipix]) {
           Double_t xl[2]; Double_t yl[2];
-          if (!OptionRot) {
+          if (!optionRot) {
             xc[nrLine] = gPad->AbsPixeltoX(ax1Pix+ipix) + xcadjust;
             yc[nrLine] = gPad->AbsPixeltoY((Int_t)centrPix[ipix]);
 
@@ -3083,7 +3083,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
             xl[1]      = gPad->AbsPixeltoX((Int_t)maxPix[ipix]);
             yl[1]      = yc[nrLine];
           }
-          if (!OptionZ && gPad->GetLogx()) {
+          if (!optionZ && gPad->GetLogx()) {
             if (xc[nrLine] > 0) xc[nrLine] = TMath::Log10(xc[nrLine]);
             else                xc[nrLine] = gPad->GetX1();
             for (Int_t il = 0; il < 2; il++) {
@@ -3091,7 +3091,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               else            xl[il] = gPad->GetX1();
             }
           }
-          if (!OptionZ && gPad->GetLogy()) {
+          if (!optionZ && gPad->GetLogy()) {
             if (yc[nrLine] > 0) yc[nrLine] = TMath::Log10(yc[nrLine]);
             else                yc[nrLine] = gPad->GetY1();
             for (Int_t il = 0; il < 2; il++) {
@@ -3100,12 +3100,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
             }
           }
 
-          gPad->PaintPolyLine(2,xl,yl,NoClip);
+          gPad->PaintPolyLine(2,xl,yl,noClip);
           nrLine++;
         }
       }
 
-      gPad->PaintPolyLine(nrLine,xc,yc,NoClip);
+      gPad->PaintPolyLine(nrLine,xc,yc,noClip);
 
       delete [] xc;
       delete [] yc;
@@ -3115,11 +3115,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
       delete [] centrPix;
       delete [] nrEntries;
     } else {
-     if (!OptionRot) {
+     if (!optionRot) {
         npt = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+           if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
            else {
               xi1 = x[i];      xi = x[i-1];
               if (xi1 < xi) {
@@ -3130,7 +3130,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
            }
            if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
-           if ((OptionMark != 10) && (OptionLine == 0)) {
+           if ((optionMark != 10) && (optionLine == 0)) {
               if (y[i-1] <= rwymin)  {npt--; continue;}
            }
            gywork[npt-1] = y[i-1];
@@ -3139,18 +3139,18 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
               if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
               if (npt > 2) {
-                 if (OptionMarker) {
-                    ComputeLogs(npt, OptionZ);
+                 if (optionMarker) {
+                    ComputeLogs(npt, optionZ);
                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
                  }
-                 if (OptionLine) {
-                    if (!OptionMarker) ComputeLogs(npt, OptionZ);
-                    if (OptionFill2) {
+                 if (optionLine) {
+                    if (!optionMarker) ComputeLogs(npt, optionZ);
+                    if (optionFill2) {
                        gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                        gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
                        gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
                     }
-                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
+                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                  }
               }
               gxwork[0] = gxwork[npt-1];
@@ -3160,13 +3160,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
 
            if (npt >= 50) {
-              if (OptionMarker) {
-                 ComputeLogs(50, OptionZ);
+              if (optionMarker) {
+                 ComputeLogs(50, optionZ);
                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
               }
-              if (OptionLine) {
-                 if (!OptionMarker) ComputeLogs(50, OptionZ);
-                 if (OptionFill2) {
+              if (optionLine) {
+                 if (!optionMarker) ComputeLogs(50, optionZ);
+                 if (optionFill2) {
                     gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                     gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
                     gPad->PaintFillArea(52,gxworkl,gyworkl);
@@ -3178,13 +3178,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               npt      = 1;
            }
         }  //endfor (i=first; i<=last;i++)
-        if (OptionMarker && npt > 0) {
-           ComputeLogs(npt, OptionZ);
+        if (optionMarker && npt > 0) {
+           ComputeLogs(npt, optionZ);
            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
         }
-        if (OptionLine && npt > 1) {
-           if (!OptionMarker) ComputeLogs(npt, OptionZ);
-           if (OptionFill2) {
+        if (optionLine && npt > 1) {
+           if (!optionMarker) ComputeLogs(npt, optionZ);
+           if (optionFill2) {
               gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
               gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
               gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
@@ -3196,7 +3196,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         npt = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
+           if (!optionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
            else {
               yi1 = y[i];      yi = y[i-1];
               if (yi1 < yi) {
@@ -3209,13 +3209,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            gxwork[npt-1] = x[i-1];
            if ((gxwork[npt-1] < uxmin) || (gxwork[npt-1] > uxmax)) {
               if (npt > 2) {
-                if (OptionMarker) {
-                    ComputeLogs(npt, OptionZ);
+                if (optionMarker) {
+                    ComputeLogs(npt, optionZ);
                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
                  }
-                 if (OptionLine) {
-                    if (!OptionMarker) ComputeLogs(npt, OptionZ);
-                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
+                 if (optionLine) {
+                    if (!optionMarker) ComputeLogs(npt, optionZ);
+                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                  }
               }
               gxwork[0] = gxwork[npt-1];
@@ -3224,12 +3224,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               continue;
            }
            if (npt >= 50) {
-              if (OptionMarker) {
-                 ComputeLogs(50, OptionZ);
+              if (optionMarker) {
+                 ComputeLogs(50, optionZ);
                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
               }
-              if (OptionLine) {
-                 if (!OptionMarker) ComputeLogs(50, OptionZ);
+              if (optionLine) {
+                 if (!optionMarker) ComputeLogs(50, optionZ);
                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
               }
               gxwork[0] = gxwork[npt-1];
@@ -3237,13 +3237,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               npt      = 1;
            }
         }  //endfor (i=first; i<=last;i++)
-        if (OptionMarker && npt > 0) {
-           ComputeLogs(npt, OptionZ);
+        if (optionMarker && npt > 0) {
+           ComputeLogs(npt, optionZ);
            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
         }
-        if (OptionLine != 0 && npt > 1) {
-           if (!OptionMarker) ComputeLogs(npt, OptionZ);
-           gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
+        if (optionLine != 0 && npt > 1) {
+           if (!optionMarker) ComputeLogs(npt, optionZ);
+           gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
         }
      }
    }
@@ -3251,10 +3251,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 //*-*-              Draw the histogram as a bar chart
 
-  if (OptionBar) {
-     if (!OptionBins) { offset = delta*baroffset; dbar = delta*barwidth; }
+  if (optionBar) {
+     if (!optionBins) { offset = delta*baroffset; dbar = delta*barwidth; }
      else {
-        if (!OptionRot) {
+        if (!optionRot) {
            offset = (x[1]-x[0])*baroffset;
            dbar   = (x[1]-x[0])*barwidth;
         } else {
@@ -3264,10 +3264,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
      }
      drawbordersav = drawborder;
      gStyle->SetDrawBorder(1);
-     if (!OptionRot) {
+     if (!optionRot) {
         xlow  = wmin+offset;
         xhigh = wmin+offset+dbar;
-        if (!OptionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
+        if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
         else            ylow = gPad->GetUymin();
 
         for (i=first; i<=last;i++) {
@@ -3276,9 +3276,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            gywork[0] = ylow;
            gxwork[1] = xhigh;
            gywork[1] = yhigh;
-           ComputeLogs(2, OptionZ);
+           ComputeLogs(2, optionZ);
            gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
-           if (!OptionBins) {
+           if (!optionBins) {
               xlow  = xlow+delta;
               xhigh = xhigh+delta;
            }
@@ -3300,7 +3300,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
      else {
         ylow  = wmin + offset;
         yhigh = wmin + offset + dbar;
-        if (!OptionOne) xlow = TMath::Max((Double_t)0,gPad->GetUxmin());
+        if (!optionOne) xlow = TMath::Max((Double_t)0,gPad->GetUxmin());
         else            xlow = gPad->GetUxmin();
 
         for (i=first; i<=last;i++) {
@@ -3309,10 +3309,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            gywork[0] = ylow;
            gxwork[1] = xhigh;
            gywork[1] = yhigh;
-           ComputeLogs(2, OptionZ);
+           ComputeLogs(2, optionZ);
            gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
            gPad->PaintBox(xlow,ylow,xhigh,yhigh);
-           if (!OptionBins) {
+           if (!optionBins) {
               ylow  = ylow  + delta;
               yhigh = yhigh + delta;
            }
@@ -3586,7 +3586,7 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 // required , then set P(I)=P(I+1) . loops are also allowed .
 //
 // Reference Marlow and Powell,Harwell report No.R.7092.1972
-// MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970PP392 6
+// MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970Pp392 6
 //
 // _Input parameters:
 //
@@ -3601,7 +3601,7 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 //
 //
 
-   Int_t i, k, kp, km, NpointsMax, banksize, n2, npt;
+   Int_t i, k, kp, km, npointsMax, banksize, n2, npt;
    Int_t maxiterations, finished;
    Int_t jtype, ktype, closed;
    Double_t sxmin, sxmax, symin, symax;
@@ -3610,27 +3610,27 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
    Double_t ratio_signs, xratio, yratio;
    Int_t flgic, flgis;
    Int_t iw, loptx;
-   Double_t P1, P2, P3, P4, P5, P6;
-   Double_t W1, W2, W3;
-   Double_t A, B, C, R, S, T, Z;
-   Double_t CO, SO, CT, ST, CTU, STU, XNT;
-   Double_t DX1, DY1, DX2, DY2, DK1, DK2;
-   Double_t XO, YO, DX, DY, XT, YT;
-   Double_t XA, XB, YA, YB;
-   Double_t U1, U2, U3, TJ;
-   Double_t CC, ERR;
-   Double_t SB, STH;
+   Double_t p1, p2, p3, p4, p5, p6;
+   Double_t w1, w2, w3;
+   Double_t a, b, c, r, s, t, z;
+   Double_t co, so, ct, st, ctu, stu, xnt;
+   Double_t dx1, dy1, dx2, dy2, dk1, dk2;
+   Double_t xo, yo, dx, dy, xt, yt;
+   Double_t xa, xb, ya, yb;
+   Double_t u1, u2, u3, tj;
+   Double_t cc, err;
+   Double_t sb, sth;
    Double_t wsign, tsquare, tcube;
-   C = T = CO = SO = CT = ST = CTU = STU = DX1 = DY1 = DX2 = DY2 = 0;
-   XT = YT = XA = XB = YA = YB = U1 = U2 = U3 = TJ = SB = 0;
+   c = t = co = so = ct = st = ctu = stu = dx1 = dy1 = dx2 = dy2 = 0;
+   xt = yt = xa = xb = ya = yb = u1 = u2 = u3 = tj = sb = 0;
 //*-* ______________________________________
 
-   NpointsMax  = npoints*10;
-   n2          = NpointsMax-2;
+   npointsMax  = npoints*10;
+   n2          = npointsMax-2;
    banksize    = n2;
 
-   Double_t *qlx = new Double_t[NpointsMax];
-   Double_t *qly = new Double_t[NpointsMax];
+   Double_t *qlx = new Double_t[npointsMax];
+   Double_t *qly = new Double_t[npointsMax];
    if (!qlx || !qly) {
       Error("Smooth", "not enough space in memory");
       return;
@@ -3779,8 +3779,8 @@ L110:
 //*-*-           Carry forward the direction cosines from the previous arc.
 
 L120:
-   CO = CT;
-   SO = ST;
+   co = ct;
+   so = st;
    k++;
    goto L60;
 
@@ -3789,155 +3789,155 @@ L120:
 //*-*-           direction cosines at P(k) obtained from P(k-1),P(k),P(k+1).
 
 L130:
-   DX1 = x[k-1]  - x[km-1];
-   DY1 = y[k-1]  - y[km-1];
-   DK1 = DX1*DX1 + DY1*DY1;
-   DX2 = x[kp-1] - x[k-1];
-   DY2 = y[kp-1] - y[k-1];
-   DK2 = DX2*DX2 + DY2*DY2;
-   CTU = DX1*DK2 + DX2*DK1;
-   STU = DY1*DK2 + DY2*DK1;
-   XNT = CTU*CTU + STU*STU;
+   dx1 = x[k-1]  - x[km-1];
+   dy1 = y[k-1]  - y[km-1];
+   dk1 = dx1*dx1 + dy1*dy1;
+   dx2 = x[kp-1] - x[k-1];
+   dy2 = y[kp-1] - y[k-1];
+   dk2 = dx2*dx2 + dy2*dy2;
+   ctu = dx1*dk2 + dx2*dk1;
+   stu = dy1*dk2 + dy2*dk1;
+   xnt = ctu*ctu + stu*stu;
 
 //*-*-           If both ctu and stu are zero,then default.This can
 //*-*-           occur when P(k)=P(k+1). I.E. A loop.
 
-   if (XNT < 1.E-25) {
-      CTU = DY1;
-      STU =-DX1;
-      XNT = DK1;
+   if (xnt < 1.E-25) {
+      ctu = dy1;
+      stu =-dx1;
+      xnt = dk1;
    }
 //*-*-           Normalise direction cosines.
 
-   CT = CTU/TMath::Sqrt(XNT);
-   ST = STU/TMath::Sqrt(XNT);
+   ct = ctu/TMath::Sqrt(xnt);
+   st = stu/TMath::Sqrt(xnt);
    if (flgis) goto L160;
 
 //*-*-           Direction cosines at P(k-1) obtained from P(k-1),P(k),P(k+1).
 
-   W3    = 2*(DX1*DY2-DX2*DY1);
-   CO    = CTU+W3*DY1;
-   SO    = STU-W3*DX1;
-   XNT   = 1/TMath::Sqrt(CO*CO+SO*SO);
-   CO    = CO*XNT;
-   SO    = SO*XNT;
+   w3    = 2*(dx1*dy2-dx2*dy1);
+   co    = ctu+w3*dy1;
+   so    = stu-w3*dx1;
+   xnt   = 1/TMath::Sqrt(co*co+so*so);
+   co    = co*xnt;
+   so    = so*xnt;
    flgis = kTRUE;
    goto L170;
 
 //*-*-           Direction cosines at P(k) obtained from P(k-2),P(k-1),P(k).
 
 L150:
-   W3    = 2*(DX1*DY2-DX2*DY1);
-   CT    = CTU-W3*DY2;
-   ST    = STU+W3*DX2;
-   XNT   = 1/TMath::Sqrt(CT*CT+ST*ST);
-   CT    = CT*XNT;
-   ST    = ST*XNT;
+   w3    = 2*(dx1*dy2-dx2*dy1);
+   ct    = ctu-w3*dy2;
+   st    = stu+w3*dx2;
+   xnt   = 1/TMath::Sqrt(ct*ct+st*st);
+   ct    = ct*xnt;
+   st    = st*xnt;
    flgis = kFALSE;
    goto L170;
 L160:
    if (k <= 1) goto L120;
 
-//*-*-           For the arc between P(k-1) and P(k) with direction cosines CO,
-//*-*-           SO and CT,ST respectively, calculate the coefficients of the
-//*-*-           parametric cubic represented by X(T) and Y(T) where
-//*-*-           X(T)=XA*T**3 + XB*T**2 + CO*T + XO
-//*-*-           Y(T)=YA*T**3 + YB*T**2 + SO*T + YO
+//*-*-           For the arc between P(k-1) and P(k) with direction cosines co,
+//*-*-           so and ct,st respectively, calculate the coefficients of the
+//*-*-           parametric cubic represented by X(t) and Y(t) where
+//*-*-           X(t)=xa*t**3 + xb*t**2 + co*t + xo
+//*-*-           Y(t)=ya*t**3 + yb*t**2 + so*t + yo
 
 L170:
-   XO = x[k-2];
-   YO = y[k-2];
-   DX = x[k-1] - XO;
-   DY = y[k-1] - YO;
+   xo = x[k-2];
+   yo = y[k-2];
+   dx = x[k-1] - xo;
+   dy = y[k-1] - yo;
 
-//*-*-           Initialise the values of X(TI),Y(TI) in XT and YT respectively.
+//*-*-           Initialise the values of X(TI),Y(TI) in xt and yt respectively.
 
-   XT = XO;
-   YT = YO;
-   if (finished < 0) {  //*-*- Draw a straight line between (XO,YO) and (XT,YT)
-      XT += DX;
-      YT += DY;
+   xt = xo;
+   yt = yo;
+   if (finished < 0) {  //*-*- Draw a straight line between (xo,yo) and (xt,yt)
+      xt += dx;
+      yt += dy;
       goto L300;
    }
-   C  = DX*DX+DY*DY;
-   A  = CO+CT;
-   B  = SO+ST;
-   R  = DX*A+DY*B;
-   T  = C*6/(TMath::Sqrt(R*R+2*(7-CO*CT-SO*ST)*C)+R);
-   tsquare = T*T;
-   tcube   = T*tsquare;
-   XA = (A*T-2*DX)/tcube;
-   XB = (3*DX-(CO+A)*T)/tsquare;
-   YA = (B*T-2*DY)/tcube;
-   YB = (3*DY-(SO+B)*T)/tsquare;
+   c  = dx*dx+dy*dy;
+   a  = co+ct;
+   b  = so+st;
+   r  = dx*a+dy*b;
+   t  = c*6/(TMath::Sqrt(r*r+2*(7-co*ct-so*st)*c)+r);
+   tsquare = t*t;
+   tcube   = t*tsquare;
+   xa = (a*t-2*dx)/tcube;
+   xb = (3*dx-(co+a)*t)/tsquare;
+   ya = (b*t-2*dy)/tcube;
+   yb = (3*dy-(so+b)*t)/tsquare;
 
 //*-*-           If the curve is close to a straight line then use a straight
-//*-*-           line between (XO,YO) and (XT,YT).
+//*-*-           line between (xo,yo) and (xt,yt).
 
-   if (.75*TMath::Max(TMath::Abs(DX*SO-DY*CO),TMath::Abs(DX*ST-DY*CT)) <= delta) {
+   if (.75*TMath::Max(TMath::Abs(dx*so-dy*co),TMath::Abs(dx*st-dy*ct)) <= delta) {
       finished = -1;
-      XT += DX;
-      YT += DY;
+      xt += dx;
+      yt += dy;
       goto L300;
    }
 
-//*-*-           Calculate a set of values 0 == T(0).LTCT(1) <  ...  < T(M)=TC
-//*-*-           such that polygonal arc joining X(T(J)),Y(T(J)) (J=0,1,..M)
+//*-*-           Calculate a set of values 0 == t(0).LTCT(1) <  ...  < t(M)=TC
+//*-*-           such that polygonal arc joining X(t(J)),Y(t(J)) (J=0,1,..M)
 //*-*-           is within the required accuracy of the curve
 
-   TJ = 0;
-   U1 = YA*XB-YB*XA;
-   U2 = YB*CO-XB*SO;
-   U3 = SO*XA-YA*CO;
+   tj = 0;
+   u1 = ya*xb-yb*xa;
+   u2 = yb*co-xb*so;
+   u3 = so*xa-ya*co;
 
-//*-*-           Given T(J), calculate T(J+1). The values of X(T(J)),
-//*-*-           Y(T(J)) T(J) are contained in XT,YT and TJ respectively.
+//*-*-           Given t(J), calculate t(J+1). The values of X(t(J)),
+//*-*-           Y(t(J)) t(J) are contained in xt,yt and tj respectively.
 
 L180:
-   S  = T - TJ;
+   s  = t - tj;
    iw = -2;
 
 //*-*-           Define iw here later.
 
-   P1 = (2*U1)*TJ-U3;
-   P2 = (U1*TJ-U3)*3*TJ+U2;
-   P3 = 3*TJ*YA+YB;
-   P4 = (P3+YB)*TJ+SO;
-   P5 = 3*TJ*XA+XB;
-   P6 = (P5+XB)*TJ+CO;
+   p1 = (2*u1)*tj-u3;
+   p2 = (u1*tj-u3)*3*tj+u2;
+   p3 = 3*tj*ya+yb;
+   p4 = (p3+yb)*tj+so;
+   p5 = 3*tj*xa+xb;
+   p6 = (p5+xb)*tj+co;
 
-//*-*-           Test D(TJ,THETA). A is set to (Y(TJ+S)-Y(TJ))/S.B is
-//*-*-           set to (X(TJ+S)-X(TJ))/S.
+//*-*-           Test D(tj,THETA). A is set to (Y(tj+s)-Y(tj))/s.b is
+//*-*-           set to (X(tj+s)-X(tj))/s.
 
-   CC  = 0.8209285;
-   ERR = 0.1209835;
+   cc  = 0.8209285;
+   err = 0.1209835;
 L190:
    iw -= 2;
 L200:
-   A   = (S*YA+P3)*S+P4;
-   B   = (S*XA+P5)*S+P6;
+   a   = (s*ya+p3)*s+p4;
+   b   = (s*xa+p5)*s+p6;
 
-//*-*-           Set Z to PSI(D/delta)-CC.
+//*-*-           Set z to PSI(D/delta)-cc.
 
-   W1 = -S*(S*U1+P1);
-   W2 = S*S*U1-P2;
-   W3 = 1.5*W1+W2;
+   w1 = -s*(s*u1+p1);
+   w2 = s*s*u1-p2;
+   w3 = 1.5*w1+w2;
 
-//*-*-           Set the estimate of (THETA-TJ)/S.Then set the numerator
-//*-*-           of the expression (EQUATION 4.4)/S. Then set the square
-//*-*-           of D(TJ,TJ+S)/delta. Then replace Z by PSI(D/delta)-CC.
+//*-*-           Set the estimate of (THETA-tj)/s.Then set the numerator
+//*-*-           of the expression (EQUATION 4.4)/s. Then set the square
+//*-*-           of D(tj,tj+s)/delta. Then replace z by PSI(D/delta)-cc.
 
-   if (W3 > 0) wsign = TMath::Abs(W1);
-   else        wsign = -TMath::Abs(W1);
-   STH = 0.5+wsign/(3.4*TMath::Abs(W1)+5.2*TMath::Abs(W3));
-   Z   = S*STH*(S-S*STH)*(W1*STH+W1+W2);
-   Z   = Z*Z/((A*A+B*B)*(delta*delta));
-   Z   = (Z+2.642937)*Z/((.3715652*Z+3.063444)*Z+.2441889)-CC;
+   if (w3 > 0) wsign = TMath::Abs(w1);
+   else        wsign = -TMath::Abs(w1);
+   sth = 0.5+wsign/(3.4*TMath::Abs(w1)+5.2*TMath::Abs(w3));
+   z   = s*sth*(s-s*sth)*(w1*sth+w1+w2);
+   z   = z*z/((a*a+b*b)*(delta*delta));
+   z   = (z+2.642937)*z/((.3715652*z+3.063444)*z+.2441889)-cc;
 
-//*-*-           Branch if Z has been calculated
+//*-*-           Branch if z has been calculated
 
    if (iw > 0) goto L250;
-   if (Z > ERR) goto L240;
+   if (z > err) goto L240;
    goto L220;
 L210:
    iw -= 2;
@@ -3948,20 +3948,20 @@ L220:
 //*-*-           Last part of arc.
 
 L230:
-   XT = x[k-1];
-   YT = y[k-1];
-   S  = 0;
+   xt = x[k-1];
+   yt = y[k-1];
+   s  = 0;
    goto L300;
 
-//*-*-           Z(S). find a value of S where 0 <= S <= SB such that
-//*-*-           TMath::Abs(Z(S)) < ERR
+//*-*-           z(s). find a value of s where 0 <= s <= sb such that
+//*-*-           TMath::Abs(z(s)) < err
 
 L240:
    kp = 0;
-   C  = Z;
-   SB = S;
+   c  = z;
+   sb = s;
 L250:
-   Zero(kp,0,SB,ERR,S,Z,maxiterations);
+   Zero(kp,0,sb,err,s,z,maxiterations);
    if (kp == 2) goto L210;
    if (kp > 2) {
       Error("Smooth", "Attempt to plot outside plot limits");
@@ -3969,32 +3969,32 @@ L250:
    }
    if (iw > 0) goto L200;
 
-//*-*-           Set Z=Z(S) for S=0.
+//*-*-           Set z=z(s) for s=0.
 
   if (iw < 0) {
-     Z  = -CC;
+     z  = -cc;
      iw = 0;
      goto L250;
   }
 
-//*-*-           Set Z=Z(S) for S=SB.
+//*-*-           Set z=z(s) for s=sb.
 
-   Z  = C;
+   z  = c;
    iw = 1;
    goto L250;
 
-//*-*-           Update TJ,XT and YT.
+//*-*-           Update tj,xt and yt.
 
 L290:
-   XT = XT + S*B;
-   YT = YT + S*A;
-   TJ = S  + TJ;
+   xt = xt + s*b;
+   yt = yt + s*a;
+   tj = s  + tj;
 
 //*-*-           Convert coordinates to original system
 
 L300:
-   qlx[npt] = sxmin + XT/xratio;
-   qly[npt] = symin + YT/yratio;
+   qlx[npt] = sxmin + xt/xratio;
+   qly[npt] = symin + yt/yratio;
    npt++;
 
 //*-*-           If a fill area must be drawn and if the banks LX and
@@ -4043,12 +4043,12 @@ L310:
       gPad->PaintPolyLine(npt,qlx,qly);
    }
    npt = 1;
-   qlx[0] = sxmin + XT/xratio;
-   qly[0] = symin + YT/yratio;
+   qlx[0] = sxmin + xt/xratio;
+   qly[0] = symin + yt/yratio;
 L320:
    if (finished > 0) goto L390;
    if (finished < 0) { finished = 0; goto L110;}
-   if (S > 0) goto L180;
+   if (s > 0) goto L180;
    goto L110;
 
 
@@ -4234,21 +4234,21 @@ void TGraph::Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Doubl
 // notes for details of the argument list and calling sequence
 //
 //
-   static Double_t A, B, YA, ytest, Y1, X1, H;
-   static Int_t J1, IT, J3, J2;
-   Double_t YB, X2;
-   YB = 0;
+   static Double_t a, b, ya, ytest, y1, x1, h;
+   static Int_t j1, it, j3, j2;
+   Double_t yb, x2;
+   yb = 0;
 
 //*-*______________________________________
 
 //*-*-       Calculate Y(X) at X=AZ.
   if (k <= 0) {
-     A  = AZ;
-     B  = BZ;
-     X  = A;
-     J1 = 1;
-     IT = 1;
-     k  = J1;
+     a  = AZ;
+     b  = BZ;
+     X  = a;
+     j1 = 1;
+     it = 1;
+     k  = j1;
      return;
   }
 
@@ -4258,45 +4258,45 @@ void TGraph::Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Doubl
 
 //*-*-       Calculate Y(X) at X=BZ.
 
-  if (J1 == 1) {
-     YA = Y;
-     X  = B;
-     J1 = 2;
+  if (j1 == 1) {
+     ya = Y;
+     X  = b;
+     j1 = 2;
      return;
   }
 //*-*-       Test whether the signs of Y(AZ) and Y(BZ) are different.
 //*-*-       if not, begin the binary subdivision.
 
-  if (J1 != 2) goto L100;
-  if (YA*Y < 0) goto L120;
-  X1 = A;
-  Y1 = YA;
-  J1 = 3;
-  H  = B - A;
-  J2 = 1;
-  X2 = A + 0.5*H;
-  J3 = 1;
-  IT++;      //*-*-   Check whether (maxiterations) function values have been calculated.
-  if (IT >= maxiterations) k = J1;
-  else                     X = X2;
+  if (j1 != 2) goto L100;
+  if (ya*Y < 0) goto L120;
+  x1 = a;
+  y1 = ya;
+  j1 = 3;
+  h  = b - a;
+  j2 = 1;
+  x2 = a + 0.5*h;
+  j3 = 1;
+  it++;      //*-*-   Check whether (maxiterations) function values have been calculated.
+  if (it >= maxiterations) k = j1;
+  else                     X = x2;
   return;
 
 //*-*-      Test whether a bracket has been found .
 //*-*-      If not,continue the search
 
 L100:
-  if (J1 > 3) goto L170;
-  if (YA*Y >= 0) {
-     if (J3 >= J2) {
-        H  = 0.5*H; J2 = 2*J2;
-        A  = X1;  YA = Y1;  X2 = A + 0.5*H; J3 = 1;
+  if (j1 > 3) goto L170;
+  if (ya*Y >= 0) {
+     if (j3 >= j2) {
+        h  = 0.5*h; j2 = 2*j2;
+        a  = x1;  ya = y1;  x2 = a + 0.5*h; j3 = 1;
      }
      else {
-        A  = X;   YA = Y;   X2 = X + H;     J3++;
+        a  = X;   ya = Y;   x2 = X + h;     j3++;
      }
-     IT++;
-     if (IT >= maxiterations) k = J1;
-     else                     X = X2;
+     it++;
+     if (it >= maxiterations) k = j1;
+     else                     X = x2;
      return;
   }
 
@@ -4304,25 +4304,25 @@ L100:
 //*-*-       secant method based on the bracket.
 
 L120:
-  B  = X;
-  YB = Y;
-  J1 = 4;
+  b  = X;
+  yb = Y;
+  j1 = 4;
 L130:
-  if (TMath::Abs(YA) > TMath::Abs(YB)) { X1 = A; Y1 = YA; X  = B; Y  = YB; }
-  else                                 { X1 = B; Y1 = YB; X  = A; Y  = YA; }
+  if (TMath::Abs(ya) > TMath::Abs(yb)) { x1 = a; y1 = ya; X  = b; Y  = yb; }
+  else                                 { x1 = b; y1 = yb; X  = a; Y  = ya; }
 
-//*-*-       Use the secant method based on the function values Y1 and Y.
-//*-*-       check that X2 is inside the interval (A,B).
+//*-*-       Use the secant method based on the function values y1 and Y.
+//*-*-       check that x2 is inside the interval (a,b).
 
 L150:
-  X2    = X-Y*(X-X1)/(Y-Y1);
-  X1    = X;
-  Y1    = Y;
-  ytest = 0.5*TMath::Min(TMath::Abs(YA),TMath::Abs(YB));
-  if ((X2-A)*(X2-B) < 0) {
-     IT++;
-     if (IT >= maxiterations) k = J1;
-     else                     X = X2;
+  x2    = X-Y*(X-x1)/(Y-y1);
+  x1    = X;
+  y1    = Y;
+  ytest = 0.5*TMath::Min(TMath::Abs(ya),TMath::Abs(yb));
+  if ((x2-a)*(x2-b) < 0) {
+     it++;
+     if (it >= maxiterations) k = j1;
+     else                     X = x2;
      return;
   }
 
@@ -4330,21 +4330,21 @@ L150:
 //*-*-       the maximum accuracy has been achieved.
 
 L160:
-  X2    = 0.5*(A+B);
+  x2    = 0.5*(a+b);
   ytest = 0;
-  if ((X2-A)*(X2-B) >= 0) { k = 2;  return; }
-  IT++;
-  if (IT >= maxiterations) k = J1;
-  else                     X = X2;
+  if ((x2-a)*(x2-b) >= 0) { k = 2;  return; }
+  it++;
+  if (it >= maxiterations) k = j1;
+  else                     X = x2;
   return;
 
 
-//*-*-       Revise the bracket (A,B).
+//*-*-       Revise the bracket (a,b).
 
 L170:
-  if (J1 != 4) return;
-  if (YA*Y < 0) { B  = X; YB = Y; }
-  else          { A  = X; YA = Y; }
+  if (j1 != 4) return;
+  if (ya*Y < 0) { b  = X; yb = Y; }
+  else          { a  = X; ya = Y; }
 
 //*-*-       Use ytest to decide the method for the next value of X.
 
