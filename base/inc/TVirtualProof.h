@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.17 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.18 2005/08/30 10:47:31 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -47,11 +47,12 @@ public:
 protected:
    EQueryMode   fQueryMode;    // default query mode
 
-   TVirtualProof() { }
+   TVirtualProof() : fQueryMode(kSync) { }
 
 public:
    TVirtualProof(const char * /*masterurl*/, const char * /*conffile*/ = 0,
-                 const char * /*confdir*/ = 0, Int_t /*loglevel*/ = 0) { }
+                 const char * /*confdir*/ = 0, Int_t /*loglevel*/ = 0)
+      : fQueryMode(kSync) { }
    virtual ~TVirtualProof() { Emit("~TVirtualProof()"); }
 
    virtual Int_t       Ping() = 0;
