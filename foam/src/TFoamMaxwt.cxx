@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.7 2005/04/13 13:15:27 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.8 2005/04/19 11:03:43 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //____________________________________________________________________________
@@ -98,28 +98,28 @@ void TFoamMaxwt::Fill(Double_t wt)
 //________________________________________________________________________________
 void TFoamMaxwt::Make(Double_t eps, Double_t &MCeff)
 {
-// Calculates Efficiency= AveWt/WtLim for a given tolerance level epsilon<<1
+// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
 // To be called at the end of the MC run.
 
-  Double_t WtLim,AveWt;
-  GetMCeff(eps, MCeff, WtLim);
-  AveWt = MCeff*WtLim;
+  Double_t wtLim,aveWt;
+  GetMCeff(eps, MCeff, wtLim);
+  aveWt = MCeff*wtLim;
   cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<endl;
-  cout<< "00 -->WtLim: No_evt ="<<fNent<<"   <Wt> = "<<AveWt<<"  WtLim=  "<<WtLim<<endl;
-  cout<< "00 -->WtLim: For eps = "<<eps  <<"    EFFICIENCY <Wt>/WtLim= "<<MCeff<<endl;
+  cout<< "00 -->wtLim: No_evt ="<<fNent<<"   <Wt> = "<<aveWt<<"  wtLim=  "<<wtLim<<endl;
+  cout<< "00 -->wtLim: For eps = "<<eps  <<"    EFFICIENCY <Wt>/wtLim= "<<MCeff<<endl;
   cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<endl;
 }
 
 //_________________________________________________________________________________
-void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &WtLim)
+void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
 {
-// Calculates Efficiency= AveWt/WtLim for a given tolerance level epsilon<<1
+// Calculates Efficiency= aveWt/wtLim for a given tolerance level epsilon<<1
 // using information stored in two histograms.
 // To be called at the end of the MC run.
 
   Int_t ib,ibX;
-  Double_t LowEdge,Bin,Bin1;
-  Double_t AveWt, AveWt1;
+  Double_t lowEdge,bin,bin1;
+  Double_t aveWt, aveWt1;
 
   fWtHst1->Print();
   fWtHst2->Print();
@@ -134,34 +134,34 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &WtLim)
   if( (sum == 0.0) || (sumWt == 0.0) ){
     cout<<"TFoamMaxwt::Make: zero content of histogram !!!,sum,sumWt ="<<sum<<sumWt<<endl;
   }
-  AveWt = sumWt/sum;
+  aveWt = sumWt/sum;
   //--------------------------------------
   for( ibX=fnBin+1; ibX>0; ibX--){
-    LowEdge = (ibX-1.0)*fwmax/fnBin;
+    lowEdge = (ibX-1.0)*fwmax/fnBin;
     sum   = 0.0;
     sumWt = 0.0;
     for( ib=0; ib<=fnBin+1; ib++){
-      Bin  = fWtHst1->GetBinContent(ib);
-      Bin1 = fWtHst2->GetBinContent(ib);
-      if(ib >= ibX) Bin1=LowEdge*Bin;
-      sum   += Bin;
-      sumWt += Bin1;
+      bin  = fWtHst1->GetBinContent(ib);
+      bin1 = fWtHst2->GetBinContent(ib);
+      if(ib >= ibX) bin1=lowEdge*bin;
+      sum   += bin;
+      sumWt += bin1;
     }
-    AveWt1 = sumWt/sum;
-    if( TMath::Abs(1.0-AveWt1/AveWt) > eps ) break;
+    aveWt1 = sumWt/sum;
+    if( TMath::Abs(1.0-aveWt1/aveWt) > eps ) break;
   }
   //---------------------------
   if(ibX == (fnBin+1) ){
-    WtLim = 1.0e200;
+    wtLim = 1.0e200;
     MCeff   = 0.0;
-    cout<< "+++++ WtLim undefined. Higher uper limit in histogram"<<endl;
+    cout<< "+++++ wtLim undefined. Higher uper limit in histogram"<<endl;
   }else if( ibX == 1){
-    WtLim = 0.0;
+    wtLim = 0.0;
     MCeff   =-1.0;
-    cout<< "+++++ WtLim undefined. Lower uper limit or more bins "<<endl;
+    cout<< "+++++ wtLim undefined. Lower uper limit or more bins "<<endl;
   }else{
-    WtLim= (ibX)*fwmax/fnBin; // We over-estimate WtLim, under-estimate MCeff
-    MCeff  = AveWt/WtLim;
+    wtLim= (ibX)*fwmax/fnBin; // We over-estimate wtLim, under-estimate MCeff
+    MCeff  = aveWt/wtLim;
   }
 }
 ///////////////////////////////////////////////////////////////////////////////

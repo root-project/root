@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.6 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.7 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_____________________________________________________________________________
@@ -159,10 +159,10 @@ TFoamVect TFoamVect::operator+(const TFoamVect &p2)
 {
 // addition operator +; sum of 2 vectors: c=a+b, a=a+b,
 // NEVER USE IT, VERY SLOW!!!
-  TFoamVect Temp(fDim);
-  Temp  = (*this);
-  Temp += p2;
-  return Temp;
+  TFoamVect temp(fDim);
+  temp  = (*this);
+  temp += p2;
+  return temp;
 }
 
 //__________________________________________________________________________
@@ -170,10 +170,10 @@ TFoamVect TFoamVect::operator-(const TFoamVect &p2)
 {
 // subtraction operator -; difference of 2 vectors; c=a-b, a=a-b,
 // NEVER USE IT, VERY SLOW!!!
-  TFoamVect Temp(fDim);
-  Temp  = (*this);
-  Temp -= p2;
-  return Temp;
+  TFoamVect temp(fDim);
+  temp  = (*this);
+  temp -= p2;
+  return temp;
 }
 
 //___________________________________________________________________________

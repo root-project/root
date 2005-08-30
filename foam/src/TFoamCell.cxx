@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.6 2005/04/15 12:39:34 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.7 2005/04/25 10:03:18 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_________________________________________________________________________________
@@ -110,14 +110,14 @@ void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCe
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________________
-void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
+void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
 {
 // Provides size and position of the cell
 // These parameter are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
   if(fDim<1) return;
     const TFoamCell *pCell,*dCell;
-    Posi = 0.0; Size=1.0; // load all components
+    cellPosi = 0.0; cellSize=1.0; // load all components
     dCell = this;
     while(dCell != 0){
       pCell = dCell->GetPare();
@@ -125,11 +125,11 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
         if(         dCell == pCell->GetDau0()  ){
-          Size[kDiv]=Size[kDiv]*xDivi;
-          Posi[kDiv]=Posi[kDiv]*xDivi;
+          cellSize[kDiv] *=xDivi;
+          cellPosi[kDiv] *=xDivi;
         }else if(   dCell == pCell->GetDau1()  ){
-          Size[kDiv]=Size[kDiv]*(1.0-xDivi);
-          Posi[kDiv]=Posi[kDiv]*(1.0-xDivi)+xDivi;
+          cellSize[kDiv] *=(1.0-xDivi);
+          cellPosi[kDiv]  =cellPosi[kDiv]*(1.0-xDivi)+xDivi;
         }else{
           Error("GetHcub ","Something wrong with linked tree \n");
         }
@@ -138,14 +138,14 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
 }//GetHcub
 
 //______________________________________________________________________________________
-void    TFoamCell::GetHSize( TFoamVect &Size)  const
+void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
 {
 // Provides size of the cell
 // Size parameters are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
   if(fDim<1) return;
     const TFoamCell *pCell,*dCell;
-    Size=1.0; // load all components
+    cellSize=1.0; // load all components
     dCell = this;
     while(dCell != 0){
       pCell = dCell->GetPare();
@@ -153,9 +153,9 @@ void    TFoamCell::GetHSize( TFoamVect &Size)  const
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
         if(        dCell == pCell->GetDau0() ){
-          Size[kDiv]=Size[kDiv]*xDivi;
+          cellSize[kDiv]=cellSize[kDiv]*xDivi;
         }else if(  dCell == pCell->GetDau1()  ){
-          Size[kDiv]=Size[kDiv]*(1.0-xDivi);
+          cellSize[kDiv]=cellSize[kDiv]*(1.0-xDivi);
         }else{
           Error("GetHSize ","Something wrong with linked tree \n");
         }
@@ -171,9 +171,9 @@ void TFoamCell::CalcVolume(void)
   Int_t k;
   Double_t volu=1.0;
   if(fDim>0){         // h-cubical subspace
-      TFoamVect Size(fDim);
-      GetHSize(Size);
-      for(k=0; k<fDim; k++) volu *= Size[k];
+      TFoamVect cellSize(fDim);
+      GetHSize(cellSize);
+      for(k=0; k<fDim; k++) volu *= cellSize[k];
   }
   fVolume =volu;
 }
@@ -200,10 +200,10 @@ void TFoamCell::Print(Option_t *option) const
   //
   //
   if(fDim>0 ){
-    TFoamVect Posi(fDim); TFoamVect Size(fDim);
-    GetHcub(Posi,Size);
-    cout <<"   Posi= "; Posi.Print("1"); cout<<","<< endl;
-    cout <<"   Size= "; Size.Print("1"); cout<<","<< endl;
+    TFoamVect cellPosi(fDim); TFoamVect cellSize(fDim);
+    GetHcub(cellPosi,cellSize);
+    cout <<"   Posi= "; cellPosi.Print("1"); cout<<","<< endl;
+    cout <<"   Size= "; cellSize.Print("1"); cout<<","<< endl;
   }
 }
 ///////////////////////////////////////////////////////////////////
