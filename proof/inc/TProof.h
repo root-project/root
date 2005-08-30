@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.60 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -66,6 +66,7 @@ class TProofInputHandler;
 class TProofInterruptHandler;
 class TProofPlayer;
 class TProofPlayerRemote;
+class TProofProgressDialog;
 class TPacketizer2;
 class TCondor;
 class TTree;
@@ -82,9 +83,10 @@ class TVirtualMutex;
 // 2 -> 3: package manager enabling protocol changed
 // 3 -> 4: introduction of multi-level-master support
 // 4 -> 5: added friends support
+// 5 -> 6: drop TFTP, support for asynchronous queries
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 5;             // protocol version number
+const Int_t       kPROOF_Protocol = 6;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -192,6 +194,7 @@ friend class TProofInputHandler;
 friend class TProofInterruptHandler;
 friend class TProofPlayer;
 friend class TProofPlayerRemote;
+friend class TProofProgressDialog;
 friend class TSlave;
 friend class TPacketizer;
 friend class TPacketizer2;
@@ -249,6 +252,7 @@ private:
    Float_t         fCpuTime;        //CPU time spent by all slaves during the session
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
    TPluginHandler *fProgressDialog; //progress dialog plugin
+   Bool_t          fProgressDialogStarted; //indicates if the progress dialog is up
    TProofPlayer   *fPlayer;         //current player
    TList          *fFeedback;       //list of names to be returned as feedback
    TList          *fChains;         //chains with this proof set
@@ -259,6 +263,17 @@ private:
    typedef std::map<TString, MD5Mod_t> FileMap_t;
    FileMap_t       fFileMap;        //map keeping track of a file's md5 and mod time
    TDSet          *fDSet;           //current TDSet being validated
+
+   Bool_t          fIdle;           //on clients, true if no PROOF jobs running
+   Bool_t          fSync;           //true if type of currently processed query is sync
+
+   Bool_t          fRedirLog;       //redirect received log info
+   TString         fLogFileName;    //name of the temp file for redirected logs
+   FILE           *fLogFileW;       //temp file to redirect logs
+   FILE           *fLogFileR;       //temp file to read redirected logs
+   Bool_t          fLogToWindowOnly; //send log to window only
+
+   TList          *fQueries;        //list of TProofQuery objects
 
 protected:
    enum ESlaves { kAll, kActive, kUnique };
@@ -304,6 +319,7 @@ private:
    Int_t    DisablePackage(const char *package);
    Int_t    DisablePackages();
 
+   void     Activate(TList *slaves = 0);
    Int_t    Broadcast(const TMessage &mess, TList *slaves);
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
    Int_t    Broadcast(const char *mess, Int_t kind, TList *slaves);
@@ -316,6 +332,7 @@ private:
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
    Int_t    Collect(const TSlave *sl);
    Int_t    Collect(TMonitor *mon);
+   Int_t    CollectInputFrom(TSocket *s);
 
    void     FindUniqueSlaves();
    TSlave  *FindSlave(TSocket *s) const;
@@ -326,6 +343,9 @@ private:
    Int_t    GetNumberOfActiveSlaves() const;
    Int_t    GetNumberOfUniqueSlaves() const;
    Int_t    GetNumberOfBadSlaves() const;
+
+   Bool_t   IsSync() const { return fSync; }
+
    void     MarkBad(TSlave *sl);
    void     MarkBad(TSocket *s);
 
@@ -333,25 +353,32 @@ private:
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
 
+   void     RedirectLog(Bool_t on = kTRUE);  // redirect log msgs
+
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
                         const char *confdir, Int_t loglevel);
    virtual Bool_t  StartSlaves(Bool_t parallel);
-   void            SetPlayer(TProofPlayer *player) { fPlayer = player; };
-   TProofPlayer   *GetPlayer() const { return fPlayer; };
+
+   void                  SetPlayer(TProofPlayer *player) { fPlayer = player; };
+   TProofPlayer         *GetPlayer() const { return fPlayer; };
    virtual TProofPlayer *MakePlayer();
-   TPluginHandler *GetProgressDialog() const { return fProgressDialog; };
+
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TSlave *CreateSlave(const char *host, Int_t port, const char *ord,
                        Int_t perf, const char *image, const char *workdir);
    TSlave *CreateSubmaster(const char *host, Int_t port,
                            const char *ord, const char *image,
                            const char *conffile, const char *msd);
+
    Int_t    Collect(ESlaves list = kActive);
    Int_t    Collect(TList *slaves);
-   void     SetDSet(TDSet *dset) { fDSet = dset; }
+
+   void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
+
+   TPluginHandler *GetProgressDialog() const { return fProgressDialog; };
 
    static void *SlaveStartupThread(void *arg);
 
@@ -368,6 +395,9 @@ public:
    Int_t       DrawSelect(TDSet *set, const char *varexp, const char *selection,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
+   Int_t       Finalize();
+   Int_t       Retrieve(Int_t query);
+   Int_t       Archive(Int_t query, const char *url);
 
    void        StopProcess(Bool_t abort);
    void        AddInput(TObject *obj);
@@ -406,6 +436,10 @@ public:
    Int_t       GetParallel() const;
    TList      *GetSlaveInfo();
 
+   EQueryType  GetQueryType() const;
+   EQueryType  GetQueryType(Option_t *opt) const;
+   void        SetQueryType(EQueryType type);
+
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
@@ -414,6 +448,7 @@ public:
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
+   Bool_t      IsIdle() const { return fIdle; }
 
    void        AddFeedback(const char *name);
    void        RemoveFeedback(const char *name);
@@ -421,12 +456,25 @@ public:
    void        ShowFeedback() const;
    TList      *GetFeedbackList() const;
 
+   void        GetListOfQueries();
+   void        ShowQueries(Option_t *opt = "");
+
    Bool_t      IsDataReady(Long64_t &totalbytes, Long64_t &bytesready);
 
    void        SetActive(Bool_t /*active*/ = kTRUE) { }
 
+   void        LogMessage(const char *msg, Bool_t all); //*SIGNAL*
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
+   void        ResetProgressDialog(const char *sel, Int_t sz,
+                                   Long64_t fst, Long64_t ent); //*SIGNAL*
+
+   void        GetLog(Int_t start = -1, Int_t end = -1);
+   void        ShowLog(Int_t qry = -1);
+   Bool_t      GetLogToWindow() const { return fLogToWindowOnly; }
+   void        SetLogToWindow(Bool_t mode) { fLogToWindowOnly = mode; }
+
+   void        ResetProgressDialogStatus() { fProgressDialogStarted = kFALSE; }
 
    TTree      *GetTreeHeader(TDSet *tdset);
    TList      *GetOutputNames();

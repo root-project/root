@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.28 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.29 2005/06/07 20:28:32 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
                              const char *selector, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0,
                              TEventList *evl = 0);
+   virtual Long64_t  Finalize();
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0);
@@ -170,6 +171,7 @@ public:
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0, TEventList *evl = 0);
+   Long64_t       Finalize();
    Long64_t       DrawSelect(TDSet *set, const char *varexp,
                              const char *selection, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0);

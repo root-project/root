@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.101 2005/07/21 17:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.102 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -64,6 +64,7 @@
 #include "TProof.h"
 #include "TProofLimitsFinder.h"
 #include "TProofPlayer.h"
+#include "TProofQuery.h"
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TSocket.h"
@@ -278,6 +279,9 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    fSocket          = new TSocket(sock);
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
+
+   fSeqNum          = 0;
+   fQueries         = new TList;
 
    if (gErrorIgnoreLevel == kUnset) {
       gErrorIgnoreLevel = 0;
@@ -733,6 +737,10 @@ void TProofServ::HandleSocketInput()
 
       case kPROOF_PROCESS:
          {
+            // Record current position in the log file at start
+            fflush(stdout);
+            Int_t startlog = lseek(fileno(stdout), (off_t) 0, SEEK_END);
+
             TDSet *dset;
             TString filename, opt;
             TList *input;
@@ -749,6 +757,36 @@ void TProofServ::HandleSocketInput()
                Error("HandleSocketInput:kPROOF_PROCESS", "input == 0");
             } else {
                PDB(kGlobal, 1) input->Print();
+            }
+
+            // On new masters, create TProofQuery instance for the record
+            TProofQuery *pq = 0;
+            if (IsMaster()) {
+
+               // Increment sequential number
+               fSeqNum++;
+               Printf(" ");
+               Info("HandleSocketInput:kPROOF_PROCESS", "Starting query: %d",fSeqNum);
+               // Build the list of loaded PAR packages
+               TString parlist = "";
+               TIter nxp(fEnabledPackages);
+               TObjString *os= 0;
+               while ((os = (TObjString *)nxp())) {
+                  if (parlist.Length() <= 0)
+                     parlist = os->GetName();
+                  else
+                     parlist += Form(";%s",os->GetName());
+               }
+               // Selector name
+               TString selec = filename;
+               Int_t d = selec.Index(".");
+               if (d > -1)
+                  selec.Remove(d);
+
+               // Create the instance and add it to the list
+               pq = new TProofQuery(fSeqNum, startlog,
+                                    nentries, first, dset, selec, parlist);
+               fQueries->Add(pq);
             }
 
             TProofPlayer *p = 0;
@@ -776,7 +814,8 @@ void TProofServ::HandleSocketInput()
 
             // return number of events processed
 
-            if (p->GetExitStatus() != TProofPlayer::kFinished) {
+            if (p->GetExitStatus() != TProofPlayer::kFinished ||
+                !IsMaster() || !IsParallel()) {
                TMessage m(kPROOF_STOPPROCESS);
                m << p->GetEventsProcessed();
                fSocket->Send(m);
@@ -785,15 +824,51 @@ void TProofServ::HandleSocketInput()
             // return output!
 
             if(p->GetExitStatus() != TProofPlayer::kAborted) {
-               PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
+               PDB(kGlobal, 2)
+                  Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
                fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
             } else {
                fSocket->SendObject(0,kPROOF_OUTPUTLIST);
             }
 
             PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
+            // Some notification (useful in large logs)
+            if (IsMaster()) {
+               if (p->GetExitStatus() == TProofPlayer::kAborted) {
+                  Info("HandleSocketInput",
+                       "query %d has been ABORTED <====", fSeqNum);
+               } else if (p->GetExitStatus() != TProofPlayer::kFinished) {
+                  Info("HandleSocketInput",
+                       "query %d has been STOPPED: %d events processed",
+                       fSeqNum, p->GetEventsProcessed());
+               } else {
+                  Info("HandleSocketInput",
+                       "query %d has been completed: %d events processed",
+                       fSeqNum, p->GetEventsProcessed());
+               }
+            }
 
             SendLogFile();
+
+            // Set query status for the record
+            if (IsMaster()) {
+               // Get mark for end of log
+               fflush(stdout);
+               off_t curlog = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
+               Int_t endlog = lseek(fileno(fLogFile), (off_t) 0, SEEK_END);
+               lseek(fileno(fLogFile), curlog, SEEK_SET);
+               // Update query record
+               if (p->GetExitStatus() == TProofPlayer::kAborted) {
+                  pq->SetEntries(-1);
+                  pq->SetDone(TProofQuery::kAborted, endlog);
+               } else if (p->GetExitStatus() == TProofPlayer::kStopped) {
+                  pq->SetEntries(p->GetEventsProcessed());
+                  pq->SetDone(TProofQuery::kStopped, endlog);
+               } else {
+                  pq->SetEntries(p->GetEventsProcessed());
+                  pq->SetDone(TProofQuery::kCompleted, endlog);
+               }
+            }
 
             delete dset;
 
@@ -803,6 +878,16 @@ void TProofServ::HandleSocketInput()
             delete input;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
+         }
+         break;
+
+      case kPROOF_QUERYLIST:
+         {
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kPROOF_QUERYLIST", "Send list of queries");
+
+            fSocket->SendObject(fQueries, kPROOF_QUERYLIST);
+            SendLogFile(); // in case of error messages
          }
          break;
 
@@ -985,10 +1070,13 @@ void TProofServ::HandleSocketInput()
       case kPROOF_SENDFILE:
          mess->ReadString(str, sizeof(str));
          {
-            Long64_t size;
-            Int_t    bin, fw;
-            char     name[1024];
-            sscanf(str, "%s %d %lld %d", name, &bin, &size, &fw);
+            Long_t size;
+            Int_t  bin, fw = 1;
+            char   name[1024];
+            if (fProtocol > 5)
+               sscanf(str, "%s %d %ld %d", name, &bin, &size, &fw);
+            else
+               sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
             if (size > 0) {
@@ -998,6 +1086,18 @@ void TProofServ::HandleSocketInput()
             }
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
+         }
+         break;
+
+      case kPROOF_LOGFILE:
+         {
+            Int_t start, end;
+            (*mess) >> start >> end;
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kPROOF_LOGFILE",
+                    "Logfile request - byte range: %d - %d", start, end);
+
+            SendLogFile(0, start, end);
          }
          break;
 
@@ -1409,6 +1509,29 @@ void TProofServ::HandleSocketInputDuringProcess()
    what = mess->What();
    switch (what) {
 
+      case kPROOF_LOGFILE:
+         {
+            Int_t start, end;
+            (*mess) >> start >> end;
+            PDB(kGlobal, 1)
+               Info("HandleSocketInputDuringProcess:kPROOF_LOGFILE",
+                    "Logfile request - byte range: %d - %d", start, end);
+
+            SendLogFile(0, start, end);
+         }
+         break;
+
+      case kPROOF_QUERYLIST:
+         {
+            PDB(kGlobal, 1)
+               Info("HandleSocketInputDuringProcess:kPROOF_QUERYLIST",
+                    "Send list of queries");
+
+            fSocket->SendObject(fQueries, kPROOF_QUERYLIST);
+            SendLogFile(); // in case of error messages
+         }
+         break;
+
       case kPROOF_STOPPROCESS:
          (*mess) >> aborted;
          PDB(kGlobal, 1)
@@ -1817,9 +1940,11 @@ void TProofServ::Run(Bool_t retrn)
 }
 
 //______________________________________________________________________________
-void TProofServ::SendLogFile(Int_t status)
+void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
 {
    // Send log file to master.
+   // If start > -1 send only bytes in the range from start to end,
+   // if end <= start send everything from start.
 
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
@@ -1829,16 +1954,29 @@ void TProofServ::SendLogFile(Int_t status)
 
    ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
    lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
-   left = Int_t(ltot - lnow);
+
+   Bool_t adhoc = kFALSE;
+   if (start > -1) {
+      lseek(fileno(fLogFile), (off_t) start, SEEK_SET);
+      if (end <= start || end > ltot)
+         end = ltot;
+      left = (Int_t)(end - start);
+      if (end < ltot)
+         left++;
+      adhoc = kTRUE;
+   } else {
+      left = (Int_t)(ltot - lnow);
+   }
 
    if (left > 0) {
       fSocket->Send(left, kPROOF_LOGFILE);
 
       const Int_t kMAXBUF = 32768;  //16384  //65536;
       char buf[kMAXBUF];
+      Int_t wanted = (left > kMAXBUF) ? kMAXBUF : left;
       Int_t len;
       do {
-         while ((len = read(fileno(fLogFile), buf, kMAXBUF)) < 0 &&
+         while ((len = read(fileno(fLogFile), buf, wanted)) < 0 &&
                 TSystem::GetErrno() == EINTR)
             TSystem::ResetErrno();
 
@@ -1847,13 +1985,24 @@ void TProofServ::SendLogFile(Int_t status)
             break;
          }
 
+         if (end == ltot && len == wanted)
+            buf[len-1] = '\n';
+
          if (fSocket->SendRaw(buf, len) < 0) {
             SysError("SendLogFile", "error sending log file");
             break;
          }
 
-      } while (len > 0);
+         // Update counters
+         left -= len;
+         wanted = (left > kMAXBUF) ? kMAXBUF : left;
+
+      } while (len > 0 && left > 0);
    }
+
+   // Restore initial position if partial send
+   if (adhoc)
+      lseek(fileno(fLogFile), lnow, SEEK_SET);
 
    TMessage mess(kPROOF_LOGDONE);
    if (IsMaster())

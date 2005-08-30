@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.60 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.61 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -274,6 +274,13 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
+Long64_t TProofPlayer::Finalize()
+{
+   MayNotUse("Finalize");
+   return -1;
+}
+
+//______________________________________________________________________________
 void TProofPlayer::UpdateAutoBin(const char *name,
                                  Double_t& xmin, Double_t& xmax,
                                  Double_t& ymin, Double_t& ymax,
@@ -386,6 +393,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TMessage mesg(kPROOF_PROCESS);
    TString fn(gSystem->BaseName(selector_file));
 
+   // Parse option
+   Bool_t sync = (fProof->GetQueryType(option) == TProof::kSync);
+
    TDSet *set = dset;
    if (fProof->IsMaster()) {
 
@@ -412,6 +422,21 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       first = 0;
 
    } else {
+
+      if (IsClient() && !sync) {
+         fProof->RedirectLog(kTRUE);
+         Printf(" ");
+         Info("Process","starting new query");
+      }
+
+      // For a new query clients should make sure that the temporary
+      // output list is empty
+      if (IsClient() && fOutputLists) {
+         fOutputLists->Delete();
+         delete fOutputLists;
+         fOutputLists = 0;
+      }
+
       if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
       fSelectorClass = 0;
       fSelector = TSelector::GetSelector(selector_file);
@@ -422,6 +447,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
+
+      if (IsClient() && !sync) fProof->RedirectLog(kFALSE);
    }
 
    TCleanup clean(this);
@@ -437,14 +464,63 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
 
-   PDB(kGlobal,1) Info("Process","Calling Collect");
-   fProof->Collect();
+   // Redirect logs from master to special log frame
+   if (IsClient())
+      fProof->fRedirLog = kTRUE;
 
-   if (!IsClient()) HandleTimer(0); // force an update of final result
+   if (!sync) {
+      if (IsClient()) {
+         // Asynchronous query: just make sure that asynchronous input
+         // is enabled and return the prompt
+         PDB(kGlobal,1) Info("Process","Asynchronous processing:"
+                                       " activating CollectInputFrom");
+         fProof->Activate();
+         return 0;
+      } else {
+         PDB(kGlobal,1) Info("Process","Calling Collect");
+         fProof->Collect();
+      
+         HandleTimer(0); // force an update of final result
+         StopFeedback();
+      
+         return Finalize();
+      }
+   } else {
 
-   StopFeedback();
+      PDB(kGlobal,1) Info("Process","Synchronous processing: calling Collect");
+      fProof->Collect();
 
-   PDB(kGlobal,1) Info("Process","Calling Merge Output");
+      // Restore prompt logging, for clients (Collect leaves things as they were
+      // at the time it was called)
+      if (IsClient())
+         fProof->fRedirLog = kFALSE;
+      
+      if (!IsClient()) HandleTimer(0); // force an update of final result
+      StopFeedback();
+
+      if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
+         return Finalize();
+      else
+         return -1;
+   }
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayerRemote::Finalize()
+{
+   // Finalize a query.
+   // Returns -1 in case error, 0 otherwise.
+
+   if (fOutputLists == 0) {
+      if (IsClient())
+         Info("Finalize","Output list is empty (already finalized?)");
+      else
+         PDB(kGlobal,1)
+             Info("Finalize","Output list is empty (already finalized?)");
+      return -1;
+   }
+
+   PDB(kGlobal,1) Info("Finalize","Calling Merge Output");
    MergeOutput();
 
    Long64_t rv = 0;
@@ -452,6 +528,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TPerfStats::Stop();
    } else {
       if (fExitStatus != kAborted) {
+
          TIter next(fOutput);
          TList *output = fSelector->GetOutputList();
          while(TObject* obj = next()) {

@@ -31,8 +31,8 @@ PROOFGUIDS   := $(MODDIRS)/G__ProofGui.cxx
 PROOFGUIDO   := $(PROOFGUIDS:.cxx=.o)
 PROOFGUIDH   := $(PROOFGUIDS:.cxx=.h)
 
-PROOFGUIH    := $(MODDIRI)/TProofProgressDialog.h
-PROOFGUIS    := $(MODDIRS)/TProofProgressDialog.cxx
+PROOFGUIH    := $(wildcard $(MODDIRI)/TProofProgress*.h)
+PROOFGUIS    := $(wildcard $(MODDIRS)/TProofProgress*.cxx)
 PROOFGUIO    := $(PROOFGUIS:.cxx=.o)
 
 PROOFGUIDEP  := $(PROOFGUIO:.o=.d) $(PROOFGUIDO:.o=.d)

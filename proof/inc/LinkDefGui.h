@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.14 2004/03/11 18:47:00 brun Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDefGui.h,v 1.1 2004/05/13 11:38:17 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,5 +15,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class TProofProgressDialog+;
+#pragma link C++ class TProofProgressLog+;
 
 #endif

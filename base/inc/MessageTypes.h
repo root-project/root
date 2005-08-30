@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.23 2005/02/07 18:02:36 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.24 2005/03/10 17:57:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -67,6 +67,9 @@ enum EMessageTypes {
    kPROOF_GETPARALLEL,                   //get number of parallel slaves
    kPROOF_VALIDATE_DSET,                 //validate a TDSet
    kPROOF_DATA_READY,                    //ask if the data is ready on nodes
+   kPROOF_QUERYLIST,                     //ask/send the list of queries
+   kPROOF_RETRIEVE,                      //asynchronous retrieve of query results
+   kPROOF_ARCHIVE,                       //archive query results
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

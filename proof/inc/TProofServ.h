@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.28 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.29 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -82,6 +82,9 @@ private:
    TStopwatch    fLatency;          //measures latency of packet requests
    TStopwatch    fCompute;          //measures time spend processing a packet
 
+   Int_t         fSeqNum;           //sequential number of last processed query
+   TList        *fQueries;          //list of TProofQuery objects
+
    void          RedirectOutput();
    Int_t         CatMotd();
    Int_t         LockDir(const TString &lock);
@@ -135,7 +138,7 @@ public:
    TDSetElement  *GetNextPacket();
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
-   void           SendLogFile(Int_t status = 0);
+   void           SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void           SendStatistics();
    void           SendParallel();
 

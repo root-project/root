@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.15 2005/03/17 15:00:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.16 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -41,7 +41,12 @@ class TChain;
 
 class TVirtualProof : public TObject, public TQObject {
 
+public:
+   enum EQueryType { kSync = 0, kAsync = 1 };
+
 protected:
+   EQueryType   fQueryType;    // default query type
+
    TVirtualProof() { }
 
 public:
@@ -61,6 +66,9 @@ public:
                                   Option_t *option = "",
                                   Long64_t nentries = -1,
                                   Long64_t firstentry = 0) = 0;
+   virtual Int_t       Finalize() = 0;
+   virtual Int_t       Retrieve(Int_t query) = 0;
+   virtual Int_t       Archive(Int_t query, const char *url) = 0;
 
    virtual void        StopProcess(Bool_t abort) = 0;
    virtual void        AddInput(TObject *obj) = 0;
@@ -97,6 +105,9 @@ public:
    virtual Int_t       GetParallel() const = 0;
    virtual TList      *GetSlaveInfo() = 0;
 
+   virtual EQueryType  GetQueryType() const { return fQueryType; }
+   virtual void        SetQueryType(EQueryType type) { fQueryType = type; }
+
    virtual Long64_t    GetBytesRead() const = 0;
    virtual Float_t     GetRealTime() const = 0;
    virtual Float_t     GetCpuTime() const = 0;
@@ -105,6 +116,7 @@ public:
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
    virtual Bool_t      IsDataReady(Long64_t &totalbytes, Long64_t &bytesready) = 0;
+   virtual Bool_t      IsIdle() const = 0;
 
    virtual void        AddFeedback(const char *name) = 0;
    virtual void        RemoveFeedback(const char *name) = 0;
@@ -112,10 +124,23 @@ public:
    virtual void        ShowFeedback() const = 0;
    virtual TList      *GetFeedbackList() const = 0;
 
+   virtual void        GetListOfQueries() = 0;
+   virtual void        ShowQueries(Option_t *opt = "") = 0;
+
    virtual void        SetActive(Bool_t active = kTRUE) = 0;
 
+   virtual void        LogMessage(const char *msg, Bool_t all) = 0; //*SIGNAL*
    virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
    virtual void        Feedback(TList *objs) = 0; //*SIGNAL*
+   virtual void        ResetProgressDialog(const char *sel, Int_t sz,
+                                   Long64_t fst, Long64_t ent) = 0; //*SIGNAL*
+
+   virtual void        GetLog(Int_t start = -1, Int_t end = -1) = 0;
+   virtual void        ShowLog(Int_t qry = -1) = 0;
+   virtual Bool_t      GetLogToWindow() const = 0;
+   virtual void        SetLogToWindow(Bool_t mode) = 0;
+
+   virtual void        ResetProgressDialogStatus() = 0;
 
    virtual TTree      *GetTreeHeader(TDSet* dset) = 0;
    virtual TList      *GetOutputNames() = 0;

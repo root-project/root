@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.98 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.99 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TROOT.h"
 #include "TH1.h"
 #include "TProofPlayer.h"
+#include "TProofQuery.h"
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TPluginManager.h"
@@ -63,6 +64,8 @@
 #include "TSemaphore.h"
 #include "TMutex.h"
 #include "TObjString.h"
+#include "Getline.h"
+
 
 TVirtualMutex *gProofMutex = 0;
 
@@ -127,7 +130,7 @@ Bool_t TProofInterruptHandler::Notify()
 //______________________________________________________________________________
 Bool_t TProofInputHandler::Notify()
 {
-   fProof->HandleAsyncInput(fSocket);
+   fProof->CollectInputFrom(fSocket);
    return kTRUE;
 }
 
@@ -273,6 +276,11 @@ TProof::~TProof()
    SafeDelete(fPlayer);
    SafeDelete(fFeedback);
 
+   // remove file with redirected logs
+   fclose(fLogFileR);
+   fclose(fLogFileW);
+   gSystem->Unlink(fLogFileName);
+
    {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
@@ -318,12 +326,34 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fSendGroupView  = kTRUE;
    fImage          = fMasterServ ? "" : "<local>";
    fIntHandler     = 0;
-   fProgressDialog = 0;
    fStatus         = 0;
    fSlaveInfo      = 0;
    fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
    delete u;
+
+   fProgressDialog        = 0;
+   fProgressDialogStarted = kFALSE;
+
+   // Client logging of messages from the master and slaves
+   fRedirLog = kFALSE;
+   if (!IsMaster()) {
+      fLogFileName    = "ProofLog_";
+      if ((fLogFileW = gSystem->TempFileName(fLogFileName)) == 0)
+         Error("Init", "could not create temporary logfile");
+      if ((fLogFileR = fopen(fLogFileName, "r")) == 0)
+         Error("Init", "could not open temp logfile for reading");
+   }
+   fLogToWindowOnly = kFALSE;
+
+   // Status of cluster
+   fIdle = kTRUE;
+
+   // Query type
+   fSync = kTRUE;
+
+   // List of queries
+   fQueries = 0;
 
    fPlayer   = MakePlayer();
    fFeedback = new TList;
@@ -877,6 +907,44 @@ void TProof::AskParallel()
 }
 
 //______________________________________________________________________________
+void TProof::GetListOfQueries()
+{
+   // Ask the master for the list of queries.
+
+   if (!IsValid() || IsMaster()) return;
+
+   Broadcast(kPROOF_QUERYLIST, kActive);
+   Collect(kActive);
+}
+
+//______________________________________________________________________________
+void TProof::ShowQueries(Option_t *opt)
+{
+   // Ask the master for the list of queries.
+
+   if (!IsValid()) return;
+
+   GetListOfQueries();
+
+   if (!fQueries) return;
+
+   Printf("+++");
+   Printf("+++ Processed queries: %d", fQueries->GetSize());
+   TIter nxq(fQueries);
+   TProofQuery *pq = 0;
+   while ((pq = (TProofQuery *)nxq()))
+      pq->Print(opt);
+
+   // Advise
+   if (strncasecmp(opt,"F",1)) {
+      Printf("+++");
+      Printf("+++ NB: use ShowQueries(\"F\") to get the full listing");
+   }
+
+   Printf("+++");
+}
+
+//______________________________________________________________________________
 Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
 {
    // See if the data is ready to be analyzed.
@@ -1015,6 +1083,24 @@ TList *TProof::GetSlaveInfo()
    if (masters.GetSize() > 0) Collect(&masters);
 
    return fSlaveInfo;
+}
+
+//______________________________________________________________________________
+void TProof::Activate(TList *slaves)
+{
+   // Activate slave server list.
+
+   TMonitor *mon = fAllMonitor;
+   mon->DeActivateAll();
+
+   slaves = !slaves ? fActiveSlaves : slaves;
+
+   TIter next(slaves);
+   TSlave *sl;
+   while ((sl = (TSlave*) next())) {
+      if (sl->IsValid())
+         mon->Activate(sl->GetSocket());
+   }
 }
 
 //______________________________________________________________________________
@@ -1212,245 +1298,317 @@ Int_t TProof::Collect(TMonitor *mon)
 
    DeActivateAsyncInput();
 
-   int cnt = 0, loop = 1;
+   // We want messages on the main window during synchronous collection,
+   // but we save the present status to restore it at the end
+   Bool_t saveRedirLog = fRedirLog;
+   if (!IsIdle() && !IsSync())
+      fRedirLog = kFALSE;
+
+   int cnt = 0, loop = 1, rc = 0;
 
    fBytesRead = 0;
    fRealTime  = 0.0;
    fCpuTime   = 0.0;
 
    while (loop) {
-      char      str[512];
-      TMessage *mess;
-      TSocket  *s;
-      TSlave   *sl;
-      TObject  *obj;
-      Int_t     what;
 
-      s = mon->Select();
+      // Wait for a ready socket
+      TSocket  *s = mon->Select();
 
-      if (s->Recv(mess) < 0) {
-         MarkBad(s);
-         continue;
-      }
+      // Get and analyse the info it did receive
+      if ((rc = CollectInputFrom(s)) == 1)
+         // Deactivate it if we are done with it
+         mon->DeActivate(s);
 
-      if (!mess) {
-         // we get here in case the remote server died
-         MarkBad(s);
-         if (!mon->GetActive()) loop = 0;
-         continue;
-      }
+      // Check if we are done
+      if (!mon->GetActive()) loop = 0;
 
-      what = mess->What();
-
-      switch (what) {
-
-         case kMESS_OBJECT:
-            obj = mess->ReadObject(mess->GetClass());
-            if (obj->InheritsFrom(TH1::Class())) {
-               TH1 *h = (TH1*)obj;
-               h->SetDirectory(0);
-               TH1 *horg = (TH1*)gDirectory->GetList()->FindObject(h->GetName());
-               if (horg)
-                  horg->Add(h);
-               else
-                  h->SetDirectory(gDirectory);
-            }
-            break;
-
-         case kPROOF_FATAL:
-            MarkBad(s);
-            if (!mon->GetActive()) loop = 0;
-            break;
-
-         case kPROOF_GETOBJECT:
-            mess->ReadString(str, sizeof(str));
-            obj = gDirectory->Get(str);
-            if (obj)
-               s->SendObject(obj);
-            else
-               s->Send(kMESS_NOTOK);
-            break;
-
-         case kPROOF_GETPACKET:
-            {
-               TDSetElement *elem = 0;
-               sl = FindSlave(s);
-               elem = fPlayer->GetNextPacket(sl, mess);
-
-               TMessage answ(kPROOF_GETPACKET);
-               answ << elem;
-               s->Send(answ);
-            }
-            break;
-
-         case kPROOF_LOGFILE:
-            {
-               Int_t size;
-               (*mess) >> size;
-               RecvLogFile(s, size);
-            }
-            break;
-
-         case kPROOF_LOGDONE:
-            sl = FindSlave(s);
-            (*mess) >> sl->fStatus >> sl->fParallel;
-            PDB(kGlobal,2) Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
-               sl->fStatus, sl->fParallel);
-            if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
-            mon->DeActivate(s);
-            if (!mon->GetActive()) loop = 0;
-            break;
-
-         case kPROOF_GETSTATS:
-            sl = FindSlave(s);
-            (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
-                    >> sl->fWorkDir >> sl->fProofWorkDir;
-            fBytesRead += sl->fBytesRead;
-            fRealTime  += sl->fRealTime;
-            fCpuTime   += sl->fCpuTime;
-            mon->DeActivate(s);
-            if (!mon->GetActive()) loop = 0;
-            break;
-
-         case kPROOF_GETPARALLEL:
-            sl = FindSlave(s);
-            (*mess) >> sl->fParallel;
-            mon->DeActivate(s);
-            if (!mon->GetActive()) loop = 0;
-            break;
-
-         case kPROOF_OUTPUTLIST:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
-               TList *out = (TList *) mess->ReadObject(TList::Class());
-               if (out) {
-                  out->SetOwner();
-                  fPlayer->StoreOutput(out); // Adopts the list
-               } else {
-                  PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
-               }
-            }
-            break;
-
-         case kPROOF_FEEDBACK:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_FEEDBACK","Enter");
-               TList *out = (TList *) mess->ReadObject(TList::Class());
-               out->SetOwner();
-               sl = FindSlave(s);
-               fPlayer->StoreFeedback(sl, out); // Adopts the list
-            }
-            break;
-
-         case kPROOF_AUTOBIN:
-            {
-               TString name;
-               Double_t xmin, xmax, ymin, ymax, zmin, zmax;
-
-               (*mess) >> name >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
-
-               fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
-
-               TMessage answ(kPROOF_AUTOBIN);
-
-               answ << name << xmin << xmax << ymin << ymax << zmin << zmax;
-
-               s->Send(answ);
-            }
-            break;
-
-         case kPROOF_PROGRESS:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_PROGRESS","Enter");
-
-               sl = FindSlave(s);
-
-               Long64_t total, processed;
-
-               (*mess) >> total >> processed;
-
-               fPlayer->Progress(sl, total, processed);
-            }
-            break;
-
-         case kPROOF_STOPPROCESS:
-            {
-               // answer contains number of processed events;
-               Long64_t events;
-               (*mess) >> events;
-               fPlayer->AddEventsProcessed(events);
-               break;
-            }
-
-         case kPROOF_GETSLAVEINFO:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
-
-               sl = FindSlave(s);
-               Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
-               Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
-               TList* tmpinfo = 0;
-               (*mess) >> tmpinfo;
-               tmpinfo->SetOwner(kFALSE);
-               Int_t nentries = tmpinfo->GetSize();
-               for (Int_t i=0; i<nentries; i++) {
-                  TSlaveInfo* slinfo =
-                     dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
-                  if (slinfo) {
-                     fSlaveInfo->Add(slinfo);
-                     if (slinfo->fStatus != TSlaveInfo::kBad) {
-                        if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
-                        if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
-                     }
-                     if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
-                  }
-               }
-               delete tmpinfo;
-               mon->DeActivate(s);
-               if (!mon->GetActive()) loop = 0;
-            }
-            break;
-
-         case kPROOF_VALIDATE_DSET:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_VALIDATE_DSET","Enter");
-               TDSet* dset = 0;
-               (*mess) >> dset;
-               if (!fDSet)
-                  Error("Collect:kPROOF_VALIDATE_DSET", "fDSet not set");
-               else
-                  fDSet->Validate(dset);
-               delete dset;
-            }
-            break;
-
-         case kPROOF_DATA_READY:
-            {
-               PDB(kGlobal,2) Info("Collect:kPROOF_DATA_READY","Enter");
-               Bool_t dataready = kFALSE;
-               Long64_t totalbytes, bytesready;
-               (*mess) >> dataready >> totalbytes >> bytesready;
-               fTotalBytes += totalbytes;
-               fBytesReady += bytesready;
-               if (dataready == kFALSE) fDataReady = dataready;
-            }
-            break;
-
-         default:
-            Error("Collect", "unknown command received from slave (%d)", what);
-            break;
-      }
-
-      cnt++;
-      delete mess;
+      // Update counter (if no error occured)
+      if (rc >= 0) cnt++;
    }
 
    // make sure group view is up to date
    SendGroupView();
 
+   // Restore redirection setting
+   fRedirLog = saveRedirLog;
+
    ActivateAsyncInput();
 
    return cnt;
+}
+
+//______________________________________________________________________________
+Int_t TProof::CollectInputFrom(TSocket *s)
+{
+   // Collect and analyze available input from socket s.
+   // Returns 0 on success, -1 if any failure occurs.
+
+   TMessage *mess;
+   Int_t rc = 0;
+
+   char      str[512];
+   TSlave   *sl;
+   TObject  *obj;
+   Int_t     what;
+
+   if (s->Recv(mess) < 0) {
+      MarkBad(s);
+      return -1;
+   }
+   if (!mess) {
+      // we get here in case the remote server died
+      MarkBad(s);
+      return -1;
+   }
+
+   what = mess->What();
+
+   switch (what) {
+
+      case kMESS_OBJECT:
+         obj = mess->ReadObject(mess->GetClass());
+         if (obj->InheritsFrom(TH1::Class())) {
+            TH1 *h = (TH1*)obj;
+            h->SetDirectory(0);
+            TH1 *horg = (TH1*)gDirectory->GetList()->FindObject(h->GetName());
+            if (horg)
+               horg->Add(h);
+            else
+               h->SetDirectory(gDirectory);
+         }
+         break;
+
+      case kPROOF_FATAL:
+         MarkBad(s);
+         break;
+
+      case kPROOF_GETOBJECT:
+         mess->ReadString(str, sizeof(str));
+         obj = gDirectory->Get(str);
+         if (obj)
+            s->SendObject(obj);
+         else
+            s->Send(kMESS_NOTOK);
+         break;
+
+      case kPROOF_GETPACKET:
+         {
+            TDSetElement *elem = 0;
+            sl = FindSlave(s);
+            elem = fPlayer->GetNextPacket(sl, mess);
+
+            TMessage answ(kPROOF_GETPACKET);
+            answ << elem;
+            s->Send(answ);
+         }
+         break;
+
+      case kPROOF_LOGFILE:
+         {
+            Int_t size;
+            (*mess) >> size;
+            RecvLogFile(s, size);
+         }
+         break;
+
+      case kPROOF_LOGDONE:
+         sl = FindSlave(s);
+         (*mess) >> sl->fStatus >> sl->fParallel;
+         PDB(kGlobal,2) Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
+            sl->fStatus, sl->fParallel);
+         if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
+         rc = 1;
+         break;
+
+      case kPROOF_GETSTATS:
+         sl = FindSlave(s);
+         (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
+                 >> sl->fWorkDir >> sl->fProofWorkDir;
+         fBytesRead += sl->fBytesRead;
+         fRealTime  += sl->fRealTime;
+         fCpuTime   += sl->fCpuTime;
+         rc = 1;
+         break;
+
+      case kPROOF_GETPARALLEL:
+         sl = FindSlave(s);
+         (*mess) >> sl->fParallel;
+         rc = 1;
+         break;
+
+      case kPROOF_OUTPUTLIST:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
+            TList *out = (TList *) mess->ReadObject(TList::Class());
+            if (out) {
+               out->SetOwner();
+               fPlayer->StoreOutput(out); // Adopts the list
+            } else {
+               PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
+            }
+            // On clients at this point processing is over
+            if (!IsMaster()) {
+
+               // Set idle ...
+               fIdle = kTRUE;
+
+               // Handle abort ...
+               if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
+                  if (!fSync) RedirectLog(kTRUE);
+                  Info("CollectInputFrom",
+                       "the processing was aborted - %lld events processed",
+                       fPlayer->GetEventsProcessed());
+                  if (!fSync) RedirectLog(kFALSE);
+
+                  gProof->Progress(-1, fPlayer->GetEventsProcessed());
+                  Emit("StopProcess(Bool_t)", kTRUE);
+               }
+
+               // Handle stop ...
+               if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
+                  if (!fSync) RedirectLog(kTRUE);
+                  Info("CollectInputFrom",
+                       "the processing was stopped - %lld events processed",
+                       fPlayer->GetEventsProcessed());
+                  if (!fSync) RedirectLog(kFALSE);
+
+                  gProof->Progress(-1, fPlayer->GetEventsProcessed());
+                  Emit("StopProcess(Bool_t)", kFALSE);
+               }
+            }
+         }
+         break;
+
+      case kPROOF_QUERYLIST:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_QUERYLIST","Enter");
+            if (fQueries) {
+               fQueries->Delete();
+               delete fQueries;
+               fQueries = 0;
+            }
+            fQueries = (TList *) mess->ReadObject(TList::Class());
+         }
+         break;
+
+      case kPROOF_FEEDBACK:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_FEEDBACK","Enter");
+            TList *out = (TList *) mess->ReadObject(TList::Class());
+            out->SetOwner();
+            sl = FindSlave(s);
+            fPlayer->StoreFeedback(sl, out); // Adopts the list
+         }
+         break;
+
+      case kPROOF_AUTOBIN:
+         {
+            TString name;
+            Double_t xmin, xmax, ymin, ymax, zmin, zmax;
+
+            (*mess) >> name >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
+
+            fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
+
+            TMessage answ(kPROOF_AUTOBIN);
+
+            answ << name << xmin << xmax << ymin << ymax << zmin << zmax;
+
+            s->Send(answ);
+         }
+         break;
+
+      case kPROOF_PROGRESS:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_PROGRESS","Enter");
+
+            sl = FindSlave(s);
+
+            Long64_t total, processed;
+
+            (*mess) >> total >> processed;
+
+            fPlayer->Progress(sl, total, processed);
+         }
+         break;
+
+      case kPROOF_STOPPROCESS:
+         {
+            // answer contains number of processed events;
+            Long64_t events;
+            (*mess) >> events;
+            fPlayer->AddEventsProcessed(events);
+            break;
+         }
+
+      case kPROOF_GETSLAVEINFO:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
+
+            sl = FindSlave(s);
+            Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
+            Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
+            TList* tmpinfo = 0;
+            (*mess) >> tmpinfo;
+            tmpinfo->SetOwner(kFALSE);
+            Int_t nentries = tmpinfo->GetSize();
+            for (Int_t i=0; i<nentries; i++) {
+               TSlaveInfo* slinfo =
+                  dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
+               if (slinfo) {
+                  fSlaveInfo->Add(slinfo);
+                  if (slinfo->fStatus != TSlaveInfo::kBad) {
+                     if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
+                     if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
+                  }
+                  if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
+               }
+            }
+            delete tmpinfo;
+            rc = 1;
+         }
+         break;
+
+      case kPROOF_VALIDATE_DSET:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_VALIDATE_DSET","Enter");
+            TDSet* dset = 0;
+            (*mess) >> dset;
+            if (!fDSet)
+               Error("Collect:kPROOF_VALIDATE_DSET", "fDSet not set");
+            else
+               fDSet->Validate(dset);
+            delete dset;
+         }
+         break;
+
+      case kPROOF_DATA_READY:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_DATA_READY","Enter");
+            Bool_t dataready = kFALSE;
+            Long64_t totalbytes, bytesready;
+            (*mess) >> dataready >> totalbytes >> bytesready;
+            fTotalBytes += totalbytes;
+            fBytesReady += bytesready;
+            if (dataready == kFALSE) fDataReady = dataready;
+         }
+         break;
+
+      case kPROOF_PING:
+         // do nothing (ping is already acknowledged)
+         break;
+
+      default:
+         Error("Collect", "unknown command received from slave (%d)", what);
+         break;
+   }
+
+   // Cleanup
+   delete mess;
+
+   // We are done successfully
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -1660,34 +1818,108 @@ Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    if (!IsValid()) return -1;
 
-   if (fProgressDialog)
-      fProgressDialog->ExecPlugin(5, this, selector, dset->GetListOfElements()->GetSize(),
-                                  first, nentries);
+   if (!IsIdle()) {
+      Info("Process","not idle, cannot submit query");
+      return -1;
+   }
+
+   // Set non idle
+   fIdle = kFALSE;
+
+   // Start or reset the progress dialog
+   if (fProgressDialog) {
+      Int_t dsz = dset->GetListOfElements()->GetSize();
+      if (!fProgressDialogStarted) {
+         fProgressDialog->ExecPlugin(5, this, selector, dsz, first, nentries);
+         fProgressDialogStarted = kTRUE;
+      } else {
+         ResetProgressDialog(selector, dsz, first, nentries);
+      }
+   }
+
+   // Resolve query type
+   fSync = (GetQueryType(option) == kSync);
 
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
    TSignalHandler *sh = 0;
-   if (gApplication)
-      sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
+   if (fSync) {
+      if (gApplication)
+         sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
+   }
 
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first, evl);
 
-   if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
-      Info("Process","the processing was aborted - %lld events processed", fPlayer->GetEventsProcessed());
-      gProof->Progress(-1, fPlayer->GetEventsProcessed());
-      Emit("StopProcess(Bool_t)", kTRUE);
+   if (fSync) {
+      // reactivate the default application interrupt handler
+      if (sh)
+         gSystem->AddSignalHandler(sh);
    }
-   if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
-      Info("Process","the processing was stopped - %lld events processed", fPlayer->GetEventsProcessed());
-      gProof->Progress(-1, fPlayer->GetEventsProcessed());
-      Emit("StopProcess(Bool_t)", kFALSE);
-   }
-
-   // reactivate the default application interrupt handler
-   if (sh)
-      gSystem->AddSignalHandler(sh);
 
    return rv;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Finalize()
+{
+   // Finalize current query.
+   // Return 0 on success, -1 on error
+
+   return (fPlayer ? fPlayer->Finalize() : -1);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Retrieve(Int_t)
+{
+   MayNotUse("Retrieve");
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Archive(Int_t, const char *)
+{
+   MayNotUse("Archive");
+   return -1;
+}
+
+//_____________________________________________________________________________
+void TProof::SetQueryType(EQueryType type)
+{
+   // Change query running type to the one specified by 'type'.
+
+   fQueryType = type;
+
+   if (gDebug > 0)
+      Info("SetQueryType","query type is set to: %s", fQueryType == kSync ?
+           "Sync" : "Async");
+}
+
+//_____________________________________________________________________________
+TProof::EQueryType TProof::GetQueryType() const
+{
+   // Get query running type.
+
+   if (gDebug > 0)
+      Info("GetDefaultType","query type is set to: %s", fQueryType == kSync ?
+           "Sync" : "Async");
+
+   return fQueryType;
+}
+
+//______________________________________________________________________________
+TProof::EQueryType TProof::GetQueryType(Option_t *opt) const
+{
+   // Find out the query type based on the current setting and 'opt'.
+
+   EQueryType qtyp = fQueryType;
+
+   if (opt) {
+      if (strchr(opt,'A'))
+         qtyp = kAsync;
+      if (strchr(opt,'S'))
+         qtyp = kSync;
+   }
+   return qtyp;
 }
 
 //______________________________________________________________________________
@@ -1774,35 +2006,102 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
    char buf[kMAXBUF];
 
-   Int_t  left, r;
+   // Append messages to active logging unit
+   Int_t fdout = -1;
+   if (!fLogToWindowOnly) {
+      fdout = (fRedirLog) ? fileno(fLogFileW) : fileno(stdout);
+      if (fdout < 0) {
+         Warning("RecvLogFile", "file descriptor for outputs undefined (%d):"
+                 " will not log msgs", fdout);
+         return;
+      }
+      lseek(fdout, (off_t) 0, SEEK_END);
+   }
+
+   Int_t  left, rec, r;
    Long_t filesize = 0;
 
    while (filesize < size) {
       left = Int_t(size - filesize);
       if (left > kMAXBUF)
          left = kMAXBUF;
-      r = s->RecvRaw(&buf, left);
-      if (r > 0) {
-         char *p = buf;
+      rec = s->RecvRaw(&buf, left);
+      filesize = (rec > 0) ? (filesize + rec) : filesize;
+      if (!fLogToWindowOnly) {
+         if (rec > 0) {
 
-         filesize += r;
-         while (r) {
-            Int_t w;
+            char *p = buf;
+            r = rec;
+            while (r) {
+               Int_t w;
 
-            w = write(fileno(stdout), p, r);
+               w = write(fdout, p, r);
 
-            if (w < 0) {
-               SysError("RecvLogFile", "error writing to stdout");
-               break;
+               if (w < 0) {
+                  SysError("RecvLogFile", "error writing to stdout");
+                  break;
+               }
+               r -= w;
+               p += w;
             }
-            r -= w;
-            p += w;
+         } else if (rec < 0) {
+            Error("RecvLogFile", "error during receiving log file");
+            break;
          }
-      } else if (r < 0) {
-         Error("RecvLogFile", "error during receiving log file");
-         break;
+      }
+      if (rec > 0) {
+         buf[rec] = 0;
+         EmitVA("LogMessage(const char*,Bool_t)", 2, buf, kFALSE);
       }
    }
+
+   // If idle restore logs to main session window
+   if (fRedirLog && IsIdle())
+      fRedirLog = kFALSE;
+}
+
+//______________________________________________________________________________
+void TProof::LogMessage(const char *msg, Bool_t all)
+{
+   // Log a message into the appropriate window by emitting a signal.
+
+   PDB(kGlobal,1)
+      Info("LogMessage","Enter ... %s, 'all: %s", msg ? msg : "",
+           all ? "true" : "false");
+
+   if (!fProgressDialogStarted) {
+      PDB(kGlobal,1) Info("LogMessage","GUI not started - use TProof::ShowLog()");
+      return;
+   }
+
+   if (msg)
+      EmitVA("LogMessage(const char*,Bool_t)", 2, msg, all);
+
+   // Re-position at the beginning of the file, if requested.
+   // This is used by the dialog when it re-opens the log window to
+   // provide all the session messages
+   if (all)
+      lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
+
+   const Int_t kMAXBUF = 32768;
+   char buf[kMAXBUF];
+   Int_t len;
+   do {
+      while ((len = read(fileno(fLogFileR), buf, kMAXBUF-1)) < 0 &&
+             TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
+
+      if (len < 0) {
+         Error("LogMessage", "error reading log file");
+         break;
+      }
+
+      if (len > 0) {
+         buf[len] = 0;
+         EmitVA("LogMessage(const char*,Bool_t)", 2, buf, kFALSE);
+      }
+
+   } while (len > 0);
 }
 
 //______________________________________________________________________________
@@ -2722,11 +3021,20 @@ Int_t TProof::UploadPackage(const char *tpar)
       sl->GetSocket()->Recv(reply);
       if (reply->What() != kPROOF_CHECKFILE) {
 
-         // remote directory is locked, upload file over the open channel
-         if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
-                      sl->GetProofWorkDir(), kPROOF_PackDir,
-                      gSystem->BaseName(par))) < 0)
-            Warning("UploadPackage", "problems uploading file %s", par.Data());
+         if (fProtocol > 5) {
+            // remote directory is locked, upload file over the open channel
+            if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
+                         sl->GetProofWorkDir(), kPROOF_PackDir,
+                         gSystem->BaseName(par))) < 0)
+               Warning("UploadPackage", "problems uploading file %s", par.Data());
+         } else {
+            // old servers receive it via TFTP
+            TFTP ftp(TString("root://")+sl->GetName(), 1);
+            if (!ftp.IsZombie()) {
+               ftp.cd(Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir));
+               ftp.put(par, gSystem->BaseName(par));
+            }
+         }
 
          // install package and unlock dir
          sl->GetSocket()->Send(mess2);
@@ -2740,7 +3048,6 @@ Int_t TProof::UploadPackage(const char *tpar)
       }
       delete reply;
    }
-
 
    // loop over all other master nodes
    TIter nextmaster(fNonUniqueMasters);
@@ -2791,6 +3098,19 @@ void TProof::Feedback(TList *objs)
    }
 
    Emit("Feedback(TList *objs)", (Long_t) objs);
+}
+
+//______________________________________________________________________________
+void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
+                                 Long64_t ent)
+{
+   // Reset progress dialog.
+
+   PDB(kGlobal,1)
+      Info("ResetProgressDialog","(%s,%d,%lld,%lld)", sel, sz, fst, ent);
+
+   EmitVA("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
+          4, sel, sz, fst, ent);
 }
 
 //______________________________________________________________________________
@@ -3183,3 +3503,167 @@ void *TProof::SlaveStartupThread(void * arg)
    return 0;
 }
 
+//______________________________________________________________________________
+void TProof::RedirectLog(Bool_t on)
+{
+   // Redirect stderr and stdout messages to log file.
+
+   static FILE *tmpout = 0, *stdout_svd = 0, *stderr_svd = 0;
+   static Int_t tmperr_fno = -1, stdout_fno = -1, stderr_fno = -1;
+
+   if (on) {
+      //
+      // redirect stdout
+      stdout_fno = fileno(stdout);
+      if (!(stdout_svd = fdopen(dup(fileno(stdout)),"w"))) {
+         Error("RedirectLog", "stdout could not been duplicated, do not redirect");
+      } else {
+         if ((tmpout = freopen(fLogFileName.Data(), "a", stdout)) == 0)
+            Error("RedirectLog", "could not freopen stdout");
+      }
+      //
+      // redirect stderr
+      stderr_fno = fileno(stderr);
+      if (!(stderr_svd = fdopen(dup(fileno(stderr)),"w"))) {
+         Error("RedirectLog", "stderr could not been duplicated, do not redirect");
+      } else {
+         if ((tmperr_fno = dup2(fileno(stdout), fileno(stderr))) < 0)
+            Error("RedirectLog", "could not redirect stderr");
+      }
+
+   } else {
+      //
+      // Restore stdout
+      if (stdout_svd) {
+         fflush(stdout);
+         stdout = stdout_svd;
+         dup2(fileno(stdout), stdout_fno);
+      }
+      //
+      // Restore stderr
+      if (stderr_svd) {
+         stderr = stderr_svd;
+         dup2(fileno(stderr), stderr_fno);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TProof::GetLog(Int_t start, Int_t end)
+{
+   // Ask for remote logs in the range [start, end]. If start == -1 all the
+   // messages not yet received are sent back.
+
+   if (!IsValid() || IsMaster()) return;
+
+   TMessage msg(kPROOF_LOGFILE);
+
+   msg << start << end;
+
+   Broadcast(msg, kActive);
+   Collect(kActive);
+}
+
+//______________________________________________________________________________
+void TProof::ShowLog(Int_t qry)
+{
+   // Display on screen the content of the temporary log file.
+   // If qry == -2 show messages from the last (current) query.
+   // If qry == -1 all the messages not yet displayed are shown (default).
+   // If qry == 0, all the messages in the file are shown.
+   // If qry  > 0, only the messages related to query 'qry' are shown.
+   // For qry != -1 the original file offset is restored at the end
+
+   // Save present offset
+   Int_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
+
+   // Get extremes
+   Int_t startlog = nowlog;
+   Int_t endlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_END);
+
+   lseek(fileno(fLogFileR), (off_t) nowlog, SEEK_SET);
+   if (qry == 0) {
+      startlog = 0;
+      lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
+   } else if (qry != -1) {
+      // Get update the list of queries
+      GetListOfQueries();
+      if (fQueries) {
+         TProofQuery *pq = 0;
+         if (qry > 0) {
+            TIter nxq(fQueries);
+            while ((pq = (TProofQuery *)nxq()))
+               if (qry == pq->GetSeqNum())
+                  break;
+         } else if (qry == -2) {
+            // Pickup the last one
+            pq = (TProofQuery *)(fQueries->Last());
+         } else
+            qry = -1;
+
+         if (pq) {
+            startlog = pq->GetStartLog();
+            endlog = pq->GetEndLog();
+            GetLog(startlog, endlog);
+            return;
+         } else {
+            Info("ShowLog","query %d not found in list", qry);
+            qry = -1;
+         }
+
+      } else
+         qry = -1;
+   }
+
+   // Number of bytes to log
+   UInt_t tolog = (UInt_t)(endlog - startlog);
+
+   // Perhaps nothing
+   if (tolog <= 0)
+
+   // Set starting point
+   lseek(fileno(fLogFileR), (off_t) startlog, SEEK_SET);
+
+   // Now we go
+   Int_t np = 0;
+   char line[2048];
+   Int_t wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
+   while (fgets(line, wanted, fLogFileR)) {
+      Int_t r = strlen(line);
+      if (line[r-1] != '\n') line[r-1] = '\n';
+      if (r > 0) {
+         char *p = line;
+         while (r) {
+            Int_t w = write(fileno(stdout), p, r);
+            if (w < 0) {
+               SysError("ShowLogFile", "error writing to stdout");
+               break;
+            }
+            r -= w;
+            p += w;
+         }
+      }
+      tolog -= strlen(line);
+      np++;
+
+      // Ask if more is wanted
+      if (!(np%10)) {
+         char *opt = Getline("More (y/n)? [y]");
+         if (opt[0] == 'n')
+            break;
+      }
+
+      // We may be over
+      if (tolog <= 0)
+         break;
+
+      // Update wanted bytes
+      wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
+   }
+   // Avoid screwing up the prompt
+   write(fileno(stdout), "\n", 1);
+
+   // Restore original pointer
+   if (qry > -1)
+      lseek(fileno(fLogFileR), (off_t) nowlog, SEEK_SET);
+}

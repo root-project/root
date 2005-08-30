@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.10 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.11 2005/05/03 13:13:03 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -18,15 +18,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TProofProgressDialog.h"
+#include "TProofProgressLog.h"
+#include "TError.h"
 #include "TGLabel.h"
 #include "TGButton.h"
+#include "TGTextBuffer.h"
+#include "TGTextEntry.h"
 #include "TGProgressBar.h"
 #include "TProof.h"
 #include "TSystem.h"
 #include "TTimer.h"
 
 
-Bool_t TProofProgressDialog::fgKeep = kTRUE;
+Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
+Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
+TString TProofProgressDialog::fgTextQueryDefault = "last";
 
 
 ClassImp(TProofProgressDialog)
@@ -46,6 +52,10 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fEntries       = entries;
    fPrevProcessed = 0;
    fPrevTotal     = 0;
+   fLogWindow     = 0;
+   fStatus        = kRunning;
+   fKeep          = fgKeepDefault;
+   fLogQuery      = fgLogQueryDefault;
 
    const TGWindow *main = gClient->GetRoot();
    fDialog = new TGTransientFrame(main, main, 10, 10);
@@ -59,7 +69,9 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
            fProof ? fProof->GetParallel() : 0);
    fDialog->AddFrame(new TGLabel(fDialog, buf),
                      new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
-   fDialog->AddFrame(new TGLabel(fDialog, selector),
+   sprintf(buf,"Selector: %s", selector);
+   fSelector = new TGLabel(fDialog, buf);
+   fDialog->AddFrame(fSelector,
                      new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
    sprintf(buf, "%d files, number of events %lld, starting event %lld",
            fFiles, fEntries, fFirst);
@@ -90,11 +102,33 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    hf2->AddFrame(fRate, new TGLayoutHints(kLHintsNormal, 10, 10, 0, 0));
    fDialog->AddFrame(hf2, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
 
-   // keep toggle button
-   fKeep = new TGCheckButton(fDialog, new TGHotString("Close this dialog when processing complete"));
-   if (!fgKeep) fKeep->SetState(kButtonDown);
-   fKeep->Connect("Toggled(Bool_t)", "TProofProgressDialog", this, "DoKeep(Bool_t)");
-   fDialog->AddFrame(fKeep, new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
+   // Keep toggle button
+   fKeepToggle = new TGCheckButton(fDialog,
+                    new TGHotString("Close dialog when processing is complete"));
+   if (!fKeep) fKeepToggle->SetState(kButtonDown);
+   fKeepToggle->Connect("Toggled(Bool_t)",
+                        "TProofProgressDialog", this, "DoKeep(Bool_t)");
+   fDialog->AddFrame(fKeepToggle, new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
+
+   // logs-from-given-query-only toggle button
+   TGHorizontalFrame *hflog = new TGHorizontalFrame(fDialog, 200, 20, kFixedWidth);
+   fLogQueryToggle =
+      new TGCheckButton(hflog,
+          new TGHotString("Show only logs from query"));
+   if (!fLogQuery) fLogQueryToggle->SetState(kButtonUp);
+   fLogQueryToggle->Connect("Toggled(Bool_t)",
+                              "TProofProgressDialog", this, "DoSetLogQuery(Bool_t)");
+   hflog->AddFrame(fLogQueryToggle,
+                   new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 0, 0, 0, 0));
+   // Text entry for logs-from-given-query-only toggle button
+   fTextQuery = new TGTextBuffer();
+   fTextQuery->AddText(0, fgTextQueryDefault.Data(), 32);
+   fEntry = new TGTextEntry(hflog, fTextQuery);
+   fEntry->SetEnabled(fLogQuery);
+   hflog->AddFrame(fEntry, new TGLayoutHints(kLHintsCenterY |
+                                          kLHintsExpandX, 2, 0, 0, 0));
+
+   fDialog->AddFrame(hflog, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
 
    // stop, cancel and close buttons
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
@@ -108,7 +142,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    height = TMath::Max(height, fStop->GetDefaultHeight());
    width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
 
-   fAbort = new TGTextButton(hf3, "C&ancel");
+   fAbort = new TGTextButton(hf3, "&Cancel");
    fAbort->SetToolTipText("Cancel processing, Terminate() will NOT be executed");
    fAbort->Connect("Clicked()", "TProofProgressDialog", this, "DoAbort()");
    hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
@@ -123,6 +157,13 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    height = TMath::Max(height, fClose->GetDefaultHeight());
    width  = TMath::Max(width, fClose->GetDefaultWidth()); ++nb;
 
+   fLog = new TGTextButton(hf3, "&Show Logs");
+   fLog->SetToolTipText("Show query log messages");
+   fLog->Connect("Clicked()", "TProofProgressDialog", this, "DoLog()");
+   hf3->AddFrame(fLog, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height = TMath::Max(height, fLog->GetDefaultHeight());
+   width  = TMath::Max(width, fLog->GetDefaultWidth()); ++nb;
+
    // place button frame (hf3) at the bottom
    fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 10, 10, 20, 10));
 
@@ -133,11 +174,16 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    if (fProof) {
       fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
                       this, "Progress(Long64_t,Long64_t)");
-      fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this, "IndicateStop(Bool_t)");
+      fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
+                      "IndicateStop(Bool_t)");
+      fProof->Connect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
+                      "TProofProgressDialog", this,
+                      "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
    }
 
    // set dialog title
-   fDialog->SetWindowName("PROOF Query Progress");
+   fDialog->SetWindowName(Form("PROOF Query Progress: %s",
+                          (fProof ? fProof->GetMaster() : "<dummy>")));
 
    // map all widgets and calculate size of dialog
    fDialog->MapSubwindows();
@@ -150,13 +196,13 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    // position relative to the parent window (which is the root window)
    Window_t wdum;
    int      ax, ay;
+   Int_t    mw = ((TGFrame *) main)->GetWidth();
+   Int_t    mh = ((TGFrame *) main)->GetHeight();
 
    gVirtualX->TranslateCoordinates(main->GetId(), main->GetId(),
-                          (((TGFrame *) main)->GetWidth() - width) >> 1,
-                          (((TGFrame *) main)->GetHeight() - height) >> 1,
-                          ax, ay, wdum);
-   fDialog->Move(ax, ay);
-   fDialog->SetWMPosition(ax, ay);
+                          (mw - width) >> 1, (mh - height) >> 1, ax, ay, wdum);
+   fDialog->Move(ax + mw/2 , ay - mh/4);
+   fDialog->SetWMPosition(ax + mw/2, ay - mh/4);
 
    // make the message box non-resizable
    fDialog->SetWMSize(width, height);
@@ -177,9 +223,54 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
 }
 
 //______________________________________________________________________________
+void TProofProgressDialog::ResetProgressDialog(const char *selec,
+                                               Int_t files, Long64_t first,
+                                               Long64_t entries)
+{
+   // Reset dialog box preparing for new query
+   char buf[512];
+
+   // Reset members
+   fFiles         = files;
+   fFirst         = first;
+   fEntries       = entries;
+   fPrevProcessed = 0;
+   fPrevTotal     = 0;
+   fStatus        = kRunning;
+
+   // Update selector name
+   sprintf(buf,"Selector: %s", selec);
+   fSelector->SetText(buf);
+
+   // Update numbers
+   sprintf(buf, "%d files, number of events %lld, starting event %lld",
+           fFiles, fEntries, fFirst);
+   fFilesEvents->SetText(buf);
+
+   // Reset progress bar
+   fBar->SetBarColor("green");
+   fBar->Reset();
+
+   // Reset buttons
+   fStop->SetState(kButtonUp);
+   fAbort->SetState(kButtonUp);
+   fClose->SetState(kButtonDisabled);
+
+   // Reconnect the slots
+   if (fProof) {
+      fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
+                      this, "Progress(Long64_t,Long64_t)");
+      fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
+                      "IndicateStop(Bool_t)");
+   }
+}
+
+//______________________________________________________________________________
 void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
+
+   static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
 
    if (total < 0)
       total = fPrevTotal;
@@ -219,12 +310,20 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
                             "IndicateStop(Bool_t)");
       }
 
+      // Set button state
+      fStop->SetState(kButtonDisabled);
+      fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
-      if (!fgKeep)
+      if (!fKeep)
          DoClose();
    } else {
-      sprintf(buf, "%.1f sec (%lld events of %lld processed)", eta, processed,
-              total);
+      if (fStatus > kDone) {
+         sprintf(buf, "%.1f sec (%lld events of %lld processed) - %s",
+                      eta, processed, total, cproc[fStatus]);
+      } else {
+         sprintf(buf, "%.1f sec (%lld events of %lld processed)",
+                      eta, processed, total);
+      }
       fTotal->SetText(buf);
       sprintf(buf, "%.1f events/sec", Float_t(processed)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
@@ -244,7 +343,15 @@ TProofProgressDialog::~TProofProgressDialog()
                          "Progress(Long64_t,Long64_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
+      fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
+                         "LogMessage(const char*,Bool_t)");
+      fProof->Disconnect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
+                         this,
+                         "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+      fProof->ResetProgressDialogStatus();
    }
+   if (fLogWindow)
+      delete fLogWindow;
    fDialog->Cleanup();
    delete fDialog;
 }
@@ -275,8 +382,24 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
    }
 
    fClose->SetState(kButtonUp);
-   if (!fgKeep)
+   if (!fKeep)
       DoClose();
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::LogMessage(const char *msg, Bool_t all)
+{
+   // Load/append a log msg in the log frame, if open
+
+   if (fLogWindow) {
+      if (all) {
+         // load buffer
+         fLogWindow->LoadBuffer(msg);
+      } else {
+         // append
+         fLogWindow->AddBuffer(msg);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -289,11 +412,55 @@ void TProofProgressDialog::DoClose()
 }
 
 //______________________________________________________________________________
+void TProofProgressDialog::DoLog()
+{
+   // Ask proof session for logs
+
+   if (fProof) {
+      if (!fLogWindow) {
+         fLogWindow = new TProofProgressLog(this);
+      } else {
+         // Clear window
+         fLogWindow->Clear();
+      }
+      fProof->Connect("LogMessage(const char*,Bool_t)", "TProofProgressDialog",
+                      this, "LogMessage(const char*,Bool_t)");
+      if (!fLogQuery) {
+         fProof->LogMessage(0, kTRUE);
+      } else {
+         Int_t qry = -2;
+         TString qs = fTextQuery->GetString();
+         if (qs != "last" && qs.IsDigit())
+            qry = qs.Atoi();
+         Bool_t logonly = fProof->GetLogToWindow();
+         fProof->SetLogToWindow(kTRUE);
+         fProof->ShowLog(qry);
+         fProof->SetLogToWindow(logonly);
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TProofProgressDialog::DoKeep(Bool_t)
 {
    // Handle keep toggle button.
 
-   fgKeep = !fgKeep;
+   fKeep = !fKeep;
+
+   // Last choice will be the default for the future
+   fgKeepDefault = fKeep;
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::DoSetLogQuery(Bool_t)
+{
+   // Handle log-current-query-only toggle button.
+
+   fLogQuery = !fLogQuery;
+   fEntry->SetEnabled(fLogQuery);
+
+   // Last choice will be the default for the future
+   fgLogQueryDefault = fLogQuery;
 }
 
 //______________________________________________________________________________
@@ -302,6 +469,12 @@ void TProofProgressDialog::DoStop()
    // Handle Stop button.
 
    fProof->StopProcess(kFALSE);
+   fStatus = kStopped;
+
+   // Set buttons states
+   fStop->SetState(kButtonDisabled);
+   fAbort->SetState(kButtonDisabled);
+   fClose->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -310,4 +483,10 @@ void TProofProgressDialog::DoAbort()
    // Handle Cancel button.
 
    fProof->StopProcess(kTRUE);
+   fStatus = kAborted;
+
+   // Set buttons states
+   fStop->SetState(kButtonDisabled);
+   fAbort->SetState(kButtonDisabled);
+   fClose->SetState(kButtonUp);
 }
