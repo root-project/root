@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQuery.cxx,v 1.1 2005/08/30 10:25:29 rdm Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TProofQuery                                                          //
 //                                                                      //
-// A class describing PROOF queries                                     //
+// A class describing PROOF queries.                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -179,12 +179,12 @@ Int_t TProofQuery::FetchFromFile(const char *file)
          buf[strlen(buf)-1] = 0;
 
       // Parse buffer
-      Int_t np = 0;
+      Int_t np = 0, stat = 0;
       UInt_t start = 0, end = 0;
       char selnam[2048] = {0}, parlist[2048] = {0}, resfile[2048] = {0};
 
       if ((np = sscanf(buf,"%d %d %d %d %d %d %lld %lld %d %lld %s %s %s",
-                       &fSeqNum, &fStatus, &start, &end,
+                       &fSeqNum, &stat, &start, &end,
                        &fStartLog, &fEndLog, &fEntries, &fFirst,
                        &fNFiles, &fTotalEntries,
                        selnam, parlist, resfile)) < 11) {
@@ -193,6 +193,7 @@ Int_t TProofQuery::FetchFromFile(const char *file)
       }
 
       // Fill members
+      fStatus = (EQueryStatus) stat;
       fStart.Set(start);
       fEnd.Set(end);
       fSelecName = selnam;

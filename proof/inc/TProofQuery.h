@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQuery.h,v 1.1 2005/08/30 10:25:29 rdm Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -71,7 +71,7 @@ private:
 
  public:
    TProofQuery() : fSeqNum(-1), fStatus(kAborted), fStartLog(-1), fEndLog(-1),
-                   fEntries(-1), fFirst(-1), fNFiles(0), fTotalEntries(0),
+                   fNFiles(0), fEntries(-1), fFirst(-1), fTotalEntries(0),
                    fSelecName("-"), fParList("-"), fResultFile("-") { }
    virtual ~TProofQuery() { }
 
