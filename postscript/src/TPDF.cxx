@@ -139,10 +139,10 @@ void TPDF::Close(Option_t *)
    // Close the currently opened page
    WriteCompressedBuffer();
    PrintStr("endstream@");
-   Int_t StreamLength = fNByte-fStartStream-10;
+   Int_t streamLength = fNByte-fStartStream-10;
    PrintStr("endobj@");
    NewObject(3*(fNbPage-1)+kObjFirstPage+2);
-   WriteInteger(StreamLength, 0);
+   WriteInteger(streamLength, 0);
    PrintStr("endobj@");
 
    // List of all the pages
@@ -163,7 +163,7 @@ void TPDF::Close(Option_t *)
    PrintStr("endobj@");
 
    // Cross-Reference Table
-   Int_t RefInd = fNByte;
+   Int_t refInd = fNByte;
    PrintStr("xref@");
    PrintStr("0");
    WriteInteger(fNbObj+1);
@@ -190,7 +190,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R");
    PrintStr(">>@");
    PrintStr("startxref@");
-   WriteInteger(RefInd, 0);
+   WriteInteger(refInd, 0);
    PrintStr("%%EOF@");
 
    // Close file stream
@@ -953,10 +953,10 @@ void TPDF::NewPage()
       // Close the currently opened page
       WriteCompressedBuffer();
       PrintStr("endstream@");
-      Int_t StreamLength = fNByte-fStartStream-10;
+      Int_t streamLength = fNByte-fStartStream-10;
       PrintStr("endobj@");
       NewObject(3*(fNbPage-2)+kObjFirstPage+2);
-      WriteInteger(StreamLength, 0);
+      WriteInteger(streamLength, 0);
       PrintStr("endobj@");
    }
 
@@ -1234,7 +1234,7 @@ void TPDF::PatternEncode()
 {
    // Patterns encoding
 
-   Int_t PatternNb = kObjPattern;
+   Int_t patternNb = kObjPattern;
 
    NewObject(kObjColorSpace);
    if (gStyle->GetColorModelPS()) {
@@ -1250,87 +1250,87 @@ void TPDF::PatternEncode()
    NewObject(kObjPatternList);
    PrintStr("<<@");
    PrintStr(" /P01");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P02");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P03");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P04");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P05");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P06");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P07");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P08");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P09");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P10");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P11");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P12");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P13");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P14");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P15");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P16");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P17");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P18");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P19");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P20");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P21");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P22");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P23");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P24");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(" /P25");
-   WriteInteger(PatternNb++);
+   WriteInteger(patternNb++);
    PrintStr(" 0 R");
    PrintStr(">>@");
    PrintStr("endobj@");
 
-   PatternNb = kObjPattern;
+   patternNb = kObjPattern;
 
    // P01
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[1 0 0 1 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 98/YStep 4/Length 91/Filter/FlateDecode>>");
@@ -1342,7 +1342,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P02
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.75 0 0 0.75 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 96/YStep 4/Length 92/Filter/FlateDecode>>@");
@@ -1354,7 +1354,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P03
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.5 0 0 0.5 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 96/YStep 16/Length 93/Filter/FlateDecode>>@");
@@ -1366,7 +1366,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P04
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 63/Filter/FlateDecode>>");
@@ -1378,7 +1378,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P05
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
@@ -1390,7 +1390,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P06
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
@@ -1402,7 +1402,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P07
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 68/Filter/FlateDecode>>");
@@ -1414,7 +1414,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P08
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 139/Filter/FlateDecode>>");
@@ -1426,7 +1426,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P09
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 108/Filter/FlateDecode>>");
@@ -1438,7 +1438,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P10
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 93/Filter/FlateDecode>>");
@@ -1450,7 +1450,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P11
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 164/Filter/FlateDecode>>");
@@ -1462,7 +1462,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P12
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 226/Filter/FlateDecode>>");
@@ -1474,7 +1474,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P13
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
@@ -1486,7 +1486,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P14
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.15 0 0 0.15 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 80/YStep 80/Length 114/Filter/FlateDecode>>");
@@ -1498,7 +1498,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P15
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.102 0 0 0.102 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 60 60]/XStep 60/YStep 60/Length 218/Filter/FlateDecode>>");
@@ -1510,7 +1510,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P16
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.1 0 0 0.05 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 123/Filter/FlateDecode>>");
@@ -1522,7 +1522,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P17
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
@@ -1534,7 +1534,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P18
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
@@ -1546,7 +1546,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P19
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.117 0 0 0.117 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 149/Filter/FlateDecode>>");
@@ -1558,7 +1558,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P20
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.05 0 0 0.1 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 122/Filter/FlateDecode>>");
@@ -1570,7 +1570,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P21
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 117/Filter/FlateDecode>>");
@@ -1582,7 +1582,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P22
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 118/Filter/FlateDecode>>");
@@ -1594,7 +1594,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P23
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 169/Filter/FlateDecode>>");
@@ -1606,7 +1606,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P24
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 280/Filter/FlateDecode>>");
@@ -1618,7 +1618,7 @@ void TPDF::PatternEncode()
    PrintStr("endobj@");
 
    // P25
-   NewObject(PatternNb++);
+   NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 54/Filter/FlateDecode>>");
@@ -1759,30 +1759,30 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
    if (fBlue  <= 0.000001) fBlue  = 0;
 
    if (gStyle->GetColorModelPS()) {
-      Double_t Cyan, Magenta, Yellow;
-      Double_t Black = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
-      if (Black==1) {
-         Cyan    = 0;
-         Magenta = 0;
-         Yellow  = 0;
+      Double_t colCyan, colMagenta, colYellow;
+      Double_t colBlack = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
+      if (colBlack==1) {
+         colCyan    = 0;
+         colMagenta = 0;
+         colYellow  = 0;
       } else {
-         Cyan    = (1-fRed-Black)/(1-Black);
-         Magenta = (1-fGreen-Black)/(1-Black);
-         Yellow  = (1-fBlue-Black)/(1-Black);
+         colCyan    = (1-fRed-colBlack)/(1-colBlack);
+         colMagenta = (1-fGreen-colBlack)/(1-colBlack);
+         colYellow  = (1-fBlue-colBlack)/(1-colBlack);
       }
-      if (Cyan    <= 0.000001) Cyan    = 0;
-      if (Magenta <= 0.000001) Magenta = 0;
-      if (Yellow  <= 0.000001) Yellow  = 0;
-      if (Black   <= 0.000001) Black   = 0;
-      WriteReal(Cyan);
-      WriteReal(Magenta);
-      WriteReal(Yellow);
-      WriteReal(Black);
+      if (colCyan    <= 0.000001) colCyan    = 0;
+      if (colMagenta <= 0.000001) colMagenta = 0;
+      if (colYellow  <= 0.000001) colYellow  = 0;
+      if (colBlack   <= 0.000001) colBlack   = 0;
+      WriteReal(colCyan);
+      WriteReal(colMagenta);
+      WriteReal(colYellow);
+      WriteReal(colBlack);
       PrintFast(2," K");
-      WriteReal(Cyan);
-      WriteReal(Magenta);
-      WriteReal(Yellow);
-      WriteReal(Black);
+      WriteReal(colCyan);
+      WriteReal(colMagenta);
+      WriteReal(colYellow);
+      WriteReal(colBlack);
       PrintFast(2," k");
    } else {
       WriteReal(fRed);
@@ -1815,29 +1815,29 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
    char cpat[10];
    PrintStr(" /Cs8 cs");
    TColor *col = gROOT->GetColor(color);
-   Double_t Red   = col->GetRed();
-   Double_t Green = col->GetGreen();
-   Double_t Blue  = col->GetBlue();
+   Double_t colRed   = col->GetRed();
+   Double_t colGreen = col->GetGreen();
+   Double_t colBlue  = col->GetBlue();
    if (gStyle->GetColorModelPS()) {
-      Double_t Black = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
-      if (Black==1) {
+      Double_t colBlack = TMath::Min(TMath::Min(1-colRed,1-colGreen),1-colBlue);
+      if (colBlack==1) {
          WriteReal(0);
          WriteReal(0);
          WriteReal(0);
-         WriteReal(Black);
+         WriteReal(colBlack);
       } else {
-         Double_t Cyan    = (1-Red-Black)/(1-Black);
-         Double_t Magenta = (1-Green-Black)/(1-Black);
-         Double_t Yellow  = (1-Blue-Black)/(1-Black);
-         WriteReal(Cyan);
-         WriteReal(Magenta);
-         WriteReal(Yellow);
-         WriteReal(Black);
+         Double_t colCyan    = (1-colRed-colBlack)/(1-colBlack);
+         Double_t colMagenta = (1-colGreen-colBlack)/(1-colBlack);
+         Double_t colYellow  = (1-colBlue-colBlack)/(1-colBlack);
+         WriteReal(colCyan);
+         WriteReal(colMagenta);
+         WriteReal(colYellow);
+         WriteReal(colBlack);
       }
    } else {
-      WriteReal(Red);
-      WriteReal(Green);
-      WriteReal(Blue);
+      WriteReal(colRed);
+      WriteReal(colGreen);
+      WriteReal(colBlue);
    }
    sprintf(cpat, " /P%2.2d scn", ipat);
    PrintStr(cpat);
@@ -1937,12 +1937,12 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t tsize, ftsize;
    if (wh < hh) {
       tsize = fTextSize*wh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fXsize*gPad->GetAbsWNDC())/wh;
+      Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (sizeTTF*fXsize*gPad->GetAbsWNDC())/wh;
    } else {
       tsize = fTextSize*hh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fYsize*gPad->GetAbsHNDC())/hh;
+      Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    Double_t fontsize = 72*(ftsize)/2.54;
    if( fontsize <= 0) return;

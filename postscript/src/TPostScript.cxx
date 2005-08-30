@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.56 2005/05/18 10:28:08 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.57 2005/07/29 11:25:24 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -450,9 +450,9 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    Int_t ix1 = XtoPS(x1);
    Int_t iy1 = YtoPS(y1);
 
-   Float_t WT = (288/2.54)*gPad->GetAbsWNDC()*
+   Float_t wt = (288/2.54)*gPad->GetAbsWNDC()*
                 fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1()));
-   Float_t HT = (288/2.54)*gPad->GetAbsHNDC()*
+   Float_t ht = (288/2.54)*gPad->GetAbsHNDC()*
                 fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1()));
 
    fLastCellRed     = 300;
@@ -466,8 +466,8 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    fMaxLines = 40000/(3*fNbCellW);
 
    // Define some paremeters
-   PrintStr("@/WT"); WriteReal(WT)          ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteReal(HT)          ; PrintStr(" def"); // Cells height
+   PrintStr("@/WT"); WriteReal(wt)          ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteReal(ht)          ; PrintStr(" def"); // Cells height
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
    PrintStr(" /YY"); WriteInteger(iy1)      ; PrintStr(" def"); // Y start
    PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
@@ -2194,29 +2194,29 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    PrintFast(3," cs");
    TColor *col = gROOT->GetColor(color);
    if (col) {
-      Double_t Red   = col->GetRed();
-      Double_t Green = col->GetGreen();
-      Double_t Blue  = col->GetBlue();
+      Double_t colRed   = col->GetRed();
+      Double_t colGreen = col->GetGreen();
+      Double_t colBlue  = col->GetBlue();
       if (gStyle->GetColorModelPS()) {
-         Double_t Black = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
-         if (Black==1) {
+         Double_t colBlack = TMath::Min(TMath::Min(1-colRed,1-colGreen),1-colBlue);
+         if (colBlack==1) {
             WriteReal(0);
             WriteReal(0);
             WriteReal(0);
-            WriteReal(Black);
+            WriteReal(colBlack);
          } else {
-            Double_t Cyan    = (1-Red-Black)/(1-Black);
-            Double_t Magenta = (1-Green-Black)/(1-Black);
-            Double_t Yellow  = (1-Blue-Black)/(1-Black);
-            WriteReal(Cyan);
-            WriteReal(Magenta);
-            WriteReal(Yellow);
-            WriteReal(Black);
+            Double_t colCyan    = (1-colRed-colBlack)/(1-colBlack);
+            Double_t colMagenta = (1-colGreen-colBlack)/(1-colBlack);
+            Double_t colYellow  = (1-colBlue-colBlack)/(1-colBlack);
+            WriteReal(colCyan);
+            WriteReal(colMagenta);
+            WriteReal(colYellow);
+            WriteReal(colBlack);
          }
       } else {
-         WriteReal(Red);
-         WriteReal(Green);
-         WriteReal(Blue);
+         WriteReal(colRed);
+         WriteReal(colGreen);
+         WriteReal(colBlue);
       }
    }
    PrintFast(4,cpat);
@@ -2326,14 +2326,14 @@ void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
       PrintFast(6," black");
    } else {
       if (gStyle->GetColorModelPS()) {
-         Double_t Black   = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
-         Double_t Cyan    = (1-fRed-Black)/(1-Black);
-         Double_t Magenta = (1-fGreen-Black)/(1-Black);
-         Double_t Yellow  = (1-fBlue-Black)/(1-Black);
-         WriteReal(Cyan);
-         WriteReal(Magenta);
-         WriteReal(Yellow);
-         WriteReal(Black);
+         Double_t colBlack   = TMath::Min(TMath::Min(1-fRed,1-fGreen),1-fBlue);
+         Double_t colCyan    = (1-fRed-colBlack)/(1-colBlack);
+         Double_t colMagenta = (1-fGreen-colBlack)/(1-colBlack);
+         Double_t colYellow  = (1-fBlue-colBlack)/(1-colBlack);
+         WriteReal(colCyan);
+         WriteReal(colMagenta);
+         WriteReal(colYellow);
+         WriteReal(colBlack);
       } else {
          WriteReal(fRed);
          WriteReal(fGreen);
@@ -2436,12 +2436,12 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    if (wh < hh) {
       tsize = fTextSize*wh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fXsize*gPad->GetAbsWNDC())/wh;
+      Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (sizeTTF*fXsize*gPad->GetAbsWNDC())/wh;
    } else {
       tsize = fTextSize*hh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fYsize*gPad->GetAbsHNDC())/hh;
+      Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    Double_t fontsize = 4*(72*(ftsize)/2.54);
    if( fontsize <= 0) return;

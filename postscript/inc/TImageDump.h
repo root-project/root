@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.6 2005/05/23 07:02:51 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.7 2005/05/30 22:38:39 rdm Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class TColor;
 class TImageDump : public TVirtualPS {
 protected:
    TImage           *fImage;     // image
-	Int_t             fType;      // PostScript workstation type
+   Int_t             fType;      // PostScript workstation type
 
 public:
    TImageDump();
