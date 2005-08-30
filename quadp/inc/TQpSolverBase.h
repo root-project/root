@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -82,7 +82,7 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-enum TerminationCode
+enum ETerminationCode
 {
   kSUCCESSFUL_TERMINATION = 0,
   kNOT_FINISHED,

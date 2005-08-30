@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************
@@ -126,15 +126,15 @@ TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
                                    TVectorD     &clo, TVectorD &iclo,
                                    TVectorD     &cup, TVectorD &icup)
 { 
-  TMatrixDSym &Q = (TMatrixDSym &) Q_in;
-  TMatrixD    &A = (TMatrixD    &) A_in;
-  TMatrixD    &C = (TMatrixD    &) C_in;
+  TMatrixDSym &mQ = (TMatrixDSym &) Q_in;
+  TMatrixD    &mA = (TMatrixD    &) A_in;
+  TMatrixD    &mC = (TMatrixD    &) C_in;
 
-  Assert(Q.GetNrows() == fNx && Q.GetNcols() == fNx);
-  if (fMy > 0) Assert(A.GetNrows() == fMy && A.GetNcols() == fNx);
-  else         Assert(A.GetNrows() == fMy);
-  if (fMz > 0) Assert(C.GetNrows() == fMz && C.GetNcols() == fNx);
-  else         Assert(C.GetNrows() == fMz);
+  Assert(mQ.GetNrows() == fNx && mQ.GetNcols() == fNx);
+  if (fMy > 0) Assert(mA.GetNrows() == fMy && mA.GetNcols() == fNx);
+  else         Assert(mA.GetNrows() == fMy);
+  if (fMz > 0) Assert(mC.GetNrows() == fMz && mC.GetNcols() == fNx);
+  else         Assert(mC.GetNrows() == fMz);
 
   Assert(c.GetNrows()    == fNx);
   Assert(xlo.GetNrows()  == fNx);
@@ -148,7 +148,7 @@ TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
   Assert(cup.GetNrows()  == fMz);
   Assert(icup.GetNrows() == fMz);
 
-  TQpDataDens *data = new TQpDataDens(c,Q,xlo,ixlo,xup,ixup,A,bA,C,clo,iclo,cup,icup);
+  TQpDataDens *data = new TQpDataDens(c,mQ,xlo,ixlo,xup,ixup,mA,bA,mC,clo,iclo,cup,icup);
 
   return data;
 }

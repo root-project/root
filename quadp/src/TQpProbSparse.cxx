@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -127,15 +127,15 @@ TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
                                      TVectorD     &clo, TVectorD &iclo,
                                      TVectorD     &cup, TVectorD &icup)
 {
-  TMatrixDSparse &Q = (TMatrixDSparse &) Q_in;
-  TMatrixDSparse &A = (TMatrixDSparse &) A_in;
-  TMatrixDSparse &C = (TMatrixDSparse &) C_in;
+  TMatrixDSparse &mQ = (TMatrixDSparse &) Q_in;
+  TMatrixDSparse &mA = (TMatrixDSparse &) A_in;
+  TMatrixDSparse &mC = (TMatrixDSparse &) C_in;
 
-  Assert(Q.GetNrows() == fNx && Q.GetNcols() == fNx);
-  if (fMy > 0) Assert(A.GetNrows() == fMy && A.GetNcols() == fNx);
-  else         Assert(A.GetNrows() == fMy);
-  if (fMz > 0) Assert(C.GetNrows() == fMz && C.GetNcols() == fNx);
-  else         Assert(C.GetNrows() == fMz);
+  Assert(mQ.GetNrows() == fNx && mQ.GetNcols() == fNx);
+  if (fMy > 0) Assert(mA.GetNrows() == fMy && mA.GetNcols() == fNx);
+  else         Assert(mA.GetNrows() == fMy);
+  if (fMz > 0) Assert(mC.GetNrows() == fMz && mC.GetNcols() == fNx);
+  else         Assert(mC.GetNrows() == fMz);
 
   Assert(c.GetNrows()    == fNx);
   Assert(xlo.GetNrows()  == fNx);
@@ -149,7 +149,7 @@ TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
   Assert(cup.GetNrows()  == fMz);
   Assert(icup.GetNrows() == fMz);
 
-  TQpDataSparse *data = new TQpDataSparse(c,Q,xlo,ixlo,xup,ixup,A,bA,C,clo,iclo,cup,icup);
+  TQpDataSparse *data = new TQpDataSparse(c,mQ,xlo,ixlo,xup,ixup,mA,bA,mC,clo,iclo,cup,icup);
 
   return data;
 }

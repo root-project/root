@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.5 2004/06/09 22:08:32 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -174,7 +174,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
       Double_t rmin = sigma*mu*fBeta_min;
       Double_t rmax = sigma*mu*fBeta_max;
 
-      Int_t StopCorrections     = 0;
+      Int_t stopCorrections     = 0;
       fNumberGondzioCorrections = 0;
 
       // enter the Gondzio correction loop:
@@ -182,7 +182,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
         cout << "**** Entering the correction loop ****" << endl;
 
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
-	     alpha < 1.0 && !StopCorrections) {
+	     alpha < 1.0 && !stopCorrections) {
 
 	// copy current variables into fcorrector_step
 	*fCorrector_step = *iterate;
@@ -214,7 +214,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 	  *fStep = *fCorrector_step;
 	  alpha = alpha_enhanced;
 	  fNumberGondzioCorrections++;
-	  StopCorrections = 1;
+	  stopCorrections = 1;
 	} else if(alpha_enhanced >= (1.0+fAcceptTol)*alpha) {
 	  // if enhanced step length is significantly better than the
 	  // current alpha, make the enhanced step official, but maybe
@@ -222,10 +222,10 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 	  *fStep = *fCorrector_step;
 	  alpha = alpha_enhanced;
 	  fNumberGondzioCorrections++;
-	  StopCorrections = 0;
+	  stopCorrections = 0;
 	} else {
 	  // otherwise quit the correction loop
-	  StopCorrections = 1;
+	  stopCorrections = 1;
 	}
       }
 
