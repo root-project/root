@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.8 2004/06/01 08:56:37 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.9 2004/11/11 07:48:31 brun Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -156,42 +156,42 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
 // with the CL bad                                               //
 ///////////////////////////////////////////////////////////////////
 
-  Double_t *P          = new Double_t[fNMax];   //the array of probabilities in the interval MUMIN-MUMAX
-  Double_t *R          = new Double_t[fNMax];   //the ratio of likliehoods = P(Mu|Nobserved)/P(MuBest|Nobserved)
+  Double_t *p          = new Double_t[fNMax];   //the array of probabilities in the interval MUMIN-MUMAX
+  Double_t *r          = new Double_t[fNMax];   //the ratio of likliehoods = P(Mu|Nobserved)/P(MuBest|Nobserved)
   Int_t    *rank       = new Int_t[fNMax];      //the ranked array corresponding to R (largest first)
-  Double_t *MuBest     = new Double_t[fNMax];
-  Double_t *ProbMuBest = new Double_t[fNMax];
+  Double_t *muBest     = new Double_t[fNMax];
+  Double_t *probMuBest = new Double_t[fNMax];
 
   //calculate P(i | mu) and P(i | mu)/P(i | mubest)
   Int_t i;
   for(i = 0; i < fNMax; i++) {
-    MuBest[i] = (Double_t)(i - fNbackground);
-    if(MuBest[i]<0.0) MuBest[i] = 0.0;
-    ProbMuBest[i] = Prob(i, MuBest[i],  fNbackground);
-    P[i]          = Prob(i, mu,  fNbackground);
-    if(ProbMuBest[i] == 0.0) R[i] = 0.0;
-    else                     R[i] = P[i]/ProbMuBest[i];
+    muBest[i] = (Double_t)(i - fNbackground);
+    if(muBest[i]<0.0) muBest[i] = 0.0;
+    probMuBest[i] = Prob(i, muBest[i],  fNbackground);
+    p[i]          = Prob(i, mu,  fNbackground);
+    if(probMuBest[i] == 0.0) r[i] = 0.0;
+    else                     r[i] = p[i]/probMuBest[i];
   }
 
   //rank the likelihood ratio
-  TMath::BubbleHigh(fNMax, R, rank);
+  TMath::BubbleHigh(fNMax, r, rank);
 
   //search through the probability table and get the i for the CL
   Double_t sum = 0.0;
   Int_t iMax = rank[0];
   Int_t iMin = rank[0];
   for(i = 0; i < fNMax; i++) {
-    sum += P[rank[i]];
+    sum += p[rank[i]];
     if(iMax < rank[i]) iMax = rank[i];
     if(iMin > rank[i]) iMin = rank[i];
     if(sum >= fCL) break;
   }
 
-  delete [] P;
-  delete [] R;
+  delete [] p;
+  delete [] r;
   delete [] rank;
-  delete [] MuBest;
-  delete [] ProbMuBest;
+  delete [] muBest;
+  delete [] probMuBest;
 
   if((fNobserved <= iMax) && (fNobserved >= iMin)) return 1;
   else return 0;

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.6 2002/05/18 08:22:00 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.7 2004/09/01 11:09:48 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -37,10 +37,10 @@ Double_t TGenPhaseSpace::pdk(Double_t a, Double_t b, Double_t c)
 Int_t DoubleMax(const void *a, const void *b) 
 {
 
-  Double_t A = * ((Double_t *) a); 
-  Double_t B = * ((Double_t *) b); 
-  if (A > B) return  1;
-  if (A < B) return -1;
+  Double_t aa = * ((Double_t *) a); 
+  Double_t bb = * ((Double_t *) b); 
+  if (aa > bb) return  1;
+  if (aa < bb) return -1;
   return 0;
 
 }
@@ -77,10 +77,10 @@ Double_t TGenPhaseSpace::Generate()
   }
   rno[fNt-1] = 1;
 
-  Double_t InvMas[kMAXP], sum=0;
+  Double_t invMas[kMAXP], sum=0;
   for (n=0; n<fNt; n++) {
     sum      += fMass[n];
-    InvMas[n] = rno[n]*fTeCmTm + sum;
+    invMas[n] = rno[n]*fTeCmTm + sum;
   }
 
   //
@@ -89,7 +89,7 @@ Double_t TGenPhaseSpace::Generate()
   Double_t wt=fWtMax;
   Double_t pd[kMAXP];
   for (n=0; n<fNt-1; n++) {
-    pd[n] = pdk(InvMas[n+1],InvMas[n],fMass[n+1]);
+    pd[n] = pdk(invMas[n+1],invMas[n],fMass[n+1]);
     wt *= pd[n];
   }
 
@@ -122,7 +122,7 @@ Double_t TGenPhaseSpace::Generate()
 
     if (i == (fNt-1)) break;
 
-    Double_t beta = pd[i] / sqrt(pd[i]*pd[i] + InvMas[i]*InvMas[i]);
+    Double_t beta = pd[i] / sqrt(pd[i]*pd[i] + invMas[i]*invMas[i]);
     for (j=0; j<=i; j++) fDecPro[j].Boost(0,beta,0);
     i++;
   }
