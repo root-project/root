@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.69 2005/08/24 13:42:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.70 2005/08/29 04:16:08 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -516,7 +516,9 @@ void TDirectory::DeleteAll(Option_t *)
 //*-*-*-*-*-*-*-*-*Delete all objects from memory*-*-*-*-*-*-*-*-*-*
 //                 ==============================
 
+   SetBit(kCloseDirectory);
    fList->Delete();
+   ResetBit(kCloseDirectory);
 }
 
 //______________________________________________________________________________
