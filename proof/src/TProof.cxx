@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.100 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.101 2005/08/30 10:47:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -277,10 +277,14 @@ TProof::~TProof()
    SafeDelete(fFeedback);
 
    // remove file with redirected logs
-   fclose(fLogFileR);
-   fclose(fLogFileW);
-   gSystem->Unlink(fLogFileName);
-
+   if (!IsMaster()) {
+      if (fLogFileR)
+         fclose(fLogFileR);
+      if (fLogFileW)
+         fclose(fLogFileW);
+      if (fLogFileName.Length())
+         gSystem->Unlink(fLogFileName);
+   }
    {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
@@ -3518,7 +3522,7 @@ void TProof::RedirectLog(Bool_t on)
       if (!(stdout_svd = fdopen(dup(fileno(stdout)),"w"))) {
          Error("RedirectLog", "stdout could not been duplicated, do not redirect");
       } else {
-         if ((tmpout = freopen(fLogFileName.Data(), "a", stdout)) == 0)
+         if ((tmpout = freopen(fLogFileName, "a", stdout)) == 0)
             Error("RedirectLog", "could not freopen stdout");
       }
       //
@@ -3536,13 +3540,13 @@ void TProof::RedirectLog(Bool_t on)
       // Restore stdout
       if (stdout_svd) {
          fflush(stdout);
-         stdout = stdout_svd;
+         *stdout = *stdout_svd;
          dup2(fileno(stdout), stdout_fno);
       }
       //
       // Restore stderr
       if (stderr_svd) {
-         stderr = stderr_svd;
+         *stderr = *stderr_svd;
          dup2(fileno(stderr), stderr_fno);
       }
    }

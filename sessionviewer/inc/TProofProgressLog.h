@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.61 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.h,v 1.1 2005/08/30 10:25:29 rdm Exp $
 // Author: G Ganis, Aug 2005
 
 /*************************************************************************
@@ -36,9 +36,6 @@ public:
 
    void   Clear();
    void   Popup();
-
-   void   SetText(const char *text);
-   void   AddText(const char *text);
 
    // slots
    void   CloseWindow();

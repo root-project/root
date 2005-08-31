@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.6 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.7 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -93,7 +93,6 @@ public:
    void DoLog();
    void DoKeep(Bool_t on);
    void DoSetLogQuery(Bool_t on);
-   void DoSetQuery();
    void DoStop();
    void DoAbort();
 
