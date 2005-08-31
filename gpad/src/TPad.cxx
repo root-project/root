@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.193 2005/08/26 09:42:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.194 2005/08/29 15:54:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4528,8 +4528,11 @@ void TPad::SetFillStyle(Style_t fstyle)
 //______________________________________________________________________________
 void TPad::SetLogx(Int_t value)
 {
-//*-*-*-*-*-*-*-*-*Set Lin/Log scale for X
-//*-*              ========================
+// Set Lin/Log scale for X
+//   value = 0 X scale will be linear
+//   value = 1 X scale will be logarithmic (base 10)
+//   value > 1 reserved for possible support of base e or other
+
    fLogx = value;
    delete fView; fView=0;
 }
@@ -4537,8 +4540,11 @@ void TPad::SetLogx(Int_t value)
 //______________________________________________________________________________
 void TPad::SetLogy(Int_t value)
 {
-//*-*-*-*-*-*-*-*-*Set Lin/Log scale for Y
-//*-*              ========================
+// Set Lin/Log scale for Y
+//   value = 0 Y scale will be linear
+//   value = 1 Y scale will be logarithmic (base 10)
+//   value > 1 reserved for possible support of base e or other
+
    fLogy = value;
    delete fView; fView=0;
 }
