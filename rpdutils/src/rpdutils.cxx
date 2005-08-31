@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.82 2005/07/21 14:08:06 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.83 2005/07/29 14:26:51 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -525,6 +525,14 @@ int RpdGetAuthProtocol()
    // Return authentication protocol used for the handshake.
    // Used by proofd.
    return gAuthProtocol;
+}
+
+//______________________________________________________________________________
+int RpdGetOffSet()
+{
+   // Return offset in the authtab file.
+   // Used by proofd.
+   return gOffSet;
 }
 
 #ifdef R__KRB5

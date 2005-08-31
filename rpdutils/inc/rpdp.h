@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.26 2005/07/18 16:20:53 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.27 2005/07/21 14:08:06 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -96,6 +96,7 @@ int  RpdGenRSAKeys(int);
 int  RpdGetAuthProtocol();
 const char *RpdGetKeyRoot();
 int  RpdGetClientProtocol();
+int  RpdGetOffSet();
 #ifdef R__GLBS
 int  RpdGetShmIdCred();
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.78 2005/07/21 14:08:06 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.79 2005/08/11 15:28:25 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -393,14 +393,7 @@ int RpdProofGetAuthSetup(char **abuf)
    // This is base 64 string to decoded by proofserv, if needed
    int nrec = -1;
 
-   int ap = RpdGetAuthProtocol();
-   if (ap < 0 || ap > 5) {
-      // Unknown protocol index
-      ErrorInfo("RpdProofGetAuthSetup:  unknown protocol index: %d", ap);
-      return -1;
-   }
-
-   if (ap != 5 ) {
+   if (RpdGetOffSet() > -1) {
       if ((nrec = RpdSecureRecv(abuf)) < 0) {
          ErrorInfo("RpdProofGetAuthSetup: sec: problems receiving buf");
          return -1;
@@ -426,7 +419,8 @@ int RpdProofGetAuthSetup(char **abuf)
    }
 
    if (gDebug > 1)
-      ErrorInfo("RpdProofGetAuthSetup: proto: %d len: %d", ap, nrec);
+      ErrorInfo("RpdProofGetAuthSetup: proto: %d len: %d",
+                RpdGetAuthProtocol(), nrec);
 
    return nrec;
 }

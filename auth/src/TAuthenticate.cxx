@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.2 2005/07/19 00:10:16 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.3 2005/07/21 14:08:06 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -5117,20 +5117,20 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
       ::Info("ProofAuthSetup","sending %d bytes", messb64.Length());
 
    // Send it over
-   if (sc->GetMethod() != TAuthenticate::kRfio) {
+   if (remoteOffSet > -1) {
       if (TAuthenticate::SecureSend(sock, 1, keytyp, messb64.Data()) == -1) {
          ::Error("ProofAuthSetup","problems secure-sending message buffer");
          return -1;
       }
    } else {
-      // There is encryption key: send it plain
+      // There is no encryption key: send it plain
       char buflen[20];
       snprintf(buflen,20, "%d", messb64.Length());
       if (sock->Send(buflen, kMESS_ANY) < 0) {
          ::Error("ProofAuthSetup","plain: problems sending message length");
          return -1;
       }
-      if (sock->SendRaw(messb64.Data(), messb64.Length())) {
+      if (sock->SendRaw(messb64.Data(), messb64.Length()) < 0) {
          ::Error("ProofAuthSetup","problems sending message buffer");
          return -1;
       }
