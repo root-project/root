@@ -10,9 +10,9 @@
    pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f} \
 (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
 
-   pt.AddText("+ 16#left|#chi(s)#right|^{2}
- #left[(#hat{g}_{a}^{e}^{2} + #hat{g}_{v}^{e}^{2})
- (#hat{g}_{a}^{f}^{2} + #hat{g}_{v}^{f}^{2})(1+cos^{2}#theta)
+   pt.AddText("+ 16#left|#chi(s)#right|^{2}\
+ #left[(#hat{g}_{a}^{e}^{2} + #hat{g}_{v}^{e}^{2})\
+ (#hat{g}_{a}^{f}^{2} + #hat{g}_{v}^{f}^{2})(1+cos^{2}#theta)\
  + 8 #hat{g}_{a}^{e} #hat{g}_{a}^{f} #hat{g}_{v}^{e} #hat{g}_{v}^{f}cos#theta#right] ");
 
    pt.SetLabel("Born equation");
