@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.6 2005/06/14 05:06:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.7 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -10,6 +10,17 @@
 #include "TObject.h"
 
 
+//____________________________________________________________________________
+void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
+   if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
+      pyobj->fClass->Destructor( pyobj->fObject );
+   }
+
+   pyobj->fClass.~TClassRef();
+}
+
+
+//____________________________________________________________________________
 namespace PyROOT {
 
 namespace {
@@ -41,11 +52,7 @@ namespace {
 //____________________________________________________________________________
    void op_dealloc( ObjectProxy* pyobj )
    {
-      if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-         pyobj->fClass->Destructor( pyobj->fObject );
-      }
-
-      pyobj->fClass.~TClassRef();
+      op_dealloc_nofree( pyobj );
       pyobj->ob_type->tp_free( (PyObject*)pyobj );
    }
 

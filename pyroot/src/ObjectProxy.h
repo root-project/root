@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.2 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.3 2005/08/25 06:44:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_OBJECTPROXY_H
@@ -78,6 +78,10 @@ namespace PyROOT {
    {
       return object && object->ob_type == &ObjectProxy_Type;
    }
+
+
+//- helper for memory regulation (no PyTypeObject equiv. member in p2.2) -----
+   void op_dealloc_nofree( ObjectProxy* );   
 
 } // namespace PyROOT
 

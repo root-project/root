@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.7 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.9 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -139,6 +139,10 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* object )
          pyobj->ob_refcnt = 0;
          PyObject_ClearWeakRefs( (PyObject*)pyobj );
          pyobj->ob_refcnt = refcnt;
+
+      // cleanup object internals
+         pyobj->Release();              // held object is out of scope now anyway
+         op_dealloc_nofree( pyobj );    // normal object cleanup, while keeping memory
 
       // reset type object
          Py_INCREF( &PyROOT_NoneType );
