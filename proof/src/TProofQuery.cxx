@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofQuery.cxx,v 1.1 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQuery.cxx,v 1.2 2005/08/30 10:37:56 rdm Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;
+#else
+   #include <unistd.h>
 #endif
 
 #include <errno.h>
@@ -27,7 +29,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
 #include <sys/file.h>
