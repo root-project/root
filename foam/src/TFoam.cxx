@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.11 2005/05/18 12:31:08 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.12 2005/08/30 08:27:42 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -150,8 +150,8 @@ ClassImp(TFoam);
 "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<endl
   //FFFFFF  BoX-FORMATs ends here
 
-static const Double_t kHigh= 1.0e150;
-static const Double_t kVlow=-1.0e150;
+static const Double_t gHigh= 1.0e150;
+static const Double_t gVlow=-1.0e150;
 
 #define SW2 setprecision(7) << setw(12)
 
@@ -216,8 +216,8 @@ TFoam::TFoam(const Char_t* Name)
   fNEffev = 0;                  // Total no of eff. wt=1 events in build=up
   fLastCe =-1;                  // Index of the last cell
   fNoAct  = 0;                  // No of active cells (used in MC generation)
-  fWtMin = kHigh;               // Minimal weight
-  fWtMax = kVlow;               // Maximal weight
+  fWtMin = gHigh;               // Minimal weight
+  fWtMax = gVlow;               // Maximal weight
   fMaxWtRej =1.10;              // Maximum weight in rejection for getting wt=1 events
   fPseRan   = 0;                // Initialize private copy of random number generator
   fMCMonit  = 0;                // MC efficiency monitoring
@@ -412,8 +412,8 @@ void TFoam::Initialize()
   fSumWt2 = 0.0;               // M.C. generation sum of Wt**2
   fSumOve = 0.0;               // M.C. generation sum of overweighted
   fNevGen = 0.0;               // M.C. generation sum of 1d0
-  fWtMax  = kVlow;               // M.C. generation maximum wt
-  fWtMin  = kHigh;               // M.C. generation minimum wt
+  fWtMax  = gVlow;               // M.C. generation maximum wt
+  fWtMin  = gHigh;               // M.C. generation minimum wt
   fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
   fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
   fMCerror =fCells[0]->GetIntg(); // M.C. Value of ERROR   ,temporary assignment
@@ -543,8 +543,8 @@ void TFoam::Explore(TFoamCell *cell)
   ceSum[0]=0;
   ceSum[1]=0;
   ceSum[2]=0;
-  ceSum[3]=kHigh;  //wtmin
-  ceSum[4]=kVlow;  //wtmax
+  ceSum[3]=gHigh;  //wtmin
+  ceSum[4]=gVlow;  //wtmax
   //
   for(i=0;i<fDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
   fHistWt->Reset();
@@ -676,7 +676,7 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
     if( fMaskDiv[kProj]){
     // initialize search over bins
     Double_t sigmIn =0.0; Double_t sigmOut =0.0;
-    Double_t sswtBest = kHigh;
+    Double_t sswtBest = gHigh;
     Double_t gain =0.0;
     Double_t xMin=0.0; Double_t xMax=0.0;
     // Double loop over all pairs jLo<jUp
@@ -749,14 +749,14 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
   kBest =-1;
   xBest =0.5;
   yBest =1.0;
-  carvMax = kVlow;
-  primMax = kVlow;
+  carvMax = gVlow;
+  primMax = gVlow;
   for(kProj=0; kProj<fDim; kProj++)
     if( fMaskDiv[kProj] ){
     //if( kProj==1 ){
     //cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<endl;
     //((TH1D *)(*fHistEdg)[kProj])->Print("all");
-    binMax = kVlow;
+    binMax = gVlow;
     for(iBin=0; iBin<fNBin;iBin++){
       bins[iBin]= ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(iBin+1);
       binMax = TMath::Max( binMax, bins[iBin]);       // Maximum content/bin
@@ -775,8 +775,8 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
      //cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<endl;
     jLow =0;
     jUp  =fNBin-1;
-    carvOne = kVlow;
-    Double_t yLevel = kVlow;
+    carvOne = gVlow;
+    Double_t yLevel = gVlow;
     for(iBin=0; iBin<fNBin;iBin++){
       theBin = bins[iBin];
       //-----  walk to the left and find first bin > theBin
@@ -884,7 +884,7 @@ Long_t  TFoam::PeekMax()
    Long_t iCell = -1;
    Double_t  drivMax, driv;
 
-   drivMax = kVlow;
+   drivMax = gVlow;
    for(i=0; i<=fLastCe; i++) //without root
    {
       if( fCells[i]->GetStat() == 1 )
