@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.194 2005/08/29 15:54:54 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.195 2005/08/31 14:27:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -61,7 +61,7 @@
 const Int_t kPXY       = 1002;
 
 static TPoint gPXY[kPXY];
-static Int_t readLevel = 0;
+static Int_t gReadLevel = 0;
 
 Int_t TPad::fgMaxPickDistance = 5;
 
@@ -4767,15 +4767,15 @@ void TPad::Streamer(TBuffer &b)
          if (fMother)  fCanvas = fMother->GetCanvas();
          gPad      = this;
          fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
-         readLevel++;
+         gReadLevel++;
          gROOT->SetReadingObject(kTRUE);
 
          TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
          fModified = kTRUE;
          fPadPointer = 0;
-         readLevel--;
-         if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
+         gReadLevel--;
+         if (gReadLevel == 0 && IsA() == TPad::Class()) ResizePad();
          gROOT->SetReadingObject(kFALSE);
          gPad = padsave;
          return;
@@ -4885,7 +4885,7 @@ void TPad::Streamer(TBuffer &b)
       }
 
       if (!gPad) gPad = new TCanvas(GetName());
-      if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
+      if (gReadLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
       else                fMother = (TPad*)gPad;
       if (!fMother) fMother = (TPad*)gPad;
       if (fMother)  fCanvas = fMother->GetCanvas();
@@ -4894,7 +4894,7 @@ void TPad::Streamer(TBuffer &b)
 //-------------------------
 // read objects and their drawing options
 //      b >> fPrimitives;
-      readLevel++;
+      gReadLevel++;
       gROOT->SetReadingObject(kTRUE);
       fPrimitives = new TList;
       b >> nobjects;
@@ -4911,7 +4911,7 @@ void TPad::Streamer(TBuffer &b)
          }
          gPad = padsav;
       }
-      readLevel--;
+      gReadLevel--;
       gROOT->SetReadingObject(kFALSE);
 //-------------------------
       if (v > 3) {
@@ -4941,7 +4941,7 @@ void TPad::Streamer(TBuffer &b)
       } else {
          fTickx = fTicky = 0;
       }
-      if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
+      if (gReadLevel == 0 && IsA() == TPad::Class()) ResizePad();
       b.CheckByteCount(R__s, R__c, TPad::IsA());
       //====end of old versions
 

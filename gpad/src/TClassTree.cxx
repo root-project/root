@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.6 2005/08/29 15:54:54 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -44,8 +44,8 @@ const Int_t kUsedByCode1 = BIT(19);
 const Int_t kIsaPointer  = BIT(20);
 const Int_t kIsBasic     = BIT(21);
 
-static Float_t xsize, ysize, dx, dy, labdx, labdy, dxx, csize;
-static Int_t *ntsons, *nsons;
+static Float_t gXsize, gYsize, gDx, gDy, gLabdx, gLabdy, gDxx, gCsize;
+static Int_t *gNtsons, *gNsons;
 
 ClassImp(TClassTree)
 
@@ -471,8 +471,8 @@ void TClassTree::Paint(Option_t *)
    Int_t nch      = strlen(GetClasses());
    if (nch == 0) return;
    char *classes  = new char[nch+1];
-   nsons   = new Int_t[fNclasses];
-   ntsons  = new Int_t[fNclasses];
+   gNsons   = new Int_t[fNclasses];
+   gNtsons  = new Int_t[fNclasses];
    strcpy(classes,GetClasses());
    Int_t i,j;
    char *derived;
@@ -524,7 +524,7 @@ void TClassTree::Paint(Option_t *)
    }
     //mark base classes of referenced classes
    for (i=0;i<fNclasses;i++) {
-      nsons[i] = ntsons[i] = 0;
+      gNsons[i] = gNtsons[i] = 0;
    }
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
@@ -542,7 +542,7 @@ void TClassTree::Paint(Option_t *)
       j = fParents[i];
       if (j >=0 ) {
          fCparent[i] = j;
-         nsons[j]++;
+         gNsons[j]++;
       }
    }
     //compute total number of sons for each node
@@ -550,14 +550,14 @@ void TClassTree::Paint(Option_t *)
    Int_t icl,ip;
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
-      if (nsons[i] != 0) continue;
+      if (gNsons[i] != 0) continue;
       icl = i;
       Int_t nlevel = 1;
       while (fCparent[icl] >= 0) {
          nlevel++;
          if (nlevel > maxlev) maxlev = nlevel;
          ip = fCparent[icl];
-         ntsons[ip]++;
+         gNtsons[ip]++;
          icl = ip;
       }
    }
@@ -568,7 +568,7 @@ void TClassTree::Paint(Option_t *)
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
       if (fCparent[i] < 0) {
-         ndiv += ntsons[i]+1;
+         ndiv += gNtsons[i]+1;
          nmore++;
       }
    }
@@ -579,33 +579,33 @@ void TClassTree::Paint(Option_t *)
    Float_t xmax = gPad->GetX2();
    Float_t ymin = gPad->GetY1();
    Float_t ymax = gPad->GetY2();
-   Float_t ytop = ysize/20;
-   xsize = xmax - xmin;
-   ysize = ymax - ymin;
-   dy = (ysize-ytop)/(ndiv);
-   if (dy > ysize/10.) dy = ysize/10.;
-   dx = 0.9*xsize/5;
-   if (maxlev > 5) dx = 0.97*xsize/maxlev;
+   Float_t ytop = gYsize/20;
+   gXsize = xmax - xmin;
+   gYsize = ymax - ymin;
+   gDy = (gYsize-ytop)/(ndiv);
+   if (gDy > gYsize/10.) gDy = gYsize/10.;
+   gDx = 0.9*gXsize/5;
+   if (maxlev > 5) gDx = 0.97*gXsize/maxlev;
    Float_t y  = ymax -ytop;
-   labdx = fLabelDx*xsize;
-   if (labdx > 0.95*dx) labdx = 0.95*dx;
-   labdy = 0.3*dy;
-   dxx = 0.5*xsize/26.;
-   Float_t xleft  = xmin +dxx;
-   Float_t ymore  = 0.5*nmore*dy+fYoffset*ysize;
-   Int_t dxpixels = gPad->XtoAbsPixel(labdx) - gPad->XtoAbsPixel(0);
-   Int_t dypixels = gPad->YtoAbsPixel(0)     - gPad->YtoAbsPixel(labdy);
-   csize  = dxpixels/(10.*dypixels);
-   csize = TMath::Max(csize,Float_t(0.75));
-   csize = TMath::Min(csize,Float_t(1.1));
+   gLabdx = fLabelDx*gXsize;
+   if (gLabdx > 0.95*gDx) gLabdx = 0.95*gDx;
+   gLabdy = 0.3*gDy;
+   gDxx = 0.5*gXsize/26.;
+   Float_t xleft  = xmin +gDxx;
+   Float_t ymore  = 0.5*nmore*gDy+fYoffset*gYsize;
+   Int_t dxpixels = gPad->XtoAbsPixel(gLabdx) - gPad->XtoAbsPixel(0);
+   Int_t dypixels = gPad->YtoAbsPixel(0)     - gPad->YtoAbsPixel(gLabdy);
+   gCsize  = dxpixels/(10.*dypixels);
+   gCsize = TMath::Max(gCsize,Float_t(0.75));
+   gCsize = TMath::Min(gCsize,Float_t(1.1));
    // draw classes level 0
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
       if (fCparent[i] < 0) {
-         y -= dy+0.5*ntsons[i]*dy;
+         y -= gDy+0.5*gNtsons[i]*gDy;
          if (!fCnames[i]->CompareTo("TObject")) y += ymore;
          PaintClass(i,xleft,y);
-         y -= 0.5*ntsons[i]*dy;
+         y -= 0.5*gNtsons[i]*gDy;
       }
    }
 
@@ -620,10 +620,10 @@ void TClassTree::Paint(Option_t *)
     if (nch > 20) xmax = 0.5;
     if (nch > 50) xmax = 0.7;
     if (nch > 70) xmax = 0.9;
-    TPaveClass *ptitle = new TPaveClass(xmin +0.1*xsize/26.
-                                      ,ymin+ysize-0.9*ysize/20.
-                                      ,xmin+xmax*xsize
-                                      ,ymin+ysize-0.1*ysize/26.
+    TPaveClass *ptitle = new TPaveClass(xmin +0.1*gXsize/26.
+                                      ,ymin+gYsize-0.9*gYsize/20.
+                                      ,xmin+xmax*gXsize
+                                      ,ymin+gYsize-0.1*gYsize/26.
                                       ,GetClasses(),this);
     ptitle->SetFillColor(42);
     ptitle->SetBit(kIsClassTree);
@@ -631,8 +631,8 @@ void TClassTree::Paint(Option_t *)
 
    //cleanup
    delete [] classes;
-   delete [] nsons;
-   delete [] ntsons;
+   delete [] gNsons;
+   delete [] gNtsons;
 }
 
 //______________________________________________________________________________
@@ -641,36 +641,36 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 // Paint one class level
 
    Float_t u[2],yu=0,yl=0;
-   Int_t ns = nsons[iclass];
+   Int_t ns = gNsons[iclass];
    u[0] = xleft;
-   u[1] = u[0]+dxx;
-   if(ns != 0) u[1] = u[0]+dx;
+   u[1] = u[0]+gDxx;
+   if(ns != 0) u[1] = u[0]+gDx;
    TLine *line = new TLine(u[0],y,u[1],y);
    line->SetBit(kIsClassTree);
    line->Draw();
    Int_t icobject = FindClass("TObject");
-   TPaveClass *label = new TPaveClass(xleft+dxx,y-labdy,xleft+labdx,y+labdy,fCnames[iclass]->Data(),this);
+   TPaveClass *label = new TPaveClass(xleft+gDxx,y-gLabdy,xleft+gLabdx,y+gLabdy,fCnames[iclass]->Data(),this);
    char *derived = fDerived[iclass];
    if (icobject >= 0 && !derived[icobject]) label->SetFillColor(30);
    if (fCstatus[iclass] > 1) label->SetFillColor(kYellow);
-   label->SetTextSize(csize);
+   label->SetTextSize(gCsize);
    label->SetBit(kIsClassTree);
    label->SetToolTipText(fCtitles[iclass]->Data(),500);
    label->Draw();
    if (ns == 0) return;
 
    // drawing sons
-   y +=  0.5*ntsons[iclass]*dy;
+   y +=  0.5*gNtsons[iclass]*gDy;
    Int_t first =0;
    for (Int_t i=0;i<fNclasses;i++) {
       if(fCparent[i] != iclass) continue;
-      if (ntsons[i] > 1) y -= 0.5*ntsons[i]*dy;
-      else               y -= 0.5*dy;
+      if (gNtsons[i] > 1) y -= 0.5*gNtsons[i]*gDy;
+      else               y -= 0.5*gDy;
       if (!first) {first=1; yu = y;}
       PaintClass(i,u[1],y);
       yl = y;
-      if (ntsons[i] > 1) y -= 0.5*ntsons[i]*dy;
-      else               y -= 0.5*dy;
+      if (gNtsons[i] > 1) y -= 0.5*gNtsons[i]*gDy;
+      else               y -= 0.5*gDy;
    }
    if (ns == 1) return;
    line = new TLine(u[1],yl,u[1],yu);
