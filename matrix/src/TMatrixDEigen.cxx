@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.9 2004/11/05 16:37:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.10 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -71,13 +71,13 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
   if (nRows > kWorkMax) ortho.ResizeTo(nRows);
   else                  ortho.Use(nRows,work);
 
-  TMatrixD H = a;
+  TMatrixD mH = a;
 
   // Reduce to Hessenberg form.
-  MakeHessenBerg(fEigenVectors,ortho,H);
+  MakeHessenBerg(fEigenVectors,ortho,mH);
 
   // Reduce Hessenberg to real Schur form.
-  MakeSchurr(fEigenVectors,fEigenValuesRe,fEigenValuesIm,H);
+  MakeSchurr(fEigenVectors,fEigenValuesRe,fEigenValuesIm,mH);
 
   // Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
   // of the complex eigenvalues .
@@ -199,20 +199,20 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 }
 
 //______________________________________________________________________________
-static Double_t cdivr, cdivi;
+static Double_t gCdivr, gCdivi;
 static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
 // Complex scalar division.
   Double_t r,d;
   if (TMath::Abs(yr) > TMath::Abs(yi)) {
     r = yi/yr;
     d = yr+r*yi;
-    cdivr = (xr+r*xi)/d;
-    cdivi = (xi-r*xr)/d;
+    gCdivr = (xr+r*xi)/d;
+    gCdivi = (xi-r*xr)/d;
   } else {
     r = yr/yi;
     d = yi+r*yr;
-    cdivr = (r*xr+xi)/d;
-    cdivi = (r*xi-xr)/d; 
+    gCdivr = (r*xr+xi)/d;
+    gCdivi = (r*xi-xr)/d; 
   }
 }
 
@@ -590,8 +590,8 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         pH[off_n1+n]   = -(pH[off_n+n]-p)/pH[off_n+n-1];
       } else {
         cdiv(0.0,-pH[off_n1+n],pH[off_n1+n-1]-p,q);
-        pH[off_n1+n-1] = cdivr;
-        pH[off_n1+n]   = cdivi;
+        pH[off_n1+n-1] = gCdivr;
+        pH[off_n1+n]   = gCdivi;
       }
       pH[off_n+n-1] = 0.0;
       pH[off_n+n]   = 1.0;
@@ -615,8 +615,8 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
           l = i;
           if (pE[i] == 0) {
             cdiv(-ra,-sa,w,q);
-            pH[off_i+n-1] = cdivr;
-            pH[off_i+n]   = cdivi;
+            pH[off_i+n-1] = gCdivr;
+            pH[off_i+n]   = gCdivi;
           } else {
 
             // Solve complex equations 
@@ -630,15 +630,15 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
                    TMath::Abs(x)+TMath::Abs(y)+TMath::Abs(z));
             }
             cdiv(x*r-z*ra+q*sa,x*s-z*sa-q*ra,vr,vi);
-            pH[off_i+n-1] = cdivr;
-            pH[off_i+n]   = cdivi;
+            pH[off_i+n-1] = gCdivr;
+            pH[off_i+n]   = gCdivi;
             if (TMath::Abs(x) > (TMath::Abs(z)+TMath::Abs(q))) {
               pH[off_i1+n-1] = (-ra-w*pH[off_i+n-1]+q*pH[off_i+n])/x;
               pH[off_i1+n]   = (-sa-w*pH[off_i+n]-q*pH[off_i+n-1])/x;
             } else {
               cdiv(-r-y*pH[off_i+n-1],-s-y*pH[off_i+n],z,q);
-              pH[off_i1+n-1] = cdivr;
-              pH[off_i1+n]   = cdivi;
+              pH[off_i1+n-1] = gCdivr;
+              pH[off_i1+n]   = gCdivi;
             }
           }
    
@@ -776,9 +776,9 @@ const TMatrixD TMatrixDEigen::GetEigenValues() const
   const Int_t rowLwb = fEigenVectors.GetRowLwb();
   const Int_t rowUpb = rowLwb+nrows-1;
 
-  TMatrixD D(rowLwb,rowUpb,rowLwb,rowUpb);
+  TMatrixD mD(rowLwb,rowUpb,rowLwb,rowUpb);
 
-  Double_t *pD = D.GetMatrixArray();
+  Double_t *pD = mD.GetMatrixArray();
   const Double_t * const pd = fEigenValuesRe.GetMatrixArray();
   const Double_t * const pe = fEigenValuesIm.GetMatrixArray();
 
@@ -794,5 +794,5 @@ const TMatrixD TMatrixDEigen::GetEigenValues() const
     }
   }
 
-  return D;
+  return mD;
 }

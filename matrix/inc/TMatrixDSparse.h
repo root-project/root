@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.7 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.8 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -52,7 +52,7 @@ protected:
                const TMatrixDSparse bt(TMatrixDSparse::kTransposed,b); AMultBt(a,bt,constr); }
   void AMultB (const TMatrixDSparse &a,const TMatrixD       &b,Int_t constr=1) {
                const TMatrixDSparse bsp = b;
-			   const TMatrixDSparse bt(TMatrixDSparse::kTransposed,bsp); AMultBt(a,bt,constr); }
+               const TMatrixDSparse bt(TMatrixDSparse::kTransposed,bsp); AMultBt(a,bt,constr); }
   void AMultB (const TMatrixD       &a,const TMatrixDSparse &b,Int_t constr=1) {
                const TMatrixDSparse bt(TMatrixDSparse::kTransposed,b); AMultBt(a,bt,constr); }
 

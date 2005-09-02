@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.14 2004/10/16 19:46:56 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.15 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -401,15 +401,15 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
     return tmp;
   }
 
-  TMatrixD Aw = A;
-  TVectorD bw = b;
+  TMatrixD mAw = A;
+  TVectorD mBw = b;
   for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
-    TMatrixDRow(Aw,irow) *= 1/std(irow);
-    bw(irow) /= std(irow);
+    TMatrixDRow(mAw,irow) *= 1/std(irow);
+    mBw(irow) /= std(irow);
   }
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,Aw));
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,mAw));
   Bool_t ok;
-  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,Aw)*bw,ok);
+  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,mAw)*mBw,ok);
 }
 
 //______________________________________________________________________________
@@ -419,12 +419,12 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
   // B and X
   //   A : (m x n ) matrix, m >= n
   //   B : (m x nb) matrix, nb >= 1
-  //   X : (n x nb) matrix
+  //  mX : (n x nb) matrix
 
   TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
-  TMatrixD X(A,TMatrixDBase::kTransposeMult,B);
-  ch.MultiSolve(X);
-  return X;
+  TMatrixD mX(A,TMatrixDBase::kTransposeMult,B);
+  ch.MultiSolve(mX);
+  return mX;
 }
 
 //______________________________________________________________________________
@@ -438,15 +438,15 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
   //   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
   //                                         = 0           fir i != j
 
-  TMatrixD Aw = A;
+  TMatrixD mAw = A;
   TMatrixD Bw = B;
   for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
-    TMatrixDRow(Aw,irow) *= 1/std(irow);
+    TMatrixDRow(mAw,irow) *= 1/std(irow);
     TMatrixDRow(Bw,irow) *= 1/std(irow);
   }
 
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,Aw));
-  TMatrixD X(Aw,TMatrixDBase::kTransposeMult,Bw);
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,mAw));
+  TMatrixD X(mAw,TMatrixDBase::kTransposeMult,Bw);
   ch.MultiSolve(X);
   return X;
 }

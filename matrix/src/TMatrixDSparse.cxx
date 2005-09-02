@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.17 2005/01/06 06:37:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.18 2005/01/06 21:32:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -2154,16 +2154,16 @@ TMatrixDBase &TMatrixDSparse::Randomize(Double_t alpha,Double_t beta,Double_t &s
   const Int_t m = GetNrows();
   const Int_t n = GetNcols();
 
-  // Knuth's algorithm for choosing "length" elements out of NN .
-  const Int_t NN     = GetNrows()*GetNcols();
-  const Int_t length = (GetNoElements() <= NN) ? GetNoElements() : NN;
+  // Knuth's algorithm for choosing "length" elements out of nn .
+  const Int_t nn     = GetNrows()*GetNcols();
+  const Int_t length = (GetNoElements() <= nn) ? GetNoElements() : nn;
   Int_t chosen   = 0;
   Int_t icurrent = 0;
   pRowIndex[0] = 0;
-  for (Int_t k = 0; k < NN; k++) {
+  for (Int_t k = 0; k < nn; k++) {
     const Double_t r = Drand(seed);
 
-    if ((NN-k)*r < length-chosen) {
+    if ((nn-k)*r < length-chosen) {
       pColIndex[chosen] = k%n;
       const Int_t irow  = k/n;
 
@@ -2212,15 +2212,15 @@ TMatrixDSparse &TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_
   pRowIndex[1] = 1;
   ep[0]        = 1e-8+scale*(Drand(seed)+shift);
 
-  // Knuth's algorithm for choosing length elements out of NN .
-  // NN here is the number of elements in the strict lower triangle.
-  const Int_t NN = n*(n-1)/2;
+  // Knuth's algorithm for choosing length elements out of nn .
+  // nn here is the number of elements in the strict lower triangle.
+  const Int_t nn = n*(n-1)/2;
 
   // length is the number of elements that can be stored, minus the number
   // of elements in the diagonal, which will always be in the matrix.
 //  Int_t length = (fNelems-n)/2;
   Int_t length = fNelems-n;
-  length = (length <= NN) ? length : NN;
+  length = (length <= nn) ? length : nn;
 
   // chosen   : the number of elements that have already been chosen (now 0)
   // nnz      : the number of non-zeros in the matrix (now 1, because the
@@ -2230,10 +2230,10 @@ TMatrixDSparse &TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_
   Int_t chosen   = 0;
   Int_t icurrent = 1;
   Int_t nnz      = 1;
-  for (Int_t k = 0; k < NN; k++ ) {
+  for (Int_t k = 0; k < nn; k++ ) {
     const Double_t r = Drand(seed);
 
-    if( (NN-k)*r < length-chosen) {
+    if( (nn-k)*r < length-chosen) {
       // Element k is chosen. What row is it in?
       // In a lower triangular matrix (including a diagonal), it will be in
       // the largest row such that row*(row+1)/2 < k. In other words

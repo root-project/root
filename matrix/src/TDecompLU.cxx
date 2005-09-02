@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.21 2005/06/22 12:37:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.22 2005/07/28 19:51:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -143,10 +143,10 @@ const TMatrixD TDecompLU::GetMatrix()
     }
   }
 
-  TMatrixD L = fLU;
-  TMatrixD U = fLU;
-  Double_t * const pU = U.GetMatrixArray();
-  Double_t * const pL = L.GetMatrixArray();
+  TMatrixD mL = fLU;
+  TMatrixD mU = fLU;
+  Double_t * const pU = mU.GetMatrixArray();
+  Double_t * const pL = mL.GetMatrixArray();
   const Int_t n = fLU.GetNcols();
   for (Int_t irow = 0; irow < n; irow++) {
     const Int_t off_row = irow*n;
@@ -157,7 +157,7 @@ const TMatrixD TDecompLU::GetMatrix()
     }
   }
 
-  TMatrixD a = L*U;
+  TMatrixD a = mL*mU;
 
   // swap rows
 
@@ -706,10 +706,10 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
 
     for (Int_t i = j+1; i < n; i++) {
       const Int_t off_i = i*n;
-      const Double_t LUij = TMath::Abs(pLU[off_i+j]);
+      const Double_t mLUij = TMath::Abs(pLU[off_i+j]);
 
-      if (LUij > max) {
-        max = LUij;
+      if (mLUij > max) {
+        max = mLUij;
         i_pivot = i;
       }
     }
@@ -725,20 +725,20 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
     }
     index[j] = i_pivot;
 
-    const Double_t LUjj = pLU[off_j+j];
+    const Double_t mLUjj = pLU[off_j+j];
 
-    if (LUjj != 0.0) {
-      if (TMath::Abs(LUjj) < tol)
+    if (mLUjj != 0.0) {
+      if (TMath::Abs(mLUjj) < tol)
         nrZeros++;
       for (Int_t i = j+1; i < n; i++) {
         const Int_t off_i = i*n;
-        const Double_t LUij = pLU[off_i+j]/LUjj;
-        pLU[off_i+j] = LUij;
+        const Double_t mLUij = pLU[off_i+j]/mLUjj;
+        pLU[off_i+j] = mLUij;
 
         for (Int_t k = j+1; k < n; k++) {
-          const Double_t LUik = pLU[off_i+k];
-          const Double_t LUjk = pLU[off_j+k];
-          pLU[off_i+k] = LUik-LUij*LUjk;
+          const Double_t mLUik = pLU[off_i+k];
+          const Double_t mLUjk = pLU[off_j+k];
+          pLU[off_i+k] = mLUik-mLUij*mLUjk;
         }
       }
     } else {
@@ -802,7 +802,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
     const Int_t off_j = j*n;
 
     pLU[off_j+j] = 1./pLU[off_j+j];
-    const Double_t LU_jj = -pLU[off_j+j];
+    const Double_t mLU_jj = -pLU[off_j+j];
 
 //  Compute elements 0:j-1 of j-th column.
 
@@ -821,7 +821,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
     }
     for (k = 0; k <= j-1; k++) {
       const Int_t off_k = k*n;
-      pX[off_k] *= LU_jj;
+      pX[off_k] *= mLU_jj;
     }
   }
 

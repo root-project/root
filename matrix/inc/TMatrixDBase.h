@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.19 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.20 2004/10/24 06:21:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -72,7 +72,7 @@ protected:
                               Int_t *second,Int_t swapSecond,Int_t *index);
 
   virtual void Allocate      (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,
-		              Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
+                              Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
   enum EMatrixStatusBits {

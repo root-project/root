@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.9 2004/12/02 11:53:30 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.10 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -1019,7 +1019,7 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
             continue;
         }
         flag[is] = 0;
-	if (iwfr >= lw) {
+        if (iwfr >= lw) {
           ipe[ms] = kp;
           iw[kp] = len-kp1;
           ipe[ie] = jp;
