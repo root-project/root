@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.47 2005/03/11 17:57:45 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.48 2005/08/30 11:13:22 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -218,16 +218,16 @@
 #endif
 
 // drawing options
-static const char* optgen[16] =
+static const char* gOptgen[16] =
 {
    "","AXIS","HIST","SAME","CYL","POL","SPH","PSR","LEGO","LEGO1","LEGO2",
    "SURF","SURF1","SURF2","SURF3","SURF4"
 };
-static const char* opt1D[12] =
+static const char* gOpt1D[12] =
 {
    "","AH","B","C","E","E1","E2","E3","E4","L","P","*H"
 };
-static const char* opt2D[14] =
+static const char* gOpt2D[14] =
 {
    "","ARR","BOX","COL","COL2","CONT","CONT0","CONT1","CONT2","CONT3",
    "FB","BB","SCAT","PROF"
@@ -2198,18 +2198,18 @@ void TTreeViewer::MapOptions(Long_t parm1)
    fBarOption->SetText("");
    for (ind=kOptionsGeneral; ind<kOptionsGeneral+16; ind++) {
       if (fOptionsGen->IsEntryChecked(ind))
-         fBarOption->AppendText(optgen[ind-kOptionsGeneral]);
+         fBarOption->AppendText(gOptgen[ind-kOptionsGeneral]);
    }
    if (Dimension() == 1) {
       for (ind=kOptions1D; ind<kOptions1D+12; ind++) {
          if (fOptions1D->IsEntryChecked(ind))
-            fBarOption->AppendText(opt1D[ind-kOptions1D]);
+            fBarOption->AppendText(gOpt1D[ind-kOptions1D]);
       }
    }
    if (Dimension() == 2) {
       for (ind=kOptions2D; ind<kOptions2D+14; ind++) {
          if (fOptions2D->IsEntryChecked(ind))
-            fBarOption->AppendText(opt2D[ind-kOptions2D]);
+            fBarOption->AppendText(gOpt2D[ind-kOptions2D]);
       }
    }
 }

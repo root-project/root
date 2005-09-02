@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.14 2005/03/16 17:18:13 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.15 2005/08/10 16:26:36 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -426,17 +426,17 @@ Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
          break;
       }
       case (kDraw): {
-         X3DBuffer *X3Dbuff = new X3DBuffer;
-         X3Dbuff->numPoints = buffer.NbPnts();
-         X3Dbuff->numSegs   = buffer.NbSegs();
-         X3Dbuff->numPolys  = buffer.NbPols();
-         X3Dbuff->points    = new Float_t[3*buffer.NbPnts()];
+         X3DBuffer *x3dBuff = new X3DBuffer;
+         x3dBuff->numPoints = buffer.NbPnts();
+         x3dBuff->numSegs   = buffer.NbSegs();
+         x3dBuff->numPolys  = buffer.NbPols();
+         x3dBuff->points    = new Float_t[3*buffer.NbPnts()];
          for (UInt_t i=0; i<3*buffer.NbPnts();i++)
-            X3Dbuff->points[i] = (Float_t)buffer.fPnts[i];
-         X3Dbuff->segs      = buffer.fSegs;
-         X3Dbuff->polys     = buffer.fPols;
-         FillX3DBuffer(X3Dbuff);
-         delete [] X3Dbuff->points;
+            x3dBuff->points[i] = (Float_t)buffer.fPnts[i];
+         x3dBuff->segs      = buffer.fSegs;
+         x3dBuff->polys     = buffer.fPols;
+         FillX3DBuffer(x3dBuff);
+         delete [] x3dBuff->points;
          break;
       }
       default: {
@@ -476,13 +476,13 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
          break;
       }
       case (kDraw): {
-         X3DBuffer *X3Dbuff = new X3DBuffer;
-         X3Dbuff->numPoints = 2*mode*buffer.NbPnts();
-         X3Dbuff->numSegs   = mode*buffer.NbPnts();
-         X3Dbuff->numPolys  = 0;
-         X3Dbuff->points    = new Float_t[3*X3Dbuff->numPoints];
-         X3Dbuff->segs      = new Int_t[3*X3Dbuff->numSegs];
-         X3Dbuff->polys     = NULL;
+         X3DBuffer *x3dBuff = new X3DBuffer;
+         x3dBuff->numPoints = 2*mode*buffer.NbPnts();
+         x3dBuff->numSegs   = mode*buffer.NbPnts();
+         x3dBuff->numPolys  = 0;
+         x3dBuff->points    = new Float_t[3*x3dBuff->numPoints];
+         x3dBuff->segs      = new Int_t[3*x3dBuff->numSegs];
+         x3dBuff->polys     = NULL;
 
          Double_t delta = 0.002;
          
@@ -491,22 +491,22 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
                for (UInt_t k = 0; k < 2; k++) {
                   delta *= -1;
                   for (UInt_t n = 0; n < 3; n++) {
-                     X3Dbuff->points[mode*6*i+6*j+3*k+n] =
+                     x3dBuff->points[mode*6*i+6*j+3*k+n] =
                      buffer.fPnts[3*i+n] * (1 + (j == n ? delta : 0));
                   }
                }
             }
          }
 
-         for (Int_t i=0; i<X3Dbuff->numSegs; i++) {
-            X3Dbuff->segs[3*i  ] = buffer.fSegs[0];
-            X3Dbuff->segs[3*i+1] = 2*i;
-            X3Dbuff->segs[3*i+2] = 2*i+1;
+         for (Int_t i=0; i<x3dBuff->numSegs; i++) {
+            x3dBuff->segs[3*i  ] = buffer.fSegs[0];
+            x3dBuff->segs[3*i+1] = 2*i;
+            x3dBuff->segs[3*i+2] = 2*i+1;
          }
 
-         FillX3DBuffer(X3Dbuff);
-         delete [] X3Dbuff->points;
-         delete [] X3Dbuff->segs;
+         FillX3DBuffer(x3dBuff);
+         delete [] x3dBuff->points;
+         delete [] x3dBuff->segs;
          break;
       }
    }

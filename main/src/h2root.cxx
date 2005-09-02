@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.22 2004/10/25 10:51:34 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.23 2005/05/06 15:01:00 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -377,11 +377,11 @@ void convert_directory(const char *dir)
   }
 
 // converting subdirectories of this directory
-  const Int_t KLS = 26;
-  const Int_t KNSD = 23;
+  const Int_t kKLS = 26;
+  const Int_t kKNSD = 23;
   lcdir = rzcl[2];
-  Int_t ls = iq[lcdir+KLS];
-  Int_t ndir = iq[lcdir+KNSD];
+  Int_t ls = iq[lcdir+kKLS];
+  Int_t ndir = iq[lcdir+kKNSD];
   Int_t nch=16;
   Int_t ihdir[4];
   Int_t ncw = 4;
@@ -559,7 +559,7 @@ void convert_directory(const char *dir)
 //____________________________________________________________________________
   void convert_rwn(Int_t id)
 {
-  const int Nchar=9;
+  const int kNchar=9;
   int nvar;
   int ier=0;
   int i,j;
@@ -578,15 +578,15 @@ void convert_directory(const char *dir)
   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
 
-  chtag_out = new char[nvar*Nchar+1];
+  chtag_out = new char[nvar*kNchar+1];
   x = new float[nvar];
 
-  chtag_out[nvar*Nchar]=0;
+  chtag_out[nvar*kNchar]=0;
   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,Nchar);
+  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,Nchar,rmin[0],rmax[0]);
+  hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
   hgnpar(id,"?",1);
   char *name = chtag_out;
@@ -594,10 +594,10 @@ void convert_directory(const char *dir)
   TTree *tree = new TTree(idname,chtitl);
   Int_t first,last;
   for(i=0; i<nvar;i++) {
-    name[Nchar-1] = 0;
+    name[kNchar-1] = 0;
     first = last = 0;
     // suppress traling blanks
-    for (j=Nchar-2;j>0;j--) {
+    for (j=kNchar-2;j>0;j--) {
        if(golower) name[j] = tolower(name[j]);
        if (name[j] == ' ' && last == 0) name[j] = 0;
        else last = j;
@@ -605,12 +605,12 @@ void convert_directory(const char *dir)
     if (golower == 2) name[0] = tolower(name[0]);
 
     // suppress heading blanks
-    for (j=0;j<Nchar;j++) {
+    for (j=0;j<kNchar;j++) {
        if (name[j] != ' ') break;
        first = j+1;
     }
     tree->Branch(&name[first],&x[i],&name[first],bufsize);
-    name += Nchar;
+    name += kNchar;
   }
   for(i=1;i<=nentries;i++) {
     hgnf(id,i,x[0],ier);
@@ -624,7 +624,7 @@ void convert_directory(const char *dir)
 //____________________________________________________________________________
   void convert_cwn(Int_t id)
 {
-  const int Nchar=9;
+  const int kNchar=9;
   int nvar;
   int ier=0;
   int i,j;
@@ -645,7 +645,7 @@ void convert_directory(const char *dir)
 #endif
 
 
-  chtag_out = new char[nvar*Nchar+1];
+  chtag_out = new char[nvar*kNchar+1];
   Int_t *charflag = new Int_t[nvar];
   Int_t *lenchar  = new Int_t[nvar];
   Int_t *boolflag = new Int_t[nvar];
@@ -654,12 +654,12 @@ void convert_directory(const char *dir)
   x = new float[nvar];
   char *bigbuf = new char[2500000];
 
-  chtag_out[nvar*Nchar]=0;
+  chtag_out[nvar*kNchar]=0;
   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,Nchar);
+  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,Nchar,rmin[0],rmax[0]);
+  hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
 #ifndef WIN32
   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);

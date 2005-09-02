@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.7 2005/05/24 15:46:40 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.8 2005/06/21 17:09:26 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -76,22 +76,22 @@ ClassImp(TImagePalette)
 
 // definition of a default palette
 const Int_t kNUM_DEFAULT_COLORS = 12;
-static UShort_t alphaDefault[kNUM_DEFAULT_COLORS] = {
+static UShort_t gAlphaDefault[kNUM_DEFAULT_COLORS] = {
    0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
    0xffff, 0xffff, 0xffff, 0xffff
 };
 
-static UShort_t redDefault[kNUM_DEFAULT_COLORS] = {
+static UShort_t gRedDefault[kNUM_DEFAULT_COLORS] = {
    0x0000, 0x0000, 0x7000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
    0x7000, 0x8000, 0xffff, 0xffff
 };
 
-static UShort_t greenDefault[kNUM_DEFAULT_COLORS] = {
+static UShort_t gGreenDefault[kNUM_DEFAULT_COLORS] = {
    0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff, 0xffff, 0x0000,
    0x0000, 0x8000, 0xffff, 0xffff
 };
 
-static UShort_t blueDefault[kNUM_DEFAULT_COLORS] = {
+static UShort_t gBlueDefault[kNUM_DEFAULT_COLORS] = {
    0x0000, 0x0000, 0x7000, 0xffff, 0xffff, 0x0000, 0x0000, 0x0000,
    0x0000, 0xa000, 0xffff, 0xffff
 };
@@ -454,10 +454,10 @@ void TAttImage::ResetAttImage(Option_t *)
    fPalette.fColorAlpha  = new UShort_t [kNUM_DEFAULT_COLORS];
    fPalette.fPoints      = new Double_t [kNUM_DEFAULT_COLORS];
 
-   memcpy(fPalette.fColorRed,   redDefault,   kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-   memcpy(fPalette.fColorGreen, greenDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-   memcpy(fPalette.fColorBlue,  blueDefault,  kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-   memcpy(fPalette.fColorAlpha, alphaDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+   memcpy(fPalette.fColorRed,   gRedDefault,   kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+   memcpy(fPalette.fColorGreen, gGreenDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+   memcpy(fPalette.fColorBlue,  gBlueDefault,  kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+   memcpy(fPalette.fColorAlpha, gAlphaDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
 
    for (Int_t point = 0; point < kNUM_DEFAULT_COLORS - 2; point++)
       fPalette.fPoints[point + 1]  =  (double)point / (kNUM_DEFAULT_COLORS - 3);
@@ -520,10 +520,10 @@ void TAttImage::SetPalette(const TImagePalette *palette)
       fPalette.fColorAlpha  = new UShort_t [kNUM_DEFAULT_COLORS];
       fPalette.fPoints      = new Double_t [kNUM_DEFAULT_COLORS];
 
-      memcpy(fPalette.fColorRed,   redDefault,   kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-      memcpy(fPalette.fColorGreen, greenDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-      memcpy(fPalette.fColorBlue,  blueDefault,  kNUM_DEFAULT_COLORS * sizeof(UShort_t));
-      memcpy(fPalette.fColorAlpha, alphaDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+      memcpy(fPalette.fColorRed,   gRedDefault,   kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+      memcpy(fPalette.fColorGreen, gGreenDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+      memcpy(fPalette.fColorBlue,  gBlueDefault,  kNUM_DEFAULT_COLORS * sizeof(UShort_t));
+      memcpy(fPalette.fColorAlpha, gAlphaDefault, kNUM_DEFAULT_COLORS * sizeof(UShort_t));
 
       for (Int_t point = 0; point < kNUM_DEFAULT_COLORS - 2; point++)
          fPalette.fPoints[point + 1]  =  (double)point / (kNUM_DEFAULT_COLORS - 3);

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.9 2005/05/23 07:02:51 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.10 2005/05/30 22:38:39 rdm Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -587,15 +587,15 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
 
 
 ////////////////////////// CellArray code ////////////////////////////////////
-static UInt_t *cellArrayColors = 0;
-static Int_t cellArrayN = 0;
-static Int_t cellArrayW = 0;
-static Int_t cellArrayH = 0;
-static Int_t cellArrayX1 = 0;
-static Int_t cellArrayX2 = 0;
-static Int_t cellArrayY1 = 0;
-static Int_t cellArrayY2 = 0;
-static Int_t cellArrayIdx = 0;
+static UInt_t *gCellArrayColors = 0;
+static Int_t   gCellArrayN = 0;
+static Int_t   gCellArrayW = 0;
+static Int_t   gCellArrayH = 0;
+static Int_t   gCellArrayX1 = 0;
+static Int_t   gCellArrayX2 = 0;
+static Int_t   gCellArrayY1 = 0;
+static Int_t   gCellArrayY2 = 0;
+static Int_t   gCellArrayIdx = 0;
 
 //______________________________________________________________________________
 void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
@@ -607,21 +607,21 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
       return;
    }
 
-   if (cellArrayColors) {
-      delete [] cellArrayColors;
+   if (gCellArrayColors) {
+      delete [] gCellArrayColors;
    }
 
-   cellArrayN = w * h;
-   cellArrayW = w;
-   cellArrayH = h;
-   cellArrayColors = new UInt_t[cellArrayN];
+   gCellArrayN = w * h;
+   gCellArrayW = w;
+   gCellArrayH = h;
+   gCellArrayColors = new UInt_t[gCellArrayN];
 
-   cellArrayX1 = x1 < x2 ? gPad->XtoPixel(x1) : gPad->XtoPixel(x2);
-   cellArrayX2 = x1 > x2 ? gPad->XtoPixel(x2) : gPad->XtoPixel(x1);
-   cellArrayY1 = y1 < y2 ? gPad->YtoPixel(y1) : gPad->YtoPixel(y2);
-   cellArrayY2 = y1 < y2 ? gPad->YtoPixel(y2) : gPad->YtoPixel(y1);
+   gCellArrayX1 = x1 < x2 ? gPad->XtoPixel(x1) : gPad->XtoPixel(x2);
+   gCellArrayX2 = x1 > x2 ? gPad->XtoPixel(x2) : gPad->XtoPixel(x1);
+   gCellArrayY1 = y1 < y2 ? gPad->YtoPixel(y1) : gPad->YtoPixel(y2);
+   gCellArrayY2 = y1 < y2 ? gPad->YtoPixel(y2) : gPad->YtoPixel(y1);
 
-   cellArrayIdx = 0;
+   gCellArrayIdx = 0;
 }
 
 //______________________________________________________________________________
@@ -629,10 +629,10 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
    //
 
-   if (cellArrayIdx >= cellArrayN) return;
+   if (gCellArrayIdx >= gCellArrayN) return;
 
-   cellArrayColors[cellArrayIdx] = ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
-   cellArrayIdx++;
+   gCellArrayColors[gCellArrayIdx] = ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
+   gCellArrayIdx++;
 }
 
 //______________________________________________________________________________
@@ -640,23 +640,23 @@ void TImageDump::CellArrayEnd()
 {
    //
 
-   if (!fImage || !cellArrayColors || !cellArrayW || !cellArrayH) {
+   if (!fImage || !gCellArrayColors || !gCellArrayW || !gCellArrayH) {
       return;
    }
 
-   fImage->DrawCellArray(cellArrayX1, cellArrayX2, cellArrayY1, cellArrayY2, 
-                         cellArrayW, cellArrayH, cellArrayColors);
+   fImage->DrawCellArray(gCellArrayX1, gCellArrayX2, gCellArrayY1, gCellArrayY2, 
+                         gCellArrayW, gCellArrayH, gCellArrayColors);
 
-   delete [] cellArrayColors;
-   cellArrayColors = 0;
-   cellArrayN = 0;
-   cellArrayW = 0;
-   cellArrayH = 0;
-   cellArrayX1 = 0;
-   cellArrayX2 = 0;
-   cellArrayY1 = 0;
-   cellArrayY2 = 0;
-   cellArrayIdx = 0;
+   delete [] gCellArrayColors;
+   gCellArrayColors = 0;
+   gCellArrayN = 0;
+   gCellArrayW = 0;
+   gCellArrayH = 0;
+   gCellArrayX1 = 0;
+   gCellArrayX2 = 0;
+   gCellArrayY1 = 0;
+   gCellArrayY2 = 0;
+   gCellArrayIdx = 0;
 }
 
 //______________________________________________________________________________
