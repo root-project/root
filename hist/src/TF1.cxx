@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.106 2005/08/18 17:50:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.107 2005/08/29 10:45:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 static TF1 *gHelper = 0;
-static Double_t ErrorTF1 = 0;
+static Double_t gErrorTF1 = 0;
 
 ClassImp(TF1)
 
@@ -792,7 +792,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
   Double_t h2    = 1/(2.*h);
   Double_t d0    = f1 - f2;
   Double_t d2    = 2*(g1 - g2);
-  ErrorTF1       = kC1*h2*fx;  //compute the error
+  gErrorTF1       = kC1*h2*fx;  //compute the error
   Double_t deriv = h2*(4*d2 - d0)/3.;  
   return deriv;
 }
@@ -853,7 +853,7 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
   Double_t hh    = 1/(h*h);
   Double_t d0    = f3 - 2*f2 + f1;
   Double_t d2    = 4*g3 - 8*f2 +4*g1;
-  ErrorTF1       = kC1*hh*f2;  //compute the error
+  gErrorTF1       = kC1*hh*f2;  //compute the error
   Double_t deriv = hh*(4*d2 - d0)/3.;
   return deriv;
 }
@@ -916,7 +916,7 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
   Double_t hhh  = 1/(h*h*h);
   Double_t d0   = 0.5*f1 - f2 +f3 - 0.5*f4;
   Double_t d2   = 4*f2 - 8*g2 +8*g3 - 4*f3;
-  ErrorTF1      = kC1*hhh*fx;   //compute the error
+  gErrorTF1      = kC1*hhh*fx;   //compute the error
   Double_t deriv = hhh*(4*d2 - d0)/3.;
   return deriv;
 }
@@ -926,7 +926,7 @@ Double_t TF1::DerivativeError()
 {
    //static function returning the error of the last call to the Derivative functions
    
-   return ErrorTF1;
+   return gErrorTF1;
 }
 
 //______________________________________________________________________________

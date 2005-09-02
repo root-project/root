@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.248 2005/08/15 08:42:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.249 2005/08/29 10:45:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2280,12 +2280,12 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    zmin    = fZaxis.GetBinLowEdge(hzfirst);
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
 
-//   - Decode list of options into Foption
-   Foption_t Foption;
-   if (!FitOptionsMake(option,Foption)) return 0;
+//   - Decode list of options into fitOption
+   Foption_t fitOption;
+   if (!FitOptionsMake(option,fitOption)) return 0;
    if (xxmin != xxmax) {
       f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
-      Foption.Range = 1;
+      fitOption.Range = 1;
    }
 
 //   - Check if Minuit is initialized and create special functions
@@ -2295,7 +2295,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    Bool_t linear = f1->IsLinear();
    if (special==299+npar)
       linear = kTRUE;
-   if (Foption.Bound || Foption.Like || Foption.Errors || Foption.Gradient || Foption.More || Foption.User|| Foption.Integral || Foption.Minuit)
+   if (fitOption.Bound || fitOption.Like || fitOption.Errors || fitOption.Gradient || fitOption.More || fitOption.User|| fitOption.Integral || fitOption.Minuit)
       linear = kFALSE;
 
    char l[] ="TLinearFitter";
@@ -2334,11 +2334,11 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
    if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
-   hFitter->SetFitOption(Foption);
+   hFitter->SetFitOption(fitOption);
 
 //   - Is a Fit range specified?
    Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
-   if (Foption.Range) {
+   if (fitOption.Range) {
       f1->GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
       if (fxmin > xmin) xmin = fxmin;
       if (fymin > ymin) ymin = fymin;
@@ -2363,14 +2363,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
       //   - If case of a predefined function, then compute initial values of parameters
-      if (Foption.Bound) special = 0;
+      if (fitOption.Bound) special = 0;
       if      (special == 100)      H1InitGaus();
       else if (special == 400)      H1InitGaus();
       else if (special == 200)      H1InitExpo();
       else if (special == 299+npar) H1InitPolynom();
 
       //   - Some initialisations
-      if (!Foption.Verbose) {
+      if (!fitOption.Verbose) {
 	 arglist[0] = -1;
 	 hFitter->ExecuteCommand("SET PRINT", arglist,1);
 	 arglist[0] = 0;
@@ -2383,10 +2383,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       //   -  if Hoption.User is specified, assume that the user has already set
       //   -  his minimization function via SetFCN.
       arglist[0] = TVirtualFitter::GetErrorDef();
-      if (Foption.Like) {
+      if (fitOption.Like) {
 	 hFitter->SetFitMethod("H1FitLikelihood");
       } else {
-	 if (!Foption.User) hFitter->SetFitMethod("H1FitChisquare");
+	 if (!fitOption.User) hFitter->SetFitMethod("H1FitChisquare");
       }
       hFitter->ExecuteCommand("SET Err",arglist,1);
 
@@ -2408,14 +2408,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
       //   - Set Gradient
-      if (Foption.Gradient) {
-	 if (Foption.Gradient == 1) arglist[0] = 1;
+      if (fitOption.Gradient) {
+	 if (fitOption.Gradient == 1) arglist[0] = 1;
 	 else                       arglist[0] = 0;
 	 hFitter->ExecuteCommand("SET GRAD",arglist,1);
       }
 
       //   - Reset Print level
-      if (Foption.Verbose) {
+      if (fitOption.Verbose) {
 	 arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
       }
 
@@ -2437,14 +2437,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       if (fitResult != 0) {
 	 //   Abnormal termination, MIGRAD might not have converged on a
 	 //   minimum.
-	 if (!Foption.Quiet) {
+	 if (!fitOption.Quiet) {
 	    Warning("Fit","Abnormal termination of minimization.");
 	 }
       }
-      if (Foption.More) {
+      if (fitOption.More) {
 	 hFitter->ExecuteCommand("IMPROVE",arglist,0);
       }
-      if (Foption.Errors) {
+      if (fitOption.Errors) {
 	 hFitter->ExecuteCommand("HESSE",arglist,0);
 	 hFitter->ExecuteCommand("MINOS",arglist,0);
       }
@@ -2453,7 +2453,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       char parName[50];
       for (i=0;i<npar;i++) {
 	 hFitter->GetParameter(i,parName, par,we,al,bl);
-	 if (!Foption.Errors) werr = we;
+	 if (!fitOption.Errors) werr = we;
 	 else {
 	    hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
 	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
@@ -2465,9 +2465,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       }
       hFitter->GetStats(aminref,edm,errdef,nvpar,nparx);
       //     If Log Likelihood, compute an equivalent chisquare
-      //if (Foption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
+      //if (fitOption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
       amin = aminref;
-      if (Foption.Like) amin = hFitter->Chisquare(npar, params);
+      if (fitOption.Like) amin = hFitter->Chisquare(npar, params);
 
       f1->SetChisquare(amin);
       f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
@@ -2476,16 +2476,16 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
 
 
-   if (!Foption.Quiet) {
-      if (Foption.Errors) hFitter->PrintResults(4,aminref);
+   if (!fitOption.Quiet) {
+      if (fitOption.Errors) hFitter->PrintResults(4,aminref);
       else                hFitter->PrintResults(3,aminref);
    }
 
 
 
 //   - Store fitted function in histogram functions list and draw
-   if (!Foption.Nostore) {
-      if (!Foption.Plus) {
+   if (!fitOption.Nostore) {
+      if (!fitOption.Plus) {
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
          while ((obj = next())) {
@@ -2501,7 +2501,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fFunctions->Add(fnew1);
          fnew1->SetParent(this);
          fnew1->Save(xmin,xmax,0,0,0,0);
-         if (Foption.Nograph) fnew1->SetBit(TF1::kNotDraw);
+         if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
          fnew1->SetBit(TFormula::kNotGlobal);
       } else if (GetDimension() < 3) {
          fnew2 = new TF2();
@@ -2509,7 +2509,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
          fnew2->Save(xmin,xmax,ymin,ymax,0,0);
-         if (Foption.Nograph) fnew2->SetBit(TF1::kNotDraw);
+         if (fitOption.Nograph) fnew2->SetBit(TF1::kNotDraw);
          fnew2->SetBit(TFormula::kNotGlobal);
       } else {
          fnew3 = new TF3();
@@ -2519,7 +2519,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fnew3->SetBit(TFormula::kNotGlobal);
       }
       if (TestBit(kCanDelete)) return fitResult;
-      if (!Foption.Nograph && GetDimension() < 3) Draw(goption);
+      if (!fitOption.Nograph && GetDimension() < 3) Draw(goption);
   }
   return fitResult;
 }
@@ -2759,9 +2759,9 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 }
 
 //______________________________________________________________________________
-Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
+Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
 {
-//   -*-*-*-*-*-*-*Decode string choptin and fill Foption structure*-*-*-*-*-*
+//   -*-*-*-*-*-*-*Decode string choptin and fill fitOption structure*-*-*-*-*-*
 //                 ================================================
 
    Int_t nch = strlen(choptin);
@@ -2772,23 +2772,23 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
 
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(choptin[i]);
 
-   if (strstr(chopt,"Q"))  Foption.Quiet   = 1;
-   if (strstr(chopt,"V")) {Foption.Verbose = 1; Foption.Quiet = 0;}
-   if (strstr(chopt,"L"))  Foption.Like    = 1;
-   if (strstr(chopt,"LL")) Foption.Like    = 2;
-   if (strstr(chopt,"W"))  Foption.W1      = 1;
-   if (strstr(chopt,"E"))  Foption.Errors  = 1;
-   if (strstr(chopt,"M"))  Foption.More    = 1;
-   if (strstr(chopt,"R"))  Foption.Range   = 1;
-   if (strstr(chopt,"G"))  Foption.Gradient= 1;
-   if (strstr(chopt,"N"))  Foption.Nostore = 1;
-   if (strstr(chopt,"0"))  Foption.Nograph = 1;
-   if (strstr(chopt,"+"))  Foption.Plus    = 1;
-   if (strstr(chopt,"I"))  Foption.Integral= 1;
-   if (strstr(chopt,"B"))  Foption.Bound   = 1;
-   if (strstr(chopt,"U")) {Foption.User    = 1; Foption.Like = 0;}
-   if (strstr(chopt,"F"))  Foption.Minuit = 1;
-   if (strstr(chopt,"C"))  Foption.Nochisq = 1;
+   if (strstr(chopt,"Q"))  fitOption.Quiet   = 1;
+   if (strstr(chopt,"V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
+   if (strstr(chopt,"L"))  fitOption.Like    = 1;
+   if (strstr(chopt,"LL")) fitOption.Like    = 2;
+   if (strstr(chopt,"W"))  fitOption.W1      = 1;
+   if (strstr(chopt,"E"))  fitOption.Errors  = 1;
+   if (strstr(chopt,"M"))  fitOption.More    = 1;
+   if (strstr(chopt,"R"))  fitOption.Range   = 1;
+   if (strstr(chopt,"G"))  fitOption.Gradient= 1;
+   if (strstr(chopt,"N"))  fitOption.Nostore = 1;
+   if (strstr(chopt,"0"))  fitOption.Nograph = 1;
+   if (strstr(chopt,"+"))  fitOption.Plus    = 1;
+   if (strstr(chopt,"I"))  fitOption.Integral= 1;
+   if (strstr(chopt,"B"))  fitOption.Bound   = 1;
+   if (strstr(chopt,"U")) {fitOption.User    = 1; fitOption.Like = 0;}
+   if (strstr(chopt,"F"))  fitOption.Minuit = 1;
+   if (strstr(chopt,"C"))  fitOption.Nochisq = 1;
    return 1;
 }
 

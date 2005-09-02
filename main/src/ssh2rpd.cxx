@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.6 2004/04/20 21:32:02 brun Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.7 2004/04/20 22:12:42 rdm Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -67,8 +67,8 @@ int main(int argc, char **argv)
    // relevant root server daemons.
 
    int   gDebug = 0;
-   char *PipeId = 0;
-   char *TmpDir = 0;
+   char *pipeId = 0;
+   char *tmpDir = 0;
 
    if (argc < 3) {
       Info("ssh2rpd: argc=%d"
@@ -80,9 +80,9 @@ int main(int argc, char **argv)
    // Parse Arguments
    gDebug = atoi(argv[1]);
    if (argc > 2)
-      PipeId   = strdup(argv[2]);
+      pipeId   = strdup(argv[2]);
    if (argc > 3)
-      TmpDir = strdup(argv[3]);
+      tmpDir = strdup(argv[3]);
 
    if (gDebug > 0) {
       std::string tmp = std::string("ssh2rpd: forked with args:");
@@ -97,32 +97,32 @@ int main(int argc, char **argv)
    // Get logged username
    struct passwd *pw = getpwuid(getuid());
 
-   char PipeFile[kMAXPATHLEN];
-   if (!TmpDir)
-      snprintf(PipeFile,kMAXPATHLEN, "%s/RootSshPipe.%s", pw->pw_dir, PipeId);
+   char pipeFile[kMAXPATHLEN];
+   if (!tmpDir)
+      snprintf(pipeFile,kMAXPATHLEN, "%s/RootSshPipe.%s", pw->pw_dir, pipeId);
    else
-      snprintf(PipeFile,kMAXPATHLEN,"%s/RootSshPipe.%s", TmpDir, PipeId);
+      snprintf(pipeFile,kMAXPATHLEN,"%s/RootSshPipe.%s", tmpDir, pipeId);
 
-   FILE *fpipe = fopen(PipeFile, "r");
-   char Pipe[kMAXPATHLEN];
+   FILE *fpipe = fopen(pipeFile, "r");
+   char pipe[kMAXPATHLEN];
    if (fpipe) {
-      while (fgets(Pipe, sizeof(Pipe), fpipe)) {
-         if (Pipe[strlen(Pipe)-1] == '\n')
-            Pipe[strlen(Pipe)-1] = 0;
+      while (fgets(pipe, sizeof(pipe), fpipe)) {
+         if (pipe[strlen(pipe)-1] == '\n')
+            pipe[strlen(pipe)-1] = 0;
       }
       fclose(fpipe);
       // Remove the temporary file
-      unlink(PipeFile);
+      unlink(pipeFile);
    } else {
       Info("ssh2rpd: cannot open file with pipe info (%s): exiting"
-           " (errno= %d)",PipeFile,errno);
+           " (errno= %d)",pipeFile,errno);
       exit(1);
    }
 
    // Preparing socket connection
    struct sockaddr_un servAddr;
    servAddr.sun_family = AF_UNIX;
-   strcpy(servAddr.sun_path,Pipe);
+   strcpy(servAddr.sun_path,pipe);
    int sd;
    if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
       Info("ssh2rpd: cannot open socket: exiting ");
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
       Info("ssh2rpd: sending might have been unsuccessful (bytes send: %d)",rc);
    }
 
-   if (TmpDir) free(TmpDir);
+   if (tmpDir) free(tmpDir);
 
    exit(0);
 }
