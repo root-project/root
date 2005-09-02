@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.249 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.250 2005/09/02 19:18:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1134,11 +1134,11 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   if (opt.Contains("P")){
      Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chsq,prob,ndf);
   }
-  if (opt.Contains("chi2/ndf")){
+  if (opt.Contains("CHI2/NDF")){
      if (ndf == 0) return 0;
      return chsq/ndf;
   }
-  if (opt.Contains("chi2")){
+  if (opt.Contains("CHI2")){
      return chsq;
   }
 
