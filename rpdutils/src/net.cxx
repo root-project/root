@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.11 2005/04/15 17:26:09 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.12 2005/07/12 15:23:24 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -59,9 +59,9 @@ static double  gBytesRecv = 0;
 
 static std::string gOpenhost = "????";
 
-static int                tcp_srv_sock;
-static struct sockaddr_in tcp_srv_addr;
-static struct sockaddr_in tcp_cli_addr;
+static int                gTcpSrvSock;
+static struct sockaddr_in gTcpSrvAddr;
+static struct sockaddr_in gTcpCliAddr;
 
 static int  gSockFd             = -1;
 static SigPipe_t   gSigPipeHook = 0;
@@ -342,11 +342,11 @@ int NetOpen(int inetdflag, EService service)
    // request to arrive.
 
 #if defined(USE_SIZE_T)
-   size_t clilen = sizeof(tcp_cli_addr);
+   size_t clilen = sizeof(gTcpCliAddr);
 #elif defined(USE_SOCKLEN_T)
-   socklen_t clilen = sizeof(tcp_cli_addr);
+   socklen_t clilen = sizeof(gTcpCliAddr);
 #else
-   int clilen = sizeof(tcp_cli_addr);
+   int clilen = sizeof(gTcpCliAddr);
 #endif
 
    if (inetdflag) {
@@ -355,13 +355,13 @@ int NetOpen(int inetdflag, EService service)
       // are sockets to the client.
 
       gSockFd = 0;
-      if (!getpeername(gSockFd, (struct sockaddr *)&tcp_cli_addr, &clilen)) {
+      if (!getpeername(gSockFd, (struct sockaddr *)&gTcpCliAddr, &clilen)) {
          struct hostent *hp;
-         if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
-                                 sizeof(tcp_cli_addr.sin_addr), AF_INET)))
+         if ((hp = gethostbyaddr((const char *)&gTcpCliAddr.sin_addr,
+                                 sizeof(gTcpCliAddr.sin_addr), AF_INET)))
             gOpenhost = std::string(hp->h_name);
          else {
-            struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+            struct in_addr *host_addr = (struct in_addr*)&gTcpCliAddr.sin_addr;
             gOpenhost = std::string(inet_ntoa(*host_addr));
          }
       }
@@ -385,22 +385,22 @@ int NetOpen(int inetdflag, EService service)
    // (for which we caught the SIGCLD signal).
 
 again:
-   int newsock = accept(tcp_srv_sock, (struct sockaddr *)&tcp_cli_addr, &clilen);
+   int newsock = accept(gTcpSrvSock, (struct sockaddr *)&gTcpCliAddr, &clilen);
    if (newsock < 0) {
       if (GetErrno() == EINTR) {
          ResetErrno();
          goto again;   // probably a SIGCLD that was caught
       }
       Error(gErrSys,kErrFatal, "NetOpen: accept error (errno: %d) ... socket %d",
-                    GetErrno(),tcp_srv_sock);
+                    GetErrno(),gTcpSrvSock);
    }
 
    struct hostent *hp;
-   if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
-                           sizeof(tcp_cli_addr.sin_addr), AF_INET)))
+   if ((hp = gethostbyaddr((const char *)&gTcpCliAddr.sin_addr,
+                           sizeof(gTcpCliAddr.sin_addr), AF_INET)))
       gOpenhost = std::string(hp->h_name);
    else {
-      struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+      struct in_addr *host_addr = (struct in_addr*)&gTcpCliAddr.sin_addr;
       gOpenhost = std::string(inet_ntoa(*host_addr));
    }
 
@@ -423,7 +423,7 @@ again:
    // Then set "gSockFd" in our process to be the descriptor
    // that we are going to process.
 
-   close(tcp_srv_sock);
+   close(gTcpSrvSock);
 
    gSockFd = newsock;
 
@@ -493,30 +493,30 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
    // Create the socket and bind our local address so that any client can
    // send to us.
 
-   if ((tcp_srv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+   if ((gTcpSrvSock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       fprintf(stderr,     "NetInit: can't create socket\n");
       Error(gErrSys,kErrFatal, "NetInit: can't create socket");
    }
 
    int val = 1;
-   if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
+   if (setsockopt(gTcpSrvSock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
                   sizeof(val)) == -1) {
       fprintf(stderr,     "NetInit: can't set SO_REUSEADDR socket option\n");
       Error(gErrSys, kErrFatal, "NetInit: can't set SO_REUSEADDR socket option");
    }
 
    // Set several general performance network options
-   NetSetOptions(kROOTD,tcp_srv_sock, tcpwindowsize);
+   NetSetOptions(kROOTD,gTcpSrvSock, tcpwindowsize);
 
-   memset(&tcp_srv_addr, 0, sizeof(tcp_srv_addr));
-   tcp_srv_addr.sin_family      = AF_INET;
-   tcp_srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   memset(&gTcpSrvAddr, 0, sizeof(gTcpSrvAddr));
+   gTcpSrvAddr.sin_family      = AF_INET;
+   gTcpSrvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
    int port;
    for (port= port1; port <= port2; port++) {
-      tcp_srv_addr.sin_port = htons(port);
-      if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
-               sizeof(tcp_srv_addr)) == 0) break;
+      gTcpSrvAddr.sin_port = htons(port);
+      if (bind(gTcpSrvSock, (struct sockaddr *) &gTcpSrvAddr,
+               sizeof(gTcpSrvAddr)) == 0) break;
    }
 
    if (port > port2) {
@@ -530,16 +530,16 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
    // And set the listen parameter, telling the system that we're
    // ready to accept incoming connection requests.
 
-   //   listen(tcp_srv_sock, 5);
-   if (listen(tcp_srv_sock, 5)==-1) {
+   //   listen(gTcpSrvSock, 5);
+   if (listen(gTcpSrvSock, 5)==-1) {
       ErrorInfo("NetInit: listen: error (errno: %d)",GetErrno());
    }
 
    if (gDebug > 0)
-      ErrorInfo("NetInit: socket %d listening on port %d", tcp_srv_sock,
-                ntohs(tcp_srv_addr.sin_port));
+      ErrorInfo("NetInit: socket %d listening on port %d", gTcpSrvSock,
+                ntohs(gTcpSrvAddr.sin_port));
 
-   return tcp_srv_sock;
+   return gTcpSrvSock;
 }
 
 //______________________________________________________________________________

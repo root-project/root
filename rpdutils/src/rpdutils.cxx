@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.83 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.84 2005/08/31 11:11:46 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -184,7 +184,7 @@ extern krb5_deltat krb5_clockskew;
 #include "rsalib.h"
 //
 // To improve error logging for UsrPwd on the client side
-static ERootdErrors kUsrPwdErr[4][4] = {
+static ERootdErrors gUsrPwdErr[4][4] = {
    {kErrNoPasswd, kErrNoPassHEquNoFiles, kErrNoPassHEquBadFiles, kErrNoPassHEquFailed},
    {kErrBadPasswd, kErrBadPassHEquNoFiles, kErrBadPassHEquBadFiles, kErrBadPassHEquFailed},
    {kErrBadRtag, kErrBadRtagHEquNoFiles, kErrBadRtagHEquBadFiles, kErrBadRtagHEquFailed},
@@ -250,20 +250,20 @@ std::string gServName[3] = { "sockd", "rootd", "proofd" };
 
 //
 // Local global consts
-static const int kAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
-static const int kAUTH_SRP_MSK = 0x2;
-static const int kAUTH_KRB_MSK = 0x4;
-static const int kAUTH_GLB_MSK = 0x8;
-static const int kAUTH_SSH_MSK = 0x10;
-static const int kMAXTABSIZE = 50000000;
+static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
+static const int gAUTH_SRP_MSK = 0x2;
+static const int gAUTH_KRB_MSK = 0x4;
+static const int gAUTH_GLB_MSK = 0x8;
+static const int gAUTH_SSH_MSK = 0x10;
+static const int gMAXTABSIZE = 50000000;
 
-static const std::string kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
+static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
                                                 "Globus", "SSH", "UidGid" };
-static const std::string kAuthTab    = "/rpdauthtab";   // auth table
-static const std::string kDaemonRc   = ".rootdaemonrc"; // daemon access rules
-static const std::string kRootdPass  = ".rootdpass";    // special rootd passwd
-static const std::string kSRootdPass = "/.srootdpass";  // SRP passwd
-static const std::string kKeyRoot    = "/rpk.";         // Root for key files
+static const std::string gAuthTab    = "/rpdauthtab";   // auth table
+static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
+static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
+static const std::string gSRootdPass = "/.srootdpass";  // SRP passwd
+static const std::string gKeyRoot    = "/rpk.";         // Root for key files
 
 //
 // RW dir for temporary files (needed by gRpdAuthTab: do not move)
@@ -299,8 +299,8 @@ static int gRemPid = -1;
 static bool gRequireAuth = 1;
 static int gReUseAllow = 0x1F;  // define methods for which tokens can be asked
 static int gReUseRequired = -1;
-static std::string gRpdAuthTab = std::string(gTmpDir).append(kAuthTab);
-static std::string gRpdKeyRoot = std::string(gTmpDir).append(kKeyRoot);
+static std::string gRpdAuthTab = std::string(gTmpDir).append(gAuthTab);
+static std::string gRpdKeyRoot = std::string(gTmpDir).append(gKeyRoot);
 static rsa_NUMBER gRSA_d;
 static rsa_NUMBER gRSA_n;
 static int gRSAInit = 0;
@@ -639,7 +639,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
    // descriptor ilck, which should correspond to an open and locked file.
    // If opt = -1 : delete file (backup saved in <file>.bak);
    // If opt =  0 : eliminate all inactive entries
-   //               (if line="size" act only if size > kMAXTABSIZE)
+   //               (if line="size" act only if size > gMAXTABSIZE)
    // if opt =  1 : append 'line'.
    // Returns -1 in case of error.
    // Returns offset for 'line' and token for opt = 1.
@@ -838,13 +838,13 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       // (check size and cleanup/truncate if needed)
 
       // Check size ...
-      if ((int)(fsize+strlen(line)) > kMAXTABSIZE) {
+      if ((int)(fsize+strlen(line)) > gMAXTABSIZE) {
 
          // If it is going to be too big, cleanup or truncate first
          fsize = RpdUpdateAuthTab(0,(const char *)0,0,itab);
 
          // If still too big: delete everything
-         if ((int)(fsize+strlen(line)) > kMAXTABSIZE)
+         if ((int)(fsize+strlen(line)) > gMAXTABSIZE)
             fsize = RpdUpdateAuthTab(-1,(const char *)0,0,itab);
       }
       // We are going to write at the end
@@ -1203,14 +1203,14 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
 }
 
 //______________________________________________________________________________
-int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
+int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
                     int *OffSet)
 {
    // Check authentication entry in tab file.
 
    int retval = 0;
    if (gDebug > 2)
-      ErrorInfo("RpdCheckAuthTab: analyzing: %d %s %s %d %d", Sec, User,
+      ErrorInfo("RpdChecgAuthTab: analyzing: %d %s %s %d %d", Sec, User,
                 Host, RemId, *OffSet);
 
    // Check OffSet first
@@ -1219,7 +1219,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
    bool GoodOfs = RpdCheckOffSet(Sec,User,Host,RemId,
                                  OffSet,&tkn,&shmid,&user);
    if (gDebug > 2)
-      ErrorInfo("RpdCheckAuthTab: GoodOfs: %d", GoodOfs);
+      ErrorInfo("RpdChecgAuthTab: GoodOfs: %d", GoodOfs);
 
    // Notify the result of the check
    int tag = 0;
@@ -1251,7 +1251,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
    char *token = 0;
    if (gRSAKey > 0) {
       if (RpdSecureRecv(&token) == -1) {
-         ErrorInfo("RpdCheckAuthTab: problems secure-"
+         ErrorInfo("RpdChecgAuthTab: problems secure-"
                    "receiving token %s",
                    "- may result in authentication failure ");
       }
@@ -1263,7 +1263,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
       NetRecv(token, Tlen, kind);
       if (kind != kMESS_STRING)
          ErrorInfo
-             ("RpdCheckAuthTab: got msg kind: %d instead of %d (kMESS_STRING)",
+             ("RpdChecgAuthTab: got msg kind: %d instead of %d (kMESS_STRING)",
               kind, kMESS_STRING);
       // Invert Token
       for (int i = 0; i < (int) strlen(token); i++) {
@@ -1272,7 +1272,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
    }
    if (gDebug > 2)
       ErrorInfo
-          ("RpdCheckAuthTab: received from client: token: '%s' ",
+          ("RpdChecgAuthTab: received from client: token: '%s' ",
            token);
 
    // Check tag, if there
@@ -1281,7 +1281,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
       char tagref[9] = {0};
       sprintf(tagref,"%08x",tag);
       if (strncmp(token+8,tagref,8)) {
-         ErrorInfo("RpdCheckAuthTab: token tag does not match - failure");
+         ErrorInfo("RpdChecgAuthTab: token tag does not match - failure");
          GoodOfs = 0;
       } else
          // Drop tag
@@ -1303,7 +1303,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
          }
 #else
          ErrorInfo
-                ("RpdCheckAuthTab: compiled without Globus support:%s",
+                ("RpdChecgAuthTab: compiled without Globus support:%s",
                  " you shouldn't have got here!");
 #endif
       } else {
@@ -1582,17 +1582,17 @@ int RpdReUseAuth(const char *sstr, int kind)
 
    // kClear
    if (kind == kROOTD_USER) {
-      if (!(gReUseAllow & kAUTH_CLR_MSK))
+      if (!(gReUseAllow & gAUTH_CLR_MSK))
          return 0;              // re-authentication required by administrator
       gSec = 0;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdCheckAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdChecgAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (OffSet != gOffSet))
             auth = 2;
@@ -1602,17 +1602,17 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kSRP
    if (kind == kROOTD_SRPUSER) {
-      if (!(gReUseAllow & kAUTH_SRP_MSK))
+      if (!(gReUseAllow & gAUTH_SRP_MSK))
          return 0;              // re-authentication required by administrator
       gSec = 1;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdCheckAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdChecgAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (OffSet != gOffSet))
             auth = 2;
@@ -1622,17 +1622,17 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kKrb5
    if (kind == kROOTD_KRB5) {
-      if (!(gReUseAllow & kAUTH_KRB_MSK))
+      if (!(gReUseAllow & gAUTH_KRB_MSK))
          return 0;              // re-authentication required by administrator
       gSec = 2;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdCheckAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdChecgAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (OffSet != gOffSet))
             auth = 2;
@@ -1642,18 +1642,18 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kGlobus
    if (kind == kROOTD_GLOBUS) {
-      if (!(gReUseAllow & kAUTH_GLB_MSK))
+      if (!(gReUseAllow & gAUTH_GLB_MSK))
          return 0;              //  re-authentication required by administrator
       gSec = 3;
       // Decode subject string
       int Slen;
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Slen, User);
       User[Slen] = '\0';
-      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdCheckAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdChecgAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (OffSet != gOffSet))
             auth = 2;
@@ -1661,7 +1661,7 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kSSH
    if (kind == kROOTD_SSH) {
-      if (!(gReUseAllow & kAUTH_SSH_MSK))
+      if (!(gReUseAllow & gAUTH_SSH_MSK))
          return 0;              //  re-authentication required by administrator
       gSec = 4;
       // Decode subject string
@@ -1669,11 +1669,11 @@ int RpdReUseAuth(const char *sstr, int kind)
       sscanf(sstr, "%d %d %d %s %d %s", &gRemPid, &OffSet, &Opt, Pipe,
              &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdCheckAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdChecgAuthTab(gSec, User, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (OffSet != gOffSet))
             auth = 2;
@@ -1719,22 +1719,22 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          struct passwd *pw = getpwuid(getuid());
          if (pw != 0) {
             theDaemonRc = std::string(pw->pw_dir).append("/");
-            theDaemonRc.append(kDaemonRc);
+            theDaemonRc.append(gDaemonRc);
          }
          if (pw == 0 || access(theDaemonRc.c_str(), R_OK)) {
             if (getenv("ROOTETCDIR")) {
                theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
-               theDaemonRc.append(kDaemonRc);
+               theDaemonRc.append(gDaemonRc);
             } else
-               theDaemonRc = std::string("/etc/root/system").append(kDaemonRc);
+               theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
          }
       } else {
          // If running as super-user, check system file only
          if (getenv("ROOTETCDIR")) {
             theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
-            theDaemonRc.append(kDaemonRc);
+            theDaemonRc.append(gDaemonRc);
          } else
-            theDaemonRc = std::string("/etc/root/system").append(kDaemonRc);
+            theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
       }
    }
    if (gDebug > 2)
@@ -1871,7 +1871,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             if (strlen(tmp) > 1) {
 
                for (tmet = 0; tmet < kMAXSEC; tmet++) {
-                  if (!rpdstrcasecmp(kAuthMeth[tmet].c_str(), tmp))
+                  if (!rpdstrcasecmp(gAuthMeth[tmet].c_str(), tmp))
                      break;
                }
                if (tmet < kMAXSEC) {
@@ -2222,11 +2222,11 @@ int RpdSshAuth(const char *sstr)
    sscanf(sstr, "%d %d %d %s %d %s %s", &gRemPid, &ofs, &opt, PipeId, &Ulen,
           User, rproto);
    User[Ulen] = '\0';
-   gReUseRequired = (opt & kAUTH_REUSE_MSK);
+   gReUseRequired = (opt & gAUTH_REUSE_MSK);
 #if R__SSL
    if (gRSASSLKey) {
      // Determine type of RSA key required
-     gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+     gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
    } else
      gRSAKey = 1;
 #else
@@ -2657,7 +2657,7 @@ int RpdSshAuth(const char *sstr)
    strcpy(gUser, User);
 
    char line[kMAXPATHLEN];
-   if ((gReUseAllow & kAUTH_SSH_MSK) && gReUseRequired) {
+   if ((gReUseAllow & gAUTH_SSH_MSK) && gReUseRequired) {
 
       if (sshproto == 0) {
 
@@ -2733,11 +2733,11 @@ int RpdKrb5Auth(const char *sstr)
       char dumm[256];
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &Ulen, dumm);
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
+      gReUseRequired = (opt & gAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
@@ -3048,7 +3048,7 @@ int RpdKrb5Auth(const char *sstr)
    if (gClientProtocol > 8) {
 
       char line[kMAXPATHLEN];
-      if ((gReUseAllow & kAUTH_KRB_MSK) && gReUseRequired) {
+      if ((gReUseAllow & gAUTH_KRB_MSK) && gReUseRequired) {
 
          // Ask for the RSA key
          NetSend(gRSAKey, kROOTD_RSAKEY);
@@ -3136,11 +3136,11 @@ int RpdSRPUser(const char *sstr)
              dumm);
       Ulen = (Ulen > kMAXUSERLEN) ? kMAXUSERLEN-1 : Ulen;
       user[Ulen] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
+      gReUseRequired = (opt & gAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
@@ -3179,7 +3179,7 @@ int RpdSRPUser(const char *sstr)
    if (gAltSRPPass.length()) {
       srootdpass = gAltSRPPass;
    } else {
-      srootdpass = std::string(pw->pw_dir).append(kSRootdPass);
+      srootdpass = std::string(pw->pw_dir).append(gSRootdPass);
    }
    srootdconf = srootdpass + std::string(".conf");
 
@@ -3299,7 +3299,7 @@ int RpdSRPUser(const char *sstr)
       if (gClientProtocol > 8) {
 
          char line[kMAXPATHLEN];
-         if ((gReUseAllow & kAUTH_SRP_MSK) && gReUseRequired) {
+         if ((gReUseAllow & gAUTH_SRP_MSK) && gReUseRequired) {
 
             // Ask for the RSA key
             NetSend(gRSAKey, kROOTD_RSAKEY);
@@ -3601,7 +3601,7 @@ int RpdPass(const char *pass, int errheq)
    errheq = (errheq > -1 && errheq < 4) ? errheq : 0;
    if (!*gUser) {
       if (gClientProtocol > 11)
-         NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
+         NetSend(gUsrPwdErr[0][errheq], kROOTD_ERR);
       else
          NetSend(kErrFatal, kROOTD_ERR);
       if (gDebug > 0)
@@ -3611,7 +3611,7 @@ int RpdPass(const char *pass, int errheq)
 
    if (!pass) {
       if (gClientProtocol > 11)
-         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+         NetSend(gUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrNoPasswd, kROOTD_ERR);
       if (gDebug > 0)
@@ -3622,7 +3622,7 @@ int RpdPass(const char *pass, int errheq)
    // Passwd length should be in the correct range ...
    if (!n) {
       if (gClientProtocol > 11)
-         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+         NetSend(gUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrBadPasswd, kROOTD_ERR);
       if (gDebug > 0)
@@ -3631,7 +3631,7 @@ int RpdPass(const char *pass, int errheq)
    }
    if (n > (int) sizeof(passwd)) {
       if (gClientProtocol > 11)
-         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+         NetSend(gUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrBadPasswd, kROOTD_ERR);
       if (gDebug > 0)
@@ -3704,7 +3704,7 @@ int RpdPass(const char *pass, int errheq)
       n = strlen(passw);
       if (strncmp(pass_crypt, passw, n + 1) != 0) {
          if (gClientProtocol > 11)
-            NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+            NetSend(gUsrPwdErr[1][errheq], kROOTD_ERR);
          else
             NetSend(kErrBadPasswd, kROOTD_ERR);
          if (gDebug > 0)
@@ -3728,7 +3728,7 @@ int RpdPass(const char *pass, int errheq)
       int OffSet = -1;
       char *token = 0;
       char line[kMAXPATHLEN];
-      if ((gReUseAllow & kAUTH_CLR_MSK) && gReUseRequired) {
+      if ((gReUseAllow & gAUTH_CLR_MSK) && gReUseRequired) {
 
          SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
                  gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
@@ -3822,11 +3822,11 @@ int RpdGlobusAuth(const char *sstr)
    sscanf(sstr, "%d %d %d %d %s %s", &gRemPid, &OffSet, &opt, &lSubj, Subj,
           dumm);
    Subj[lSubj] = '\0';
-   gReUseRequired = (opt & kAUTH_REUSE_MSK);
+   gReUseRequired = (opt & gAUTH_REUSE_MSK);
 #if R__SSL
    if (gRSASSLKey) {
       // Determine type of RSA key required
-      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+      gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
    } else
       gRSAKey = 1;
 #else
@@ -4023,7 +4023,7 @@ int RpdGlobusAuth(const char *sstr)
    strncpy(gUser, user, ulen + 1);
 
    char line[kMAXPATHLEN];
-   if ((gReUseAllow & kAUTH_GLB_MSK) && gReUseRequired) {
+   if ((gReUseAllow & gAUTH_GLB_MSK) && gReUseRequired) {
 
       // Ask for the RSA key
       NetSend(gRSAKey, kROOTD_RSAKEY);
@@ -4476,14 +4476,14 @@ int RpdUser(const char *sstr)
       user[ulen] = '\0';
       if (nw > 5)
          ruser[rulen] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-      gCryptRequired = (opt & kAUTH_CRYPT_MSK);
-      gSaltRequired  = (opt & kAUTH_SSALT_MSK);
+      gReUseRequired = (opt & gAUTH_REUSE_MSK);
+      gCryptRequired = (opt & gAUTH_CRYPT_MSK);
+      gSaltRequired  = (opt & gAUTH_SSALT_MSK);
       gOffSet = ofs;
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
@@ -4566,7 +4566,7 @@ int RpdUser(const char *sstr)
    if (gAnon == 0) {
 
       // Check ROOT specific passwd first
-      int rcsp = RpdRetrieveSpecialPass(user,kRootdPass.c_str(),
+      int rcsp = RpdRetrieveSpecialPass(user,gRootdPass.c_str(),
                                         gPasswd,sizeof(gPasswd));
       if (rcsp < 0)
          errrdp = (rcsp == -2) ? 3 : 0;
@@ -4592,7 +4592,7 @@ int RpdUser(const char *sstr)
          // Check if successful
          if (strlen(passw) == 0 || !strcmp(passw, "x")) {
             if (gClientProtocol > 11)
-               NetSend(kUsrPwdErr[errrdp][errheq], kROOTD_ERR);
+               NetSend(gUsrPwdErr[errrdp][errheq], kROOTD_ERR);
             else
                NetSend(kErrNotAllowed, kROOTD_ERR);
             ErrorInfo("RpdUser: passwd hash not available for user %s", user);
@@ -4730,7 +4730,7 @@ int RpdUser(const char *sstr)
             if (strncmp(ctag,&passwd[plen-10],10)) {
                // The tag does not match; failure
                if (gClientProtocol > 11)
-                  NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+                  NetSend(gUsrPwdErr[2][errheq], kROOTD_ERR);
                else
                   NetSend(kErrBadPasswd, kROOTD_ERR);
                ErrorInfo("RpdUser: rndm tag mis-match"
@@ -4747,7 +4747,7 @@ int RpdUser(const char *sstr)
          } else {
             // The tag is not there or incomplete; failure
             if (gClientProtocol > 11)
-               NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+               NetSend(gUsrPwdErr[2][errheq], kROOTD_ERR);
             else
                NetSend(kErrBadPasswd, kROOTD_ERR);
             ErrorInfo("RpdUser: rndm tag missing or incomplete"
@@ -5633,7 +5633,7 @@ int RpdAuthenticate()
                   if (gDebug > 0)
                      ErrorInfo("Authenticate: %s method not"
                                " accepted from host: %s",
-                                kAuthMeth[gAuthProtocol].c_str(),
+                                gAuthMeth[gAuthProtocol].c_str(),
                                 gOpenHost.c_str());
                   NetSend(kErrNotAllowed, kROOTD_ERR);
                   RpdSendAuthList();
@@ -6322,8 +6322,8 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
 
    if (tmpd && strlen(tmpd)) {
       gTmpDir      = tmpd;
-      gRpdAuthTab  = gTmpDir + kAuthTab;
-      gRpdKeyRoot  = gTmpDir + kKeyRoot;
+      gRpdAuthTab  = gTmpDir + gAuthTab;
+      gRpdKeyRoot  = gTmpDir + gKeyRoot;
    }
    // Auth Tab and public key files are exclusive to this family
    gRpdAuthTab.append(".");
