@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.85 2005/09/02 19:55:59 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.86 2005/09/02 20:11:55 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1588,7 +1588,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1608,7 +1608,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1628,7 +1628,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1649,7 +1649,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       int Slen;
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &OffSet, &Opt, &Slen, User);
       User[Slen] = '\0';
-      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1669,7 +1669,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       sscanf(sstr, "%d %d %d %s %d %s", &gRemPid, &OffSet, &Opt, Pipe,
              &Ulen, User);
       User[Ulen] = '\0';
-      if ((gReUseRequired = (Opt & gAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (Opt & kAUTH_REUSE_MSK))) {
          gOffSet = OffSet;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -2222,7 +2222,7 @@ int RpdSshAuth(const char *sstr)
    sscanf(sstr, "%d %d %d %s %d %s %s", &gRemPid, &ofs, &opt, PipeId, &Ulen,
           User, rproto);
    User[Ulen] = '\0';
-   gReUseRequired = (opt & gAUTH_REUSE_MSK);
+   gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
    if (gRSASSLKey) {
      // Determine type of RSA key required
@@ -2733,7 +2733,7 @@ int RpdKrb5Auth(const char *sstr)
       char dumm[256];
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &Ulen, dumm);
-      gReUseRequired = (opt & gAUTH_REUSE_MSK);
+      gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
@@ -3136,7 +3136,7 @@ int RpdSRPUser(const char *sstr)
              dumm);
       Ulen = (Ulen > kMAXUSERLEN) ? kMAXUSERLEN-1 : Ulen;
       user[Ulen] = '\0';
-      gReUseRequired = (opt & gAUTH_REUSE_MSK);
+      gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
@@ -3822,7 +3822,7 @@ int RpdGlobusAuth(const char *sstr)
    sscanf(sstr, "%d %d %d %d %s %s", &gRemPid, &OffSet, &opt, &lSubj, Subj,
           dumm);
    Subj[lSubj] = '\0';
-   gReUseRequired = (opt & gAUTH_REUSE_MSK);
+   gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
    if (gRSASSLKey) {
       // Determine type of RSA key required
@@ -4476,8 +4476,8 @@ int RpdUser(const char *sstr)
       user[ulen] = '\0';
       if (nw > 5)
          ruser[rulen] = '\0';
-      gReUseRequired = (opt & gAUTH_REUSE_MSK);
-      gCryptRequired = (opt & gAUTH_CRYPT_MSK);
+      gReUseRequired = (opt & kAUTH_REUSE_MSK);
+      gCryptRequired = (opt & kAUTH_CRYPT_MSK);
       gSaltRequired  = (opt & kAUTH_SSALT_MSK);
       gOffSet = ofs;
 #if R__SSL
