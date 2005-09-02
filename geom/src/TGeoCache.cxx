@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.35 2005/05/26 13:20:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.36 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -515,13 +515,13 @@ void TGeoNodeCache::PrintNode() const
 }
 
 //_____________________________________________________________________________
-Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Double_t *point)
+Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Int_t nmany, Double_t *point)
 {
    if (fStackLevel>=fGeoCacheStackSize) {
       printf("ERROR TGeoNodeCach::PushSate() : stack of states full\n");
       return 0;
    }
-   ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,startlevel,ovlp,point);
+   ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,startlevel,nmany,ovlp,point);
    return ++fStackLevel;
 }
 
@@ -540,20 +540,20 @@ void TGeoNodeCache::Refresh()
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoNodeCache::PopState(Double_t *point)
+Bool_t TGeoNodeCache::PopState(Int_t &nmany, Double_t *point)
 {
    if (!fStackLevel) return 0;
-   Bool_t ovlp = ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
+   Bool_t ovlp = ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,nmany,point);
    Refresh();
 //   return (fStackLevel+1);
    return ovlp;
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point)
+Bool_t TGeoNodeCache::PopState(Int_t &nmany, Int_t level, Double_t *point)
 {
    if (level<=0) return 0;
-   ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,point);
+   ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,nmany,point);
    Refresh();
    return level;
 }
@@ -1508,6 +1508,7 @@ TGeoCacheState::TGeoCacheState()
 //--- Default ctor
    fCapacity = 0;
    fLevel = 0;
+   fNmany = 0;
    fBranch = 0;
    fMatrices = 0;
    fPoint = 0;
@@ -1519,6 +1520,7 @@ TGeoCacheState::TGeoCacheState(Int_t capacity)
 //--- ctor
    fCapacity = capacity;
    fLevel = 0;
+   fNmany = 0;
    fBranch = new Int_t[capacity];
    fMatrices = new Int_t[capacity];
    fPoint = new Double_t[3];
@@ -1536,10 +1538,11 @@ TGeoCacheState::~TGeoCacheState()
 }
 
 //_____________________________________________________________________________
-void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point)
+void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
    fStart = startlevel;
+   fNmany = nmany;
    if (gGeoManager->IsOutside()) {
       fLevel = -1;
       return;
@@ -1555,9 +1558,10 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
+Bool_t TGeoCacheState::GetState(Int_t &level, Int_t &nmany, Double_t *point) const
 {
    level = fLevel;
+   nmany = fNmany;
    if (fLevel<0) {
       level = 0;
       return kFALSE;
@@ -1619,10 +1623,11 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
 }
 
 //_____________________________________________________________________________
-void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point)
+void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
    fStart = startlevel;
+   fNmany = nmany;
    TGeoNodeCache *cache = gGeoManager->GetCache();
    if (cache->HasIdArray()) memcpy(fIdBranch, cache->GetIdBranch()+fStart, (level+1-fStart)*sizeof(Int_t));
    TGeoNode **node_branch = (TGeoNode **) cache->GetBranch();
@@ -1643,9 +1648,10 @@ void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, D
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
+Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Int_t &nmany, Double_t *point) const
 {
    level = fLevel;
+   nmany = fNmany;
    TGeoNodeCache *cache = gGeoManager->GetCache();
    if (cache->HasIdArray()) cache->FillIdBranch(fIdBranch, fStart);
    TGeoNode **node_branch = (TGeoNode **) cache->GetBranch();

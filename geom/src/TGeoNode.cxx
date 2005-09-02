@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.23 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.24 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -185,18 +185,20 @@ void TGeoNode::DrawOverlaps()
 {
    if (!fNovlp) {printf("node %s is ONLY\n", GetName()); return;}
    if (!fOverlaps) {printf("node %s no overlaps\n", GetName()); return;}
-   fVolume->SetLineColor(3);
-   fVolume->SetLineWidth(2);
-   gGeoManager->RestoreMasterVolume();
-   gGeoManager->GetTopVolume()->VisibleDaughters(kFALSE);
-   fVolume->SetVisibility(kTRUE);
-   fVolume->VisibleDaughters(kFALSE);
    TGeoNode *node;
-   for (Int_t i=0; i<fNovlp; i++) {
+   Int_t i;
+   Int_t nd = fMother->GetNdaughters();
+   for (i=0; i<nd; i++) {
+      node = fMother->GetNode(i);
+      node->GetVolume()->SetVisibility(kFALSE);
+   }   
+   fVolume->SetVisibility(kTRUE);
+   for (i=0; i<fNovlp; i++) {
       node = fMother->GetNode(fOverlaps[i]);
       node->GetVolume()->SetVisibility(kTRUE);
    }
-   gGeoManager->GetTopVolume()->Draw();
+   gGeoManager->SetVisLevel(1);
+   fMother->Draw();
 }
 
 //_____________________________________________________________________________

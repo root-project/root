@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.2 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.3 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -45,6 +45,7 @@ protected:
    Int_t             fLevel;          // depth in the geometry tree
    TObjArray        *fMatrices;       // global transformation matrices
    TObjArray        *fNodes;          // branch of nodes
+   TGeoHMatrix      *fMatrixOrig;     // original local matrix of the last node in the path
 
    void              SetAligned(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeAligned,flag);}
 
@@ -67,6 +68,7 @@ public:
    void              Draw(Option_t *option="");
    Int_t             GetLevel() const {return fLevel;}
    TGeoHMatrix      *GetMatrix(Int_t level=-1) const;
+   TGeoHMatrix      *GetOriginalMatrix() const {return fMatrixOrig;}
    TGeoNode         *GetMother(Int_t levup=1) const;
    const char       *GetName() const;
    TGeoNode         *GetNode(Int_t level=-1) const;

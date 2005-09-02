@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.42 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.43 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -840,19 +840,31 @@ TBuffer3D *TGeoSphere::MakeBuffer3D() const
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
-   Int_t  n = gGeoManager->GetNsegments()+1;
-   Double_t ph1 = GetPhi1();
-   Double_t ph2 = GetPhi2();
-   Int_t nz     = GetNz()+1;
-   if (nz < 2) return 0;
-   Int_t nbPnts = 2*n*nz;
-   if (nbPnts <= 0) return 0;
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
 
-   Bool_t specialCase = kFALSE;
-   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
+   Int_t nbPnts = nlat*nlong+nup+ndown+ncenter;
+   if (TestShapeBit(kGeoRSeg)) nbPnts *= 2;
 
-   Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-   Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   Int_t nbSegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
+   if (TestShapeBit(kGeoRSeg)) nbSegs *= 2; // inner sphere
+   if (TestShapeBit(kGeoPhiSeg)) nbSegs += 2*nlat+nup+ndown; // 2 phi planes
+   nbSegs += nlong * (2-nup - ndown);  // connecting cones
+      
+   Int_t nbPols = fNz*fNseg; // outer
+   if (TestShapeBit(kGeoRSeg)) nbPols *=2;  // inner
+   if (TestShapeBit(kGeoPhiSeg)) nbPols += 2*fNz; // 2 phi planes
+   nbPols += (2-nup-ndown)*fNseg; // connecting
+
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
 
@@ -869,175 +881,367 @@ TBuffer3D *TGeoSphere::MakeBuffer3D() const
 void TGeoSphere::SetSegsAndPols(TBuffer3D & buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
-   Int_t i, j;
-   Int_t n = gGeoManager->GetNsegments()+1;
-   Double_t ph1 = GetPhi1();
-   Double_t ph2 = GetPhi2();
-   Int_t nz     = GetNz()+1;
-   if (nz < 2) return;
-   Bool_t specialCase = kFALSE;
-   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
+
+   Int_t nbPnts = nlat*nlong+nup+ndown+ncenter;
+   if (TestShapeBit(kGeoRSeg)) nbPnts *= 2;
+
+   Int_t nbSegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
+   if (TestShapeBit(kGeoRSeg)) nbSegs *= 2; // inner sphere
+   if (TestShapeBit(kGeoPhiSeg)) nbSegs += 2*nlat+nup+ndown; // 2 phi planes
+   nbSegs += nlong * (2-nup - ndown);  // connecting cones
+      
+   Int_t nbPols = fNz*fNseg; // outer
+   if (TestShapeBit(kGeoRSeg)) nbPols *=2;  // inner
+   if (TestShapeBit(kGeoPhiSeg)) nbPols += 2*fNz; // 2 phi planes
+   nbPols += (2-nup-ndown)*fNseg; // connecting
+
    Int_t c = GetBasicColor();
-
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
-
-   //inside & outside spheres, number of segments: 2*nz*(n-1)
-   //             special case number of segments: 2*nz*n
-   for (i = 0; i < nz*2; i++) {
-      indx2 = i*n;
-      for (j = 1; j < n; j++) {
-         buff.fSegs[indx++] = c;
-         buff.fSegs[indx++] = indx2+j-1;
-         buff.fSegs[indx++] = indx2+j;
-      }
-      if (specialCase) {
-         buff.fSegs[indx++] = c;
-         buff.fSegs[indx++] = indx2+j-1;
-         buff.fSegs[indx++] = indx2;
+   Int_t i, j;
+   Int_t indx;
+   indx = 0;
+   // outside sphere
+   // loop all segments on latitudes (except 0 and 180 degrees)
+   // [0, nlat*fNseg)
+   Int_t indpar = 0;
+   for (i=0; i<nlat; i++) {
+      for (j=0; j<fNseg; j++) {
+         buff.fSegs[indx++]   = c;
+         buff.fSegs[indx++] = i*nlong+j;
+         buff.fSegs[indx++] = i*nlong+(j+1)%nlong;
       }
    }
-
-   //bottom & top lines, number of segments: 2*n
-   for (i = 0; i < 2; i++) {
-      indx2 = i*(nz-1)*2*n;
-      for (j = 0; j < n; j++) {
-         buff.fSegs[indx++] = c;
-         buff.fSegs[indx++] = indx2+j;
-         buff.fSegs[indx++] = indx2+n+j;
+   // loop all segments on longitudes
+   // nlat*fNseg + [0, (nlat-1)*nlong)
+   Int_t indlong = indpar + nlat*fNseg;
+   for (i=0; i<nlat-1; i++) {
+      for (j=0; j<nlong; j++) {
+         buff.fSegs[indx++]   = c;
+         buff.fSegs[indx++] = i*nlong+j;
+         buff.fSegs[indx++] = (i+1)*nlong+j;
       }
    }
-
-   //inside & outside spheres, number of segments: 2*(nz-1)*n
-   for (i = 0; i < (nz-1); i++) {
-      //inside sphere
-      indx2 = i*n*2;
-      for (j = 0; j < n; j++) {
-         buff.fSegs[indx++] = c+2;
-         buff.fSegs[indx++] = indx2+j;
-         buff.fSegs[indx++] = indx2+n*2+j;
-      }
-      //outside sphere
-      indx2 = i*n*2+n;
-      for (j = 0; j < n; j++) {
-         buff.fSegs[indx++] = c+3;
-         buff.fSegs[indx++] = indx2+j;
-         buff.fSegs[indx++] = indx2+n*2+j;
-      }
-   }
-
-   //left & right sections, number of segments: 2*(nz-2)
-   //          special case number of segments: 0
-   if (!specialCase) {
-      for (i = 1; i < (nz-1); i++) {
-         for (j = 0; j < 2; j++) {
-            buff.fSegs[indx++] = c;
-            buff.fSegs[indx++] =  2*i    * n + j*(n-1);
-            buff.fSegs[indx++] = (2*i+1) * n + j*(n-1);
+   Int_t indup = indlong + (nlat-1)*nlong;
+   // extra longitudes on top
+   // nlat*fNseg+(nlat-1)*nlong + [0, nlong)
+   if (nup) {
+      Int_t indpup = nlat*nlong;
+      for (j=0; j<nlong; j++) {
+         buff.fSegs[indx++]   = c;
+         buff.fSegs[indx++] = j;
+         buff.fSegs[indx++] = indpup;
+      }   
+   }      
+   Int_t inddown = indup + nup*nlong;
+   // extra longitudes on bottom
+   // nlat*fNseg+(nlat+nup-1)*nlong + [0, nlong)
+   if (ndown) {
+      Int_t indpdown = nlat*nlong+nup;
+      for (j=0; j<nlong; j++) {
+         buff.fSegs[indx++]   = c;
+         buff.fSegs[indx++] = (nlat-1)*nlong+j;
+         buff.fSegs[indx++] = indpdown;
+      }   
+   }      
+   Int_t indparin = inddown + ndown*nlong;
+   Int_t indlongin = indparin;
+   Int_t indupin = indparin;
+   Int_t inddownin = indparin;
+   Int_t indphi = indparin;
+   // inner sphere
+   Int_t indptin = nlat*nlong + nup + ndown;
+   Int_t iptcenter = indptin;
+   // nlat*fNseg+(nlat+nup+ndown-1)*nlong
+   if (TestShapeBit(kGeoRSeg)) {
+      indlongin = indparin + nlat*fNseg;
+      indupin   = indlongin + (nlat-1)*nlong;
+      inddownin = indupin + nup*nlong;
+      // loop all segments on latitudes (except 0 and 180 degrees)
+      // indsegin + [0, nlat*fNseg)
+      for (i=0; i<nlat; i++) {
+         for (j=0; j<fNseg; j++) {
+            buff.fSegs[indx++]   = c+1;
+            buff.fSegs[indx++] = indptin + i*nlong+j;
+            buff.fSegs[indx++] = indptin + i*nlong+(j+1)%nlong;
          }
       }
+      // loop all segments on longitudes
+      // indsegin + nlat*fNseg + [0, (nlat-1)*nlong)
+      for (i=0; i<nlat-1; i++) {
+         for (j=0; j<nlong; j++) {
+            buff.fSegs[indx++]   = c+1;
+            buff.fSegs[indx++] = indptin + i*nlong+j;
+            buff.fSegs[indx++] = indptin + (i+1)*nlong+j;
+         }
+      }
+      // extra longitudes on top
+      // indsegin + nlat*fNseg+(nlat-1)*nlong + [0, nlong)
+      if (nup) {
+         Int_t indup = indptin + nlat*nlong;
+         for (j=0; j<nlong; j++) {
+            buff.fSegs[indx++]   = c+1;
+            buff.fSegs[indx++] = indptin + j;
+            buff.fSegs[indx++] = indup;
+         }   
+      }      
+      // extra longitudes on bottom
+      // indsegin + nlat*fNseg+(nlat+nup-1)*nlong + [0, nlong)
+      if (ndown) {
+         Int_t indpdown = indptin + nlat*nlong+nup;
+         for (j=0; j<nlong; j++) {
+            buff.fSegs[indx++]   = c+1;
+            buff.fSegs[indx++] = indptin + (nlat-1)*nlong+j;
+            buff.fSegs[indx++] = indpdown;
+         }   
+      }      
+      indphi = inddownin + ndown*nlong;
    }
-
-   Int_t m = n - 1 + (specialCase == kTRUE);
+   Int_t indtheta = indphi; 
+   // Segments on phi planes
+   if (TestShapeBit(kGeoPhiSeg)) {
+      indtheta += 2*nlat + nup + ndown;
+      for (j=0; j<nlat; j++) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = j*nlong;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + j*nlong;
+         else buff.fSegs[indx++] = iptcenter;
+      }
+      for (j=0; j<nlat; j++) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = (j+1)*nlong-1;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + (j+1)*nlong-1;
+         else buff.fSegs[indx++] = iptcenter;
+      }
+      if (nup) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = nlat*nlong;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + nlat*nlong;
+         else buff.fSegs[indx++] = iptcenter;
+      }   
+      if (ndown) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = nlat*nlong+nup;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + nlat*nlong+nup;
+         else buff.fSegs[indx++] = iptcenter;
+      }   
+   }
+   // Segments on cones
+   if (!nup) {   
+      for (j=0; j<nlong; j++) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = j;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + j;
+         else buff.fSegs[indx++] = iptcenter;
+      }
+   }     
+   if (!ndown) {   
+      for (j=0; j<nlong; j++) {
+         buff.fSegs[indx++]   = c+2;
+         buff.fSegs[indx++] = (nlat-1)*nlong + j;
+         if (TestShapeBit(kGeoRSeg)) buff.fSegs[indx++] = indptin + (nlat-1)*nlong +j;
+         else buff.fSegs[indx++] = iptcenter;
+      }
+   }     
+   
    indx = 0;
+   // Fill polygons for outside sphere (except 0/180)
+   for (i=0; i<nlat-1; i++) {
+      for (j=0; j<fNseg; j++) {
+         buff.fPols[indx++] = c;   
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = indpar+i*fNseg+j;
+         buff.fPols[indx++] = indlong+i*nlong+(j+1)%nlong;
+         buff.fPols[indx++] = indpar+(i+1)*fNseg+j;
+         buff.fPols[indx++] = indlong+i*nlong+j;
+      }
+   }      
+   // upper
+   if (nup) {
+      for (j=0; j<fNseg; j++) {
+         buff.fPols[indx++] = c;   
+         buff.fPols[indx++] = 3;
+         buff.fPols[indx++] = indup + j;
+         buff.fPols[indx++] = indup + (j+1)%nlong;
+         buff.fPols[indx++] = indpar + j;
+      }      
+   }
+   // lower
+   if (ndown) {
+      for (j=0; j<fNseg; j++) {
+         buff.fPols[indx++] = c;   
+         buff.fPols[indx++] = 3;
+         buff.fPols[indx++] = inddown + j;
+         buff.fPols[indx++] = indpar + (nlat-1)*fNseg + j;
+         buff.fPols[indx++] = inddown + (j+1)%nlong;
+      }      
+   }
+   // Fill polygons for inside sphere (except 0/180)
 
-   //bottom & top, number of polygons: 2*(n-1)
-   // special case number of polygons: 2*n
-   i = 0;
-   for (j = 0; j < n-1; j++) {
-      buff.fPols[indx++] = c+3;
-      buff.fPols[indx++] = 4;
-      buff.fPols[indx++] = i*(nz*2-2)*m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n+j+1;
-      buff.fPols[indx++] = i*(nz*2-2)*m+m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n+j;
-   }
-   if (specialCase) {
-      buff.fPols[indx++] = c+3;
-      buff.fPols[indx++] = 4;
-      buff.fPols[indx++] = i*(nz*2-2)*m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n;
-      buff.fPols[indx++] = i*(nz*2-2)*m+m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n+j;
-   }
-   i = 1;
-   for (j = 0; j < n-1; j++) {
-      buff.fPols[indx++] = c+3;
-      buff.fPols[indx++] = 4;
-      buff.fPols[indx++] = 2*nz*m+i*n+j;
-      buff.fPols[indx++] = i*(nz*2-2)*m+m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n+j+1;
-      buff.fPols[indx++] = i*(nz*2-2)*m+j;
-   }
-   if (specialCase) {
-      buff.fPols[indx++] = c+3;
-      buff.fPols[indx++] = 4;
-      buff.fPols[indx++] = 2*nz*m+i*n+j;
-      buff.fPols[indx++] = i*(nz*2-2)*m+m+j;
-      buff.fPols[indx++] = 2*nz*m+i*n;
-      buff.fPols[indx++] = i*(nz*2-2)*m+j;
-   }
-
-   //inside & outside, number of polygons: (nz-1)*2*(n-1)
-   for (k = 0; k < (nz-1); k++) {
-      i = 0;
-      for (j = 0; j < n-1; j++) {
-         buff.fPols[indx++] = c+i;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = (2*k+i*1)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-         buff.fPols[indx++] = (2*k+i*1+2)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+   if (TestShapeBit(kGeoRSeg)) {
+      for (i=0; i<nlat-1; i++) {
+         for (j=0; j<fNseg; j++) {
+            buff.fPols[indx++] = c+1;   
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indparin+i*fNseg+j;
+            buff.fPols[indx++] = indlongin+i*nlong+j;
+            buff.fPols[indx++] = indparin+(i+1)*fNseg+j;
+            buff.fPols[indx++] = indlongin+i*nlong+(j+1)%nlong;
+         }
       }
-      if (specialCase) {
-         buff.fPols[indx++] = c+i;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = (2*k+i*1)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-         buff.fPols[indx++] = (2*k+i*1+2)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
+      // upper
+      if (nup) {
+         for (j=0; j<fNseg; j++) {
+            buff.fPols[indx++] = c+1;   
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = indupin + j;
+            buff.fPols[indx++] = indparin + j;
+            buff.fPols[indx++] = indupin + (j+1)%nlong;
+         }      
       }
-      i = 1;
-      for (j = 0; j < n-1; j++) {
-         buff.fPols[indx++] = c+i;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-         buff.fPols[indx++] = (2*k+i*1+2)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-         buff.fPols[indx++] = (2*k+i*1)*m+j;
+      // lower
+      if (ndown) {
+         for (j=0; j<fNseg; j++) {
+            buff.fPols[indx++] = c+1;   
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = inddownin + j;
+            buff.fPols[indx++] = inddownin + (j+1)%nlong;
+            buff.fPols[indx++] = indparin + (nlat-1)*fNseg + j;
+         }      
       }
-      if (specialCase) {
-         buff.fPols[indx++] = c+i;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
-         buff.fPols[indx++] = (2*k+i*1+2)*m+j;
-         buff.fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-         buff.fPols[indx++] = (2*k+i*1)*m+j;
+   }         
+   // Polygons on phi planes
+   if (TestShapeBit(kGeoPhiSeg)) {
+      for (i=0; i<nlat-1; i++) {
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indlong + i*nlong;
+            buff.fPols[indx++] = indphi + i + 1;
+            buff.fPols[indx++] = indlongin + i*nlong;
+            buff.fPols[indx++] = indphi + i;
+         } else {
+            buff.fPols[indx++] = 3;  
+            buff.fPols[indx++] = indlong + i*nlong;
+            buff.fPols[indx++] = indphi + i + 1;
+            buff.fPols[indx++] = indphi + i;
+         }
+      }      
+      for (i=0; i<nlat-1; i++) {
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indlong + (i+1)*nlong-1;
+            buff.fPols[indx++] = indphi + nlat + i;
+            buff.fPols[indx++] = indlongin + (i+1)*nlong-1;
+            buff.fPols[indx++] = indphi + nlat + i + 1;
+         } else {
+            buff.fPols[indx++] = 3;  
+            buff.fPols[indx++] = indlong + (i+1)*nlong-1;
+            buff.fPols[indx++] = indphi + nlat + i;
+            buff.fPols[indx++] = indphi + nlat + i + 1;
+         }
+      }      
+      if (nup) {
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indup;
+            buff.fPols[indx++] = indphi;
+            buff.fPols[indx++] = indupin;
+            buff.fPols[indx++] = indphi + 2*nlat;
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = indup;  
+            buff.fPols[indx++] = indphi;
+            buff.fPols[indx++] = indphi + 2*nlat;
+         }                      
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indup+nlong-1;
+            buff.fPols[indx++] = indphi + 2*nlat;
+            buff.fPols[indx++] = indupin+nlong-1;
+            buff.fPols[indx++] = indphi + nlat;
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = indup+nlong-1;  
+            buff.fPols[indx++] = indphi + 2*nlat;
+            buff.fPols[indx++] = indphi + nlat;
+         }                      
       }
-   }
-
-   //left & right sections, number of polygons: 2*(nz-1)
-   //          special case number of polygons: 0
-   if (!specialCase) {
-      indx2 = nz*2*(n-1);
-      for (k = 0; k < (nz-1); k++) {
-         i = 0;
+      if (ndown) {
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = inddown;
+            buff.fPols[indx++] = indphi + 2*nlat + nup;
+            buff.fPols[indx++] = inddownin;
+            buff.fPols[indx++] = indphi + nlat-1;
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = inddown;  
+            buff.fPols[indx++] = indphi + 2*nlat + nup;
+            buff.fPols[indx++] = indphi + nlat-1;
+         }                      
+         buff.fPols[indx++]   = c+2;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = inddown+nlong-1;
+            buff.fPols[indx++] = indphi + 2*nlat-1;
+            buff.fPols[indx++] = inddownin+nlong-1;
+            buff.fPols[indx++] = indphi + 2*nlat+nup;
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = inddown+nlong-1;  
+            buff.fPols[indx++] = indphi + 2*nlat-1;
+            buff.fPols[indx++] = indphi + 2*nlat+nup;
+         } 
+      }
+   }                           
+   // Polygons on cones
+   if (!nup) {
+      for (j=0; j<fNseg; j++) {
          buff.fPols[indx++] = c+2;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-         buff.fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
-         buff.fPols[indx++] = indx2+2*nz*n+2*k+i;
-         buff.fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-         i = 1;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indpar+j;
+            buff.fPols[indx++] = indtheta + j;
+            buff.fPols[indx++] = indparin + j;
+            buff.fPols[indx++] = indtheta + (j+1)%nlong;            
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = indpar+j;
+            buff.fPols[indx++] = indtheta + j;
+            buff.fPols[indx++] = indtheta + (j+1)%nlong;            
+         }
+      }   
+   }
+   if (!ndown) {
+      for (j=0; j<fNseg; j++) {
          buff.fPols[indx++] = c+2;
-         buff.fPols[indx++] = 4;
-         buff.fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-         buff.fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-         buff.fPols[indx++] = indx2+2*nz*n+2*k+i;
-         buff.fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
-      }
-      buff.fPols[indx-8] = indx2+n;
-      buff.fPols[indx-2] = indx2+2*n-1;
+         if (TestShapeBit(kGeoRSeg)) {
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indpar+(nlat-1)*fNseg+j;
+            buff.fPols[indx++] = indtheta + (1-nup)*nlong +(j+1)%nlong;            
+            buff.fPols[indx++] = indparin + (nlat-1)*fNseg + j;
+            buff.fPols[indx++] = indtheta + (1-nup)*nlong + j;
+         } else {
+            buff.fPols[indx++] = 3;
+            buff.fPols[indx++] = indpar+(nlat-1)*fNseg+j;
+            buff.fPols[indx++] = indtheta + (1-nup)*nlong +(j+1)%nlong;            
+            buff.fPols[indx++] = indtheta + (1-nup)*nlong + j;
+         }
+      }   
    }
 }   
    
@@ -1141,132 +1345,245 @@ void TGeoSphere::SetNumberOfDivisions(Int_t p)
    if (dphi<0) dphi+=360;
    Double_t dtheta = TMath::Abs(fTheta2-fTheta1);
    fNz = Int_t(fNseg*dtheta/dphi) +1;
+   if (fNz<2) fNz=2;
 }
 
 //_____________________________________________________________________________
 void TGeoSphere::SetPoints(Double_t *points) const
 {
 // create sphere mesh points
+   if (!points) {
+      Error("SetPoints", "Input array is NULL");
+      return;
+   }   
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
+   // total number of points on mesh is:
+   //    nlat*nlong + nup + ndown + ncenter;    // in case rmin=0
+   //   2*(nlat*nlong + nup + ndown);           // in case rmin>0
    Int_t i,j ;
-    if (points) {
-        Double_t dphi = fPhi2-fPhi1;
-        if (dphi<0) dphi+=360;
-        Double_t dtheta = fTheta2-fTheta1;
-
-        Int_t n            = fNseg + 1;
-        dphi = dphi/fNseg;
-        dtheta = dtheta/fNz;
-        Double_t z, theta, phi, cphi, sphi;
-        Int_t indx=0;
-        for (i = 0; i < fNz+1; i++)
-        {
-            theta = (fTheta1+i*dtheta)*TMath::DegToRad();
-            z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
-            Double_t zi = fRmin*TMath::Sin(theta);
-//            printf("plane %i nseg=%i z=%f:\n", i,n,z);
-            for (j = 0; j < n; j++) {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                cphi = TMath::Cos(phi);
-                sphi = TMath::Sin(phi);
-                points[indx++] = zi * cphi;
-                points[indx++] = zi * sphi;
-                points[indx++] = z;
-//                printf("%i %f %f %f\n", j, points[3*j], points[3*j+1], points[3*j+2]);
-            }
-            z = fRmax * TMath::Cos(theta);
-            zi = fRmax* TMath::Sin(theta);
-//            printf("outer points for plane %i:\n", i);
-            for (j = 0; j < n; j++) {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                cphi = TMath::Cos(phi);
-                sphi = TMath::Sin(phi);
-                points[indx++] = zi * cphi;
-                points[indx++] = zi * sphi;
-                points[indx++] = z;
-//                printf("%i %f %f %f\n", j, points[n+3*j], points[n+3*j+1], points[n+3*j+2]);
-            }
-        }
-    }
+   Double_t phi1 = fPhi1*TMath::DegToRad();
+   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t dphi = (phi2-phi1)/fNseg;
+   Double_t theta1 = fTheta1*TMath::DegToRad();
+   Double_t theta2 = fTheta2*TMath::DegToRad();
+   Double_t dtheta = (theta2-theta1)/fNz;
+   Double_t z,zi,theta,phi,cphi,sphi;
+   Int_t indx=0;
+   // FILL ALL POINTS ON OUTER SPHERE
+   // (nlat * nlong) points
+   // loop all latitudes except 0/180 degrees (nlat times)
+   // ilat = [0,nlat]   jlong = [0,nlong]
+   // Index(ilat, jlong) = 3*(ilat*nlat + jlong)
+   for (i = 0; i < nlat; i++) {
+      theta = theta1+(nup+i)*dtheta;
+      z =  fRmax * TMath::Cos(theta);
+      zi = fRmax * TMath::Sin(theta);
+      // loop all different longitudes (nlong times)
+      for (j = 0; j < nlong; j++) {
+         phi = phi1+j*dphi;
+         cphi = TMath::Cos(phi);
+         sphi = TMath::Sin(phi);
+         points[indx++] = zi * cphi;
+         points[indx++] = zi * sphi;
+         points[indx++] = z;
+      }
+   }
+   // upper/lower points (if they exist) for outer sphere
+   if (nup) {
+      // ind_up = 3*nlat*nlong
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = fRmax;
+   }   
+   if (ndown) {
+      // ind_down = 3*(nlat*nlong+nup)
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = -fRmax;
+   }   
+   // do the same for inner sphere if it exist
+   // Start_index = 3*(nlat*nlong + nup + ndown)
+   if (TestShapeBit(kGeoRSeg)) {
+   // Index(ilat, jlong) = start_index + 3*(ilat*nlat + jlong)
+      for (i = 0; i < nlat; i++) {
+         theta = theta1+(nup+i)*dtheta;
+         z =  fRmin * TMath::Cos(theta);
+         zi = fRmin * TMath::Sin(theta);
+         // loop all different longitudes (nlong times)
+         for (j = 0; j < nlong; j++) {
+            phi = phi1+j*dphi;
+            cphi = TMath::Cos(phi);
+            sphi = TMath::Sin(phi);
+            points[indx++] = zi * cphi;
+            points[indx++] = zi * sphi;
+            points[indx++] = z;
+         }
+      }
+      // upper/lower points (if they exist) for inner sphere
+      if (nup) {
+      // ind_up = start_index + 3*nlat*nlong
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = fRmin;
+      }   
+      if (ndown) {
+      // ind_down = start_index + 3*(nlat*nlong+nup)
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = -fRmin;
+      }   
+   }
+   // Add center of sphere if needed
+   if (ncenter) {
+      // ind_center = 6*(nlat*nlong + nup + ndown)
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+   }   
 }
 
 //_____________________________________________________________________________
 void TGeoSphere::SetPoints(Float_t *points) const
 {
 // create sphere mesh points
+   if (!points) {
+      Error("SetPoints", "Input array is NULL");
+      return;
+   }   
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
+   // total number of points on mesh is:
+   //    nlat*nlong + nup + ndown + ncenter;    // in case rmin=0
+   //   2*(nlat*nlong + nup + ndown);           // in case rmin>0
    Int_t i,j ;
-    if (points) {
-        Double_t dphi = fPhi2-fPhi1;
-        if (dphi<0) dphi+=360;
-        Double_t dtheta = fTheta2-fTheta1;
-
-        Int_t n            = fNseg + 1;
-        dphi = dphi/fNseg;
-        dtheta = dtheta/fNz;
-        Double_t z, theta, phi, cphi, sphi;
-        Int_t indx=0;
-        for (i = 0; i < fNz+1; i++)
-        {
-            theta = (fTheta1+i*dtheta)*TMath::DegToRad();
-            z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
-            Double_t zi = fRmin*TMath::Sin(theta);
-//            printf("plane %i nseg=%i z=%f:\n", i,n,z);
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                cphi = TMath::Cos(phi);
-                sphi = TMath::Sin(phi);
-                points[indx++] = zi * cphi;
-                points[indx++] = zi * sphi;
-                points[indx++] = z;
-//                printf("%i %f %f %f\n", j, points[3*j], points[3*j+1], points[3*j+2]);
-            }
-            z = fRmax * TMath::Cos(theta);
-            zi = fRmax* TMath::Sin(theta);
-//            printf("outer points for plane %i:\n", i);
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                cphi = TMath::Cos(phi);
-                sphi = TMath::Sin(phi);
-                points[indx++] = zi * cphi;
-                points[indx++] = zi * sphi;
-                points[indx++] = z;
-//                printf("%i %f %f %f\n", j, points[n+3*j], points[n+3*j+1], points[n+3*j+2]);
-            }
-        }
-    }
+   Double_t phi1 = fPhi1*TMath::DegToRad();
+   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t dphi = (phi2-phi1)/fNseg;
+   Double_t theta1 = fTheta1*TMath::DegToRad();
+   Double_t theta2 = fTheta2*TMath::DegToRad();
+   Double_t dtheta = (theta2-theta1)/fNz;
+   Double_t z,zi,theta,phi,cphi,sphi;
+   Int_t indx=0;
+   // FILL ALL POINTS ON OUTER SPHERE
+   // (nlat * nlong) points
+   // loop all latitudes except 0/180 degrees (nlat times)
+   // ilat = [0,nlat]   jlong = [0,nlong]
+   // Index(ilat, jlong) = 3*(ilat*nlat + jlong)
+   for (i = 0; i < nlat; i++) {
+      theta = theta1+(nup+i)*dtheta;
+      z =  fRmax * TMath::Cos(theta);
+      zi = fRmax * TMath::Sin(theta);
+      // loop all different longitudes (nlong times)
+      for (j = 0; j < nlong; j++) {
+         phi = phi1+j*dphi;
+         cphi = TMath::Cos(phi);
+         sphi = TMath::Sin(phi);
+         points[indx++] = zi * cphi;
+         points[indx++] = zi * sphi;
+         points[indx++] = z;
+      }
+   }
+   // upper/lower points (if they exist) for outer sphere
+   if (nup) {
+      // ind_up = 3*nlat*nlong
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = fRmax;
+   }   
+   if (ndown) {
+      // ind_down = 3*(nlat*nlong+nup)
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = -fRmax;
+   }   
+   // do the same for inner sphere if it exist
+   // Start_index = 3*(nlat*nlong + nup + ndown)
+   if (TestShapeBit(kGeoRSeg)) {
+   // Index(ilat, jlong) = start_index + 3*(ilat*nlat + jlong)
+      for (i = 0; i < nlat; i++) {
+         theta = theta1+(nup+i)*dtheta;
+         z =  fRmin * TMath::Cos(theta);
+         zi = fRmin * TMath::Sin(theta);
+         // loop all different longitudes (nlong times)
+         for (j = 0; j < nlong; j++) {
+            phi = phi1+j*dphi;
+            cphi = TMath::Cos(phi);
+            sphi = TMath::Sin(phi);
+            points[indx++] = zi * cphi;
+            points[indx++] = zi * sphi;
+            points[indx++] = z;
+         }
+      }
+      // upper/lower points (if they exist) for inner sphere
+      if (nup) {
+      // ind_up = start_index + 3*nlat*nlong
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = fRmin;
+      }   
+      if (ndown) {
+      // ind_down = start_index + 3*(nlat*nlong+nup)
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = -fRmin;
+      }   
+   }
+   // Add center of sphere if needed
+   if (ncenter) {
+      // ind_center = 6*(nlat*nlong + nup + ndown)
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+   }   
 }
 
 //_____________________________________________________________________________
 Int_t TGeoSphere::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
-   Int_t n;
-   n = fNseg+1;
-   Int_t nz = fNz+1;
-   Int_t numPoints = 2*n*nz;
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
+   // total number of points on mesh is:
+   //    nlat*nlong + nup + ndown + ncenter;    // in case rmin=0
+   //   2*(nlat*nlong + nup + ndown);           // in case rmin>0
+   Int_t numPoints = 0;
+   if (TestShapeBit(kGeoRSeg)) numPoints = 2*(nlat*nlong+nup+ndown);
+   else numPoints = nlat*nlong+nup+ndown+ncenter;
    return numPoints;
 }
 
 //_____________________________________________________________________________
 void TGeoSphere::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (!painter) return;
-///    
-///    Int_t n;
-///    n = fNseg+1;
-///    Int_t nz = fNz+1;
-///    Bool_t specialCase = kFALSE;
-///
-///    if (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01)  //mark this as a very special case, when
-///          specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
-///
-///    Int_t numPoints = 2*n*nz;
-///    Int_t numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-///    Int_t numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
-///    painter->AddSize3D(numPoints, numSegs, numPolys);
+///// obsolete - to be removed
 }
 
 const TBuffer3D & TGeoSphere::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
@@ -1289,21 +1606,33 @@ const TBuffer3D & TGeoSphere::GetBuffer3D(Int_t reqSections, Bool_t localFrame) 
       TGeoSphere * localThis = const_cast<TGeoSphere *>(this);
       localThis->SetNumberOfDivisions(gGeoManager->GetNsegments());
 
-      Int_t n = GetNumberOfDivisions()+1;
+      Bool_t full = kTRUE;
+      if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+      Int_t ncenter = 1;
+      if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+      Int_t nup = (fTheta1>0)?0:1;
+      Int_t ndown = (fTheta2<180)?0:1;
+      // number of different latitudes, excluding 0 and 180 degrees
+      Int_t nlat = fNz+1-(nup+ndown);
+      // number of different longitudes
+      Int_t nlong = fNseg;
+      if (TestShapeBit(kGeoPhiSeg)) nlong++;
 
-      Int_t nz     = GetNz()+1;
-      Int_t nbPnts = 2*n*nz;
-      if (nz < 2 || nbPnts <= 0) {
-         assert(kFALSE);
-      }
-      else {
-         Bool_t specialCase = (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01);
-         Int_t nbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-         Int_t nbPols = 2*(nz*n-1+(specialCase == kTRUE));
+      Int_t nbPnts = nlat*nlong+nup+ndown+ncenter;
+      if (TestShapeBit(kGeoRSeg)) nbPnts *= 2;
 
-         if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
-            buffer.SetSectionsValid(TBuffer3D::kRawSizes);
-         }
+      Int_t nbSegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
+      if (TestShapeBit(kGeoRSeg)) nbSegs *= 2; // inner sphere
+      if (TestShapeBit(kGeoPhiSeg)) nbSegs += 2*nlat+nup+ndown; // 2 phi planes
+      nbSegs += nlong * (2-nup - ndown);  // connecting cones
+      
+      Int_t nbPols = fNz*fNseg; // outer
+      if (TestShapeBit(kGeoRSeg)) nbPols *=2;  // inner
+      if (TestShapeBit(kGeoPhiSeg)) nbPols += 2*fNz; // 2 phi planes
+      nbPols += (2-nup-ndown)*fNseg; // connecting
+      
+      if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
    if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.67 2005/06/24 14:28:57 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.68 2005/06/27 13:09:47 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1218,7 +1218,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    tosource[2] = -dir[2];
    
    Bool_t done;
-   Int_t istep;
+//   Int_t istep;
    Int_t base_color, color;
    Double_t light;
    Double_t stemin=0, stemax=TGeoShape::Big();
@@ -1287,11 +1287,13 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   stemax = fClippingShape->DistFromOutside(point,dir,3);
                }
             }              
-            nextnode = fGeoManager->FindNextBoundary();
+//            nextnode = fGeoManager->FindNextBoundary();
+            nextnode = fGeoManager->FindNextBoundaryAndStep();
             step = fGeoManager->GetStep();
             if (!nextnode || step>1E10) break;
             steptot += step;
-            next = fGeoManager->Step();
+//            next = fGeoManager->Step();
+            next = nextnode;
             // Check the step
             if (fClippingShape) {
                if (steptot>stemax) {
@@ -1316,6 +1318,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                break;
             }
             // Propagate and recheck the point            
+/*
             istep = 0;
             if (!fGeoManager->IsEntering()) {
                if (fGeoManager->IsOutside()) break;
@@ -1332,6 +1335,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                printf("WOOPS\n");
                break; 
             }   
+*/
             if (fClippingShape) {
                if (steptot>stemax) {
                   steptot = 0;
@@ -1357,7 +1361,8 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          }
          if (!done) continue;
          // current ray intersect a visible volume having color=base_color
-         if (!norm) norm = fGeoManager->FindNormal(kFALSE);
+//         if (!norm) norm = fGeoManager->FindNormal(kFALSE);
+         if (!norm) norm = fGeoManager->FindNormalFast();
          if (!norm) continue;
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
          light = 0.25+0.5*TMath::Abs(calf);

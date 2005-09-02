@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.2 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.3 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -33,6 +33,7 @@ TGeoPhysicalNode::TGeoPhysicalNode()
    fLevel        = 0;
    fMatrices     = 0;
    fNodes        = 0;
+   fMatrixOrig   = 0;
    SetVisibility(kTRUE);
    SetVisibleFull(kFALSE);
    SetIsVolAtt(kTRUE);
@@ -66,6 +67,7 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
       delete fMatrices;
    }   
    if (fNodes) delete fNodes;
+   if (fMatrixOrig) delete fMatrixOrig;
 }
 
 //_____________________________________________________________________________
@@ -133,8 +135,10 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    // Change the shape for the aligned node
    if (newshape) vd->SetShape(newshape);
    // Now we have to re-voxelize the mother volume
-   vm->SetVoxelFinder(0);
-   vm->Voxelize("ALL");
+   TGeoVoxelFinder *voxels = vm->GetVoxels();
+   if (voxels) voxels->Voxelize();
+//   vm->SetVoxelFinder(0);
+//   vm->Voxelize("ALL");
    vm->FindOverlaps(); 
    // Eventually check for overlaps
    if (check) vm->CheckOverlaps();
@@ -243,6 +247,9 @@ void TGeoPhysicalNode::SetBranchAsState()
       fNodes->AddAt(branch[i],i);
       fMatrices->AddAt(new TGeoHMatrix(*matrices[i]),i);
    }   
+   TGeoNode *node = (TGeoNode*)fNodes->UncheckedAt(fLevel);
+   if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
+   *fMatrixOrig = node->GetMatrix();
 }
 
 //_____________________________________________________________________________

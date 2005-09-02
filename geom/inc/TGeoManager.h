@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.63 2005/06/16 13:25:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.64 2005/07/27 10:32:28 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -125,6 +125,7 @@ private :
    Int_t                *fIntBuffer;        //! transient int buffer
    Int_t                *fOverlapClusters;  //! internal array for overlaps
    Int_t                 fNLevel;           // maximum accepted level in geometry
+   Int_t                 fNmany;            //! number of overlapping nodes on current branch
    Double_t             *fDblBuffer;        //! transient dbl buffer
    Double_t              fLastPoint[3];     //! last point for which safety was computed
    TGeoVolume           *fPaintVolume;      //! volume currently painted
@@ -168,6 +169,7 @@ public:
    void                   GetBranchNames(Int_t *names) const;
    void                   GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    void                   GetBranchOnlys(Int_t *isonly) const;
+   Int_t                  GetNmany() const {return fNmany;}
    const char            *GetPdgName(Int_t pdg) const;
    void                   SetPdgName(Int_t pdg, const char *name);
    Bool_t                 IsFolder() const { return kTRUE; }
@@ -323,8 +325,10 @@ public:
    void                   SetTopVolume(TGeoVolume *vol);
    
    //--- geometry queries
-   TGeoNode              *FindNextBoundary(Double_t stepmax=1e30,const char *path="");
-   TGeoNode              *FindNextDaughterBoundary(Double_t *point, Double_t *dir, Bool_t compmatrix=kFALSE);
+   TGeoNode              *CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode);
+   TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::Big(),const char *path="");
+   TGeoNode              *FindNextDaughterBoundary(Double_t *point, Double_t *dir, Int_t &idaughter, Bool_t compmatrix=kFALSE);
+   TGeoNode              *FindNextBoundaryAndStep(Double_t stepmax=TGeoShape::Big());
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
@@ -417,6 +421,7 @@ public:
    Int_t                  GetNodeId() const {return fCache->GetNodeId();}
    TGeoNode              *GetNextNode() const         {return fNextNode;}
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
+   TGeoHMatrix           *GetMotherMatrix(Int_t up=1) const {return fCache->GetMotherMatrix(up);}
    TGeoHMatrix           *GetHMatrix();
    TGeoHMatrix           *GetCurrentMatrix() const    {return fCache->GetCurrentMatrix();}
    TGeoHMatrix           *GetGLMatrix() const         {return fGLMatrix;}
@@ -483,15 +488,15 @@ public:
    void                   SelectTrackingMedia();
 
    //--- stack manipulation
-   Int_t                  PushPath(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel);}
-   Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(); fCurrentNode=fCache->GetNode();
+   Int_t                  PushPath(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel, fNmany);}
+   Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(fNmany); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel();return fCurrentOverlapping;}
-   Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(index);
+   Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index);
                                      fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
-   Int_t                  PushPoint(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel,fPoint);}
-   Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fPoint); fCurrentNode=fCache->GetNode();
+   Int_t                  PushPoint(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel,fNmany,fPoint);}
+   Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fNmany,fPoint); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
-   Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(index, fPoint); fCurrentNode=fCache->GetNode();
+   Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 

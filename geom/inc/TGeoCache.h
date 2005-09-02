@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.21 2005/05/26 12:54:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.22 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TGeoCacheState : public TObject
 protected:
    Int_t                fCapacity;  // maximum level stored
    Int_t                fLevel;     // level in the current branch
+   Int_t                fNmany;     // number of overlapping nodes on current branch
    Int_t                fStart;     // start level
    Int_t                fIdBranch[30]; // ID branch
    Double_t            *fPoint;     // last point in master frame
@@ -57,8 +58,8 @@ public:
    TGeoCacheState(Int_t capacity);
    virtual ~TGeoCacheState();
 
-   virtual void         SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point=0);
-   virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
+   virtual void         SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=0);
+   virtual Bool_t       GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
 
   ClassDef(TGeoCacheState, 2)       // class storing the cache state
 };
@@ -81,8 +82,8 @@ public:
    TGeoCacheStateDummy(Int_t capacity);
    virtual ~TGeoCacheStateDummy();
 
-   virtual void         SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point=0);
-   virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
+   virtual void         SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=0);
+   virtual Bool_t       GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
 
   ClassDef(TGeoCacheStateDummy, 1)       // class storing the cache state
 };
@@ -163,6 +164,7 @@ public:
    Int_t                GetCurrentNode() const {return fCurrentNode;}
    Int_t                GetCurrentNodeId() const;
    virtual TGeoNode    *GetMother(Int_t up=1) const;
+   virtual TGeoHMatrix *GetMotherMatrix(Int_t /*up*/) const {return 0;}
    virtual TGeoNode    *GetNode() const;
    Int_t                GetStackLevel() const  {return fStackLevel;}
    Int_t                GetTopNode() const     {return fTopNode;}
@@ -187,9 +189,9 @@ public:
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    virtual void         PrintNode() const;
-   virtual Int_t        PushState(Bool_t ovlp, Int_t startlevel=0, Double_t *point=0);
-   virtual Bool_t       PopState(Double_t *point=0);
-   virtual Bool_t       PopState(Int_t level, Double_t *point=0);
+   virtual Int_t        PushState(Bool_t ovlp, Int_t ntmany=0, Int_t startlevel=0, Double_t *point=0);
+   virtual Bool_t       PopState(Int_t &nmany, Double_t *point=0);
+   virtual Bool_t       PopState(Int_t &nmany, Int_t level, Double_t *point=0);
    virtual void         PopDummy(Int_t ipop=9999) {fStackLevel=(ipop>fStackLevel)?(fStackLevel-1):(ipop-1);}
    virtual void         Refresh();
    void                 SetDefaultLevel(Int_t level) {fDefaultLevel = level;}
@@ -239,6 +241,7 @@ public:
    virtual Int_t        GetFreeSpace() const   {return fGeoCacheMaxSize;}
    virtual void        *GetMatrices() const {return fMatrixBranch;}
    virtual TGeoNode    *GetMother(Int_t up=1) const {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:0;}
+   virtual TGeoHMatrix *GetMotherMatrix(Int_t up=1) const {return ((fLevel-up)>=0)?fMatrixBranch[fLevel-up]:0;}
    virtual TGeoNode    *GetNode() const {return fNode;}
    virtual Int_t        GetNfree() const       {return fGeoCacheMaxSize;}
    virtual Int_t        GetNused() const       {return 0;}
