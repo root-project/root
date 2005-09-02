@@ -1275,26 +1275,26 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
    // Fill the projected histogram
    Double_t entries = 0;
-   for (Int_t N=0; N<fNpoints; N++) {
+   for (Int_t n=0; n<fNpoints; n++) {
       switch (pcase) {
          case 1:
             // "x"
-            h1->Fill(fX[N], fZ[N]);
+            h1->Fill(fX[n], fZ[n]);
             break;
          case 2:
             // "y"
-            h1->Fill(fY[N], fZ[N]);
+            h1->Fill(fY[n], fZ[n]);
             break;
          case 3:
             // "xy"
-            h2->Fill(fX[N], fY[N], fZ[N]);
+            h2->Fill(fX[n], fY[n], fZ[n]);
             break;
          case 4:
             // "yx"
-            h2->Fill(fY[N], fX[N], fZ[N]);
+            h2->Fill(fY[n], fX[n], fZ[n]);
             break;
       }
-      entries += fZ[N];
+      entries += fZ[n];
    }
    h->SetEntries(entries);
    return h;
