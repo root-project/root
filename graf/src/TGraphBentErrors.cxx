@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.13 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.14 2005/03/07 09:15:45 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -447,7 +447,7 @@ void TGraphBentErrors::Paint(Option_t *option)
    Int_t if1 = 0;
    Int_t if2 = 0;
 
-   const Int_t BASEMARKER=8;
+   const Int_t kBASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    Double_t bxl, bxh, byl, byh;
@@ -500,7 +500,7 @@ void TGraphBentErrors::Paint(Option_t *option)
    box.SetFillColor(GetFillColor());
 
    symbolsize  = GetMarkerSize();
-   sbase       = symbolsize*BASEMARKER;
+   sbase       = symbolsize*kBASEMARKER;
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
    Double_t cy  = 0;
@@ -515,7 +515,7 @@ void TGraphBentErrors::Paint(Option_t *option)
    Int_t dxend = Int_t(gStyle->GetEndErrorSize());
    tx   = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
    ty   =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
-   Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
+   Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
    for (Int_t i=0;i<fNpoints;i++) {
