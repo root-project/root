@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.8 2005/06/23 10:51:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.9 2005/07/18 16:20:52 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -205,8 +205,8 @@ void TSecContext::Print(Option_t *opt) const
    // If opt is "S" prints short in-line form for calls within TFTP,
    // TSlave, TProof ...
 
-   char Ord[10] = {0};
-   char Spc[10] = {0};
+   char aOrd[10] = {0};
+   char aSpc[10] = {0};
 
    // Check if option is numeric
    Int_t ord = -1, i = 0;
@@ -222,11 +222,11 @@ void TSecContext::Print(Option_t *opt) const
 
    // If asked to print ordinal number, preapre the string
    if (ord > -1) {
-      sprintf(Ord,"%d)",ord);
+      sprintf(aOrd,"%d)",ord);
       // and take care of alignment
-      Int_t len=strlen(Ord);
+      Int_t len=strlen(aOrd);
       while (len--)
-         strcat(Spc," ");
+         strcat(aSpc," ");
    }
 
    if (!strncasecmp(opt,"F",1)) {
@@ -255,11 +255,11 @@ void TSecContext::Print(Option_t *opt) const
    } else {
       // special printing form for THostAuth
       Info("PrintEstblshed","+ %s h:%s met:%d (%s) us:'%s'",
-            Ord, GetHost(), fMethod, GetMethodName(),
+            aOrd, GetHost(), fMethod, GetMethodName(),
             fUser.Data());
-      Info("PrintEstblshed","+ %s offset:%d id:%s", Spc, fOffSet, fID.Data());
+      Info("PrintEstblshed","+ %s offset:%d id:%s", aSpc, fOffSet, fID.Data());
       if (fOffSet > -1)
-         Info("PrintEstblshed","+ %s expiring: %s",Spc,fExpDate.AsString());
+         Info("PrintEstblshed","+ %s expiring: %s",aSpc,fExpDate.AsString());
    }
 }
 

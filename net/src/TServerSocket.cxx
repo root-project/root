@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.10 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.11 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -189,9 +189,9 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
    // Parse Opt
-   UChar_t AcceptOpt = fgAcceptOpt;
-   setaccopt(AcceptOpt,Opt);
-   Bool_t Auth = (Bool_t)(AcceptOpt & kSrvAuth);
+   UChar_t acceptOpt = fgAcceptOpt;
+   setaccopt(acceptOpt,Opt);
+   Bool_t auth = (Bool_t)(acceptOpt & kSrvAuth);
 
    socket->fSocket  = soc;
    socket->fSecContext = 0;
@@ -203,7 +203,7 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
    }
 
    // Perform authentication, if required
-   if (Auth) {
+   if (auth) {
       if (!Authenticate(socket)) {
          delete socket;
          socket = 0;

@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.4 2004/01/31 11:57:34 brun Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.5 2004/10/29 16:07:32 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -76,7 +76,7 @@ class ReAllocInit {
 public:
    ReAllocInit() { TStorage::SetReAllocHooks(&CustomReAlloc1, &CustomReAlloc2); }
 };
-static ReAllocInit realloc_init;
+static ReAllocInit gReallocInit;
 
 
 //---- memory checking macros --------------------------------------------------
@@ -191,8 +191,8 @@ extern long G__globalvarpointer;
 #define R__THROW_NULL
 #endif
 
-static const char *spaceErr = "storage exhausted (failed to allocate %ld bytes)";
-static int newInit = 0;
+static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
+static int gNewInit = 0;
 
 //______________________________________________________________________________
 void *operator new(size_t size) R__THROW_BAD
@@ -205,9 +205,9 @@ void *operator new(size_t size) R__THROW_BAD
 
    static const char *where = "operator new";
 
-   if (!newInit) {
+   if (!gNewInit) {
       TStorage::SetCustomNewDelete();
-      newInit++;
+      gNewInit++;
    }
 
 #ifndef NOCINT
@@ -231,7 +231,7 @@ void *operator new(size_t size) R__THROW_BAD
    else
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, gSpaceErr, RealSize(size));
    StoreSizeMagic(vp, size, where);
    return ExtStart(vp);
 }
@@ -244,9 +244,9 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 
    static const char *where = "operator new(void *at)";
 
-   if (!newInit) {
+   if (!gNewInit) {
       TStorage::SetCustomNewDelete();
-      newInit++;
+      gNewInit++;
    }
 
 #ifndef NOCINT
@@ -270,7 +270,7 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
       else
          vp = ::calloc(RealSize(size), sizeof(char));
       if (vp == 0)
-         Fatal(where, spaceErr, RealSize(size));
+         Fatal(where, gSpaceErr, RealSize(size));
       StoreSizeMagic(vp, size, where);
       return ExtStart(vp);
    }
@@ -291,7 +291,7 @@ void operator delete(void *ptr) R__THROW_NULL
 
    static const char *where = "operator delete";
 
-   if (!newInit)
+   if (!gNewInit)
       Fatal(where, "space was not allocated via custom new");
 
 #ifndef NOCINT
@@ -364,7 +364,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    if (ovp == 0)
       return ::operator new(size);
 
-   if (!newInit)
+   if (!gNewInit)
       Fatal(where, "space was not allocated via custom new");
 
    size_t oldsize = storage_size(ovp);
@@ -377,7 +377,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 
@@ -400,7 +400,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    if (ovp == 0)
       return ::operator new(size);
 
-   if (!newInit)
+   if (!gNewInit)
       Fatal(where, "space was not allocated via custom new");
 
 #if defined(MEM_DEBUG)
@@ -417,7 +417,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 
