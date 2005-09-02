@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.84 2005/08/31 11:11:46 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.85 2005/09/02 19:55:59 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2226,7 +2226,7 @@ int RpdSshAuth(const char *sstr)
 #if R__SSL
    if (gRSASSLKey) {
      // Determine type of RSA key required
-     gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
+     gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
    } else
      gRSAKey = 1;
 #else
@@ -2737,7 +2737,7 @@ int RpdKrb5Auth(const char *sstr)
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
@@ -3140,7 +3140,7 @@ int RpdSRPUser(const char *sstr)
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
@@ -3826,7 +3826,7 @@ int RpdGlobusAuth(const char *sstr)
 #if R__SSL
    if (gRSASSLKey) {
       // Determine type of RSA key required
-      gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
+      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
    } else
       gRSAKey = 1;
 #else
@@ -4478,12 +4478,12 @@ int RpdUser(const char *sstr)
          ruser[rulen] = '\0';
       gReUseRequired = (opt & gAUTH_REUSE_MSK);
       gCryptRequired = (opt & gAUTH_CRYPT_MSK);
-      gSaltRequired  = (opt & gAUTH_SSALT_MSK);
+      gSaltRequired  = (opt & kAUTH_SSALT_MSK);
       gOffSet = ofs;
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & gAUTH_RSATY_MSK) ? 2 : 1;
+        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
         gRSAKey = 1;
 #else
