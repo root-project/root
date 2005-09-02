@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.13 2003/08/21 08:26:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.14 2005/04/25 21:12:08 rdm Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -39,8 +39,8 @@ protected:
         Double_t        fLatitude;         //View angle latitude
         Double_t        fLongitude;        //View angle longitude
         Double_t        fPsi;              //View angle psi
-	     Double_t        fDview;            //Distance from COP to COV
-	     Double_t        fDproj;            //Distance from COP to projection plane
+        Double_t        fDview;            //Distance from COP to COV
+        Double_t        fDproj;            //Distance from COP to projection plane
         Double_t        fUpix;             // pad X size in pixels
         Double_t        fVpix;             // pad Y size in pixels
         Double_t        fTN[16];           //

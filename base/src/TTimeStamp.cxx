@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.19 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.20 2005/06/23 06:24:27 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -194,27 +194,27 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
 
 #ifdef R__LINUX
    // under linux %z is the hour offset and %Z is the timezone name
-   const Char_t *RFC822   = "%a, %d %b %Y %H:%M:%S %z (%Z) +#9ld nsec";
-   const Char_t *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
-   const Char_t *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
+   const Char_t *kRFC822   = "%a, %d %b %Y %H:%M:%S %z (%Z) +#9ld nsec";
+   const Char_t *kISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
+   const Char_t *kISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
 #else
    // otherwise only %Z is guarenteed to be defind
-   const Char_t *RFC822   = "%a, %d %b %Y %H:%M:%S %Z +#9ld nsec";
-   const Char_t *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%Z";
-   const Char_t *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
+   const Char_t *kRFC822   = "%a, %d %b %Y %H:%M:%S %Z +#9ld nsec";
+   const Char_t *kISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%Z";
+   const Char_t *kISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
 #endif
-   const Char_t *SQL = "%Y-%m-%d %H:%M:%S";
+   const Char_t *kSQL = "%Y-%m-%d %H:%M:%S";
 
    Bool_t asLocal = opt.Contains("l");
    Bool_t asSQL   = opt.Contains("s");
    if (asSQL) asLocal = kFALSE;
 
-   const Char_t *format = RFC822;
+   const Char_t *format = kRFC822;
    if (opt.Contains("c")) {
-      format = ISO8601;
-      if (!asLocal) format = ISO8601Z;
+      format = kISO8601;
+      if (!asLocal) format = kISO8601Z;
    }
-   if (asSQL) format = SQL;
+   if (asSQL) format = kSQL;
 
    // get the components into a tm struct
    time_t seconds = (time_t) fSec;

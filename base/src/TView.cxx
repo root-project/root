@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.27 2005/04/25 21:12:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.28 2005/08/29 08:24:08 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1373,7 +1373,7 @@ void TView::SetRange(const Double_t *min, const Double_t *max)
 //*-*
         Int_t irep;
         for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
-	if (IsPerspective()) SetDefaultWindow();
+        if (IsPerspective()) SetDefaultWindow();
         ResetView(fLongitude, fLatitude, fPsi, irep);
         if(irep < 0)
                 Error("SetRange", "problem setting view");
@@ -1741,7 +1741,7 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
       od[2]  += doz;
       for (j=0; j<3; j++) {
          fRmin[j] = oc[j]-od[j];
-	      fRmax[j] = oc[j]+od[j];
+         fRmax[j] = oc[j]+od[j];
       }
       SetDefaultWindow();
       fLatitude += dlat;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.83 2005/08/15 21:17:52 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.84 2005/08/23 19:41:36 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1497,7 +1497,7 @@ void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele)
       Float_t afloat;
       for (int i = 0; i < n; i++) {
          frombuf(fBufCur, &afloat);
-	     d[i]=afloat;
+         d[i]=afloat;
       }
    }
 }

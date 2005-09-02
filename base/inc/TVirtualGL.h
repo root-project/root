@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.19 2005/08/17 09:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.20 2005/08/23 11:29:06 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
    virtual void PaintPolyMarker(const Double_t * place, Style_t marker_style, UInt_t size) = 0;
    virtual void DrawSelectionBox(Double_t xmin, Double_t xmax,
                                  Double_t ymin, Double_t ymax,
-								 Double_t zmin, Double_t zmax) = 0;
+                                 Double_t zmin, Double_t zmax) = 0;
    virtual void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport) = 0;
    virtual Int_t ExitSelectionMode() = 0;
    virtual void GLLoadName(UInt_t name) = 0;

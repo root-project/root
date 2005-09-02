@@ -62,7 +62,7 @@ TBuffer3D::TBuffer3D(Int_t type,
 {
    // Destructor
    // Construct from supplied shape type and raw sizes
-	Init();
+   Init();
    SetRawSizes(reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity);
 }
 

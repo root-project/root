@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.2 2002/09/30 17:31:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.3 2004/01/29 18:31:39 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -37,16 +37,16 @@
 #define PCLOSE  '+'             // Positive closure (1 or more)
 #define OPT     '?'             // Optional closure (0 or 1)
 
-enum action {                   // These are put in the pattern string
+enum Eaction {                  // These are put in the pattern string
                                 // to represent metacharacters.
-   M_BOL    = (0x8000 | '^'),
-   M_EOL    = (0x8000 | '$'),
-   M_ANY    = (0x8000 | '.'),
-   M_CCL    = (0x8000 | '['),
-   M_OPT    = (0x8000 | '?'),
-   M_CLOSE  = (0x8000 | '*'),
-   M_PCLOSE = (0x8000 | '+'),
-   M_END    = (0x8000 | 0)      // end of pattern
+   kBOL    = (0x8000 | '^'),
+   kEOL    = (0x8000 | '$'),
+   kANY    = (0x8000 | '.'),
+   kCCL    = (0x8000 | '['),
+   kOPT    = (0x8000 | '?'),
+   kCLOSE  = (0x8000 | '*'),
+   kPCLOSE = (0x8000 | '+'),
+   kEND    = (0x8000 | 0)      // end of pattern
 
 };
 
@@ -68,10 +68,10 @@ enum action {                   // These are put in the pattern string
 inline void ADVANCE(const Pattern_t*& pat)
 {
    // Advance a pointer into the pattern template to the next pattern element,
-   // this is a+1 for all pattern elements but M_CCL, where you have to skip
-   // past both the M_CCL character and the bitmap that follows that character.
+   // this is a+1 for all pattern elements but kCCL, where you have to skip
+   // past both the kCCL character and the bitmap that follows that character.
 
-   if (*pat++ == (Pattern_t) M_CCL)
+   if (*pat++ == (Pattern_t) kCCL)
       pat += MAPSIZE;
 }
 
@@ -126,7 +126,7 @@ int Makepat(const char*     exp,        // Regular expression
 
    Pattern_t* cur;           // pointer to current pattern element
    Pattern_t* prev;          // pointer to previous pattern element
-   int        Error = E_ILLEGAL;
+   int        theError = E_ILLEGAL;
 
    if (!*exp)
       goto exit;
@@ -134,11 +134,11 @@ int Makepat(const char*     exp,        // Regular expression
    if (*exp == CLOSURE || *exp == PCLOSE || *exp == OPT)
       goto exit;
 
-   Error = E_NOMEM;
+   theError = E_NOMEM;
    if (!pat) goto exit;          // Check for bad pat
 
    prev = cur = pat;
-   Error = E_PAT;
+   theError = E_PAT;
 
    while (*exp) {
 
@@ -146,19 +146,19 @@ int Makepat(const char*     exp,        // Regular expression
 
       switch (*exp) {
       case ANY:
-         *cur = (Pattern_t)M_ANY;
+         *cur = (Pattern_t)kANY;
          prev = cur++;
          ++exp;
          break;
 
       case BOL:
-         *cur = (cur == pat) ? (Pattern_t)M_BOL : (unsigned char)*exp;
+         *cur = (cur == pat) ? (Pattern_t)kBOL : (unsigned char)*exp;
          prev = cur++;
          ++exp;
          break;
 
       case EOL:
-         *cur = (!exp[1]) ? (Pattern_t)M_EOL : (unsigned char)*exp;
+         *cur = (!exp[1]) ? (Pattern_t)kEOL : (unsigned char)*exp;
          prev = cur++;
          ++exp;
          break;
@@ -167,7 +167,7 @@ int Makepat(const char*     exp,        // Regular expression
          if (((cur - pat) + MAPSIZE) >= maxpat)
             goto exit;              // not enough room for bit map
          prev = cur;
-         *cur++ = (Pattern_t)M_CCL;
+         *cur++ = (Pattern_t)kCCL;
          exp = doccl(cur, exp);
          if (*exp != CCLEND) goto exit;
          ++exp;
@@ -178,18 +178,18 @@ int Makepat(const char*     exp,        // Regular expression
       case CLOSURE:
       case PCLOSE:
          switch (*prev) {
-         case M_BOL:
-         case M_EOL:
-         case M_OPT:
-         case M_PCLOSE:
-         case M_CLOSE:
+         case kBOL:
+         case kEOL:
+         case kOPT:
+         case kPCLOSE:
+         case kCLOSE:
             goto exit;
          }
 
          memmove( prev+1, prev, (cur-prev)*sizeof(*cur));
-         *prev = (Pattern_t) (*exp == OPT) ?    M_OPT :
-                             (*exp == PCLOSE) ? M_PCLOSE :
-                                                M_CLOSE;
+         *prev = (Pattern_t) (*exp == OPT) ?    kOPT :
+                             (*exp == PCLOSE) ? kPCLOSE :
+                                                kCLOSE;
          ++cur;
          ++exp;
          break;
@@ -201,11 +201,11 @@ int Makepat(const char*     exp,        // Regular expression
       }
    }
 
-   *cur = (Pattern_t)M_END;
-   Error = E_NONE;
+   *cur = (Pattern_t)kEND;
+   theError = E_NONE;
 
 exit:
-   return Error;
+   return theError;
 }
 
 //______________________________________________________________________________
@@ -218,7 +218,7 @@ const char *Matchs(const char*       str,
 
    if (!pat) return 0;
    const char* endp = 0;
-   if (*pat == (Pattern_t)M_BOL) {
+   if (*pat == (Pattern_t)kBOL) {
       // the rest has to match directly
       endp = patcmp(str, slen, pat+1, str);
    } else {
@@ -286,17 +286,17 @@ static const char *patcmp(const char*      str,
    if (!pat)                     // make sure pattern is valid
       return 0;
 
-   while (*pat != (Pattern_t)M_END) {
-      if (*pat == (Pattern_t)M_OPT) {
+   while (*pat != (Pattern_t)kEND) {
+      if (*pat == (Pattern_t)kOPT) {
 
          // Zero or one matches. It doesn't matter if omatch fails---it will
          // advance str past the character on success, though. Always advance
-         // the pattern past both the M_OPT and the operand.
+         // the pattern past both the kOPT and the operand.
          omatch(&str, &slen, ++pat, start);
          ADVANCE(pat);
 
-      } else if (*pat != (Pattern_t)M_CLOSE &&
-                 *pat != (Pattern_t)M_PCLOSE)    {
+      } else if (*pat != (Pattern_t)kCLOSE &&
+                 *pat != (Pattern_t)kPCLOSE)    {
 
          // Do a simple match. Note that omatch() fails if there's still
          // something in pat but we're at end of string.
@@ -307,7 +307,7 @@ static const char *patcmp(const char*      str,
 
       } else {                    // Process a Kleene or positive closure
 
-         if (*pat++ == (Pattern_t)M_PCLOSE)    // one match required
+         if (*pat++ == (Pattern_t)kPCLOSE)    // one match required
             if (!omatch(&str, &slen, pat, start))
                return 0;
 
@@ -317,7 +317,7 @@ static const char *patcmp(const char*      str,
          while (slen && omatch(&str, &slen, pat, start))
             ;
          ADVANCE(pat);  // skip over the closure
-         if (*pat == (Pattern_t)M_END)
+         if (*pat == (Pattern_t)kEND)
             break;
 
          // 'str' now points to the character that made made us fail. Try to
@@ -337,7 +337,7 @@ static const char *patcmp(const char*      str,
          return end;
 
       }  // closure
-   }  // while (*pat != M_END)
+   }  // while (*pat != kEND)
 
    //
    // omatch() advances str to point at the next character to be matched. So
@@ -367,18 +367,18 @@ static int omatch(const char**      strp,
 
    switch (*pat) {
    // Match beginning of line
-   case M_BOL:   return (*strp == start);
+   case kBOL:   return (*strp == start);
 
    // Match end of line
-   case M_EOL:   return (*slenp == 0);
+   case kEOL:   return (*slenp == 0);
 
    // Notice: cases above don't advance.
    // Match any except newline
-   case M_ANY: if (**strp == '\n') return 0;
+   case kANY: if (**strp == '\n') return 0;
       break;
 
    // Set match
-   case M_CCL: if (*slenp == 0 || !TSTBIT(**strp, pat + 1)) return 0;
+   case kCCL: if (*slenp == 0 || !TSTBIT(**strp, pat + 1)) return 0;
       break;
 
    // Literal match

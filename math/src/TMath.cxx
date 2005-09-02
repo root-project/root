@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.104 2005/08/15 08:42:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.105 2005/08/29 08:24:08 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -4799,9 +4799,9 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       DRK[1] = wk*wk;
       DSIGM[1] = TMath::Sqrt(rkappa/(1-0.5*beta2));
       for (j=1; j<=4; j++) {
-	 DRK[j+1] = DRK[1]*DRK[j];
-	 DSIGM[j+1] = DSIGM[1]*DSIGM[j];
-	 ALFA[j+1] = (FNINV[j]-beta2*FNINV[j+1])*DRK[j];
+         DRK[j+1] = DRK[1]*DRK[j];
+         DSIGM[j+1] = DSIGM[1]*DSIGM[j];
+         ALFA[j+1] = (FNINV[j]-beta2*FNINV[j+1])*DRK[j];
       }
       HC[0]=TMath::Log(rkappa)+beta2+0.42278434;
       HC[1]=DSIGM[1];
@@ -4812,7 +4812,7 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       HC[6]=HC[2]*HC[3];
       HC[7]=HC[2]*HC[5];
       for (j=2; j<=7; j++)
-	 HC[j]*=EDGEC[j];
+         HC[j]*=EDGEC[j];
       HC[8]=0.39894228*HC[1];
    } 
    else if (rkappa >=0.22) {
@@ -4899,19 +4899,19 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       q3 = y3*x;
       pq = x2*y2;
       if (itype==3){
-	 AC[1] = U1[1] + U1[2]*x + U1[3]*x2 + U1[5]*y + U1[6]*y2 + U1[7]*y3 + 
+         AC[1] = U1[1] + U1[2]*x + U1[3]*x2 + U1[5]*y + U1[6]*y2 + U1[7]*y3 + 
             U1[8]*xy + U1[10]*p3 + U1[12]*q3 + U1[13]*pq;
-	 AC[2] = U2[1] + U2[2]*x + U2[3]*x2 + U2[5]*y + U2[6]*y2 + U2[7]*y3 + 
+         AC[2] = U2[1] + U2[2]*x + U2[3]*x2 + U2[5]*y + U2[6]*y2 + U2[7]*y3 + 
             U2[8]*xy + U2[9]*p2 + U2[10]*p3 + U2[12]*q3 + U2[13]*pq;
-	 AC[3] = U3[1] + U3[2]*x + U3[3]*x2 + U3[5]*y + U3[6]*y2 + U3[7]*y3 + 
+         AC[3] = U3[1] + U3[2]*x + U3[3]*x2 + U3[5]*y + U3[6]*y2 + U3[7]*y3 + 
             U3[8]*xy + U3[9]*p2 + U3[10]*p3 + U3[11]*q2 + U3[12]*q3 + U3[13]*pq;
-	 AC[4] = U4[1] + U4[2]*x + U4[3]*x2 + U4[4]*x3 + U4[5]*y + U4[6]*y2 + U4[7]*y3 + 
+         AC[4] = U4[1] + U4[2]*x + U4[3]*x2 + U4[4]*x3 + U4[5]*y + U4[6]*y2 + U4[7]*y3 + 
             U4[8]*xy + U4[9]*p2 + U4[10]*p3 + U4[11]*q2 + U4[12]*q3;
-	 AC[5] = U5[1] + U5[2]*x + U5[3]*x2 + U5[4]*x3 + U5[5]*y + U5[6]*y2 + U5[7]*y3 + 
+         AC[5] = U5[1] + U5[2]*x + U5[3]*x2 + U5[4]*x3 + U5[5]*y + U5[6]*y2 + U5[7]*y3 + 
             U5[8]*xy + U5[10]*p3 + U5[11]*q2 + U5[12]*q3 + U5[13]*pq;
-	 AC[6] = U6[1] + U6[2]*x + U6[3]*x2 + U6[4]*x3 + U6[5]*y + U6[7]*y3 + 
+         AC[6] = U6[1] + U6[2]*x + U6[3]*x2 + U6[4]*x3 + U6[5]*y + U6[7]*y3 + 
             U6[8]*xy + U6[9]*p2 + U6[10]*p3 + U6[12]*q3 + U6[13]*pq;
-	 AC[7] = U7[1] + U7[2]*x + U7[3]*x2 + U7[4]*x3 + U7[5]*y + U7[6]*y2 + U7[8]*xy;
+         AC[7] = U7[1] + U7[2]*x + U7[3]*x2 + U7[4]*x3 + U7[5]*y + U7[6]*y2 + U7[8]*xy;
       }
       AC[8] = U8[1] + U8[2]*x + U8[3]*x2 + U8[4]*x3 + U8[5]*y + U8[6]*y2 + U8[7]*y3 + 
          U8[8]*xy + U8[9]*p2 + U8[10]*p3 + U8[11]*q2 + U8[13]*pq;
@@ -4965,12 +4965,12 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
       h[1] = x;
       h[2] = x*x -1;
       for (k=2; k<=8; k++) {
-	 fn++;
-	 h[k+1] = x*h[k]-fn*h[k-1];
+         fn++;
+         h[k+1] = x*h[k]-fn*h[k-1];
       }
       s = 1 + HC[7]*h[9];
       for (k=2; k<=6; k++) 
-	 s+=HC[k]*h[k+1];
+         s+=HC[k]*h[k+1];
       v = HC[8]*TMath::Exp(-0.5*x*x)*TMath::Max(s, 0.);
    } 
    else if (itype == 2) {
@@ -4979,11 +4979,11 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
    }
    else if (itype == 3) {
       if (rlam < AC[7]) {
-	 x = rlam*rlam;
-	 v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x)-AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x)));
+         x = rlam*rlam;
+         v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x)-AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x)));
       } else {
-	 x = 1./rlam;
-	 v = (AC[11]*x + AC[12])*x;
+         x = 1./rlam;
+         v = (AC[11]*x + AC[12])*x;
       }
    }
    else if (itype == 4) {

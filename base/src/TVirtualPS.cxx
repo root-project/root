@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.10 2004/05/10 14:20:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.11 2004/05/29 13:00:04 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -118,11 +118,11 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
       fStream->write(fBuffer, fLenBuffer);
       fStream->write("\n",1); fNByte++;
       while (len > kMaxBuffer) {
-		  fStream->write(str,kMaxBuffer);
-		  len -= kMaxBuffer;
-		  str += kMaxBuffer;
-	  }
-	  strcpy(fBuffer, str);
+         fStream->write(str,kMaxBuffer);
+         len -= kMaxBuffer;
+         str += kMaxBuffer;
+      }
+      strcpy(fBuffer, str);
       fLenBuffer = len;
    } else {
       strcpy(fBuffer + fLenBuffer, str);

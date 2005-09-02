@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.13 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.14 2004/08/18 15:27:59 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -282,7 +282,7 @@ void TMD5::Decode(UInt_t *out, const UChar_t *in, UInt_t len)
 
 // This is the central step in the MD5 algorithm
 #define MD5STEP(f, w, x, y, z, data, s) \
-	( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
+        ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
 
 //______________________________________________________________________________
 void TMD5::Transform(UInt_t buf[4], const UChar_t in[64])

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.20 2005/01/27 20:14:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.21 2005/08/25 17:07:30 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -212,12 +212,12 @@ Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 // (with mean =*ntot+0.5 and standard deviation sqrt(ntot*prob*(1-prob)).
 
    if (prob < 0 || prob > 1) return 0;
-   Int_t N = 0;
+   Int_t n = 0;
    for (Int_t i=0;i<ntot;i++) {
-      if (Rndm(N) > prob) continue;
-      N++;
+      if (Rndm() > prob) continue;
+      n++;
    }
-   return N;
+   return n;
 }
 
 //______________________________________________________________________________
@@ -482,22 +482,22 @@ Int_t TRandom::Poisson(Double_t mean)
 // Coded from Los Alamos report LA-5061-MS
 // Prob(N) = exp(-mean)*mean^N/Factorial(N)
 //
-   Int_t N;
+   Int_t n;
    if (mean <= 0) return 0;
      // use a gaussian approximation for large values of mean
    if (mean > 88) {
-      N = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
-      return N;
+      n = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
+      return n;
    }
    Double_t expmean = TMath::Exp(-mean);
    Double_t pir = 1;
-   N = -1;
+   n = -1;
    while(1) {
-      N++;
-      pir *= Rndm(N);
+      n++;
+      pir *= Rndm();
       if (pir <= expmean) break;
    }
-   return N;
+   return n;
 }
 
 //______________________________________________________________________________
@@ -510,7 +510,7 @@ Double_t TRandom::PoissonD(Double_t mean)
 // This function is a variant of TRandom::Poisson returning a double
 // instead of an integer.
    
-   Int_t N;
+   Int_t n;
    if (mean <= 0) return 0;
      // use a gaussian approximation for large values of mean
    if (mean > 88) {
@@ -518,13 +518,13 @@ Double_t TRandom::PoissonD(Double_t mean)
    }
    Double_t expmean = TMath::Exp(-mean);
    Double_t pir = 1;
-   N = -1;
+   n = -1;
    while(1) {
-      N++;
-      pir *= Rndm(N);
+      n++;
+      pir *= Rndm();
       if (pir <= expmean) break;
    }
-   return (Double_t)N;
+   return (Double_t)n;
 }
    
 //______________________________________________________________________________
@@ -668,7 +668,7 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong)
       c  = Rndm() - 0.5;
       r2 =  a*a+b*b+c*c;
    } 
-	
+
    Double_t rinv = xlong/TMath::Sqrt(r2);
    x = a*rinv;
    y = b*rinv;
