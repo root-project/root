@@ -76,7 +76,7 @@
 //______________________________________________________________________________
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 template <class T>
-Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *This,
+Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *thisVar,
                                        TBuffer &b, const T &arr, Int_t first,
                                        Int_t narr, Int_t eoffset, Int_t arrayMode,
                                        ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
@@ -87,9 +87,9 @@ Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *This,
 #else
 template <class T>
 Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
-				    Int_t narr, Int_t eoffset, Int_t arrayMode)
+                                    Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
-   TStreamerInfo *This = this;
+   TStreamerInfo *thisVar = this;
 #endif
    //  The object at pointer is serialized to the buffer b
    //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
@@ -98,10 +98,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    //  object.  Currently the only anticipated instantiation are for T==char**
    //  and T==TVirtualCollectionProxy
 
-   b.IncrementLevel(This);
+   b.IncrementLevel(thisVar);
 
    //mark this class as being used in the current file
-   This->TagFile((TFile *)b.GetParent());
+   thisVar->TagFile((TFile *)b.GetParent());
 
    //============
 
@@ -275,7 +275,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             Int_t *x=(Int_t*)(arr[0]+ioffset);
             b << *x;
             if (i == last-1) {
-               b.DecrementLevel(This);
+               b.DecrementLevel(thisVar);
                return x[0]; // info used by TBranchElement::FillLeaves
             }
             continue;
@@ -349,7 +349,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                if (res==2) {
                   Warning("WriteBuffer",
                           "The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
-                          This->GetName(),aElement->GetName(),cl->GetName());
+                          thisVar->GetName(),aElement->GetName(),cl->GetName());
                }
              }
             continue;
@@ -377,7 +377,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 //             {
 //                TMemberStreamer *pstreamer = fComp[i].fStreamer;
 //                TClass *cl                 = fComp[i].fClass;
-//                UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+//                UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
 //                if (pstreamer == 0) {
 //                   Int_t size = cl->Size();
 //                   Int_t imethod = fMethod[i]+eoffset;
@@ -408,10 +408,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
 
-               if (This->GetStreamMemberWise() && cl->CanSplit()) {
+               if (thisVar->GetStreamMemberWise() && cl->CanSplit()) {
                   // Let's save the collection member-wise.
 
-                  UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
+                  UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
                   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
@@ -427,7 +427,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                    b.SetByteCount(pos,kTRUE);
                    continue;
                }
-               UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+               UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
                if (pstreamer == 0) {
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
@@ -448,10 +448,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
-               if (This->GetStreamMemberWise() && cl->CanSplit()) {
+               if (thisVar->GetStreamMemberWise() && cl->CanSplit()) {
                   // Let's save the collection in member-wise order.
 
-                  UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
+                  UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
                   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
@@ -470,7 +470,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                   b.SetByteCount(pos,kTRUE);
                   continue;
                }
-               UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+               UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
                if (pstreamer == 0) {
                   DOLOOP {
                      b.WriteFastArray((void*)(arr[k]+ioffset),cl,fLength[i],0);
@@ -501,7 +501,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
             TClass *cl                 = fComp[i].fClass;
 
-            UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+            UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
             DOLOOP {b.WriteFastArray((void*)(arr[k]+ioffset),cl,fLength[i],pstreamer);}
             b.SetByteCount(pos,kTRUE);
             continue;
@@ -513,7 +513,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
                if(pstreamer) {
                   // See kStreamer case (similar code)
-                  UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+                  UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
                   DOLOOP{(*pstreamer)(b,arr[k]+ioffset,fLength[i]);}
                   b.SetByteCount(pos,kTRUE);
                } else {
@@ -529,7 +529,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          {
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
 
-            UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+            UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
             if (pstreamer == 0) {
                printf("ERROR, Streamer is null\n");
                aElement->ls();continue;
@@ -543,7 +543,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
          case TStreamerInfo::kStreamLoop:{
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
-            UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
+            UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
             if (pstreamer == 0) {
                printf("ERROR, Streamer is null\n");
                aElement->ls(); continue;
@@ -558,12 +558,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          continue;
 
          default:
-            Error("WriteBuffer","The element %s::%s type %d (%s) is not supported yet\n",This->GetName(),aElement->GetFullName(),fType[i],aElement->GetTypeName());
+            Error("WriteBuffer","The element %s::%s type %d (%s) is not supported yet\n",thisVar->GetName(),aElement->GetFullName(),fType[i],aElement->GetTypeName());
             continue;
       }
    }
 
-   b.DecrementLevel(This);
+   b.DecrementLevel(thisVar);
 
    return 0;
 }

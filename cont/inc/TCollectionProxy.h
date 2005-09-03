@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.9 2005/06/01 15:43:18 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.10 2005/08/30 02:45:05 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -60,7 +60,7 @@ namespace ROOT {
     void*               object;
     void*               start;
     void*               temp;
-    bool                delete_temp;
+    Bool_t              delete_temp;
     int                 refCount;
     size_t              space;
     T& iter() { return *(T*)buff; }

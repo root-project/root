@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.53 2005/06/22 20:18:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.54 2005/06/23 15:11:54 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -269,8 +269,8 @@ namespace ROOT {
       template <typename T> struct IsPointer { enum { val = 0 }; };
       template <typename T> struct IsPointer<T*> { enum { val = 1 }; };
    #else
-      template <typename T> bool IsPointer(const T* /* dummy */) { return false; };
-      template <typename T> bool IsPointer(const T** /* dummy */) { return true; };
+      template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
+      template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
    #endif
 
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }

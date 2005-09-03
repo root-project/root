@@ -98,7 +98,7 @@
       Int_t addCounter = -111;                                            \
       if ((imethod>0) && (fMethod[i]>0)) addCounter = -1;                 \
       if((addCounter<-1) && (aElement!=0) && (aElement->IsA()==TStreamerBasicPointer::Class())) { \
-         TStreamerElement* elemCounter = (TStreamerElement*) This->GetElements()->FindObject(((TStreamerBasicPointer*)aElement)->GetCountName()); \
+         TStreamerElement* elemCounter = (TStreamerElement*) thisVar->GetElements()->FindObject(((TStreamerBasicPointer*)aElement)->GetCountName()); \
          if (elemCounter) addCounter = elemCounter->GetTObjectOffset();   \
       }                                                                   \
       if (addCounter>=-1) {                                               \
@@ -122,7 +122,7 @@
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 // Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* This,
+Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* thisVar,
                                        TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset, ULong_t *fMethod,Int_t *fLength,
@@ -135,7 +135,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  TStreamerInfo* This = this;  
+  TStreamerInfo* thisVar = this;  
 #endif
    //  Skip elements in a TClonesArray
    
@@ -526,7 +526,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 // Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *This,
+Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *thisVar,
                                    TBuffer &b, const T &arr, Int_t first,
                                    Int_t narr, Int_t eoffset, Int_t arrayMode,
                                    ULong_t *&fMethod, ULong_t *&fElem, Int_t *&fLength,
@@ -540,7 +540,7 @@ template <class T>
 Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                                 Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
-  TStreamerInfo *This = this;
+  TStreamerInfo *thisVar = this;
 #endif
 
    //  Deserialize information from buffer b into object at pointer
@@ -550,14 +550,14 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
    //  object.  Currently the only anticipated instantiation are for T==char**
    //  and T==TVirtualCollectionProxy
 
-   b.IncrementLevel(This);
+   b.IncrementLevel(thisVar);
 
    Int_t last;
 
    if (!fType) {
       char *ptr = (arrayMode&1)? 0:arr[0];
       fClass->BuildRealData(ptr);
-      This->BuildOld();
+      thisVar->BuildOld();
    }
 
    //loop on all active members
@@ -1081,24 +1081,24 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          default: {
             int ans = -1;
             if (kase >= TStreamerInfo::kConv)
-               ans = This->ReadBufferConv(b,arr,i,kase,aElement,narr,eoffset);
+               ans = thisVar->ReadBufferConv(b,arr,i,kase,aElement,narr,eoffset);
             if (ans==0) continue;
 
             if (kase >= TStreamerInfo::kSkip)
-               ans = This->ReadBufferSkip(b,arr,i,kase,aElement,narr,eoffset);
+               ans = thisVar->ReadBufferSkip(b,arr,i,kase,aElement,narr,eoffset);
             if (ans==0) continue;
          }
          if (aElement)
             Error("ReadBuffer","The element %s::%s type %d (%s) is not supported yet\n",
-               This->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
+               thisVar->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
          else 
            Error("ReadBuffer","The TStreamerElement for %s %d is missing!\n",
-               This->GetName(),i);
+               thisVar->GetName(),i);
 
          continue;
       }
    }
-   b.DecrementLevel(This);
+   b.DecrementLevel(thisVar);
 
    return 0;
 }

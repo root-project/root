@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.21 2005/06/22 20:18:11 brun Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.22 2005/07/05 22:22:34 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -313,13 +313,13 @@ void TMethodCall::Execute(void *object)
    G__settemplevel(1);
    if (fDtorOnly) {
 #ifdef WIN32
-      long saveglobalvar = G__getgvp();
-      G__setgvp((long)address);
+      Long_t saveglobalvar = G__getgvp();
+      G__setgvp((Long_t)address);
       fFunc->Exec(address);
       G__setgvp(saveglobalvar);
 #else
-      long saveglobalvar = G__globalvarpointer;
-      G__globalvarpointer = (long)address;
+      Long_t saveglobalvar = G__globalvarpointer;
+      G__globalvarpointer = (Long_t)address;
       fFunc->Exec(address);
       G__globalvarpointer = saveglobalvar;
 #endif
@@ -506,7 +506,7 @@ void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
    // of default arguments.
 
    R__LOCKGUARD2(gCINTMutex);
-   fFunc->SetArgArray((long *)paramArr, nparam);
+   fFunc->SetArgArray((Long_t *)paramArr, nparam);
 }
 
 //______________________________________________________________________________

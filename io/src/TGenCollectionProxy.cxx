@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.20 2005/06/01 15:43:18 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.21 2005/08/30 02:45:05 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -269,34 +269,34 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
           }
        }
        else {
-          Long_t P = ti.Property();
-          if ( P&G__BIT_ISPOINTER ) {
+          Long_t prop = ti.Property();
+          if ( prop&G__BIT_ISPOINTER ) {
              fSize = sizeof(void*);
           }
-          if ( P&G__BIT_ISSTRUCT ) {
-             P |= G__BIT_ISCLASS;
+          if ( prop&G__BIT_ISSTRUCT ) {
+             prop |= G__BIT_ISCLASS;
           }
-          if ( P&G__BIT_ISCLASS ) {
+          if ( prop&G__BIT_ISCLASS ) {
              fType = gROOT->GetClass(intype.c_str());
              Assert(fType);
              fCtor   = fType->GetNew();
              fDtor   = fType->GetDestructor();
              fDelete = fType->GetDelete();
           }
-          else if ( P&G__BIT_ISFUNDAMENTAL ) {
+          else if ( prop&G__BIT_ISFUNDAMENTAL ) {
              TDataType *fundType = gROOT->GetType( intype.c_str() );
              fKind = (EDataType)fundType->GetType();
              if ( 0 == strcmp("bool",fundType->GetFullTypeName()) )  {
                 fKind = (EDataType)kBOOL_t;
              }
              fSize = ti.Size();
-             Assert(fKind>0 && fKind<0x16 || (fKind==-1&&(P&G__BIT_ISPOINTER)) );
+             Assert(fKind>0 && fKind<0x16 || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
           }
-          else if ( P&G__BIT_ISENUM ) {
+          else if ( prop&G__BIT_ISENUM ) {
              fSize = sizeof(int);
              fKind = kInt_t;
           }
-          fCase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
+          fCase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
           if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
              fCase |= R__BIT_ISTSTRING;
           }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.1 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.2 2005/05/30 10:31:15 rdm Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -91,7 +91,7 @@ TClass* TIsAProxy::operator()(const void *obj)
    } else  {
       // Avoid the case that the first word is a virtual_base_offset_table instead of
       // a virtual_function_table
-      long offset = **(long**)obj;
+      Long_t offset = **(Long_t**)obj;
       if ( offset == 0 ) return fClass;
 
       DynamicType* ptr = (DynamicType*)obj;

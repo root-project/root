@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.177 2005/08/23 17:00:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.178 2005/08/30 02:45:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@
 #include "TVirtualMutex.h"
 
 #ifndef WIN32
-extern long G__globalvarpointer;
+extern Long_t G__globalvarpointer;
 #endif
 
 // Mutex to protect CINT operations
@@ -292,7 +292,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    // we skip: non static members and non objects
    //  - the member G__virtualinfo inserted by the CINT RTTI system
 
-   long prop = m.Property() | m.Type()->Property();
+   Long_t prop = m.Property() | m.Type()->Property();
    if (prop & G__BIT_ISSTATIC)           return;
    if (prop & G__BIT_ISFUNDAMENTAL)      return;
    if (prop & G__BIT_ISENUM)             return;
@@ -386,7 +386,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                ts += buf;
                fBrowser->Add( p, actualCl, ts );
             }
-	    proxy->PopProxy();
+            proxy->PopProxy();
          }
       }
    }
@@ -912,7 +912,7 @@ void TClass::BuildRealData(void *pointer)
          R__LOCKGUARD2(gCINTMutex);
          G__CallFunc func;
          void *address;
-         long  offset;
+         Long_t offset;
          func.SetFunc(fClassInfo->GetMethod("ShowMembers",
                                             "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
@@ -931,7 +931,7 @@ void TClass::BuildRealData(void *pointer)
          // Not data member call ShowMembers, let try for the global
          // scope ShowMembers.
          G__ClassInfo gcl("ROOT");
-         long offset;
+         Long_t offset;
          char *proto = new char[strlen(GetName())+31];
          sprintf(proto,"%s*,TMemberInspector&,char*",GetName());
          G__MethodInfo methodinfo = gcl.GetMethod("ShowMembers",proto,&offset);
@@ -1162,7 +1162,7 @@ void TClass::Dump(void *obj) const
       R__LOCKGUARD2(gCINTMutex);
       G__CallFunc func;
       void *address;
-      long  offset;
+      Long_t offset;
       func.SetFunc(fClassInfo->GetMethod("ShowMembers",
                                          "TMemberInspector&,char*", &offset));
       if (!func.IsValid()) {
@@ -2012,7 +2012,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
 
    R__LOCKGUARD2(gCINTMutex);
    G__CallFunc  func;
-   long         offset;
+   Long_t       offset;
    func.SetFunc(GetClassInfo(), name, params, &offset);
    G__MethodInfo *info = new G__MethodInfo(func.GetMethodInfo());
    TMethod request(info,this);
@@ -2328,7 +2328,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 
    G__CallFunc func;
    void *address;
-   long  offset;
+   Long_t offset;
    TString dtor("~");
    dtor += fClassInfo->Name(); // Use just the name (as opposed to the fully qualified name).
    R__LOCKGUARD2(gCINTMutex);
@@ -2336,12 +2336,12 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    address = (void*)((long)obj + offset);
    if (dtorOnly) {
 #ifdef WIN32
-      long saveglobalvar = G__getgvp();
+      Long_t saveglobalvar = G__getgvp();
       G__setgvp((long)address);
       func.Exec(address);
       G__setgvp(saveglobalvar);
 #else
-      long saveglobalvar = G__globalvarpointer;
+      Long_t saveglobalvar = G__globalvarpointer;
       G__globalvarpointer = (long)address;
       func.Exec(address);
       G__globalvarpointer = saveglobalvar;

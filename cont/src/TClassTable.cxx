@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.33 2005/06/22 17:01:55 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.34 2005/08/30 02:45:05 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -525,8 +525,8 @@ void ROOT::RemoveClass(const char *cname)
       if (gROOT && gROOT->GetListOfClasses()) {
          TObject *pcname;
          if ((pcname=gROOT->GetListOfClasses()->FindObject(cname))) {
-	    TClass *cl = dynamic_cast<TClass*>(pcname);
-	    if (cl) cl->SetUnloaded();
+            TClass *cl = dynamic_cast<TClass*>(pcname);
+            if (cl) cl->SetUnloaded();
          }
       }
       TClassTable::Remove(cname);

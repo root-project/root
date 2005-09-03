@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.104 2005/06/22 20:18:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.105 2005/07/01 17:21:12 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -856,7 +856,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
 
    R__LOCKGUARD2(gCINTMutex);
    void       *address;
-   long        offset;
+   Long_t      offset;
    G__CallFunc func;
 
    // If the actuall class of this object inherit 2nd (or more) from TObject,

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.225 2005/06/09 18:18:41 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.226 2005/06/23 18:19:26 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -220,7 +220,7 @@ void TStreamerInfo::Build()
          const char* dmType = dm->GetTypeName();
          const char* dmFull = dm->GetFullTypeName();
          const char* dmTitle = dm->GetTitle();
-         bool        dmIsPtr = dm->IsaPointer();
+         Bool_t      dmIsPtr = dm->IsaPointer();
 
          //look for a data member with a counter in the comment string [n]
          TDataMember *dmref = 0;
@@ -812,8 +812,8 @@ void TStreamerInfo::BuildOld()
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
             Bool_t isPointer = dm->IsaPointer();
-            bool   isArray   = element->GetArrayLength() > 1;
-            bool   hasCount  = element->HasCounter();
+            Bool_t isArray   = element->GetArrayLength() > 1;
+            Bool_t hasCount  = element->HasCounter();
             newType = dm->GetDataType()->GetType();
             if (newType == kChar && isPointer && !isArray && !hasCount ) {
                newType = kCharStar;
@@ -1307,7 +1307,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    TIter next(fElements);
    TStreamerElement *element;
    Int_t ninc = 0;
-   Bool_t Riostream = kFALSE;
+   Bool_t incRiostream = kFALSE;
    while ((element = (TStreamerElement*)next())) {
       //if (element->IsA() == TStreamerBase::Class()) continue;
       sprintf(name,element->GetName());
@@ -1320,8 +1320,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       if (ltype < lt) ltype = lt;
       if (ldata < ld) ldata = ld;
       //must include Riostream.h in case of an STL container
-      if (!Riostream && element->InheritsFrom(TStreamerSTL::Class())) {
-         Riostream = kTRUE;
+      if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
+         incRiostream = kTRUE;
          fprintf(fp,"#include \"Riostream.h\"\n");
       }
       //get include file name if any
