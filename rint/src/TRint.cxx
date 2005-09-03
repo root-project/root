@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.47 2005/06/06 12:48:37 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.48 2005/07/29 21:33:58 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -248,7 +248,7 @@ void TRint::Run(Bool_t retrn)
             // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
             needGetlinemInit = kFALSE;
             retval = ProcessLine(cmd, kFALSE, &error);
-	    gInterpreter->EndOfLineAction();
+            gInterpreter->EndOfLineAction();
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.20 2005/07/07 06:10:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.21 2005/08/18 13:53:08 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -394,7 +394,7 @@ namespace ROOT {
 
       TString proxyTypeName;
       TString prefix;
-      bool isBase = false;
+      Bool_t  isBase = false;
       TString dataMemberName;
       TString cname;
       TString middle;
@@ -440,7 +440,7 @@ namespace ROOT {
       }
       
       if (element) {
-         bool ispointer = false;
+         Bool_t ispointer = false;
          switch(element->GetType()) {
 
             case TStreamerInfo::kBool:    { proxyTypeName = "T" + middle + "BoolProxy"; break; }
@@ -1318,7 +1318,7 @@ namespace ROOT {
       TString type;
 
       // TString prefix;
-      bool isBase = false;
+      Bool_t isBase = false;
       TString cname;
       TString middle;
       Bool_t  isclones = false;
@@ -1330,7 +1330,7 @@ namespace ROOT {
       }
 
       if (!element) return;
-      bool ispointer = false;
+      Bool_t ispointer = false;
       switch(element->GetType()) {
 
          case TStreamerInfo::kBool:    { type = "T" + middle + "BoolProxy"; break; }
@@ -1576,7 +1576,7 @@ namespace ROOT {
       TString classname = gSystem->BaseName(fPrefix);
 
       TString treefile;
-      bool ischain = fTree->InheritsFrom(TChain::Class());
+      Bool_t ischain = fTree->InheritsFrom(TChain::Class());
       if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
          treefile = fTree->GetDirectory()->GetFile()->GetName();
       else

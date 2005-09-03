@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.198 2005/07/27 16:09:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.199 2005/08/18 10:22:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -705,7 +705,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Entry$    : return the current entry number (== TTree::GetReadEntry())
 //  Entries$  : return the total number of entries (== TTree::GetEntries())
 //  Length$   : return the total number of element of this formula for this
-//  		   entry (==TTreeFormula::GetNdata())
+//              entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
@@ -1186,29 +1186,29 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    Int_t *leaflen = new Int_t[nleaves];
    TObjArray *leafs = new TObjArray(nleaves);
    for (l=0;l<nleaves;l++) {
-	   TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-	   leafs->AddAt(new TObjString(leaf->GetName()),l);
-	   leaflen[l] = leaf->GetMaximum();
-	}
+      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      leafs->AddAt(new TObjString(leaf->GetName()),l);
+      leaflen[l] = leaf->GetMaximum();
+   }
    if (ischain) {
       // In case of a chain, one must find the maximum dimension of each leaf
       // One must be careful and not assume that all Trees in the chain
       // have the same leaves and in the same order!
-	   TChain *chain = (TChain*)fTree;
-	   Int_t ntrees = chain->GetNtrees();
-	   for (Int_t file=0;file<ntrees;file++) {
-		   Long64_t first = chain->GetTreeOffset()[file];
-		   chain->LoadTree(first);
-		   for (l=0;l<nleaves;l++) {
-			   TObjString *obj = (TObjString*)leafs->At(l);
-			   TLeaf *leaf = chain->GetLeaf(obj->GetName());
-			   if (leaf) {
-				   leaflen[l] = TMath::Max(leaflen[l],leaf->GetMaximum());
-				}
-			}
-		}
-		chain->LoadTree(0);
-	}
+      TChain *chain = (TChain*)fTree;
+      Int_t ntrees = chain->GetNtrees();
+      for (Int_t file=0;file<ntrees;file++) {
+         Long64_t first = chain->GetTreeOffset()[file];
+         chain->LoadTree(first);
+         for (l=0;l<nleaves;l++) {
+            TObjString *obj = (TObjString*)leafs->At(l);
+            TLeaf *leaf = chain->GetLeaf(obj->GetName());
+            if (leaf) {
+               leaflen[l] = TMath::Max(leaflen[l],leaf->GetMaximum());
+            }
+         }
+      }
+      chain->LoadTree(0);
+   }
 
    leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
@@ -2082,24 +2082,24 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       }
       if (leafcount) {
          len = leafcount->GetMaximum();
-	 // Dimensions can be in the branchname for a split Object with a fix length C array.
-	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
-	 char *dimInName = (char*) strstr(branchname,"[");
-	 char *dimensions = 0;
-	 if ( twodim || dimInName ) {
-	   int dimlen = 0;
-	   if (dimInName) dimlen += strlen(dimInName) + 1;
-	   if (twodim)    dimlen += strlen(twodim) + 1;
-	   dimensions = new char[dimlen];
-	   if (dimInName) {
-	     strcpy(dimensions,dimInName);
-	     dimInName[0] = 0; // terminate branchname before the array dimensions.
-	   } else dimensions[0] = 0;
-	   if (twodim) strcat(dimensions,(char*)(twodim+1));
-	 }
+         // Dimensions can be in the branchname for a split Object with a fix length C array.
+         // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
+         char *dimInName = (char*) strstr(branchname,"[");
+         char *dimensions = 0;
+         if ( twodim || dimInName ) {
+            int dimlen = 0;
+            if (dimInName) dimlen += strlen(dimInName) + 1;
+            if (twodim)    dimlen += strlen(twodim) + 1;
+            dimensions = new char[dimlen];
+            if (dimInName) {
+               strcpy(dimensions,dimInName);
+               dimInName[0] = 0; // terminate branchname before the array dimensions.
+            } else dimensions[0] = 0;
+            if (twodim) strcat(dimensions,(char*)(twodim+1));
+         }
          if (dimensions) {
             fprintf(fp,"   %-15s %s[%d]%s;\n",leaf->GetTypeName(), branchname,len,dimensions);
-	    delete dimensions;
+            delete dimensions;
          } else {
             fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
          }

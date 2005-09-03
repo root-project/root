@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.20 2005/04/22 19:04:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.21 2005/05/18 21:04:54 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -912,10 +912,10 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf) {
    // Return the current size of the the TClonesArray
 
    if (!fCounter) {
-      TClass * ClonesClass = TClonesArray::Class();
+      TClass *clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = ClonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
-      fCounter = new TFormLeafInfo(ClonesClass,c_offset,counter);
+      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
    return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)) + 1;
 }

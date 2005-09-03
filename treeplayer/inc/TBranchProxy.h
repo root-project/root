@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.6 2005/01/19 18:30:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.7 2005/01/27 06:16:43 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -56,18 +56,18 @@ namespace ROOT {
 
    class TBranchProxyHelper {
    public:
-      TString name;
+      TString fName;
       TBranchProxyHelper(const char *left,const char *right = 0) :
-         name() {
+         fName() {
          if (left) {
-            name = left;
-            if (strlen(left)&&right) name += ".";
+            fName = left;
+            if (strlen(left)&&right) fName += ".";
          }
          if (right) {
-            name += right;
+            fName += right;
          }
       }
-      operator const char*() { return name.Data(); };
+      operator const char*() { return fName.Data(); };
    };
 
 
@@ -110,7 +110,7 @@ namespace ROOT {
       TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername);
       virtual ~TBranchProxy();
 
-      TBranchProxy* proxy() { return this; }
+      TBranchProxy* GetProxy() { return this; }
 
       void Reset();
 
@@ -240,7 +240,7 @@ namespace ROOT {
       TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TArrayCharProxy() {};
 
-      unsigned char at(int i) {
+      unsigned char At(int i) {
          static unsigned char default_val;
          if (!Read()) return default_val;
          // should add out-of bound test
@@ -249,7 +249,7 @@ namespace ROOT {
       }
 
       unsigned char operator [](int i) {
-         return at(i);
+         return At(i);
       }
 
       const char* c_str() {
@@ -287,12 +287,12 @@ namespace ROOT {
       TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TClaProxy() {};
 
-      const TClonesArray* ptr() {
+      const TClonesArray* GetPtr() {
          if (!Read()) return 0;
          return (TClonesArray*)GetStart();
       }
 
-      const TClonesArray* operator->() { return ptr(); }
+      const TClonesArray* operator->() { return GetPtr(); }
 
    };
 
@@ -352,7 +352,7 @@ namespace ROOT {
       TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TArrayProxy() {};
 
-      const T& at(int i) {
+      const T& At(int i) {
          static T default_val;
          if (!Read()) return default_val;
          // should add out-of bound test
@@ -360,7 +360,7 @@ namespace ROOT {
       }
 
       const T& operator [](int i) {
-         return at(i);
+         return At(i);
       }
 
 
@@ -386,7 +386,7 @@ namespace ROOT {
       TArray3Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TArray3Proxy() {};
 
-      const array_t* at(int i) {
+      const array_t* At(int i) {
          static array_t default_val;
          if (!Read()) return &default_val;
          // should add out-of bound test
@@ -394,7 +394,7 @@ namespace ROOT {
       }
 
       const array_t* operator [](int i) {
-         return at(i);
+         return At(i);
       }
 
    };
@@ -418,7 +418,7 @@ namespace ROOT {
       TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TClaImpProxy() {};
 
-      const T& at(int i) {
+      const T& At(int i) {
          static T default_val;
          if (!Read()) return default_val;
          if (fWhere==0) return default_val;
@@ -430,7 +430,7 @@ namespace ROOT {
 
       }
 
-      const T& operator [](int i) { return at(i); }
+      const T& operator [](int i) { return At(i); }
 
       // Make sure that the copy methods are really private
 #ifdef private
@@ -467,7 +467,7 @@ namespace ROOT {
       TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TClaArrayProxy() {};
 
-      /* const */  array_t at(int i) {
+      /* const */  array_t At(int i) {
          static T default_val;
          if (!Read()) return &default_val;
          if (fWhere==0) return &default_val;
@@ -475,7 +475,7 @@ namespace ROOT {
          return (array_t)GetClaStart(i);
       }
 
-      /* const */ array_t operator [](int i) { return at(i); }
+      /* const */ array_t operator [](int i) { return At(i); }
 
    };
 
@@ -505,7 +505,7 @@ namespace ROOT {
          : TBranchProxy(director,parent, name) {};
       ~TClaArray2Proxy() {};
 
-      const array_t &at(int i) {
+      const array_t &At(int i) {
          // might need a second param or something !?
 
          static array_t default_val;
@@ -520,7 +520,7 @@ namespace ROOT {
          // return ((array_t**)temp)[i];
       }
 
-      const array_t &operator [](int i) { return at(i); }
+      const array_t &operator [](int i) { return At(i); }
 
    };
 
@@ -544,7 +544,7 @@ namespace ROOT {
       TClaArray3Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TClaArray3Proxy() {};
 
-      const array_t* at(int i) {
+      const array_t* At(int i) {
          static array_t default_val;
          if (!Read()) return &default_val;
          if (fWhere==0) return &default_val;
@@ -557,7 +557,7 @@ namespace ROOT {
          // return ((array_t**)temp)[i];
       }
 
-      const array_t* operator [](int i) { return at(i); }
+      const array_t* operator [](int i) { return At(i); }
 
    };
 #endif

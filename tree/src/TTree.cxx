@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.261 2005/08/04 20:10:06 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.262 2005/08/15 10:11:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1388,8 +1388,8 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       }
    }
 
-   //	Now look vector<> or list<>
-   //int stlcont = TClassEdit::IsSTLCont(classname);
+   // Now look vector<> or list<>
+   // int stlcont = TClassEdit::IsSTLCont(classname);
 
    //if ( (stlcont>=1 && stlcont<=8) || (stlcont>=-8 && stlcont<=-1) || cl->GetCollectionProxy() ) {
    if (cl->GetCollectionProxy()) {
@@ -1690,7 +1690,7 @@ TFile *TTree::ChangeFile(TFile *file)
          while ((branch = (TBranch*)nextb())) {
             branch->SetFile(newfile);
          }
-	 if (t->GetBranchRef()) t->GetBranchRef()->SetFile(newfile);
+         if (t->GetBranchRef()) t->GetBranchRef()->SetFile(newfile);
          continue;
       }
       //not a TH1 or a TTree, move object to new file
@@ -2292,7 +2292,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  Entry$    : return the current entry number (== TTree::GetReadEntry())
 //  Entries$  : return the total number of entries (== TTree::GetEntries())
 //  Length$   : return the total number of element of this formula for this
-//  		   entry (==TTreeFormula::GetNdata())
+//                 entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //

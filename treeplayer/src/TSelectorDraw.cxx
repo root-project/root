@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.53 2005/08/09 20:11:53 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.54 2005/08/29 12:05:56 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -655,7 +655,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
             }
-	    if (!hkeep) {
+            if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(0);
             }
@@ -1230,7 +1230,7 @@ void TSelectorDraw::TakeAction()
       // Remove potential empty graphs
       for (col=0;col<ncolors;col++) {
          gr = (TGraph*)grs->At(col);
-	 if (gr && gr->GetN() <= 0) grs->Remove(gr);
+         if (gr && gr->GetN() <= 0) grs->Remove(gr);
       }
    }
    //__________________________2D Profile Histogram__________________

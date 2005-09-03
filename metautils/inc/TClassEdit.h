@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.10 2004/07/15 23:08:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.11 2004/10/29 16:07:32 rdm Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -23,7 +23,7 @@ namespace std {
 
 namespace TClassEdit {
 
-   typedef enum {
+   enum EModType {
       kDropTrailStar    = 1<<0,
       kDropDefaultAlloc = 1<<1,
       kDropAlloc        = 1<<2,
@@ -31,9 +31,9 @@ namespace TClassEdit {
       kInnedMostClass   = 1<<4,
       kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
       kDropComparator   = 1<<6  /* if the class has a comparator, drops BOTH the comparator and the Allocator */
-   } EModType;
+   };
 
-   typedef enum {
+   enum ESTLType {
       kNotSTL   = 0,
       kVector   = 1,
       kList     = 2,
@@ -43,7 +43,7 @@ namespace TClassEdit {
       kSet      = 6,
       kMultiSet = 7,
       kEnd      = 8
-   } ESTLType;
+   };
 
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);

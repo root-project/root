@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.29 2005/08/24 21:04:29 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.30 2005/08/30 12:10:37 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1846,13 +1846,13 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const EContext_t original_context = context;  // save this for later
 
          TClass *pClass;
-	 
-	 // frodo: Instead of just passing the last portion of the string to
-	 //        MakeClassFromVarName(), we now pass the all string and let
-	 //        it decide how to handle it... I know it's not the best way
-	 //        because of the context handling, but I wanted to "minimize"
-	 //        the changes to the current code and this seemed the best way 
-	 //        to do it
+         
+         // frodo: Instead of just passing the last portion of the string to
+         //        MakeClassFromVarName(), we now pass the all string and let
+         //        it decide how to handle it... I know it's not the best way
+         //        because of the context handling, but I wanted to "minimize"
+         //        the changes to the current code and this seemed the best way 
+         //        to do it
 //         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
          TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():]*$");
 
@@ -2357,15 +2357,15 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       
       if (pclass) 
       {            
-          if (0) printf("Variable [%s] exists!\n", parentName.Data());	  
+          if (0) printf("Variable [%s] exists!\n", parentName.Data());  
           
-	  // If it's back in the first call of the function, return immediatly
+          // If it's back in the first call of the function, return immediatly
           if (iter == 0) return pclass;
 
-	  if (0) printf("Trying data member [%s] of class [%s] ...\n", 
-	          memberName.Data(), pclass->GetName());
+          if (0) printf("Trying data member [%s] of class [%s] ...\n", 
+                  memberName.Data(), pclass->GetName());
           
-	  // Check if it's a member
+          // Check if it's a member
           TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
           TList  *dlist = pclass->GetListOfDataMembers();
           TIter   next(pclass->GetListOfAllPublicDataMembers());
@@ -2375,28 +2375,28 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
           delete dlist;
           if (dmptr)
           {
-	      if (0) printf("It's a member!\n");
+              if (0) printf("It's a member!\n");
 
               TString returnName = dmptr->GetTypeName();
-//	      if (returnName[returnName.Length()-1] == '*')
-//	          printf("It's a pointer!\n");
-	      
-	      TClass *mclass = new TClass(returnName.Data());
+//              if (returnName[returnName.Length()-1] == '*')
+//                  printf("It's a pointer!\n");
+              
+              TClass *mclass = new TClass(returnName.Data());
               return mclass;
           }
 
 
           // Check if it's a proto: must have ()
-	  // This might not be too safe to use   :(
+          // This might not be too safe to use   :(
           char *parentesis_ptr = (char*)strrchr(memberName.Data(), '(');
           if (parentesis_ptr) *parentesis_ptr = 0;
 
 
-	  if (0) printf("Trying method [%s] of class [%s] ...\n", 
-	          memberName.Data(), pclass->GetName());
+          if (0) printf("Trying method [%s] of class [%s] ...\n", 
+                  memberName.Data(), pclass->GetName());
 
           // Check if it's a method
-	  TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data()); 
+          TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data()); 
           TList  *mlist = pclass->GetListOfAllPublicMethods();
           next = mlist;
           while ((mptr = (TMethod *) next())) {
@@ -2404,28 +2404,28 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
           }
           delete mlist;
 
-	  if (mptr)
-	  {
+          if (mptr)
+          {
               TString returnName = mptr->GetReturnTypeName();
 
               if (0) printf("It's a method called [%s] with return type [%s]\n", 
-	              memberName.Data(), returnName.Data());
+                      memberName.Data(), returnName.Data());
               
               // This will handle the methods that returns a pointer to a class
-	      if (returnName[returnName.Length()-1] == '*')
-	      {
-	          returnName[returnName.Length()-1] = 0;
-		  fVarIsPointer = kTRUE;
-	      } 
-	      else 
-	      {
-	          fVarIsPointer = kFALSE;
-	      }
-	      
-  	      TClass *mclass = new TClass(returnName.Data());
-              return mclass;	      
-	  }      
-      }	  
+              if (returnName[returnName.Length()-1] == '*')
+              {
+                  returnName[returnName.Length()-1] = 0;
+                  fVarIsPointer = kTRUE;
+              } 
+              else 
+              {
+                  fVarIsPointer = kFALSE;
+              }
+              
+              TClass *mclass = new TClass(returnName.Data());
+              return mclass;      
+          }      
+      }
    }
 
    //
@@ -2595,7 +2595,7 @@ int TTabCom::ParseReverse(const char *var_str, int start)
     for (int i = start; i > 0; i--)
     {
         if (var_str[i] == '.') return i;
-	if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;        
+        if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;        
     }
 
     return end;

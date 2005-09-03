@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.2 2005/08/16 13:51:49 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.3 2005/08/29 10:57:28 brun Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -231,9 +231,9 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
    TSQLRow * row = 0;
    while( (row = tables->Next()) ) {
-     if(strcmp(row->GetField(0),table.Data())==0){
-	     return kTRUE;
-     }
+      if(strcmp(row->GetField(0),table.Data())==0){
+        return kTRUE;
+      }
    }
 
    return kFALSE;
@@ -351,7 +351,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
       type = row->GetField(1);
       Int_t index = type.First('(');
       if(index>0){
-       	prec = atoi(type(index+1,type.First(')')-1).Data());
+         prec = atoi(type(index+1,type.First(')')-1).Data());
          type = type(0,index);
       }
       branchName = row->GetField(0);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.3 2004/06/28 16:38:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.4 2004/10/18 21:07:05 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 #endif
 
 #define InjecTBranchProxyInterface()                     \
-   TBranchProxy *proxy() { return obj.proxy(); }         \
+   TBranchProxy *GetProxy() { return obj.GetProxy(); }   \
    void Reset() { obj.Reset(); }                         \
    bool Setup() { return obj.Setup(); }                  \
    bool IsInitialized() { return obj.IsInitialized(); }  \
@@ -46,7 +46,7 @@ namespace ROOT {
          if (obj.GetWhere()) cout << "address? " << (T*)obj.GetWhere() << endl;
       }
 
-      T* ptr() {
+      T* GetPtr() {
          //static T default_val;
          if (!obj.Read()) return 0; // &default_val;
          T *temp = (T*)obj.GetStart();
@@ -54,9 +54,9 @@ namespace ROOT {
          return temp;
       }
 
-      T* operator->() { return ptr(); }
-      operator T*() { return ptr(); }
-      // operator T&() { return *ptr(); }
+      T* operator->() { return GetPtr(); }
+      operator T*() { return GetPtr(); }
+      // operator T&() { return *GetPtr(); }
 
    };
 
@@ -84,7 +84,7 @@ namespace ROOT {
          if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
       }
 
-      const array_t &at(int i) {
+      const array_t &At(int i) {
          static array_t default_val;
          if (!obj.Read()) return default_val;
          // should add out-of bound test
@@ -94,7 +94,7 @@ namespace ROOT {
          else return default_val;
       }
 
-      const array_t &operator [](int i) { return at(i); }
+      const array_t &operator [](int i) { return At(i); }
 
    };
 #endif
@@ -120,7 +120,7 @@ namespace ROOT {
       TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
       ~TClaObjProxy() {};
 
-      const T* at(int i) {
+      const T* At(int i) {
          static T default_val;
          if (!obj.Read()) return &default_val;
          if (obj.GetWhere()==0) return &default_val;
@@ -130,7 +130,7 @@ namespace ROOT {
          else return &default_val;
       }
 
-      const T* operator [](int i) { return at(i); }
+      const T* operator [](int i) { return At(i); }
 
    };
 

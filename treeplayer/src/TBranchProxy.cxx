@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.2 2004/06/28 16:38:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.3 2004/08/23 19:27:33 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -301,8 +301,8 @@ Bool_t ROOT::TBranchProxy::Setup() {
 
             if (fMemberOffset<0) {
                Error("Setup",Form("Negative offset %d for %s in %s",
-				  fMemberOffset,fBranch->GetName(),
-				  bcount?bcount->GetName():"unknown"));
+                                  fMemberOffset,fBranch->GetName(),
+                                  bcount?bcount->GetName():"unknown"));
             }
 
          } else if (fClass) {

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.2 2005/06/28 16:46:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.3 2005/06/28 16:49:45 brun Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -61,7 +61,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 
    // Go through all the trees and check if they have indeces. If not then build them.
    for (i = 0; i < chain->GetNtrees(); i++) {
-      ChainIndexEntry_t entry;
+      TChainIndexEntry entry;
       chain->LoadTree((chain->GetTreeOffset())[i]);
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
       entry.fTreeIndex = 0;

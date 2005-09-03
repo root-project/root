@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TChaioIndex.h,v 1.4 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.1 2005/06/24 20:25:11 pcanal Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TChain;
 class TChainIndex : public TVirtualIndex {
 
 public:
-   class ChainIndexEntry_t {
+   class TChainIndexEntry {
       // holds a description of indices of trees in the chain. 
    public:
       Long64_t    fMinIndexValue;           // the minimum value of the index
@@ -59,7 +59,7 @@ protected:
    TString        fMinorName;               // Index minor name
    TTreeFormula  *fMajorFormulaParent;      //! Pointer to major TreeFormula in Parent tree (if any)
    TTreeFormula  *fMinorFormulaParent;      //! Pointer to minor TreeFormula in Parent tree (if any)
-   std::vector<ChainIndexEntry_t> fEntries; // descriptions of indices of trees in the chain.
+   std::vector<TChainIndexEntry> fEntries; // descriptions of indices of trees in the chain.
 
    std::pair<TVirtualIndex*, Int_t> GetSubTreeIndex(Int_t major, Int_t minor) const;
    void ReleaseSubTreeIndex(TVirtualIndex* index, Int_t treeNo) const;

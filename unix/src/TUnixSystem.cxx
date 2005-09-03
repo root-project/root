@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.135 2005/06/14 09:20:57 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.136 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -417,7 +417,7 @@ void TUnixSystem::SetDisplay()
       if (tty) {
          tty += 5;               // remove "/dev/"
 
-	 R__LOCKGUARD2(gSystemMutex);
+         R__LOCKGUARD2(gSystemMutex);
 
          STRUCT_UTMP *utmp_entry = (STRUCT_UTMP *)SearchUtmpEntry(ReadUtmpFile(), tty);
          if (utmp_entry) {
@@ -1885,19 +1885,19 @@ void TUnixSystem::StackTrace()
    void *trace[kMAX_BACKTRACE_DEPTH];
    int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
    for (int n = 5; n < depth; n++) {
-      unsigned long addr = (unsigned long) trace[n];
+      ULong_t addr = (ULong_t) trace[n];
       Dl_info info;
 
       if (dladdr(trace[n], &info) && info.dli_fname && info.dli_fname[0]) {
          const char   *libname = info.dli_fname;
          const char   *symname = (info.dli_sname && info.dli_sname[0])
                                  ? info.dli_sname : "<unknown>";
-         unsigned long libaddr = (unsigned long) info.dli_fbase;
-         unsigned long symaddr = (unsigned long) info.dli_saddr;
-         bool          gte = (addr >= symaddr);
-         unsigned long diff = (gte) ? addr - symaddr : symaddr - addr;
+         ULong_t libaddr = (ULong_t) info.dli_fbase;
+         ULong_t symaddr = (ULong_t) info.dli_saddr;
+         Bool_t        gte = (addr >= symaddr);
+         ULong_t diff = (gte) ? addr - symaddr : symaddr - addr;
          if (addr2line && symaddr) {
-            unsigned long offset = (addr >= libaddr) ? addr - libaddr :
+            ULong_t offset = (addr >= libaddr) ? addr - libaddr :
                                                        libaddr - addr;
             sprintf(buffer, "%s -e %s 0x%016lx", addr2line, libname, offset);
             Bool_t nodebug = kTRUE;
@@ -1961,7 +1961,7 @@ void TUnixSystem::StackTrace()
 # endif
    // 64 should more than plenty for a space and a pid.
    char buffer[sizeof(PROG_PSTACK) + 64 + 3 + sizeof(PROG_CXXFILT) + 64];
-   sprintf(buffer, "%s %lu%s 1>&%d", PROG_PSTACK, (unsigned long) getpid(),
+   sprintf(buffer, "%s %lu%s 1>&%d", PROG_PSTACK, (ULong_t) getpid(),
            "" CXXFILTER, fd);
    buffer[sizeof (buffer)-1] = 0;
    system(buffer);

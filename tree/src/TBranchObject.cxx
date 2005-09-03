@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.30 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.31 2005/03/19 16:39:39 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -309,9 +309,9 @@ void TBranchObject::SetAddress(void *add)
       }
       TClass *clm = clones->GetClass();
       if (clm) {
-			clm->BuildRealData(); //just in case clm derives from an abstract class
-			clm->GetStreamerInfo();
-		}
+         clm->BuildRealData(); //just in case clm derives from an abstract class
+         clm->GetStreamerInfo();
+      }
    }
    char *fullname = new char[200];
    const char *bname = GetName();
@@ -364,7 +364,7 @@ void TBranchObject::SetAddress(void *add)
                   };
                };
                fullname[pos] = '\0';
-               branch = (TBranch*)fBranches.FindObject(fullname);		 
+               branch = (TBranch*)fBranches.FindObject(fullname);
             } else {
                if (!clobj->InheritsFrom(TObject::Class())) continue;
                if (isDot) sprintf(fullname,"%s%s",bname,&rdname[1]);

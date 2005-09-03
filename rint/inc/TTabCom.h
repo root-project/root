@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.7 2005/08/24 12:52:08 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -228,8 +228,8 @@ private: // data members
 
    Pattern_t   fPat[ kNUM_PAT ][ MAX_LEN_PAT ];  // array of patterns
    const char* fRegExp[ kNUM_PAT ];              // corresponding regular expression plain text
-   bool  fVarIsPointer;                          // frodo: pointer or not flag
-   int   fLastIter;                              // frodo: iteration counter for recursive MakeClassFromVarName
+   Bool_t fVarIsPointer;                         // frodo: pointer or not flag
+   Int_t  fLastIter;                             // frodo: iteration counter for recursive MakeClassFromVarName
 
    ClassDef(TTabCom,0)  //Perform comand line completion when hitting <TAB>
 };

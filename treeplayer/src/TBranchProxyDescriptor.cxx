@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.5 2005/01/22 09:29:37 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.6 2005/03/04 20:11:26 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -100,7 +100,7 @@ namespace ROOT {
                  offset," ", maxVarname, GetDataName(), above, subbranchname);
       } else {
 
-         fprintf(hf,"\n%-*s      %-*s(director, obj.proxy(), \"%s\")",
+         fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\")",
                  offset," ", maxVarname, GetDataName(), GetBranchName() );
 
          //fprintf(hf,"\n%-*s      %-*s(director, ffPrefix, \"\", \"%s\")",

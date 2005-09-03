@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: $
+// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.1 2005/08/15 21:29:58 pcanal Exp $
 // Author: Philippe Canal 2005
 
 /*************************************************************************
@@ -38,7 +38,7 @@ private:
    // TBuffer objects cannot be copied or assigned
    TBufferSQL(const TBufferSQL &);        // not implemented
    void operator=(const TBufferSQL &);    // not implemented
-	
+
 public:
    TBufferSQL();
    TBufferSQL(EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
@@ -62,8 +62,8 @@ public:
    virtual TBuffer    &operator>>(ULong64_t &);
    virtual TBuffer    &operator>>(Double_t  &);
    virtual TBuffer    &operator>>(Char_t    *);
-	  
-	
+  
+
    virtual   TBuffer  &operator<<(Bool_t    b);
    virtual   TBuffer  &operator<<(Char_t    c);
    virtual   TBuffer  &operator<<(UChar_t   c);
@@ -78,7 +78,7 @@ public:
    virtual   TBuffer  &operator<<(Float_t   f);
    virtual   TBuffer  &operator<<(Double_t  d);
    virtual   TBuffer  &operator<<(const Char_t *c);
-	
+
    virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteFastArray(const Char_t    *c, Int_t n);
    virtual   void     WriteFastArrayString(const Char_t   *c, Int_t n);
@@ -95,7 +95,7 @@ public:
    virtual   void     WriteFastArray(const Double_t  *d, Int_t n);
    virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
-	
+
    virtual   void     ReadFastArray(Bool_t    *, Int_t );
    virtual   void     ReadFastArray(Char_t    *, Int_t );
    virtual   void     ReadFastArrayString(Char_t   *, Int_t );
