@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.9 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.10 2005/05/27 16:42:58 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -79,7 +79,7 @@ namespace ROOT {
       Init(pragmabits);
    }
 
-   class fornamespace {}; // Dummy class to give a typeid to namespace 
+   class TForNamespace {}; // Dummy class to give a typeid to namespace (See also TClassTable.cc)
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
@@ -87,7 +87,7 @@ namespace ROOT {
                                         VoidFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(typeid(fornamespace)), 
+        fDictionary(dictionary), fInfo(typeid(TForNamespace)), 
         fImplFileName(0), fImplFileLine(0),
         fIsA(0), fShowMembers(0),
         fVersion(version),

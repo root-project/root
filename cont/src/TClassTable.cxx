@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.34 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.35 2005/09/03 00:45:34 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -218,7 +218,7 @@ int   TClassTable::Classes() { return fgTally; }
 //______________________________________________________________________________
 void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
-namespace ROOT { class TFornamespace {}; } // Dummy class to give a typeid to namespace
+namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to namespace (see also TGenericClassInfo)
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
@@ -232,8 +232,8 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
   // check if already in table, if so return
    TClassRec *r = FindElement(cname, kTRUE);
    if (r->fName) {
-      if ( strcmp(r->fInfo->name(),typeid(ROOT::TFornamespace).name())==0
-           && strcmp(info.name(),typeid(ROOT::TFornamespace).name())==0 ) {
+      if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
+           && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
          // We have a namespace being reloaded.
          // This okay we just keep the old one.
          return;
