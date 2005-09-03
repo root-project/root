@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.21 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.22 2003/02/09 18:35:17 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -87,10 +87,9 @@
 #include "TFile.h"
 #include "TRegexp.h"
 
-const int kMAXDEPTH = 64;
-static const char *d[kMAXDEPTH];
-static Int_t level = -1;
-static char path[512];
+static const char *gFolderD[64];
+static Int_t gFolderLevel = -1;
+static char  gFolderPath[512];
 
 ClassImp(TFolder)
 
@@ -207,25 +206,25 @@ const char *TFolder::FindFullPathName(const char *name) const
 
    TObject *obj = FindObject(name);
    if (obj || !fFolders) {
-      level++;
-      d[level] = GetName();
-      path[0] = '/';
-      path[1] = 0;
-      for (Int_t l=0;l<=level;l++) {
-         strcat(path,"/");
-         strcat(path,d[l]);
+      gFolderLevel++;
+      gFolderD[gFolderLevel] = GetName();
+      gFolderPath[0] = '/';
+      gFolderPath[1] = 0;
+      for (Int_t l=0;l<=gFolderLevel;l++) {
+         strcat(gFolderPath,"/");
+         strcat(gFolderPath,gFolderD[l]);
      }
-      strcat(path,"/");
-      strcat(path,name);
-      level = -1;
-      return path;
+      strcat(gFolderPath,"/");
+      strcat(gFolderPath,name);
+      gFolderLevel = -1;
+      return gFolderPath;
    }
    if (name[0] == '/') return 0;
    TIter next(fFolders);
    TFolder *folder;
    const char *found;
-   level++;
-   d[level] = GetName();
+   gFolderLevel++;
+   gFolderD[gFolderLevel] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
       if (obj->InheritsFrom(TClass::Class())) continue;
@@ -233,7 +232,7 @@ const char *TFolder::FindFullPathName(const char *name) const
       found = folder->FindFullPathName(name);
       if (found) return found;
    }
-   level--;
+   gFolderLevel--;
    return 0;
 }
 
@@ -311,7 +310,7 @@ TObject *TFolder::FindObjectAny(const char *name) const
    TIter next(fFolders);
    TFolder *folder;
    TObject *found;
-   if (level >= 0) d[level] = GetName();
+   if (gFolderLevel >= 0) gFolderD[gFolderLevel] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
       if (obj->IsA() == TClass::Class()) continue;
