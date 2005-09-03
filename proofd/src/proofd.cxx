@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.79 2005/08/11 15:28:25 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.80 2005/08/31 11:11:46 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -445,7 +445,7 @@ void ProofdExec()
    NetGetRemoteHost(gOpenHost);
 
    // Socket descriptor
-   int SockFd = NetGetSockFd();
+   int sockFd = NetGetSockFd();
 
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gOpenHost = %s", gOpenHost.c_str());
@@ -507,19 +507,19 @@ void ProofdExec()
    }
 
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: send Okay (SockFd: %d)", SockFd);
+      ErrorInfo("ProofdExec: send Okay (SockFd: %d)", sockFd);
    NetSend("Okay");
 
    // Find a free filedescriptor outside the standard I/O range
-   if (SockFd == 0 || SockFd == 1 || SockFd == 2) {
+   if (sockFd == 0 || sockFd == 1 || sockFd == 2) {
       Int_t fd;
       struct stat stbuf;
       for (fd = 3; fd < NOFILE; fd++) {
          ResetErrno();
          if (fstat(fd, &stbuf) == -1 && GetErrno() == EBADF) {
-            dup2(SockFd, fd);
-            close(SockFd);
-            SockFd = fd;
+            dup2(sockFd, fd);
+            close(sockFd);
+            sockFd = fd;
             close(2);
             close(1);
             close(0);
@@ -557,7 +557,7 @@ void ProofdExec()
       ErrorInfo("ProofdExec: setting: %s", rootentity);
    // Open socket
    char *rootopensock = new char[33];
-   sprintf(rootopensock, "ROOTOPENSOCK=%d", SockFd);
+   sprintf(rootopensock, "ROOTOPENSOCK=%d", sockFd);
    putenv(rootopensock);
    if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", rootopensock);
