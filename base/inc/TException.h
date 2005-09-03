@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TException.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TException.h,v 1.2 2002/08/20 10:51:49 rdm Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************
@@ -48,27 +48,27 @@ struct ExceptionContext_t {
 
 #define RETRY \
    { \
-      ExceptionContext_t __curr, *__old = gException; \
-      int __code; \
-      gException = &__curr; \
-      __code = SETJMP(gException->buf); if (__code) { }; {
+      ExceptionContext_t R__curr, *R__old = gException; \
+      int R__code; \
+      gException = &R__curr; \
+      R__code = SETJMP(gException->buf); if (R__code) { }; {
 
 #define TRY \
    { \
-      ExceptionContext_t __curr, *__old = gException; \
-      int __code; \
-      gException = &__curr; \
-      if ((__code = SETJMP(gException->buf)) == 0) {
+      ExceptionContext_t R__curr, *R__old = gException; \
+      int R__code; \
+      gException = &R__curr; \
+      if ((R__code = SETJMP(gException->buf)) == 0) {
 
 #define CATCH(n) \
-         gException = __old; \
+         gException = R__old; \
       } else { \
-         int n = __code; \
-         gException = __old;
+         int n = R__code; \
+         gException = R__old;
 
 #define ENDTRY \
       } \
-      gException = __old; \
+      gException = R__old; \
    }
 
 R__EXTERN ExceptionContext_t *gException;
