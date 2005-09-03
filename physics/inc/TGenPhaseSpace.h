@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.h,v 1.1 2000/09/08 16:42:12 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.h,v 1.2 2000/09/11 06:16:26 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ class TGenPhaseSpace : public TObject {
   Double_t     fWtMax;          // maximum weigth 
   TLorentzVector  fDecPro[18];  //kinematics of the generated particles 
 
-  Double_t pdk(Double_t a, Double_t b, Double_t c);  
+  Double_t PDK(Double_t a, Double_t b, Double_t c);  
 
  public:
   TGenPhaseSpace() {}

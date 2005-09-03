@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.7 2004/09/01 11:09:48 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.8 2005/08/30 12:27:21 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -26,7 +26,7 @@ const Int_t kMAXP = 18;
 ClassImp(TGenPhaseSpace)
 
 //_____________________________________________________________________________________
-Double_t TGenPhaseSpace::pdk(Double_t a, Double_t b, Double_t c) 
+Double_t TGenPhaseSpace::PDK(Double_t a, Double_t b, Double_t c) 
 {
   Double_t x = (a-b-c)*(a+b+c)*(a-b+c)*(a+b-c);
   x = TMath::Sqrt(x)/(2*a);
@@ -89,7 +89,7 @@ Double_t TGenPhaseSpace::Generate()
   Double_t wt=fWtMax;
   Double_t pd[kMAXP];
   for (n=0; n<fNt-1; n++) {
-    pd[n] = pdk(invMas[n+1],invMas[n],fMass[n+1]);
+    pd[n] = PDK(invMas[n+1],invMas[n],fMass[n+1]);
     wt *= pd[n];
   }
 
@@ -198,7 +198,7 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
     for (n=1; n<fNt; n++) {
       emmin += fMass[n-1];
       emmax += fMass[n];
-      wtmax *= pdk(emmax, emmin, fMass[n]);
+      wtmax *= PDK(emmax, emmin, fMass[n]);
     }
     fWtMax = 1/wtmax;
   }

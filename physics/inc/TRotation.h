@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.h,v 1.2 2003/04/11 06:44:39 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.h,v 1.3 2005/06/28 10:16:12 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************
@@ -28,9 +28,9 @@ public:
     inline TRotationRow(const TRotation &, int);
     inline Double_t operator [] (int) const;
   private:
-    const TRotation * rr;
-    //    const TRotation & rr;
-    int ii;
+    const TRotation * fRR;
+    //    const TRotation & fRR;
+    int fII;
   };
   // Helper class for implemention of C-style subscripting r[i][j]
 
@@ -198,10 +198,10 @@ inline Double_t TRotation::ZY() const { return fzy; }
 inline Double_t TRotation::ZZ() const { return fzz; }
 
 inline TRotation::TRotationRow::TRotationRow
-(const TRotation & r, int i) : rr(&r), ii(i) {}
+(const TRotation & r, int i) : fRR(&r), fII(i) {}
 
 inline Double_t TRotation::TRotationRow::operator [] (int jj) const {
-  return rr->operator()(ii,jj);
+  return fRR->operator()(fII,jj);
 }
 
 inline TRotation::TRotationRow TRotation::operator [] (int i) const {

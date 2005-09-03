@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixFSymCramerInv.cxx,v 1.1 2004/10/16 18:09:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixFSymCramerInv.cxx,v 1.2 2005/09/03 13:12:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
@@ -157,27 +157,27 @@ Bool_t TMatrixFSymCramerInv::Inv4x4(TMatrixFSym &m,Double_t *determ)
 
   // Find all NECESSARY 2x2 dets:  (14 of them)
 
-  const Double_t mmDet2_12_01 = pM[F10]*pM[F21] - pM[F11]*pM[F20];
-  const Double_t mmDet2_12_02 = pM[F10]*pM[F22] - pM[F12]*pM[F20];
-  const Double_t mmDet2_12_12 = pM[F11]*pM[F22] - pM[F12]*pM[F21];
-  const Double_t mmDet2_13_01 = pM[F10]*pM[F31] - pM[F11]*pM[F30];
-  const Double_t mmDet2_13_02 = pM[F10]*pM[F32] - pM[F12]*pM[F30];
-  const Double_t mmDet2_13_03 = pM[F10]*pM[F33] - pM[F13]*pM[F30];
-  const Double_t mmDet2_13_12 = pM[F11]*pM[F32] - pM[F12]*pM[F31];
-  const Double_t mmDet2_13_13 = pM[F11]*pM[F33] - pM[F13]*pM[F31];
-  const Double_t mmDet2_23_01 = pM[F20]*pM[F31] - pM[F21]*pM[F30];
-  const Double_t mmDet2_23_02 = pM[F20]*pM[F32] - pM[F22]*pM[F30];
-  const Double_t mmDet2_23_03 = pM[F20]*pM[F33] - pM[F23]*pM[F30];
-  const Double_t mmDet2_23_12 = pM[F21]*pM[F32] - pM[F22]*pM[F31];
-  const Double_t mmDet2_23_13 = pM[F21]*pM[F33] - pM[F23]*pM[F31];
-  const Double_t mmDet2_23_23 = pM[F22]*pM[F33] - pM[F23]*pM[F32];
+  const Double_t mDet2_12_01 = pM[F10]*pM[F21] - pM[F11]*pM[F20];
+  const Double_t mDet2_12_02 = pM[F10]*pM[F22] - pM[F12]*pM[F20];
+  const Double_t mDet2_12_12 = pM[F11]*pM[F22] - pM[F12]*pM[F21];
+  const Double_t mDet2_13_01 = pM[F10]*pM[F31] - pM[F11]*pM[F30];
+  const Double_t mDet2_13_02 = pM[F10]*pM[F32] - pM[F12]*pM[F30];
+  const Double_t mDet2_13_03 = pM[F10]*pM[F33] - pM[F13]*pM[F30];
+  const Double_t mDet2_13_12 = pM[F11]*pM[F32] - pM[F12]*pM[F31];
+  const Double_t mDet2_13_13 = pM[F11]*pM[F33] - pM[F13]*pM[F31];
+  const Double_t mDet2_23_01 = pM[F20]*pM[F31] - pM[F21]*pM[F30];
+  const Double_t mDet2_23_02 = pM[F20]*pM[F32] - pM[F22]*pM[F30];
+  const Double_t mDet2_23_03 = pM[F20]*pM[F33] - pM[F23]*pM[F30];
+  const Double_t mDet2_23_12 = pM[F21]*pM[F32] - pM[F22]*pM[F31];
+  const Double_t mDet2_23_13 = pM[F21]*pM[F33] - pM[F23]*pM[F31];
+  const Double_t mDet2_23_23 = pM[F22]*pM[F33] - pM[F23]*pM[F32];
 
   // Find all NECESSFRY 3x3 dets:   (10 of them)
   
-  const Double_t mDet3_012_012 = pM[F00]*mmDet2_12_12 - pM[F01]*mmDet2_12_02
-                               + pM[F02]*mmDet2_12_01;
-  const Double_t mDet3_013_012 = pM[F00]*mmDet2_13_12 - pM[F01]*mmDet2_13_02
-                               + pM[F02]*mmDet2_13_01;
+  const Double_t mDet3_012_012 = pM[F00]*mDet2_12_12 - pM[F01]*mDet2_12_02
+                               + pM[F02]*mDet2_12_01;
+  const Double_t mDet3_013_012 = pM[F00]*mDet2_13_12 - pM[F01]*mDet2_13_02
+                               + pM[F02]*mDet2_13_01;
   const Double_t mDet3_013_013 = pM[F00]*mDet2_13_13 - pM[F01]*mDet2_13_03
                                + pM[F03]*mDet2_13_01;
   const Double_t mDet3_023_012 = pM[F00]*mDet2_23_12 - pM[F01]*mDet2_23_02

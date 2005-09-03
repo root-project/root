@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************
@@ -31,8 +31,8 @@ public:
     inline TLorentzRotationRow(const TLorentzRotation &, int);
     inline Double_t operator [] (int) const;
   private:
-    const TLorentzRotation * rr;
-    int ii;
+    const TLorentzRotation * fRR;
+    int fII;
   };
   // Helper class for implemention of C-style subscripting r[i][j]
 
@@ -162,11 +162,11 @@ inline Double_t TLorentzRotation::TZ() const { return ftz; }
 inline Double_t TLorentzRotation::TT() const { return ftt; }
 
 inline TLorentzRotation::TLorentzRotationRow::TLorentzRotationRow
-(const TLorentzRotation & r, int i) : rr(&r), ii(i) {}
+(const TLorentzRotation & r, int i) : fRR(&r), fII(i) {}
 
 inline Double_t
 TLorentzRotation::TLorentzRotationRow::operator [] (int jj) const {
-  return rr->operator()(ii,jj);
+  return fRR->operator()(fII,jj);
 }
 
 inline TLorentzRotation::TLorentzRotationRow
