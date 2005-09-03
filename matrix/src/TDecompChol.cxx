@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.15 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.16 2005/09/02 11:04:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -434,19 +434,19 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
   // B and X
   //   A : (m x n ) matrix, m >= n
   //   B : (m x nb) matrix, nb >= 1
-  //   X : (n x nb) matrix
+  //  mX : (n x nb) matrix
   //   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
   //                                         = 0           fir i != j
 
   TMatrixD mAw = A;
-  TMatrixD Bw = B;
+  TMatrixD mBw = B;
   for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
     TMatrixDRow(mAw,irow) *= 1/std(irow);
-    TMatrixDRow(Bw,irow) *= 1/std(irow);
+    TMatrixDRow(mBw,irow) *= 1/std(irow);
   }
 
   TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,mAw));
-  TMatrixD X(mAw,TMatrixDBase::kTransposeMult,Bw);
-  ch.MultiSolve(X);
-  return X;
+  TMatrixD mX(mAw,TMatrixDBase::kTransposeMult,mBw);
+  ch.MultiSolve(mX);
+  return mX;
 }
