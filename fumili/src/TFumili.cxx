@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.24 2005/08/30 08:27:42 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.25 2005/09/02 09:52:54 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1738,7 +1738,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t Foption = hFitter->GetFitOption();
+   Foption_t fitOption = hFitter->GetFitOption();
 
    npar = f1->GetNpar();
    hFitter->SetParNumber(npar);
@@ -1769,7 +1769,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
             TF1::RejectPoint(kFALSE);
-            if (Foption.Integral) {
+            if (fitOption.Integral) {
                binlow  = xaxis->GetBinLowEdge(binx);
                binsize = xaxis->GetBinWidth(binx);
                binup   = binlow + binsize;
@@ -1778,7 +1778,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
                fu = f1->EvalPar(x,u);
             }
             if (TF1::RejectedPoint()) continue;
-            if (Foption.W1) {
+            if (fitOption.W1) {
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
@@ -1834,7 +1834,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t Foption = hFitter->GetFitOption();
+   Foption_t fitOption = hFitter->GetFitOption();
    npar = f1->GetNpar();
 
    hFitter->SetParNumber(npar);
@@ -1866,7 +1866,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
             TF1::RejectPoint(kFALSE);
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
-            if (Foption.Integral) {
+            if (fitOption.Integral) {
                binlow  = xaxis->GetBinLowEdge(binx);
                binsize = xaxis->GetBinWidth(binx);
                binup   = binlow + binsize;
@@ -1938,7 +1938,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    TFumili *grFitter = (TFumili*)TVirtualFitter::GetFitter();
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
-   Foption_t Foption = grFitter->GetFitOption();
+   Foption_t fitOption = grFitter->GetFitOption();
    
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
@@ -1967,7 +1967,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       //      fsum = (cu-fu);
       npfits++;
       Double_t eusq=1.;
-      if (Foption.W1) {
+      if (fitOption.W1) {
         //         f += fsum*fsum;
         //         continue;
         eu = 1.;
