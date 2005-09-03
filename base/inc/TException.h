@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TException.h,v 1.2 2002/08/20 10:51:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TException.h,v 1.3 2005/09/03 04:16:27 pcanal Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************
@@ -34,9 +34,9 @@ struct jmp_buf;
 
 struct ExceptionContext_t {
 #ifdef NEED_SIGJMP
-   sigjmp_buf buf;
+   sigjmp_buf fBuf;
 #else
-   jmp_buf buf;
+   jmp_buf fBuf;
 #endif
 };
 
@@ -51,14 +51,14 @@ struct ExceptionContext_t {
       ExceptionContext_t R__curr, *R__old = gException; \
       int R__code; \
       gException = &R__curr; \
-      R__code = SETJMP(gException->buf); if (R__code) { }; {
+      R__code = SETJMP(gException->fBuf); if (R__code) { }; {
 
 #define TRY \
    { \
       ExceptionContext_t R__curr, *R__old = gException; \
       int R__code; \
       gException = &R__curr; \
-      if ((R__code = SETJMP(gException->buf)) == 0) {
+      if ((R__code = SETJMP(gException->fBuf)) == 0) {
 
 #define CATCH(n) \
          gException = R__old; \

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TException.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************
@@ -31,9 +31,9 @@ void Throw(int code)
 
    if (gException)
 #ifdef NEED_SIGJMP
-      siglongjmp(gException->buf, code);
+      siglongjmp(gException->fBuf, code);
 #else
-      longjmp(gException->buf, code);
+      longjmp(gException->fBuf, code);
 #endif
 }
 
