@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.77 2005/07/25 13:53:57 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.78 2005/08/05 14:44:13 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1631,11 +1631,11 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       while ((inheritFrom = (TBaseClass *) nextBase())) {
 
         if (first) {
-	  out << "<td><table><tr>" << endl;    
+          out << "<td><table><tr>" << endl;    
           first = kFALSE;
         } else 
            out << "</tr><tr>" << endl;
-	out << "<td bgcolor=\""
+        out << "<td bgcolor=\""
             << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor) 
             << "\" align=\"right\">" << endl;
         // get a class
@@ -1770,7 +1770,7 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
       tmp1 = 0;
 
       if (IsModified(classPtr, kTree) || force) {
-	 // TCanvas already prints pdf being saved
+         // TCanvas already prints pdf being saved
          // Printf(formatStr, "", "", filename);
          classPtr->Draw("same");
          psCanvas->SaveAs(filename);
@@ -1798,7 +1798,7 @@ void THtml::Convert(const char *filename, const char *title,
 //  NOTE: Output file name is the same as filename, but with extension .html
 //
 
-   gROOT->GetListOfGlobals(kTRUE);	// force update of this list
+   gROOT->GetListOfGlobals(kTRUE);        // force update of this list
 
    const char *dir;
    char *ptr;
@@ -2162,12 +2162,12 @@ ofstream outputFile;
             else underlinePtr=strchr(underlinePtr,'_');
          *underlinePtr = 0;
 
-	 char htmltitle[1024];
-	 strcpy(htmltitle, "Index of ");
-	 strcat(htmltitle, GetFileName(filename));
-	 strcat(htmltitle, " classes");
+         char htmltitle[1024];
+         strcpy(htmltitle, "Index of ");
+         strcat(htmltitle, GetFileName(filename));
+         strcat(htmltitle, " classes");
          
-	 strcat(filename, "_Index.html");
+         strcat(filename, "_Index.html");
 
          // open a file
          outputFile.open(filename, ios::out);
@@ -2337,7 +2337,7 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
         }
         
         // Find basic base classes
-	TList *bases = basePtr->GetListOfBases();
+        TList *bases = basePtr->GetListOfBases();
         if (bases && bases->IsEmpty()){
 
           out << "<hr>" << endl;
@@ -2359,7 +2359,7 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
           }   
   
           // find derived classes
-	  out << "</tt></li></ul></td>";
+          out << "</tt></li></ul></td>";
           fHierarchyLines = 0; 
           DescendHierarchy(out,basePtr,classNames,numberOfClasses);
         
@@ -2493,9 +2493,9 @@ ofstream typesList;
       TIter nextType(gROOT->GetListOfTypes());
 
       while ((type = (TDataType *) nextType())) {
-	 // no templates ('<' and '>'), no idea why the '(' is in here...
+         // no templates ('<' and '>'), no idea why the '(' is in here...
          if (*type->GetTitle() && !strchr(type->GetName(), '(') 
-	     && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
+             && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
             if (type->GetName())
                len = strlen(type->GetName());
             else
@@ -2509,7 +2509,7 @@ ofstream typesList;
 
       while ((type = (TDataType *) nextType())) {
          if (*type->GetTitle() && !strchr(type->GetName(), '(')
-	     && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
+             && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
             typesList << "<b><a name=\"";
             ReplaceSpecialChars(typesList, type->GetName());
             typesList << "\">";
@@ -2661,14 +2661,14 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             flag = kFALSE;
             hide = kTRUE;
             pre_is_open = kTRUE;
-	    out << endl << "<pre>";
+            out << endl << "<pre>";
          }
       } else {
          if (!strcasecmp(keyword, "begin_html") && *(keyword - 1) != '\"') {
             flag = kTRUE;
             hide = kTRUE;
             pre_is_open = kFALSE;
-	    out << "</pre>" << endl;
+            out << "</pre>" << endl;
          } else {
             *end = c;
             tempEndPtr = end;
@@ -2779,9 +2779,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             if (htmlFile) {
                out << "<a href=\"";
                if (*dir  
-		   && strncmp(htmlFile, "http://", 7) 
-		   && strncmp(htmlFile, "https://", 8)
-		   && !gSystem->IsAbsoluteFileName(htmlFile))
+                   && strncmp(htmlFile, "http://", 7) 
+                   && strncmp(htmlFile, "https://", 8)
+                   && !gSystem->IsAbsoluteFileName(htmlFile))
                   out << dir;
                out << htmlFile;
 
@@ -2882,9 +2882,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                      if (htmlFile) {
                         out << "<a href=\"";
                         if (*dir 
-			    && strncmp(htmlFile, "http://", 7)
-			    && strncmp(htmlFile, "https://", 8)
-			    && !gSystem->IsAbsoluteFileName(htmlFile))
+                            && strncmp(htmlFile, "http://", 7)
+                            && strncmp(htmlFile, "https://", 8)
+                            && !gSystem->IsAbsoluteFileName(htmlFile))
                            out << dir;
                         out << htmlFile;
                         if (cl->GetDataMember(keyword)) {
@@ -2917,8 +2917,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                                  out << "<a href=\"";
                                  if (*dir 
                                      && strncmp(htmlFile2, "http://", 7)
-				     && strncmp(htmlFile2, "https://", 8)
-				     && !gSystem->IsAbsoluteFileName(htmlFile2))
+                                     && strncmp(htmlFile2, "https://", 8)
+                                     && !gSystem->IsAbsoluteFileName(htmlFile2))
                                     out << dir;
                                  out << htmlFile2;
                                  out << "#" << cm->GetName() << ":";
@@ -3396,10 +3396,10 @@ void THtml::MakeClass(const char *className, Bool_t force)
    if (classPtr) {
       char *htmlFile = GetHtmlFileName(classPtr);
       if (htmlFile 
-	  && (!strncmp(htmlFile, "http://", 7)
-	      || !strncmp(htmlFile, "https://", 8)
-	      || gSystem->IsAbsoluteFileName(htmlFile))
-	  ) {
+          && (!strncmp(htmlFile, "http://", 7)
+              || !strncmp(htmlFile, "https://", 8)
+              || gSystem->IsAbsoluteFileName(htmlFile))
+          ) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3465,7 +3465,7 @@ void THtml::MakeIndex(const char *filter)
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
          impname = classPtr->GetImplFileName();
       else 
-	 impname = classPtr->GetDeclFileName();
+         impname = classPtr->GetDeclFileName();
 
       if (impname && strlen(impname)) {
          fileNames[numberOfImpFiles] = StrDup(impname, 64);
@@ -3473,11 +3473,11 @@ void THtml::MakeIndex(const char *filter)
          // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
          char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/T");
 
-	 // if impl is unset, check for decl and see if it matches 
-	 // format "base/inc/TROOT.h" - in which case it's not a USER
-	 // class, but a BASE class.
+         // if impl is unset, check for decl and see if it matches 
+         // format "base/inc/TROOT.h" - in which case it's not a USER
+         // class, but a BASE class.
          if (!srcdir) 
-	    srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
+            srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
          // ROOT's non-classes (e.g. enums) don't start with T, but end with _t
          if (!srcdir && !(classPtr->Property()&kIsClass)) {
             const char* _t=classPtr->GetName()+strlen(classPtr->GetName())-2;
@@ -3485,8 +3485,8 @@ void THtml::MakeIndex(const char *filter)
                srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
          };
 
-	 // there can be no sub-path in the class name, 
-	 // and impl file names don't have absolute paths
+         // there can be no sub-path in the class name, 
+         // and impl file names don't have absolute paths
          if (srcdir && (!strchr(srcdir + 5, '/')) 
              && fileNames[numberOfImpFiles][0]!='/') {
             strcpy(srcdir, "_");
@@ -3556,10 +3556,10 @@ void THtml::MakeTree(const char *className, Bool_t force)
 
       char *htmlFile = GetHtmlFileName(classPtr);
       if (htmlFile 
-	  && (!strncmp(htmlFile, "http://", 7)
-	      || !strncmp(htmlFile, "https://", 8)
-	      || gSystem->IsAbsoluteFileName(htmlFile))
-	  ) {
+          && (!strncmp(htmlFile, "http://", 7)
+              || !strncmp(htmlFile, "https://", 8)
+              || gSystem->IsAbsoluteFileName(htmlFile))
+          ) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3728,7 +3728,7 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title, TClass *cls/*=0*/
           endl;
       out << "<head>" << endl;
       out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=" <<
-	  charset << "\">" <<
+          charset << "\">" <<
           endl;
       out << "<title>";
       ReplaceSpecialChars(out, title);
@@ -3762,12 +3762,12 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title, TClass *cls/*=0*/
          while (!addHeaderFile.eof()) {
 
             addHeaderFile.getline(fLine, fLen - 1);
-            fLine[fLen - 1] = 0;	// just to make sure it ends
+            fLine[fLen - 1] = 0;        // just to make sure it ends
             if (addHeaderFile.eof())
                break;
 
             if (fLine) {
-	       TString txt(fLine);
+               TString txt(fLine);
                txt.ReplaceAll("%TITLE%", title);
                txt.ReplaceAll("%CLASS%", cls?cls->GetName():"");
                txt.ReplaceAll("%INCFILE%", cls?cls->GetDeclFileName():"");
@@ -3825,7 +3825,7 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
          while (!addFooterFile.eof()) {
 
             addFooterFile.getline(fLine, fLen - 1);
-            fLine[fLen - 1] = 0;	// just to make sure it ends
+            fLine[fLen - 1] = 0;        // just to make sure it ends
             if (addFooterFile.eof())
                break;
 
@@ -3965,7 +3965,7 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
                out << "<a href=http://pcbrun.cern.ch/nicolas/index.html";
                ptr += 12;
             } else {
-               cLink = strchr(ptr, '<');	// look for link start tag
+               cLink = strchr(ptr, '<');        // look for link start tag
                if (cLink) {
                   out << "<a href=\"";
                   ptr = cLink-1;
@@ -4057,8 +4057,8 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
          out << "<a href=\"";
          if (*dir) {
             if (strncmp(userHomePage, "http://", 7)
-		&& strncmp(userHomePage, "https://", 8)
-		&& !gSystem->IsAbsoluteFileName(userHomePage))
+                && strncmp(userHomePage, "https://", 8)
+                && !gSystem->IsAbsoluteFileName(userHomePage))
                out << dir;
          }
          out << userHomePage;
@@ -4386,10 +4386,10 @@ void THtml::ExtractDocumentation(const char* cFileName, TList* listClassesFound)
                   d+=6;
                   while (isspace(*(++d)));
                   TString strIncludeFile;
-		  Int_t d_;
+                  Int_t d_;
                   if (strchr("<\"", *d))
                      if (ParseWord(++d, d_, strIncludeFile, "/\\._-")) {
-			d+=d_;
+                        d+=d_;
                         char* store_fLine=new char[fLen];
                         strcpy(store_fLine, fLine);
                         TObjString ostrIncludeFile(strIncludeFile);
@@ -4399,7 +4399,7 @@ void THtml::ExtractDocumentation(const char* cFileName, TList* listClassesFound)
                         strcpy(fLine, store_fLine);
                         delete[] store_fLine;
                      } 
-		     else d+=d_;
+                     else d+=d_;
                }
             }
             // skip to eol
@@ -4465,9 +4465,9 @@ parseStack.Top().SetTitle(line);
                // first check that this is not "Int_t iContemplate" or something
                TString strWord;
                char* end;
-	       Int_t step;
+               Int_t step;
                ParseWord(c, step, strWord);
-	       end=c+step;
+               end=c+step;
                // if template isn't actually the full word then ignore
                if (strcmp(strWord.Data(),"template")!=0) break;
                c=end;
@@ -4481,9 +4481,9 @@ parseStack.Top().SetTitle(line);
                if (*c!='<') break;
                end=++c;
                while (*end!='>' && ParseWord(end, step,",* "))
-		  end+=step;
+                  end+=step;
                if (*end!='>') {
-		  end+=step;
+                  end+=step;
                   Warning("ExtractClassDocumentation", 
                      "Found a templated declaration with an illegal character '%c':%s",
                      *end, fLine);
@@ -4502,9 +4502,9 @@ parseStack.Top().SetTitle(line);
                else if (c==cEnumPos) spec=TLocalType::kEnum;
                else if (c==cStructPos) spec=TLocalType::kStruct; 
 
-	       Int_t step;
+               Int_t step;
                ParseWord(c,step); // skip "class" / "enum" / "struct"
-	       c+=step;
+               c+=step;
 
                TString strClassName;
                TClass* cldecl=ParseClassDecl(c, parseStack, strClassName);
@@ -4523,7 +4523,7 @@ parseStack.Top().SetTitle(line);
                const char* cClName=strClassName;
                const char* cCol=strchr(cClName, ':');
                while ((cCol=strchr(cClName, ':'))) 
-		  cClName=&cCol[1];
+                  cClName=&cCol[1];
 
                psNext=TParseStack::TParseElement(TParseStack::kBlock, 
                   TParseStack::kClassDecl, cClName, 0, cldecl);
@@ -4540,14 +4540,14 @@ printf("FOUND CLASS: %s in \n%s\n", cClName, fLine);
             }; // if class / enum / struct def in line
 
             if (c==cTypeDefPos) {
-	       Int_t step;
+               Int_t step;
                ParseWord(c,step); // skip "typedef"
-	       c+=step;
+               c+=step;
                TString strOldType;
                TString strNewType;
                TString strWord;
                while (ParseWord(c,step, strWord) && *(c+step)!=';' && *(c+step)) {
-		  c+=step;
+                  c+=step;
                   while (!IsWord(*c) && *c && *c!=';') {
                      if (strWord.Length()) strWord+=' ';
                      strWord+=*c;
@@ -4569,7 +4569,7 @@ printf("FOUND CLASS: %s in \n%s\n", cClName, fLine);
                   iPosBracket++; // skip '('
                   while (strOldType[iPosBracket]==' ' || strOldType[iPosBracket]=='*')
                      iPosBracket++;
-		  Int_t step;
+                  Int_t step;
                   ParseWord(&(strOldType.Data()[iPosBracket]), step, strNewType);
                   strOldType="void*";
                }
@@ -4623,9 +4623,9 @@ printf("FOUND USING DECL: %s in \n%s\n", c, fLine);
                // namespace decl
                c+=9;
                TString strNamesp;
-	       Int_t step;
+               Int_t step;
                ParseWord(c, step, strNamesp);
-	       c+=step;
+               c+=step;
                char* d=c;
                // now either ';' (forward decl) or '{'
                if (*d==';') // ignore - this is just to make the namespace known
@@ -4645,17 +4645,17 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
                if (c!=fLine && IsName(c[-1])) break;
 
                char* end;
-	       Int_t step;
+               Int_t step;
                TString strMethName;
                while (ParseWord(c, step, strMethName)) {
-		  end=c+step;
+                  end=c+step;
                   if (!strncmp(end,"::",2)) {
                      strMethName+="::";
                      end+=2;
                   } else break;
                   c=end;
                }
-	       end=c+step;
+               end=c+step;
 
                if (*end!='(') break;
 
@@ -4812,10 +4812,10 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
 
                   // now look for real words
                   strWord="";
-		  Int_t step;
+                  Int_t step;
                   if (!ParseWord(end, step, strWord))
                   {
-		     end+=step;
+                     end+=step;
                      if (!strncmp(end,"/*",2)) {
                         while (!(end=strstr(end,"*/")) && !sourceFile.eof()){
                            sourceFile.getline(fLine, fLen-1);
@@ -4833,7 +4833,7 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
                      bBreak=kTRUE;
                      break;
                   }
-		  end+=step;
+                  end+=step;
                   while (!strcmp(strWord,"const") || !strcmp(strWord,"unsigned")) {
                      if (strArg.Length()) 
                         strArg+=" ";
@@ -4844,9 +4844,9 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
                         lenLine=strlen(fLine);
                         end=fLine;
                      }
-		     Int_t step;
+                     Int_t step;
                      ParseWord(end, step, strWord);
-		     end+=step;
+                     end+=step;
                   };
                   if (strArg.Length() && strArg[strArg.Length()-1]!=':') strArg+=" ";
                   strArg+=strWord;
@@ -4923,9 +4923,9 @@ end=0;
             } // if methodpos
 
             char* cc;
-	    Int_t step;
+            Int_t step;
             ParseWord(c,step);
-	    cc=c+step;
+            cc=c+step;
             if (cc!=c) c=--cc;
             break;
          }
@@ -5080,15 +5080,15 @@ printf("Parsing meth %s ... ",strMethFullName.Data());
       // e.g. "type* const*" becomes "type* * const"
       while (*endArg) {
          strArgPart="";
-	 Int_t step;
+         Int_t step;
          if (!ParseWord(endArg, step, strArgPart, ":")) {
-	    endArg+=step;
+            endArg+=step;
             // we have a non-word char here, just simulate it being a word
             strArgPart=*endArg;
             endArg++;
          }
-	 else
- 	    endArg+=step;
+         else
+             endArg+=step;
         // try and see if there is a FQI for this param type known to CInt
          parseStack.FindType(strArgPart);
          Int_t iPos=strThisArg.Index(strArgPart);
@@ -5221,7 +5221,7 @@ THtml::TParseStack::~TParseStack(){
                            strStack+=pe->GetName(); strStack+="***";
                            strStack+=pe->GetTitle(); strStack+="***";
                            break;
-		     default: break;
+                     default: break;
                      }
                      strStack+=")";
                      break; 
@@ -5229,7 +5229,7 @@ THtml::TParseStack::~TParseStack(){
                   case kTemplate: strStack+="Template"; break; 
                   case kArray: strStack+="Array"; break; 
                   case kString: strStack+="String"; break; 
-	       default: break;
+               default: break;
                }
                strStack+="\n";
                fStack.Remove(pe);

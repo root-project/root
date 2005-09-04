@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.11 2004/01/21 07:11:29 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.12 2004/01/28 22:31:11 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -111,7 +111,7 @@ public:
          const char* realTypdefName = 0):
          fName(nameFQI), 
          fDeclName(declFileName),
-	 fTypedefReal(realTypdefName), 
+         fTypedefReal(realTypdefName), 
          fSpec(spec), fDeclLine(declFileLine) {}
 
       inline virtual ~TLocalType() {}
@@ -232,7 +232,7 @@ public:
             case kTemplate: return ">";
             case kArray: return "]";
             case kString: return "\"";
-	    default: return NULL;
+            default: return NULL;
             }
          }
 
@@ -376,7 +376,7 @@ public:
             TString *strUsing=pe->GetUsing();
             if (strUsing) {
                const char* pos=strUsing->Data();
-	       Int_t end;
+               Int_t end;
                TString strClassUsing;
                ParseWord(pos, end, strClassUsing, ":");
                strClassUsing+=strClassName;
@@ -447,9 +447,9 @@ protected:
         char   *GetSourceFileName(const char *filename);
         char   *GetHtmlFileName(TClass *classPtr);
         Bool_t  IsModified(TClass *classPtr, const Int_t type);
-        static Bool_t  IsName(Int_t c);
-        static Bool_t  IsWord(Int_t c);
-		void	NameSpace2FileName(char *name);
+ static Bool_t  IsName(Int_t c);
+ static Bool_t  IsWord(Int_t c);
+        void    NameSpace2FileName(char *name);
         void    ReplaceSpecialChars(ofstream &out, const char c);
         void    ReplaceSpecialChars(ofstream &out, const char *string);
         void    SortNames(const char **strings, Int_t num, Bool_t type=0);
