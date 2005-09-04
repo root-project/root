@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -658,24 +658,24 @@ Bool_t TQpVar::ValidNonZeroPattern()
 {
   if (fNxlo > 0 && 
       ( !fV    .MatchesNonZeroPattern(fXloIndex) ||
-	!fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
+        !fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
     return kFALSE;
   }
 
   if (fNxup > 0 &&
       ( !fW  .MatchesNonZeroPattern(fXupIndex) ||
-	!fPhi.MatchesNonZeroPattern(fXupIndex) ) ) {
+        !fPhi.MatchesNonZeroPattern(fXupIndex) ) ) {
     return kFALSE;
   }
   if (fMclo > 0 &&
       ( !fT     .MatchesNonZeroPattern(fCloIndex) ||
-	!fLambda.MatchesNonZeroPattern(fCloIndex) ) ) {
+        !fLambda.MatchesNonZeroPattern(fCloIndex) ) ) {
     return kFALSE;
   }
 
   if (fMcup > 0 &&
       ( !fU .MatchesNonZeroPattern(fCupIndex) ||
-	!fPi.MatchesNonZeroPattern(fCupIndex) ) ) {
+        !fPi.MatchesNonZeroPattern(fCupIndex) ) ) {
     return kFALSE;
   }
   

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -159,7 +159,7 @@ void TQpResidual::CalcResids(TQpDataBase *prob_in,TQpVar *vars)
     Add(fRt,-1.0,vars->fT);
 
     gap -= prob->fCloBound*vars->fLambda;
-	
+
     componentNorm = fRt.NormInf();
     if( componentNorm > norm ) norm = componentNorm;
   }

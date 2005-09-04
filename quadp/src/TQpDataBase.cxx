@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
   Int_t i;
   for (i = 0; i < n; i++) {
     const Double_t r = Drand(ix);
-	
+        
     if (r < percentLowerOnly) {
       ixlow[i] = 1.0;
       xlow [i] = (Drand(ix)-0.5)*3.0;
@@ -134,39 +134,39 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
       // x[i] is bounded above and below
       const Double_t r = Drand(ix);
       if (r < 0.33 ) {
-	// x[i] is on its lower bound
-	x    [i] = xlow[i];
-	dualx[i] = 10.0*Drand(ix);
+        // x[i] is on its lower bound
+        x    [i] = xlow[i];
+        dualx[i] = 10.0*Drand(ix);
       } else if ( r > .66 ) {
-	// x[i] is on its upper bound
-	x    [i] =  xupp[i];
-	dualx[i] = -10.0*Drand(ix);
+        // x[i] is on its upper bound
+        x    [i] =  xupp[i];
+        dualx[i] = -10.0*Drand(ix);
       } else {
-	// x[i] is somewhere in between
-	const Double_t theta = .99*Drand(ix)+.005;
-	x    [i] = (1-theta)*xlow[i]+theta*xupp[i];
-	dualx[i] = 0.0;
+        // x[i] is somewhere in between
+        const Double_t theta = .99*Drand(ix)+.005;
+        x    [i] = (1-theta)*xlow[i]+theta*xupp[i];
+        dualx[i] = 0.0;
       }
     } else if (ixlow[i] != 0.0) {
       // x[i] is only bounded below
       if (Drand(ix) < .33 ) {
-	// x[i] is on its lower bound
-	x    [i] = xlow[i];
-	dualx[i] = 10.0*Drand(ix);
+        // x[i] is on its lower bound
+        x    [i] = xlow[i];
+        dualx[i] = 10.0*Drand(ix);
       } else {
-	// x[i] is somewhere above its lower bound
-	x    [i] = xlow[i]+0.005+10.0*Drand(ix);
-	dualx[i] = 0.0;
+        // x[i] is somewhere above its lower bound
+        x    [i] = xlow[i]+0.005+10.0*Drand(ix);
+        dualx[i] = 0.0;
       }
     } else { // x[i] only has an upper bound
       if (Drand(ix) > .66 ) {
-	// x[i] is on its upper bound
-	x    [i] = xupp[i];
-	dualx[i] = -10.0*Drand(ix);
+        // x[i] is on its upper bound
+        x    [i] = xupp[i];
+        dualx[i] = -10.0*Drand(ix);
       } else {
-	// x[i] is somewhere below its upper bound
-	x    [i] = xupp[i]-0.005-10.0*Drand(ix);
-	dualx[i] = 0.0;
+        // x[i] is somewhere below its upper bound
+        x    [i] = xupp[i]-0.005-10.0*Drand(ix);
+        dualx[i] = 0.0;
       }
     }
   }
