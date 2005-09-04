@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.19 2005/02/04 12:53:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.20 2005/08/29 12:52:22 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -149,29 +149,29 @@ void TPainter3dAlgorithms::BackBox(Double_t ang)
     TView *view = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-    	   Error("BackBox", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+               Error("BackBox", "no TView in current pad");
+                    return;
+            }
     }
 
 
     /* Local variables */
     Double_t cosa, sina;
     Int_t i;
-    Double_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
+    Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
     Int_t icodes[3];
     Double_t tt[4];
     Int_t ix1, ix2, iy1, iy2, iz1, iz2;
 
     cosa = TMath::Cos(kRad*ang);
     sina = TMath::Sin(kRad*ang);
-	view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
+        view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
     for (i = 1; i <= 8; ++i) {
-	r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
-	r[i*3 - 2] = av[i*3 - 2]*sina;
-	r[i*3 - 1] = av[i*3 - 1];
+        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
+        r[i*3 - 2] = av[i*3 - 2]*sina;
+        r[i*3 - 1] = av[i*3 - 1];
     }
 
 //*-*-          D R A W   F O R W A R D   F A C E S */
@@ -226,7 +226,7 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
     Int_t i;
 
     irep = 0;
-    if (nl == 0) {fNlevel = 0;	return; }
+    if (nl == 0) {fNlevel = 0;        return; }
 
 //*-*-          C H E C K   P A R A M E T E R S
 
@@ -236,14 +236,14 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
        return;
     }
     for (i = 1; i < nl; ++i) {
-	if (fl[i] <= fl[i - 1]) {
+        if (fl[i] <= fl[i - 1]) {
 //         Error(where, "function levels must be in increasing order");
            irep = -1;
            return;
         }
     }
     for (i = 0; i < nl; ++i) {
-	if (icl[i] < 0) {
+        if (icl[i] < 0) {
 //         Error(where, "negative color index (%d)", icl[i]);
            irep = -1;
            return;
@@ -317,11 +317,11 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
     Int_t i, k,ifneg,i1, i2;
     Double_t x[13], y[13];
     Double_t z;
-    Double_t p3[24]	/* was [2][12] */;
+    Double_t p3[24]        /* was [2][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          T R A N S F E R   T O   N O R M A L I S E D   COORDINATES
@@ -334,28 +334,28 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 
     ifneg = 0;
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	if (k < 0) ifneg = 1;
-	if (k < 0) k = -k;
-	view->WCtoNDC(&xyz[k*3 + 1], &p3[2*i - 2]);
-	x[i - 1] = p3[2*i - 2];
-	y[i - 1] = p3[2*i - 1];
+        k = iface[i];
+        if (k < 0) ifneg = 1;
+        if (k < 0) k = -k;
+        view->WCtoNDC(&xyz[k*3 + 1], &p3[2*i - 2]);
+        x[i - 1] = p3[2*i - 2];
+        y[i - 1] = p3[2*i - 1];
     }
 
 //*-*-          F I N D   N O R M A L
 
     z = 0;
     for (i = 1; i <= np; ++i) {
-	i1 = i;
-	i2 = i1 + 1;
-	if (i2 > np) i2 = 1;
-	z = z + p3[2*i1 - 1]*p3[2*i2 - 2] - p3[2*i1 - 2] *
-		p3[2*i2 - 1];
+        i1 = i;
+        i2 = i1 + 1;
+        if (i2 > np) i2 = 1;
+        z = z + p3[2*i1 - 1]*p3[2*i2 - 2] - p3[2*i1 - 2] *
+                p3[2*i2 - 1];
     }
 
 //*-*-          D R A W   F A C E
 
-    if (z > 0) 	SetFillColor(kF3FillColor1);
+    if (z > 0)         SetFillColor(kF3FillColor1);
     if (z <= 0) SetFillColor(kF3FillColor2);
     SetFillStyle(1001);
     TAttFill::Modify();
@@ -364,18 +364,18 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*-          D R A W   B O R D E R
 
     if (ifneg == 0) {
-	SetFillStyle(0);
-	SetFillColor(kF3LineColor);
+        SetFillStyle(0);
+        SetFillColor(kF3LineColor);
         TAttFill::Modify();
-	gPad->PaintFillArea(np, x, y);
+        gPad->PaintFillArea(np, x, y);
     } else {
-	x[np] = x[0];
-	y[np] = y[0];
-	SetLineColor(kF3LineColor);
+        x[np] = x[0];
+        y[np] = y[0];
+        SetLineColor(kF3LineColor);
         TAttLine::Modify();
-	for (i = 1; i <= np; ++i) {
-	    if (iface[i] > 0) gPad->PaintPolyLine(2, &x[i-1], &y[i-1]);
-	}
+        for (i = 1; i <= np; ++i) {
+            if (iface[i] > 0) gPad->PaintPolyLine(2, &x[i-1], &y[i-1]);
+        }
     }
 }
 
@@ -403,11 +403,11 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
     /* Local variables */
     Int_t i, k;
     Double_t x[12], y[12];
-    Double_t p3[36]	/* was [3][12] */;
+    Double_t p3[36]        /* was [3][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          T R A N S F E R   T O   N O R M A L I S E D   COORDINATES
@@ -419,20 +419,20 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
     --icodes;
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
-	x[i - 1] = p3[i*3 - 3];
-	y[i - 1] = p3[i*3 - 2];
+        k = iface[i];
+        view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
+        x[i - 1] = p3[i*3 - 3];
+        y[i - 1] = p3[i*3 - 2];
     }
 
 //*-*-          D R A W   F A C E   &   B O R D E R
 
     FillPolygon(np, p3, &t[1]);
     if (fMesh == 1) {
-	SetFillColor(1);
-	SetFillStyle(0);
+        SetFillColor(1);
+        SetFillStyle(0);
         TAttFill::Modify();
-	gPad->PaintFillArea(np, x, y);
+        gPad->PaintFillArea(np, x, y);
     }
 }
 
@@ -463,11 +463,11 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
 
     Int_t i, k;
     Int_t icol = 0;
-    Double_t x[4], y[4], p3[12]	/* was [3][4] */;
+    Double_t x[4], y[4], p3[12]        /* was [3][4] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
     /* Parameter adjustments */
@@ -484,10 +484,10 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
     if (icodes[4] == 4) icol = fColorDark[icodes[3] - 1];
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
-	x[i - 1] = p3[i*3 - 3];
-	y[i - 1] = p3[i*3 - 2];
+        k = iface[i];
+        view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
+        x[i - 1] = p3[i*3 - 3];
+        y[i - 1] = p3[i*3 - 2];
     }
 
     SetFillStyle(1001);
@@ -495,10 +495,10 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
     TAttFill::Modify();
     gPad->PaintFillArea(np, x, y);
     if (fMesh) {
-	SetFillStyle(0);
-	SetFillColor(1);
+        SetFillStyle(0);
+        SetFillColor(1);
         TAttFill::Modify();
-	gPad->PaintFillArea(np, x, y);
+        gPad->PaintFillArea(np, x, y);
     }
 }
 
@@ -529,7 +529,7 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
     Double_t xdel, ydel;
     Int_t i, k, i1, i2, il, it;
     Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
 
 
     TView *view = gPad->GetView();   //Get current view
@@ -545,10 +545,10 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
     --icodes;
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	p3[i*3 - 3] = xyz[k*3 + 1];
-	p3[i*3 - 2] = xyz[k*3 + 2];
-	p3[i*3 - 1] = xyz[k*3 + 3];
+        k = iface[i];
+        p3[i*3 - 3] = xyz[k*3 + 1];
+        p3[i*3 - 2] = xyz[k*3 + 2];
+        p3[i*3 - 1] = xyz[k*3 + 3];
     }
 
 //*-*-          F I N D   L E V E L   L I N E S
@@ -560,18 +560,18 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
     SetLineStyle(3);
     TAttLine::Modify();
     for (il = 1; il <= fNlines; ++il) {
-	FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
-	view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-	view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-	xdel = p2[0] - p1[0];
-	ydel = p2[1] - p1[1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = p1[0] + xdel*fT[2*it - 2];
-	    y[0] = p1[1] + ydel*fT[2*it - 2];
-	    x[1] = p1[0] + xdel*fT[2*it - 1];
-	    y[1] = p1[1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
+        view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
+        view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
+        xdel = p2[0] - p1[0];
+        ydel = p2[1] - p1[1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = p1[0] + xdel*fT[2*it - 2];
+            y[0] = p1[1] + ydel*fT[2*it - 2];
+            x[1] = p1[0] + xdel*fT[2*it - 1];
+            y[1] = p1[1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          D R A W   F A C E
@@ -579,30 +579,30 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
     SetLineStyle(1);
     TAttLine::Modify();
     for (i = 1; i <= np; ++i) {
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-	view->WCtoNDC(&p3[i1*3 - 3], p1);
-	view->WCtoNDC(&p3[i2*3 - 3], p2);
-	xdel = p2[0] - p1[0];
-	ydel = p2[1] - p1[1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = p1[0] + xdel*fT[2*it - 2];
-	    y[0] = p1[1] + ydel*fT[2*it - 2];
-	    x[1] = p1[0] + xdel*fT[2*it - 1];
-	    y[1] = p1[1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+        view->WCtoNDC(&p3[i1*3 - 3], p1);
+        view->WCtoNDC(&p3[i2*3 - 3], p2);
+        xdel = p2[0] - p1[0];
+        ydel = p2[1] - p1[1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = p1[0] + xdel*fT[2*it - 2];
+            y[0] = p1[1] + ydel*fT[2*it - 2];
+            x[1] = p1[0] + xdel*fT[2*it - 1];
+            y[1] = p1[1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          M O D I F Y    S C R E E N
 
     for (i = 1; i <= np; ++i) {
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
     }
 }
 
@@ -633,7 +633,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    Double_t xdel, ydel;
    Int_t i, k, i1, i2, il, it;
    Double_t x[2], y[2];
-   Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
 
    TView *view = gPad->GetView();
    if(!view) return;
@@ -708,11 +708,11 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
     Double_t xdel, ydel;
     Int_t i, k, icol, i1, i2, it;
     Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
@@ -724,10 +724,10 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
     --icodes;
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	p3[i*3 - 3] = xyz[k*3 + 1];
-	p3[i*3 - 2] = xyz[k*3 + 2];
-	p3[i*3 - 1] = xyz[k*3 + 3];
+        k = iface[i];
+        p3[i*3 - 3] = xyz[k*3 + 1];
+        p3[i*3 - 2] = xyz[k*3 + 2];
+        p3[i*3 - 1] = xyz[k*3 + 3];
     }
 
 //*-*-          D R A W   F A C E
@@ -737,30 +737,30 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
     else      SetLineColor(1);
     TAttLine::Modify();
     for (i = 1; i <= np; ++i) {
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-	view->WCtoNDC(&p3[i1*3 - 3], p1);
-	view->WCtoNDC(&p3[i2*3 - 3], p2);
-	xdel = p2[0] - p1[0];
-	ydel = p2[1] - p1[1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = p1[0] + xdel*fT[2*it - 2];
-	    y[0] = p1[1] + ydel*fT[2*it - 2];
-	    x[1] = p1[0] + xdel*fT[2*it - 1];
-	    y[1] = p1[1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+        view->WCtoNDC(&p3[i1*3 - 3], p1);
+        view->WCtoNDC(&p3[i2*3 - 3], p2);
+        xdel = p2[0] - p1[0];
+        ydel = p2[1] - p1[1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = p1[0] + xdel*fT[2*it - 2];
+            y[0] = p1[1] + ydel*fT[2*it - 2];
+            x[1] = p1[0] + xdel*fT[2*it - 1];
+            y[1] = p1[1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          M O D I F Y    S C R E E N
 
     for (i = 1; i <= np; ++i) {
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
     }
 }
 
@@ -790,12 +790,12 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
     Double_t xdel, ydel;
     Int_t i, k, i1, i2, il, it;
     Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
-    Double_t pp[24]	/* was [2][12] */;
+    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
+    Double_t pp[24]        /* was [2][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
@@ -807,12 +807,12 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
     --icodes;
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	if (k < 0) k = -k;
-	p3[i*3 - 3] = xyz[k*3 + 1];
-	p3[i*3 - 2] = xyz[k*3 + 2];
-	p3[i*3 - 1] = xyz[k*3 + 3];
-	view->WCtoNDC(&p3[i*3 - 3], &pp[2*i - 2]);
+        k = iface[i];
+        if (k < 0) k = -k;
+        p3[i*3 - 3] = xyz[k*3 + 1];
+        p3[i*3 - 2] = xyz[k*3 + 2];
+        p3[i*3 - 1] = xyz[k*3 + 3];
+        view->WCtoNDC(&p3[i*3 - 3], &pp[2*i - 2]);
     }
 
 //*-*-          F I N D   L E V E L   L I N E S
@@ -824,18 +824,18 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
     SetLineStyle(3);
     TAttLine::Modify();
     for (il = 1; il <= fNlines; ++il) {
-	view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-	view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-	FindVisibleLine(p1, p2, 100, fNT, fT);
-	xdel = p2[0] - p1[0];
-	ydel = p2[1] - p1[1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = p1[0] + xdel*fT[2*it - 2];
-	    y[0] = p1[1] + ydel*fT[2*it - 2];
-	    x[1] = p1[0] + xdel*fT[2*it - 1];
-	    y[1] = p1[1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
+        view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
+        FindVisibleLine(p1, p2, 100, fNT, fT);
+        xdel = p2[0] - p1[0];
+        ydel = p2[1] - p1[1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = p1[0] + xdel*fT[2*it - 2];
+            y[0] = p1[1] + ydel*fT[2*it - 2];
+            x[1] = p1[0] + xdel*fT[2*it - 1];
+            y[1] = p1[1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          D R A W   F A C E
@@ -843,20 +843,20 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
     SetLineStyle(1);
     TAttLine::Modify();
     for (i = 1; i <= np; ++i) {
-	if (iface[i] < 0) continue;
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
-	xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
-	ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
-	    y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
-	    x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
-	    y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        if (iface[i] < 0) continue;
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
+        xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
+        ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
+            y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
+            x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
+            y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          M O D I F Y    S C R E E N
@@ -891,11 +891,11 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t n
     Double_t xdel, ydel;
     Int_t i, k, icol, i1, i2, it;
     Double_t p[3], x[2], y[2];
-    Double_t pp[24]	/* was [2][12] */;
+    Double_t pp[24]        /* was [2][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
 
@@ -906,11 +906,11 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t n
     --icodes;
 
     for (i = 1; i <= np; ++i) {
-	k = iface[i];
-	if (k < 0) k = -k;
-	view->WCtoNDC(&xyz[k*3 + 1], p);
-	pp[2*i - 2] = p[0];
-	pp[2*i - 1] = p[1];
+        k = iface[i];
+        if (k < 0) k = -k;
+        view->WCtoNDC(&xyz[k*3 + 1], p);
+        pp[2*i - 2] = p[0];
+        pp[2*i - 1] = p[1];
     }
 
 //*-*-          D R A W   F A C E
@@ -920,20 +920,20 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t n
     else      SetLineColor(1);
     TAttLine::Modify();
     for (i = 1; i <= np; ++i) {
-	if (iface[i] < 0) continue;
-	i1 = i;
-	i2 = i + 1;
-	if (i == np) i2 = 1;
-	FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
-	xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
-	ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
-	for (it = 1; it <= fNT; ++it) {
-	    x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
-	    y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
-	    x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
-	    y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
-	    gPad->PaintPolyLine(2, x, y);
-	}
+        if (iface[i] < 0) continue;
+        i1 = i;
+        i2 = i + 1;
+        if (i == np) i2 = 1;
+        FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
+        xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
+        ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
+        for (it = 1; it <= fNT; ++it) {
+            x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
+            y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
+            x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
+            y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
+            gPad->PaintPolyLine(2, x, y);
+        }
     }
 
 //*-*-          M O D I F Y    R A S T E R   S C R E E N
@@ -961,7 +961,7 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
     Int_t ilev, i, k, icol, i1, i2, nl, np;
     Double_t fmin, fmax;
     Double_t x[12], y[12], f1, f2;
-    Double_t p3[36]	/* was [3][12] */;
+    Double_t p3[36]        /* was [3][12] */;
     Double_t funmin, funmax;
 
 
@@ -983,8 +983,8 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
     fmin = f[1];
     fmax = f[1];
     for (i = 2; i <= np; ++i) {
-	if (fmin > f[i]) fmin = f[i];
-	if (fmax < f[i]) fmax = f[i];
+        if (fmin > f[i]) fmin = f[i];
+        if (fmax < f[i]) fmax = f[i];
     }
     funmin = fFunLevel[0] - 1;
     if (fmin < funmin) funmin = fmin - 1;
@@ -995,30 +995,30 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
     f2 = funmin;
     for (ilev = 1; ilev <= nl+1; ++ilev) {
 //*-*-         S E T   L E V E L   L I M I T S
-	f1 = f2;
-	if (ilev == nl + 1) f2 = funmax;
-	else                f2 = fFunLevel[ilev - 1];
-	if (fmax < f1)  return;
-	if (fmin > f2)  continue;
+        f1 = f2;
+        if (ilev == nl + 1) f2 = funmax;
+        else                f2 = fFunLevel[ilev - 1];
+        if (fmax < f1)  return;
+        if (fmin > f2)  continue;
 //*-*-         F I N D   S U B P O L Y G O N
-	k = 0;
-	for (i = 1; i <= np; ++i) {
-	    i1 = i;
-	    i2 = i + 1;
-	    if (i == np) i2 = 1;
-	    FindPartEdge(&p[i1*3 + 1], &p[i2*3 + 1], f[i1], f[i2], f1, f2, k, p3);
-	}
+        k = 0;
+        for (i = 1; i <= np; ++i) {
+            i1 = i;
+            i2 = i + 1;
+            if (i == np) i2 = 1;
+            FindPartEdge(&p[i1*3 + 1], &p[i2*3 + 1], f[i1], f[i2], f1, f2, k, p3);
+        }
 //*-*-         D R A W   S U B P O L Y G O N
-	if (k < 3) continue;
-	for (i = 1; i <= k; ++i) {
-	    x[i - 1] = p3[i*3 - 3];
-	    y[i - 1] = p3[i*3 - 2];
-	}
+        if (k < 3) continue;
+        for (i = 1; i <= k; ++i) {
+            x[i - 1] = p3[i*3 - 3];
+            y[i - 1] = p3[i*3 - 2];
+        }
      if (ilev==1) {
          icol=gPad->GetFillColor();
      }else{
          icol = fColorLevel[ilev - 2];
-	}
+        }
      SetFillColor(icol);
      SetFillStyle(1001);
      TAttFill::Modify();
@@ -1038,9 +1038,9 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t kbit, nbit, step, ymin, ymax, test[kLmax], xcur[kLmax], xnex[kLmax],
-	     i, j, k, n, ibase, t, x, y, xscan[24]	/* was [2][kLmax] */,
-	     yscan, x1[kLmax+2], y1[kLmax+2], x2[kLmax+2], y2[kLmax+2],
-	     ib, nb, dx, dy, iw, nx, xx, yy, signdx, nstart, xx1, xx2, nxa, nxb;
+             i, j, k, n, ibase, t, x, y, xscan[24]        /* was [2][kLmax] */,
+             yscan, x1[kLmax+2], y1[kLmax+2], x2[kLmax+2], y2[kLmax+2],
+             ib, nb, dx, dy, iw, nx, xx, yy, signdx, nstart, xx1, xx2, nxa, nxb;
 
 //*-*-          T R A N S F E R   T O   S C R E E N   C O O R D I N A T E S
 
@@ -1051,8 +1051,8 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 
     n = nn;
     for (i = 1; i <= n; ++i) {
-	x1[i - 1] = Int_t(fNxrast*((xy[2*i + 1] - fXrast) /fDXrast) - 0.01);
-	y1[i - 1] = Int_t(fNyrast*((xy[2*i + 2] - fYrast) /fDYrast) - 0.01);
+        x1[i - 1] = Int_t(fNxrast*((xy[2*i + 1] - fXrast) /fDXrast) - 0.01);
+        y1[i - 1] = Int_t(fNyrast*((xy[2*i + 2] - fYrast) /fDYrast) - 0.01);
     }
     x1[n] = x1[0];
     y1[n] = y1[0];
@@ -1063,15 +1063,15 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
     ymin = y1[0];
     ymax = y1[0];
     for (i = 1; i <= n; ++i) {
-	if (ymin > y1[i - 1])   ymin = y1[i - 1];
-	if (ymax < y1[i - 1])   ymax = y1[i - 1];
-	if (y1[i - 1] <= y1[i]) {x2[i - 1] = x1[i]; y2[i - 1] = y1[i];}
-	else {
-	    x2[i - 1] = x1[i - 1];
-	    y2[i - 1] = y1[i - 1];
-	    x1[i - 1] = x1[i];
-	    y1[i - 1] = y1[i];
-	}
+        if (ymin > y1[i - 1])   ymin = y1[i - 1];
+        if (ymax < y1[i - 1])   ymax = y1[i - 1];
+        if (y1[i - 1] <= y1[i]) {x2[i - 1] = x1[i]; y2[i - 1] = y1[i];}
+        else {
+            x2[i - 1] = x1[i - 1];
+            y2[i - 1] = y1[i - 1];
+            x1[i - 1] = x1[i];
+            y1[i - 1] = y1[i];
+        }
     }
     if (ymin >= fNyrast) return;
     if (ymax < 0)        return;
@@ -1080,64 +1080,64 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 //*-*-          S O R T   L I N E S
 
     for (i = 1; i < n; ++i) {
-	if (y1[i] >= y1[i - 1]) continue;
-	y = y1[i];
-	k = 1;
-	for (j = i - 1; j >= 1; --j) {
-	    if (y < y1[j - 1]) continue;
-	    k = j + 1;
-	    break;
-	}
-	x = x1[i];
-	xx = x2[i];
-	yy = y2[i];
-	for (j = i; j >= k; --j) {
-	    x1[j] = x1[j - 1];
-	    y1[j] = y1[j - 1];
-	    x2[j] = x2[j - 1];
-	    y2[j] = y2[j - 1];
-	}
-	x1[k - 1] = x;
-	y1[k - 1] = y;
-	x2[k - 1] = xx;
-	y2[k - 1] = yy;
+        if (y1[i] >= y1[i - 1]) continue;
+        y = y1[i];
+        k = 1;
+        for (j = i - 1; j >= 1; --j) {
+            if (y < y1[j - 1]) continue;
+            k = j + 1;
+            break;
+        }
+        x = x1[i];
+        xx = x2[i];
+        yy = y2[i];
+        for (j = i; j >= k; --j) {
+            x1[j] = x1[j - 1];
+            y1[j] = y1[j - 1];
+            x2[j] = x2[j - 1];
+            y2[j] = y2[j - 1];
+        }
+        x1[k - 1] = x;
+        y1[k - 1] = y;
+        x2[k - 1] = xx;
+        y2[k - 1] = yy;
     }
 
 //*-*-          S E T   I N I T I A L   V A L U E S
 
     for (i = 1; i <= n; ++i) {
-	xcur[i - 1] = x1[i - 1];
-	dy = y2[i - 1] - y1[i - 1];
-	dx = x2[i - 1] - x1[i - 1];
-	signdx = 1;
-	if (dx < 0)   signdx = -1;
-	if (dx < 0)   dx = -dx;
-	if (dx <= dy) {
-	    t = -(dy + 1) / 2 + dx;
-	    if (t < 0) {
-		test[i - 1] = t;
-		xnex[i - 1] = xcur[i - 1];
-	    } else {
-		test[i - 1] = t - dy;
-		xnex[i - 1] = xcur[i - 1] + signdx;
-	    }
-	} else if (dy != 0) {
-	    step = (dx - 1) / (dy + dy) + 1;
-	    test[i - 1] = step*dy - (dx + 1) / 2 - dx;
-	    xnex[i - 1] = xcur[i - 1] + signdx*step;
-	}
+        xcur[i - 1] = x1[i - 1];
+        dy = y2[i - 1] - y1[i - 1];
+        dx = x2[i - 1] - x1[i - 1];
+        signdx = 1;
+        if (dx < 0)   signdx = -1;
+        if (dx < 0)   dx = -dx;
+        if (dx <= dy) {
+            t = -(dy + 1) / 2 + dx;
+            if (t < 0) {
+                test[i - 1] = t;
+                xnex[i - 1] = xcur[i - 1];
+            } else {
+                test[i - 1] = t - dy;
+                xnex[i - 1] = xcur[i - 1] + signdx;
+            }
+        } else if (dy != 0) {
+            step = (dx - 1) / (dy + dy) + 1;
+            test[i - 1] = step*dy - (dx + 1) / 2 - dx;
+            xnex[i - 1] = xcur[i - 1] + signdx*step;
+        }
     }
 
 //*-*-          L O O P   O N   S C A N   L I N E S
 
     nstart = 1;
     for (yscan = ymin; yscan <= ymax; ++yscan) {
-	nx  = 0;
-	nxa = 0;
-	nxb = kLmax + 1;
-	for (i = nstart; i <= n; ++i) {
-	    if (y1[i - 1] > yscan) goto L500;
-	    if (y2[i - 1] <= yscan) {
+        nx  = 0;
+        nxa = 0;
+        nxb = kLmax + 1;
+        for (i = nstart; i <= n; ++i) {
+            if (y1[i - 1] > yscan) goto L500;
+            if (y2[i - 1] <= yscan) {
                if (i == nstart)       ++nstart;
                if (y2[i - 1] != yscan)continue;
                --nxb;
@@ -1154,50 +1154,50 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 //*-*-          S T O R E   C U R R E N T  X
 //*-*-          P R E P A R E   X   F O R   N E X T   S C A N - L I N E
 
-	    ++nxa;
-	    dy = y2[i - 1] - y1[i - 1];
-	    dx = x2[i - 1] - x1[i - 1];
-	    if (dx >= 0) {
-		signdx = 1;
-		xscan[2*nxa - 2] = xcur[i - 1];
-		xscan[2*nxa - 1] = xnex[i - 1];
-		if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
-		    --xscan[2*nxa - 1];
-		}
-	    } else {
-		dx = -dx;
-		signdx = -1;
-		xscan[2*nxa - 2] = xnex[i - 1];
-		xscan[2*nxa - 1] = xcur[i - 1];
-		if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
-		    ++xscan[2*nxa - 2];
-		}
-	    }
-	    xcur[i - 1] = xnex[i - 1];
-	    if (dx <= dy) {
+            ++nxa;
+            dy = y2[i - 1] - y1[i - 1];
+            dx = x2[i - 1] - x1[i - 1];
+            if (dx >= 0) {
+                signdx = 1;
+                xscan[2*nxa - 2] = xcur[i - 1];
+                xscan[2*nxa - 1] = xnex[i - 1];
+                if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
+                    --xscan[2*nxa - 1];
+                }
+            } else {
+                dx = -dx;
+                signdx = -1;
+                xscan[2*nxa - 2] = xnex[i - 1];
+                xscan[2*nxa - 1] = xcur[i - 1];
+                if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
+                    ++xscan[2*nxa - 2];
+                }
+            }
+            xcur[i - 1] = xnex[i - 1];
+            if (dx <= dy) {
                test[i - 1] += dx;
                if (test[i - 1] < 0) continue;
                test[i - 1] -= dy;
                xnex[i - 1] += signdx;
                continue;
             }
-	    step = dx / dy;
-	    t = test[i - 1] + step*dy;
-	    if (t >= 0) {
-		test[i - 1] = t - dx;
-		xnex[i - 1] += signdx*step;
-	    } else {
-		test[i - 1] = t + dy - dx;
-		xnex[i - 1] += signdx*(step + 1);
-	    }
-	}
+            step = dx / dy;
+            t = test[i - 1] + step*dy;
+            if (t >= 0) {
+                test[i - 1] = t - dx;
+                xnex[i - 1] += signdx*step;
+            } else {
+                test[i - 1] = t + dy - dx;
+                xnex[i - 1] += signdx*(step + 1);
+            }
+        }
 
 //*-*-          S O R T   P O I N T S   A L O N G   X
 
 L500:
-	if (yscan < 0) continue;
-	ibase = yscan*fNxrast;
-	if (nxa >= 2) {
+        if (yscan < 0) continue;
+        ibase = yscan*fNxrast;
+        if (nxa >= 2) {
            for (i = 1; i < nxa; ++i) {
               for (j = i; j >= 1; --j) {
                  if (xscan[2*j] >= xscan[2*j - 2]) continue;
@@ -1217,7 +1217,7 @@ L500:
               xscan[2*nx - 1] = x;
            }
         }
-	if (nxb <= kLmax) {
+        if (nxb <= kLmax) {
            for (i = nxb; i <= kLmax; ++i) {
               ++nx;
               xscan[2*nx - 2] = xscan[2*i - 2];
@@ -1295,8 +1295,8 @@ void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
     tmin = t[1];
     tmax = t[1];
     for (i = 2; i <= np; ++i) {
-	if (t[i] < tmin) tmin = t[i];
-	if (t[i] > tmax) tmax = t[i];
+        if (t[i] < tmin) tmin = t[i];
+        if (t[i] > tmax) tmax = t[i];
     }
     if (tmin >= fFunLevel[nl - 1]) return;
     if (tmax <= fFunLevel[0])      return;
@@ -1304,41 +1304,41 @@ void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
 //*-*-          F I N D   L E V E L S   L I N E S
 
     for (il = 1; il <= nl; ++il) {
-	if (tmin >= fFunLevel[il - 1]) continue;
-	if (tmax <= fFunLevel[il - 1]) return;
-	if (fNlines >= 200)            return;
-	++fNlines;
-	fLevelLine[fNlines - 1] = il;
-	k = 0;
-	for (i = 1; i <= np; ++i) {
-	    i1 = i;
-	    i2 = i + 1;
-	    if (i == np) i2 = 1;
-	    d1 = t[i1] - fFunLevel[il - 1];
-	    d2 = t[i2] - fFunLevel[il - 1];
-	    if (d1) {
+        if (tmin >= fFunLevel[il - 1]) continue;
+        if (tmax <= fFunLevel[il - 1]) return;
+        if (fNlines >= 200)            return;
+        ++fNlines;
+        fLevelLine[fNlines - 1] = il;
+        k = 0;
+        for (i = 1; i <= np; ++i) {
+            i1 = i;
+            i2 = i + 1;
+            if (i == np) i2 = 1;
+            d1 = t[i1] - fFunLevel[il - 1];
+            d2 = t[i2] - fFunLevel[il - 1];
+            if (d1) {
                if (d1*d2 < 0) goto L320;
                continue;
             }
-	    ++k;
-	    fPlines[(k + 2*fNlines)*3 - 9] = f[i1*3 + 1];
-	    fPlines[(k + 2*fNlines)*3 - 8] = f[i1*3 + 2];
-	    fPlines[(k + 2*fNlines)*3 - 7] = f[i1*3 + 3];
-	    if (k == 1) continue;
-	    goto L340;
+            ++k;
+            fPlines[(k + 2*fNlines)*3 - 9] = f[i1*3 + 1];
+            fPlines[(k + 2*fNlines)*3 - 8] = f[i1*3 + 2];
+            fPlines[(k + 2*fNlines)*3 - 7] = f[i1*3 + 3];
+            if (k == 1) continue;
+            goto L340;
 L320:
-	    ++k;
-	    d1 /= t[i2] - t[i1];
-	    d2 /= t[i2] - t[i1];
-	    fPlines[(k + 2*fNlines)*3 - 9] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
-	    fPlines[(k + 2*fNlines)*3 - 8] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
-	    fPlines[(k + 2*fNlines)*3 - 7] = d2*f[i1*3 + 3] - d1*f[i2*3 + 3];
-	    if (k != 1) goto L340;
-	}
-	if (k != 2) {
-	    Error("FindLevelLines", "number of points for line not equal 2");
-	    --fNlines;
-	}
+            ++k;
+            d1 /= t[i2] - t[i1];
+            d2 /= t[i2] - t[i1];
+            fPlines[(k + 2*fNlines)*3 - 9] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
+            fPlines[(k + 2*fNlines)*3 - 8] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
+            fPlines[(k + 2*fNlines)*3 - 7] = d2*f[i1*3 + 3] - d1*f[i2*3 + 3];
+            if (k != 1) goto L340;
+        }
+        if (k != 2) {
+            Error("FindLevelLines", "number of points for line not equal 2");
+            --fNlines;
+        }
 L340:
         if (il < 0) return;
     }
@@ -1391,31 +1391,31 @@ void TPainter3dAlgorithms::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1,
 //*-*-    K2:    -2  -1   0  +1  +2
 //*-*-    K1:    -2 -1 0 +1 +2
     switch ((int)kk) {
-	case 1:  return;
-	case 2:  return;
-	case 3:  goto L200;
-	case 4:  goto L200;
-	case 5:  goto L600;
-	case 6:  goto L100;
-	case 7:  goto L100;
-	case 8:  goto L100;
-	case 9:  goto L100;
-	case 10:  goto L500;
-	case 11:  goto L400;
-	case 12:  goto L100;
-	case 13:  goto L100;
-	case 14:  goto L100;
-	case 15:  goto L500;
-	case 16:  goto L400;
-	case 17:  goto L100;
-	case 18:  goto L100;
-	case 19:  goto L100;
-	case 20:  goto L100;
-	case 21:  goto L700;
-	case 22:  goto L300;
-	case 23:  goto L300;
-	case 24:  return;
-	case 25:  return;
+        case 1:  return;
+        case 2:  return;
+        case 3:  goto L200;
+        case 4:  goto L200;
+        case 5:  goto L600;
+        case 6:  goto L100;
+        case 7:  goto L100;
+        case 8:  goto L100;
+        case 9:  goto L100;
+        case 10:  goto L500;
+        case 11:  goto L400;
+        case 12:  goto L100;
+        case 13:  goto L100;
+        case 14:  goto L100;
+        case 15:  goto L500;
+        case 16:  goto L400;
+        case 17:  goto L100;
+        case 18:  goto L100;
+        case 19:  goto L100;
+        case 20:  goto L100;
+        case 21:  goto L700;
+        case 22:  goto L300;
+        case 23:  goto L300;
+        case 24:  return;
+        case 25:  return;
     }
 
 //*-*-          1 - S T   P O I N T
@@ -1537,17 +1537,17 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
     --r1;
 
     if(gPad->GetView()) {
-    	tn = gPad->GetView()->GetTN();
+            tn = gPad->GetView()->GetTN();
         x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3]  + tn[3];
-    	x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
-    	y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
-    	y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
-    	z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
-    	z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
+            x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
+            y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
+            y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
+            z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
+            z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
     }
     else {
       Error("FindVisibleDraw", "no TView in current pad");
-    	return;
+            return;
     }
 
     ifback = 0;
@@ -1577,60 +1577,60 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
     dt = 1 / di;
     iv = -1;
     for (i = i1; i <= i2 - 1; ++i) {
-	yy1 = y1 + dy*(i - i1);
-	yy2 = yy1 + dy;
-	yy1u = yy1 - fU[2*i - 2];
-	yy1d = yy1 - fD[2*i - 2];
-	yy2u = yy2 - fU[2*i - 1];
-	yy2d = yy2 - fD[2*i - 1];
-	tt = dt*(i - i1);
+        yy1 = y1 + dy*(i - i1);
+        yy2 = yy1 + dy;
+        yy1u = yy1 - fU[2*i - 2];
+        yy1d = yy1 - fD[2*i - 2];
+        yy2u = yy2 - fU[2*i - 1];
+        yy2d = yy2 - fD[2*i - 1];
+        tt = dt*(i - i1);
 //*-*-         A N A L I Z E   L E F T   S I D E
-	icase1 = 1;
-	if (yy1u >  kEpsil) icase1 = 0;
-	if (yy1d < -kEpsil) icase1 = 2;
-	if ((icase1 == 0 || icase1 == 2) && iv <= 0) {
+        icase1 = 1;
+        if (yy1u >  kEpsil) icase1 = 0;
+        if (yy1d < -kEpsil) icase1 = 2;
+        if ((icase1 == 0 || icase1 == 2) && iv <= 0) {
            iv = 1;
            ++fNT;
            fT[2*fNT - 2] = tt;
         }
-	if (icase1 == 1 && iv >= 0) {
+        if (icase1 == 1 && iv >= 0) {
            iv = -1;
            fT[2*fNT - 1] = tt;
         }
 //*-*-         A N A L I Z E   R I G H T   S I D E
-	icase2 = 1;
-	if (yy2u >  kEpsil) icase2 = 0;
-	if (yy2d < -kEpsil) icase2 = 2;
-	icase = icase1*3 + icase2;
-	if (icase == 1) {
+        icase2 = 1;
+        if (yy2u >  kEpsil) icase2 = 0;
+        if (yy2d < -kEpsil) icase2 = 2;
+        icase = icase1*3 + icase2;
+        if (icase == 1) {
            iv = -1;
-	   fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
-        }
-	if (icase == 2) {
            fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
-	   ++fNT;
-	   fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
         }
-	if (icase == 3) {
+        if (icase == 2) {
+           fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
+           ++fNT;
+           fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
+        }
+        if (icase == 3) {
            iv = 1;
-	   ++fNT;
-	   fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
+           ++fNT;
+           fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
         }
-	if (icase == 5) {
+        if (icase == 5) {
            iv = 1;
-	   ++fNT;
-	   fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
+           ++fNT;
+           fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
         }
-	if (icase == 6) {
+        if (icase == 6) {
            fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
-	   ++fNT;
-	   fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
+           ++fNT;
+           fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
         }
-	if (icase == 7) {
+        if (icase == 7) {
            iv = -1;
            fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
         }
-	if (fNT + 1 >= 100) break;
+        if (fNT + 1 >= 100) break;
     }
     if (iv > 0) fT[2*fNT - 1] = 1;
  } else {
@@ -1673,8 +1673,8 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
     if (ifback == 0) return;
     if (fNT == 0)    return;
     for (i = 1; i <= fNT; ++i) {
-	fT[2*i - 2] = 1 - fT[2*i - 2];
-	fT[2*i - 1] = 1 - fT[2*i - 1];
+        fT[2*i - 2] = 1 - fT[2*i - 2];
+        fT[2*i - 1] = 1 - fT[2*i - 1];
     }
 }
 
@@ -1706,10 +1706,10 @@ void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntm
     --p1;
 
     if (fIfrast) {
-	nt = 1;
-	t[3] = 0;
-	t[4] = 1;
-	return;
+        nt = 1;
+        t[3] = 0;
+        t[4] = 1;
+        return;
     }
     x1 = Int_t(fNxrast*((p1[1] - fXrast) / fDXrast) - 0.01);
     y1 = Int_t(fNyrast*((p1[2] - fYrast) / fDYrast) - 0.01);
@@ -1717,13 +1717,13 @@ void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntm
     y2 = Int_t(fNyrast*((p2[2] - fYrast) / fDYrast) - 0.01);
     ifinve = 0;
     if (y1 > y2) {
-	ifinve = 1;
-	iw = x1;
-	x1 = x2;
-	x2 = iw;
-	iw = y1;
-	y1 = y2;
-	y2 = iw;
+        ifinve = 1;
+        iw = x1;
+        x1 = x2;
+        x2 = iw;
+        iw = y1;
+        y1 = y2;
+        y2 = iw;
     }
     nt   = 0;
     ivis = 0;
@@ -1737,8 +1737,8 @@ void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntm
     incrx = 1;
     dx = x2 - x1;
     if (dx < 0) {
-	dx = -dx;
-	incrx = -1;
+        dx = -dx;
+        incrx = -1;
     }
     dy  = y2 - y1;
     dx2 = dx + dx;
@@ -1754,31 +1754,31 @@ void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntm
     iy = y1;
     kb = iy*fNxrast + x1 - incrx;
     for (ix = x1; incrx < 0 ? ix >= x2 : ix <= x2; ix += incrx) {
-	kb += incrx;
-	tcur += dt;
-	tt += dy2;
-	if (tt >= 0) {
-	    ++iy;
-	    tt -= dx2;
-	    kb += fNxrast;
-	}
-	if (iy < 0)        goto L110;
-	if (iy >= fNyrast) goto L110;
-	if (ix < 0)        goto L110;
-	if (ix >= fNxrast) goto L110;
-	iw = kb / 30;
-	ib = kb - iw*30 + 1;
-	if (fRaster[iw] & fMask[ib - 1]) goto L110;
-	if (ivis > 0)      continue;
-	ivis = 1;
-	++nt;
-	t[2*nt + 1] = tcur;
-	continue;
+        kb += incrx;
+        tcur += dt;
+        tt += dy2;
+        if (tt >= 0) {
+            ++iy;
+            tt -= dx2;
+            kb += fNxrast;
+        }
+        if (iy < 0)        goto L110;
+        if (iy >= fNyrast) goto L110;
+        if (ix < 0)        goto L110;
+        if (ix >= fNxrast) goto L110;
+        iw = kb / 30;
+        ib = kb - iw*30 + 1;
+        if (fRaster[iw] & fMask[ib - 1]) goto L110;
+        if (ivis > 0)      continue;
+        ivis = 1;
+        ++nt;
+        t[2*nt + 1] = tcur;
+        continue;
 L110:
-	if (ivis == 0) continue;
-	ivis = 0;
-	t[2*nt + 2] = tcur;
-	if (nt == ntmax)  goto L300;
+        if (ivis == 0) continue;
+        ivis = 0;
+        t[2*nt + 2] = tcur;
+        if (nt == ntmax)  goto L300;
     }
     if (ivis > 0) t[2*nt + 2] = tcur + dt + ddtt;
     goto L300;
@@ -1794,30 +1794,30 @@ L200:
     if (y2 >= fNyrast) y2 = fNyrast - 1;
     kb = (y1 - 1)*fNxrast + ix;
     for (iy = y1; iy <= y2; ++iy) {
-	kb += fNxrast;
-	tcur += dt;
-	tt += dx2;
-	if (tt >= 0) {
-	    ix += incrx;
-	    tt -= dy2;
-	    kb += incrx;
-	}
-	if (iy < 0)        goto L210;
-	if (ix < 0)        goto L210;
-	if (ix >= fNxrast) goto L210;
-	iw = kb / 30;
-	ib = kb - iw*30 + 1;
-	if (fRaster[iw] & fMask[ib - 1]) goto L210;
-	if (ivis > 0) continue;
-	ivis = 1;
-	++nt;
-	t[2*nt + 1] = tcur;
-	continue;
+        kb += fNxrast;
+        tcur += dt;
+        tt += dx2;
+        if (tt >= 0) {
+            ix += incrx;
+            tt -= dy2;
+            kb += incrx;
+        }
+        if (iy < 0)        goto L210;
+        if (ix < 0)        goto L210;
+        if (ix >= fNxrast) goto L210;
+        iw = kb / 30;
+        ib = kb - iw*30 + 1;
+        if (fRaster[iw] & fMask[ib - 1]) goto L210;
+        if (ivis > 0) continue;
+        ivis = 1;
+        ++nt;
+        t[2*nt + 1] = tcur;
+        continue;
 L210:
-	if (ivis == 0) continue;
-	ivis = 0;
-	t[2*nt + 2] = tcur;
-	if (nt == ntmax) goto L300;
+        if (ivis == 0) continue;
+        ivis = 0;
+        t[2*nt + 2] = tcur;
+        if (nt == ntmax) goto L300;
     }
     if (ivis > 0) t[2*nt + 2] = tcur + dt;
 
@@ -1830,10 +1830,10 @@ L300:
     if (t[2*nt + 2] >= 1 - dt) t[2*nt + 2] = 1;
     if (ifinve == 0) return;
     for (i = 1; i <= nt; ++i) {
-	t1 = t[2*i + 1];
-	t2 = t[2*i + 2];
-	t[2*i + 1] = 1 - t2;
-	t[2*i + 2] = 1 - t1;
+        t1 = t[2*i + 1];
+        t2 = t[2*i + 2];
+        t[2*i + 1] = 1 - t2;
+        t[2*i + 2] = 1 - t1;
     }
 }
 
@@ -1863,28 +1863,28 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
     static Int_t iface2[4] = { 2,3,7,6 };
 
     Double_t cosa, sina;
-    Double_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
+    Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
     Int_t icodes[3];
     Double_t fdummy[1];
     Int_t i, ix1, ix2, iy1, iy2, iz1, iz2;
     TView *view = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-      	Error("FrontBox", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+              Error("FrontBox", "no TView in current pad");
+                    return;
+            }
     }
 
 
     cosa = TMath::Cos(kRad*ang);
     sina = TMath::Sin(kRad*ang);
-	view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
+        view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
     for (i = 1; i <= 8; ++i) {
-	r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2] * cosa;
-	r[i*3 - 2] = av[i*3 - 2] * sina;
-	r[i*3 - 1] = av[i*3 - 1];
+        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2] * cosa;
+        r[i*3 - 2] = av[i*3 - 2] * sina;
+        r[i*3 - 1] = av[i*3 - 1];
     }
 
 //*-*-          D R A W   F O R W A R D   F A C E S
@@ -1907,14 +1907,14 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t iphi;
-   static Double_t f[108];	/* was [3][4][3][3] */
+   static Double_t f[108];        /* was [3][4][3][3] */
    Int_t i, j, k;
-   Double_t r, s, x[36];	/* was [4][3][3] */
-   Double_t y[36];	/* was [4][3][3] */
-   Double_t z[36];	/* was [4][3][3] */
+   Double_t r, s, x[36];        /* was [4][3][3] */
+   Double_t y[36];        /* was [4][3][3] */
+   Double_t z[36];        /* was [4][3][3] */
    Int_t incrx[3], incry[3];
 
-   Double_t x1, x2, y1, y2, z1, z2, th, an[27];	/* was [3][3][3] */
+   Double_t x1, x2, y1, y2, z1, z2, th, an[27];        /* was [3][3][3] */
    Double_t bn[12];    /* was [3][2][2] */
 
    Double_t rad;
@@ -1972,34 +1972,34 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
          for (k = 1; k <= 4; ++k) {
             if (Hoption.System == kPOLAR) {
                phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-	       r = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
-	       x[k + (i + j*3 << 2) - 17] = r * TMath::Cos(phi);
-	       y[k + (i + j*3 << 2) - 17] = r * TMath::Sin(phi);
-	       z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
+               r = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
+               x[k + (i + j*3 << 2) - 17] = r * TMath::Cos(phi);
+               y[k + (i + j*3 << 2) - 17] = r * TMath::Sin(phi);
+               z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
             } else if (Hoption.System == kCYLINDRICAL) {
-	       phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
+               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
                r = f[(k + (i + j*3 << 2))*3 - 49];
-	       x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
-	       y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
-	       z[k + (i + j*3 << 2) - 17] = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
+               x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
+               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
+               z[k + (i + j*3 << 2) - 17] = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
             } else if (Hoption.System == kSPHERICAL) {
-	       phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-	       th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-	       r = f[(k + (i + j*3 << 2))*3 - 49];
-	       x[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Cos(phi);
-	       y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Sin(phi);
-	       z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th);
+               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
+               th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
+               r = f[(k + (i + j*3 << 2))*3 - 49];
+               x[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Cos(phi);
+               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Sin(phi);
+               z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th);
             } else if (Hoption.System == kRAPIDITY) {
-	       phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-	       th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-	       r = f[(k + (i + j*3 << 2))*3 - 49];
-	       x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
-	       y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
-	       z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th) / TMath::Sin(th);
+               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
+               th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
+               r = f[(k + (i + j*3 << 2))*3 - 49];
+               x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
+               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
+               z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th) / TMath::Sin(th);
            } else {
-	       x[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 51];
-	       y[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 50];
-	       z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
+               x[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 51];
+               y[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 50];
+               z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
            }
         }
         x1 = x[(i + j*3 << 2) - 14] - x[(i + j*3 << 2) - 16];
@@ -2027,7 +2027,7 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
       for (i = 1; i <= 2; ++i) {
          for (k = 1; k <= 3; ++k) {
             bn[k + (i + 2*j)*3 - 10] = an[k + (i + j*3)*3 - 13]
-	      + an[k + (i + 1 + j*3)*3 - 13] + an[k + (i + 1 +
+              + an[k + (i + 1 + j*3)*3 - 13] + an[k + (i + 1 +
                           (j + 1)*3)*3 - 13] + an[k + (i + (j + 1)*3)*3 - 13];
          }
       }
@@ -2056,10 +2056,10 @@ void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
     fX0 = xmin;
     fDX = (xmax - xmin) / 1000;
     for (Int_t i = 1; i <= 1000; ++i) {
-	fU[2*i - 2] = (float)-999;
-	fU[2*i - 1] = (float)-999;
-	fD[2*i - 2] = (float)999;
-	fD[2*i - 1] = (float)999;
+        fU[2*i - 2] = (float)-999;
+        fU[2*i - 1] = (float)-999;
+        fD[2*i - 2] = (float)999;
+        fD[2*i - 1] = (float)999;
     }
 }
 //______________________________________________________________________________
@@ -2095,19 +2095,19 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
     k = 0;
     Int_t pow2 = 1;
     for (i = 1; i <= 30; ++i) {
-	fJmask[i - 1] = k;
-	k = k + 30 - i + 1;
-	fMask[i - 1] = pow2;
+        fJmask[i - 1] = k;
+        k = k + 30 - i + 1;
+        fMask[i - 1] = pow2;
         pow2 *= 2;
     }
     j = 30;
     for (nb = 2; nb <= 30; ++nb) {
-	for (ib = 1; ib <= 30 - nb + 1; ++ib) {
-	    k = 0;
-	    for (i = ib; i <= ib + nb - 1; ++i) k = k | fMask[i - 1];
-	    ++j;
-	    fMask[j - 1] = k;
-	}
+        for (ib = 1; ib <= 30 - nb + 1; ++ib) {
+            k = 0;
+            for (i = ib; i <= ib + nb - 1; ++i) k = k | fMask[i - 1];
+            ++j;
+            fMask[j - 1] = k;
+        }
     }
 
 //*-*-          C L E A R   R A S T E R   S C R E E N
@@ -2175,23 +2175,23 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 //*-*-       Transform the cell position in the required coordinate system
 
     if (Hoption.System == kPOLAR) {
-	ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-	ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
-	ab[4] = (ab[4] - yval1l) / (yval2l - yval1l);
-	ab[8] = (ab[8] - yval1l) / (yval2l - yval1l);
+        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
+        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[4] = (ab[4] - yval1l) / (yval2l - yval1l);
+        ab[8] = (ab[8] - yval1l) / (yval2l - yval1l);
     } else if (Hoption.System == kCYLINDRICAL) {
-	ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-	ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
+        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
     } else if (Hoption.System == kSPHERICAL) {
-	ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-	ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
-	ab[4] = 180*(ab[4] - yval1l) / (yval2l - yval1l);
-	ab[8] = 180*(ab[8] - yval1l) / (yval2l - yval1l);
+        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
+        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[4] = 180*(ab[4] - yval1l) / (yval2l - yval1l);
+        ab[8] = 180*(ab[8] - yval1l) / (yval2l - yval1l);
     } else if (Hoption.System == kRAPIDITY) {
-	ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-	ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
-	ab[4] = (180 - dangle*2)*(ab[4] - yval1l) / (yval2l - yval1l) + dangle;
-	ab[8] = (180 - dangle*2)*(ab[8] - yval1l) / (yval2l - yval1l) + dangle;
+        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
+        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[4] = (180 - dangle*2)*(ab[4] - yval1l) / (yval2l - yval1l) + dangle;
+        ab[8] = (180 - dangle*2)*(ab[8] - yval1l) / (yval2l - yval1l) + dangle;
     }
 
 //*-*-             Complete the cell coordinates
@@ -2210,17 +2210,17 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     Int_t nids = 0; //not yet implemented
     if (stack) nids = stack->GetSize();
     if (nids) {
-	for (i = 2; i <= nids + 1; ++i) {
+        for (i = 2; i <= nids + 1; ++i) {
             TH1 *hid = (TH1*)stack->At(i-2);
             vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
-	    vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
-	    //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
-	}
+            vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
+            //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
+        }
     }
 
     nv = nids + 2;
     for (i = 2; i <= nv; ++i) {
-	if (Hoption.Logz) {
+        if (Hoption.Logz) {
             if (vv[i] > 0)
                vv[i] = TMath::Max(Hparam.zmin, (Double_t)TMath::Log10(vv[i]));
             else
@@ -2233,29 +2233,29 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     }
 
     if (!Hoption.Logz) {
-	i = 3;
-	while (i <= nv) {
-	    if (vv[i] < vv[i - 1]) {
-		vv[i - 1] = vv[i];
-		i = 3;
+        i = 3;
+        while (i <= nv) {
+            if (vv[i] < vv[i - 1]) {
+                vv[i - 1] = vv[i];
+                i = 3;
                 continue;
-	    }
-	    ++i;
-	}
+            }
+            ++i;
+        }
     }
 
 //*-*-          For cylindrical, spherical and pseudo-rapidity, the content
 //*-*-          is mapped onto the radius
 
     if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
-	for (i = 1; i <= nv; ++i) {
-	    vv[i] = (1 - rinrad)*((vv[i] - Hparam.zmin) /
-		    (Hparam.zmax - Hparam.zmin)) + rinrad;
-	}
+        for (i = 1; i <= nv; ++i) {
+            vv[i] = (1 - rinrad)*((vv[i] - Hparam.zmin) /
+                    (Hparam.zmax - Hparam.zmin)) + rinrad;
+        }
     }
 
     for (i = 1; i <= nv; ++i) {
-	for (j = 1; j <= 4; ++j) t[j + (i << 2)] = vv[i];
+        for (j = 1; j <= 4; ++j) t[j + (i << 2)] = vv[i];
     }
 
 }
@@ -2305,10 +2305,10 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
     Int_t ivis[4], iface[4];
     Double_t tface[4], v[20];
     Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
-    Double_t tt[80]	/* was [4][20] */;
+    Double_t tt[80]        /* was [4][20] */;
     Int_t icodes[4];
-    Double_t zn, xy[8]	/* was [2][4] */;
-    Double_t xyz[24]	/* was [3][8] */;
+    Double_t zn, xy[8]        /* was [2][4] */;
+    Double_t xyz[24]        /* was [3][8] */;
     Double_t *tn = 0;
     TView *view = 0;
 
@@ -2317,14 +2317,14 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-	if(gPad) {
-		view = gPad->GetView();
-		if(!view) {
-			Error("LegoCartesian", "no TView in current pad");
-			return;
-		}
-		tn = gPad->GetView()->GetTN();
-	}
+        if(gPad) {
+                view = gPad->GetView();
+                if(!view) {
+                        Error("LegoCartesian", "no TView in current pad");
+                        return;
+                }
+                tn = gPad->GetView()->GetTN();
+        }
 
     i1 = 1;
     if (tn[0] < 0) i1 = 2;
@@ -2333,11 +2333,11 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 //*-*-          D E F I N E   O R D E R   O F   D R A W I N G
 
     if (*chopt == 'B' || *chopt == 'b') {
-	incrx = -1;
-	incry = -1;
+        incrx = -1;
+        incry = -1;
     } else {
-	incrx = 1;
-	incry = 1;
+        incrx = 1;
+        incry = 1;
     }
     if (i1 == 1 || i1 == 2) incrx = -incrx;
     if (i1 == 2 || i1 == 3) incry = -incry;
@@ -2366,73 +2366,73 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 
     THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-	    if (!painter->IsInside(ix,iy)) continue;
+        for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+            if (!painter->IsInside(ix,iy)) continue;
             (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
-	    if (nv < 2 || nv > 20) continue;
-	    icodes[0] = ix;
-	    icodes[1] = iy;
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = xy[2*i - 2] + xy[2*i - 1]*cosa;
-		xyz[i*3 - 2] = xy[2*i - 1]*sina;
-		xyz[(i + 4)*3 - 3] = xyz[i*3 - 3];
-		xyz[(i + 4)*3 - 2] = xyz[i*3 - 2];
-	    }
+            if (nv < 2 || nv > 20) continue;
+            icodes[0] = ix;
+            icodes[1] = iy;
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = xy[2*i - 2] + xy[2*i - 1]*cosa;
+                xyz[i*3 - 2] = xy[2*i - 1]*sina;
+                xyz[(i + 4)*3 - 3] = xyz[i*3 - 3];
+                xyz[(i + 4)*3 - 2] = xyz[i*3 - 2];
+            }
 //*-*-         D R A W   S T A C K
-	    for (iv = 1; iv < nv; ++iv) {
-		for (i = 1; i <= 4; ++i) {
-		    xyz[i*3 - 1] = v[iv - 1];
-		    xyz[(i + 4)*3 - 1] = v[iv];
-		}
-		if (v[iv - 1] == v[iv]) continue;
-		icodes[2] = iv;
-		for (i = 1; i <= 4; ++i) {
-		    if (ivis[i - 1] == 0) continue;
-		    k1 = i;
-		    k2 = i + 1;
-		    if (i == 4) k2 = 1;
-		    icodes[3] = k1;
-		    iface[0] = k1;
-		    iface[1] = k2;
-		    iface[2] = k2 + 4;
-		    iface[3] = k1 + 4;
-		    tface[0] = tt[k1 + (iv << 2) - 5];
-		    tface[1] = tt[k2 + (iv << 2) - 5];
-		    tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-		    tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-		    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-		}
-	    }
+            for (iv = 1; iv < nv; ++iv) {
+                for (i = 1; i <= 4; ++i) {
+                    xyz[i*3 - 1] = v[iv - 1];
+                    xyz[(i + 4)*3 - 1] = v[iv];
+                }
+                if (v[iv - 1] == v[iv]) continue;
+                icodes[2] = iv;
+                for (i = 1; i <= 4; ++i) {
+                    if (ivis[i - 1] == 0) continue;
+                    k1 = i;
+                    k2 = i + 1;
+                    if (i == 4) k2 = 1;
+                    icodes[3] = k1;
+                    iface[0] = k1;
+                    iface[1] = k2;
+                    iface[2] = k2 + 4;
+                    iface[3] = k1 + 4;
+                    tface[0] = tt[k1 + (iv << 2) - 5];
+                    tface[1] = tt[k2 + (iv << 2) - 5];
+                    tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+                    tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+                    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+                }
+            }
 //*-*-         D R A W   B O T T O M   F A C E
-	    view->FindNormal(0, 0, 1, zn);
-	    if (zn < 0) {
-		icodes[2] = 1;
-		icodes[3] = 5;
-		for (i = 1; i <= 4; ++i) {
-		    xyz[i*3 - 1] = v[0];
-		    iface[i - 1] = 5 - i;
-		    tface[i - 1] = tt[5 - i - 1];
-		}
-		(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	    }
+            view->FindNormal(0, 0, 1, zn);
+            if (zn < 0) {
+                icodes[2] = 1;
+                icodes[3] = 5;
+                for (i = 1; i <= 4; ++i) {
+                    xyz[i*3 - 1] = v[0];
+                    iface[i - 1] = 5 - i;
+                    tface[i - 1] = tt[5 - i - 1];
+                }
+                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+            }
 //*-*-         D R A W   T O P   F A C E
-	    if (zn > 0) {
-		icodes[2] = nv - 1;
-		icodes[3] = 6;
-		for (i = 1; i <= 4; ++i) {
-		    iface[i - 1] = i + 4;
-		    tface[i - 1] = tt[i + (nv << 2) - 5];
-		}
+            if (zn > 0) {
+                icodes[2] = nv - 1;
+                icodes[3] = 6;
+                for (i = 1; i <= 4; ++i) {
+                    iface[i - 1] = i + 4;
+                    tface[i - 1] = tt[i + (nv << 2) - 5];
+                }
                 Int_t cs = fColorTop;
                 if ( nv > 2 && (v[nv-1] == v[nv-2])) {
                     for (Int_t iv = nv-1; iv>2; iv--) {
-	                if (v[iv] == v[iv-1]) fColorTop = fColorMain[iv-2];
+                        if (v[iv] == v[iv-1]) fColorTop = fColorMain[iv-2];
                     }
                 }
-		(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
                 fColorTop = cs;
-	    }
-	}
+            }
+        }
     }
 }
 
@@ -2479,30 +2479,30 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
     Double_t tface[4], v[20];
     Int_t incrr, k1, k2, ia, ib, ir1, ir2;
-    Double_t ab[8]	/* was [2][4] */;
+    Double_t ab[8]        /* was [2][4] */;
     Int_t ir, jr, iv, nr, nv, icodes[4];
-    Double_t tt[80]	/* was [4][20] */;
-    Double_t xyz[24]	/* was [3][8] */;
+    Double_t tt[80]        /* was [4][20] */;
+    Double_t xyz[24]        /* was [3][8] */;
     TView *view = 0;
     ia = ib = 0;
-	if(gPad) {
-		view = gPad->GetView();
-		if(!view) {
-			Error("LegoPolar", "no TView in current pad");
-			return;
-		}
-	}
+        if(gPad) {
+                view = gPad->GetView();
+                if(!view) {
+                        Error("LegoPolar", "no TView in current pad");
+                        return;
+                }
+        }
 
     if (iordr == 0) {
-	jr   = 1;
-	jphi = 2;
-	nr   = na;
-	nphi = nb;
+        jr   = 1;
+        jphi = 2;
+        nr   = na;
+        nphi = nb;
     } else {
-	jr   = 2;
-	jphi = 1;
-	nr   = nb;
-	nphi = na;
+        jr   = 2;
+        jphi = 1;
+        nr   = nb;
+        nphi = na;
     }
     if (nphi > 180) {
        Error("LegoPolar", "too many PHI sectors (%d)", nphi);
@@ -2519,12 +2519,12 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
     if (iordr == 0) ia = nr;
     if (iordr != 0) ib = nr;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (i == 1) fAphi[0] = ab[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-	fAphi[i] = ab[jphi + 3];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (i == 1) fAphi[0] = ab[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+        fAphi[i] = ab[jphi + 3];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -2532,10 +2532,10 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
 //*-*-      A N D   O R D E R   A L O N G   R
 
     for (i = 1; i <= nphi; ++i) {
-	if (!iordr) ib = i;
-	if (iordr)  ia = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
+        if (!iordr) ib = i;
+        if (iordr)  ia = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
     }
 
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
@@ -2552,69 +2552,69 @@ L100:
     ir2 = nr - ir1 + 1;
 //*-*-      D R A W   L E G O S   F O R   S E C T O R
     for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
-	if (iordr == 0) { ia = ir;   ib = iphi; }
-	else            { ia = iphi; ib = ir; }
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (nv < 2 || nv > 20) continue;
-	icodes[0] = ia;
-	icodes[1] = ib;
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr != 0 && i == 2) j = 4;
-	    if (iordr != 0 && i == 4) j = 2;
-	    xyz[j*3 - 3] = ab[jr + 2*i - 3]*TMath::Cos(ab[jphi + 2*i - 3]*kRad);
-	    xyz[j*3 - 2] = ab[jr + 2*i - 3]*TMath::Sin(ab[jphi + 2*i - 3]*kRad);
-	    xyz[(j + 4)*3 - 3] = xyz[j*3 - 3];
-	    xyz[(j + 4)*3 - 2] = xyz[j*3 - 2];
-	}
+        if (iordr == 0) { ia = ir;   ib = iphi; }
+        else            { ia = iphi; ib = ir; }
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (nv < 2 || nv > 20) continue;
+        icodes[0] = ia;
+        icodes[1] = ib;
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr != 0 && i == 2) j = 4;
+            if (iordr != 0 && i == 4) j = 2;
+            xyz[j*3 - 3] = ab[jr + 2*i - 3]*TMath::Cos(ab[jphi + 2*i - 3]*kRad);
+            xyz[j*3 - 2] = ab[jr + 2*i - 3]*TMath::Sin(ab[jphi + 2*i - 3]*kRad);
+            xyz[(j + 4)*3 - 3] = xyz[j*3 - 3];
+            xyz[(j + 4)*3 - 2] = xyz[j*3 - 2];
+        }
 //*-*-      D R A W   S T A C K
-	for (iv = 1; iv < nv; ++iv) {
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 1] = v[iv - 1];
-		xyz[(i + 4)*3 - 1] = v[iv];
-	    }
-	    if (v[iv - 1] >= v[iv]) continue;
-	    icodes[2] = iv;
-	    for (i = 1; i <= 4; ++i) {
-		if (ivis[i - 1] == 0) continue;
-		k1 = i - 1;
-		if (i == 1) k1 = 4;
-		k2 = i;
-		if (xyz[k1*3 - 3] == xyz[k2*3 - 3] && xyz[k1*3 - 2] ==
-			xyz[k2*3 - 2]) continue;
-		iface[0] = k1;
-		iface[1] = k2;
-		iface[2] = k2 + 4;
-		iface[3] = k1 + 4;
-		tface[0] = tt[k1 + (iv << 2) - 5];
-		tface[1] = tt[k2 + (iv << 2) - 5];
-		tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-		tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-		icodes[3] = i;
-		(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	    }
-	}
+        for (iv = 1; iv < nv; ++iv) {
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 1] = v[iv - 1];
+                xyz[(i + 4)*3 - 1] = v[iv];
+            }
+            if (v[iv - 1] >= v[iv]) continue;
+            icodes[2] = iv;
+            for (i = 1; i <= 4; ++i) {
+                if (ivis[i - 1] == 0) continue;
+                k1 = i - 1;
+                if (i == 1) k1 = 4;
+                k2 = i;
+                if (xyz[k1*3 - 3] == xyz[k2*3 - 3] && xyz[k1*3 - 2] ==
+                        xyz[k2*3 - 2]) continue;
+                iface[0] = k1;
+                iface[1] = k2;
+                iface[2] = k2 + 4;
+                iface[3] = k1 + 4;
+                tface[0] = tt[k1 + (iv << 2) - 5];
+                tface[1] = tt[k2 + (iv << 2) - 5];
+                tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+                tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+                icodes[3] = i;
+                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+            }
+        }
 //*-*-         D R A W   B O T T O M   F A C E
-	if (ivis[4] != 0) {
-	    icodes[2] = 1;
-	    icodes[3] = 5;
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 1] = v[0];
-		iface[i - 1] = 5 - i;
-		tface[i - 1] = tt[5 - i - 1];
-	    }
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	}
+        if (ivis[4] != 0) {
+            icodes[2] = 1;
+            icodes[3] = 5;
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 1] = v[0];
+                iface[i - 1] = 5 - i;
+                tface[i - 1] = tt[5 - i - 1];
+            }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        }
 //*-*-         D R A W   T O P   F A C E
-	if (ivis[5] != 0) {
-	    icodes[2] = nv - 1;
-	    icodes[3] = 6;
-	    for (i = 1; i <= 4; ++i) {
-		iface[i - 1] = i + 4;
-		tface[i - 1] = tt[i + (nv << 2) - 5];
-	    }
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	}
+        if (ivis[5] != 0) {
+            icodes[2] = nv - 1;
+            icodes[3] = 6;
+            for (i = 1; i <= 4; ++i) {
+                iface[i - 1] = i + 4;
+                tface[i - 1] = tt[i + (nv << 2) - 5];
+            }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        }
     }
 //*-*-      N E X T   P H I
 L300:
@@ -2674,33 +2674,33 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
     Double_t tface[4], v[20], z;
-    Double_t ab[8]	/* was [2][4] */;
+    Double_t ab[8]        /* was [2][4] */;
     Int_t ia, ib, idummy, iz1, iz2, nz, incrz, k1, k2, nv;
     Int_t iv, iz, jz, icodes[4];
-    Double_t tt[80]	/* was [4][20] */;
+    Double_t tt[80]        /* was [4][20] */;
     Double_t cosphi[4];
     Double_t sinphi[4];
-    Double_t xyz[24]	/* was [3][8] */;
+    Double_t xyz[24]        /* was [3][8] */;
     TView *view = 0;
     ia = ib = 0;
 
-	if(gPad) {
-		view = gPad->GetView();
-		if(!view) {
-			Error("LegoCylindrical", "no TView in current pad");
-			return;
-		}
-	}
+        if(gPad) {
+                view = gPad->GetView();
+                if(!view) {
+                        Error("LegoCylindrical", "no TView in current pad");
+                        return;
+                }
+        }
     if (iordr == 0) {
-	jz   = 1;
-	jphi = 2;
-	nz   = na;
-	nphi = nb;
+        jz   = 1;
+        jphi = 2;
+        nz   = na;
+        nphi = nb;
     } else {
-	jz   = 2;
-	jphi = 1;
-	nz   = nb;
-	nphi = na;
+        jz   = 2;
+        jphi = 1;
+        nz   = nb;
+        nphi = na;
     }
     if (nphi > 180) {
        Error("LegoCylindrical", "too many PHI sectors (%d)", nphi);
@@ -2717,12 +2717,12 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
     if (iordr == 0) ia = nz;
     if (iordr != 0) ib = nz;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (i == 1)  fAphi[0] = ab[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-	fAphi[i] = ab[jphi + 3];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (i == 1)  fAphi[0] = ab[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+        fAphi[i] = ab[jphi + 3];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -2730,10 +2730,10 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
 //*-*-      A N D   O R D E R   A L O N G   R
 
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
     }
 
 //*-*-       F I N D   O R D E R   A L O N G   Z
@@ -2742,8 +2742,8 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
     iz1 = 1;
     view->FindNormal(0, 0, 1, z);
     if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-	incrz = -1;
-	iz1 = nz;
+        incrz = -1;
+        iz1 = nz;
     }
     iz2 = nz - iz1 + 1;
 
@@ -2757,70 +2757,70 @@ L100:
     idummy = 0;
     SideVisibilityDecode(fAphi[iphi - 1], ivis[4], ivis[1], ivis[5], ivis[3], ivis[0], ivis[2], idummy);
     for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
-	if (iordr == 0) {ia = iz;   ib = iphi;}
+        if (iordr == 0) {ia = iz;   ib = iphi;}
         else            {ia = iphi; ib = iz;}
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (nv < 2 || nv > 20) continue;
-	icodes[0] = ia;
-	icodes[1] = ib;
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr != 0 && i == 2) j = 4;
-	    if (iordr != 0 && i == 4) j = 2;
-	    cosphi[j - 1] = TMath::Cos(ab[jphi + 2*i - 3]*kRad);
-	    sinphi[j - 1] = TMath::Sin(ab[jphi + 2*i - 3]*kRad);
-	    xyz[j*3 - 1] = ab[jz + 2*i - 3];
-	    xyz[(j + 4)*3 - 1] = ab[jz + 2*i - 3];
-	}
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (nv < 2 || nv > 20) continue;
+        icodes[0] = ia;
+        icodes[1] = ib;
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr != 0 && i == 2) j = 4;
+            if (iordr != 0 && i == 4) j = 2;
+            cosphi[j - 1] = TMath::Cos(ab[jphi + 2*i - 3]*kRad);
+            sinphi[j - 1] = TMath::Sin(ab[jphi + 2*i - 3]*kRad);
+            xyz[j*3 - 1] = ab[jz + 2*i - 3];
+            xyz[(j + 4)*3 - 1] = ab[jz + 2*i - 3];
+        }
 //*-*-      D R A W   S T A C K
-	for (iv = 1; iv < nv; ++iv) {
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
-		xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
-		xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
-	    }
-	    if (v[iv - 1] >= v[iv]) continue;
-	    icodes[2] = iv;
-	    for (i = 1; i <= 4; ++i) {
-		if (ivis[i - 1] == 0) continue;
-		k1 = i;
-		k2 = i - 1;
-		if (i == 1) k2 = 4;
-		iface[0] = k1;
-		iface[1] = k2;
-		iface[2] = k2 + 4;
-		iface[3] = k1 + 4;
-		tface[0] = tt[k1 + (iv << 2) - 5];
-		tface[1] = tt[k2 + (iv << 2) - 5];
-		tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-		tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-		icodes[3] = i;
-		(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	    }
-	}
+        for (iv = 1; iv < nv; ++iv) {
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
+                xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
+                xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
+            }
+            if (v[iv - 1] >= v[iv]) continue;
+            icodes[2] = iv;
+            for (i = 1; i <= 4; ++i) {
+                if (ivis[i - 1] == 0) continue;
+                k1 = i;
+                k2 = i - 1;
+                if (i == 1) k2 = 4;
+                iface[0] = k1;
+                iface[1] = k2;
+                iface[2] = k2 + 4;
+                iface[3] = k1 + 4;
+                tface[0] = tt[k1 + (iv << 2) - 5];
+                tface[1] = tt[k2 + (iv << 2) - 5];
+                tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+                tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+                icodes[3] = i;
+                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+            }
+        }
 //*-*-       D R A W   B O T T O M   F A C E
-	if (ivis[4] != 0 && v[0] > 0) {
-	    icodes[2] = 1;
-	    icodes[3] = 5;
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = v[0]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[0]*sinphi[i - 1];
-		iface[i - 1] = i;
-		tface[i - 1] = tt[i - 1];
-	    }
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	}
+        if (ivis[4] != 0 && v[0] > 0) {
+            icodes[2] = 1;
+            icodes[3] = 5;
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = v[0]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[0]*sinphi[i - 1];
+                iface[i - 1] = i;
+                tface[i - 1] = tt[i - 1];
+            }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        }
 //*-*-      D R A W   T O P   F A C E
-	if (ivis[5] != 0 && v[nv - 1] > 0) {
-	    icodes[2] = nv - 1;
-	    icodes[3] = 6;
-	    for (i = 1; i <= 4; ++i) {
-		iface[i - 1] = 5 - i + 4;
-		tface[i - 1] = tt[5 - i + (nv << 2) - 5];
-	    }
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	}
+        if (ivis[5] != 0 && v[nv - 1] > 0) {
+            icodes[2] = nv - 1;
+            icodes[3] = 6;
+            for (i = 1; i <= 4; ++i) {
+                iface[i - 1] = 5 - i + 4;
+                tface[i - 1] = tt[5 - i + (nv << 2) - 5];
+            }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        }
     }
 //*-*-      N E X T   P H I
 L400:
@@ -2878,33 +2878,33 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
     Double_t tface[4], v[20], costh[4];
     Double_t sinth[4];
     Int_t k1, k2, ia, ib, incrth, ith, jth, kth, nth, mth, ith1, ith2, nv;
-    Double_t ab[8]	/* was [2][4] */;
+    Double_t ab[8]        /* was [2][4] */;
     Double_t th;
     Int_t iv, icodes[4];
-    Double_t tt[80]	/* was [4][20] */, zn, cosphi[4];
+    Double_t tt[80]        /* was [4][20] */, zn, cosphi[4];
     Double_t sinphi[4], th1, th2, phi;
-    Double_t xyz[24]	/* was [3][8] */, phi1, phi2;
+    Double_t xyz[24]        /* was [3][8] */, phi1, phi2;
     TView *view = 0;
     ia = ib = 0;
 
-	if(gPad) {
-		view = gPad->GetView();
-		if(!view) {
-			Error("LegoSpherical", "no TView in current pad");
-			return;
-		}
-	}
+        if(gPad) {
+                view = gPad->GetView();
+                if(!view) {
+                        Error("LegoSpherical", "no TView in current pad");
+                        return;
+                }
+        }
 
     if (iordr == 0) {
-	jth  = 1;
-	jphi = 2;
-	nth  = na;
-	nphi = nb;
+        jth  = 1;
+        jphi = 2;
+        nth  = na;
+        nphi = nb;
     } else {
-	jth  = 2;
-	jphi = 1;
-	nth  = nb;
-	nphi = na;
+        jth  = 2;
+        jphi = 1;
+        nth  = nb;
+        nphi = na;
     }
     if (nth > 180) {
        Error("LegoSpherical", "too many THETA sectors (%d)", nth);
@@ -2927,12 +2927,12 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
     if (iordr == 0) ia = mth;
     if (iordr != 0) ib = mth;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (i == 1)  fAphi[0] = ab[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-	fAphi[i] = ab[jphi + 3];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (i == 1)  fAphi[0] = ab[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+        fAphi[i] = ab[jphi + 3];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -2941,12 +2941,12 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
     if (iordr == 0) ib = 1;
     if (iordr != 0) ia = 1;
     for (i = 1; i <= nth; ++i) {
-	if (iordr == 0) ia = i;
-	if (iordr != 0) ib = i;
-	(this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-	if (i == 1) fAphi[0] = ab[jth - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
-	fAphi[i] = ab[jth + 3];
+        if (iordr == 0) ia = i;
+        if (iordr != 0) ib = i;
+        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+        if (i == 1) fAphi[0] = ab[jth - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
+        fAphi[i] = ab[jth + 3];
     }
 
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
@@ -2960,7 +2960,7 @@ L100:
     if (iphi > nphi) goto L500;
 
 //*-*-      F I N D    C R I T I C A L   T H E T A   S E C T O R S
-    if (!iordr) {ia = mth;	ib = iphi; }
+    if (!iordr) {ia = mth;        ib = iphi; }
     else        {ia = iphi;ib = mth;  }
     (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
     phi = (ab[jphi - 1] + ab[jphi + 3]) / (float)2.;
@@ -3002,82 +3002,82 @@ L200:
     icodes[0] = ia;
     icodes[1] = ib;
     for (i = 1; i <= 4; ++i) {
-	j = i;
-	if (iordr != 0 && i == 2) j = 4;
-	if (iordr != 0 && i == 4) j = 2;
-	costh[j - 1]  = TMath::Cos(kRad*ab[jth + 2*i - 3]);
-	sinth[j - 1]  = TMath::Sin(kRad*ab[jth + 2*i - 3]);
-	cosphi[j - 1] = TMath::Cos(kRad*ab[jphi + 2*i - 3]);
-	sinphi[j - 1] = TMath::Sin(kRad*ab[jphi + 2*i - 3]);
+        j = i;
+        if (iordr != 0 && i == 2) j = 4;
+        if (iordr != 0 && i == 4) j = 2;
+        costh[j - 1]  = TMath::Cos(kRad*ab[jth + 2*i - 3]);
+        sinth[j - 1]  = TMath::Sin(kRad*ab[jth + 2*i - 3]);
+        cosphi[j - 1] = TMath::Cos(kRad*ab[jphi + 2*i - 3]);
+        sinphi[j - 1] = TMath::Sin(kRad*ab[jphi + 2*i - 3]);
     }
     for (iv = 1; iv < nv; ++iv) {
-	if (ipsdr == 1) {
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
-		xyz[i*3 - 1] = v[iv - 1]*costh[i - 1] / sinth[i - 1];
-		xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
-		xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
-		xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1] / sinth[i - 1];
-	    }
-	} else {
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = v[iv - 1]*sinth[i - 1]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[iv - 1]*sinth[i - 1]*sinphi[i - 1];
-		xyz[i*3 - 1] = v[iv - 1]*costh[i - 1];
-		xyz[(i + 4)*3 - 3] = v[iv]*sinth[i - 1]*cosphi[i - 1];
-		xyz[(i + 4)*3 - 2] = v[iv]*sinth[i - 1]*sinphi[i - 1];
-		xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1];
-	    }
-	}
-	if (v[iv - 1] >= v[iv]) continue;
-	icodes[2] = iv;
-	for (i = 1; i <= 4; ++i) {
-	    if (ivis[i - 1] == 0) continue;
-	    k1 = i - 1;
-	    if (i == 1) k1 = 4;
-	    k2 = i;
-	    iface[0] = k1;
-	    iface[1] = k2;
-	    iface[2] = k2 + 4;
-	    iface[3] = k1 + 4;
-	    tface[0] = tt[k1 + (iv << 2) - 5];
-	    tface[1] = tt[k2 + (iv << 2) - 5];
-	    tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-	    tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-	    icodes[3] = i;
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-	}
+        if (ipsdr == 1) {
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
+                xyz[i*3 - 1] = v[iv - 1]*costh[i - 1] / sinth[i - 1];
+                xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
+                xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
+                xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1] / sinth[i - 1];
+            }
+        } else {
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = v[iv - 1]*sinth[i - 1]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[iv - 1]*sinth[i - 1]*sinphi[i - 1];
+                xyz[i*3 - 1] = v[iv - 1]*costh[i - 1];
+                xyz[(i + 4)*3 - 3] = v[iv]*sinth[i - 1]*cosphi[i - 1];
+                xyz[(i + 4)*3 - 2] = v[iv]*sinth[i - 1]*sinphi[i - 1];
+                xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1];
+            }
+        }
+        if (v[iv - 1] >= v[iv]) continue;
+        icodes[2] = iv;
+        for (i = 1; i <= 4; ++i) {
+            if (ivis[i - 1] == 0) continue;
+            k1 = i - 1;
+            if (i == 1) k1 = 4;
+            k2 = i;
+            iface[0] = k1;
+            iface[1] = k2;
+            iface[2] = k2 + 4;
+            iface[3] = k1 + 4;
+            tface[0] = tt[k1 + (iv << 2) - 5];
+            tface[1] = tt[k2 + (iv << 2) - 5];
+            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+            icodes[3] = i;
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        }
     }
 //*-*-      D R A W   B O T T O M   F A C E
     if (ivis[4] != 0 && v[0] > 0) {
-	icodes[2] = 1;
-	icodes[3] = 5;
-	for (i = 1; i <= 4; ++i) {
-	    if (ipsdr == 1) {
-		xyz[i*3 - 3] = v[0]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[0]*sinphi[i - 1];
-		xyz[i*3 - 1] = v[0]*costh[i - 1] / sinth[i - 1];
-	    } else {
-		xyz[i*3 - 3] = v[0]*sinth[i - 1]*cosphi[i - 1];
-		xyz[i*3 - 2] = v[0]*sinth[i - 1]*sinphi[i - 1];
-		xyz[i*3 - 1] = v[0]*costh[i - 1];
-	    }
-	    iface[i - 1] = 5 - i;
-	    tface[i - 1] = tt[5 - i - 1];
-	}
-	(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        icodes[2] = 1;
+        icodes[3] = 5;
+        for (i = 1; i <= 4; ++i) {
+            if (ipsdr == 1) {
+                xyz[i*3 - 3] = v[0]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[0]*sinphi[i - 1];
+                xyz[i*3 - 1] = v[0]*costh[i - 1] / sinth[i - 1];
+            } else {
+                xyz[i*3 - 3] = v[0]*sinth[i - 1]*cosphi[i - 1];
+                xyz[i*3 - 2] = v[0]*sinth[i - 1]*sinphi[i - 1];
+                xyz[i*3 - 1] = v[0]*costh[i - 1];
+            }
+            iface[i - 1] = 5 - i;
+            tface[i - 1] = tt[5 - i - 1];
+        }
+        (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
     }
 //*-*-      D R A W   T O P   F A C E
     if (ivis[5] != 0 && v[nv - 1] > 0) {
-	icodes[2] = nv - 1;
-	icodes[3] = 6;
-	for (i = 1; i <= 4; ++i) {
-	    iface[i - 1] = i + 4;
-//	    tface[i - 1] = tt[i + 4 + 4*nv - 5];
-	    tface[i - 1] = tt[i + 4 + 2*nv - 5];
-	}
-	(this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+        icodes[2] = nv - 1;
+        icodes[3] = 6;
+        for (i = 1; i <= 4; ++i) {
+            iface[i - 1] = i + 4;
+//            tface[i - 1] = tt[i + 4 + 4*nv - 5];
+            tface[i - 1] = tt[i + 4 + 2*nv - 5];
+        }
+        (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
     }
 //*-*-      N E X T   T H E T A
 L400:
@@ -3145,7 +3145,7 @@ L100:
     fLoff = 1;
     fYdl = 0;
     for (i = 1; i <= 4; ++i) {
-	fYls[i - 1] = 0;
+        fYls[i - 1] = 0;
     }
     return;
 //*-*-          S E T   D I F F U S E D   L I G H T
@@ -3179,7 +3179,7 @@ L400:
     fLoff = 0;
     if (fYdl != 0) return;
     for (i = 1; i <= 4; ++i) {
-	if (fYls[i - 1] != 0) return;
+        if (fYls[i - 1] != 0) return;
     }
     fLoff = 1;
 }
@@ -3221,8 +3221,8 @@ void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
     Double_t s, vl[3], vn[3];
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+        TView *view = gPad->GetView();   //Get current view
+        if(!view) return;                //Check if `view` is valid!
 
 
     /* Parameter adjustments */
@@ -3244,16 +3244,16 @@ void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 
     flum = fYdl*fQA;
     for (i = 1; i <= 4; ++i) {
-	if (fYls[i - 1] <= 0) continue;
-	vl[0] = fVls[i*3 - 3];
-	vl[1] = fVls[i*3 - 2];
-	vl[2] = fVls[i*3 - 1];
-	cosn = vl[0]*vn[0] + vl[1]*vn[1] + vl[2]*vn[2];
-	if (cosn < 0) continue;
-	cosr = vn[1]*(vn[2]*vl[1] - vn[1]*vl[2]) - vn[0]*(vn[0]*vl[2]
-		- vn[2]*vl[0]) + vn[2]*cosn;
-	if (cosr <= 0) cosr = 0;
-	flum += fYls[i - 1]*(fQD*cosn + fQS*TMath::Power(cosr, fNqs));
+        if (fYls[i - 1] <= 0) continue;
+        vl[0] = fVls[i*3 - 3];
+        vl[1] = fVls[i*3 - 2];
+        vl[2] = fVls[i*3 - 1];
+        cosn = vl[0]*vn[0] + vl[1]*vn[1] + vl[2]*vn[2];
+        if (cosn < 0) continue;
+        cosr = vn[1]*(vn[2]*vl[1] - vn[1]*vl[2]) - vn[0]*(vn[0]*vl[2]
+                - vn[2]*vl[0]) + vn[2]*cosn;
+        if (cosr <= 0) cosr = 0;
+        flum += fYls[i - 1]*(fQD*cosn + fQS*TMath::Power(cosr, fNqs));
     }
 }
 
@@ -3277,16 +3277,16 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
     --r1;
 
     if(gPad->GetView()) {
-    	tn = gPad->GetView()->GetTN();
+            tn = gPad->GetView()->GetTN();
 
-    	x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
-    	x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
-    	y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
-    	y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
+            x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
+            x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
+            y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
+            y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
     }
     else {
-    	Error("ModifyScreen", "no TView in current pad");
-    	return;
+            Error("ModifyScreen", "no TView in current pad");
+            return;
     }
 
     if (x1 >= x2) {
@@ -3305,12 +3305,12 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 
     dy = (y2 - y1) / (i2 - i1);
     for (i = i1; i <= i2 - 1; ++i) {
-	yy1 = y1 + dy*(i - i1);
-	yy2 = yy1 + dy;
-	if (fD[2*i - 2] > yy1) fD[2*i - 2] = yy1;
-	if (fD[2*i - 1] > yy2) fD[2*i - 1] = yy2;
-	if (fU[2*i - 2] < yy1) fU[2*i - 2] = yy1;
-	if (fU[2*i - 1] < yy2) fU[2*i - 1] = yy2;
+        yy1 = y1 + dy*(i - i1);
+        yy2 = yy1 + dy;
+        if (fD[2*i - 2] > yy1) fD[2*i - 2] = yy1;
+        if (fD[2*i - 1] > yy2) fD[2*i - 1] = yy2;
+        if (fU[2*i - 2] < yy1) fU[2*i - 2] = yy1;
+        if (fU[2*i - 1] < yy2) fU[2*i - 1] = yy2;
     }
 }
 
@@ -3430,11 +3430,11 @@ void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t 
     k = Int_t(val);
     num = 128;
     for (i = 1; i <= 6; ++i) {
-	ivis[i - 1] = 0;
-	num /= 2;
-	if (k < num) continue;
-	k -= num;
-	ivis[i - 1] = 1;
+        ivis[i - 1] = 0;
+        num /= 2;
+        if (k < num) continue;
+        k -= num;
+        ivis[i - 1] = 1;
     }
     ir = 1;
     if (k == 1) ir = -1;
@@ -3468,11 +3468,11 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
     TView *view = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-    		Error("SideVisibilityEncode", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+                    Error("SideVisibilityEncode", "no TView in current pad");
+                    return;
+            }
     }
 
     view->FindNormal(0, 0, 1, zn);
@@ -3549,9 +3549,9 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
     delf    = (fmax - fmin) / nl;
     fNlevel = -(nl + 1);
     for (i = 1; i <= nl+1; ++i) {
-	fFunLevel[i - 1] = fmin + (i - 1)*delf;
-	fColorLevel[i] = ic + (i - 1)*idc;
-	if (ic <= kMAXCOL && fColorLevel[i] > kMAXCOL) fColorLevel[i] -= kMAXCOL;
+        fFunLevel[i - 1] = fmin + (i - 1)*delf;
+        fColorLevel[i] = ic + (i - 1)*idc;
+        if (ic <= kMAXCOL && fColorLevel[i] > kMAXCOL) fColorLevel[i] -= kMAXCOL;
     }
     fColorLevel[0] = fColorLevel[1];
     fColorLevel[nl + 1] = fColorLevel[nl];
@@ -3591,11 +3591,11 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
     Int_t iface[4] = { 1,2,3,4 };
 
     /* Local variables */
-    Double_t cosa, sina, f[12]	/* was [3][4] */;
+    Double_t cosa, sina, f[12]        /* was [3][4] */;
     Int_t i, incrx, incry, i1, ix, iy;
     Double_t tt[4];
     Int_t icodes[2], ix1, iy1, ix2, iy2;
-    Double_t xyz[12]	/* was [3][4] */;
+    Double_t xyz[12]        /* was [3][4] */;
     Double_t *tn;
 
     sina = TMath::Sin(ang*kRad);
@@ -3603,12 +3603,12 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-	if(gPad->GetView())
-		tn = gPad->GetView()->GetTN();
-	else {
-		Error("SurfaceCartesian", "no TView in current pad");
-		return;
-	}
+        if(gPad->GetView())
+                tn = gPad->GetView()->GetTN();
+        else {
+                Error("SurfaceCartesian", "no TView in current pad");
+                return;
+        }
 
     i1 = 1;
     if (tn[0] < 0) i1 = 2;
@@ -3631,37 +3631,37 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
 
     THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-	    if (!painter->IsInside(ix,iy)) continue;
-	    (this->*fSurfaceFunction)(ix, iy, f, tt);
-	    for (i = 1; i <= 4; ++i) {
-		xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
-		xyz[i*3 - 2] = f[i*3 - 2]*sina;
-		xyz[i*3 - 1] = f[i*3 - 1];
-		// added EJB -->
-		double al, ab;
-		if (Hoption.Proj == 1 ) {
-		    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-		    xyz[i*3 - 3] = al;
-		    xyz[i*3 - 2] = ab;
+        for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+            if (!painter->IsInside(ix,iy)) continue;
+            (this->*fSurfaceFunction)(ix, iy, f, tt);
+            for (i = 1; i <= 4; ++i) {
+                xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
+                xyz[i*3 - 2] = f[i*3 - 2]*sina;
+                xyz[i*3 - 1] = f[i*3 - 1];
+                // added EJB -->
+                double al, ab;
+                if (Hoption.Proj == 1 ) {
+                    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+                    xyz[i*3 - 3] = al;
+                    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 2 ) {
-		    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-		    xyz[i*3 - 3] = al;
-		    xyz[i*3 - 2] = ab;
+                    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+                    xyz[i*3 - 3] = al;
+                    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 3) {
-		    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-		    xyz[i*3 - 3] = al;
-		    xyz[i*3 - 2] = ab;
+                    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+                    xyz[i*3 - 3] = al;
+                    xyz[i*3 - 2] = ab;
                 } else if (Hoption.Proj == 4) {
-		    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-		    xyz[i*3 - 3] = al;
-		    xyz[i*3 - 2] = ab;
+                    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+                    xyz[i*3 - 3] = al;
+                    xyz[i*3 - 2] = ab;
                 }
-	    }
-	    icodes[0] = ix;
-	    icodes[1] = iy;
-	    (this->*fDrawFace)(icodes, xyz, 4, iface, tt);
-	}
+            }
+            icodes[0] = ix;
+            icodes[1] = iy;
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tt);
+        }
     }
 }
 
@@ -3689,53 +3689,53 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
     ixt = ia + Hparam.xfirst - 1;
     iyt = ib + Hparam.yfirst - 1;
 
-	xval1l = Hparam.xmin;
-	xval2l = Hparam.xmax;
-	yval1l = Hparam.ymin;
-	yval2l = Hparam.ymax;
+        xval1l = Hparam.xmin;
+        xval2l = Hparam.xmax;
+        yval1l = Hparam.ymin;
+        yval2l = Hparam.ymax;
 
     for (i = 1; i <= 4; ++i) {
-	ixa = ixadd[i - 1];
-	iya = iyadd[i - 1];
+        ixa = ixadd[i - 1];
+        iya = iyadd[i - 1];
         Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt+ixa);
         Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt+iya);
 
 //*-*-          Compute the cell position in cartesian coordinates
 //*-*-          and compute the LOG if necessary
 
-	f[i*3 + 1] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt+ixa) + 0.5*xwid;
-	f[i*3 + 2] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt+iya) + 0.5*ywid;
+        f[i*3 + 1] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt+ixa) + 0.5*xwid;
+        f[i*3 + 2] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt+iya) + 0.5*ywid;
         if (Hoption.Logx) {
             if (f[i*3 + 1] > 0) f[i*3 + 1] = TMath::Log10(f[i*3 + 1]);
             else                f[i*3 + 1] = Hparam.xmin;
-	}
+        }
         if (Hoption.Logy) {
             if (f[i*3 + 2] > 0) f[i*3 + 2] = TMath::Log10(f[i*3 + 2]);
             else                f[i*3 + 2] = Hparam.ymin;
-	}
+        }
 
 //*-*-     Transform the cell position in the required coordinate system
 
         if (Hoption.System == kPOLAR) {
-	    f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
-	    f[i*3 + 2] = (f[i*3 + 2] - yval1l) / (yval2l - yval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 2] = (f[i*3 + 2] - yval1l) / (yval2l - yval1l);
         } else if (Hoption.System == kCYLINDRICAL) {
-	    f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
         } else if (Hoption.System == kSPHERICAL) {
-	    f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
-	    f[i*3 + 2] = 360*(f[i*3 + 2] - yval1l) / (yval2l - yval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 2] = 360*(f[i*3 + 2] - yval1l) / (yval2l - yval1l);
         } else if (Hoption.System == kRAPIDITY) {
-	    f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
-	    f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - yval1l) / (yval2l - yval1l) + dangle;
-	}
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - yval1l) / (yval2l - yval1l) + dangle;
+        }
 
 //*-*-          Get the content of the table. If the X index (ICX) is
 //*-*-          greater than the X size of the table (NCX), that's mean
 //*-*-          IGTABL tried to close the surface and in this case the
 //*-*-          first channel should be used. */
 
-	icx = ixt + ixa;
-	if (icx > Hparam.xlast) icx = 1;
+        icx = ixt + ixa;
+        if (icx > Hparam.xlast) icx = 1;
         f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
         if (Hoption.Logz) {
            if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
@@ -3749,8 +3749,8 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 
 //*-*-          The colors on the surface can represent the content or the errors.
 
-//	if (fSumw2.fN) t[i] = gCurrentHist->GetCellError(icx, iyt + iya);
-//	else           t[i] = f[i * 3 + 3];
+//        if (fSumw2.fN) t[i] = gCurrentHist->GetCellError(icx, iyt + iya);
+//        else           t[i] = f[i * 3 + 3];
         t[i] = f[i * 3 + 3];
     }
 
@@ -3761,10 +3761,10 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
     }
 
     if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
-	for (i = 1; i <= 4; ++i) {
-	    f[i*3 + 3] = (1 - rinrad)*((f[i*3 + 3] - Hparam.zmin) /
-		    (Hparam.zmax - Hparam.zmin)) + rinrad;
-	}
+        for (i = 1; i <= 4; ++i) {
+            f[i*3 + 3] = (1 - rinrad)*((f[i*3 + 3] - Hparam.zmin) /
+                    (Hparam.zmax - Hparam.zmin)) + rinrad;
+        }
     }
 }
 
@@ -3807,33 +3807,33 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
     TView *view = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-    		Error("SurfacePolar", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+                    Error("SurfacePolar", "no TView in current pad");
+                    return;
+            }
     }
 
 
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
-    Double_t f[12]	/* was [3][4] */;
+    Double_t f[12]        /* was [3][4] */;
     Int_t i, j, incrr, ir1, ir2;
     Double_t z;
     Int_t ia, ib, ir, jr, nr, icodes[2];
     Double_t tt[4];
-    Double_t phi, ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t phi, ttt[4], xyz[12]        /* was [3][4] */;
     ia = ib = 0;
 
     if (iordr == 0) {
-	jr   = 1;
-	jphi = 2;
-	nr   = na;
-	nphi = nb;
+        jr   = 1;
+        jphi = 2;
+        nr   = na;
+        nphi = nb;
     } else {
-	jr   = 2;
-	jphi = 1;
-	nr   = nb;
-	nphi = na;
+        jr   = 2;
+        jphi = 1;
+        nr   = nb;
+        nphi = na;
     }
     if (nphi > 180) {
        Error("SurfacePolar", "too many PHI sectors (%d)", nphi);
@@ -3849,12 +3849,12 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
     if (iordr == 0) ia = nr;
     if (iordr != 0) ib = nr;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	if (i == 1) fAphi[0] = f[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-	fAphi[i] = f[jphi + 5];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        if (i == 1) fAphi[0] = f[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+        fAphi[i] = f[jphi + 5];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -3866,7 +3866,7 @@ L100:
     if (iphi > nphi) goto L300;
 
 //*-*-      F I N D   O R D E R   A L O N G   R
-    if (iordr == 0) {ia = nr; 	ib = iphi;}
+    if (iordr == 0) {ia = nr;         ib = iphi;}
     else            {ia = iphi;ib = nr;}
 
     (this->*fSurfaceFunction)(ia, ib, f, tt);
@@ -3875,28 +3875,28 @@ L100:
     incrr = 1;
     ir1 = 1;
     if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-	incrr = -1;
-	ir1 = nr;
+        incrr = -1;
+        ir1 = nr;
     }
     ir2 = nr - ir1 + 1;
 //*-*-      D R A W   S U R F A C E   F O R   S E C T O R
     for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
-	if (iordr == 0) ia = ir;
-	if (iordr != 0) ib = ir;
+        if (iordr == 0) ia = ir;
+        if (iordr != 0) ib = ir;
 
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr != 0 && i == 2) j = 4;
-	    if (iordr != 0 && i == 4) j = 2;
-	    xyz[j*3 - 3] = f[jr + i*3 - 4]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 2] = f[jr + i*3 - 4]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 1] = f[i*3 - 1];
-	    ttt[j - 1] = tt[i - 1];
-	}
-	icodes[0] = ia;
-	icodes[1] = ib;
-	(this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr != 0 && i == 2) j = 4;
+            if (iordr != 0 && i == 4) j = 2;
+            xyz[j*3 - 3] = f[jr + i*3 - 4]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 2] = f[jr + i*3 - 4]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 1] = f[i*3 - 1];
+            ttt[j - 1] = tt[i - 1];
+        }
+        icodes[0] = ia;
+        icodes[1] = ib;
+        (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
     }
 //*-*-      N E X T   P H I
 L300:
@@ -3959,32 +3959,32 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
     Int_t i, j, incrz, nz, iz1, iz2;
     Int_t ia, ib, iz, jz, icodes[2];
-    Double_t f[12]	/* was [3][4] */;
+    Double_t f[12]        /* was [3][4] */;
     Double_t z;
     Double_t tt[4];
-    Double_t ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t ttt[4], xyz[12]        /* was [3][4] */;
     TView *view = 0;
     ia = ib = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-    		Error("SurfaceCylindrical", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+                    Error("SurfaceCylindrical", "no TView in current pad");
+                    return;
+            }
     }
 
 
     if (iordr == 0) {
-	jz   = 1;
-	jphi = 2;
-	nz   = na;
-	nphi = nb;
+        jz   = 1;
+        jphi = 2;
+        nz   = na;
+        nphi = nb;
     } else {
-	jz   = 2;
-	jphi = 1;
-	nz   = nb;
-	nphi = na;
+        jz   = 2;
+        jphi = 1;
+        nz   = nb;
+        nphi = na;
     }
     if (nphi > 180) {
        Error("SurfaceCylindrical", "too many PHI sectors (%d)", nphi);
@@ -4000,12 +4000,12 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
     if (iordr == 0) ia = nz;
     if (iordr != 0) ib = nz;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	if (i == 1) fAphi[0] = f[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-	fAphi[i] = f[jphi + 5];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        if (i == 1) fAphi[0] = f[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+        fAphi[i] = f[jphi + 5];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -4015,8 +4015,8 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
     iz1 = 1;
     view->FindNormal(0, 0, 1, z);
     if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-	incrz = -1;
-	iz1 = nz;
+        incrz = -1;
+        iz1 = nz;
     }
     iz2 = nz - iz1 + 1;
 
@@ -4027,21 +4027,21 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
 L100:
     if (iphi > nphi) goto L400;
     for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
-	if (iordr == 0) {ia = iz;   ib = iphi;}
-	else             {ia = iphi; ib = iz;}
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr == 0 && i == 2) j = 4;
-	    if (iordr == 0 && i == 4) j = 2;
-	    xyz[j*3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 1] = f[jz + i*3 - 4];
-	    ttt[j - 1] = tt[i - 1];
-	}
-	icodes[0] = ia;
-	icodes[1] = ib;
-	(this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
+        if (iordr == 0) {ia = iz;   ib = iphi;}
+        else             {ia = iphi; ib = iz;}
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr == 0 && i == 2) j = 4;
+            if (iordr == 0 && i == 4) j = 2;
+            xyz[j*3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 1] = f[jz + i*3 - 4];
+            ttt[j - 1] = tt[i - 1];
+        }
+        icodes[0] = ia;
+        icodes[1] = ib;
+        (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
     }
 //*-*-      N E X T   P H I
 L400:
@@ -4099,32 +4099,32 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
     Int_t i, j, incrth, ith, jth, kth, nth, mth, ith1, ith2;
     Int_t ia, ib, icodes[2];
-    Double_t f[12]	/* was [3][4] */;
+    Double_t f[12]        /* was [3][4] */;
     Double_t tt[4];
     Double_t phi;
-    Double_t ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t ttt[4], xyz[12]        /* was [3][4] */;
     TView *view = 0;
     ia = ib = 0;
 
     if(gPad) {
-    	view = gPad->GetView();
-    	if(!view) {
-    		Error("SurfaceSpherical", "no TView in current pad");
-    		return;
-    	}
+            view = gPad->GetView();
+            if(!view) {
+                    Error("SurfaceSpherical", "no TView in current pad");
+                    return;
+            }
     }
 
 
     if (iordr == 0) {
-	jth  = 1;
-	jphi = 2;
-	nth  = na;
-	nphi = nb;
+        jth  = 1;
+        jphi = 2;
+        nth  = na;
+        nphi = nb;
     } else {
-	jth  = 2;
-	jphi = 1;
-	nth  = nb;
-	nphi = na;
+        jth  = 2;
+        jphi = 1;
+        nth  = nb;
+        nphi = na;
     }
     if (nth > 180)  {
        Error("SurfaceSpherical", "too many THETA sectors (%d)", nth);
@@ -4146,12 +4146,12 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
     if (iordr == 0) ia = mth;
     if (iordr != 0) ib = mth;
     for (i = 1; i <= nphi; ++i) {
-	if (iordr == 0) ib = i;
-	if (iordr != 0) ia = i;
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	if (i == 1) fAphi[0] = f[jphi - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-	fAphi[i] = f[jphi + 5];
+        if (iordr == 0) ib = i;
+        if (iordr != 0) ia = i;
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        if (i == 1) fAphi[0] = f[jphi - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+        fAphi[i] = f[jphi + 5];
     }
     view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
@@ -4160,13 +4160,13 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
     if (iordr == 0) ib = 1;
     if (iordr != 0) ia = 1;
     for (i = 1; i <= nth; ++i) {
-	if (iordr == 0) ia = i;
-	if (iordr != 0) ib = i;
+        if (iordr == 0) ia = i;
+        if (iordr != 0) ib = i;
 
-	(this->*fSurfaceFunction)(ia, ib, f, tt);
-	if (i == 1) fAphi[0] = f[jth - 1];
-	fAphi[i - 1] = (fAphi[i - 1] + f[jth - 1]) / (float)2.;
-	fAphi[i] = f[jth + 5];
+        (this->*fSurfaceFunction)(ia, ib, f, tt);
+        if (i == 1) fAphi[0] = f[jth - 1];
+        fAphi[i - 1] = (fAphi[i - 1] + f[jth - 1]) / (float)2.;
+        fAphi[i] = f[jth + 5];
     }
 
 //*-*-       D R A W   S U R F A C E
@@ -4193,26 +4193,26 @@ L200:
 
     (this->*fSurfaceFunction)(ia, ib, f, tt);
     if (ipsdr == 1) {
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr != 0 && i == 2) j = 4;
-	    if (iordr != 0 && i == 4) j = 2;
-	    xyz[j * 3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-	    xyz[j * 3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-	    xyz[j * 3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth  + i*3 - 4]*kRad) /
-		    TMath::Sin(f[jth + i*3 - 4]*kRad);
-	    ttt[j - 1] = tt[i - 1];
-	}
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr != 0 && i == 2) j = 4;
+            if (iordr != 0 && i == 4) j = 2;
+            xyz[j * 3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+            xyz[j * 3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+            xyz[j * 3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth  + i*3 - 4]*kRad) /
+                    TMath::Sin(f[jth + i*3 - 4]*kRad);
+            ttt[j - 1] = tt[i - 1];
+        }
     } else {
-	for (i = 1; i <= 4; ++i) {
-	    j = i;
-	    if (iordr != 0 && i == 2) j = 4;
-	    if (iordr != 0 && i == 4) j = 2;
-	    xyz[j*3 - 3] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-	    xyz[j*3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth + i*3 - 4]*kRad);
-	    ttt[j - 1] = tt[i - 1];
-	}
+        for (i = 1; i <= 4; ++i) {
+            j = i;
+            if (iordr != 0 && i == 2) j = 4;
+            if (iordr != 0 && i == 4) j = 2;
+            xyz[j*3 - 3] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+            xyz[j*3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth + i*3 - 4]*kRad);
+            ttt[j - 1] = tt[i - 1];
+        }
     }
     icodes[0] = ia;
     icodes[1] = ib;
@@ -4539,7 +4539,7 @@ L120:
             if (ntria == 0)   goto L510;
 
             for ( i=1 ; i<=nnod ; i++ ) {
-	       view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
+               view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
                Luminosity(&grad[i-1][0], w);
                grad[i-1][0] = w;
             }
@@ -4550,7 +4550,7 @@ L120:
             i1 = 1;
             if (incr == -1) i1 = ntria;
             i2 = ntria - i1 + 1;
-	    // If clipping box is on do not draw the triangles
+            // If clipping box is on do not draw the triangles
             if (fgF3Clipping) {
                if(x2<=fgF3XClip && y2 <=fgF3YClip && z2>=fgF3ZClip) goto L510;
             }
@@ -5284,27 +5284,27 @@ L300:
          nnod = 13;
          ntria = 10;
          MarchingCubeMiddlePoint(9, xyz, grad, it5,
-	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+                                 &xyz[nnod-1][0], &grad[nnod-1][0]);
          MarchingCubeSetTriangles(ntria, it5, itria);
          return;
       case 6:
          nnod = 13;
          ntria = 10;
          MarchingCubeMiddlePoint(9, xyz, grad, it6,
-	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+                                 &xyz[nnod-1][0], &grad[nnod-1][0]);
          MarchingCubeSetTriangles(ntria, it6, itria);
          return;
       case 5:
          nnod = 13;
          ntria = 12;
          MarchingCubeMiddlePoint(12, xyz, grad, it7,
-	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+                                 &xyz[nnod-1][0], &grad[nnod-1][0]);
          MarchingCubeSetTriangles(ntria, it7, itria);
          return;
       //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
       case 4:
          MarchingCubeSurfacePenetration(fF8[2], fF8[3], fF8[0], fF8[1],
-	                                fF8[6], fF8[7], fF8[4], fF8[5], irep);
+                                        fF8[6], fF8[7], fF8[4], fF8[5], irep);
          switch ((int)(irep+1)) {
             case 1:
                ntria = 6;
@@ -5644,9 +5644,9 @@ L600:
          i2 = kk[0];
          if (i != 3) i2 = kk[i];
          TestEdge(kDel, xyz, i1, i2, nn, abcdn, irep);
-	 if ( irep<0 ) goto L700;
-	 if ( irep==0 ) continue;
-	 if ( irep>0 ) goto L800;
+         if ( irep<0 ) goto L700;
+         if ( irep==0 ) continue;
+         if ( irep>0 ) goto L800;
       }
    //  N F - E D G E S   A G A I N S T   K F
       for ( i=1 ; i<=3 ; i++ ) {
@@ -5654,9 +5654,9 @@ L600:
          i2 = nn[0];
          if (i != 3) i2 = nn[i];
          TestEdge(kDel, xyz, i1, i2, kk, abcdk, irep);
-	 if ( irep<0 ) goto L800;
-	 if ( irep==0 ) continue;
-	 if ( irep>0 ) goto L700;
+         if ( irep<0 ) goto L800;
+         if ( irep==0 ) continue;
+         if ( irep>0 ) goto L700;
       }
       goto L800;
 
@@ -5888,7 +5888,7 @@ L130:
             nnod = 0;
             ntria = 0;
             iready = 0;
-	    for ( isurf=1 ; isurf<=nsurf ; isurf++ ) {
+            for ( isurf=1 ; isurf<=nsurf ; isurf++ ) {
                fsurf = s[isurf-1];
                if (gCurrentHist->GetBinContent(ix,  iy,  iz)   >= fsurf)
                    goto L210;
@@ -5978,9 +5978,9 @@ L220:
                                       (d1+d1);
                      } else {
                         df1 = gCurrentHist->GetBinContent(kx,ky,kz) -
-			      gCurrentHist->GetBinContent(kx,ky-1,kz);
+                              gCurrentHist->GetBinContent(kx,ky-1,kz);
                         df2 = gCurrentHist->GetBinContent(kx,ky+1,kz) -
-			      gCurrentHist->GetBinContent(kx,ky,kz);
+                              gCurrentHist->GetBinContent(kx,ky,kz);
                         pn[i-1][1] = (df1*d2*d2+df2*d1*d1)/(d1*d2*d2+d2*d1*d1);
                      }
                   }
@@ -6033,7 +6033,7 @@ L310:
                }
 
                for ( i=ntria+1 ; i<=ntria+ktria ; i++ ) {
-		 for ( j=1 ; j<=3 ; j++ ){
+                 for ( j=1 ; j<=3 ; j++ ){
                      ibase = nnod;
                      if (itria[i-1][j-1] < 0) ibase =-nnod;
                      itria[i-1][j-1] = itria[i-1][j-1] + ibase;
