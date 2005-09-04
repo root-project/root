@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.9 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.10 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -212,11 +212,11 @@ void TPCON::SetPoints(Double_t *points) const
 void TPCON::Sizeof3D() const
 {
    // Return total X3D needed by TNode::ls (when called with option "x")
-	   
+           
    Int_t n; 
 
    n = GetNumberOfDivisions()+1;
-		        
+                        
    gSize3D.numPoints += fNz*2*n;
    gSize3D.numSegs   += 4*(fNz*n-1+(fDphi1 == 360));
    gSize3D.numPolys  += 2*(fNz*n-1+(fDphi1 == 360));
@@ -391,7 +391,7 @@ Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
       buffer.fPols[indx++] = m+j;
       buffer.fPols[indx++] = 2*fNz*m;
       buffer.fPols[indx++] = j;
-	 
+         
       buffer.fPols[indx++] = c+3;
       buffer.fPols[indx++] = 4;
       buffer.fPols[indx++] = 2*fNz*m+n+j;
@@ -424,7 +424,7 @@ Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
          buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n;
          buffer.fPols[indx++] = (2*k+2)*m+j;
          buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
-	    
+            
          buffer.fPols[indx++] = c+1;
          buffer.fPols[indx++] = 4;
          buffer.fPols[indx++] = (2*k+1)*m+j;
@@ -443,7 +443,7 @@ Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
          buffer.fPols[indx++] = indx2+2*(k+1)*n;
          buffer.fPols[indx++] = indx2+2*fNz*n+2*k;
          buffer.fPols[indx++] = indx2+(2*k+3)*n;
-	    
+            
          buffer.fPols[indx++] = c+2;
          buffer.fPols[indx++] = 4;
          buffer.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*fNz*n+2*(k-1)+1;

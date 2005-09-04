@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.10 2005/03/18 08:03:27 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.11 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -157,10 +157,10 @@ void TTUBE::SetNumberOfDivisions (Int_t ndiv)
 void TTUBE::SetPoints(Double_t *points) const
 {
    // Create TUBE points
-	            
+        
    Int_t j, n;
    Int_t indx = 0;
-		                
+       
    n = GetNumberOfDivisions();
    
    if (points) {
@@ -269,7 +269,7 @@ void TTUBE::Sizeof3D() const
    // Return total X3D needed by TNode::ls (when called with option "x")
 
    Int_t n = GetNumberOfDivisions();
-	                    
+
    gSize3D.numPoints += n*4;
    gSize3D.numSegs   += n*8;
    gSize3D.numPolys  += n*4;
@@ -315,7 +315,7 @@ const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
    // pass yet. To be revisited.
 
    // We also do not fill the bounding box as derived classes can adjust shape
-	// leave up to viewer to work out
+   // leave up to viewer to work out
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = GetNumberOfDivisions();
       Int_t nbPnts = 4*n;
