@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.7 2005/05/12 12:40:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.8 2005/05/20 10:02:45 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -36,13 +36,13 @@ class TUrl : public TObject {
 
 private:
    TString fUrl;            // full URL
-   TString fProtocol;       // protocol: http, ftp, news, root, proof
+   TString fProtocol;       // protocol: http, ftp, news, root, proof, ...
    TString fUser;           // user name
    TString fPasswd;         // password
    TString fHost;           // remote host
    TString fFile;           // remote object
-   TString fAnchor;         // anchor in object
-   TString fOptions;        // options (after ?)
+   TString fAnchor;         // anchor in object (after #)
+   TString fOptions;        // options/search (after ?)
    mutable TString fFileAO; //!file and option
    Int_t   fPort;           // port through which to contact remote server
 
