@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.3 2003/09/23 14:03:15 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.4 2004/10/12 07:45:53 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry
@@ -36,14 +36,14 @@ class TVirtualMCGeometry : public TNamed {
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Float_t* ubuf, Int_t nbuf) = 0;
+                     Double_t stmin, Float_t* ubuf, Int_t nbuf) = 0;
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Double_t* ubuf, Int_t nbuf) = 0;
+                     Double_t stmin, Double_t* ubuf, Int_t nbuf) = 0;
     virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX, 
                      Double_t thetaY, Double_t phiY, Double_t thetaZ, 
-		     Double_t phiZ) = 0;
+                     Double_t phiZ) = 0;
  
     // functions from GGEOM 
     virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,  
@@ -79,7 +79,7 @@ class TVirtualMCGeometry : public TNamed {
 
     // Euclid
     // virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
-		               
+   
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
@@ -88,7 +88,7 @@ class TVirtualMCGeometry : public TNamed {
     virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
     virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const;
             // New functions
-	    // Make them = 0 with the next release
+            // Make them = 0 with the next release
     virtual Int_t VolId2Mate(Int_t id) const = 0;
 
   protected:

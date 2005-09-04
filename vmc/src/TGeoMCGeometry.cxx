@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.4 2004/03/19 17:42:47 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.5 2004/10/12 07:45:54 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -107,8 +107,8 @@ void TGeoMCGeometry::Vname(const char *name, char *vname) const
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_t z,
-		       Double_t dens, Double_t radl, Double_t absl, Float_t* buf,
-		       Int_t nwbuf)
+                       Double_t dens, Double_t radl, Double_t absl, Float_t* buf,
+                       Int_t nwbuf)
 {
   //
   // Defines a Material
@@ -135,8 +135,8 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_t z,
-		       Double_t dens, Double_t radl, Double_t absl, Double_t* /*buf*/,
-		       Int_t /*nwbuf*/)
+                     Double_t dens, Double_t radl, Double_t absl, Double_t* /*buf*/,
+                     Int_t /*nwbuf*/)
 {
   //
   // Defines a Material
@@ -161,7 +161,7 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t* z, 
-		      Double_t dens, Int_t nlmat, Float_t* wmat)
+                    Double_t dens, Int_t nlmat, Float_t* wmat)
 {
   //
   // Defines mixture OR COMPOUND IMAT as composed by 
@@ -192,7 +192,7 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t*
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_t* z, 
-		      Double_t dens, Int_t nlmat, Double_t* wmat)
+                    Double_t dens, Int_t nlmat, Double_t* wmat)
 {
   //
   // Defines mixture OR COMPOUND IMAT as composed by 
@@ -223,9 +223,9 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isvol,
-		     Int_t ifield, Double_t fieldm, Double_t tmaxfd,
-		     Double_t stemax, Double_t deemax, Double_t epsil,
-		     Double_t stmin, Float_t* ubuf, Int_t nbuf)
+                   Int_t ifield, Double_t fieldm, Double_t tmaxfd,
+                   Double_t stemax, Double_t deemax, Double_t epsil,
+                   Double_t stmin, Float_t* ubuf, Int_t nbuf)
 {
   //
   //  kmed      tracking medium number assigned
@@ -249,14 +249,14 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
   Double_t* dubuf = CreateDoubleArray(ubuf, nbuf);  
   Medium(kmed, name, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil,
          stmin, dubuf, nbuf);
-  delete [] dubuf;	 
+  delete [] dubuf;        
 }
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isvol,
-		     Int_t ifield, Double_t fieldm, Double_t tmaxfd,
-		     Double_t stemax, Double_t deemax, Double_t epsil,
-		     Double_t stmin, Double_t* /*ubuf*/, Int_t /*nbuf*/)
+                   Int_t ifield, Double_t fieldm, Double_t tmaxfd,
+                   Double_t stemax, Double_t deemax, Double_t epsil,
+                   Double_t stmin, Double_t* /*ubuf*/, Int_t /*nbuf*/)
 {
   //
   //  kmed      tracking medium number assigned
@@ -281,7 +281,7 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t they,
-		     Double_t phiy, Double_t thez, Double_t phiz)
+                   Double_t phiy, Double_t thez, Double_t phiz)
 {
   //
   //  krot     rotation matrix number assigned
@@ -301,7 +301,7 @@ void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t 
 
 //_____________________________________________________________________________
 Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,  
-		      Float_t *upar, Int_t npar) 
+                    Float_t *upar, Int_t npar) 
 { 
   //
   //  NAME   Volume name
@@ -321,7 +321,7 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
 
 //_____________________________________________________________________________
 Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,  
-		      Double_t *upar, Int_t npar) 
+                    Double_t *upar, Int_t npar) 
 { 
   //
   //  NAME   Volume name
@@ -344,7 +344,7 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
  
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
-		     Int_t iaxis) 
+                   Int_t iaxis) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -367,7 +367,7 @@ void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
  
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
-		      Int_t iaxis, Double_t c0i, Int_t numed) 
+                    Int_t iaxis, Double_t c0i, Int_t numed) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -385,7 +385,7 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
 } 
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
-		     Int_t iaxis, Int_t numed, Int_t /*ndvmx*/) 
+                   Int_t iaxis, Int_t numed, Int_t /*ndvmx*/) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -408,7 +408,7 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
 
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step,
-		      Int_t iaxis, Double_t c0, Int_t numed, Int_t /*ndvmx*/) 
+                    Int_t iaxis, Double_t c0, Int_t numed, Int_t /*ndvmx*/) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -452,7 +452,7 @@ void  TGeoMCGeometry::Gsord(const char * /*name*/, Int_t /*iax*/)
  
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Double_t x,
-		     Double_t y, Double_t z, Int_t irot, const char *konly) 
+                   Double_t y, Double_t z, Int_t irot, const char *konly) 
 { 
   //
   // Position a volume into an existing one
@@ -484,8 +484,8 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
  
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,  
-		      Double_t x, Double_t y, Double_t z, Int_t irot,
-		      const char *konly, Float_t *upar, Int_t np ) 
+                    Double_t x, Double_t y, Double_t z, Int_t irot,
+                    const char *konly, Float_t *upar, Int_t np ) 
 { 
   //
   //      Place a copy of generic volume NAME with user number
@@ -499,8 +499,8 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
  
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,  
-		      Double_t x, Double_t y, Double_t z, Int_t irot,
-		      const char *konly, Double_t *upar, Int_t np ) 
+                    Double_t x, Double_t y, Double_t z, Int_t irot,
+                    const char *konly, Double_t *upar, Int_t np ) 
 { 
   //
   //      Place a copy of generic volume NAME with user number

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name: v4-04-02 $:$Id: TMCVerbose.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.3 2005/05/17 12:44:52 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "Riostream.h"
@@ -256,9 +256,9 @@ void TMCVerbose::Stepping()
     Double_t x, y, z;
     gMC->TrackPosition(x, y, z);
     cout << setw(8) << setprecision(3) << x << " " 
-	 << setw(8) << setprecision(3) << y << " " 
-	 << setw(8) << setprecision(3) << z << "  ";
-	 
+         << setw(8) << setprecision(3) << y << " " 
+         << setw(8) << setprecision(3) << z << "  ";
+
     // Kinetic energy
     //	 
     Double_t px, py, pz, etot;
@@ -273,7 +273,7 @@ void TMCVerbose::Stepping()
     // Step length
     //	 
     cout << setw(8) << setprecision(3) << gMC->TrackStep() << " ";
-	 
+
     // Track length
     //	 
     cout << setw(8) << setprecision(3) << gMC->TrackLength() << "     ";

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.h,v 1.2 2003/09/23 14:03:15 brun Exp $
 // Authors: Ivana Hrivnacova 13/04/2002
 
 #ifndef ROOT_TVirtualMCStack
@@ -43,9 +43,9 @@ public:
     virtual void  PushTrack(Int_t toBeDone, Int_t parent, Int_t pdg,
   	              Double_t px, Double_t py, Double_t pz, Double_t e,
                       Double_t vx, Double_t vy, Double_t vz, Double_t tof,
-		      Double_t polx, Double_t poly, Double_t polz,
-		      TMCProcess mech, Int_t& ntr, Double_t weight,
-		      Int_t is) = 0;
+                      Double_t polx, Double_t poly, Double_t polz,
+                      TMCProcess mech, Int_t& ntr, Double_t weight,
+                      Int_t is) = 0;
 
     // The stack has to provide two pop mechanisms:
     // PopNextTrack() - pops all particles with toBeDone = 1,

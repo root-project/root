@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.12 2005/05/17 12:44:52 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.13 2005/05/19 09:03:48 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -48,11 +48,11 @@ class TVirtualMC : public TNamed {
 
     // functions from GCONS 
     virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,  
-  		         Float_t &dens, Float_t &radl, Float_t &absl,
-		         Float_t* ubuf, Int_t& nbuf) = 0; 
+                           Float_t &dens, Float_t &radl, Float_t &absl,
+                         Float_t* ubuf, Int_t& nbuf) = 0; 
     virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,  
-  		         Double_t &dens, Double_t &radl, Double_t &absl,
-		         Double_t* ubuf, Int_t& nbuf) = 0; 
+                           Double_t &dens, Double_t &radl, Double_t &absl,
+                         Double_t* ubuf, Int_t& nbuf) = 0; 
     virtual void  Gckmat(Int_t imed, char* name) = 0;
 
     // detector composition
@@ -69,14 +69,14 @@ class TVirtualMC : public TNamed {
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Float_t* ubuf, Int_t nbuf) = 0;
+                     Double_t stmin, Float_t* ubuf, Int_t nbuf) = 0;
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Double_t* ubuf, Int_t nbuf) = 0;
+                     Double_t stmin, Double_t* ubuf, Int_t nbuf) = 0;
     virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX, 
                      Double_t thetaY, Double_t phiY, Double_t thetaZ, 
-		     Double_t phiZ) = 0;
+                     Double_t phiZ) = 0;
     virtual void  Gstpar(Int_t itmed, const char *param, Double_t parval) = 0; 
 
     // functions from GGEOM 
@@ -113,40 +113,40 @@ class TVirtualMC : public TNamed {
     // and material properties for optical physics
     virtual void  DefineOpSurface(const char* name,
                          EMCOpSurfaceModel model,
-			 EMCOpSurfaceType surfaceType,
-			 EMCOpSurfaceFinish surfaceFinish,
-			 Double_t sigmaAlpha);
+                         EMCOpSurfaceType surfaceType,
+                         EMCOpSurfaceFinish surfaceFinish,
+                         Double_t sigmaAlpha);
     virtual void  SetBorderSurface(const char* name,
                          const char* vol1Name, int vol1CopyNo,
                          const char* vol2Name, int vol2CopyNo,
-			 const char* opSurfaceName);
+                         const char* opSurfaceName);
     virtual void  SetSkinSurface(const char* name,
                          const char* volName,
-			 const char* opSurfaceName);
+                         const char* opSurfaceName);
     virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName, 
-			 Int_t np, Double_t* pp, Double_t* values);
+                         Int_t np, Double_t* pp, Double_t* values);
     virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName,
-			 Double_t value);
+                         Double_t value);
     virtual void  SetMaterialProperty(
                          const char* surfaceName, const char* propertyName, 
-			 Int_t np, Double_t* pp, Double_t* values);
+                         Int_t np, Double_t* pp, Double_t* values);
     
     // functions for drawing
     // to be removed with complete move to TGeo
     virtual void  DrawOneSpec(const char* name) = 0;
     virtual void  Gsatt(const char* name, const char* att, Int_t val) = 0;
     virtual void  Gdraw(const char*,Double_t theta = 30, Double_t phi = 30,
-		        Double_t psi = 0, Double_t u0 = 10, Double_t v0 = 10,
-		        Double_t ul = 0.01, Double_t vl = 0.01) = 0;
+                        Double_t psi = 0, Double_t u0 = 10, Double_t v0 = 10,
+                        Double_t ul = 0.01, Double_t vl = 0.01) = 0;
 
     // Euclid
     virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
     
     // set geometry from Root (built via TGeo)
     virtual void  SetRootGeometry() = 0; 
-		               
+                               
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
@@ -176,10 +176,10 @@ class TVirtualMC : public TNamed {
     virtual Int_t   PDGFromId(Int_t pdg) const =0;
     
         // get methods
-    virtual TString   ParticleName(Int_t pdg) const = 0;	  
-    virtual Double_t  ParticleMass(Int_t pdg) const = 0;	  
-    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;	  
-    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;	  
+    virtual TString   ParticleName(Int_t pdg) const = 0;          
+    virtual Double_t  ParticleMass(Int_t pdg) const = 0;          
+    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;          
+    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;          
     virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
   
     //
@@ -307,39 +307,39 @@ class TVirtualMC : public TNamed {
 
 inline void  TVirtualMC::DefineOpSurface(const char* /*name*/,
                 EMCOpSurfaceModel /*model*/, EMCOpSurfaceType /*surfaceType*/,
-	        EMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
+                EMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
    
    Warning("DefineOpSurface", "New function - not yet implemented.");
 }   
-		
+                
 inline void  TVirtualMC::SetBorderSurface(const char* /*name*/,
                 const char* /*vol1Name*/, int /*vol1CopyNo*/,
                 const char* /*vol2Name*/, int /*vol2CopyNo*/,
-		const char* /*opSurfaceName*/) {
+                const char* /*opSurfaceName*/) {
    Warning("SetBorderSurface", "New function - not yet implemented.");
 }   
-		
+                
 inline void  TVirtualMC::SetSkinSurface(const char* /*name*/,
                 const char* /*volName*/,
-		const char* /*opSurfaceName*/) {
+                const char* /*opSurfaceName*/) {
    Warning("SetSkinSurface", "New function - not yet implemented.");
 }   
-		
+                
 inline void  TVirtualMC::SetMaterialProperty(
                 Int_t /*itmed*/, const char* /*propertyName*/, 
-		Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
+                Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
 }   
-		
+                
 inline void  TVirtualMC::SetMaterialProperty(
                 Int_t /*itmed*/, const char* /*propertyName*/, 
-		Double_t /*value*/) {
+                Double_t /*value*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
 }   
-		
+                
 inline void  TVirtualMC::SetMaterialProperty(
                 const char* /*surfaceName*/, const char* /*propertyName*/, 
-	        Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
+                Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
 }   
 

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.5 2004/05/14 09:45:07 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.6 2004/10/12 07:45:53 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.5 2004/05/14 09:45:07 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.6 2004/10/12 07:45:53 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -40,14 +40,14 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Float_t* ubuf, Int_t nbuf);
+                     Double_t stmin, Float_t* ubuf, Int_t nbuf);
     virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
                      Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
                      Double_t stemax, Double_t deemax, Double_t epsil, 
-		     Double_t stmin, Double_t* ubuf, Int_t nbuf);
+                     Double_t stmin, Double_t* ubuf, Int_t nbuf);
     virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX, 
                      Double_t thetaY, Double_t phiY, Double_t thetaZ, 
-		     Double_t phiZ);
+                     Double_t phiZ);
 
     // functions from GGEOM 
     virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,  
@@ -84,7 +84,7 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
 
     // Euclid
     //virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t);
-		               
+               
     // get methods
     virtual Int_t VolId(const Text_t* volName) const;
     virtual const char* VolName(Int_t id) const;
