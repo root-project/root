@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.48 2005/07/19 07:31:25 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.49 2005/09/04 15:14:02 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -7787,7 +7787,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 //*-*         If SET WARnings is in effect (the default), this routine
 //*-*             prints the warning message CMES coming from CORG.
 //*-*         If SET NOWarnings is in effect, the warning message is
-//*-*             stored in a circular buffer of length MAXMES.
+//*-*             stored in a circular buffer of length kMAXMES.
 //*-*         If called with CORG=CMES='SHO', it prints the messages in
 //*-*             the circular buffer, FIFO, and empties the buffer.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -7796,7 +7796,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
     TString corg = corg1;
     TString cmes = cmes1;
 
-    const Int_t MAXMES = 10;
+    const Int_t kMAXMES = 10;
     Int_t ityp, i, ic, nm;
     TString englsh, ctyp;
 
@@ -7845,15 +7845,15 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
              ,(const char*)ctyp,(const char*)englsh);
         nm = fNwrmes[ityp-1];
         ic = 0;
-        if (nm > MAXMES) {
+        if (nm > kMAXMES) {
             Printf(" ONLY THE MOST RECENT 10 WILL BE LISTED BELOW.");
-            nm = MAXMES;
+            nm = kMAXMES;
             ic = fIcirc[ityp-1];
         }
         Printf("  CALLS  ORIGIN         MESSAGE");
         for (i = 1; i <= nm; ++i) {
             ++ic;
-            if (ic > MAXMES) ic = 1;
+            if (ic > kMAXMES) ic = 1;
             Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
         }
         fNwrmes[ityp-1] = 0;
