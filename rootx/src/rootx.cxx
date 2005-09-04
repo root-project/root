@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.16 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.17 2005/06/01 14:07:58 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ static void SetDisplay()
                   sprintf(display, "DISPLAY=%s", utmp_entry->ut_host);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s\n",
                           utmp_entry->ut_host);
-	       } else {
+               } else {
                   sprintf(display, "DISPLAY=%s:0.0", utmp_entry->ut_host);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s:0.0\n",
                           utmp_entry->ut_host);
@@ -424,7 +424,7 @@ int main(int argc, char **argv)
    // Exec failed
 #ifndef ROOTBINDIR
    fprintf(stderr,
-	   "%s: can't start ROOT -- check that %s/bin/%s exists!\n",
+           "%s: can't start ROOT -- check that %s/bin/%s exists!\n",
            argv[0], getenv("ROOTSYS"), ROOTBINARY);
 #else
    fprintf(stderr, "%s: can't start ROOT -- check that %s/%s exists!\n",
