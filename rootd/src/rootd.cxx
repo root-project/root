@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.107 2005/07/25 14:50:18 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.108 2005/08/17 12:58:41 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -335,7 +335,7 @@ int gDebug  = 0;
 
 //--- Local Globals -----------------------------------------------------------
 
-enum { kBinary, kAscii };
+enum EFileMode{ kBinary, kAscii };
 
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
@@ -1647,8 +1647,8 @@ void RootdChdir(const char *dir)
 {
    // Change directory.
 
-   const int MAXBUFLEN = kMAXPATHLEN + 256;
-   char buffer[MAXBUFLEN];
+   const int kMAXBUFLEN = kMAXPATHLEN + 256;
+   char buffer[kMAXBUFLEN];
 
    if (dir && *dir == '~') {
       struct passwd *pw;
@@ -1661,15 +1661,15 @@ void RootdChdir(const char *dir)
       buffer[i] = 0;
 
       if ((pw = getpwnam(i ? buffer : gUser.c_str())))
-         SPrintf(buffer, MAXBUFLEN, "%s%s", pw->pw_dir, p);
+         SPrintf(buffer, kMAXBUFLEN, "%s%s", pw->pw_dir, p);
       else
          *buffer = 0;
    } else
       *buffer = 0;
 
    if (chdir(*buffer ? buffer : (dir && *dir ? dir : "/")) == -1) {
-      SPrintf(buffer,MAXBUFLEN,"cannot change directory to %s",dir);
-      Perror(buffer,MAXBUFLEN);
+      SPrintf(buffer,kMAXBUFLEN,"cannot change directory to %s",dir);
+      Perror(buffer,kMAXBUFLEN);
       NetSend(buffer, kROOTD_CHDIR);
       return;
    } else {
@@ -1686,7 +1686,7 @@ void RootdChdir(const char *dir)
 
       if (!getcwd(buffer, kMAXPATHLEN)) {
          if (*dir == '/')
-            SPrintf(buffer, MAXBUFLEN, "%s", dir);
+            SPrintf(buffer, kMAXBUFLEN, "%s", dir);
       }
       NetSend(buffer, kROOTD_CHDIR);
    }
