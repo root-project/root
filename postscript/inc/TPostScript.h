@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.5 2002/02/14 18:04:15 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.6 2004/01/28 15:49:07 brun Exp $
 // Author: O.Couet   16/07/99
 
 /*************************************************************************
@@ -88,7 +88,7 @@ protected:
    Int_t   fNBSameColorCell; //Number of boxes with the same color
 
    static Int_t fgLineJoin;  //Appearance of joining lines
-	
+
 public:
    TPostScript();
    TPostScript(const char *filename, Int_t type=-111);
