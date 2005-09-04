@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.137 2005/09/03 02:21:31 pcanal Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.138 2005/09/03 13:22:41 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -237,7 +237,7 @@ extern "C" {
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
    // The maximum stack trace depth for systems where we request the
    // stack depth separately (currently glibc-based systems).
-   static const int gMAX_BACKTRACE_DEPTH = 128;
+   static const int kMAX_BACKTRACE_DEPTH = 128;
 #endif
 
 // FPE handling includes
@@ -1310,10 +1310,10 @@ int TUnixSystem::Unlink(const char *name)
 
 static const char
 #ifdef G__OLDEXPAND
-   gShellEscape     = '\\',
-   *gShellStuff     = "(){}<>\"'",
+   kShellEscape     = '\\',
+   *kShellStuff     = "(){}<>\"'",
 #endif
-   *gShellMeta      = "~*[]{}?$";
+   *kShellMeta      = "~*[]{}?$";
 
 
 #ifndef G__OLDEXPAND
@@ -1333,7 +1333,7 @@ Bool_t TUnixSystem::ExpandPathName(TString &path)
 
    // any shell meta characters ?
    for (p = patbuf; *p; p++)
-      if (strchr(gShellMeta, *p))
+      if (strchr(kShellMeta, *p))
          goto expand;
 
    return kFALSE;
@@ -1371,7 +1371,7 @@ Bool_t TUnixSystem::ExpandPathName(TString &patbuf0)
 
    // any shell meta characters ?
    for (p = patbuf; *p; p++)
-      if (strchr(gShellMeta, *p))
+      if (strchr(kShellMeta, *p))
          goto needshell;
 
    return kFALSE;
@@ -1382,7 +1382,7 @@ needshell:
    patbuf0.ReplaceAll(")","");
 
    // escape shell quote characters
-   EscChar(patbuf, stuffedPat, sizeof(stuffedPat), (char*)gShellStuff, gShellEscape);
+   EscChar(patbuf, stuffedPat, sizeof(stuffedPat), (char*)kShellStuff, kShellEscape);
 
 #ifdef R__HPUX
    TString cmd("/bin/echo ");
@@ -1882,8 +1882,8 @@ void TUnixSystem::StackTrace()
    }
 
    char buffer[2048];
-   void *trace[gMAX_BACKTRACE_DEPTH];
-   int  depth = backtrace(trace, gMAX_BACKTRACE_DEPTH);
+   void *trace[kMAX_BACKTRACE_DEPTH];
+   int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
    for (int n = 5; n < depth; n++) {
       ULong_t addr = (ULong_t) trace[n];
       Dl_info info;
