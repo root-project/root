@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.12 2005/07/25 10:22:47 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.13 2005/09/04 10:38:41 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -438,13 +438,13 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
          fAtbTemp+=fAtbTemp2;
          fAtbTemp2.Zero();
          fY2+=fY2Temp;
-         fY2Temp=0;	 
-	 if (fNpoints % 1000000 == 0 && fNpoints>1000000){
+         fY2Temp=0;         
+         if (fNpoints % 1000000 == 0 && fNpoints>1000000){
             fDesign+=fDesignTemp;
             fDesignTemp.Zero();
             fAtb+=fAtbTemp;
             fAtbTemp.Zero();
-	 }
+         }
       }
    }
 }
@@ -557,9 +557,9 @@ void TLinearFitter::Chisquare()
                   temp += fParams(i)*val[i];
             } else {
                if (fSpecial>200) {
-		  //hyperplane case
+                  //hyperplane case
                   Int_t npar = fSpecial-201;
-		  temp+=fParams(0);
+                  temp+=fParams(0);
                   for (i=0; i<npar; i++)
                      temp += fParams(i+1)*fX(point, i);
                } else {
@@ -1082,14 +1082,14 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
    if (level==3){
      if (!fRobust){
         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");     
-	for (Int_t i=0; i<fNfunctions; i++){
-	   printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
-	}
+        for (Int_t i=0; i<fNfunctions; i++){
+           printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
+        }
      } else {
         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");     
-	for (Int_t i=0; i<fNfunctions; i++){
-	   printf("%d\t%f\n", i, fParams(i));
-	}
+        for (Int_t i=0; i<fNfunctions; i++){
+           printf("%d\t%f\n", i, fParams(i));
+        }
      }
    }
 }
@@ -1431,15 +1431,15 @@ void TLinearFitter::EvalRobust(Double_t h)
       //to store the best coefficients (columnwise)
       TMatrixD cstock(fNfunctions, nbest);
       for (k = 0; k < k1; k++) {
-	 CreateSubset(fNpoints, fH, index);
-	 chi2 = CStep(1, fH, residuals,index, index, -1, -1);
-	 chi2 = CStep(2, fH, residuals,index, index, -1, -1);
-	 maxind = TMath::LocMax(nbest, bestchi2);
-	 if (chi2 < bestchi2[maxind]) {
-	    bestchi2[maxind] = chi2;
-	    for (i=0; i<fNfunctions; i++) 
-	       cstock(i, maxind) = fParams(i);
-	 }
+         CreateSubset(fNpoints, fH, index);
+         chi2 = CStep(1, fH, residuals,index, index, -1, -1);
+         chi2 = CStep(2, fH, residuals,index, index, -1, -1);
+         maxind = TMath::LocMax(nbest, bestchi2);
+         if (chi2 < bestchi2[maxind]) {
+            bestchi2[maxind] = chi2;
+            for (i=0; i<fNfunctions; i++) 
+               cstock(i, maxind) = fParams(i);
+         }
       }
 
       //for the nbest best results, perform CSteps until convergence
@@ -1449,13 +1449,13 @@ void TLinearFitter::EvalRobust(Double_t h)
          for (j=0; j<fNfunctions; j++)
              fParams(j) = cstock(j, i);
          chi2 = 1;
-	 while (chi2 > kEps) {
+         while (chi2 > kEps) {
             chi2 = CStep(2, fH, residuals,index, index, -1, -1);
-	    if (TMath::Abs(chi2 - bestchi2[i]) < kEps)
-	       break;
-	    else
-	       bestchi2[i] = chi2;
-	 }
+            if (TMath::Abs(chi2 - bestchi2[i]) < kEps)
+               break;
+            else
+               bestchi2[i] = chi2;
+         }
          currentbest = TMath::MinElement(nbest, bestchi2);
          if (chi2 <= currentbest + kEps) {
             for (j=0; j<fH; j++){
@@ -1463,12 +1463,12 @@ void TLinearFitter::EvalRobust(Double_t h)
             }
             maxind = i;
          }
-	 for (j=0; j<fNfunctions; j++)
-	    cstock(j, i) = fParams(j);
+         for (j=0; j<fNfunctions; j++)
+            cstock(j, i) = fParams(j);
       }
       //report the result with the lowest chisquare
       for (j=0; j<fNfunctions; j++)
-	 fParams(j) = cstock(j, maxind);
+         fParams(j) = cstock(j, maxind);
       fFitsample.SetBitNumber(fNpoints, kFALSE);
       for (j=0; j<fH; j++){
          //printf("bestindex[%d]=%d\n", j, bestindex[j]);
@@ -1506,21 +1506,21 @@ void TLinearFitter::EvalRobust(Double_t h)
 
       hsub = Int_t(fH * indsubdat[kgroup]/fNpoints);
       for (i=0; i<nbest; i++)
-	 bestchi2[i] = 1e16;
+         bestchi2[i] = 1e16;
       for (k=0; k<k2; k++) {
-	 CreateSubset(indsubdat[kgroup], hsub, index);
-	 chi2 = CStep(1, hsub, residuals, index, subdat, i_start, i_end);
-	 chi2 = CStep(2, hsub, residuals, index, subdat, i_start, i_end);
-	 maxind = TMath::LocMax(nbest, bestchi2);
-	 if (chi2 < bestchi2[maxind]){
-	    for (i=0; i<fNfunctions; i++)
-	       cstockbig(i, nbest*kgroup + maxind) = fParams(i);
-	    bestchi2[maxind] = chi2;
-	 }
+         CreateSubset(indsubdat[kgroup], hsub, index);
+         chi2 = CStep(1, hsub, residuals, index, subdat, i_start, i_end);
+         chi2 = CStep(2, hsub, residuals, index, subdat, i_start, i_end);
+         maxind = TMath::LocMax(nbest, bestchi2);
+         if (chi2 < bestchi2[maxind]){
+            for (i=0; i<fNfunctions; i++)
+               cstockbig(i, nbest*kgroup + maxind) = fParams(i);
+            bestchi2[maxind] = chi2;
+         }
       }
       if (kgroup != nsub - 1){
-	 i_start += indsubdat[kgroup];
-	 i_end += indsubdat[kgroup+1];
+         i_start += indsubdat[kgroup];
+         i_end += indsubdat[kgroup+1];
       }
    }
 
@@ -1530,20 +1530,20 @@ void TLinearFitter::EvalRobust(Double_t h)
    Int_t hsub2 = Int_t(fH*sum/fNpoints);
    for (k=0; k<nbest*5; k++) {
       for (i=0; i<fNfunctions; i++)
-	 fParams(i)=cstockbig(i, k);
+         fParams(i)=cstockbig(i, k);
       chi2 = CStep(1, hsub2, residuals, index, subdat, 0, sum);
       chi2 = CStep(2, hsub2, residuals, index, subdat, 0, sum);
       maxind = TMath::LocMax(nbest, bestchi2);
       if (chi2 < bestchi2[maxind]){
-	 beststock[maxind] = k;
-	 bestchi2[maxind] = chi2; 
+         beststock[maxind] = k;
+         bestchi2[maxind] = chi2; 
       }
    }
 
    //now the array beststock keeps indices of 10 best candidates in cstockbig matrix
    for (k=0; k<nbest; k++) {
       for (i=0; i<fNfunctions; i++)
-	 fParams(i) = cstockbig(i, beststock[k]);
+         fParams(i) = cstockbig(i, beststock[k]);
       chi2 = CStep(1, fH, residuals, index, index, -1, -1);
       chi2 = CStep(2, fH, residuals, index, index, -1, -1);
       bestchi2[k] = chi2;
@@ -1557,9 +1557,9 @@ void TLinearFitter::EvalRobust(Double_t h)
    while (chi2 > kEps) {
       chi2 = CStep(2, fH, residuals, index, index, -1, -1);
       if (TMath::Abs(chi2 - bestchi2[maxind]) < kEps)
-	 break;
+         break;
       else
-	 bestchi2[maxind] = chi2;
+         bestchi2[maxind] = chi2;
    }
 
    fFitsample.SetBitNumber(fNpoints, kFALSE);
@@ -1598,17 +1598,17 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
    for (i=0; i<fNfunctions; i++) {
       num=Int_t(r.Uniform(0, 1)*(ntotal-1));
       if (i>0){
-	 for(j=0; j<=i-1; j++) {
-	    if(index[j]==num)
-	       repeat = kTRUE;
-	 }
+         for(j=0; j<=i-1; j++) {
+            if(index[j]==num)
+               repeat = kTRUE;
+         }
       }
       if(repeat==kTRUE) {
-	 i--;
-	 repeat = kFALSE;
+         i--;
+         repeat = kFALSE;
       } else {
-	 index[i] = num;
-	 nindex++;
+         index[i] = num;
+         nindex++;
       }
    }
    
@@ -1626,14 +1626,14 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
    while (!ok && (nindex < h)) {
       repeat=kFALSE;
       do{
-	 num=Int_t(r.Uniform(0,1)*(ntotal-1));
-	 repeat=kFALSE;
-	 for(i=0; i<nindex; i++) {
-	    if(index[i]==num) {
-	       repeat=kTRUE;
-	       break;
-	    }
-	 }
+         num=Int_t(r.Uniform(0,1)*(ntotal-1));
+         repeat=kFALSE;
+         for(i=0; i<nindex; i++) {
+            if(index[i]==num) {
+               repeat=kTRUE;
+               break;
+            }
+         }
       } while(repeat==kTRUE);
 
       index[nindex] = num;
@@ -1656,71 +1656,71 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
    if (start > -1) {
       n = end - start;
       for (i=0; i<n; i++) {
-	 func = 0;
-	 itemp = subdat[start+i];
-	 if (fInputFunction){
+         func = 0;
+         itemp = subdat[start+i];
+         if (fInputFunction){
             fInputFunction->SetParameters(fParams.GetMatrixArray());
-	    func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
-	 } else {
-	    func=0;
-	    if ((fSpecial>100)&&(fSpecial<200)){
-		  npar = fSpecial-100;
-		  val[0] = 1;
-		  for (j=1; j<npar; j++)
-		     val[j] = val[j-1]*fX(itemp, 0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j)*val[j];
-	    } else {
-	       if (fSpecial>200) {
-		  //hyperplane case
-		  npar = fSpecial-201;
-		  func+=fParams(0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j+1)*fX(itemp, j);
-	       } else {
-		  for (j=0; j<fNfunctions; j++) {
-		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
-		     func += fParams(j)*val[j];
-		  }
-	       }
-	    }
-	 }
-	 residuals[i] = (fY(itemp) - func)*(fY(itemp) - func)/(fE(i)*fE(i));
+            func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+         } else {
+            func=0;
+            if ((fSpecial>100)&&(fSpecial<200)){
+                  npar = fSpecial-100;
+                  val[0] = 1;
+                  for (j=1; j<npar; j++)
+                     val[j] = val[j-1]*fX(itemp, 0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j)*val[j];
+            } else {
+               if (fSpecial>200) {
+                  //hyperplane case
+                  npar = fSpecial-201;
+                  func+=fParams(0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j+1)*fX(itemp, j);
+               } else {
+                  for (j=0; j<fNfunctions; j++) {
+                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+                     func += fParams(j)*val[j];
+                  }
+               }
+            }
+         }
+         residuals[i] = (fY(itemp) - func)*(fY(itemp) - func)/(fE(i)*fE(i));
       }
    } else {
        n=fNpoints;
        for (i=0; i<fNpoints; i++) {
-	  func = 0;
-	  if (fInputFunction){
-	     fInputFunction->SetParameters(fParams.GetMatrixArray());
-	     func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
-	  } else {
-	    func=0;
-	    if ((fSpecial>100)&&(fSpecial<200)){
-	       Int_t npar = fSpecial-100;
-	       val[0] = 1;
-	       for (j=1; j<npar; j++)
-		  val[j] = val[j-1]*fX(i, 0);
-	       for (j=0; j<npar; j++)
-		  func += fParams(j)*val[j];
-	    } else {
-	       if (fSpecial>200) {
-		  //hyperplane case
-		  Int_t npar = fSpecial-201;
-		  func+=fParams(0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j+1)*fX(i, j);
-	       } else {
-		  for (j=0; j<fNfunctions; j++) {
-		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, i).GetPtr());
-		     func += fParams(j)*val[j];
-		  }
-	       }
-	    }
-	  }   
-	  residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
+          func = 0;
+          if (fInputFunction){
+             fInputFunction->SetParameters(fParams.GetMatrixArray());
+             func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
+          } else {
+            func=0;
+            if ((fSpecial>100)&&(fSpecial<200)){
+               Int_t npar = fSpecial-100;
+               val[0] = 1;
+               for (j=1; j<npar; j++)
+                  val[j] = val[j-1]*fX(i, 0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j)*val[j];
+            } else {
+               if (fSpecial>200) {
+                  //hyperplane case
+                  Int_t npar = fSpecial-201;
+                  func+=fParams(0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j+1)*fX(i, j);
+               } else {
+                  for (j=0; j<fNfunctions; j++) {
+                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, i).GetPtr());
+                     func += fParams(j)*val[j];
+                  }
+               }
+            }
+          }   
+          residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
        }
    }
    //take h with smallest residuals
@@ -1740,68 +1740,68 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
 
    if (start > -1) {
       for (i=0; i<h; i++) {
-	 itemp = subdat[start+index[i]];
-	 if (fInputFunction){
-	    fInputFunction->SetParameters(fParams.GetMatrixArray());
-	    func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
-	 } else {
-	    func=0;
-	    if ((fSpecial>100)&&(fSpecial<200)){
-		  npar = fSpecial-100;
-		  val[0] = 1;
-		  for (j=1; j<npar; j++)
-		     val[j] = val[j-1]*fX(itemp, 0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j)*val[j];
-	    } else {
-	       if (fSpecial>200) {
-		  //hyperplane case
-		  npar = fSpecial-201;
-		  func+=fParams(0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j+1)*fX(itemp, j);
-	       } else {
-		  for (j=0; j<fNfunctions; j++) {
-		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
-		     func += fParams(j)*val[j];
-		  }
-	       }
-	    }
-	 }
-	 sum+=(fY(itemp)-func)*(fY(itemp)-func)/(fE(itemp)*fE(itemp));
+         itemp = subdat[start+index[i]];
+         if (fInputFunction){
+            fInputFunction->SetParameters(fParams.GetMatrixArray());
+            func=fInputFunction->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+         } else {
+            func=0;
+            if ((fSpecial>100)&&(fSpecial<200)){
+                  npar = fSpecial-100;
+                  val[0] = 1;
+                  for (j=1; j<npar; j++)
+                     val[j] = val[j-1]*fX(itemp, 0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j)*val[j];
+            } else {
+               if (fSpecial>200) {
+                  //hyperplane case
+                  npar = fSpecial-201;
+                  func+=fParams(0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j+1)*fX(itemp, j);
+               } else {
+                  for (j=0; j<fNfunctions; j++) {
+                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+                     func += fParams(j)*val[j];
+                  }
+               }
+            }
+         }
+         sum+=(fY(itemp)-func)*(fY(itemp)-func)/(fE(itemp)*fE(itemp));
       }
    } else {
       for (i=0; i<h; i++) {
-	 if (fInputFunction){
-	    fInputFunction->SetParameters(fParams.GetMatrixArray());
-	    func=fInputFunction->EvalPar(TMatrixDRow(fX, index[i]).GetPtr());
-	 } else {
-	    func=0;
-	    if ((fSpecial>100)&&(fSpecial<200)){
-	       Int_t npar = fSpecial-100;
-	       val[0] = 1;
-	       for (j=1; j<npar; j++)
-		  val[j] = val[j-1]*fX(index[i], 0);
-	       for (j=0; j<npar; j++)
-		  func += fParams(j)*val[j];
-	    } else {
-	       if (fSpecial>200) {
-		  //hyperplane case
-		  Int_t npar = fSpecial-201;
-		  func+=fParams(0);
-		  for (j=0; j<npar; j++)
-		     func += fParams(j+1)*fX(index[i], j);
-	       } else {
-		  for (j=0; j<fNfunctions; j++) {
-		     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-		     val[j] = f1->EvalPar(0, TMatrixDRow(fX, index[i]).GetPtr());
-		     func += fParams(j)*val[j];
-		  }
-	       }
-	    }
-	 }   
-	 
+         if (fInputFunction){
+            fInputFunction->SetParameters(fParams.GetMatrixArray());
+            func=fInputFunction->EvalPar(TMatrixDRow(fX, index[i]).GetPtr());
+         } else {
+            func=0;
+            if ((fSpecial>100)&&(fSpecial<200)){
+               Int_t npar = fSpecial-100;
+               val[0] = 1;
+               for (j=1; j<npar; j++)
+                  val[j] = val[j-1]*fX(index[i], 0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j)*val[j];
+            } else {
+               if (fSpecial>200) {
+                  //hyperplane case
+                  Int_t npar = fSpecial-201;
+                  func+=fParams(0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j+1)*fX(index[i], j);
+               } else {
+                  for (j=0; j<fNfunctions; j++) {
+                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, index[i]).GetPtr());
+                     func += fParams(j)*val[j];
+                  }
+               }
+            }
+         }   
+         
          sum+=(fY(index[i])-func)*(fY(index[i])-func)/(fE(index[i])*fE(index[i]));
       }
    }
@@ -1855,43 +1855,43 @@ Int_t TLinearFitter::Partition(Int_t nmini, Int_t *indsubdat)
 
    if ((fNpoints>=2*nmini) && (fNpoints<=(3*nmini-1))) {
       if (fNpoints%2==1){
-	 indsubdat[0]=Int_t(fNpoints*0.5);
-	 indsubdat[1]=Int_t(fNpoints*0.5)+1;
+         indsubdat[0]=Int_t(fNpoints*0.5);
+         indsubdat[1]=Int_t(fNpoints*0.5)+1;
       } else
-	 indsubdat[0]=indsubdat[1]=Int_t(fNpoints/2);
+         indsubdat[0]=indsubdat[1]=Int_t(fNpoints/2);
     nsub=2;
    }
    else{
       if((fNpoints>=3*nmini) && (fNpoints<(4*nmini -1))) {
-	 if(fNpoints%3==0){
-	    indsubdat[0]=indsubdat[1]=indsubdat[2]=Int_t(fNpoints/3);
-	 } else {
-	    indsubdat[0]=Int_t(fNpoints/3);
-	    indsubdat[1]=Int_t(fNpoints/3)+1;
-	    if (fNpoints%3==1) indsubdat[2]=Int_t(fNpoints/3);
-	    else indsubdat[2]=Int_t(fNpoints/3)+1;
-	 }
-	 nsub=3;
+         if(fNpoints%3==0){
+            indsubdat[0]=indsubdat[1]=indsubdat[2]=Int_t(fNpoints/3);
+         } else {
+            indsubdat[0]=Int_t(fNpoints/3);
+            indsubdat[1]=Int_t(fNpoints/3)+1;
+            if (fNpoints%3==1) indsubdat[2]=Int_t(fNpoints/3);
+            else indsubdat[2]=Int_t(fNpoints/3)+1;
+         }
+         nsub=3;
       }
       else{
-	 if((fNpoints>=4*nmini)&&(fNpoints<=(5*nmini-1))){
-	    if (fNpoints%4==0) indsubdat[0]=indsubdat[1]=indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
-	    else {
-	       indsubdat[0]=Int_t(fNpoints/4);
-	       indsubdat[1]=Int_t(fNpoints/4)+1;
-	       if(fNpoints%4==1) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
-	       if(fNpoints%4==2) {
-		  indsubdat[2]=Int_t(fNpoints/4)+1;
-		  indsubdat[3]=Int_t(fNpoints/4);
-	       }
-	       if(fNpoints%4==3) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4)+1;
-	    }
-	    nsub=4;
-	 } else {
-	    for(Int_t i=0; i<5; i++)
-	       indsubdat[i]=nmini;
-	    nsub=5;
-	 }
+         if((fNpoints>=4*nmini)&&(fNpoints<=(5*nmini-1))){
+            if (fNpoints%4==0) indsubdat[0]=indsubdat[1]=indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
+            else {
+               indsubdat[0]=Int_t(fNpoints/4);
+               indsubdat[1]=Int_t(fNpoints/4)+1;
+               if(fNpoints%4==1) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4);
+               if(fNpoints%4==2) {
+                  indsubdat[2]=Int_t(fNpoints/4)+1;
+                  indsubdat[3]=Int_t(fNpoints/4);
+               }
+               if(fNpoints%4==3) indsubdat[2]=indsubdat[3]=Int_t(fNpoints/4)+1;
+            }
+            nsub=4;
+         } else {
+            for(Int_t i=0; i<5; i++)
+               indsubdat[i]=nmini;
+            nsub=5;
+         }
       }
    }
    return nsub;
@@ -1909,27 +1909,27 @@ void TLinearFitter::RDraw(Int_t *subdat, Int_t *indsubdat)
    Int_t ngroup=0;
    for (i=0; i<5; i++) {
       if (indsubdat[i]!=0)
-	 ngroup++;
+         ngroup++;
    }
    TRandom r;
    for (k=1; k<=ngroup; k++) {
       for (m=1; m<=indsubdat[k-1]; m++) {
-	 nrand = Int_t(r.Uniform(0, 1) * (fNpoints-jndex)) + 1;
-	 jndex++;
-	 if (jndex==1) {
-	    subdat[0] = nrand;
-	 } else {
-	    subdat[jndex-1] = nrand + jndex - 2;
-	    for (i=1; i<=jndex-1; i++) {
-	       if(subdat[i-1] > nrand+i-2) {
-		  for(j=jndex; j>=i+1; j--) {
-		     subdat[j-1] = subdat[j-2];
-		  }
-		  subdat[i-1] = nrand+i-2;
-		  break;  //breaking the loop for(i=1...
-	       }
-	    }
-	 }
+         nrand = Int_t(r.Uniform(0, 1) * (fNpoints-jndex)) + 1;
+         jndex++;
+         if (jndex==1) {
+            subdat[0] = nrand;
+         } else {
+            subdat[jndex-1] = nrand + jndex - 2;
+            for (i=1; i<=jndex-1; i++) {
+               if(subdat[i-1] > nrand+i-2) {
+                  for(j=jndex; j>=i+1; j--) {
+                     subdat[j-1] = subdat[j-2];
+                  }
+                  subdat[i-1] = nrand+i-2;
+                  break;  //breaking the loop for(i=1...
+               }
+            }
+         }
       }
    }
    
@@ -1968,7 +1968,7 @@ Double_t TLinearFitter::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work
    for(;;) {
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
          Double_t tmp = a[ind[rk]];
          if (isAllocated)
             delete [] ind;
@@ -1977,22 +1977,22 @@ Double_t TLinearFitter::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work
          mid = (l+ir) >> 1; //choose median of left, center and right
          {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
          if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l+1]]>a[ind[ir]])
-	    {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
+            {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l]]>a[ind[l+1]])
-    	    {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
+                {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
 
          i=l+1;        //initialize pointers for partitioning
          j=ir;
          arr = ind[l+1];
          for (;;) {
-	    do i++; while (a[ind[i]]<a[arr]);
-	    do j--; while (a[ind[j]]>a[arr]);
-	    if (j<i) break;  //pointers crossed, partitioning complete
-	       {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+            do i++; while (a[ind[i]]<a[arr]);
+            do j--; while (a[ind[j]]>a[arr]);
+            if (j<i) break;  //pointers crossed, partitioning complete
+               {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
          }
          ind[l+1]=ind[j];
          ind[j]=arr;
