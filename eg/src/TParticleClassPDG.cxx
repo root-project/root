@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.1 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.2 2001/03/05 11:37:31 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -36,8 +36,8 @@ void TParticleClassPDG::Print(Option_t *) const
     TParticlePDG *p;
     while ((p = (TParticlePDG*)next())) {
       if (! banner_printed) {
-	p->Print("banner");
-	banner_printed = 1;
+        p->Print("banner");
+        banner_printed = 1;
       }
       p->Print("");
     }

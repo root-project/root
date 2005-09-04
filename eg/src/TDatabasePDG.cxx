@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name: v4-04-02 $:$Id: TDatabasePDG.cxx,v 1.20 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.21 2005/06/09 06:23:47 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -69,7 +69,7 @@ TDatabasePDG::~TDatabasePDG()
       fParticleList->Delete();
       delete fParticleList;
    }
-				// classes do not own particles...
+                                // classes do not own particles...
    if (fListOfClasses) delete fListOfClasses;
    gROOT->GetListOfSpecials()->Remove(this);
    fgInstance = 0;
@@ -85,12 +85,12 @@ TDatabasePDG*  TDatabasePDG::Instance()
 
 //______________________________________________________________________________
 TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
-					Double_t mass, Bool_t stable,
-					Double_t width, Double_t charge,
-					const char* ParticleClass,
-					Int_t PDGcode,
-					Int_t Anti,
-					Int_t TrackingCode)
+                                        Double_t mass, Bool_t stable,
+                                        Double_t width, Double_t charge,
+                                        const char* ParticleClass,
+                                        Int_t PDGcode,
+                                        Int_t Anti,
+                                        Int_t TrackingCode)
 {
   //
   //  Particle definition normal constructor. If the particle is set to be
@@ -109,8 +109,8 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
   }
 
   TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
-				     charge, ParticleClass, PDGcode, Anti,
-				     TrackingCode);
+                                     charge, ParticleClass, PDGcode, Anti,
+                                     TrackingCode);
   fParticleList->Add(p);
 
   TParticleClassPDG* pclass = GetParticleClass(ParticleClass);
@@ -141,15 +141,15 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
   TParticlePDG* p = GetParticle(pdg_code);
 
   TParticlePDG* ap = AddParticle(Name,
-				 Name,
-				 p->Mass(),
-				 1,
-				 p->Width(),
-				 -p->Charge(),
-				 p->ParticleClass(),
-				 PdgCode,
-				 1,
-				 p->TrackingCode());
+                                 Name,
+                                 p->Mass(),
+                                 1,
+                                 p->Width(),
+                                 -p->Charge(),
+                                 p->ParticleClass(),
+                                 PdgCode,
+                                 1,
+                                 p->TrackingCode());
   return ap;
 }
 
@@ -548,78 +548,78 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
     if (c[0] != '#') {
       ungetc(c[0],file);
-				// read channel number
+      // read channel number
       fscanf(file,"%i",&ich);
       fscanf(file,"%s",name  );
       fscanf(file,"%i",&kf   );
       fscanf(file,"%i",&anti );
 
       if (kf < 0) {
-	AddAntiParticle(name,kf);
-				// nothing more on this line
-	fgets(c,200,file);
+        AddAntiParticle(name,kf);
+        // nothing more on this line
+        fgets(c,200,file);
       }
       else {
-	fscanf(file,"%i",&class_number);
-	fscanf(file,"%s",class_name);
-	fscanf(file,"%i",&charge);
-	fscanf(file,"%le",&mass);
-	fscanf(file,"%le",&width);
-	fscanf(file,"%i",&isospin);
-	fscanf(file,"%i",&i3);
-	fscanf(file,"%i",&spin);
-	fscanf(file,"%i",&flavor);
-	fscanf(file,"%i",&tracking_code);
-	fscanf(file,"%i",&nch);
-				// nothing more on this line
-	fgets(c,200,file);
+        fscanf(file,"%i",&class_number);
+        fscanf(file,"%s",class_name);
+        fscanf(file,"%i",&charge);
+        fscanf(file,"%le",&mass);
+        fscanf(file,"%le",&width);
+        fscanf(file,"%i",&isospin);
+        fscanf(file,"%i",&i3);
+        fscanf(file,"%i",&spin);
+        fscanf(file,"%i",&flavor);
+        fscanf(file,"%i",&tracking_code);
+        fscanf(file,"%i",&nch);
+        // nothing more on this line
+        fgets(c,200,file);
 
 
-				// create particle
+        // create particle
 
-	TParticlePDG* part = AddParticle(name,
-					   name,
-					   mass,
-					   1,
-					   width,
-					   charge,
-					   class_name,
-					   kf,
-					   anti,
-					   tracking_code);
+        TParticlePDG* part = AddParticle(name,
+                                           name,
+                                           mass,
+                                           1,
+                                           width,
+                                           charge,
+                                           class_name,
+                                           kf,
+                                           anti,
+                                           tracking_code);
 
-	if (nch) {
-				// read in decay channels
-	  int ich = 0;
-	  while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
-	    if (c[0] != '#') {
-	      ungetc(c[0],file);
+        if (nch) {
+          // read in decay channels
+          int ich = 0;
+          while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
+            if (c[0] != '#') {
+              ungetc(c[0],file);
 
-	      fscanf(file,"%i",&idecay);
-	      fscanf(file,"%i",&decay_type);
-	      fscanf(file,"%le",&branching_ratio);
-	      fscanf(file,"%i",&ndau);
-	      for (int idau=0; idau<ndau; idau++) {
-		fscanf(file,"%i",&dau[idau]);
-	      }
-				// add decay channel
+              fscanf(file,"%i",&idecay);
+              fscanf(file,"%i",&decay_type);
+              fscanf(file,"%le",&branching_ratio);
+              fscanf(file,"%i",&ndau);
+              for (int idau=0; idau<ndau; idau++) {
+                fscanf(file,"%i",&dau[idau]);
+              }
+              // add decay channel
 
-	      part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
-	      ich++;
-	    }
-				// skip end of line
-	    fgets(c,200,file);
-	  }
-	}
+              part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
+              ich++;
+            }
+            // skip end of line
+            fgets(c,200,file);
+          }
+        }
       }
     }
     else {
-				// skip end of line
+      // skip end of line
       fgets(c,200,file);
     }
   }
-				// in the end loop over the antiparticles and
-				// define their decay lists
+  // in the end loop over the antiparticles and
+  // define their decay lists
   TIter it(fParticleList);
 
   Int_t code[20];
@@ -628,28 +628,28 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
   while ((p = (TParticlePDG*) it.Next())) {
 
-  				// define decay channels for antiparticles
+    // define decay channels for antiparticles
     if (p->PdgCode() < 0) {
       ap = GetParticle(-p->PdgCode());
       nch = ap->NDecayChannels();
       for (int ich=0; ich<nch; ich++) {
-	TDecayChannel* dc = ap->DecayChannel(ich);
-	ndau = dc->NDaughters();
-	for (int i=0; i<ndau; i++) {
-					// conserve CPT
+        TDecayChannel* dc = ap->DecayChannel(ich);
+        ndau = dc->NDaughters();
+        for (int i=0; i<ndau; i++) {
+          // conserve CPT
 
-	  code[i] = dc->DaughterPdgCode(i);
-	  daughter = GetParticle(code[i]);
-	  if (daughter->AntiParticle()) {
-					// this particle does have an
-					// antiparticle
-	    code[i] = -code[i];
-	  }
-	}
-	p->AddDecayChannel(dc->MatrixElementCode(),
-			   dc->BranchingRatio(),
-			   dc->NDaughters(),
-			   code);
+          code[i] = dc->DaughterPdgCode(i);
+          daughter = GetParticle(code[i]);
+          if (daughter->AntiParticle()) {
+            // this particle does have an
+            // antiparticle
+            code[i] = -code[i];
+          }
+        }
+        p->AddDecayChannel(dc->MatrixElementCode(),
+                           dc->BranchingRatio(),
+                           dc->NDaughters(),
+                           code);
       }
       p->SetAntiParticle(ap);
       ap->SetAntiParticle(p);

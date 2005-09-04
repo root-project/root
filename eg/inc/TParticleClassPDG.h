@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.1 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.2 2004/07/07 17:47:49 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -27,11 +27,11 @@ protected:
 // functions
 //------------------------------------------------------------------------------
 public:
-					// ****** constructors  and destructor
+  // ****** constructors  and destructor
 
   TParticleClassPDG(const char* name = 0);
   virtual ~TParticleClassPDG();
-				// ****** access methods
+  // ****** access methods
   
   Int_t   GetNParticles () { 
     return fListOfParticles->GetEntriesFast();
@@ -43,11 +43,11 @@ public:
 
   TObjArray* GetListOfParticles() { return fListOfParticles; }
 
- 				// ****** modifiers
+  // ****** modifiers
 
   void AddParticle(TObject* p) { fListOfParticles->Add(p); }
 
-				// ****** overloaded methods of TObject
+  // ****** overloaded methods of TObject
 
  virtual void    Print(Option_t* opt="") const; // *MENU*
 

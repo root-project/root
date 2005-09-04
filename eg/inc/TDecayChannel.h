@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:$:$Id:$
+// @(#)root/eg:$Name:  $:$Id: TDecayChannel.h,v 1.2 2002/02/23 15:45:56 rdm Exp $
 // Author: P.Murat   15/02/2001
 
 /*************************************************************************
@@ -27,21 +27,21 @@
 
 class TDecayChannel: public TObject{
 protected:
-  Int_t     fNumber;			// channel number
-  Int_t     fMatrixElementCode;		// matrix element for this decay mode
-  Double_t  fBranchingRatio;		// branching ratio ( < 1)
-  TArrayI   fDaughters;			// PDG codes of the daughters
+  Int_t     fNumber;                        // channel number
+  Int_t     fMatrixElementCode;             // matrix element for this decay mode
+  Double_t  fBranchingRatio;                // branching ratio ( < 1)
+  TArrayI   fDaughters;                     // PDG codes of the daughters
 public:
-					// ****** constructors and destructor
+  // ****** constructors and destructor
   TDecayChannel();
   TDecayChannel(Int_t     Number,
-		Int_t     MatrixElementCode,
-		Double_t  BranchingRatio,
-		Int_t     NDaughters,
-		Int_t*    DaughterPdgCode);
+                Int_t     MatrixElementCode,
+                Double_t  BranchingRatio,
+                Int_t     NDaughters,
+                Int_t*    DaughterPdgCode);
 
   virtual ~TDecayChannel();
-					// ****** accessors
+  // ****** accessors
 
   Int_t     Number                () { return fNumber; }
   Int_t     MatrixElementCode     () { return fMatrixElementCode;  }

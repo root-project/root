@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:$:$Id:$
+// @(#)root/eg:$Name:  $:$Id: TDecayChannel.cxx,v 1.3 2002/02/23 15:45:56 rdm Exp $
 // Author: P.Murat   15/02/2001
 
 /*************************************************************************
@@ -26,10 +26,10 @@ TDecayChannel::TDecayChannel()
 
 //_____________________________________________________________________________
 TDecayChannel::TDecayChannel(Int_t    Number,
-			     Int_t    MatrixElementType,
-			     Double_t BranchingRatio,
-			     Int_t    NDaughters,
-			     Int_t*   DaughterPdgCode)
+                             Int_t    MatrixElementType,
+                             Double_t BranchingRatio,
+                             Int_t    NDaughters,
+                             Int_t*   DaughterPdgCode)
 {
   fNumber            = Number;
   fMatrixElementCode = MatrixElementType;

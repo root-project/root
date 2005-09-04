@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name: v4-04-02 $:$Id: TDatabasePDG.h,v 1.6 2004/08/19 20:00:14 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.7 2005/06/09 06:23:47 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -24,9 +24,9 @@
 class TDatabasePDG: public TNamed {
 
 protected:
-  static TDatabasePDG *fgInstance;	// protect against multiple instances
-  THashList* fParticleList;		// list of PDG particles
-  TObjArray* fListOfClasses;		// list of classes (leptons etc.)
+  static TDatabasePDG *fgInstance;        // protect against multiple instances
+  THashList* fParticleList;               // list of PDG particles
+  TObjArray* fListOfClasses;              // list of classes (leptons etc.)
 
   
 public:
@@ -37,22 +37,22 @@ public:
   static TDatabasePDG*  Instance();
 
   virtual TParticlePDG*   AddParticle(const char*  Name, 
-					const char*  Title,
-					Double_t     Mass, 
-					Bool_t       Stable,
-					Double_t     DecayWidth, 
-					Double_t     Charge, 
-					const char*  ParticleClass,
-					Int_t        PdgCode,
-					Int_t        Anti=-1,
-					Int_t        TrackingCode=0);
+                                        const char*  Title,
+                                        Double_t     Mass, 
+                                        Bool_t       Stable,
+                                        Double_t     DecayWidth, 
+                                        Double_t     Charge, 
+                                        const char*  ParticleClass,
+                                        Int_t        PdgCode,
+                                        Int_t        Anti=-1,
+                                        Int_t        TrackingCode=0);
 
   virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number);
   virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber);
   virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
 
   virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);
-				
+                                
   TParticlePDG  *GetParticle(Int_t pdgCode) const;
   TParticlePDG  *GetParticle(const char *name) const;
 

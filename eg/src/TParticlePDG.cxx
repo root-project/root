@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.6 2002/01/10 20:10:49 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.7 2003/02/12 07:58:43 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -59,9 +59,9 @@ TParticlePDG::TParticlePDG(Int_t )
 
 //______________________________________________________________________________
 TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
-			   Bool_t Stable, Double_t Width, Double_t Charge,
-			   const char* ParticleClass, Int_t PdgCode, Int_t Anti,
-			   Int_t TrackingCode)
+                           Bool_t Stable, Double_t Width, Double_t Charge,
+                           const char* ParticleClass, Int_t PdgCode, Int_t Anti,
+                           Int_t TrackingCode)
   : TNamed(Name,Title)
 {
 
@@ -103,9 +103,9 @@ TParticlePDG::~TParticlePDG() {
 
 //______________________________________________________________________________
 Int_t TParticlePDG::AddDecayChannel(Int_t        Type, 
-				    Double_t     BranchingRatio,
-				    Int_t        NDaughters, 
-				    Int_t*       DaughterPdgCode)
+                                    Double_t     BranchingRatio,
+                                    Int_t        NDaughters, 
+                                    Int_t*       DaughterPdgCode)
 {
   // add new decay channel, Particle owns those...
 
@@ -114,7 +114,7 @@ Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
     fDecayList = new TObjArray(5);
   }
   TDecayChannel* dc = new TDecayChannel(n,Type,BranchingRatio,NDaughters,
-					DaughterPdgCode);
+                                        DaughterPdgCode);
   fDecayList->Add(dc);
   return 0;
 }
@@ -129,7 +129,7 @@ TDecayChannel* TParticlePDG::DecayChannel(Int_t i)
 void TParticlePDG::PrintDecayChannel(TDecayChannel* dc, Option_t* option) const
 {
   if (strstr(option,"banner")) {
-				// print banner
+                                // print banner
 
     printf(" Channel Code BranchingRatio Nd  ");
     printf(" ...................Daughters.................... \n");
@@ -139,10 +139,10 @@ void TParticlePDG::PrintDecayChannel(TDecayChannel* dc, Option_t* option) const
     TDatabasePDG* db = TDatabasePDG::Instance();
 
     printf("%7i %5i %12.5e %5i  ",
-	   dc->Number(),
-	   dc->MatrixElementCode(),
-	   dc->BranchingRatio(),
-	   dc->NDaughters());
+           dc->Number(),
+           dc->MatrixElementCode(),
+           dc->BranchingRatio(),
+           dc->NDaughters());
     
     for (int i=0; i<dc->NDaughters(); i++) {
       int ic = dc->DaughterPdgCode(i);
@@ -176,8 +176,8 @@ void TParticlePDG::Print(Option_t *) const
      TDecayChannel* dc;
      while ((dc = (TDecayChannel*)next())) {
        if (! banner_printed) {
-	 PrintDecayChannel(dc,"banner");
-	 banner_printed = 1;
+         PrintDecayChannel(dc,"banner");
+         banner_printed = 1;
        }
        PrintDecayChannel(dc,"data");
      }

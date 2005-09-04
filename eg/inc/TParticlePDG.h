@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.5 2003/05/19 22:13:29 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.6 2004/01/23 08:49:40 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -26,7 +26,7 @@ public:
 //     data members
 //------------------------------------------------------------------------------
 protected:
-  Int_t            fPdgCode;		        // PDG code of the particle
+  Int_t            fPdgCode;                    // PDG code of the particle
   Double_t         fMass;                       // particle mass in GeV
   Double_t         fCharge;                     // charge in units of |e|/3
   Double_t         fLifetime;                   // proper lifetime in nanoseconds
@@ -43,27 +43,27 @@ protected:
   Int_t            fY;                          // X,Y: quantum numbers for the 4-th generation
   Int_t            fX;                          //
   Int_t            fStable;                     // 1 if stable, 0 otherwise
-					
+                                        
   TObjArray*       fDecayList;                  // array of decay channels
-				
+                                
   TString          fParticleClass;              // lepton, meson etc
 
-  Int_t            fTrackingCode;		// G3 tracking code of the particle
-  TParticlePDG*    fAntiParticle;		// pointer to antiparticle
+  Int_t            fTrackingCode;               // G3 tracking code of the particle
+  TParticlePDG*    fAntiParticle;               // pointer to antiparticle
 //------------------------------------------------------------------------------
 // functions
 //------------------------------------------------------------------------------
 public:
-					// ****** constructors  and destructor
+  // ****** constructors  and destructor
   TParticlePDG();
   TParticlePDG(int pdg_code);
   TParticlePDG(const char* Name, const char* Title, Double_t Mass,
-	       Bool_t Stable, Double_t Width, Double_t Charge,
-	       const char* ParticleClass, Int_t PdgCode, Int_t Anti, 
-	       Int_t TrackingCode);
+               Bool_t Stable, Double_t Width, Double_t Charge,
+               const char* ParticleClass, Int_t PdgCode, Int_t Anti, 
+               Int_t TrackingCode);
 
   virtual ~TParticlePDG();
-				// ****** access methods
+  // ****** access methods
   
   Int_t           PdgCode      () const { return fPdgCode; }
   Double_t        Mass         () const { return fMass; }
@@ -95,20 +95,20 @@ public:
 
   TParticlePDG* AntiParticle() { return fAntiParticle; }
 
-				// ****** modifiers
+  // ****** modifiers
 
   void   SetAntiParticle(TParticlePDG* ap) { fAntiParticle = ap; }
 
   Int_t  AddDecayChannel(Int_t        Type, 
-			 Double_t     BranchingRatio, 
-			 Int_t        NDaughters, 
-			 Int_t*       DaughterPdgCode);
+                         Double_t     BranchingRatio, 
+                         Int_t        NDaughters, 
+                         Int_t*       DaughterPdgCode);
 
   virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const; 
 
   virtual void  Print(Option_t* opt = "") const; // *MENU*
 
-  ClassDef(TParticlePDG,2)		// PDG static particle definition
+  ClassDef(TParticlePDG,2)  // PDG static particle definition
 };
 
 #endif
