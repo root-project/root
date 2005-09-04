@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.8 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.9 2005/06/17 14:56:08 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -273,18 +273,18 @@ Double_t TRolke::Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em,Do
 
       med = l*low + (1-l)*high;
       if(med < 0.01){
-	limits[1]=0.0;                           
-	goto done;
+        limits[1]=0.0;                           
+        goto done;
       }
 
     fmid = Likelihood(med,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
 
       if (fmid > target) {
-	 high  = med;
-	 fhigh = fmid;
-      }	else {
-	 low  = med;
-	 flow = fmid;
+         high  = med;
+         fhigh = fmid;
+      }        else {
+         low  = med;
+         flow = fmid;
       }
       if ((high-low) < acc*high) break;
     }
@@ -322,10 +322,10 @@ Double_t TRolke::Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em,Do
 
      if (fmid < target) {
         high  = med;
-	fhigh = fmid;
-     }	else {
-	low  = med;
-	flow = fmid;
+        fhigh = fmid;
+     }        else {
+        low  = med;
+        flow = fmid;
      }
      if (high-low < acc*high) break;
   }

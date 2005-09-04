@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.8 2004/10/21 14:30:53 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.9 2004/10/21 14:44:02 rdm Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -109,10 +109,10 @@ ClassImp(TRobustEstimator)
 
 const Double_t kChiMedian[50]= {
          0.454937, 1.38629, 2.36597, 3.35670, 4.35146, 5.34812, 6.34581, 7.34412, 8.34283,
-	 9.34182, 10.34, 11.34, 12.34, 13.34, 14.34, 15.34, 16.34, 17.34, 18.34, 19.34,
-	20.34, 21.34, 22.34, 23.34, 24.34, 25.34, 26.34, 27.34, 28.34, 29.34, 30.34,
-	31.34, 32.34, 33.34, 34.34, 35.34, 36.34, 37.34, 38.34, 39.34, 40.34,
-	41.34, 42.34, 43.34, 44.34, 45.34, 46.34, 47.34, 48.34, 49.33};
+         9.34182, 10.34, 11.34, 12.34, 13.34, 14.34, 15.34, 16.34, 17.34, 18.34, 19.34,
+        20.34, 21.34, 22.34, 23.34, 24.34, 25.34, 26.34, 27.34, 28.34, 29.34, 30.34,
+        31.34, 32.34, 33.34, 34.34, 35.34, 36.34, 37.34, 38.34, 39.34, 40.34,
+        41.34, 42.34, 43.34, 44.34, 45.34, 46.34, 47.34, 48.34, 49.33};
 
 const Double_t kChiQuant[50]={
          5.02389, 7.3776,9.34840,11.1433,12.8325,
@@ -246,46 +246,46 @@ void TRobustEstimator::Evaluate()
       //calculate the mean and covariance of the created subset
       ClearSscp(sscp);
       for (i=0; i<fH; i++) {
-	for(j=0; j<fNvar; j++)
-	  vec(j)=fData[index[i]][j];
-	AddToSscp(sscp, vec);
+        for(j=0; j<fNvar; j++)
+          vec(j)=fData[index[i]][j];
+        AddToSscp(sscp, vec);
       }
       Covar(sscp, fMean, fCovariance, fSd, fH);
       det = fCovariance.Determinant();
       if (det < kEps) {
-	fExact = Exact(ndist);
-	delete [] index;
-	delete [] ndist;
-	delete [] deti;
-	return;
+        fExact = Exact(ndist);
+        delete [] index;
+        delete [] ndist;
+        delete [] deti;
+        return;
       }
       //make 2 CSteps
       det = CStep(fN, fH, index, fData, sscp, ndist);
       if (det < kEps) {
-	fExact = Exact(ndist);
-	delete [] index;
-	delete [] ndist;
-	delete [] deti;
-	return;
+        fExact = Exact(ndist);
+        delete [] index;
+        delete [] ndist;
+        delete [] deti;
+        return;
       }
       det = CStep(fN, fH, index, fData, sscp, ndist);
       if (det < kEps) {
-	fExact = Exact(ndist);
-	delete [] index;
-	delete [] ndist;
-	delete [] deti;
-	return;
+        fExact = Exact(ndist);
+        delete [] index;
+        delete [] ndist;
+        delete [] deti;
+        return;
       } else {
 
-	Int_t maxind=TMath::LocMax(nbest, deti);
-	if(det<deti[maxind]) {
-	  deti[maxind]=det;
-	  for(ii=0; ii<fNvar; ii++) {
-	    mstock(maxind, ii)=fMean(ii);
-	    for(jj=0; jj<fNvar; jj++)
-	      cstock(ii, jj+maxind*fNvar)=fCovariance(ii, jj);
-	  }
-	}
+        Int_t maxind=TMath::LocMax(nbest, deti);
+        if(det<deti[maxind]) {
+          deti[maxind]=det;
+          for(ii=0; ii<fNvar; ii++) {
+            mstock(maxind, ii)=fMean(ii);
+            for(jj=0; jj<fNvar; jj++)
+              cstock(ii, jj+maxind*fNvar)=fCovariance(ii, jj);
+          }
+        }
       }
     }
 
@@ -293,23 +293,23 @@ void TRobustEstimator::Evaluate()
 
     for (i=0; i<nbest; i++) {
       for(ii=0; ii<fNvar; ii++) {
-	fMean(ii)=mstock(i, ii);
-	for (jj=0; jj<fNvar; jj++)
-	  fCovariance(ii, jj)=cstock(ii, jj+i*fNvar);
+        fMean(ii)=mstock(i, ii);
+        for (jj=0; jj<fNvar; jj++)
+          fCovariance(ii, jj)=cstock(ii, jj+i*fNvar);
       }
 
       det=1;
       while (det>kEps) {
-	  det=CStep(fN, fH, index, fData, sscp, ndist);
-	  if(TMath::Abs(det-deti[i])<kEps)
-	    break;
-	  else
-	    deti[i]=det;
+          det=CStep(fN, fH, index, fData, sscp, ndist);
+          if(TMath::Abs(det-deti[i])<kEps)
+            break;
+          else
+            deti[i]=det;
       }
       for(ii=0; ii<fNvar; ii++) {
-	mstock(i,ii)=fMean(ii);
-	for (jj=0; jj<fNvar; jj++)
-	  cstock(ii,jj+i*fNvar)=fCovariance(ii, jj);
+        mstock(i,ii)=fMean(ii);
+        for (jj=0; jj<fNvar; jj++)
+          cstock(ii,jj+i*fNvar)=fCovariance(ii, jj);
       }
     }
 
@@ -318,7 +318,7 @@ void TRobustEstimator::Evaluate()
       fMean(ii)=mstock(detind,ii);
 
       for(jj=0; jj<fNvar; jj++)
-	fCovariance(ii, jj)=cstock(ii,jj+detind*fNvar);
+        fCovariance(ii, jj)=cstock(ii,jj+detind*fNvar);
     }
 
     if (deti[detind]!=0) {
@@ -330,10 +330,10 @@ void TRobustEstimator::Evaluate()
 
       j=0;
       for (i=0; i<fN; i++) {
-	if(fRd(i)>cutoff) {
-	   fOut[j]=i;
-	   j++;
-	}
+        if(fRd(i)>cutoff) {
+           fOut[j]=i;
+           j++;
+        }
       }
 
     } else {
@@ -389,7 +389,7 @@ void TRobustEstimator::Evaluate()
 
     for(i=0; i<ntemp; i++) {
       for (j=0; j<fNvar; j++) {
-	 dattemp(i,j)=fData[subdat[temp+i]][j];
+         dattemp(i,j)=fData[subdat[temp+i]][j];
       }
     }
     Int_t htemp=Int_t(fH*ntemp/fN);
@@ -401,74 +401,74 @@ void TRobustEstimator::Evaluate()
       CreateSubset(ntemp, htemp, fNvar, index, dattemp, sscp, ndist);
       ClearSscp(sscp);
       for (i=0; i<htemp; i++) {
-	for(j=0; j<fNvar; j++) {
-	   vec(j)=dattemp(index[i],j);
-	}
-	AddToSscp(sscp, vec);
+        for(j=0; j<fNvar; j++) {
+           vec(j)=dattemp(index[i],j);
+        }
+        AddToSscp(sscp, vec);
       }
       Covar(sscp, fMean, fCovariance, fSd, htemp);
       det = fCovariance.Determinant();
       if (det<kEps) {
-	par =Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp,ndist);
-	if(par==nbest+1) {
+        par =Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp,ndist);
+        if(par==nbest+1) {
 
-	  delete [] detibig;
-	  delete [] deti;
-	  delete [] subdat;
-	  delete [] ndist;
-	  delete [] index;
-	  return;
-	} else
-	  deti[par]=det;
+          delete [] detibig;
+          delete [] deti;
+          delete [] subdat;
+          delete [] ndist;
+          delete [] index;
+          return;
+        } else
+          deti[par]=det;
       } else {
-	det = CStep(ntemp, htemp, index, dattemp, sscp, ndist);
-	if (det<kEps) {
-	  par=Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp, ndist);
-	  if(par==nbest+1) {
+        det = CStep(ntemp, htemp, index, dattemp, sscp, ndist);
+        if (det<kEps) {
+          par=Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp, ndist);
+          if(par==nbest+1) {
 
-	    delete [] detibig;
-	    delete [] deti;
-	    delete [] subdat;
-	    delete [] ndist;
-	    delete [] index;
-	    return;
-	  } else
-	    deti[par]=det;
-	} else {
-	  det=CStep(ntemp,htemp, index, dattemp, sscp, ndist);
-	  if(det<kEps){
-	    par=Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp,ndist);
-	    if(par==nbest+1) {
+            delete [] detibig;
+            delete [] deti;
+            delete [] subdat;
+            delete [] ndist;
+            delete [] index;
+            return;
+          } else
+            deti[par]=det;
+        } else {
+          det=CStep(ntemp,htemp, index, dattemp, sscp, ndist);
+          if(det<kEps){
+            par=Exact2(mstockbig, cstockbig, hyperplane, deti, nbest, kgroup, sscp,ndist);
+            if(par==nbest+1) {
 
-	      delete [] detibig;
-	      delete [] deti;
-	      delete [] subdat;
-	      delete [] ndist;
-	      delete [] index;
-	      return;
-	    } else {
-	      deti[par]=det;
-	    }
-	  } else {
-	    maxind=TMath::LocMax(nbest, deti);
-	    if(det<deti[maxind]) {
-	      deti[maxind]=det;
-	      for(i=0; i<fNvar; i++) {
-		mstockbig(nbest*kgroup+maxind,i)=fMean(i);
-		for(j=0; j<fNvar; j++) {
-		  cstockbig(i,nbest*kgroup*fNvar+maxind*fNvar+j)=fCovariance(i,j);
+              delete [] detibig;
+              delete [] deti;
+              delete [] subdat;
+              delete [] ndist;
+              delete [] index;
+              return;
+            } else {
+              deti[par]=det;
+            }
+          } else {
+            maxind=TMath::LocMax(nbest, deti);
+            if(det<deti[maxind]) {
+              deti[maxind]=det;
+              for(i=0; i<fNvar; i++) {
+                mstockbig(nbest*kgroup+maxind,i)=fMean(i);
+                for(j=0; j<fNvar; j++) {
+                  cstockbig(i,nbest*kgroup*fNvar+maxind*fNvar+j)=fCovariance(i,j);
 
-		}
-	      }
-	    }
+                }
+              }
+            }
 
-	  }
-	}
+          }
+        }
       }
 
       maxind=TMath::LocMax(nbest, deti);
       if (deti[maxind]<kEps)
-	break;
+        break;
     }
 
 
@@ -495,13 +495,13 @@ void TRobustEstimator::Evaluate()
   for(k=0; k<nbestsub; k++) {
     //for all best solutions perform 2 CSteps and then choose the very best
       for(ii=0; ii<fNvar; ii++) {
-	fMean(ii)=mstockbig(k,ii);
-	for(jj=0; jj<fNvar; jj++)
-	  fCovariance(ii, jj)=cstockbig(ii,k*fNvar+jj);
+        fMean(ii)=mstockbig(k,ii);
+        for(jj=0; jj<fNvar; jj++)
+          fCovariance(ii, jj)=cstockbig(ii,k*fNvar+jj);
       }
     if(detibig[k]==0) {
        for(i=0; i<fNvar; i++)
-	fHyperplane(i)=hyperplane(k,i);
+        fHyperplane(i)=hyperplane(k,i);
       CreateOrtSubset(datmerged,index, hmerged, sum, sscp, ndist);
 
     }
@@ -509,37 +509,37 @@ void TRobustEstimator::Evaluate()
     if (det<kEps) {
       nh= Exact(ndist);
       if (nh>=fH) {
-	fExact = nh;
+        fExact = nh;
 
-	delete [] detibig;
-	delete [] deti;
-	delete [] subdat;
-	delete [] ndist;
-	delete [] index;
-	return;
+        delete [] detibig;
+        delete [] deti;
+        delete [] subdat;
+        delete [] ndist;
+        delete [] index;
+        return;
       } else {
-	CreateOrtSubset(datmerged, index, hmerged, sum, sscp, ndist);
+        CreateOrtSubset(datmerged, index, hmerged, sum, sscp, ndist);
       }
     }
 
     det=CStep(sum, hmerged, index, datmerged, sscp, ndist);
     if (det<kEps) {
       nh=Exact(ndist);
-	if (nh>=fH) {
-	  fExact = nh;
-	  delete [] detibig;
-	  delete [] deti;
-	  delete [] subdat;
-	  delete [] ndist;
-	  delete [] index;
-	  return;
-	}
+        if (nh>=fH) {
+          fExact = nh;
+          delete [] detibig;
+          delete [] deti;
+          delete [] subdat;
+          delete [] ndist;
+          delete [] index;
+          return;
+        }
     }
     detibig[k]=det;
     for(i=0; i<fNvar; i++) {
       mstockbig(k,i)=fMean(i);
       for(j=0; j<fNvar; j++) {
-	cstockbig(i,k*fNvar+j)=fCovariance(i, j);
+        cstockbig(i,k*fNvar+j)=fCovariance(i, j);
       }
     }
 
@@ -624,7 +624,7 @@ void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Double_t &mea
     for (Int_t j=0; j<hh; j++) {
       aw[jint]+=data[index[j+jint]];
       if(jint==0)
-	sq+=data[index[j]]*data[index[j]];
+        sq+=data[index[j]]*data[index[j]];
     }
     aw2[jint]=aw[jint]*aw[jint]/hh;
 
@@ -635,18 +635,18 @@ void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Double_t &mea
 
     } else {
       sq=sq - data[index[jint-1]]*data[index[jint-1]]+
-	data[index[jint+hh]]*data[index[jint+hh]]-
-	aw2[jint]+aw2[jint-1];
+        data[index[jint+hh]]*data[index[jint+hh]]-
+        aw2[jint]+aw2[jint-1];
       if(sq<sqmin) {
-	ndup=0;
-	sqmin=sq;
-	slutn[ndup]=aw[jint];
+        ndup=0;
+        sqmin=sq;
+        slutn[ndup]=aw[jint];
 
       } else {
-	if(sq==sqmin) {
-	  ndup++;
-	  slutn[ndup]=aw[jint];
-	}
+        if(sq==sqmin) {
+          ndup++;
+          slutn[ndup]=aw[jint];
+        }
       }
     }
   }
@@ -827,9 +827,9 @@ void TRobustEstimator::Correl()
   for(i=0; i<fNvar; i++) {
     for (j=0; j<fNvar; j++) {
       if (i==j)
-	fCorrelation(i, j)=1.;
+        fCorrelation(i, j)=1.;
       else
-	fCorrelation(i, j)=fCovariance(i, j)*sd[i]*sd[j];
+        fCorrelation(i, j)=fCovariance(i, j)*sd[i]*sd[j];
     }
   }
   delete [] sd;
@@ -860,9 +860,9 @@ void TRobustEstimator::CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *
     num=Int_t(gRandom->Uniform(0, 1)*(ntotal-1));
     if (i>0){
       for(j=0; j<=i-1; j++) {
-	if(index[j]==num)
+        if(index[j]==num)
 
-	  repeat=kTRUE;
+          repeat=kTRUE;
       }
     }
     if(repeat==kTRUE) {
@@ -897,10 +897,10 @@ void TRobustEstimator::CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *
       num=Int_t(gRandom->Uniform(0,1)*(ntotal-1));
       repeat=kFALSE;
       for(i=0; i<nindex; i++) {
-	if(index[i]==num) {
-	  repeat=kTRUE;
-	  break;
-	}
+        if(index[i]==num) {
+          repeat=kTRUE;
+          break;
+        }
       }
     }while(repeat==kTRUE);
 
@@ -922,10 +922,10 @@ void TRobustEstimator::CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *
     for(j=0; j<ntotal; j++) {
       ndist[j]=0;
       for(i=0; i<fNvar; i++)
-	temp[i]=data[j][i] - fMean(i);
+        temp[i]=data[j][i] - fMean(i);
       temp*=fInvcovariance;
       for(i=0; i<fNvar; i++)
-	ndist[j]+=(data[j][i]-fMean(i))*temp[i];
+        ndist[j]+=(data[j][i]-fMean(i))*temp[i];
     }
     KOrdStat(ntotal, ndist, htotal-1,index);
   }
@@ -1035,8 +1035,8 @@ Int_t TRobustEstimator::Exact(Double_t *ndist)
 
 //____________________________________________________________________________
 Int_t TRobustEstimator::Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrixD &hyperplane,
-			     Double_t *deti, Int_t nbest, Int_t kgroup,
-			     TMatrixD &sscp, Double_t *ndist)
+                             Double_t *deti, Int_t nbest, Int_t kgroup,
+                             TMatrixD &sscp, Double_t *ndist)
 {
   //This function is called if determinant of the covariance matrix of a subset=0.
   //
@@ -1055,9 +1055,9 @@ Int_t TRobustEstimator::Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrix
     ClearSscp(sscp);
     for (i=0; i<fN; i++) {
       if(ndist[i]<1e-14) {
-	for (j=0; j<fNvar; j++)
-	  vec[j]=fData[i][j];
-	AddToSscp(sscp, vec);
+        for (j=0; j<fNvar; j++)
+          vec[j]=fData[i][j];
+        AddToSscp(sscp, vec);
       }
     }
     Covar(sscp, fMean, fCovariance, fSd, nh);
@@ -1071,11 +1071,11 @@ Int_t TRobustEstimator::Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrix
     //and cstockbig in place of the previous maximum determinant
     //mean and covariance
       for(i=0; i<fNvar; i++) {
-	mstockbig(nbest*kgroup+maxind,i)=fMean(i);
-	hyperplane(nbest*kgroup+maxind,i)=fHyperplane(i);
-	for(j=0; j<fNvar; j++) {
-	   cstockbig(i,nbest*kgroup*fNvar+maxind*fNvar+j)=fCovariance(i,j);
-	}
+        mstockbig(nbest*kgroup+maxind,i)=fMean(i);
+        hyperplane(nbest*kgroup+maxind,i)=fHyperplane(i);
+        for(j=0; j<fNvar; j++) {
+           cstockbig(i,nbest*kgroup*fNvar+maxind*fNvar+j)=fCovariance(i,j);
+        }
 
       }
 
@@ -1103,33 +1103,33 @@ Int_t TRobustEstimator::Partition(Int_t nmini, Int_t *indsubdat)
   else{
     if((fN>=3*nmini) && (fN<(4*nmini -1))) {
       if(fN%3==0){
-	indsubdat[0]=indsubdat[1]=indsubdat[2]=Int_t(fN/3);
+        indsubdat[0]=indsubdat[1]=indsubdat[2]=Int_t(fN/3);
       } else {
-	indsubdat[0]=Int_t(fN/3);
-	indsubdat[1]=Int_t(fN/3)+1;
-	if (fN%3==1) indsubdat[2]=Int_t(fN/3);
-	else indsubdat[2]=Int_t(fN/3)+1;
+        indsubdat[0]=Int_t(fN/3);
+        indsubdat[1]=Int_t(fN/3)+1;
+        if (fN%3==1) indsubdat[2]=Int_t(fN/3);
+        else indsubdat[2]=Int_t(fN/3)+1;
       }
-	nsub=3;
+        nsub=3;
     }
     else{
       if((fN>=4*nmini)&&(fN<=(5*nmini-1))){
-	if (fN%4==0) indsubdat[0]=indsubdat[1]=indsubdat[2]=indsubdat[3]=Int_t(fN/4);
-	else {
-	  indsubdat[0]=Int_t(fN/4);
-	  indsubdat[1]=Int_t(fN/4)+1;
-	  if(fN%4==1) indsubdat[2]=indsubdat[3]=Int_t(fN/4);
-	  if(fN%4==2) {
-	    indsubdat[2]=Int_t(fN/4)+1;
-	    indsubdat[3]=Int_t(fN/4);
-	  }
-	  if(fN%4==3) indsubdat[2]=indsubdat[3]=Int_t(fN/4)+1;
-	}
-	nsub=4;
+        if (fN%4==0) indsubdat[0]=indsubdat[1]=indsubdat[2]=indsubdat[3]=Int_t(fN/4);
+        else {
+          indsubdat[0]=Int_t(fN/4);
+          indsubdat[1]=Int_t(fN/4)+1;
+          if(fN%4==1) indsubdat[2]=indsubdat[3]=Int_t(fN/4);
+          if(fN%4==2) {
+            indsubdat[2]=Int_t(fN/4)+1;
+            indsubdat[3]=Int_t(fN/4);
+          }
+          if(fN%4==3) indsubdat[2]=indsubdat[3]=Int_t(fN/4)+1;
+        }
+        nsub=4;
       } else {
-	for(Int_t i=0; i<5; i++)
-	    indsubdat[i]=nmini;
-	nsub=5;
+        for(Int_t i=0; i<5; i++)
+            indsubdat[i]=nmini;
+        nsub=5;
       }
     }
   }
@@ -1191,7 +1191,7 @@ Int_t TRobustEstimator::RDist(TMatrixD &sscp)
   for(i=0; i<fN; i++) {
     if (fRd[i]<=cutoff) {
       for(j=0; j<fNvar; j++)
-	temp[j]=fData[i][j];
+        temp[j]=fData[i][j];
       AddToSscp(sscp,temp);
     } else {
       nout++;
@@ -1218,18 +1218,18 @@ void TRobustEstimator::RDraw(Int_t *subdat, Int_t ngroup, Int_t *indsubdat)
 
       jndex++;
       if (jndex==1) {
-	subdat[0]=nrand;
+        subdat[0]=nrand;
       } else {
-	subdat[jndex-1]=nrand+jndex-2;
-	for (i=1; i<=jndex-1; i++) {
-	  if(subdat[i-1] > nrand+i-2) {
-	    for(j=jndex; j>=i+1; j--) {
-	      subdat[j-1]=subdat[j-2];
-	    }
-	    subdat[i-1]=nrand+i-2;
-	    break;  //breaking the loop for(i=1...
-	  }
-	}
+        subdat[jndex-1]=nrand+jndex-2;
+        for (i=1; i<=jndex-1; i++) {
+          if(subdat[i-1] > nrand+i-2) {
+            for(j=jndex; j>=i+1; j--) {
+              subdat[j-1]=subdat[j-2];
+            }
+            subdat[i-1]=nrand+i-2;
+            break;  //breaking the loop for(i=1...
+          }
+        }
       }
     }
   }
@@ -1267,7 +1267,7 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
    for(;;) {
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
          Double_t tmp = a[ind[rk]];
          if (isAllocated)
             delete [] ind;
@@ -1276,22 +1276,22 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
          mid = (l+ir) >> 1; //choose median of left, center and right
          {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
          if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l+1]]>a[ind[ir]])
-	    {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
+            {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l]]>a[ind[l+1]])
-    	    {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
+                {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
 
          i=l+1;        //initialize pointers for partitioning
          j=ir;
          arr = ind[l+1];
          for (;;) {
-	    do i++; while (a[ind[i]]<a[arr]);
-	    do j--; while (a[ind[j]]>a[arr]);
-	    if (j<i) break;  //pointers crossed, partitioning complete
-	       {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+            do i++; while (a[ind[i]]<a[arr]);
+            do j--; while (a[ind[j]]>a[arr]);
+            if (j<i) break;  //pointers crossed, partitioning complete
+               {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
          }
          ind[l+1]=ind[j];
          ind[j]=arr;

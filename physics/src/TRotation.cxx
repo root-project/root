@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.7 2003/09/03 06:08:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.8 2005/06/28 10:16:12 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -194,8 +194,8 @@ TRotation::TRotation(const TRotation & m) : TObject(m),
   fzx(m.fzx), fzy(m.fzy), fzz(m.fzz) {}
 
 TRotation::TRotation(Double_t mxx, Double_t mxy, Double_t mxz,
-			 Double_t myx, Double_t myy, Double_t myz,
-			 Double_t mzx, Double_t mzy, Double_t mzz)
+                         Double_t myx, Double_t myy, Double_t myz,
+                         Double_t mzx, Double_t mzy, Double_t mzz)
 : fxx(mxx), fxy(mxy), fxz(mxz), fyx(myx), fyy(myy), fyz(myz),
   fzx(mzx), fzy(mzy), fzz(mzz) {}
 
@@ -222,81 +222,81 @@ Double_t TRotation::operator() (int i, int j) const {
 
 TRotation TRotation::operator* (const TRotation & b) const {
   return TRotation(fxx*b.fxx + fxy*b.fyx + fxz*b.fzx,
-		     fxx*b.fxy + fxy*b.fyy + fxz*b.fzy,
-		     fxx*b.fxz + fxy*b.fyz + fxz*b.fzz,
-		     fyx*b.fxx + fyy*b.fyx + fyz*b.fzx,
-		     fyx*b.fxy + fyy*b.fyy + fyz*b.fzy,
-		     fyx*b.fxz + fyy*b.fyz + fyz*b.fzz,
-		     fzx*b.fxx + fzy*b.fyx + fzz*b.fzx,
-		     fzx*b.fxy + fzy*b.fyy + fzz*b.fzy,
-		     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
+                     fxx*b.fxy + fxy*b.fyy + fxz*b.fzy,
+                     fxx*b.fxz + fxy*b.fyz + fxz*b.fzz,
+                     fyx*b.fxx + fyy*b.fyx + fyz*b.fzx,
+                     fyx*b.fxy + fyy*b.fyy + fyz*b.fzy,
+                     fyx*b.fxz + fyy*b.fyz + fyz*b.fzz,
+                     fzx*b.fxx + fzy*b.fyx + fzz*b.fzx,
+                     fzx*b.fxy + fzy*b.fyy + fzz*b.fzy,
+                     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
 }
 
 //_____________________________________
 TRotation::TRotation(const TQuaternion & Q) {
-	// Constructor for a rotation based on a Quaternion
-	// if magnitude of quaternion is null, creates identity rotation
-	// if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
+        // Constructor for a rotation based on a Quaternion
+        // if magnitude of quaternion is null, creates identity rotation
+        // if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
 
 
-	double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
-	double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();
-	double two_y2 = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Y();
-	double two_z2 = 2 * Q.fVectorPart.Z() * Q.fVectorPart.Z();
-	double two_xy = 2 * Q.fVectorPart.X() * Q.fVectorPart.Y();
-	double two_xz = 2 * Q.fVectorPart.X() * Q.fVectorPart.Z();
-	double two_xr = 2 * Q.fVectorPart.X() * Q.fRealPart;
-	double two_yz = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Z();
-	double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
-	double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
+        double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
+        double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();
+        double two_y2 = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Y();
+        double two_z2 = 2 * Q.fVectorPart.Z() * Q.fVectorPart.Z();
+        double two_xy = 2 * Q.fVectorPart.X() * Q.fVectorPart.Y();
+        double two_xz = 2 * Q.fVectorPart.X() * Q.fVectorPart.Z();
+        double two_xr = 2 * Q.fVectorPart.X() * Q.fRealPart;
+        double two_yz = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Z();
+        double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
+        double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
 
-	// protect agains zero quaternion
-	double mag2 = Q.QMag2();
-	if (mag2 > 0) {
+        // protect agains zero quaternion
+        double mag2 = Q.QMag2();
+        if (mag2 > 0) {
 
-		// diago + identity
-		fxx = two_r2 + two_x2;
-		fyy = two_r2 + two_y2;
-		fzz = two_r2 + two_z2;
+                // diago + identity
+                fxx = two_r2 + two_x2;
+                fyy = two_r2 + two_y2;
+                fzz = two_r2 + two_z2;
 
-		//	line 0 column 1 and conjugate
-		fxy = two_xy - two_zr;
-		fyx = two_xy + two_zr;
+                //        line 0 column 1 and conjugate
+                fxy = two_xy - two_zr;
+                fyx = two_xy + two_zr;
 
-		//	line 0 column 2 and conjugate
-		fxz = two_xz + two_yr;
-		fzx = two_xz - two_yr;
+                //        line 0 column 2 and conjugate
+                fxz = two_xz + two_yr;
+                fzx = two_xz - two_yr;
 
-		//	line 1 column 2 and conjugate
-		fyz = two_yz - two_xr;
-		fzy = two_yz + two_xr;
+                //        line 1 column 2 and conjugate
+                fyz = two_yz - two_xr;
+                fzy = two_yz + two_xr;
 
-		// protect agains non-unit quaternion 
-		if (TMath::Abs(mag2-1) > 1e-10) {
-			fxx /= mag2;
-			fyy /= mag2;
-			fzz /= mag2;
-			fxy /= mag2;
-			fyx /= mag2;
-			fxz /= mag2;
-			fzx /= mag2;
-			fyz /= mag2;
-			fzy /= mag2;
-		}
+                // protect agains non-unit quaternion 
+                if (TMath::Abs(mag2-1) > 1e-10) {
+                        fxx /= mag2;
+                        fyy /= mag2;
+                        fzz /= mag2;
+                        fxy /= mag2;
+                        fyx /= mag2;
+                        fxz /= mag2;
+                        fzx /= mag2;
+                        fyz /= mag2;
+                        fzy /= mag2;
+                }
 
-		// diago : remove identity
-		fxx -= 1;
-		fyy -= 1;
-		fzz -= 1;
+                // diago : remove identity
+                fxx -= 1;
+                fyy -= 1;
+                fzz -= 1;
 
 
-	} else {
-		// Identity
+        } else {
+                // Identity
 
-		fxx = fyy = fzz = 1;
-		fxy = fyx = fxz = fzx = fyz = fzy = 0;
+                fxx = fyy = fzz = 1;
+                fxy = fyx = fxz = fzx = fyz = fzy = 0;
 
-	}
+        }
 
 }
 
@@ -309,9 +309,9 @@ TRotation & TRotation::Rotate(Double_t a, const TVector3& axis) {
       Double_t sa = TMath::Sin(a), ca = TMath::Cos(a);
       Double_t dx = axis.X()/ll, dy = axis.Y()/ll, dz = axis.Z()/ll;
       TRotation m(
-	ca+(1-ca)*dx*dx,          (1-ca)*dx*dy-sa*dz,    (1-ca)*dx*dz+sa*dy,
-	   (1-ca)*dy*dx+sa*dz, ca+(1-ca)*dy*dy,          (1-ca)*dy*dz-sa*dx,
-	   (1-ca)*dz*dx-sa*dy,    (1-ca)*dz*dy+sa*dx, ca+(1-ca)*dz*dz );
+        ca+(1-ca)*dx*dx,          (1-ca)*dx*dy-sa*dz,    (1-ca)*dx*dz+sa*dy,
+           (1-ca)*dy*dx+sa*dz, ca+(1-ca)*dy*dy,          (1-ca)*dy*dz-sa*dx,
+           (1-ca)*dz*dx-sa*dy,    (1-ca)*dz*dy+sa*dx, ca+(1-ca)*dz*dz );
       Transform(m);
     }
   }
@@ -505,7 +505,7 @@ Double_t TRotation::GetXPhi(void) const {
   if (sinTheta != 0) {
     const Double_t cscTheta = 1/sinTheta;
     Double_t cosAbsPhi =  fzy * cscTheta;
-    if ( TMath::Abs(cosAbsPhi) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(cosAbsPhi) > 1 ) {        // NaN-proofing
         Warning("GetPhi()","finds | cos phi | > 1");
         cosAbsPhi = 1;
     }
@@ -560,7 +560,7 @@ Double_t TRotation::GetXPsi(void) const {
   if (sinTheta != 0) {
     const Double_t cscTheta = 1/sinTheta;
     Double_t cosAbsPsi =  - fyz * cscTheta;
-    if ( TMath::Abs(cosAbsPsi) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(cosAbsPsi) > 1 ) {        // NaN-proofing
       Warning("GetPsi()","| cos psi | > 1 ");
       cosAbsPsi = 1;
     }
@@ -575,7 +575,7 @@ Double_t TRotation::GetXPsi(void) const {
   }
   else {              // sinTheta == 0 so |Fzz| = 1
     Double_t absPsi = fxx;
-    if ( TMath::Abs(fxx) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(fxx) > 1 ) {        // NaN-proofing
       Warning("GetPsi()","| fxx | > 1 ");
       absPsi = 1;
     }

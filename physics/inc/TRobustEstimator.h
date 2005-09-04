@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.2 2004/10/19 15:20:56 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.3 2004/10/19 16:17:24 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 
@@ -52,15 +52,15 @@ protected:
   void     Correl();
 
   void     CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *index, TMatrixD &data, 
-		    TMatrixD &sscp, Double_t *ndist);
+                    TMatrixD &sscp, Double_t *ndist);
   void     CreateOrtSubset(TMatrixD &dat, Int_t *index, Int_t hmerged, Int_t nmerged, TMatrixD &sscp, Double_t *ndist);
 
   Double_t CStep(Int_t ntotal, Int_t htotal, Int_t *index, TMatrixD &data, TMatrixD &sscp, Double_t *ndist);
 
   Int_t    Exact(Double_t *ndist); 
   Int_t    Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrixD &hyperplane,
-	       Double_t *deti, Int_t nbest,Int_t kgroup, 
-	       TMatrixD &sscp, Double_t *ndist);
+               Double_t *deti, Int_t nbest,Int_t kgroup, 
+               TMatrixD &sscp, Double_t *ndist);
 
   Int_t    Partition(Int_t nmini, Int_t *indsubdat); 
   Int_t    RDist(TMatrixD &sscp);
