@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.78 2005/08/05 14:44:13 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.79 2005/09/04 10:47:08 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3480,8 +3480,8 @@ void THtml::MakeIndex(const char *filter)
             srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
          // ROOT's non-classes (e.g. enums) don't start with T, but end with _t
          if (!srcdir && !(classPtr->Property()&kIsClass)) {
-            const char* _t=classPtr->GetName()+strlen(classPtr->GetName())-2;
-            if (!strcmp(_t,"_t"))
+            const char* undert=classPtr->GetName()+strlen(classPtr->GetName())-2;
+            if (!strcmp(undert,"_t"))
                srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
          };
 
