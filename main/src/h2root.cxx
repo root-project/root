@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.23 2005/05/06 15:01:00 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.24 2005/09/02 10:02:12 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -721,59 +721,59 @@ void convert_directory(const char *dir)
      
      if( itype == 2 )  
        {
-	 if( optcwn == 1 ) 
-	   { 
-	     if( nbits > 16 ) 
-	       {
-		 strcat(fullname,"/I");
-	       }
-	     else 
-	       {
-		 if( nbits > 8 )
-		   { 
-		     strcat(fullname,"/S");
-		     nBytesUsed = 2;
-		   }
-		 else
-		   {
-		     strcat(fullname,"/B");
-		     nBytesUsed = 1;
-		   }
-	       }
-	   }
-	 else 
-	   {
-	     strcat(fullname,"/I");
-	   }
+         if( optcwn == 1 ) 
+           { 
+             if( nbits > 16 ) 
+               {
+                 strcat(fullname,"/I");
+               }
+             else 
+               {
+                 if( nbits > 8 )
+                   { 
+                     strcat(fullname,"/S");
+                     nBytesUsed = 2;
+                   }
+                 else
+                   {
+                     strcat(fullname,"/B");
+                     nBytesUsed = 1;
+                   }
+               }
+           }
+         else 
+           {
+             strcat(fullname,"/I");
+           }
        }
      
      // add support for 1-byte (UChar_t) and 2-byte (UShort_t) integers  
      if ( itype == 3 ) 
        {
-	 if(  optcwn == 1 ) 
-	   { 
-	     if( nbits > 16) 
-	       {
-		 strcat(fullname,"/i");
-	       }
-	     else
-	       {   
-		 if( nbits > 8 )
-		   {
-		     strcat(fullname,"/s");
-		     nBytesUsed = 2;
-		   }
-		 else
-		   {
-		     strcat(fullname,"/b");
-		     nBytesUsed = 1;
-		   }
-	       }
-	   }
-	 else 
-	   {
-	     strcat(fullname,"/i");
-	   }
+         if(  optcwn == 1 ) 
+           { 
+             if( nbits > 16) 
+               {
+                 strcat(fullname,"/i");
+               }
+             else
+               {   
+                 if( nbits > 8 )
+                   {
+                     strcat(fullname,"/s");
+                     nBytesUsed = 2;
+                   }
+                 else
+                   {
+                     strcat(fullname,"/b");
+                     nBytesUsed = 1;
+                   }
+               }
+           }
+         else 
+           {
+             strcat(fullname,"/i");
+           }
        }
      
      
@@ -846,60 +846,60 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
     // if optimizing cwn ntuple then look up bufpos and adjust integers to be shorts or chars
     if(  optcwn == 1 ) 
       { 
-	bufpos = 0;
-	for(int k=0; k<nvar;k++) 
-	  {
+        bufpos = 0;
+        for(int k=0; k<nvar;k++) 
+          {
 #ifndef WIN32
-	    hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
+            hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
 #else
-	    hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
+            hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
 #endif
-	    
-	    Int_t nBytesUsed = 4; // default for integers
-	    
-	    if ( itype == 2 || itype == 3) 
-	      {
-		if( nbits > 16) 
-		  {
-		    // do nothing for integers of 4 byte
-		  }
-		else
-		  {   
-		    if( nbits > 8 )
-		      {
-			nBytesUsed = 2;
-		      }
-		    else
-		      {
-			nBytesUsed = 1;
-		      }
-		  }
-	      }
-	    
-	    if(nBytesUsed == 1)
-	      {
-		
-		for(Int_t index = 0; index < ielem; index++)
-		  {
-		    // shift all chars with data to be one after another
-		    bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
-		  }
-	      } 
-	    else
-	      {
-		if(nBytesUsed == 2)
-		  {
-		    
-		    for(Int_t index = 0; index < ielem; index++)
-		      {
-			// shift all shorts ( 2 chars) with data to be one after another 
-			bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
-			bigbuf[bufpos + index*nBytesUsed+1 ] =  bigbuf[bufpos + index * isize+1];
-		      }
-		  }
-	      }
-	    bufpos += isize*ielem;
-	  }
+            
+            Int_t nBytesUsed = 4; // default for integers
+            
+            if ( itype == 2 || itype == 3) 
+              {
+                if( nbits > 16) 
+                  {
+                    // do nothing for integers of 4 byte
+                  }
+                else
+                  {   
+                    if( nbits > 8 )
+                      {
+                        nBytesUsed = 2;
+                      }
+                    else
+                      {
+                        nBytesUsed = 1;
+                      }
+                  }
+              }
+            
+            if(nBytesUsed == 1)
+              {
+                
+                for(Int_t index = 0; index < ielem; index++)
+                  {
+                    // shift all chars with data to be one after another
+                    bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
+                  }
+              } 
+            else
+              {
+                if(nBytesUsed == 2)
+                  {
+                    
+                    for(Int_t index = 0; index < ielem; index++)
+                      {
+                        // shift all shorts ( 2 chars) with data to be one after another 
+                        bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
+                        bigbuf[bufpos + index*nBytesUsed+1 ] =  bigbuf[bufpos + index * isize+1];
+                      }
+                  }
+              }
+            bufpos += isize*ielem;
+          }
       }
 
      tree->Fill();

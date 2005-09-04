@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.220 2005/08/26 16:26:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.221 2005/08/29 12:52:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -130,7 +130,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    TString doption = gPad->GetPadPointer()->GetDrawOption();
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
-	   factor = fH->GetNormFactor()/fH->GetSumOfWeights();
+           factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
 //     return if point is not in the histogram area
 
@@ -945,7 +945,7 @@ void THistPainter::Paint(Option_t *option)
 //        h->Draw("E1 SAME");
 //
 // The options are not case sensitive:
-//	h->Draw("e1 same");
+//        h->Draw("e1 same");
 //
 // The options "BOX", "COL" or "COLZ", use the color palette
 // defined in the current style (see TStyle::SeTPaletteAxis)
@@ -1454,8 +1454,8 @@ void THistPainter::Paint(Option_t *option)
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
        }
-	  if (Hoption.Same ==1) Hoption.Same = 2;
-	  goto paintstat;
+          if (Hoption.Same ==1) Hoption.Same = 2;
+          goto paintstat;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
@@ -2215,7 +2215,7 @@ void THistPainter::PaintColorLevels(Option_t *)
             color = -1;
             for (Int_t k=0; k<ndiv; k++) {
                zc = fH->GetContourLevelPad(k);
-	       if (z < zc) {
+               if (z < zc) {
                   continue;
                } else {
                   color++;
@@ -2893,8 +2893,8 @@ void THistPainter::PaintErrors(Option_t *)
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
          if (yi1 + s2y < yi4) gPad->PaintLine(xi3,yi1 + s2y,xi4,yi4);
-  	 //don't duplicate the horizontal line
- 	 if (Hoption.Hist != 2){
+           //don't duplicate the horizontal line
+          if (Hoption.Hist != 2){
             if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
             if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
          }
@@ -2902,8 +2902,8 @@ void THistPainter::PaintErrors(Option_t *)
       if (optionE && !drawmarker && ey1 != 0) {
          if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
          if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
- 	 //don't duplicate the horizontal line
- 	 if (Hoption.Hist != 2){
+          //don't duplicate the horizontal line
+          if (Hoption.Hist != 2){
             if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
             if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
          }
@@ -2954,7 +2954,7 @@ L30:
             xline[if1-2+i] = xline[if2-1+i];
             yline[if1-2+i] = yline[if2-1+i];
          }
-	 npoints = if1-1;
+         npoints = if1-1;
       }
       if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
       else         graph.PaintGraph(2*npoints,xline,yline,"F");
@@ -4121,7 +4121,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
     Double_t cosa, sina;
     Double_t bmin, bmax;
-    Double_t r[24]	/* was [3][8] */;
+    Double_t r[24]        /* was [3][8] */;
     Int_t ndivx, ndivy, ndivz, i;
     Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
     static char chopax[8], chopay[8], chopaz[8];
@@ -4160,9 +4160,9 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
     view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
     for (i = 1; i <= 8; ++i) {
-	r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
-	r[i*3 - 2] = av[i*3 - 2]*sina;
-	r[i*3 - 1] = av[i*3 - 1];
+        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
+        r[i*3 - 2] = av[i*3 - 2]*sina;
+        r[i*3 - 1] = av[i*3 - 1];
     }
 
 
@@ -4199,15 +4199,15 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
     ndivy = fYaxis->GetNdivisions();
     ndivz = fZaxis->GetNdivisions();
     if (ndivx < 0) {
-	ndivx = TMath::Abs(ndivx);
+        ndivx = TMath::Abs(ndivx);
         strcat(chopax, "N");
     }
     if (ndivy < 0) {
-	ndivy = TMath::Abs(ndivy);
+        ndivy = TMath::Abs(ndivy);
         strcat(chopay, "N");
     }
     if (ndivz < 0) {
-	ndivz = TMath::Abs(ndivz);
+        ndivz = TMath::Abs(ndivz);
         strcat(chopaz, "N");
     }
 
@@ -4221,14 +4221,14 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
     if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
         axis->ImportAxisAttributes(fXaxis);
-	axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
-	if (Hoption.Logx) {
-	    bmin = TMath::Power(10, rmin[0]);
-	    bmax = TMath::Power(10, rmax[0]);
-	} else {
-	    bmin = rmin[0];
-	    bmax = rmax[0];
-	}
+        axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
+        if (Hoption.Logx) {
+            bmin = TMath::Power(10, rmin[0]);
+            bmax = TMath::Power(10, rmax[0]);
+        } else {
+            bmin = rmin[0];
+            bmax = rmax[0];
+        }
 //                 Option time display is required ?
         if (fXaxis->GetTimeDisplay()) {
            strcat(chopax,"t");
@@ -4239,32 +4239,32 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
            }
         }
         axis->SetOption(chopax);
-	axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
+        axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
     }
 
 //              Y axis drawing
 
     if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
         axis->ImportAxisAttributes(fYaxis);
-	axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
+        axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
 
-	//if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
-	//    strcpy(chopay, "SDH+=N");
-	//}
-	if (fH->GetDimension() < 2) {
-	    strcpy(chopay, "V=+UN");
-	    ndivy = 0;
-	}
-	if (TMath::Abs(y1[0] - y2[0]) < epsil) {
-	    y2[0] = y1[0];
-	}
-	if (Hoption.Logy) {
-	    bmin = TMath::Power(10, rmin[1]);
-	    bmax = TMath::Power(10, rmax[1]);
-	} else {
-	    bmin = rmin[1];
-	    bmax = rmax[1];
-	}
+        //if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
+        //    strcpy(chopay, "SDH+=N");
+        //}
+        if (fH->GetDimension() < 2) {
+            strcpy(chopay, "V=+UN");
+            ndivy = 0;
+        }
+        if (TMath::Abs(y1[0] - y2[0]) < epsil) {
+            y2[0] = y1[0];
+        }
+        if (Hoption.Logy) {
+            bmin = TMath::Power(10, rmin[1]);
+            bmax = TMath::Power(10, rmax[1]);
+        } else {
+            bmin = rmin[1];
+            bmax = rmax[1];
+        }
 //                 Option time display is required ?
         if (fYaxis->GetTimeDisplay()) {
            strcat(chopay,"t");
@@ -4275,20 +4275,20 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
            }
         }
         axis->SetOption(chopay);
-	axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
+        axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
     }
 
 //              Z axis drawing
 
     if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
         axis->ImportAxisAttributes(fZaxis);
-	if (Hoption.Logz) {
-	    bmin = TMath::Power(10, rmin[2]);
-	    bmax = TMath::Power(10, rmax[2]);
-	} else {
-	    bmin = rmin[2];
-	    bmax = rmax[2];
-	}
+        if (Hoption.Logz) {
+            bmin = TMath::Power(10, rmin[2]);
+            bmax = TMath::Power(10, rmax[2]);
+        } else {
+            bmin = rmin[2];
+            bmax = rmax[2];
+        }
 //                 Option time display is required ?
         if (fZaxis->GetTimeDisplay()) {
            strcat(chopaz,"t");
@@ -4299,7 +4299,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
            }
         }
         axis->SetOption(chopaz);
-	axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
+        axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
     }
 
     fH->SetLineStyle(1);
@@ -4546,7 +4546,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t print_kurt    = (dostat/100000000)%10;
    Int_t nlines = print_name + print_entries + print_mean + print_rms + 
                   print_under + print_over + print_integral +
-		  print_skew + print_kurt;
+                  print_skew + print_kurt;
    Int_t print_fval    = dofit%10;
    Int_t print_ferrors = (dofit/10)%10;
    Int_t print_fchi2   = (dofit/100)%10;
@@ -5729,25 +5729,25 @@ void THistPainter::RecalculateRange()
        if (xmax < xmax_aid) xmax = xmax_aid;
        if (ymax < ymax_aid) ymax = ymax_aid;
        if (Hparam.ymin<0 && Hparam.ymax>0) {
-	   // there is an  'equator', check its range in the plot..
-	   THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
-	   THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
-	   if (xmin >xmin_aid) xmin = xmin_aid;
-	   if (xmax <xmax_aid) xmax = xmax_aid;
+           // there is an  'equator', check its range in the plot..
+           THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
+           THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
+           if (xmin >xmin_aid) xmin = xmin_aid;
+           if (xmax <xmax_aid) xmax = xmax_aid;
        }
        if (Hparam.xmin<0 && Hparam.xmax>0) {
-	   THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-	   THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
-	   if (ymin >ymin_aid) ymin = ymin_aid;
-	   if (ymax <ymax_aid) ymax = ymax_aid;
+           THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+           THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
+           if (ymin >ymin_aid) ymin = ymin_aid;
+           if (ymax <ymax_aid) ymax = ymax_aid;
        }
   } else if ( Hoption.Proj ==2) {
        if (Hparam.ymin <= -90 | Hparam.ymax >=90) {
-	   Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
-	   Hoption.Proj = 0;
+           Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
+           Hoption.Proj = 0;
        } else {
-	   THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
-	   THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
+           THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
+           THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
        }
   } else if (Hoption.Proj == 3) {
        THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
@@ -5760,16 +5760,16 @@ void THistPainter::RecalculateRange()
        if (xmax < xmax_aid) xmax = xmax_aid;
        if (ymax < ymax_aid) ymax = ymax_aid;
        if (Hparam.ymin<0 && Hparam.ymax>0) {
-	   THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-	   THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-	   if (xmin >xmin_aid) xmin = xmin_aid;
-	   if (xmax <xmax_aid) xmax = xmax_aid;
+           THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+           THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+           if (xmin >xmin_aid) xmin = xmin_aid;
+           if (xmax <xmax_aid) xmax = xmax_aid;
        }
        if (Hparam.xmin<0 && Hparam.xmax>0) {
-	   THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
-	   THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-	   if (ymin >ymin_aid) ymin = ymin_aid;
-	   if (ymax <ymax_aid) ymax = ymax_aid;
+           THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
+           THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+           if (ymin >ymin_aid) ymin = ymin_aid;
+           if (ymax <ymax_aid) ymax = ymax_aid;
        }
   } else if (Hoption.Proj == 4) {
        THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
@@ -5782,16 +5782,16 @@ void THistPainter::RecalculateRange()
        if (xmax < xmax_aid) xmax = xmax_aid;
        if (ymax < ymax_aid) ymax = ymax_aid;
        if (Hparam.ymin<0 && Hparam.ymax>0) {
-	   THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-	   THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-	   if (xmin >xmin_aid) xmin = xmin_aid;
-	   if (xmax <xmax_aid) xmax = xmax_aid;
+           THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+           THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+           if (xmin >xmin_aid) xmin = xmin_aid;
+           if (xmax <xmax_aid) xmax = xmax_aid;
        }
        if (Hparam.xmin<0 && Hparam.xmax>0) {
-	   THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-	   THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-	   if (ymin >ymin_aid) ymin = ymin_aid;
-	   if (ymax <ymax_aid) ymax = ymax_aid;
+           THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+           THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+           if (ymin >ymin_aid) ymin = ymin_aid;
+           if (ymax <ymax_aid) ymax = ymax_aid;
        }
      }
    Hparam.xmin= xmin;

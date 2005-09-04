@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.28 2005/07/18 12:02:02 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.29 2005/08/30 11:04:43 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -35,18 +35,18 @@
 //BEGIN_HTML <!--
 /* -->
 <UL>
-	<LI><P><A NAME="intro"></A><FONT COLOR="#5c8526">
-	<FONT SIZE=4 STYLE="font-size: 15pt">Introduction</FONT></FONT></P>
+        <LI><P><A NAME="intro"></A><FONT COLOR="#5c8526">
+        <FONT SIZE=4 STYLE="font-size: 15pt">Introduction</FONT></FONT></P>
 </UL>
 <P>Neural Networks are more and more used in various fields for data
 analysis and classification, both for research and commercial
 institutions. Some randomly choosen examples are:</P>
 <UL>
-	<LI><P>image analysis</P>
-	<LI><P>financial movements predictions and analysis</P>
-	<LI><P>sales forecast and product shipping optimisation</P>
-	<LI><P>in particles physics: mainly for classification tasks (signal
-	over background discrimination)</P>
+        <LI><P>image analysis</P>
+        <LI><P>financial movements predictions and analysis</P>
+        <LI><P>sales forecast and product shipping optimisation</P>
+        <LI><P>in particles physics: mainly for classification tasks (signal
+        over background discrimination)</P>
 </UL>
 <P>More than 50% of neural networks are multilayer perceptrons. This
 implementation of multilayer perceptrons is inspired from the
@@ -58,9 +58,9 @@ Oriented implementation has been choosen over a faster but more
 difficult to maintain code. Nevertheless, the time penalty does not
 exceed a factor 2.</P>
 <UL>
-	<LI><P><A NAME="mlp"></A><FONT COLOR="#5c8526">
-	<FONT SIZE=4 STYLE="font-size: 15pt">The
-	MLP</FONT></FONT></P>
+        <LI><P><A NAME="mlp"></A><FONT COLOR="#5c8526">
+        <FONT SIZE=4 STYLE="font-size: 15pt">The
+        MLP</FONT></FONT></P>
 </UL>
 <P>The multilayer perceptron is a simple feed-forward network with
 the following structure:</P>
@@ -78,16 +78,16 @@ neuron is then function of that combination with <I>f</I> being
 linear for output neurons or a sigmoid for hidden layers. This is
 useful because of two theorems:</P>
 <OL>
-	<LI><P>A linear combination of sigmoids can approximate any
-	continuous function.</P>
-	<LI><P>Trained with output = 1 for the signal and 0 for the
-	background, the approximated function of inputs X is the probability
-	of signal, knowing X.</P>
+        <LI><P>A linear combination of sigmoids can approximate any
+        continuous function.</P>
+        <LI><P>Trained with output = 1 for the signal and 0 for the
+        background, the approximated function of inputs X is the probability
+        of signal, knowing X.</P>
 </OL>
 <UL>
-	<LI><P><A NAME="lmet"></A><FONT COLOR="#5c8526">
-	<FONT SIZE=4 STYLE="font-size: 15pt">Learning
-	methods</FONT></FONT></P>
+        <LI><P><A NAME="lmet"></A><FONT COLOR="#5c8526">
+        <FONT SIZE=4 STYLE="font-size: 15pt">Learning
+        methods</FONT></FONT></P>
 </UL>
 <P>The aim of all learning methods is to minimize the total error on
 a set of weighted examples. The error is defined as the sum in
@@ -98,10 +98,10 @@ the first derivative of that error with respect to the weights.
 Exploiting the well-known properties of the derivative, especialy the
 derivative of compound functions, one can write:</P>
 <UL>
-	<LI><P>for a neuton: product of the local derivative with the
-	weighted sum on the outputs of the derivatives.</P>
-	<LI><P>for a synapse: product of the input with the local derivative
-	of the output neuron.</P>
+        <LI><P>for a neuton: product of the local derivative with the
+        weighted sum on the outputs of the derivatives.</P>
+        <LI><P>for a synapse: product of the input with the local derivative
+        of the output neuron.</P>
 </UL>
 <P>This computation is called back-propagation of the errors. A
 loop over all examples is called an epoch.</P>
@@ -143,9 +143,9 @@ computation, but seems more powerful at least for less than 300
 weights. Parameters are Tau and Reset, which defines the epochs where
 the direction is reset to the steepes descent.</P>
 <UL>
-	<LI><P><A NAME="use"></A><FONT COLOR="#5c8526">
-	<FONT SIZE=4 STYLE="font-size: 15pt">How
-	to use it...</FONT></FONT></P></LI>
+        <LI><P><A NAME="use"></A><FONT COLOR="#5c8526">
+        <FONT SIZE=4 STYLE="font-size: 15pt">How
+        to use it...</FONT></FONT></P></LI>
 </UL>
 <P><FONT SIZE=3>TMLP is build from 3 classes: TNeuron, TSynapse and
 TMultiLayerPerceptron. Only TMultiLayerPerceptron should be used
@@ -225,9 +225,9 @@ standalone C++ code ( TMultiLayerPerceptron::Export() ).</FONT></P>
 the feature lists are not exactly matching:
 <UL>
         <LI><P>mlpfit hybrid learning method is not implemented</P></LI>
-	<LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
-	<LI><P>the neural net is exported in C++ (not in FORTRAN)</P></LI>
-	<LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
+        <LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
+        <LI><P>the neural net is exported in C++ (not in FORTRAN)</P></LI>
+        <LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
 </UL>
 In addition, the paw version of mlpfit had additional limitations on the number of neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
 <!-- */
@@ -879,11 +879,11 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       if ((verbosity % 2) && ((!(iepoch % displayStepping))
           || (iepoch == nEpoch - 1)))
          cout << "Epoch: " << iepoch
-		   << " learn="
+                   << " learn="
                    << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining)
                       / fTraining->GetN())
                    << " test="
-		   << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest)
+                   << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest)
                       / fTest->GetN())
                    << endl;
       if (verbosity / 2) {
@@ -1000,8 +1000,8 @@ void TMultiLayerPerceptron::ComputeDEDw() const
       Int_t nEvents = fTraining->GetN();
       for (i = 0; i < nEvents; i++) {
          GetEntry(fTraining->GetEntry(i));
-	 eventWeight = fEventWeight->EvalInstance();
-	 eventWeight *= fCurrentTreeWeight;
+         eventWeight = fEventWeight->EvalInstance();
+         eventWeight *= fCurrentTreeWeight;
          nentries = fSynapses.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             synapse = (TSynapse *) fSynapses.UncheckedAt(j);
@@ -1027,8 +1027,8 @@ void TMultiLayerPerceptron::ComputeDEDw() const
       Int_t nEvents = (Int_t) fData->GetEntries();
       for (i = 0; i < nEvents; i++) {
          GetEntry(i);
-	 eventWeight = fEventWeight->EvalInstance();
-	 eventWeight *= fCurrentTreeWeight;
+         eventWeight = fEventWeight->EvalInstance();
+         eventWeight *= fCurrentTreeWeight;
          nentries = fSynapses.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             synapse = (TSynapse *) fSynapses.UncheckedAt(j);
@@ -1629,16 +1629,16 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
    else if(lg == "FORTRAN") {
       TString implicit = "      implicit double precision (a-h,n-z)\n";
       ofstream sigmoid("sigmoid.f");
-      sigmoid 	<< "      double precision FUNCTION SIGMOID(X)"	<< endl
-    		<< implicit
-		<< "      IF(X.GT.37.) THEN"			<< endl
-    		<< "         SIGMOID = 1."			<< endl
-		<< "      ELSE IF(X.LT.-709.) THEN"		<< endl
-    		<< "         SIGMOID = 0."			<< endl
-    		<< "      ELSE"					<< endl
-    		<< "         SIGMOID = 1./(1.+EXP(-X))"		<< endl
-    		<< "      ENDIF"				<< endl
-    		<< "      END"					<< endl;
+      sigmoid         << "      double precision FUNCTION SIGMOID(X)"        << endl
+                    << implicit
+                << "      IF(X.GT.37.) THEN"                        << endl
+                    << "         SIGMOID = 1."                        << endl
+                << "      ELSE IF(X.LT.-709.) THEN"                << endl
+                    << "         SIGMOID = 0."                        << endl
+                    << "      ELSE"                                        << endl
+                    << "         SIGMOID = 1./(1.+EXP(-X))"                << endl
+                    << "      ENDIF"                                << endl
+                    << "      END"                                        << endl;
       sigmoid.close();
       TString source = filename;
       source += ".f";
@@ -1663,11 +1663,11 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                     << "=((neuron" << neuron << "(x)*"
                     << neuron->GetNormalisation()[0] << ")+"
                     << neuron->GetNormalisation()[1] << ");" << endl;
-	 ifelseif = "      else if (index.eq.";
+         ifelseif = "      else if (index.eq.";
       }
       sourcefile << "      else" << endl
                  << "          " << filename << "=0.d0" << endl
-		 << "      endif" << endl;
+                 << "      endif" << endl;
       sourcefile << "      end" << endl;
 
       // Network
@@ -1677,7 +1677,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       while ((neuron = (TNeuron *) it->Next())) {
          sourcefile << "      double precision function neuron" 
                     << neuron << "(x)" << endl
-		    << implicit;
+                    << implicit;
          sourcefile << "      double precision x(" 
                     << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
          if (!neuron->GetPre(0)) {
@@ -1687,7 +1687,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
              << "d0)/"
              << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[0] 
              << "d0" << endl;
-	     idx++;
+             idx++;
          } else {
             sourcefile << "      neuron" << neuron 
                        << " = " << neuron->GetWeight() << "d0" << endl;
@@ -1695,8 +1695,8 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++)))
                sourcefile << "      neuron" << neuron
-	    		  << " = neuron" << neuron
-			  << " + synapse" << syn << "(x)" << endl;
+                              << " = neuron" << neuron
+                          << " + synapse" << syn << "(x)" << endl;
             if (neuron->GetPost(0)) {
                switch(neuron->GetType()) {
                   case (TNeuron::kSigmoid):
@@ -1894,7 +1894,7 @@ void TMultiLayerPerceptron::MLP_Stochastic(Double_t * buffer)
       for (j=0;j<nentries;j++) {
          neuron = (TNeuron *) fNetwork.UncheckedAt(j);
          buffer[cnt] = (-fEta) * (neuron->GetDeDw() + fDelta)
-		       + fEpsilon * buffer[cnt];
+                       + fEpsilon * buffer[cnt];
          neuron->SetWeight(neuron->GetWeight() + buffer[cnt++]);
       }
       // Step for all synapses
@@ -2248,16 +2248,16 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
          TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
          Int_t beg = 0;
          Int_t end = hidden.Index(":", beg + 1);
-	 while (end != -1) {
+         while (end != -1) {
            Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
-	   cnt++;
+           cnt++;
            beg = end + 1;
            end = hidden.Index(":", beg + 1);
-	   if(layer==cnt) nNeurons_this = num;
+           if(layer==cnt) nNeurons_this = num;
          }
-	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
-	 cnt++;
-	 if(layer==cnt) nNeurons_this = num;
+         Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+         cnt++;
+         if(layer==cnt) nNeurons_this = num;
       }
       Float_t nNeurons_next = 0;
       if(layer==nLayers-2) {
@@ -2269,16 +2269,16 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
          TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
          Int_t beg = 0;
          Int_t end = hidden.Index(":", beg + 1);
-	 while (end != -1) {
+         while (end != -1) {
            Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
-	   cnt++;
+           cnt++;
            beg = end + 1;
            end = hidden.Index(":", beg + 1);
-	   if(layer+1==cnt) nNeurons_next = num;
+           if(layer+1==cnt) nNeurons_next = num;
          }
-	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
-	 cnt++;
-	 if(layer+1==cnt) nNeurons_next = num;
+         Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+         cnt++;
+         if(layer+1==cnt) nNeurons_next = num;
       }
       Float_t yStep_this = 1./(nNeurons_this+1.);
       Float_t yStep_next = 1./(nNeurons_next+1.);
@@ -2292,12 +2292,12 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
       for(Int_t neuron1=0; neuron1<nNeurons_this; neuron1++) {
          for(Int_t neuron2=0; neuron2<nNeurons_next; neuron2++) {
             TLine* synapse = new TLine(xStep*(layer+1),yStep_this*(neuron1+1),xStep*(layer+2),yStep_next*(neuron2+1));
-	    synapse->Draw();
-	    theSynapse = (TSynapse *) it->Next();
-	    synapse->SetLineWidth(Int_t((theSynapse->GetWeight()/maxWeight)*10.));
-	    synapse->SetLineStyle(1);
-	    if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.5) synapse->SetLineStyle(2);
-	    if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.25) synapse->SetLineStyle(3);
+            synapse->Draw();
+            theSynapse = (TSynapse *) it->Next();
+            synapse->SetLineWidth(Int_t((theSynapse->GetWeight()/maxWeight)*10.));
+            synapse->SetLineStyle(1);
+            if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.5) synapse->SetLineStyle(2);
+            if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.25) synapse->SetLineStyle(3);
          }
       }
       delete it;
@@ -2317,16 +2317,16 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
          TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
          Int_t beg = 0;
          Int_t end = hidden.Index(":", beg + 1);
-	 while (end != -1) {
+         while (end != -1) {
            Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
-	   cnt++;
+           cnt++;
            beg = end + 1;
            end = hidden.Index(":", beg + 1);
-	   if(layer==cnt) nNeurons = num;
+           if(layer==cnt) nNeurons = num;
          }
-	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
-	 cnt++;
-	 if(layer==cnt) nNeurons = num;
+         Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+         cnt++;
+         if(layer==cnt) nNeurons = num;
       }
       Float_t yStep = 1./(nNeurons+1.);
       for(Int_t neuron=0; neuron<nNeurons; neuron++) {

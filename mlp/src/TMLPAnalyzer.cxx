@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.12 2005/07/18 15:30:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.13 2005/08/30 11:04:43 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -247,10 +247,10 @@ void TMLPAnalyzer::GatherInformations()
             v1 = fNetwork->Evaluate(l,params);
             params[i] -= 2*shift*rms[i];
             v2 = fNetwork->Evaluate(l,params);
-	    diff += (v1-v2)*(v1-v2);
+            diff += (v1-v2)*(v1-v2);
             // reset to original vealue
             params[i] += shift*rms[i];
-	 }
+         }
          diff = TMath::Sqrt(diff);
          fAnalysisTree->Fill();
       }

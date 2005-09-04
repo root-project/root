@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.11 2005/06/23 10:04:08 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.12 2005/07/25 10:22:47 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1102,7 +1102,7 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    StoreData(kFALSE);
    TGraph *grr=(TGraph*)GetObjectFit();
    TF1 *f1=(TF1*)GetUserFunc();
-   Foption_t Foption=GetFitOption();
+   Foption_t fitOption=GetFitOption();
 
    //Int_t np=0;
    Double_t *x=grr->GetX();
@@ -1113,7 +1113,7 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    SetDim(1);
    SetFormula(f1);
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       fRobust=kTRUE;
       StoreData(kTRUE);
    }
@@ -1122,12 +1122,12 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    for (Int_t i=0; i<n; i++){
       if (!f1->IsInside(&x[i])) continue;
       e=grr->GetErrorY(i);
-      if (e<0 || Foption.W1)
+      if (e<0 || fitOption.W1)
          e=1;
       AddPoint(&x[i], y[i], e);
    }
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       EvalRobust(h);
       return;
    }
@@ -1135,14 +1135,14 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
    Eval();
 
    //calculate the precise chisquare
-   if (!Foption.Nochisq){
+   if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
       for (Int_t i=0; i<n; i++){
          if (!f1->IsInside(&x[i])) continue;
          temp=f1->Eval(x[i]);
          temp2=(y[i]-temp)*(y[i]-temp);
          e=grr->GetErrorY(i);
-         if (e<0 || Foption.W1)
+         if (e<0 || fitOption.W1)
             e=1;
          temp2/=(e*e);
 
@@ -1165,7 +1165,7 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
    //if (gr->InheritsFrom(TGraph2DErrors::Class())) gre=(TGraph2DErrors*)gr;
 
 
-   Foption_t Foption=GetFitOption();
+   Foption_t fitOption=GetFitOption();
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
@@ -1180,7 +1180,7 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
    SetDim(2);
    SetFormula(f2);
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       fRobust=kTRUE;
       StoreData(kTRUE);
    }
@@ -1192,22 +1192,22 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
          continue;
       }
       z   = gz[bin];
-      //if (gre && !Foption.W1) e  = gr->GetErrorZ(bin);
+      //if (gre && !fitOption.W1) e  = gr->GetErrorZ(bin);
       //else e = 1;
       e=gr->GetErrorZ(bin);
-      if (e<0 || Foption.W1)
+      if (e<0 || fitOption.W1)
          e=1;
       AddPoint(x, z, e);
    }
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       EvalRobust(h);
       return;
    }
 
    Eval();
 
-   if (!Foption.Nochisq){
+   if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
       for (Int_t bin=0; bin<n; bin++){
          x[0] = gx[bin];
@@ -1219,12 +1219,12 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
 
          temp=f2->Eval(x[0], x[1]);
          temp2=(z-temp)*(z-temp);
-         //if (gre && !Foption.W1)
+         //if (gre && !fitOption.W1)
          //   e=gr->GetErrorZ(bin);
          //else
          //   e=1;
          e=gr->GetErrorZ(bin);
-         if (e<0 || Foption.W1)
+         if (e<0 || fitOption.W1)
             e=1;
          temp2/=(e*e);
 
@@ -1245,11 +1245,11 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TMultiGraph *mg     = (TMultiGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
-   Foption_t Foption = grFitter->GetFitOption();
+   Foption_t fitOption = grFitter->GetFitOption();
 
    SetDim(1);
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       fRobust=kTRUE;
       StoreData(kTRUE);
    }  
@@ -1264,13 +1264,13 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
       for (i=0; i<n; i++){
          if (!f1->IsInside(&gx[i])) continue;
          e=gr->GetErrorY(i);
-         if (e<0 || Foption.W1)
+         if (e<0 || fitOption.W1)
             e=1;
          AddPoint(&gx[i], gy[i], e);
       }
    }
 
-   if (Foption.Robust){
+   if (fitOption.Robust){
       EvalRobust(h);
       return;
    }
@@ -1278,7 +1278,7 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
    Eval();
 
    //calculate the chisquare
-   if (!Foption.Nochisq){
+   if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
       next.Reset();
       while((gr = (TGraph*)next())) {
@@ -1290,7 +1290,7 @@ void TLinearFitter::MultiGraphLinearFitter(Double_t h)
             temp=f1->Eval(gx[i]);
             temp2=(gy[i]-temp)*(gy[i]-temp);
             e=gr->GetErrorY(i);
-            if (e<0 || Foption.W1)
+            if (e<0 || fitOption.W1)
                e=1;
             temp2/=(e*e);
 
@@ -1318,7 +1318,7 @@ void TLinearFitter::HistLinearFitter()
    TH1 *hfit = (TH1*)GetObjectFit();
    TF1 *f1   = (TF1*)GetUserFunc();
 
-   Foption_t Foption = GetFitOption();
+   Foption_t fitOption = GetFitOption();
    //   printf("%s\n", f1->GetName());
    SetDim(hfit->GetDimension());
    SetFormula(f1);
@@ -1342,7 +1342,7 @@ void TLinearFitter::HistLinearFitter()
             if (!f1->IsInside(x)) continue;
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
-            if (Foption.W1) {
+            if (fitOption.W1) {
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
@@ -1356,7 +1356,7 @@ void TLinearFitter::HistLinearFitter()
 
    Eval();
 
-   if (!Foption.Nochisq){
+   if (!fitOption.Nochisq){
       Double_t temp, temp2, sumtotal=0;
       for (binz=hzfirst;binz<=hzlast;binz++) {
          x[2]  = zaxis->GetBinCenter(binz);
@@ -1368,7 +1368,7 @@ void TLinearFitter::HistLinearFitter()
                bin = hfit->GetBin(binx,biny,binz);
                cu  = hfit->GetBinContent(bin);
 
-               if (Foption.W1) {
+               if (fitOption.W1) {
                eu = 1;
                } else {
                   eu  = hfit->GetBinError(bin);

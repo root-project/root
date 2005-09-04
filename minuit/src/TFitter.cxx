@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.30 2005/04/17 14:12:50 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.31 2005/06/27 12:17:11 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -338,7 +338,7 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t Foption = hFitter->GetFitOption();
+   Foption_t fitOption = hFitter->GetFitOption();
    
    f1->InitArgs(x,u);
    npar = f1->GetNpar();
@@ -370,7 +370,7 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
             TF1::RejectPoint(kFALSE);
-            if (Foption.Integral) {
+            if (fitOption.Integral) {
                binxlow  = xaxis->GetBinLowEdge(binx);
                binxsize = xaxis->GetBinWidth(binx);
                binxup   = binxlow + binxsize;
@@ -387,7 +387,7 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
                fu = f1->EvalPar(x,u);
             }
             if (TF1::RejectedPoint()) continue;
-            if (Foption.W1) {
+            if (fitOption.W1) {
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
@@ -430,7 +430,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t Foption = hFitter->GetFitOption();
+   Foption_t fitOption = hFitter->GetFitOption();
 
    f1->InitArgs(x,u);
    npar = f1->GetNpar();
@@ -456,7 +456,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
             TF1::RejectPoint(kFALSE);
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
-            if (Foption.Integral) {
+            if (fitOption.Integral) {
                binlow  = xaxis->GetBinLowEdge(binx);
                binsize = xaxis->GetBinWidth(binx);
                binup   = binlow + binsize;
@@ -473,7 +473,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
                }
             }
             if (fu < 1.e-9) fu = 1.e-9;
-            if (Foption.Like == 1) {
+            if (fitOption.Like == 1) {
                icu  = Int_t(cu);
                fsub = -fu +icu*TMath::Log(fu);
                fobs = hFitter->GetSumLog(icu);
@@ -534,7 +534,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
-   Foption_t Foption = grFitter->GetFitOption();
+   Foption_t fitOption = grFitter->GetFitOption();
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
@@ -553,7 +553,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (TF1::RejectedPoint()) continue;
       fsum = (cu-fu);
       npfits++;
-      if (Foption.W1) {
+      if (fitOption.W1) {
          f += fsum*fsum;
          continue;
       }
@@ -565,7 +565,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
       if (exh > 0 && exl > 0) {
-	//Without the "variance method", we had the 6 next lines instead
+        //Without the "variance method", we had the 6 next lines instead
         // of the line above.
          //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
          //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
@@ -575,8 +575,8 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
          //eux = 0.5*(fp-fm);
          
         //"Effective Variance" method introduced by Anna Kreshuk 
-        // in version 4.00/08.	
-	eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
+        // in version 4.00/08.        
+        eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
       } else
         eux = 0.;
       eu = ey*ey+eux*eux;
@@ -603,7 +603,7 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TGraph2D *gr     = (TGraph2D*)grFitter->GetObjectFit();
    TF2 *f2   = (TF2*)grFitter->GetUserFunc();
-   Foption_t Foption = grFitter->GetFitOption();
+   Foption_t fitOption = grFitter->GetFitOption();
    
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
@@ -626,7 +626,7 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (TF2::RejectedPoint()) continue;
       fsum = (cu-fu);
       npfits++;
-      if (Foption.W1) {
+      if (fitOption.W1) {
          f += fsum*fsum;
          continue;
       }
@@ -672,7 +672,7 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TMultiGraph *mg     = (TMultiGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
-   Foption_t Foption = grFitter->GetFitOption();
+   Foption_t fitOption = grFitter->GetFitOption();
    TGraph *gr;
    TIter next(mg->GetListOfGraphs());   
 
@@ -690,43 +690,43 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       gx   = gr->GetX();
       gy   = gr->GetY();
       for (bin=0;bin<n;bin++) {
-	 f1->InitArgs(x,u); //must be inside the loop because of TF1::Derivative calling InitArgs
-	 x[0] = gx[bin];
-	 if (!f1->IsInside(x)) continue;
-	 cu   = gy[bin];
-	 TF1::RejectPoint(kFALSE);
-	 fu   = f1->EvalPar(x,u);
-	 if (TF1::RejectedPoint()) continue;
-	 fsum = (cu-fu);
-	 npfits++;
-	 if (Foption.W1) {
-	    f += fsum*fsum;
-	    continue;
-	 }
-	 exh = gr->GetErrorXhigh(bin);
-	 exl = gr->GetErrorXlow(bin);
-	 ey  = gr->GetErrorY(bin);
-	 if (exl < 0) exl = 0;
-	 if (exh < 0) exh = 0;
-	 if (ey < 0)  ey  = 0;
-	 if (exh > 0 && exl > 0) {
-	    //Without the "variance method", we had the 6 next lines instead
-	    // of the line above.
-	    //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
-	    //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
-	    //Double_t fm,fp;
-	    //x[0] = xm; fm = f1->EvalPar(x,u);
-	    //x[0] = xp; fp = f1->EvalPar(x,u);
-	    //eux = 0.5*(fp-fm);
-	    
-	    //"Effective Variance" method introduced by Anna Kreshuk 
-	    // in version 4.00/08.	
-	    eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
-	 } else
-	    eux = 0.;
-	 eu = ey*ey+eux*eux;
-	 if (eu <= 0) eu = 1;
-	 f += fsum*fsum/eu;
+         f1->InitArgs(x,u); //must be inside the loop because of TF1::Derivative calling InitArgs
+         x[0] = gx[bin];
+         if (!f1->IsInside(x)) continue;
+         cu   = gy[bin];
+         TF1::RejectPoint(kFALSE);
+         fu   = f1->EvalPar(x,u);
+         if (TF1::RejectedPoint()) continue;
+         fsum = (cu-fu);
+         npfits++;
+         if (fitOption.W1) {
+            f += fsum*fsum;
+            continue;
+         }
+         exh = gr->GetErrorXhigh(bin);
+         exl = gr->GetErrorXlow(bin);
+         ey  = gr->GetErrorY(bin);
+         if (exl < 0) exl = 0;
+         if (exh < 0) exh = 0;
+         if (ey < 0)  ey  = 0;
+         if (exh > 0 && exl > 0) {
+            //Without the "variance method", we had the 6 next lines instead
+            // of the line above.
+            //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+            //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
+            //Double_t fm,fp;
+            //x[0] = xm; fm = f1->EvalPar(x,u);
+            //x[0] = xp; fp = f1->EvalPar(x,u);
+            //eux = 0.5*(fp-fm);
+            
+            //"Effective Variance" method introduced by Anna Kreshuk 
+            // in version 4.00/08.        
+            eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
+         } else
+            eux = 0.;
+         eu = ey*ey+eux*eux;
+         if (eu <= 0) eu = 1;
+         f += fsum*fsum/eu;
       }
    }
    f1->SetNumberFitPoints(npfits);
