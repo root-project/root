@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.20 2005/05/20 10:02:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.21 2005/05/31 13:28:00 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -189,7 +189,7 @@ again:
    u = s;
    if ((s = strchr(u, ':')) || (s = strchr(u, '/'))) {
       if ((strchr (u, ':') > strchr(u, '/')) && (strchr (u, '/')))
-	s = strchr(u, '/');
+         s = strchr(u, '/');
       sav = *s;
       *s = 0;
       fHost = u;

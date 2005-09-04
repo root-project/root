@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.51 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.52 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -1317,7 +1317,7 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
          ddp = phi-phi1;
          if (ddp < 0) ddp+=360.;
 //	 printf("snxt2=%f phi=%f ddp=%f\n", snxt, phi, ddp);
-	 if (ddp<=dphi) return snxt;
+         if (ddp<=dphi) return snxt;
       }
    }
    return TGeoShape::Big();

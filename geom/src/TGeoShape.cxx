@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.32 2005/06/27 13:09:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.33 2005/06/27 14:11:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -401,9 +401,9 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
    }
 
    if (reqSections & TBuffer3D::kCore) {
-		// If writing core section all others will be invalid
+      // If writing core section all others will be invalid
       buffer.ClearSectionsValid();
-		
+ 
       // Check/grab some objects we need
       if (!gGeoManager) { 
          assert(kFALSE); 
@@ -415,7 +415,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          return; 
       }
 
-		buffer.fID = const_cast<TGeoVolume *>(paintVolume);
+      buffer.fID = const_cast<TGeoVolume *>(paintVolume);
       buffer.fColor = paintVolume->GetLineColor();
 
       buffer.fTransparency = paintVolume->GetTransparency();
@@ -449,7 +449,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          buffer.SetLocalMasterIdentity();
       }
 
-		buffer.SetSectionsValid(TBuffer3D::kCore);
+      buffer.SetSectionsValid(TBuffer3D::kCore);
    }
 }
 

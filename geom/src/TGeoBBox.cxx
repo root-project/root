@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.44 2005/05/25 14:25:16 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.45 2005/06/13 12:17:32 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -513,17 +513,17 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 
    Double_t safe, safy, safz;
    if (in) {
-	   safe = fDX - TMath::Abs(point[0]-fOrigin[0]);
-	   safy = fDY - TMath::Abs(point[1]-fOrigin[1]);
-	   safz = fDZ - TMath::Abs(point[2]-fOrigin[2]);
-	   if (safy < safe) safe = safy;
-	   if (safz < safe) safe = safz;
+      safe = fDX - TMath::Abs(point[0]-fOrigin[0]);
+      safy = fDY - TMath::Abs(point[1]-fOrigin[1]);
+      safz = fDZ - TMath::Abs(point[2]-fOrigin[2]);
+      if (safy < safe) safe = safy;
+      if (safz < safe) safe = safz;
    } else {
-	   safe = -fDX + TMath::Abs(point[0]-fOrigin[0]);
-	   safy = -fDY + TMath::Abs(point[1]-fOrigin[1]);
-	   safz = -fDZ + TMath::Abs(point[2]-fOrigin[2]);
-	   if (safy > safe) safe = safy;
-	   if (safz > safe) safe = safz;
+      safe = -fDX + TMath::Abs(point[0]-fOrigin[0]);
+      safy = -fDY + TMath::Abs(point[1]-fOrigin[1]);
+      safz = -fDZ + TMath::Abs(point[2]-fOrigin[2]);
+      if (safy > safe) safe = safy;
+      if (safz > safe) safe = safz;
    }
    return safe;
 }

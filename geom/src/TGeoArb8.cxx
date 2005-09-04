@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.42 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.43 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -1295,7 +1295,7 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
       ay = y1-y0;
       az = z1-z0;
       j  = (i+1)%4;
-	  x2 = fXY[j][0];
+      x2 = fXY[j][0];
       y2 = fXY[j][1];
       bx = x2-x0;
       by = y2-y0;
@@ -1321,11 +1321,11 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    saf[4] = fDz-TMath::Abs(point[2]);
    if (in) {
       safe = saf[0];
-	  for (j=1;j<5;j++) if (saf[j] <safe) safe = saf[j];
+      for (j=1;j<5;j++) if (saf[j] <safe) safe = saf[j];
    } else {
       saf[4]=-saf[4];
       safe = saf[0];
-	  for (j=1;j<5;j++) if (saf[j] >safe) safe = saf[j];
+      for (j=1;j<5;j++) if (saf[j] >safe) safe = saf[j];
    }
    return safe;
 }

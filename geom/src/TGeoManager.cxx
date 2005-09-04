@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.122 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.123 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -786,13 +786,13 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
          fCurrentVolume = volume;
          Int_t olduid = GetUID(volume->GetName());
          if (olduid<0) {
-	         fUniqueVolumes->AddAtAndExpand(volume,uid);
+            fUniqueVolumes->AddAtAndExpand(volume,uid);
          } else {
             uid = olduid;
          }
       }
    }
-   volume->SetNumber(uid);      	 	    
+   volume->SetNumber(uid);                           
    if (!fHashVolumes) {
       fHashVolumes = new THashList(256);
       fHashGVolumes = new THashList(256);
@@ -1038,8 +1038,8 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       if (!volume) {
          TString vname = name;
          vname = vname.Strip();
-	      Error("Node","VOLUME: \"%s\" not defined",vname.Data());
-	      return;
+         Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+         return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
@@ -1175,8 +1175,8 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       if (!volume) {
          TString vname = name;
          vname = vname.Strip();
-	      Error("Node","VOLUME: \"%s\" not defined",vname.Data());
-	      return;
+         Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+         return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
@@ -2602,12 +2602,12 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          if (e0(i)=='(') {
             if (!level) iloop++;
             level++;
-	          continue;
+            continue;
          }
          if  (e0(i)==')') {
             level--;
             if (level==0) lastpp=i;
-	          continue;
+            continue;
          }
          if ((e0(i)=='+') || (e0(i)=='-') || (e0(i)=='*')) {
             lastop = i;
@@ -2619,7 +2619,7 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          }
          if  ((e0(i)==':') && (level==0)) {
             lastdp = i;
-	          continue;
+            continue;
          }
       }
       if (level!=0) {
@@ -2645,28 +2645,28 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
    for (i=0; i<len; i++) {
       if (e0(i)=='(') {
          level++;
-	       continue;
+         continue;
       }
       if  (e0(i)==')') {
          level--;
-	       continue;
+         continue;
       }
       if (level<levmin) {
          if (e0(i)=='+') {
             boolop = 1; // union
-	          levmin = level;
-	          indop = i;
-	       }
+            levmin = level;
+            indop = i;
+         }
          if (e0(i)=='-') {
             boolop = 2; // difference
-	          levmin = level;
-	          indop = i;
-	       }
+            levmin = level;
+            indop = i;
+         }
          if (e0(i)=='*') {
             boolop = 3; // intersection
-	          levmin = level;
-	          indop = i;
-	       }
+            levmin = level;
+            indop = i;
+         }
       }
    }
    if (indop==0) {

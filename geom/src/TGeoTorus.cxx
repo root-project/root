@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.26 2005/06/17 20:31:52 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -666,9 +666,9 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = c+1;
          buff.fPols[indx++] = np;
          buff.fPols[indx++] = j;         // seg j on outer row 0  a
-	 buff.fPols[indx++] = startcap+j;        // endcap j on row 0  d
+         buff.fPols[indx++] = startcap+j;        // endcap j on row 0  d
          if(hasrmin)
-	    buff.fPols[indx++] = indp+j; // seg j on inner row 0  c
+            buff.fPols[indx++] = indp+j; // seg j on inner row 0  c
          buff.fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0  b
       }
 
@@ -677,7 +677,7 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = c+1;
          buff.fPols[indx++] = np;
          buff.fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1 a
-	 buff.fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1 d
+         buff.fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1 d
          if (hasrmin)
             buff.fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1 c
          buff.fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1 b

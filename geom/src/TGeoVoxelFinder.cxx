@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.23 2005/04/30 19:45:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.24 2005/06/13 12:17:32 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1081,18 +1081,18 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
    if (fPriority[0]==2) {
       nd[0] = fIndX[fOBx[fSlices[0]]];
       slicex=(UChar_t*)(&fIndX[fOBx[fSlices[0]]+1]);
-	    islices++;
+      islices++;
    }   
    UChar_t *slicey = 0;
    if (fPriority[1]==2) {
       nd[1] = fIndY[fOBy[fSlices[1]]];
       islices++;
       if (slicex) {
-	       slicey=(UChar_t*)(&fIndY[fOBy[fSlices[1]]+1]);
-	    } else {
-	       slicex=(UChar_t*)(&fIndY[fOBy[fSlices[1]]+1]);
-	       nd[0] = nd[1];
-	    } 
+         slicey=(UChar_t*)(&fIndY[fOBy[fSlices[1]]+1]);
+      } else {
+         slicex=(UChar_t*)(&fIndY[fOBy[fSlices[1]]+1]);
+         nd[0] = nd[1];
+      } 
    }   
    UChar_t *slicez = 0;
    if (fPriority[2]==2) {

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJDL.cxx,v 1.4 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJDL.cxx,v 1.1 2005/05/12 13:19:39 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -60,8 +60,8 @@ void TGridJDL::SetValue(const char *key, const char *value)
          oldObject = 0;
 
          if (oldValue) {
-	    delete oldValue;
-	    oldValue = 0;
+            delete oldValue;
+            oldValue = 0;
          }
       }
    }

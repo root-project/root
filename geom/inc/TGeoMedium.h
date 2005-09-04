@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.5 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.6 2005/02/09 13:30:27 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -32,7 +32,7 @@ protected:
    Int_t                    fId;         // unique Id
    Double_t                 fParams[20]; // parameters
    TGeoMaterial            *fMaterial;   // pointer to material
-	 
+ 
 // methods
 
 public:

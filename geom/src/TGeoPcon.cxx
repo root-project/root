@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.47 2005/05/30 16:55:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.48 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -807,7 +807,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
       buff.fPols[indx++] = m+j;
       buff.fPols[indx++] = 2*nz*m;
       buff.fPols[indx++] = j;
-	 
+ 
       buff.fPols[indx++] = c+3;
       buff.fPols[indx++] = 4;
       buff.fPols[indx++] = 2*nz*m+n+j;
@@ -841,7 +841,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n;
          buff.fPols[indx++] = (2*k+2)*m+j;
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
-	    
+ 
          buff.fPols[indx++] = c+1;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = (2*k+1)*m+j;
@@ -862,7 +862,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = indx2+2*(k+1)*n;
          buff.fPols[indx++] = indx2+2*nz*n+2*k;
          buff.fPols[indx++] = indx2+(2*k+3)*n;
-	    
+ 
          buff.fPols[indx++] = c+2;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
