@@ -27,11 +27,6 @@
 #include "TGeoManager.h"
 #endif
 
-typedef struct _x3d_points_ {
-   Int_t     numPoints;
-   Double_t *points;    // x0, y0, z0, x1, y1, z1, ...
-} X3DPoints;   
-
 class TGeoHMatrix;
 class TVirtualGeoTrack;
 class TGeoPhysicalNode;

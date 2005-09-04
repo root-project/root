@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.33 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.34 2005/09/04 11:50:47 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -301,7 +301,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TGeoShape *shaped;
    TGeoNode * node;
    TGeoMatrix *matrix;
-//   X3DPoints *buff, *buffm;
+
    TBuffer3D *buff, *buffm;
    buff = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
    buffm = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
