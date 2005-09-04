@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.11 2004/05/29 13:00:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.12 2005/09/02 07:51:51 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -94,7 +94,7 @@ void TVirtualPS::PrintStr(const char *str)
       return;
    }
 
-   if( (len + fLenBuffer ) > kMaxBuffer) {
+   if( (len + fLenBuffer ) > kMaxBuffer-1) {
       fStream->write(fBuffer, fLenBuffer);
       fStream->write("\n",1); fNByte++;
       strcpy(fBuffer, str);
@@ -114,7 +114,7 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
    // Fast version of Print
 
    fNByte += len;
-   if( (len + fLenBuffer ) > kMaxBuffer) {
+   if( (len + fLenBuffer ) > kMaxBuffer-1) {
       fStream->write(fBuffer, fLenBuffer);
       fStream->write("\n",1); fNByte++;
       while (len > kMaxBuffer) {
