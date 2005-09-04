@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.68 2005/06/27 13:09:47 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.69 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -210,7 +210,7 @@ void TGeoPainter::DefineColors() const
       if (!color) {
          Warning("DefineColors", "No colors defined");
          return;
-      }	 
+      }         
       color->GetHLS(h,l,s);
       for (j=0; j<100; j++) {
          l = 0.25+0.5*j/99.;
@@ -340,12 +340,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px,py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
-	             fCheckedNode = current;
-	             box = (TGeoBBox*)vol->GetShape();
-	             fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	             fCheckedBox[3] = box->GetDX();
-	             fCheckedBox[4] = box->GetDY();
-	             fCheckedBox[5] = box->GetDZ();
+               fCheckedNode = current;
+               box = (TGeoBBox*)vol->GetShape();
+               fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+               fCheckedBox[3] = box->GetDX();
+               fCheckedBox[4] = box->GetDY();
+               fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -367,12 +367,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px, py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
-	             fCheckedNode = current;
-	             box = (TGeoBBox*)vol->GetShape();
-	             fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	             fCheckedBox[3] = box->GetDX();
-	             fCheckedBox[4] = box->GetDY();
-	             fCheckedBox[5] = box->GetDZ();
+               fCheckedNode = current;
+               box = (TGeoBBox*)vol->GetShape();
+               fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+               fCheckedBox[3] = box->GetDX();
+               fCheckedBox[4] = box->GetDY();
+               fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -390,11 +390,11 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          if (dist<maxdist) {
             gPad->SetSelected(vol);
             fCheckedNode = current;
-	          box = (TGeoBBox*)vol->GetShape();
-	          fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	          fCheckedBox[3] = box->GetDX();
-	          fCheckedBox[4] = box->GetDY();
-	          fCheckedBox[5] = box->GetDZ();
+            box = (TGeoBBox*)vol->GetShape();
+            fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+            fCheckedBox[3] = box->GetDX();
+            fCheckedBox[4] = box->GetDY();
+            fCheckedBox[5] = box->GetDZ();
             return 0;
          }
          break;
@@ -405,22 +405,22 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
                dist = fGeoManager->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
                if (dist<maxdist) {
                   gPad->SetSelected(fGeoManager->GetCurrentVolume());
-  	          fCheckedNode = current;
-	          box = (TGeoBBox*)fGeoManager->GetCurrentVolume()->GetShape();
-	          fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	          fCheckedBox[3] = box->GetDX();
-	          fCheckedBox[4] = box->GetDY();
-	          fCheckedBox[5] = box->GetDZ();
+                    fCheckedNode = current;
+                  box = (TGeoBBox*)fGeoManager->GetCurrentVolume()->GetShape();
+                  fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+                  fCheckedBox[3] = box->GetDX();
+                  fCheckedBox[4] = box->GetDY();
+                  fCheckedBox[5] = box->GetDZ();
                   return 0;
                }
             }   
             fGeoManager->CdUp();
          }
          gPad->SetSelected(view);
-	 fCheckedNode = fGeoManager->GetTopNode();      
+         fCheckedNode = fGeoManager->GetTopNode();      
          return big;   
       default:
-	 fCheckedNode = fGeoManager->GetTopNode();      
+         fCheckedNode = fGeoManager->GetTopNode();      
          return big;
    }       
    if ((dist>maxdist) && !fGeoManager->GetLevel()) gPad->SetSelected(view);
@@ -527,14 +527,14 @@ void TGeoPainter::Draw(Option_t *option)
       view->SetAutoRange(kTRUE);
       if (has_pad) gPad->Update();
    }
-	
+        
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
    if (!view->IsPerspective()) view->SetPerspective();
    
    fLastVolume = fGeoManager->GetTopVolume();
  
- 	// Create a 3D viewer to paint us
+         // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
 }
 
@@ -563,7 +563,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    overlap->AppendPad(option);
 
    // Create a 3-D view
- 	// Create a 3D viewer to paint us
+         // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
    TView *view = gPad->GetView();
    if (!view) {
@@ -1029,7 +1029,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 //______________________________________________________________________________
 Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) const
 {
-	// Paint the supplied shape into the current 3D viewer
+   // Paint the supplied shape into the current 3D viewer
    Bool_t addDaughters = kTRUE;
 
    TVirtualViewer3D * viewer = gPad->GetViewer3D();

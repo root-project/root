@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.32 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.33 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -177,9 +177,9 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
          for (j=0; j<nelem1; j++) {
             pm = (TPolyMarker3D*)pma->At(0);
             pm->SetNextPoint(array1[3*j], array1[3*j+1], array1[3*j+2]);
-	 }
-	 continue;
-      }	     
+         }
+         continue;
+      }             
 //      printf("BACKWARDS\n");
       Int_t k=nelem2>>1;
       for (j=0; j<k; j++) {
@@ -187,7 +187,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
          memcpy(&array2[3*j], &array2[3*(nelem2-1-j)], 3*sizeof(Double_t));
          memcpy(&array2[3*(nelem2-1-j)], &dummy[0], 3*sizeof(Double_t));
       }
-//      for (j=0; j<nelem2; j++) printf("%i : %f ,%f ,%f   \n", j, array2[3*j], array2[3*j+1], array2[3*j+2]);	 
+//      for (j=0; j<nelem2; j++) printf("%i : %f ,%f ,%f   \n", j, array2[3*j], array2[3*j+1], array2[3*j+2]);         
       if (nelem1!=nelem2) printf("### DIFFERENT SIZES : nelem1=%i nelem2=%i ##########\n", nelem1, nelem2);
       ist1 = ist2 = 0;
       // check first match
@@ -232,11 +232,11 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
             dy = array2[3*ist2+1]-array1[3*ist1+1];
             dz = array2[3*ist2+2]-array1[3*ist1+2];
             dw = dx+dir[0]+dy*dir[1]+dz*dir[2];
-	    if (TMath::Abs(dw-dwmin)<1E-4) {
-	       ist1++;
-	       ist2++;
-	       break;
-	    }   
+            if (TMath::Abs(dw-dwmin)<1E-4) {
+               ist1++;
+               ist2++;
+               break;
+            }   
             if (dw<dwmin) {
             // point found on way back. Check if close enough to ist1+1
                ifound++;
@@ -251,8 +251,8 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                // extra boundary found on way back   
                   fGeoManager->SetCurrentPoint(&array2[3*ist2]);
                   fGeoManager->FindNode();
-     	          pm = (TPolyMarker3D*)pma->At(2);
-	          pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
+                       pm = (TPolyMarker3D*)pma->At(2);
+                  pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
                   printf("### EXTRA BOUNDARY %i :  %s found at DCLOSE=%f\n", ist2, fGeoManager->GetPath(), dw);
                   ist2++;
                   continue;
@@ -262,8 +262,8 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                   // point ist1+1 not found on way back
                   fGeoManager->SetCurrentPoint(&array1[3*ist1+3]);
                   fGeoManager->FindNode();
-	          pm = (TPolyMarker3D*)pma->At(1);
-	          pm->SetNextPoint(array2[3*ist1+3], array2[3*ist1+4], array2[3*ist1+5]);
+                  pm = (TPolyMarker3D*)pma->At(1);
+                  pm->SetNextPoint(array2[3*ist1+3], array2[3*ist1+4], array2[3*ist1+5]);
                   printf("### BOUNDARY MISSED BACK #########################\n");
                   ist1++;
                   break;
@@ -334,13 +334,13 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
       // loop all points of the daughter
       for (ip=0; ip<buff->NbPnts(); ip++) {
          memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-	      matrix->LocalToMaster(local, point);
-	      extrude = !shapem->Contains(point);
-	      if (extrude) {
-	         safety = shapem->Safety(point, kFALSE);
-	         if (safety<ovlp) extrude=kFALSE;
-	      }    
-	      if (extrude) {
+              matrix->LocalToMaster(local, point);
+              extrude = !shapem->Contains(point);
+              if (extrude) {
+                 safety = shapem->Safety(point, kFALSE);
+                 if (safety<ovlp) extrude=kFALSE;
+              }    
+              if (extrude) {
             if (!isextrusion) {
                isextrusion = kTRUE;
                char *name = new char[20];
@@ -352,12 +352,12 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                nodeovlp->SetNextPoint(point[0],point[1],point[2]);
             }   
-	      }
-      }	     
+              }
+      }             
       // loop all points of the mother
       for (ip=0; ip<buffm->NbPnts(); ip++) {
          memcpy(point, &pointsm[3*ip], 3*sizeof(Double_t));
-	      matrix->MasterToLocal(point, local);
+              matrix->MasterToLocal(point, local);
          extrude = shaped->Contains(local);
          if (extrude) {
             // skip points on mother mesh that have no neghbourhood ouside mother
@@ -366,7 +366,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                extrude = kFALSE;
             } else {   
                safety = shaped->Safety(local,kTRUE);
-	            if (safety<ovlp) extrude=kFALSE;
+                    if (safety<ovlp) extrude=kFALSE;
             }   
          }   
          if (extrude) {
@@ -429,14 +429,14 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          isoverlapping = kFALSE;
          for (ip=0; ip<buff->NbPnts(); ip++) {
             memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-	         matrix1->LocalToMaster(local, point);
+                 matrix1->LocalToMaster(local, point);
             matrix->MasterToLocal(point, local); // now point in local reference of node
-	         overlap = shapem->Contains(local);
-	         if (overlap) {
-	            safety = shapem->Safety(local, kTRUE);
-	            if (safety<ovlp) overlap=kFALSE;
-	         }    
-	         if (overlap) {
+                 overlap = shapem->Contains(local);
+                 if (overlap) {
+                    safety = shapem->Safety(local, kTRUE);
+                    if (safety<ovlp) overlap=kFALSE;
+                 }    
+                 if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
                   char *name = new char[20];
@@ -448,19 +448,19 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                   if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
                }     
-	         }
-         }	     
+                 }
+         }             
          // loop all points of node
          for (ip=0; ip<buffm->NbPnts(); ip++) {
             memcpy(local, &pointsm[3*ip], 3*sizeof(Double_t));
-	         matrix->LocalToMaster(local, point);
+                 matrix->LocalToMaster(local, point);
             matrix1->MasterToLocal(point, local); // now point in local reference of node
-	         overlap = shaped->Contains(local);
-	         if (overlap) {
-	            safety = shaped->Safety(local, kTRUE);
-	            if (safety<ovlp) overlap=kFALSE;
-	         }    
-	         if (overlap) {
+                 overlap = shaped->Contains(local);
+                 if (overlap) {
+                    safety = shaped->Safety(local, kTRUE);
+                    if (safety<ovlp) overlap=kFALSE;
+                 }    
+                 if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
                   char *name = new char[20];
@@ -472,9 +472,9 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                   if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
                }     
-	         }
+                 }
          }
-      }   	     
+      }                
       node->SetOverlaps(0,0);
    }
    delete buff;
@@ -934,9 +934,9 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
       if (endpoint) {
          forward = dirx*(endpoint[0]-point[0])+diry*(endpoint[1]-point[1])+dirz*(endpoint[2]-point[2]);
          if (forward<1E-3) {
-//	    printf("exit : Passed start point. nelem=%i\n", nelem); 
-	    return;
-	 }
+//            printf("exit : Passed start point. nelem=%i\n", nelem); 
+            return;
+         }
       }
       if (is_entering) {
          if (nelem>=dim) {
@@ -944,16 +944,16 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
             memcpy(temparray, array, 3*dim*sizeof(Double_t));
             delete [] array;
             array = temparray;
-	          dim += 20;
+                  dim += 20;
          }
          memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
 //         printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
          nelem++; 
       } else {
          if (endnode==0 && step>1E10) {
-//	    printf("exit : NULL endnode. nelem=%i\n", nelem); 
-	    return;
-	 }    
+//            printf("exit : NULL endnode. nelem=%i\n", nelem); 
+            return;
+         }    
          if (!fGeoManager->IsEntering()) {
 //            if (startnode) printf("stepping %f from (%f, %f, %f) inside %s...\n", step,point[0], point[1], point[2], startnode->GetName());
 //            else printf("stepping %f from (%f, %f, %f) OUTSIDE...\n", step,point[0], point[1], point[2]);
@@ -961,11 +961,11 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
          }    
          while (!fGeoManager->IsEntering()) {
             istep++;
-	    if (istep>1E3) {
-//	       Error("ShootRay", "more than 1000 steps. Step was %f", step);
-	       nelem = 0;
-	       return;
-	    }   
+            if (istep>1E3) {
+//               Error("ShootRay", "more than 1000 steps. Step was %f", step);
+               nelem = 0;
+               return;
+            }   
             fGeoManager->SetStep(1E-5);
             endnode = fGeoManager->Step();
          }
@@ -975,7 +975,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
             memcpy(temparray, array, 3*dim*sizeof(Double_t));
             delete [] array;
             array = temparray;
-	          dim += 20;
+                  dim += 20;
          }
          memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
 //         if (endnode) printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
@@ -1210,23 +1210,23 @@ Double_t TGeoChecker::Weight(Double_t precision, Option_t *option)
             weight += dens*Double_t(nin[indmat]);
             sigma  += dens*dens*nin[indmat];
          }
-	       sigma = TMath::Sqrt(sigma);
-	       eps = sigma/weight;
-	       weight *= vbox/Double_t(igen);
-	       sigma *= vbox/Double_t(igen);
-	       if (eps<precision || igen>1E8) {
-	          if (isverbose) {
-	             printf("=== Weight of %s : %g +/- %g [kg]\n", 
-	                    fGeoManager->GetTopVolume()->GetName(), weight, sigma);
-            }
-	          end = kTRUE;		      
-	       } else {
-	          if (isverbose && eps<0.5*eps0) {
-	             printf("%8dK: %14.7g kg  %g %%\n", 
+               sigma = TMath::Sqrt(sigma);
+               eps = sigma/weight;
+               weight *= vbox/Double_t(igen);
+               sigma *= vbox/Double_t(igen);
+               if (eps<precision || igen>1E8) {
+                  if (isverbose) {
+                     printf("=== Weight of %s : %g +/- %g [kg]\n", 
+                            fGeoManager->GetTopVolume()->GetName(), weight, sigma);
+                  }
+                  end = kTRUE;                      
+               } else {
+                  if (isverbose && eps<0.5*eps0) {
+                     printf("%8dK: %14.7g kg  %g %%\n", 
                        igen/1000, weight, eps*100);
                eps0 = eps;
             } 
-	       }
+         }
       }
    }      
    delete [] nin;
