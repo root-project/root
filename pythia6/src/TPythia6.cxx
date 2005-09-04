@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.17 2005/08/30 10:55:19 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.18 2005/09/04 16:37:43 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,11 +148,11 @@ extern "C" {
 ClassImp(TPythia6)
 
 //------------------------------------------------------------------------------
-TPythia6::Cleaner::Cleaner() {
+TPythia6::TPythia6Cleaner::TPythia6Cleaner() {
 }
 
 //------------------------------------------------------------------------------
-TPythia6::Cleaner::~Cleaner() {
+TPythia6::TPythia6Cleaner::~TPythia6Cleaner() {
 
   if (TPythia6::fgInstance) {
     delete TPythia6::fgInstance;
@@ -219,7 +219,7 @@ TPythia6* TPythia6::Instance() {
   // destructor for local static variable `cleaner' is  always called in the end
   // of the job thus deleting the only TPythia6 instance
 
-  static TPythia6::Cleaner cleaner;
+  static TPythia6::TPythia6Cleaner cleaner;
   return fgInstance ? fgInstance : (fgInstance=new TPythia6()) ;
 }
 

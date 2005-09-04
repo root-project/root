@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.5 2004/09/13 05:37:16 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.6 2005/09/04 16:37:43 brun Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -112,12 +112,12 @@ protected:
   Pyints_t*  fPyints;
   Pybins_t*  fPybins;
    // ****** cleanup stuff (thanks Jim K.)
-  class  Cleaner {
+  class  TPythia6Cleaner {
   public:
-    Cleaner();
-    ~Cleaner();
+    TPythia6Cleaner();
+    ~TPythia6Cleaner();
   };
-  friend class Cleaner;
+  friend class TPythia6Cleaner;
 //------------------------------------------------------------------------------
 //  functions:
 //------------------------------------------------------------------------------
