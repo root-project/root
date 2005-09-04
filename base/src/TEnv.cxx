@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.19 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.20 2005/06/10 22:28:51 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TEnv *gEnv;
 static struct BoolNameTable_t {
    const char *fName;
    Int_t       fValue;
-} boolNames[]= {
+} gBoolNames[]= {
    { "TRUE",  1 },
    { "FALSE", 0 },
    { "ON",    1 },
@@ -487,7 +487,7 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
          while (isalpha((int)*cp))
             *cp2++ = toupper((int)*cp++);
          *cp2 = 0;
-         for (bt = boolNames; bt->fName; bt++)
+         for (bt = gBoolNames; bt->fName; bt++)
             if (strcmp(buf2, bt->fName) == 0)
                return bt->fValue;
       }
