@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.16 2005/03/16 08:35:19 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.17 2005/08/30 10:55:19 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +310,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 //  Use the common block values for the TParticle constructor
 //
         new(clonesParticles[nparts]) TParticle(
-			    fPyjets->K[1][i] ,
+                            fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
                             -1,
@@ -327,8 +327,8 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
                             fPyjets->V[2][i] ,
                             fPyjets->V[3][i]);
 
-	//	if(gDebug) printf("%d %d %d! ",i,fPyjets->K[1][i],numpart);
-	nparts++;
+         //     if(gDebug) printf("%d %d %d! ",i,fPyjets->K[1][i],numpart);
+         nparts++;
       }
     }
   }
@@ -512,7 +512,7 @@ void TPythia6::Pyname(int kf, char* name) {
   //to at least name[16]
    
    pyname(&kf,name,15);
-				// cut trailing blanks to get C string
+  // cut trailing blanks to get C string
  name[15] = 0;
   //for (int i=15; (i>=0) && (name[i] == ' '); i--) {
   //  name[i] = 0;

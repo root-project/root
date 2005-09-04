@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.4 2002/11/26 17:57:42 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.5 2004/09/13 05:37:16 brun Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -88,7 +88,7 @@
 class TPythia6 : public TGenerator {
 protected:
   static  TPythia6* fgInstance;
-				// PYTHIA6 common-blocks
+  // PYTHIA6 common-blocks
   Pyjets_t*  fPyjets;
   Pydat1_t*  fPydat1;
   Pydat2_t*  fPydat2;
@@ -111,7 +111,7 @@ protected:
   Pyssmt_t*  fPyssmt;
   Pyints_t*  fPyints;
   Pybins_t*  fPybins;
-				// ****** cleanup stuff (thanks Jim K.)
+   // ****** cleanup stuff (thanks Jim K.)
   class  Cleaner {
   public:
     Cleaner();
@@ -122,18 +122,18 @@ protected:
 //  functions:
 //------------------------------------------------------------------------------
 public:
-				// ****** constructors and destructor
+   // ****** constructors and destructor
   TPythia6();
   virtual ~TPythia6();
 
   static TPythia6* Instance();
-				// ****** accessors
-				// FORTRAN indexing in accessing the arrays,
-				// indices start from 1 !!!!!
+   // ****** accessors
+   // FORTRAN indexing in accessing the arrays,
+   // indices start from 1 !!!!!
 
-				// ****** access to PYTHIA6 common-blocks
+   // ****** access to PYTHIA6 common-blocks
 
-				// ****** /PYJETS/
+   // ****** /PYJETS/
 
   Pyjets_t*   GetPyjets        ()           { return fPyjets; }
   int         GetN             ()           { return fPyjets->N; }
@@ -148,7 +148,7 @@ public:
   void        SetP(int ip, int i, double p) { fPyjets->P[i-1][ip-1] = p;    }
   void        SetV(int ip, int i, double v) { fPyjets->V[i-1][ip-1] = v;    }
 
-				// ****** /PYDAT1/
+   // ****** /PYDAT1/
 
   Pydat1_t*   GetPydat1   () { return fPydat1; }
   int         GetMSTU(int i) { return fPydat1->MSTU[i-1]; }
@@ -161,7 +161,7 @@ public:
   void        SetMSTJ(int i, int m   ) { fPydat1->MSTJ[i-1] = m; }
   void        SetPARJ(int i, double p) { fPydat1->PARJ[i-1] = p; }
 
-				// ****** /PYDAT2/
+   // ****** /PYDAT2/
 
   Pydat2_t*   GetPydat2           () { return fPydat2; }
   int         GetKCHG(int ip, int i) { return fPydat2->KCHG[i-1][ip-1]; }
@@ -174,7 +174,7 @@ public:
   void        SetPARF        (int i, double p) { fPydat2->PARF[i-1]       = p; }
   void        SetVCKM (int i, int j, double v) { fPydat2->VCKM[j-1][i-1]  = v; }
 
-				// ****** /PYDAT3/
+   // ****** /PYDAT3/
 
   Pydat3_t*   GetPydat3() { return fPydat3; }
   int         GetMDCY(int i, int j) { return fPydat3->MDCY[j-1][i-1]; }
@@ -187,11 +187,11 @@ public:
   void        SetBRAT(int i, double b)     { fPydat3->BRAT[i-1]      = b; }
   void        SetKFDP(int i, int j, int k) { fPydat3->KFDP[j-1][i-1] = k; }
 
-				// ****** /PYDAT4/
+   // ****** /PYDAT4/
 
   Pydat4_t*   GetPydat4() { return fPydat4; }
 
-				// ****** /PYDATR/ - random number generator info
+   // ****** /PYDATR/ - random number generator info
 
   Pydatr_t*   GetPydatr   () { return fPydatr; }
   int         GetMRPY(int i) { return fPydatr->MRPY[i-1]; }
@@ -200,7 +200,7 @@ public:
   void        SetMRPY(int i, int m)    { fPydatr->MRPY[i-1] = m; }
   void        SetRRPY(int i, double r) { fPydatr->RRPY[i-1] = r; }
 
-				// ****** /PYSUBS/
+   // ****** /PYSUBS/
 
   Pysubs_t*   GetPysubs     () { return fPysubs; }
   int         GetMSEL       () { return fPysubs->MSEL; }
@@ -215,7 +215,7 @@ public:
   void        SetCKIN   (int i, double c) { fPysubs->CKIN[i-1] = c; }
   void        SetKFIN(int i, int j, Int_t kfin=1) { fPysubs->KFIN[j+40][i-1] = kfin; }
 
-				// ****** /PYPARS/
+   // ****** /PYPARS/
 
   Pypars_t*   GetPypars() { return fPypars; }
   int         GetMSTP(int i) { return fPypars->MSTP[i-1]; }
@@ -228,7 +228,7 @@ public:
   void        SetMSTI   (int i, int    m) { fPypars->MSTI[i-1] = m; }
   void        SetPARI   (int i, double p) { fPypars->PARI[i-1] = p; }
 
-				// ****** /PYINT1/
+   // ****** /PYINT1/
 
   Pyint1_t*   GetPyint1() { return fPyint1; }
   int         GetMINT(int i) { return fPyint1->MINT[i-1]; }
@@ -237,12 +237,12 @@ public:
   void        SetMINT(int i, int m   ) { fPyint1->MINT[i-1] = m; }
   void        SetVINT(int i, double v) { fPyint1->VINT[i-1] = v; }
 
-				// ****** /PYINT2/ and /PYINT3/
+   // ****** /PYINT2/ and /PYINT3/
 
   Pyint2_t*   GetPyint2() { return fPyint2; }
   Pyint3_t*   GetPyint3() { return fPyint3; }
 
-				// ****** /PYINT4/
+   // ****** /PYINT4/
 
   Pyint4_t*   GetPyint4() { return fPyint4; }
   int         GetMWID      (int i) { return fPyint4->MWID[i-1]; }
@@ -251,13 +251,13 @@ public:
   void        SetMWID(int i, int m)           { fPyint4->MWID[i-1]      = m; }
   void        SetWIDS(int i, int j, double w) { fPyint4->WIDS[j-1][i-1] = w; }
 
-				// ****** / PYINT5/
+   // ****** / PYINT5/
 
   Pyint5_t*   GetPyint5() { return fPyint5; }
   int         GetNGENPD() { return fPyint5->NGENPD; }
   void        SetNGENPD(int n) { fPyint5->NGENPD = n; }
 
-				// ****** /PYINT6/
+   // ****** /PYINT6/
 
   Pyint6_t*   GetPyint6   () { return fPyint6; }
   char*       GetPROC(int i) { return fPyint6->PROC[i]; }
@@ -267,8 +267,8 @@ public:
   Pyint9_t*   GetPyint9() { return fPyint9; }
   Pyuppr_t*   GetPyuppr() { return fPyuppr; }
 
-				// ****** /PYMSSM/ - indexing in FORTRAN starts
-				// from 0!
+   // ****** /PYMSSM/ - indexing in FORTRAN starts
+   // from 0!
 
   Pymssm_t*   GetPymssm()    { return fPymssm; }
   int         GetIMSS(int i) { return fPymssm->IMSS[i]; }
@@ -277,7 +277,7 @@ public:
   void        SetIMSS(int i, int    m) { fPymssm->IMSS[i] = m; }
   void        SetRMSS(int i, double r) { fPymssm->RMSS[i] = r; }
 
-				// ****** /PYSSMT/
+   // ****** /PYSSMT/
 
   Pyssmt_t*   GetPyssmt()           { return fPyssmt; }
   double      GetZMIX(int i, int j) { return fPyssmt->ZMIX[j-1][i-1]; }
@@ -294,7 +294,7 @@ public:
   Pyints_t*   GetPyints() { return fPyints; }
   Pybins_t*   GetPybins() { return fPybins; }
 
-				// ****** TPYTHIA routines
+   // ****** TPYTHIA routines
 
   void             GenerateEvent();
 
