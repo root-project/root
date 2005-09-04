@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.5 2004/06/09 22:08:32 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.6 2005/08/30 12:19:23 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -182,51 +182,51 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
         cout << "**** Entering the correction loop ****" << endl;
 
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
-	     alpha < 1.0 && !stopCorrections) {
+             alpha < 1.0 && !stopCorrections) {
 
-	// copy current variables into fcorrector_step
-	*fCorrector_step = *iterate;
+        // copy current variables into fcorrector_step
+        *fCorrector_step = *iterate;
 
-	// calculate target steplength
-	Double_t alpha_target = fStepFactor1*alpha+fStepFactor0;
-	if (alpha_target > 1.0) alpha_target = 1.0;
+        // calculate target steplength
+        Double_t alpha_target = fStepFactor1*alpha+fStepFactor0;
+        if (alpha_target > 1.0) alpha_target = 1.0;
 
-	// add a step of this length to corrector_step
-	fCorrector_step->Saxpy(fStep,alpha_target);
+        // add a step of this length to corrector_step
+        fCorrector_step->Saxpy(fStep,alpha_target);
 
-	// place XZ into the r3 component of corrector_resids
-	fCorrector_resid->Set_r3_xz_alpha(fCorrector_step,0.0);
+        // place XZ into the r3 component of corrector_resids
+        fCorrector_resid->Set_r3_xz_alpha(fCorrector_step,0.0);
 
-	// do the projection operation
-	fCorrector_resid->Project_r3(rmin,rmax);
+        // do the projection operation
+        fCorrector_resid->Project_r3(rmin,rmax);
 
-	// solve for corrector direction
-	fSys->Solve(prob,iterate,fCorrector_resid,fCorrector_step);
+        // solve for corrector direction
+        fSys->Solve(prob,iterate,fCorrector_resid,fCorrector_step);
 
-	// add the current step to corrector_step, and calculate the
-	// step to boundary along the resulting direction
-	fCorrector_step->Saxpy(fStep,1.0);
-	Double_t alpha_enhanced = iterate->StepBound(fCorrector_step);
+        // add the current step to corrector_step, and calculate the
+        // step to boundary along the resulting direction
+        fCorrector_step->Saxpy(fStep,1.0);
+        Double_t alpha_enhanced = iterate->StepBound(fCorrector_step);
 
-	// if the enhanced step length is actually 1, make it official
-	// and stop correcting
-	if (alpha_enhanced == 1.0) {
-	  *fStep = *fCorrector_step;
-	  alpha = alpha_enhanced;
-	  fNumberGondzioCorrections++;
-	  stopCorrections = 1;
-	} else if(alpha_enhanced >= (1.0+fAcceptTol)*alpha) {
-	  // if enhanced step length is significantly better than the
-	  // current alpha, make the enhanced step official, but maybe
-	  // keep correcting
-	  *fStep = *fCorrector_step;
-	  alpha = alpha_enhanced;
-	  fNumberGondzioCorrections++;
-	  stopCorrections = 0;
-	} else {
-	  // otherwise quit the correction loop
-	  stopCorrections = 1;
-	}
+        // if the enhanced step length is actually 1, make it official
+        // and stop correcting
+        if (alpha_enhanced == 1.0) {
+          *fStep = *fCorrector_step;
+          alpha = alpha_enhanced;
+          fNumberGondzioCorrections++;
+          stopCorrections = 1;
+        } else if(alpha_enhanced >= (1.0+fAcceptTol)*alpha) {
+          // if enhanced step length is significantly better than the
+          // current alpha, make the enhanced step official, but maybe
+          // keep correcting
+          *fStep = *fCorrector_step;
+          alpha = alpha_enhanced;
+          fNumberGondzioCorrections++;
+          stopCorrections = 0;
+        } else {
+          // otherwise quit the correction loop
+          stopCorrections = 1;
+        }
       }
 
       // We've finally decided on a step direction, now calculate the
@@ -260,29 +260,29 @@ void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
     cout << endl << "Duality Gap: " << resid->GetDualityGap() << endl;
     if (i > 1) {
       cout << " Number of Corrections = " << fNumberGondzioCorrections
-	   << " alpha = " << alpha << endl;
+           << " alpha = " << alpha << endl;
     }
     cout << " *** Iteration " << i << " *** " << endl;
     cout << " mu = " << mu << " relative residual norm = " 
-	 << resid->GetResidualNorm()/fDnorm << endl;
+         << resid->GetResidualNorm()/fDnorm << endl;
 
     if (level == 1) { 
       // Termination has been detected by the status check; print
       // appropriate message
       if (status_code == kSUCCESSFUL_TERMINATION) {
-	cout << endl 
-	     << " *** SUCCESSFUL TERMINATION ***" 
-	     << endl;
+        cout << endl 
+             << " *** SUCCESSFUL TERMINATION ***" 
+             << endl;
       } else if (status_code == kMAX_ITS_EXCEEDED) {
-	cout << endl 
-	     << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
+        cout << endl 
+             << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
       } else if (status_code == kINFEASIBLE) {
-	cout << endl 
-	     << " *** TERMINATION: PROBABLY INFEASIBLE *** " 
-	     << endl;
+        cout << endl 
+             << " *** TERMINATION: PROBABLY INFEASIBLE *** " 
+             << endl;
       } else if (status_code == kUNKNOWN) {
-	cout << endl 
-	     << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
+        cout << endl 
+             << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
       }
     }
   } break;
