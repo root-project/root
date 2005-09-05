@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.42 2005/06/08 07:07:43 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.43 2005/08/19 09:34:36 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2302,7 +2302,7 @@ void TGX11::GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar
 
    Atom actual_type, property = (Atom) atom;
    int  actual_format;
-   unsigned long nitems, bytes_after, nread;
+   ULong_t nitems, bytes_after, nread;
    unsigned char *data;
 
    nchar = 0;
