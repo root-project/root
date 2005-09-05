@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.13 2005/08/12 07:38:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.14 2005/08/15 13:56:50 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -735,9 +735,9 @@ void TGLViewer::SetupLights()
    // TODO: Could detect state change and only adjust if a change
    for (UInt_t light = 0; (1<<light) < kLightMask; light++) {
       if ((1<<light) & fLightState) {
-         glEnable(GL_LIGHT0 + light);
+         glEnable(GLenum(GL_LIGHT0 + light));
       } else {
-         glDisable(GL_LIGHT0 + light);
+         glDisable(GLenum(GL_LIGHT0 + light));
       }
    }
 }
