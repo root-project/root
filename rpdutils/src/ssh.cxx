@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.12 2005/03/11 18:33:48 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.13 2005/04/15 17:26:09 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -244,26 +244,26 @@ int SshToolNotifyFailure(const char *Pipe)
 //______________________________________________________________________________
 int SshToolGetAuth(int UnixFd, const char *User)
 {
-   int Auth = 0;
+   int auth = 0;
 
    if (gDebug > 2)
       ErrorInfo("SshToolGetAuth: accepting connections on socket %d"
                 " for user %s",UnixFd,User);
 
    // Wait for verdict form sshd (via ssh2rpd ...)
-   struct sockaddr SunAddr;
+   struct sockaddr sunAddr;
 #if defined(USE_SIZE_T)
-   size_t SunAddrLen = sizeof(SunAddr);
+   size_t sunAddrLen = sizeof(sunAddr);
 #elif defined(USE_SOCKLEN_T)
-   socklen_t SunAddrLen = sizeof(SunAddr);
+   socklen_t sunAddrLen = sizeof(sunAddr);
 #else
-   int SunAddrLen = sizeof(SunAddr);
+   int sunAddrLen = sizeof(sunAddr);
 #endif
-   int NewUnixFd =
-       accept(UnixFd, (struct sockaddr *) &SunAddr, &SunAddrLen);
+   int newUnixFd =
+       accept(UnixFd, (struct sockaddr *) &sunAddr, &sunAddrLen);
 
    int lenr[1], nr, len = 0;
-   if ((nr = NetRecvRaw(NewUnixFd, lenr, sizeof(lenr))) < 0) {
+   if ((nr = NetRecvRaw(newUnixFd, lenr, sizeof(lenr))) < 0) {
       ErrorInfo
          ("SshToolGetAuth: incorrect recv from ssh2rpd: bytes:%d, buffer:%d",
            nr, lenr[0]);
@@ -271,44 +271,44 @@ int SshToolGetAuth(int UnixFd, const char *User)
 
    // Transform in human readable form
    len = ntohl(lenr[0]) + 1;
-   char *SshAuth = 0;
+   char *sshAuth = 0;
    if (len > 0) {
-      SshAuth = new char[len];
-      if (SshAuth) {
-         if ((nr = NetRecvRaw(NewUnixFd, SshAuth, len)) != len) {
+      sshAuth = new char[len];
+      if (sshAuth) {
+         if ((nr = NetRecvRaw(newUnixFd, sshAuth, len)) != len) {
             ErrorInfo
              ("SshToolGetAuth: incorrect recv from ssh2rpd: nr:%d, buf:%s",
-              nr, SshAuth);
+              nr, sshAuth);
          } else
-            SshAuth[len-1] = 0;
+            sshAuth[len-1] = 0;
          if (gDebug > 2)
-            ErrorInfo("SshToolGetAuth: got: %s",SshAuth);
+            ErrorInfo("SshToolGetAuth: got: %s",sshAuth);
 
          // Check authentication and notify to client
-         if (strncmp(SshAuth, "OK", 2) != 0) {
+         if (strncmp(sshAuth, "OK", 2) != 0) {
             ErrorInfo("SshToolGetAuth: user did not authenticate to sshd: %s (%d)",
-                       SshAuth, strncmp(SshAuth, "OK", 2));
+                       sshAuth, strncmp(sshAuth, "OK", 2));
          } else {
             if (len > 3) {
-               if (strcmp((const char *)(SshAuth+3), User) != 0) {
+               if (strcmp((const char *)(sshAuth+3), User) != 0) {
                   ErrorInfo("SshToolGetAuth: authenticated user not the same"
                             " as requested login username: %s (%s)",
-                            SshAuth+3, User);
-                  Auth = -1;
+                            sshAuth+3, User);
+                  auth = -1;
                } else {
-                  Auth = 1;
+                  auth = 1;
                }
             } else
-               Auth = -1;
+               auth = -1;
          }
-         delete[] SshAuth;
+         delete[] sshAuth;
       }
    }
 
    // Close local socket
-   close(NewUnixFd);
+   close(newUnixFd);
 
-   return Auth;
+   return auth;
 }
 
 } // namespace ROOT

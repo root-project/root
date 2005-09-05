@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.9 2005/03/11 18:33:48 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.10 2005/04/15 17:26:09 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -268,10 +268,10 @@ void NetParClose()
       close(gPSockFd[i]);
 
    if (gDebug > 0) {
-      std::string Host;
-      NetGetRemoteHost(Host);
+      std::string host;
+      NetGetRemoteHost(host);
       ErrorInfo("NetParClose: closing %d-stream connection to host %s",
-                gParallel, Host.data());
+                gParallel, host.data());
    }
 
    delete [] gPSockFd;
