@@ -34,7 +34,7 @@
 //                   see TAttLineEditor                                 //
 //      'Fill'     : change Fill attributes (color, pattern)            //
 //                   see TAttFillEditor                                 //
-//	'Title'    : TextEntry: set the title of the histogram          //
+//      'Title'    : TextEntry: set the title of the histogram          //
 //      'Histogram': change the draw options of the histogram           //
 //      'Plot'     : Radiobutton: draw a 2D or 3D plot of the histogram //
 //                   according to the Plot dimension there will be      //
@@ -728,10 +728,10 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
             fTab->GetTabContainer(i)->UnmapWindow();
-	    fTab->GetTabTab(i)->UnmapWindow();
-	    fTab->SetEnabled(i,kFALSE);
-//	    fTab->SetTab(0);
-	 }
+            fTab->GetTabTab(i)->UnmapWindow();
+            fTab->SetEnabled(i,kFALSE);
+//    fTab->SetTab(0);
+         }
       }
       return;                 
    }
@@ -754,7 +754,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
                      fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax(),
-		     fBinHist->GetYaxis()->GetNbins(),
+                     fBinHist->GetYaxis()->GetNbins(),
                      fBinHist->GetYaxis()->GetXmin(),
                      fBinHist->GetYaxis()->GetXmax());
       fHist->Add(fBinHist);
@@ -762,7 +762,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fBinHist = 0;
       if (fPad) {
          fPad->Modified(); 
-	 fPad->Update();
+         fPad->Update();
       }
    }
   
@@ -820,10 +820,10 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (fCoordsCombo->GetSelected()==-1) fCoordsCombo->Select(kCOORDS_CAR);
       if (str.Contains("CONT")){
          if (str.Contains("CONT1")) fContCombo->Select(kCONT_1);
-	 else if (str.Contains("CONT2")) fContCombo->Select(kCONT_2);
-	 else if (str.Contains("CONT3")) fContCombo->Select(kCONT_3);
-	 else if (str.Contains("CONT4")) fContCombo->Select(kCONT_4);
-	 else if (str.Contains("CONT0") || str.Contains("CONT")) fContCombo->Select(kCONT_0);
+         else if (str.Contains("CONT2")) fContCombo->Select(kCONT_2);
+         else if (str.Contains("CONT3")) fContCombo->Select(kCONT_3);
+         else if (str.Contains("CONT4")) fContCombo->Select(kCONT_4);
+         else if (str.Contains("CONT0") || str.Contains("CONT")) fContCombo->Select(kCONT_0);
       } else fContCombo->Select(kCONT_NONE);
 
       if (str.Contains("ARR")) fAddArr->SetState(kButtonDown);
@@ -834,7 +834,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       else fAddCol->SetState(kButtonUp);
       if (str.Contains("SCAT")) {
          if (str=="SCAT") fAddScat->SetState(kButtonDisabled);
-	 else fAddScat->SetState(kButtonDown);
+         else fAddScat->SetState(kButtonDown);
       } else fAddScat->SetState(kButtonUp);            
       if (str.Contains("TEXT")) fAddText->SetState(kButtonDown);
       else fAddText->SetState(kButtonUp);
@@ -887,8 +887,8 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       
       if (fCoordsCombo->GetSelected()!=kCOORDS_CAR) {
          if (fAddFB->GetState()!=kButtonDisabled) fAddFB->SetState(kButtonDisabled);
-	 if (fAddBB->GetState()!=kButtonDisabled) fAddBB->SetState(kButtonDisabled);
-	 if (fAddError->GetState()!=kButtonDisabled) fAddError->SetState(kButtonDisabled);
+         if (fAddBB->GetState()!=kButtonDisabled) fAddBB->SetState(kButtonDisabled);
+         if (fAddError->GetState()!=kButtonDisabled) fAddError->SetState(kButtonDisabled);
       } else {
          if (str.Contains("FB")) fAddFB->SetState(kButtonUp);      
          else fAddFB->SetState(kButtonDown);      
@@ -994,7 +994,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
       if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
          fTab->GetTabContainer(i)->MapWindow(); 
-	 fTab->GetTabTab(i)->MapWindow();    
+         fTab->GetTabTab(i)->MapWindow();    
          fTab->SetEnabled(i, kTRUE);  
       } else fTab->SetEnabled(i,kFALSE); 
    }
@@ -1103,11 +1103,11 @@ void TH2Editor::DoHistChanges()
       if ((fContCombo->GetSelected()!=kCONT_NONE && fContCombo->GetSelected()!=kCONT_2 && fContCombo->GetSelected()!=kCONT_3) ||
       str.Contains("COL")) {
          if (str.Contains("Z")) fAddPalette->SetState(kButtonDown);
-	 else fAddPalette->SetState(kButtonUp);
+         else fAddPalette->SetState(kButtonUp);
       } else fAddPalette->SetState(kButtonDisabled);
       if (str=="" || str=="SCAT") {
          fAddScat->SetState(kButtonDisabled);
-	 fAddPalette->SetState(kButtonDisabled);
+         fAddPalette->SetState(kButtonDisabled);
       } else if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
       str = GetHistContLabel()+GetHistAdditiveLabel();
       if (str.Contains("COL") || fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable();
@@ -1115,22 +1115,22 @@ void TH2Editor::DoHistChanges()
    } else if (fDim0->GetState() == kButtonDown) {
       if (fCoordsCombo->GetSelected()!=kCOORDS_CAR) {
          if (fAddFB->GetState()!=kButtonDisabled) fAddFB->SetState(kButtonDisabled);
-	 if (fAddBB->GetState()!=kButtonDisabled) fAddBB->SetState(kButtonDisabled);
-	 if (fAddError->GetState()!=kButtonDisabled) fAddError->SetState(kButtonDisabled);
+         if (fAddBB->GetState()!=kButtonDisabled) fAddBB->SetState(kButtonDisabled);
+         if (fAddError->GetState()!=kButtonDisabled) fAddError->SetState(kButtonDisabled);
       } else {
          if (fAddFB->GetState()==kButtonDisabled) fAddFB->SetState(kButtonDown);
-	 if (fAddBB->GetState()==kButtonDisabled) fAddBB->SetState(kButtonDown);
-	 if (fAddError->GetState()==kButtonDisabled) fAddError->SetState(kButtonUp);
+         if (fAddBB->GetState()==kButtonDisabled) fAddBB->SetState(kButtonDown);
+         if (fAddError->GetState()==kButtonDisabled) fAddError->SetState(kButtonUp);
       }
       if ((fTypeCombo->GetSelected()==kTYPE_LEGO) || (fTypeCombo->GetSelected()==kTYPE_LEGO1) ||
            (fTypeCombo->GetSelected()==kTYPE_SURF)|| (fTypeCombo->GetSelected()==kTYPE_SURF4)) fAddPalette1->SetState(kButtonDisabled);
       else if (fAddPalette1->GetState()==kButtonDisabled) fAddPalette1->SetState(kButtonUp);
       if (GetHistTypeLabel().Contains("LEGO")) {
          ShowFrame(f12);
-	 ShowFrame(f13);
+         ShowFrame(f13);
       } else {
          HideFrame(f12);
-	 HideFrame(f13);
+         HideFrame(f13);
       }
       ((TGMainFrame*)GetMainFrame())->Layout();
       str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
@@ -1153,17 +1153,17 @@ void TH2Editor::DoAddArr(Bool_t on)
    if (on) {
       if (!str.Contains("ARR")) {
          str += "ARR";
-	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);	 
-	 make=kTRUE;
+         if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);	 
+         make=kTRUE;
       }
    } else if (fAddArr->GetState()==kButtonUp) {
       if (str.Contains("ARR")) {
          str.Remove(strstr(str.Data(),"ARR")-str.Data(),3);
          if (str=="" || str=="SCAT") {
-	    fAddScat->SetState(kButtonDisabled);
-	    fAddPalette->SetState(kButtonDisabled);
-	 }
-	 make=kTRUE;
+            fAddScat->SetState(kButtonDisabled);
+            fAddPalette->SetState(kButtonDisabled);
+         }
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1182,17 +1182,17 @@ void TH2Editor::DoAddBox(Bool_t on)
    if (on) {
       if (!str.Contains("BOX")) {
          str += "BOX";
-	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
-	 make=kTRUE;
+         if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+         make=kTRUE;
       }
    } else if (fAddBox->GetState()==kButtonUp) {
       if (str.Contains("BOX")) {
          str.Remove(strstr(str.Data(),"BOX")-str.Data(),3);
-	 if (str=="" || str=="SCAT") {
-	    fAddScat->SetState(kButtonDisabled);
-	    fAddPalette->SetState(kButtonDisabled);
-	 }
-	 make=kTRUE;
+         if (str=="" || str=="SCAT") {
+            fAddScat->SetState(kButtonDisabled);
+            fAddPalette->SetState(kButtonDisabled);
+         }
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1211,23 +1211,23 @@ void TH2Editor::DoAddCol(Bool_t on)
    if (on) {
       if (!str.Contains("COL")) {
          str += "COL";
-	 fColContLbl->Enable() ;
-	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
-	 if (fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
-	 make=kTRUE;
+         fColContLbl->Enable() ;
+         if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+         if (fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
+         make=kTRUE;
       }
    } else if (fAddCol->GetState()==kButtonUp) {
       if (str.Contains("COL")) {
          str.Remove(strstr(str.Data(),"COL")-str.Data(),3);
-	 if (fAddBox->GetState()==kButtonDisabled) fAddBox->SetState(kButtonUp);
-	 if (fContCombo->GetSelected()==kCONT_NONE) {
-	    fAddPalette->SetState(kButtonDisabled);
-	    if (str.Contains("Z")) str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
-	 }
+         if (fAddBox->GetState()==kButtonDisabled) fAddBox->SetState(kButtonUp);
+         if (fContCombo->GetSelected()==kCONT_NONE) {
+            fAddPalette->SetState(kButtonDisabled);
+            if (str.Contains("Z")) str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
+         }
          if (str=="" || str=="SCAT" ) fAddScat->SetState(kButtonDisabled);
          if (fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable() ;
          else fColContLbl->Disable();
-	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1246,12 +1246,12 @@ void TH2Editor::DoAddScat(Bool_t on)
    if (on) {
       if (!str.Contains("SCAT")) {
          str += "SCAT";
-	 make=kTRUE;
+         make=kTRUE;
       }
    } else if (fAddScat->GetState()==kButtonUp) {
       if (str.Contains("SCAT")) {
          str.Remove(strstr(str.Data(),"SCAT")-str.Data(),4);
-	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1270,14 +1270,14 @@ void TH2Editor::DoAddText(Bool_t on)
    if (on) {
       if (!str.Contains("TEXT")) {
          str += "TEXT";
-	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
-	 make=kTRUE;
+         if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+         make=kTRUE;
       }
    } else if (fAddText->GetState()==kButtonUp) {
       if (str.Contains("TEXT")) {
          str.Remove(strstr(str.Data(),"TEXT")-str.Data(),4);
          if (str=="" || str=="SCAT" ) fAddScat->SetState(kButtonDisabled);
- 	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1323,12 +1323,12 @@ void TH2Editor::DoAddPalette(Bool_t on)
    if (on) {
       if (!str.Contains("Z")) {
          str += "Z";
-	 make=kTRUE;
+         make=kTRUE;
       }
    } else if (fAddPalette->GetState()==kButtonUp || fAddPalette1->GetState()==kButtonUp) {
       if (str.Contains("Z")) {
          str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
-	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1347,18 +1347,18 @@ void TH2Editor::DoAddFB()
    if (fAddFB->GetState()==kButtonDown) {
       if (str.Contains("FB")) {
          if (str.Contains("SURF") && !(str.Contains("1") || str.Contains("2") ||  str.Contains("3") || str.Contains("4") ||
-	 str.Contains("5"))) {
-	    TString dum = str;
-	    dum.Remove(strstr(dum.Data(),"SURF")-dum.Data(),4); 
-	    if (dum.Contains("FB")) dum.Remove(strstr(dum.Data(),"FB")-dum.Data(),2); 
-	    str = "SURF" + dum;
-	 } else str.Remove(strstr(str.Data(),"FB")-str.Data(),2);
-	 make = kTRUE;
+             str.Contains("5"))) {
+            TString dum = str;
+            dum.Remove(strstr(dum.Data(),"SURF")-dum.Data(),4); 
+            if (dum.Contains("FB")) dum.Remove(strstr(dum.Data(),"FB")-dum.Data(),2); 
+            str = "SURF" + dum;
+         } else str.Remove(strstr(str.Data(),"FB")-str.Data(),2);
+         make = kTRUE;
       }
    } else if (fAddFB->GetState()==kButtonUp){
       if (!str.Contains("FB")) {
          str += "FB";
-	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1377,17 +1377,17 @@ void TH2Editor::DoAddBB()
    if (fAddBB->GetState()==kButtonDown) {
       if (str.Contains("BB")) {
          if (str.Contains("FB")) {
-	    TString dum = str;
-	    dum.Remove(strstr(dum.Data(),"FB")-dum.Data(),2);
-	    dum.Remove(strstr(dum.Data(),"BB")-dum.Data(),2);
-	    str=dum+"FB";
-	 } else str.Remove(strstr(str.Data(),"BB")-str.Data(),2);
-	 make = kTRUE;
+            TString dum = str;
+            dum.Remove(strstr(dum.Data(),"FB")-dum.Data(),2);
+            dum.Remove(strstr(dum.Data(),"BB")-dum.Data(),2);
+            str=dum+"FB";
+         } else str.Remove(strstr(str.Data(),"BB")-str.Data(),2);
+         make = kTRUE;
       }
    } else if (fAddBB->GetState()==kButtonUp){
       if (!str.Contains("BB")) {
          str += "BB";
-	 make=kTRUE;
+         make=kTRUE;
       }
    }
    if (make) SetDrawOption(str);
@@ -1562,7 +1562,7 @@ void TH2Editor::DoBinMoved()
          // the axis range could be changed a little bit by the Rebin algorithm
          fSldXMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
          fSldXMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
-	 fClient->NeedRedraw(fBinXSlider,kTRUE);
+         fClient->NeedRedraw(fBinXSlider,kTRUE);
       } 
       if (divy[0]!=2) {      
          TAxis* yaxis = fHist->GetYaxis();	 
@@ -1572,7 +1572,7 @@ void TH2Editor::DoBinMoved()
          fSliderY->SetPosition(yaxis->FindBin(fSldYMin->GetNumber()+yBinWidth/2), yaxis->FindBin(fSldYMax->GetNumber()-yBinWidth/2));
          fSldYMin->SetNumber(yaxis->GetBinLowEdge(yaxis->GetFirst()));
          fSldYMax->SetNumber(yaxis->GetBinUpEdge(yaxis->GetLast()));
-	 fClient->NeedRedraw(fBinYSlider,kTRUE);	 
+         fClient->NeedRedraw(fBinYSlider,kTRUE);	 
       }
       Update();
    }
@@ -1606,14 +1606,14 @@ void TH2Editor::DoBinLabel()
    for (i = 2; i <= divx[0]; i++) {
       if ((TMath::Abs(numx - divx[i])) < diff) {
          c = i; 
-	 diff = TMath::Abs(numx - divx[i]);
+         diff = TMath::Abs(numx - divx[i]);
       }
    }
    diff = TMath::Abs(numy - divy[1]);
    for (i = 2; i <= divy[0]; i++) {
       if ((TMath::Abs(numy - divy[i])) < diff) {
          d = i; 
-	 diff = TMath::Abs(numy - divy[i]);
+         diff = TMath::Abs(numy - divy[i]);
       }
    }
    if (divx[c]!= fHist->GetXaxis()->GetNbins() || divy[d]!= fHist->GetYaxis()->GetNbins()){
@@ -2616,7 +2616,7 @@ Int_t* TH2Editor::Dividers(Int_t n)
    for (Int_t i=2; i <= n/2; i++) {
       if (n % i == 0) {
          num++;
-	 div[num] = i;
+         div[num] = i;
       }
    }
    num++;

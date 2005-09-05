@@ -34,7 +34,7 @@
 //                   see TAttLineEditor                                 //
 //      'Fill'     : change Fill attributes (color, pattern)            //
 //                   see TAttFillEditor                                 //
-//	'Title'    : TextEntry: set the title of the histogram          //
+//      'Title'    : TextEntry: set the title of the histogram          //
 //      'Histogram': change the draw options of the histogram           //
 //          'Plot' : Radiobutton: draw a 2D or 3D plot of the histogram //
 //                   according to the Plot dimension there will be      //
@@ -440,9 +440,9 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {
             fTab->GetTabContainer(i)->UnmapWindow();     // Hide the Rebin tab if obj is not inherited from TH1 or 
-	    fTab->GetTabTab(i)->UnmapWindow();           // if a TH2, TH3 is drawn
-	    fTab->SetEnabled(i,kFALSE);                  // also disable is, then the current tab will be changed
-	 } 
+            fTab->GetTabTab(i)->UnmapWindow();           // if a TH2, TH3 is drawn
+            fTab->SetEnabled(i,kFALSE);                  // also disable is, then the current tab will be changed
+         } 
       }
       return;                 
    } 
@@ -467,7 +467,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       delete fBinHist; fBinHist = 0;
       if (fPad) {
          fPad->Modified(); 
-	 fPad->Update();
+         fPad->Update();
       }
    }
 
@@ -518,56 +518,56 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       // initialising fAddCombo
       if (str.Contains("C")) {
          if (str.Contains("CYL")) {
-	    TString dum = str;
-	    dum.Remove(strstr(dum.Data(),"CYL")-dum.Data(),3);
-	    if (dum.Contains("C")) fAddCombo->Select(kADD_SMOOTH);
-	 } else fAddCombo->Select(kADD_SMOOTH);
+            TString dum = str;
+            dum.Remove(strstr(dum.Data(),"CYL")-dum.Data(),3);
+            if (dum.Contains("C")) fAddCombo->Select(kADD_SMOOTH);
+         } else fAddCombo->Select(kADD_SMOOTH);
       } 
       else if (str.Contains("LF2")) fAddCombo->Select(kADD_FILL);
       else if (str.Contains("L")){
          TString dum = str;
          if (str.Contains("CYL")) {
-	    dum.Remove(strstr(dum.Data(),"CYL")-dum.Data(),3);
-	    if (dum.Contains("L")) fAddCombo->Select(kADD_SIMPLE);
+            dum.Remove(strstr(dum.Data(),"CYL")-dum.Data(),3);
+            if (dum.Contains("L")) fAddCombo->Select(kADD_SIMPLE);
          }
          if (str.Contains("POL")) {
-	    dum.Remove(strstr(dum.Data(),"POL")-dum.Data(),3);
-	    if (dum.Contains("L")) fAddCombo->Select(kADD_SIMPLE);
+            dum.Remove(strstr(dum.Data(),"POL")-dum.Data(),3);
+            if (dum.Contains("L")) fAddCombo->Select(kADD_SIMPLE);
          } else fAddCombo->Select(kADD_SIMPLE);
       } else fAddCombo->Select(kADD_NONE);
 
       if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
       else if (str.Contains("HIST")) {
          if (str=="HIST") fAddSimple->SetState(kButtonDisabled);
-	 else fAddSimple->SetState(kButtonDown);
+         else fAddSimple->SetState(kButtonDown);
       } else fAddSimple->SetState(kButtonUp);
       
       if (str.Contains("B")) {
          TString dum = str;
-	 if (str.Contains("BAR")) {
-	    fAddBar->SetState(kButtonDown);
+         if (str.Contains("BAR")) {
+            fAddBar->SetState(kButtonDown);
             fAddB->SetState(kButtonDisabled);
-	    ShowFrame(f10);
+            ShowFrame(f10);
             ShowFrame(f11);
-	    ShowFrame(f12);
-	 } else {
-	    fAddB->SetState(kButtonDown);
+            ShowFrame(f12);
+         } else {
+            fAddB->SetState(kButtonDown);
             fAddBar->SetState(kButtonDisabled);
-	    fAddSimple->SetState(kButtonDisabled);
-	    ShowFrame(f10);
+            fAddSimple->SetState(kButtonDisabled);
+            ShowFrame(f10);
             ShowFrame(f11);      
             HideFrame(f12);
-	 }
+         }
       } else {
          fAddB->SetState(kButtonUp);
-	 fAddBar->SetState(kButtonUp);
-	 HideFrame(f10);
+         fAddBar->SetState(kButtonUp);
+         HideFrame(f10);
          HideFrame(f11);
          HideFrame(f12);
       }
       if (str.Contains("P") ) {
          fAddMarker->SetState(kButtonDown);
-	 fAddSimple->SetState(kButtonDisabled);
+         fAddSimple->SetState(kButtonDisabled);
       } else if (!str.Contains("BAR")) fAddMarker->SetState(kButtonUp);
       ChangeErrorCombo(1);
 
@@ -580,18 +580,19 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       // set Coordinate ComboBox
       if (str.Contains("SURF")){ 
          // surf cannot be combined with spheric and cartesian coordinates 
-	 // i.e. remove them from the combobox
+         // i.e. remove them from the combobox
          fCoordsCombo->RemoveEntry(kCOORDS_SPH);
          fCoordsCombo->RemoveEntry(kCOORDS_CAR);
          lb = fCoordsCombo->GetListBox();
          lb->Resize(lb->GetWidth(), 49);
       } else {
          // surf cannot be combined with spheric and cartesian coordinates 
-	 // if surf was selected before here the removed items were added the combobox again
-         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) fCoordsCombo->AddEntry("Spheric", kCOORDS_SPH);
-         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1){
-	    fCoordsCombo->AddEntry("Cartesian", kCOORDS_CAR);
-	    lb = fCoordsCombo->GetListBox();
+         // if surf was selected before here the removed items were added the combobox again
+         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) 
+            fCoordsCombo->AddEntry("Spheric", kCOORDS_SPH);
+         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1) {
+            fCoordsCombo->AddEntry("Cartesian", kCOORDS_CAR);
+            lb = fCoordsCombo->GetListBox();
             lb->Resize(lb->GetWidth(), 83);
          }
       }
@@ -620,11 +621,11 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (str.Contains("LEGO")) {
          ShowFrame(f10);
          ShowFrame(f11); 
-	 HideFrame(f12);
+         HideFrame(f12);
       } else {
          HideFrame(f10);
          HideFrame(f11); 
-	 HideFrame(f12);
+         HideFrame(f12);
       }
       fAddMarker->SetState(kButtonDisabled);
       fAddB->SetState(kButtonDisabled);
@@ -636,11 +637,11 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       else if (str.Contains("E3")) fErrorCombo->Select(kERRORS_FILL);
       else if (str.Contains("E4")) fErrorCombo->Select(kERRORS_CONTOUR);
       else if (str.Contains("E")) {
-	 if (str.Contains("LEGO")) {
+         if (str.Contains("LEGO")) {
             TString dum=str;
-	    dum.Remove(strstr(dum.Data(),"LEGO")-dum.Data(),4);
-  	    if (dum.Contains("E")) fErrorCombo->Select(kERRORS_SIMPLE);
-	 } else fErrorCombo->Select(kERRORS_SIMPLE); 
+            dum.Remove(strstr(dum.Data(),"LEGO")-dum.Data(),4);
+            if (dum.Contains("E")) fErrorCombo->Select(kERRORS_SIMPLE);
+         } else fErrorCombo->Select(kERRORS_SIMPLE); 
       } else fErrorCombo->Select(kERRORS_NO); //default
    }     
     
@@ -712,8 +713,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
       if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
-	 fTab->GetTabContainer(i)->MapWindow();
-	 fTab->GetTabTab(i)->MapWindow();
+         fTab->GetTabContainer(i)->MapWindow();
+         fTab->GetTabTab(i)->MapWindow();
          fTab->SetEnabled(i, kTRUE);  
       } else fTab->SetEnabled(i,kFALSE);
    }
@@ -758,7 +759,7 @@ void TH1Editor::DoAddMarker(Bool_t on)
    } else if (fAddMarker->GetState()==kButtonUp) {
       if (str.Contains("POL") || str.Contains("SPH")) {
          while (dum.Contains("P")) dum.Remove(strstr(dum.Data(),"P")-dum.Data(),1);
-	 if (str.Contains("POL")) str = dum + "POL";
+         if (str.Contains("POL")) str = dum + "POL";
          if (str.Contains("SPH")) str = dum + "SPH";
          if (str.Contains("PSR")) str = dum + "PSR";	 
       } else if (str.Contains("P")) str.Remove(str.First("P"),1); 
@@ -786,16 +787,16 @@ void TH1Editor::DoAddB(Bool_t on)
          ShowFrame(f11);
          HideFrame(f12);
          fAddBar->SetState(kButtonDisabled);
-	 fAddSimple->SetState(kButtonDisabled);
+         fAddSimple->SetState(kButtonDisabled);
          fBarOffset->SetNumber(fHist->GetBarOffset());
          fBarWidth->SetNumber(fHist->GetBarWidth());      
       } else if (fAddB->GetState()==kButtonUp) {
          while (str.Contains("B")) str.Remove(str.First("B"),1);
          HideFrame(f10);
-	 HideFrame(f11);
-	 HideFrame(f12);
+         HideFrame(f11);
+         HideFrame(f12);
          fAddBar->SetState(kButtonUp);
-	 if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
+         if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
       }
       if (fMake) SetDrawOption(str);
       Update(); 
@@ -826,19 +827,20 @@ void TH1Editor::DoAddBar(Bool_t on)
       else if (str.Contains("BAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);      
       if (on) {
          if ((fAddMarker->GetState()==kButtonDown) && (fErrorCombo->GetSelected()==kERRORS_NO) && (fAddSimple->GetState()!=kButtonDisabled)) fAddSimple->SetState(kButtonDisabled);
-	 else if ((fAddMarker->GetState()!=kButtonDown) && (fAddSimple->GetState()==kButtonDisabled)) {
-	    if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);  
-	    else if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
-	    else fAddSimple->SetState(kButtonUp);
-	 }
+         else if ((fAddMarker->GetState()!=kButtonDown) && (fAddSimple->GetState()==kButtonDisabled)) {
+            if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);  
+            else if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
+            else fAddSimple->SetState(kButtonUp);
+         }
          switch (fPercentCombo->GetSelected()){
-            case(-1): { str += "BAR";
-	       fPercentCombo->Select(kPER_0);
-	       break;
-	    }
+            case(-1): { 
+               str += "BAR";
+               fPercentCombo->Select(kPER_0);
+               break;
+            }
             case(kPER_0): { 
-	       str += "BAR"; 
-	       break;
+               str += "BAR"; 
+               break;
             }
             case(kPER_10): { 
                str += "BAR1"; 
@@ -849,12 +851,12 @@ void TH1Editor::DoAddBar(Bool_t on)
                break;
             }
             case(kPER_30): { 
-	       str += "BAR3"; 
-	       break;
+               str += "BAR3"; 
+               break;
             }
             case(kPER_40): { 
-	       str += "BAR4"; 
-	       break;
+               str += "BAR4"; 
+               break;
             }	 
          }
          ShowFrame(f10);
@@ -870,7 +872,9 @@ void TH1Editor::DoAddBar(Bool_t on)
          HideFrame(f12);
          fAddB->SetState(kButtonUp);
          if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
-	 if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
+         if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || 
+             ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) 
+            fAddSimple->SetState(kButtonDisabled);
       }
       if (fMake) SetDrawOption(str);
       Update(); 
@@ -890,21 +894,21 @@ void TH1Editor::DoAddSimple(Bool_t on)
    // in combination with some other drawoptions it draws an additional line on top of the bins
 
    Disconnect(fAddMarker);
-//   Bool_t make=kFALSE;
+   //   Bool_t make=kFALSE;
    fMake = kFALSE;
    TString str = GetDrawOption();
    str.ToUpper();
    if (on) {
       if (!str.Contains("HIST")) {
          str += "HIST";
-	 fAddMarker->SetState(kButtonDisabled);
-	 fMake=kTRUE;
+         fAddMarker->SetState(kButtonDisabled);
+         fMake=kTRUE;
       }
    } else if (fAddSimple->GetState()==kButtonUp) {
       if (str.Contains("HIST")) {
          str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
          fAddMarker->SetState(kButtonUp);	 
-	 fMake=kTRUE;
+         fMake=kTRUE;
       }
    }
    if (fMake) SetDrawOption(str);
@@ -928,8 +932,10 @@ void TH1Editor::DoHistSimple()
       ShowFrame(f9);
       ShowFrame(f15);
       ChangeErrorCombo(1);
-      if ((fAddBar->GetState() !=kButtonDown || fAddMarker->GetState()==kButtonDown ) && (fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
-      else if ((fAddSimple->GetState()==kButtonDisabled) && (fAddMarker->GetState()!=kButtonDown) ) fAddSimple->SetState(kButtonUp);
+      if ((fAddBar->GetState() !=kButtonDown || fAddMarker->GetState()==kButtonDown ) 
+          && (fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
+      else if ((fAddSimple->GetState()==kButtonDisabled) && (fAddMarker->GetState()!=kButtonDown)) 
+         fAddSimple->SetState(kButtonUp);
       else if (fAddSimple->GetState()!=kButtonUp) fAddSimple->SetState(kButtonDown);
       if (fAddMarker->GetState()==kButtonDisabled && fAddSimple->GetState()!=kButtonDown) fAddMarker->SetState(kButtonUp);
 
@@ -944,10 +950,10 @@ void TH1Editor::DoHistSimple()
 
       if ((fAddB->GetState() == kButtonDisabled)){
          if (fAddBar->GetState()==kButtonDown) {
-	    ShowFrame(f10);
+            ShowFrame(f10);
             ShowFrame(f11);
             ShowFrame(f12);
-	 } else {
+         } else {
             HideFrame(f10);  
             HideFrame(f11);
             HideFrame(f12);
@@ -958,7 +964,7 @@ void TH1Editor::DoHistSimple()
          ShowFrame(f11);
          HideFrame(f12);
       } 
-     if ((fAddBar->GetState() == kButtonUp) && (fAddB->GetState() == kButtonUp)){
+      if ((fAddBar->GetState() == kButtonUp) && (fAddB->GetState() == kButtonUp)){
          HideFrame(f10);  
          HideFrame(f11);
          HideFrame(f12);
@@ -968,17 +974,19 @@ void TH1Editor::DoHistSimple()
          fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
          lb->Resize(lb->GetWidth(),19);	 
-	 Disconnect(fAddCombo);
-	 fAddCombo->Select(kADD_NONE);
-	 fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()"); 
+         Disconnect(fAddCombo);
+         fAddCombo->Select(kADD_NONE);
+         fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()"); 
       } else {
-         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) {
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1)
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1)
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) {
             ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
             lb = fAddCombo->GetListBox();
             lb->Resize(lb->GetWidth(),76);	 
-	 }    
+         }    
       }
       if (fAddSimple->GetState()==kButtonDown) str+="HIST";
       str += GetHistErrorLabel()+GetHistAddLabel();
@@ -1053,8 +1061,9 @@ void TH1Editor::DoHistChanges()
       lb = fCoordsCombo->GetListBox();
       lb->Resize(lb->GetWidth(), 49);
    } else {
-      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Spheric", kCOORDS_SPH);
-      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1){
+      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1)
+         ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Spheric", kCOORDS_SPH);
+      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1) {
          ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Cartesian", kCOORDS_CAR);
          lb = fCoordsCombo->GetListBox();
          lb->Resize(lb->GetWidth(), 83);
@@ -1065,21 +1074,21 @@ void TH1Editor::DoHistChanges()
          HideFrame(f7);
          HideFrame(f8);
          ShowFrame(f9);
-	 fAddMarker->SetState(kButtonDisabled);
-	 fAddB->SetState(kButtonDisabled);
-	 if (fAddBar->GetState()==kButtonDisabled) fAddBar->SetState(kButtonUp);
-	 if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
-	 fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
+         fAddMarker->SetState(kButtonDisabled);
+         fAddB->SetState(kButtonDisabled);
+         if (fAddBar->GetState()==kButtonDisabled) fAddBar->SetState(kButtonUp);
+         if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
+         fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
          lb->Resize(lb->GetWidth(),19);	 
-	 Disconnect(fAddCombo);
-	 fAddCombo->Select(kADD_NONE);
-	 fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
+         Disconnect(fAddCombo);
+         fAddCombo->Select(kADD_NONE);
+         fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
          if (fAddBar->GetState()==kButtonDown) {
             ShowFrame(f10);	
-	    ShowFrame(f11);
+            ShowFrame(f11);
             ShowFrame(f12);
-	 } else {
+         } else {
             HideFrame(f10);
             HideFrame(f11);
             HideFrame(f12);
@@ -1090,13 +1099,15 @@ void TH1Editor::DoHistChanges()
          ShowFrame(f7);
          ShowFrame(f8);
          ShowFrame(f9);
-	 if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
-	 if (fAddBar->GetState()!=kButtonDown && fAddB->GetState()==kButtonDisabled) fAddB->SetState(kButtonUp);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1){ 
+         if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
+         if (fAddBar->GetState()!=kButtonDown && fAddB->GetState()==kButtonDisabled) fAddB->SetState(kButtonUp);
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1)
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1)
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
+         if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) { 
             ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
-	    lb = fAddCombo->GetListBox();
+            lb = fAddCombo->GetListBox();
             lb->Resize(lb->GetWidth(),76);	
          }
          fMake=on;
@@ -1105,7 +1116,7 @@ void TH1Editor::DoHistChanges()
          fAddSimple->SetState(kButtonDisabled);
       } else {
          if (fAddMarker->GetState()==kButtonDown) fAddSimple->SetState(kButtonDisabled);
-	 else if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
+         else if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
       }
    } else if (fDim0->GetState()==kButtonDown) {
       if (GetHistTypeLabel().Contains("LEGO")) {
@@ -1579,7 +1590,7 @@ void TH1Editor::DoBinLabel()
    for (Int_t i = 2; i <= div[0]; i++) {
       if ((TMath::Abs(num - div[i])) < diff) {
          c = i; 
-	 diff = TMath::Abs(num - div[i]);
+         diff = TMath::Abs(num - div[i]);
       }
    }
    fBinNumberEntry->SetNumber(div[c]);
@@ -2027,24 +2038,26 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
 {
    // Changes the display of the error combobox
    
-  switch (i){
-     case 0: {
-        if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)!=-1) fErrorCombo->RemoveEntries(kERRORS_EDGES,kERRORS_CONTOUR);
-	if (!((fErrorCombo->GetSelected()== kERRORS_NO) || (fErrorCombo->GetSelected()== kERRORS_SIMPLE))) fErrorCombo->Select(kERRORS_NO);
-        TGListBox* lb = fErrorCombo->GetListBox();
-        lb->Resize(lb->GetWidth(),36);	 
-        break;
-     }
-     case 1: {   
-        if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)==-1){
-           fErrorCombo->AddEntry("Edges", kERRORS_EDGES);
-           fErrorCombo->AddEntry("Rectangles",kERRORS_REC);
-           fErrorCombo->AddEntry("Fill", kERRORS_FILL);   
-           fErrorCombo->AddEntry("Contour", kERRORS_CONTOUR);
-           TGListBox* lb = fErrorCombo->GetListBox();
-           lb->Resize(lb->GetWidth(),100);	 
+   switch (i){
+      case 0: {
+         if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)!=-1)
+            fErrorCombo->RemoveEntries(kERRORS_EDGES,kERRORS_CONTOUR);
+         if (!((fErrorCombo->GetSelected()== kERRORS_NO) || (fErrorCombo->GetSelected()== kERRORS_SIMPLE))) 
+            fErrorCombo->Select(kERRORS_NO);
+         TGListBox* lb = fErrorCombo->GetListBox();
+         lb->Resize(lb->GetWidth(),36);	 
+         break;
+      }
+      case 1: {   
+         if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)==-1) {
+            fErrorCombo->AddEntry("Edges", kERRORS_EDGES);
+            fErrorCombo->AddEntry("Rectangles",kERRORS_REC);
+            fErrorCombo->AddEntry("Fill", kERRORS_FILL);   
+            fErrorCombo->AddEntry("Contour", kERRORS_CONTOUR);
+            TGListBox* lb = fErrorCombo->GetListBox();
+            lb->Resize(lb->GetWidth(),100);	 
         }
-	break;
+        break;
       }
    }
 }
@@ -2089,7 +2102,7 @@ Int_t* TH1Editor::Dividers(Int_t n)
    for (Int_t i=2; i <= n/2; i++) {
       if (n % i == 0) {
          num++;
-	 div[num] = i;
+         div[num] = i;
       }
    }
    num++;

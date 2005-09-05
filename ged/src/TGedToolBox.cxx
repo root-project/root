@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.4 2004/04/22 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.5 2005/05/14 00:19:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -74,7 +74,7 @@ static ToolBarData_t gToolBoxData[] = {
    { 0,                0,                  kFALSE,    0,             NULL }
 };
                     
-	
+
 //______________________________________________________________________________
 TGedToolBox::TGedToolBox(const TGWindow *p, UInt_t w, 
                          UInt_t h, UInt_t options, ULong_t back) 

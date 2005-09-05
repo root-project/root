@@ -114,20 +114,20 @@ private:
    Bool_t               fMakeB;           // avoid execution of Bar Slots
    Int_t                fPx1old,          // save the coordinates of the "virtual box" in delay draw mode (2D Plot)
                         fPy1old,
-			fPx2old,
-			fPy2old;
+                        fPx2old,
+                        fPy2old;
    Float_t              fP1NDCold[3],     // save the coordinates of the "virtual box" in delay draw mode 
                         fP2NDCold[3], 
-			fP3NDCold[3], 
-			fP4NDCold[3];
+                        fP3NDCold[3], 
+                        fP4NDCold[3];
    Float_t              fP1old[3],        // save the coordinates of the "virtual box" in delay draw mode (3D plot)
                         fP2old[3], 
-			fP3old[3], 
-			fP4old[3], 
-			fP5old[3], 
-			fP6old[3], 
-			fP7old[3], 
-			fP8old[3];   
+                        fP3old[3], 
+                        fP4old[3], 
+                        fP5old[3], 
+                        fP6old[3], 
+                        fP7old[3], 
+                        fP8old[3];   
    TH1                 *fBinHist;         // Cloned histogram for rebin
    Double_t             fOldOffset;       // save the old offset of the histogram
    

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.7 2004/10/18 10:13:46 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.8 2005/05/14 00:19:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -40,9 +40,9 @@ ClassImp(TGedMarkerSelect)
 ClassImp(TGedMarkerPopup)
 
 struct MarkerDescription_t {
-   const char* filename;
-   const char* name;
-   int number;
+   const char* fFilename;
+   const char* fName;
+   int fNumber;
 };
 
 static MarkerDescription_t  gMarkers[] = {
@@ -71,10 +71,10 @@ static MarkerDescription_t  gMarkers[] = {
    {0, 0, 0},
 };
 
-static MarkerDescription_t* GetMarkerByNumber(int number)
+static MarkerDescription_t* GetMarkerByNumber(Int_t number)
 {
-   for (int i = 0; gMarkers[i].filename != 0; i++) {
-      if (gMarkers[i].number == number)
+   for (Int_t i = 0; gMarkers[i].fFilename != 0; i++) {
+      if (gMarkers[i].fNumber == number)
           return &gMarkers[i];
    }
    return 0;
@@ -94,11 +94,11 @@ TGedMarkerPopup::TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t m
 
    SetLayoutManager(new TGTileLayout(this, 1));
 
-   for (int i = 0; gMarkers[i].filename != 0; i++) {
-      AddFrame(b = new TGPictureButton(this, gMarkers[i].filename,
-               gMarkers[i].number, TGButton::GetDefaultGC()(), kSunkenFrame),
+   for (int i = 0; gMarkers[i].fFilename != 0; i++) {
+      AddFrame(b = new TGPictureButton(this, gMarkers[i].fFilename,
+               gMarkers[i].fNumber, TGButton::GetDefaultGC()(), kSunkenFrame),
                new TGLayoutHints(kLHintsLeft, 14, 14, 14, 14));
-      b->SetToolTipText(gMarkers[i].name);
+      b->SetToolTipText(gMarkers[i].fName);
    }
 
    Resize(74, 90);
@@ -194,7 +194,7 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 
    MarkerDescription_t *md = GetMarkerByNumber(fMarkerStyle);
 
-   if (md)  fPicture = gClient->GetPicture(md->filename);
+   if (md)  fPicture = gClient->GetPicture(md->fFilename);
 
    MarkerSelected(fMarkerStyle);
 }

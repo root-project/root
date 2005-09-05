@@ -203,8 +203,9 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 // we deactivate the CheckBox
 // also initialising the MarkerOnOff checkbutton (== P option)
    if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
-      if (!opt.Contains("P")) opt +="P"; 
-	     fMarkerOnOff->SetState(kButtonDisabled);
+      if (!opt.Contains("P")) 
+         opt +="P"; 
+      fMarkerOnOff->SetState(kButtonDisabled);
    } else if (opt.Contains("P")) {
       fMarkerOnOff->SetState(kButtonDown);
    } else fMarkerOnOff->SetState(kButtonUp);
@@ -246,7 +247,7 @@ void TGraphEditor::DoShape(Int_t s)
          if (opt.Contains(fDrawShape)) 
             opt.Remove(opt.First(fDrawShape),1);
          fDrawShape = ' '; 
-	        fMarkerOnOff->SetState(kButtonDisabled);
+         fMarkerOnOff->SetState(kButtonDisabled);
          break;
       }  
       
@@ -256,8 +257,8 @@ void TGraphEditor::DoShape(Int_t s)
             opt +="C";
          else if (opt.Contains(fDrawShape)) 
             opt.Replace(opt.First(fDrawShape),1,'C'); 
-	        fDrawShape = 'C';
-	        break;
+         fDrawShape = 'C';
+         break;
       }
 
       // change draw option to Simple Line (L) 
