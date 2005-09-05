@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.195 2005/08/31 14:27:01 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.196 2005/09/02 10:33:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -646,6 +646,145 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
    return code;
 }
 
+
+//___________________________________________________________
+Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
+{
+   // Clip polygon using the Sutherland-Hodgman algorithm.
+   //
+   // Input parameters:
+   //
+   //  n: Number of points in the polygon to be clipped
+   //  x[n], y[n] : Polygon do be clipped vertices
+   //  xclipl, yclipb, xclipr, yclipt : Clipping boundary
+   //
+   // Output parameters:
+   //
+   // nn: number of points in xc and yc
+   // xc, yc: clipped polygon vertices. The Int_t returned by this function is
+   //         the number of points in the clipped polygon. These vectors must 
+   //         be allocated by the calling function. A size of 2*n for each is 
+   //         enough.
+   //
+   // Sutherland and Hodgman's polygon-clipping algorithm uses a divide-and-conquer
+   // strategy: It solves a series of simple and identical problems that, when
+   // combined, solve the overall problem. The simple problem is to clip a polygon
+   // against a single infinite clip edge. Four clip edges, each defining one boundary
+   // of the clip rectangle, successively clip a polygon against a clip rectangle.
+   //
+   // Steps of Sutherland-Hodgman's polygon-clipping algorithm:
+   //
+   // * Polygons can be clipped against each edge of the window one at a time.
+   //   Windows/edge intersections, if any, are easy to find since the X or Y coordinates
+   //   are already known.
+   // * Vertices which are kept after clipping against one window edge are saved for
+   //   clipping against the remaining edges.
+   // * Note that the number of vertices usually changes and will often increases.
+   //
+   // The clip boundary determines a visible and invisible region. The edges from
+   // vertex i to vertex i+1 can be one of four types:
+   //
+   // * Case 1 : Wholly inside visible region - save endpoint
+   // * Case 2 : Exit visible region - save the intersection
+   // * Case 3 : Wholly outside visible region - save nothing
+   // * Case 4 : Enter visible region - save intersection and endpoint 
+   
+   Int_t nc, nc2;
+   Double_t x1, y1, x2, y2, slope; // Segment to be clipped
+
+   Double_t *xc2 = new Double_t[nn];
+   Double_t *yc2 = new Double_t[nn];
+
+   // Clip against the left boundary
+   x1 = x[n-1]; y1 = y[n-1];
+   nc2 = 0;
+   for (Int_t i=0; i<n; i++) {
+      x2 = x[i]; y2 = y[i];
+      slope = (y2-y1)/(x2-x1);
+      if (x1 >= xclipl) {
+         if (x2 < xclipl) {
+            xc2[nc2] = xclipl; yc2[nc2++] = slope*(xclipl-x1)+y1;
+         } else {
+            xc2[nc2] = x2; yc2[nc2++] = y2;
+         }
+      } else {
+         if (x2 >= xclipl) {
+            xc2[nc2] = xclipl; yc2[nc2++] = slope*(xclipl-x1)+y1;
+            xc2[nc2] = x2; yc2[nc2++] = y2;
+         }
+      }
+      x1 = x2; y1 = y2;
+   }
+
+   // Clip against the top boundary
+   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   nc = 0;
+   for (Int_t i=0; i<nc2; i++) {
+      x2 = xc2[i]; y2 = yc2[i];
+      slope = (y2-y1)/(x2-x1);
+      if (y1 <= yclipt) {
+         if (y2 > yclipt) {
+            xc[nc] = x1+(yclipt-y1)/slope; yc[nc++] = yclipt;
+         } else {
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      } else {
+         if (y2 <= yclipt) {
+            xc[nc] = x1+(yclipt-y1)/slope; yc[nc++] = yclipt;
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      }
+      x1 = x2; y1 = y2;
+   }
+
+   // Clip against the right boundary
+   x1 = xc[nc-1]; y1 = yc[nc-1];
+   nc2 = 0;
+   for (Int_t i=0; i<nc; i++) {
+      x2 = xc[i]; y2 = yc[i];
+      slope = (y2-y1)/(x2-x1);
+      if (x1 <= xclipr) {
+         if (x2 > xclipr) {
+            xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
+         } else {
+            xc2[nc2] = x2; yc2[nc2++] = y2;
+         }
+      } else {
+         if (x2 <= xclipr) {
+            xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
+            xc2[nc2] = x2; yc2[nc2++] = y2;
+         }
+      }
+      x1 = x2; y1 = y2;
+   }
+
+   // Clip against the bottom boundary
+   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   nc = 0;
+   for (Int_t i=0; i<nc2; i++) {
+      x2 = xc2[i]; y2 = yc2[i];
+      slope = (y2-y1)/(x2-x1);
+      if (y1 >= yclipb) {
+         if (y2 < yclipb) {
+            xc[nc] = x1+(yclipb-y1)/slope; yc[nc++] = yclipb;
+         } else {
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      } else {
+         if (y2 >= yclipb) {
+            xc[nc] = x1+(yclipb-y1)/slope; yc[nc++] = yclipb;
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      }
+      x1 = x2; y1 = y2;
+   }
+
+   delete [] xc2;
+   delete [] yc2;
+
+   if (nc < 3) nc =0;
+   return nc;
+}
 //______________________________________________________________________________
 void TPad::Close(Option_t *)
 {
@@ -2565,6 +2704,8 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
 //*-*-*-*-*-*-*-*-*Paint fill area in CurrentPad World coordinates*-*-*-*-*-*-*
 //*-*              ===============================================
 
+   Warning("TPad::PaintFillArea", "Float_t signature is obsolete");
+
    if (nn <3) return;
    Int_t i,iclip,n=0;
    Double_t xmin,xmax,ymin,ymax;
@@ -2662,48 +2803,20 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 //*-*              ===============================================
 
    if (nn <3) return;
-   Int_t i,iclip,n=0;
+   Int_t i,n=0;
    Double_t xmin,xmax,ymin,ymax;
-   Double_t u1, v1, u[2],v[2];
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
    }
-   Double_t *x = new Double_t[2*nn+1];
-   Double_t *y = new Double_t[2*nn+1];
 
-   for (i=0;i<nn;i++) {
-      u[0] = xx[i];
-      v[0] = yy[i];
-      if (i == nn-1) {
-         u[1] = xx[0];
-         v[1] = yy[0];
-      } else {
-         u[1] = xx[i+1];
-         v[1] = yy[i+1];
-      }
-      u1 = u[1];
-      v1 = v[1];
-      iclip = Clip(u,v,xmin,ymin,xmax,ymax);
-      if (iclip == 2) continue;
-      if (iclip == 1) {
-         if (u[0] == u[1] && v[0] == v[1]) continue;
-      }
-      x[n] = u[0];
-      y[n] = v[0];
-      n++;
-      if (iclip) {
-         if (u[1] != u1 || v[1] != v1) {
-            x[n] = u[1];
-            y[n] = v[1];
-            n++;
-         }
-      }
-   }
-   x[n] = x[0];
-   y[n] = y[0];
-   if (n < 3) {
+   Int_t nc = 2*nn+1;
+   Double_t *x = new Double_t[nc];
+   Double_t *y = new Double_t[nc];
+                                                                                    
+   n = ClipPolygon(nn, xx, yy, nc, x, y,xmin,ymin,xmax,ymax);
+   if (!n) {
       delete [] x;
       delete [] y;
       return;
