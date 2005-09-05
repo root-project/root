@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.8 2003/12/10 14:23:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.9 2003/12/12 18:21:06 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -89,7 +89,7 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    out <<"   TGIcon *";
    out << GetName() << " = new TGIcon(" << fParent->GetName()
        << ",gClient->GetPicture(" << quote
-	      << gSystem->ExpandPathName(gSystem->UnixPathName(picname))                       // if no path
+       << gSystem->ExpandPathName(gSystem->UnixPathName(picname))                       // if no path
        << quote << ")" << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.17 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.18 2005/09/05 07:33:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -141,7 +141,7 @@ static UChar_t bcolor[48][3] = {
 
 // "User" defined colors
 
-static ULong_t ucolor[24] = { 0xff000000 };
+static ULong_t gUcolor[24] = { 0xff000000 };
 
 
 //________________________________________________________________________________
@@ -1063,11 +1063,11 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    vf1->AddFrame(fCpalette, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
    fCpalette->Associate(this);
 
-   if (ucolor[0] == 0xff000000) {
+   if (gUcolor[0] == 0xff000000) {
       for (i = 0; i < 24; i++)
-         ucolor[i] = TColor::RGB2Pixel(255, 255, 255);
+         gUcolor[i] = TColor::RGB2Pixel(255, 255, 255);
    }
-   fCpalette->SetColors(ucolor);
+   fCpalette->SetColors(gUcolor);
 
    // button frame
 
@@ -1210,7 +1210,7 @@ void TGColorDialog::CloseWindow()
 
    // save user set colors
    for (Int_t i = 0; i < 24; ++i)
-      ucolor[i] = fCpalette->GetColorByIndex(i);
+      gUcolor[i] = fCpalette->GetColorByIndex(i);
 
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)

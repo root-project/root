@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.111 2005/07/15 00:31:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.112 2005/08/19 09:46:37 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2554,21 +2554,21 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       }
    }
 
@@ -2588,13 +2588,13 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
                out << "," << GetOptionString() <<");" << endl;
             }
          } else {
-            out << "," << GetOptionString() << "," << ParGC <<");" << endl;
+            out << "," << GetOptionString() << "," << parGC <<");" << endl;
          }
       } else {
-         out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ");" << endl;
+         out << "," << GetOptionString() << "," << parGC << "," << parFont << ");" << endl;
       }
    } else {
-      out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);"  << endl;
+      out << "," << GetOptionString() << "," << parGC << "," << parFont << ",ucolor);"  << endl;
    }
 
    SavePrimitiveSubframes(out, option);

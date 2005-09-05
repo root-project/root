@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.13 2002/06/10 18:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.14 2004/05/24 11:45:08 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -617,7 +617,7 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    }
    fCurrent->DelText(start.fX, fCurrent->fLength-start.fX);
    SetCurrentRow(fCurrentRow+1);
-   for (long i = start.fY+1; i < end.fY; i++)
+   for (Long_t i = start.fY+1; i < end.fY; i++)
       DelLine(fCurrentRow);
    tempbuffer = fCurrent->GetText(end.fX+1, fCurrent->fLength-end.fX-1);
    DelLine(fCurrentRow);

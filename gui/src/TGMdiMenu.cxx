@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.3 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.4 2004/10/21 14:25:30 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -124,7 +124,7 @@ void TGMdiMenuBar::SavePrimitive(ofstream &out, Option_t *option)
    TIter next(fBar->GetList());
 
    while ((el = (TGFrameElement *)next())) {
-	     el->fFrame->SavePrimitive(out, option);
+      el->fFrame->SavePrimitive(out, option);
       el->fLayout->SavePrimitive(out, option);
       out << ");" << endl;
    }

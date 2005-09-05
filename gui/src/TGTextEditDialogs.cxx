@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.10 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.11 2005/09/05 07:33:37 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -46,7 +46,7 @@ ClassImp(TGSearchDialog)
 ClassImp(TGPrintDialog)
 ClassImp(TGGotoDialog)
 
-static TString fgLastSearchString;
+static TString gLastSearchString;
 TGSearchDialog *TGSearchDialog::fgSearchDialog = 0;
 
 //______________________________________________________________________________
@@ -93,8 +93,8 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    fLSearch = new TGLabel(fF3, new TGHotString("Search &for:"));
 
    fBSearch = new TGTextBuffer(100);
-   if (!fgLastSearchString.IsNull())
-      fBSearch->AddText(0, fgLastSearchString.Data());
+   if (!gLastSearchString.IsNull())
+      fBSearch->AddText(0, gLastSearchString.Data());
    else
       fSearchButton->SetState(kButtonDisabled);
 
@@ -220,7 +220,7 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 1:
                      string = fBSearch->GetString();
                      fType->fBuffer = (char*)string;
-                     fgLastSearchString = string;
+                     gLastSearchString = string;
                      *fRetCode = kTRUE;
                      TextEntered(string);
                      fCombo->ReturnPressed();
@@ -268,7 +268,7 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kTE_ENTER:
                string = fBSearch->GetString();
                fType->fBuffer = (char*)string;
-               fgLastSearchString = string;
+               gLastSearchString = string;
                *fRetCode = kTRUE;
                TextEntered(string);
                if (fType->fClose) CloseWindow();

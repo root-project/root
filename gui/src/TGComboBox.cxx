@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.30 2005/06/01 12:35:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.31 2005/08/12 09:49:19 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -485,7 +485,7 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
-   for (int i = 1; i <= 10; i++)
+   for (Int_t i = 1; i <= 10; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
@@ -505,7 +505,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
-   for (int i = 1; i < 16; i++)
+   for (Int_t i = 1; i < 16; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1);  // to have first entry selected
@@ -513,7 +513,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
 }
 
 
-static const char *fonts[][2] = {    //   unix name,     name
+static const char *gFonts[][2] = {    //   unix name,     name
    { "",                                           ""                         }, //not used
    { "-*-times-medium-i-*-*-12-*-*-*-*-*-*-*",     "1. times italic"          },
    { "-*-times-bold-r-*-*-12-*-*-*-*-*-*-*",       "2. times bold"            },
@@ -538,11 +538,11 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
 {
    // Create a text font combo box.
 
-   int noFonts = 0;
+   Int_t noFonts = 0;
 
-   for (int i = 1; fonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
+   for (Int_t i = 1; gFonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
 
-      fFonts[noFonts] = gVirtualX->LoadQueryFont(fonts[i][0]);
+      fFonts[noFonts] = gVirtualX->LoadQueryFont(gFonts[i][0]);
 
       if (fFonts[noFonts] == 0)
          fFonts[noFonts] = TGTextLBEntry::GetDefaultFontStruct();
@@ -552,7 +552,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
       gval.fFont = gVirtualX->GetFontHandle(fFonts[noFonts]);
 
       AddEntry(new TGTextLBEntry(GetListBox()->GetContainer(),
-               new TGString(fonts[i][1]), i,
+               new TGString(gFonts[i][1]), i,
                fClient->GetGC(&gval, kTRUE)->GetGC(), fFonts[noFonts]),
                new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX));
       noFonts++;

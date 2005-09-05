@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.55 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.56 2005/08/25 12:48:11 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1929,7 +1929,7 @@ void TGMenuBar::SavePrimitive(ofstream &out, Option_t *option)
    TIter next(fList);
 
    while ((el = (TGFrameElement *)next())) {
-	     el->fFrame->SavePrimitive(out, option);
+      el->fFrame->SavePrimitive(out, option);
       el->fLayout->SavePrimitive(out, option);
       out << ");" << endl;
    }

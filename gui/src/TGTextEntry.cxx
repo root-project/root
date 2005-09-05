@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.30 2004/12/10 10:57:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.31 2004/12/14 11:44:42 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1703,21 +1703,21 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC.GetGC())) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC.GetGC());
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       }
    }
 
@@ -1737,18 +1737,18 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
                      out << "," << fWidgetId << ");" << endl;
                    }
                } else {
-                 out << "," << fWidgetId << "," << ParGC << ");" << endl;
+                 out << "," << fWidgetId << "," << parGC << ");" << endl;
                }
            } else {
-             out << "," << fWidgetId << "," << ParGC << "," << ParFont
+             out << "," << fWidgetId << "," << parGC << "," << parFont
                  <<");" << endl;
            }
        } else {
-         out << "," << fWidgetId << "," << ParGC << "," << ParFont
+         out << "," << fWidgetId << "," << parGC << "," << parFont
              << "," << GetOptionString() << ");" << endl;
        }
    } else {
-     out << "," << fWidgetId << "," << ParGC << "," << ParFont
+     out << "," << fWidgetId << "," << parGC << "," << parFont
          << "," << GetOptionString() << ",ucolor);" << endl;
    }
 

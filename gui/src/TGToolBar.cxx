@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.15 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.16 2005/08/25 16:37:43 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -295,7 +295,7 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
          i++;
       } else {
          f->fFrame->SavePrimitive(out, option);
-		       out << "   " << GetName()<<"->AddFrame(" << f->fFrame->GetName();
+         out << "   " << GetName()<<"->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
          out << ");"<< endl;
       }

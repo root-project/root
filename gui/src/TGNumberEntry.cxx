@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.10 2005/08/12 15:53:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.11 2005/09/05 07:33:37 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -243,15 +243,15 @@ static char *EliminateGarbage(char *text,
 static Long_t IntStr(const char *text)
 {
    Long_t l = 0;
-   Int_t Sign = 1;
+   Int_t sign = 1;
    for (UInt_t i = 0; i < strlen(text); i++) {
       if (text[i] == '-') {
-         Sign = -1;
+         sign = -1;
       } else if ((isdigit(text[i])) && (l < 100000000)) {
          l = 10 * l + (text[i] - '0');
       }
    }
-   return Sign * l;
+   return sign * l;
 }
 
 //______________________________________________________________________________

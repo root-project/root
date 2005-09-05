@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.28 2005/02/18 11:22:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.29 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -737,8 +737,8 @@ Bool_t TGTextEdit::HandleSelection(Event_t *event)
    return kTRUE;
 }
 
-static Bool_t dbl_clk = kFALSE;
-static Bool_t trpl_clk = kFALSE;
+static Bool_t gDbl_clk = kFALSE;
+static Bool_t gTrpl_clk = kFALSE;
 
 //______________________________________________________________________________
 Bool_t TGTextEdit::HandleButton(Event_t *event)
@@ -775,8 +775,8 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          SetMenuState();
          fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
       }
-      dbl_clk = kFALSE;
-      trpl_clk = kFALSE;
+      gDbl_clk = kFALSE;
+      gTrpl_clk = kFALSE;
    }
    return kTRUE;
 }
@@ -798,10 +798,10 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
    TGLongPosition pos;
    pos.fY = ToObjYCoord(fVisible.fY + event->fY);
 
-   if (dbl_clk && (event->fTime - fgLastClick < 350)) { // triple click
+   if (gDbl_clk && (event->fTime - fgLastClick < 350)) { // triple click
       fgLastClick  = event->fTime;
-      dbl_clk = kFALSE;
-      trpl_clk = kTRUE;
+      gDbl_clk = kFALSE;
+      gTrpl_clk = kTRUE;
       fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
       fIsMarked = kTRUE;
       fMarkedStart.fX = 0;
@@ -812,9 +812,9 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
       return kTRUE;
    }
 
-   if (trpl_clk && (event->fTime - fgLastClick < 350)) { // 4 click
+   if (gTrpl_clk && (event->fTime - fgLastClick < 350)) { // 4 click
       fgLastClick  = event->fTime;
-      trpl_clk = kFALSE;
+      gTrpl_clk = kFALSE;
       fIsMarked = kTRUE;
       fMarkedStart.fY = 0;
       fMarkedStart.fX = 0;
@@ -827,8 +827,8 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
       return kTRUE;
    }
 
-   dbl_clk = kTRUE;
-   trpl_clk = kFALSE;
+   gDbl_clk = kTRUE;
+   gTrpl_clk = kFALSE;
 
    if (pos.fY >= fText->RowCount()) {
       pos.fY = fText->RowCount() - 1;

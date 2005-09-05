@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.9 2004/12/07 15:34:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.10 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -278,15 +278,15 @@ void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
 
    delete [] outext;
 
-   TList *List = ((TGCompositeFrame *)GetContainer())->GetList();
+   TList *list = ((TGCompositeFrame *)GetContainer())->GetList();
 
-   if (!List) return;
+   if (!list) return;
 
    out << "   TGCompositeFrame *" << GetContainer()->GetName()
        << " = (TGCompositeFrame *)" << GetName() << "->GetContainer();" << endl;
 
    TGFrameElement *el;
-   TIter next(List);
+   TIter next(list);
 
    while ((el = (TGFrameElement *) next())) {
       el->fFrame->SavePrimitive(out, option);

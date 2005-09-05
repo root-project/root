@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.17 2005/05/10 09:27:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.18 2005/05/10 15:11:26 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -272,20 +272,20 @@ void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = fClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       }
 
       TGGC *userGC = fClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       }
    }
 
@@ -303,16 +303,16 @@ void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
             if (fNormGC == GetDefaultGC()()) {
                out <<");" << endl;
             } else {
-               out << "," << ParGC << ");" << endl;
+               out << "," << parGC << ");" << endl;
             }
          } else {
-            out << "," << ParGC << "," << ParFont << ");" << endl;
+            out << "," << parGC << "," << parFont << ");" << endl;
          }
       } else {
-         out << "," << ParGC << "," << ParFont << "," << GetOptionString() <<");" << endl;
+         out << "," << parGC << "," << parFont << "," << GetOptionString() <<");" << endl;
       }
    } else {
-      out << "," << ParGC << "," << ParFont << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << parGC << "," << parFont << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    if (fDisabled)

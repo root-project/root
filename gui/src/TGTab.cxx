@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.20 2005/04/19 09:10:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.21 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -595,21 +595,21 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       }
    }
 
@@ -627,16 +627,16 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
              if (fNormGC == GetDefaultGC()()) {
                 out <<");" << endl;
                } else {
-                 out << "," << ParGC <<");" << endl;
+                 out << "," << parGC <<");" << endl;
                }
            } else {
-             out << "," << ParGC << "," << ParFont <<");" << endl;
+             out << "," << parGC << "," << parFont <<");" << endl;
            }
        } else {
-         out << "," << ParGC << "," << ParFont << "," << GetOptionString() <<");" << endl;
+         out << "," << parGC << "," << parFont << "," << GetOptionString() <<");" << endl;
        }
    } else {
-     out << "," << ParGC << "," << ParFont << "," << GetOptionString()  << ",ucolor);" << endl;
+     out << "," << parGC << "," << parFont << "," << GetOptionString()  << ",ucolor);" << endl;
    }
 
    TGCompositeFrame *cf;
@@ -658,9 +658,9 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
       TIter next(cf->GetList());
       while ((el = (TGFrameElement *) next())) {
          el->fFrame->SavePrimitive(out, option);
-		       out << "   " << cf->GetName() << "->AddFrame(" << el->fFrame->GetName();
-					    el->fLayout->SavePrimitive(out, option);
-					    out << ");" << endl;
+         out << "   " << cf->GetName() << "->AddFrame(" << el->fFrame->GetName();
+         el->fLayout->SavePrimitive(out, option);
+         out << ");" << endl;
       }
       //cf->SavePrimitive(out, option);
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {

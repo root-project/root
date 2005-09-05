@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.22 2005/02/07 22:47:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.23 2005/08/18 11:54:27 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -472,21 +472,21 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
    
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       } 
    }
 
@@ -507,13 +507,13 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
                out << "," << GetOptionString() <<");" << endl;
             }
          } else {
-            out << "," << GetOptionString() << "," << ParGC <<");" << endl;
+            out << "," << GetOptionString() << "," << parGC <<");" << endl;
          }
       } else {
-         out << "," << GetOptionString() << "," << ParGC << "," << ParFont <<");" << endl;
+         out << "," << GetOptionString() << "," << parGC << "," << parFont <<");" << endl;
       }
    } else {
-     out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+     out << "," << GetOptionString() << "," << parGC << "," << parFont << ",ucolor);" << endl;
    }
    
    // setting layout manager
@@ -558,21 +558,21 @@ void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
    
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       } 
    }
 
@@ -590,13 +590,13 @@ void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
          if (fNormGC == GetDefaultGC()()) {
             out << ");" << endl;
          } else {
-            out << "," << ParGC <<");" << endl;
+            out << "," << parGC <<");" << endl;
          }
       } else {
-         out << "," << ParGC << "," << ParFont <<");" << endl;
+         out << "," << parGC << "," << parFont <<");" << endl;
       }
    } else {
-      out << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+      out << "," << parGC << "," << parFont << ",ucolor);" << endl;
    }
 
    TGFrameElement *f;
@@ -635,21 +635,21 @@ void TGVButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   char parGC[50], parFont[50];
+   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
    
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
+         sprintf(parFont,"ufont->GetFontStruct()");
       } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
+         sprintf(parGC,"uGC->GetGC()");
       } 
    }
 
@@ -666,13 +666,13 @@ void TGVButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
          if (fNormGC == GetDefaultGC()()) {
             out <<");" << endl;
          } else {
-            out << "," << ParGC <<");" << endl;
+            out << "," << parGC <<");" << endl;
          }
       } else {
-         out << "," << ParGC << "," << ParFont <<");" << endl;
+         out << "," << parGC << "," << parFont <<");" << endl;
       }
    } else {
-      out << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+      out << "," << parGC << "," << parFont << ",ucolor);" << endl;
    }
 
    TGFrameElement *f;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.17 2004/10/25 12:39:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.18 2005/08/18 11:54:27 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -966,11 +966,11 @@ void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
    }
    if (fLayoutHints & kLHintsLeft) {
       if (hints.Length() == 0) hints  = "kLHintsLeft";
-			   else                     hints += " | kLHintsLeft";
+      else                     hints += " | kLHintsLeft";
    }
    if (fLayoutHints & kLHintsCenterX) {
       if  (hints.Length() == 0) hints  = "kLHintsCenterX";
-      else                     hints += " | kLHintsCenterX";
+      else                      hints += " | kLHintsCenterX";
    }
    if (fLayoutHints & kLHintsRight) {
       if (hints.Length() == 0) hints  = "kLHintsRight";
@@ -982,7 +982,7 @@ void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
    }
    if (fLayoutHints & kLHintsCenterY) {
       if (hints.Length() == 0) hints  = "kLHintsCenterY";
-	     else                     hints += " | kLHintsCenterY";
+      else                     hints += " | kLHintsCenterY";
    }
    if (fLayoutHints & kLHintsBottom) {
       if (hints.Length() == 0) hints  = "kLHintsBottom";

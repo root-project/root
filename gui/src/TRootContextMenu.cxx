@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.12 2005/03/31 12:51:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.13 2005/06/21 17:09:26 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -47,7 +47,7 @@
 #include "TClassMenuItem.h"
 
 
-enum {
+enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
    kToggleListStart   = 2000, // first id of toggle list menu items
    kUserFunctionStart = 3000  // first id of user added functions/methods, etc...
