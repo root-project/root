@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.17 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.18 2004/12/15 17:48:03 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -44,11 +44,12 @@ class TSocket;
 class TNetFile : public TFile {
 
 protected:
-   TUrl      fUrl;        //URL of file
-   TString   fUser;       //remote user name
-   TSocket  *fSocket;     //connection to rootd server
-   Int_t     fProtocol;   //rootd protocol level
-   Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
+   TUrl      fUrl;         //URL of file
+   TUrl      fEndpointUrl; //URL of realfile (after possible redirection)
+   TString   fUser;        //remote user name
+   TSocket  *fSocket;      //connection to rootd server
+   Int_t     fProtocol;    //rootd protocol level
+   Int_t     fErrorCode;   //error code returned by rootd (matching gRootdErrStr)
 
    TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
    virtual void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
@@ -67,7 +68,7 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() : fUrl("dummy") { fSocket = 0; }
+   TNetFile() : fUrl("dummy"), fEndpointUrl("dummy") { fSocket = 0; }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*
@@ -78,6 +79,8 @@ public:
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg);
+
+   const TUrl *GetEndpointUrl() const { return &fEndpointUrl; }
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };

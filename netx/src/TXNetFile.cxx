@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.12 2005/07/21 23:49:08 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.13 2005/07/28 16:27:46 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -407,6 +407,9 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
          goto zombie;
       }
    }
+
+   // set the Endpoint Url we are now connected to
+   fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
 
    return;
 

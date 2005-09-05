@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.60 2005/03/11 11:06:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.61 2005/05/31 13:29:12 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -82,7 +82,7 @@ ClassImp(TNetSystem)
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
-         : TFile(url, "NET", ftitle, compress), fUrl(url)
+   : TFile(url, "NET", ftitle, compress), fUrl(url), fEndpointUrl(url)
 {
    // Create a TNetFile object. This is actually done inside Create(), so
    // for a description of the options and other arguments see Create().
@@ -93,7 +93,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 }
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
-         : TFile(url, "NET", ftitle, compress), fUrl(url)
+   : TFile(url, "NET", ftitle, compress), fUrl(url), fEndpointUrl(url)
 {
    // Create a TNetFile object. To be used by derived classes, that need
    // to initialize the TFile base class but not open a connection at this
