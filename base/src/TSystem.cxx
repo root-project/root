@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.126 2005/08/01 16:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.127 2005/09/04 15:33:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -786,15 +786,16 @@ Bool_t TSystem::IsAbsoluteFileName(const char *dir)
 }
 
 //______________________________________________________________________________
-Bool_t TSystem::IsFileInIncludePath(const char *name)
+Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
 {
    // Return true if 'name' is a file that can be found in the ROOT include
    // path or the current directory.
    // If 'name' contains any ACLiC style information (e.g. trailing +[+][g|O]),
    // it will be striped off 'name'.
+   // If fullpath is != 0, the full path to the file is returned in *fullpath,
+   // which must be deleted by the caller.
 
-   if (name==0) return kFALSE;
-   if (strlen(name)==0) return kFALSE;
+   if (!name || !strlen(name)) return kFALSE;
 
    TString aclicMode;
    TString arguments;
@@ -811,11 +812,17 @@ Bool_t TSystem::IsFileInIncludePath(const char *name)
    }
    incPath.Prepend(fileLocation+":.:");
 
-   const char *actual = Which(incPath,realname);
+   char *actual = Which(incPath,realname);
 
-   if (actual==0) return kFALSE;
-   else return kTRUE;
-
+   if (!actual) {
+      return kFALSE;
+   } else {
+      if (fullpath)
+         *fullpath = actual;
+      else
+         delete [] actual;
+      return kTRUE;
+   }
 }
 
 //______________________________________________________________________________
