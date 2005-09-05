@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.10 2003/01/22 11:23:03 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.11 2003/05/08 16:55:25 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -34,43 +34,43 @@
 
 
 struct FormSize_t {
-      Double_t width,dessus,dessous;
+      Double_t fWidth, fOver, fUnder;
 };
 
 struct TextSpec_t {
-   Double_t angle,size;
-   Int_t color,font;
+   Double_t fAngle,fSize;
+   Int_t    fColor,fFont;
 };
 
 // compute size of a portion of a formula
-class FormSize {
+class TLatexFormSize {
 private:
-      Double_t width, dessus, dessous;
+      Double_t fWidth, fOver, fUnder;
 public:
-      FormSize() { width=0; dessus=0; dessous=0; } // constructeur par defaut
-      FormSize(Double_t x, Double_t y1, Double_t y2) { width=x; dessus=y1; dessous=y2; } // constructeur
-      virtual ~FormSize() {} //destructeur
-      FormSize(const FormSize& form) {width=form.width; dessus=form.dessus; dessous=form.dessous;}
+      TLatexFormSize() { fWidth=0; fOver=0; fUnder=0; } // constructeur par defaut
+      TLatexFormSize(Double_t x, Double_t y1, Double_t y2) { fWidth=x; fOver=y1; fUnder=y2; } // constructeur
+      virtual ~TLatexFormSize() {} //destructeur
+      TLatexFormSize(const TLatexFormSize& form) {fWidth=form.fWidth; fOver=form.fOver; fUnder=form.fUnder;}
       
       // definition of operators + and +=
-      FormSize operator+(FormSize f)
-         { return FormSize(f.Width()+width,TMath::Max(f.Dessus(),dessus),TMath::Max(f.Dessous(),dessous)); }
-      void operator+=(FormSize f)
-         { width += f.Width(); dessus = TMath::Max(dessus,f.Dessus()); dessous = TMath::Max(dessous,f.Dessous()); }
+      TLatexFormSize operator+(TLatexFormSize f)
+         { return TLatexFormSize(f.Width()+fWidth,TMath::Max(f.Over(),fOver),TMath::Max(f.Under(),fUnder)); }
+      void operator+=(TLatexFormSize f)
+         { fWidth += f.Width(); fOver = TMath::Max(fOver,f.Over()); fUnder = TMath::Max(fUnder,f.Under()); }
 
-      inline void Set(Double_t x, Double_t y1, Double_t y2) { width=x; dessus=y1; dessous=y2; }
-      FormSize add_Dessus(FormSize f)
-         { return FormSize(f.Width()+width,f.Height()+dessus,dessous); }
-      FormSize add_Dessous(FormSize f)
-         { return FormSize(f.Width()+width,dessus,f.Height()+dessous); }
-      FormSize add_DessusDessous(FormSize f1, FormSize f2)
-         { return FormSize(width+TMath::Max(f1.Width(),f2.Width()),dessus+f1.Dessus(),dessous+f2.Dessous()); }
+      inline void Set(Double_t x, Double_t y1, Double_t y2) { fWidth=x; fOver=y1; fUnder=y2; }
+      TLatexFormSize AddOver(TLatexFormSize f)
+         { return TLatexFormSize(f.Width()+fWidth,f.Height()+fOver,fUnder); }
+      TLatexFormSize AddUnder(TLatexFormSize f)
+         { return TLatexFormSize(f.Width()+fWidth,fOver,f.Height()+fUnder); }
+      TLatexFormSize AddOver(TLatexFormSize f1, TLatexFormSize f2)
+         { return TLatexFormSize(fWidth+TMath::Max(f1.Width(),f2.Width()),fOver+f1.Over(),fUnder+f2.Under()); }
 
       // return members
-      inline Double_t Width()   { return width; }
-      inline Double_t Dessus()  { return dessus; }
-      inline Double_t Dessous() { return dessous; }
-      inline Double_t Height()  { return dessus+dessous; }
+      inline Double_t Width()  const { return fWidth; }
+      inline Double_t Over()   const { return fOver; }
+      inline Double_t Under()  const { return fUnder; }
+      inline Double_t Height() const { return fOver+fUnder; }
 };
 
 class TLatex : public TText, public TAttLine {
@@ -86,17 +86,17 @@ protected:
       Int_t         fPos;             //!Current position in array fTabSize;
 
       //Text analysis and painting
-      FormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);
-      FormSize Anal1(TextSpec_t spec, const Char_t* t,Int_t length);
+      TLatexFormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);
+      TLatexFormSize Anal1(TextSpec_t spec, const Char_t* t,Int_t length);
 
       void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec);
       void DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec);
       void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, TextSpec_t spec);
 
-      FormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
+      TLatexFormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
 
-      void Savefs(FormSize *fs);
-      FormSize Readfs();
+      void Savefs(TLatexFormSize *fs);
+      TLatexFormSize Readfs();
 
       Int_t CheckLatexSyntax(TString &text) ;
 
