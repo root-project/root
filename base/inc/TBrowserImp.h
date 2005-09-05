@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.3 2004/06/25 10:10:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.4 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -41,9 +41,9 @@ public:
    virtual ~TBrowserImp() { }
 
    virtual void  Add(TObject *, const char *, Int_t) { }
-   virtual void  AddCheckBox(TObject *obj, Bool_t check = kFALSE) { }
-   virtual void  CheckObjectItem(TObject *obj, Bool_t check = kFALSE) { }
-   virtual void  RemoveCheckBox(TObject *obj) { }
+   virtual void  AddCheckBox(TObject *, Bool_t = kFALSE) { }
+   virtual void  CheckObjectItem(TObject *, Bool_t = kFALSE) { }
+   virtual void  RemoveCheckBox(TObject *) { }
    virtual void  BrowseObj(TObject *) { }
    TBrowser     *Browser() const { return fBrowser; }
    virtual void  ExecuteDefaultAction(TObject *) { }
