@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.101 2005/09/03 13:12:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.102 2005/09/05 10:02:38 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3391,7 +3391,7 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
          SetActionOptimized(pos, kFDM);
       }    
       if (prim->fType==0){
-         SetActionOptimized(pos,kConstant);
+         SetActionOptimized(pos,kConstant,fNconst);
          fConst[fNconst] = prim->Eval(0);
          fNconst++;
       }
