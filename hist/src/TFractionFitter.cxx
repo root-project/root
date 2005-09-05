@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.10 2004/08/18 12:29:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.11 2005/08/29 10:45:06 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -244,8 +244,8 @@ void TFractionFitter::SetWeight(Int_t parm, TH1* weight) {
   }
   if (weight) {
      if (weight->GetNbinsX() != fData->GetNbinsX() ||
-	 (fData->GetDimension() > 1 && weight->GetNbinsY() != fData->GetNbinsY()) ||
-	 (fData->GetDimension() > 2 && weight->GetNbinsZ() != fData->GetNbinsZ())) {
+         (fData->GetDimension() > 1 && weight->GetNbinsY() != fData->GetNbinsY()) ||
+         (fData->GetDimension() > 2 && weight->GetNbinsZ() != fData->GetNbinsZ())) {
         Error("SetWeight","Inconsistent weights histogram for source %d", parm);
         return;
      }
@@ -414,8 +414,8 @@ void TFractionFitter::CheckConsistency() {
   for (z = minZ; z <= maxZ; ++z) {
      for (y = minY; y <= maxY; ++y) {
         for (x = minX; x <= maxX; ++x) {
-	   fNpfits++;
-	   fIntegralData += fData->GetBinContent(x, y, z);
+           fNpfits++;
+           fIntegralData += fData->GetBinContent(x, y, z);
         }
      }
   }
@@ -439,17 +439,17 @@ void TFractionFitter::CheckConsistency() {
         return;
      }
      if ((! h->Class()->InheritsFrom(cl)) || h->GetNbinsX() != fData->GetNbinsX() ||
-	 (fData->GetDimension() > 1 && h->GetNbinsY() != fData->GetNbinsY()) ||
-	 (fData->GetDimension() > 2 && h->GetNbinsZ() != fData->GetNbinsZ())) {
+         (fData->GetDimension() > 1 && h->GetNbinsY() != fData->GetNbinsY()) ||
+         (fData->GetDimension() > 2 && h->GetNbinsZ() != fData->GetNbinsZ())) {
         Error("CheckConsistency","Histogram inconsistency for source #%d",par);
         return;
      }
      fIntegralMCs[par] = 0;
      for (z = minZ; z <= maxZ; ++z) {
         for (y = minY; y <= maxY; ++y) {
-	   for (x = minX; x <= maxX; ++x) {
-	      fIntegralMCs[par] += h->GetBinContent(x, y, z);
-	   }
+           for (x = minX; x <= maxX; ++x) {
+              fIntegralMCs[par] += h->GetBinContent(x, y, z);
+           }
         }
      }
      if (fIntegralMCs[par] <= 0) {
@@ -544,7 +544,7 @@ TH1* TFractionFitter::GetPlot() {
 
 //______________________________________________________________________________
 void TFractionFitter::GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
-				Int_t& minZ, Int_t& maxZ) const {
+                                Int_t& minZ, Int_t& maxZ) const {
   // Used internally to obtain the bin ranges according to the dimensionality of
   // the histogram and the limits set by hand.
 
@@ -585,18 +585,18 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
      TH1 *hw = (TH1*)fWeights[mc];
      if (hw) {
         tot = 0;
-	for (z = minZ; z <= maxZ; ++z) {
-	   for (y = minY; y <= maxY; ++y) {
-	      for (x = minX; x <= maxX; ++x) {
-	         Double_t weight = hw->GetBinContent(x, y, z);
-	         if (weight <= 0) {
-		    Error("ComputeFCN","Invalid weight encountered for MC source %d",mc);
-		    return;
-	         }
-	         tot += weight * h->GetBinContent(x, y, z);
-	      }
-	   }
-	}
+        for (z = minZ; z <= maxZ; ++z) {
+           for (y = minY; y <= maxY; ++y) {
+              for (x = minX; x <= maxX; ++x) {
+                 Double_t weight = hw->GetBinContent(x, y, z);
+                 if (weight <= 0) {
+                    Error("ComputeFCN","Invalid weight encountered for MC source %d",mc);
+                    return;
+                 }
+                 tot += weight * h->GetBinContent(x, y, z);
+              }
+           }
+        }
     } else tot = fIntegralMCs[mc];
     fFractions[mc] = xx[mc] * fIntegralData / tot;
   }
@@ -611,44 +611,44 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
   for (z = minZ; z <= maxZ; ++z) {
     for (y = minY; y <= maxY; ++y) {
       for (x = minX; x <= maxX; ++x) {
-	bin = fData->GetBin(x, y, z);
+        bin = fData->GetBin(x, y, z);
 
-	// Solve for the "predictions"
-	int k0;
-	Double_t ti; Double_t aki;
-	FindPrediction(bin, fFractions, ti, k0, aki);
+        // Solve for the "predictions"
+        int k0;
+        Double_t ti; Double_t aki;
+        FindPrediction(bin, fFractions, ti, k0, aki);
 
-	Double_t prediction = 0;
-	for (mc = 0; mc < fNpar; ++mc) {
-	  TH1 *h  = (TH1*)fMCs[mc];
-	  TH1 *hw = (TH1*)fWeights[mc];
-	  Double_t binPrediction;
-	  Double_t binContent = h->GetBinContent(bin);
-	  Double_t weight = hw ? hw->GetBinContent(bin) : 1;
-	  if (k0 >= 0 && fFractions[mc] == fFractions[k0]) {
-	     binPrediction = aki;
-	  } else {
-	     binPrediction = binContent > 0 ? binContent / (1+weight*fFractions[mc]*ti) : 0;
-	  }
+        Double_t prediction = 0;
+        for (mc = 0; mc < fNpar; ++mc) {
+          TH1 *h  = (TH1*)fMCs[mc];
+          TH1 *hw = (TH1*)fWeights[mc];
+          Double_t binPrediction;
+          Double_t binContent = h->GetBinContent(bin);
+          Double_t weight = hw ? hw->GetBinContent(bin) : 1;
+          if (k0 >= 0 && fFractions[mc] == fFractions[k0]) {
+             binPrediction = aki;
+          } else {
+             binPrediction = binContent > 0 ? binContent / (1+weight*fFractions[mc]*ti) : 0;
+          }
 
-	  prediction += fFractions[mc]*weight*binPrediction;
-	  result -= binPrediction;
-	  if (binContent > 0 && binPrediction > 0)
-	    result += binContent*TMath::Log(binPrediction);
+          prediction += fFractions[mc]*weight*binPrediction;
+          result -= binPrediction;
+          if (binContent > 0 && binPrediction > 0)
+            result += binContent*TMath::Log(binPrediction);
 
-	  if (flag == 3) {
-	     ((TH1*)fAji.At(mc))->SetBinContent(bin, binPrediction);
-	  }
-	}
+          if (flag == 3) {
+             ((TH1*)fAji.At(mc))->SetBinContent(bin, binPrediction);
+          }
+        }
 
-	if (flag == 3) {
-	   fPlot->SetBinContent(bin, prediction);
-	}
+        if (flag == 3) {
+           fPlot->SetBinContent(bin, prediction);
+        }
 
-	result -= prediction;
-	Double_t found = fData->GetBinContent(bin);
-	if (found > 0)
-	   result += found*TMath::Log(prediction);
+        result -= prediction;
+        Double_t found = fData->GetBinContent(bin);
+        if (found > 0)
+           result += found*TMath::Log(prediction);
       }
     }
   }
@@ -714,10 +714,10 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &ti,
      for (par = 0; par < fNpar; ++par) {
         hw = (TH1*)fWeights.At(par);
         if (par != k0) {
-	   Double_t weightedFraction = hw ?
-	     hw->GetBinContent(bin) * fractions[par] : fractions[par];
-	   if (weightedFraction != refWeightedFraction)
-	     aki -= ((TH1*)fMCs.At(par))->GetBinContent(bin)*weightedFraction/ (refWeightedFraction - weightedFraction);
+           Double_t weightedFraction = hw ?
+             hw->GetBinContent(bin) * fractions[par] : fractions[par];
+           if (weightedFraction != refWeightedFraction)
+             aki -= ((TH1*)fMCs.At(par))->GetBinContent(bin)*weightedFraction/ (refWeightedFraction - weightedFraction);
         }
      }
      if (aki > 0) {
@@ -741,7 +741,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &ti,
         TH1 *h = (TH1*)fMCs.At(par);
         hw = (TH1*)fWeights.At(par);
         Double_t weightedFraction = hw ?
-	  hw->GetBinContent(bin) * fractions[par] : fractions[par];
+          hw->GetBinContent(bin) * fractions[par] : fractions[par];
         Double_t d = 1/(ti+1/weightedFraction);
         aFunction   += h->GetBinContent(bin)*d;
         aDerivative -= h->GetBinContent(bin)*d*d;
@@ -840,18 +840,18 @@ Double_t TFractionFitter::GetChisquare() const
    Double_t logLmn = 0; // likelihood of data ("true" distribution)
    for(Int_t x = minX; x <= maxX; x++) {
       for(Int_t y = minY; y <= maxY; y++) {
-	 for(Int_t z = minZ; z <= maxZ; z++) {
-	    Double_t di = fData->GetBinContent(x, y, z);
-	    Double_t fi = fPlot->GetBinContent(x, y, z);
-	    if(fi != 0) logLyn += di * TMath::Log(fi) - fi;
-	    if(di != 0) logLmn += di * TMath::Log(di) - di;
-	    for(Int_t j = 0; j < fNpar; j++) {
-	       Double_t aji = ((TH1*)fMCs.At(j))->GetBinContent(x, y, z);
-	       Double_t bji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
-	       if(bji != 0) logLyn += aji * TMath::Log(bji) - aji;
-	       if(aji != 0) logLmn += aji * TMath::Log(aji) - aji;
-	    }
-	 }
+         for(Int_t z = minZ; z <= maxZ; z++) {
+            Double_t di = fData->GetBinContent(x, y, z);
+            Double_t fi = fPlot->GetBinContent(x, y, z);
+            if(fi != 0) logLyn += di * TMath::Log(fi) - fi;
+            if(di != 0) logLmn += di * TMath::Log(di) - di;
+            for(Int_t j = 0; j < fNpar; j++) {
+               Double_t aji = ((TH1*)fMCs.At(j))->GetBinContent(x, y, z);
+               Double_t bji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
+               if(bji != 0) logLyn += aji * TMath::Log(bji) - aji;
+               if(aji != 0) logLmn += aji * TMath::Log(aji) - aji;
+            }
+         }
       }
    }
 

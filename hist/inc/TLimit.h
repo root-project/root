@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.2 2003/03/21 14:53:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.3 2004/01/27 13:41:53 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -36,7 +36,7 @@ class TLimit {
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
                                          Int_t nmc =50000, 
                                          bool stat = false,
-					 TRandom * generator = NULL,
+                                         TRandom * generator = NULL,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) =&(TLimit::LogLikelihood));
  protected:
    static TLimitDataSource *Fluctuate(TLimitDataSource * input, bool init,TRandom *, bool stat=false);

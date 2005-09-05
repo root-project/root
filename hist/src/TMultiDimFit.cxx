@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.20 2005/07/19 07:17:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.21 2005/08/29 10:45:07 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1818,8 +1818,8 @@ TMultiDimFit::TMultiDimFit()
 
 //____________________________________________________________________
 TMultiDimFit::TMultiDimFit(Int_t dimension,
-			   EMDFPolyType type,
-			   Option_t *option)
+                           EMDFPolyType type,
+                           Option_t *option)
   : TNamed("multidimfit","Multi-dimensional fit object"),
     fQuantity(dimension),
     fSqError(dimension),
@@ -2027,10 +2027,10 @@ void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 
     if (x[i] > fMaxVariables(i))
       Warning("AddTestRow", "variable %d (row: %d) too large: %f > %f",
-	       i, fTestSampleSize, x[i], fMaxVariables(i));
+               i, fTestSampleSize, x[i], fMaxVariables(i));
     if (x[i] < fMinVariables(i))
       Warning("AddTestRow", "variable %d (row: %d) too small: %f < %f",
-	       i, fTestSampleSize, x[i], fMinVariables(i));
+               i, fTestSampleSize, x[i], fMinVariables(i));
   }
 }
 
@@ -2187,7 +2187,7 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
       // Evaluate the factor (polynomial) in the j-th variable.
       Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
       Double_t y  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
-	* (x[j] - fMaxVariables(j));
+        * (x[j] - fMaxVariables(j));
       term        *= EvalFactor(p,y);
     }
     // Add this term to the final result
@@ -2234,9 +2234,9 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
     for (i = 3; i <= p; i++) {
       p3 = p2 * x;
       if (fPolyType == kLegendre)
-	p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
+        p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
       else if (fPolyType == kChebyshev)
-	p3 = 2 * x * p2 - p1;
+        p3 = 2 * x * p2 - p1;
       p1 = p2;
       p2 = p3;
     }
@@ -2325,7 +2325,7 @@ void TMultiDimFit::Fit(Option_t *option)
     Double_t startVal = fCoefficients(i);
     Double_t startErr = fCoefficientsRMS(i);
     fFitter->SetParameter(i, Form("coeff%02d",i),
-			  startVal, startErr, 0, 0);
+                          startVal, startErr, 0, 0);
   }
 
   // arglist[0]           = 0;
@@ -2336,7 +2336,7 @@ void TMultiDimFit::Fit(Option_t *option)
   for (i = 0; i < fNCoefficients; i++) {
     Double_t val = 0, err = 0, low = 0, high = 0;
     fFitter->GetParameter(i, Form("coeff%02d",i),
-			 val, err, low, high);
+                         val, err, low, high);
     fCoefficients(i)    = val;
     fCoefficientsRMS(i) = err;
   }
@@ -2382,44 +2382,44 @@ void TMultiDimFit::MakeCandidates()
 
       if (s <= fPowerLimit) {
 
-	// Call over-loadable method Select, as to allow the user to
-	// interfere with the selection of functions.
-	if (Select(iv)) {
-	  numberFunctions++;
+        // Call over-loadable method Select, as to allow the user to
+        // interfere with the selection of functions.
+        if (Select(iv)) {
+          numberFunctions++;
 
-	  // If we've reached the user defined limit of how many
-	  // functions we can consider, break out of the loop
-	  if (numberFunctions > fMaxFunctions)
-	  break;
+          // If we've reached the user defined limit of how many
+          // functions we can consider, break out of the loop
+          if (numberFunctions > fMaxFunctions)
+          break;
 
-	  // Store the control value, so we can sort array of powers
-	  // later on
-	  control[numberFunctions-1] = Int_t(1.0e+6*s);
+          // Store the control value, so we can sort array of powers
+          // later on
+          control[numberFunctions-1] = Int_t(1.0e+6*s);
 
-	  // Store the powers in powers array.
-	  for (i = 0; i < fNVariables; i++) {
-	    j = (numberFunctions - 1) * fNVariables + i;
-	    powers[j] = iv[i];
-	  }
-	} // if (Select())
+          // Store the powers in powers array.
+          for (i = 0; i < fNVariables; i++) {
+            j = (numberFunctions - 1) * fNVariables + i;
+            powers[j] = iv[i];
+          }
+        } // if (Select())
       } // if (s <= fPowerLimit)
 
       for (i = 0; i < fNVariables; i++)
-	if (iv[i] < fMaxPowers[i])
-	  break;
+        if (iv[i] < fMaxPowers[i])
+          break;
 
       // If all variables have reached their maximum power, then we
       // break out of the loop
       if (i == fNVariables) {
-	fMaxFunctions = numberFunctions;
-	break;
+        fMaxFunctions = numberFunctions;
+        break;
       }
 
       // Next power in variable i
       iv[i]++;
 
       for (j = 0; j < i; j++)
-	iv[j] = 1;
+        iv[j] = 1;
     } // while (kTRUE)
   }
   else {
@@ -2427,8 +2427,8 @@ void TMultiDimFit::MakeCandidates()
     for (i = 0; i < fMaxFunctions; i++) {
       // Copy the powers to working arrays
       for (j = 0; j < fNVariables; j++) {
-	powers[i * fNVariables + j] = fPowers[i * fNVariables + j];
-	iv[j]                 = fPowers[i * fNVariables + j];
+        powers[i * fNVariables + j] = fPowers[i * fNVariables + j];
+        iv[j]                 = fPowers[i * fNVariables + j];
       }
 
       control[i] = Int_t(1.0e+6*EvalControl(iv));
@@ -2449,9 +2449,9 @@ void TMultiDimFit::MakeCandidates()
 
     for (j = i; j < fMaxFunctions; j++) {
       if (control[j] <= x) {
-	x = control[j];
-	l = order[j];
-	k = j;
+        x = control[j];
+        l = order[j];
+        k = j;
       }
     }
 
@@ -2563,8 +2563,8 @@ void TMultiDimFit::MakeCoefficientErrors()
     for (j = 0; j <= i; j++) {
       jF = TMatrixDRow(fFunctions,j);
       for (k = 0; k < fSampleSize; k++)
-	curvatureMatrix(i,j) +=
-	  1 / TMath::Max(fSqError(k), 1e-20) * iF(k) * jF(k);
+        curvatureMatrix(i,j) +=
+          1 / TMath::Max(fSqError(k), 1e-20) * iF(k) * jF(k);
       curvatureMatrix(j,i) = curvatureMatrix(i,j);
     }
   }
@@ -2614,9 +2614,9 @@ void TMultiDimFit::MakeCoefficients()
     for (row = col - 1; row > -1; row--) {
       fOrthCurvatureMatrix(row,col) = 0;
       for (i = row; i <= col ; i++)
- 	fOrthCurvatureMatrix(row,col) -=
-	  fOrthCurvatureMatrix(i,row)
-	  * fOrthCurvatureMatrix(i,col);
+         fOrthCurvatureMatrix(row,col) -=
+          fOrthCurvatureMatrix(i,row)
+          * fOrthCurvatureMatrix(i,col);
     }
   }
 
@@ -2665,15 +2665,15 @@ void TMultiDimFit::MakeCoefficients()
       TESTBIT(fHistogramMask,HIST_RX)) {
     for (i = 0; i < fSampleSize; i++) {
       if (TESTBIT(fHistogramMask,HIST_RD))
-	((TH2D*)fHistograms->FindObject("res_d"))->Fill(fQuantity(i),
-							fResiduals(i));
+        ((TH2D*)fHistograms->FindObject("res_d"))->Fill(fQuantity(i),
+                                                        fResiduals(i));
       if (TESTBIT(fHistogramMask,HIST_RTRAI))
-	((TH1D*)fHistograms->FindObject("res_train"))->Fill(fResiduals(i));
+        ((TH1D*)fHistograms->FindObject("res_train"))->Fill(fResiduals(i));
 
       if (TESTBIT(fHistogramMask,HIST_RX))
-	for (j = 0; j < fNVariables; j++)
-	  ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
-	    ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
+        for (j = 0; j < fNVariables; j++)
+          ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
+            ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
     }
   } // If histograms
 
@@ -2708,7 +2708,7 @@ void TMultiDimFit::MakeCorrelation()
       k =  j * fNVariables + i;
       ddotXi += fQuantity(j) * (fVariables(k) - fMeanVariables(i));
       xiNorm += (fVariables(k) - fMeanVariables(i))
-	* (fVariables(k) - fMeanVariables(i));
+        * (fVariables(k) - fMeanVariables(i));
     }
     fCorrelationMatrix(i,0) = ddotXi / TMath::Sqrt(d2 * xiNorm);
 
@@ -2716,16 +2716,16 @@ void TMultiDimFit::MakeCorrelation()
       xidotXj = 0.; // G.Q. reinitialisation
       xjNorm = 0.; // G.Q. reinitialisation
       for (k = 0; k < fSampleSize; k++) {
-	// Index of sample j of variable i
-	// l =  j * fNVariables + k;  // G.Q.
-	l =  k * fNVariables + j; // G.Q.
-	m =  k * fNVariables + i; // G.Q.
-	// G.Q.	xidotXj += (fVariables(i) - fMeanVariables(i))
-	// G.Q.	  * (fVariables(l) - fMeanVariables(j));
-	xidotXj += (fVariables(m) - fMeanVariables(i))
-	  * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
-	xjNorm  += (fVariables(l) - fMeanVariables(j))
-	  * (fVariables(l) - fMeanVariables(j));
+        // Index of sample j of variable i
+        // l =  j * fNVariables + k;  // G.Q.
+        l =  k * fNVariables + j; // G.Q.
+        m =  k * fNVariables + i; // G.Q.
+        // G.Q.        xidotXj += (fVariables(i) - fMeanVariables(i))
+        // G.Q.          * (fVariables(l) - fMeanVariables(j));
+        xidotXj += (fVariables(m) - fMeanVariables(i))
+          * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
+        xjNorm  += (fVariables(l) - fMeanVariables(j))
+          * (fVariables(l) - fMeanVariables(j));
       }
       //fCorrelationMatrix(i+1,j) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
       fCorrelationMatrix(i,j+1) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
@@ -2775,7 +2775,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
     // Calculate (f_fNCoefficients dot w_j) / w_j^2
     for (k = 0; k < fSampleSize; k++) {
       fdw += fFunctions(fNCoefficients, k) * fOrthFunctions(j,k)
-	/ fOrthFunctionNorms(j);
+        / fOrthFunctionNorms(j);
     }
 
     fOrthCurvatureMatrix(fNCoefficients,j) = fdw;
@@ -2798,7 +2798,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
   // First test, but only if didn't user specify
   if (!fIsUserFunction)
     if (TMath::Sqrt(fOrthFunctionNorms(fNCoefficients) / (f2 + 1e-10))
-	< TMath::Sin(fMinAngle*DEGRAD))
+        < TMath::Sin(fMinAngle*DEGRAD))
       return 0;
 
   // The result found by this code for the first residual is always
@@ -2853,10 +2853,10 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_XORIG);
     for (i = 0; i < fNVariables; i++)
       if (!fHistograms->FindObject(Form("x_%d_orig",i)))
-	fHistograms->Add(new TH1D(Form("x_%d_orig",i),
-				  Form("Original variable # %d",i),
-				  100, fMinVariables(i),
-				  fMaxVariables(i)));
+        fHistograms->Add(new TH1D(Form("x_%d_orig",i),
+                                  Form("Original variable # %d",i),
+                                  100, fMinVariables(i),
+                                  fMaxVariables(i)));
   }
 
   // Histogram of original dependent variable
@@ -2864,7 +2864,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_DORIG);
     if (!fHistograms->FindObject("d_orig"))
       fHistograms->Add(new TH1D("d_orig", "Original Quantity",
-				100, fMinQuantity, fMaxQuantity));
+                                100, fMinQuantity, fMaxQuantity));
   }
 
   // Histograms of normalized variables
@@ -2872,9 +2872,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_XNORM);
     for (i = 0; i < fNVariables; i++)
       if (!fHistograms->FindObject(Form("x_%d_norm",i)))
-	fHistograms->Add(new TH1D(Form("x_%d_norm",i),
-				  Form("Normalized variable # %d",i),
-				  100, -1,1));
+        fHistograms->Add(new TH1D(Form("x_%d_norm",i),
+                                  Form("Normalized variable # %d",i),
+                                  100, -1,1));
   }
 
   // Histogram of shifted dependent variable
@@ -2882,8 +2882,8 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_DSHIF);
     if (!fHistograms->FindObject("d_shifted"))
       fHistograms->Add(new TH1D("d_shifted", "Shifted Quantity",
-				100, fMinQuantity - fMeanQuantity,
-				fMaxQuantity - fMeanQuantity));
+                                100, fMinQuantity - fMeanQuantity,
+                                fMaxQuantity - fMeanQuantity));
   }
 
   // Residual from training sample versus independent variables
@@ -2891,12 +2891,12 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_RX);
     for (i = 0; i < fNVariables; i++)
       if (!fHistograms->FindObject(Form("res_x_%d",i)))
-	fHistograms->Add(new TH2D(Form("res_x_%d",i),
-				  Form("Computed residual versus x_%d", i),
-				  100, -1,    1,
-				  35,
-				  fMinQuantity - fMeanQuantity,
-				  fMaxQuantity - fMeanQuantity));
+        fHistograms->Add(new TH2D(Form("res_x_%d",i),
+                                  Form("Computed residual versus x_%d", i),
+                                  100, -1,    1,
+                                  35,
+                                  fMinQuantity - fMeanQuantity,
+                                  fMaxQuantity - fMeanQuantity));
   }
 
   // Residual from training sample versus. dependent variable
@@ -2904,13 +2904,13 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_RD);
     if (!fHistograms->FindObject("res_d"))
       fHistograms->Add(new TH2D("res_d",
-				"Computed residuals vs Quantity",
-				100,
-				fMinQuantity - fMeanQuantity,
-				fMaxQuantity - fMeanQuantity,
-				35,
-				fMinQuantity - fMeanQuantity,
-				fMaxQuantity - fMeanQuantity));
+                                "Computed residuals vs Quantity",
+                                100,
+                                fMinQuantity - fMeanQuantity,
+                                fMaxQuantity - fMeanQuantity,
+                                35,
+                                fMinQuantity - fMeanQuantity,
+                                fMaxQuantity - fMeanQuantity));
   }
 
   // Residual from training sample
@@ -2918,18 +2918,18 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
     SETBIT(fHistogramMask,HIST_RTRAI);
     if (!fHistograms->FindObject("res_train"))
       fHistograms->Add(new TH1D("res_train",
-				"Computed residuals over training sample",
-				100, fMinQuantity - fMeanQuantity,
-				fMaxQuantity - fMeanQuantity));
+                                "Computed residuals over training sample",
+                                100, fMinQuantity - fMeanQuantity,
+                                fMaxQuantity - fMeanQuantity));
 
   }
   if (opt.Contains("r4") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RTEST);
     if (!fHistograms->FindObject("res_test"))
       fHistograms->Add(new TH1D("res_test",
-				"Distribution of residuals from test",
-				100,fMinQuantity - fMeanQuantity,
-				fMaxQuantity - fMeanQuantity));
+                                "Distribution of residuals from test",
+                                100,fMinQuantity - fMeanQuantity,
+                                fMaxQuantity - fMeanQuantity));
   }
 }
 
@@ -3013,16 +3013,16 @@ void TMultiDimFit::MakeNormalized()
 
       // Fill histograms of original independent variables
       if (TESTBIT(fHistogramMask,HIST_XORIG))
-	((TH1D*)fHistograms->FindObject(Form("x_%d_orig",j)))
-	  ->Fill(fVariables(k));
+        ((TH1D*)fHistograms->FindObject(Form("x_%d_orig",j)))
+          ->Fill(fVariables(k));
 
       // Normalise independent variables
       fVariables(k) = 1 + 2 * range * (fVariables(k) - fMaxVariables(j));
 
       // Fill histograms of normalised independent variables
       if (TESTBIT(fHistogramMask,HIST_XNORM))
-	((TH1D*)fHistograms->FindObject(Form("x_%d_norm",j)))
-	  ->Fill(fVariables(k));
+        ((TH1D*)fHistograms->FindObject(Form("x_%d_norm",j)))
+          ->Fill(fVariables(k));
 
     }
   }
@@ -3034,7 +3034,7 @@ void TMultiDimFit::MakeNormalized()
   for (i = 0; i < fNVariables; i++) {
     Double_t range = 1. / (fMaxVariables(i) - fMinVariables(i));
     fMeanVariables(i) = 1 + 2 * range * (fMeanVariables(i)
-					 - fMaxVariables(i));
+                                         - fMaxVariables(i));
   }
 }
 
@@ -3093,7 +3093,7 @@ void TMultiDimFit::MakeParameterization()
     // If we've reached the end of the functions, restart pass
     if (i == fMaxFunctions) {
       if (fMaxAngle != 0)
-	fMaxAngle += (90 - fMaxAngle) / 2;
+        fMaxAngle += (90 - fMaxAngle) / 2;
       i = 0;
       studied--;
       k++;
@@ -3107,7 +3107,7 @@ void TMultiDimFit::MakeParameterization()
     // Print a happy message
     if (fIsVerbose && studied == 1)
       cout << "Coeff   SumSqRes    Contrib   Angle      QM   Func"
-	   << "     Value        W^2  Powers" << endl;
+           << "     Value        W^2  Powers" << endl;
 
     // Make the Gram-Schmidt
     Double_t dResidur = MakeGramSchmidt(i);
@@ -3126,8 +3126,8 @@ void TMultiDimFit::MakeParameterization()
 
       // Test if this function contributes to the fit
       if (!TestFunction(squareResidual, dResidur)) {
-	fFunctionCodes[i] = 1;
-	continue;
+        fFunctionCodes[i] = 1;
+        continue;
       }
     }
 
@@ -3147,26 +3147,26 @@ void TMultiDimFit::MakeParameterization()
     // Calculate control parameter from this function
     for (j = 0; j < fNVariables; j++) {
       if (fNCoefficients == 1
-	  || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1)
-	fMaxPowersFinal[j] = fPowers[i * fNVariables + j] - 1;
+          || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1)
+        fMaxPowersFinal[j] = fPowers[i * fNVariables + j] - 1;
     }
     Double_t s = EvalControl(&fPowers[i * fNVariables]);
 
     // Print the statistics about this function
     if (fIsVerbose) {
       cout << setw(5)  << fNCoefficients << " "
-	   << setw(10) << setprecision(4) << squareResidual << " "
-	   << setw(10) << setprecision(4) << dResidur << " "
-	   << setw(7)  << setprecision(3) << fMaxAngle << " "
-	   << setw(7)  << setprecision(3) << s << " "
-	   << setw(5)  << i << " "
-	   << setw(10) << setprecision(4)
-	   << fOrthCoefficients(fNCoefficients-1) << " "
-	   << setw(10) << setprecision(4)
-	   << fOrthFunctionNorms(fNCoefficients-1) << " "
-	   << flush;
+           << setw(10) << setprecision(4) << squareResidual << " "
+           << setw(10) << setprecision(4) << dResidur << " "
+           << setw(7)  << setprecision(3) << fMaxAngle << " "
+           << setw(7)  << setprecision(3) << s << " "
+           << setw(5)  << i << " "
+           << setw(10) << setprecision(4)
+           << fOrthCoefficients(fNCoefficients-1) << " "
+           << setw(10) << setprecision(4)
+           << fOrthFunctionNorms(fNCoefficients-1) << " "
+           << flush;
       for (j = 0; j < fNVariables; j++)
-	cout << " " << fPowers[i * fNVariables + j] - 1 << flush;
+        cout << " " << fPowers[i * fNVariables + j] - 1 << flush;
       cout << endl;
     }
 
@@ -3176,7 +3176,7 @@ void TMultiDimFit::MakeParameterization()
     }
 
     Double_t err  = TMath::Sqrt(TMath::Max(1e-20,squareResidual) /
-				fSumSqAvgQuantity);
+                                fSumSqAvgQuantity);
     if (err < fMinRelativeError) {
       fParameterisationCode = PARAM_RELERR;
       break;
@@ -3192,8 +3192,8 @@ void TMultiDimFit::MakeParameterization()
 
 //____________________________________________________________________
 void TMultiDimFit::MakeRealCode(const char *filename,
-				const char *classname,
-				Option_t *)
+                                const char *classname,
+                                Option_t *)
 {
   // PRIVATE METHOD:
   // This is the method that actually generates the code for the
@@ -3236,7 +3236,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
           << "//    double  " << prefix << "MDF(double *x); " << endl
           << "//" << endl
           << "// For evaluating the parameterization obtained" << endl
-	  << "// from TMultiDimFit and the point x" << endl
+          << "// from TMultiDimFit and the point x" << endl
           << "// " << endl
           << "// See TMultiDimFit class documentation for more "
           << "information " << endl << "// " << endl;
@@ -3293,9 +3293,9 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
   // Assignment to powers vector.
   outFile << "// Assignment to powers vector." << endl
-	  << "// The powers are stored row-wise, that is" << endl
-	  << "//  p_ij = " << prefix
-	  << "gPower[i * NVariables + j];" << endl;
+          << "// The powers are stored row-wise, that is" << endl
+          << "//  p_ij = " << prefix
+          << "gPower[i * NVariables + j];" << endl;
   outFile << cv_qual << "int    " << prefix
           << "gPower[] = {" << flush;
   for (i = 0; i < fNCoefficients; i++) {
@@ -3303,8 +3303,8 @@ void TMultiDimFit::MakeRealCode(const char *filename,
       if (j != 0) outFile << flush << "  ";
       else        outFile << endl << "  ";
       outFile << fPowers[fPowerIndex[i] * fNVariables + j]
-	      << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",")
-	      << flush;
+              << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",")
+              << flush;
     }
   }
   outFile << endl << "};" << endl << endl;
@@ -3321,42 +3321,42 @@ void TMultiDimFit::MakeRealCode(const char *filename,
           << endl << "// " << endl;
   outFile << "double " << prefix
           << "MDF(double *x) {" << endl
-	  << "  double returnValue = " << prefix << "gDMean;" << endl
-	  << "  int    i = 0, j = 0, k = 0;" << endl
-	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
-	  << endl
-	  << "    // Evaluate the ith term in the expansion" << endl
-	  << "    double term = " << prefix << "gCoefficient[i];"
-	  << endl
-	  << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
-	  << endl
-	  << "      // Evaluate the polynomial in the jth variable." << endl
-	  << "      int power = "<< prefix << "gPower["
-	  << prefix << "gNVariables * i + j]; " << endl
-	  << "      double p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl
-	  << "      double v =  1 + 2. / ("
-	  << prefix << "gXMax[j] - " << prefix
-	  << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << endl
-	  << "      // what is the power to use!" << endl
-	  << "      switch(power) {" << endl
-	  << "      case 1: r = 1; break; " << endl
-	  << "      case 2: r = v; break; " << endl
-	  << "      default: " << endl
-	  << "        p2 = v; " << endl
-	  << "        for (k = 3; k <= power; k++) { " << endl
-	  << "          p3 = p2 * v;" << endl;
+          << "  double returnValue = " << prefix << "gDMean;" << endl
+          << "  int    i = 0, j = 0, k = 0;" << endl
+          << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
+          << endl
+          << "    // Evaluate the ith term in the expansion" << endl
+          << "    double term = " << prefix << "gCoefficient[i];"
+          << endl
+          << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
+          << endl
+          << "      // Evaluate the polynomial in the jth variable." << endl
+          << "      int power = "<< prefix << "gPower["
+          << prefix << "gNVariables * i + j]; " << endl
+          << "      double p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl
+          << "      double v =  1 + 2. / ("
+          << prefix << "gXMax[j] - " << prefix
+          << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << endl
+          << "      // what is the power to use!" << endl
+          << "      switch(power) {" << endl
+          << "      case 1: r = 1; break; " << endl
+          << "      case 2: r = v; break; " << endl
+          << "      default: " << endl
+          << "        p2 = v; " << endl
+          << "        for (k = 3; k <= power; k++) { " << endl
+          << "          p3 = p2 * v;" << endl;
   if (fPolyType == kLegendre)
     outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
-	    << " / (i - 1);" << endl;
+            << " / (i - 1);" << endl;
   if (fPolyType == kChebyshev)
     outFile << "          p3 = 2 * v * p2 - p1; " << endl;
   outFile << "          p1 = p2; p2 = p3; " << endl << "        }" << endl
-	  << "        r = p3;" << endl << "      }" << endl
-	  << "      // multiply this term by the poly in the jth var" << endl
-	  << "      term *= r; " << endl << "    }" << endl
-	  << "    // Add this term to the final result" << endl
-	  << "    returnValue += term;" << endl << "  }" << endl
-	  << "  return returnValue;" << endl << "}" << endl << endl;
+          << "        r = p3;" << endl << "      }" << endl
+          << "      // multiply this term by the poly in the jth var" << endl
+          << "      term *= r; " << endl << "    }" << endl
+          << "    // Add this term to the final result" << endl
+          << "    returnValue += term;" << endl << "  }" << endl
+          << "  return returnValue;" << endl << "}" << endl << endl;
 
   // EOF
   outFile << "// EOF for " << filename << endl;
@@ -3391,21 +3391,21 @@ void TMultiDimFit::Print(Option_t *option) const
   if (opt.Contains("p")) {
     // Print basic parameters for this object
     cout << "User parameters:" << endl
-	 << "----------------" << endl
-	 << " Variables:                    " << fNVariables << endl
-	 << " Data points:                  " << fSampleSize << endl
-	 << " Max Terms:                    " << fMaxTerms << endl
-	 << " Power Limit Parameter:        " << fPowerLimit << endl
-	 << " Max functions:                " << fMaxFunctions << endl
-	 << " Max functions to study:       " << fMaxStudy << endl
-	 << " Max angle (optional):         " << fMaxAngle << endl
-	 << " Min angle:                    " << fMinAngle << endl
-	 << " Relative Error accepted:      " << fMinRelativeError << endl
-	 << " Maximum Powers:               " << flush;
+         << "----------------" << endl
+         << " Variables:                    " << fNVariables << endl
+         << " Data points:                  " << fSampleSize << endl
+         << " Max Terms:                    " << fMaxTerms << endl
+         << " Power Limit Parameter:        " << fPowerLimit << endl
+         << " Max functions:                " << fMaxFunctions << endl
+         << " Max functions to study:       " << fMaxStudy << endl
+         << " Max angle (optional):         " << fMaxAngle << endl
+         << " Min angle:                    " << fMinAngle << endl
+         << " Relative Error accepted:      " << fMinRelativeError << endl
+         << " Maximum Powers:               " << flush;
     for (i = 0; i < fNVariables; i++)
       cout << " " << fMaxPowers[i] - 1 << flush;
     cout << endl << endl
-	 << " Parameterisation will be done using " << flush;
+         << " Parameterisation will be done using " << flush;
     if (fPolyType == kChebyshev)
       cout << "Chebyshev polynomials" << endl;
     else if (fPolyType == kLegendre)
@@ -3418,61 +3418,61 @@ void TMultiDimFit::Print(Option_t *option) const
   if (opt.Contains("s")) {
     // Print statistics for read data
     cout << "Sample statistics:" << endl
-	 << "------------------" << endl
-	 << "                 D"  << flush;
+         << "------------------" << endl
+         << "                 D"  << flush;
     for (i = 0; i < fNVariables; i++)
       cout << " " << setw(10) << i+1 << flush;
     cout << endl << " Max:   " << setw(10) << setprecision(7)
-	 << fMaxQuantity << flush;
+         << fMaxQuantity << flush;
     for (i = 0; i < fNVariables; i++)
       cout << " " << setw(10) << setprecision(4)
-	   << fMaxVariables(i) << flush;
+           << fMaxVariables(i) << flush;
     cout << endl << " Min:   " << setw(10) << setprecision(7)
-	 << fMinQuantity << flush;
+         << fMinQuantity << flush;
     for (i = 0; i < fNVariables; i++)
       cout << " " << setw(10) << setprecision(4)
-	   << fMinVariables(i) << flush;
+           << fMinVariables(i) << flush;
     cout << endl << " Mean:  " << setw(10) << setprecision(7)
-	 << fMeanQuantity << flush;
+         << fMeanQuantity << flush;
     for (i = 0; i < fNVariables; i++)
       cout << " " << setw(10) << setprecision(4)
-	   << fMeanVariables(i) << flush;
+           << fMeanVariables(i) << flush;
     cout << endl << " Function Sum Squares:         " << fSumSqQuantity
-	 << endl << endl;
+         << endl << endl;
   }
 
   if (opt.Contains("r")) {
     cout << "Results of Parameterisation:" << endl
-	 << "----------------------------" << endl
-	 << " Total reduction of square residuals    "
-	 << fSumSqResidual << endl
-	 << " Relative precision obtained:           "
-	 << fPrecision   << endl
-	 << " Error obtained:                        "
-	 << fError << endl
-	 << " Multiple correlation coefficient:      "
-	 << fCorrelationCoeff   << endl
-	 << " Reduced Chi square over sample:        "
-	 << fChi2 / (fSampleSize - fNCoefficients) << endl
-	 << " Maximum residual value:                "
-	 << fMaxResidual << endl
-	 << " Minimum residual value:                "
-	 << fMinResidual << endl
-	 << " Estimated root mean square:            "
-	 << fRMS << endl
-	 << " Maximum powers used:                   " << flush;
+         << "----------------------------" << endl
+         << " Total reduction of square residuals    "
+         << fSumSqResidual << endl
+         << " Relative precision obtained:           "
+         << fPrecision   << endl
+         << " Error obtained:                        "
+         << fError << endl
+         << " Multiple correlation coefficient:      "
+         << fCorrelationCoeff   << endl
+         << " Reduced Chi square over sample:        "
+         << fChi2 / (fSampleSize - fNCoefficients) << endl
+         << " Maximum residual value:                "
+         << fMaxResidual << endl
+         << " Minimum residual value:                "
+         << fMinResidual << endl
+         << " Estimated root mean square:            "
+         << fRMS << endl
+         << " Maximum powers used:                   " << flush;
     for (j = 0; j < fNVariables; j++)
       cout << fMaxPowersFinal[j] << " " << flush;
     cout << endl
-	 << " Function codes of candidate functions." << endl
-	 << "  1: considered,"
-	 << "  2: too little contribution,"
-	 << "  3: accepted." << flush;
+         << " Function codes of candidate functions." << endl
+         << "  1: considered,"
+         << "  2: too little contribution,"
+         << "  3: accepted." << flush;
     for (i = 0; i < fMaxFunctions; i++) {
       if (i % 60 == 0)
-	cout << endl << " " << flush;
+        cout << endl << " " << flush;
       else if (i % 10 == 0)
-	cout << " " << flush;
+        cout << " " << flush;
       cout << fFunctionCodes[i];
     }
     cout << endl << " Loop over candidates stopped because " << flush;
@@ -3494,18 +3494,18 @@ void TMultiDimFit::Print(Option_t *option) const
 
   if (opt.Contains("f")) {
     cout << "Results of Fit:" << endl
-	 << "---------------" << endl
-	 << " Test sample size:                      "
-	 << fTestSampleSize << endl
-	 << " Multiple correlation coefficient:      "
-	 << fTestCorrelationCoeff << endl
-	 << " Relative precision obtained:           "
-	 << fTestPrecision   << endl
-	 << " Error obtained:                        "
-	 << fTestError << endl
-	 << " Reduced Chi square over sample:        "
-	 << fChi2 / (fSampleSize - fNCoefficients) << endl
-	 << endl;
+         << "---------------" << endl
+         << " Test sample size:                      "
+         << fTestSampleSize << endl
+         << " Multiple correlation coefficient:      "
+         << fTestCorrelationCoeff << endl
+         << " Relative precision obtained:           "
+         << fTestPrecision   << endl
+         << " Error obtained:                        "
+         << fTestError << endl
+         << " Reduced Chi square over sample:        "
+         << fChi2 / (fSampleSize - fNCoefficients) << endl
+         << endl;
     if (fFitter) {
       fFitter->PrintResults(1,1);
       cout << endl;
@@ -3514,37 +3514,37 @@ void TMultiDimFit::Print(Option_t *option) const
 
   if (opt.Contains("c")){
     cout << "Coefficients:" << endl
-	 << "-------------" << endl
-	 << "   #         Value        Error   Powers" << endl
-	 << " ---------------------------------------" << endl;
+         << "-------------" << endl
+         << "   #         Value        Error   Powers" << endl
+         << " ---------------------------------------" << endl;
     for (i = 0; i < fNCoefficients; i++) {
       cout << " " << setw(3) << i << "  "
-	   << setw(12) << fCoefficients(i) << "  "
-	   << setw(12) << fCoefficientsRMS(i) << "  " << flush;
+           << setw(12) << fCoefficients(i) << "  "
+           << setw(12) << fCoefficientsRMS(i) << "  " << flush;
       for (j = 0; j < fNVariables; j++)
-	cout << " " << setw(3)
-	     << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << flush;
+        cout << " " << setw(3)
+             << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << flush;
       cout << endl;
     }
     cout << endl;
   }
   if (opt.Contains("k") && fCorrelationMatrix.IsValid()) {
     cout << "Correlation Matrix:" << endl
-	 << "-------------------";
+         << "-------------------";
     fCorrelationMatrix.Print();
   }
   
   if (opt.Contains("m")) {
     cout << "Parameterization:" << endl
-	 << "-----------------" << endl
-	 << "  Normalised variables: " << endl;
+         << "-----------------" << endl
+         << "  Normalised variables: " << endl;
     for (i = 0; i < fNVariables; i++) 
       cout << "\ty_" << i << "\t= 1 + 2 * (x_" << i << " - " 
-	   << fMaxVariables(i) << ") / (" 
-	   << fMaxVariables(i) << " - " << fMinVariables(i) << ")" 
-	   << endl;
+           << fMaxVariables(i) << ") / (" 
+           << fMaxVariables(i) << " - " << fMinVariables(i) << ")" 
+           << endl;
     cout << endl
-	 << "  f(";
+         << "  f(";
     for (i = 0; i < fNVariables; i++) {
       cout << "y_" << i;
       if (i != fNVariables-1) cout << ", ";
@@ -3552,23 +3552,23 @@ void TMultiDimFit::Print(Option_t *option) const
     cout << ") = ";
     for (Int_t i = 0; i < fNCoefficients; i++) {
       if (i != 0)
-	cout << endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ") 
-	     << TMath::Abs(fCoefficients(i));
+        cout << endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ") 
+             << TMath::Abs(fCoefficients(i));
       else 
-	cout << fCoefficients(i);
+        cout << fCoefficients(i);
       for (Int_t j = 0; j < fNVariables; j++) {
-	Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
-	switch (p) { 
-	case 1: break;
-	case 2: cout << " * y_" << j; break;
-	default:
-	  switch(fPolyType) {
-	  case kLegendre:  cout << " * L_" << p-1 << "(y_" << j << ")"; break;
-	  case kChebyshev: cout << " * C_" << p-1 << "(y_" << j << ")"; break;
-	  default:         cout << " * y_" << j << "^" << p-1; break;
-	  }
-	}
-			  
+        Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
+        switch (p) { 
+        case 1: break;
+        case 2: cout << " * y_" << j; break;
+        default:
+          switch(fPolyType) {
+          case kLegendre:  cout << " * L_" << p-1 << "(y_" << j << ")"; break;
+          case kChebyshev: cout << " * C_" << p-1 << "(y_" << j << ")"; break;
+          default:         cout << " * y_" << j << "^" << p-1; break;
+          }
+        }
+                          
       }
     }
     cout << endl;
@@ -3680,7 +3680,7 @@ void TMultiDimFit::SetMinRelativeError(Double_t error)
 
 //____________________________________________________________________
 Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
-				  Double_t dResidur)
+                                  Double_t dResidur)
 {
   // PRIVATE METHOD:
   // Test whether the currently considered function contributes to the
@@ -3692,16 +3692,16 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
     if (fMaxAngle == 0) {
       // If the user hasn't supplied a max angle do the test as,
       if (dResidur <
-	  squareResidual / (fMaxTerms - fNCoefficients + 1 + 1E-10)) {
-	return kFALSE;
+          squareResidual / (fMaxTerms - fNCoefficients + 1 + 1E-10)) {
+        return kFALSE;
       }
     }
     else {
       // If the user has provided a max angle, test if the calculated
       // angle is less then the max angle.
       if (TMath::Sqrt(dResidur/fSumSqAvgQuantity) <
-	  TMath::Cos(fMaxAngle*DEGRAD)) {
-	return kFALSE;
+          TMath::Cos(fMaxAngle*DEGRAD)) {
+        return kFALSE;
       }
     }
   }
@@ -3712,7 +3712,7 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
 
 //____________________________________________________________________
 void mdfHelper(int& /*npar*/, double* /*divs*/, double& chi2,
-	       double* coeffs, int /*flag*/)
+               double* coeffs, int /*flag*/)
 {
   // Helper function for doing the minimisation of Chi2 using Minuit
 

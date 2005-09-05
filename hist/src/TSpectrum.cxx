@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.28 2005/06/15 10:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.29 2005/06/20 08:34:56 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -124,7 +124,7 @@ void TSpectrum::SetDeconIterations(Int_t n)
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
+const char *TSpectrum::Background(TH1 * h, int fNumberIterations,
                                   Option_t * option) 
 {   
 /////////////////////////////////////////////////////////////////////////////
@@ -135,12 +135,12 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 //   Function parameters:                                                  //
 //   spectrum:  pointer to the vector of source spectrum                   //
 //   size:      length of spectrum and working space vectors               //
-//   number_of_iterations, for details we refer to manual                  //
+//   fNumberIterations, for details we refer to manual                  //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
        printf
        ("Background function not yet implemented: h=%s, iter=%d, option=%sn"
-        , h->GetName(), number_of_iterations, option);
+        , h->GetName(), fNumberIterations, option);
    return 0;
 }
 
@@ -250,19 +250,19 @@ void TSpectrum::SetResolution(Float_t resolution)
     
 /////////////////////NEW FUNCTIONS  APRIL 2003
 const char *TSpectrum::Background1(float *spectrum, int size,
-                                     int number_of_iterations) 
+                                     int fNumberIterations) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - INCREASING        */ 
-/*                                CLIPPING WINDOW			   */ 
-/*	This function calculates background spectrum from source spectrum. */ 
-/*	The result is placed in the vector pointed by spectrum pointer.    */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	spectrum-pointer to the vector of source spectrum		   */ 
-/*	size-length of spectrum and working space vectors		   */ 
-/*	number_of_iterations, for details we refer to manual		   */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - INCREASING        */ 
+/*                                CLIPPING WINDOW                            */ 
+/*        This function calculates background spectrum from source spectrum. */ 
+/*        The result is placed in the vector pointed by spectrum pointer.    */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        spectrum-pointer to the vector of source spectrum                  */ 
+/*        size-length of spectrum and working space vectors                  */ 
+/*        fNumberIterations, for details we refer to manual               */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
        
 //BEGIN_HTML <!--
@@ -317,810 +317,810 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <!--
 // Font Definitions
 @font-face
-	{font-family:Wingdings;
-	panose-1:5 0 0 0 0 0 0 0 0 0;
-	mso-font-charset:2;
-	mso-generic-font-family:auto;
-	mso-font-pitch:variable;
-	mso-font-signature:0 268435456 0 0 -2147483648 0;}
+        {font-family:Wingdings;
+        panose-1:5 0 0 0 0 0 0 0 0 0;
+        mso-font-charset:2;
+        mso-generic-font-family:auto;
+        mso-font-pitch:variable;
+        mso-font-signature:0 268435456 0 0 -2147483648 0;}
  // Style Definitions
 p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{mso-style-parent:"";
-	margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {mso-style-parent:"";
+        margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 h1
-	{mso-style-next:Normal;
-	margin-top:12.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	mso-pagination:widow-orphan;
-	page-break-after:avoid;
-	mso-outline-level:1;
-	font-size:14.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:Arial;
-	mso-bidi-font-family:"Times New Roman";
-	mso-font-kerning:14.0pt;
-	mso-bidi-font-weight:normal;}
+        {mso-style-next:Normal;
+        margin-top:12.0pt;
+        margin-right:0in;
+        margin-bottom:3.0pt;
+        margin-left:0in;
+        mso-pagination:widow-orphan;
+        page-break-after:avoid;
+        mso-outline-level:1;
+        font-size:14.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:Arial;
+        mso-bidi-font-family:"Times New Roman";
+        mso-font-kerning:14.0pt;
+        mso-bidi-font-weight:normal;}
 h2
-	{mso-style-next:Normal;
-	margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	page-break-after:avoid;
-	mso-outline-level:2;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-bidi-font-weight:normal;}
+        {mso-style-next:Normal;
+        margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        page-break-after:avoid;
+        mso-outline-level:2;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-bidi-font-weight:normal;}
 h3
-	{mso-style-next:Normal;
-	margin-top:12.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	mso-pagination:widow-orphan;
-	page-break-after:avoid;
-	mso-outline-level:3;
-	font-size:13.0pt;
-	font-family:Arial;}
+        {mso-style-next:Normal;
+        margin-top:12.0pt;
+        margin-right:0in;
+        margin-bottom:3.0pt;
+        margin-left:0in;
+        mso-pagination:widow-orphan;
+        page-break-after:avoid;
+        mso-outline-level:3;
+        font-size:13.0pt;
+        font-family:Arial;}
 h4
-	{mso-style-next:Normal;
-	margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	page-break-after:avoid;
-	mso-outline-level:4;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	font-weight:normal;}
+        {mso-style-next:Normal;
+        margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        page-break-after:avoid;
+        mso-outline-level:4;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        font-weight:normal;}
 p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 p.MsoHeader, li.MsoHeader, div.MsoHeader
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	tab-stops:center 3.0in right 6.0in;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        tab-stops:center 3.0in right 6.0in;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 p.MsoFooter, li.MsoFooter, div.MsoFooter
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	tab-stops:center 3.0in right 6.0in;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        tab-stops:center 3.0in right 6.0in;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 span.MsoFootnoteReference
-	{vertical-align:super;}
+        {vertical-align:super;}
 p.MsoBodyText, li.MsoBodyText, div.MsoBodyText
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 p.MsoBodyTextIndent, li.MsoBodyTextIndent, div.MsoBodyTextIndent
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin-top:0in;
+        margin-right:0in;
+        margin-bottom:0in;
+        margin-left:.25in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 p.MsoBodyText2, li.MsoBodyText2, div.MsoBodyText2
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";
-	font-weight:bold;
-	mso-bidi-font-weight:normal;}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";
+        font-weight:bold;
+        mso-bidi-font-weight:normal;}
 p.MsoBodyText3, li.MsoBodyText3, div.MsoBodyText3
-	{margin:0in;
-	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";
-	font-weight:bold;
-	mso-bidi-font-weight:normal;}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        mso-pagination:widow-orphan;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";
+        font-weight:bold;
+        mso-bidi-font-weight:normal;}
 p.MsoBodyTextIndent2, li.MsoBodyTextIndent2, div.MsoBodyTextIndent2
-	{margin:0in;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-indent:.5in;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        text-align:justify;
+        text-indent:.5in;
+        mso-pagination:widow-orphan;
+        font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 p.MsoBodyTextIndent3, li.MsoBodyTextIndent3, div.MsoBodyTextIndent3
-	{margin:0in;
-	margin-bottom:.0001pt;
-	text-indent:.5in;
-	mso-pagination:widow-orphan;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";
-	font-weight:bold;
-	mso-bidi-font-weight:normal;}
+        {margin:0in;
+        margin-bottom:.0001pt;
+        text-indent:.5in;
+        mso-pagination:widow-orphan;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";
+        font-weight:bold;
+        mso-bidi-font-weight:normal;}
 p.MTDisplayEquation, li.MTDisplayEquation, div.MTDisplayEquation
-	{mso-style-name:MTDisplayEquation;
-	mso-style-parent:"Body Text Indent";
-	margin:0in;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	line-height:150%;
-	mso-pagination:widow-orphan;
-	tab-stops:center 215.5pt right 431.0pt;
-	font-size:12.0pt;
-	mso-bidi-font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"Times New Roman";}
+        {mso-style-name:MTDisplayEquation;
+        mso-style-parent:"Body Text Indent";
+        margin:0in;
+        margin-bottom:.0001pt;
+        text-align:justify;
+        line-height:150%;
+        mso-pagination:widow-orphan;
+        tab-stops:center 215.5pt right 431.0pt;
+        font-size:12.0pt;
+        mso-bidi-font-size:10.0pt;
+        font-family:"Times New Roman";
+        mso-fareast-font-family:"Times New Roman";}
 @page Section1
-	{size:595.35pt 842.0pt;
-	margin:1.0in 89.85pt 1.0in 89.85pt;
-	mso-header-margin:.5in;
-	mso-footer-margin:.5in;
-	mso-title-page:yes;
-	mso-even-header:url("./Background1_files/header.htm") eh1;
-	mso-header:url("./Background1_files/header.htm") h1;
-	mso-even-footer:url("./Background1_files/header.htm") ef1;
-	mso-footer:url("./Background1_files/header.htm") f1;
-	mso-paper-source:0;}
+        {size:595.35pt 842.0pt;
+        margin:1.0in 89.85pt 1.0in 89.85pt;
+        mso-header-margin:.5in;
+        mso-footer-margin:.5in;
+        mso-title-page:yes;
+        mso-even-header:url("./Background1_files/header.htm") eh1;
+        mso-header:url("./Background1_files/header.htm") h1;
+        mso-even-footer:url("./Background1_files/header.htm") ef1;
+        mso-footer:url("./Background1_files/header.htm") f1;
+        mso-paper-source:0;}
 div.Section1
-	{page:Section1;}
+        {page:Section1;}
  // List Definitions
 @list l0
-	{mso-list-id:24991170;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:24991170;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l0:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l1
-	{mso-list-id:127162979;
-	mso-list-type:hybrid;
-	mso-list-template-ids:-1145955346;}
+        {mso-list-id:127162979;
+        mso-list-type:hybrid;
+        mso-list-template-ids:-1145955346;}
 @list l1:level1
-	{mso-level-tab-stop:.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;}
+        {mso-level-tab-stop:.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;}
 @list l2
-	{mso-list-id:129250882;
-	mso-list-template-ids:-1983590464;}
+        {mso-list-id:129250882;
+        mso-list-template-ids:-1983590464;}
 @list l2:level1
-	{mso-level-tab-stop:.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;}
+        {mso-level-tab-stop:.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;}
 @list l2:level2
-	{mso-level-number-format:alpha-lower;
-	mso-level-tab-stop:1.0in;
-	mso-level-number-position:left;
-	margin-left:63.0pt;
-	text-indent:-9.0pt;}
+        {mso-level-number-format:alpha-lower;
+        mso-level-tab-stop:1.0in;
+        mso-level-number-position:left;
+        margin-left:63.0pt;
+        text-indent:-9.0pt;}
 @list l3
-	{mso-list-id:178593267;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:178593267;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l3:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l4
-	{mso-list-id:245725304;
-	mso-list-type:hybrid;
-	mso-list-template-ids:-726902096;}
+        {mso-list-id:245725304;
+        mso-list-type:hybrid;
+        mso-list-template-ids:-726902096;}
 @list l4:level1
-	{mso-level-tab-stop:.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;}
+        {mso-level-tab-stop:.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;}
 @list l5
-	{mso-list-id:382556631;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:382556631;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l5:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l6
-	{mso-list-id:429618661;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:429618661;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l6:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l7
-	{mso-list-id:436873422;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:436873422;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l7:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l8
-	{mso-list-id:454328312;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:454328312;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l8:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l9
-	{mso-list-id:500900935;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:500900935;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l9:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l10
-	{mso-list-id:531573629;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:531573629;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l10:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l11
-	{mso-list-id:567233683;
-	mso-list-template-ids:-1388549558;}
+        {mso-list-id:567233683;
+        mso-list-template-ids:-1388549558;}
 @list l11:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l11:level2
-	{mso-level-number-format:bullet;
-	mso-level-text:o;
-	mso-level-tab-stop:1.0in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:"Courier New";
-	mso-bidi-font-family:"Times New Roman";}
+        {mso-level-number-format:bullet;
+        mso-level-text:o;
+        mso-level-tab-stop:1.0in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:"Courier New";
+        mso-bidi-font-family:"Times New Roman";}
 @list l11:level3
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0A7;
-	mso-level-tab-stop:1.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Wingdings;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0A7;
+        mso-level-tab-stop:1.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Wingdings;}
 @list l11:level4
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:2.0in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:2.0in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l11:level5
-	{mso-level-number-format:bullet;
-	mso-level-text:o;
-	mso-level-tab-stop:2.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:"Courier New";
-	mso-bidi-font-family:"Times New Roman";}
+        {mso-level-number-format:bullet;
+        mso-level-text:o;
+        mso-level-tab-stop:2.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:"Courier New";
+        mso-bidi-font-family:"Times New Roman";}
 @list l11:level6
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0A7;
-	mso-level-tab-stop:3.0in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Wingdings;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0A7;
+        mso-level-tab-stop:3.0in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Wingdings;}
 @list l11:level7
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:3.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:3.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l11:level8
-	{mso-level-number-format:bullet;
-	mso-level-text:o;
-	mso-level-tab-stop:4.0in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:"Courier New";
-	mso-bidi-font-family:"Times New Roman";}
+        {mso-level-number-format:bullet;
+        mso-level-text:o;
+        mso-level-tab-stop:4.0in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:"Courier New";
+        mso-bidi-font-family:"Times New Roman";}
 @list l11:level9
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0A7;
-	mso-level-tab-stop:4.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Wingdings;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0A7;
+        mso-level-tab-stop:4.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Wingdings;}
 @list l12
-	{mso-list-id:642778214;
-	mso-list-type:hybrid;
-	mso-list-template-ids:185498508;}
+        {mso-list-id:642778214;
+        mso-list-type:hybrid;
+        mso-list-template-ids:185498508;}
 @list l12:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.75in;
-	mso-level-number-position:left;
-	margin-left:.75in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.75in;
+        mso-level-number-position:left;
+        margin-left:.75in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l13
-	{mso-list-id:661739637;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:661739637;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l13:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l14
-	{mso-list-id:668169972;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:668169972;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l14:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l15
-	{mso-list-id:696466787;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:696466787;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l15:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l16
-	{mso-list-id:697974868;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:697974868;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l16:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l17
-	{mso-list-id:738133466;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:738133466;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l17:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l18
-	{mso-list-id:757675041;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:757675041;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l18:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l19
-	{mso-list-id:819929221;
-	mso-list-type:simple;
-	mso-list-template-ids:1934940258;}
+        {mso-list-id:819929221;
+        mso-list-type:simple;
+        mso-list-template-ids:1934940258;}
 @list l19:level1
-	{mso-level-number-format:alpha-lower;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;}
+        {mso-level-number-format:alpha-lower;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;}
 @list l20
-	{mso-list-id:841815699;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:841815699;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l20:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l21
-	{mso-list-id:946497998;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:946497998;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l21:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l22
-	{mso-list-id:1008798662;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1008798662;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l22:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l23
-	{mso-list-id:1059400825;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1059400825;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l23:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l24
-	{mso-list-id:1068840417;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1068840417;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l24:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l25
-	{mso-list-id:1099788556;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1099788556;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l25:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l26
-	{mso-list-id:1106534387;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1106534387;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l26:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l27
-	{mso-list-id:1119496346;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1119496346;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l27:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l28
-	{mso-list-id:1141120086;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1141120086;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l28:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l29
-	{mso-list-id:1151021739;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1151021739;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l29:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l30
-	{mso-list-id:1204173880;
-	mso-list-type:simple;
-	mso-list-template-ids:67698703;}
+        {mso-list-id:1204173880;
+        mso-list-type:simple;
+        mso-list-template-ids:67698703;}
 @list l30:level1
-	{mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;}
+        {mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;}
 @list l31
-	{mso-list-id:1217397408;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1217397408;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l31:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l32
-	{mso-list-id:1262570285;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1262570285;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l32:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l33
-	{mso-list-id:1265843418;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1265843418;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l33:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l34
-	{mso-list-id:1268653809;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1268653809;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l34:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l35
-	{mso-list-id:1279602481;
-	mso-list-type:simple;
-	mso-list-template-ids:1176016568;}
+        {mso-list-id:1279602481;
+        mso-list-type:simple;
+        mso-list-template-ids:1176016568;}
 @list l35:level1
-	{mso-level-number-format:alpha-lower;
-	mso-level-tab-stop:.75in;
-	mso-level-number-position:left;
-	margin-left:.75in;
-	text-indent:-.25in;}
+        {mso-level-number-format:alpha-lower;
+        mso-level-tab-stop:.75in;
+        mso-level-number-position:left;
+        margin-left:.75in;
+        text-indent:-.25in;}
 @list l36
-	{mso-list-id:1286422925;
-	mso-list-type:hybrid;
-	mso-list-template-ids:185498508;}
+        {mso-list-id:1286422925;
+        mso-list-type:hybrid;
+        mso-list-template-ids:185498508;}
 @list l36:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0A7;
-	mso-level-tab-stop:.5in;
-	mso-level-number-position:left;
-	text-indent:-.25in;
-	font-family:Wingdings;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0A7;
+        mso-level-tab-stop:.5in;
+        mso-level-number-position:left;
+        text-indent:-.25in;
+        font-family:Wingdings;}
 @list l37
-	{mso-list-id:1337805030;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1337805030;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l37:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l38
-	{mso-list-id:1411347952;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1411347952;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l38:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l39
-	{mso-list-id:1450782188;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1450782188;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l39:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l40
-	{mso-list-id:1526749020;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1526749020;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l40:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l41
-	{mso-list-id:1561331700;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1561331700;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l41:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l42
-	{mso-list-id:1715229423;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1715229423;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l42:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l43
-	{mso-list-id:1777142054;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1777142054;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l43:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l44
-	{mso-list-id:1870682292;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1870682292;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l44:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l45
-	{mso-list-id:1893075106;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:1893075106;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l45:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l46
-	{mso-list-id:2004579635;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:2004579635;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l46:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l47
-	{mso-list-id:2060131503;
-	mso-list-type:simple;
-	mso-list-template-ids:67698689;}
+        {mso-list-id:2060131503;
+        mso-list-type:simple;
+        mso-list-template-ids:67698689;}
 @list l47:level1
-	{mso-level-number-format:bullet;
-	mso-level-text:\F0B7;
-	mso-level-tab-stop:.25in;
-	mso-level-number-position:left;
-	margin-left:.25in;
-	text-indent:-.25in;
-	font-family:Symbol;}
+        {mso-level-number-format:bullet;
+        mso-level-text:\F0B7;
+        mso-level-tab-stop:.25in;
+        mso-level-number-position:left;
+        margin-left:.25in;
+        text-indent:-.25in;
+        font-family:Symbol;}
 @list l48
-	{mso-list-id:2102682727;
-	mso-list-type:hybrid;
-	mso-list-template-ids:192675958;}
+        {mso-list-id:2102682727;
+        mso-list-type:hybrid;
+        mso-list-template-ids:192675958;}
 @list l48:level1
-	{mso-level-tab-stop:1.0in;
-	mso-level-number-position:left;
-	margin-left:1.0in;
-	text-indent:-.25in;}
+        {mso-level-tab-stop:1.0in;
+        mso-level-number-position:left;
+        margin-left:1.0in;
+        text-indent:-.25in;}
 ol
-	{margin-bottom:0in;}
+        {margin-bottom:0in;}
 ul
-	{margin-bottom:0in;}
+        {margin-bottom:0in;}
 -->
 </style>
 <!--[if gte mso 9]><xml>
@@ -1156,7 +1156,7 @@ it returns pointer to the string describing error. <o:p></o:p></span></p>
 mso-bidi-font-size:10.0pt'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
 
 <p class=MsoBodyText><b style='mso-bidi-font-weight:normal'>char
-*Background1(float *spectrum, int size, int number_of_iterations);<o:p></o:p></b></p>
+*Background1(float *spectrum, int size, int fNumberIterations);<o:p></o:p></b></p>
 
 <p class=MsoBodyText><b style='mso-bidi-font-weight:normal'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></b></p>
 
@@ -1176,7 +1176,7 @@ of spectrum<span style='mso-tab-count:1'>          </span><span
 style='mso-tab-count:1'>            </span><span style="mso-spacerun: yes">  
 </span><o:p></o:p></span></p>
 
-<p class=MsoBodyText>-number_of_iterations or width of the clipping window<span
+<p class=MsoBodyText>-fNumberIterations or width of the clipping window<span
 style='mso-tab-count:1'>           </span><span style='mso-tab-count:1'>            </span><b
 style='mso-bidi-font-weight:normal'><o:p></o:p></b></p>
 
@@ -1218,12 +1218,12 @@ spectra in geoscience applications. NIM, B34 (1988), 396-402.<o:p></o:p></span><
    float a, b;
    if (size <= 0)
       return "Wrong Parameters";
-   if (number_of_iterations < 1)
+   if (fNumberIterations < 1)
       return "Width of Clipping Window Must Be Positive";
-   if (size < 2 * number_of_iterations + 1)
+   if (size < 2 * fNumberIterations + 1)
       return "Too Large Clipping Window";
    float *working_space = new float[size];
-   for (i = 1; i <= number_of_iterations; i++) {
+   for (i = 1; i <= fNumberIterations; i++) {
       for (j = i; j < size - i; j++) {
          a = spectrum[j];
          b = (spectrum[j - i] + spectrum[j + i]) / 2.0;
@@ -1241,49 +1241,49 @@ spectra in geoscience applications. NIM, B34 (1988), 396-402.<o:p></o:p></span><
 
 //_______________________________________________________________________________
 const char *TSpectrum::Background1General(float *spectrum, int size,
-                                          int number_of_iterations,
+                                          int fNumberIterations,
                                           int direction, int filter_order,
                                           bool compton) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - GENERAL FUNCTION  */ 
-/*                                                                         */ 
-/*	This function calculates background spectrum from source spectrum. */ 
-/*	The result is placed in the vector pointed by spectrum pointer.    */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	spectrum-pointer to the vector of source spectrum		   */ 
-/*	size-length of spectrum vector        		                   */ 
-/*	number_of_iterations-maximal width of clipping window,             */ 
-/*                           for details we refer to manual	           */ 
-/*	direction- direction of change of clipping window                  */ 
-/*               - possible values=BACK1_INCREASING_WINDOW                 */ 
-/*                                 BACK1_DECREASING_WINDOW                 */ 
-/*	filter_order-order of clipping filter,                             */ 
-/*                  -possible values=BACK1_ORDER2                          */ 
-/*                                   BACK1_ORDER4                          */ 
-/*                                   BACK1_ORDER6                          */ 
-/*                                   BACK1_ORDER8	                   */ 
-/*	compton- logical variable whether the estimation of Compton edge   */ 
-/*               will be incuded                                           */ 
-/*             - possible values=BACK1_EXCLUDE_COMPTON                     */ 
-/*                               BACK1_INCLUDE_COMPTON                     */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - GENERAL FUNCTION  */ 
+/*                                                                           */ 
+/*        This function calculates background spectrum from source spectrum. */ 
+/*        The result is placed in the vector pointed by spectrum pointer.    */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        spectrum-pointer to the vector of source spectrum                  */ 
+/*        size-length of spectrum vector                                     */ 
+/*        fNumberIterations-maximal width of clipping window,             */ 
+/*                           for details we refer to manual                  */ 
+/*        direction- direction of change of clipping window                  */ 
+/*               - possible values=kBackIncreasingWindow                   */ 
+/*                                 kBackDecreasingWindow                   */ 
+/*        filter_order-order of clipping filter,                             */ 
+/*                  -possible values=kBackOrder2                            */ 
+/*                                   kBackOrder4                            */ 
+/*                                   kBackOrder6                            */ 
+/*                                   kBackOrder8                            */ 
+/*        compton- logical variable whether the estimation of Compton edge   */ 
+/*               will be incuded                                             */ 
+/*             - possible values=kBackExcludeCompton                       */ 
+/*                               kBackIncludeCompton                       */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, b1, b2, priz;
    float a, b, c, d, e, yb1, yb2, ai;
    if (size <= 0)
       return "Wrong Parameters";
-   if (number_of_iterations < 1)
+   if (fNumberIterations < 1)
       return "Width of Clipping Window Must Be Positive";
-   if (size < 2 * number_of_iterations + 1)
+   if (size < 2 * fNumberIterations + 1)
       return "Too Large Clipping Window";
    float *working_space = new float[2 * size];
    for (i = 0; i < size; i++)
       working_space[i + size] = spectrum[i];
-   if (direction == BACK1_INCREASING_WINDOW) {
-      if (filter_order == BACK1_ORDER2) {
-         for (i = 1; i <= number_of_iterations; i++) {
+   if (direction == kBackIncreasingWindow) {
+      if (filter_order == kBackOrder2) {
+         for (i = 1; i <= fNumberIterations; i++) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1297,8 +1297,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER4) {
-         for (i = 1; i <= number_of_iterations; i++) {
+      else if (filter_order == kBackOrder4) {
+         for (i = 1; i <= fNumberIterations; i++) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1320,8 +1320,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER6) {
-         for (i = 1; i <= number_of_iterations; i++) {
+      else if (filter_order == kBackOrder6) {
+         for (i = 1; i <= fNumberIterations; i++) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1353,8 +1353,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER8) {
-         for (i = 1; i <= number_of_iterations; i++) {
+      else if (filter_order == kBackOrder8) {
+         for (i = 1; i <= fNumberIterations; i++) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1399,9 +1399,9 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
       }
    }
    
-   else if (direction == BACK1_DECREASING_WINDOW) {
-      if (filter_order == BACK1_ORDER2) {
-         for (i = number_of_iterations; i >= 1; i--) {
+   else if (direction == kBackDecreasingWindow) {
+      if (filter_order == kBackOrder2) {
+         for (i = fNumberIterations; i >= 1; i--) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1415,8 +1415,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER4) {
-         for (i = number_of_iterations; i >= 1; i--) {
+      else if (filter_order == kBackOrder4) {
+         for (i = fNumberIterations; i >= 1; i--) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1438,8 +1438,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER6) {
-         for (i = number_of_iterations; i >= 1; i--) {
+      else if (filter_order == kBackOrder6) {
+         for (i = fNumberIterations; i >= 1; i--) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1471,8 +1471,8 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
       
-      else if (filter_order == BACK1_ORDER8) {
-         for (i = number_of_iterations; i >= 1; i--) {
+      else if (filter_order == kBackOrder8) {
+         for (i = fNumberIterations; i >= 1; i--) {
             for (j = i; j < size - i; j++) {
                a = working_space[size + j];
                b = (working_space[size + j - i] +
@@ -1516,7 +1516,7 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
          }
       }
    }
-   if (compton == BACK1_INCLUDE_COMPTON) {
+   if (compton == kBackIncludeCompton) {
       for (i = 0, b2 = 0; i < size; i++) {
          b1 = b2;
          a = working_space[i], b = spectrum[i];
@@ -1586,25 +1586,25 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
 const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
 {
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                 */
-/*                                              			   */
-/*	This function calculates smoothed spectrum from source spectrum    */
-/*      based on Markov chain method.                                      */
-/*	The result is placed in the array pointed by source pointer.       */
-/*									   */
-/*	Function parameters:						   */
-/*	source-pointer to the array of source spectrum   		   */
-/*	size length of source array					   */
-/*	aver_window-width of averaging smoothing window                	   */
-/*									   */
+/*        ONE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                 */
+/*                                                                           */
+/*        This function calculates smoothed spectrum from source spectrum    */
+/*      based on Markov chain method.                                        */
+/*        The result is placed in the array pointed by source pointer.       */
+/*                                                                           */
+/*        Function parameters:                                               */
+/*        source-pointer to the array of source spectrum                     */
+/*        size length of source array                                        */
+/*        aver_window-width of averaging smoothing window                    */
+/*                                                                           */
 /////////////////////////////////////////////////////////////////////////////
-   int xmin, xmax, i, l;
+   int fXmin, fXmax, i, l;
    float a, b, maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
    if(aver_window <= 0)
       return "Averaging Window must be positive";   
    float *working_space = new float[size];      
-   xmin = 0,xmax = size - 1;
+   fXmin = 0,fXmax = size - 1;
    for(i = 0, maxch = 0; i < size; i++){
       working_space[i]=0;
       if(maxch < source[i])
@@ -1616,14 +1616,14 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
       return 0 ;
       
    nom = 1;
-   working_space[xmin] = 1;
-   for(i = xmin; i < xmax; i++){
+   working_space[fXmin] = 1;
+   for(i = fXmin; i < fXmax; i++){
       nip = source[i] / maxch;
       nim = source[i + 1] / maxch;
       sp = 0,sm = 0;
       for(l = 1; l <= aver_window; l++){
-         if((i + l) > xmax)
-            a = source[xmax] / maxch;
+         if((i + l) > fXmax)
+            a = source[fXmax] / maxch;
             
          else
             a = source[i + l] / maxch;
@@ -1632,12 +1632,12 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
             a = 1;
             
          else
-       	    a = TMath::Sqrt(a + nip);            
-	 b = b / a;
-	 b = TMath::Exp(b);                        	                                                             
-       	 sp = sp + b;
-         if((i - l + 1) < xmin)
-            a = source[xmin] / maxch;
+            a = TMath::Sqrt(a + nip);            
+         b = b / a;
+         b = TMath::Exp(b);                                                                                             
+         sp = sp + b;
+         if((i - l + 1) < fXmin)
+            a = source[fXmin] / maxch;
             
          else
             a = source[i - l + 1] / maxch;
@@ -1646,16 +1646,16 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
             a = 1;
             
          else
-       	    a = TMath::Sqrt(a + nim);            
-	 b = b / a;
-	 b = TMath::Exp(b);                        	                                                                      
-       	 sm = sm + b;
+                   a = TMath::Sqrt(a + nim);            
+         b = b / a;
+         b = TMath::Exp(b);                                                                                                      
+         sm = sm + b;
       }
       a = sp / sm;
       a = working_space[i + 1] = working_space[i] * a;
       nom = nom + a;
    }
-   for(i = xmin; i <= xmax; i++){
+   for(i = fXmin; i <= fXmax; i++){
       working_space[i] = working_space[i] / nom;
    }
    for(i = 0; i < size; i++)
@@ -1666,7 +1666,7 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
 
 //_______________________________________________________________________________
 const char *TSpectrum::Deconvolution1(float *source, const float *resp,
-                                      int size, int number_of_iterations) 
+                                      int size, int fNumberIterations) 
 {   
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
@@ -1678,7 +1678,7 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
 //   source:  pointer to the vector of source spectrum                     //
 //   res:     pointer to the vector of response spectrum                   //
 //   size:    length of source and response spectra                        //
-//   number_of_iterations, for details we refer to this reference:         //
+//   fNumberIterations, for details we refer to this reference:         //
 //                                                                         //
 //    M. Morhac, J. Kliman, V. Matousek, M. Veselský, I. Turzo.:           //
 //    Efficient one- and two-dimensional Gold deconvolution and its        //
@@ -1700,10 +1700,10 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    maximum = 0;
    
 //read response vector
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = resp[i];
       if (lda != 0)
-         lh_gold = i + 1;
+      lh_gold = i + 1;
       working_space[i] = lda;
       area += lda;
       if (lda > maximum) {
@@ -1715,11 +1715,11 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
       return "ZERO RESPONSE VECTOR";
    
 //read source vector
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[2 * size + i] = source[i];
    
 //create matrix at*a(vector b)
-       i = lh_gold - 1;
+   i = lh_gold - 1;
    if (i > size)
       i = size;
    imin = -i, imax = i;
@@ -1740,7 +1740,7 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //create vector p
-       i = lh_gold - 1;
+   i = lh_gold - 1;
    imin = -i;
    imax = size + i - 1;
    for (i = imin; i <= imax; i++) {
@@ -1757,12 +1757,12 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //move vector p
-       for (i = imin; i <= imax; i++)
+   for (i = imin; i <= imax; i++)
       working_space[2 * size + i - imin] =
           working_space[4 * size + i - imin];
    
 //create at*a*at*y (vector ysc)
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = 0;
       j = lh_gold - 1;
       jmin = -j;
@@ -1776,11 +1776,11 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //move ysc
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[2 * size + i] = working_space[4 * size + i];
    
 //create vector c//
-       i = 2 * lh_gold - 2;
+   i = 2 * lh_gold - 2;
    if (i > size)
       i = size;
    imin = -i;
@@ -1802,15 +1802,15 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //move vector c
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[i + size] = working_space[i];
    
 //initialization of resulting vector
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[i] = 1;
    
        //**START OF ITERATIONS**
-       for (lindex = 0; lindex < number_of_iterations; lindex++) {
+   for (lindex = 0; lindex < fNumberIterations; lindex++) {
       for (i = 0; i < size; i++) {
          if (working_space[2 * size + i] > 0.000001
               && working_space[i] > 0.000001) {
@@ -1843,7 +1843,7 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //shift resulting spectrum
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = working_space[i];
       j = i + posit;
       j = j % size;
@@ -1851,7 +1851,7 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
    }
    
 //write back resulting spectrum
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       source[i] = area * working_space[size + i];
    delete[]working_space;
    return 0;
@@ -1867,7 +1867,7 @@ double TSpectrum::Lls(double a)
 //   LLS operator. It calculates log(log(sqrt(a+1))) value of a.           //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
-       if (a < 0)
+   if (a < 0)
       a = 0;
    a = TMath::Sqrt(a + 1.0);
    a = TMath::Log(a + 1.0);
@@ -1878,26 +1878,26 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
                                                      const float *resp,
                                                      int size,
                                                      int
-                                                     number_of_iterations,
+                                                     fNumberIterations,
                                                      int
                                                      number_of_repetitions,
                                                      double boost) 
 {
    
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL HIGH RESOLUTION DECONVOLUTION FUNCTION		   */ 
-/*	This function calculates deconvolution from source spectrum	   */ 
-/*	according to response spectrum					   */ 
-/*	The result is placed in the vector pointed by source pointer.	   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum			   */ 
-/*	resp-pointer to the vector of response spectrum			   */ 
-/*	size-length of source and response spectra			   */ 
-/*	number_of_iterations, for details we refer to manual		   */ 
-/*	number_of_repetitions, for details we refer to manual		   */ 
-/*	boost, boosting factor, for details we refer to manual		   */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL HIGH RESOLUTION DECONVOLUTION FUNCTION            */ 
+/*        This function calculates deconvolution from source spectrum       */ 
+/*        according to response spectrum                                    */ 
+/*        The result is placed in the vector pointed by source pointer.     */ 
+/*                                                                          */ 
+/*        Function parameters:                                              */ 
+/*        source-pointer to the vector of source spectrum                   */ 
+/*        resp-pointer to the vector of response spectrum                   */ 
+/*        size-length of source and response spectra                        */ 
+/*        fNumberIterations, for details we refer to manual              */ 
+/*        number_of_repetitions, for details we refer to manual             */ 
+/*        boost, boosting factor, for details we refer to manual            */ 
+/*                                                                          */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, k, m, lindex, posit, imin, imax, jmin, jmax, lh_gold, iter,
        repet;
@@ -1905,7 +1905,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    double a;
    if (size <= 0)
       return "Wrong Parameters";
-   if (number_of_iterations <= 0)
+   if (fNumberIterations <= 0)
       return "Number of iterations must be positive";
    if (number_of_repetitions <= 0)
       return "Number of repetitions must be positive";
@@ -1928,7 +1928,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    maximum = 0;
    
 //read response vector
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = resp[i];
       if (lda != 0)
          lh_gold = i + 1;
@@ -1944,7 +1944,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    
 /////////TOEPLITZ MATRIX INVERSION//////////////////////////
 //read source vector
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       working_space[size + i] = source[i];
    }
    for (i = 0; i < size; i++) {
@@ -2006,21 +2006,21 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
       working_space[i] = working_space[3 * size + i + 2 * size];
    
 //////////////////////*Fourier deconvolution*///////////////////////////
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       working_space[6 * size + i] = Lls(working_space[i]);
    }
    
 ////////////////////End of Fourier deconvolution///////////////////////
 //read response vector
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[i] = resp[i];
    
 //read source vector
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[2 * size + i] = source[i];
    
 //create matrix at*a(vector b)
-       i = lh_gold - 1;
+   i = lh_gold - 1;
    if (i > size)
       i = size;
    imin = -i, imax = i;
@@ -2041,7 +2041,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //create vector p
-       i = lh_gold - 1;
+   i = lh_gold - 1;
    imin = -i, imax = size + i - 1;
    for (i = imin; i <= imax; i++) {
       lda = 0;
@@ -2057,12 +2057,12 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //move vector p
-       for (i = imin; i <= imax; i++)
+   for (i = imin; i <= imax; i++)
       working_space[2 * size + i - imin] =
           working_space[4 * size + i - imin];
    
 //create at*a*at*y (vector ysc)
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = 0;
       j = lh_gold - 1;
       jmin = -j, jmax = j;
@@ -2075,11 +2075,11 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //move ysc
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[2 * size + i] = working_space[4 * size + i];
    
 //create vector c
-       i = 2 * lh_gold - 2;
+   i = 2 * lh_gold - 2;
    if (i > size)
       i = size;
    imin = -i, imax = i;
@@ -2100,11 +2100,11 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //move vector c
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       working_space[i + size] = working_space[i];
    
 //initialization of resulting vector
-       for (i = 0, a = 0; i < size; i++) {
+   for (i = 0, a = 0; i < size; i++) {
       working_space[i] = working_space[6 * size + i];
       a += working_space[6 * size + i];
    }
@@ -2113,12 +2113,12 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
        //////START OF ITERATIONS////
-       for (repet = 0; repet < number_of_repetitions; repet++) {
+   for (repet = 0; repet < number_of_repetitions; repet++) {
       if (repet != 0) {
          for (i = 0; i < size; i++)
             working_space[i] = TMath::Power(working_space[i], boost);
       }
-      for (lindex = 0; lindex < number_of_iterations; lindex++) {
+      for (lindex = 0; lindex < fNumberIterations; lindex++) {
          for (i = 0; i < size; i++) {
             lda = 0;
             jmin = 2 * lh_gold - 2;
@@ -2149,7 +2149,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //shift resulting spectrum
-       for (i = 0; i < size; i++) {
+   for (i = 0; i < size; i++) {
       lda = working_space[i];
       j = i + posit;
       j = j % size;
@@ -2157,7 +2157,7 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
    }
    
 //write back resulting spectrum
-       for (i = 0; i < size; i++)
+   for (i = 0; i < size; i++)
       source[i] = area * working_space[size + i];
    delete[]working_space;
    return 0;
@@ -2168,22 +2168,22 @@ const char *TSpectrum::Deconvolution1HighResolution(float *source,
 const char *TSpectrum::Deconvolution1Unfolding(float *source,
                                                const float **resp,
                                                int sizex, int sizey,
-                                               int number_of_iterations) 
+                                               int fNumberIterations) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL UNFOLDING FUNCTION				   */ 
-/*	This function unfolds source spectrum				   */ 
-/*	according to response matrix columns.				   */ 
-/*	The result is placed in the vector pointed by source pointer.	   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum			   */ 
-/*	resp-pointer to the matrix of response spectra			   */ 
-/*	sizex-length of source spectrum and # of columns of response matrix*/ 
-/*	sizey-length of destination spectrum and # of rows of		   */ 
-/*	      response matrix						   */ 
-/*	number_of_iterations, for details we refer to manual		   */ 
-/*	Note!!! sizex must be >= sizey					   */ 
+/*        ONE-DIMENSIONAL UNFOLDING FUNCTION                                   */ 
+/*        This function unfolds source spectrum                                */ 
+/*        according to response matrix columns.                                */ 
+/*        The result is placed in the vector pointed by source pointer.        */ 
+/*                                                                             */ 
+/*        Function parameters:                                                 */ 
+/*        source-pointer to the vector of source spectrum                      */ 
+/*        resp-pointer to the matrix of response spectra                       */ 
+/*        sizex-length of source spectrum and # of columns of response matrix  */ 
+/*        sizey-length of destination spectrum and # of rows of                */ 
+/*              response matrix                                                */ 
+/*        fNumberIterations, for details we refer to manual                 */ 
+/*        Note!!! sizex must be >= sizey                                       */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, k, lindex, lhx = 0;
    double lda, ldb, ldc, area;
@@ -2191,13 +2191,13 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       return "Wrong Parameters";
    if (sizex < sizey)
       return "Sizex must be greater than sizey)";
-   if (number_of_iterations <= 0)
+   if (fNumberIterations <= 0)
       return "Number of iterations must be positive";
    double *working_space =
        new double[sizex * sizey + 2 * sizey * sizey + 4 * sizex];
    
 /*read response matrix*/ 
-       for (j = 0; j < sizey && lhx != -1; j++) {
+   for (j = 0; j < sizey && lhx != -1; j++) {
       area = 0;
       lhx = -1;
       for (i = 0; i < sizex; i++) {
@@ -2217,12 +2217,12 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       return ("ZERO COLUMN IN RESPONSE MATRIX");
    
 /*read source vector*/ 
-       for (i = 0; i < sizex; i++)
+   for (i = 0; i < sizex; i++)
       working_space[sizex * sizey + 2 * sizey * sizey + 2 * sizex + i] =
           source[i];
    
 /*create matrix at*a + at*y */ 
-       for (i = 0; i < sizey; i++) {
+   for (i = 0; i < sizey; i++) {
       for (j = 0; j < sizey; j++) {
          lda = 0;
          for (k = 0; k < sizex; k++) {
@@ -2245,12 +2245,12 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    }
    
 /*move vector at*y*/ 
-       for (i = 0; i < sizey; i++)
+   for (i = 0; i < sizey; i++)
       working_space[sizex * sizey + 2 * sizey * sizey + 2 * sizex + i] =
           working_space[sizex * sizey + 2 * sizey * sizey + 3 * sizex + i];
    
 /*create matrix at*a*at*a + vector at*a*at*y */ 
-       for (i = 0; i < sizey; i++) {
+   for (i = 0; i < sizey; i++) {
       for (j = 0; j < sizey; j++) {
          lda = 0;
          for (k = 0; k < sizey; k++) {
@@ -2274,16 +2274,16 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    }
    
 /*move at*a*at*y*/ 
-       for (i = 0; i < sizey; i++)
+   for (i = 0; i < sizey; i++)
       working_space[sizex * sizey + 2 * sizey * sizey + 2 * sizex + i] =
           working_space[sizex * sizey + 2 * sizey * sizey + 3 * sizex + i];
    
 /*initialization in resulting vectore */ 
-       for (i = 0; i < sizey; i++)
+   for (i = 0; i < sizey; i++)
       working_space[sizex * sizey + 2 * sizey * sizey + i] = 1;
    
-	/***START OF ITERATIONS***/ 
-       for (lindex = 0; lindex < number_of_iterations; lindex++) {
+        /***START OF ITERATIONS***/ 
+   for (lindex = 0; lindex < fNumberIterations; lindex++) {
       for (i = 0; i < sizey; i++) {
          lda = 0;
          for (j = 0; j < sizey; j++) {
@@ -2314,7 +2314,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    }
    
 /*write back resulting spectrum*/ 
-       for (i = 0; i < sizex; i++) {
+   for (i = 0; i < sizex; i++) {
       if (i < sizey)
          source[i] = working_space[sizex * sizey + 2 * sizey * sizey + i];
       
@@ -2333,19 +2333,19 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                                      bool markov, int aver_window)
 {
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION		   */
-/*	This function searches for peaks in source spectrum		   */
+/*        ONE-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION             */
+/*        This function searches for peaks in source spectrum              */
 /*      It is based on deconvolution method. First the background is       */
 /*      removed (if desired), then Markov spectrum is calculated           */
 /*      (if desired), then the response function is generated              */
 /*      according to given sigma and deconvolution is carried out.         */
-/*									   */
-/*	Function parameters:						   */
-/*	source-pointer to the vector of source spectrum			   */
-/*	dest-pointer to the vector of resulting deconvolved spectrum	   */
-/*	size-length of source spectrum			                   */
-/*	sigma-sigma of searched peaks, for details we refer to manual	   */
-/*	threshold-threshold value in % for selected peaks, peaks with      */
+/*                                                                         */
+/*        Function parameters:                                             */
+/*        source-pointer to the vector of source spectrum                  */
+/*        dest-pointer to the vector of resulting deconvolved spectrum     */
+/*        size-length of source spectrum                                   */
+/*        sigma-sigma of searched peaks, for details we refer to manual    */
+/*        threshold-threshold value in % for selected peaks, peaks with    */
 /*                amplitude less than threshold*highest_peak/100           */
 /*                are ignored, see manual                                  */
 /*      background_remove-logical variable, set if the removal of          */
@@ -2354,22 +2354,22 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
 /*      markov-logical variable, if it is true, first the source spectrum  */
 /*             is replaced by new spectrum calculated using Markov         */
 /*             chains method.                                              */
-/*	aver_window-averanging window of searched peaks, for details       */
+/*        aver_window-averanging window of searched peaks, for details     */
 /*                  we refer to manual (applies only for Markov method)    */
-/*									   */
+/*                                                                         */
 /////////////////////////////////////////////////////////////////////////////
-   int i, j, number_of_iterations = (int)(7 * sigma + 0.5);
+   int i, j, fNumberIterations = (int)(7 * sigma + 0.5);
    float a, b;
    int k, lindex, posit, imin, imax, jmin, jmax, lh_gold;
    double lda, ldb, ldc, area, maximum, maximum_decon;
-   int xmin, xmax, l, peak_index = 0, size_ext = size + 2 * number_of_iterations, shift = number_of_iterations;
+   int fXmin, fXmax, l, peak_index = 0, size_ext = size + 2 * fNumberIterations, shift = fNumberIterations;
    float maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
    if (sigma < 1) {
       Error("Search1HighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
-   	
+           
    if(threshold<=0||threshold>=100){
       Error("Search1HighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
@@ -2389,7 +2389,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    }
          
    if(background_remove == true){
-      if(size < 2 * number_of_iterations + 1){   
+      if(size < 2 * fNumberIterations + 1){   
          Error("Search1HighRes", "Too large clipping window");
          return 0;
       }
@@ -2409,16 +2409,16 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
          working_space[i + size_ext] = source[i - shift];
    }
    if(background_remove == true){
-      for(i = 1; i <= number_of_iterations; i++){
-       	 for(j = i; j < size_ext - i; j++){
+      for(i = 1; i <= fNumberIterations; i++){
+         for(j = i; j < size_ext - i; j++){
             a = working_space[size_ext + j];
-       	    b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+                   b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
             if(b < a)
-	        a = b;
-	           
-       	    working_space[j]=a;
+                a = b;
+                   
+             working_space[j]=a;
          }
-       	 for(j = i; j < size_ext - i; j++)
+         for(j = i; j < size_ext - i; j++)
             working_space[size_ext + j] = working_space[j];
       }
       for(j = 0;j < size_ext; j++){
@@ -2440,9 +2440,9 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    if(markov == true){
       for(j = 0; j < size_ext; j++)
          working_space[2 * size_ext + j] = working_space[size_ext + j];
-      xmin = 0,xmax = size_ext - 1;
+      fXmin = 0,fXmax = size_ext - 1;
       for(i = 0, maxch = 0; i < size_ext; i++){
-	 working_space[i] = 0;
+         working_space[i] = 0;
          if(maxch < working_space[2 * size_ext + i])
             maxch = working_space[2 * size_ext + i];
          plocha += working_space[2 * size_ext + i];
@@ -2451,19 +2451,19 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
          return 0;
          
       nom = 1;
-      working_space[xmin] = 1;
-      for(i = xmin; i < xmax; i++){
-	 nip = working_space[2 * size_ext + i] / maxch;
+      working_space[fXmin] = 1;
+      for(i = fXmin; i < fXmax; i++){
+         nip = working_space[2 * size_ext + i] / maxch;
          nim = working_space[2 * size_ext + i + 1] / maxch;
          sp = 0,sm = 0;
-	 for(l = 1; l <= aver_window; l++){
-            if((i + l) > xmax)
-               a = working_space[2 * size_ext + xmax] / maxch;
+         for(l = 1; l <= aver_window; l++){
+            if((i + l) > fXmax)
+               a = working_space[2 * size_ext + fXmax] / maxch;
                
             else
                a = working_space[2 * size_ext + i + l] / maxch;
                
-	    b = a - nip;
+            b = a - nip;
             if(a + nip <= 0)
                a=1;
                
@@ -2473,8 +2473,8 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
             b = b / a;
             b = TMath::Exp(b);            
             sp = sp + b;
-            if((i - l + 1) < xmin)
-               a = working_space[2 * size_ext + xmin] / maxch;
+            if((i - l + 1) < fXmin)
+               a = working_space[2 * size_ext + fXmin] / maxch;
                
             else
                a = working_space[2 * size_ext + i - l + 1] / maxch;
@@ -2486,15 +2486,15 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
             else
                a = TMath::Sqrt(a + nim);
                
-	    b = b / a;
-            b = TMath::Exp(b);            	    
-       	    sm = sm + b;
-       	 }
+            b = b / a;
+            b = TMath::Exp(b);                        
+                   sm = sm + b;
+                }
          a = sp / sm;
          a = working_space[i + 1] = working_space[i] * a;
          nom = nom + a;
       }
-      for(i = xmin; i <= xmax; i++){
+      for(i = fXmin; i <= fXmax; i++){
          working_space[i] = working_space[i] / nom;
       }
       for(j = 0; j < size_ext; j++)
@@ -2503,18 +2503,18 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
          working_space[2 * size_ext + j] = working_space[size_ext + j];
       }
       if(background_remove == true){
-         for(i = 1; i <= number_of_iterations; i++){
-       	    for(j = i; j < size_ext - i; j++){
+         for(i = 1; i <= fNumberIterations; i++){
+            for(j = i; j < size_ext - i; j++){
                a = working_space[size_ext + j];
                b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
                if(b < a)
-	          a = b;
+                  a = b;
                working_space[j] = a;
             }
-       	    for(j = i; j < size_ext - i; j++)
+            for(j = i; j < size_ext - i; j++)
                working_space[size_ext + j] = working_space[j];
          }
-	 for(j = 0; j < size_ext; j++){
+         for(j = 0; j < size_ext; j++){
             working_space[size_ext + j] = working_space[2 * size_ext + j] - working_space[size_ext + j];
          }
       }
@@ -2531,17 +2531,17 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       j = (int)(1000 * TMath::Exp(-lda));
       lda = j;
       if(lda != 0)
-	 lh_gold = i + 1;
-	 
+         lh_gold = i + 1;
+         
       working_space[i] = lda;
       area = area + lda;
       if(lda > maximum){
-	 maximum = lda;
-	 posit = i;
+         maximum = lda;
+         posit = i;
       }
    }
 //read source vector
-   for(i = 0; i < size_ext; i++)  	
+   for(i = 0; i < size_ext; i++)          
       working_space[2 * size_ext + i] = TMath::Abs(working_space[size_ext + i]);
 //create matrix at*a(vector b)
    i = lh_gold - 1;
@@ -2553,15 +2553,15 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       lda = 0;
       jmin = 0;
       if(i < 0)
-	 jmin = -i;
+         jmin = -i;
       jmax = lh_gold - 1 - i;
       if(jmax > (lh_gold - 1))
-	 jmax = lh_gold - 1;
-	 
+         jmax = lh_gold - 1;
+         
       for(j = jmin;j <= jmax; j++){
-	 ldb = working_space[j];
-	 ldc = working_space[i + j];
-	 lda = lda + ldb * ldc;
+         ldb = working_space[j];
+         ldc = working_space[i + j];
+         lda = lda + ldb * ldc;
       }
       working_space[size_ext + i - imin] = lda;
    }
@@ -2571,13 +2571,13 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    for(i = imin; i <= imax; i++){
       lda = 0;
       for(j = 0; j <= (lh_gold - 1); j++){
-	 ldb = working_space[j];
-	 k = i + j;
-	 if(k >= 0 && k < size_ext){
-	    ldc = working_space[2 * size_ext + k];
-	    lda = lda + ldb * ldc;
-	 }
-	 
+         ldb = working_space[j];
+         k = i + j;
+         if(k >= 0 && k < size_ext){
+            ldc = working_space[2 * size_ext + k];
+            lda = lda + ldb * ldc;
+         }
+         
       }
       working_space[4 * size_ext + i - imin] = lda;
    }
@@ -2591,32 +2591,32 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    for(lindex = 0; lindex < decon_iterations; lindex++){
       for(i = 0; i < size_ext; i++){
          if(TMath::Abs(working_space[2 * size_ext + i]) > 0.00001 && TMath::Abs(working_space[i]) > 0.00001){
-	    lda=0;
-	    jmin = lh_gold - 1;
-       	    if(jmin > i)
+            lda=0;
+            jmin = lh_gold - 1;
+            if(jmin > i)
                jmin = i;
                
-	    jmin = -jmin;
-	    jmax = lh_gold - 1;
+            jmin = -jmin;
+            jmax = lh_gold - 1;
             if(jmax > (size_ext - 1 - i))
-	       jmax=size_ext-1-i;
-	       
-       	    for(j = jmin; j <= jmax; j++){
+               jmax=size_ext-1-i;
+               
+            for(j = jmin; j <= jmax; j++){
                ldb = working_space[j + lh_gold - 1 + size_ext];
-	       ldc = working_space[i + j];
-	       lda = lda + ldb * ldc;
-	    }
-       	    ldb = working_space[2 * size_ext + i];
+               ldc = working_space[i + j];
+               lda = lda + ldb * ldc;
+            }
+            ldb = working_space[2 * size_ext + i];
             if(lda != 0)
-	       lda = ldb / lda;
-	          
-	    else
-	       lda = 0;
-		  
-       	    ldb = working_space[i];
+               lda = ldb / lda;
+                  
+            else
+               lda = 0;
+                  
+            ldb = working_space[i];
             lda = lda * ldb;
-	    working_space[3 * size_ext + i] = lda;
-	 }
+            working_space[3 * size_ext + i] = lda;
+         }
       }
       for(i = 0; i < size_ext; i++){
          working_space[i] = working_space[3 * size_ext + i];
@@ -2643,7 +2643,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    for(i = 1; i < size_ext - 1; i++){
       if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
          if(i >= shift && i < size + shift){
-            if(working_space[i] > 0.01*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){	
+            if(working_space[i] > 0.01*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){        
                if(peak_index < fMaxPeaks){
                   for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
                      a += (double)(j - shift) * working_space[j];
@@ -2657,12 +2657,12 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                      a = size - 1;
                      
                   fPositionX[peak_index] = a;                        
-        	  peak_index += 1;
-	       }
-	       else{
+                  peak_index += 1;
+               }
+               else{
                   Warning("Search1HighRes", "Peak buffer full");
                   return 0;
-               }	          
+               }                  
             }
          }
       }
@@ -3024,11 +3024,11 @@ double TSpectrum::Derb(int num_of_fitted_peaks, double i,
    r = -r * t / (2. * b * b);
    return (r);
 }
-double TSpectrum::Dera1(double i)	//derivative of backgroud according to a1
+double TSpectrum::Dera1(double i)        //derivative of backgroud according to a1
 {
    return (i);
 }
-double TSpectrum::Dera2(double i)	//derivative of backgroud according to a2
+double TSpectrum::Dera2(double i)        //derivative of backgroud according to a2
 {
    return (i * i);
 }
@@ -3252,141 +3252,141 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
 {
    
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL FIT FUNCTION				           */ 
-/*      ALGORITHM WITHOUT MATRIX INVERSION                                 */ 
-/*	This function fits the source spectrum. The calling program should */ 
-/*      fill in input parameters of the TSpectrumOneDimFit class 	   */ 
-/*	The fitted parameters are written into class pointed by 	   */ 
-/*	TSpectrumOneDimFit class pointer and fitted data are written into  */ 
-/*      source spectrum.                                                   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum			   */ 
-/*	p-pointer to the TSpectrumOneDimFit class, see manual              */ 
-/*	size-length of source spectrum                                     */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL FIT FUNCTION                                       */ 
+/*      ALGORITHM WITHOUT MATRIX INVERSION                                   */ 
+/*        This function fits the source spectrum. The calling program should */ 
+/*      fill in input parameters of the TSpectrumOneDimFit class             */ 
+/*        The fitted parameters are written into class pointed by            */ 
+/*        TSpectrumOneDimFit class pointer and fitted data are written into  */ 
+/*      source spectrum.                                                     */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        source-pointer to the vector of source spectrum                    */ 
+/*        p-pointer to the TSpectrumOneDimFit class, see manual              */ 
+/*        size-length of source spectrum                                     */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, k, shift =
-       2 * p->number_of_peaks + 7, peak_vel, rozmer, iter, pw, regul_cycle,
+       2 * p->fNumberPeaks + 7, peak_vel, rozmer, iter, pw, regul_cycle,
        flag;
    double a, b, c, d = 0, alpha, chi_opt, yw, ywm, f, chi2, chi_min, chi =
        0, pi, pmin = 0, chi_cel = 0, chi_er;
    if (size <= 0)
       return "Wrong Parameters";
-   if (p->number_of_peaks <= 0)
+   if (p->fNumberPeaks <= 0)
       return ("INVALID NUMBER OF PEAKS, MUST BE POSITIVE");
-   if (p->number_of_iterations <= 0)
+   if (p->fNumberIterations <= 0)
       return ("INVALID NUMBER OF ITERATIONS, MUST BE POSITIVE");
-   if (p->alpha <= 0 || p->alpha > 1)
+   if (p->fAlpha <= 0 || p->fAlpha > 1)
       return ("INVALID COEFFICIENT ALPHA, MUST BE > THAN 0 AND <=1");
-   if (p->statistic_type != FIT1_OPTIM_CHI_COUNTS
-        && p->statistic_type != FIT1_OPTIM_CHI_FUNC_VALUES
-        && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD)
+   if (p->fStatisticType != kFitOptimChiCounts
+        && p->fStatisticType != kFitOptimChiFuncValues
+        && p->fStatisticType != kFitOptimMaxLikelihood)
       return ("WRONG TYPE OF STATISTIC");
-   if (p->alpha_optim != FIT1_ALPHA_HALVING
-        && p->alpha_optim != FIT1_ALPHA_OPTIMAL)
+   if (p->fAlphaOptim != kFitAlphaHalving
+        && p->fAlphaOptim != kFitAlphaOptimal)
       return ("WRONG OPTIMIZATION ALGORITHM");
-   if (p->power != FIT1_FIT_POWER2 && p->power != FIT1_FIT_POWER4
-        && p->power != FIT1_FIT_POWER6 && p->power != FIT1_FIT_POWER8
-        && p->power != FIT1_FIT_POWER10 && p->power != FIT1_FIT_POWER12)
+   if (p->fPower != kFitPower2 && p->fPower != kFitPower4
+        && p->fPower != kFitPower6 && p->fPower != kFitPower8
+        && p->fPower != kFitPower10 && p->fPower != kFitPower12)
       return ("WRONG POWER");
-   if (p->fit_taylor != FIT1_TAYLOR_ORDER_FIRST
-        && p->fit_taylor != FIT1_TAYLOR_ORDER_SECOND)
+   if (p->fFitTaylor != kFitTaylorOrderFirst
+        && p->fFitTaylor != kFitTaylorOrderSecond)
       return ("WRONG ORDER OF TAYLOR DEVELOPMENT");
-   if (p->xmin < 0 || p->xmin > p->xmax)
+   if (p->fXmin < 0 || p->fXmin > p->fXmax)
       return ("INVALID LOW LIMIT OF FITTING REGION");
-   if (p->xmax >= size || p->xmax < p->xmin)
+   if (p->fXmax >= size || p->fXmax < p->fXmin)
       return ("INVALID HIGH LIMIT OF FITTING REGION");
-   double *working_space = new double[5 * (2 * p->number_of_peaks + 7)];
-   for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-      if (p->amp_init[i] < 0)
+   double *working_space = new double[5 * (2 * p->fNumberPeaks + 7)];
+   for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+      if (p->fAmpInit[i] < 0)
          return ("INITIAL VALUE OF AMPLITUDE MUST BE NONNEGATIVE");
-      working_space[2 * i] = p->amp_init[i];	//vector parameter
-      if (p->fix_amp[i] == false) {
-         working_space[shift + j] = p->amp_init[i];	//vector xk
+      working_space[2 * i] = p->fAmpInit[i];        //vector parameter
+      if (p->fFixAmp[i] == false) {
+         working_space[shift + j] = p->fAmpInit[i];        //vector xk
          j += 1;
       }
-      if (p->position_init[i] < p->xmin)
+      if (p->fPositionInit[i] < p->fXmin)
          return
              ("INITIAL VALUE OF POSITION MUST BE WITHIN FITTING REGION");
-      if (p->position_init[i] > p->xmax)
+      if (p->fPositionInit[i] > p->fXmax)
          return
              ("INITIAL VALUE OF POSITION MUST BE WITHIN FITTING REGION");
-      working_space[2 * i + 1] = p->position_init[i];	//vector parameter
-      if (p->fix_position[i] == false) {
-         working_space[shift + j] = p->position_init[i];	//vector xk
+      working_space[2 * i + 1] = p->fPositionInit[i];        //vector parameter
+      if (p->fFixPosition[i] == false) {
+         working_space[shift + j] = p->fPositionInit[i];        //vector xk
          j += 1;
       }
    }
    peak_vel = 2 * i;
-   if (p->sigma_init < 0)
+   if (p->fSigmaInit < 0)
       return ("INITIAL VALUE OF SIGMA MUST BE NONNEGATIVE");
-   working_space[2 * i] = p->sigma_init;	//vector parameter
-   if (p->fix_sigma == false) {
-      working_space[shift + j] = p->sigma_init;	//vector xk
+   working_space[2 * i] = p->fSigmaInit;        //vector parameter
+   if (p->fFixSigma == false) {
+      working_space[shift + j] = p->fSigmaInit;        //vector xk
       j += 1;
    }
-   if (p->t_init < 0)
+   if (p->fTInit < 0)
       return ("INITIAL VALUE OF T MUST BE NONNEGATIVE");
-   working_space[2 * i + 1] = p->t_init;	//vector parameter
-   if (p->fix_t == false) {
-      working_space[shift + j] = p->t_init;	//vector xk
+   working_space[2 * i + 1] = p->fTInit;        //vector parameter
+   if (p->fFixT == false) {
+      working_space[shift + j] = p->fTInit;        //vector xk
       j += 1;
    }
-   if (p->b_init <= 0)
+   if (p->fBInit <= 0)
       return ("INITIAL VALUE OF B MUST BE POSITIVE");
-   working_space[2 * i + 2] = p->b_init;	//vector parameter
-   if (p->fix_b == false) {
-      working_space[shift + j] = p->b_init;	//vector xk
+   working_space[2 * i + 2] = p->fBInit;        //vector parameter
+   if (p->fFixB == false) {
+      working_space[shift + j] = p->fBInit;        //vector xk
       j += 1;
    }
-   if (p->s_init < 0)
+   if (p->fSInit < 0)
       return ("INITIAL VALUE OF S MUST BE NONNEGATIVE");
-   working_space[2 * i + 3] = p->s_init;	//vector parameter
-   if (p->fix_s == false) {
-      working_space[shift + j] = p->s_init;	//vector xk
+   working_space[2 * i + 3] = p->fSInit;        //vector parameter
+   if (p->fFixS == false) {
+      working_space[shift + j] = p->fSInit;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 4] = p->a0_init;	//vector parameter
-   if (p->fix_a0 == false) {
-      working_space[shift + j] = p->a0_init;	//vector xk
+   working_space[2 * i + 4] = p->fA0Init;        //vector parameter
+   if (p->fFixA0 == false) {
+      working_space[shift + j] = p->fA0Init;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 5] = p->a1_init;	//vector parameter
-   if (p->fix_a1 == false) {
-      working_space[shift + j] = p->a1_init;	//vector xk
+   working_space[2 * i + 5] = p->fA1Init;        //vector parameter
+   if (p->fFixA1 == false) {
+      working_space[shift + j] = p->fA1Init;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 6] = p->a2_init;	//vector parameter
-   if (p->fix_a2 == false) {
-      working_space[shift + j] = p->a2_init;	//vector xk
+   working_space[2 * i + 6] = p->fA2Init;        //vector parameter
+   if (p->fFixA2 == false) {
+      working_space[shift + j] = p->fA2Init;        //vector xk
       j += 1;
    }
    rozmer = j;
    if (rozmer == 0)
       return ("ALL PARAMETERS ARE FIXED");
-   if (rozmer >= p->xmax - p->xmin + 1)
+   if (rozmer >= p->fXmax - p->fXmin + 1)
       return
           ("NUMBER OF FITTED PARAMETERS IS LARGER THAN # OF FITTED POINTS");
-   for (iter = 0; iter < p->number_of_iterations; iter++) {
+   for (iter = 0; iter < p->fNumberIterations; iter++) {
       for (j = 0; j < rozmer; j++) {
-         working_space[2 * shift + j] = 0, working_space[3 * shift + j] = 0;	//der,temp
+         working_space[2 * shift + j] = 0, working_space[3 * shift + j] = 0;        //der,temp
       }
       
           //filling vectors
-          alpha = p->alpha;
-      chi_opt = 0, pw = p->power - 2;
-      for (i = p->xmin; i <= p->xmax; i++) {
+      alpha = p->fAlpha;
+      chi_opt = 0, pw = p->fPower - 2;
+      for (i = p->fXmin; i <= p->fXmax; i++) {
          yw = source[i];
          ywm = yw;
-         f = Shape(p->number_of_peaks, (double) i, working_space,
+         f = Shape(p->fNumberPeaks, (double) i, working_space,
                     working_space[peak_vel], working_space[peak_vel + 1],
                     working_space[peak_vel + 3],
                     working_space[peak_vel + 2],
                     working_space[peak_vel + 4],
                     working_space[peak_vel + 5],
                     working_space[peak_vel + 6]);
-         if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+         if (p->fStatisticType == kFitOptimMaxLikelihood) {
             if (f > 0.00001)
                chi_opt += yw * TMath::Log(f) - f;
          }
@@ -3395,13 +3395,13 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
             if (ywm != 0)
                chi_opt += (yw - f) * (yw - f) / ywm;
          }
-         if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+         if (p->fStatisticType == kFitOptimChiFuncValues) {
             ywm = f;
             if (f < 0.00001)
                ywm = 0.00001;
          }
          
-         else if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+         else if (p->fStatisticType == kFitOptimMaxLikelihood) {
             ywm = f;
             if (f < 0.001)
                ywm = 0.001;
@@ -3413,8 +3413,8 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
          }
          
              //calculation of gradient vector
-             for (j = 0, k = 0; j < p->number_of_peaks; j++) {
-            if (p->fix_amp[j] == false) {
+             for (j = 0, k = 0; j < p->fNumberPeaks; j++) {
+            if (p->fFixAmp[j] == false) {
                a = Deramp((double) i, working_space[2 * j + 1],
                            working_space[peak_vel],
                            working_space[peak_vel + 1],
@@ -3422,37 +3422,37 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
                            working_space[peak_vel + 2]);
                if (ywm != 0) {
                   c = Ourpowl(a, pw);
-                  if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+                  if (p->fStatisticType == kFitOptimChiFuncValues) {
                      b = a * (yw * yw - f * f) / (ywm * ywm);
-                     working_space[2 * shift + k] += b * c;	//der
+                     working_space[2 * shift + k] += b * c;        //der
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                     working_space[3 * shift + k] += b * c;	//temp
+                     working_space[3 * shift + k] += b * c;        //temp
                   }
                   
                   else {
                      b = a * (yw - f) / ywm;
-                     working_space[2 * shift + k] += b * c;	//der
+                     working_space[2 * shift + k] += b * c;        //der
                      b = a * a / ywm;
-                     working_space[3 * shift + k] += b * c;	//temp
+                     working_space[3 * shift + k] += b * c;        //temp
                   }
                }
                k += 1;
             }
-            if (p->fix_position[j] == false) {
+            if (p->fFixPosition[j] == false) {
                a = Deri0((double) i, working_space[2 * j],
                           working_space[2 * j + 1],
                           working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 3],
                           working_space[peak_vel + 2]);
-               if (p->fit_taylor == FIT1_TAYLOR_ORDER_SECOND)
+               if (p->fFitTaylor == kFitTaylorOrderSecond)
                   d = Derderi0((double) i, working_space[2 * j],
                                 working_space[2 * j + 1],
                                 working_space[peak_vel]);
                if (ywm != 0) {
                   c = Ourpowl(a, pw);
                   if (TMath::Abs(a) > 0.00000001
-                       && p->fit_taylor == FIT1_TAYLOR_ORDER_SECOND) {
+                       && p->fFitTaylor == kFitTaylorOrderSecond) {
                      d = d * TMath::Abs(yw - f) / (2 * a * ywm);
                      if ((a + d) <= 0 && a >= 0 || (a + d) >= 0 && a <= 0)
                         d = 0;
@@ -3461,36 +3461,36 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
                   else
                      d = 0;
                   a = a + d;
-                  if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+                  if (p->fStatisticType == kFitOptimChiFuncValues) {
                      b = a * (yw * yw - f * f) / (ywm * ywm);
-                     working_space[2 * shift + k] += b * c;	//der
+                     working_space[2 * shift + k] += b * c;        //der
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                     working_space[3 * shift + k] += b * c;	//temp
+                     working_space[3 * shift + k] += b * c;        //temp
                   }
                   
                   else {
                      b = a * (yw - f) / ywm;
-                     working_space[2 * shift + k] += b * c;	//der
+                     working_space[2 * shift + k] += b * c;        //der
                      b = a * a / ywm;
-                     working_space[3 * shift + k] += b * c;	//temp
+                     working_space[3 * shift + k] += b * c;        //temp
                   }
                }
                k += 1;
             }
          }
-         if (p->fix_sigma == false) {
-            a = Dersigma(p->number_of_peaks, (double) i, working_space,
+         if (p->fFixSigma == false) {
+            a = Dersigma(p->fNumberPeaks, (double) i, working_space,
                           working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 3],
                           working_space[peak_vel + 2]);
-            if (p->fit_taylor == FIT1_TAYLOR_ORDER_SECOND)
-               d = Derdersigma(p->number_of_peaks, (double) i,
+            if (p->fFitTaylor == kFitTaylorOrderSecond)
+               d = Derdersigma(p->fNumberPeaks, (double) i,
                                 working_space, working_space[peak_vel]);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
                if (TMath::Abs(a) > 0.00000001
-                    && p->fit_taylor == FIT1_TAYLOR_ORDER_SECOND) {
+                    && p->fFitTaylor == kFitTaylorOrderSecond) {
                   d = d * TMath::Abs(yw - f) / (2 * a * ywm);
                   if ((a + d) <= 0 && a >= 0 || (a + d) >= 0 && a <= 0)
                      d = 0;
@@ -3499,143 +3499,143 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
                else
                   d = 0;
                a = a + d;
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_t == false) {
-            a = Dert(p->number_of_peaks, (double) i, working_space,
+         if (p->fFixT == false) {
+            a = Dert(p->fNumberPeaks, (double) i, working_space,
                       working_space[peak_vel],
                       working_space[peak_vel + 2]);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_b == false) {
-            a = Derb(p->number_of_peaks, (double) i, working_space,
+         if (p->fFixB == false) {
+            a = Derb(p->fNumberPeaks, (double) i, working_space,
                       working_space[peak_vel], working_space[peak_vel + 1],
                       working_space[peak_vel + 2]);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_s == false) {
-            a = Ders(p->number_of_peaks, (double) i, working_space,
+         if (p->fFixS == false) {
+            a = Ders(p->fNumberPeaks, (double) i, working_space,
                       working_space[peak_vel]);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_a0 == false) {
+         if (p->fFixA0 == false) {
             a = 1.;
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_a1 == false) {
+         if (p->fFixA1 == false) {
             a = Dera1((double) i);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
          }
-         if (p->fix_a2 == false) {
+         if (p->fFixA2 == false) {
             a = Dera2((double) i);
             if (ywm != 0) {
                c = Ourpowl(a, pw);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   b = a * (yw * yw - f * f) / (ywm * ywm);
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
                
                else {
                   b = a * (yw - f) / ywm;
-                  working_space[2 * shift + k] += b * c;	//der
+                  working_space[2 * shift + k] += b * c;        //der
                   b = a * a / ywm;
-                  working_space[3 * shift + k] += b * c;	//temp
+                  working_space[3 * shift + k] += b * c;        //temp
                }
             }
             k += 1;
@@ -3643,9 +3643,9 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
       }
       for (j = 0; j < rozmer; j++) {
          if (TMath::Abs(working_space[3 * shift + j]) > 0.000001)
-            working_space[2 * shift + j] = working_space[2 * shift + j] / TMath::Abs(working_space[3 * shift + j]);	//der[j]=der[j]/temp[j]
+            working_space[2 * shift + j] = working_space[2 * shift + j] / TMath::Abs(working_space[3 * shift + j]);        //der[j]=der[j]/temp[j]
          else
-            working_space[2 * shift + j] = 0;	//der[j]
+            working_space[2 * shift + j] = 0;        //der[j]
       }
       
           //calculate chi_opt
@@ -3655,12 +3655,12 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
           //calculate new parameters
           regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
-         working_space[4 * shift + j] = working_space[shift + j];	//temp_xk[j]=xk[j]
+         working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }
       
       do {
-         if (p->alpha_optim == FIT1_ALPHA_OPTIMAL) {
-            if (p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD)
+         if (p->fAlphaOptim == kFitAlphaOptimal) {
+            if (p->fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
             
             else
@@ -3668,79 +3668,79 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
             flag = 0;
             for (pi = 0.1; flag == 0 && pi <= 100; pi += 0.1) {
                for (j = 0; j < rozmer; j++) {
-                  working_space[shift + j] = working_space[4 * shift + j] + pi * alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+pi*alpha*der[j]
+                  working_space[shift + j] = working_space[4 * shift + j] + pi * alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pi*alpha*der[j]
                }
-               for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-                  if (p->fix_amp[i] == false) {
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = 0;	//xk[j]
-                     working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+               for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+                  if (p->fFixAmp[i] == false) {
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = 0;        //xk[j]
+                     working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                      j += 1;
                   }
-                  if (p->fix_position[i] == false) {
-                     if (working_space[shift + j] < p->xmin)	//xk[j]
-                        working_space[shift + j] = p->xmin;	//xk[j]
-                     if (working_space[shift + j] > p->xmax)	//xk[j]
-                        working_space[shift + j] = p->xmax;	//xk[j]
-                     working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+                  if (p->fFixPosition[i] == false) {
+                     if (working_space[shift + j] < p->fXmin)        //xk[j]
+                        working_space[shift + j] = p->fXmin;        //xk[j]
+                     if (working_space[shift + j] > p->fXmax)        //xk[j]
+                        working_space[shift + j] = p->fXmax;        //xk[j]
+                     working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                      j += 1;
                   }
                }
-               if (p->fix_sigma == false) {
-                  if (working_space[shift + j] < 0.001) {	//xk[j]
-                     working_space[shift + j] = 0.001;	//xk[j]
+               if (p->fFixSigma == false) {
+                  if (working_space[shift + j] < 0.001) {        //xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+                  working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                   j += 1;
                }
-               if (p->fix_t == false) {
-                  working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+               if (p->fFixT == false) {
+                  working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                   j += 1;
                }
-               if (p->fix_b == false) {
-                  if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = -0.001;	//xk[j]
+               if (p->fFixB == false) {
+                  if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = -0.001;        //xk[j]
                      else
-                        working_space[shift + j] = 0.001;	//xk[j]
+                        working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+                  working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                   j += 1;
                }
-               if (p->fix_s == false) {
-                  working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+               if (p->fFixS == false) {
+                  working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                   j += 1;
                }
-               if (p->fix_a0 == false) {
-                  working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+               if (p->fFixA0 == false) {
+                  working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                   j += 1;
                }
-               if (p->fix_a1 == false) {
-                  working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+               if (p->fFixA1 == false) {
+                  working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                   j += 1;
                }
-               if (p->fix_a2 == false) {
-                  working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+               if (p->fFixA2 == false) {
+                  working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                   j += 1;
                }
                chi2 = 0;
-               for (i = p->xmin; i <= p->xmax; i++) {
+               for (i = p->fXmin; i <= p->fXmax; i++) {
                   yw = source[i];
                   ywm = yw;
-                  f = Shape(p->number_of_peaks, (double) i, working_space,
-                             working_space[peak_vel],
-                             working_space[peak_vel + 1],
-                             working_space[peak_vel + 3],
-                             working_space[peak_vel + 2],
-                             working_space[peak_vel + 4],
-                             working_space[peak_vel + 5],
-                             working_space[peak_vel + 6]);
-                  if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+                  f = Shape(p->fNumberPeaks, (double) i, working_space,
+                  working_space[peak_vel],
+                  working_space[peak_vel + 1],
+                  working_space[peak_vel + 3],
+                  working_space[peak_vel + 2],
+                  working_space[peak_vel + 4],
+                  working_space[peak_vel + 5],
+                  working_space[peak_vel + 6]);
+                  if (p->fStatisticType == kFitOptimChiFuncValues) {
                      ywm = f;
                      if (f < 0.00001)
                         ywm = 0.00001;
                   }
-                  if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+                  if (p->fStatisticType == kFitOptimMaxLikelihood) {
                      if (f > 0.00001)
                         chi2 += yw * TMath::Log(f) - f;
                   }
@@ -3751,9 +3751,9 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
                   }
                }
                if (chi2 < chi_min
-                    && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD
+                    && p->fStatisticType != kFitOptimMaxLikelihood
                     || chi2 > chi_min
-                    && p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+                    && p->fStatisticType == kFitOptimMaxLikelihood) {
                   pmin = pi, chi_min = chi2;
                }
                
@@ -3765,59 +3765,59 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
             }
             if (pmin != 0.1) {
                for (j = 0; j < rozmer; j++) {
-                  working_space[shift + j] = working_space[4 * shift + j] + pmin * alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+pmin*alpha*der[j]
+                  working_space[shift + j] = working_space[4 * shift + j] + pmin * alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pmin*alpha*der[j]
                }
-               for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-                  if (p->fix_amp[i] == false) {
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = 0;	//xk[j]
-                     working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+               for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+                  if (p->fFixAmp[i] == false) {
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = 0;        //xk[j]
+                     working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                      j += 1;
                   }
-                  if (p->fix_position[i] == false) {
-                     if (working_space[shift + j] < p->xmin)	//xk[j]
-                        working_space[shift + j] = p->xmin;	//xk[j]
-                     if (working_space[shift + j] > p->xmax)	//xk[j]
-                        working_space[shift + j] = p->xmax;	//xk[j]
-                     working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+                  if (p->fFixPosition[i] == false) {
+                     if (working_space[shift + j] < p->fXmin)        //xk[j]
+                        working_space[shift + j] = p->fXmin;        //xk[j]
+                     if (working_space[shift + j] > p->fXmax)        //xk[j]
+                        working_space[shift + j] = p->fXmax;        //xk[j]
+                     working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                      j += 1;
                   }
                }
-               if (p->fix_sigma == false) {
-                  if (working_space[shift + j] < 0.001) {	//xk[j]
-                     working_space[shift + j] = 0.001;	//xk[j]
+               if (p->fFixSigma == false) {
+                  if (working_space[shift + j] < 0.001) {        //xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+                  working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                   j += 1;
                }
-               if (p->fix_t == false) {
-                  working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+               if (p->fFixT == false) {
+                  working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                   j += 1;
                }
-               if (p->fix_b == false) {
-                  if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = -0.001;	//xk[j]
+               if (p->fFixB == false) {
+                  if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = -0.001;        //xk[j]
                      else
-                        working_space[shift + j] = 0.001;	//xk[j]
+                        working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+                  working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                   j += 1;
                }
-               if (p->fix_s == false) {
-                  working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+               if (p->fFixS == false) {
+                  working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                   j += 1;
                }
-               if (p->fix_a0 == false) {
-                  working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+               if (p->fFixA0 == false) {
+                  working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                   j += 1;
                }
-               if (p->fix_a1 == false) {
-                  working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+               if (p->fFixA1 == false) {
+                  working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                   j += 1;
                }
-               if (p->fix_a2 == false) {
-                  working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+               if (p->fFixA2 == false) {
+                  working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                   j += 1;
                }
                chi = chi_min;
@@ -3826,79 +3826,79 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
          
          else {
             for (j = 0; j < rozmer; j++) {
-               working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+pi*alpha*der[j]
+               working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pi*alpha*der[j]
             }
-            for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-               if (p->fix_amp[i] == false) {
-                  if (working_space[shift + j] < 0)	//xk[j]
-                     working_space[shift + j] = 0;	//xk[j]
-                  working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+            for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+               if (p->fFixAmp[i] == false) {
+                  if (working_space[shift + j] < 0)        //xk[j]
+                     working_space[shift + j] = 0;        //xk[j]
+                  working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                   j += 1;
                }
-               if (p->fix_position[i] == false) {
-                  if (working_space[shift + j] < p->xmin)	//xk[j]
-                     working_space[shift + j] = p->xmin;	//xk[j]
-                  if (working_space[shift + j] > p->xmax)	//xk[j]
-                     working_space[shift + j] = p->xmax;	//xk[j]
-                  working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+               if (p->fFixPosition[i] == false) {
+                  if (working_space[shift + j] < p->fXmin)        //xk[j]
+                     working_space[shift + j] = p->fXmin;        //xk[j]
+                  if (working_space[shift + j] > p->fXmax)        //xk[j]
+                     working_space[shift + j] = p->fXmax;        //xk[j]
+                  working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                   j += 1;
                }
             }
-            if (p->fix_sigma == false) {
-               if (working_space[shift + j] < 0.001) {	//xk[j]
-                  working_space[shift + j] = 0.001;	//xk[j]
+            if (p->fFixSigma == false) {
+               if (working_space[shift + j] < 0.001) {        //xk[j]
+                  working_space[shift + j] = 0.001;        //xk[j]
                }
-               working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+               working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                j += 1;
             }
-            if (p->fix_t == false) {
-               working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+            if (p->fFixT == false) {
+               working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                j += 1;
             }
-            if (p->fix_b == false) {
-               if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                  if (working_space[shift + j] < 0)	//xk[j]
-                     working_space[shift + j] = -0.001;	//xk[j]
+            if (p->fFixB == false) {
+               if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                  if (working_space[shift + j] < 0)        //xk[j]
+                     working_space[shift + j] = -0.001;        //xk[j]
                   else
-                     working_space[shift + j] = 0.001;	//xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                }
-               working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+               working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                j += 1;
             }
-            if (p->fix_s == false) {
-               working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+            if (p->fFixS == false) {
+               working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                j += 1;
             }
-            if (p->fix_a0 == false) {
-               working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+            if (p->fFixA0 == false) {
+               working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                j += 1;
             }
-            if (p->fix_a1 == false) {
-               working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+            if (p->fFixA1 == false) {
+               working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                j += 1;
             }
-            if (p->fix_a2 == false) {
-               working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+            if (p->fFixA2 == false) {
+               working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                j += 1;
             }
             chi = 0;
-            for (i = p->xmin; i <= p->xmax; i++) {
+            for (i = p->fXmin; i <= p->fXmax; i++) {
                yw = source[i];
                ywm = yw;
-               f = Shape(p->number_of_peaks, (double) i, working_space,
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2],
-                          working_space[peak_vel + 4],
-                          working_space[peak_vel + 5],
-                          working_space[peak_vel + 6]);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               f = Shape(p->fNumberPeaks, (double) i, working_space,
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2],
+               working_space[peak_vel + 4],
+               working_space[peak_vel + 5],
+               working_space[peak_vel + 6]);
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   ywm = f;
                   if (f < 0.00001)
                      ywm = 0.00001;
                }
-               if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+               if (p->fStatisticType == kFitOptimMaxLikelihood) {
                   if (f > 0.00001)
                      chi += yw * TMath::Log(f) - f;
                }
@@ -3911,275 +3911,275 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
          }
          chi2 = chi;
          chi = TMath::Sqrt(TMath::Abs(chi));
-         if (p->alpha_optim == FIT1_ALPHA_HALVING && chi > 1E-6)
+         if (p->fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
          
-         else if (p->alpha_optim == FIT1_ALPHA_OPTIMAL)
+         else if (p->fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
          regul_cycle += 1;
       } while ((chi > chi_opt
-                 && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD
+                 && p->fStatisticType != kFitOptimMaxLikelihood
                  || chi < chi_opt
-                 && p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD)
-                && regul_cycle < FIT1_NUM_OF_REGUL_CYCLES);
+                 && p->fStatisticType == kFitOptimMaxLikelihood)
+                && regul_cycle < kFitNumRegulCycles);
       for (j = 0; j < rozmer; j++) {
-         working_space[4 * shift + j] = 0;	//temp_xk[j]
-         working_space[2 * shift + j] = 0;	//der[j]
+         working_space[4 * shift + j] = 0;        //temp_xk[j]
+         working_space[2 * shift + j] = 0;        //der[j]
       }
-      for (i = p->xmin, chi_cel = 0; i <= p->xmax; i++) {
+      for (i = p->fXmin, chi_cel = 0; i <= p->fXmax; i++) {
          yw = source[i];
          if (yw == 0)
             yw = 1;
-         f = Shape(p->number_of_peaks, (double) i, working_space,
-                    working_space[peak_vel], working_space[peak_vel + 1],
-                    working_space[peak_vel + 3],
-                    working_space[peak_vel + 2],
-                    working_space[peak_vel + 4],
-                    working_space[peak_vel + 5],
-                    working_space[peak_vel + 6]);
+         f = Shape(p->fNumberPeaks, (double) i, working_space,
+         working_space[peak_vel], working_space[peak_vel + 1],
+         working_space[peak_vel + 3],
+         working_space[peak_vel + 2],
+         working_space[peak_vel + 4],
+         working_space[peak_vel + 5],
+         working_space[peak_vel + 6]);
          chi_opt = (yw - f) * (yw - f) / yw;
          chi_cel += (yw - f) * (yw - f) / yw;
          
              //calculate gradient vector
-             for (j = 0, k = 0; j < p->number_of_peaks; j++) {
-            if (p->fix_amp[j] == false) {
+         for (j = 0, k = 0; j < p->fNumberPeaks; j++) {
+            if (p->fFixAmp[j] == false) {
                a = Deramp((double) i, working_space[2 * j + 1],
-                           working_space[peak_vel],
-                           working_space[peak_vel + 1],
-                           working_space[peak_vel + 3],
-                           working_space[peak_vel + 2]);
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                if (yw != 0) {
                   c = Ourpowl(a, pw);
-                  working_space[2 * shift + k] += chi_opt * c;	//der[k]
+                  working_space[2 * shift + k] += chi_opt * c;        //der[k]
                   b = a * a / yw;
-                  working_space[4 * shift + k] += b * c;	//temp_xk[k]
+                  working_space[4 * shift + k] += b * c;        //temp_xk[k]
                }
                k += 1;
             }
-            if (p->fix_position[j] == false) {
+            if (p->fFixPosition[j] == false) {
                a = Deri0((double) i, working_space[2 * j],
-                          working_space[2 * j + 1],
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2]);
+               working_space[2 * j + 1],
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                if (yw != 0) {
                   c = Ourpowl(a, pw);
-                  working_space[2 * shift + k] += chi_opt * c;	//der[k]
+                  working_space[2 * shift + k] += chi_opt * c;        //der[k]
                   b = a * a / yw;
-                  working_space[4 * shift + k] += b * c;	//temp_xk[k]
+                  working_space[4 * shift + k] += b * c;        //temp_xk[k]
                }
                k += 1;
             }
          }
-         if (p->fix_sigma == false) {
-            a = Dersigma(p->number_of_peaks, (double) i, working_space,
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2]);
+         if (p->fFixSigma == false) {
+            a = Dersigma(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel],
+            working_space[peak_vel + 1],
+            working_space[peak_vel + 3],
+            working_space[peak_vel + 2]);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_t == false) {
-            a = Dert(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel],
-                      working_space[peak_vel + 2]);
+         if (p->fFixT == false) {
+            a = Dert(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel],
+            working_space[peak_vel + 2]);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_b == false) {
-            a = Derb(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel], working_space[peak_vel + 1],
-                      working_space[peak_vel + 2]);
+         if (p->fFixB == false) {
+            a = Derb(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel], working_space[peak_vel + 1],
+            working_space[peak_vel + 2]);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_s == false) {
-            a = Ders(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel]);
+         if (p->fFixS == false) {
+            a = Ders(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel]);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//tem_xk[k]
+               working_space[4 * shift + k] += b * c;        //tem_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a0 == false) {
+         if (p->fFixA0 == false) {
             a = 1.0;
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a1 == false) {
+         if (p->fFixA1 == false) {
             a = Dera1((double) i);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a2 == false) {
+         if (p->fFixA2 == false) {
             a = Dera2((double) i);
             if (yw != 0) {
                c = Ourpowl(a, pw);
-               working_space[2 * shift + k] += chi_opt * c;	//der[k]
+               working_space[2 * shift + k] += chi_opt * c;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b * c;	//temp_xk[k]
+               working_space[4 * shift + k] += b * c;        //temp_xk[k]
             }
             k += 1;
          }
       }
    }
-   b = p->xmax - p->xmin + 1 - rozmer;
+   b = p->fXmax - p->fXmin + 1 - rozmer;
    chi_er = chi_cel / b;
-   for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-      p->area[i] =
+   for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+      p->fArea[i] =
           Area(working_space[2 * i], working_space[peak_vel],
                working_space[peak_vel + 1], working_space[peak_vel + 2]);
-      if (p->fix_amp[i] == false) {
-         p->amp_calc[i] = working_space[shift + j];	//xk[j]
+      if (p->fFixAmp[i] == false) {
+         p->fAmpCalc[i] = working_space[shift + j];        //xk[j]
          if (working_space[3 * shift + j] != 0)
-            p->amp_err[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
-         if (p->area[i] > 0) {
+            p->fAmpErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
+         if (p->fArea[i] > 0) {
             a = Derpa(working_space[peak_vel],
                        working_space[peak_vel + 1],
                        working_space[peak_vel + 2]);
-            b = working_space[4 * shift + j];	//temp_xk[j]
+            b = working_space[4 * shift + j];        //temp_xk[j]
             if (b == 0)
                b = 1;
             
             else
                b = 1 / b;
-            p->area_err[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
+            p->fAreaErr[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
          }
          
          else
-            p->area_err[i] = 0;
+            p->fAreaErr[i] = 0;
          j += 1;
       }
       
       else {
-         p->amp_calc[i] = p->amp_init[i];
-         p->amp_err[i] = 0;
-         p->area_err[i] = 0;
+         p->fAmpCalc[i] = p->fAmpInit[i];
+         p->fAmpErr[i] = 0;
+         p->fAreaErr[i] = 0;
       }
-      if (p->fix_position[i] == false) {
-         p->position_calc[i] = working_space[shift + j];	//xk[j]
-         if (working_space[3 * shift + j] != 0)	//temp[j]
-            p->position_err[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+      if (p->fFixPosition[i] == false) {
+         p->fPositionCalc[i] = working_space[shift + j];        //xk[j]
+         if (working_space[3 * shift + j] != 0)        //temp[j]
+            p->fPositionErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
          j += 1;
       }
       
       else {
-         p->position_calc[i] = p->position_init[i];
-         p->position_err[i] = 0;
+         p->fPositionCalc[i] = p->fPositionInit[i];
+         p->fPositionErr[i] = 0;
       }
    }
-   if (p->fix_sigma == false) {
-      p->sigma_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->sigma_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixSigma == false) {
+      p->fSigmaCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fSigmaErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->sigma_calc = p->sigma_init;
-      p->sigma_err = 0;
+      p->fSigmaCalc = p->fSigmaInit;
+      p->fSigmaErr = 0;
    }
-   if (p->fix_t == false) {
-      p->t_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->t_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixT == false) {
+      p->fTCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fTErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->t_calc = p->t_init;
-      p->t_err = 0;
+      p->fTCalc = p->fTInit;
+      p->fTErr = 0;
    }
-   if (p->fix_b == false) {
-      p->b_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->b_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixB == false) {
+      p->fBCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fBErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->b_calc = p->b_init;
-      p->b_err = 0;
+      p->fBCalc = p->fBInit;
+      p->fBErr = 0;
    }
-   if (p->fix_s == false) {
-      p->s_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->s_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixS == false) {
+      p->fSCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fSErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->s_calc = p->s_init;
-      p->s_err = 0;
+      p->fSCalc = p->fSInit;
+      p->fSErr = 0;
    }
-   if (p->fix_a0 == false) {
-      p->a0_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a0_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA0 == false) {
+      p->fA0Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a0_calc = p->a0_init;
-      p->a0_err = 0;
+      p->fA0Calc = p->fA0Init;
+      p->fA0Err = 0;
    }
-   if (p->fix_a1 == false) {
-      p->a1_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a1_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA1 == false) {
+      p->fA1Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA1Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a1_calc = p->a1_init;
-      p->a1_err = 0;
+      p->fA1Calc = p->fA1Init;
+      p->fA1Err = 0;
    }
-   if (p->fix_a2 == false) {
-      p->a2_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a2_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA2 == false) {
+      p->fA2Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA2Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a2_calc = p->a2_init;
-      p->a2_err = 0;
+      p->fA2Calc = p->fA2Init;
+      p->fA2Err = 0;
    }
-   b = p->xmax - p->xmin + 1 - rozmer;
-   p->chi = chi_cel / b;
-   for (i = p->xmin; i <= p->xmax; i++) {
-      f = Shape(p->number_of_peaks, (double) i, working_space,
+   b = p->fXmax - p->fXmin + 1 - rozmer;
+   p->fChi = chi_cel / b;
+   for (i = p->fXmin; i <= p->fXmax; i++) {
+      f = Shape(p->fNumberPeaks, (double) i, working_space,
                  working_space[peak_vel], working_space[peak_vel + 1],
                  working_space[peak_vel + 3], working_space[peak_vel + 2],
                  working_space[peak_vel + 4], working_space[peak_vel + 5],
@@ -4217,11 +4217,11 @@ void TSpectrum::StiefelInversion(double **a, int size)
       
           //calculation of rk and norm
           for (i = 0; i < size; i++) {
-         a[i][size + 2] = -a[i][size];	//rk=-C
+         a[i][size + 2] = -a[i][size];        //rk=-C
          for (j = 0; j < size; j++) {
-            a[i][size + 2] += a[i][j] * a[j][size + 1];	//A*xk-C
+            a[i][size + 2] += a[i][j] * a[j][size + 1];        //A*xk-C
          }
-         normk += a[i][size + 2] * a[i][size + 2];	//calculation normk
+         normk += a[i][size + 2] * a[i][size + 2];        //calculation normk
       }
       
           //calculation of sk
@@ -4230,28 +4230,28 @@ void TSpectrum::StiefelInversion(double **a, int size)
       }
       
           //calculation of uk
-          for (i = 0; i < size; i++) {
-         a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3];	//uk=-rk+sk*uk-1
+      for (i = 0; i < size; i++) {
+         a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3];        //uk=-rk+sk*uk-1
       }
       
           //calculation of lambdak
           lambdak = 0;
       for (i = 0; i < size; i++) {
          for (j = 0, b = 0; j < size; j++) {
-            b += a[i][j] * a[j][size + 3];	//A*uk
+            b += a[i][j] * a[j][size + 3];        //A*uk
          }
          lambdak += b * a[i][size + 3];
       }
-      if (TMath::Abs(lambdak) > 1e-50)	//computer zero
+      if (TMath::Abs(lambdak) > 1e-50)        //computer zero
          lambdak = normk / lambdak;
       
       else
          lambdak = 0;
       for (i = 0; i < size; i++)
-         a[i][size + 1] += lambdak * a[i][size + 3];	//xk+1=xk+lambdak*uk
+         a[i][size + 1] += lambdak * a[i][size + 3];        //xk+1=xk+lambdak*uk
       normk_old = normk;
       k += 1;
-   } while (k < size && TMath::Abs(normk) > 1e-50);	//computer zero
+   } while (k < size && TMath::Abs(normk) > 1e-50);        //computer zero
    return;
 }
 const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
@@ -4259,201 +4259,201 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
 {
    
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL FIT FUNCTION				           */ 
-/*      ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)           */ 
-/*	This function fits the source spectrum. The calling program should */ 
-/*      fill in input parameters of the TSpectrumOneDimFit class 	   */ 
-/*	The fitted parameters are written into class pointed by 	   */ 
-/*	TSpectrumOneDimFit class pointer and fitted data are written into  */ 
-/*      source spectrum.                                                   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum			   */ 
-/*	p-pointer to the TSpectrumOneDimFit class, see manual       	   */ 
-/*	size-length of source spectrum                                     */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL FIT FUNCTION                                       */ 
+/*      ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)             */ 
+/*        This function fits the source spectrum. The calling program should */ 
+/*      fill in input parameters of the TSpectrumOneDimFit class             */ 
+/*        The fitted parameters are written into class pointed by            */ 
+/*        TSpectrumOneDimFit class pointer and fitted data are written into  */ 
+/*      source spectrum.                                                     */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        source-pointer to the vector of source spectrum                    */ 
+/*        p-pointer to the TSpectrumOneDimFit class, see manual              */ 
+/*        size-length of source spectrum                                     */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, k, shift =
-       2 * p->number_of_peaks + 7, peak_vel, rozmer, iter, regul_cycle,
+       2 * p->fNumberPeaks + 7, peak_vel, rozmer, iter, regul_cycle,
        flag;
    double a, b, alpha, chi_opt, yw, ywm, f, chi2, chi_min, chi =
        0, pi, pmin = 0, chi_cel = 0, chi_er;
    if (size <= 0)
       return "Wrong Parameters";
-   if (p->number_of_peaks <= 0)
+   if (p->fNumberPeaks <= 0)
       return ("INVALID NUMBER OF PEAKS, MUST BE POSITIVE");
-   if (p->number_of_iterations <= 0)
+   if (p->fNumberIterations <= 0)
       return ("INVALID NUMBER OF ITERATIONS, MUST BE POSITIVE");
-   if (p->alpha <= 0 || p->alpha > 1)
+   if (p->fAlpha <= 0 || p->fAlpha > 1)
       return ("INVALID COEFFICIENT ALPHA, MUST BE > THAN 0 AND <=1");
-   if (p->statistic_type != FIT1_OPTIM_CHI_COUNTS
-        && p->statistic_type != FIT1_OPTIM_CHI_FUNC_VALUES
-        && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD)
+   if (p->fStatisticType != kFitOptimChiCounts
+        && p->fStatisticType != kFitOptimChiFuncValues
+        && p->fStatisticType != kFitOptimMaxLikelihood)
       return ("WRONG TYPE OF STATISTIC");
-   if (p->alpha_optim != FIT1_ALPHA_HALVING
-        && p->alpha_optim != FIT1_ALPHA_OPTIMAL)
+   if (p->fAlphaOptim != kFitAlphaHalving
+        && p->fAlphaOptim != kFitAlphaOptimal)
       return ("WRONG OPTIMIZATION ALGORITHM");
-   if (p->xmin < 0 || p->xmin > p->xmax)
+   if (p->fXmin < 0 || p->fXmin > p->fXmax)
       return ("INVALID LOW LIMIT OF FITTING REGION");
-   if (p->xmax >= size || p->xmax < p->xmin)
+   if (p->fXmax >= size || p->fXmax < p->fXmin)
       return ("INVALID HIGH LIMIT OF FITTING REGION");
-   double *working_space = new double[5 * (2 * p->number_of_peaks + 7)];
-   for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-      if (p->amp_init[i] < 0)
+   double *working_space = new double[5 * (2 * p->fNumberPeaks + 7)];
+   for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+      if (p->fAmpInit[i] < 0)
          return ("INITIAL VALUE OF AMPLITUDE MUST BE NONNEGATIVE");
-      working_space[2 * i] = p->amp_init[i];	//vector parameter
-      if (p->fix_amp[i] == false) {
-         working_space[shift + j] = p->amp_init[i];	//vector xk
+      working_space[2 * i] = p->fAmpInit[i];        //vector parameter
+      if (p->fFixAmp[i] == false) {
+         working_space[shift + j] = p->fAmpInit[i];        //vector xk
          j += 1;
       }
-      if (p->position_init[i] < p->xmin)
+      if (p->fPositionInit[i] < p->fXmin)
          return
              ("INITIAL VALUE OF POSITION MUST BE WITHIN FITTING REGION");
-      if (p->position_init[i] > p->xmax)
+      if (p->fPositionInit[i] > p->fXmax)
          return
              ("INITIAL VALUE OF POSITION MUST BE WITHIN FITTING REGION");
-      working_space[2 * i + 1] = p->position_init[i];	//vector parameter
-      if (p->fix_position[i] == false) {
-         working_space[shift + j] = p->position_init[i];	//vector xk
+      working_space[2 * i + 1] = p->fPositionInit[i];        //vector parameter
+      if (p->fFixPosition[i] == false) {
+         working_space[shift + j] = p->fPositionInit[i];        //vector xk
          j += 1;
       }
    }
    peak_vel = 2 * i;
-   if (p->sigma_init < 0)
+   if (p->fSigmaInit < 0)
       return ("INITIAL VALUE OF SIGMA MUST BE NONNEGATIVE");
-   working_space[2 * i] = p->sigma_init;	//vector parameter
-   if (p->fix_sigma == false) {
-      working_space[shift + j] = p->sigma_init;	//vector xk
+   working_space[2 * i] = p->fSigmaInit;        //vector parameter
+   if (p->fFixSigma == false) {
+      working_space[shift + j] = p->fSigmaInit;        //vector xk
       j += 1;
    }
-   if (p->t_init < 0)
+   if (p->fTInit < 0)
       return ("INITIAL VALUE OF T MUST BE NONNEGATIVE");
-   working_space[2 * i + 1] = p->t_init;	//vector parameter
-   if (p->fix_t == false) {
-      working_space[shift + j] = p->t_init;	//vector xk
+   working_space[2 * i + 1] = p->fTInit;        //vector parameter
+   if (p->fFixT == false) {
+      working_space[shift + j] = p->fTInit;        //vector xk
       j += 1;
    }
-   if (p->b_init <= 0)
+   if (p->fBInit <= 0)
       return ("INITIAL VALUE OF B MUST BE POSITIVE");
-   working_space[2 * i + 2] = p->b_init;	//vector parameter
-   if (p->fix_b == false) {
-      working_space[shift + j] = p->b_init;	//vector xk
+   working_space[2 * i + 2] = p->fBInit;        //vector parameter
+   if (p->fFixB == false) {
+      working_space[shift + j] = p->fBInit;        //vector xk
       j += 1;
    }
-   if (p->s_init < 0)
+   if (p->fSInit < 0)
       return ("INITIAL VALUE OF S MUST BE NONNEGATIVE");
-   working_space[2 * i + 3] = p->s_init;	//vector parameter
-   if (p->fix_s == false) {
-      working_space[shift + j] = p->s_init;	//vector xk
+   working_space[2 * i + 3] = p->fSInit;        //vector parameter
+   if (p->fFixS == false) {
+      working_space[shift + j] = p->fSInit;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 4] = p->a0_init;	//vector parameter
-   if (p->fix_a0 == false) {
-      working_space[shift + j] = p->a0_init;	//vector xk
+   working_space[2 * i + 4] = p->fA0Init;        //vector parameter
+   if (p->fFixA0 == false) {
+      working_space[shift + j] = p->fA0Init;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 5] = p->a1_init;	//vector parameter
-   if (p->fix_a1 == false) {
-      working_space[shift + j] = p->a1_init;	//vector xk
+   working_space[2 * i + 5] = p->fA1Init;        //vector parameter
+   if (p->fFixA1 == false) {
+      working_space[shift + j] = p->fA1Init;        //vector xk
       j += 1;
    }
-   working_space[2 * i + 6] = p->a2_init;	//vector parameter
-   if (p->fix_a2 == false) {
-      working_space[shift + j] = p->a2_init;	//vector xk
+   working_space[2 * i + 6] = p->fA2Init;        //vector parameter
+   if (p->fFixA2 == false) {
+      working_space[shift + j] = p->fA2Init;        //vector xk
       j += 1;
    }
    rozmer = j;
    if (rozmer == 0)
       return ("ALL PARAMETERS ARE FIXED");
-   if (rozmer >= p->xmax - p->xmin + 1)
+   if (rozmer >= p->fXmax - p->fXmin + 1)
       return
           ("NUMBER OF FITTED PARAMETERS IS LARGER THAN # OF FITTED POINTS");
    double **working_matrix = new double *[rozmer];
    for (i = 0; i < rozmer; i++)
       working_matrix[i] = new double[rozmer + 4];
-   for (iter = 0; iter < p->number_of_iterations; iter++) {
+   for (iter = 0; iter < p->fNumberIterations; iter++) {
       for (j = 0; j < rozmer; j++) {
-         working_space[3 * shift + j] = 0;	//temp
+         working_space[3 * shift + j] = 0;        //temp
          for (k = 0; k <= rozmer; k++) {
             working_matrix[j][k] = 0;
          }
       }
       
           //filling working matrix
-          alpha = p->alpha;
+          alpha = p->fAlpha;
       chi_opt = 0;
-      for (i = p->xmin; i <= p->xmax; i++) {
+      for (i = p->fXmin; i <= p->fXmax; i++) {
          
              //calculation of gradient vector
-             for (j = 0, k = 0; j < p->number_of_peaks; j++) {
-            if (p->fix_amp[j] == false) {
+             for (j = 0, k = 0; j < p->fNumberPeaks; j++) {
+            if (p->fFixAmp[j] == false) {
                working_space[2 * shift + k] =
                    Deramp((double) i, working_space[2 * j + 1],
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2]);
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                k += 1;
             }
-            if (p->fix_position[j] == false) {
+            if (p->fFixPosition[j] == false) {
                working_space[2 * shift + k] =
                    Deri0((double) i, working_space[2 * j],
-                         working_space[2 * j + 1], working_space[peak_vel],
-                         working_space[peak_vel + 1],
-                         working_space[peak_vel + 3],
-                         working_space[peak_vel + 2]);
+               working_space[2 * j + 1], working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                k += 1;
             }
-         } if (p->fix_sigma == false) {
+         } if (p->fFixSigma == false) {
             working_space[2 * shift + k] =
-                Dersigma(p->number_of_peaks, (double) i, working_space,
-                         working_space[peak_vel],
-                         working_space[peak_vel + 1],
-                         working_space[peak_vel + 3],
-                         working_space[peak_vel + 2]);
+                Dersigma(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel],
+            working_space[peak_vel + 1],
+            working_space[peak_vel + 3],
+            working_space[peak_vel + 2]);
             k += 1;
          }
-         if (p->fix_t == false) {
+         if (p->fFixT == false) {
             working_space[2 * shift + k] =
-                Dert(p->number_of_peaks, (double) i, working_space,
-                     working_space[peak_vel], working_space[peak_vel + 2]);
+                Dert(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel], working_space[peak_vel + 2]);
             k += 1;
          }
-         if (p->fix_b == false) {
+         if (p->fFixB == false) {
             working_space[2 * shift + k] =
-                Derb(p->number_of_peaks, (double) i, working_space,
-                     working_space[peak_vel], working_space[peak_vel + 1],
-                     working_space[peak_vel + 2]);
+                Derb(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel], working_space[peak_vel + 1],
+            working_space[peak_vel + 2]);
             k += 1;
          }
-         if (p->fix_s == false) {
+         if (p->fFixS == false) {
             working_space[2 * shift + k] =
-                Ders(p->number_of_peaks, (double) i, working_space,
-                     working_space[peak_vel]);
+                Ders(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel]);
             k += 1;
          }
-         if (p->fix_a0 == false) {
+         if (p->fFixA0 == false) {
             working_space[2 * shift + k] = 1.;
             k += 1;
          }
-         if (p->fix_a1 == false) {
+         if (p->fFixA1 == false) {
             working_space[2 * shift + k] = Dera1((double) i);
             k += 1;
          }
-         if (p->fix_a2 == false) {
+         if (p->fFixA2 == false) {
             working_space[2 * shift + k] = Dera2((double) i);
             k += 1;
          }
          yw = source[i];
          ywm = yw;
-         f = Shape(p->number_of_peaks, (double) i, working_space,
-                    working_space[peak_vel], working_space[peak_vel + 1],
-                    working_space[peak_vel + 3],
-                    working_space[peak_vel + 2],
-                    working_space[peak_vel + 4],
-                    working_space[peak_vel + 5],
-                    working_space[peak_vel + 6]);
-         if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+         f = Shape(p->fNumberPeaks, (double) i, working_space,
+         working_space[peak_vel], working_space[peak_vel + 1],
+         working_space[peak_vel + 3],
+         working_space[peak_vel + 2],
+         working_space[peak_vel + 4],
+         working_space[peak_vel + 5],
+         working_space[peak_vel + 6]);
+         if (p->fStatisticType == kFitOptimMaxLikelihood) {
             if (f > 0.00001)
                chi_opt += yw * TMath::Log(f) - f;
          }
@@ -4462,13 +4462,13 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
             if (ywm != 0)
                chi_opt += (yw - f) * (yw - f) / ywm;
          }
-         if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+         if (p->fStatisticType == kFitOptimChiFuncValues) {
             ywm = f;
             if (f < 0.00001)
                ywm = 0.00001;
          }
          
-         else if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+         else if (p->fStatisticType == kFitOptimMaxLikelihood) {
             ywm = f;
             if (f < 0.00001)
                ywm = 0.00001;
@@ -4482,14 +4482,14 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
             for (k = 0; k < rozmer; k++) {
                b = working_space[2 * shift +
                                   j] * working_space[2 * shift + k] / ywm;
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES)
+               if (p->fStatisticType == kFitOptimChiFuncValues)
                   b = b * (4 * yw - 2 * f) / ywm;
                working_matrix[j][k] += b;
                if (j == k)
                   working_space[3 * shift + j] += b;
             }
          }
-         if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES)
+         if (p->fStatisticType == kFitOptimChiFuncValues)
             b = (f * f - yw * yw) / (ywm * ywm);
          
          else
@@ -4499,11 +4499,11 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
          }
       }
       for (i = 0; i < rozmer; i++) {
-         working_matrix[i][rozmer + 1] = 0;	//xk
+         working_matrix[i][rozmer + 1] = 0;        //xk
       }
       StiefelInversion(working_matrix, rozmer);
       for (i = 0; i < rozmer; i++) {
-         working_space[2 * shift + i] = working_matrix[i][rozmer + 1];	//der
+         working_space[2 * shift + i] = working_matrix[i][rozmer + 1];        //der
       }
       
           //calculate chi_opt
@@ -4513,12 +4513,12 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
           //calculate new parameters
           regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
-         working_space[4 * shift + j] = working_space[shift + j];	//temp_xk[j]=xk[j]
+         working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }
       
       do {
-         if (p->alpha_optim == FIT1_ALPHA_OPTIMAL) {
-            if (p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD)
+         if (p->fAlphaOptim == kFitAlphaOptimal) {
+            if (p->fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
             
             else
@@ -4526,79 +4526,79 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
             flag = 0;
             for (pi = 0.1; flag == 0 && pi <= 100; pi += 0.1) {
                for (j = 0; j < rozmer; j++) {
-                  working_space[shift + j] = working_space[4 * shift + j] + pi * alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+pi*alpha*der[j]
+                  working_space[shift + j] = working_space[4 * shift + j] + pi * alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pi*alpha*der[j]
                }
-               for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-                  if (p->fix_amp[i] == false) {
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = 0;	//xk[j]
-                     working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+               for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+                  if (p->fFixAmp[i] == false) {
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = 0;        //xk[j]
+                     working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                      j += 1;
                   }
-                  if (p->fix_position[i] == false) {
-                     if (working_space[shift + j] < p->xmin)	//xk[j]
-                        working_space[shift + j] = p->xmin;	//xk[j]
-                     if (working_space[shift + j] > p->xmax)	//xk[j]
-                        working_space[shift + j] = p->xmax;	//xk[j]
-                     working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+                  if (p->fFixPosition[i] == false) {
+                     if (working_space[shift + j] < p->fXmin)        //xk[j]
+                        working_space[shift + j] = p->fXmin;        //xk[j]
+                     if (working_space[shift + j] > p->fXmax)        //xk[j]
+                        working_space[shift + j] = p->fXmax;        //xk[j]
+                     working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                      j += 1;
                   }
                }
-               if (p->fix_sigma == false) {
-                  if (working_space[shift + j] < 0.001) {	//xk[j]
-                     working_space[shift + j] = 0.001;	//xk[j]
+               if (p->fFixSigma == false) {
+                  if (working_space[shift + j] < 0.001) {        //xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+                  working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                   j += 1;
                }
-               if (p->fix_t == false) {
-                  working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+               if (p->fFixT == false) {
+                  working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                   j += 1;
                }
-               if (p->fix_b == false) {
-                  if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = -0.001;	//xk[j]
+               if (p->fFixB == false) {
+                  if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = -0.001;        //xk[j]
                      else
-                        working_space[shift + j] = 0.001;	//xk[j]
+                        working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+                  working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                   j += 1;
                }
-               if (p->fix_s == false) {
-                  working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+               if (p->fFixS == false) {
+                  working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                   j += 1;
                }
-               if (p->fix_a0 == false) {
-                  working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+               if (p->fFixA0 == false) {
+                  working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                   j += 1;
                }
-               if (p->fix_a1 == false) {
-                  working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+               if (p->fFixA1 == false) {
+                  working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                   j += 1;
                }
-               if (p->fix_a2 == false) {
-                  working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+               if (p->fFixA2 == false) {
+                  working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                   j += 1;
                }
                chi2 = 0;
-               for (i = p->xmin; i <= p->xmax; i++) {
+               for (i = p->fXmin; i <= p->fXmax; i++) {
                   yw = source[i];
                   ywm = yw;
-                  f = Shape(p->number_of_peaks, (double) i, working_space,
-                             working_space[peak_vel],
-                             working_space[peak_vel + 1],
-                             working_space[peak_vel + 3],
-                             working_space[peak_vel + 2],
-                             working_space[peak_vel + 4],
-                             working_space[peak_vel + 5],
-                             working_space[peak_vel + 6]);
-                  if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+                  f = Shape(p->fNumberPeaks, (double) i, working_space,
+                  working_space[peak_vel],
+                  working_space[peak_vel + 1],
+                  working_space[peak_vel + 3],
+                  working_space[peak_vel + 2],
+                  working_space[peak_vel + 4],
+                  working_space[peak_vel + 5],
+                  working_space[peak_vel + 6]);
+                  if (p->fStatisticType == kFitOptimChiFuncValues) {
                      ywm = f;
                      if (f < 0.00001)
                         ywm = 0.00001;
                   }
-                  if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+                  if (p->fStatisticType == kFitOptimMaxLikelihood) {
                      if (f > 0.00001)
                         chi2 += yw * TMath::Log(f) - f;
                   }
@@ -4609,9 +4609,9 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
                   }
                }
                if (chi2 < chi_min
-                    && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD
+                    && p->fStatisticType != kFitOptimMaxLikelihood
                     || chi2 > chi_min
-                    && p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+                    && p->fStatisticType == kFitOptimMaxLikelihood) {
                   pmin = pi, chi_min = chi2;
                }
                
@@ -4623,59 +4623,59 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
             }
             if (pmin != 0.1) {
                for (j = 0; j < rozmer; j++) {
-                  working_space[shift + j] = working_space[4 * shift + j] + pmin * alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+pmin*alpha*der[j]
+                  working_space[shift + j] = working_space[4 * shift + j] + pmin * alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pmin*alpha*der[j]
                }
-               for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-                  if (p->fix_amp[i] == false) {
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = 0;	//xk[j]
-                     working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+               for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+                  if (p->fFixAmp[i] == false) {
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = 0;        //xk[j]
+                     working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                      j += 1;
                   }
-                  if (p->fix_position[i] == false) {
-                     if (working_space[shift + j] < p->xmin)	//xk[j]
-                        working_space[shift + j] = p->xmin;	//xk[j]
-                     if (working_space[shift + j] > p->xmax)	//xk[j]
-                        working_space[shift + j] = p->xmax;	//xk[j]
-                     working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+                  if (p->fFixPosition[i] == false) {
+                     if (working_space[shift + j] < p->fXmin)        //xk[j]
+                        working_space[shift + j] = p->fXmin;        //xk[j]
+                     if (working_space[shift + j] > p->fXmax)        //xk[j]
+                        working_space[shift + j] = p->fXmax;        //xk[j]
+                     working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                      j += 1;
                   }
                }
-               if (p->fix_sigma == false) {
-                  if (working_space[shift + j] < 0.001) {	//xk[j]
-                     working_space[shift + j] = 0.001;	//xk[j]
+               if (p->fFixSigma == false) {
+                  if (working_space[shift + j] < 0.001) {        //xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+                  working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                   j += 1;
                }
-               if (p->fix_t == false) {
-                  working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+               if (p->fFixT == false) {
+                  working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                   j += 1;
                }
-               if (p->fix_b == false) {
-                  if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                     if (working_space[shift + j] < 0)	//xk[j]
-                        working_space[shift + j] = -0.001;	//xk[j]
+               if (p->fFixB == false) {
+                  if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                     if (working_space[shift + j] < 0)        //xk[j]
+                        working_space[shift + j] = -0.001;        //xk[j]
                      else
-                        working_space[shift + j] = 0.001;	//xk[j]
+                        working_space[shift + j] = 0.001;        //xk[j]
                   }
-                  working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+                  working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                   j += 1;
                }
-               if (p->fix_s == false) {
-                  working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+               if (p->fFixS == false) {
+                  working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                   j += 1;
                }
-               if (p->fix_a0 == false) {
-                  working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+               if (p->fFixA0 == false) {
+                  working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                   j += 1;
                }
-               if (p->fix_a1 == false) {
-                  working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+               if (p->fFixA1 == false) {
+                  working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                   j += 1;
                }
-               if (p->fix_a2 == false) {
-                  working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+               if (p->fFixA2 == false) {
+                  working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                   j += 1;
                }
                chi = chi_min;
@@ -4684,79 +4684,79 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
          
          else {
             for (j = 0; j < rozmer; j++) {
-               working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];	//xk[j]=temp_xk[j]+alpha*der[j]
+               working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+alpha*der[j]
             }
-            for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-               if (p->fix_amp[i] == false) {
-                  if (working_space[shift + j] < 0)	//xk[j]
-                     working_space[shift + j] = 0;	//xk[j]
-                  working_space[2 * i] = working_space[shift + j];	//parameter[2*i]=xk[j]
+            for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+               if (p->fFixAmp[i] == false) {
+                  if (working_space[shift + j] < 0)        //xk[j]
+                     working_space[shift + j] = 0;        //xk[j]
+                  working_space[2 * i] = working_space[shift + j];        //parameter[2*i]=xk[j]
                   j += 1;
                }
-               if (p->fix_position[i] == false) {
-                  if (working_space[shift + j] < p->xmin)	//xk[j]
-                     working_space[shift + j] = p->xmin;	//xk[j]
-                  if (working_space[shift + j] > p->xmax)	//xk[j]
-                     working_space[shift + j] = p->xmax;	//xk[j]
-                  working_space[2 * i + 1] = working_space[shift + j];	//parameter[2*i+1]=xk[j]
+               if (p->fFixPosition[i] == false) {
+                  if (working_space[shift + j] < p->fXmin)        //xk[j]
+                     working_space[shift + j] = p->fXmin;        //xk[j]
+                  if (working_space[shift + j] > p->fXmax)        //xk[j]
+                     working_space[shift + j] = p->fXmax;        //xk[j]
+                  working_space[2 * i + 1] = working_space[shift + j];        //parameter[2*i+1]=xk[j]
                   j += 1;
                }
             }
-            if (p->fix_sigma == false) {
-               if (working_space[shift + j] < 0.001) {	//xk[j]
-                  working_space[shift + j] = 0.001;	//xk[j]
+            if (p->fFixSigma == false) {
+               if (working_space[shift + j] < 0.001) {        //xk[j]
+                  working_space[shift + j] = 0.001;        //xk[j]
                }
-               working_space[peak_vel] = working_space[shift + j];	//parameter[peak_vel]=xk[j]
+               working_space[peak_vel] = working_space[shift + j];        //parameter[peak_vel]=xk[j]
                j += 1;
             }
-            if (p->fix_t == false) {
-               working_space[peak_vel + 1] = working_space[shift + j];	//parameter[peak_vel+1]=xk[j]
+            if (p->fFixT == false) {
+               working_space[peak_vel + 1] = working_space[shift + j];        //parameter[peak_vel+1]=xk[j]
                j += 1;
             }
-            if (p->fix_b == false) {
-               if (TMath::Abs(working_space[shift + j]) < 0.001) {	//xk[j]
-                  if (working_space[shift + j] < 0)	//xk[j]
-                     working_space[shift + j] = -0.001;	//xk[j]
+            if (p->fFixB == false) {
+               if (TMath::Abs(working_space[shift + j]) < 0.001) {        //xk[j]
+                  if (working_space[shift + j] < 0)        //xk[j]
+                     working_space[shift + j] = -0.001;        //xk[j]
                   else
-                     working_space[shift + j] = 0.001;	//xk[j]
+                     working_space[shift + j] = 0.001;        //xk[j]
                }
-               working_space[peak_vel + 2] = working_space[shift + j];	//parameter[peak_vel+2]=xk[j]
+               working_space[peak_vel + 2] = working_space[shift + j];        //parameter[peak_vel+2]=xk[j]
                j += 1;
             }
-            if (p->fix_s == false) {
-               working_space[peak_vel + 3] = working_space[shift + j];	//parameter[peak_vel+3]=xk[j]
+            if (p->fFixS == false) {
+               working_space[peak_vel + 3] = working_space[shift + j];        //parameter[peak_vel+3]=xk[j]
                j += 1;
             }
-            if (p->fix_a0 == false) {
-               working_space[peak_vel + 4] = working_space[shift + j];	//parameter[peak_vel+4]=xk[j]
+            if (p->fFixA0 == false) {
+               working_space[peak_vel + 4] = working_space[shift + j];        //parameter[peak_vel+4]=xk[j]
                j += 1;
             }
-            if (p->fix_a1 == false) {
-               working_space[peak_vel + 5] = working_space[shift + j];	//parameter[peak_vel+5]=xk[j]
+            if (p->fFixA1 == false) {
+               working_space[peak_vel + 5] = working_space[shift + j];        //parameter[peak_vel+5]=xk[j]
                j += 1;
             }
-            if (p->fix_a2 == false) {
-               working_space[peak_vel + 6] = working_space[shift + j];	//parameter[peak_vel+6]=xk[j]
+            if (p->fFixA2 == false) {
+               working_space[peak_vel + 6] = working_space[shift + j];        //parameter[peak_vel+6]=xk[j]
                j += 1;
             }
             chi = 0;
-            for (i = p->xmin; i <= p->xmax; i++) {
+            for (i = p->fXmin; i <= p->fXmax; i++) {
                yw = source[i];
                ywm = yw;
-               f = Shape(p->number_of_peaks, (double) i, working_space,
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2],
-                          working_space[peak_vel + 4],
-                          working_space[peak_vel + 5],
-                          working_space[peak_vel + 6]);
-               if (p->statistic_type == FIT1_OPTIM_CHI_FUNC_VALUES) {
+               f = Shape(p->fNumberPeaks, (double) i, working_space,
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2],
+               working_space[peak_vel + 4],
+               working_space[peak_vel + 5],
+               working_space[peak_vel + 6]);
+               if (p->fStatisticType == kFitOptimChiFuncValues) {
                   ywm = f;
                   if (f < 0.00001)
                      ywm = 0.00001;
                }
-               if (p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD) {
+               if (p->fStatisticType == kFitOptimMaxLikelihood) {
                   if (f > 0.00001)
                      chi += yw * TMath::Log(f) - f;
                }
@@ -4769,270 +4769,270 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
          }
          chi2 = chi;
          chi = TMath::Sqrt(TMath::Abs(chi));
-         if (p->alpha_optim == FIT1_ALPHA_HALVING && chi > 1E-6)
+         if (p->fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
          
-         else if (p->alpha_optim == FIT1_ALPHA_OPTIMAL)
+         else if (p->fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
          regul_cycle += 1;
       } while ((chi > chi_opt
-                 && p->statistic_type != FIT1_OPTIM_MAX_LIKELIHOOD
+                 && p->fStatisticType != kFitOptimMaxLikelihood
                  || chi < chi_opt
-                 && p->statistic_type == FIT1_OPTIM_MAX_LIKELIHOOD)
-                && regul_cycle < FIT1_NUM_OF_REGUL_CYCLES);
+                 && p->fStatisticType == kFitOptimMaxLikelihood)
+                && regul_cycle < kFitNumRegulCycles);
       for (j = 0; j < rozmer; j++) {
-         working_space[4 * shift + j] = 0;	//temp_xk[j]
-         working_space[2 * shift + j] = 0;	//der[j]
+         working_space[4 * shift + j] = 0;        //temp_xk[j]
+         working_space[2 * shift + j] = 0;        //der[j]
       }
-      for (i = p->xmin, chi_cel = 0; i <= p->xmax; i++) {
+      for (i = p->fXmin, chi_cel = 0; i <= p->fXmax; i++) {
          yw = source[i];
          if (yw == 0)
             yw = 1;
-         f = Shape(p->number_of_peaks, (double) i, working_space,
-                    working_space[peak_vel], working_space[peak_vel + 1],
-                    working_space[peak_vel + 3],
-                    working_space[peak_vel + 2],
-                    working_space[peak_vel + 4],
-                    working_space[peak_vel + 5],
-                    working_space[peak_vel + 6]);
+         f = Shape(p->fNumberPeaks, (double) i, working_space,
+         working_space[peak_vel], working_space[peak_vel + 1],
+         working_space[peak_vel + 3],
+         working_space[peak_vel + 2],
+         working_space[peak_vel + 4],
+         working_space[peak_vel + 5],
+         working_space[peak_vel + 6]);
          chi_opt = (yw - f) * (yw - f) / yw;
          chi_cel += (yw - f) * (yw - f) / yw;
          
              //calculate gradient vector
-             for (j = 0, k = 0; j < p->number_of_peaks; j++) {
-            if (p->fix_amp[j] == false) {
+             for (j = 0, k = 0; j < p->fNumberPeaks; j++) {
+            if (p->fFixAmp[j] == false) {
                a = Deramp((double) i, working_space[2 * j + 1],
-                           working_space[peak_vel],
-                           working_space[peak_vel + 1],
-                           working_space[peak_vel + 3],
-                           working_space[peak_vel + 2]);
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                if (yw != 0) {
-                  working_space[2 * shift + k] += chi_opt;	//der[k]
+                  working_space[2 * shift + k] += chi_opt;        //der[k]
                   b = a * a / yw;
-                  working_space[4 * shift + k] += b;	//temp_xk[k]
+                  working_space[4 * shift + k] += b;        //temp_xk[k]
                }
                k += 1;
             }
-            if (p->fix_position[j] == false) {
+            if (p->fFixPosition[j] == false) {
                a = Deri0((double) i, working_space[2 * j],
-                          working_space[2 * j + 1],
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2]);
+               working_space[2 * j + 1],
+               working_space[peak_vel],
+               working_space[peak_vel + 1],
+               working_space[peak_vel + 3],
+               working_space[peak_vel + 2]);
                if (yw != 0) {
-                  working_space[2 * shift + k] += chi_opt;	//der[k]
+                  working_space[2 * shift + k] += chi_opt;        //der[k]
                   b = a * a / yw;
-                  working_space[4 * shift + k] += b;	//temp_xk[k]
+                  working_space[4 * shift + k] += b;        //temp_xk[k]
                }
                k += 1;
             }
          }
-         if (p->fix_sigma == false) {
-            a = Dersigma(p->number_of_peaks, (double) i, working_space,
-                          working_space[peak_vel],
-                          working_space[peak_vel + 1],
-                          working_space[peak_vel + 3],
-                          working_space[peak_vel + 2]);
+         if (p->fFixSigma == false) {
+            a = Dersigma(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel],
+            working_space[peak_vel + 1],
+            working_space[peak_vel + 3],
+           working_space[peak_vel + 2]);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_t == false) {
-            a = Dert(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel],
-                      working_space[peak_vel + 2]);
+         if (p->fFixT == false) {
+            a = Dert(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel],
+            working_space[peak_vel + 2]);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_b == false) {
-            a = Derb(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel], working_space[peak_vel + 1],
-                      working_space[peak_vel + 2]);
+         if (p->fFixB == false) {
+            a = Derb(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel], working_space[peak_vel + 1],
+            working_space[peak_vel + 2]);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_s == false) {
-            a = Ders(p->number_of_peaks, (double) i, working_space,
-                      working_space[peak_vel]);
+         if (p->fFixS == false) {
+            a = Ders(p->fNumberPeaks, (double) i, working_space,
+            working_space[peak_vel]);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//tem_xk[k]
+               working_space[4 * shift + k] += b;        //tem_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a0 == false) {
+         if (p->fFixA0 == false) {
             a = 1.0;
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a1 == false) {
+         if (p->fFixA1 == false) {
             a = Dera1((double) i);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
-         if (p->fix_a2 == false) {
+         if (p->fFixA2 == false) {
             a = Dera2((double) i);
             if (yw != 0) {
-               working_space[2 * shift + k] += chi_opt;	//der[k]
+               working_space[2 * shift + k] += chi_opt;        //der[k]
                b = a * a / yw;
-               working_space[4 * shift + k] += b;	//temp_xk[k]
+               working_space[4 * shift + k] += b;        //temp_xk[k]
             }
             k += 1;
          }
       }
    }
-   b = p->xmax - p->xmin + 1 - rozmer;
+   b = p->fXmax - p->fXmin + 1 - rozmer;
    chi_er = chi_cel / b;
-   for (i = 0, j = 0; i < p->number_of_peaks; i++) {
-      p->area[i] =
+   for (i = 0, j = 0; i < p->fNumberPeaks; i++) {
+      p->fArea[i] =
           Area(working_space[2 * i], working_space[peak_vel],
                working_space[peak_vel + 1], working_space[peak_vel + 2]);
-      if (p->fix_amp[i] == false) {
-         p->amp_calc[i] = working_space[shift + j];	//xk[j]
+      if (p->fFixAmp[i] == false) {
+         p->fAmpCalc[i] = working_space[shift + j];        //xk[j]
          if (working_space[3 * shift + j] != 0)
-            p->amp_err[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
-         if (p->area[i] > 0) {
+            p->fAmpErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
+         if (p->fArea[i] > 0) {
             a = Derpa(working_space[peak_vel],
-                       working_space[peak_vel + 1],
-                       working_space[peak_vel + 2]);
-            b = working_space[4 * shift + j];	//temp_xk[j]
+            working_space[peak_vel + 1],
+            working_space[peak_vel + 2]);
+            b = working_space[4 * shift + j];        //temp_xk[j]
             if (b == 0)
                b = 1;
             
             else
                b = 1 / b;
-            p->area_err[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
+            p->fAreaErr[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
          }
          
          else
-            p->area_err[i] = 0;
+            p->fAreaErr[i] = 0;
          j += 1;
       }
       
       else {
-         p->amp_calc[i] = p->amp_init[i];
-         p->amp_err[i] = 0;
-         p->area_err[i] = 0;
+         p->fAmpCalc[i] = p->fAmpInit[i];
+         p->fAmpErr[i] = 0;
+         p->fAreaErr[i] = 0;
       }
-      if (p->fix_position[i] == false) {
-         p->position_calc[i] = working_space[shift + j];	//xk[j]
-         if (working_space[3 * shift + j] != 0)	//temp[j]
-            p->position_err[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//Der[j]/temp[j]
+      if (p->fFixPosition[i] == false) {
+         p->fPositionCalc[i] = working_space[shift + j];        //xk[j]
+         if (working_space[3 * shift + j] != 0)        //temp[j]
+            p->fPositionErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //Der[j]/temp[j]
          j += 1;
       }
       
       else {
-         p->position_calc[i] = p->position_init[i];
-         p->position_err[i] = 0;
+         p->fPositionCalc[i] = p->fPositionInit[i];
+         p->fPositionErr[i] = 0;
       }
    }
-   if (p->fix_sigma == false) {
-      p->sigma_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->sigma_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixSigma == false) {
+      p->fSigmaCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fSigmaErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->sigma_calc = p->sigma_init;
-      p->sigma_err = 0;
+      p->fSigmaCalc = p->fSigmaInit;
+      p->fSigmaErr = 0;
    }
-   if (p->fix_t == false) {
-      p->t_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->t_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixT == false) {
+      p->fTCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fTErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->t_calc = p->t_init;
-      p->t_err = 0;
+      p->fTCalc = p->fTInit;
+      p->fTErr = 0;
    }
-   if (p->fix_b == false) {
-      p->b_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->b_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixB == false) {
+      p->fBCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fBErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->b_calc = p->b_init;
-      p->b_err = 0;
+      p->fBCalc = p->fBInit;
+      p->fBErr = 0;
    }
-   if (p->fix_s == false) {
-      p->s_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->s_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixS == false) {
+      p->fSCalc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fSErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->s_calc = p->s_init;
-      p->s_err = 0;
+      p->fSCalc = p->fSInit;
+      p->fSErr = 0;
    }
-   if (p->fix_a0 == false) {
-      p->a0_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a0_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA0 == false) {
+      p->fA0Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a0_calc = p->a0_init;
-      p->a0_err = 0;
+      p->fA0Calc = p->fA0Init;
+      p->fA0Err = 0;
    }
-   if (p->fix_a1 == false) {
-      p->a1_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a1_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA1 == false) {
+      p->fA1Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA1Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a1_calc = p->a1_init;
-      p->a1_err = 0;
+      p->fA1Calc = p->fA1Init;
+      p->fA1Err = 0;
    }
-   if (p->fix_a2 == false) {
-      p->a2_calc = working_space[shift + j];	//xk[j]
-      if (working_space[3 * shift + j] != 0)	//temp[j]
-         p->a2_err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));	//der[j]/temp[j]
+   if (p->fFixA2 == false) {
+      p->fA2Calc = working_space[shift + j];        //xk[j]
+      if (working_space[3 * shift + j] != 0)        //temp[j]
+         p->fA2Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
    
    else {
-      p->a2_calc = p->a2_init;
-      p->a2_err = 0;
+      p->fA2Calc = p->fA2Init;
+      p->fA2Err = 0;
    }
-   b = p->xmax - p->xmin + 1 - rozmer;
-   p->chi = chi_cel / b;
-   for (i = p->xmin; i <= p->xmax; i++) {
-      f = Shape(p->number_of_peaks, (double) i, working_space,
-                 working_space[peak_vel], working_space[peak_vel + 1],
-                 working_space[peak_vel + 3], working_space[peak_vel + 2],
-                 working_space[peak_vel + 4], working_space[peak_vel + 5],
-                 working_space[peak_vel + 6]);
+   b = p->fXmax - p->fXmin + 1 - rozmer;
+   p->fChi = chi_cel / b;
+   for (i = p->fXmin; i <= p->fXmax; i++) {
+      f = Shape(p->fNumberPeaks, (double) i, working_space,
+      working_space[peak_vel], working_space[peak_vel + 1],
+      working_space[peak_vel + 3], working_space[peak_vel + 2],
+      working_space[peak_vel + 4], working_space[peak_vel + 5],
+      working_space[peak_vel + 6]);
       source[i] = f;
    } for (i = 0; i < rozmer; i++)
       delete[]working_matrix[i];
@@ -5068,7 +5068,7 @@ void TSpectrum::Haar(float *working_space, int num, int direction)
       iter += 1;
       i = i / 2;
    }
-   if (direction == TRANSFORM1_FORWARD) {
+   if (direction == kTransformForward) {
       for (m = 1; m <= iter; m++) {
          li = iter + 1 - m;
          l2 = (int) TMath::Power(2, li - 1);
@@ -5104,7 +5104,7 @@ void TSpectrum::Haar(float *working_space, int num, int direction)
          working_space[j] = val;
       }
    }
-   if (direction == TRANSFORM1_INVERSE) {
+   if (direction == kTransformInverse) {
       for (m = 1; m <= iter; m++) {
          a = 2;
          b = m - 1;
@@ -5201,7 +5201,7 @@ void TSpectrum::BitReverse(float *working_space, int num)
    for (i = 1; i <= num; i++) {
       ib = i - 1;
       il = 1;
-    lab9:ibd = ib / 2;
+   lab9:ibd = ib / 2;
       ipower[il - 1] = 1;
       if (ib == (ibd * 2))
          ipower[il - 1] = 0;
@@ -5210,7 +5210,7 @@ void TSpectrum::BitReverse(float *working_space, int num)
       ib = ibd;
       il = il + 1;
       goto lab9;
-    lab10:ip = 1;
+   lab10:ip = 1;
       ifac = num;
       for (i1 = 1; i1 <= il; i1++) {
          ifac = ifac / 2;
@@ -5238,7 +5238,7 @@ void TSpectrum::Fourier(float *working_space, int num, int hartley,
    double a, b, c, d, sign, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
    float val1, val2, val3, val4;
-   if (direction == TRANSFORM1_FORWARD && zt_clear == 0) {
+   if (direction == kTransformForward && zt_clear == 0) {
       for (i = 0; i < num; i++)
          working_space[i + num] = 0;
    }
@@ -5249,7 +5249,7 @@ void TSpectrum::Fourier(float *working_space, int num, int hartley,
       i = i / 2;
    }
    sign = -1;
-   if (direction == TRANSFORM1_INVERSE)
+   if (direction == kTransformInverse)
       sign = 1;
    nxp2 = num;
    for (it = 1; it <= iter; it++) {
@@ -5333,7 +5333,7 @@ void TSpectrum::Fourier(float *working_space, int num, int hartley,
          working_space[i + num] = 0;
       }
    }
-   if (hartley == 1 && direction == TRANSFORM1_INVERSE) {
+   if (hartley == 1 && direction == kTransformInverse) {
       for (i = 1; i < num; i++)
          working_space[num - i + num] = working_space[i];
       working_space[0 + num] = working_space[0];
@@ -5385,9 +5385,9 @@ void TSpectrum::BitReverseHaar(float *working_space, int shift, int num,
          ip = ip + ifac * ipower[i1 - 1];
       }
       working_space[ip - 1 + start] =
-          working_space[i - 1 + shift + start];
+      working_space[i - 1 + shift + start];
       working_space[ip - 1 + start + 2 * shift] =
-          working_space[i - 1 + shift + start + 2 * shift];
+      working_space[i - 1 + shift + start + 2 * shift];
    }
    return;
 }
@@ -5434,15 +5434,15 @@ int TSpectrum::GeneralExe(float *working_space, int zt_clear, int num,
       mnum = num / nump;
       mnum2 = mnum / 2;
       if (m > degree
-           && (type == TRANSFORM1_FOURIER_HAAR
-               || type == TRANSFORM1_WALSH_HAAR
-               || type == TRANSFORM1_COS_HAAR
-               || type == TRANSFORM1_SIN_HAAR))
+           && (type == kTransformFourierHaar
+               || type == kTransformWalshHaar
+               || type == kTransformCosHaar
+               || type == kTransformSinHaar))
          mp2step *= 2;
       if (ring > 1)
          ring = ring / 2;
       for (mp = 0; mp < nump; mp++) {
-         if (type != TRANSFORM1_WALSH_HAAR) {
+         if (type != kTransformWalshHaar) {
             mppom = mp;
             mppom = mppom % ring;
             a = 0;
@@ -5541,8 +5541,8 @@ int TSpectrum::GeneralInv(float *working_space, int num, int degree,
    a = num;
    wpwr = 2.0 * pi / a;
    mp2step = 1;
-   if (type == TRANSFORM1_FOURIER_HAAR || type == TRANSFORM1_WALSH_HAAR
-        || type == TRANSFORM1_COS_HAAR || type == TRANSFORM1_SIN_HAAR) {
+   if (type == kTransformFourierHaar || type == kTransformWalshHaar
+        || type == kTransformCosHaar || type == kTransformSinHaar) {
       for (i = 0; i < iter - degree; i++)
          mp2step *= 2;
    }
@@ -5558,7 +5558,7 @@ int TSpectrum::GeneralInv(float *working_space, int num, int degree,
       if (m > iter - degree + 1)
          ring *= 2;
       for (mp = nump - 1; mp >= 0; mp--) {
-         if (type != TRANSFORM1_WALSH_HAAR) {
+         if (type != kTransformWalshHaar) {
             mppom = mp;
             mppom = mppom % ring;
             a = 0;
@@ -5617,10 +5617,10 @@ int TSpectrum::GeneralInv(float *working_space, int num, int degree,
          }
       }
       if (m <= iter - degree
-           && (type == TRANSFORM1_FOURIER_HAAR
-               || type == TRANSFORM1_WALSH_HAAR
-               || type == TRANSFORM1_COS_HAAR
-               || type == TRANSFORM1_SIN_HAAR))
+           && (type == kTransformFourierHaar
+               || type == kTransformWalshHaar
+               || type == kTransformCosHaar
+               || type == kTransformSinHaar))
          mp2step /= 2;
       for (i = 0; i < num; i++) {
          val1 = working_space[num + i];
@@ -5642,24 +5642,24 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
 {
    
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL TRANSFORM FUNCTION				   */ 
-/*	This function transforms the source spectrum. The calling program  */ 
-/*      should fill in input parameters.                         	   */ 
-/*	Transformed data are written into dest spectrum.                   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum, its length should */ 
-/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR   */ 
-/*             transform. These need 2*size length to supply real and      */ 
-/*             imaginary coefficients.                                     */ 
-/*	dest-pointer to the vector of dest data, its length should be      */ 
-/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These  */ 
-/*           need 2*size length to store real and imaginary coefficients   */ 
-/*	size-basic length of source and dest spectra                       */ 
-/*	type-type of transform                                             */ 
-/*      direction-transform direction (forward, inverse)                   */ 
-/*      degree-applied only for mixed transforms                           */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL TRANSFORM FUNCTION                                 */ 
+/*        This function transforms the source spectrum. The calling program  */ 
+/*      should fill in input parameters.                                     */ 
+/*        Transformed data are written into dest spectrum.                   */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        source-pointer to the vector of source spectrum, its length should */ 
+/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR     */ 
+/*             transform. These need 2*size length to supply real and        */ 
+/*             imaginary coefficients.                                       */ 
+/*        dest-pointer to the vector of dest data, its length should be      */ 
+/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These    */ 
+/*           need 2*size length to store real and imaginary coefficients     */ 
+/*        size-basic length of source and dest spectra                       */ 
+/*        type-type of transform                                             */ 
+/*      direction-transform direction (forward, inverse)                     */ 
+/*      degree-applied only for mixed transforms                             */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, n, k = 1, m, l;
    float val;
@@ -5675,42 +5675,42 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
    }
    if (n != size)
       return ("LENGTH MUST BE POWER OF 2");
-   if (type < TRANSFORM1_HAAR || type > TRANSFORM1_SIN_HAAR)
+   if (type < kTransformHaar || type > kTransformSinHaar)
       return ("WRONG TRANSFORM TYPE");
-   if (direction != TRANSFORM1_FORWARD && direction != TRANSFORM1_INVERSE)
+   if (direction != kTransformForward && direction != kTransformInverse)
       return ("WRONG TRANSFORM DIRECTION");
-   if (type >= TRANSFORM1_FOURIER_WALSH && type <= TRANSFORM1_SIN_HAAR) {
+   if (type >= kTransformFourierWalsh && type <= kTransformSinHaar) {
       if (degree > j || degree < 1)
          return ("WRONG DEGREE");
-      if (type >= TRANSFORM1_COS_WALSH)
+      if (type >= kTransformCosWalsh)
          degree += 1;
       k = (int) TMath::Power(2, degree);
       j = size / k;
    }
    switch (type) {
-   case TRANSFORM1_HAAR:
-   case TRANSFORM1_WALSH:
+   case kTransformHaar:
+   case kTransformWalsh:
       working_space = new float[2 * size];
       break;
-   case TRANSFORM1_COS:
-   case TRANSFORM1_SIN:
-   case TRANSFORM1_FOURIER:
-   case TRANSFORM1_HARTLEY:
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
+   case kTransformCos:
+   case kTransformSin:
+   case kTransformFourier:
+   case kTransformHartley:
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
       working_space = new float[4 * size];
       break;
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
       working_space = new float[8 * size];
       break;
    }
-   if (direction == TRANSFORM1_FORWARD) {
+   if (direction == kTransformForward) {
       switch (type) {
-      case TRANSFORM1_HAAR:
+      case kTransformHaar:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5719,7 +5719,7 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_WALSH:
+      case kTransformWalsh:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5729,14 +5729,14 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_COS:
+      case kTransformCos:
          size = 2 * size;
          for (i = 1; i <= (size / 2); i++) {
             val = source[i - 1];
             working_space[i - 1] = val;
             working_space[size - i] = val;
          }
-         Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+         Fourier(working_space, size, 0, kTransformForward, 0);
          for (i = 0; i < size / 2; i++) {
             a = pi * (double) i / (double) size;
             a = TMath::Cos(a);
@@ -5749,14 +5749,14 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_SIN:
+      case kTransformSin:
          size = 2 * size;
          for (i = 1; i <= (size / 2); i++) {
             val = source[i - 1];
             working_space[i - 1] = val;
             working_space[size - i] = -val;
          }
-         Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+         Fourier(working_space, size, 0, kTransformForward, 0);
          for (i = 0; i < size / 2; i++) {
             a = pi * (double) i / (double) size;
             a = TMath::Sin(a);
@@ -5772,35 +5772,35 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_FOURIER:
+      case kTransformFourier:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
-         Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+         Fourier(working_space, size, 0, kTransformForward, 0);
          for (i = 0; i < 2 * size; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_HARTLEY:
+      case kTransformHartley:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
-         Fourier(working_space, size, 1, TRANSFORM1_FORWARD, 0);
+         Fourier(working_space, size, 1, kTransformForward, 0);
          for (i = 0; i < size; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_FOURIER_WALSH:
-      case TRANSFORM1_FOURIER_HAAR:
-      case TRANSFORM1_WALSH_HAAR:
-      case TRANSFORM1_COS_WALSH:
-      case TRANSFORM1_COS_HAAR:
-      case TRANSFORM1_SIN_WALSH:
-      case TRANSFORM1_SIN_HAAR:
+      case kTransformFourierWalsh:
+      case kTransformFourierHaar:
+      case kTransformWalshHaar:
+      case kTransformCosWalsh:
+      case kTransformCosHaar:
+      case kTransformSinWalsh:
+      case kTransformSinHaar:
          for (i = 0; i < size; i++) {
             val = source[i];
-            if (type == TRANSFORM1_COS_WALSH
-                 || type == TRANSFORM1_COS_HAAR) {
+            if (type == kTransformCosWalsh
+                 || type == kTransformCosHaar) {
                j = (int) TMath::Power(2, degree) / 2;
                k = i / j;
                k = 2 * k * j;
@@ -5808,8 +5808,8 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
                working_space[k + 2 * j - 1 - i % j] = val;
             }
             
-            else if (type == TRANSFORM1_SIN_WALSH
-                     || type == TRANSFORM1_SIN_HAAR) {
+            else if (type == kTransformSinWalsh
+                     || type == kTransformSinHaar) {
                j = (int) TMath::Power(2, degree) / 2;
                k = i / j;
                k = 2 * k * j;
@@ -5820,16 +5820,16 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             else
                working_space[i] = val;
          }
-         if (type == TRANSFORM1_FOURIER_WALSH
-              || type == TRANSFORM1_FOURIER_HAAR
-              || type == TRANSFORM1_WALSH_HAAR) {
+         if (type == kTransformFourierWalsh
+              || type == kTransformFourierHaar
+              || type == kTransformWalshHaar) {
             for (i = 0; i < j; i++)
                BitReverseHaar(working_space, size, k, i * k);
             GeneralExe(working_space, 0, size, degree, type);
          }
          
-         else if (type == TRANSFORM1_COS_WALSH
-                  || type == TRANSFORM1_COS_HAAR) {
+         else if (type == kTransformCosWalsh
+                  || type == kTransformCosHaar) {
             m = (int) TMath::Power(2, degree);
             l = 2 * size / m;
             for (i = 0; i < l; i++)
@@ -5851,8 +5851,8 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             }
          }
          
-         else if (type == TRANSFORM1_SIN_WALSH
-                  || type == TRANSFORM1_SIN_HAAR) {
+         else if (type == kTransformSinWalsh
+                  || type == kTransformSinHaar) {
             m = (int) TMath::Power(2, degree);
             l = 2 * size / m;
             for (i = 0; i < l; i++)
@@ -5873,7 +5873,7 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
                working_space[i + 2 * size] = 0;
             }
          }
-         if (type > TRANSFORM1_WALSH_HAAR)
+         if (type > kTransformWalshHaar)
             k = (int) TMath::Power(2, degree - 1);
          
          else
@@ -5892,8 +5892,8 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
          for (i = 0; i < size; i++) {
             dest[i] = working_space[i];
          }
-         if (type == TRANSFORM1_FOURIER_WALSH
-              || type == TRANSFORM1_FOURIER_HAAR) {
+         if (type == kTransformFourierWalsh
+              || type == kTransformFourierHaar) {
             for (i = 0; i < size; i++) {
                dest[size + i] = working_space[i + 2 * size];
             }
@@ -5902,9 +5902,9 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
       }
    }
    
-   else if (direction == TRANSFORM1_INVERSE) {
+   else if (direction == kTransformInverse) {
       switch (type) {
-      case TRANSFORM1_HAAR:
+      case kTransformHaar:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5913,7 +5913,7 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_WALSH:
+      case kTransformWalsh:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5923,7 +5923,7 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_COS:
+      case kTransformCos:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5942,12 +5942,12 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
          }
          working_space[size / 2] = 0;
          working_space[size / 2 + size] = 0;
-         Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 1);
+         Fourier(working_space, size, 0, kTransformInverse, 1);
          for (i = 0; i < size / 2; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_SIN:
+      case kTransformSin:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
@@ -5968,46 +5968,46 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
          working_space[0] = 0;
          working_space[size] = 0;
          working_space[size / 2 + size] = 0;
-         Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+         Fourier(working_space, size, 0, kTransformInverse, 0);
          for (i = 0; i < size / 2; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_FOURIER:
+      case kTransformFourier:
          for (i = 0; i < 2 * size; i++) {
             working_space[i] = source[i];
          }
-         Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+         Fourier(working_space, size, 0, kTransformInverse, 0);
          for (i = 0; i < size; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_HARTLEY:
+      case kTransformHartley:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
-         Fourier(working_space, size, 1, TRANSFORM1_INVERSE, 0);
+         Fourier(working_space, size, 1, kTransformInverse, 0);
          for (i = 0; i < size; i++) {
             dest[i] = working_space[i];
          }
          break;
-      case TRANSFORM1_FOURIER_WALSH:
-      case TRANSFORM1_FOURIER_HAAR:
-      case TRANSFORM1_WALSH_HAAR:
-      case TRANSFORM1_COS_WALSH:
-      case TRANSFORM1_COS_HAAR:
-      case TRANSFORM1_SIN_WALSH:
-      case TRANSFORM1_SIN_HAAR:
+      case kTransformFourierWalsh:
+      case kTransformFourierHaar:
+      case kTransformWalshHaar:
+      case kTransformCosWalsh:
+      case kTransformCosHaar:
+      case kTransformSinWalsh:
+      case kTransformSinHaar:
          for (i = 0; i < size; i++) {
             working_space[i] = source[i];
          }
-         if (type == TRANSFORM1_FOURIER_WALSH
-              || type == TRANSFORM1_FOURIER_HAAR) {
+         if (type == kTransformFourierWalsh
+              || type == kTransformFourierHaar) {
             for (i = 0; i < size; i++) {
                working_space[i + 2 * size] = source[size + i];
             }
          }
-         if (type > TRANSFORM1_WALSH_HAAR)
+         if (type > kTransformWalshHaar)
             k = (int) TMath::Power(2, degree - 1);
          
          else
@@ -6023,16 +6023,16 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
             working_space[i + 2 * size] =
                 working_space[size + i + 2 * size];
          }
-         if (type == TRANSFORM1_FOURIER_WALSH
-              || type == TRANSFORM1_FOURIER_HAAR
-              || type == TRANSFORM1_WALSH_HAAR) {
+         if (type == kTransformFourierWalsh
+              || type == kTransformFourierHaar
+              || type == kTransformWalshHaar) {
             GeneralInv(working_space, size, degree, type);
             for (i = 0; i < j; i++)
                BitReverseHaar(working_space, size, k, i * k);
          }
          
-         else if (type == TRANSFORM1_COS_WALSH
-                  || type == TRANSFORM1_COS_HAAR) {
+         else if (type == kTransformCosWalsh
+                  || type == kTransformCosHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             m = (int) TMath::Power(2, degree);
             l = 2 * size / m;
@@ -6080,8 +6080,8 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
                BitReverseHaar(working_space, 2 * size, m, i * m);
          }
          
-         else if (type == TRANSFORM1_SIN_WALSH
-                  || type == TRANSFORM1_SIN_HAAR) {
+         else if (type == kTransformSinWalsh
+                  || type == kTransformSinHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             m = (int) TMath::Power(2, degree);
             l = 2 * size / m;
@@ -6129,7 +6129,7 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
                BitReverseHaar(working_space, 2 * size, m, i * m);
          }
          for (i = 0; i < size; i++) {
-            if (type >= TRANSFORM1_COS_WALSH) {
+            if (type >= kTransformCosWalsh) {
                k = i / j;
                k = 2 * k * j;
                val = working_space[k + i % j];
@@ -6150,32 +6150,32 @@ const char *TSpectrum::Transform1(const float *source, float *dest,
 //______________________________________________________________________________
 const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
                                     int size, int type, int degree,
-                                    int xmin, int xmax,
+                                    int fXmin, int fXmax,
                                     float filter_coeff) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL FILTER ZONAL FUNCTION   			   */ 
-/*	This function transforms the source spectrum. The calling program  */ 
-/*      should fill in input parameters. Then it sets transformed          */ 
-/*      coefficients in the given region (xmin, xmax) to the given         */ 
-/*      filter_coeff and transforms it back                                */ 
-/*	Filtered data are written into dest spectrum.                      */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum, its length should */ 
-/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR   */ 
-/*             transform. These need 2*size length to supply real and      */ 
-/*             imaginary coefficients.                                     */ 
-/*	dest-pointer to the vector of dest data, its length should be      */ 
-/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These  */ 
-/*           need 2*size length to store real and imaginary coefficients   */ 
-/*	size-basic length of source and dest spectra                       */ 
-/*	type-type of transform                                             */ 
-/*      degree-applied only for mixed transforms                           */ 
-/*	xmin-low limit of filtered region                                  */ 
-/*	xmax-high limit of filtered region                                 */ 
-/*	filter_coeff-value which is set in filtered region                 */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL FILTER ZONAL FUNCTION                              */ 
+/*        This function transforms the source spectrum. The calling program  */ 
+/*      should fill in input parameters. Then it sets transformed            */ 
+/*      coefficients in the given region (fXmin, fXmax) to the given           */ 
+/*      filter_coeff and transforms it back                                  */ 
+/*        Filtered data are written into dest spectrum.                      */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        source-pointer to the vector of source spectrum, its length should */ 
+/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR     */ 
+/*             transform. These need 2*size length to supply real and        */ 
+/*             imaginary coefficients.                                       */ 
+/*        dest-pointer to the vector of dest data, its length should be      */ 
+/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These    */ 
+/*           need 2*size length to store real and imaginary coefficients     */ 
+/*        size-basic length of source and dest spectra                       */ 
+/*        type-type of transform                                             */ 
+/*      degree-applied only for mixed transforms                             */ 
+/*        fXmin-low limit of filtered region                                  */ 
+/*        fXmax-high limit of filtered region                                 */ 
+/*        filter_coeff-value which is set in filtered region                 */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
        
 //////////FILTER1_ZONAL FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
@@ -6193,63 +6193,63 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
    }
    if (n != size)
       return ("LENGTH MUST BE POWER OF 2");
-   if (type < TRANSFORM1_HAAR || type > TRANSFORM1_SIN_HAAR)
+   if (type < kTransformHaar || type > kTransformSinHaar)
       return ("WRONG TRANSFORM TYPE");
-   if (type >= TRANSFORM1_FOURIER_WALSH && type <= TRANSFORM1_SIN_HAAR) {
+   if (type >= kTransformFourierWalsh && type <= kTransformSinHaar) {
       if (degree > j || degree < 1)
          return ("WRONG DEGREE");
-      if (type >= TRANSFORM1_COS_WALSH)
+      if (type >= kTransformCosWalsh)
          degree += 1;
       k = (int) TMath::Power(2, degree);
       j = size / k;
    }
-   if (xmin < 0 || xmin > xmax)
+   if (fXmin < 0 || fXmin > fXmax)
       return ("WRONG LOW REGION LIMIT");
-   if (xmax < xmin || xmax >= size)
+   if (fXmax < fXmin || fXmax >= size)
       return ("WRONG HIGH REGION LIMIT");
    switch (type) {
-   case TRANSFORM1_HAAR:
-   case TRANSFORM1_WALSH:
+   case kTransformHaar:
+   case kTransformWalsh:
       working_space = new float[2 * size];
       break;
-   case TRANSFORM1_COS:
-   case TRANSFORM1_SIN:
-   case TRANSFORM1_FOURIER:
-   case TRANSFORM1_HARTLEY:
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
+   case kTransformCos:
+   case kTransformSin:
+   case kTransformFourier:
+   case kTransformHartley:
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
       working_space = new float[4 * size];
       break;
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
       working_space = new float[8 * size];
       break;
    }
    switch (type) {
-   case TRANSFORM1_HAAR:
+   case kTransformHaar:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Haar(working_space, size, TRANSFORM1_FORWARD);
+      Haar(working_space, size, kTransformForward);
       break;
-   case TRANSFORM1_WALSH:
+   case kTransformWalsh:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
       Walsh(working_space, size);
       BitReverse(working_space, size);
       break;
-   case TRANSFORM1_COS:
+   case kTransformCos:
       size = 2 * size;
       for (i = 1; i <= (size / 2); i++) {
          val = source[i - 1];
          working_space[i - 1] = val;
          working_space[size - i] = val;
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       for (i = 0; i < size / 2; i++) {
          a = pi * (double) i / (double) size;
          a = TMath::Cos(a);
@@ -6260,14 +6260,14 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       } working_space[0] = working_space[0] / TMath::Sqrt(2.0);
       size = size / 2;
       break;
-   case TRANSFORM1_SIN:
+   case kTransformSin:
       size = 2 * size;
       for (i = 1; i <= (size / 2); i++) {
          val = source[i - 1];
          working_space[i - 1] = val;
          working_space[size - i] = -val;
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       for (i = 0; i < size / 2; i++) {
          a = pi * (double) i / (double) size;
          a = TMath::Sin(a);
@@ -6281,28 +6281,28 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
           working_space[size / 2] / TMath::Sqrt(2.0);
       size = size / 2;
       break;
-   case TRANSFORM1_FOURIER:
+   case kTransformFourier:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       break;
-   case TRANSFORM1_HARTLEY:
+   case kTransformHartley:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Fourier(working_space, size, 1, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 1, kTransformForward, 0);
       break;
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
       for (i = 0; i < size; i++) {
          val = source[i];
-         if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+         if (type == kTransformCosWalsh || type == kTransformCosHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             k = i / j;
             k = 2 * k * j;
@@ -6310,8 +6310,8 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
             working_space[k + 2 * j - 1 - i % j] = val;
          }
          
-         else if (type == TRANSFORM1_SIN_WALSH
-                  || type == TRANSFORM1_SIN_HAAR) {
+         else if (type == kTransformSinWalsh
+                  || type == kTransformSinHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             k = i / j;
             k = 2 * k * j;
@@ -6322,15 +6322,15 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
          else
             working_space[i] = val;
       }
-      if (type == TRANSFORM1_FOURIER_WALSH
-           || type == TRANSFORM1_FOURIER_HAAR
-           || type == TRANSFORM1_WALSH_HAAR) {
+      if (type == kTransformFourierWalsh
+           || type == kTransformFourierHaar
+           || type == kTransformWalshHaar) {
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, size, k, i * k);
          GeneralExe(working_space, 0, size, degree, type);
       }
       
-      else if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+      else if (type == kTransformCosWalsh || type == kTransformCosHaar) {
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
          for (i = 0; i < l; i++)
@@ -6352,7 +6352,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
          }
       }
       
-      else if (type == TRANSFORM1_SIN_WALSH || type == TRANSFORM1_SIN_HAAR) {
+      else if (type == kTransformSinWalsh || type == kTransformSinHaar) {
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
          for (i = 0; i < l; i++)
@@ -6373,7 +6373,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
             working_space[i + 2 * size] = 0;
          }
       }
-      if (type > TRANSFORM1_WALSH_HAAR)
+      if (type > kTransformWalshHaar)
          k = (int) TMath::Power(2, degree - 1);
       
       else
@@ -6394,7 +6394,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       old_area += working_space[i];
    }
    for (i = 0, new_area = 0; i < size; i++) {
-      if (i >= xmin && i <= xmax)
+      if (i >= fXmin && i <= fXmax)
          working_space[i] = filter_coeff;
       new_area += working_space[i];
    }
@@ -6404,12 +6404,12 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
          working_space[i] *= a;
       }
    }
-   if (type == TRANSFORM1_FOURIER) {
+   if (type == kTransformFourier) {
       for (i = 0, old_area = 0; i < size; i++) {
          old_area += working_space[i + size];
       }
       for (i = 0, new_area = 0; i < size; i++) {
-         if (i >= xmin && i <= xmax)
+         if (i >= fXmin && i <= fXmax)
             working_space[i + size] = filter_coeff;
          new_area += working_space[i + size];
       }
@@ -6421,13 +6421,13 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       }
    }
    
-   else if (type == TRANSFORM1_FOURIER_WALSH
-            || type == TRANSFORM1_FOURIER_HAAR) {
+   else if (type == kTransformFourierWalsh
+            || type == kTransformFourierHaar) {
       for (i = 0, old_area = 0; i < size; i++) {
          old_area += working_space[i + 2 * size];
       }
       for (i = 0, new_area = 0; i < size; i++) {
-         if (i >= xmin && i <= xmax)
+         if (i >= fXmin && i <= fXmax)
             working_space[i + 2 * size] = filter_coeff;
          new_area += working_space[i + 2 * size];
       }
@@ -6439,20 +6439,20 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       }
    }
    switch (type) {
-   case TRANSFORM1_HAAR:
-      Haar(working_space, size, TRANSFORM1_INVERSE);
+   case kTransformHaar:
+      Haar(working_space, size, kTransformInverse);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_WALSH:
+   case kTransformWalsh:
       BitReverse(working_space, size);
       Walsh(working_space, size);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_COS:
+   case kTransformCos:
       size = 2 * size;
       working_space[0] = working_space[0] * TMath::Sqrt(2.0);
       for (i = 0; i < size / 2; i++) {
@@ -6468,12 +6468,12 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       }
       working_space[size / 2] = 0;
       working_space[size / 2 + size] = 0;
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 1);
+      Fourier(working_space, size, 0, kTransformInverse, 1);
       for (i = 0; i < size / 2; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_SIN:
+   case kTransformSin:
       size = 2 * size;
       working_space[size / 2] =
           working_space[size / 2 - 1] * TMath::Sqrt(2.0);
@@ -6490,31 +6490,31 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
       working_space[0] = 0;
       working_space[size] = 0;
       working_space[size / 2 + size] = 0;
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+      Fourier(working_space, size, 0, kTransformInverse, 0);
       for (i = 0; i < size / 2; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_FOURIER:
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+   case kTransformFourier:
+      Fourier(working_space, size, 0, kTransformInverse, 0);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_HARTLEY:
-      Fourier(working_space, size, 1, TRANSFORM1_INVERSE, 0);
+   case kTransformHartley:
+      Fourier(working_space, size, 1, kTransformInverse, 0);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
-      if (type > TRANSFORM1_WALSH_HAAR)
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
+      if (type > kTransformWalshHaar)
          k = (int) TMath::Power(2, degree - 1);
       
       else
@@ -6529,15 +6529,15 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
          working_space[i] = working_space[size + i];
          working_space[i + 2 * size] = working_space[size + i + 2 * size];
       }
-      if (type == TRANSFORM1_FOURIER_WALSH
-           || type == TRANSFORM1_FOURIER_HAAR
-           || type == TRANSFORM1_WALSH_HAAR) {
+      if (type == kTransformFourierWalsh
+           || type == kTransformFourierHaar
+           || type == kTransformWalshHaar) {
          GeneralInv(working_space, size, degree, type);
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, size, k, i * k);
       }
       
-      else if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+      else if (type == kTransformCosWalsh || type == kTransformCosHaar) {
          j = (int) TMath::Power(2, degree) / 2;
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
@@ -6585,7 +6585,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
             BitReverseHaar(working_space, 2 * size, m, i * m);
       }
       
-      else if (type == TRANSFORM1_SIN_WALSH || type == TRANSFORM1_SIN_HAAR) {
+      else if (type == kTransformSinWalsh || type == kTransformSinHaar) {
          j = (int) TMath::Power(2, degree) / 2;
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
@@ -6631,7 +6631,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
             BitReverseHaar(working_space, 2 * size, m, i * m);
       }
       for (i = 0; i < size; i++) {
-         if (type >= TRANSFORM1_COS_WALSH) {
+         if (type >= kTransformCosWalsh) {
             k = i / j;
             k = 2 * k * j;
             val = working_space[k + i % j];
@@ -6652,32 +6652,32 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
     
 //////////ENHANCE1 FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
 const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
-                                int type, int degree, int xmin, int xmax,
+                                int type, int degree, int fXmin, int fXmax,
                                 float enhance_coeff) 
 {   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION		        	   */ 
-/*	This function transforms the source spectrum. The calling program  */ 
-/*      should fill in input parameters. Then it multiplies transformed    */ 
-/*      coefficients in the given region (xmin, xmax) by the given         */ 
-/*      enhance_coeff and transforms it back                               */ 
-/*	Processed data are written into dest spectrum.                     */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum, its length should */ 
-/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR   */ 
-/*             transform. These need 2*size length to supply real and      */ 
-/*             imaginary coefficients.                                     */ 
-/*	dest-pointer to the vector of dest data, its length should be      */ 
-/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These  */ 
-/*           need 2*size length to store real and imaginary coefficients   */ 
-/*	size-basic length of source and dest spectra                       */ 
-/*	type-type of transform                                             */ 
-/*      degree-applied only for mixed transforms                           */ 
-/*	xmin-low limit of filtered region                                  */ 
-/*	xmax-high limit of filtered region                                 */ 
-/*	enhance_coeff-value by which the filtered region is multiplied     */ 
-/*									   */ 
+/*        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION                             */ 
+/*        This function transforms the source spectrum. The calling program  */ 
+/*      should fill in input parameters. Then it multiplies transformed      */ 
+/*      coefficients in the given region (fXmin, fXmax) by the given           */ 
+/*      enhance_coeff and transforms it back                                 */ 
+/*        Processed data are written into dest spectrum.                     */ 
+/*                                                                           */ 
+/*        Function parameters:                                               */ 
+/*        source-pointer to the vector of source spectrum, its length should */ 
+/*             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR     */ 
+/*             transform. These need 2*size length to supply real and        */ 
+/*             imaginary coefficients.                                       */ 
+/*        dest-pointer to the vector of dest data, its length should be      */ 
+/*           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These    */ 
+/*           need 2*size length to store real and imaginary coefficients     */ 
+/*        size-basic length of source and dest spectra                       */ 
+/*        type-type of transform                                             */ 
+/*      degree-applied only for mixed transforms                             */ 
+/*        fXmin-low limit of filtered region                                  */ 
+/*        fXmax-high limit of filtered region                                 */ 
+/*        enhance_coeff-value by which the filtered region is multiplied     */ 
+/*                                                                           */ 
 /////////////////////////////////////////////////////////////////////////////
    int i, j, n, k = 1, m, l;
    float val;
@@ -6693,63 +6693,63 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
    }
    if (n != size)
       return ("LENGTH MUST BE POWER OF 2");
-   if (type < TRANSFORM1_HAAR || type > TRANSFORM1_SIN_HAAR)
+   if (type < kTransformHaar || type > kTransformSinHaar)
       return ("WRONG TRANSFORM TYPE");
-   if (type >= TRANSFORM1_FOURIER_WALSH && type <= TRANSFORM1_SIN_HAAR) {
+   if (type >= kTransformFourierWalsh && type <= kTransformSinHaar) {
       if (degree > j || degree < 1)
          return ("WRONG DEGREE");
-      if (type >= TRANSFORM1_COS_WALSH)
+      if (type >= kTransformCosWalsh)
          degree += 1;
       k = (int) TMath::Power(2, degree);
       j = size / k;
    }
-   if (xmin < 0 || xmin > xmax)
+   if (fXmin < 0 || fXmin > fXmax)
       return ("WRONG LOW REGION LIMIT");
-   if (xmax < xmin || xmax >= size)
+   if (fXmax < fXmin || fXmax >= size)
       return ("WRONG HIGH REGION LIMIT");
    switch (type) {
-   case TRANSFORM1_HAAR:
-   case TRANSFORM1_WALSH:
+   case kTransformHaar:
+   case kTransformWalsh:
       working_space = new float[2 * size];
       break;
-   case TRANSFORM1_COS:
-   case TRANSFORM1_SIN:
-   case TRANSFORM1_FOURIER:
-   case TRANSFORM1_HARTLEY:
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
+   case kTransformCos:
+   case kTransformSin:
+   case kTransformFourier:
+   case kTransformHartley:
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
       working_space = new float[4 * size];
       break;
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
       working_space = new float[8 * size];
       break;
    }
    switch (type) {
-   case TRANSFORM1_HAAR:
+   case kTransformHaar:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Haar(working_space, size, TRANSFORM1_FORWARD);
+      Haar(working_space, size, kTransformForward);
       break;
-   case TRANSFORM1_WALSH:
+   case kTransformWalsh:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
       Walsh(working_space, size);
       BitReverse(working_space, size);
       break;
-   case TRANSFORM1_COS:
+   case kTransformCos:
       size = 2 * size;
       for (i = 1; i <= (size / 2); i++) {
          val = source[i - 1];
          working_space[i - 1] = val;
          working_space[size - i] = val;
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       for (i = 0; i < size / 2; i++) {
          a = pi * (double) i / (double) size;
          a = TMath::Cos(a);
@@ -6760,14 +6760,14 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       } working_space[0] = working_space[0] / TMath::Sqrt(2.0);
       size = size / 2;
       break;
-   case TRANSFORM1_SIN:
+   case kTransformSin:
       size = 2 * size;
       for (i = 1; i <= (size / 2); i++) {
          val = source[i - 1];
          working_space[i - 1] = val;
          working_space[size - i] = -val;
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       for (i = 0; i < size / 2; i++) {
          a = pi * (double) i / (double) size;
          a = TMath::Sin(a);
@@ -6781,28 +6781,28 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
           working_space[size / 2] / TMath::Sqrt(2.0);
       size = size / 2;
       break;
-   case TRANSFORM1_FOURIER:
+   case kTransformFourier:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Fourier(working_space, size, 0, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 0, kTransformForward, 0);
       break;
-   case TRANSFORM1_HARTLEY:
+   case kTransformHartley:
       for (i = 0; i < size; i++) {
          working_space[i] = source[i];
       }
-      Fourier(working_space, size, 1, TRANSFORM1_FORWARD, 0);
+      Fourier(working_space, size, 1, kTransformForward, 0);
       break;
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
       for (i = 0; i < size; i++) {
          val = source[i];
-         if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+         if (type == kTransformCosWalsh || type == kTransformCosHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             k = i / j;
             k = 2 * k * j;
@@ -6810,8 +6810,8 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
             working_space[k + 2 * j - 1 - i % j] = val;
          }
          
-         else if (type == TRANSFORM1_SIN_WALSH
-                  || type == TRANSFORM1_SIN_HAAR) {
+         else if (type == kTransformSinWalsh
+                  || type == kTransformSinHaar) {
             j = (int) TMath::Power(2, degree) / 2;
             k = i / j;
             k = 2 * k * j;
@@ -6822,15 +6822,15 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
          else
             working_space[i] = val;
       }
-      if (type == TRANSFORM1_FOURIER_WALSH
-           || type == TRANSFORM1_FOURIER_HAAR
-           || type == TRANSFORM1_WALSH_HAAR) {
+      if (type == kTransformFourierWalsh
+           || type == kTransformFourierHaar
+           || type == kTransformWalshHaar) {
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, size, k, i * k);
          GeneralExe(working_space, 0, size, degree, type);
       }
       
-      else if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+      else if (type == kTransformCosWalsh || type == kTransformCosHaar) {
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
          for (i = 0; i < l; i++)
@@ -6852,7 +6852,7 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
          }
       }
       
-      else if (type == TRANSFORM1_SIN_WALSH || type == TRANSFORM1_SIN_HAAR) {
+      else if (type == kTransformSinWalsh || type == kTransformSinHaar) {
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
          for (i = 0; i < l; i++)
@@ -6873,7 +6873,7 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
             working_space[i + 2 * size] = 0;
          }
       }
-      if (type > TRANSFORM1_WALSH_HAAR)
+      if (type > kTransformWalshHaar)
          k = (int) TMath::Power(2, degree - 1);
       
       else
@@ -6894,7 +6894,7 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       old_area += working_space[i];
    }
    for (i = 0, new_area = 0; i < size; i++) {
-      if (i >= xmin && i <= xmax)
+      if (i >= fXmin && i <= fXmax)
          working_space[i] *= enhance_coeff;
       new_area += working_space[i];
    }
@@ -6904,12 +6904,12 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
          working_space[i] *= a;
       }
    }
-   if (type == TRANSFORM1_FOURIER) {
+   if (type == kTransformFourier) {
       for (i = 0, old_area = 0; i < size; i++) {
          old_area += working_space[i + size];
       }
       for (i = 0, new_area = 0; i < size; i++) {
-         if (i >= xmin && i <= xmax)
+         if (i >= fXmin && i <= fXmax)
             working_space[i + size] *= enhance_coeff;
          new_area += working_space[i + size];
       }
@@ -6921,13 +6921,13 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       }
    }
    
-   else if (type == TRANSFORM1_FOURIER_WALSH
-            || type == TRANSFORM1_FOURIER_HAAR) {
+   else if (type == kTransformFourierWalsh
+            || type == kTransformFourierHaar) {
       for (i = 0, old_area = 0; i < size; i++) {
          old_area += working_space[i + 2 * size];
       }
       for (i = 0, new_area = 0; i < size; i++) {
-         if (i >= xmin && i <= xmax)
+         if (i >= fXmin && i <= fXmax)
             working_space[i + 2 * size] *= enhance_coeff;
          new_area += working_space[i + 2 * size];
       }
@@ -6939,20 +6939,20 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       }
    }
    switch (type) {
-   case TRANSFORM1_HAAR:
-      Haar(working_space, size, TRANSFORM1_INVERSE);
+   case kTransformHaar:
+      Haar(working_space, size, kTransformInverse);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_WALSH:
+   case kTransformWalsh:
       BitReverse(working_space, size);
       Walsh(working_space, size);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_COS:
+   case kTransformCos:
       size = 2 * size;
       working_space[0] = working_space[0] * TMath::Sqrt(2.0);
       for (i = 0; i < size / 2; i++) {
@@ -6968,12 +6968,12 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       }
       working_space[size / 2] = 0;
       working_space[size / 2 + size] = 0;
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 1);
+      Fourier(working_space, size, 0, kTransformInverse, 1);
       for (i = 0; i < size / 2; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_SIN:
+   case kTransformSin:
       size = 2 * size;
       working_space[size / 2] =
           working_space[size / 2 - 1] * TMath::Sqrt(2.0);
@@ -6990,31 +6990,31 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
       working_space[0] = 0;
       working_space[size] = 0;
       working_space[size / 2 + size] = 0;
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+      Fourier(working_space, size, 0, kTransformInverse, 0);
       for (i = 0; i < size / 2; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_FOURIER:
-      Fourier(working_space, size, 0, TRANSFORM1_INVERSE, 0);
+   case kTransformFourier:
+      Fourier(working_space, size, 0, kTransformInverse, 0);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_HARTLEY:
-      Fourier(working_space, size, 1, TRANSFORM1_INVERSE, 0);
+   case kTransformHartley:
+      Fourier(working_space, size, 1, kTransformInverse, 0);
       for (i = 0; i < size; i++) {
          dest[i] = working_space[i];
       }
       break;
-   case TRANSFORM1_FOURIER_WALSH:
-   case TRANSFORM1_FOURIER_HAAR:
-   case TRANSFORM1_WALSH_HAAR:
-   case TRANSFORM1_COS_WALSH:
-   case TRANSFORM1_COS_HAAR:
-   case TRANSFORM1_SIN_WALSH:
-   case TRANSFORM1_SIN_HAAR:
-      if (type > TRANSFORM1_WALSH_HAAR)
+   case kTransformFourierWalsh:
+   case kTransformFourierHaar:
+   case kTransformWalshHaar:
+   case kTransformCosWalsh:
+   case kTransformCosHaar:
+   case kTransformSinWalsh:
+   case kTransformSinHaar:
+      if (type > kTransformWalshHaar)
          k = (int) TMath::Power(2, degree - 1);
       
       else
@@ -7029,15 +7029,15 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
          working_space[i] = working_space[size + i];
          working_space[i + 2 * size] = working_space[size + i + 2 * size];
       }
-      if (type == TRANSFORM1_FOURIER_WALSH
-           || type == TRANSFORM1_FOURIER_HAAR
-           || type == TRANSFORM1_WALSH_HAAR) {
+      if (type == kTransformFourierWalsh
+           || type == kTransformFourierHaar
+           || type == kTransformWalshHaar) {
          GeneralInv(working_space, size, degree, type);
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, size, k, i * k);
       }
       
-      else if (type == TRANSFORM1_COS_WALSH || type == TRANSFORM1_COS_HAAR) {
+      else if (type == kTransformCosWalsh || type == kTransformCosHaar) {
          j = (int) TMath::Power(2, degree) / 2;
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
@@ -7085,7 +7085,7 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
             BitReverseHaar(working_space, 2 * size, m, i * m);
       }
       
-      else if (type == TRANSFORM1_SIN_WALSH || type == TRANSFORM1_SIN_HAAR) {
+      else if (type == kTransformSinWalsh || type == kTransformSinHaar) {
          j = (int) TMath::Power(2, degree) / 2;
          m = (int) TMath::Power(2, degree);
          l = 2 * size / m;
@@ -7131,7 +7131,7 @@ const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
             BitReverseHaar(working_space, 2 * size, m, i * m);
       }
       for (i = 0; i < size; i++) {
-         if (type >= TRANSFORM1_COS_WALSH) {
+         if (type >= kTransformCosWalsh) {
             k = i / j;
             k = 2 * k * j;
             val = working_space[k + i % j];

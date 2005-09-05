@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.11 2005/04/13 10:01:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.12 2005/06/15 10:27:36 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -37,110 +37,99 @@
 #include "TH1.h"
 #endif
 
-const int BACK1_ORDER2 =0;
-const int BACK1_ORDER4 =1;
-const int BACK1_ORDER6 =2;
-const int BACK1_ORDER8 =3;
-const int BACK1_INCREASING_WINDOW =0;
-const int BACK1_DECREASING_WINDOW =1;
-const bool BACK1_EXCLUDE_COMPTON =false;
-const bool BACK1_INCLUDE_COMPTON =true;
+const int    kBackOrder2 =0;
+const int    kBackOrder4 =1;
+const int    kBackOrder6 =2;
+const int    kBackOrder8 =3;
+const int    kBackIncreasingWindow =0;
+const int    kBackDecreasingWindow =1;
+const Bool_t kBackExcludeCompton = kFALSE;
+const Bool_t kBackIncludeCompton = kTRUE;
 
-const int SMOOTH1_3POINTS =3;
-const int SMOOTH1_5POINTS =5;
-const int SMOOTH1_7POINTS =7;
-const int SMOOTH1_9POINTS =9;
-const int SMOOTH1_11POINTS =11;
-const int SMOOTH1_13POINTS =13;
-const int SMOOTH1_15POINTS =15;
+const int    kFitOptimChiCounts =0;
+const int    kFitOptimChiFuncValues =1;
+const int    kFitOptimMaxLikelihood =2;
+const int    kFitAlphaHalving =0;
+const int    kFitAlphaOptimal =1;
+const int    kFitPower2 =2;
+const int    kFitPower4 =4;
+const int    kFitPower6 =6;
+const int    kFitPower8 =8;
+const int    kFitPower10 =10;
+const int    kFitPower12 =12;
+const int    kFitTaylorOrderFirst =0;
+const int    kFitTaylorOrderSecond =1;
+const int    kFitNumRegulCycles =100;
 
-const bool SEARCH1_EXCLUDE_MARKOV =false;
-const bool SEARCH1_INCLUDE_MARKOV =true;
+const int    kTransformHaar =0;
+const int    kTransformWalsh =1;
+const int    kTransformCos =2;
+const int    kTransformSin =3;
+const int    kTransformFourier =4;
+const int    kTransformHartley =5;
+const int    kTransformFourierWalsh =6;
+const int    kTransformFourierHaar =7;
+const int    kTransformWalshHaar =8;
+const int    kTransformCosWalsh =9;
+const int    kTransformCosHaar =10;
+const int    kTransformSinWalsh =11;
+const int    kTransformSinHaar =12;
+const int    kTransformForward =0;
+const int    kTransformInverse =1;
 
-const int FIT1_OPTIM_CHI_COUNTS =0;
-const int FIT1_OPTIM_CHI_FUNC_VALUES =1;
-const int FIT1_OPTIM_MAX_LIKELIHOOD =2;
-const int FIT1_ALPHA_HALVING =0;
-const int FIT1_ALPHA_OPTIMAL =1;
-const int FIT1_FIT_POWER2 =2;
-const int FIT1_FIT_POWER4 =4;
-const int FIT1_FIT_POWER6 =6;
-const int FIT1_FIT_POWER8 =8;
-const int FIT1_FIT_POWER10 =10;
-const int FIT1_FIT_POWER12 =12;
-const int FIT1_TAYLOR_ORDER_FIRST =0;
-const int FIT1_TAYLOR_ORDER_SECOND =1;
-const int FIT1_NUM_OF_REGUL_CYCLES =100;
-
-const int TRANSFORM1_HAAR =0;
-const int TRANSFORM1_WALSH =1;
-const int TRANSFORM1_COS =2;
-const int TRANSFORM1_SIN =3;
-const int TRANSFORM1_FOURIER =4;
-const int TRANSFORM1_HARTLEY =5;
-const int TRANSFORM1_FOURIER_WALSH =6;
-const int TRANSFORM1_FOURIER_HAAR =7;
-const int TRANSFORM1_WALSH_HAAR =8;
-const int TRANSFORM1_COS_WALSH =9;
-const int TRANSFORM1_COS_HAAR =10;
-const int TRANSFORM1_SIN_WALSH =11;
-const int TRANSFORM1_SIN_HAAR =12;
-const int TRANSFORM1_FORWARD =0;
-const int TRANSFORM1_INVERSE =1;
-
-const int MAX_NUMBER_OF_PEAKS1= 1000;
+const int    kMaxNumberPeaks= 1000;
 
 //note that this class does not follow the ROOT naming conventions
 class TSpectrumOneDimFit{
 public:
-   int    number_of_peaks;                     //input parameter, should be>0
-   int    number_of_iterations;                //input parameter, should be >0
-   int    xmin;                                //first fitted channel
-   int    xmax;                                //last fitted channel
-   double alpha;                               //convergence coefficient, input parameter, it should be positive number and <=1
-   double chi;                                 //here the function returns resulting chi square
-   int    statistic_type;                      //type of statistics, possible values FIT1_OPTIM_CHI_COUNTS (chi square statistics with counts as weighting coefficients), FIT1_OPTIM_CHI_FUNC_VALUES (chi square statistics with function values as weighting coefficients),FIT1_OPTIM_MAX_LIKELIHOOD
-   int    alpha_optim;                         //optimization of convergence coefficients, possible values FIT1_ALPHA_HALVING, FIT1_ALPHA_OPTIMAL, see manual
-   int    power;                               //possible values FIT1_FIT_POWER2,4,6,8,10,12, see manual
-   int    fit_taylor;                          //order of Taylor expansion, possible values FIT1_TAYLOR_ORDER_FIRST, FIT1_TAYLOR_ORDER_SECOND
-   double position_init[MAX_NUMBER_OF_PEAKS1]; //initial values of peaks positions, input parameters
-   double position_calc[MAX_NUMBER_OF_PEAKS1]; //calculated values of fitted positions, output parameters
-   double position_err[MAX_NUMBER_OF_PEAKS1];  //position errors
-   bool   fix_position[MAX_NUMBER_OF_PEAKS1];  //logical vector which allows to fix appropriate positions (not fit). However they are present in the estimated functional
-   double amp_init[MAX_NUMBER_OF_PEAKS1];      //initial values of peaks amplitudes, input parameters
-   double amp_calc[MAX_NUMBER_OF_PEAKS1];      //calculated values of fitted amplitudes, output parameters
-   double amp_err[MAX_NUMBER_OF_PEAKS1];       //amplitude errors
-   bool   fix_amp[MAX_NUMBER_OF_PEAKS1];       //logical vector which allows to fix appropriate amplitudes (not fit). However they are present in the estimated functional
-   double area[MAX_NUMBER_OF_PEAKS1];          //calculated areas of peaks
-   double area_err[MAX_NUMBER_OF_PEAKS1];      //errors of peak areas
-   double sigma_init; //sigma parameter, meaning analogical to the above given parameters, see manual
-   double sigma_calc;
-   double sigma_err;
-   bool   fix_sigma;
-   double t_init;    //t parameter, meaning analogical to the above given parameters, see manual
-   double t_calc;
-   double t_err;
-   bool   fix_t;
-   double b_init;    //b parameter, meaning analogical to the above given parameters, see manual
-   double b_calc;
-   double b_err;
-   bool   fix_b;
-   double s_init;    //s parameter, meaning analogical to the above given parameters, see manual
-   double s_calc;
-   double s_err;
-   bool   fix_s;
-   double a0_init;   //backgroud is estimated as a0+a1*x+a2*x*x
-   double a0_calc;
-   double a0_err;
-   bool   fix_a0;
-   double a1_init;
-   double a1_calc;
-   double a1_err;
-   bool   fix_a1;
-   double a2_init;
-   double a2_calc;
-   double a2_err;
-   bool   fix_a2;
+   int    fNumberPeaks;                     //input parameter, should be>0
+   int    fNumberIterations;                //input parameter, should be >0
+   int    fXmin;                            //first fitted channel
+   int    fXmax;                            //last fitted channel
+   double fAlpha;                           //convergence coefficient, input parameter, it should be positive number and <=1
+   double fChi;                             //here the function returns resulting chi square
+   int    fStatisticType;                   //type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
+   int    fAlphaOptim;                      //optimization of convergence coefficients, possible values kFitAlphaHalving, kFitAlphaOptimal, see manual
+   int    fPower;                           //possible values kFitPower2,4,6,8,10,12, see manual
+   int    fFitTaylor;                       //order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond
+   double fPositionInit[kMaxNumberPeaks];   //initial values of peaks positions, input parameters
+   double fPositionCalc[kMaxNumberPeaks];   //calculated values of fitted positions, output parameters
+   double fPositionErr[kMaxNumberPeaks];    //position errors
+   Bool_t fFixPosition[kMaxNumberPeaks];    //logical vector which allows to fix appropriate positions (not fit). However they are present in the estimated functional
+   double fAmpInit[kMaxNumberPeaks];        //initial values of peaks amplitudes, input parameters
+   double fAmpCalc[kMaxNumberPeaks];        //calculated values of fitted amplitudes, output parameters
+   double fAmpErr[kMaxNumberPeaks];         //amplitude errors
+   Bool_t fFixAmp[kMaxNumberPeaks];         //logical vector which allows to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+   double fArea[kMaxNumberPeaks];           //calculated areas of peaks
+   double fAreaErr[kMaxNumberPeaks];        //errors of peak areas
+   double fSigmaInit; //sigma parameter, meaning analogical to the above given parameters, see manual
+   double fSigmaCalc;
+   double fSigmaErr;
+   Bool_t fFixSigma;
+   double fTInit;    //t parameter, meaning analogical to the above given parameters, see manual
+   double fTCalc;
+   double fTErr;
+   Bool_t fFixT;
+   double fBInit;    //b parameter, meaning analogical to the above given parameters, see manual
+   double fBCalc;
+   double fBErr;
+   Bool_t fFixB;
+   double fSInit;    //s parameter, meaning analogical to the above given parameters, see manual
+   double fSCalc;
+   double fSErr;
+   Bool_t fFixS;
+   double fA0Init;   //backgroud is estimated as a0+a1*x+a2*x*x
+   double fA0Calc;
+   double fA0Err;
+   Bool_t fFixA0;
+   double fA1Init;
+   double fA1Calc;
+   double fA1Err;
+   Bool_t fFixA1;
+   double fA2Init;
+   double fA2Calc;
+   double fA2Err;
+   Bool_t fFixA2;
 };
 
 class TSpectrum : public TNamed {
@@ -160,25 +149,25 @@ public:
    TSpectrum(Int_t maxpositions, Float_t resolution=1);
    virtual ~TSpectrum();
    virtual const char *Background(TH1 *hist,int niter, Option_t *option="goff");
-   const char *Background1(float *spectrum,int size,int niter);
-   const char *Deconvolution1(float *source,const float *resp,int size,int niter);
-   TH1        *GetHistogram() const {return fHistogram;}
-   Int_t       GetNPeaks() const {return fNPeaks;}
-   Float_t    *GetPositionX() const {return fPositionX;}
-   Float_t    *GetPositionY() const {return fPositionY;}
-   virtual Int_t  Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
-   static void SetAverageWindow(Int_t w=3);   //set average window
-   static void SetDeconIterations(Int_t n=3); //set max number of decon iterations
-    void       SetResolution(Float_t resolution=1);
+   const char         *Background1(float *spectrum,int size,int niter);
+   const char         *Deconvolution1(float *source,const float *resp,int size,int niter);
+   TH1                *GetHistogram() const {return fHistogram;}
+   Int_t               GetNPeaks() const {return fNPeaks;}
+   Float_t            *GetPositionX() const {return fPositionX;}
+   Float_t            *GetPositionY() const {return fPositionY;}
+   virtual Int_t       Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
+   static void         SetAverageWindow(Int_t w=3);   //set average window
+   static void         SetDeconIterations(Int_t n=3); //set max number of decon iterations
+    void               SetResolution(Float_t resolution=1);
 
    //new functions April 2003
-   const char *Background1General(float *spectrum,int size,int number_of_iterations,int direction,int filter_order,bool compton);
-   const char *Smooth1Markov(float *source, int size, int aver_window);
-   const char *Deconvolution1HighResolution(float *source,const float *resp,int size,int number_of_iterations,int number_of_repetitions,double boost);
-   const char *Deconvolution1Unfolding(float *source,const float **resp,int sizex,int sizey,int number_of_iterations);
-   Int_t Search1HighRes(float *source,float *dest, int size, float sigma, double threshold,
-                        bool background_remove,int decon_iterations,bool markov, int aver_window);
-   double      Lls(double a);
+   const char         *Background1General(float *spectrum,int size,int number_of_iterations,int direction,int filter_order,Bool_t compton);
+   const char         *Smooth1Markov(float *source, int size, int aver_window);
+   const char         *Deconvolution1HighResolution(float *source,const float *resp,int size,int number_of_iterations,int number_of_repetitions,double boost);
+   const char         *Deconvolution1Unfolding(float *source,const float **resp,int sizex,int sizey,int number_of_iterations);
+   Int_t               Search1HighRes(float *source,float *dest, int size, float sigma, double threshold,
+   Bool_t              background_remove,int decon_iterations,Bool_t markov, int aver_window);
+   double              Lls(double a);
 
       //auxiliary functions for 1. parameter fit functions
    double Erfc(double x);

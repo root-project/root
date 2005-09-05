@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.4 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.5 2003/01/16 18:07:52 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -122,16 +122,16 @@ protected:
   virtual void     MakeNormalized();
   virtual void     MakeParameterization();
   virtual void     MakeRealCode(const char *filename,
-				const char *classname,
-				Option_t   *option="");
+                                const char *classname,
+                                Option_t   *option="");
   virtual Bool_t   Select(const Int_t *iv);
   virtual Bool_t   TestFunction(Double_t squareResidual,
-				Double_t dResidur);
+                                Double_t dResidur);
 public:
   TMultiDimFit();
   TMultiDimFit(Int_t dimension,
-	       EMDFPolyType type=kMonomials,
-	       Option_t *option="");
+               EMDFPolyType type=kMonomials,
+               Option_t *option="");
   virtual ~TMultiDimFit();
 
   virtual void     AddRow(const Double_t *x, Double_t D, Double_t E=0);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.250 2005/09/02 19:18:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.251 2005/09/02 21:06:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1113,19 +1113,18 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
         --ndf; //no data means one less degree of freedom
      } else {
 
-        temp  = bin1-bin2;
-	//
-	err1=this->GetBinError(i);
-	err2=h->GetBinError(i);
-	if (err1 == 0 && err2 == 0){
-	  Error("Chi2Test", "bins with non-zero content and zero error");
-	  return 0;
-	}
-	err1*=err1;
-	err2*=err2;
-	err1/=sum1*sum1;
-	err2/=sum2*sum2;
-	chsq+=temp*temp/(err1+err2);
+        temp  = bin1-bin2;        
+        err1=this->GetBinError(i);
+        err2=h->GetBinError(i);
+        if (err1 == 0 && err2 == 0){
+          Error("Chi2Test", "bins with non-zero content and zero error");
+          return 0;
+        }
+        err1*=err1;
+        err2*=err2;
+        err1/=sum1*sum1;
+        err2/=sum2*sum2;
+        chsq+=temp*temp/(err1+err2);
      }
   }
 
@@ -2031,16 +2030,16 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
    Int_t ndim=GetDimension();
    if (linear){
       if (ndim<2){
-	 f1=new TF1(fname, fname, xxmin, xxmax);
-	 return Fit(f1,option,goption,xxmin,xxmax);
+         f1=new TF1(fname, fname, xxmin, xxmax);
+         return Fit(f1,option,goption,xxmin,xxmax);
       }
       else if (ndim<3){
-	 f2=new TF2(fname, fname);
-	 return Fit(f2,option,goption,xxmin,xxmax);
+         f2=new TF2(fname, fname);
+         return Fit(f2,option,goption,xxmin,xxmax);
       }
       else{
-	 f3=new TF3(fname, fname);
-	 return Fit(f3,option,goption,xxmin,xxmax);
+         f3=new TF3(fname, fname);
+         return Fit(f3,option,goption,xxmin,xxmax);
       }
    }
 
@@ -2260,7 +2259,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    // Check that function has same dimension as histogram
    if (f1->GetNdim() != GetDimension()) {
       Error("Fit","function %s dimension, %d, does not match histogram dimension, %d",
-	    f1->GetName(), f1->GetNdim(), GetDimension());
+            f1->GetName(), f1->GetNdim(), GetDimension());
       return 0;
    }
 
@@ -2310,19 +2309,19 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet) {
-	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+         TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
       if (isSet && strdiff==0){
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet)
-	 TVirtualFitter::SetFitter(0);
+         TVirtualFitter::SetFitter(0);
    }
 
    TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
@@ -2371,10 +2370,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
       //   - Some initialisations
       if (!fitOption.Verbose) {
-	 arglist[0] = -1;
-	 hFitter->ExecuteCommand("SET PRINT", arglist,1);
-	 arglist[0] = 0;
-	 hFitter->ExecuteCommand("SET NOW",   arglist,0);
+         arglist[0] = -1;
+         hFitter->ExecuteCommand("SET PRINT", arglist,1);
+         arglist[0] = 0;
+         hFitter->ExecuteCommand("SET NOW",   arglist,0);
       }
 
       //   - Set error criterion for chisquare or likelihood methods
@@ -2384,46 +2383,46 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       //   -  his minimization function via SetFCN.
       arglist[0] = TVirtualFitter::GetErrorDef();
       if (fitOption.Like) {
-	 hFitter->SetFitMethod("H1FitLikelihood");
+         hFitter->SetFitMethod("H1FitLikelihood");
       } else {
-	 if (!fitOption.User) hFitter->SetFitMethod("H1FitChisquare");
+         if (!fitOption.User) hFitter->SetFitMethod("H1FitChisquare");
       }
       hFitter->ExecuteCommand("SET Err",arglist,1);
 
       //   - Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
       for (i=0;i<npar;i++) {
-	 par = f1->GetParameter(i);
-	 f1->GetParLimits(i,al,bl);
-	 if (al*bl != 0 && al >= bl) {
-	    al = bl = 0;
-	    arglist[nfixed] = i+1;
-	    nfixed++;
-	 }
-	 we = 0.1*TMath::Abs(bl-al);
-	 if (we == 0) we = 0.3*TMath::Abs(par);
-	 if (we == 0) we = binwidx;
-	 hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
+         par = f1->GetParameter(i);
+         f1->GetParLimits(i,al,bl);
+         if (al*bl != 0 && al >= bl) {
+            al = bl = 0;
+            arglist[nfixed] = i+1;
+            nfixed++;
+         }
+         we = 0.1*TMath::Abs(bl-al);
+         if (we == 0) we = 0.3*TMath::Abs(par);
+         if (we == 0) we = binwidx;
+         hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
       if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
       //   - Set Gradient
       if (fitOption.Gradient) {
-	 if (fitOption.Gradient == 1) arglist[0] = 1;
-	 else                       arglist[0] = 0;
-	 hFitter->ExecuteCommand("SET GRAD",arglist,1);
+         if (fitOption.Gradient == 1) arglist[0] = 1;
+         else                       arglist[0] = 0;
+         hFitter->ExecuteCommand("SET GRAD",arglist,1);
       }
 
       //   - Reset Print level
       if (fitOption.Verbose) {
-	 arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
+         arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
       }
 
       //   - Compute sum of squares of errors in the bin range
       Double_t ey, sumw2=0;
       for (i=hxfirst;i<=hxlast;i++) {
-	 ey = GetBinError(i);
-	 sumw2 += ey*ey;
+         ey = GetBinError(i);
+         sumw2 += ey*ey;
       }
       //
       //
@@ -2435,33 +2434,33 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       arglist[1] = sumw2*TVirtualFitter::GetPrecision();
       fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
       if (fitResult != 0) {
-	 //   Abnormal termination, MIGRAD might not have converged on a
-	 //   minimum.
-	 if (!fitOption.Quiet) {
-	    Warning("Fit","Abnormal termination of minimization.");
-	 }
+         //   Abnormal termination, MIGRAD might not have converged on a
+         //   minimum.
+         if (!fitOption.Quiet) {
+            Warning("Fit","Abnormal termination of minimization.");
+         }
       }
       if (fitOption.More) {
-	 hFitter->ExecuteCommand("IMPROVE",arglist,0);
+         hFitter->ExecuteCommand("IMPROVE",arglist,0);
       }
       if (fitOption.Errors) {
-	 hFitter->ExecuteCommand("HESSE",arglist,0);
-	 hFitter->ExecuteCommand("MINOS",arglist,0);
+         hFitter->ExecuteCommand("HESSE",arglist,0);
+         hFitter->ExecuteCommand("MINOS",arglist,0);
       }
 
       //   - Get return status
       char parName[50];
       for (i=0;i<npar;i++) {
-	 hFitter->GetParameter(i,parName, par,we,al,bl);
-	 if (!fitOption.Errors) werr = we;
-	 else {
-	    hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-	    else                         werr = we;
-	 }
-	 params[i] = par;
-	 f1->SetParameter(i,par);
-	 f1->SetParError(i,werr);
+         hFitter->GetParameter(i,parName, par,we,al,bl);
+         if (!fitOption.Errors) werr = we;
+         else {
+            hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+            if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+            else                         werr = we;
+         }
+         params[i] = par;
+         f1->SetParameter(i,par);
+         f1->SetParError(i,werr);
       }
       hFitter->GetStats(aminref,edm,errdef,nvpar,nparx);
       //     If Log Likelihood, compute an equivalent chisquare
@@ -2590,14 +2589,14 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
     for(Int_t j=1; j<= ymax; j++){
       for(Int_t k=1; k<= zmax; k++){
 
-	// here some bin contents are written into variables to make the error
-	// calculation a little more legible:
+        // here some bin contents are written into variables to make the error
+        // calculation a little more legible:
         a   = h1->GetBinContent(i,j,k);
         b   = h2->GetBinContent(i,j,k);
         bot = bottom->GetBinContent(i,j,k);
 
         // make sure there are some events, if not, then the errors are set = 0
-	// automatically.
+        // automatically.
         if(bot < 1){}
         else{
           // computation of errors by Christos Leonidopoulos
@@ -2910,7 +2909,7 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
     const Double_t one = 1.;
     const Int_t idim = 20;
 
-    Double_t  b[400]	/* was [20][20] */;
+    Double_t  b[400]        /* was [20][20] */;
     Int_t i, k, l, ifail;
     Double_t power;
     Double_t da[20], xk, yk;
@@ -2923,33 +2922,33 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
     b[0]  = Double_t(n);
     da[0] = zero;
     for (l = 2; l <= m; ++l) {
-	b[l-1]           = zero;
-	b[m + l*20 - 21] = zero;
-	da[l-1]          = zero;
+        b[l-1]           = zero;
+        b[m + l*20 - 21] = zero;
+        da[l-1]          = zero;
     }
     TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
     TH1 *curHist  = (TH1*)hFitter->GetObjectFit();
     Int_t hxfirst = hFitter->GetXfirst();
     Int_t hxlast  = hFitter->GetXlast();
     for (k = hxfirst; k <= hxlast; ++k) {
-	xk     = curHist->GetBinCenter(k);
-	yk     = curHist->GetBinContent(k);
-	power  = one;
-	da[0] += yk;
-	for (l = 2; l <= m; ++l) {
-	    power   *= xk;
-	    b[l-1]  += power;
-	    da[l-1] += power*yk;
-	}
-	for (l = 2; l <= m; ++l) {
-	    power            *= xk;
-	    b[m + l*20 - 21] += power;
-	}
+        xk     = curHist->GetBinCenter(k);
+        yk     = curHist->GetBinContent(k);
+        power  = one;
+        da[0] += yk;
+        for (l = 2; l <= m; ++l) {
+            power   *= xk;
+            b[l-1]  += power;
+            da[l-1] += power*yk;
+        }
+        for (l = 2; l <= m; ++l) {
+            power            *= xk;
+            b[m + l*20 - 21] += power;
+        }
     }
     for (i = 3; i <= m; ++i) {
-	for (k = i; k <= m; ++k) {
-	    b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
-	}
+        for (k = i; k <= m; ++k) {
+            b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
+        }
     }
     H1LeastSquareSeqnd(m, b, idim, ifail, 1, da);
 
@@ -2982,16 +2981,16 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
     Int_t hxfirst = hFitter->GetXfirst();
     Int_t hxlast  = hFitter->GetXlast();
     for (i = hxfirst; i <= hxlast; ++i) {
-	xk = curHist->GetBinCenter(i);
-	yk = curHist->GetBinContent(i);
-	if (ndata < 0) {
-	    if (yk <= 0) yk = 1e-9;
-	    yk = TMath::Log(yk);
-	}
-	xbar  += xk;
-	ybar  += yk;
-	x2bar += xk*xk;
-	xybar += xk*yk;
+        xk = curHist->GetBinCenter(i);
+        yk = curHist->GetBinContent(i);
+        if (ndata < 0) {
+            if (yk <= 0) yk = 1e-9;
+            yk = TMath::Log(yk);
+        }
+        xbar  += xk;
+        ybar  += yk;
+        x2bar += xk*xk;
+        xybar += xk*yk;
     }
     fn    = Double_t(n);
     det   = fn*x2bar - xbar*xbar;
@@ -3034,42 +3033,42 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
 
     ifail = 0;
     for (j = 1; j <= n; ++j) {
-	if (a[j + j*a_dim1] <= 0) { ifail = -1; return; }
-	a[j + j*a_dim1] = one / a[j + j*a_dim1];
-	if (j == n) continue;
-	jp1 = j + 1;
-	for (l = jp1; l <= n; ++l) {
-	    a[j + l*a_dim1] = a[j + j*a_dim1] * a[l + j*a_dim1];
-	    s1 = -a[l + (j+1)*a_dim1];
-	    for (i = 1; i <= j; ++i) { s1 = a[l + i*a_dim1] * a[i + (j+1)*a_dim1] + s1; }
-	    a[l + (j+1)*a_dim1] = -s1;
-	}
+        if (a[j + j*a_dim1] <= 0) { ifail = -1; return; }
+        a[j + j*a_dim1] = one / a[j + j*a_dim1];
+        if (j == n) continue;
+        jp1 = j + 1;
+        for (l = jp1; l <= n; ++l) {
+            a[j + l*a_dim1] = a[j + j*a_dim1] * a[l + j*a_dim1];
+            s1 = -a[l + (j+1)*a_dim1];
+            for (i = 1; i <= j; ++i) { s1 = a[l + i*a_dim1] * a[i + (j+1)*a_dim1] + s1; }
+            a[l + (j+1)*a_dim1] = -s1;
+        }
     }
     if (k <= 0) return;
 
     for (l = 1; l <= k; ++l) {
-	b[l*b_dim1 + 1] = a[a_dim1 + 1]*b[l*b_dim1 + 1];
+        b[l*b_dim1 + 1] = a[a_dim1 + 1]*b[l*b_dim1 + 1];
     }
     if (n == 1) return;
     for (l = 1; l <= k; ++l) {
-	for (i = 2; i <= n; ++i) {
-	    im1 = i - 1;
-	    s21 = -b[i + l*b_dim1];
-	    for (j = 1; j <= im1; ++j) {
-		s21 = a[i + j*a_dim1]*b[j + l*b_dim1] + s21;
-	    }
-	    b[i + l*b_dim1] = -a[i + i*a_dim1]*s21;
-	}
-	nm1 = n - 1;
-	for (i = 1; i <= nm1; ++i) {
-	    nmi = n - i;
-	    s22 = -b[nmi + l*b_dim1];
-	    for (j = 1; j <= i; ++j) {
-		nmjp1 = n - j + 1;
-		s22 = a[nmi + nmjp1*a_dim1]*b[nmjp1 + l*b_dim1] + s22;
-	    }
-	    b[nmi + l*b_dim1] = -s22;
-	}
+        for (i = 2; i <= n; ++i) {
+            im1 = i - 1;
+            s21 = -b[i + l*b_dim1];
+            for (j = 1; j <= im1; ++j) {
+                s21 = a[i + j*a_dim1]*b[j + l*b_dim1] + s21;
+            }
+            b[i + l*b_dim1] = -a[i + i*a_dim1]*s21;
+        }
+        nm1 = n - 1;
+        for (i = 1; i <= nm1; ++i) {
+            nmi = n - i;
+            s22 = -b[nmi + l*b_dim1];
+            for (j = 1; j <= i; ++j) {
+                nmjp1 = n - j + 1;
+                s22 = a[nmi + nmjp1*a_dim1]*b[nmjp1 + l*b_dim1] + s22;
+            }
+            b[nmi + l*b_dim1] = -s22;
+        }
     }
 }
 
@@ -4882,7 +4881,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
       nonEqiX = kTRUE;
       out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN
- 	 << "] = {";
+          << "] = {";
       for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
          out << GetXaxis()->GetXbins()->fArray[i];
@@ -4896,7 +4895,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
        GetYaxis()->GetXbins()->fArray) {
       nonEqiY = kTRUE;
       out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN
- 	  << "] = {";
+           << "] = {";
       for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
          out << GetYaxis()->GetXbins()->fArray[i];
@@ -4910,7 +4909,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
        GetZaxis()->GetXbins()->fArray) {
       nonEqiZ = kTRUE;
       out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN
- 	 << "] = {";
+          << "] = {";
       for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
          out << GetZaxis()->GetXbins()->fArray[i];
@@ -4929,14 +4928,14 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
       out << ", xAxis";
    else
       out << "," << GetXaxis()->GetXmin()
-	  << "," << GetXaxis()->GetXmax();
+          << "," << GetXaxis()->GetXmax();
    if (fDimension > 1) {
       out << "," << GetYaxis()->GetNbins();
       if (nonEqiY)
          out << ", yAxis";
       else
          out << "," << GetYaxis()->GetXmin()
-	     << "," << GetYaxis()->GetXmax();
+             << "," << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
       out << "," << GetZaxis()->GetNbins();
@@ -4944,7 +4943,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          out << ", zAxis";
       else
          out << "," << GetZaxis()->GetXmin()
-	     << "," << GetZaxis()->GetXmax();
+             << "," << GetZaxis()->GetXmax();
    }
    out << ");" << endl;
 

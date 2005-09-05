@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.34 2004/10/04 17:00:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.35 2005/03/08 17:43:54 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -162,9 +162,9 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
       for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
          TH1* hProj=0;
          if (useX) hProj=hist2->ProjectionX(Form("%s_px%d",hist2->GetName(), iBin), 
-					    iBin, iBin, proj_option);
+                                            iBin, iBin, proj_option);
          else hProj=hist2->ProjectionY(Form("%s_py%d",hist2->GetName(), iBin), 
-				       iBin, iBin, proj_option);
+                                       iBin, iBin, proj_option);
          Add(hProj, draw_option);
       }
    } else {
@@ -202,7 +202,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
             haxis->SetRange(iBin, iBin);
             // build projection named axis_iBin (passed through "option")
             TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
-					     axis, proj_option, iBin));
+                                             axis, proj_option, iBin));
             Add(hProj, draw_option);
          }
          haxis->SetRange(iFirstOld, iLastOld);
@@ -244,7 +244,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
                haxis2->SetRange(jBin, jBin);
                // build projection named axis_iBin (passed through "option")
                TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
-						axis, proj_option, iBin));
+                                                axis, proj_option, iBin));
                Add(hProj, draw_option);
             }
          }
@@ -630,21 +630,21 @@ void THStack::Paint(Option_t *option)
       TAxis *yaxis = h->GetYaxis();
       if (h->GetDimension() > 1) {
          if (strlen(option) == 0) strcpy(loption,"lego1");
-	    const TArrayD *xbins = xaxis->GetXbins();
-	    const TArrayD *ybins = yaxis->GetXbins();
-	    if (xbins->fN != 0 && ybins->fN != 0) {
+            const TArrayD *xbins = xaxis->GetXbins();
+            const TArrayD *ybins = yaxis->GetXbins();
+            if (xbins->fN != 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
                                   xaxis->GetNbins(), xbins->GetArray(),
                                   yaxis->GetNbins(), ybins->GetArray());
-	    } else if (xbins->fN != 0 && ybins->fN == 0) {
+            } else if (xbins->fN != 0 && ybins->fN == 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
                                   xaxis->GetNbins(), xbins->GetArray(),
                                   yaxis->GetNbins(), ymin, ymax);
-	    } else if (xbins->fN == 0 && ybins->fN != 0) {
+            } else if (xbins->fN == 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
                                   xaxis->GetNbins(), xmin, xmax,
                                   yaxis->GetNbins(), ybins->GetArray());
-	    } else {
+            } else {
             fHistogram = new TH2F(GetName(),GetTitle(),
                                   xaxis->GetNbins(), xmin, xmax,
                                   yaxis->GetNbins(), ymin, ymax);

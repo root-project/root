@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.2 2003/11/04 22:03:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.3 2004/01/27 13:28:23 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
    
 #ifndef ROOT_TFractionFitter
@@ -62,7 +62,7 @@ private:
   void FindPrediction(int bin, double* fractions, double& Ti, int& k0, double& Aki) const;
   void ComputeFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
   void GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
-		 Int_t& minZ, Int_t& maxZ) const;
+                 Int_t& minZ, Int_t& maxZ) const;
   void ComputeChisquareLambda();
 
 protected:

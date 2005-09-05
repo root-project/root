@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.65 2005/08/09 10:51:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.66 2005/08/11 09:38:22 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -911,7 +911,7 @@ void TH3::GetStats(Stat_t *stats) const
                stats[10]+= w*y*z;
             }
          }
-	  }
+      }
    } else {
       stats[0] = fTsumw;
       stats[1] = fTsumw2;

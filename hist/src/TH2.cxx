@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.79 2005/08/11 09:38:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.80 2005/08/29 10:45:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1525,8 +1525,8 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       oldErrors = new Double_t[nxbins*nybins];
       for (xbin = 0; xbin < nxbins; xbin++) {
          for (ybin = 0; ybin < nybins; ybin++) {
-	    oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
-	 }
+            oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
+         }
       }
    }
 
@@ -1575,16 +1575,16 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    // copy merged bin contents (ignore under/overflows)
    if (nxgroup != 1 || nygroup != 1) {
       if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0){
-	 // variable bin sizes in x or y, don't treat both cases separately
-	 Axis_t *xbins = new Axis_t[newxbins+1];
-	 for(i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
-	 Axis_t *ybins = new Axis_t[newybins+1];
-	 for(i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
-	 hnew->SetBins(newxbins,xbins, newybins, ybins);//changes also errors array (if any)
+         // variable bin sizes in x or y, don't treat both cases separately
+         Axis_t *xbins = new Axis_t[newxbins+1];
+         for(i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+         Axis_t *ybins = new Axis_t[newybins+1];
+         for(i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
+         hnew->SetBins(newxbins,xbins, newybins, ybins);//changes also errors array (if any)
          delete [] xbins;
-	 delete [] ybins;
+         delete [] ybins;
       } else {
-	 hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax);//changes also errors array
+         hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax);//changes also errors array
       }
 
       Double_t binContent, binError;
@@ -1596,11 +1596,11 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
             binError   = 0;
             for (i = 0; i < nxgroup; i++) {
                if (oldxbin+i >= nxbins) break;
-	       for (j =0; j < nygroup; j++) {
-	          if (oldybin+j >= nybins) break;
+               for (j =0; j < nygroup; j++) {
+                  if (oldybin+j >= nybins) break;
                   binContent += oldBins[oldybin+j + (oldxbin+i)*nybins];
                   if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*nybins]*oldErrors[oldybin + j + (oldxbin+i)*nybins];
-	       }
+               }
             }
             hnew->SetBinContent(xbin+1,ybin+1, binContent);
             if (oldErrors) hnew->SetBinError(xbin+1,ybin+1,TMath::Sqrt(binError));

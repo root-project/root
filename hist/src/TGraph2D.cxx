@@ -738,20 +738,20 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet) {
-	//TLinearFitter *lf=(TLinearFitter *)cl->New();
-	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+        //TLinearFitter *lf=(TLinearFitter *)cl->New();
+         TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
       if (isSet && strdiff==0){
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet)
-	 TVirtualFitter::SetFitter(0);
+         TVirtualFitter::SetFitter(0);
    }
 
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f2->GetNpar());
@@ -784,92 +784,92 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
          else
             grFitter->ExecuteCommand("FitGraph2D", 0, 0);
       } else {
-	 // Some initialisations
-	 if (!fitOption.Verbose) {
-	    arglist[0] = -1;
-	    grFitter->ExecuteCommand("SET PRINT", arglist,1);
-	    arglist[0] = 0;
-	    grFitter->ExecuteCommand("SET NOW",   arglist,0);
-	 }
+         // Some initialisations
+         if (!fitOption.Verbose) {
+            arglist[0] = -1;
+            grFitter->ExecuteCommand("SET PRINT", arglist,1);
+            arglist[0] = 0;
+            grFitter->ExecuteCommand("SET NOW",   arglist,0);
+         }
 
-	 // Set error criterion for chisquare
-	 arglist[0] = 1;
-	 if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
-	 fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
-	 if (fitResult != 0) {
-	    // Abnormal termination, MIGRAD might not have converged on a minimum.
-	    if (!fitOption.Quiet) {
-	       Warning("Fit","Abnormal termination of minimization.");
-	    }
-	    delete [] arglist;
-	    return fitResult;
-	 }
+         // Set error criterion for chisquare
+         arglist[0] = 1;
+         if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
+         fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
+         if (fitResult != 0) {
+            // Abnormal termination, MIGRAD might not have converged on a minimum.
+            if (!fitOption.Quiet) {
+               Warning("Fit","Abnormal termination of minimization.");
+            }
+            delete [] arglist;
+            return fitResult;
+         }
 
-	 // Transfer names and initial values of parameters to Minuit
-	 Int_t nfixed = 0;
-	 for (i=0;i<npar;i++) {
-	    par = f2->GetParameter(i);
-	    f2->GetParLimits(i,al,bl);
-	    if (al*bl != 0 && al >= bl) {
-	       al = bl = 0;
-	       arglist[nfixed] = i+1;
-	       nfixed++;
-	    }
-	    we  = 0.3*TMath::Abs(par);
-	    if (we <= TMath::Abs(par)*1e-6) we = 1;
-	    grFitter->SetParameter(i,f2->GetParName(i),par,we,al,bl);
-	 }
-	 if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+         // Transfer names and initial values of parameters to Minuit
+         Int_t nfixed = 0;
+         for (i=0;i<npar;i++) {
+            par = f2->GetParameter(i);
+            f2->GetParLimits(i,al,bl);
+            if (al*bl != 0 && al >= bl) {
+               al = bl = 0;
+               arglist[nfixed] = i+1;
+               nfixed++;
+            }
+            we  = 0.3*TMath::Abs(par);
+            if (we <= TMath::Abs(par)*1e-6) we = 1;
+            grFitter->SetParameter(i,f2->GetParName(i),par,we,al,bl);
+         }
+         if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
-	 // Reset Print level
-	 if (fitOption.Verbose) {
-	    arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1);
-	 }
+         // Reset Print level
+         if (fitOption.Verbose) {
+            arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1);
+         }
 
-	 // Compute sum of squares of errors in the bin range
-	 Bool_t hasErrors = kFALSE;
-	 Double_t ex, ey, ez, sumw2=0;
-	 for (i=gxfirst;i<=gxlast;i++) {
-	    ex = GetErrorX(i);
-	    ey = GetErrorY(i);
-	    ez = GetErrorZ(i);
-	    if (ex > 0 || ey > 0 || ez > 0) hasErrors = kTRUE;
-	    sumw2 += ez*ez;
-	 }
-	 //*-*- Perform minimization
-	 arglist[0] = TVirtualFitter::GetMaxIterations();
-	 arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-	 grFitter->ExecuteCommand("MIGRAD",arglist,2);
-	 if (fitOption.Errors) {
-	    grFitter->ExecuteCommand("HESSE",arglist,0);
-	    grFitter->ExecuteCommand("MINOS",arglist,0);
-	 }
+         // Compute sum of squares of errors in the bin range
+         Bool_t hasErrors = kFALSE;
+         Double_t ex, ey, ez, sumw2=0;
+         for (i=gxfirst;i<=gxlast;i++) {
+            ex = GetErrorX(i);
+            ey = GetErrorY(i);
+            ez = GetErrorZ(i);
+            if (ex > 0 || ey > 0 || ez > 0) hasErrors = kTRUE;
+            sumw2 += ez*ez;
+         }
+         //*-*- Perform minimization
+         arglist[0] = TVirtualFitter::GetMaxIterations();
+         arglist[1] = sumw2*TVirtualFitter::GetPrecision();
+         grFitter->ExecuteCommand("MIGRAD",arglist,2);
+         if (fitOption.Errors) {
+            grFitter->ExecuteCommand("HESSE",arglist,0);
+            grFitter->ExecuteCommand("MINOS",arglist,0);
+         }
 
-	 grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-	 f2->SetChisquare(amin);
-	 Int_t ndf = f2->GetNumberFitPoints()-npar+nfixed;
-	 f2->SetNDF(ndf);
+         grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+         f2->SetChisquare(amin);
+         Int_t ndf = f2->GetNumberFitPoints()-npar+nfixed;
+         f2->SetNDF(ndf);
 
-	 // Get return status
-	 char parName[50];
-	 for (i=0;i<npar;i++) {
-	    grFitter->GetParameter(i,parName, par,we,al,bl);
-	    if (!fitOption.Errors) werr = we;
-	    else {
-	       grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-	       if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-	       else                         werr = we;
-	    }
-	    if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
-	    f2->SetParameter(i,par);
-	    f2->SetParError(i,werr);
-	 }
+         // Get return status
+         char parName[50];
+         for (i=0;i<npar;i++) {
+            grFitter->GetParameter(i,parName, par,we,al,bl);
+            if (!fitOption.Errors) werr = we;
+            else {
+               grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+               if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+               else                         werr = we;
+            }
+            if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
+            f2->SetParameter(i,par);
+            f2->SetParError(i,werr);
+         }
       }
 
       // Print final values of parameters.
       if (!fitOption.Quiet) {
-	 if (fitOption.Errors) grFitter->PrintResults(4,amin);
-	 else                  grFitter->PrintResults(3,amin);
+         if (fitOption.Errors) grFitter->PrintResults(4,amin);
+         else                  grFitter->PrintResults(3,amin);
       }
       delete [] arglist;
 
@@ -1396,7 +1396,7 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 void TGraph2D::SetHistogram(TH2 *h)
 {
    // Sets the histogram to be filled
-	                                                                                   
+                                                                                           
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();

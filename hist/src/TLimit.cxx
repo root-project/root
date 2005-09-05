@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.11 2004/11/11 07:48:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.12 2005/08/29 10:45:07 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ TOrdCollection *TLimit::fgSystNames = new TOrdCollection();
 
 TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                                        Int_t nmc, bool stat,
-				       TRandom * generator,
+                                       TRandom * generator,
                                        Double_t(*statistic) (Double_t,
                                                              Double_t,
                                                              Double_t))
@@ -125,7 +125,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Int_t i;
    for (i = 0; i <= data->GetSignal()->GetLast(); i++) {
       maxbins = (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) > maxbins ?
-	        (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) : maxbins;
+                 (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) : maxbins;
       nsig   +=  ((TH1D *) (data->GetSignal()->At(i)))->Integral();
       nbg    +=  ((TH1D *) (data->GetBackground()->At(i)))->Integral();
       ncand  +=  (Int_t) ((TH1D *) (data->GetCandidates()->At(i)))->Integral();
@@ -288,7 +288,7 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
          berrf[channel] = 0;
          for (Int_t bin = 0;
               bin <=((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX();
-	      bin++) {
+              bin++) {
             serrf[channel] += ((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetBinContent(bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
             berrf[channel] += ((TH1D *) (input->GetErrorOnBackground()->At(channel)))->GetBinContent(bin) *
@@ -311,7 +311,7 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
       if(stat)
          for(int i=1; i<=newsignal->GetNbinsX(); i++) {
             newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
-	 }
+         }
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
       TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));

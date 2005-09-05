@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.100 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.101 2005/09/03 13:12:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -438,7 +438,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
          Analyze(objstr->String(),err,offset);
       }
       if (nargs!=prim->fNArguments) {
-         Error("Compile",	"%s requires %d arguments",
+         Error("Compile",        "%s requires %d arguments",
             prim->GetName(), prim->fNArguments);
          return kFALSE;
       }
@@ -1203,7 +1203,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               if (find == 0) {
 //*-*- Check if chaine is a defined variable.
 //*-*- Note that DefinedVariable can be overloaded
-  	             ctemp = chaine;
+                ctemp = chaine;
                 ctemp.ReplaceAll(escapedSlash, slash);
                 Int_t action;
                 k = DefinedVariable(ctemp,action);
@@ -1727,7 +1727,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               SetAction(fNoper,actionCode,actionParam);
               fNoper++;
             }
-	 } else if (chaine(0,7) == "strstr(") {
+         } else if (chaine(0,7) == "strstr(") {
             compt = 7; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
@@ -2101,8 +2101,8 @@ Int_t TFormula::Compile(const char *expression)
 
 // if no parameters delete arrays fParams and fNames
   if (!fNpar) {
-	  delete [] fParams; fParams = 0;
-	  delete [] fNames;  fNames = 0;
+     delete [] fParams; fParams = 0;
+     delete [] fNames;  fNames = 0;
   }
 
 //*-*- if no errors, copy local parameters to formula objects
@@ -2956,11 +2956,11 @@ void TFormula::ProcessLinear(TString &formula)
       //if there are "++", replaces them with +[i]*
       nf = 1;
       while (pch){
-	 sprintf(repl, ")+[%d]*(", nf);
-	 Int_t offset = pch-formula.Data();
-	 formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+7);
-	 pch = (char*)strstr(formula.Data()+offset, "++");   
-	 nf++;
+         sprintf(repl, ")+[%d]*(", nf);
+         Int_t offset = pch-formula.Data();
+         formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+7);
+         pch = (char*)strstr(formula.Data()+offset, "++");   
+         nf++;
       }
       formula.Append(')', 1);
    } else {
@@ -2970,10 +2970,10 @@ void TFormula::ProcessLinear(TString &formula)
       char repl[]="++";
       nf = 1;
       while (pch){
-	 Int_t offset = pch-formula2.Data()-1;
-	 formula2.Replace(pch-formula2.Data()-1, (nf)/10+5, repl, 2);
-	 pch = (char*)strchr(formula2.Data()+offset, '[');
-	 nf++;
+         Int_t offset = pch-formula2.Data()-1;
+         formula2.Replace(pch-formula2.Data()-1, (nf)/10+5, repl, 2);
+         pch = (char*)strchr(formula2.Data()+offset, '[');
+         nf++;
       }
    }
    
@@ -3002,9 +3002,9 @@ void TFormula::ProcessLinear(TString &formula)
      //replacement="[0]";
       Int_t offset = fstring - sstring.Data();
       if (*(fstring-1)!='e' && *(fstring+1)!='p')
-	 sstring.Replace(fstring-sstring.Data(), 1,"[0]",3);
+         sstring.Replace(fstring-sstring.Data(), 1,"[0]",3);
       else
-	 offset++;
+         offset++;
       fstring = (char*)strchr(sstring.Data()+offset, 'x');   
    }
 
@@ -3015,8 +3015,8 @@ void TFormula::ProcessLinear(TString &formula)
       replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
       TFormula *f = new TFormula("f", replaceformula.Data());
       if (!f) {
-	 Error("TFormula", "f_linear not allocated");
-	 return;
+         Error("TFormula", "f_linear not allocated");
+         return;
       }
       fLinearParts.Add(f);
    }
@@ -3142,7 +3142,7 @@ void TFormula::Streamer(TBuffer &b)
          } else if (v<6) {
             Convert(v);
          }
-	      Optimize();
+         Optimize();
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3516,7 +3516,7 @@ void TFormula::Optimize()
       switch(action){
     case kVariable : {action=kData; fOperOffset[i].fType0=0; break;}
     case kParameter: {action=kData; fOperOffset[i].fType0=1; break;}
-    case kConstant : {action=kData; fOperOffset[i].fType0=2; break;}      	
+    case kConstant : {action=kData; fOperOffset[i].fType0=2; break;}              
       }    
       //
       fOperOffset[i].fOffset0 = GetActionParamOptimized(i);
@@ -3530,7 +3530,7 @@ void TFormula::Optimize()
    {
       //
       if (!(GetActionOptimized(i)== kData)) continue;
-      offset[0] = fOperOffset[i].fType0;       //      	    
+      offset[0] = fOperOffset[i].fType0;       //                  
       offset[1] = fOperOptimized[i] & kTFOperMask;   // offset
 
       if ((i+1) >= fNoper) continue;
@@ -3631,7 +3631,7 @@ void TFormula::Optimize()
           if (GetActionOptimized(i)==kMultiply&&GetActionOptimized(i+1)==kMultiply) {
              action=5;
              if (offset[0]==offset[2]&&offset[1]==offset[3]&&offset[0]==offset[4]&&offset[1]==offset[5]){
-                fPredefined[i]=primitive[9];	 
+                fPredefined[i]=primitive[9];         
                 action2=kUnary;
                 action =9;
              }
@@ -4106,7 +4106,7 @@ Int_t TFormula::PreCompile()
    fprintf(hf,   "return (%s);\n}",str.Data());
 
    //   fprintf("TFormulaPrimitive::AddFormula(new TFormulaPrimitive(\"%s::%s\",\"%s::%s\",(TFormulaPrimitive::GenFunc0)%s::%s));\n",
-   // 			   clname,method->GetName(),clname,method->GetName(),clname,method->GetName());
+   //             clname,method->GetName(),clname,method->GetName(),clname,method->GetName());
    fclose(hf);
 
    return 0;

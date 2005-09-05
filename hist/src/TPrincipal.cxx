@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.26 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.27 2004/06/09 13:40:02 brun Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,9 +667,9 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.26 2004/02/13 14:27:00 rdm Exp $
-// $Date: 2004/02/13 14:27:00 $
-// $Author: rdm $
+// $Id: TPrincipal.cxx,v 1.27 2004/06/09 13:40:02 brun Exp $
+// $Date: 2004/06/09 13:40:02 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
@@ -918,8 +918,8 @@ With <IMG
 
       // Setting Matrix (lower triangle) elements
       for (j = 0; j < i + 1; j++) {
-	fCovarianceMatrix(i,j) *= cor;
-	fCovarianceMatrix(i,j) += t1 * (p[j] - fMeanValues(j));
+        fCovarianceMatrix(i,j) *= cor;
+        fCovarianceMatrix(i,j) += t1 * (p[j] - fMeanValues(j));
       }
     }
   }
@@ -1066,17 +1066,17 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     case 'X':
     case 'x':
       if (fStoreData)
-	makeX = kTRUE;
+        makeX = kTRUE;
       break;
     case 'd':
     case 'D':
       if (fStoreData)
-	makeD = kTRUE;
+        makeD = kTRUE;
       break;
     case 'P':
     case 'p':
       if (fStoreData)
-	makeP = kTRUE;
+        makeP = kTRUE;
       break;
     case 'E':
     case 'e':
@@ -1085,7 +1085,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     case 's':
     case 'S':
       if (fStoreData)
-	makeS = kTRUE;
+        makeS = kTRUE;
       break;
     default:
       Warning("MakeHistograms","Unknown option: %c",opt[i]);
@@ -1130,14 +1130,14 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 
   if (makeE){
     hE = new TH1F(Form("%s_e",name), "Eigenvalues of Covariance matrix",
-		  fNumberOfVariables,0,fNumberOfVariables);
+                  fNumberOfVariables,0,fNumberOfVariables);
     hE->SetXTitle("Eigenvalue");
     fHistograms->Add(hE);
   }
 
   if (makeS) {
     hS = new TH1F(Form("%s_s",name),"E_{N}",
-		  fNumberOfVariables-1,1,fNumberOfVariables);
+                  fNumberOfVariables-1,1,fNumberOfVariables);
     hS->SetXTitle("N");
     hS->SetYTitle("#sum_{i=1}^{M} (x_{i} - x'_{N,i})^{2}");
     fHistograms->Add(hS);
@@ -1152,8 +1152,8 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t xhighb = fMeanValues(i) + 4 * fSigmas(i);
       Int_t    xbins  = fNumberOfDataPoints/100;
       hX[i]           = new TH1F(Form("%s_x%03d", name, i),
-				 Form("Pattern space, variable %d", i),
-				 xbins,xlowb,xhighb);
+                                 Form("Pattern space, variable %d", i),
+                                 xbins,xlowb,xhighb);
       hX[i]->SetXTitle(Form("x_{%d}",i));
       fHistograms->Add(hX[i]);
     }
@@ -1164,12 +1164,12 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t dhighb = 20;
       Int_t    dbins  = fNumberOfDataPoints/100;
       hD[i]           = new TH2F(Form("%s_d%03d", name, i),
-				 Form("Distance from pattern to "
-				      "feature space, variable %d", i),
-				 dbins,dlowb,dhighb,
-				 fNumberOfVariables-1,
-				 1,
-				 fNumberOfVariables);
+                                 Form("Distance from pattern to "
+                                      "feature space, variable %d", i),
+                                 dbins,dlowb,dhighb,
+                                 fNumberOfVariables-1,
+                                 1,
+                                 fNumberOfVariables);
       hD[i]->SetXTitle(Form("|x_{%d} - x'_{%d,N}|/#sigma_{%d}",i,i,i));
       hD[i]->SetYTitle("N");
       fHistograms->Add(hD[i]);
@@ -1183,8 +1183,8 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t phighb  = -plowb;
       Int_t    pbins   = 100;
       hP[i]            = new TH1F(Form("%s_p%03d", name, i),
-				  Form("Feature space, variable %d", i),
-				  pbins,plowb,phighb);
+                                  Form("Feature space, variable %d", i),
+                                  pbins,plowb,phighb);
       hX[i]->SetXTitle(Form("p_{%d}",i));
       fHistograms->Add(hP[i]);
     }
@@ -1218,20 +1218,20 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       // same project onto principal components, and then to a lower
       // dimensional sub-space
       for (j = fNumberOfVariables; j > 0; j--) {
-	P2X(p,d,j);
+        P2X(p,d,j);
 
-	for (k = 0; k < fNumberOfVariables; k++) {
-	  // We use the absolute value of the difference!
-	  d[k] = x[k] - d[k];
+        for (k = 0; k < fNumberOfVariables; k++) {
+          // We use the absolute value of the difference!
+          d[k] = x[k] - d[k];
 
-	  if (makeS)
-	    hS->Fill(j,d[k]*d[k]);
+          if (makeS)
+            hS->Fill(j,d[k]*d[k]);
 
-	  if (makeD) {
-	    d[k] = TMath::Abs(d[k]) / (fIsNormalised ? fSigmas(k) : 1);
-	    (hD[k])->Fill(d[k],j);
-	  }
-	}
+          if (makeD) {
+            d[k] = TMath::Abs(d[k]) / (fIsNormalised ? fSigmas(k) : 1);
+            (hD[k])->Fill(d[k],j);
+          }
+        }
       }
     }
 
@@ -1239,11 +1239,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       // If we are asked to make any of these histograms, we have to
       // go here
       for (j = 0; j < fNumberOfVariables; j++) {
-	if (makeX)
-	  (hX[j])->Fill(x[j]);
+        if (makeX)
+          (hX[j])->Fill(x[j]);
 
-	if (makeP)
-	  (hP[j])->Fill(p[j]);
+        if (makeP)
+          (hP[j])->Fill(p[j]);
       }
     }
   }
@@ -1268,7 +1268,7 @@ void TPrincipal::MakeNormalised()
     fSigmas(i) = TMath::Sqrt(fCovarianceMatrix(i,i));
     if (fIsNormalised)
       for (j = 0; j <= i; j++)
-	fCovarianceMatrix(i,j) /= (fSigmas(i) * fSigmas(j));
+        fCovarianceMatrix(i,j) /= (fSigmas(i) * fSigmas(j));
 
     fTrace += fCovarianceMatrix(i,i);
   }
@@ -1376,30 +1376,30 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
   outFile << "// -*- mode: c++ -*-" << endl;
   // Info about creator
   outFile << "// " << endl
-	  << "// File " << filename
-	  << " generated by TPrincipal::MakeCode" << endl;
+          << "// File " << filename
+          << " generated by TPrincipal::MakeCode" << endl;
   // Time stamp
   TDatime date;
   outFile << "// on " << date.AsString() << endl;
   // ROOT version info
   outFile << "// ROOT version " << gROOT->GetVersion()
-	  << endl << "//" << endl;
+          << endl << "//" << endl;
   // General information on the code
   outFile << "// This file contains the functions " << endl
-	  << "//" << endl
-	  << "//    void  " << prefix
-	  << "X2P(Double_t *x, Double_t *p); " << endl
-	  << "//    void  " << prefix
-	  << "P2X(Double_t *p, Double_t *x, Int_t nTest);"
-	  << endl << "//" << endl
-	  << "// The first for transforming original data x in " << endl
-	  << "// pattern space, to principal components p in " << endl
-	  << "// feature space. The second function is for the" << endl
-	  << "// inverse transformation, but using only nTest" << endl
-	  << "// of the principal components in the expansion" << endl
-	  << "// " << endl
-	  << "// See TPrincipal class documentation for more "
-	  << "information " << endl << "// " << endl;
+          << "//" << endl
+          << "//    void  " << prefix
+          << "X2P(Double_t *x, Double_t *p); " << endl
+          << "//    void  " << prefix
+          << "P2X(Double_t *p, Double_t *x, Int_t nTest);"
+          << endl << "//" << endl
+          << "// The first for transforming original data x in " << endl
+          << "// pattern space, to principal components p in " << endl
+          << "// feature space. The second function is for the" << endl
+          << "// inverse transformation, but using only nTest" << endl
+          << "// of the principal components in the expansion" << endl
+          << "// " << endl
+          << "// See TPrincipal class documentation for more "
+          << "information " << endl << "// " << endl;
   // Header files
   outFile << "#ifndef __CINT__" << endl;
   if (isMethod)
@@ -1419,27 +1419,27 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
   // functions. Also ,the number of variables are stored in a static
   // variable.
   outFile << "//" << endl
-	  << "// Static data variables"  << endl
-	  << "//" << endl;
+          << "// Static data variables"  << endl
+          << "//" << endl;
   outFile << cv_qual << "Int_t    " << prefix << "gNVariables = "
-	  << fNumberOfVariables << ";" << endl;
+          << fNumberOfVariables << ";" << endl;
 
   // Assign the values to the Eigenvector matrix. The elements are
   // stored row-wise, that is element
   //    M[i][j] = e[i * nVariables + j]
   // where i and j are zero-based.
   outFile << endl << "// Assignment of eigenvector matrix." << endl
-	  << "// Elements are stored row-wise, that is" << endl
-	  << "//    M[i][j] = e[i * nVariables + j] " << endl
-	  << "// where i and j are zero-based" << endl;
+          << "// Elements are stored row-wise, that is" << endl
+          << "//    M[i][j] = e[i * nVariables + j] " << endl
+          << "// where i and j are zero-based" << endl;
   outFile << cv_qual << "Double_t " << prefix
-	  << "gEigenVectors[] = {" << flush;
+          << "gEigenVectors[] = {" << flush;
   Int_t i,j;
   for (i = 0; i < fNumberOfVariables; i++) {
     for (j = 0; j < fNumberOfVariables; j++) {
       Int_t index = i * fNumberOfVariables + j;
       outFile << (index != 0 ? "," : "" ) << endl
-	      << "  "  << fEigenVectors(i,j) << flush;
+              << "  "  << fEigenVectors(i,j) << flush;
     }
   }
   outFile << "};" << endl << endl;
@@ -1447,25 +1447,25 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
   // Assignment to eigenvalue vector. Zero-based.
   outFile << "// Assignment to eigen value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix
-	  << "gEigenValues[] = {" << flush;
+          << "gEigenValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
-	    << "  " << fEigenValues(i) << flush;
+            << "  " << fEigenValues(i) << flush;
   outFile << endl << "};" << endl << endl;
 
   // Assignment to mean Values vector. Zero-based.
   outFile << "// Assignment to mean value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix
-	  << "gMeanValues[] = {" << flush;
+          << "gMeanValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
-	    << "  " << fMeanValues(i) << flush;
+            << "  " << fMeanValues(i) << flush;
   outFile << endl << "};" << endl << endl;
 
   // Assignment to mean Values vector. Zero-based.
   outFile << "// Assignment to sigma value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix
-	  << "gSigmaValues[] = {" << flush;
+          << "gSigmaValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
             << "  " << (fIsNormalised ? fSigmas(i) : 1) << flush;
@@ -1478,36 +1478,36 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
   // First: void x2p(Double_t *x, Double_t *p);
   //
   outFile << "// " << endl
-	  << "// The "
-    	  << (isMethod ? "method " : "function ")
-	  << "  void " << prefix
-	  << "X2P(Double_t *x, Double_t *p)"
-	  << endl << "// " << endl;
+          << "// The "
+              << (isMethod ? "method " : "function ")
+          << "  void " << prefix
+          << "X2P(Double_t *x, Double_t *p)"
+          << endl << "// " << endl;
   outFile << "void " << prefix
-	  << "X2P(Double_t *x, Double_t *p) {" << endl
-	  << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
-	  << "    p[i] = 0;" << endl
-	  << "    for (Int_t j = 0; j < gNVariables; j++)" << endl
-	  << "      p[i] += (x[j] - gMeanValues[j]) " << endl
-	  << "        * gEigenVectors[j *  gNVariables + i] "
-	  << "/ gSigmaValues[j];" << endl << endl << "  }"
-	  << endl << "}" << endl << endl;
+          << "X2P(Double_t *x, Double_t *p) {" << endl
+          << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
+          << "    p[i] = 0;" << endl
+          << "    for (Int_t j = 0; j < gNVariables; j++)" << endl
+          << "      p[i] += (x[j] - gMeanValues[j]) " << endl
+          << "        * gEigenVectors[j *  gNVariables + i] "
+          << "/ gSigmaValues[j];" << endl << endl << "  }"
+          << endl << "}" << endl << endl;
   //
   // Now: void p2x(Double_t *p, Double_t *x, Int_t nTest);
   //
   outFile << "// " << endl << "// The "
-	  << (isMethod ? "method " : "function ")
-	  << "  void " << prefix
-	  << "P2X(Double_t *p, Double_t *x, Int_t nTest)"
-	  << endl << "// " << endl;
+          << (isMethod ? "method " : "function ")
+          << "  void " << prefix
+          << "P2X(Double_t *p, Double_t *x, Int_t nTest)"
+          << endl << "// " << endl;
   outFile << "void " << prefix
-	  << "P2X(Double_t *p, Double_t *x, Int_t nTest) {" << endl
-	  << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
-	  << "    x[i] = gMeanValues[i];" << endl
-	  << "    for (Int_t j = 0; j < nTest; j++)" << endl
-	  << "      x[i] += p[j] * gSigmaValues[i] " << endl
-	  << "        * gEigenVectors[i *  gNVariables + j];" << endl
-	  << "  }" << endl << "}" << endl << endl;
+          << "P2X(Double_t *p, Double_t *x, Int_t nTest) {" << endl
+          << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
+          << "    x[i] = gMeanValues[i];" << endl
+          << "    for (Int_t j = 0; j < nTest; j++)" << endl
+          << "      x[i] += p[j] * gSigmaValues[i] " << endl
+          << "        * gEigenVectors[i *  gNVariables + j];" << endl
+          << "  }" << endl << "}" << endl << endl;
 
   // EOF
   outFile << "// EOF for " << filename << endl;
@@ -1530,7 +1530,7 @@ void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
     x[i] = fMeanValues(i);
     for (Int_t j = 0; j < nTest; j++)
       x[i] += p[j] * (fIsNormalised ? fSigmas(i) : 1)
-	* fEigenVectors(i,j);
+        * fEigenVectors(i,j);
   }
 
 }
@@ -1598,14 +1598,14 @@ void TPrincipal::Print(Option_t *opt) const
     for (Int_t i = 0; i < fNumberOfVariables; i++) {
       cout << setw(12) << i << " " << flush;
       if (printM)
-	cout << "| " << setw(10) << setprecision(4)
-	     << fMeanValues(i) << " " << flush;
+        cout << "| " << setw(10) << setprecision(4)
+             << fMeanValues(i) << " " << flush;
       if (printS)
-	cout << "| " << setw(10) << setprecision(4)
-	     << fSigmas(i) << " " << flush;
+        cout << "| " << setw(10) << setprecision(4)
+             << fSigmas(i) << " " << flush;
       if (printE)
-	cout << "| " << setw(10) << setprecision(4)
-	     << fEigenValues(i) << " " << flush;
+        cout << "| " << setw(10) << setprecision(4)
+             << fEigenValues(i) << " " << flush;
       cout << endl;
     }
     cout << endl;
@@ -1721,7 +1721,7 @@ void TPrincipal::X2P(const Double_t *x, Double_t *p)
     p[i] = 0;
     for (Int_t j = 0; j < fNumberOfVariables; j++)
       p[i] += (x[j] - fMeanValues(j)) * fEigenVectors(j,i) /
-	(fIsNormalised ? fSigmas(j) : 1);
+        (fIsNormalised ? fSigmas(j) : 1);
   }
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.64 2005/08/09 10:52:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.65 2005/08/09 11:02:30 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1632,7 +1632,7 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
       out << ", xAxis";
    else
       out << "," << GetXaxis()->GetXmin()
-	  << "," << GetXaxis()->GetXmax()
+          << "," << GetXaxis()->GetXmax()
           <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
 
    // save bin entries
