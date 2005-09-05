@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.49 2005/06/21 18:15:13 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.50 2005/08/18 11:12:59 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -185,7 +185,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++)
-      fWindows[i].open = 0;
+      fWindows[i].fOpen = 0;
 
    fColors = new TExMap;
 }
@@ -226,22 +226,22 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (i = 0; i < fMaxNumberOfWindows; i++) {
-      fWindows[i].open          = org.fWindows[i].open;
-      fWindows[i].double_buffer = org.fWindows[i].double_buffer;
-      fWindows[i].ispixmap      = org.fWindows[i].ispixmap;
-      fWindows[i].drawing       = org.fWindows[i].drawing;
-      fWindows[i].window        = org.fWindows[i].window;
-      fWindows[i].buffer        = org.fWindows[i].buffer;
-      fWindows[i].width         = org.fWindows[i].width;
-      fWindows[i].height        = org.fWindows[i].height;
-      fWindows[i].clip          = org.fWindows[i].clip;
-      fWindows[i].xclip         = org.fWindows[i].xclip;
-      fWindows[i].yclip         = org.fWindows[i].yclip;
-      fWindows[i].wclip         = org.fWindows[i].wclip;
-      fWindows[i].hclip         = org.fWindows[i].hclip;
-      fWindows[i].new_colors    = org.fWindows[i].new_colors;
-      fWindows[i].ncolors       = org.fWindows[i].ncolors;
-      fWindows[i].shared        = org.fWindows[i].shared;
+      fWindows[i].fOpen         = org.fWindows[i].fOpen;
+      fWindows[i].fDoubleBuffer = org.fWindows[i].fDoubleBuffer;
+      fWindows[i].fIsPixmap     = org.fWindows[i].fIsPixmap;
+      fWindows[i].fDrawing      = org.fWindows[i].fDrawing;
+      fWindows[i].fWindow       = org.fWindows[i].fWindow;
+      fWindows[i].fBuffer       = org.fWindows[i].fBuffer;
+      fWindows[i].fWidth        = org.fWindows[i].fWidth;
+      fWindows[i].fHeight       = org.fWindows[i].fHeight;
+      fWindows[i].fClip         = org.fWindows[i].fClip;
+      fWindows[i].fXclip        = org.fWindows[i].fXclip;
+      fWindows[i].fYclip        = org.fWindows[i].fYclip;
+      fWindows[i].fWclip        = org.fWindows[i].fWclip;
+      fWindows[i].fHclip        = org.fWindows[i].fHclip;
+      fWindows[i].fNewColors    = org.fWindows[i].fNewColors;
+      fWindows[i].fNcolors      = org.fWindows[i].fNcolors;
+      fWindows[i].fShared       = org.fWindows[i].fShared;
    }
 
    for (i = 0; i < kNumCursors; i++)
@@ -253,11 +253,11 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    while (it.Next(key, value)) {
       XColor_t *colo = (XColor_t *) value;
       XColor_t *col  = new XColor_t;
-      col->pixel   = colo->pixel;
-      col->red     = colo->red;
-      col->green   = colo->green;
-      col->blue    = colo->blue;
-      col->defined = colo->defined;
+      col->fPixel   = colo->fPixel;
+      col->fRed     = colo->fRed;
+      col->fGreen   = colo->fGreen;
+      col->fBlue    = colo->fBlue;
+      col->fDefined = colo->fDefined;
       fColors->Add(key, (Long_t) col);
    }
 }
@@ -363,14 +363,14 @@ void TGX11::ClearWindow()
 {
    // Clear current window.
 
-   if (!gCws->ispixmap && !gCws->double_buffer) {
-      XSetWindowBackground(fDisplay, gCws->drawing, GetColor(0).pixel);
-      XClearWindow(fDisplay, gCws->drawing);
+   if (!gCws->fIsPixmap && !gCws->fDoubleBuffer) {
+      XSetWindowBackground(fDisplay, gCws->fDrawing, GetColor(0).fPixel);
+      XClearWindow(fDisplay, gCws->fDrawing);
       XFlush(fDisplay);
    } else {
       SetColor(*gGCpxmp, 0);
-      XFillRectangle(fDisplay, gCws->drawing, *gGCpxmp,
-                     0, 0, gCws->width, gCws->height);
+      XFillRectangle(fDisplay, gCws->fDrawing, *gGCpxmp,
+                     0, 0, gCws->fWidth, gCws->fHeight);
       SetColor(*gGCpxmp, 1);
    }
 }
@@ -388,8 +388,8 @@ void TGX11::CloseWindow()
 {
    // Delete current window.
 
-   if (gCws->shared)
-      gCws->open = 0;
+   if (gCws->fShared)
+      gCws->fOpen = 0;
    else
       CloseWindow1();
 
@@ -404,27 +404,27 @@ void TGX11::CloseWindow1()
 
    int wid;
 
-   if (gCws->ispixmap)
-      XFreePixmap(fDisplay, gCws->window);
+   if (gCws->fIsPixmap)
+      XFreePixmap(fDisplay, gCws->fWindow);
    else
-      XDestroyWindow(fDisplay, gCws->window);
+      XDestroyWindow(fDisplay, gCws->fWindow);
 
-   if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
+   if (gCws->fBuffer) XFreePixmap(fDisplay, gCws->fBuffer);
 
-   if (gCws->new_colors) {
+   if (gCws->fNewColors) {
       if (fRedDiv == -1)
-         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
+         XFreeColors(fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
+      delete [] gCws->fNewColors;
+      gCws->fNewColors = 0;
    }
 
    XFlush(fDisplay);
 
-   gCws->open = 0;
+   gCws->fOpen = 0;
 
    // make first window in list the current window
    for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (fWindows[wid].open) {
+      if (fWindows[wid].fOpen) {
          gCws = &fWindows[wid];
          return;
       }
@@ -439,8 +439,8 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 
    gTws = &fWindows[wid];
 
-   XCopyArea(fDisplay, gTws->drawing, gCws->drawing, *gGCpxmp, 0, 0, gTws->width,
-             gTws->height, xpos, ypos);
+   XCopyArea(fDisplay, gTws->fDrawing, gCws->fDrawing, *gGCpxmp, 0, 0, gTws->fWidth,
+             gTws->fHeight, xpos, ypos);
    XFlush(fDisplay);
 }
 
@@ -454,7 +454,7 @@ void TGX11::CopyWindowtoPixmap(Drawable *pix, int xpos, int ypos )
    unsigned int ww, hh, border, depth;
 
    XGetGeometry(fDisplay, *pix, &root, &xx, &yy, &ww, &hh, &border, &depth);
-   XCopyArea(fDisplay, gCws->drawing, *pix, *gGCpxmp, xpos, ypos, ww, hh, 0, 0);
+   XCopyArea(fDisplay, gCws->fDrawing, *pix, *gGCpxmp, xpos, ypos, ww, hh, 0, 0);
    XFlush(fDisplay);
 }
 
@@ -473,11 +473,11 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    switch (mode) {
 
       case kHollow:
-         XDrawRectangle(fDisplay, gCws->drawing, *gGCline, x, y, w, h);
+         XDrawRectangle(fDisplay, gCws->fDrawing, *gGCline, x, y, w, h);
          break;
 
       case kFilled:
-         XFillRectangle(fDisplay, gCws->drawing, *gGCfill, x, y, w, h);
+         XFillRectangle(fDisplay, gCws->fDrawing, *gGCfill, x, y, w, h);
          break;
 
       default:
@@ -510,10 +510,10 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
       for (j = 0; j < ny; j++) {
          icol = ic[i+(nx*j)];
          if (icol != current_icol) {
-            XSetForeground(fDisplay, *gGCfill, GetColor(icol).pixel);
+            XSetForeground(fDisplay, *gGCfill, GetColor(icol).fPixel);
             current_icol = icol;
          }
-         XFillRectangle(fDisplay, gCws->drawing, *gGCfill, ix, iy, w, h);
+         XFillRectangle(fDisplay, gCws->fDrawing, *gGCfill, ix, iy, w, h);
          iy = iy-h;
       }
       ix = ix+w;
@@ -530,10 +530,10 @@ void TGX11::DrawFillArea(int n, TPoint *xyt)
    XPoint *xy = (XPoint*)xyt;
 
    if (gFillHollow)
-      XDrawLines(fDisplay, gCws->drawing, *gGCfill, xy, n, CoordModeOrigin);
+      XDrawLines(fDisplay, gCws->fDrawing, *gGCfill, xy, n, CoordModeOrigin);
 
    else {
-      XFillPolygon(fDisplay, gCws->drawing, *gGCfill,
+      XFillPolygon(fDisplay, gCws->fDrawing, *gGCfill,
                    xy, n, Nonconvex, CoordModeOrigin);
    }
 }
@@ -546,10 +546,10 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
    // x2,y2        : end of line
 
    if (gLineStyle == LineSolid)
-      XDrawLine(fDisplay, gCws->drawing, *gGCline, x1, y1, x2, y2);
+      XDrawLine(fDisplay, gCws->fDrawing, *gGCline, x1, y1, x2, y2);
    else {
       XSetDashes(fDisplay, *gGCdash, gDashOffset, gDashList, gDashSize);
-      XDrawLine(fDisplay, gCws->drawing, *gGCdash, x1, y1, x2, y2);
+      XDrawLine(fDisplay, gCws->fDrawing, *gGCdash, x1, y1, x2, y2);
    }
 }
 
@@ -578,12 +578,12 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
       }
    } else if (n > 1) {
       if (gLineStyle == LineSolid)
-         XDrawLines(fDisplay, gCws->drawing, *gGCline, xy, n, CoordModeOrigin);
+         XDrawLines(fDisplay, gCws->fDrawing, *gGCline, xy, n, CoordModeOrigin);
       else {
          int i;
          XSetDashes(fDisplay, *gGCdash,
                     gDashOffset, gDashList, gDashSize);
-         XDrawLines(fDisplay, gCws->drawing, *gGCdash, xy, n, CoordModeOrigin);
+         XDrawLines(fDisplay, gCws->fDrawing, *gGCdash, xy, n, CoordModeOrigin);
 
          // calculate length of line to update dash offset
          for (i = 1; i < n; i++) {
@@ -599,7 +599,7 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
       int px,py;
       px=xy[0].x;
       py=xy[0].y;
-      XDrawPoint(fDisplay, gCws->drawing,
+      XDrawPoint(fDisplay, gCws->fDrawing,
                  gLineStyle == LineSolid ? *gGCline : *gGCdash, px, py);
    }
 }
@@ -618,9 +618,9 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
       int nt = n/kNMAX;
       for (int it=0;it<=nt;it++) {
          if (it < nt) {
-            XDrawPoints(fDisplay, gCws->drawing, *gGCmark, &xy[it*kNMAX], kNMAX, CoordModeOrigin);
+            XDrawPoints(fDisplay, gCws->fDrawing, *gGCmark, &xy[it*kNMAX], kNMAX, CoordModeOrigin);
          } else {
-            XDrawPoints(fDisplay, gCws->drawing, *gGCmark, &xy[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
+            XDrawPoints(fDisplay, gCws->fDrawing, *gGCmark, &xy[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
          }
       }
    } else {
@@ -634,12 +634,12 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
            int i;
 
            case 0:        // hollow circle
-              XDrawArc(fDisplay, gCws->drawing, *gGCmark,
+              XDrawArc(fDisplay, gCws->fDrawing, *gGCmark,
                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
               break;
 
            case 1:        // filled circle
-              XFillArc(fDisplay, gCws->drawing, *gGCmark,
+              XFillArc(fDisplay, gCws->fDrawing, *gGCmark,
                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
               break;
 
@@ -651,10 +651,10 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
                  gMarker.xy[i].y += xy[m].y;
               }
               if (hollow)
-                 XDrawLines(fDisplay, gCws->drawing, *gGCmark,
+                 XDrawLines(fDisplay, gCws->fDrawing, *gGCmark,
                             gMarker.xy, gMarker.n, CoordModeOrigin);
               else
-                 XFillPolygon(fDisplay, gCws->drawing, *gGCmark,
+                 XFillPolygon(fDisplay, gCws->fDrawing, *gGCmark,
                               gMarker.xy, gMarker.n, Nonconvex, CoordModeOrigin);
               for (i = 0; i < gMarker.n; i++) {
                  gMarker.xy[i].x -= xy[m].x;
@@ -664,7 +664,7 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 
            case 4:        // segmented line
               for (i = 0; i < gMarker.n; i += 2)
-                 XDrawLine(fDisplay, gCws->drawing, *gGCmark,
+                 XDrawLine(fDisplay, gCws->fDrawing, *gGCmark,
                            xy[m].x + gMarker.xy[i].x, xy[m].y + gMarker.xy[i].y,
                            xy[m].x + gMarker.xy[i+1].x, xy[m].y + gMarker.xy[i+1].y);
               break;
@@ -694,12 +694,12 @@ void TGX11::DrawText(int x, int y, float angle, float mgn,
 
       case kClear:
          XRotDrawAlignedString(fDisplay, gTextFont, angle,
-                      gCws->drawing, *gGCtext, x, y, (char*)text, fTextAlign);
+                      gCws->fDrawing, *gGCtext, x, y, (char*)text, fTextAlign);
          break;
 
       case kOpaque:
          XRotDrawAlignedImageString(fDisplay, gTextFont, angle,
-                      gCws->drawing, *gGCtext, x, y, (char*)text, fTextAlign);
+                      gCws->fDrawing, *gGCtext, x, y, (char*)text, fTextAlign);
          break;
 
       default:
@@ -856,7 +856,7 @@ Window_t TGX11::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGX11TTF.
 
-   return (Window_t)gCws->drawing;
+   return (Window_t)gCws->fDrawing;
 }
 
 //______________________________________________________________________________
@@ -878,10 +878,10 @@ Int_t TGX11::GetDoubleBuffer(int wid)
    // Query the double buffer value for the window wid.
 
    gTws = &fWindows[wid];
-   if (!gTws->open)
+   if (!gTws->fOpen)
       return -1;
    else
-      return gTws->double_buffer;
+      return gTws->fDoubleBuffer;
 }
 
 //______________________________________________________________________________
@@ -906,20 +906,20 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
       unsigned int width, height;
 
       gTws = &fWindows[wid];
-      XGetGeometry(fDisplay, gTws->window, &root, &x, &y,
+      XGetGeometry(fDisplay, gTws->fWindow, &root, &x, &y,
                    &width, &height, &border, &depth);
-      XTranslateCoordinates(fDisplay, gTws->window, fRootWin,
+      XTranslateCoordinates(fDisplay, gTws->fWindow, fRootWin,
                             0, 0, &x, &y, &junkwin);
       if (width >= 65535)
          width = 1;
       if (height >= 65535)
          height = 1;
       if (width > 0 && height > 0) {
-         gTws->width  = width;
-         gTws->height = height;
+         gTws->fWidth  = width;
+         gTws->fHeight = height;
       }
-      w = gTws->width;
-      h = gTws->height;
+      w = gTws->fWidth;
+      h = gTws->fHeight;
    }
 }
 
@@ -943,7 +943,7 @@ ULong_t TGX11::GetPixel(Color_t ci)
 //      Warning("GetPixel", "color with index %d not defined", ci);
 
    XColor_t &col = GetColor(ci);
-   return col.pixel;
+   return col.fPixel;
 }
 
 //______________________________________________________________________________
@@ -965,9 +965,9 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
       r = g = b = 0.0;
    } else {
       XColor_t &col = GetColor(index);
-      r = ((float) col.red) / ((float) kBIGGEST_RGB_VALUE);
-      g = ((float) col.green) / ((float) kBIGGEST_RGB_VALUE);
-      b = ((float) col.blue) / ((float) kBIGGEST_RGB_VALUE);
+      r = ((float) col.fRed) / ((float) kBIGGEST_RGB_VALUE);
+      g = ((float) col.fGreen) / ((float) kBIGGEST_RGB_VALUE);
+      b = ((float) col.fBlue) / ((float) kBIGGEST_RGB_VALUE);
    }
 }
 
@@ -982,12 +982,12 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    w=0; h=0;
    if (strlen(mess)==0) return;
 
-   XPoint *CBox;
+   XPoint *cBox;
    XRotSetMagnification(fTextMagnitude);
-   CBox = XRotTextExtents(fDisplay, gTextFont, 0., 0, 0, mess, 0);
-   w    = CBox[2].x;
-   h    = -CBox[2].y;
-   free((char *)CBox);
+   cBox = XRotTextExtents(fDisplay, gTextFont, 0., 0, 0, mess, 0);
+   w    = cBox[2].x;
+   h    = -cBox[2].y;
+   free((char *)cBox);
 }
 
 //______________________________________________________________________________
@@ -996,7 +996,7 @@ Window_t TGX11::GetWindowID(int wid)
    // Return the X11 window identifier.
    // wid      : Workstation identifier (input)
 
-   return (Window_t) fWindows[wid].window;
+   return (Window_t) fWindows[wid].fWindow;
 }
 
 //______________________________________________________________________________
@@ -1008,9 +1008,9 @@ void TGX11::MoveWindow(int wid, int x, int y)
    // y    : y new window position
 
    gTws = &fWindows[wid];
-   if (!gTws->open) return;
+   if (!gTws->fOpen) return;
 
-   XMoveWindow(fDisplay, gTws->window, x, y);
+   XMoveWindow(fDisplay, gTws->fWindow, x, y);
 }
 
 //______________________________________________________________________________
@@ -1031,10 +1031,10 @@ Int_t TGX11::OpenDisplay(Display *disp)
 
    FindBestVisual();
 
-   GetColor(1).defined = kTRUE; // default foreground
-   GetColor(1).pixel = fBlackPixel;
-   GetColor(0).defined = kTRUE; // default background
-   GetColor(0).pixel = fWhitePixel;
+   GetColor(1).fDefined = kTRUE; // default foreground
+   GetColor(1).fPixel = fBlackPixel;
+   GetColor(0).fDefined = kTRUE; // default background
+   GetColor(0).fPixel = fWhitePixel;
 
    // Inquire the the XServer Vendor
    char vendor[132];
@@ -1180,8 +1180,8 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
 
 again:
    for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
+      if (!fWindows[wid].fOpen) {
+         fWindows[wid].fOpen = 1;
          gCws = &fWindows[wid];
          break;
       }
@@ -1191,31 +1191,31 @@ again:
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
                                                 fMaxNumberOfWindows*sizeof(XWindow_t));
       for (i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].open = 0;
+         fWindows[i].fOpen = 0;
       fMaxNumberOfWindows = newsize;
       goto again;
    }
 
-   gCws->window = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
-   XGetGeometry(fDisplay, gCws->window, &root, &xx, &yy, &ww, &hh, &border, &depth);
+   gCws->fWindow = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
+   XGetGeometry(fDisplay, gCws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
    for (i = 0; i < kMAXGC; i++)
       XSetClipMask(fDisplay, gGClist[i], None);
 
    SetColor(*gGCpxmp, 0);
-   XFillRectangle(fDisplay, gCws->window, *gGCpxmp, 0, 0, ww, hh);
+   XFillRectangle(fDisplay, gCws->fWindow, *gGCpxmp, 0, 0, ww, hh);
    SetColor(*gGCpxmp, 1);
 
    // Initialise the window structure
-   gCws->drawing        = gCws->window;
-   gCws->buffer         = 0;
-   gCws->double_buffer  = 0;
-   gCws->ispixmap       = 1;
-   gCws->clip           = 0;
-   gCws->width          = wval;
-   gCws->height         = hval;
-   gCws->new_colors     = 0;
-   gCws->shared         = kFALSE;
+   gCws->fDrawing       = gCws->fWindow;
+   gCws->fBuffer        = 0;
+   gCws->fDoubleBuffer  = 0;
+   gCws->fIsPixmap      = 1;
+   gCws->fClip          = 0;
+   gCws->fWidth         = wval;
+   gCws->fHeight        = hval;
+   gCws->fNewColors     = 0;
+   gCws->fShared        = kFALSE;
 
    return wid;
 }
@@ -1227,7 +1227,7 @@ Int_t TGX11::InitWindow(ULong_t win)
    // Return -1 if window initialization fails.
 
    XSetWindowAttributes attributes;
-   unsigned long attr_mask = 0;
+   ULong_t attr_mask = 0;
    int wid;
    int xval, yval;
    unsigned int wval, hval, border, depth;
@@ -1241,9 +1241,9 @@ Int_t TGX11::InitWindow(ULong_t win)
 
 again:
    for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
+      if (!fWindows[wid].fOpen) {
+         fWindows[wid].fOpen = 1;
+         fWindows[wid].fDoubleBuffer = 0;
          gCws = &fWindows[wid];
          break;
       }
@@ -1253,16 +1253,16 @@ again:
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
                                                 fMaxNumberOfWindows*sizeof(XWindow_t));
       for (int i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].open = 0;
+         fWindows[i].fOpen = 0;
       fMaxNumberOfWindows = newsize;
       goto again;
    }
 
    // Create window
 
-   attributes.background_pixel = GetColor(0).pixel;
+   attributes.background_pixel = GetColor(0).fPixel;
    attr_mask |= CWBackPixel;
-   attributes.border_pixel = GetColor(1).pixel;
+   attributes.border_pixel = GetColor(1).fPixel;
    attr_mask |= CWBorderPixel;
    attributes.event_mask = NoEventMask;
    attr_mask |= CWEventMask;
@@ -1275,25 +1275,25 @@ again:
       attr_mask |= CWColormap;
    }
 
-   gCws->window = XCreateWindow(fDisplay, wind,
-                                xval, yval, wval, hval, 0, fDepth,
-                                InputOutput, fVisual,
-                                attr_mask, &attributes);
+   gCws->fWindow = XCreateWindow(fDisplay, wind,
+                                 xval, yval, wval, hval, 0, fDepth,
+                                 InputOutput, fVisual,
+                                 attr_mask, &attributes);
 
-   XMapWindow(fDisplay, gCws->window);
+   XMapWindow(fDisplay, gCws->fWindow);
    XFlush(fDisplay);
 
    // Initialise the window structure
 
-   gCws->drawing        = gCws->window;
-   gCws->buffer         = 0;
-   gCws->double_buffer  = 0;
-   gCws->ispixmap       = 0;
-   gCws->clip           = 0;
-   gCws->width          = wval;
-   gCws->height         = hval;
-   gCws->new_colors     = 0;
-   gCws->shared         = kFALSE;
+   gCws->fDrawing      = gCws->fWindow;
+   gCws->fBuffer       = 0;
+   gCws->fDoubleBuffer = 0;
+   gCws->fIsPixmap     = 0;
+   gCws->fClip         = 0;
+   gCws->fWidth        = wval;
+   gCws->fHeight       = hval;
+   gCws->fNewColors    = 0;
+   gCws->fShared       = kFALSE;
 
    return wid;
 }
@@ -1309,9 +1309,9 @@ Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 
 again:
    for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
+      if (!fWindows[wid].fOpen) {
+         fWindows[wid].fOpen = 1;
+         fWindows[wid].fDoubleBuffer = 0;
          gCws = &fWindows[wid];
          break;
       }
@@ -1321,23 +1321,23 @@ again:
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
                                                 fMaxNumberOfWindows*sizeof(XWindow_t));
       for (int i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].open = 0;
+         fWindows[i].fOpen = 0;
       fMaxNumberOfWindows = newsize;
       goto again;
    }
 
-   gCws->window = qwid;
+   gCws->fWindow = qwid;
 
    //init Xwindow_t struct
-   gCws->drawing        = gCws->window;
-   gCws->buffer         = 0;
-   gCws->double_buffer  = 0;
-   gCws->ispixmap       = 0;
-   gCws->clip           = 0;
-   gCws->width          = w;
-   gCws->height         = h;
-   gCws->new_colors     = 0;
-   gCws->shared         = kTRUE;
+   gCws->fDrawing       = gCws->fWindow;
+   gCws->fBuffer        = 0;
+   gCws->fDoubleBuffer  = 0;
+   gCws->fIsPixmap      = 0;
+   gCws->fClip          = 0;
+   gCws->fWidth         = w;
+   gCws->fHeight        = h;
+   gCws->fNewColors     = 0;
+   gCws->fShared        = kTRUE;
 
    return wid;
 }
@@ -1349,20 +1349,20 @@ void TGX11::RemoveWindow(ULong_t qwid)
 
    SelectWindow((int)qwid);
 
-   if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
+   if (gCws->fBuffer) XFreePixmap(fDisplay, gCws->fBuffer);
 
-   if (gCws->new_colors) {
+   if (gCws->fNewColors) {
       if (fRedDiv == -1)
-         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
+         XFreeColors(fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
+      delete [] gCws->fNewColors;
+      gCws->fNewColors = 0;
    }
 
-   gCws->open = 0;
+   gCws->fOpen = 0;
 
    // make first window in list the current window
    for (Int_t wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (fWindows[wid].open) {
+      if (fWindows[wid].fOpen) {
          gCws = &fWindows[wid];
          return;
       }
@@ -1383,7 +1383,7 @@ void TGX11::QueryPointer(int &ix, int &iy)
    int       root_x_return, root_y_return;
    unsigned int mask_return;
 
-   XQueryPointer(fDisplay,gCws->window, &root_return,
+   XQueryPointer(fDisplay,gCws->fWindow, &root_return,
                  &child_return, &root_x_return, &root_y_return, &win_x_return,
                  &win_y_return, &mask_return);
 
@@ -1440,11 +1440,11 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
    // Change the cursor shape
    if (cursor == 0) {
       if (ctyp > 1) {
-         XDefineCursor(fDisplay, gCws->window, gNullCursor);
-         XSetForeground(fDisplay, gGCecho, GetColor(0).pixel);
+         XDefineCursor(fDisplay, gCws->fWindow, gNullCursor);
+         XSetForeground(fDisplay, gGCecho, GetColor(0).fPixel);
       } else {
          cursor = XCreateFontCursor(fDisplay, XC_crosshair);
-         XDefineCursor(fDisplay, gCws->window, cursor);
+         XDefineCursor(fDisplay, gCws->fWindow, cursor);
       }
    }
 
@@ -1460,27 +1460,27 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
              break;
 
          case 2 :
-             XDrawLine(fDisplay, gCws->window, gGCecho,
-                       xloc, 0, xloc, gCws->height);
-             XDrawLine(fDisplay, gCws->window, gGCecho,
-                       0, yloc, gCws->width, yloc);
+             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                       xloc, 0, xloc, gCws->fHeight);
+             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                       0, yloc, gCws->fWidth, yloc);
              break;
 
          case 3 :
              radius = (int) TMath::Sqrt((double)((xloc-xlocp)*(xloc-xlocp) +
                                         (yloc-ylocp)*(yloc-ylocp)));
-             XDrawArc(fDisplay, gCws->window, gGCecho,
+             XDrawArc(fDisplay, gCws->fWindow, gGCecho,
                       xlocp-radius, ylocp-radius,
                       2*radius, 2*radius, 0, 23040);
              break;
 
          case 4 :
-             XDrawLine(fDisplay, gCws->window, gGCecho,
+             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
                        xlocp, ylocp, xloc, yloc);
              break;
 
          case 5 :
-             XDrawRectangle(fDisplay, gCws->window, gGCecho,
+             XDrawRectangle(fDisplay, gCws->fWindow, gGCecho,
                             TMath::Min(xlocp,xloc), TMath::Min(ylocp,yloc),
                             TMath::Abs(xloc-xlocp), TMath::Abs(yloc-ylocp));
              break;
@@ -1492,7 +1492,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
       while (XEventsQueued( fDisplay, QueuedAlready) > 1) {
          XNextEvent(fDisplay, &event);
       }
-      XWindowEvent(fDisplay, gCws->window, gMouseMask, &event);
+      XWindowEvent(fDisplay, gCws->fWindow, gMouseMask, &event);
 
       switch (ctyp) {
 
@@ -1500,27 +1500,27 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
             break;
 
          case 2 :
-            XDrawLine(fDisplay, gCws->window, gGCecho,
-                      xloc, 0, xloc, gCws->height);
-            XDrawLine(fDisplay, gCws->window, gGCecho,
-                      0, yloc, gCws->width, yloc);
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                      xloc, 0, xloc, gCws->fHeight);
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                      0, yloc, gCws->fWidth, yloc);
             break;
 
          case 3 :
             radius = (int) TMath::Sqrt((double)((xloc-xlocp)*(xloc-xlocp) +
                                            (yloc-ylocp)*(yloc-ylocp)));
-            XDrawArc(fDisplay, gCws->window, gGCecho,
+            XDrawArc(fDisplay, gCws->fWindow, gGCecho,
                      xlocp-radius, ylocp-radius,
                      2*radius, 2*radius, 0, 23040);
             break;
 
          case 4 :
-            XDrawLine(fDisplay, gCws->window, gGCecho,
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
                       xlocp, ylocp, xloc, yloc);
             break;
 
          case 5 :
-            XDrawRectangle(fDisplay, gCws->window, gGCecho,
+            XDrawRectangle(fDisplay, gCws->fWindow, gGCecho,
                            TMath::Min(xlocp,xloc), TMath::Min(ylocp,yloc),
                            TMath::Abs(xloc-xlocp), TMath::Abs(yloc-ylocp));
             break;
@@ -1549,7 +1549,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
             button_press = event.xbutton.button ;
             xlocp = event.xbutton.x;
             ylocp = event.xbutton.y;
-            XUndefineCursor( fDisplay, gCws->window );
+            XUndefineCursor( fDisplay, gCws->fWindow );
             cursor = 0;
             break;
 
@@ -1623,27 +1623,27 @@ Int_t TGX11::RequestString(int x, int y, char *text)
       percent = kbstate.bell_percent;
    }
    if (cursor != 0)
-      XDefineCursor(fDisplay, gCws->window, cursor);
+      XDefineCursor(fDisplay, gCws->fWindow, cursor);
    for (nt = len_text; nt > 0 && text[nt-1] == ' '; nt--);
       pt = nt;
    XGetInputFocus(fDisplay, &focuswindow, &focusrevert);
-   XSetInputFocus(fDisplay, gCws->window, focusrevert, CurrentTime);
+   XSetInputFocus(fDisplay, gCws->fWindow, focusrevert, CurrentTime);
    while (key < 0) {
       char keybuf[8];
       char nbytes;
       int dx;
       int i;
-      XDrawImageString(fDisplay, gCws->window, *gGCtext, x, y, text, nt);
+      XDrawImageString(fDisplay, gCws->fWindow, *gGCtext, x, y, text, nt);
       dx = XTextWidth(gTextFont, text, nt);
-      XDrawImageString(fDisplay, gCws->window, *gGCtext, x + dx, y, " ", 1);
+      XDrawImageString(fDisplay, gCws->fWindow, *gGCtext, x + dx, y, " ", 1);
       dx = pt == 0 ? 0 : XTextWidth(gTextFont, text, pt);
-      XDrawImageString(fDisplay, gCws->window, *gGCinvt,
+      XDrawImageString(fDisplay, gCws->fWindow, *gGCinvt,
                        x + dx, y, pt < len_text ? &text[pt] : " ", 1);
-      XWindowEvent(fDisplay, gCws->window, gKeybdMask, &event);
+      XWindowEvent(fDisplay, gCws->fWindow, gKeybdMask, &event);
       switch (event.type) {
          case ButtonPress:
          case EnterNotify:
-            XSetInputFocus(fDisplay, gCws->window, focusrevert, CurrentTime);
+            XSetInputFocus(fDisplay, gCws->fWindow, focusrevert, CurrentTime);
             break;
          case LeaveNotify:
             XSetInputFocus(fDisplay, focuswindow, focusrevert, CurrentTime);
@@ -1746,7 +1746,7 @@ Int_t TGX11::RequestString(int x, int y, char *text)
    XSetInputFocus(fDisplay, focuswindow, focusrevert, CurrentTime);
 
    if (cursor != 0) {
-      XUndefineCursor(fDisplay, gCws->window);
+      XUndefineCursor(fDisplay, gCws->fWindow);
       cursor = 0;
    }
 
@@ -1764,27 +1764,27 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
    int i;
 
    gTws = &fWindows[wid];
-   if (!gTws->open) return;
+   if (!gTws->fOpen) return;
 
    // don't do anything when size did not change
-   if (gTws->width == w && gTws->height == h) return;
+   if (gTws->fWidth == w && gTws->fHeight == h) return;
 
-   XResizeWindow(fDisplay, gTws->window, w, h);
+   XResizeWindow(fDisplay, gTws->fWindow, w, h);
 
-   if (gTws->buffer) {
+   if (gTws->fBuffer) {
       // don't free and recreate pixmap when new pixmap is smaller
-      if (gTws->width < w || gTws->height < h) {
-         XFreePixmap(fDisplay,gTws->buffer);
-         gTws->buffer = XCreatePixmap(fDisplay, fRootWin, w, h, fDepth);
+      if (gTws->fWidth < w || gTws->fHeight < h) {
+         XFreePixmap(fDisplay,gTws->fBuffer);
+         gTws->fBuffer = XCreatePixmap(fDisplay, fRootWin, w, h, fDepth);
       }
       for (i = 0; i < kMAXGC; i++) XSetClipMask(fDisplay, gGClist[i], None);
       SetColor(*gGCpxmp, 0);
-      XFillRectangle( fDisplay, gTws->buffer, *gGCpxmp, 0, 0, w, h);
+      XFillRectangle( fDisplay, gTws->fBuffer, *gGCpxmp, 0, 0, w, h);
       SetColor(*gGCpxmp, 1);
-      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
+      if (gTws->fDoubleBuffer) gTws->fDrawing = gTws->fBuffer;
    }
-   gTws->width  = w;
-   gTws->height = h;
+   gTws->fWidth  = w;
+   gTws->fHeight = h;
 }
 
 //______________________________________________________________________________
@@ -1804,31 +1804,31 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    gTws = &fWindows[wid];
 
    // don't do anything when size did not change
-   //  if (gTws->width == wval && gTws->height == hval) return 0;
+   //  if (gTws->fWidth == wval && gTws->fHeight == hval) return 0;
 
    // due to round-off errors in TPad::Resize() we might get +/- 1 pixel
    // change, in those cases don't resize pixmap
-   if (gTws->width  >= wval-1 && gTws->width  <= wval+1 &&
-       gTws->height >= hval-1 && gTws->height <= hval+1) return 0;
+   if (gTws->fWidth  >= wval-1 && gTws->fWidth  <= wval+1 &&
+       gTws->fHeight >= hval-1 && gTws->fHeight <= hval+1) return 0;
 
    // don't free and recreate pixmap when new pixmap is smaller
-   if (gTws->width < wval || gTws->height < hval) {
-      XFreePixmap(fDisplay, gTws->window);
-      gTws->window = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
+   if (gTws->fWidth < wval || gTws->fHeight < hval) {
+      XFreePixmap(fDisplay, gTws->fWindow);
+      gTws->fWindow = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
    }
-   XGetGeometry(fDisplay, gTws->window, &root, &xx, &yy, &ww, &hh, &border, &depth);
+   XGetGeometry(fDisplay, gTws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
    for (i = 0; i < kMAXGC; i++)
       XSetClipMask(fDisplay, gGClist[i], None);
 
    SetColor(*gGCpxmp, 0);
-   XFillRectangle(fDisplay, gTws->window, *gGCpxmp, 0, 0, ww, hh);
+   XFillRectangle(fDisplay, gTws->fWindow, *gGCpxmp, 0, 0, ww, hh);
    SetColor(*gGCpxmp, 1);
 
    // Initialise the window structure
-   gTws->drawing = gTws->window;
-   gTws->width   = wval;
-   gTws->height  = hval;
+   gTws->fDrawing = gTws->fWindow;
+   gTws->fWidth   = wval;
+   gTws->fHeight  = hval;
 
    return 1;
 }
@@ -1845,29 +1845,29 @@ void TGX11::ResizeWindow(int wid)
 
    gTws = &fWindows[wid];
 
-   win = gTws->window;
+   win = gTws->fWindow;
 
    XGetGeometry(fDisplay, win, &root,
                 &xval, &yval, &wval, &hval, &border, &depth);
 
    // don't do anything when size did not change
-   if (gTws->width == wval && gTws->height == hval) return;
+   if (gTws->fWidth == wval && gTws->fHeight == hval) return;
 
-   XResizeWindow(fDisplay, gTws->window, wval, hval);
+   XResizeWindow(fDisplay, gTws->fWindow, wval, hval);
 
-   if (gTws->buffer) {
-      if (gTws->width < wval || gTws->height < hval) {
-         XFreePixmap(fDisplay,gTws->buffer);
-         gTws->buffer = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
+   if (gTws->fBuffer) {
+      if (gTws->fWidth < wval || gTws->fHeight < hval) {
+         XFreePixmap(fDisplay,gTws->fBuffer);
+         gTws->fBuffer = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
       }
       for (i = 0; i < kMAXGC; i++) XSetClipMask(fDisplay, gGClist[i], None);
       SetColor(*gGCpxmp, 0);
-      XFillRectangle(fDisplay, gTws->buffer, *gGCpxmp, 0, 0, wval, hval);
+      XFillRectangle(fDisplay, gTws->fBuffer, *gGCpxmp, 0, 0, wval, hval);
       SetColor(*gGCpxmp, 1);
-      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
+      if (gTws->fDoubleBuffer) gTws->fDrawing = gTws->fBuffer;
    }
-   gTws->width  = wval;
-   gTws->height = hval;
+   gTws->fWidth  = wval;
+   gTws->fHeight = hval;
 }
 
 //______________________________________________________________________________
@@ -1878,15 +1878,15 @@ void TGX11::SelectWindow(int wid)
    XRectangle region;
    int i;
 
-   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) return;
+   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].fOpen) return;
 
    gCws = &fWindows[wid];
 
-  if (gCws->clip && !gCws->ispixmap && !gCws->double_buffer) {
-     region.x      = gCws->xclip;
-     region.y      = gCws->yclip;
-     region.width  = gCws->wclip;
-     region.height = gCws->hclip;
+  if (gCws->fClip && !gCws->fIsPixmap && !gCws->fDoubleBuffer) {
+     region.x      = gCws->fXclip;
+     region.y      = gCws->fYclip;
+     region.width  = gCws->fWclip;
+     region.height = gCws->fHclip;
      for (i = 0; i < kMAXGC; i++)
         XSetClipRectangles(fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
    } else {
@@ -1922,7 +1922,7 @@ void TGX11::SetClipOFF(int wid)
    // Turn off the clipping for the window wid.
 
    gTws       = &fWindows[wid];
-   gTws->clip = 0;
+   gTws->fClip = 0;
 
    for (int i = 0; i < kMAXGC; i++)
       XSetClipMask( fDisplay, gGClist[i], None );
@@ -1938,17 +1938,17 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 
 
    gTws = &fWindows[wid];
-   gTws->xclip = x;
-   gTws->yclip = y;
-   gTws->wclip = w;
-   gTws->hclip = h;
-   gTws->clip  = 1;
-   if (gTws->clip && !gTws->ispixmap && !gTws->double_buffer) {
+   gTws->fXclip = x;
+   gTws->fYclip = y;
+   gTws->fWclip = w;
+   gTws->fHclip = h;
+   gTws->fClip  = 1;
+   if (gTws->fClip && !gTws->fIsPixmap && !gTws->fDoubleBuffer) {
       XRectangle region;
-      region.x      = gTws->xclip;
-      region.y      = gTws->yclip;
-      region.width  = gTws->wclip;
-      region.height = gTws->hclip;
+      region.x      = gTws->fXclip;
+      region.y      = gTws->fYclip;
+      region.width  = gTws->fWclip;
+      region.height = gTws->fHclip;
       for (int i = 0; i < kMAXGC; i++)
          XSetClipRectangles(fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
    }
@@ -1966,7 +1966,7 @@ void  TGX11::SetColor(GC gc, int ci)
 //      Warning("SetColor", "color with index %d not defined", ci);
 
    XColor_t &col = GetColor(ci);
-   if (fColormap && !col.defined) {
+   if (fColormap && !col.fDefined) {
       col = GetColor(0);
    } else if (!fColormap && (ci < 0 || ci > 1)) {
       col = GetColor(0);
@@ -1975,15 +1975,15 @@ void  TGX11::SetColor(GC gc, int ci)
    if (fDrawMode == kXor) {
       XGCValues values;
       XGetGCValues(fDisplay, gc, GCBackground, &values);
-      XSetForeground(fDisplay, gc, col.pixel ^ values.background);
+      XSetForeground(fDisplay, gc, col.fPixel ^ values.background);
    } else {
-      XSetForeground(fDisplay, gc, col.pixel);
+      XSetForeground(fDisplay, gc, col.fPixel);
 
       // make sure that foreground and background are different
       XGCValues values;
       XGetGCValues(fDisplay, gc, GCForeground | GCBackground, &values);
       if (values.foreground == values.background)
-         XSetBackground(fDisplay, gc, GetColor(!ci).pixel);
+         XSetBackground(fDisplay, gc, GetColor(!ci).fPixel);
    }
 }
 
@@ -1993,7 +1993,7 @@ void  TGX11::SetCursor(int wid, ECursor cursor)
    // Set the cursor.
 
    gTws = &fWindows[wid];
-   XDefineCursor(fDisplay, gTws->window, fCursors[cursor]);
+   XDefineCursor(fDisplay, gTws->fWindow, fCursors[cursor]);
 }
 
 //______________________________________________________________________________
@@ -2008,7 +2008,7 @@ void TGX11::SetDoubleBuffer(int wid, int mode)
    if (wid == 999) {
       for (int i = 0; i < fMaxNumberOfWindows; i++) {
          gTws = &fWindows[i];
-         if (gTws->open) {
+         if (gTws->fOpen) {
             switch (mode) {
                case 1 :
                   SetDoubleBufferON();
@@ -2021,7 +2021,7 @@ void TGX11::SetDoubleBuffer(int wid, int mode)
       }
    } else {
       gTws = &fWindows[wid];
-      if (!gTws->open) return;
+      if (!gTws->fOpen) return;
       switch (mode) {
          case 1 :
             SetDoubleBufferON();
@@ -2038,9 +2038,9 @@ void TGX11::SetDoubleBufferOFF()
 {
    // Turn double buffer mode off.
 
-   if (!gTws->double_buffer) return;
-   gTws->double_buffer = 0;
-   gTws->drawing       = gTws->window;
+   if (!gTws->fDoubleBuffer) return;
+   gTws->fDoubleBuffer = 0;
+   gTws->fDrawing      = gTws->fWindow;
 }
 
 //______________________________________________________________________________
@@ -2048,17 +2048,17 @@ void TGX11::SetDoubleBufferON()
 {
    // Turn double buffer mode on.
 
-   if (gTws->double_buffer || gTws->ispixmap) return;
-   if (!gTws->buffer) {
-      gTws->buffer = XCreatePixmap(fDisplay, fRootWin,
-                                   gTws->width, gTws->height, fDepth);
+   if (gTws->fDoubleBuffer || gTws->fIsPixmap) return;
+   if (!gTws->fBuffer) {
+      gTws->fBuffer = XCreatePixmap(fDisplay, fRootWin,
+                                   gTws->fWidth, gTws->fHeight, fDepth);
       SetColor(*gGCpxmp, 0);
-      XFillRectangle(fDisplay, gTws->buffer, *gGCpxmp, 0, 0, gTws->width, gTws->height);
+      XFillRectangle(fDisplay, gTws->fBuffer, *gGCpxmp, 0, 0, gTws->fWidth, gTws->fHeight);
       SetColor(*gGCpxmp, 1);
    }
    for (int i = 0; i < kMAXGC; i++) XSetClipMask(fDisplay, gGClist[i], None);
-   gTws->double_buffer  = 1;
-   gTws->drawing        = gTws->buffer;
+   gTws->fDoubleBuffer  = 1;
+   gTws->fDrawing       = gTws->fBuffer;
 }
 
 //______________________________________________________________________________
@@ -2168,16 +2168,16 @@ void TGX11::SetInput(int inp)
    // Set input on or off.
 
    XSetWindowAttributes attributes;
-   unsigned long attr_mask;
+   ULong_t attr_mask;
 
    if (inp == 1) {
       attributes.event_mask = gMouseMask | gKeybdMask;
       attr_mask = CWEventMask;
-      XChangeWindowAttributes(fDisplay, gCws->window, attr_mask, &attributes);
+      XChangeWindowAttributes(fDisplay, gCws->fWindow, attr_mask, &attributes);
   } else {
       attributes.event_mask = NoEventMask;
       attr_mask = CWEventMask;
-      XChangeWindowAttributes(fDisplay, gCws->window, attr_mask, &attributes);
+      XChangeWindowAttributes(fDisplay, gCws->fWindow, attr_mask, &attributes);
    }
 }
 
@@ -2512,19 +2512,19 @@ void TGX11::SetOpacity(Int_t percent)
    Int_t    maxcolors = 0, ncolors, ntmpc = 0;
 
    // save previous allocated colors, delete at end when not used anymore
-   if (gCws->new_colors) {
-      tmpc = gCws->new_colors;
-      ntmpc = gCws->ncolors;
+   if (gCws->fNewColors) {
+      tmpc = gCws->fNewColors;
+      ntmpc = gCws->fNcolors;
    }
 
    // get pixmap from server as image
-   XImage *image = XGetImage(fDisplay, gCws->drawing, 0, 0, gCws->width,
-                             gCws->height, AllPlanes, ZPixmap);
+   XImage *image = XGetImage(fDisplay, gCws->fDrawing, 0, 0, gCws->fWidth,
+                             gCws->fHeight, AllPlanes, ZPixmap);
 
    // collect different image colors
    int x, y;
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
+   for (y = 0; y < (int) gCws->fHeight; y++) {
+      for (x = 0; x < (int) gCws->fWidth; x++) {
          ULong_t pixel = XGetPixel(image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
@@ -2539,17 +2539,17 @@ void TGX11::SetOpacity(Int_t percent)
    MakeOpaqueColors(percent, orgcolors, ncolors);
 
    // put opaque colors in image
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
+   for (y = 0; y < (int) gCws->fHeight; y++) {
+      for (x = 0; x < (int) gCws->fWidth; x++) {
          ULong_t pixel = XGetPixel(image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         XPutPixel(image, x, y, gCws->new_colors[idx]);
+         XPutPixel(image, x, y, gCws->fNewColors[idx]);
       }
    }
 
    // put image back in pixmap on server
-   XPutImage(fDisplay, gCws->drawing, *gGCpxmp, image, 0, 0, 0, 0,
-             gCws->width, gCws->height);
+   XPutImage(fDisplay, gCws->fDrawing, *gGCpxmp, image, 0, 0, 0, 0,
+             gCws->fWidth, gCws->fHeight);
    XFlush(fDisplay);
 
    // clean up
@@ -2590,7 +2590,7 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
 void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
 {
    // Get RGB values for orgcolors, add percent neutral to the RGB and
-   // allocate new_colors.
+   // allocate fNewColors.
 
    if (ncolors == 0) return;
 
@@ -2623,11 +2623,11 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
       // assumes that in case of failure xcol[i].pixel is not changed
    }
 
-   gCws->new_colors = new ULong_t[ncolors];
-   gCws->ncolors    = ncolors;
+   gCws->fNewColors = new ULong_t[ncolors];
+   gCws->fNcolors   = ncolors;
 
    for (i = 0; i < ncolors; i++)
-      gCws->new_colors[i] = xcol[i].pixel;
+      gCws->fNewColors[i] = xcol[i].pixel;
 
    delete [] xcol;
 }
@@ -2635,7 +2635,7 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
 //______________________________________________________________________________
 Int_t TGX11::FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors)
 {
-   // Returns index in orgcolors (and new_colors) for pixel.
+   // Returns index in orgcolors (and fNewColors) for pixel.
 
    for (int i = 0; i < ncolors; i++)
       if (pixel == orgcolors[i]) return i;
@@ -2659,21 +2659,21 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       xcol.blue  = (UShort_t)(b * kBIGGEST_RGB_VALUE);
       xcol.flags = DoRed || DoGreen || DoBlue;
       XColor_t &col = GetColor(cindex);
-      if (col.defined) {
+      if (col.fDefined) {
          // if color is already defined with same rgb just return
-         if (col.red  == xcol.red && col.green == xcol.green &&
-             col.blue == xcol.blue)
+         if (col.fRed  == xcol.red && col.fGreen == xcol.green &&
+             col.fBlue == xcol.blue)
             return;
-         col.defined = kFALSE;
+         col.fDefined = kFALSE;
          if (fRedDiv == -1)
-            XFreeColors(fDisplay, fColormap, &col.pixel, 1, 0);
+            XFreeColors(fDisplay, fColormap, &col.fPixel, 1, 0);
       }
       if (AllocColor(fColormap, &xcol)) {
-         col.defined = kTRUE;
-         col.pixel   = xcol.pixel;
-         col.red     = xcol.red;
-         col.green   = xcol.green;
-         col.blue    = xcol.blue;
+         col.fDefined = kTRUE;
+         col.fPixel  = xcol.pixel;
+         col.fRed     = xcol.red;
+         col.fGreen   = xcol.green;
+         col.fBlue    = xcol.blue;
       }
    }
 }
@@ -2751,7 +2751,7 @@ void TGX11::SetTextColor(Color_t cindex)
    } else {
       Error("SetTextColor", "cannot get GC values");
    }
-   XSetBackground(fDisplay, *gGCtext, GetColor(0).pixel);
+   XSetBackground(fDisplay, *gGCtext, GetColor(0).fPixel);
 }
 
 //______________________________________________________________________________
@@ -2846,12 +2846,12 @@ void TGX11::UpdateWindow(int mode)
    //        (0) sync
    //
    // Synchronise client and server once (not permanent).
-   // Copy the pixmap gCws->drawing on the window gCws->window
+   // Copy the pixmap gCws->fDrawing on the window gCws->fWindow
    // if the double buffer is on.
 
-   if (gCws->double_buffer) {
-      XCopyArea(fDisplay, gCws->drawing, gCws->window,
-                *gGCpxmp, 0, 0, gCws->width, gCws->height, 0, 0);
+   if (gCws->fDoubleBuffer) {
+      XCopyArea(fDisplay, gCws->fDrawing, gCws->fWindow,
+                *gGCpxmp, 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
    }
    if (mode == 1) {
      XFlush(fDisplay);
@@ -2871,7 +2871,7 @@ void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
 
    if (!id) {
       // Causes problems when calling ProcessEvents()... BadWindow
-      //XWarpPointer(fDisplay, None, gCws->window, 0, 0, 0, 0, ix, iy);
+      //XWarpPointer(fDisplay, None, gCws->fWindow, 0, 0, 0, 0, ix, iy);
    } else {
       XWarpPointer(fDisplay, None, (Window) id, 0, 0, 0, 0, ix, iy);
    }
@@ -2891,7 +2891,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
    hval = h;
 
    gTws = &fWindows[wid];
-   XWriteBitmapFile(fDisplay, pxname, gTws->drawing, wval, hval, -1, -1);
+   XWriteBitmapFile(fDisplay, pxname, gTws->fDrawing, wval, hval, -1, -1);
 }
 
 
@@ -2899,16 +2899,16 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 // Functions for GIFencode()
 //
 
-static FILE *out;                      // output unit used WriteGIF and PutByte
-static XImage *ximage = 0;             // image used in WriteGIF and GetPixel
+static FILE *gOut;                      // output unit used WriteGIF and PutByte
+static XImage *gXimage = 0;             // image used in WriteGIF and GetPixel
 
 extern "C" {
    int GIFquantize(UInt_t width, UInt_t height, Int_t *ncol, Byte_t *red, Byte_t *green,
                    Byte_t *blue, Byte_t *outputBuf, Byte_t *outputCmap);
    long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[], Byte_t G[], Byte_t B[], Byte_t ScLine[],
                   void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
-   int GIFdecode(Byte_t *GIFarr, Byte_t *PIXarr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
-   int GIFinfo(Byte_t *GIFarr, int *Width, int *Height, int *Ncols);
+   int GIFdecode(Byte_t *gifArr, Byte_t *pixArr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
+   int GIFinfo(Byte_t *gifArr, int *Width, int *Height, int *Ncols);
 }
 
 //______________________________________________________________________________
@@ -2917,7 +2917,7 @@ static void GetPixel(int y, int width, Byte_t *scline)
    // Get pixels in line y and put in array scline.
 
    for (int i = 0; i < width; i++)
-      scline[i] = Byte_t(XGetPixel(ximage, i, y));
+      scline[i] = Byte_t(XGetPixel(gXimage, i, y));
 }
 
 //______________________________________________________________________________
@@ -2925,7 +2925,7 @@ static void PutByte(Byte_t b)
 {
    // Put byte b in output stream.
 
-   if (ferror(out) == 0) fputc(b, out);
+   if (ferror(gOut) == 0) fputc(b, gOut);
 }
 
 //______________________________________________________________________________
@@ -2944,8 +2944,8 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 
    // collect different image colors
    int x, y;
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
+   for (x = 0; x < (int) gCws->fWidth; x++) {
+      for (y = 0; y < (int) gCws->fHeight; y++) {
          ULong_t pixel = XGetPixel(image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
@@ -2976,8 +2976,8 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
    ncol = ncolors;
 
    // update image with indices (pixels) into the new RGB colormap
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
+   for (x = 0; x < (int) gCws->fWidth; x++) {
+      for (y = 0; y < (int) gCws->fHeight; y++) {
          ULong_t pixel = XGetPixel(image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
          XPutPixel(image, x, y, idx);
@@ -2996,60 +2996,60 @@ Int_t TGX11::WriteGIF(char *name)
    // 0 otherwise.
 
    Byte_t    scline[2000], r[256], b[256], g[256];
-   Int_t    *R, *G, *B;
+   Int_t    *red, *green, *blue;
    Int_t     ncol, maxcol, i;
 
-   if (ximage) {
-      XDestroyImage(ximage);
-      ximage = 0;
+   if (gXimage) {
+      XDestroyImage(gXimage);
+      gXimage = 0;
    }
 
-   ximage = XGetImage(fDisplay, gCws->drawing, 0, 0,
-                      gCws->width, gCws->height,
-                      AllPlanes, ZPixmap);
+   gXimage = XGetImage(fDisplay, gCws->fDrawing, 0, 0,
+                       gCws->fWidth, gCws->fHeight,
+                       AllPlanes, ZPixmap);
 
-   ImgPickPalette(ximage, ncol, R, G, B);
+   ImgPickPalette(gXimage, ncol, red, green, blue);
 
    if (ncol > 256) {
       //GIFquantize(...);
       Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
-      delete [] R;
-      delete [] G;
-      delete [] B;
+      delete [] red;
+      delete [] green;
+      delete [] blue;
       return 0;
    }
 
    maxcol = 0;
    for (i = 0; i < ncol; i++) {
-      if (maxcol < R[i] ) maxcol = R[i];
-      if (maxcol < G[i] ) maxcol = G[i];
-      if (maxcol < B[i] ) maxcol = B[i];
+      if (maxcol < red[i] )   maxcol = red[i];
+      if (maxcol < green[i] ) maxcol = green[i];
+      if (maxcol < blue[i] )  maxcol = blue[i];
       r[i] = 0;
       g[i] = 0;
       b[i] = 0;
    }
    if (maxcol != 0) {
       for (i = 0; i < ncol; i++) {
-         r[i] = R[i] * 255/maxcol;
-         g[i] = G[i] * 255/maxcol;
-         b[i] = B[i] * 255/maxcol;
+         r[i] = red[i] * 255/maxcol;
+         g[i] = green[i] * 255/maxcol;
+         b[i] = blue[i] * 255/maxcol;
       }
    }
 
-   out = fopen(name, "w+");
+   gOut = fopen(name, "w+");
 
-   if (out) {
-      GIFencode(gCws->width, gCws->height,
+   if (gOut) {
+      GIFencode(gCws->fWidth, gCws->fHeight,
              ncol, r, g, b, scline, ::GetPixel, PutByte);
-      fclose(out);
+      fclose(gOut);
       i = 1;
    } else {
       Error("WriteGIF","cannot write file: %s",name);
       i = 0;
    }
-   delete [] R;
-   delete [] G;
-   delete [] B;
+   delete [] red;
+   delete [] green;
+   delete [] blue;
    return i;
 }
 
@@ -3059,17 +3059,17 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
 {
    // Draw image.
 
-   const int MAX_SEGMENT = 20;
+   const int maxSegment = 20;
    int           i, n, x, y, xcur, x1, x2, y1, y2;
    unsigned char *jimg, *jbase, icol;
    int           nlines[256];
-   XSegment      lines[256][MAX_SEGMENT];
+   XSegment      lines[256][maxSegment];
    Drawable_t    id;
 
    if (wid) {
       id = wid;
    } else {
-      id = gCws->drawing;
+      id = gCws->fDrawing;
    }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
@@ -3086,10 +3086,10 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
                n = nlines[icol]++;
                lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
                lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
-               if (nlines[icol] == MAX_SEGMENT) {
+               if (nlines[icol] == maxSegment) {
                   SetColor(*gGCline,(int)icol+offset);
                   XDrawSegments(fDisplay,id,*gGCline,&lines[icol][0],
-                                MAX_SEGMENT);
+                                maxSegment);
                   nlines[icol] = 0;
                }
             }
@@ -3100,10 +3100,10 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
          n = nlines[icol]++;
          lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
          lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
-         if (nlines[icol] == MAX_SEGMENT) {
+         if (nlines[icol] == maxSegment) {
             SetColor(*gGCline,(int)icol+offset);
             XDrawSegments(fDisplay,id,*gGCline,&lines[icol][0],
-                          MAX_SEGMENT);
+                          maxSegment);
             nlines[icol] = 0;
          }
       }
@@ -3125,7 +3125,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 
    FILE  *fd;
    Seek_t filesize;
-   unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
+   unsigned char *gifArr, *pixArr, red[256], green[256], blue[256], *j1, *j2, icol;
    int   i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
    Pixmap_t pic = 0;
@@ -3140,36 +3140,36 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    filesize = Seek_t(ftell(fd));
    fseek(fd, 0L, 0);
 
-   if (!(GIFarr = (unsigned char *) calloc(filesize+256,1))) {
+   if (!(gifArr = (unsigned char *) calloc(filesize+256,1))) {
       Error("ReadGIF", "unable to allocate array for gif");
       fclose(fd);
       return pic;
    }
 
-   if (fread(GIFarr, filesize, 1, fd) != 1) {
+   if (fread(gifArr, filesize, 1, fd) != 1) {
       Error("ReadGIF", "GIF file read failed");
-      free(GIFarr);
+      free(gifArr);
       fclose(fd);
       return pic;
    }
    fclose(fd);
 
-   irep = GIFinfo(GIFarr, &width, &height, &ncolor);
+   irep = GIFinfo(gifArr, &width, &height, &ncolor);
    if (irep != 0) {
-      free(GIFarr);
+      free(gifArr);
       return pic;
    }
 
-   if (!(PIXarr = (unsigned char *) calloc((width*height),1))) {
+   if (!(pixArr = (unsigned char *) calloc((width*height),1))) {
       Error("ReadGIF", "unable to allocate array for image");
-      free(GIFarr);
+      free(gifArr);
       return pic;
    }
 
-   irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
+   irep = GIFdecode(gifArr, pixArr, &width, &height, &ncolor, red, green, blue);
    if (irep != 0) {
-      free(GIFarr);
-      free(PIXarr);
+      free(gifArr);
+      free(pixArr);
       return pic;
    }
 
@@ -3178,9 +3178,9 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    offset = 8;
 
    for (i = 0; i < ncolor; i++) {
-      rr = R[i]/255.;
-      gg = G[i]/255.;
-      bb = B[i]/255.;
+      rr = red[i]/255.;
+      gg = green[i]/255.;
+      bb = blue[i]/255.;
       j = i+offset;
       SetRGB(j,rr,gg,bb);
    }
@@ -3188,22 +3188,22 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    // O U T P U T   I M A G E
 
    for (i = 1; i <= height/2; i++) {
-      j1 = PIXarr + (i-1)*width;
-      j2 = PIXarr + (height-i)*width;
+      j1 = pixArr + (i-1)*width;
+      j2 = pixArr + (height-i)*width;
       for (k = 0; k < width; k++) {
          icol = *j1; *j1++ = *j2; *j2++ = icol;
       }
    }
    if (id) pic = CreatePixmap(id, width, height);
-   PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,PIXarr,pic);
+   PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,pixArr,pic);
 
-   free(GIFarr);
-   free(PIXarr);
+   free(gifArr);
+   free(pixArr);
 
    if (pic)
       return pic;
-   else if (gCws->drawing)
-      return (Pixmap_t)gCws->drawing;
+   else if (gCws->fDrawing)
+      return (Pixmap_t)gCws->fDrawing;
    return 0;
 }
 
@@ -3248,7 +3248,7 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
 
       // Select next free window number
       for (; wid < fMaxNumberOfWindows; ++wid) 
-         if (!fWindows[wid].open)
+         if (!fWindows[wid].fOpen)
             break;
       
       if (wid == fMaxNumberOfWindows) {
@@ -3259,38 +3259,38 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
                                                   );
                                                   
          for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
-            fWindows[i].open = 0;
+            fWindows[i].fOpen = 0;
          
          fMaxNumberOfWindows = newsize;
       }
       
-      fWindows[wid].open = 1;
+      fWindows[wid].fOpen = 1;
       gCws = fWindows + wid;
-      gCws->window = pixid;
-      gCws->drawing = gCws->window;
-      gCws->buffer = 0;
-      gCws->double_buffer = 0;
-      gCws->ispixmap = 1;
-      gCws->clip = 0;
-      gCws->width = w;
-      gCws->height = h;
-      gCws->new_colors = 0;
-      gCws->shared = kFALSE;
+      gCws->fWindow = pixid;
+      gCws->fDrawing = gCws->fWindow;
+      gCws->fBuffer = 0;
+      gCws->fDoubleBuffer = 0;
+      gCws->fIsPixmap = 1;
+      gCws->fClip = 0;
+      gCws->fWidth = w;
+      gCws->fHeight = h;
+      gCws->fNewColors = 0;
+      gCws->fShared = kFALSE;
       
       return wid;
 
    } else if (pixid != 0) {
    //replace drawing
       gCws = fWindows + prevind; //do I really need this ???
-      gCws->window = pixid;
-      gCws->drawing = gCws->window;
-      gCws->width = w;
-      gCws->height = h;
+      gCws->fWindow = pixid;
+      gCws->fDrawing = gCws->fWindow;
+      gCws->fWidth = w;
+      gCws->fHeight = h;
    } else {
    //change sizes
       gCws = fWindows + prevind; //do I really need this ???
-      gCws->width = w;
-      gCws->height = h;
+      gCws->fWidth = w;
+      gCws->fHeight = h;
    }
    
    return prevind;

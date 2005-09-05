@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.25 2005/06/21 18:15:13 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.26 2005/08/18 11:12:59 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -60,31 +60,31 @@ struct XpmAttributes;
 
 
 struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   Drawable drawing;              // drawing area, equal to window or buffer
-   Drawable window;               // X11 window
-   Drawable buffer;               // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
-   Bool_t   shared;               // notify when window is shared
+   Int_t    fOpen;                // 1 if the window is open, 0 if not
+   Int_t    fDoubleBuffer;        // 1 if the double buffer is on, 0 if not
+   Int_t    fIsPixmap;            // 1 if pixmap, 0 if not
+   Drawable fDrawing;             // drawing area, equal to window or buffer
+   Drawable fWindow;              // X11 window
+   Drawable fBuffer;              // pixmap used for double buffer
+   UInt_t   fWidth;               // width of the window
+   UInt_t   fHeight;              // height of the window
+   Int_t    fClip;                // 1 if the clipping is on
+   Int_t    fXclip;               // x coordinate of the clipping rectangle
+   Int_t    fYclip;               // y coordinate of the clipping rectangle
+   UInt_t   fWclip;               // width of the clipping rectangle
+   UInt_t   fHclip;               // height of the clipping rectangle
+   ULong_t *fNewColors;           // new image colors (after processing)
+   Int_t    fNcolors;             // number of different colors
+   Bool_t   fShared;              // notify when window is shared
 };
 
 struct XColor_t {
-   ULong_t  pixel;                // color pixel value
-   UShort_t red;                  // red value in range [0,kBIGGEST_RGB_VALUE]
-   UShort_t green;                // green value
-   UShort_t blue;                 // blue value
-   Bool_t   defined;              // true if pixel value is defined
-   XColor_t() { pixel = 0; red = green = blue = 0; defined = kFALSE; }
+   ULong_t  fPixel;               // color pixel value
+   UShort_t fRed;                 // red value in range [0,kBIGGEST_RGB_VALUE]
+   UShort_t fGreen;               // green value
+   UShort_t fBlue;                // blue value
+   Bool_t   fDefined;             // true if pixel value is defined
+   XColor_t() { fPixel = 0; fRed = fGreen = fBlue = 0; fDefined = kFALSE; }
 };
 
 class TExMap;
