@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.50 2005/03/07 09:15:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.51 2005/09/02 10:22:55 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -335,77 +335,77 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // A fit using the full shape of the error distribution for each point
 // would be far more difficult to perform.
 
-	TString opt = option; opt.ToLower();
+   TString opt = option; opt.ToLower();
 
-	Int_t nbins = pass->GetNbinsX();
-	if (nbins != total->GetNbinsX()){
-		Error("BayesDivide","Histograms must have the same number of X bins");
-		return;
-	}
+   Int_t nbins = pass->GetNbinsX();
+   if (nbins != total->GetNbinsX()){
+      Error("BayesDivide","Histograms must have the same number of X bins");
+      return;
+   }
 
-	if (opt.Contains("w")) {
-	   //compare sum of weights with sum of squares of weights
+   if (opt.Contains("w")) {
+      //compare sum of weights with sum of squares of weights
            Double_t stats[10];
-	   pass->GetStats(stats);
-	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
-		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
-		return;
-	   }
-	   total->GetStats(stats);
-	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
-		Error("BayesDivide","Total histogram has not been filled with weights = 1");
-		return;
-	   }
-	}
+      pass->GetStats(stats);
+      if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+      Error("BayesDivide","Pass histogram has not been filled with weights = 1");
+      return;
+      }
+      total->GetStats(stats);
+      if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+      Error("BayesDivide","Total histogram has not been filled with weights = 1");
+      return;
+      }
+   }
 
-	//Set the graph to have a number of points equal to the number of histogram bins
-	Set(nbins);
+   //Set the graph to have a number of points equal to the number of histogram bins
+   Set(nbins);
 
-	// Ok, now set the points for each bin
-	// (Note: the TH1 bin content is shifted to the right by one: 
-	//  bin=0 is underflow, bin=nbins+1 is overflow.)
+   // Ok, now set the points for each bin
+   // (Note: the TH1 bin content is shifted to the right by one: 
+   //  bin=0 is underflow, bin=nbins+1 is overflow.)
 
-	double mode, low, high; //these will hold the result of the Bayes calculation
-	int npoint=0;//this keeps track of the number of points added to the graph
-	for (int b=1; b<=nbins; ++b) { // loop through the bins
-		
-		int t = (int)total->GetBinContent(b);
-		if (!t) continue;  //don't add points for bins with no information
+   double mode, low, high; //these will hold the result of the Bayes calculation
+   int npoint=0;//this keeps track of the number of points added to the graph
+   for (int b=1; b<=nbins; ++b) { // loop through the bins
+      
+      int t = (int)total->GetBinContent(b);
+      if (!t) continue;  //don't add points for bins with no information
 
-		int p = (int)pass->GetBinContent(b);
-		if (p>t) {
-			Warning("BayesDivide","Histogram bin %d in pass has more entries than corresponding bin in total! (%d>%d)",b,p,t);
-			continue; //we may as well go on...
-		}
+      int p = (int)pass->GetBinContent(b);
+      if (p>t) {
+         Warning("BayesDivide","Histogram bin %d in pass has more entries than corresponding bin in total! (%d>%d)",b,p,t);
+         continue; //we may as well go on...
+      }
 
-		//This is the Bayes calculation...
-		Efficiency(p,t,0.683,mode,low,high);
+      //This is the Bayes calculation...
+      Efficiency(p,t,0.683,mode,low,high);
 
-		//These are the low and high error bars
-		low = mode-low;
-		high = high-mode;
+      //These are the low and high error bars
+      low = mode-low;
+      high = high-mode;
 
-		//If either of the errors are 0, set them to 1/10 of the other error
-		//so that the fitters don't get confused.
-		if (low==0.0) low=high/10.;
-		if (high==0.0) high=low/10.;
+      //If either of the errors are 0, set them to 1/10 of the other error
+      //so that the fitters don't get confused.
+      if (low==0.0) low=high/10.;
+      if (high==0.0) high=low/10.;
 
-		//Set the point center and its errors
-		SetPoint(npoint,pass->GetBinCenter(b),mode);
-		SetPointError(npoint,
-			pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
-			pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
-			low,high);
-		npoint++;//we have added a point to the graph
+      //Set the point center and its errors
+      SetPoint(npoint,pass->GetBinCenter(b),mode);
+      SetPointError(npoint,
+      pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
+      pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
+      low,high);
+      npoint++;//we have added a point to the graph
 
-	}
+   }
 
-	Set(npoint);//tell the graph how many points we've really added
+   Set(npoint);//tell the graph how many points we've really added
 
-	if (opt.Contains("debug")) {
-		printf("BayesDivide: made a graph with %d points from %d bins\n",npoint,nbins);
-		Print();//The debug prints out what we get for each point
-	}
+   if (opt.Contains("debug")) {
+      printf("BayesDivide: made a graph with %d points from %d bins\n",npoint,nbins);
+      Print();//The debug prints out what we get for each point
+   }
 
 }
 
@@ -490,14 +490,13 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
          q=TMath::Abs(q);
          etemp=e;
          e=d;
-         if (TMath::Abs(p) >= TMath::Abs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
-	    d=kCGOLD*(e=(x >= xm ? a-x : b-x));
-         else {
-	    d=p/q;
-	    u=x+d;
-	    if (u-a < tol2 || b-u < tol2)
-	       d=TMath::Sign(tol1,xm-x);
-         }
+         if (TMath::Abs(p) >= TMath::Abs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x)) d=kCGOLD*(e=(x >= xm ? a-x : b-x));
+       else {
+         d=p/q;
+         u=x+d;
+         if (u-a < tol2 || b-u < tol2)
+            d=TMath::Sign(tol1,xm-x);
+       }
      } else {
         d=kCGOLD*(e=(x >= xm ? a-x : b-x));
      }
@@ -514,13 +513,13 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
      } else {
         if (u < x) a=u; else b=u;
         if (fu <= fw || w == x) {
-	   v=w;
-	   w=u;
-	   fv=fw;
-	   fw=fu;
+           v=w;
+           w=u;
+           fv=fw;
+           fw=fu;
         } else if (fu <= fv || v == x || v == w) {
-	   v=u;
-	   fv=fu;
+           v=u;
+           fv=fu;
         }
      }
    }
@@ -539,7 +538,7 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
            if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
            else                   xmin = TMath::Min(xmin,fX[i]/3);
         } else {
-          xmin = fX[i]-fEXlow[i];
+           xmin = fX[i]-fEXlow[i];
         }
      }
      if (fX[i] +fEXhigh[i] > xmax) xmax = fX[i]+fEXhigh[i];
@@ -548,7 +547,7 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
            if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
            else                   ymin = TMath::Min(ymin,fY[i]/3);
         } else {
-          ymin = fY[i]-fEYlow[i];
+           ymin = fY[i]-fEYlow[i];
         }
      }
      if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
@@ -619,7 +618,7 @@ Bool_t TGraphAsymmErrors::CtorAllocate(void)
 
 //______________________________________________________________________________
 void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel, 
-	   double& mode, double& low, double& high) const
+      double& mode, double& low, double& high) const
 {
    // Calculate the shortest central confidence interval containing the required
    // probability content.

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.20 2005/03/29 10:06:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.21 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -182,7 +182,7 @@ void TPaveStats::Paint(Option_t *option)
       titlesize = textsize;
       wtok[0] = 0; wtok[1] = 0;
       while ((line = (TObject*) next())) {
-	 if (line->IsA() == TLatex::Class()) {
+         if (line->IsA() == TLatex::Class()) {
             latex = (TLatex*)line;
             sl = new char[strlen(latex->GetTitle())+1];
             strcpy(sl, latex->GetTitle());
@@ -244,10 +244,10 @@ void TPaveStats::Paint(Option_t *option)
               if (halign == 12) xtext = fX1 + margin;
               if (halign == 32) {
                  xtext = fX2 - margin;
-		 // Clean trailing blanks in case of right alignment.
+                 // Clean trailing blanks in case of right alignment.
                  char *stc;
-		 stc=st+strlen(st)-1;
-		 while (*stc == ' ') {
+                 stc=st+strlen(st)-1;
+                 while (*stc == ' ') {
                     *stc = '\0';
                     --stc;
                  }
@@ -258,7 +258,7 @@ void TPaveStats::Paint(Option_t *option)
               st = strtok(0, "=");
               halign = 32;
            }
-	 // Draw the 2D under/overflow
+         // Draw the 2D under/overflow
          } else if (strpbrk(sl, "|") !=0) {
            Double_t yline1 = ytext+yspace/2.;
            Double_t yline2 = ytext-yspace/2.;
@@ -268,19 +268,19 @@ void TPaveStats::Paint(Option_t *option)
            gPad->PaintLine(xline1,yline1,xline1,yline2);
            gPad->PaintLine(xline2,yline1,xline2,yline2);
            st = strtok(sl, "|");
-	   Int_t theIndex = 0;
+           Int_t theIndex = 0;
            while ( st !=0 ) {
               latex->SetTextAlign(22);
-	      if (theIndex == 0) xtext = 0.5*(fX1+xline1);
-	      if (theIndex == 1) xtext = 0.5*(fX1+fX2);
-	      if (theIndex == 2) xtext = 0.5*(xline2+fX2);
+              if (theIndex == 0) xtext = 0.5*(fX1+xline1);
+              if (theIndex == 1) xtext = 0.5*(fX1+fX2);
+              if (theIndex == 2) xtext = 0.5*(xline2+fX2);
               latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                             latex->GetTextSize(),
                                             st);
               theIndex++;
               st = strtok(0, "|");
            }
-	 // Draw the histogram identifier
+         // Draw the histogram identifier
          } else {
            print_name = 0;
            latex->SetTextAlign(22);
@@ -305,7 +305,7 @@ void TPaveStats::Paint(Option_t *option)
    // if a label create & paint a pavetext title
    if (fLabel.Length() > 0) {
       Double_t x1,x2;
-	  dy = gPad->GetY2() - gPad->GetY1();
+      dy = gPad->GetY2() - gPad->GetY1();
       x1 = fX1 + 0.25*dx;
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;

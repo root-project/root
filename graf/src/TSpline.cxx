@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.9 2004/06/01 09:56:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.10 2004/10/21 09:48:57 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -83,8 +83,8 @@ void TSpline::Paint(Option_t *option)
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (fHistogram)
       if ((!gPad->GetLogx() && fHistogram->TestBit(TH1::kLogX)) ||
-	  (gPad->GetLogx() && !fHistogram->TestBit(TH1::kLogX)))
-	{ delete fHistogram; fHistogram = 0;}
+          (gPad->GetLogx() && !fHistogram->TestBit(TH1::kLogX)))
+        { delete fHistogram; fHistogram = 0;}
 
    if (fHistogram) {
      //if (xmin != fXmin || xmax != fXmax)
@@ -98,7 +98,7 @@ void TSpline::Paint(Option_t *option)
        Double_t xlogmax = TMath::Log10(xmax);
        Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);
        for (i=0;i<=fNpx;i++) {
-	 xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
+         xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
        }
        fHistogram = new TH1F("Spline",GetTitle(),fNpx,xbins);
        fHistogram->SetBit(TH1::kLogX);
@@ -147,7 +147,7 @@ void TSpline::Paint(Option_t *option)
        Double_t *xx = new Double_t[fNp];
        Double_t *yy = new Double_t[fNp];
        for(i=0; i<fNp; ++i)
-	 GetKnot(i,xx[i],yy[i]);
+         GetKnot(i,xx[i],yy[i]);
        fGraph=new TGraph(fNp,xx,yy);
        delete [] xx;
        delete [] yy;
@@ -210,8 +210,8 @@ void TSpline::Streamer(TBuffer &R__b)
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   Double_t x[], Double_t y[], Int_t n, const char *opt,
-		   Double_t valbeg, Double_t valend) :
+                   Double_t x[], Double_t y[], Int_t n, const char *opt,
+                   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,x[0],x[n-1],n,kFALSE),
   fValBeg(valbeg), fValEnd(valend), fBegCond(0), fEndCond(0)
 {
@@ -240,9 +240,9 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   Double_t xmin, Double_t xmax,
-		   Double_t y[], Int_t n, const char *opt,
-		   Double_t valbeg, Double_t valend) :
+                   Double_t xmin, Double_t xmax,
+                   Double_t y[], Int_t n, const char *opt,
+                   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
   fBegCond(0), fEndCond(0)
@@ -272,8 +272,8 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   Double_t x[], const TF1 *func, Int_t n, const char *opt,
-		   Double_t valbeg, Double_t valend) :
+                   Double_t x[], const TF1 *func, Int_t n, const char *opt,
+                   Double_t valbeg, Double_t valend) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE),
   fValBeg(valbeg), fValEnd(valend),
   fBegCond(0), fEndCond(0)
@@ -303,9 +303,9 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   Double_t xmin, Double_t xmax,
-		   const TF1 *func, Int_t n, const char *opt,
-		   Double_t valbeg, Double_t valend) :
+                   Double_t xmin, Double_t xmax,
+                   const TF1 *func, Int_t n, const char *opt,
+                   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
   fBegCond(0), fEndCond(0)
@@ -336,8 +336,8 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   const TGraph *g, const char *opt,
-		   Double_t valbeg, Double_t valend) :
+                   const TGraph *g, const char *opt,
+                   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE),
   fValBeg(valbeg), fValEnd(valend),
   fBegCond(0), fEndCond(0)
@@ -454,19 +454,19 @@ void TSpline3::Test()
       for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
       printf("\n");
       for (i = 0; i < mm1; ++i)
-	if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
+        if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
       z = x[k+1]-x[k];
       for (i = 1; i < mm; ++i)
-	for (jj = i; jj < mm; ++jj) {
-	  j = mm+i-jj;
-	  c[j-2] = c[j-1]*z+c[j-2];
-	}
+        for (jj = i; jj < mm; ++jj) {
+          j = mm+i-jj;
+          c[j-2] = c[j-1]*z+c[j-2];
+        }
       for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
       printf("\n");
       for (i = 0; i < mm1; ++i)
-	if (!(k >= n-2 && i != 0))
-	  if((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	     > diff[i]) diff[i] = z;
+        if (!(k >= n-2 && i != 0))
+          if((z = TMath::Abs(c[i]-a[k+1+i*200]))
+             > diff[i]) diff[i] = z;
     }
   }
   printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
@@ -501,34 +501,34 @@ void TSpline3::Test()
       diff[i] = com[i] = 0;
     for (k = 0; k < n; ++k) {
       for (i = 0; i < mm; ++i)
-	c[i] = a[k+i*200];
+        c[i] = a[k+i*200];
       if (n < 11) {
-	printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
-	printf("%12.8f\n",x[k]);
-	if (k == n-1) printf("%16.8f\n",c[0]);
+        printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
+        printf("%12.8f\n",x[k]);
+        if (k == n-1) printf("%16.8f\n",c[0]);
       }
       if (k == n-1) break;
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if ((z=TMath::Abs(a[k+i*200])) > com[i])
-	  com[i] = z;
+        if ((z=TMath::Abs(a[k+i*200])) > com[i])
+          com[i] = z;
       z = x[k+1]-x[k];
       for (i = 1; i < mm; ++i)
-	for (jj = i; jj < mm; ++jj) {
-	  j = mm+i-jj;
-	  c[j-2] = c[j-1]*z+c[j-2];
-	}
+        for (jj = i; jj < mm; ++jj) {
+          j = mm+i-jj;
+          c[j-2] = c[j-1]*z+c[j-2];
+        }
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if (!(k >= n-2 && i != 0))
-	  if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	      > diff[i]) diff[i] = z;
+        if (!(k >= n-2 && i != 0))
+          if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
+              > diff[i]) diff[i] = z;
     }
     printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
     for (i = 0; i < mm1; ++i) printf("%18.9E",diff[i]);
@@ -561,17 +561,17 @@ Int_t TSpline3::FindX(Double_t x) const
       //
       // Non equidistant knots, binary search
       while(khig-klow>1)
-	if(x>fPoly[khalf=(klow+khig)/2].X())
-	  klow=khalf;
-	else
-	  khig=khalf;
+        if(x>fPoly[khalf=(klow+khig)/2].X())
+          klow=khalf;
+        else
+          khig=khalf;
     }
     //
     // This could be removed, sanity check
     if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
       Error("Eval",
-	    "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
-	    klow,fPoly[klow].X(),x,fPoly[klow+1].X());
+            "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
+            klow,fPoly[klow].X(),x,fPoly[klow+1].X());
   }
   return klow;
 }
@@ -729,9 +729,9 @@ void TSpline3::SaveAs(const char *filename) const
    nch = strlen(buffer); f->write(buffer,nch);
    sprintf(buffer,"       while(khig-klow>1)\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   sprintf(buffer,"	 if(x>fX[khalf=(klow+khig)/2]) klow=khalf;\n");
+   sprintf(buffer,"         if(x>fX[khalf=(klow+khig)/2]) klow=khalf;\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   sprintf(buffer,"	 else khig=khalf;\n");
+   sprintf(buffer,"         else khig=khalf;\n");
    nch = strlen(buffer); f->write(buffer,nch);
    sprintf(buffer,"     }\n");
    nch = strlen(buffer); f->write(buffer,nch);
@@ -839,17 +839,17 @@ void TSpline3::BuildCoeff()
       if (fNp > 3 || fBegCond != 0) {
 //     not-a-knot and n .ge. 3, and either n.gt.3 or  also not-a-knot at
 //     left end point.
-	g = fPoly[fNp-2].C() + fPoly[fNp-1].C();
-	fPoly[fNp-1].B() = ((fPoly[fNp-1].C()+2.*g)*fPoly[fNp-1].D()*fPoly[fNp-2].C()
-		     + fPoly[fNp-1].C()*fPoly[fNp-1].C()*(fPoly[fNp-2].Y()-fPoly[fNp-3].Y())/fPoly[fNp-2].C())/g;
-	g = -g/fPoly[fNp-2].D();
-	fPoly[fNp-1].D() = fPoly[fNp-2].C();
+        g = fPoly[fNp-2].C() + fPoly[fNp-1].C();
+        fPoly[fNp-1].B() = ((fPoly[fNp-1].C()+2.*g)*fPoly[fNp-1].D()*fPoly[fNp-2].C()
+                     + fPoly[fNp-1].C()*fPoly[fNp-1].C()*(fPoly[fNp-2].Y()-fPoly[fNp-3].Y())/fPoly[fNp-2].C())/g;
+        g = -g/fPoly[fNp-2].D();
+        fPoly[fNp-1].D() = fPoly[fNp-2].C();
       } else {
 //     either (n=3 and not-a-knot also at left) or (n=2 and not not-a-
 //     knot at left end point).
-	fPoly[fNp-1].B() = 2.*fPoly[fNp-1].D();
-	fPoly[fNp-1].D() = 1.;
-	g = -1./fPoly[fNp-2].D();
+        fPoly[fNp-1].B() = 2.*fPoly[fNp-1].D();
+        fPoly[fNp-1].D() = 1.;
+        g = -1./fPoly[fNp-2].D();
       }
     } else if (fEndCond == 1) {
       fPoly[fNp-1].B() = fValEnd;
@@ -865,13 +865,13 @@ void TSpline3::BuildCoeff()
        if (fBegCond > 0) {
 //     either (n=3 and not-a-knot also at left) or (n=2 and not not-a-
 //     knot at left end point).
-	 fPoly[fNp-1].B() = 2.*fPoly[fNp-1].D();
-	 fPoly[fNp-1].D() = 1.;
-	 g = -1./fPoly[fNp-2].D();
+         fPoly[fNp-1].B() = 2.*fPoly[fNp-1].D();
+         fPoly[fNp-1].D() = 1.;
+         g = -1./fPoly[fNp-2].D();
        } else {
 //     not-a-knot at right endpoint and at left endpoint and n = 2.
-	 fPoly[fNp-1].B() = fPoly[fNp-1].D();
-	 goto L30;
+         fPoly[fNp-1].B() = fPoly[fNp-1].D();
+         goto L30;
        }
      } else if(fEndCond == 1) {
        fPoly[fNp-1].B() = fValEnd;
@@ -920,7 +920,7 @@ void TSpline3::Streamer(TBuffer &R__b)
       if (fNp > 0) {
          fPoly = new TSplinePoly3[fNp];
          for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
+           fPoly[i].Streamer(R__b);
          }
       }
       //      R__b >> fPoly;
@@ -948,9 +948,9 @@ void TSpline3::Streamer(TBuffer &R__b)
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   Double_t x[], Double_t y[], Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
-		   Double_t b2, Double_t e2) :
+                   Double_t x[], Double_t y[], Int_t n,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
   //
@@ -982,10 +982,10 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   Double_t xmin, Double_t xmax,
-		   Double_t y[], Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
-		   Double_t b2, Double_t e2) :
+                   Double_t xmin, Double_t xmax,
+                   Double_t y[], Int_t n,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
   //
@@ -1017,9 +1017,9 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   Double_t x[], const TF1 *func, Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
-		   Double_t b2, Double_t e2) :
+                   Double_t x[], const TF1 *func, Int_t n,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
   //
@@ -1051,10 +1051,10 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   Double_t xmin, Double_t xmax,
-		   const TF1 *func, Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
-		   Double_t b2, Double_t e2) :
+                   Double_t xmin, Double_t xmax,
+                   const TF1 *func, Int_t n,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
   //
@@ -1087,9 +1087,9 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   const TGraph *g,
-		   const char *opt, Double_t b1, Double_t e1,
-		   Double_t b2, Double_t e2) :
+                   const TGraph *g,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE)
 {
   //
@@ -1125,7 +1125,7 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
-				  const char *&cb1,const char *&ce1,
+                                  const char *&cb1,const char *&ce1,
                                   const char *&cb2,const char *&ce2)
 {
   //
@@ -1158,7 +1158,7 @@ void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
 
 //____________________________________________________________________________
 void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-			     const char *cb1, const char *ce1, const char *cb2,
+                             const char *cb1, const char *ce1, const char *cb2,
                              const char *ce2)
 {
   //
@@ -1196,8 +1196,8 @@ void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
       fPoly[fNp-2].Y()=e1;
     else
       fPoly[fNp-2].Y()=
-	(fPoly[fNp-3].Y()-fPoly[fNp-4].Y())
-	/(fPoly[fNp-3].X()-fPoly[fNp-4].X());
+        (fPoly[fNp-3].Y()-fPoly[fNp-4].Y())
+        /(fPoly[fNp-3].X()-fPoly[fNp-4].X());
   } else if(ce1) {
     //
     // First derivative at the end
@@ -1225,17 +1225,17 @@ Int_t TSpline5::FindX(Double_t x) const
       //
       // Non equidistant knots, binary search
       while(khig-klow>1)
-	if(x>fPoly[khalf=(klow+khig)/2].X())
-	  klow=khalf;
-	else
-	  khig=khalf;
+        if(x>fPoly[khalf=(klow+khig)/2].X())
+          klow=khalf;
+        else
+          khig=khalf;
     }
     //
     // This could be removed, sanity check
     if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
       Error("Eval",
-	    "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
-	      klow,fPoly[klow].X(),x,fPoly[klow+1].X());
+            "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
+              klow,fPoly[klow].X(),x,fPoly[klow+1].X());
   }
   return klow;
 }
@@ -1425,9 +1425,9 @@ void TSpline5::SaveAs(const char *filename) const
    nch = strlen(buffer); f->write(buffer,nch);
    sprintf(buffer,"       while(khig-klow>1)\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   sprintf(buffer,"	 if(x>fX[khalf=(klow+khig)/2]) klow=khalf;\n");
+   sprintf(buffer,"         if(x>fX[khalf=(klow+khig)/2]) klow=khalf;\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   sprintf(buffer,"	 else khig=khalf;\n");
+   sprintf(buffer,"         else khig=khalf;\n");
    nch = strlen(buffer); f->write(buffer,nch);
    sprintf(buffer,"     }\n");
    nch = strlen(buffer); f->write(buffer,nch);
@@ -1547,19 +1547,19 @@ void TSpline5::BuildCoeff()
       pq = qr;
       qr = q+r;
       if (q) {
-	q3 = q2*q;
-	pr = p*r;
-	pqqr = pq*qr;
-	fPoly[i+1].D() = q3*6./(qr*qr);
-	fPoly[i].D() += (q+q)*(pr*15.*pr+(p+r)*q
-			       *(pr* 20.+q2*7.)+q2*
-			       ((p2+r2)*8.+pr*21.+q2+q2))/(pqqr*pqqr);
-	fPoly[i-1].D() += q3*6./(pq*pq);
-	fPoly[i].E() = q2*(p*qr+pq*3.*(qr+r+r))/(pqqr*qr);
-	fPoly[i-1].E() += q2*(r*pq+qr*3.*(pq+p+p))/(pqqr*pq);
-	fPoly[i-1].F() = q3/pqqr;
+        q3 = q2*q;
+        pr = p*r;
+        pqqr = pq*qr;
+        fPoly[i+1].D() = q3*6./(qr*qr);
+        fPoly[i].D() += (q+q)*(pr*15.*pr+(p+r)*q
+                               *(pr* 20.+q2*7.)+q2*
+                               ((p2+r2)*8.+pr*21.+q2+q2))/(pqqr*pqqr);
+        fPoly[i-1].D() += q3*6./(pq*pq);
+        fPoly[i].E() = q2*(p*qr+pq*3.*(qr+r+r))/(pqqr*qr);
+        fPoly[i-1].E() += q2*(r*pq+qr*3.*(pq+p+p))/(pqqr*pq);
+        fPoly[i-1].F() = q3/pqqr;
       } else
-	fPoly[i+1].D() = fPoly[i].E() = fPoly[i-1].F() = 0;
+        fPoly[i+1].D() = fPoly[i].E() = fPoly[i-1].F() = 0;
     }
   }
   if (r) fPoly[m-1].D() += r*6.*r2/(qr*qr);
@@ -1571,7 +1571,7 @@ void TSpline5::BuildCoeff()
   for (i = 1; i < fNp; ++i) {
     if (fPoly[i].X() != fPoly[i-1].X()) {
       fPoly[i].B() =
-	(fPoly[i].Y()-fPoly[i-1].Y())/(fPoly[i].X()-fPoly[i-1].X());
+        (fPoly[i].Y()-fPoly[i-1].Y())/(fPoly[i].X()-fPoly[i-1].X());
     } else {
       fPoly[i].B() = fPoly[i].Y();
       fPoly[i].Y() = fPoly[i-1].Y();
@@ -1580,7 +1580,7 @@ void TSpline5::BuildCoeff()
   for (i = 2; i < fNp; ++i) {
     if (fPoly[i].X() != fPoly[i-2].X()) {
       fPoly[i].C() =
-	(fPoly[i].B()-fPoly[i-1].B())/(fPoly[i].X()-fPoly[i-2].X());
+        (fPoly[i].B()-fPoly[i-1].B())/(fPoly[i].X()-fPoly[i-2].X());
     } else {
       fPoly[i].C() = fPoly[i].B()*.5;
       fPoly[i].B() = fPoly[i-1].B();
@@ -1597,12 +1597,12 @@ void TSpline5::BuildCoeff()
 
     if (m > 2) {
       for (i = 2; i < m; ++i) {
-	q = fPoly[i-1].D()*fPoly[i-1].E();
-	fPoly[i].D() = 1./(fPoly[i].D()-p*fPoly[i-2].F()-q*fPoly[i-1].E());
-	fPoly[i].E() -= q*fPoly[i-1].F();
-	fPoly[i].C() = fPoly[i+2].C()-fPoly[i+1].C()-p*fPoly[i-2].C()
-	  -q*fPoly[i-1].C();
-	p = fPoly[i-1].D()*fPoly[i-1].F();
+        q = fPoly[i-1].D()*fPoly[i-1].E();
+        fPoly[i].D() = 1./(fPoly[i].D()-p*fPoly[i-2].F()-q*fPoly[i-1].E());
+        fPoly[i].E() -= q*fPoly[i-1].F();
+        fPoly[i].C() = fPoly[i+2].C()-fPoly[i+1].C()-p*fPoly[i-2].C()
+          -q*fPoly[i-1].C();
+        p = fPoly[i-1].D()*fPoly[i-1].F();
       }
     }
   }
@@ -1611,7 +1611,7 @@ void TSpline5::BuildCoeff()
   if (fNp > 3)
     for (i=fNp-3; i > 0; --i)
       fPoly[i].C() = (fPoly[i].C()-fPoly[i].E()*fPoly[i+1].C()
-		      -fPoly[i].F()*fPoly[i+2].C())*fPoly[i].D();
+                      -fPoly[i].F()*fPoly[i+2].C())*fPoly[i].D();
   //
   //     Integrate the third derivative of s(x)
   //
@@ -1648,10 +1648,10 @@ void TSpline5::BuildCoeff()
       fPoly[i].E() = s*5.;
       fPoly[i].D() = (fPoly[i].C()-q*s)*10;
       fPoly[i].C() =
-	fPoly[i].D()*(p-q)+(fPoly[i+1].B()-fPoly[i].B()+(u-fPoly[i].E())*
-			    p3-(v+fPoly[i].E())*q3)/pq;
+        fPoly[i].D()*(p-q)+(fPoly[i+1].B()-fPoly[i].B()+(u-fPoly[i].E())*
+                            p3-(v+fPoly[i].E())*q3)/pq;
       fPoly[i].B() = (p*(fPoly[i+1].B()-v*q3)+q*(fPoly[i].B()-u*p3))/pq-p
-	*q*(fPoly[i].D()+fPoly[i].E()*(q-p));
+        *q*(fPoly[i].D()+fPoly[i].E()*(q-p));
     } else {
       fPoly[i].C() = fPoly[i-1].C();
       fPoly[i].D() = fPoly[i].E() = fPoly[i].F() = 0;
@@ -1728,7 +1728,7 @@ void TSpline5::Test()
   TSpline5 *spline = new TSpline5("Test",x,y,n);
   for (i = 0; i < n; ++i)
     spline->GetCoeff(i,hx, a[i],a[i+200],a[i+400],
-		     a[i+600],a[i+800],a[i+1000]);
+                     a[i+600],a[i+800],a[i+1000]);
   delete spline;
   for (i = 0; i < mm1; ++i) diff[i] = com[i] = 0;
   for (k = 0; k < n; ++k) {
@@ -1741,19 +1741,19 @@ void TSpline5::Test()
       for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
       printf("\n");
       for (i = 0; i < mm1; ++i)
-	if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
+        if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
       z = x[k+1]-x[k];
       for (i = 1; i < mm; ++i)
-	for (jj = i; jj < mm; ++jj) {
-	  j = mm+i-jj;
-	  c[j-2] = c[j-1]*z+c[j-2];
-	}
+        for (jj = i; jj < mm; ++jj) {
+          j = mm+i-jj;
+          c[j-2] = c[j-1]*z+c[j-2];
+        }
       for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
       printf("\n");
       for (i = 0; i < mm1; ++i)
-	if (!(k >= n-2 && i != 0))
-	  if((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	     > diff[i]) diff[i] = z;
+        if (!(k >= n-2 && i != 0))
+          if((z = TMath::Abs(c[i]-a[k+1+i*200]))
+             > diff[i]) diff[i] = z;
     }
   }
   printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
@@ -1783,40 +1783,40 @@ void TSpline5::Test()
     spline = new TSpline5("Test",x,y,n);
     for (i = 0; i < n; ++i)
       spline->GetCoeff(i,hx,a[i],a[i+200],a[i+400],
-		       a[i+600],a[i+800],a[i+1000]);
+                       a[i+600],a[i+800],a[i+1000]);
     delete spline;
     for (i = 0; i < mm1; ++i)
       diff[i] = com[i] = 0;
     for (k = 0; k < n; ++k) {
       for (i = 0; i < mm; ++i)
-	c[i] = a[k+i*200];
+        c[i] = a[k+i*200];
       if (n < 11) {
-	printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
-	printf("%12.8f\n",x[k]);
-	if (k == n-1) printf("%16.8f\n",c[0]);
+        printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
+        printf("%12.8f\n",x[k]);
+        if (k == n-1) printf("%16.8f\n",c[0]);
       }
       if (k == n-1) break;
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if ((z=TMath::Abs(a[k+i*200])) > com[i])
-	  com[i] = z;
+        if ((z=TMath::Abs(a[k+i*200])) > com[i])
+          com[i] = z;
       z = x[k+1]-x[k];
       for (i = 1; i < mm; ++i)
-	for (jj = i; jj < mm; ++jj) {
-	  j = mm+i-jj;
-	  c[j-2] = c[j-1]*z+c[j-2];
-	}
+        for (jj = i; jj < mm; ++jj) {
+          j = mm+i-jj;
+          c[j-2] = c[j-1]*z+c[j-2];
+        }
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if (!(k >= n-2 && i != 0))
-	  if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	      > diff[i]) diff[i] = z;
+        if (!(k >= n-2 && i != 0))
+          if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
+              > diff[i]) diff[i] = z;
     }
     printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
     for (i = 0; i < mm1; ++i) printf("%18.9E",diff[i]);
@@ -1860,7 +1860,7 @@ void TSpline5::Test()
   spline = new TSpline5("Test",x,y,nn);
   for (i = 0; i < nn; ++i)
     spline->GetCoeff(i,hx,a[i],a[i+200],a[i+400],
-		     a[i+600],a[i+800],a[i+1000]);
+                     a[i+600],a[i+800],a[i+1000]);
   delete spline;
   for (i = 0; i < mm1; ++i)
     diff[i] = com[i] = 0;
@@ -1880,15 +1880,15 @@ void TSpline5::Test()
     z = x[k+1]-x[k];
     for (i = 1; i < mm; ++i)
       for (jj = i; jj < mm; ++jj) {
-	j = mm+i-jj;
-	c[j-2] = c[j-1]*z+c[j-2];
+        j = mm+i-jj;
+        c[j-2] = c[j-1]*z+c[j-2];
       }
     for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
     printf("\n");
     for (i = 0; i < mm1; ++i)
       if (!(k >= nn-2 && i != 0))
-	if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	    > diff[i]) diff[i] = z;
+        if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
+            > diff[i]) diff[i] = z;
   }
   printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
   for (i = 1; i <= mm1; ++i) {
@@ -1917,40 +1917,40 @@ void TSpline5::Test()
     spline = new TSpline5("Test",x,y,nn);
     for (i = 0; i < nn; ++i)
       spline->GetCoeff(i,hx,a[i],a[i+200],a[i+400],
-		       a[i+600],a[i+800],a[i+1000]);
+                       a[i+600],a[i+800],a[i+1000]);
     delete spline;
     for (i = 0; i < mm1; ++i)
       diff[i] = com[i] = 0;
     for (k = 0; k < nn; ++k) {
       for (i = 0; i < mm; ++i)
-	c[i] = a[k+i*200];
+        c[i] = a[k+i*200];
       if (n < 11) {
-	printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
-	printf("%12.8f\n",x[k]);
-	if (k == nn-1) printf("%16.8f\n",c[0]);
+        printf(" ---------------------------------------%3d --------------------------------------------\n",k+1);
+        printf("%12.8f\n",x[k]);
+        if (k == nn-1) printf("%16.8f\n",c[0]);
       }
       if (k == nn-1) break;
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
+        if ((z=TMath::Abs(a[k+i*200])) > com[i]) com[i] = z;
       z = x[k+1]-x[k];
       for (i = 1; i < mm; ++i) {
-	for (jj = i; jj < mm; ++jj) {
-	  j = mm+i-jj;
-	  c[j-2] = c[j-1]*z+c[j-2];
-	}
+        for (jj = i; jj < mm; ++jj) {
+          j = mm+i-jj;
+          c[j-2] = c[j-1]*z+c[j-2];
+        }
       }
       if (n <= 10) {
-	for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
-	printf("\n");
+        for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
+        printf("\n");
       }
       for (i = 0; i < mm1; ++i)
-	if (!(k >= nn-2 && i != 0))
-	  if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	      > diff[i]) diff[i] = z;
+        if (!(k >= nn-2 && i != 0))
+          if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
+              > diff[i]) diff[i] = z;
     }
     printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
     for (i = 0; i < mm1; ++i) printf("%18.9E",diff[i]);
@@ -1991,7 +1991,7 @@ void TSpline5::Test()
   spline=new TSpline5("Test",x,y,n);
   for (i = 0; i < n; ++i)
     spline->GetCoeff(i,hx,a[i],a[i+200],a[i+400],
-		     a[i+600],a[i+800],a[i+1000]);
+                     a[i+600],a[i+800],a[i+1000]);
   delete spline;
   for (i = 0; i < mm1; ++i)
     diff[i] = com[i] = 0;
@@ -2011,15 +2011,15 @@ void TSpline5::Test()
     z = x[k+1]-x[k];
     for (i = 1; i < mm; ++i)
       for (jj = i; jj < mm; ++jj) {
-	j = mm+i-jj;
-	c[j-2] = c[j-1]*z+c[j-2];
+        j = mm+i-jj;
+        c[j-2] = c[j-1]*z+c[j-2];
       }
     for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
     printf("\n");
     for (i = 0; i < mm1; ++i)
       if (!(k >= n-2 && i != 0))
-	if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	    > diff[i]) diff[i] = z;
+        if ((z = TMath::Abs(c[i]-a[k+1+i*200]))
+            > diff[i]) diff[i] = z;
   }
   printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
   for (i = 0; i < mm1; ++i) printf("%18.9E",diff[i]);
@@ -2063,7 +2063,7 @@ void TSpline5::Test()
   spline = new TSpline5("Test",x,y,n);
   for (i = 0; i < n; ++i)
     spline->GetCoeff(i,hx,a[i],a[i+200],a[i+400],
-		     a[i+600],a[i+800],a[i+1000]);
+                     a[i+600],a[i+800],a[i+1000]);
   delete spline;
   for (i = 0; i < mm1; ++i)
     diff[i] = com[i] = 0;
@@ -2083,15 +2083,15 @@ void TSpline5::Test()
     z = x[k+1]-x[k];
     for (i = 1; i < mm; ++i)
       for (jj = i; jj < mm; ++jj) {
-	j = mm+i-jj;
-	c[j-2] = c[j-1]*z+c[j-2];
+        j = mm+i-jj;
+        c[j-2] = c[j-1]*z+c[j-2];
       }
     for (i = 0; i < mm; ++i) printf("%16.8f",c[i]);
     printf("\n");
     for (i = 0; i < mm1; ++i)
       if (!(k >= n-2 && i != 0))
-	if((z = TMath::Abs(c[i]-a[k+1+i*200]))
-	   > diff[i]) diff[i] = z;
+        if((z = TMath::Abs(c[i]-a[k+1+i*200]))
+           > diff[i]) diff[i] = z;
   }
   printf("  MAXIMUM ABSOLUTE VALUES OF DIFFERENCES \n");
   for (i = 0; i < mm1; ++i) printf("%18.9E",diff[i]);
@@ -2120,7 +2120,7 @@ void TSpline5::Streamer(TBuffer &R__b)
       if (fNp > 0) {
          fPoly = new TSplinePoly5[fNp];
          for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
+           fPoly[i].Streamer(R__b);
          }
       }
       //      R__b >> fPoly;

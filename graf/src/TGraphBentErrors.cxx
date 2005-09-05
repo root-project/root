@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.14 2005/03/07 09:15:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.15 2005/09/02 19:08:28 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -102,11 +102,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n)
 
 //_____________________________________________________________________________
 TGraphBentErrors::TGraphBentErrors(Int_t n,
-				   const Float_t *x, const Float_t *y,
-				   const Float_t *exl, const Float_t *exh,
-				   const Float_t *eyl, const Float_t *eyh,
-				   const Float_t *exld, const Float_t *exhd,
-				   const Float_t *eyld, const Float_t *eyhd)
+                                   const Float_t *x, const Float_t *y,
+                                   const Float_t *exl, const Float_t *exh,
+                                   const Float_t *eyl, const Float_t *eyh,
+                                   const Float_t *exld, const Float_t *exhd,
+                                   const Float_t *eyld, const Float_t *eyhd)
   : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphBentErrors normal constructor*-*-*-*-*-*-*-*-*-*-*
@@ -138,11 +138,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
 
 //_____________________________________________________________________________
 TGraphBentErrors::TGraphBentErrors(Int_t n,
-				   const Double_t *x, const Double_t *y,
-				   const Double_t *exl, const Double_t *exh,
-				   const Double_t *eyl, const Double_t *eyh,
-				   const Double_t *exld, const Double_t *exhd,
-				   const Double_t *eyld, const Double_t *eyhd)
+                                   const Double_t *x, const Double_t *y,
+                                   const Double_t *exl, const Double_t *exh,
+                                   const Double_t *eyl, const Double_t *eyh,
+                                   const Double_t *exld, const Double_t *exhd,
+                                   const Double_t *eyld, const Double_t *eyhd)
   : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphBentErrors normal constructor*-*-*-*-*-*-*-*-*-*-*

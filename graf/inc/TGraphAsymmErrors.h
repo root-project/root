@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.21 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.22 2005/03/07 09:15:45 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -69,10 +69,10 @@ public:
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin)   const;
         Double_t        GetErrorY(Int_t bin)   const;
-	Double_t        GetErrorXlow(Int_t i)  const;
-	Double_t        GetErrorXhigh(Int_t i) const;
-	Double_t        GetErrorYlow(Int_t i)  const;
-	Double_t        GetErrorYhigh(Int_t i) const;
+        Double_t        GetErrorXlow(Int_t i)  const;
+        Double_t        GetErrorXhigh(Int_t i) const;
+        Double_t        GetErrorYlow(Int_t i)  const;
+        Double_t        GetErrorYhigh(Int_t i) const;
         Double_t       *GetEXlow()  const {return fEXlow;}
         Double_t       *GetEXhigh() const {return fEXhigh;}
         Double_t       *GetEYlow()  const {return fEYlow;}

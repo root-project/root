@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.7 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.8 2005/08/29 14:43:30 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -267,7 +267,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    Bool_t   ok;
 
    if (n < 2) {
-	   ys[0] = y[0];
+      ys[0] = y[0];
       return;
    }
 
@@ -285,95 +285,95 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 // robustness iterations
    iiter = 1;
    while (iiter <= iter+1) {
-	   nleft = 1;
-	   nright = ns;
-	   last = 0;	// index of prev estimated poInt_t
-	   i = 1;		// index of current poInt_t
+      nleft = 1;
+      nright = ns;
+      last = 0;   // index of prev estimated poInt_t
+      i = 1;      // index of current poInt_t
 
       for(;;) {
-	      if (nright < n) {
+         if (nright < n) {
          // move nleft,  nright to right if radius decreases
             d1 = x[i] - x[nleft];
-		      d2 = x[nright+1] - x[i];
+            d2 = x[nright+1] - x[i];
 
-		   // if d1 <= d2 with x[nright+1] == x[nright], lowest fixes
+         // if d1 <= d2 with x[nright+1] == x[nright], lowest fixes
             if (d1 > d2) {
             // radius will not decrease by move right
                nleft++;
-		         nright++;
-		         continue;
-		      }
-	      }
+               nright++;
+               continue;
+            }
+         }
 
-	   // fitted value at x[i]
+      // fitted value at x[i]
          Bool_t iterg1 = iiter>1;
          Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
                       res, iterg1, rw, ok);
-	      if (!ok) ys[i] = y[i];
+         if (!ok) ys[i] = y[i];
 
-	   // all weights zero copy over value (all rw==0)
+      // all weights zero copy over value (all rw==0)
          if (last < i-1) {
-		      denom = x[i]-x[last];
+            denom = x[i]-x[last];
 
-		   // skipped poInt_ts -- Int_terpolate non-zero - proof?
+         // skipped poInt_ts -- Int_terpolate non-zero - proof?
             for(j = last+1; j < i; j++) {
-		         alpha = (x[j]-x[last])/denom;
-		         ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
+               alpha = (x[j]-x[last])/denom;
+               ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
             }
-	 }
+    }
 
-	   // last poInt_t actually estimated
-	      last = i;
+      // last poInt_t actually estimated
+         last = i;
 
-	   // x coord of close poInt_ts
-	      cut = x[last] + delta;
-	      for (i = last+1; i <= n; i++) {
-		      if (x[i] > cut)
-		         break;
-		      if (x[i] == x[last]) {
-		         ys[i] = ys[last];
-		         last = i;
-		      }
-	      }
-	      i = TMath::Max(last+1, i-1);
-	      if (last >= n)
-		      break;
-	   }
+      // x coord of close poInt_ts
+         cut = x[last] + delta;
+         for (i = last+1; i <= n; i++) {
+            if (x[i] > cut)
+               break;
+            if (x[i] == x[last]) {
+               ys[i] = ys[last];
+               last = i;
+            }
+         }
+         i = TMath::Max(last+1, i-1);
+         if (last >= n)
+            break;
+      }
 
-	// residuals
-	   for(i=0; i < n; i++)
-	      res[i] = y[i+1] - ys[i+1];
+   // residuals
+      for(i=0; i < n; i++)
+         res[i] = y[i+1] - ys[i+1];
 
-	// compute robustness weights except last time
+   // compute robustness weights except last time
       if (iiter > iter)
-	      break;
-	   for(i=0 ; i<n ; i++)
-	      rw[i] = TMath::Abs(res[i]);
+         break;
+      for(i=0 ; i<n ; i++)
+         rw[i] = TMath::Abs(res[i]);
 
-	// compute cmad := 6 * median(rw[], n)
-   	m1 = n/2;
-	// partial sort, for m1 & m2
-	   Psort(rw, n, m1);
-	   if(n % 2 == 0) {
-	      m2 = n-m1-1;
-	      Psort(rw, n, m2);
-	      cmad = 3.*(rw[m1]+rw[m2]);
-	   } else { /* n odd */
-	      cmad = 6.*rw[m1];
-	   }
+   // compute cmad := 6 * median(rw[], n)
+      m1 = n/2;
+   // partial sort, for m1 & m2
+      Psort(rw, n, m1);
+      if(n % 2 == 0) {
+         m2 = n-m1-1;
+         Psort(rw, n, m2);
+         cmad = 3.*(rw[m1]+rw[m2]);
+      } else { /* n odd */
+         cmad = 6.*rw[m1];
+      }
 
-	   c9 = 0.999*cmad;
-	   c1 = 0.001*cmad;
-	   for(i=0 ; i<n ; i++) {
-	      r = TMath::Abs(res[i]);
-	      if (r <= c1)
-		      rw[i] = 1.;
-	      else if (r <= c9)
-		      rw[i] = (1.-(r/cmad)*(r/cmad))*(1.-(r/cmad)*(r/cmad));
-	      else
-		      rw[i] = 0.;
-	   }
-	   iiter++;
+      c9 = 0.999*cmad;
+      c1 = 0.001*cmad;
+      for(i=0 ; i<n ; i++) {
+         r = TMath::Abs(res[i]);
+         if (r <= c1)
+            rw[i] = 1.;
+         else if (r <= c9)
+            rw[i] = (1.-(r/cmad)*(r/cmad))*(1.-(r/cmad)*(r/cmad));
+         else
+            rw[i] = 0.;
+      }
+      iiter++;
    }
 }
 
@@ -406,52 +406,52 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
    a = 0.;
    j = nleft;
    while (j <= n) {
-	// compute weights (pick up all ties on right)
+   // compute weights (pick up all ties on right)
       w[j] = 0.;
-	   r = TMath::Abs(x[j] - xs);
-	   if (r <= h9) {
-	      if (r <= h1) {
-		      w[j] = 1.;
-	      } else {
+      r = TMath::Abs(x[j] - xs);
+      if (r <= h9) {
+         if (r <= h1) {
+            w[j] = 1.;
+         } else {
             d = (r/h)*(r/h)*(r/h);
-		      w[j] = (1.- d)*(1.- d)*(1.- d);
+            w[j] = (1.- d)*(1.- d)*(1.- d);
          }
-	      if (userw)
-		      w[j] *= rw[j];
-	      a += w[j];
-	   } else if (x[j] > xs)
-	      break;
-	   j = j+1;
+         if (userw)
+            w[j] *= rw[j];
+         a += w[j];
+      } else if (x[j] > xs)
+         break;
+      j = j+1;
    }
 
 // rightmost pt (may be greater than nright because of ties)
    nrt = j-1;
    if (a <= 0.)
-	   ok = kFALSE;
+      ok = kFALSE;
    else {
-	   ok = kTRUE;
+      ok = kTRUE;
    // weighted least squares: make sum of w[j] == 1
-	   for(j=nleft ; j<=nrt ; j++)
-	      w[j] /= a;
-	   if (h > 0.) {
-	      a = 0.;
+      for(j=nleft ; j<=nrt ; j++)
+         w[j] /= a;
+      if (h > 0.) {
+         a = 0.;
       // use linear fit weighted center of x values
          for(j=nleft ; j<=nrt ; j++)
-		      a += w[j] * x[j];
-	      b = xs - a;
-	      c = 0.;
-	      for(j=nleft ; j<=nrt ; j++)
-		      c += w[j]*(x[j]-a)*(x[j]-a);
-	      if (TMath::Sqrt(c) > 0.001*range) {
-		      b /= c;
+            a += w[j] * x[j];
+         b = xs - a;
+         c = 0.;
+         for(j=nleft ; j<=nrt ; j++)
+            c += w[j]*(x[j]-a)*(x[j]-a);
+         if (TMath::Sqrt(c) > 0.001*range) {
+            b /= c;
          // poInt_ts are spread out enough to compute slope
             for(j=nleft; j <= nrt; j++)
-		         w[j] *= (b*(x[j]-a) + 1.);
-	      }
-	   }
-	   ys = 0.;
-	   for(j=nleft; j <= nrt; j++)
-	      ys += w[j] * y[j];
+               w[j] *= (b*(x[j]-a) + 1.);
+         }
+      }
+      ys = 0.;
+      for(j=nleft; j <= nrt; j++)
+         ys += w[j] * y[j];
    }
 }
 
@@ -932,16 +932,16 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
       else switch(iTies) {
          case 1:
             y[k++] = vMean/ndup;
-   	      break;
+            break;
          case 2:
             y[k++] = vMin;
-	         break;
+            break;
          case 3:
             y[k++] = vMax;
-    	      break;
+             break;
          default:
             y[k++] = vMean/ndup;
-   	      break;
+            break;
       }
    }
    fNin = k;
@@ -960,13 +960,13 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
       case 1:
          ylow  = 0;   // = nan("NAN") ??
          yhigh = 0;   // = nan("NAN") ??
-	 break;
+    break;
       case 2:
          ylow  = fGin->GetY()[0];
          yhigh = fGin->GetY()[fNin-1];
-	 break;
+    break;
       default:
-	 break;
+    break;
    }
 
 // cleanup
@@ -1106,9 +1106,9 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
 
 // find the correct interval by bisection
    while(i < j - 1) {
-	   Int_t ij = (i + j)/2;
-	   if(v < x[ij]) j = ij;
-	   else i = ij;
+      Int_t ij = (i + j)/2;
+      if(v < x[ij]) j = ij;
+      else i = ij;
    }
 
 // interpolation
@@ -1116,9 +1116,9 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
    if(v == x[i]) return y[i];
 
    if(iKind == 1) { // linear
-	   return y[i] + (y[j] - y[i]) * ((v - x[i])/(x[j] - x[i]));
+      return y[i] + (y[j] - y[i]) * ((v - x[i])/(x[j] - x[i]));
    } else { // 2 : constant
-	   return y[i] * (1-f) + y[j] * f;
+      return y[i] * (1-f) + y[j] * f;
    }
 }
 
@@ -1127,10 +1127,10 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
 Int_t TGraphSmooth::Rcmp(Double_t x, Double_t y)
 {
 //   static function
-//   if (ISNAN(x))	return 1;
-//   if (ISNAN(y))	return -1;
-   if (x < y)		return -1;
-   if (x > y)		return 1;
+//   if (ISNAN(x))   return 1;
+//   if (ISNAN(y))   return -1;
+   if (x < y)      return -1;
+   if (x > y)      return 1;
    return 0;
 }
 
@@ -1146,14 +1146,14 @@ void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
    Int_t pL, pR, i, j;
 
    for (pL = 0, pR = n - 1; pL < pR; ) {
-	   v = x[k];
-	   for(i = pL, j = pR; i <= j;) {
-	      while (TGraphSmooth::Rcmp(x[i], v) < 0) i++;
-	      while (TGraphSmooth::Rcmp(v, x[j]) < 0) j--;
-	      if (i <= j) { w = x[i]; x[i++] = x[j]; x[j--] = w; }
-	   }
-	   if (j < k) pL = i;
-	   if (k < i) pR = j;
+      v = x[k];
+      for(i = pL, j = pR; i <= j;) {
+         while (TGraphSmooth::Rcmp(x[i], v) < 0) i++;
+         while (TGraphSmooth::Rcmp(v, x[j]) < 0) j--;
+         if (i <= j) { w = x[i]; x[i++] = x[j]; x[j--] = w; }
+      }
+      if (j < k) pL = i;
+      if (k < i) pR = j;
    }
 }
 

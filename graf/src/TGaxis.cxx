@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.79 2005/06/10 15:53:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.80 2005/08/30 16:03:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -338,18 +338,18 @@ void TGaxis::Paint(Option_t *)
    TString opt = fChopt;
    opt.ToUpper();
    if (gPad->GetLogx()) {
-	   if ((y1 == y2) && !opt.Contains("G")) opt += "G";
+      if ((y1 == y2) && !opt.Contains("G")) opt += "G";
    } else {
-	   if ((y1 == y2) && opt.Contains("G")) opt.ReplaceAll("G","");
+      if ((y1 == y2) && opt.Contains("G")) opt.ReplaceAll("G","");
    }
    if (gPad->GetLogy()) {
-	   if ((x1 == x2) && !opt.Contains("G")) opt += "G";
+      if ((x1 == x2) && !opt.Contains("G")) opt += "G";
    } else {
-	   if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
+      if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
    }
 */
    
-	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
+   PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
@@ -670,7 +670,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                sscanf(sdp.Data(),"%g",&dp);
                timeoffset += dp;
             }
-	    // if optionTime = 2 gmtime will be used instead of localtime
+            // if optionTime = 2 gmtime will be used instead of localtime
             if (stringtimeoffset.Index("GMT")>=0) optionTime =2;
          } else {
             Error(where, "Time offset has not the right format");

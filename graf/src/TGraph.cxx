@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.165 2005/08/09 13:42:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.166 2005/08/30 16:45:07 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -967,7 +967,7 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
    linear= (char*) strstr(fname, "++");
    TF1 *f1=0;
    if (linear)
-	 f1=new TF1(fname, fname, xmin, xmax);
+      f1=new TF1(fname, fname, xmin, xmax);
    else {
       f1 = (TF1*)gROOT->GetFunction(fname);
       if (!f1) { Printf("Unknown function: %s",fname); return -1; }
@@ -1242,19 +1242,19 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
-	 delete TVirtualFitter::GetFitter();
-	 isSet = kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet = kFALSE;
       }
       if (!isSet) {
-	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+         TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
       if (isSet && strdiff==0){
-	 delete TVirtualFitter::GetFitter();
-	 isSet = kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet = kFALSE;
       }
       if (!isSet)
-	 TVirtualFitter::SetFitter(0);
+         TVirtualFitter::SetFitter(0);
    }
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    grFitter->Clear();
@@ -1289,10 +1289,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
       //*-*- Some initialisations
       if (!fitOption.Verbose) {
-	 arglist[0] = -1;
-	 grFitter->ExecuteCommand("SET PRINT", arglist,1);
-	 arglist[0] = 0;
-	 grFitter->ExecuteCommand("SET NOW",   arglist,0);
+         arglist[0] = -1;
+         grFitter->ExecuteCommand("SET PRINT", arglist,1);
+         arglist[0] = 0;
+         grFitter->ExecuteCommand("SET NOW",   arglist,0);
       }
       /////////////////////////////////////////////////////////
       //*-*- Set error criterion for chisquare
@@ -1300,46 +1300,46 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
       fitResult = grFitter->ExecuteCommand("SET err",arglist,1);
       if (fitResult != 0) {
-	 //   Abnormal termination, MIGRAD might not have converged on a
-	 //   minimum.
-	 if (!fitOption.Quiet) {
-	    Warning("Fit","Abnormal termination of minimization.");
-	 }
-	 delete [] arglist;
-	 return fitResult;
+         //   Abnormal termination, MIGRAD might not have converged on a
+         //   minimum.
+         if (!fitOption.Quiet) {
+            Warning("Fit","Abnormal termination of minimization.");
+         }
+         delete [] arglist;
+         return fitResult;
       }
 
       //*-*- Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
       for (i=0;i<npar;i++) {
-	 par = f1->GetParameter(i);
-	 f1->GetParLimits(i,al,bl);
-	 if (al*bl != 0 && al >= bl) {
-	    al = bl = 0;
-	    arglist[nfixed] = i+1;
-	    nfixed++;
-	 }
-	 we  = 0.3*TMath::Abs(par);
-	 if (we <= TMath::Abs(par)*1e-6) we = 1;
-	 grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
+         par = f1->GetParameter(i);
+         f1->GetParLimits(i,al,bl);
+         if (al*bl != 0 && al >= bl) {
+            al = bl = 0;
+            arglist[nfixed] = i+1;
+            nfixed++;
+         }
+         we  = 0.3*TMath::Abs(par);
+         if (we <= TMath::Abs(par)*1e-6) we = 1;
+         grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
       if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
       //*-*- Reset Print level
       if (!fitOption.Quiet) {
-	 if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
-	 else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+         if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+         else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
       }
 
       //*-*- Compute sum of squares of errors in the bin range
       Bool_t hasErrors = kFALSE;
       Double_t ex, ey, sumw2=0;
       for (i=0;i<fNpoints;i++) {
-	if(fX[i]<xmin || fX[i]>xmax) continue;
-	 ex = GetErrorX(i);
-	 ey = GetErrorY(i);
-	 if (ex > 0 || ey > 0) hasErrors = kTRUE;
-	 sumw2 += ey*ey;
+        if(fX[i]<xmin || fX[i]>xmax) continue;
+         ex = GetErrorX(i);
+         ey = GetErrorY(i);
+         if (ex > 0 || ey > 0) hasErrors = kTRUE;
+         sumw2 += ey*ey;
       }
 
       //*-*- Perform minimization
@@ -1348,8 +1348,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       arglist[1] = sumw2*TVirtualFitter::GetPrecision();
       grFitter->ExecuteCommand("MIGRAD",arglist,2);
       if (fitOption.Errors) {
-	 grFitter->ExecuteCommand("HESSE",arglist,0);
-	 grFitter->ExecuteCommand("MINOS",arglist,0);
+         grFitter->ExecuteCommand("HESSE",arglist,0);
+         grFitter->ExecuteCommand("MINOS",arglist,0);
 
       }
 
@@ -1363,16 +1363,16 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       //*-*- Get return status
       char parName[50];
       for (i=0;i<npar;i++) {
-	 grFitter->GetParameter(i,parName, par,we,al,bl);
-	 if (!fitOption.Errors) werr = we;
-	 else {
-	    grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-	    else                         werr = we;
-	 }
-	 if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
-	 f1->SetParameter(i,par);
-	 f1->SetParError(i,werr);
+         grFitter->GetParameter(i,parName, par,we,al,bl);
+         if (!fitOption.Errors) werr = we;
+         else {
+            grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+            if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+            else                         werr = we;
+         }
+         if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
+         f1->SetParameter(i,par);
+         f1->SetParError(i,werr);
       }
    }
 
@@ -1813,7 +1813,7 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
     const Double_t one = 1.;
     const Int_t idim = 20;
 
-    Double_t  b[400]	/* was [20][20] */;
+    Double_t  b[400]        /* was [20][20] */;
     Int_t i, k, l, ifail;
     Double_t power;
     Double_t da[20], xk, yk;
@@ -1827,33 +1827,33 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
     if (m > idim || m > n) return;
     da[0] = zero;
     for (l = 2; l <= m; ++l) {
-	b[l-1]           = zero;
-	b[m + l*20 - 21] = zero;
-	da[l-1]          = zero;
+        b[l-1]           = zero;
+        b[m + l*20 - 21] = zero;
+        da[l-1]          = zero;
     }
     Int_t np = 0;
     for (k = 0; k < fNpoints; ++k) {
-	xk     = fX[k];
-	if (xk < xmin || xk > xmax) continue;
+        xk     = fX[k];
+        if (xk < xmin || xk > xmax) continue;
         np++;
         yk     = fY[k];
-	power  = one;
-	da[0] += yk;
-	for (l = 2; l <= m; ++l) {
-	    power   *= xk;
-	    b[l-1]  += power;
-	    da[l-1] += power*yk;
-	}
-	for (l = 2; l <= m; ++l) {
-	    power            *= xk;
-	    b[m + l*20 - 21] += power;
-	}
+        power  = one;
+        da[0] += yk;
+        for (l = 2; l <= m; ++l) {
+            power   *= xk;
+            b[l-1]  += power;
+            da[l-1] += power*yk;
+        }
+        for (l = 2; l <= m; ++l) {
+            power            *= xk;
+            b[m + l*20 - 21] += power;
+        }
     }
     b[0]  = Double_t(np);
     for (i = 3; i <= m; ++i) {
-	for (k = i; k <= m; ++k) {
-	    b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
-	}
+        for (k = i; k <= m; ++k) {
+            b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
+        }
     }
     H1LeastSquareSeqnd(m, b, idim, ifail, 1, da);
 
@@ -1892,18 +1892,18 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
     xbar  = ybar = x2bar = xybar = 0;
     Int_t np = 0;
     for (i = 0; i < fNpoints; ++i) {
-	xk = fX[i];
-	if (xk < xmin || xk > xmax) continue;
+        xk = fX[i];
+        if (xk < xmin || xk > xmax) continue;
         np++;
-	yk = fY[i];
-	if (ndata < 0) {
-	    if (yk <= 0) yk = 1e-9;
-	    yk = TMath::Log(yk);
-	}
-	xbar  += xk;
-	ybar  += yk;
-	x2bar += xk*xk;
-	xybar += xk*yk;
+        yk = fY[i];
+        if (ndata < 0) {
+            if (yk <= 0) yk = 1e-9;
+            yk = TMath::Log(yk);
+        }
+        xbar  += xk;
+        ybar  += yk;
+        x2bar += xk*xk;
+        xybar += xk*yk;
     }
     fn    = Double_t(np);
     det   = fn*x2bar - xbar*xbar;
@@ -2845,15 +2845,15 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                     }
                  }
                  // remove points after the high cutoff
-		 Int_t point2 = npoints;
+                 Int_t point2 = npoints;
                  for (ip=point2; ip>=point1; ip--) {
                     if (gyworkl[ip] != ywmin) {
                        point2 = ip;
                        break;
                     }
                  }
-			  npoints = point2-point1+1;
-		    }
+                          npoints = point2-point1+1;
+                    }
               gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1],noClip);
               continue;
            }
@@ -4067,7 +4067,7 @@ L390:
 
 //______________________________________________________________________________
 void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
-		  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) {
+                  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) {
 // Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
 // To compare two points the function parameter greaterfunc is used (see TGraph::CompareX for an
 // example of such a method, which is also the default comparison function for Sort). After
@@ -4098,12 +4098,12 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::
    while (left < right) {
       // move left while item < pivot
       while(left <= high && greaterfunc(this, left, low) != ascending)
-	 left++;
+         left++;
       // move right while item > pivot
       while(right > low && greaterfunc(this, right, low) == ascending)
-	 right--;
+         right--;
       if (left < right && left < high && right > low)
-	 SwapPoints(left, right);
+         SwapPoints(left, right);
    }
    // right is final position for the pivot
    if (right > low)

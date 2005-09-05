@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.49 2005/06/13 10:10:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.50 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -598,7 +598,7 @@ void TGraphErrors::Paint(Option_t *option)
          yline[if2-1] = gPad->YtoPad(fY[i] - ey);
          if1++;
          if2--;
-	 continue;
+         continue;
       }
 
       xl1 = x - s2x*cx;

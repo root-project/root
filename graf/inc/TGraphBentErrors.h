@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.6 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.7 2005/03/07 09:15:45 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -52,28 +52,28 @@ public:
         TGraphBentErrors();
         TGraphBentErrors(Int_t n);
         TGraphBentErrors(Int_t n,
-			 const Float_t *x, const Float_t *y,
-			 const Float_t *exl=0, const Float_t *exh=0,
-			 const Float_t *eyl=0, const Float_t *eyh=0,
-			 const Float_t *exld=0, const Float_t *exhd=0,
-			 const Float_t *eyld=0, const Float_t *eyhd=0);
+                         const Float_t *x, const Float_t *y,
+                         const Float_t *exl=0, const Float_t *exh=0,
+                         const Float_t *eyl=0, const Float_t *eyh=0,
+                         const Float_t *exld=0, const Float_t *exhd=0,
+                         const Float_t *eyld=0, const Float_t *eyhd=0);
         TGraphBentErrors(Int_t n,
-			 const Double_t *x, const Double_t *y,
-			 const Double_t *exl=0, const Double_t *exh=0,
-			 const Double_t *eyl=0, const Double_t *eyh=0,
-			 const Double_t *exld=0, const Double_t *exhd=0,
-			 const Double_t *eyld=0, const Double_t *eyhd=0);
+                         const Double_t *x, const Double_t *y,
+                         const Double_t *exl=0, const Double_t *exh=0,
+                         const Double_t *eyl=0, const Double_t *eyh=0,
+                         const Double_t *exld=0, const Double_t *exhd=0,
+                         const Double_t *eyld=0, const Double_t *eyhd=0);
         TGraphBentErrors(const TGraphBentErrors &gr);
         virtual ~TGraphBentErrors();
         virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin,
-				     Double_t &xmax, Double_t &ymax) const;
+                                     Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin)     const;
         Double_t        GetErrorY(Int_t bin)     const;
-	Double_t        GetErrorXlow(Int_t bin)  const;
-	Double_t        GetErrorXhigh(Int_t bin) const;
-	Double_t        GetErrorYlow(Int_t bin)  const;
-	Double_t        GetErrorYhigh(Int_t bin) const;
+        Double_t        GetErrorXlow(Int_t bin)  const;
+        Double_t        GetErrorXhigh(Int_t bin) const;
+        Double_t        GetErrorYlow(Int_t bin)  const;
+        Double_t        GetErrorYhigh(Int_t bin) const;
         Double_t       *GetEXlow()  const {return fEXlow;}
         Double_t       *GetEXhigh() const {return fEXhigh;}
         Double_t       *GetEYlow()  const {return fEYlow;}
@@ -82,10 +82,10 @@ public:
         virtual void    Print(Option_t *chopt="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
         virtual void    SetPointError(Double_t exl, Double_t exh,
-				      Double_t eyl, Double_t eyh); // *MENU*
+                                      Double_t eyl, Double_t eyh); // *MENU*
         virtual void    SetPointError(Int_t i,
-				      Double_t exl, Double_t exh,
-				      Double_t eyl, Double_t eyh);
+                                      Double_t exl, Double_t exh,
+                                      Double_t eyl, Double_t eyh);
 
         ClassDef(TGraphBentErrors,1)  //A graph with bent, asymmetric error bars
 };

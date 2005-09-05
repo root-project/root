@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.15 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.16 2004/06/26 13:38:57 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -222,7 +222,7 @@ Double_t TCutG::Integral(TH2 *h, Option_t *option) const
    // Compute the integral of 2-d histogram h for all bins inside the cut
    // if option "width" is specified, the integral is the sum of
    // the bin contents multiplied by the bin width in x and in y.
-	
+
    if (!h) return 0;
    Int_t n = GetN();
    Double_t xmin= 1e200;
@@ -255,7 +255,7 @@ Double_t TCutG::Integral(TH2 *h, Option_t *option) const
       for (binx=binx1;binx<=binx2;binx++) {
          Double_t x = xaxis->GetBinCenter(binx);
          if (!IsInside(x,y)) continue;
-	 bin = binx +(nbinsx+2)*biny;
+         bin = binx +(nbinsx+2)*biny;
          if (width) integral += h->GetBinContent(bin)*xaxis->GetBinWidth(binx)*yaxis->GetBinWidth(biny);
          else       integral += h->GetBinContent(bin);
       }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.9 2004/04/26 19:49:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.10 2004/10/21 09:48:57 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 class TF1;
 
 class TSpline : public TNamed, public TAttLine,
-		public TAttFill, public TAttMarker
+                public TAttFill, public TAttMarker
 {
 protected:
   Double_t  fDelta;     // Distance between equidistant knots
@@ -42,7 +42,7 @@ public:
   TSpline() : fDelta(-1), fXmin(0), fXmax(0),
     fNp(0), fKstep(kFALSE), fHistogram(0), fGraph(0), fNpx(100) {}
   TSpline(const char *title, Double_t delta, Double_t xmin,
-	  Double_t xmax, Int_t np, Bool_t step) :
+          Double_t xmax, Int_t np, Bool_t step) :
     TNamed("Spline",title), TAttFill(0,1),
     fDelta(delta), fXmin(xmin),
     fXmax(xmax), fNp(np), fKstep(step),
@@ -120,7 +120,7 @@ public:
   TSplinePoly5() :
     fB(0), fC(0), fD(0), fE(0), fF(0) {}
   TSplinePoly5(Double_t x, Double_t y, Double_t b, Double_t c,
-	 Double_t d, Double_t e, Double_t f) :
+         Double_t d, Double_t e, Double_t f) :
     TSplinePoly(x,y), fB(b), fC(c), fD(d), fE(e), fF(f) {}
   Double_t &B() {return fB;}
   Double_t &C() {return fC;}
@@ -157,29 +157,29 @@ public:
   TSpline3() : fPoly(0), fValBeg(0), fValEnd(0),
     fBegCond(-1), fEndCond(-1) {}
   TSpline3(const char *title,
-	   Double_t x[], Double_t y[], Int_t n, const char *opt=0,
-	   Double_t valbeg=0, Double_t valend=0);
+           Double_t x[], Double_t y[], Int_t n, const char *opt=0,
+           Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   Double_t xmin, Double_t xmax,
-	   Double_t y[], Int_t n, const char *opt=0,
-	   Double_t valbeg=0, Double_t valend=0);
+           Double_t xmin, Double_t xmax,
+           Double_t y[], Int_t n, const char *opt=0,
+           Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   Double_t x[], const TF1 *func, Int_t n, const char *opt=0,
-	   Double_t valbeg=0, Double_t valend=0);
+           Double_t x[], const TF1 *func, Int_t n, const char *opt=0,
+           Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   Double_t xmin, Double_t xmax,
-	   const TF1 *func, Int_t n, const char *opt=0,
-	   Double_t valbeg=0, Double_t valend=0);
+           Double_t xmin, Double_t xmax,
+           const TF1 *func, Int_t n, const char *opt=0,
+           Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   const TGraph *g, const char *opt=0,
-	   Double_t valbeg=0, Double_t valend=0);
+           const TGraph *g, const char *opt=0,
+           Double_t valbeg=0, Double_t valend=0);
   Int_t    FindX(Double_t x) const;
   Double_t Eval(Double_t x) const;
   Double_t Derivative(Double_t x) const;
   virtual ~TSpline3() {if (fPoly) delete [] fPoly;}
   void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
-		Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
-		b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
+                Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
+                b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
   void GetKnot(Int_t i, Double_t &x, Double_t &y) const
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   virtual  void     SaveAs(const char *filename) const;
@@ -196,42 +196,42 @@ private:
 
   void BuildCoeff();
   void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
-			  const char *&cb1, const char *&ce1, const char *&cb2,
+                          const char *&cb1, const char *&ce1, const char *&cb2,
                           const char *&ce2);
   void SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-		     const char *cb1, const char *ce1, const char *cb2,
+                     const char *cb1, const char *ce1, const char *cb2,
                      const char *ce2);
 
 public:
   TSpline5() : fPoly(0) {}
   TSpline5(const char *title,
-	   Double_t x[], Double_t y[], Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
-	   Double_t b2=0, Double_t e2=0);
+           Double_t x[], Double_t y[], Int_t n,
+           const char *opt=0, Double_t b1=0, Double_t e1=0,
+           Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   Double_t xmin, Double_t xmax,
-	   Double_t y[], Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
-	   Double_t b2=0, Double_t e2=0);
+           Double_t xmin, Double_t xmax,
+           Double_t y[], Int_t n,
+           const char *opt=0, Double_t b1=0, Double_t e1=0,
+           Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   Double_t x[], const TF1 *func, Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
-	   Double_t b2=0, Double_t e2=0);
+           Double_t x[], const TF1 *func, Int_t n,
+           const char *opt=0, Double_t b1=0, Double_t e1=0,
+           Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   Double_t xmin, Double_t xmax,
-	   const TF1 *func, Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
-	   Double_t b2=0, Double_t e2=0);
+           Double_t xmin, Double_t xmax,
+           const TF1 *func, Int_t n,
+           const char *opt=0, Double_t b1=0, Double_t e1=0,
+           Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   const TGraph *g,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
-	   Double_t b2=0, Double_t e2=0);
+           const TGraph *g,
+           const char *opt=0, Double_t b1=0, Double_t e1=0,
+           Double_t b2=0, Double_t e2=0);
   Int_t    FindX(Double_t x) const;
   Double_t Eval(Double_t x) const;
   Double_t Derivative(Double_t x) const;
   ~TSpline5() {if (fPoly) delete [] fPoly;}
   void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
-		Double_t &c, Double_t &d, Double_t &e, Double_t &f)
+                Double_t &c, Double_t &d, Double_t &e, Double_t &f)
     {x=fPoly[i].X();y=fPoly[i].Y();b=fPoly[i].B();
     c=fPoly[i].C();d=fPoly[i].D();
     e=fPoly[i].E();f=fPoly[i].F();}

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.23 2005/06/23 10:04:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.24 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -176,7 +176,7 @@ Int_t TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t x
    linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
    if (linear)
-	 f1=new TF1(fname, fname, xmin, xmax);
+      f1=new TF1(fname, fname, xmin, xmax);
    else {
       f1 = (TF1*)gROOT->GetFunction(fname);
       if (!f1) { Printf("Unknown function: %s",fname); return -1; }
@@ -405,8 +405,8 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    } else {
       g=(TGraph *)fGraphs->First();
       if (!g) {
-	 Error("Fit", "No graphs in the multigraph");
-	 return 0;
+         Error("Fit", "No graphs in the multigraph");
+         return 0;
       }
       Double_t *px, *py;
       np=g->GetN();
@@ -423,15 +423,15 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
       next.Reset();
       while ((g = (TGraph*) next())) {
-	 np=g->GetN();
-	 px=g->GetX();
-	 py=g->GetY();
-	 for (i=0; i<np; i++) {
-	    if (px[i] < xmin) xmin = px[i];
-	    if (px[i] > xmax) xmax = px[i];
-	    if (py[i] < ymin) ymin = py[i];
-	    if (py[i] > ymax) ymax = py[i];
-	 }
+         np=g->GetN();
+         px=g->GetX();
+         py=g->GetY();
+         for (i=0; i<np; i++) {
+            if (px[i] < xmin) xmin = px[i];
+            if (px[i] > xmax) xmax = px[i];
+            if (py[i] < ymin) ymin = py[i];
+            if (py[i] > ymax) ymax = py[i];
+         }
       }
    }
 
@@ -457,19 +457,19 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    if (linear){
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet) {
-	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+         TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
       if (isSet && strdiff==0){
-	 delete TVirtualFitter::GetFitter();
-	 isSet=kFALSE;
+         delete TVirtualFitter::GetFitter();
+         isSet=kFALSE;
       }
       if (!isSet)
-	 TVirtualFitter::SetFitter(0);
+         TVirtualFitter::SetFitter(0);
    }
 
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
@@ -516,48 +516,48 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
       fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
       if (fitResult != 0) {
-	 //   Abnormal termination, MIGRAD might not have converged on a
-	 //   minimum.
-	 if (!fitOption.Quiet) {
-	    Warning("Fit","Abnormal termination of minimization.");
-	 }
-	 delete [] arglist;
-	 return fitResult;
+         //   Abnormal termination, MIGRAD might not have converged on a
+         //   minimum.
+         if (!fitOption.Quiet) {
+            Warning("Fit","Abnormal termination of minimization.");
+         }
+         delete [] arglist;
+         return fitResult;
       }
 
       //*-*- Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
       for (i=0;i<npar;i++) {
-	 par = f1->GetParameter(i);
-	 f1->GetParLimits(i,al,bl);
-	 if (al*bl != 0 && al >= bl) {
-	    al = bl = 0;
-	    arglist[nfixed] = i+1;
-	    nfixed++;
-	 }
-	 we  = 0.3*TMath::Abs(par);
-	 if (we <= TMath::Abs(par)*1e-6) we = 1;
-	 grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
+         par = f1->GetParameter(i);
+         f1->GetParLimits(i,al,bl);
+         if (al*bl != 0 && al >= bl) {
+            al = bl = 0;
+            arglist[nfixed] = i+1;
+            nfixed++;
+         }
+         we  = 0.3*TMath::Abs(par);
+         if (we <= TMath::Abs(par)*1e-6) we = 1;
+         grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
       if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
       //*-*- Reset Print level
       if (!fitOption.Quiet) {
-	 if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
-	 else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+         if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+         else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
       }
       //*-*- Compute sum of squares of errors in the bin range
       Bool_t hasErrors = kFALSE;
       Double_t ex, ey, sumw2=0;
       next.Reset();
       while ((g = (TGraph*) next())) {
-	 np=g->GetN();
-	 for (i=0; i<np; i++){
-	    ex=g->GetErrorX(i);
-	    ey=g->GetErrorY(i);
-	    if (ex > 0 || ey > 0) hasErrors=kTRUE;
-	    sumw2+=ey*ey;
-	 }
+         np=g->GetN();
+         for (i=0; i<np; i++){
+            ex=g->GetErrorX(i);
+            ey=g->GetErrorY(i);
+            if (ex > 0 || ey > 0) hasErrors=kTRUE;
+            sumw2+=ey*ey;
+         }
       }
 
       //*-*- Perform minimization
@@ -566,8 +566,8 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       arglist[1] = sumw2*TVirtualFitter::GetPrecision();
       grFitter->ExecuteCommand("MIGRAD",arglist,2);
       if (fitOption.Errors) {
-	 grFitter->ExecuteCommand("HESSE",arglist,0);
-	 grFitter->ExecuteCommand("MINOS",arglist,0);
+         grFitter->ExecuteCommand("HESSE",arglist,0);
+         grFitter->ExecuteCommand("MINOS",arglist,0);
       }
 
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
@@ -578,16 +578,16 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       //*-*- Get return status
       char parName[50];
       for (i=0;i<npar;i++) {
-	 grFitter->GetParameter(i,parName, par,we,al,bl);
-	 if (!fitOption.Errors) werr = we;
-	 else {
-	    grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-	    else                         werr = we;
-	 }
-	 if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
-	 f1->SetParameter(i,par);
-	 f1->SetParError(i,werr);
+         grFitter->GetParameter(i,parName, par,we,al,bl);
+         if (!fitOption.Errors) werr = we;
+         else {
+            grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+            if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+            else                         werr = we;
+         }
+         if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
+         f1->SetParameter(i,par);
+         f1->SetParError(i,werr);
       }
    }
 //*-*- Print final values of parameters.
@@ -606,9 +606,9 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
          TObject *obj;
          while ((obj = next2())) {
             if (obj->InheritsFrom(TF1::Class())){
-	       obj = fFunctions->Remove(obj);
-	       delete obj;
-	    }
+               obj = fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
       fnew1 = new TF1();
@@ -666,13 +666,13 @@ void TMultiGraph::InitGaus(Double_t xmin, Double_t xmax)
       py=g->GetY();
       npp=g->GetN();
       for (bin=0; bin<npp; bin++){
-	 x=px[bin];
-	 if (x<xmin || x>xmax) continue;
-	 np++;
-	 val=py[bin];
-	 sumx+=val*x;
-	 sumx2+=val*x*x;
-	 allcha+=val;
+         x=px[bin];
+         if (x<xmin || x>xmax) continue;
+         np++;
+         val=py[bin];
+         sumx+=val*x;
+         sumx2+=val*x*x;
+         allcha+=val;
       }
    }
    if (np == 0 || allcha == 0) return;
@@ -743,7 +743,7 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
     const Double_t one = 1.;
     const Int_t idim = 20;
 
-    Double_t  b[400]	/* was [20][20] */;
+    Double_t  b[400]        /* was [20][20] */;
     Int_t i, k, l, ifail, bin;
     Double_t power;
     Double_t da[20], xk, yk;
@@ -760,9 +760,9 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
        py=g->GetY();
        npp=g->GetN();
        for (bin=0; bin<npp; bin++){
-	  xk=px[bin];
-	  if (xk < xmin || xk > xmax) continue;
-	  n++;
+          xk=px[bin];
+          if (xk < xmin || xk > xmax) continue;
+          n++;
        }
     }
     if (m <= 2) {
@@ -772,9 +772,9 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
     if (m > idim || m > n) return;
     da[0] = zero;
     for (l = 2; l <= m; ++l) {
-	b[l-1]           = zero;
-	b[m + l*20 - 21] = zero;
-	da[l-1]          = zero;
+        b[l-1]           = zero;
+        b[m + l*20 - 21] = zero;
+        da[l-1]          = zero;
     }
     Int_t np = 0;
 
@@ -785,28 +785,28 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
        npp=g->GetN();
 
        for (k = 0; k <= npp; ++k) {
-	  xk     = px[k];
-	  if (xk < xmin || xk > xmax) continue;
-	  np++;
-	  yk     = py[k];
-	  power  = one;
-	  da[0] += yk;
-	  for (l = 2; l <= m; ++l) {
-	     power   *= xk;
-	    b[l-1]  += power;
-	    da[l-1] += power*yk;
-	  }
-	  for (l = 2; l <= m; ++l) {
-	     power            *= xk;
-	     b[m + l*20 - 21] += power;
-	  }
+          xk     = px[k];
+          if (xk < xmin || xk > xmax) continue;
+          np++;
+          yk     = py[k];
+          power  = one;
+          da[0] += yk;
+          for (l = 2; l <= m; ++l) {
+             power   *= xk;
+            b[l-1]  += power;
+            da[l-1] += power*yk;
+          }
+          for (l = 2; l <= m; ++l) {
+             power            *= xk;
+             b[m + l*20 - 21] += power;
+          }
        }
     }
     b[0]  = Double_t(np);
     for (i = 3; i <= m; ++i) {
-	for (k = i; k <= m; ++k) {
-	    b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
-	}
+        for (k = i; k <= m; ++k) {
+            b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
+        }
     }
     H1LeastSquareSeqnd(m, b, idim, ifail, 1, da);
 
@@ -854,18 +854,18 @@ void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, 
        py=g->GetY();
        npp=g->GetN();
        for (i = 0; i < npp; ++i) {
-	  xk = px[i];
-	  if (xk < xmin || xk > xmax) continue;
-	  np++;
-	  yk = py[i];
-	  if (ndata < 0) {
-	     if (yk <= 0) yk = 1e-9;
-	     yk = TMath::Log(yk);
-	  }
-	  xbar  += xk;
-	  ybar  += yk;
-	  x2bar += xk*xk;
-	  xybar += xk*yk;
+          xk = px[i];
+          if (xk < xmin || xk > xmax) continue;
+          np++;
+          yk = py[i];
+          if (ndata < 0) {
+             if (yk <= 0) yk = 1e-9;
+             yk = TMath::Log(yk);
+          }
+          xbar  += xk;
+          ybar  += yk;
+          x2bar += xk*xk;
+          xybar += xk*yk;
        }
     }
     fn    = Double_t(np);
