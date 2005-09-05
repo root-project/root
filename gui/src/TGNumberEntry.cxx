@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.9 2004/10/11 16:25:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.10 2005/08/12 15:53:05 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -99,7 +99,7 @@ ClassImp(TGNumberEntry);
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-enum RealStyle {                // Style of real
+enum ERealStyle {               // Style of real
    kRSInt = 0,                  // Integer
    kRSFrac = 1,                 // Fraction only
    kRSExpo = 2,                 // Exponent only
@@ -109,7 +109,7 @@ enum RealStyle {                // Style of real
 //______________________________________________________________________________
 struct RealInfo_t {
    // Style of real
-   RealStyle fStyle;
+   ERealStyle fStyle;
    // Number of fractional digits
    Int_t fFracDigits;
    // Base of fractional digits

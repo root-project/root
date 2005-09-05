@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.22 2005/08/15 12:57:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.23 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 
 #include <sys/stat.h>
 
-enum {
+enum EFileFialog {
    kIDF_CDUP,
    kIDF_NEW_FOLDER,
    kIDF_LIST,

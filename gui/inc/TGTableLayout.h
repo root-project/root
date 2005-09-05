@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.2 2001/05/02 14:18:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.3 2003/11/10 15:44:32 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
 class TGTableLayout : public TGLayoutManager {
 
 protected:
-   struct TableData {
+   struct TableData_t {
       UInt_t fDefSize;        // Default size of col/rows
       UInt_t fRealSize;       // Real size of col/rows (eg, if table resize)
       Bool_t fNeedExpand;
@@ -92,11 +92,11 @@ protected:
       Bool_t fShrink;
       Bool_t fEmpty;
    };
-   TableData        *fRow;          // info about each row
-   TableData        *fCol;          // info about each column
-   TGCompositeFrame *fMain;         // container frame
-   TList            *fList;         // list of frames to arrange
-   Bool_t            fHomogeneous;  // all cols/rows same size
+   TableData_t        *fRow;          // info about each row
+   TableData_t        *fCol;          // info about each column
+   TGCompositeFrame   *fMain;         // container frame
+   TList              *fList;         // list of frames to arrange
+   Bool_t              fHomogeneous;  // all cols/rows same size
 
    void FindRowColSizes();
    void FindRowColSizesInit();
@@ -110,7 +110,7 @@ protected:
    void CheckSanity();
 
    static void SetRowColResize(UInt_t real_size, UInt_t nthings,
-                               TableData *thing, Bool_t homogeneous);
+                               TableData_t *thing, Bool_t homogeneous);
 
 public:
    // these are public in TGMatrixLayout ???  Perpetuate it.

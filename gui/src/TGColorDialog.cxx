@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.16 2005/01/18 21:07:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.17 2005/08/23 17:00:41 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -76,7 +76,7 @@ ClassImp(TGColorDialog)
 // - improve the color allocation routine.
 // - use a buffering pixmap for the fColormap image.
 
-enum {
+enum EColorDialog {
    kCDLG_OK       = 100,
    kCDLG_CANCEL,
    kCDLG_ADD,
@@ -93,13 +93,13 @@ enum {
    kCDLG_BTE
 };
 
-enum {
+enum EColorPick {
    kCLICK_NONE,
    kCLICK_HS,
    kCLICK_L
 };
 
-enum {
+enum EColorImage {
    kIMG_HS,
    kIMG_L
 };

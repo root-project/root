@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.6 2003/11/10 15:44:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.7 2003/11/12 19:34:59 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -107,8 +107,8 @@ void TGTableLayout::FindRowColSizesInit()
 
    if (fRow) delete [] fRow;
    if (fCol) delete [] fCol;
-   fRow = new TableData[fNrows];
-   fCol = new TableData[fNcols];
+   fRow = new TableData_t[fNrows];
+   fCol = new TableData_t[fNcols];
 
    // Find max of each row and column
 
@@ -229,7 +229,7 @@ void TGTableLayout::FindRowColSizesMultiplyAttached()
 
 //______________________________________________________________________________
 void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
-                                    TableData *thing, Bool_t homogeneous)
+                                    TableData_t *thing, Bool_t homogeneous)
 {
    // If main frame is bigger or smaller than all children,
    // expand/shrink to fill. This is symmetric under row<-->col

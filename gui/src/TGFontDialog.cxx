@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.8 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TROOT.h"
 #include "TString.h"
 
-enum {
+enum EFontDialog {
     kFDLG_OK           = 1,
     kFDLG_CANCEL,
 

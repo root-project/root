@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.14 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.15 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -46,14 +46,16 @@ TGGC         *TGTreeLBEntry::fgDefaultGC = 0;
 
 //--- this is temp here...
 
-struct lbc_t {
-  const char *name;
-  const char *path;
-  const char *pixmap;
-  Int_t       id, indent, flags;
+struct Lbc_t {
+  const char *fName;
+  const char *fPath;
+  const char *fPixmap;
+  Int_t       fId;
+  Int_t       fIndent;
+  Int_t       fFlags;
 };
 
-static struct lbc_t gLbc[] = {
+static struct Lbc_t gLbc[] = {
   { "Root",        "/",                     "hdisk_t.xpm",         1000, 0, 0 },
   { "Floppy",      "/floppy",               "fdisk_t.xpm",         2000, 1, 0 },
   { "CD-ROM",      "/cdrom",                "cdrom_t.xpm",         3000, 1, 0 },
@@ -238,47 +240,47 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    const char *rootSys = ROOTPREFIX;
 #endif
 
-   for (i = 0; gLbc[i].path != 0; ++i) {
-      if (strstr(gLbc[i].path, "$HOME") != 0) {
+   for (i = 0; gLbc[i].fPath != 0; ++i) {
+      if (strstr(gLbc[i].fPath, "$HOME") != 0) {
          if (homeDir) {
             int hlen = strlen(homeDir);
-            p = new char[hlen + strlen(gLbc[i].path) - 3];
+            p = new char[hlen + strlen(gLbc[i].fPath) - 3];
             strcpy(p, homeDir);
-            strcat(p, &gLbc[i].path[5]);
-            gLbc[i].path = p;
+            strcat(p, &gLbc[i].fPath[5]);
+            gLbc[i].fPath = p;
          } else {
-            gLbc[i].flags = 0;
+            gLbc[i].fFlags = 0;
          }
       }
 #ifndef ROOTPREFIX
-      if (strstr(gLbc[i].path, "$ROOTSYS") != 0) {
+      if (strstr(gLbc[i].fPath, "$ROOTSYS") != 0) {
 #else
-      if (strstr(gLbc[i].path, ROOTPREFIX) != 0) {
+      if (strstr(gLbc[i].fPath, ROOTPREFIX) != 0) {
 #endif
          if (rootSys) {
             int hlen = strlen(rootSys);
-            p = new char[hlen + strlen(gLbc[i].path) - 3];
+            p = new char[hlen + strlen(gLbc[i].fPath) - 3];
             strcpy(p, rootSys);
-            strcat(p, &gLbc[i].path[8]);
-            gLbc[i].path = p;
+            strcat(p, &gLbc[i].fPath[8]);
+            gLbc[i].fPath = p;
          } else {
-            gLbc[i].flags = 0;
+            gLbc[i].fFlags = 0;
          }
       }
-      if (gSystem->AccessPathName(gLbc[i].path, kFileExists) == 0)
-         gLbc[i].flags = 1;
+      if (gSystem->AccessPathName(gLbc[i].fPath, kFileExists) == 0)
+         gLbc[i].fFlags = 1;
    }
 
    //--- then init the contents...
 
-   for (i = 0; gLbc[i].name != 0; ++i) {
-      if (gLbc[i].flags) {
-         indent = 4 + (gLbc[i].indent * 10);
-         pic = fClient->GetPicture(gLbc[i].pixmap);
-         if (!pic) Error("TGFSComboBox", "pixmap not found: %s", gLbc[i].pixmap);
+   for (i = 0; gLbc[i].fName != 0; ++i) {
+      if (gLbc[i].fFlags) {
+         indent = 4 + (gLbc[i].fIndent * 10);
+         pic = fClient->GetPicture(gLbc[i].fPixmap);
+         if (!pic) Error("TGFSComboBox", "pixmap not found: %s", gLbc[i].fPixmap);
          AddEntry(new TGTreeLBEntry(fListBox->GetContainer(),
-                  new TGString(gLbc[i].name), pic, gLbc[i].id,
-                  new TGString(gLbc[i].path)),
+                  new TGString(gLbc[i].fName), pic, gLbc[i].fId,
+                  new TGString(gLbc[i].fPath)),
                   new TGLayoutHints(kLHintsLeft | kLHintsTop, indent, 0, 0, 0));
       }
    }
@@ -296,19 +298,19 @@ void TGFSComboBox::Update(const char *path)
 
    if (!path) return;
 
-   for (i = 0; gLbc[i].path != 0; ++i)
-      RemoveEntries(gLbc[i].id+1, gLbc[i+1].id-1);
+   for (i = 0; gLbc[i].fPath != 0; ++i)
+      RemoveEntries(gLbc[i].fId+1, gLbc[i+1].fId-1);
 
    int len = 0;
-   for (i = 0; gLbc[i].name != 0; ++i) {
-      if (gLbc[i].flags) {
-         int slen = strlen(gLbc[i].path);
-         if (strncmp(path, gLbc[i].path, slen) == 0) {
+   for (i = 0; gLbc[i].fName != 0; ++i) {
+      if (gLbc[i].fFlags) {
+         int slen = strlen(gLbc[i].fPath);
+         if (strncmp(path, gLbc[i].fPath, slen) == 0) {
             if (slen > len) {
-               sel = afterID = gLbc[i].id;
-               indent_lvl = gLbc[i].indent + 1;
+               sel = afterID = gLbc[i].fId;
+               indent_lvl = gLbc[i].fIndent + 1;
                tailpath = path + slen;
-               strcpy(mpath, gLbc[i].path);
+               strcpy(mpath, gLbc[i].fPath);
                len = slen;
             }
          }
