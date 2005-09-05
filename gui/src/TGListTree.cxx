@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.39 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.40 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1022,9 +1022,10 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
 {
    // Draw list tree item.
 
-   Int_t  xpic1, ypic1, xpic2, ypic2, xbranch, ybranch, xtext, ytext, xline, yline, xc;
+   Int_t  xpic2, ypic2, xbranch, ybranch, xtext, ytext, xline, yline, xc;
+   Int_t  xpic1 = 0, ypic1 = 0;
    UInt_t height;
-   const TGPicture *pic1, *pic2;
+   const TGPicture *pic1 = 0, *pic2;
 
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
