@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.12 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.13 2005/09/05 14:26:43 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -442,27 +442,27 @@ static char *IntToHexStr(char *text, ULong_t l)
 static char *mIntToStr(char *text, Long_t l, Int_t digits)
 {
    TString s;
-   Int_t Base;
+   Int_t base;
    switch (digits) {
    case 0:
-      Base = 1;
+      base = 1;
       break;
    case 1:
-      Base = 10;
+      base = 10;
       break;
    case 2:
-      Base = 100;
+      base = 100;
       break;
    case 3:
-      Base = 1000;
+      base = 1000;
       break;
    default:
    case 4:
-      Base = 10000;
+      base = 10000;
       break;
    }
-   s = StringInt(TMath::Abs(l) / Base, 0) + "." +
-       StringInt(TMath::Abs(l) % Base, digits);
+   s = StringInt(TMath::Abs(l) / base, 0) + "." +
+       StringInt(TMath::Abs(l) % base, digits);
    if (l < 0) {
       s = "-" + s;
    }
