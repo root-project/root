@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.38 2005/06/27 15:11:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.39 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -87,13 +87,16 @@ static Int_t FontTextWidth(FontStruct_t f, const char *c)
 //______________________________________________________________________________
 TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
                                const TGPicture *opened,
-                               const TGPicture *closed)
+                               const TGPicture *closed,
+                               Bool_t checkbox)
 {
    // Create list tree item.
 
    fClient = client;
 
    fText = name;
+   fCheckBox = checkbox;
+   fChecked = kTRUE;
 
    if (!opened)
       opened = fClient->GetPicture("ofolder_t.xpm");
@@ -108,7 +111,14 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
    fOpenPic   = opened;
    fClosedPic = closed;
 
-   fPicWidth  = TMath::Max(fOpenPic->GetWidth(), fClosedPic->GetWidth());
+   fCheckedPic   = fClient->GetPicture("checked_t.xpm");
+   fUncheckedPic = fClient->GetPicture("unchecked_t.xpm");
+
+   if (fCheckBox)
+      fPicWidth  = TMath::Max(fCheckedPic->GetWidth() + fOpenPic->GetWidth(),
+                              fCheckedPic->GetWidth() + fClosedPic->GetWidth());
+   else
+      fPicWidth  = TMath::Max(fOpenPic->GetWidth(), fClosedPic->GetWidth());
 
    fOpen = fActive = kFALSE;
 
@@ -129,6 +139,8 @@ TGListTreeItem::~TGListTreeItem()
 
    fClient->FreePicture(fOpenPic);
    fClient->FreePicture(fClosedPic);
+   fClient->FreePicture(fCheckedPic);
+   fClient->FreePicture(fUncheckedPic);
 }
 
 //______________________________________________________________________________
@@ -137,6 +149,41 @@ void TGListTreeItem::Rename(const char *new_name)
    // Rename a list tree item.
 
    fText = new_name;
+}
+//______________________________________________________________________________
+void TGListTreeItem::SetCheckBox(Bool_t on)
+{
+   fCheckBox = on;
+   if (fCheckBox)
+      fPicWidth  = TMath::Max(fCheckedPic->GetWidth() + fOpenPic->GetWidth(),
+                              fCheckedPic->GetWidth() + fClosedPic->GetWidth());
+   else
+      fPicWidth  = TMath::Max(fOpenPic->GetWidth(), fClosedPic->GetWidth());
+}
+
+//___________________________________________________________________________
+void TGListTreeItem::SetCheckBoxPictures(const TGPicture *checked,
+                                         const TGPicture *unchecked)
+{
+   // Change list tree check item icons.
+
+   fClient->FreePicture(fCheckedPic);
+   fClient->FreePicture(fUncheckedPic);
+
+   if (!checked) {
+         ::Warning("TGListTreeItem::SetCheckBoxPictures", "checked picture not specified, defaulting to checked_t");
+         checked = fClient->GetPicture("checked_t.xpm");
+   } else
+      ((TGPicture *)checked)->AddReference();
+
+   if (!unchecked) {
+         ::Warning("TGListTreeItem::SetCheckBoxPictures", "unchecked picture not specified, defaulting to unchecked_t");
+         unchecked = fClient->GetPicture("unchecked_t.xpm");
+   } else
+      ((TGPicture *)unchecked)->AddReference();
+
+   fCheckedPic   = checked;
+   fUncheckedPic = unchecked;
 }
 
 //___________________________________________________________________________
@@ -162,7 +209,6 @@ void TGListTreeItem::SetPictures(const TGPicture *opened, const TGPicture *close
    fOpenPic   = opened;
    fClosedPic = closed;
 }
-
 
 //______________________________________________________________________________
 TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
@@ -329,6 +375,17 @@ Bool_t TGListTree::HandleButton(Event_t *event)
 
    if (event->fType == kButtonPress) {
       if ((item = FindItem(event->fY)) != 0) {
+         if ((event->fCode == kButton1) && (item->HasCheckBox())) {
+            if ((event->fX < (item->fXtext - Int_t(item->fPicWidth)) +
+                              Int_t(item->fCheckedPic->GetWidth()) - 4) &&
+                (event->fX > (item->fXtext - Int_t(item->fPicWidth)))) {
+               fLastY = event->fY;
+               ToggleItem(item);
+               UpdateChecked(item, kTRUE);
+               Checked((TObject *)item->GetUserData(), item->IsChecked());
+               return kTRUE;
+            }
+         }
          if (fSelected) fSelected->fActive = kFALSE;
          fLastY = event->fY;
          UnselectAll(kTRUE);
@@ -405,6 +462,18 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
    TGPosition pos = GetPagePosition();
 
    if ((item = FindItem(event->fY)) != 0) {
+
+      if (item->HasCheckBox()) {
+         if ((event->fX < (item->fXtext - Int_t(item->fPicWidth)) +
+                           Int_t(item->fCheckedPic->GetWidth()) - 4) &&
+             (event->fX > (item->fXtext - Int_t(item->fPicWidth)))) {
+            gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kPointer));
+            return kTRUE;
+         }
+         else {
+            gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
+         }
+      }
       if (fTipItem == item) return kTRUE;
 
       OnMouseOver(item);
@@ -620,6 +689,19 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
 }
 
 //______________________________________________________________________________
+void TGListTree::Checked(TObject *entry, Bool_t on)
+{
+   // Emit Checked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)entry;
+   args[1] = on;
+
+   Emit("Checked(TObject*,Bool_t)", args);
+}
+
+//______________________________________________________________________________
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 {
    // Emit Clicked() signal.
@@ -714,15 +796,24 @@ void TGListTree::LineUp(Bool_t /*select*/)
 
    if (!fCanvas || !fSelected) return;
 
-   const TGPicture *pic;
+   const TGPicture *pic1, *pic2;
    Int_t height;
 
    if (fSelected->fOpen)
-      pic = fSelected->fOpenPic;
+      pic2 = fSelected->fOpenPic;
    else
-      pic = fSelected->fClosedPic;
+      pic2 = fSelected->fClosedPic;
 
-   height = pic->GetHeight() + fVspacing;
+   if (fSelected->HasCheckBox()){
+      if (fSelected->IsChecked())
+         pic1 = fSelected->fOpenPic;
+      else
+         pic1 = fSelected->fClosedPic;
+      height  = TMath::Max(pic2->GetHeight() + fVspacing, pic1->GetHeight() + fVspacing);
+   }
+   else {
+      height = pic2->GetHeight() + fVspacing;
+   }
 
    Int_t newpos = fCanvas->GetVsbPosition() - height;
    if (newpos<0) newpos = 0;
@@ -737,15 +828,24 @@ void TGListTree::LineDown(Bool_t /*select*/)
 
    if (!fCanvas || !fSelected) return;
 
-   const TGPicture *pic;
+   const TGPicture *pic1, *pic2;
    Int_t height;
 
    if (fSelected->fOpen)
-      pic = fSelected->fOpenPic;
+      pic2 = fSelected->fOpenPic;
    else
-      pic = fSelected->fClosedPic;
+      pic2 = fSelected->fClosedPic;
 
-   height = pic->GetHeight() + fVspacing;
+   if (fSelected->HasCheckBox()){
+      if (fSelected->IsChecked())
+         pic1 = fSelected->fOpenPic;
+      else
+         pic1 = fSelected->fClosedPic;
+      height  = TMath::Max(pic2->GetHeight() + fVspacing, pic1->GetHeight() + fVspacing);
+   }
+   else {
+      height = pic2->GetHeight() + fVspacing;
+   }
 
    Int_t newpos = fCanvas->GetVsbPosition() + height;
    if (newpos<0) newpos = 0;
@@ -899,7 +999,6 @@ Int_t TGListTree::DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xro
    TGPosition pos = GetPagePosition();
 
    x += fIndent + (Int_t)item->fPicWidth;
-
    while (item) {
       xbranch = xroot;
 
@@ -923,40 +1022,66 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
 {
    // Draw list tree item.
 
-   Int_t  xpic, ypic, xbranch, ybranch, xtext, ytext, yline, xc;
+   Int_t  xpic1, ypic1, xpic2, ypic2, xbranch, ybranch, xtext, ytext, xline, yline, xc;
    UInt_t height;
-   const TGPicture *pic;
+   const TGPicture *pic1, *pic2;
 
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
    // Select the pixmap to use, if any
    if (item->fOpen)
-      pic = item->fOpenPic;
+      pic2 = item->fOpenPic;
    else
-      pic = item->fClosedPic;
+      pic2 = item->fClosedPic;
+
+   if (item->HasCheckBox()) {
+      if (item->IsChecked())
+         pic1 = item->fCheckedPic;
+      else
+         pic1 = item->fUncheckedPic;
+   }
 
    // Compute the height of this line
    height = FontHeight(fFont);
-   xpic = x;
+   xpic2 = x;
    xtext = x + fHspacing + (Int_t)item->fPicWidth;
-   if (pic) {
-      if (pic->GetHeight() > height) {
-         ytext = y + (Int_t)((pic->GetHeight() - height) >> 1);
-         height = pic->GetHeight();
-         ypic = y;
+   if ((item->HasCheckBox()) && (pic1)) {
+      if (pic1->GetHeight() > height) {
+         ytext = y + (Int_t)((pic1->GetHeight() - height) >> 1);
+         height = pic1->GetHeight();
+         ypic1 = y;
       } else {
          ytext = y;
-         ypic = y + (Int_t)((height - pic->GetHeight()) >> 1);
+         ypic1 = y + (Int_t)((height - pic1->GetHeight()) >> 1);
       }
-      xbranch = xpic + (Int_t)(item->fPicWidth >> 1);
-      ybranch = ypic + (Int_t)pic->GetHeight();
-      yline = ypic + (Int_t)(pic->GetHeight() >> 1);
+      xpic1 = x;
+      xpic2 = xpic1 + pic1->GetWidth();
+      xline = xpic1;
    } else {
-      ypic = ytext = y;
-      xbranch = xpic + (Int_t)(item->fPicWidth >> 1);
-      yline = ybranch = ypic + (Int_t)(height >> 1);
-      yline = ypic + (Int_t)(height >> 1);
+      xpic2 = x;
+      ypic2 = y;
+      xline = 0;
+   }
+   if (pic2) {
+      if (pic2->GetHeight() > height) {
+         ytext = y + (Int_t)((pic2->GetHeight() - height) >> 1);
+         height = pic2->GetHeight();
+         ypic2 = y;
+      } else {
+         ytext = y;
+         ypic2 = y + (Int_t)((height - pic2->GetHeight()) >> 1);
+      }
+      xbranch = xpic2 + (Int_t)(pic2->GetWidth() >> 1);
+      ybranch = ypic2 + (Int_t)pic2->GetHeight();
+      yline = ypic2 + (Int_t)(pic2->GetHeight() >> 1);
+      if (xline == 0) xline = xpic2;
+   } else {
+      if (xline == 0) xline = xpic2;
+      ypic2 = ytext = y;
+      xbranch = xpic2 + (Int_t)(item->fPicWidth >> 1);
+      yline = ybranch = ypic2 + (Int_t)(height >> 1);
+      yline = ypic2 + (Int_t)(height >> 1);
    }
 
    // height must be even, otherwise our dashed line wont appear properly
@@ -972,7 +1097,7 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
    Int_t yp = y - pos.fY;
    Int_t ylinep = yline - pos.fY;
    Int_t ybranchp = ybranch - pos.fY;
-   Int_t ypicp = ypic - pos.fY;
+   Int_t ypicp = ypic2 - pos.fY;
 
    if ((yp >= fExposeTop) && (yp <= (Int_t)dim.fHeight)) {
 
@@ -991,19 +1116,25 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
                gVirtualX->DrawLine(fId, fLineGC, xc, yp, xc, yp+height);
             p = p->fParent;
          }
-         gVirtualX->DrawLine(fId, fLineGC, *xroot, ylinep, xpic/*xbranch*/, ylinep);
+         gVirtualX->DrawLine(fId, fLineGC, *xroot, ylinep, xline /*xpic2*/ /*xbranch*/, ylinep);
          DrawNode(item, *xroot, yline);
       }
       if (item->fOpen && item->fFirstchild)
          gVirtualX->DrawLine(fId, fLineGC, xbranch, ybranchp/*yline*/,
                         xbranch, yp+height);
 
-      // if (pic)
-      //    pic->Draw(fId, fDrawGC, xpic, ypic);
+      // if (pic2)
+      //    pic2->Draw(fId, fDrawGC, xpic2, ypic2);
+      if (item->HasCheckBox()) {
+         if (item->IsChecked())
+            item->fCheckedPic->Draw(fId, fDrawGC, xpic1, ypicp);
+         else
+            item->fUncheckedPic->Draw(fId, fDrawGC, xpic1, ypicp);
+      }
       if (item->fActive || item == fSelected)
-         item->fOpenPic->Draw(fId, fDrawGC, xpic, ypicp);
+         item->fOpenPic->Draw(fId, fDrawGC, xpic2, ypicp);
       else
-         item->fClosedPic->Draw(fId, fDrawGC, xpic, ypicp);
+         item->fClosedPic->Draw(fId, fDrawGC, xpic2, ypicp);
 
       DrawItemName(item);
    }
@@ -1161,6 +1292,7 @@ void TGListTree::InsertChild(TGListTreeItem *parent, TGListTreeItem *item)
       }
 
    }
+   UpdateChecked(item);
 }
 
 //______________________________________________________________________________
@@ -1215,6 +1347,7 @@ Int_t TGListTree::SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
 
    while (item) {
       // Select the pixmap to use, if any
+
       if (item->fOpen)
          pic = item->fOpenPic;
       else
@@ -1286,13 +1419,14 @@ TGListTreeItem *TGListTree::FindItem(Int_t findy)
 
 //______________________________________________________________________________
 TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
-                                    const TGPicture *open, const TGPicture *closed)
+                                    const TGPicture *open, const TGPicture *closed,
+                                    Bool_t checkbox)
 {
    // Add item to list tree. Returns new item.
 
    TGListTreeItem *item;
 
-   item = new TGListTreeItem(fClient, string, open, closed);
+   item = new TGListTreeItem(fClient, string, open, closed, checkbox);
    InsertChild(parent, item);
 
    //fClient->NeedRedraw(this);
@@ -1303,14 +1437,15 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
 //______________________________________________________________________________
 TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
                                     void *userData, const TGPicture *open,
-                                    const TGPicture *closed)
+                                    const TGPicture *closed,
+                                    Bool_t checkbox)
 {
    // Add item to list tree. If item with same userData already exists
    // don't add it. Returns new item.
 
    TGListTreeItem *item = FindChildByData(parent, userData);
    if (!item) {
-      item = AddItem(parent, string, open, closed);
+      item = AddItem(parent, string, open, closed, checkbox);
       if (item) item->SetUserData(userData);
    }
    return item;
@@ -1830,3 +1965,98 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
    out << "   " << GetName() << "->AddItem(0," << quote
        << GetFirstItem()->GetText() << quote << ");" << endl;
 }
+
+//______________________________________________________________________________
+void TGListTree::CheckItem(TGListTreeItem *item, Bool_t check)
+{
+   item->CheckItem(check);
+}
+
+//______________________________________________________________________________
+void TGListTree::SetCheckBox(TGListTreeItem *item, Bool_t on)
+{
+   item->SetCheckBox(on);
+}
+
+//______________________________________________________________________________
+void TGListTree::ToggleItem(TGListTreeItem *item)
+{
+   item->Toggle();
+}
+
+//______________________________________________________________________________
+void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
+{
+   Bool_t diff = kFALSE;
+   TGListTreeItem *current = item;
+
+   if (item->GetParent()) {
+      current = item->GetParent()->GetFirstChild();
+   }
+   while (current) {
+      TGListTreeItem *parent = current->GetParent();
+      if ((parent) && (parent->HasCheckBox())) {
+         if ( ((parent->IsChecked()) && (!current->IsChecked())) ||
+              ((!parent->IsChecked()) && (current->IsChecked())) ) {
+            diff = kTRUE;
+            break;
+         }
+      }
+      current = current->fNextsibling;
+   }
+   if ((item->GetParent()) && (item->GetParent()->HasCheckBox())) {
+      if (diff) {
+         item->GetParent()->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
+                                                fClient->GetPicture("unchecked_dis_t.xpm"));
+      }
+      else {
+         item->GetParent()->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
+                                                fClient->GetPicture("unchecked_t.xpm"));
+      }
+   }
+   diff = kFALSE;
+   current = item->GetFirstChild();
+   while (current) {
+      if (current->HasCheckBox()) {
+         if ( ((current->IsChecked()) && (!item->IsChecked())) ||
+              ((!current->IsChecked()) && (item->IsChecked())) ) {
+            diff = kTRUE;
+            break;
+         }
+      }
+      current = current->GetNextSibling();
+   }
+   if (diff) {
+      item->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
+                                fClient->GetPicture("unchecked_dis_t.xpm"));
+   }
+   else {
+      item->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
+                                fClient->GetPicture("unchecked_t.xpm"));
+   }
+
+   if (redraw)
+      fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
+{
+   // Find item with fUserData == ptr. Search tree downwards starting
+   // at item.
+
+   TGListTreeItem *fitem;
+   if (item && ptr) {
+      if (item->fUserData == ptr)
+         return item;
+      else {
+         if (item->fFirstchild) {
+            fitem = FindItemByObj(item->fFirstchild,  ptr);
+            if (fitem) return fitem;
+         }
+         return FindItemByObj(item->fNextsibling, ptr);
+      }
+   }
+   return 0;
+}
+

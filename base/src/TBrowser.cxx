@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.12 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.13 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -56,12 +56,12 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TBrowserObject : public TNamed 
+class TBrowserObject : public TNamed
 {
-   // This class is designed to wrap a Foreign object in order to 
+   // This class is designed to wrap a Foreign object in order to
    // inject it into the Browse sub-system.
 
-public: 
+public:
 
    TBrowserObject(void *obj, TClass *cl, const char *brname);
   ~TBrowserObject(){;}
@@ -74,7 +74,7 @@ private:
    void     *fObj;   //! pointer to the foreign object
    TClass   *fClass; //! pointer to class of the foreign object
 
-};  
+};
 
 
 ClassImp(TBrowser)
@@ -102,7 +102,7 @@ TBrowser::TBrowser(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, 
+TBrowser::TBrowser(const char *name, const char *title,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -114,8 +114,8 @@ TBrowser::TBrowser(const char *name, const char *title,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, 
-                   Int_t x, Int_t y, 
+TBrowser::TBrowser(const char *name, const char *title,
+                   Int_t x, Int_t y,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -142,7 +142,7 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title, 
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -154,8 +154,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title, 
-                   Int_t x, Int_t y, 
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
+                   Int_t x, Int_t y,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -167,7 +167,7 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, void *obj, TClass *cl, 
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
                    const char *objname, const char *title)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -184,8 +184,8 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, void *obj, TClass *cl, 
-                   const char *objname, const char *title, 
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
+                   const char *objname, const char *title,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -197,9 +197,9 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name,void *obj,  TClass *cl, 
-                   const char *objname, const char *title, 
-                   Int_t x, Int_t y, 
+TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
+                   const char *objname, const char *title,
+                   Int_t x, Int_t y,
                    UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -223,33 +223,66 @@ TBrowser::~TBrowser()
 }
 
 //______________________________________________________________________________
-void TBrowser::Add(TObject *obj, const char *name)
+void TBrowser::Add(TObject *obj, const char *name, Int_t check)
 {
    // Add object with name to browser. If name not set the objects GetName()
-   // is used.
+   // is used. If check < 0 (default) no check box is drawn, if 0 then
+   // unchecked checkbox is added, if 1 checked checkbox is added.
 
    if (obj && fImp) {
-      fImp->Add(obj, name);
+      fImp->Add(obj, name, check);
       obj->SetBit(kMustCleanup);
    }
 }
 
 //______________________________________________________________________________
-void TBrowser::Add(void *obj, TClass *cl, const char *name)
+void TBrowser::Add(void *obj, TClass *cl, const char *name, Int_t check)
 {
-   // Add foreign object with name to browser. 
+   // Add foreign object with name to browser.
    // 'cl' is the type use to store the value of obj.
    // So literally the following pseudo code should be correct:
    //    `cl->GetName()` * ptr = (`cl->GetName()`*) obj;
    // and the value of obj is not necessarily the start of the object.
+   // If check < 0 (default) no check box is drawn, if 0 then
+   // unchecked checkbox is added, if 1 checked checkbox is added.
 
    if (!obj || !cl) return;
-   TObject *to; 
-   if (cl->IsTObject()) to = (TObject*)cl->DynamicCast(TObject::Class(),obj,kTRUE); 
+   TObject *to;
+   if (cl->IsTObject()) to = (TObject*)cl->DynamicCast(TObject::Class(),obj,kTRUE);
    else                 to = new TBrowserObject(obj,cl,name);
 
    if (!to) return;
-   Add(to,name);
+   Add(to,name,check);
+}
+
+//______________________________________________________________________________
+void TBrowser::AddCheckBox(TObject *obj, Bool_t check)
+{
+   // Add checkbox for this item.
+
+   if (obj && fImp) {
+      fImp->AddCheckBox(obj, check);
+   }
+}
+
+//______________________________________________________________________________
+void TBrowser::CheckObjectItem(TObject *obj, Bool_t check)
+{
+   // Change status of checkbox for this item.
+
+   if (obj && fImp) {
+      fImp->CheckObjectItem(obj, check);
+   }
+}
+
+//______________________________________________________________________________
+void TBrowser::RemoveCheckBox(TObject *obj)
+{
+   // Remove checkbox for this item.
+
+   if (obj && fImp) {
+      fImp->RemoveCheckBox(obj);
+   }
 }
 
 //______________________________________________________________________________
@@ -367,7 +400,7 @@ TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
 
 //______________________________________________________________________________
 Bool_t TBrowserObject::IsFolder() const
-{ 
+{
    return fClass->IsFolder(fObj);
 }
 

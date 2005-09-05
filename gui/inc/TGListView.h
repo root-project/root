@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.24 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.25 2005/07/24 09:55:52 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -64,10 +64,12 @@ protected:
    UInt_t              fTWidth;      // width of name
    UInt_t              fTHeight;     // height of name
    Bool_t              fActive;      // true if item is active
+   Bool_t              fChecked;     // true if item is checked
    EListViewMode       fViewMode;    // list view viewing mode
    const TGPicture    *fBigPic;      // big icon
    const TGPicture    *fSmallPic;    // small icon
    const TGPicture    *fCurrent;     // current icon
+   const TGPicture    *fCheckMark;   // checkmark
    TGSelectedPicture  *fSelPic;      // selected icon
    GContext_t          fNormGC;      // drawing graphics context
    FontStruct_t        fFontStruct;  // text font
@@ -113,6 +115,7 @@ public:
                                    const char* n10="",const char* n11="",const char* n12="");
    virtual void        SetPictures(const TGPicture *bigpic = 0, const TGPicture *smallpic = 0);
    virtual void        SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
+   virtual void        SetCheckedEntry(Bool_t check = kTRUE) { fChecked = check; }
 
    virtual TGDimension GetDefaultSize() const;
    virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }

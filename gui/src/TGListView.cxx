@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.31 2005/05/27 12:24:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.32 2005/07/24 09:55:52 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -75,6 +75,9 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fBigPic   = bigpic;
    fSmallPic = smallpic;
 
+   fCheckMark  = fClient->GetPicture("checkmark_t.xpm");
+   fChecked = kFALSE;
+
    fItemName = name;
    fSubnames = subnames;
    fUserData = 0;
@@ -128,6 +131,8 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 
    fCurrent  =
    fBigPic   = fClient->GetMimeTypeList()->GetIcon(cname, kFALSE);
+   fCheckMark  = fClient->GetPicture("checkmark_t.xpm");
+   fChecked = kFALSE;
 
    if (!fBigPic) {
       fBigPic = fClient->GetPicture("doc_s.xpm");
@@ -347,6 +352,20 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
       gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+   }
+   if ((fChecked) && (fCheckMark)) {
+      if (fViewMode == kLVLargeIcons) {
+         fCheckMark->Draw(id, fNormGC, x + ix + 8, y + iy + 8);
+         gVirtualX->SetForeground(fNormGC, fgWhitePixel);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+      }
+      else {
+         fCheckMark->Draw(id, fNormGC, x + ix, y + iy);
+         gVirtualX->SetForeground(fNormGC, fgWhitePixel);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
+         gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+      }
    }
 
    fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);

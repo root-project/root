@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.18 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.19 2005/08/19 09:46:37 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -125,12 +125,18 @@ public:
    TRootBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootBrowser();
 
-   virtual void Add(TObject *obj, const char *name = 0);
+   virtual void Add(TObject *obj, const char *name = 0, Int_t check = -1);
    virtual void AddToBox(TObject *obj, const char *name);
-   virtual void AddToTree(TObject *obj, const char *name);
-   virtual void BrowseObj(TObject *obj);            //*SIGNAL*
-   virtual void ExecuteDefaultAction(TObject *obj); //*SIGNAL*
-   virtual void DoubleClicked(TObject *obj);        //*SIGNAL*
+   virtual void AddToTree(TObject *obj, const char *name, Int_t check = -1);
+
+   virtual void AddCheckBox(TObject *obj, Bool_t check = kFALSE);
+   virtual void CheckObjectItem(TObject *obj, Bool_t check = kFALSE);
+   virtual void RemoveCheckBox(TObject *obj);
+
+   virtual void BrowseObj(TObject *obj);             //*SIGNAL*
+   virtual void ExecuteDefaultAction(TObject *obj);  //*SIGNAL*
+   virtual void DoubleClicked(TObject *obj);         //*SIGNAL*
+   virtual void Checked(TObject *obj, Bool_t check); //*SIGNAL*
    virtual void Iconify() { }
    virtual void RecursiveRemove(TObject *obj);
    virtual void Refresh(Bool_t force = kFALSE);

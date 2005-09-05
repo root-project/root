@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.17 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.18 2005/07/14 14:13:02 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -54,6 +54,8 @@ private:
    TGListTreeItem  *fNextsibling;  // pointer to next sibling
    Bool_t           fOpen;         // true if item is open
    Bool_t           fActive;       // true if item is active
+   Bool_t           fCheckBox;     // true if checkbox is visible
+   Bool_t           fChecked;      // true if item is checked
    TString          fText;         // item text
    TString          fTipText;      // tooltip text
    Int_t            fY;            // y position of item
@@ -63,11 +65,14 @@ private:
    UInt_t           fPicWidth;     // width of item icon
    const TGPicture *fOpenPic;      // icon for open state
    const TGPicture *fClosedPic;    // icon for closed state
+   const TGPicture *fCheckedPic;   // icon for checked item
+   const TGPicture *fUncheckedPic; // icon for unchecked item
    void            *fUserData;     // pointer to user data structure
 
 public:
    TGListTreeItem(TGClient *fClient = gClient, const char *name = 0,
-                  const TGPicture *opened = 0, const TGPicture *closed = 0);
+                  const TGPicture *opened = 0, const TGPicture *closed = 0,
+                  Bool_t checkbox = kFALSE);
    virtual ~TGListTreeItem();
 
    void Rename(const char *new_name);
@@ -83,6 +88,13 @@ public:
    void            SetUserData(void *userData) { fUserData = userData; }
    void           *GetUserData() const { return fUserData; }
    void            SetPictures(const TGPicture *opened, const TGPicture *closed);
+   void            SetCheckBoxPictures(const TGPicture *checked, const TGPicture *unchecked);
+
+   void            SetCheckBox(Bool_t on = kTRUE);
+   Bool_t          HasCheckBox() const { return fCheckBox; }
+   void            CheckItem(Bool_t checked = kTRUE) { fChecked = checked; }
+   void            Toggle() { fChecked = !fChecked; }
+   Bool_t          IsChecked() const { return fChecked; }
 
    ClassDef(TGListTreeItem,0)  //Item that goes into a TGListTree container
 };
@@ -131,6 +143,7 @@ protected:
                   UInt_t *retwidth, UInt_t *retheight);
    void  DrawItemName(TGListTreeItem *item);
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
+   void  UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
    void  RemoveReference(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
@@ -179,15 +192,21 @@ public:
 
    TGListTreeItem *AddItem(TGListTreeItem *parent, const char *string,
                            const TGPicture *open = 0,
-                           const TGPicture *closed = 0);
+                           const TGPicture *closed = 0,
+                           Bool_t checkbox = kFALSE);
    TGListTreeItem *AddItem(TGListTreeItem *parent, const char *string,
                            void *userData, const TGPicture *open = 0,
-                           const TGPicture *closed = 0);
+                           const TGPicture *closed = 0,
+                           Bool_t checkbox = kFALSE);
    void  RenameItem(TGListTreeItem *item, const char *string);
    Int_t DeleteItem(TGListTreeItem *item);
    void  OpenItem(TGListTreeItem *item);
    void  CloseItem(TGListTreeItem *item);
+   void  CheckItem(TGListTreeItem *item, Bool_t check = kTRUE);
+   void  SetCheckBox(TGListTreeItem *item, Bool_t on = kTRUE);
+   void  ToggleItem(TGListTreeItem *item);
    Int_t RecursiveDeleteItem(TGListTreeItem *item, void *userData);
+
    Int_t DeleteChildren(TGListTreeItem *item);
    Int_t Reparent(TGListTreeItem *item, TGListTreeItem *newparent);
    Int_t ReparentChildren(TGListTreeItem *item, TGListTreeItem *newparent);
@@ -224,6 +243,7 @@ public:
    TGListTreeItem *FindChildByName(TGListTreeItem *item, const char *name);
    TGListTreeItem *FindChildByData(TGListTreeItem *item, void *userData);
    TGListTreeItem *FindItemByPathname(const char *path);
+   TGListTreeItem *FindItemByObj(TGListTreeItem *item, void *ptr);
 
    virtual void OnMouseOver(TGListTreeItem *entry);  //*SIGNAL*
    virtual void KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask);  //*SIGNAL*
@@ -232,6 +252,7 @@ public:
    virtual void Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+   virtual void Checked(TObject *obj, Bool_t check);  //*SIGNAL*
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 

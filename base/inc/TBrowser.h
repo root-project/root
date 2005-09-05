@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.10 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.11 2004/06/22 15:36:42 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -79,8 +79,13 @@ public:
 
    virtual ~TBrowser();
 
-   void          Add(TObject *obj,             const char *name = 0);
-   void          Add(void    *obj, TClass *cl, const char *name = 0);
+   void          Add(TObject *obj,             const char *name = 0, Int_t check = -1);
+   void          Add(void    *obj, TClass *cl, const char *name = 0, Int_t check = -1);
+
+   void          AddCheckBox(TObject *obj, Bool_t check = kFALSE);
+   void          CheckObjectItem(TObject *obj, Bool_t check = kFALSE);
+   void          RemoveCheckBox(TObject *obj);
+
    virtual void  Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
