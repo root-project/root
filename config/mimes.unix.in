@@ -266,4 +266,123 @@ pattern = TGGroupFrame
 icon = bld_groupframe.xpm bld_groupframe.xpm
 action = new TGuiBldTextDialog("%s")
 
+[root/tgeoarb8]
+pattern = TGeoArb8
+icon = geoarb8_s.xpm geoarb8_t.xpm
+action = ->Browse()
+
+[root/tgeobbox]
+pattern = TGeoBBox
+icon = geobbox_s.xpm geobbox_t.xpm
+action = ->Browse()
+
+[root/tgeocone]
+pattern = TGeoCone
+icon = geocone_s.xpm geocone_t.xpm
+action = ->Browse()
+
+[root/tgeoconeseg]
+pattern = TGeoConeSeg
+icon = geoconeseg_s.xpm geoconeseg_t.xpm
+action = ->Browse()
+
+[root/tgeoctub]
+pattern = TGeoCtub
+icon = geoctub_s.xpm geoctub_t.xpm
+action = ->Browse()
+
+[root/tgeoeltu]
+pattern = TGeoEltu
+icon = geoeltu_s.xpm geoeltu_t.xpm
+action = ->Browse()
+
+[root/tgeoxtru]
+pattern = TGeoXtru
+icon = geoxtru_s.xpm geoxtru_t.xpm
+action = ->Browse()
+
+[root/tgeohype]
+pattern = TGeoHype
+icon = geohype_s.xpm geohype_t.xpm
+action = ->Browse()
+
+[root/tgeoparaboloid]
+pattern = TGeoParaboloid
+icon = geoparaboloid_s.xpm geoparaboloid_t.xpm
+action = ->Browse()
+
+[root/tgeopcon]
+pattern = TGeoPcon
+icon = geopcon_s.xpm geopcon_t.xpm
+action = ->Browse()
+
+[root/tgeopgon]
+pattern = TGeoPgon
+icon = geopcon_s.xpm geopcon_t.xpm
+action = ->Browse()
+
+[root/tgeopara]
+pattern = TGeoPara
+icon = geopara_s.xpm geopara_t.xpm
+action = ->Browse()
+
+[root/tgeosphere]
+pattern = TGeoSphere
+icon = geosphere_s.xpm geosphere_t.xpm
+action = ->Browse()
+
+[root/tgeotrd1]
+pattern = TGeoTrd1
+icon = geotrd1_s.xpm geotrd1_t.xpm
+action = ->Browse()
+
+[root/tgeotrd2]
+pattern = TGeoTrd2
+icon = geotrd2_s.xpm geotrd2_t.xpm
+action = ->Browse()
+
+[root/tgeotrap]
+pattern = TGeoTrap
+icon = geotrap_s.xpm geotrap_t.xpm
+action = ->Browse()
+
+[root/tgeotorus]
+pattern = TGeoTorus
+icon = geotorus_s.xpm geotorus_t.xpm
+action = ->Browse()
+
+[root/tgeotube]
+pattern = TGeoTube
+icon = geotube_s.xpm geotube_t.xpm
+action = ->Browse()
+
+[root/tgeotubeseg]
+pattern = TGeoTubeSeg
+icon = geotubeseg_s.xpm geotubeseg_t.xpm
+action = ->Browse()
+
+[root/tgeogtra]
+pattern = TGeoGtra
+icon = geogtra_s.xpm geogtra_t.xpm
+action = ->Browse()
+
+#[root/tgeocompositeshape]
+#pattern = TGeoCompositeShape
+#icon = geocomposite_s.xpm geocomposite_t.xpm
+#action = ->Browse()
+
+#[root/tgeohalfspace]
+#pattern = TGeoHalfSpace
+#icon = geohalfspace_s.xpm geohalfspace_t.xpm
+#action = ->Browse()
+
+#[root/tgeoshapeassembly]
+#pattern = TGeoShapeAssembly
+#icon = geoshapeassembly_s.xpm geoshapeassembly_t.xpm
+#action = ->Browse()
+
+[root/tmacro]
+pattern = TMacro
+icon = tmacro_s.xpm tmacro_t.xpm
+action =
 
