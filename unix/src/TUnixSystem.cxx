@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.138 2005/09/03 13:22:41 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.139 2005/09/04 15:47:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -517,6 +517,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
    // Remove a file handler from the list of file handlers. Returns
    // the handler or 0 if the handler was not in the list of file handlers.
 
+   if (!h) return 0;
+
    R__LOCKGUARD2(gSystemMutex);
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
@@ -559,6 +561,8 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
    // Remove a signal handler from list of signal handlers. Returns
    // the handler or 0 if the handler was not in the list of signal handlers.
+
+   if (!h) return 0;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -2351,6 +2355,10 @@ TTimer *TUnixSystem::RemoveTimer(TTimer *ti)
 {
    // Remove timer from list of system timers.
 
+   if (!ti) return 0;
+
+   R__LOCKGUARD2(gSystemMutex);
+
    TTimer *t = TSystem::RemoveTimer(ti);
    if (ti->IsAsync())
       UnixSetitimer(NextTimeOut(kFALSE));
@@ -2362,7 +2370,7 @@ void TUnixSystem::ResetTimer(TTimer *ti)
 {
    // Reset a-sync timer.
 
-   if (!fInsideNotify && ti->IsAsync())
+   if (!fInsideNotify && ti && ti->IsAsync())
       UnixSetitimer(NextTimeOut(kFALSE));
 }
 

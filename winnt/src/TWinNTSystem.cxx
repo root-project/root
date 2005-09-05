@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.120 2005/05/12 07:59:39 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.121 2005/08/18 16:32:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -182,18 +182,6 @@ static int setitimer(int which, const struct itimerval *value, struct itimerval 
    return 0;
 }
 
-#ifndef GDK_WIN32
-
-//______________________________________________________________________________
-static int WinNTSetitimer(TTimer *ti)
-{
-   // Set interval timer to time-out in ms milliseconds.
-
-   return 0;
-}
-
-#else // GDK_WIN32
-
 //______________________________________________________________________________
 static int WinNTSetitimer(Long_t ms)
 {
@@ -208,8 +196,6 @@ static int WinNTSetitimer(Long_t ms)
    }
    return ::setitimer(ITIMER_REAL, &itval, 0);
 }
-
-#endif // GDK_WIN32
 
 //---- RPC -------------------------------------------------------------------
 //*-* Error codes set by the Windows Sockets implementation are not made available
@@ -473,7 +459,6 @@ void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
 ///////////////////////////////////////////////////////////////////////////////
 ClassImp(TWinNTSystem)
 
-#ifdef GDK_WIN32
 //______________________________________________________________________________
 unsigned __stdcall HandleConsoleThread(void *pArg )
 {
@@ -508,7 +493,6 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
    _endthreadex( 0 );
    return 0;
 }
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::HandleConsoleEvent()
@@ -575,16 +559,12 @@ TWinNTSystem::~TWinNTSystem()
       fhNormalIconList = 0;
    }
 
-#ifdef GDK_WIN32
    if (gConsoleEvent) {
       ::ResetEvent(gConsoleEvent);
       ::CloseHandle(gConsoleEvent);
       gConsoleEvent = 0;
    }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
-#else
-   ::CloseHandle(fhTermInputEvent);
-#endif
 }
 
 //______________________________________________________________________________
@@ -635,20 +615,11 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-#ifdef GDK_WIN32
    if (!gROOT->IsBatch()) {
       gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
       gConsoleThreadHandle = (HANDLE)_beginthreadex(NULL, 0, &HandleConsoleThread,
                                                     0, 0, 0);
    }
-#else
-   // The the name of the DLL to be used as a stock of the icon
-   SetShellName();
-   CreateIcons();
-
-   // Create Event HANDLE for stand-alone ROOT-based applications
-   fhTermInputEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-#endif
 
    fGroupsInitDone = kFALSE;
 
@@ -921,6 +892,8 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    // Remove a file handler from the list of file handlers. Returns
    // the handler or 0 if the handler was not in the list of file handlers.
 
+   if (!h) return 0;
+
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
       TFileHandler *th;
@@ -964,6 +937,8 @@ TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
 {
    // Remove a signal handler from list of signal handlers. Returns
    // the handler or 0 if the handler was not in the list of signal handlers.
+
+   if (!h) return 0;
 
    int sig = h->GetSignal();
 
@@ -1030,33 +1005,6 @@ Int_t TWinNTSystem::SetFPEMask(Int_t mask)
 
    return old;
 }
-
-#ifndef GDK_WIN32
-
-//______________________________________________________________________________
-Bool_t TWinNTSystem::ProcessEvents()
-{
-   // Events are processed by separate thread. Here we just return the
-   // interrupt value the might have been set in command thread.
-
-   Bool_t intr = gROOT->IsInterrupted();
-   gROOT->SetInterrupt(kFALSE);
-   return intr;
-}
-
-//______________________________________________________________________________
-void TWinNTSystem::DispatchOneEvent(Bool_t)
-{
- // Dispatch a single event via Command thread
-
-  if (!gApplication->HandleTermInput()) {
-     // wait ExitLoop()
-     ::WaitForSingleObject(fhTermInputEvent, INFINITE);
-     ::ResetEvent(fhTermInputEvent);
-  }
-}
-
-#else // GDK_WIN32
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
@@ -1181,18 +1129,12 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    }
 }
 
-#endif  // GDK_WIN32
-
 //______________________________________________________________________________
 void TWinNTSystem::ExitLoop()
 {
-   //
+   // Exit from event loop.
 
    TSystem::ExitLoop();
-#ifndef GDK_WIN32
-   // Release Dispatch one event
-   if (fhTermInputEvent) ::SetEvent(fhTermInputEvent);
-#endif
 }
 
 //---- handling of system events -----------------------------------------------
@@ -3170,44 +3112,26 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
 //______________________________________________________________________________
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
-   //
+   // Add timer to list of system timers.
 
-#ifndef GDK_WIN32
-   if (ti) {
-      TSystem::AddTimer(ti);
-
-      if (!fWin32Timer) fWin32Timer = new TWin32Timer;
-      fWin32Timer->CreateTimer(ti);
-      if (!ti->GetTimerID()) {
-         RemoveTimer(ti);
-      }
-   }
-#else
    TSystem::AddTimer(ti);
    if (!fInsideNotify && ti->IsAsync()) {
       WinNTSetitimer(NextTimeOut(kFALSE));
    }
-#endif
 }
 
 //______________________________________________________________________________
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
-   //
+   // Remove timer from list of system timers.
 
-#ifndef GDK_WIN32
-   if (ti && fWin32Timer ) {
-      fWin32Timer->KillTimer(ti);
-      return TSystem::RemoveTimer(ti);
-   }
-   return 0;
-#else
+   if (!ti) return 0;
+
    TTimer *t = TSystem::RemoveTimer(ti);
    if (ti->IsAsync()) {
       WinNTSetitimer(NextTimeOut(kFALSE));
    }
    return t;
-#endif
 }
 
 //______________________________________________________________________________
@@ -3216,9 +3140,6 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
    // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
    // timers else a-synchronous timers.
 
-#ifndef GDK_WIN32
-   return kFALSE;
-#else
    if (!fTimers) return kFALSE;
 
    fInsideNotify = kTRUE;
@@ -3242,8 +3163,8 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
       }
    }
    fInsideNotify = kFALSE;
+
    return timedout;
-#endif
 }
 
 //______________________________________________________________________________
