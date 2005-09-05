@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.10 2005/09/05 07:33:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -51,7 +51,7 @@ enum EFontDialog {
     kFDLG_COLORSEL     = 31
 };
 
-static const char *kFDLG_DEFAULTSAMPLE = "AaBbCcYyZz 1234567890";
+static const char *gFDLG_DEFAULTSAMPLE = "AaBbCcYyZz 1234567890";
 
 
 static const char *gFontSizes[] = {
@@ -272,7 +272,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                                       1, 1, 3, 1));
 
    if (sample == "")
-      fSampleText = kFDLG_DEFAULTSAMPLE;
+      fSampleText = gFDLG_DEFAULTSAMPLE;
    else
       fSampleText = sample;
 

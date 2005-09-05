@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.80 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.81 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2592,9 +2592,9 @@ void TRootBrowser::BrowseTextFile(const char *file)
    if (!fTextEdit) {
       fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(),
                                  kSunkenFrame | kDoubleBorder);
-      if (TGSearchDialog::gDialog()) {
-         TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGTextEdit",
-                                             fTextEdit, "Search(char *,Bool_t,Bool_t)");
+      if (TGSearchDialog::SearchDialog()) {
+         TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
+                                                 fTextEdit, "Search(char *,Bool_t,Bool_t)");
       }
       fV2->AddFrame(fTextEdit, fExpandLayout);
    }

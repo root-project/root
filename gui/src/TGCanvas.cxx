@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.34 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.35 2005/08/25 16:51:18 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -345,8 +345,8 @@ TGContainer::~TGContainer()
 {
    // Delete canvas container.
 
-   if (TGSearchDialog::gDialog()) {
-      TQObject::Disconnect(TGSearchDialog::gDialog(), 0, this);
+   if (TGSearchDialog::SearchDialog()) {
+      TQObject::Disconnect(TGSearchDialog::SearchDialog(), 0, this);
    }
 
    delete fScrollTimer;
@@ -1159,9 +1159,9 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
    Bool_t direction = kTRUE;
    Bool_t caseSensitive = kFALSE;
 
-   if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
-      caseSensitive = TGSearchDialog::gDialog()->GetType()->fCaseSensitive;
-      direction = TGSearchDialog::gDialog()->GetType()->fDirection;
+   if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
+      caseSensitive = TGSearchDialog::SearchDialog()->GetType()->fCaseSensitive;
+      direction = TGSearchDialog::SearchDialog()->GetType()->fDirection;
    }
 
    char msg[256];
@@ -1173,7 +1173,7 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
       fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
 
       if (!fe) {
-         if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
+         if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
             sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
             gVirtualX->Bell(20);
             new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
@@ -1206,11 +1206,11 @@ void TGContainer::Search(Bool_t close)
    srch->fClose = close;
 
    if (!close) {
-      if (!TGSearchDialog::gDialog()) {
-         TGSearchDialog::gDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+      if (!TGSearchDialog::SearchDialog()) {
+         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
       }
-      TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGContainer", this, "FindFrameByName(char *)");
-      TGSearchDialog::gDialog()->MapRaised();
+      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGContainer", this, "FindFrameByName(char *)");
+      TGSearchDialog::SearchDialog()->MapRaised();
    } else {
       new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
       if (ret) {

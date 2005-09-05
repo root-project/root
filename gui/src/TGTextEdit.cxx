@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.29 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.30 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -92,8 +92,8 @@ TGTextEdit::~TGTextEdit()
 {
    // Cleanup text edit widget.
 
-   if (TGSearchDialog::gDialog()) {
-      TQObject::Disconnect(TGSearchDialog::gDialog(), 0, this);
+   if (TGSearchDialog::SearchDialog()) {
+      TQObject::Disconnect(TGSearchDialog::SearchDialog(), 0, this);
    }
    delete fCurBlink;
    delete fMenu;
@@ -390,9 +390,9 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
 
    if (!IsMapped()) return kFALSE;
 
-   if (gTQSender && (gTQSender == TGSearchDialog::gDialog())) {
-      caseSensitive = TGSearchDialog::gDialog()->GetType()->fCaseSensitive;
-      direction = TGSearchDialog::gDialog()->GetType()->fDirection;
+   if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
+      caseSensitive = TGSearchDialog::SearchDialog()->GetType()->fCaseSensitive;
+      direction = TGSearchDialog::SearchDialog()->GetType()->fDirection;
    }
 
    TGLongPosition pos;
@@ -1177,13 +1177,13 @@ void TGTextEdit::Search(Bool_t close)
    srch->fClose = close;
 
    if (!close) {
-      if (!TGSearchDialog::gDialog()) {
-         TGSearchDialog::gDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
+      if (!TGSearchDialog::SearchDialog()) {
+         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
                                                         fCanvas, 400, 150, srch, &ret);         
       }
-      TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
+      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
                                           this, "Search(char *,Bool_t,Bool_t)");
-      TGSearchDialog::gDialog()->MapRaised();
+      TGSearchDialog::SearchDialog()->MapRaised();
    } else {
       new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
       if (ret) {

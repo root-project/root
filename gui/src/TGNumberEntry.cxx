@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.11 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.12 2005/09/05 13:33:08 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -255,11 +255,11 @@ static Long_t IntStr(const char *text)
 }
 
 //______________________________________________________________________________
-static char *StrInt(char *text, Long_t i, Int_t Digits)
+static char *StrInt(char *text, Long_t i, Int_t digits)
 {
    sprintf(text, "%li", TMath::Abs(i));
    TString s = text;
-   while (Digits > s.Length()) {
+   while (digits > s.Length()) {
       s = "0" + s;
    }
    if (i < 0) {
@@ -270,10 +270,10 @@ static char *StrInt(char *text, Long_t i, Int_t Digits)
 }
 
 //______________________________________________________________________________
-static TString StringInt(Long_t i, Int_t Digits)
+static TString StringInt(Long_t i, Int_t digits)
 {
    char text[256];
-   StrInt(text, i, Digits);
+   StrInt(text, i, digits);
    return TString(text);
 }
 
@@ -310,9 +310,9 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
 static Double_t StrToReal(const char *text, RealInfo_t & ri)
 {
    char *s;
-   char *Frac;
-   char *Expo;
-   char *Minus;
+   char *frac;
+   char *expo;
+   char *minus;
    char buf[256];
 
    if ((text == 0) || (strlen(text) == 0)) {
@@ -323,43 +323,43 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    }
    strncpy(buf, text, sizeof(buf) - 1);
    s = buf;
-   Frac = strchr(s, '.');
-   if (Frac == 0) {
-      Frac = strchr(s, ',');
+   frac = strchr(s, '.');
+   if (frac == 0) {
+      frac = strchr(s, ',');
    }
-   Expo = strchr(s, 'e');
-   Minus = strchr(s, '-');
-   if (Expo == 0) {
-      Expo = strchr(s, 'E');
+   expo = strchr(s, 'e');
+   minus = strchr(s, '-');
+   if (expo == 0) {
+      expo = strchr(s, 'E');
    }
-   if ((Frac != 0) && (Expo != 0) && (Frac > Expo)) {
-      Frac = 0;
+   if ((frac != 0) && (expo != 0) && (frac > expo)) {
+      frac = 0;
    }
-   if ((Minus != 0) && ((Expo == 0) || (Minus < Expo))) {
+   if ((minus != 0) && ((expo == 0) || (minus < expo))) {
       ri.fSign = -1;
    } else {
       ri.fSign = 1;
    }
-   if ((Frac == 0) && (Expo == 0)) {
+   if ((frac == 0) && (expo == 0)) {
       ri.fStyle = kRSInt;
-   } else if (Frac == 0) {
+   } else if (frac == 0) {
       ri.fStyle = kRSExpo;
-   } else if (Expo == 0) {
+   } else if (expo == 0) {
       ri.fStyle = kRSFrac;
    } else {
       ri.fStyle = kRSFracExpo;
    }
-   if (Frac != 0) {
-      *Frac = 0;
-      Frac++;
+   if (frac != 0) {
+      *frac = 0;
+      frac++;
    }
-   if (Expo != 0) {
-      *Expo = 0;
-      Expo++;
+   if (expo != 0) {
+      *expo = 0;
+      expo++;
    }
    ri.fIntNum = TMath::Abs(IntStr(s));
-   if (Expo != 0) {
-      ri.fExpoNum = IntStr(Expo);
+   if (expo != 0) {
+      ri.fExpoNum = IntStr(expo);
    } else {
       ri.fExpoNum = 0;
    }
@@ -372,11 +372,11 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    ri.fFracDigits = 0;
    ri.fFracBase = 1;
    ri.fFracNum = 0;
-   if (Frac != 0) {
-      for (UInt_t i = 0; i < strlen(Frac); i++) {
-         if (isdigit(Frac[i])) {
+   if (frac != 0) {
+      for (UInt_t i = 0; i < strlen(frac); i++) {
+         if (isdigit(frac[i])) {
             if (ri.fFracNum < 100000000) {
-               ri.fFracNum = 10 * ri.fFracNum + (Frac[i] - '0');
+               ri.fFracNum = 10 * ri.fFracNum + (frac[i] - '0');
                ri.fFracDigits++;
                ri.fFracBase *= 10;
             }
@@ -422,12 +422,12 @@ static ULong_t HexStrToInt(const char *s)
 //______________________________________________________________________________
 static char *IntToHexStr(char *text, ULong_t l)
 {
-   const char *const Digits = "0123456789ABCDEF";
+   const char *const digits = "0123456789ABCDEF";
    char buf[64];
    char *p = buf + 62;
    strcpy(p, "");
    while (l > 0) {
-      *(--p) = Digits[l % 16];
+      *(--p) = digits[l % 16];
       l /= 16;
    }
    if (strlen(p) == 0) {
@@ -439,11 +439,11 @@ static char *IntToHexStr(char *text, ULong_t l)
 }
 
 //______________________________________________________________________________
-static char *mIntToStr(char *text, Long_t l, Int_t Digits)
+static char *mIntToStr(char *text, Long_t l, Int_t digits)
 {
    TString s;
    Int_t Base;
-   switch (Digits) {
+   switch (digits) {
    case 0:
       Base = 1;
       break;
@@ -462,7 +462,7 @@ static char *mIntToStr(char *text, Long_t l, Int_t Digits)
       break;
    }
    s = StringInt(TMath::Abs(l) / Base, 0) + "." +
-       StringInt(TMath::Abs(l) % Base, Digits);
+       StringInt(TMath::Abs(l) % Base, digits);
    if (l < 0) {
       s = "-" + s;
    }
@@ -534,10 +534,10 @@ static Long_t GetSignificant(Long_t l, Int_t Max)
 }
 
 //______________________________________________________________________________
-static void AppendFracZero(char *text, Int_t Digits)
+static void AppendFracZero(char *text, Int_t digits)
 {
    char *p;
-   Int_t Found = 0;
+   Int_t found = 0;
    p = strchr(text, '.');
    if (p == 0) {
       p = strchr(text, ',');
@@ -548,12 +548,12 @@ static void AppendFracZero(char *text, Int_t Digits)
    p++;
    for (UInt_t i = 0; i < strlen(p); i++) {
       if (isdigit(*p)) {
-         Found++;
+         found++;
       }
    }
-   while (Found < Digits) {
+   while (found < digits) {
       strcpy(p + strlen(p), "0");
-      Found++;
+      found++;
    }
 }
 

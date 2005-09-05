@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.5 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.6 2005/09/05 07:33:37 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
    virtual TGSearchType *GetType() const { return fType; }
-   static TGSearchDialog *&gDialog() { return fgSearchDialog; }
+   static TGSearchDialog *&SearchDialog() { return fgSearchDialog; }
 
    ClassDef(TGSearchDialog,0)  // Text search dialog used by TGTextEdit widget
 };
