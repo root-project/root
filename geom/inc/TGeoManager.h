@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.64 2005/07/27 10:32:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.65 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -328,7 +328,7 @@ public:
    TGeoNode              *CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode);
    TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::Big(),const char *path="");
    TGeoNode              *FindNextDaughterBoundary(Double_t *point, Double_t *dir, Int_t &idaughter, Bool_t compmatrix=kFALSE);
-   TGeoNode              *FindNextBoundaryAndStep(Double_t stepmax=TGeoShape::Big());
+   TGeoNode              *FindNextBoundaryAndStep(Double_t stepmax=TGeoShape::Big(), Bool_t compsafe=kFALSE);
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);

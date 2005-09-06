@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.69 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.70 2005/09/04 11:50:47 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1290,7 +1290,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
 //            nextnode = fGeoManager->FindNextBoundary();
             nextnode = fGeoManager->FindNextBoundaryAndStep();
             step = fGeoManager->GetStep();
-            if (!nextnode || step>1E10) break;
+            if (step>1E10) break;
             steptot += step;
 //            next = fGeoManager->Step();
             next = nextnode;
@@ -1310,53 +1310,13 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                }
             }      
             // Check if next node is visible
+            if (!nextnode) continue;
             nextvol = nextnode->GetVolume();
             if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
                done = kTRUE;
                base_color = nextvol->GetLineColor();
                next = nextnode;
                break;
-            }
-            // Propagate and recheck the point            
-/*
-            istep = 0;
-            if (!fGeoManager->IsEntering()) {
-               if (fGeoManager->IsOutside()) break;
-               fGeoManager->SetStep(1E-3);
-               printf("EXTRA STEPS\n");
-            }   
-            while (!fGeoManager->IsEntering()) {
-               istep++;
-               if (istep>1E2) break;
-               steptot += 1E-3+1E-6;
-               next = fGeoManager->Step();
-            }
-            if (istep>1E2) {
-               printf("WOOPS\n");
-               break; 
-            }   
-*/
-            if (fClippingShape) {
-               if (steptot>stemax) {
-                  steptot = 0;
-                  inclip = fClippingShape->Contains(point);
-                  if (inclip) {
-                     stemin = fClippingShape->DistFromInside(point,dir,3);
-                     stemax = TGeoShape::Big();
-                     continue;
-                  } else {
-                     stemin = 0;
-                     stemax = fClippingShape->DistFromOutside(point,dir,3);  
-                  }
-               }
-            }      
-            if (next) {
-               nextvol = next->GetVolume();
-               if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
-                  done = kTRUE;
-                  base_color = nextvol->GetLineColor();
-                  break;
-               }
             }
          }
          if (!done) continue;

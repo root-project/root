@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.3 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.4 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path)
    fLevel  = 0;
    fMatrices = new TObjArray(30);
    fNodes    = new TObjArray(30);
+   fMatrixOrig   = 0;
    SetPath(path);   
    SetVisibility(kTRUE);
    SetVisibleFull(kFALSE);

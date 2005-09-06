@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:  Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.1 2005/06/13 12:17:32 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -114,8 +114,6 @@ void TGeoShapeAssembly::ComputeNormal(Double_t *point, Double_t *dir, Double_t *
 Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
 {
 // Test if point is inside the assembly
-   fVolume->SetCurrentNodeIndex(-1);
-   fVolume->SetNextNodeIndex(-1);
    if (!TGeoBBox::Contains(point)) return kFALSE;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    if (!voxels) printf("WOOPS: volume %s no vox\n", fVolume->GetName());
@@ -129,24 +127,28 @@ Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
       check_list = voxels->GetCheckList(&point[0], ncheck);
       if (!check_list) return kFALSE;
       for (id=0; id<ncheck; id++) {
-         fVolume->SetCurrentNodeIndex(check_list[id]);
          node = fVolume->GetNode(check_list[id]);
          shape = node->GetVolume()->GetShape();
          node->MasterToLocal(point,local);
-         if (shape->Contains(local)) return kTRUE;
+         if (shape->Contains(local)) {
+            fVolume->SetCurrentNodeIndex(check_list[id]);
+            fVolume->SetNextNodeIndex(check_list[id]);
+            return kTRUE;
+         }   
       }
-      fVolume->SetCurrentNodeIndex(-1);
       return kFALSE;
    }      
    Int_t nd = fVolume->GetNdaughters();
    for (id=0; id<nd; id++) {
-      fVolume->SetCurrentNodeIndex(id);
       node = fVolume->GetNode(id);
       shape = node->GetVolume()->GetShape();
       node->MasterToLocal(point,local);
-      if (shape->Contains(local)) return kTRUE;
+      if (shape->Contains(local)) {
+         fVolume->SetCurrentNodeIndex(id);
+         fVolume->SetNextNodeIndex(id);      
+         return kTRUE;
+      }   
    }
-   fVolume->SetCurrentNodeIndex(-1);
    return kFALSE;   
 }
 
@@ -170,7 +172,7 @@ Double_t TGeoShapeAssembly::DistFromInside(Double_t * /*point*/, Double_t * /*di
 Double_t TGeoShapeAssembly::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the hyperboloid.
-   fVolume->SetNextNodeIndex(-1);
+//   fVolume->SetNextNodeIndex(-1);
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();

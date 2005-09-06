@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.64 2005/06/27 13:09:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.65 2005/07/06 12:50:59 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1888,8 +1888,10 @@ TGeoVolumeAssembly::TGeoVolumeAssembly()
 
 //_____________________________________________________________________________
 TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
-                   :TGeoVolume(name, NULL, NULL)
+                   :TGeoVolume()
 {
+   fName = name;
+   fName = fName.Strip();
    fCurrent = -1;
    fNext = -1;
    fShape = new TGeoShapeAssembly(this);
