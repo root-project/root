@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.14 2005/08/15 13:56:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.15 2005/09/05 11:03:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -70,6 +70,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fDebugMode(kFALSE),
    fAcceptedPhysicals(0), 
    fRejectedPhysicals(0),
+   fIsPrinting(kFALSE),
    fGLWindow(0)
 {
    fRedrawTimer = new TGLRedrawTimer(*this);
@@ -766,7 +767,7 @@ void TGLViewer::DoDraw()
    }
 
    // GL pre draw setup
-   PreDraw();
+   if (!fIsPrinting) PreDraw();
 
    SetupLights();
 

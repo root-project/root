@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.9 2005/08/12 07:38:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.10 2005/08/15 13:56:50 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -55,6 +55,7 @@ class TContextMenu;
 class TGLViewer : public TVirtualViewer3D
 {
    RQ_OBJECT("TGLViewer")
+   friend class TGLOutput;
 public:
 
    enum ECamera { kCameraPerspective, kCameraXOY, kCameraYOZ, kCameraXOZ };
@@ -125,6 +126,7 @@ private:
    Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
    UInt_t         fAcceptedPhysicals;     //! number of physicals accepted in last rebuild
    UInt_t         fRejectedPhysicals;     //! number of physicals rejected in last rebuild
+   Bool_t         fIsPrinting;
 
    ///////////////////////////////////////////////////////////////////////
    // Methods

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -84,6 +84,8 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
             return kFALSE;
       }
       Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+      viewer.DoDraw();
+      viewer.fIsPrinting = kTRUE;
       while (state == GL2PS_OVERFLOW) {
          buffsize += 1024*1024;
          gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
@@ -93,12 +95,13 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
          | 0,
          GL_RGBA, 0, NULL,0, 0, 0,
          buffsize, output, NULL);
-         viewer.Draw();
+         viewer.DoDraw();
          state = gl2psEndPage();
          std::cout << ".";
       }
       std::cout << std::endl;
       fclose (output);
+      viewer.fIsPrinting = kFALSE;
       if (!gSystem->AccessPathName(filePath)) {
          Info("TGLOutput::Postscript", "Finished creating %s.", filePath);
          return kTRUE;
