@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.124 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.125 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -439,6 +439,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
+#include "TQObject.h"
 
 // statics and globals
 
@@ -818,9 +819,20 @@ void TGeoManager::Browse(TBrowser *b)
    if (fMatrices)  b->Add(fMatrices, "Local transformations");
    if (fOverlaps)  b->Add(fOverlaps, "Illegal overlaps");
    if (fTracks)    b->Add(fTracks,   "Tracks");
-   if (fMasterVolume) b->Add(fMasterVolume);
+   if (fMasterVolume) b->Add(fMasterVolume, "Master Volume", fMasterVolume->IsVisible());
+   if (fTopVolume) b->Add(fTopVolume, "Top Volume", fTopVolume->IsVisible());
    if (fTopNode)   b->Add(fTopNode);
+   TQObject::Connect("TRootBrowser", "Checked(TObject*,Bool_t)", 
+                     "TGeoManager", this, "SetVisibility(TObject*,Bool_t)");
 }
+
+//_____________________________________________________________________________
+void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
+{
+   if(obj->IsA() != TGeoVolume::Class()) return;
+   TGeoVolume *vol = (TGeoVolume *) obj;
+   vol->SetVisibility(vis);
+}  
 
 //_____________________________________________________________________________
 void TGeoManager::BombTranslation(const Double_t *tr, Double_t *bombtr)

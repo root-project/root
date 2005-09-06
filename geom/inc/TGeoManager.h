@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.65 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.66 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -161,6 +161,7 @@ public:
    void                   SortOverlaps();
    //--- browsing and tree navigation
    void                   Browse(TBrowser *b);
+   void                   SetVisibility(TObject *obj, Bool_t vis);
    virtual Bool_t         cd(const char *path=""); // *MENU*
    void                   CdNode(Int_t nodeid);
    void                   CdDown(Int_t index);

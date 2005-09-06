@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.65 2005/07/06 12:50:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.66 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -413,9 +413,21 @@ void TGeoVolume::Browse(TBrowser *b)
 {
 // How to browse a volume
    if (!b) return;
-   if (!GetNdaughters()) b->Add(this);
-   for (Int_t i=0; i<GetNdaughters(); i++) 
+
+   if (!GetNdaughters()) b->Add(this, 0, IsVisible());
+   for (Int_t i=0; i<GetNdaughters(); i++) { 
+      TString title;
+      title.Form("%s : %d daughter(s), %d bytes", 
+                 GetNode(i)->GetVolume()->GetShape()->GetName(),
+                 GetNode(i)->GetVolume()->GetNdaughters(),
+                 GetNode(i)->GetVolume()->GetByteCount());
+      GetNode(i)->GetVolume()->SetTitle(title.Data());
       b->Add(GetNode(i)->GetVolume());
+      if (IsVisDaughters())
+         b->AddCheckBox(GetNode(i)->GetVolume(), GetNode(i)->GetVolume()->IsVisible());
+      else
+         b->AddCheckBox(GetNode(i)->GetVolume(), kFALSE);
+   }
 }
 
 //_____________________________________________________________________________
@@ -1501,6 +1513,13 @@ void TGeoVolume::SetVisibility(Bool_t vis)
    TGeoAtt::SetVisibility(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
    fGeoManager->ModifiedPad();
+   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+   TIter next(brlist);
+   TBrowser *browser = 0;
+   while ((browser=(TBrowser*)next())) {
+      browser->CheckObjectItem(this, vis);
+      browser->Refresh();
+   }
 }   
 
 //_____________________________________________________________________________
