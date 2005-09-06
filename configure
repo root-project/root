@@ -1363,7 +1363,7 @@ if test ! "x$enable_qt" = "xno"; then
     qtmocexe=`which moc`
     if test $? -ne 0 ; then
        for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
-           /usr/qt3/bin ; do
+           /usr/qt3/bin /usr/share/qt3/bin ; do
 	  if test -x $i/moc ; then
 	      qtmocexe=$i/moc
 	      break
