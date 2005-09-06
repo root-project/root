@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.5 2005/03/11 18:33:48 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -64,9 +64,9 @@ static TSocket *gSocket;
 
 // This is to be changed whenever something is changed
 // in non-backward compatible way
-static Int_t fgSrvProtocol = 0;
-static EService fgService = kSOCKD;
-static Int_t fgReuseAllow = 0x1F;
+static Int_t gSrvProtocol = 0;
+static EService gService = kSOCKD;
+static Int_t gReuseAllow = 0x1F;
 
 using namespace std;
 using namespace ROOT;
@@ -238,8 +238,8 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    RpdSetErrorHandler(Err, ErrSys, ErrFatal);
 
    // Init daemon code
-   RpdInit(fgService, parentid, fgSrvProtocol, options,
-           fgReuseAllow, sshdport,
+   RpdInit(gService, parentid, gSrvProtocol, options,
+           gReuseAllow, sshdport,
            tmpdir, altSRPpass.c_str());
 
    // Generate Local RSA keys for the session
@@ -257,7 +257,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    // type of authentication:
    //    0 (new), 1 (existing), 2 (updated offset)
    int clientprotocol = 0;
-   rc = RpdInitSession(fgService, user, clientprotocol, meth, type, ctoken);
+   rc = RpdInitSession(gService, user, clientprotocol, meth, type, ctoken);
 
    TSecContext *seccontext = 0;
    if (rc > 0) {
@@ -292,7 +292,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
          } else {
             if (gDebug > 0)
                ErrorInfo("SrvAuthImpl: could not create sec context object"
-                                      ": potential problems in cleaning");
+                         ": potential problems in cleaning");
          }
       }
    }
@@ -305,270 +305,270 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
 
 namespace ROOT {
 
-static int gSockFd = -1;
+   static int gSockFd = -1;
 
 //______________________________________________________________________________
-void SrvSetSocket(TSocket *Socket)
-{
-   // Fill socket parameters
+   void SrvSetSocket(TSocket *Socket)
+   {
+      // Fill socket parameters
 
-   gSocket = Socket;
-   gSockFd = Socket->GetDescriptor();
-}
+      gSocket = Socket;
+      gSockFd = Socket->GetDescriptor();
+   }
 
 //______________________________________________________________________________
-static int Recvn(int sock, void *buffer, int length)
-{
-   // Receive exactly length bytes into buffer. Returns number of bytes
-   // received. Returns -1 in case of error.
+   static int Recvn(int sock, void *buffer, int length)
+   {
+      // Receive exactly length bytes into buffer. Returns number of bytes
+      // received. Returns -1 in case of error.
 
-   if (sock < 0) return -1;
+      if (sock < 0) return -1;
 
-   int n, nrecv = 0;
-   char *buf = (char *)buffer;
+      int n, nrecv = 0;
+      char *buf = (char *)buffer;
 
-   for (n = 0; n < length; n += nrecv) {
-      while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1
-                                     && GetErrno() == EINTR)
-         ResetErrno();   // probably a SIGCLD that was caught
-      if (nrecv < 0) {
+      for (n = 0; n < length; n += nrecv) {
+         while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1
+                && GetErrno() == EINTR)
+            ResetErrno();   // probably a SIGCLD that was caught
+         if (nrecv < 0) {
+            Error(gErrFatal,-1,
+                  "Recvn: error (sock: %d): errno: %d",sock,GetErrno());
+            return nrecv;
+         } else if (nrecv == 0)
+            break;         // EOF
+      }
+
+      return n;
+   }
+
+//________________________________________________________________________
+   void NetClose()
+   {
+      // Empty call, for consistency
+      return;
+   }
+
+//______________________________________________________________________________
+   int NetGetSockFd()
+   {
+      // return open socket descriptor
+      return gSockFd;
+   }
+
+//________________________________________________________________________
+   int NetParOpen(int port, int size)
+   {
+      // Empty call, for consistency
+      if (port+size)
+         return (port+size);
+      else
+         return 1;
+   }
+
+//________________________________________________________________________
+   int NetRecv(char *msg, int max)
+   {
+      // Receive a string of maximum length max.
+
+      return gSocket->Recv(msg, max);
+   }
+
+//________________________________________________________________________
+   int NetRecv(char *msg, int len, EMessageTypes &kind)
+   {
+      // Receive a string of maximum len length. Returns message type in kind.
+      // Return value is msg length.
+
+      Int_t tmpkind;
+      Int_t rc = gSocket->Recv(msg, len, tmpkind);
+      kind = (EMessageTypes)tmpkind;
+      return rc;
+   }
+
+//________________________________________________________________________
+   int NetRecv(void *&buf, int &len, EMessageTypes &kind)
+   {
+      // Receive a buffer. Returns the newly allocated buffer, the length
+      // of the buffer and message type in kind.
+
+      int hdr[2];
+
+      if (NetRecvRaw(hdr, sizeof(hdr)) < 0)
+         return -1;
+
+      len = ntohl(hdr[0]) - sizeof(int);
+      kind = (EMessageTypes) ntohl(hdr[1]);
+      if (len) {
+         buf = new char* [len];
+         return NetRecvRaw(buf, len);
+      }
+      buf = 0;
+      return 0;
+
+   }
+
+//________________________________________________________________________
+   int NetRecvRaw(void *buf, int len)
+   {
+      // Receive a buffer of maximum len bytes.
+
+      return gSocket->RecvRaw(buf,len);
+   }
+
+//________________________________________________________________________
+   int NetRecvRaw(int sock, void *buf, int len)
+   {
+      // Receive a buffer of maximum len bytes from generic socket sock.
+
+      if (sock == -1) return -1;
+
+      if (Recvn(sock, buf, len) < 0) {
          Error(gErrFatal,-1,
-               "Recvn: error (sock: %d): errno: %d",sock,GetErrno());
-         return nrecv;
-      } else if (nrecv == 0)
-         break;         // EOF
+               "NetRecvRaw: Recvn error (sock: %d, errno: %d)",sock,GetErrno());
+      }
+
+      return len;
    }
 
-   return n;
-}
+//________________________________________________________________________
+   int NetSend(int code, EMessageTypes kind)
+   {
+      // Send integer. Message will be of type "kind".
+
+      int hdr[3];
+      int hlen = sizeof(int) + sizeof(int);
+      hdr[0] = htonl(hlen);
+      hdr[1] = htonl(kind);
+      hdr[2] = htonl(code);
+
+      return gSocket->SendRaw(hdr, sizeof(hdr));
+   }
 
 //________________________________________________________________________
-void NetClose()
-{
-   // Empty call, for consistency
-   return;
-}
+   int NetSend(const char *msg, EMessageTypes kind)
+   {
+      // Send a string. Message will be of type "kind".
+
+      return gSocket->Send(msg, kind);
+   }
+
+//________________________________________________________________________
+   int NetSend(const void *buf, int len, EMessageTypes kind)
+   {
+      // Send buffer of len bytes. Message will be of type "kind".
+
+      int hdr[2];
+      int hlen = sizeof(int) + len;
+      hdr[0] = htonl(hlen);
+      hdr[1] = htonl(kind);
+      if (gSocket->SendRaw(hdr, sizeof(hdr)) < 0)
+         return -1;
+
+      return gSocket->SendRaw(buf, len);
+   }
+
+//________________________________________________________________________
+   int NetSendAck()
+   {
+      // Send acknowledge code
+
+      return NetSend(0, kROOTD_ACK);
+   }
+
+//________________________________________________________________________
+   int NetSendError(ERootdErrors err)
+   {
+      // Send error code
+
+      return NetSend(err, kROOTD_ERR);
+   }
+
+//________________________________________________________________________
+   int NetSendRaw(const void *buf, int len)
+   {
+      // Send buffer of len bytes.
+
+      return gSocket->SendRaw(buf, len);
+   }
 
 //______________________________________________________________________________
-int NetGetSockFd()
-{
-   // return open socket descriptor
-   return gSockFd;
-}
+   void NetGetRemoteHost(std::string &openhost)
+   {
+      // Return name of connected host
 
-//________________________________________________________________________
-int NetParOpen(int port, int size)
-{
-   // Empty call, for consistency
-   if (port+size)
-      return (port+size);
-   else
-      return 1;
-}
-
-//________________________________________________________________________
-int NetRecv(char *msg, int max)
-{
-   // Receive a string of maximum length max.
-
-   return gSocket->Recv(msg, max);
-}
-
-//________________________________________________________________________
-int NetRecv(char *msg, int len, EMessageTypes &kind)
-{
-   // Receive a string of maximum len length. Returns message type in kind.
-   // Return value is msg length.
-
-   Int_t tmpkind;
-   Int_t rc = gSocket->Recv(msg, len, tmpkind);
-   kind = (EMessageTypes)tmpkind;
-   return rc;
-}
-
-//________________________________________________________________________
-int NetRecv(void *&buf, int &len, EMessageTypes &kind)
-{
-   // Receive a buffer. Returns the newly allocated buffer, the length
-   // of the buffer and message type in kind.
-
-   int hdr[2];
-
-   if (NetRecvRaw(hdr, sizeof(hdr)) < 0)
-      return -1;
-
-   len = ntohl(hdr[0]) - sizeof(int);
-   kind = (EMessageTypes) ntohl(hdr[1]);
-   if (len) {
-      buf = new char* [len];
-      return NetRecvRaw(buf, len);
-   }
-   buf = 0;
-   return 0;
-
-}
-
-//________________________________________________________________________
-int NetRecvRaw(void *buf, int len)
-{
-   // Receive a buffer of maximum len bytes.
-
-   return gSocket->RecvRaw(buf,len);
-}
-
-//________________________________________________________________________
-int NetRecvRaw(int sock, void *buf, int len)
-{
-   // Receive a buffer of maximum len bytes from generic socket sock.
-
-   if (sock == -1) return -1;
-
-   if (Recvn(sock, buf, len) < 0) {
-      Error(gErrFatal,-1,
-        "NetRecvRaw: Recvn error (sock: %d, errno: %d)",sock,GetErrno());
+      // Get Host name
+      openhost = string(gSocket->GetInetAddress().GetHostName());
    }
 
-   return len;
-}
-
 //________________________________________________________________________
-int NetSend(int code, EMessageTypes kind)
-{
-   // Send integer. Message will be of type "kind".
-
-   int hdr[3];
-   int hlen = sizeof(int) + sizeof(int);
-   hdr[0] = htonl(hlen);
-   hdr[1] = htonl(kind);
-   hdr[2] = htonl(code);
-
-   return gSocket->SendRaw(hdr, sizeof(hdr));
-}
-
-//________________________________________________________________________
-int NetSend(const char *msg, EMessageTypes kind)
-{
-   // Send a string. Message will be of type "kind".
-
-   return gSocket->Send(msg, kind);
-}
-
-//________________________________________________________________________
-int NetSend(const void *buf, int len, EMessageTypes kind)
-{
-   // Send buffer of len bytes. Message will be of type "kind".
-
-   int hdr[2];
-   int hlen = sizeof(int) + len;
-   hdr[0] = htonl(hlen);
-   hdr[1] = htonl(kind);
-   if (gSocket->SendRaw(hdr, sizeof(hdr)) < 0)
-      return -1;
-
-   return gSocket->SendRaw(buf, len);
-}
-
-//________________________________________________________________________
-int NetSendAck()
-{
-   // Send acknowledge code
-
-   return NetSend(0, kROOTD_ACK);
-}
-
-//________________________________________________________________________
-int NetSendError(ERootdErrors err)
-{
-   // Send error code
-
-   return NetSend(err, kROOTD_ERR);
-}
-
-//________________________________________________________________________
-int NetSendRaw(const void *buf, int len)
-{
-   // Send buffer of len bytes.
-
-   return gSocket->SendRaw(buf, len);
-}
-
-//______________________________________________________________________________
-void NetGetRemoteHost(std::string &openhost)
-{
-   // Return name of connected host
-
-   // Get Host name
-   openhost = string(gSocket->GetInetAddress().GetHostName());
-}
-
-//________________________________________________________________________
-int GetErrno()
-{
-   // return errno
+   int GetErrno()
+   {
+      // return errno
 #ifdef GLOBAL_ERRNO
-   return ::errno;
+      return ::errno;
 #else
-   return errno;
+      return errno;
 #endif
-}
+   }
 //________________________________________________________________________
-void ResetErrno()
-{
-   // reset errno
+   void ResetErrno()
+   {
+      // reset errno
 #ifdef GLOBAL_ERRNO
-   ::errno = 0;
+      ::errno = 0;
 #else
-   errno = 0;
+      errno = 0;
 #endif
-}
+   }
 
 //______________________________________________________________________________
-void Perror(char *buf)
-{
-   // Return in buf the message belonging to errno.
+   void Perror(char *buf)
+   {
+      // Return in buf the message belonging to errno.
 
-   int len = strlen(buf);
+      int len = strlen(buf);
 #if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
    defined(_AIX) || defined(__MACH__)
-   sprintf(buf+len, " (%s)", strerror(GetErrno()));
+      sprintf(buf+len, " (%s)", strerror(GetErrno()));
 #else
-   if (GetErrno() >= 0 && GetErrno() < sys_nerr)
-      sprintf(buf+len, " (%s)", sys_errlist[GetErrno()]);
+      if (GetErrno() >= 0 && GetErrno() < sys_nerr)
+         sprintf(buf+len, " (%s)", sys_errlist[GetErrno()]);
 #endif
-}
+   }
 
 //________________________________________________________________________
-void ErrorInfo(const char *va_(fmt), ...)
-{
-   // Formats a string in a circular formatting buffer and prints the string.
-   // Appends a newline.
-   // Cut & Paste from Printf in base/src/TString.cxx
+   void ErrorInfo(const char *va_(fmt), ...)
+   {
+      // Formats a string in a circular formatting buffer and prints the string.
+      // Appends a newline.
+      // Cut & Paste from Printf in base/src/TString.cxx
 
-   char    buf[1024];
-   va_list ap;
-   va_start(ap,va_(fmt));
-   vsprintf(buf, fmt, ap);
-   va_end(ap);
-   printf("%s\n", buf);
-   fflush(stdout);
-}
+      char    buf[1024];
+      va_list ap;
+      va_start(ap,va_(fmt));
+      vsprintf(buf, fmt, ap);
+      va_end(ap);
+      printf("%s\n", buf);
+      fflush(stdout);
+   }
 
 //________________________________________________________________________
-void Error(ErrorHandler_t func,int code,const char *va_(fmt), ...)
-{
-   // Write error message and call a handler, if required
+   void Error(ErrorHandler_t func,int code,const char *va_(fmt), ...)
+   {
+      // Write error message and call a handler, if required
 
-   char    buf[1024];
-   va_list ap;
-   va_start(ap,va_(fmt));
-   vsprintf(buf, fmt, ap);
-   va_end(ap);
-   printf("%s\n", buf);
-   fflush(stdout);
+      char    buf[1024];
+      va_list ap;
+      va_start(ap,va_(fmt));
+      vsprintf(buf, fmt, ap);
+      va_end(ap);
+      printf("%s\n", buf);
+      fflush(stdout);
 
-   // Actions are defined by the specific error handler (
-   // see rootd.cxx and proofd.cxx)
-   if (func) (*func)(code,(const char *)buf);
-}
+      // Actions are defined by the specific error handler (
+      // see rootd.cxx and proofd.cxx)
+      if (func) (*func)(code,(const char *)buf);
+   }
 
 } // namespace ROOT

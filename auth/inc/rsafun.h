@@ -30,46 +30,46 @@
 #endif
 
 
-typedef  rsa_NUMBER (*rsa_genprim_t)(int, int);
-typedef  int    (*rsa_genrsa_t)(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
-typedef  int    (*rsa_encode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
-typedef  int    (*rsa_decode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
-typedef  int	(*rsa_num_sput_t)(rsa_NUMBER*, char*, int );
-typedef  int	(*rsa_num_fput_t)(rsa_NUMBER*, FILE* );
-typedef  int	(*rsa_num_sget_t)(rsa_NUMBER*, char* );
-typedef  int	(*rsa_num_fget_t)(rsa_NUMBER*, FILE* );
-typedef  void   (*rsa_assign_t)(rsa_NUMBER *, rsa_NUMBER *);
-typedef  int    (*rsa_cmp_t)(rsa_NUMBER *, rsa_NUMBER *);
+typedef  rsa_NUMBER (*RSA_genprim_t)(int, int);
+typedef  int    (*RSA_genrsa_t)(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
+typedef  int    (*RSA_encode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
+typedef  int    (*RSA_decode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
+typedef  int	(*RSA_num_sput_t)(rsa_NUMBER*, char*, int );
+typedef  int	(*RSA_num_fput_t)(rsa_NUMBER*, FILE* );
+typedef  int	(*RSA_num_sget_t)(rsa_NUMBER*, char* );
+typedef  int	(*RSA_num_fget_t)(rsa_NUMBER*, FILE* );
+typedef  void   (*RSA_assign_t)(rsa_NUMBER *, rsa_NUMBER *);
+typedef  int    (*RSA_cmp_t)(rsa_NUMBER *, rsa_NUMBER *);
 
 
-class rsa_fun {
+class TRSA_fun {
 
 private:
-   static rsa_genprim_t   fg_rsa_genprim;
-   static rsa_genrsa_t    fg_rsa_genrsa;
-   static rsa_encode_t    fg_rsa_encode;
-   static rsa_decode_t    fg_rsa_decode;
-   static rsa_num_sput_t  fg_rsa_num_sput;
-   static rsa_num_fput_t  fg_rsa_num_fput;
-   static rsa_num_sget_t  fg_rsa_num_sget;
-   static rsa_num_fget_t  fg_rsa_num_fget;
-   static rsa_assign_t    fg_rsa_assign;
-   static rsa_cmp_t       fg_rsa_cmp;
+   static RSA_genprim_t   fg_rsa_genprim;
+   static RSA_genrsa_t    fg_rsa_genrsa;
+   static RSA_encode_t    fg_rsa_encode;
+   static RSA_decode_t    fg_rsa_decode;
+   static RSA_num_sput_t  fg_rsa_num_sput;
+   static RSA_num_fput_t  fg_rsa_num_fput;
+   static RSA_num_sget_t  fg_rsa_num_sget;
+   static RSA_num_fget_t  fg_rsa_num_fget;
+   static RSA_assign_t    fg_rsa_assign;
+   static RSA_cmp_t       fg_rsa_cmp;
 
 public:
-   static rsa_genprim_t   rsa_genprim();
-   static rsa_genrsa_t    rsa_genrsa();
-   static rsa_encode_t    rsa_encode();
-   static rsa_decode_t    rsa_decode();
-   static rsa_num_sput_t  rsa_num_sput();
-   static rsa_num_fput_t  rsa_num_fput();
-   static rsa_num_sget_t  rsa_num_sget();
-   static rsa_num_fget_t  rsa_num_fget();
-   static rsa_assign_t    rsa_assign();
-   static rsa_cmp_t       rsa_cmp();
+   static RSA_genprim_t   RSA_genprim();
+   static RSA_genrsa_t    RSA_genrsa();
+   static RSA_encode_t    RSA_encode();
+   static RSA_decode_t    RSA_decode();
+   static RSA_num_sput_t  RSA_num_sput();
+   static RSA_num_fput_t  RSA_num_fput();
+   static RSA_num_sget_t  RSA_num_sget();
+   static RSA_num_fget_t  RSA_num_fget();
+   static RSA_assign_t    RSA_assign();
+   static RSA_cmp_t       RSA_cmp();
 
-   rsa_fun(rsa_genprim_t, rsa_genrsa_t, rsa_encode_t, rsa_decode_t,
-           rsa_num_sput_t, rsa_num_fput_t, rsa_num_sget_t, rsa_num_fget_t, rsa_assign_t, rsa_cmp_t);
+   TRSA_fun(RSA_genprim_t, RSA_genrsa_t, RSA_encode_t, RSA_decode_t,
+           RSA_num_sput_t, RSA_num_fput_t, RSA_num_sget_t, RSA_num_fget_t, RSA_assign_t, RSA_cmp_t);
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.8 2005/06/23 10:51:12 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 ClassImp(THostAuth)
 
 //______________________________________________________________________________
-THostAuth::THostAuth() : TObject()
+   THostAuth::THostAuth() : TObject()
 {
    // Deafult constructor.
 
@@ -109,23 +109,23 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
 
    fServer = -1;
    // Extract server, if given
-   TString Srv("");
+   TString srv("");
    if (fHost.Contains(":")) {
       // .rootauthrc form: host:server
-      Srv = fHost;
+      srv = fHost;
       fHost.Remove(fHost.Index(":"));
-      Srv.Remove(0,Srv.Index(":")+1);
+      srv.Remove(0,srv.Index(":")+1);
    } else if (fHost.Contains("://")) {
       // Url form: server://host
-      Srv = TUrl(fHost).GetProtocol();
+      srv = TUrl(fHost).GetProtocol();
       fHost.Remove(0,fHost.Index("://")+3);
    }
-   if (Srv.Length()) {
-      if (Srv == "0" || Srv.BeginsWith("sock"))
+   if (srv.Length()) {
+      if (srv == "0" || srv.BeginsWith("sock"))
          fServer = TSocket::kSOCKD;
-      else if (Srv == "1" || Srv.BeginsWith("root"))
+      else if (srv == "1" || srv.BeginsWith("root"))
          fServer = TSocket::kROOTD;
-      else if (Srv == "2" || Srv.BeginsWith("proof"))
+      else if (srv == "2" || srv.BeginsWith("proof"))
          fServer = TSocket::kPROOFD;
    }
 
@@ -200,21 +200,21 @@ THostAuth::THostAuth(const char *asstring) : TObject()
 
    fServer = -1;
 
-   TString Tmp(asstring);
+   TString strtmp(asstring);
    char *tmp = new char[strlen(asstring)+1];
    strcpy(tmp,asstring);
 
    fHost = TString((const char *)strtok(tmp," "));
-   Tmp.ReplaceAll(fHost,"");
+   strtmp.ReplaceAll(fHost,"");
    fHost.Remove(0,fHost.Index(":")+1);
 
    fUser = TString((const char *)strtok(0," "));
-   Tmp.ReplaceAll(fUser,"");
+   strtmp.ReplaceAll(fUser,"");
    fUser.Remove(0,fUser.Index(":")+1);
 
    TString fNmet;
    fNmet = TString((const char *)strtok(0," "));
-   Tmp.ReplaceAll(fNmet,"");
+   strtmp.ReplaceAll(fNmet,"");
    fNmet.Remove(0,fNmet.Index(":")+1);
 
    if (tmp) delete[] tmp;
@@ -222,25 +222,25 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    fNumMethods = atoi(fNmet.Data());
    Int_t i = 0;
    for (; i < fNumMethods; i++) {
-      TString Det = Tmp;
-      Det.Remove(0,Det.Index("'")+1);
-      Det.Resize(Det.Index("'"));
+      TString det = strtmp;
+      det.Remove(0,det.Index("'")+1);
+      det.Resize(det.Index("'"));
       // Remove leading spaces, if
       char cmet[2];
-      sscanf(Det.Data(),"%s",cmet);
+      sscanf(det.Data(),"%s",cmet);
       Int_t met = atoi(cmet);
       if (met > -1 && met < kMAXSEC) {
-         Det.ReplaceAll(cmet,"");
-         while (Det.First(' ') == 0)
-            Det.Remove(0,1);
-         while (Det.Last(' ') == (Det.Length() - 1))
-            Det.Resize(Det.Length() - 1);
+         det.ReplaceAll(cmet,"");
+         while (det.First(' ') == 0)
+            det.Remove(0,1);
+         while (det.Last(' ') == (det.Length() - 1))
+            det.Resize(det.Length() - 1);
          fMethods[i] = met;
          fSuccess[i] = 0;
          fFailure[i] = 0;
-         fDetails[i] = Det;
+         fDetails[i] = det;
       }
-      Tmp.Remove(0,Tmp.Index("'",Tmp.Index("'")+1)+1);
+      strtmp.Remove(0,strtmp.Index("'",strtmp.Index("'")+1)+1);
    }
    for (i = fNumMethods; i < kMAXSEC ; i++) {
       fMethods[i] = -1;
@@ -363,7 +363,7 @@ void  THostAuth::Reset()
 }
 
 //______________________________________________________________________________
-  THostAuth::~THostAuth()
+THostAuth::~THostAuth()
 {
    // The dtor.
 
@@ -380,7 +380,7 @@ const char *THostAuth::GetDetails(Int_t level)
    if (HasMethod(level,&i)) {
       if (gDebug > 3)
          Info("GetDetails"," %d: returning fDetails[%d]: %s",
-                                 level,i,fDetails[i].Data());
+              level,i,fDetails[i].Data());
       return fDetails[i];
    }
    static const char *empty = " ";
@@ -432,12 +432,12 @@ void THostAuth::Print(Option_t *proc) const
    char srvnam[5][8] = { "any", "sockd", "rootd", "proofd", "???" };
 
    Int_t isrv = (fServer >= -1 && fServer <= TSocket::kPROOFD) ?
-                fServer+1 : TSocket::kPROOFD+2;
+      fServer+1 : TSocket::kPROOFD+2;
 
    Info("Print",
-   "%s +------------------------------------------------------------------+",proc);
-   Info("Print","%s + Host:%s - Srv:%s - User:%s - # of available methods:%d",
-         proc, fHost.Data(), srvnam[isrv], fUser.Data(), fNumMethods);
+        "%s +------------------------------------------------------------------+",proc);
+   Info("Print","%s + Host:%s - srv:%s - User:%s - # of available methods:%d",
+        proc, fHost.Data(), srvnam[isrv], fUser.Data(), fNumMethods);
    int i = 0;
    for (i = 0; i < fNumMethods; i++){
       Info("Print","%s + Method: %d (%s) Ok:%d Ko:%d Dets:%s", proc,
@@ -445,7 +445,7 @@ void THostAuth::Print(Option_t *proc) const
            fSuccess[i], fFailure[i], fDetails[i].Data());
    }
    Info("Print",
-   "%s +------------------------------------------------------------------+",proc);
+        "%s +------------------------------------------------------------------+",proc);
 }
 
 //______________________________________________________________________________
@@ -454,9 +454,9 @@ void THostAuth::PrintEstablished() const
    // Print info about established authentication vis-a-vis of this Host.
 
    Info("PrintEstablished",
-   "+------------------------------------------------------------------------------+");
+        "+------------------------------------------------------------------------------+");
    Info("PrintEstablished","+ Host:%s - Number of active sec contexts: %d",
-         fHost.Data(), fSecContexts->GetSize());
+        fHost.Data(), fSecContexts->GetSize());
 
    // Check list
    if (fSecContexts->GetSize()>0) {
@@ -470,7 +470,7 @@ void THostAuth::PrintEstablished() const
       }
    }
    Info("PrintEstablished",
-   "+------------------------------------------------------------------------------+");
+        "+------------------------------------------------------------------------------+");
 }
 
 //______________________________________________________________________________
@@ -724,8 +724,9 @@ void THostAuth::CountFailure(Int_t method)
 
 //______________________________________________________________________________
 TRootSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
-                        Int_t meth, Int_t offset, const char *details,
-                        const char *token, TDatime expdate, void *sctx, Int_t key)
+                                             Int_t meth, Int_t offset,
+                                             const char *details, const char *token,
+                                             TDatime expdate, void *sctx, Int_t key)
 {
    // Create a Security context and add it to local list
    // Return pointer to it to be stored in TAuthenticate

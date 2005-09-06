@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:$:$Id:$
+// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: G. Ganis   08/07/2005
 
 /*************************************************************************
@@ -33,11 +33,11 @@
 ClassImp(TRootSecContext)
 
 //______________________________________________________________________________
-TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
-                                 Int_t offset, const char *id,
-                                 const char *token, TDatime expdate,
-                                 void *ctx, Int_t key)
-                : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
+   TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
+                                    Int_t offset, const char *id,
+                                    const char *token, TDatime expdate,
+                                    void *ctx, Int_t key)
+      : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
 {
    // Ctor for SecContext object.
    Assert(gROOT);
@@ -50,7 +50,7 @@ TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
 TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
                                  const char *id, const char *token,
                                  TDatime expdate, void *ctx, Int_t key)
-                : TSecContext(url, meth, offset, id, token, expdate, ctx)
+   : TSecContext(url, meth, offset, id, token, expdate, ctx)
 {
    // Ctor for SecContext object.
    // User and host from url = user@host .
@@ -94,11 +94,11 @@ void TRootSecContext::DeActivate(Option_t *Opt)
 
    // Cleanup globus security context if needed
    if (fMethod == TAuthenticate::kGlobus && fContext) {
-      GlobusAuth_t GlobusAuthHook = TAuthenticate::GetGlobusAuthHook();
-      if (GlobusAuthHook != 0) {
+      GlobusAuth_t globusAuthHook = TAuthenticate::GetGlobusAuthHook();
+      if (globusAuthHook != 0) {
          TString det("context");
          TString us("-1");
-         (*GlobusAuthHook)((TAuthenticate *)fContext,us,det);
+         (*globusAuthHook)((TAuthenticate *)fContext,us,det);
          fContext = 0;
       }
    }
@@ -169,7 +169,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
                news->Send(Form("%d %d %d %s", TAuthenticate::fgProcessID, fMethod,
                                fOffSet, fUser.Data()), kROOTD_CLEANUP);
                if (TAuthenticate::SecureSend(news, 1, fRSAKey,
-                  (char *)(fToken.Data())) == -1) {
+                                             (char *)(fToken.Data())) == -1) {
                   Info("CleanupSecContext", "problems secure-sending token");
                } else {
                   cleaned = kTRUE;
@@ -203,8 +203,8 @@ void TRootSecContext::Print(Option_t *opt) const
    // If opt is "S" prints short in-line form for calls within TFTP,
    // TSlave, TProof ...
 
-   char Ord[10] = {0};
-   char Spc[10] = {0};
+   char cord[10] = {0};
+   char cspc[10] = {0};
 
    // Check if option is numeric
    Int_t ord = -1, i = 0;
@@ -220,11 +220,11 @@ void TRootSecContext::Print(Option_t *opt) const
 
    // If asked to print ordinal number, preapre the string
    if (ord > -1) {
-      sprintf(Ord,"%d)",ord);
+      sprintf(cord,"%d)",ord);
       // and take care of alignment
-      Int_t len=strlen(Ord);
+      Int_t len=strlen(cord);
       while (len--)
-         strcat(Spc," ");
+         strcat(cspc," ");
    }
 
    if (!strncasecmp(opt,"F",1)) {
@@ -232,13 +232,13 @@ void TRootSecContext::Print(Option_t *opt) const
            "+------------------------------------------------------+");
       Info("Print",
            "+ Host:%s Method:%d (%s) User:'%s'",
-            GetHost(), fMethod, GetMethodName(),
-            fUser.Data());
+           GetHost(), fMethod, GetMethodName(),
+           fUser.Data());
       Info("Print",
            "+         OffSet:%d Id: '%s'", fOffSet, fID.Data());
       if (fOffSet > -1)
          Info("Print",
-           "+         Expiration time: %s",fExpDate.AsString());
+              "+         Expiration time: %s",fExpDate.AsString());
       Info("Print",
            "+------------------------------------------------------+");
    } else if (!strncasecmp(opt,"S",1)) {
@@ -256,12 +256,12 @@ void TRootSecContext::Print(Option_t *opt) const
    } else {
       // special printing form for THostAuth
       Info("PrintEstblshed","+ %s h:%s met:%d (%s) us:'%s'",
-            Ord, GetHost(), fMethod, GetMethodName(),
-            fUser.Data());
+           cord, GetHost(), fMethod, GetMethodName(),
+           fUser.Data());
       Info("PrintEstblshed","+ %s offset:%d id: '%s'",
-            Spc, fOffSet, fID.Data());
+           cspc, fOffSet, fID.Data());
       if (fOffSet > -1)
-         Info("PrintEstblshed","+ %s expiring: %s",Spc,fExpDate.AsString());
+         Info("PrintEstblshed","+ %s expiring: %s",cspc,fExpDate.AsString());
    }
 }
 

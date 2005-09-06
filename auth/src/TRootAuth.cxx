@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.2 2005/07/29 14:26:50 rdm Exp $
 // Author: Gerardo Ganis   08/07/05
 
 /*************************************************************************
@@ -137,7 +137,7 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
    if (rc && isPROOF && rproto > 11) {
       Bool_t client = !isPROOFserv;
       if (TAuthenticate::ProofAuthSetup(s, client) !=0 ) {
-          Error("Authenticate", "PROOF: failed to finalize setup");
+         Error("Authenticate", "PROOF: failed to finalize setup");
       }
    }
 
