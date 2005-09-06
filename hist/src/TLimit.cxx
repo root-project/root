@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.12 2005/08/29 10:45:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.13 2005/09/05 10:02:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -233,6 +233,8 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
       // create a "map" with the systematics names
       TIterator *errornames = input->GetErrorNames()->MakeIterator();
       TObjArray *listofnames = 0;
+      delete fgSystNames;
+      fgSystNames = new TOrdCollection();
       while ((listofnames = ((TObjArray *) errornames->Next()))) {
          TObjString *name = NULL;
          TIterator *loniter = listofnames->MakeIterator();
