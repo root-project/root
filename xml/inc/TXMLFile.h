@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.7 2004/07/30 01:12:28 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.8 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -108,8 +108,8 @@ class TXMLFile : public TFile, public TXMLSetup {
    protected:
       // functions to store streamer infos
       
-      void              StoreStreamerElement(xmlNodePointer node, TStreamerElement* elem);
-      void              ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info);
+      void              StoreStreamerElement(XMLNodePointer_t node, TStreamerElement* elem);
+      void              ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info);
 
       Bool_t            ReadFromFile();
 
@@ -117,9 +117,9 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       static void       ProduceFileNames(const char* filename, TString& fname, TString& dtdname);
 
-      xmlDocPointer     fDoc;                  //!
+      XMLDocPointer_t   fDoc;                  //!
 
-      xmlNodePointer    fStreamerInfoNode;     //!  pointer of node with streamer info data
+      XMLNodePointer_t  fStreamerInfoNode;     //!  pointer of node with streamer info data
       
       TXMLEngine*       fXML;                  //! object for interface with xml library
       

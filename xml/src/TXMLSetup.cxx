@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.4 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.6 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -87,7 +87,7 @@ const char* xmlNames_String      = "string";
 const char* xmlNames_CharStar    = "CharStar";
 
 
-TString TXMLSetup::fNameSpaceBase = "http://root.cern.ch/root/htmldoc/";   
+TString TXMLSetup::fgNameSpaceBase = "http://root.cern.ch/root/htmldoc/";   
 
 //______________________________________________________________________________
 TString TXMLSetup::DefaultXmlSetup() 
@@ -97,7 +97,7 @@ TString TXMLSetup::DefaultXmlSetup()
 
 //______________________________________________________________________________
 void TXMLSetup::SetNameSpaceBase(const char* namespacebase) {
-   fNameSpaceBase = namespacebase; 
+   fgNameSpaceBase = namespacebase; 
 }
 
 //______________________________________________________________________________
@@ -196,9 +196,9 @@ const char* TXMLSetup::XmlConvertClassName(const char* clname)
 const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 {
    TString clname = XmlConvertClassName(cl->GetName());
-   fStrBuf = fNameSpaceBase;
+   fStrBuf = fgNameSpaceBase;
    fStrBuf += clname;
-   if (fNameSpaceBase == "http://root.cern.ch/root/htmldoc/")
+   if (fgNameSpaceBase == "http://root.cern.ch/root/htmldoc/")
      fStrBuf += ".html";
    return fStrBuf.Data();
 }

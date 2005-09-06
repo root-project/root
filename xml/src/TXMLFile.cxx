@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.10 2004/12/20 17:15:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.11 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -284,7 +284,7 @@ void TXMLFile::InitXmlFile(Bool_t create)
     
    if (create) {
       fDoc = fXML->NewDoc(0);
-      xmlNodePointer fRootNode = fXML->NewChild(0, 0, xmlNames_Root, 0);
+      XMLNodePointer_t fRootNode = fXML->NewChild(0, 0, xmlNames_Root, 0);
       fXML->DocSetRootElement(fDoc, fRootNode);
    } else {
       ReadFromFile();
@@ -577,7 +577,7 @@ void TXMLFile::SaveToFile()
    if (gDebug>1)
      cout << "TXMLFile::SaveToFile() " << fRealName << endl;
 
-   xmlNodePointer fRootNode = fXML->DocGetRootElement(fDoc);
+   XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
    
    fXML->FreeAttr(fRootNode, xmlNames_Setup);
    fXML->NewAttr(fRootNode, 0, xmlNames_Setup, GetSetupAsString());
@@ -628,7 +628,7 @@ Bool_t TXMLFile::ReadFromFile()
    fDoc = fXML->ParseFile(fRealName);
    if (fDoc==0) return kFALSE;
    
-   xmlNodePointer fRootNode = fXML->DocGetRootElement(fDoc);
+   XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
 
    if (fRootNode==0) {
       fXML->FreeDoc(fDoc);
@@ -655,10 +655,10 @@ Bool_t TXMLFile::ReadFromFile()
         return kFALSE;
      }
 
-   xmlNodePointer keynode = fXML->GetChild(fRootNode);
+   XMLNodePointer_t keynode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(keynode);
    while (keynode!=0) {
-      xmlNodePointer next = fXML->GetNext(keynode);
+      XMLNodePointer_t next = fXML->GetNext(keynode);
       
       if (strcmp(xmlNames_Xmlkey, fXML->GetNodeName(keynode))==0) {
          fXML->UnlinkNode(keynode);
@@ -710,7 +710,7 @@ void TXMLFile::WriteStreamerInfo()
    for (int n=0;n<=list.GetLast();n++) {
       TStreamerInfo* info  = (TStreamerInfo*) list.At(n);
 
-      xmlNodePointer infonode = fXML->NewChild(fStreamerInfoNode, 0, "TStreamerInfo");
+      XMLNodePointer_t infonode = fXML->NewChild(fStreamerInfoNode, 0, "TStreamerInfo");
 
       fXML->NewAttr(infonode, 0, "name", info->GetName());
       fXML->NewAttr(infonode, 0, "title", info->GetTitle());
@@ -737,7 +737,7 @@ TList* TXMLFile::GetStreamerInfoList()
     
    TList* list = new TList();
    
-   xmlNodePointer sinfonode = fXML->GetChild(fStreamerInfoNode);
+   XMLNodePointer_t sinfonode = fXML->GetChild(fStreamerInfoNode);
    fXML->SkipEmpty(sinfonode);
 
    while (sinfonode!=0) {
@@ -754,7 +754,7 @@ TList* TXMLFile::GetStreamerInfoList()
         Int_t checksum = AtoI(fXML->GetAttr(sinfonode,"checksum"));
         info->SetCheckSum(checksum);
 
-        xmlNodePointer node = fXML->GetChild(sinfonode);
+        XMLNodePointer_t node = fXML->GetChild(sinfonode);
         fXML->SkipEmpty(node);
         while (node!=0) {
            ReadStreamerElement(node, info);
@@ -810,13 +810,13 @@ void TXMLFile::ReadStreamerInfo()
 
 
 //______________________________________________________________________________
-void TXMLFile::StoreStreamerElement(xmlNodePointer infonode, TStreamerElement* elem) 
+void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement* elem) 
 {
 // store data of single TStreamerElement in streamer node    
     
    TClass* cl = elem->IsA();
 
-   xmlNodePointer node = fXML->NewChild(infonode, 0, cl->GetName());
+   XMLNodePointer_t node = fXML->NewChild(infonode, 0, cl->GetName());
 
    char sbuf[100], namebuf[100];
 
@@ -868,7 +868,7 @@ void TXMLFile::StoreStreamerElement(xmlNodePointer infonode, TStreamerElement* e
 }
 
 //______________________________________________________________________________
-void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info) 
+void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info) 
 {
   // read and reconstruct single TStreamerElement from xml node   
     

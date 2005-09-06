@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.5 2004/06/03 21:06:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.1 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TKeyXML::TKeyXML(TXMLFile* file, const void* obj, const TClass* cl, const char* 
 }
 
 //______________________________________________________________________________
-TKeyXML::TKeyXML(TXMLFile* file, xmlNodePointer keynode) :
+TKeyXML::TKeyXML(TXMLFile* file, XMLNodePointer_t keynode) :
     TKey(), 
     fFile(file), 
     fXML(file->XML()), 
@@ -81,7 +81,7 @@ TKeyXML::TKeyXML(TXMLFile* file, xmlNodePointer keynode) :
   SetName(fXML->GetAttr(keynode, xmlNames_Name));
   fCycle = fXML->GetIntAttr(keynode, xmlNames_Cycle);
 
-  xmlNodePointer objnode = fXML->GetChild(keynode);
+  XMLNodePointer_t objnode = fXML->GetChild(keynode);
   fXML->SkipEmpty(objnode);
 
   fClassName = fXML->GetAttr(objnode, xmlNames_ObjClass);
@@ -139,7 +139,7 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
    fXML->NewIntAttr(fKeyNode, xmlNames_Cycle, fCycle);
 
    TBufferXML buffer(TBuffer::kWrite, fFile);
-   xmlNodePointer node = buffer.XmlWrite(obj, cl);
+   XMLNodePointer_t node = buffer.XmlWrite(obj, cl);
 
    if (node!=0)
       fXML->AddChild(fKeyNode, node);
@@ -150,22 +150,22 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TKeyXML::ObjNode()
+XMLNodePointer_t TKeyXML::ObjNode()
 {
 // return starting node, where object was stored
     
    if (fKeyNode==0) return 0;
-   xmlNodePointer node = fXML->GetChild(fKeyNode);
+   XMLNodePointer_t node = fXML->GetChild(fKeyNode);
    fXML->SkipEmpty(node);
    return node;
 }
 
 //______________________________________________________________________________
-xmlNodePointer TKeyXML::BlockNode() 
+XMLNodePointer_t TKeyXML::BlockNode() 
 {
 // return node, where key binary data is stored    
    if (fKeyNode==0) return 0;    
-   xmlNodePointer node = fXML->GetChild(fKeyNode);
+   XMLNodePointer_t node = fXML->GetChild(fKeyNode);
    fXML->SkipEmpty(node);
    while (node!=0) {
      if (strcmp(fXML->GetNodeName(node), xmlNames_XmlBlock)==0) return node;

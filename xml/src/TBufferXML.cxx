@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.cxx,v 1.15 2005/04/19 06:13:24 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.1 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -121,7 +121,7 @@ TXMLFile* TBufferXML::XmlFile()
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWrite(const TObject* obj)
+XMLNodePointer_t TBufferXML::XmlWrite(const TObject* obj)
 {
 // Convert object, derived from TObject class to xml structures
 // Return pointer on top xml element
@@ -131,7 +131,7 @@ xmlNodePointer TBufferXML::XmlWrite(const TObject* obj)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWrite(const void* obj, const TClass* cl)
+XMLNodePointer_t TBufferXML::XmlWrite(const void* obj, const TClass* cl)
 {
 // Convert object of any class to xml structures
 // Return pointer on top xml element
@@ -140,13 +140,13 @@ xmlNodePointer TBufferXML::XmlWrite(const void* obj, const TClass* cl)
 
    if (fXML==0) return 0;
 
-   xmlNodePointer res = XmlWriteObject(obj, cl);
+   XMLNodePointer_t res = XmlWriteObject(obj, cl);
 
    return res;
 }
 
 //______________________________________________________________________________
-TObject* TBufferXML::XmlRead(xmlNodePointer node)
+TObject* TBufferXML::XmlRead(XMLNodePointer_t node)
 {
 // Recreate object from xml structure.
 // Return pointer to read object.
@@ -165,7 +165,7 @@ TObject* TBufferXML::XmlRead(xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-void* TBufferXML::XmlReadAny(xmlNodePointer node, TClass** cl)
+void* TBufferXML::XmlReadAny(XMLNodePointer_t node, TClass** cl)
 {
 // Recreate object from xml structure.
 // Return pointer to read object.
@@ -200,7 +200,7 @@ void TBufferXML::WriteObject(const TObject *obj)
 
 class TXMLStackObj : public TObject {
    public:
-      TXMLStackObj(xmlNodePointer node) :
+      TXMLStackObj(XMLNodePointer_t node) :
          TObject(),
          fNode(node),
          fInfo(0),
@@ -209,16 +209,16 @@ class TXMLStackObj : public TObject {
          fCompressedClassNode(kFALSE),
          fClassNs(0) {}
 
-      xmlNodePointer    fNode;
+      XMLNodePointer_t  fNode;
       TStreamerInfo*    fInfo;
       TStreamerElement* fElem;
       Int_t             fElemNumber;
       Bool_t            fCompressedClassNode;
-      xmlNsPointer      fClassNs;
+      XMLNsPointer_t    fClassNs;
 };
 
 //______________________________________________________________________________
-TXMLStackObj* TBufferXML::PushStack(xmlNodePointer current, Bool_t simple)
+TXMLStackObj* TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 {
 // add new level to xml stack
 
@@ -258,7 +258,7 @@ TXMLStackObj* TBufferXML::Stack(Int_t depth)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::StackNode()
+XMLNodePointer_t TBufferXML::StackNode()
 {
 // return pointer on current xml node
 
@@ -282,7 +282,7 @@ void TBufferXML::ShiftStack(const char* errinfo)
 }
 
 //______________________________________________________________________________
-void TBufferXML::XmlWriteBlock(xmlNodePointer node)
+void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 {
 // write binary data block from buffer to xml
 // this data can be produced only by direct call of TBuffer::WriteBuf() functions
@@ -297,14 +297,14 @@ void TBufferXML::XmlWriteBlock(xmlNodePointer node)
    Int_t complevel = fCompressLevel;
 
    if ((Length() > 512) && (complevel>0)) {
-      int ZipBufferSize = Length();
-      fZipBuffer = new char[ZipBufferSize];
-      int DataSize = Length();
-      int CompressedSize = 0;
+      int zipBufferSize = Length();
+      fZipBuffer = new char[zipBufferSize];
+      int dataSize = Length();
+      int compressedSize = 0;
       if (complevel>9) complevel = 9;
-      R__zip(complevel, &DataSize, Buffer(), &ZipBufferSize, fZipBuffer, &CompressedSize);
+      R__zip(complevel, &dataSize, Buffer(), &zipBufferSize, fZipBuffer, &compressedSize);
       src = fZipBuffer;
-      srcSize = CompressedSize;
+      srcSize = compressedSize;
    }
 
    TString res;
@@ -325,7 +325,7 @@ void TBufferXML::XmlWriteBlock(xmlNodePointer node)
 
    if (block>0) res += sbuf;
 
-   xmlNodePointer blocknode = fXML->NewChild(node, 0, xmlNames_XmlBlock, res);
+   XMLNodePointer_t blocknode = fXML->NewChild(node, 0, xmlNames_XmlBlock, res);
    fXML->NewIntAttr(blocknode, xmlNames_Size, Length());
 
    if (fZipBuffer) {
@@ -335,14 +335,14 @@ void TBufferXML::XmlWriteBlock(xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-void TBufferXML::XmlReadBlock(xmlNodePointer blocknode)
+void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
 {
 // read binary block of data from xml
 
    if (blocknode==0) return;
 
    Int_t blockSize = fXML->GetIntAttr(blocknode, xmlNames_Size);
-   bool blockCompressed = fXML->HasAttr(blocknode, xmlNames_Zip);
+   Bool_t blockCompressed = fXML->HasAttr(blocknode, xmlNames_Zip);
    char* fUnzipBuffer = 0;
 
    if (gDebug>2) {
@@ -400,7 +400,7 @@ void TBufferXML::XmlReadBlock(xmlNodePointer blocknode)
 }
 
 //______________________________________________________________________________
-Bool_t TBufferXML::ProcessPointer(const void* ptr, xmlNodePointer node)
+Bool_t TBufferXML::ProcessPointer(const void* ptr, XMLNodePointer_t node)
 {
 // Add "ptr" attribute to node, if ptr is null or
 // if ptr is pointer on object, which is already saved in buffer
@@ -417,7 +417,7 @@ Bool_t TBufferXML::ProcessPointer(const void* ptr, xmlNodePointer node)
 
      ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
 
-     xmlNodePointer refnode = (xmlNodePointer) fObjMap->GetValue(hash, (Long_t) ptr);
+     XMLNodePointer_t refnode = (XMLNodePointer_t) fObjMap->GetValue(hash, (Long_t) ptr);
      if (refnode==0) return kFALSE;
 
      if (fXML->HasAttr(refnode, xmlNames_Ref))
@@ -438,7 +438,7 @@ Bool_t TBufferXML::ProcessPointer(const void* ptr, xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-void TBufferXML::RegisterPointer(const void* ptr, xmlNodePointer node)
+void TBufferXML::RegisterPointer(const void* ptr, XMLNodePointer_t node)
 {
 // Register pair of object pointer and node, where this object is saved,
 // in object map
@@ -454,7 +454,7 @@ void TBufferXML::RegisterPointer(const void* ptr, xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-Bool_t TBufferXML::ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl)
+Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void* &ptr, TClass* &cl)
 {
 // Searches for "ptr" attribute and returns pointer to object and class,
 // if "ptr" attribute reference to read object
@@ -485,7 +485,7 @@ Bool_t TBufferXML::ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl)
 }
 
 //______________________________________________________________________________
-void TBufferXML::ExtractReference(xmlNodePointer node, const void* ptr, const TClass* cl)
+void TBufferXML::ExtractReference(XMLNodePointer_t node, const void* ptr, const TClass* cl)
 {
 // Analyse, if node has "ref" attribute and register it to object map
 
@@ -511,7 +511,7 @@ void TBufferXML::ExtractReference(xmlNodePointer node, const void* ptr, const TC
 }
 
 //______________________________________________________________________________
-Bool_t TBufferXML::VerifyNode(xmlNodePointer node, const char* name, const char* errinfo)
+Bool_t TBufferXML::VerifyNode(XMLNodePointer_t node, const char* name, const char* errinfo)
 {
 // check, if node has specified name
 
@@ -537,7 +537,7 @@ Bool_t TBufferXML::VerifyStackNode(const char* name, const char* errinfo)
 
 
 //______________________________________________________________________________
-Bool_t TBufferXML::VerifyAttr(xmlNodePointer node, const char* name, const char* value, const char* errinfo)
+Bool_t TBufferXML::VerifyAttr(XMLNodePointer_t node, const char* name, const char* value, const char* errinfo)
 {
 // checks, that attribute of specified name exists and has specified value
 
@@ -562,11 +562,11 @@ Bool_t TBufferXML::VerifyStackAttr(const char* name, const char* value, const ch
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::CreateItemNode(const char* name)
+XMLNodePointer_t TBufferXML::CreateItemNode(const char* name)
 {
 // create item node of specified name
 
-   xmlNodePointer node = 0;
+   XMLNodePointer_t node = 0;
    if (GetXmlLayout()==kGeneralized) {
       node = fXML->NewChild(StackNode(), 0, xmlNames_Item, 0);
       fXML->NewAttr(node, 0, xmlNames_Name, name);
@@ -594,14 +594,14 @@ void TBufferXML::CreateElemNode(const TStreamerElement* elem, Int_t number)
 {
 // create xml node correspondent to TStreamerElement object
 
-    xmlNodePointer elemnode = 0;
+    XMLNodePointer_t elemnode = 0;
 
     if (GetXmlLayout()==kGeneralized) {
       elemnode = fXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
       fXML->NewAttr(elemnode, 0, xmlNames_Name, XmlGetElementName(elem));
     } else {
        // take namesapce for element only if it is not a base class or class name
-       xmlNsPointer ns = Stack()->fClassNs;
+       XMLNsPointer_t ns = Stack()->fClassNs;
        if ((elem->GetType()==TStreamerInfo::kBase)
            || ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName()))
            || ((elem->GetType()==TStreamerInfo::kTObject) && !strcmp(elem->GetName(), TObject::Class()->GetName()))
@@ -637,13 +637,13 @@ Bool_t TBufferXML::VerifyElemNode(const TStreamerElement* elem, Int_t number)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteObject(const void* obj, const TClass* cl)
+XMLNodePointer_t TBufferXML::XmlWriteObject(const void* obj, const TClass* cl)
 {
 // Write object to buffer
 // If object was written before, only pointer will be stored
 // Return pointer to top xml node, representing object
 
-   xmlNodePointer objnode = fXML->NewChild(StackNode(), 0, xmlNames_Object, 0);
+   XMLNodePointer_t objnode = fXML->NewChild(StackNode(), 0, xmlNames_Object, 0);
 
    if (!cl) obj = 0;
    if (ProcessPointer(obj, objnode)) return objnode;
@@ -673,7 +673,7 @@ void* TBufferXML::XmlReadObject(void* obj, TClass** cl)
 
    if (cl) *cl = 0;
 
-   xmlNodePointer objnode = StackNode();
+   XMLNodePointer_t objnode = StackNode();
 
    if (fErrorFlag>0) return obj;
 
@@ -747,7 +747,7 @@ void  TBufferXML::IncrementLevel(TStreamerInfo* info)
 
    if (IsWriting()) {
 
-      xmlNodePointer classnode = 0;
+      XMLNodePointer_t classnode = 0;
       if (compressClassNode) {
         classnode = StackNode();
       } else {
@@ -914,7 +914,7 @@ void TBufferXML::PerformPostProcessing()
    if (GetXmlLayout()==kGeneralized) return;
 
    const TStreamerElement* elem = Stack()->fElem;
-   xmlNodePointer elemnode = IsWriting() ? Stack()->fNode : Stack(1)->fNode;
+   XMLNodePointer_t elemnode = IsWriting() ? Stack()->fNode : Stack(1)->fNode;
 
    if ((elem==0) || (elemnode==0)) return;
 
@@ -923,12 +923,12 @@ void TBufferXML::PerformPostProcessing()
 
 //      cout << "Has TString " << elem->GetName() << endl;
 
-      xmlNodePointer node = fXML->GetChild(elemnode);
+      XMLNodePointer_t node = fXML->GetChild(elemnode);
       fXML->SkipEmpty(node);
 
-      xmlNodePointer nodecharstar = 0;
-      xmlNodePointer nodeuchar = 0;
-      xmlNodePointer nodeint = 0;
+      XMLNodePointer_t nodecharstar = 0;
+      XMLNodePointer_t nodeuchar = 0;
+      XMLNodePointer_t nodeint = 0;
 
       while (node!=0) {
          const char* name = fXML->GetNodeName(node);
@@ -963,13 +963,13 @@ void TBufferXML::PerformPostProcessing()
       fXML->UnlinkFreeNode(nodecharstar);
    } else
    if (elem->GetType()==TStreamerInfo::kTObject) {
-      xmlNodePointer node = fXML->GetChild(elemnode);
+      XMLNodePointer_t node = fXML->GetChild(elemnode);
       fXML->SkipEmpty(node);
 
-      xmlNodePointer vnode = 0;
-      xmlNodePointer idnode = 0;
-      xmlNodePointer bitsnode = 0;
-      xmlNodePointer prnode = 0;
+      XMLNodePointer_t vnode = 0;
+      XMLNodePointer_t idnode = 0;
+      XMLNodePointer_t bitsnode = 0;
+      XMLNodePointer_t prnode = 0;
       while (node!=0) {
          const char* name = fXML->GetNodeName(node);
 
@@ -1014,7 +1014,7 @@ void TBufferXML::PerformPostProcessing()
 }
 
 //______________________________________________________________________________
-void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, xmlNodePointer elemnode)
+void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePointer_t elemnode)
 {
 // Function is unpack TObject and TString structures to be able read
 // them from custom streamers of this objects
@@ -1032,7 +1032,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, xmlNodePoint
 
 //     cout << "Unpack string : " << str << endl;
 
-     xmlNodePointer ucharnode = fXML->NewChild(elemnode, 0, xmlNames_UChar,0);
+     XMLNodePointer_t ucharnode = fXML->NewChild(elemnode, 0, xmlNames_UChar,0);
 
      char sbuf[20];
      sprintf(sbuf,"%d", len);
@@ -1041,12 +1041,12 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, xmlNodePoint
      }
      else {
         fXML->NewAttr(ucharnode,0,xmlNames_v,"255");
-        xmlNodePointer intnode = fXML->NewChild(elemnode, 0, xmlNames_Int, 0);
+        XMLNodePointer_t intnode = fXML->NewChild(elemnode, 0, xmlNames_Int, 0);
         fXML->NewAttr(intnode, 0, xmlNames_v, sbuf);
 
      }
      if (len>0) {
-       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_CharStar, 0);
+       XMLNodePointer_t node = fXML->NewChild(elemnode, 0, xmlNames_CharStar, 0);
        fXML->NewAttr(node, 0, xmlNames_v, str);
      }
    } else
@@ -1062,7 +1062,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, xmlNodePoint
        fXML->FreeAttr(elemnode, "fBits");
        fXML->FreeAttr(elemnode, "fProcessID");
 
-       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_OnlyVersion, 0);
+       XMLNodePointer_t node = fXML->NewChild(elemnode, 0, xmlNames_OnlyVersion, 0);
        fXML->NewAttr(node, 0, xmlNames_v, "1");
 
        node = fXML->NewChild(elemnode, 0, xmlNames_UInt, 0);
@@ -1754,7 +1754,7 @@ void TBufferXML::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
 { \
    Int_t indx = 0; \
    while(indx<arrsize) { \
-      xmlNodePointer elemnode = XmlWriteBasic(vname[indx]); \
+      XMLNodePointer_t elemnode = XmlWriteBasic(vname[indx]); \
       Int_t curr = indx; indx++; \
       while ((indx<arrsize) && (vname[indx]==vname[curr])) indx++; \
       if (indx-curr > 1)  \
@@ -1775,7 +1775,7 @@ void TBufferXML::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
 #define TBufferXML_WriteArray(vname) \
 { \
    BeforeIOoperation(); \
-   xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
+   XMLNodePointer_t arrnode = CreateItemNode(xmlNames_Array); \
    fXML->NewIntAttr(arrnode, xmlNames_Size, n); \
    PushStack(arrnode); \
    TXMLWriteArrayContent(vname, n); \
@@ -1912,7 +1912,7 @@ void TBufferXML::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElemen
           XmlWriteBasic(vname[indx]); \
       } \
    } else {\
-      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
+      XMLNodePointer_t arrnode = CreateItemNode(xmlNames_Array); \
       PushStack(arrnode); \
       TXMLWriteArrayContent(vname, n); \
       PopStack(); \
@@ -1943,7 +1943,7 @@ void TBufferXML::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElemen
           XmlWriteBasic(vname[index]);                                    \
           index++;                                                        \
         } else {                                                          \
-          xmlNodePointer arrnode = CreateItemNode(xmlNames_Array);        \
+          XMLNodePointer_t arrnode = CreateItemNode(xmlNames_Array);      \
           Int_t elemlen = elem->GetArrayLength();                         \
           PushStack(arrnode);                                             \
           TXMLWriteArrayContent((vname+index), elemlen);                  \
@@ -1952,7 +1952,7 @@ void TBufferXML::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElemen
         }                                                                 \
       }                                                                   \
    } else {                                                               \
-      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array);            \
+      XMLNodePointer_t arrnode = CreateItemNode(xmlNames_Array);          \
       PushStack(arrnode);                                                 \
       TXMLWriteArrayContent(vname, n);                                    \
       PopStack();                                                         \
@@ -2381,7 +2381,7 @@ TBuffer& TBufferXML::operator<<(const Char_t *c)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Char_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Char_t value)
 {
 // converts Char_t to string and add xml node to buffer
 
@@ -2391,7 +2391,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Char_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer  TBufferXML::XmlWriteBasic(Short_t value)
+XMLNodePointer_t  TBufferXML::XmlWriteBasic(Short_t value)
 {
 // converts Short_t to string and add xml node to buffer
 
@@ -2401,7 +2401,7 @@ xmlNodePointer  TBufferXML::XmlWriteBasic(Short_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Int_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Int_t value)
 {
 // converts Int_t to string and add xml node to buffer
 
@@ -2411,7 +2411,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Int_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Long_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Long_t value)
 {
 // converts Long_t to string and add xml node to buffer
 
@@ -2421,7 +2421,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Long_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Long64_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 {
 // converts Long64_t to string and add xml node to buffer
 
@@ -2431,7 +2431,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Long64_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer  TBufferXML::XmlWriteBasic(Float_t value)
+XMLNodePointer_t  TBufferXML::XmlWriteBasic(Float_t value)
 {
 // converts Float_t to string and add xml node to buffer
 
@@ -2441,7 +2441,7 @@ xmlNodePointer  TBufferXML::XmlWriteBasic(Float_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Double_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
 {
 // converts Double_t to string and add xml node to buffer
 
@@ -2451,7 +2451,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Double_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(Bool_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(Bool_t value)
 {
 // converts Bool_t to string and add xml node to buffer
 
@@ -2459,7 +2459,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(Bool_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(UChar_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(UChar_t value)
 {
 // converts UChar_t to string and add xml node to buffer
 
@@ -2469,7 +2469,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(UChar_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(UShort_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(UShort_t value)
 {
 // converts UShort_t to string and add xml node to buffer
 
@@ -2479,7 +2479,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(UShort_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(UInt_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(UInt_t value)
 {
 // converts UInt_t to string and add xml node to buffer
 
@@ -2489,7 +2489,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(UInt_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(ULong_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong_t value)
 {
 // converts ULong_t to string and add xml node to buffer
 
@@ -2499,7 +2499,7 @@ xmlNodePointer TBufferXML::XmlWriteBasic(ULong_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteBasic(ULong64_t value)
+XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong64_t value)
 {
 // converts ULong64_t to string and add xml node to buffer
 
@@ -2509,11 +2509,11 @@ xmlNodePointer TBufferXML::XmlWriteBasic(ULong64_t value)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TBufferXML::XmlWriteValue(const char* value, const char* name)
+XMLNodePointer_t TBufferXML::XmlWriteValue(const char* value, const char* name)
 {
 // create xml node with specified name and adds it to stack node
 
-   xmlNodePointer node = 0;
+   XMLNodePointer_t node = 0;
 
    if (fCanUseCompact)
      node = StackNode();

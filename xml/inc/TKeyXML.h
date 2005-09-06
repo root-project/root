@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.4 2004/06/03 21:06:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.1 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TKeyXML : public TKey {
    public:
       TKeyXML(TXMLFile* file, const TObject* obj, const char* name = 0);
       TKeyXML(TXMLFile* file, const void* obj, const TClass* cl, const char* name);
-      TKeyXML(TXMLFile* file, xmlNodePointer keynode);
+      TKeyXML(TXMLFile* file, XMLNodePointer_t keynode);
       virtual ~TKeyXML();
 
       // redefined TKey Methods
@@ -58,19 +58,19 @@ class TKeyXML : public TKey {
 
       // TKeyXML specific methods
 
-      xmlNodePointer    KeyNode() const { return fKeyNode; }
+      XMLNodePointer_t  KeyNode() const { return fKeyNode; }
       void              SetXML(TXMLEngine* xml) { fXML = xml; }
 
 
    protected:
       virtual Int_t     Read(const char *name) { return TKey::Read(name); }
       void              StoreObject(const void* obj, const TClass* cl);
-      xmlNodePointer    ObjNode();
-      xmlNodePointer    BlockNode();
+      XMLNodePointer_t  ObjNode();
+      XMLNodePointer_t  BlockNode();
       
       TXMLFile*         fFile;     //!
       TXMLEngine*       fXML;      //!
-      xmlNodePointer    fKeyNode;  //!
+      XMLNodePointer_t  fKeyNode;  //!
 
    ClassDef(TKeyXML,1) // a special TKey for XML files      
 };

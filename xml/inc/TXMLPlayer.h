@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.h,v 0.0 2004/06/04 16:28:31 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.h,v 1.2 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -48,9 +48,9 @@ class TXMLPlayer : public TObject {
       TString GetBasicTypeReaderMethodName(Int_t type, const char* realname);
       void ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist);
       
-      void ReadSTLarg(ostream& fs, TString& argname, int argtyp, bool isargptr, TClass* argcl, TString& tname, TString& ifcond);
-      void WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool isargptr, TClass* argcl);
-      bool ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting);
+      void ReadSTLarg(ostream& fs, TString& argname, int argtyp, Bool_t isargptr, TClass* argcl, TString& tname, TString& ifcond);
+      void WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_t isargptr, TClass* argcl);
+      Bool_t ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting);
       
       TString fGetterName;                   //!  buffer for name of getter method
       TString fSetterName;                   //!  buffer for name of setter method

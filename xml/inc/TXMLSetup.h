@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.4 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.6 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -120,7 +120,7 @@ class TXMLSetup {
 
       TString        fStrBuf;          //!  buffer, used in XmlDefineClass() function
       
-      static TString fNameSpaceBase;   
+      static TString fgNameSpaceBase;   
 
    ClassDef(TXMLSetup,1) //settings to be stored in XML files
 };

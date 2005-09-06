@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.8 2005/04/18 10:54:58 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.1 2005/05/06 14:25:34 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -48,13 +48,13 @@ class TBufferXML : public TBuffer, public TXMLSetup {
       void             SetCompressionLevel(int level) { fCompressLevel = level; }
       void             SetXML(TXMLEngine* xml) { fXML = xml; }
 
-      void             XmlWriteBlock(xmlNodePointer node);
-      xmlNodePointer   XmlWrite(const TObject* obj);
-      xmlNodePointer   XmlWrite(const void* obj, const TClass* cl);
+      void             XmlWriteBlock(XMLNodePointer_t node);
+      XMLNodePointer_t XmlWrite(const TObject* obj);
+      XMLNodePointer_t XmlWrite(const void* obj, const TClass* cl);
 
-      void             XmlReadBlock(xmlNodePointer node);
-      TObject*         XmlRead(xmlNodePointer node);
-      void*            XmlReadAny(xmlNodePointer node, TClass** cl);
+      void             XmlReadBlock(XMLNodePointer_t node);
+      TObject*         XmlRead(XMLNodePointer_t node);
+      void*            XmlReadAny(XMLNodePointer_t node, TClass** cl);
 
       // suppress class writing/reading
 
@@ -208,47 +208,47 @@ class TBufferXML : public TBuffer, public TXMLSetup {
 
       TXMLFile*        XmlFile();
       
-      TXMLStackObj*    PushStack(xmlNodePointer current, Bool_t simple = kFALSE);
+      TXMLStackObj*    PushStack(XMLNodePointer_t current, Bool_t simple = kFALSE);
       TXMLStackObj*    PopStack();
       void             ShiftStack(const char* info = 0);
 
-      xmlNodePointer   StackNode();
+      XMLNodePointer_t StackNode();
       TXMLStackObj*    Stack(Int_t depth = 0);
 
-      Bool_t           VerifyNode(xmlNodePointer node, const char* name, const char* errinfo = 0);
+      Bool_t           VerifyNode(XMLNodePointer_t node, const char* name, const char* errinfo = 0);
       Bool_t           VerifyStackNode(const char* name, const char* errinfo = 0);
       
-      Bool_t           VerifyAttr(xmlNodePointer node, const char* name, const char* value, const char* errinfo = 0);
+      Bool_t           VerifyAttr(XMLNodePointer_t node, const char* name, const char* value, const char* errinfo = 0);
       Bool_t           VerifyStackAttr(const char* name, const char* value, const char* errinfo = 0);
 
-      Bool_t           ProcessPointer(const void* ptr, xmlNodePointer node);
-      void             RegisterPointer(const void* ptr, xmlNodePointer node);
-      Bool_t           ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl);
-      void             ExtractReference(xmlNodePointer node, const void* ptr, const TClass* cl);
+      Bool_t           ProcessPointer(const void* ptr, XMLNodePointer_t node);
+      void             RegisterPointer(const void* ptr, XMLNodePointer_t node);
+      Bool_t           ExtractPointer(XMLNodePointer_t node, void* &ptr, TClass* &cl);
+      void             ExtractReference(XMLNodePointer_t node, const void* ptr, const TClass* cl);
 
-      xmlNodePointer   CreateItemNode(const char* name);
+      XMLNodePointer_t CreateItemNode(const char* name);
       Bool_t           VerifyItemNode(const char* name, const char* errinfo = 0);
 
       void             CreateElemNode(const TStreamerElement* elem, Int_t number = -1);
       Bool_t           VerifyElemNode(const TStreamerElement* elem, Int_t number = -1);
 
-      void             PerformPreProcessing(const TStreamerElement* elem, xmlNodePointer elemnode);
+      void             PerformPreProcessing(const TStreamerElement* elem, XMLNodePointer_t elemnode);
       void             PerformPostProcessing();
 
-      xmlNodePointer   XmlWriteBasic(Char_t value);
-      xmlNodePointer   XmlWriteBasic(Short_t value);
-      xmlNodePointer   XmlWriteBasic(Int_t value);
-      xmlNodePointer   XmlWriteBasic(Long_t value);
-      xmlNodePointer   XmlWriteBasic(Long64_t value);
-      xmlNodePointer   XmlWriteBasic(Float_t value);
-      xmlNodePointer   XmlWriteBasic(Double_t value);
-      xmlNodePointer   XmlWriteBasic(Bool_t value);
-      xmlNodePointer   XmlWriteBasic(UChar_t value);
-      xmlNodePointer   XmlWriteBasic(UShort_t value);
-      xmlNodePointer   XmlWriteBasic(UInt_t value);
-      xmlNodePointer   XmlWriteBasic(ULong_t value);
-      xmlNodePointer   XmlWriteBasic(ULong64_t value);
-      xmlNodePointer   XmlWriteValue(const char* value, const char* name);
+      XMLNodePointer_t XmlWriteBasic(Char_t value);
+      XMLNodePointer_t XmlWriteBasic(Short_t value);
+      XMLNodePointer_t XmlWriteBasic(Int_t value);
+      XMLNodePointer_t XmlWriteBasic(Long_t value);
+      XMLNodePointer_t XmlWriteBasic(Long64_t value);
+      XMLNodePointer_t XmlWriteBasic(Float_t value);
+      XMLNodePointer_t XmlWriteBasic(Double_t value);
+      XMLNodePointer_t XmlWriteBasic(Bool_t value);
+      XMLNodePointer_t XmlWriteBasic(UChar_t value);
+      XMLNodePointer_t XmlWriteBasic(UShort_t value);
+      XMLNodePointer_t XmlWriteBasic(UInt_t value);
+      XMLNodePointer_t XmlWriteBasic(ULong_t value);
+      XMLNodePointer_t XmlWriteBasic(ULong64_t value);
+      XMLNodePointer_t XmlWriteValue(const char* value, const char* name);
 
       void             XmlReadBasic(Char_t& value);
       void             XmlReadBasic(Short_t& value);
@@ -265,7 +265,7 @@ class TBufferXML : public TBuffer, public TXMLSetup {
       void             XmlReadBasic(ULong64_t& value);
       const char*      XmlReadValue(const char* name);
 
-      xmlNodePointer   XmlWriteObject(const void* obj, const TClass* objClass);
+      XMLNodePointer_t XmlWriteObject(const void* obj, const TClass* objClass);
       void*            XmlReadObject(void* obj, TClass** cl = 0);
 
       void             BeforeIOoperation();

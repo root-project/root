@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.6 2005/01/19 18:30:58 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.7 2005/02/23 11:46:02 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -291,9 +291,9 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
      case TStreamerInfo::kDouble32:
      case TStreamerInfo::kDouble:   return "ReadDouble";
      case TStreamerInfo::kUChar: {
-       bool isbool = false;
+       Bool_t isbool = false;
        if (realname!=0) 
-         isbool = (TString(realname).Index("bool",0, TString::kIgnoreCase)>=0);
+          isbool = (TString(realname).Index("bool",0, TString::kIgnoreCase)>=0);
        if (isbool) return "ReadBool";
               else return "ReadUChar";         
      }
@@ -330,7 +330,7 @@ const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int sp
       fGetterName += membername;
    } else {
       fGetterName = "";
-      bool deref = (member->GetArrayDim()==0) && (specials!=2);
+      Bool_t deref = (member->GetArrayDim()==0) && (specials!=2);
       if (deref) fGetterName += "*(";
       if (specials!=3) {
          fGetterName += "("; 
@@ -421,7 +421,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
    
    TIter iter(cllist);
    TClass* c1 = 0;
-   bool firstchild = true;
+   Bool_t firstchild = true;
    
    while ((c1 = (TClass*) iter()) != 0) {
       if (c1==cl) continue;
@@ -816,7 +816,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
 void TXMLPlayer::ReadSTLarg(ostream& fs, 
                             TString& argname, 
                             int argtyp, 
-                            bool isargptr, 
+                            Bool_t isargptr, 
                             TClass* argcl, 
                             TString& tname,
                             TString& ifcond) 
@@ -878,7 +878,7 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
 }
 
 //______________________________________________________________________________
-void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool isargptr, TClass* argcl)
+void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_t isargptr, TClass* argcl)
 {
 // Produce code to write argument of stl container to xml file
 
@@ -924,7 +924,7 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool 
 }
 
 //______________________________________________________________________________
-bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting)
+Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting)
 {
 // Produce code of xml streamer for data member of stl type
 
@@ -933,15 +933,15 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
    TClass* contcl = el->GetClassPointer();  
 //   fs << tab2 << "// class " << contcl->GetName() << endl;
    
-   bool isstr = (el->GetSTLtype() == TStreamerElement::kSTLstring);   
-   bool isptr = el->IsaPointer();
-   bool isarr = (el->GetArrayLength()>0);
-   bool isparent = (strcmp(el->GetName(), contcl->GetName())==0);
+   Bool_t isstr = (el->GetSTLtype() == TStreamerElement::kSTLstring);   
+   Bool_t isptr = el->IsaPointer();
+   Bool_t isarr = (el->GetArrayLength()>0);
+   Bool_t isparent = (strcmp(el->GetName(), contcl->GetName())==0);
    
    int stltyp = -1;
    int narg = 0;
    int argtype[2];
-   bool isargptr[2];
+   Bool_t isargptr[2];
    TClass* argcl[2];
    TString argtname[2];
    
@@ -1012,7 +1012,7 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
      if (stltyp<0) return false;
    }
    
-   bool akaarrayaccess = (narg==1) && (argtype[0]<20);
+   Bool_t akaarrayaccess = (narg==1) && (argtype[0]<20);
 
    char tabs[30], tabs2[30];
    
