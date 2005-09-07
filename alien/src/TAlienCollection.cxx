@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.6 2004/11/04 14:56:00 dfeich Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -93,25 +93,25 @@ void TAlienCollection::ParseXML()
 
    TXMLEngine xml;
 
-   xmlDocPointer xdoc = xml.ParseFile(fXmlFile);
+   XMLDocPointer_t xdoc = xml.ParseFile(fXmlFile);
    if (!xdoc) {
       Error("ParseXML","cannot parse the xml file %s",fXmlFile.Data());
       return;
    }
 
-   xmlNodePointer xalien = xml.DocGetRootElement(xdoc);
+   XMLNodePointer_t xalien = xml.DocGetRootElement(xdoc);
    if (!xalien) {
       Error("ParseXML","cannot find the <alien> tag in %s",fXmlFile.Data());
       return;
    }
 
-   xmlNodePointer xcollection = xml.GetChild(xalien);
+   XMLNodePointer_t xcollection = xml.GetChild(xalien);
    if (!xcollection) {
       Error("ParseXML","cannot find the <collection> tag in %s",fXmlFile.Data());
       return;
    }
 
-   xmlNodePointer xevent = xml.GetChild(xcollection);;
+   XMLNodePointer_t xevent = xml.GetChild(xcollection);;
    if (!xevent) {
       Error("ParseXML","cannot find the <event> tag in %s",fXmlFile.Data());
       return;
@@ -126,7 +126,7 @@ void TAlienCollection::ParseXML()
          //      printf("Found event: %s\n",xml.GetAttr(xevent,"name"));
 
          // files
-         xmlNodePointer xfile = xml.GetChild(xevent);
+         XMLNodePointer_t xfile = xml.GetChild(xevent);
          if (!xfile) continue;
 
          do {
