@@ -65,6 +65,7 @@ CXXFLAGS      = -O
 LD            = xlC
 LDFLAGS       = -O
 SOFLAGS       =
+DllSuf        = a
 endif
 
 ifeq ($(ARCH),aix5)
@@ -74,6 +75,7 @@ CXXFLAGS      = -O
 LD            = xlC
 LDFLAGS       = -O
 SOFLAGS       =
+DllSuf        = a
 endif
 
 ifeq ($(ARCH),aixgcc)
