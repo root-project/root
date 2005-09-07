@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.105 2005/07/01 17:21:12 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.106 2005/09/03 00:48:25 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -984,8 +984,15 @@ Int_t TCint::LoadLibraryMap()
    // See also the AutoLoadCallback() method below.
 
    // open the [system].rootmap files
-   if (!fMapfile)
+   if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
+
+      if (!fMapfile->GetTable()->GetEntries()) {
+         Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
+               "found. ROOT not properly installed.");
+         return -1;
+      }
+   }
 
    TEnvRec *rec;
    TIter next(fMapfile->GetTable());
@@ -993,7 +1000,6 @@ Int_t TCint::LoadLibraryMap()
    while ((rec = (TEnvRec*) next())) {
       TString cls = rec->GetName();
       if (!strncmp(cls.Data(), "Library.", 8) && cls.Length() > 8) {
-
 
          // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
@@ -1005,23 +1011,22 @@ Int_t TCint::LoadLibraryMap()
          cls.Remove(0,8);
          cls.ReplaceAll("@@", "::");
 
-         if ( strchr(cls.Data(),':')!=0 ) {
+         if (cls.Contains(":")) {
             // We have a namespace and we have to check it first
-
             int slen = cls.Length();
-            for(int k=0;k<slen;++k) {
-               if (cls[k]==':') {
-                  if (k+1>=slen || cls[k+1]!=':') {
+            for (int k = 0; k < slen; k++) {
+               if (cls[k] == ':') {
+                  if (k+1 >= slen || cls[k+1] != ':') {
                      // we expected another ':'
                      break;
                   }
                   if (k) {
-                     string base(cls.Data(), 0, k);
-                     if (base=="std") {
+                     TString base = cls(0, k);
+                     if (base == "std") {
                         // std is not declared but is also ignored by CINT!
                         break;
                      } else {
-                        G__set_class_autoloading_table((char*)base.c_str(), lib);
+                        G__set_class_autoloading_table((char*)base.Data(), lib);
                      }
                      ++k;
                   }
@@ -1031,7 +1036,7 @@ Int_t TCint::LoadLibraryMap()
                }
             }
          }
-         G__set_class_autoloading_table((char*)(cls.Data()), lib);
+         G__set_class_autoloading_table((char*)cls.Data(), lib);
          if (gDebug > 0)
             printf("<TCint::LoadLibraryMap>: adding class %s in lib %s\n",
                    cls.Data(), lib);
@@ -1252,7 +1257,7 @@ const char* TCint::GetSharedLibs()
       Bool_t needToSkip = kFALSE;
       if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
          // Filter out the cintdlls
-         const char *excludelist [] = { 
+         const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
             "string.dll","vector.dll","list.dll","deque.dll","map.dll",
             "map2.dll","set.dll multimap.dll multimap2.dll multiset.dll",
@@ -1261,7 +1266,7 @@ const char* TCint::GetSharedLibs()
             if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
          }
       }
-      if ( !needToSkip && 
+      if ( !needToSkip &&
            ( (len>3 && strcmp(end-2,".a") == 0) ||
              (len>4 && (strcmp(end-3,".sl") == 0 ||
                         strcmp(end-3,".dl") == 0 ||
