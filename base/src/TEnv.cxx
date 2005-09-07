@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.20 2005/06/10 22:28:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.21 2005/09/04 09:26:56 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -368,7 +368,7 @@ TEnv::TEnv(const char *name)
    // read additional user defined resource files by creating addtional TEnv
    // object.
 
-   if (strlen(name) == 0)
+   if (!name || !strlen(name))
       fTable = 0;
    else {
       fTable  = new THashList(1000);
