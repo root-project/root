@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.65 2005/08/09 11:02:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.66 2005/09/05 10:02:38 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1352,7 +1352,7 @@ void TProfile::Multiply(TF1 *f1, Double_t c1)
       fArray[bin]             *= c1*cf1;
     //fSumw2.fArray[bin]      *= c1*c1*cf1*cf1;
       fSumw2.fArray[bin]      *= ac1*cf1*cf1;
-      if (!fScaling) fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
+      //if (!fScaling) fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
    }
 }
 
