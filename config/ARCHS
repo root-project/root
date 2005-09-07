@@ -1,6 +1,6 @@
 aix                  for AIX 4.x xlC
 aix5                 for AIX 5.x xlC
-aixgcc               for AIX 4.x gcc
+aixgcc               for AIX 5.x gcc >= 3
 alphacxx6            for DEC Unix cxx6
 alphagcc             for DEC Unix gcc
 alphakcc             for DEC Unix KCC

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.4 2005/08/19 19:26:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.5 2005/08/25 08:04:56 brun Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -129,8 +129,10 @@ static GLUtriangulatorObj *getTesselator()
    static struct Init {
       Init()
       {
-#ifdef GDK_WIN32
+#if defined(GDK_WIN32)
          typedef void (CALLBACK *tessfuncptr_t)();
+#elif defined(R__AIXGCC)
+         typedef void (*tessfuncptr_t)(...);
 #else
          typedef void (*tessfuncptr_t)();
 #endif

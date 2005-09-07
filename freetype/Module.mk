@@ -107,6 +107,9 @@ else
 		if [ $(ARCH) = "aix5" ]; then \
 			FREEZLIB="--without-zlib"; \
 		fi; \
+		if [ $(ARCH) = "aixgcc" ]; then \
+			FREEZLIB="--without-zlib"; \
+		fi; \
 		GNUMAKE=$(MAKE) ./configure --with-pic $$FREEZLIB \
 		CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O\"; \
 		$(MAKE))

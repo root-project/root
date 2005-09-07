@@ -33,6 +33,8 @@ rm -f $LIB
 
 if [ $PLATFORM = "macosx" ]; then
    soext="dylib"
+elif [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
+   soext="a"
 else
    soext="so"
 fi
@@ -57,16 +59,12 @@ if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
       makeshared="/usr/vacpp/bin/makeC++SharedLib"
    fi
    if [ $LD = "xlC" ]; then
-      EXPLLNKCORE=
-      if [ $LIB != "lib/libCint.a" ]; then
-         if [ $LIB != "lib/libCore.a" ]; then
-            EXPLLNKCORE="-Llib -lCore -lCint"
-         else
-            EXPLLNKCORE="-Llib -lCint"
-         fi
-      fi
-
       cmd="$makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE"
+      echo $cmd
+      $cmd
+   fi
+   if [ $LD = "g++" ]; then
+      cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
       echo $cmd
       $cmd
    fi

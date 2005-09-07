@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.42 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.43 2005/06/15 15:40:30 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -27,8 +27,10 @@ static GLUtriangulatorObj *GetTesselator()
    static struct Init {
       Init()
       {
-#ifdef GDK_WIN32
+#if defined(GDK_WIN32)
          typedef void (CALLBACK *tessfuncptr_t)();
+#elif defined(R__AIXGCC)
+         typedef void (*tessfuncptr_t)(...);
 #else
          typedef void (*tessfuncptr_t)();
 #endif

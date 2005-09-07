@@ -65,8 +65,6 @@ CXXFLAGS      = -O
 LD            = xlC
 LDFLAGS       = -O
 SOFLAGS       =
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 
 ifeq ($(ARCH),aix5)
@@ -76,8 +74,6 @@ CXXFLAGS      = -O
 LD            = xlC
 LDFLAGS       = -O
 SOFLAGS       =
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 
 ifeq ($(ARCH),aixgcc)
@@ -87,6 +83,8 @@ CXXFLAGS      = -O
 LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
+DllSuf        = a
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
 ifeq ($(ARCH),solaris)
@@ -497,8 +495,6 @@ LDOPT         = -opt:ref
 LDFLAGS       = $(LDOPT) -pdb:none -nologo
 SOFLAGS       = -DLL
 
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
@@ -520,8 +516,6 @@ LDOPT         = -opt:ref
 LDFLAGS       = $(LDOPT) -pdb:none -nologo
 SOFLAGS       = -DLL
 
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
