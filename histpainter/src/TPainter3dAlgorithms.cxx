@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.20 2005/08/29 12:52:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.21 2005/09/04 10:51:23 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -60,7 +60,12 @@ Int_t    TPainter3dAlgorithms::fgF3Clipping = 0;
 Double_t TPainter3dAlgorithms::fgF3XClip = 0.;
 Double_t TPainter3dAlgorithms::fgF3YClip = 0.;
 Double_t TPainter3dAlgorithms::fgF3ZClip = 0.;
-TF3      *TPainter3dAlgorithms::fgCurrentF3 = 0;
+TF3     *TPainter3dAlgorithms::fgCurrentF3 = 0;
+
+// Static arrays used to paint stacked lego plots.
+const Int_t kVSizeMax = 20;
+static Double_t gV[kVSizeMax];
+static Double_t gTT[4*kVSizeMax];
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;
@@ -2300,15 +2305,14 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
+    // Local variables
     Double_t cosa, sina;
     Int_t ivis[4], iface[4];
-    Double_t tface[4], v[20];
+    Double_t tface[4];
     Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
-    Double_t tt[80]        /* was [4][20] */;
     Int_t icodes[4];
-    Double_t zn, xy[8]        /* was [2][4] */;
-    Double_t xyz[24]        /* was [3][8] */;
+    Double_t zn, xy[8]; // was [2][4]
+    Double_t xyz[24];   // was [3][8]
     Double_t *tn = 0;
     TView *view = 0;
 
@@ -2317,18 +2321,32 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-        if(gPad) {
-                view = gPad->GetView();
-                if(!view) {
-                        Error("LegoCartesian", "no TView in current pad");
-                        return;
-                }
-                tn = gPad->GetView()->GetTN();
-        }
+    if(gPad) {
+       view = gPad->GetView();
+       if(!view) {
+          Error("LegoCartesian", "no TView in current pad");
+          return;
+       }
+       tn = gPad->GetView()->GetTN();
+    }
 
     i1 = 1;
     if (tn[0] < 0) i1 = 2;
     if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+
+    // Allocate v and tt arrays
+    Double_t *v, *tt;
+    TList *stack = gCurrentHist->GetPainter()->GetStack();
+    Int_t vSize = 0;
+    if (stack) vSize = stack->GetSize()+2;
+    if (vSize > kVSizeMax) {
+       v  = new Double_t[vSize];
+       tt = new Double_t[4*vSize];
+    } else {
+       vSize = kVSizeMax;
+       v  = &gV[0];
+       tt = &gTT[0];
+    }
 
 //*-*-          D E F I N E   O R D E R   O F   D R A W I N G
 
@@ -2369,7 +2387,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
         for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
             if (!painter->IsInside(ix,iy)) continue;
             (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
-            if (nv < 2 || nv > 20) continue;
+            if (nv < 2 || nv > vSize) continue;
             icodes[0] = ix;
             icodes[1] = iy;
             for (i = 1; i <= 4; ++i) {
@@ -2434,6 +2452,10 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             }
         }
     }
+    if (vSize > kVSizeMax) {
+       delete [] v;
+       delete [] tt;
+    }
 }
 
 //______________________________________________________________________________
@@ -2477,21 +2499,20 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4], v[20];
+    Double_t tface[4];
     Int_t incrr, k1, k2, ia, ib, ir1, ir2;
-    Double_t ab[8]        /* was [2][4] */;
+    Double_t ab[8];       // was [2][4]
     Int_t ir, jr, iv, nr, nv, icodes[4];
-    Double_t tt[80]        /* was [4][20] */;
-    Double_t xyz[24]        /* was [3][8] */;
+    Double_t xyz[24];     // was [3][8]
     TView *view = 0;
     ia = ib = 0;
-        if(gPad) {
-                view = gPad->GetView();
-                if(!view) {
-                        Error("LegoPolar", "no TView in current pad");
-                        return;
-                }
+    if(gPad) {
+        view = gPad->GetView();
+        if(!view) {
+            Error("LegoPolar", "no TView in current pad");
+            return;
         }
+    }
 
     if (iordr == 0) {
         jr   = 1;
@@ -2510,6 +2531,20 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
     }
     iopt = 2;
     if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+
+    // Allocate v and tt arrays
+    Double_t *v, *tt;
+    TList *stack = gCurrentHist->GetPainter()->GetStack();
+    Int_t vSize = 0;
+    if (stack) vSize = stack->GetSize()+2;
+    if (vSize > kVSizeMax) {
+       v  = new Double_t[vSize];
+       tt = new Double_t[4*vSize];
+    } else {
+       vSize = kVSizeMax;
+       v  = &gV[0];
+       tt = &gTT[0];
+    }
 
 //*-*-     P R E P A R E   P H I   A R R A Y
 //*-*-     F I N D    C R I T I C A L   S E C T O R S
@@ -2555,7 +2590,7 @@ L100:
         if (iordr == 0) { ia = ir;   ib = iphi; }
         else            { ia = iphi; ib = ir; }
         (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (nv < 2 || nv > 20) continue;
+        if (nv < 2 || nv > vSize) continue;
         icodes[0] = ia;
         icodes[1] = ib;
         for (i = 1; i <= 4; ++i) {
@@ -2622,7 +2657,13 @@ L300:
     if (iphi == 0)      iphi = kphi;
     if (iphi > kphi)    iphi = 1;
     if (iphi != iphi2)  goto L100;
-    if (incr == 0) return;
+    if (incr == 0) {
+       if (vSize > kVSizeMax) {
+          delete [] v;
+          delete [] tt;
+       }
+       return;
+    }
     if (incr < 0) {
        incr = 0;
        goto L100;
@@ -2673,24 +2714,23 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4], v[20], z;
-    Double_t ab[8]        /* was [2][4] */;
+    Double_t tface[4], z;
+    Double_t ab[8];       // was [2][4]
     Int_t ia, ib, idummy, iz1, iz2, nz, incrz, k1, k2, nv;
     Int_t iv, iz, jz, icodes[4];
-    Double_t tt[80]        /* was [4][20] */;
     Double_t cosphi[4];
     Double_t sinphi[4];
-    Double_t xyz[24]        /* was [3][8] */;
+    Double_t xyz[24];     // was [3][8]
     TView *view = 0;
     ia = ib = 0;
 
-        if(gPad) {
-                view = gPad->GetView();
-                if(!view) {
-                        Error("LegoCylindrical", "no TView in current pad");
-                        return;
-                }
+    if(gPad) {
+        view = gPad->GetView();
+        if(!view) {
+            Error("LegoCylindrical", "no TView in current pad");
+            return;
         }
+    }
     if (iordr == 0) {
         jz   = 1;
         jphi = 2;
@@ -2708,6 +2748,20 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
     }
     iopt = 2;
     if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+
+    // Allocate v and tt arrays
+    Double_t *v, *tt;
+    TList *stack = gCurrentHist->GetPainter()->GetStack();
+    Int_t vSize = 0;
+    if (stack) vSize = stack->GetSize()+2;
+    if (vSize > kVSizeMax) {
+       v  = new Double_t[vSize];
+       tt = new Double_t[4*vSize];
+    } else {
+       vSize = kVSizeMax;
+       v  = &gV[0];
+       tt = &gTT[0];
+    }
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   S E C T O R S
@@ -2760,7 +2814,7 @@ L100:
         if (iordr == 0) {ia = iz;   ib = iphi;}
         else            {ia = iphi; ib = iz;}
         (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (nv < 2 || nv > 20) continue;
+        if (nv < 2 || nv > vSize) continue;
         icodes[0] = ia;
         icodes[1] = ib;
         for (i = 1; i <= 4; ++i) {
@@ -2828,7 +2882,13 @@ L400:
     if (iphi == 0)     iphi = kphi;
     if (iphi > kphi)   iphi = 1;
     if (iphi != iphi2) goto L100;
-    if (incr == 0) return;
+    if (incr == 0) {
+       if (vSize > kVSizeMax) {
+          delete [] v;
+          delete [] tt;
+       }
+       return;
+    }
     if (incr < 0) {
        incr = 0;
        goto L100;
@@ -2875,25 +2935,26 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4], v[20], costh[4];
+    Double_t tface[4], costh[4];
     Double_t sinth[4];
     Int_t k1, k2, ia, ib, incrth, ith, jth, kth, nth, mth, ith1, ith2, nv;
-    Double_t ab[8]        /* was [2][4] */;
+    Double_t ab[8];       // was [2][4]
     Double_t th;
     Int_t iv, icodes[4];
-    Double_t tt[80]        /* was [4][20] */, zn, cosphi[4];
+    Double_t zn, cosphi[4];
     Double_t sinphi[4], th1, th2, phi;
-    Double_t xyz[24]        /* was [3][8] */, phi1, phi2;
+    Double_t xyz[24];     // was [3][8]
+    Double_t phi1, phi2;
     TView *view = 0;
     ia = ib = 0;
 
-        if(gPad) {
-                view = gPad->GetView();
-                if(!view) {
-                        Error("LegoSpherical", "no TView in current pad");
-                        return;
-                }
+    if(gPad) {
+        view = gPad->GetView();
+        if(!view) {
+            Error("LegoSpherical", "no TView in current pad");
+            return;
         }
+    }
 
     if (iordr == 0) {
         jth  = 1;
@@ -2916,6 +2977,20 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
     }
     iopt = 2;
     if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+
+    // Allocate v and tt arrays
+    Double_t *v, *tt;
+    TList *stack = gCurrentHist->GetPainter()->GetStack();
+    Int_t vSize = 0;
+    if (stack) vSize = stack->GetSize()+2;
+    if (vSize > kVSizeMax) {
+       v  = new Double_t[vSize];
+       tt = new Double_t[4*vSize];
+    } else {
+       vSize = kVSizeMax;
+       v  = &gV[0];
+       tt = &gTT[0];
+    }
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   P H I   S E C T O R S
@@ -2952,7 +3027,6 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
 
     kth = nth;
-//printf("nth=%d nv=%d iordr=%d\n",nth,nv,iordr);
 
     incr = 1;
     iphi = iphi1;
@@ -2971,10 +3045,8 @@ L200:
     if (ith > nth)   goto L400;
     if (iordr == 0) ia = ith;
     if (iordr != 0) ib = ith;
-//printf("na=%d nb=%d ith=%d iphi=%d kth=%d iphi1=%d iphi2=%d ith1=%d ith2=%d\n",
-//     na,nb,ith,iphi,kth,iphi1,iphi2,ith1,ith2);
     (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-    if (nv < 2 || nv > 20) goto L400;
+    if (nv < 2 || nv > vSize) goto L400;
 
 //*-*-      D E F I N E   V I S I B I L I T Y   O F   S I D E S
     for (i = 1; i <= 6; ++i) ivis[i - 1] = 0;
@@ -3074,7 +3146,6 @@ L200:
         icodes[3] = 6;
         for (i = 1; i <= 4; ++i) {
             iface[i - 1] = i + 4;
-//            tface[i - 1] = tt[i + 4 + 4*nv - 5];
             tface[i - 1] = tt[i + 4 + 2*nv - 5];
         }
         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
@@ -3099,7 +3170,13 @@ L500:
     if (iphi == 0)     iphi = kphi;
     if (iphi > kphi)   iphi = 1;
     if (iphi != iphi2) goto L100;
-    if (incr == 0) return;
+    if (incr == 0) {
+       if (vSize > kVSizeMax) {
+          delete [] v;
+          delete [] tt;
+       }
+       return;
+    }
     if (incr < 0) {
        incr = 0;
        goto L100;
