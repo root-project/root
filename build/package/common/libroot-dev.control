@@ -1,5 +1,5 @@
 Package: libroot-dev
-Section: non-free/libdevel
+Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends}
 Suggests: root-bin

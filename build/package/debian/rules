@@ -44,7 +44,7 @@ SOVERS		= $(MAJOR).$(MINOR)
 PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
 BUILDDEP	:= $(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))
 TEMPLATES	:= $(wildcard debian/*.in)
-SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer libroot,$(PKGLIST)) libroot$(MAJOR)
+SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer libroot,$(PKGLIST)) libroot$(MAJOR).$(MINOR)
 IPKGLIST	:= root-doc ttf-root ttf-root-installer root
 DPKGLIST	:= $(SPKGLIST:%=%,) root-doc, root-ttf
 #root-plugins root-extra-plugins
@@ -74,7 +74,7 @@ debian/control:debian/control.in
 	    echo "Adding package $$p to control file" ; \
 	    cat build/package/common/$$p.control >> $@.tmp ; fi ; done 
 	@sed -e 's,@prefix@,$(PREFIX),g' \
-		-e 's,@libvers@,$(MAJOR),g' \
+		-e 's,@libvers@,$(MAJOR).$(MINOR),g' \
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
 		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
 		-e 's/@builddepends@/$(BUILDDEP)/' \
@@ -140,7 +140,7 @@ pkglists:
 	build/package/lib/makelists.sh debian \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
 	for i in debian/libroot.* ; do \
-	  cp $$i `echo $$i | sed 's/libroot\.\(.*\)/libroot$(MAJOR).\1/'` ; \
+	  cp $$i `echo $$i | sed 's/libroot\.\(.*\)/libroot$(MAJOR).$(MINOR).\1/'` ; \
 	done 
 
 install: install-indep install-arch
@@ -169,6 +169,12 @@ install-arch:
 
 	# Make ROOT look in `/usr/lib/root/<version>' for loadable module 
 	# sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$(SOVER)|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
+	# Make root-config output `/usr/lib/root' instead of 
+	# `/usr/lib/root/<version>' 
+	sed 's,/usr/lib/root/[0-9.][0-9.]*,/usr/lib/root,' \
+		< debian/tmp/usr/bin/root-config > root-config.tmp 
+	mv root-config.tmp debian/tmp/usr/bin/root-config
+
 	# mv tmp.systemrc debian/tmp/etc/root/system.rootrc
 
 	# Remove the CVS directories if present

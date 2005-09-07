@@ -1,5 +1,5 @@
 Package: libroot@libvers@
-Section: non-free/libs
+Section: libs
 Architecture: any
 Depends: root-ttf, ${shlibs:Depends}
 Recommends: root-bin, libroot-dev 
