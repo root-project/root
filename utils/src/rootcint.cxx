@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.215 2005/08/11 21:19:05 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.216 2005/08/30 02:45:05 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -311,8 +311,8 @@ char autold[64];
 FILE *fp;
 char *StrDup(const char *str);
 
-typedef map<string,bool> funcMap_t;
-funcMap_t gFunMap;
+typedef map<string,bool> Funcmap_t;
+Funcmap_t gFunMap;
 
 vector<string> gIoConstructorTypes;
 void AddConstructorType(const char *arg) 
@@ -514,8 +514,8 @@ extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode);
 
 
 //______________________________________________________________________________
-typedef map<string,string> recmap_t;
-recmap_t gAutoloads;
+typedef map<string,string> Recmap_t;
+Recmap_t gAutoloads;
 string gLiblistPrefix;
 string gLibsNeeded;
 
@@ -1454,7 +1454,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
       R__BIT_ISSTRING    = 0x40000000
    };
 
-   long P = ti.Property();
+   long prop = ti.Property();
    char tiName[kMaxLen],tiFullname[kMaxLen],objType[kMaxLen];
    strcpy(tiName,ti.Name());
    strcpy(objType,ShortTypeName(tiName));
@@ -1465,7 +1465,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
    int isTObj = (ti.IsBase("TObject") || !strcmp(tiFullname, "TObject"));
    int isStre = (ti.HasMethod("Streamer"));
 
-   long kase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM);
+   long kase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM);
    if (isTObj)                      kase |= R__BIT_ISTOBJECT;
    if (strcmp("string" ,tiName)==0) kase |= R__BIT_ISSTRING;
    if (strcmp("string*",tiName)==0) kase |= R__BIT_ISSTRING;
@@ -2252,12 +2252,12 @@ void WriteClassInit(G__ClassInfo &cl)
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
       long offset;
-      const char *VersionFunc = "GetClassVersion";
-      char *funcname= new char[strlen(classname.c_str())+strlen(VersionFunc)+5];
-      sprintf(funcname,"%s<%s >",VersionFunc,classname.c_str());
+      const char *versionFunc = "GetClassVersion";
+      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
+      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
       char *proto = new char[strlen(classname.c_str())+ 10 ];
       sprintf(proto,"%s*",classname.c_str());
-      G__MethodInfo methodinfo = gcl.GetMethod(VersionFunc,proto,&offset);
+      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
 
@@ -2307,8 +2307,8 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
       int idx = classname.find("<");
-      int STL_type = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
-      switch(STL_type)  {
+      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
+      switch(stlType)  {
         case TClassEdit::kVector:
         case TClassEdit::kList:
         case TClassEdit::kDeque:
@@ -2404,12 +2404,12 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
       long offset;
-      const char *VersionFunc = "GetClassVersion";
-      char *funcname= new char[strlen(classname.c_str())+strlen(VersionFunc)+5];
-      sprintf(funcname,"%s<%s >",VersionFunc,classname.c_str());
+      const char *versionFunc = "GetClassVersion";
+      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
+      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
       char *proto = new char[strlen(classname.c_str())+ 10 ];
       sprintf(proto,"%s*",classname.c_str());
-      G__MethodInfo methodinfo = gcl.GetMethod(VersionFunc,proto,&offset);
+      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
 

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.139 2005/09/04 15:47:10 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.140 2005/09/05 09:42:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2936,11 +2936,11 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 
 //---- signals -----------------------------------------------------------------
 
-static struct signal_map {
-   int               code;
-   SigHandler_t      handler;
-   struct sigaction *oldhandler;
-   const char       *signame;
+static struct Signalmap_t {
+   int               fCode;
+   SigHandler_t      fHandler;
+   struct sigaction *fOldHandler;
+   const char       *fSigName;
 } gSignalMap[kMAXSIGNALS] = {       // the order of the signals should be identical
    { SIGBUS,   0, 0, "bus error" }, // to the one in SysEvtHandler.h
    { SIGSEGV,  0, 0, "segmentation violation" },
@@ -2966,8 +2966,8 @@ static void sighandler(int sig)
    // Call the signal handler associated with the signal.
 
    for (int i= 0; i < kMAXSIGNALS; i++) {
-      if (gSignalMap[i].code == sig) {
-         (*gSignalMap[i].handler)((ESignals)i);
+      if (gSignalMap[i].fCode == sig) {
+         (*gSignalMap[i].fHandler)((ESignals)i);
          return;
       }
    }
@@ -2984,11 +2984,11 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 {
    // Set a signal handler for a signal.
 
-   if (gSignalMap[sig].handler != handler) {
+   if (gSignalMap[sig].fHandler != handler) {
       struct sigaction sigact;
 
-      gSignalMap[sig].handler    = handler;
-      gSignalMap[sig].oldhandler = new struct sigaction();
+      gSignalMap[sig].fHandler    = handler;
+      gSignalMap[sig].fOldHandler = new struct sigaction();
 
 #if defined(R__SUN)
       sigact.sa_handler = (void (*)())sighandler;
@@ -3010,8 +3010,8 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #if defined(SA_RESTART)
       sigact.sa_flags |= SA_RESTART;
 #endif
-      if (sigaction(gSignalMap[sig].code, &sigact,
-                    gSignalMap[sig].oldhandler) < 0)
+      if (sigaction(gSignalMap[sig].fCode, &sigact,
+                    gSignalMap[sig].fOldHandler) < 0)
          ::SysError("TUnixSystem::UnixSignal", "sigaction");
    }
 }
@@ -3038,10 +3038,10 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
 #endif
          sigemptyset(&sigact.sa_mask);
          sigact.sa_flags = 0;
-         if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
+         if (sigaction(gSignalMap[sig].fCode, &sigact, &oldsigact[sig]) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       } else {
-         if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
+         if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], 0) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       }
    }
@@ -3057,7 +3057,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
    // signals). This can be controlled for each a-synchronous TTimer via
    // the method TTimer::SetInterruptSyscalls().
 
-   if (gSignalMap[kSigAlarm].handler) {
+   if (gSignalMap[kSigAlarm].fHandler) {
       struct sigaction sigact;
 #if defined(R__SUN)
       sigact.sa_handler = (void (*)())sighandler;
@@ -3085,7 +3085,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
          sigact.sa_flags |= SA_RESTART;
 #endif
       }
-      if (sigaction(gSignalMap[kSigAlarm].code, &sigact, 0) < 0)
+      if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, 0) < 0)
          ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscalls", "sigaction");
    }
 }
@@ -3095,7 +3095,7 @@ const char *TUnixSystem::UnixSigname(ESignals sig)
 {
    // Return the signal name associated with a signal.
 
-   return gSignalMap[sig].signame;
+   return gSignalMap[sig].fSigName;
 }
 
 //______________________________________________________________________________
@@ -3103,12 +3103,12 @@ void TUnixSystem::UnixResetSignal(ESignals sig)
 {
    // Restore old signal handler for specified signal.
 
-   if (gSignalMap[sig].oldhandler) {
+   if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
-      sigaction(gSignalMap[sig].code, gSignalMap[sig].oldhandler, 0);
-      delete gSignalMap[sig].oldhandler;
-      gSignalMap[sig].oldhandler = 0;
-      gSignalMap[sig].handler    = 0;
+      sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0);
+      delete gSignalMap[sig].fOldHandler;
+      gSignalMap[sig].fOldHandler = 0;
+      gSignalMap[sig].fHandler    = 0;
    }
 }
 
@@ -3118,12 +3118,12 @@ void TUnixSystem::UnixResetSignals()
    // Restore old signal handlers.
 
    for (int sig = 0; sig < kMAXSIGNALS; sig++) {
-      if (gSignalMap[sig].oldhandler) {
+      if (gSignalMap[sig].fOldHandler) {
          // restore old signal handler
-         sigaction(gSignalMap[sig].code, gSignalMap[sig].oldhandler, 0);
-         delete gSignalMap[sig].oldhandler;
-         gSignalMap[sig].oldhandler = 0;
-         gSignalMap[sig].handler    = 0;
+         sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0);
+         delete gSignalMap[sig].fOldHandler;
+         gSignalMap[sig].fOldHandler = 0;
+         gSignalMap[sig].fHandler    = 0;
       }
    }
 }
