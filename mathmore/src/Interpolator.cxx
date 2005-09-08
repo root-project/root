@@ -1,5 +1,5 @@
-// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Implementation file for class Interpolator using GSL
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:00:25 2004
-// 
+//
 // Last update: Fri Nov 26 15:00:25 2004
-// 
+//
 
 #include "MathMore/Interpolator.h"
 #include "GSLInterpolator.h"
@@ -37,23 +37,23 @@ namespace ROOT {
 namespace Math {
 
 
-Interpolator::Interpolator(const std::vector<double> & x, const std::vector<double> & y, const Interpolation::Type type) 
-{      
+Interpolator::Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type)
+{
   // allocate GSL interpolation object
 
   fInterp = new GSLInterpolator(type, x, y);
 }
 
-Interpolator::~Interpolator() 
+Interpolator::~Interpolator()
 {
-  if (fInterp) delete fInterp; 
+  if (fInterp) delete fInterp;
 }
 
-Interpolator::Interpolator(const Interpolator &) 
+Interpolator::Interpolator(const Interpolator &)
 {
 }
 
-Interpolator & Interpolator::operator = (const Interpolator &rhs) 
+Interpolator & Interpolator::operator = (const Interpolator &rhs)
 {
    if (this == &rhs) return *this;  // time saving self-test
 
@@ -65,20 +65,20 @@ double Interpolator::Eval( double x ) const
   return fInterp->Eval(x);
 }
 
-double Interpolator::Deriv( double x ) const 
+double Interpolator::Deriv( double x ) const
 {
-  return fInterp->Deriv(x);  
+  return fInterp->Deriv(x);
 }
 
-double Interpolator::Deriv2( double x ) const {  
+double Interpolator::Deriv2( double x ) const {
   return fInterp->Deriv2(x);
 }
 
-double Interpolator::Integ( double a, double b) const { 
+double Interpolator::Integ( double a, double b) const {
   return fInterp->Integ(a,b);
 }
 
-std::string  Interpolator::TypeGet() const { 
+std::string  Interpolator::TypeGet() const {
   return fInterp->Name();
 }
 

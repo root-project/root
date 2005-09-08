@@ -1,5 +1,5 @@
-// @(#)root/mathmore:$Name:  $:$Id: Interpolator.hv 1.0 2005/06/23 12:00:00 moneta Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// @(#)root/mathmore:$Name:  $:$Id: Interpolator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class Interpolator
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:00:25 2004
-// 
+//
 // Last update: Fri Nov 26 15:00:25 2004
-// 
+//
 #ifndef ROOT_Math_Interpolator
 #define ROOT_Math_Interpolator
 
@@ -45,71 +45,71 @@ namespace ROOT {
 namespace Math {
 
 
-  class GSLInterpolator; 
+  class GSLInterpolator;
 
   /**
-     Class for performing function interpolation of points. 
-     The class is instantiated with an interpolation methods, passed as an enumeration in the constructor. 
-     See Interpolation::Type for the available interpolation algorithms, which are implemented using GSL. 
-     See also the <A HREF=http://www.gnu.org/software/gsl/manual/gsl-ref_26.html#SEC391">GSL manual</A> for more information. 
+     Class for performing function interpolation of points.
+     The class is instantiated with an interpolation methods, passed as an enumeration in the constructor.
+     See Interpolation::Type for the available interpolation algorithms, which are implemented using GSL.
+     See also the <A HREF=http://www.gnu.org/software/gsl/manual/gsl-ref_26.html#SEC391">GSL manual</A> for more information.
      The class provides additional methods for computing derivatives and integrals of interpolating functions.
 
      This class does not support copying.
-     @ingroup Interpolation 
+     @ingroup Interpolation
   */
 
   class Interpolator {
 
-  public: 
+  public:
     /**
-       Constructs an interpolator class from vector of data points \f$ (x_i, y_i )\f$ and with Interpolation::Type type. 
-       The method will compute a continous interpolating function \f$ y(x) \f$ such that \f$ y_i = y ( x_i )\f$. 
+       Constructs an interpolator class from vector of data points \f$ (x_i, y_i )\f$ and with Interpolation::Type type.
+       The method will compute a continous interpolating function \f$ y(x) \f$ such that \f$ y_i = y ( x_i )\f$.
      */
-    Interpolator(const std::vector<double> & x, const std::vector<double> & y, const Interpolation::Type type = Interpolation::POLYNOMIAL); 
+    Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type = Interpolation::POLYNOMIAL);
 
-    virtual ~Interpolator(); 
-    
+    virtual ~Interpolator();
+
   private:
     // usually copying is non trivial, so we make this unaccessible
-    Interpolator(const Interpolator &); 
-    Interpolator & operator = (const Interpolator &); 
-    
-  public: 
+    Interpolator(const Interpolator &);
+    Interpolator & operator = (const Interpolator &);
+
+  public:
 
     /**
        Return the interpolated value at point x
      */
-    double Eval( double x ) const; 
+    double Eval( double x ) const;
 
     /**
        Return the derivative of the interpolated function at point x
      */
-    double Deriv( double x ) const; 
+    double Deriv( double x ) const;
 
     /**
        Return the second derivative of the interpolated function at point x
      */
-    double Deriv2( double x ) const; 
+    double Deriv2( double x ) const;
 
     /**
        Return the Integral of the interpolated function over the range [a,b]
      */
-    double Integ( double a, double b) const; 
-        
+    double Integ( double a, double b) const;
+
     /**
        Return the type of interpolation method
      */
-    std::string TypeGet() const; 
-    
-  protected: 
-    
+    std::string TypeGet() const;
 
-  private: 
-    
-    GSLInterpolator * fInterp;  
-    
-  }; 
-  
+  protected:
+
+
+  private:
+
+    GSLInterpolator * fInterp;
+
+  };
+
 } // namespace Math
 } // namespace ROOT
 

@@ -1,5 +1,5 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Implementation file for class GSLIntegrator
-// 
+//
 // Created by: Lorenzo Moneta  at Thu Nov 11 14:22:32 2004
-// 
+//
 // Last update: Thu Nov 11 14:22:32 2004
-// 
+//
 
 #include "MathMore/Integrator.h"
 #include "GSLIntegrator.h"
@@ -45,51 +45,51 @@ namespace Math {
 
 
   // full constructor
-  
-Integrator::Integrator(const IGenFunction &f, const Integration::Type type , const Integration::GKRule rule, double absTol, double relTol, size_t size) {
+
+Integrator::Integrator(const IGenFunction &f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
 
   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
-}   
+}
 
-// constructor with default type (ADaptiveSingular) ,  rule is not needed 
+// constructor with default type (ADaptiveSingular) ,  rule is not needed
 
 Integrator::Integrator(const IGenFunction &f, double absTol, double relTol, size_t size) {
   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
-}   
-  
+}
+
 // constructor with default rule (gauss31) passing the type
-  
-Integrator::Integrator(const IGenFunction &f, const Integration::Type type , double absTol, double relTol, size_t size) {
+
+Integrator::Integrator(const IGenFunction &f, Integration::Type type , double absTol, double relTol, size_t size) {
   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
-}   
+}
 
-Integrator::Integrator(GSLFuncPointer f, const Integration::Type type , const Integration::GKRule rule, double absTol, double relTol, size_t size) {
+Integrator::Integrator(GSLFuncPointer f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
-}   
+}
 
-// constructor with default type (ADaptiveSingular) ,  rule is not needed 
+// constructor with default type (ADaptiveSingular) ,  rule is not needed
 
 Integrator::Integrator(GSLFuncPointer f, double absTol, double relTol, size_t size) {
   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
-}   
-  
+}
+
 // constructor with default rule (gauss31) passing the type
-  
-Integrator::Integrator(GSLFuncPointer f, const Integration::Type type , double absTol, double relTol, size_t size) {
+
+Integrator::Integrator(GSLFuncPointer f, Integration::Type type , double absTol, double relTol, size_t size) {
   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
-}   
-
-Integrator::~Integrator() 
-{
-
-    if (fIntegrator) delete fIntegrator; 
 }
 
-Integrator::Integrator(const Integrator &) 
+Integrator::~Integrator()
+{
+
+    if (fIntegrator) delete fIntegrator;
+}
+
+Integrator::Integrator(const Integrator &)
 {
 }
 
-Integrator & Integrator::operator = (const Integrator &rhs) 
+Integrator & Integrator::operator = (const Integrator &rhs)
 {
     if (this == &rhs) return *this;  // time saving self-test
 
@@ -100,7 +100,7 @@ Integrator & Integrator::operator = (const Integrator &rhs)
 void Integrator::SetFunction(const IGenFunction &f) {
   fIntegrator->SetFunction(f);
 }
- 
+
 void Integrator::SetFunction( const GSLFuncPointer &f) {
   fIntegrator->SetFunction(f);
 }
@@ -109,27 +109,27 @@ void Integrator::SetFunction( const GSLFuncPointer &f) {
 
 
   // evaluation methods
- 
+
   double  Integrator::Integral(double a, double b) {
     return fIntegrator->Integral(a, b);
   }
 
- 
+
   double  Integrator::Integral( const std::vector<double> & pts) {
     return fIntegrator->Integral(pts);
   }
-      
+
 
   // Eval for indefined integrals: use QAGI method
 
   double  Integrator::Integral( ) {
-    return fIntegrator->Integral();   
+    return fIntegrator->Integral();
   }
 
   // Integral between [a, + inf]
 
   double  Integrator::IntegralUp( double a ) {
-    return fIntegrator->IntegralUp(a);    
+    return fIntegrator->IntegralUp(a);
   }
 
   // Integral between [-inf, + b]
@@ -163,7 +163,7 @@ void Integrator::SetFunction( const GSLFuncPointer &f) {
 
 
 
-// use c free function pointer 
+// use c free function pointer
   double  Integrator::Integral( GSLFuncPointer f , void * p, double a, double b) {
     return fIntegrator->Integral(f, p, a, b);
   }
@@ -197,19 +197,19 @@ void Integrator::SetFunction( const GSLFuncPointer &f) {
 
 //   double Integrator::getAbsTolerance() const { return fAbsTol; }
 
-  void Integrator::SetAbsTolerance(double absTol){ 
+  void Integrator::SetAbsTolerance(double absTol){
     fIntegrator->SetAbsTolerance(absTol);
   }
 
 //   double Integrator::getRelTolerance() const { return fRelTol; }
 
-  void Integrator::SetRelTolerance(double relTol){ 
-    fIntegrator->SetRelTolerance(relTol); 
+  void Integrator::SetRelTolerance(double relTol){
+    fIntegrator->SetRelTolerance(relTol);
   }
 
 
-  void Integrator::SetIntegrationRule(Integration::GKRule rule){ 
-    fIntegrator->SetIntegrationRule(rule); 
+  void Integrator::SetIntegrationRule(Integration::GKRule rule){
+    fIntegrator->SetIntegrationRule(rule);
   }
 
 
