@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.3 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.4 2003/02/05 23:35:34 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -23,7 +23,7 @@ class TTableDescriptor : public TTable {
                                           // the table row C-structure
      TTableDescriptor *fSecondDescriptor; // shadow descriptor 
                                           // to back TTable::Streamer
-     static TString fCommentsName;        // The name of dataset to keep the comments fields
+     static TString gfCommentsName;        // The name of dataset to keep the comments fields
      virtual void Init(TClass *classPtr);
      static void SetCommentsSetName(const char *name=".comments");
 
@@ -59,7 +59,7 @@ class TTableDescriptor : public TTable {
              void        SetSize(UInt_t size,Int_t column);
              void        SetTypeSize(UInt_t size,Int_t column);
              void        SetDimensions(UInt_t dim,Int_t column);
-			 Int_t       Sizeof() const;
+             Int_t       Sizeof() const;
              void        SetColumnType(TTable::EColumnType type,Int_t column);
     virtual  Int_t       UpdateOffsets(const TTableDescriptor *newDesciptor);
 
@@ -102,6 +102,6 @@ inline  void    TTableDescriptor::SetSize(UInt_t size,Int_t column)      {((tabl
 inline  void    TTableDescriptor::SetTypeSize(UInt_t size,Int_t column)  {((tableDescriptor_st *)At(column))->fTypeSize   = size;  }
 inline  void    TTableDescriptor::SetDimensions(UInt_t dim,Int_t column) {((tableDescriptor_st *)At(column))->fDimensions = dim;   }
 inline  void    TTableDescriptor::SetColumnType(TTable::EColumnType type,Int_t column) {((tableDescriptor_st *)At(column))->fType = type;  }
-inline  void    TTableDescriptor::SetCommentsSetName(const char *name){fCommentsName =  name;}
+inline  void    TTableDescriptor::SetCommentsSetName(const char *name){gfCommentsName =  name;}
 
 #endif

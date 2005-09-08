@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 
@@ -20,44 +20,44 @@ class TGenericTable : public TTable {
      TTableDescriptor *fColDescriptors;     
      virtual TTableDescriptor *GetDescriptorPointer() const { return fColDescriptors;}                 
      virtual void SetDescriptorPointer(TTableDescriptor *list) { fColDescriptors = list;}        
-	 void SetGenericType(){ TTable::SetType(GetDescriptorPointer()->GetName()); }
+    void SetGenericType(){ TTable::SetType(GetDescriptorPointer()->GetName()); }
  
   public:
     class iterator {
       protected:
-	     UInt_t  fRowSize;
-	     char   *fCurrentRow;
-	     iterator():  fRowSize(0), fCurrentRow(0) {}
+        UInt_t  fRowSize;
+        char   *fCurrentRow;
+        iterator():  fRowSize(0), fCurrentRow(0) {}
       public:
-	     iterator(UInt_t size, char &rowPtr): fRowSize(size), fCurrentRow(&rowPtr){}
-	     iterator(const TTable &t, char &rowPtr): fRowSize(t.GetRowSize()), fCurrentRow(&rowPtr){}
-	     iterator(const TTable &t): fRowSize(t.GetRowSize()), fCurrentRow(0){}
+        iterator(UInt_t size, char &rowPtr): fRowSize(size), fCurrentRow(&rowPtr){}
+        iterator(const TTable &t, char &rowPtr): fRowSize(t.GetRowSize()), fCurrentRow(&rowPtr){}
+        iterator(const TTable &t): fRowSize(t.GetRowSize()), fCurrentRow(0){}
              iterator(const iterator& iter) : fRowSize (iter.fRowSize), fCurrentRow(iter.fCurrentRow){}
-	     iterator &operator=(const iterator& iter) { fRowSize = iter.fRowSize; fCurrentRow = iter.fCurrentRow; return *this;}
-	     iterator &operator++()    { if (fCurrentRow) fCurrentRow+=fRowSize; return *this;}
- 	     void     operator++(int) { if (fCurrentRow) fCurrentRow+=fRowSize;}
-	     iterator &operator--()    { if (fCurrentRow) fCurrentRow-=fRowSize; return *this;}
-	     void      operator--(int) { if (fCurrentRow) fCurrentRow-=fRowSize;}
-	     iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx*fRowSize; return *this;}
-	     iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx*fRowSize; return *this;}
-	     Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/fRowSize; }
+        iterator &operator=(const iterator& iter) { fRowSize = iter.fRowSize; fCurrentRow = iter.fCurrentRow; return *this;}
+        iterator &operator++()    { if (fCurrentRow) fCurrentRow+=fRowSize; return *this;}
+        void     operator++(int) { if (fCurrentRow) fCurrentRow+=fRowSize;}
+        iterator &operator--()    { if (fCurrentRow) fCurrentRow-=fRowSize; return *this;}
+        void      operator--(int) { if (fCurrentRow) fCurrentRow-=fRowSize;}
+        iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx*fRowSize; return *this;}
+        iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx*fRowSize; return *this;}
+        Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/fRowSize; }
              char *operator *(){ return fCurrentRow;}
              Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
-	     Bool_t operator!=(const iterator &t) const { return !operator==(t); }
-	};                                        
+        Bool_t operator!=(const iterator &t) const { return !operator==(t); }
+   };                                        
     TGenericTable() : TTable("TGenericTable",-1), fColDescriptors(0) {SetType("generic");}      
 
-	// Create TGenericTable by C structure name provided
+   // Create TGenericTable by C structure name provided
     TGenericTable(const char *structName, const Text_t *name);
     TGenericTable(const char *structName, Int_t n);
     TGenericTable(const char *structName, const Text_t *name,Int_t n);
 
-	// Create TGenericTable by TTableDescriptor pointer
+   // Create TGenericTable by TTableDescriptor pointer
     TGenericTable(const TTableDescriptor &dsc, const Text_t *name);
     TGenericTable(const TTableDescriptor &dsc, Int_t n);
     TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_t n);
 
-	virtual ~TGenericTable();
+   virtual ~TGenericTable();
 
                 char  *GetTable(Int_t i=0)   const { return ((char *)GetArray())+i*GetRowSize();}     
     TTableDescriptor  *GetTableDescriptors() const { return GetDescriptorPointer();}

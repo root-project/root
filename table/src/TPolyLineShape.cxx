@@ -1,6 +1,6 @@
-// @(#)root/star:$Name: v4-00-08a $:$Id: TPolyLineShape.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.3 2004/11/18 18:08:48 brun Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// $Id: TPolyLineShape.cxx,v 1.3 2004/11/18 18:08:48 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -326,11 +326,11 @@ void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 
   // Calculate the rotation axis for Axis Oz
 
-    Double_t Oz[3]={0,0,1};
+    Double_t oz[3]={0,0,1};
     Double_t rotate[3];
 
-    Double_t sina = TMath::Normalize(TMath::Cross(vector,Oz,rotate));
-    Double_t cosa = Product(vector,Oz);
+    Double_t sina = TMath::Normalize(TMath::Cross(vector,oz,rotate));
+    Double_t cosa = Product(vector,oz);
     Double_t mrot[3][3];
 
     TShape *shape = fShape;

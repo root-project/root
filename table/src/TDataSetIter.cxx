@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 #include "Riosfwd.h"
@@ -18,7 +18,7 @@
 #  define strcasecmp(arg1,arg2) stricmp(arg1,arg2)
 #endif
 
-TDataSet *TDataSetIter::fNullDataSet = (TDataSet *)(-1);
+TDataSet *TDataSetIter::gfNullDataSet = (TDataSet *)(-1);
 
 ClassImp(TDataSetIter)
 
@@ -41,7 +41,7 @@ TDataSetIter::TDataSetIter(TDataSet *link, Bool_t dir)
 {
    fWorkingDataSet= fRootDataSet   =link;
    fMaxDepth      = fDepth         =1;
-   fDataSet= fNullDataSet ;
+   fDataSet= gfNullDataSet ;
    fNext = link ? new TIter(link->GetCollection() ,dir):0;
 }
 
@@ -51,7 +51,7 @@ TDataSetIter::TDataSetIter(TDataSet *link, Int_t depth, Bool_t dir)
    fRootDataSet = fWorkingDataSet = link;
    fMaxDepth    = depth;
    fDepth       = 1;
-   fDataSet     = fNullDataSet;
+   fDataSet     = gfNullDataSet;
    fNext        = (link)? new TIter(link->GetCollection() ,dir):0;
 
    // Create a DataSet iterator to pass all nodes of the
@@ -469,7 +469,7 @@ TDataSet *TDataSetIter::Next( TDataSet::EDataSetPass mode)
    else {
       // Check the whether the next level does exist
       if (fDepth==0) fDepth = 1;
-      if (fDataSet && fDataSet != fNullDataSet &&
+      if (fDataSet && fDataSet != gfNullDataSet &&
          (fDepth < fMaxDepth || fMaxDepth ==0) && mode == TDataSet::kContinue )
       {
          // create the next level iterator, go deeper
@@ -648,7 +648,7 @@ void TDataSetIter::Reset(TDataSet *l, int depth)
    //    depth      != 0 means the new value for the depth
    //                    otherwise the privious one is used;
    //
-   fDataSet = fNullDataSet;
+   fDataSet = gfNullDataSet;
    if (fMaxDepth != 1) {
       // clean all interators
       Int_t level = fDepth;

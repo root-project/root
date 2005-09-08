@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:$:$Id:$
+// @(#)root/table:$Name:  $:$Id: TFileIter.h,v 1.5 2004/02/13 14:27:00 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -149,8 +149,8 @@ inline const char *TFileIter::GetForeignFileSystemKey(){return "MountedFileSyste
 //__________________________________________________________________________
 inline Int_t TFileIter::CurrentCursorPosition() const
 {
-	// return the current
-	return fCursorPosition;
+   // return the current
+   return fCursorPosition;
 }
 
 //__________________________________________________________________________
@@ -159,9 +159,9 @@ inline const TFile *TFileIter::GetTFile() const { return fRootFile; }
 //__________________________________________________________________________
 inline TObject *TFileIter::Next()
 {
-	// Make 1 step over the file objects and returns its pointer
-	// or 0, if there is no object left in the container
-	return Next(1);
+   // Make 1 step over the file objects and returns its pointer
+   // or 0, if there is no object left in the container
+  return Next(1);
 }
 
 //__________________________________________________________________________
@@ -171,16 +171,16 @@ inline void TFileIter::Rewind() {
 //__________________________________________________________________________
 inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
 {
-	// Make <cursorPosition> steps (>0 - forward) over the file
-	// objects to skip it
-	SkipObjects(cursorPosition - fCursorPosition);
+   // Make <cursorPosition> steps (>0 - forward) over the file
+   // objects to skip it
+   SkipObjects(cursorPosition - fCursorPosition);
 }
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(const char *keyNameToFind)
 {
-	// Iterate unless the name of the object matches <keyNameToFind>
-	SetCursorPosition(keyNameToFind); return *this;}
+   // Iterate unless the name of the object matches <keyNameToFind>
+   SetCursorPosition(keyNameToFind); return *this;}
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
@@ -213,8 +213,8 @@ inline TFileIter::operator int () const
 //__________________________________________________________________________
 inline TFileIter::operator const char *() const
 {
-	// return the current key name
-	return GetKeyName();
+   // return the current key name
+   return GetKeyName();
 }
 //__________________________________________________________________________
 inline int TFileIter::operator==(const char *name) const

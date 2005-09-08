@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.4 2005/05/08 13:50:55 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -41,7 +41,7 @@ class TTableMap : public TObject
     TTableMap(const TTable *table=0);
     TTableMap(const TTableMap &map) : TObject(map)
 #ifndef __CINT__
-		, std::vector<Long_t>(map)
+      , std::vector<Long_t>(map)
 #endif
     , fTable(map.fTable)	{;}
     ~TTableMap(){;}

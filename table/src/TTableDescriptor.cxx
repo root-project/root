@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.7 2003/02/05 23:35:35 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2003/05/28 15:17:03 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.7 2003/02/05 23:35:35 rdm Exp $
+// $Id: TTableDescriptor.cxx,v 1.8 2003/05/28 15:17:03 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -13,8 +13,8 @@
 #include "TInterpreter.h"
 
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
-// TString TTableDescriptor::fCommentsName = TTableDescriptor::SetCommentsSetName();
-TString TTableDescriptor::fCommentsName = ".comments";
+// TString TTableDescriptor::gfCommentsName = TTableDescriptor::SetCommentsSetName();
+TString TTableDescriptor::gfCommentsName = ".comments";
 TableClassImp(TTableDescriptor,tableDescriptor_st)
 
 //______________________________________________________________________________
@@ -102,7 +102,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
 TString TTableDescriptor::CreateLeafList() const
 {
    // Create a list of leaf to be useful for TBranch::TBranch ctor
-   const Char_t TypeMapTBranch[]="\0FIISDiisbBC";
+   const Char_t typeMapTBranch[]="\0FIISDiisbBC";
    Int_t maxRows = NumberOfColumns();
    TString string;
    for (Int_t i=0;i<maxRows;i++){
@@ -130,14 +130,14 @@ TString TTableDescriptor::CreateLeafList() const
           string += buf;
           if (k==0) {
              string += "/";
-             string += TypeMapTBranch[ColumnType(i)];
+             string += typeMapTBranch[ColumnType(i)];
           }
           if (k != totalSize -1) string += ":";
        }
     } else {
        string += ColumnName(i);
        string += "/";
-       string += TypeMapTBranch[ColumnType(i)];
+       string += typeMapTBranch[ColumnType(i)];
     }
   }
   return string;
@@ -251,28 +251,28 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 //______________________________________________________________________________
 TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 {
-	///////////////////////////////////////////////////////////
-	//
-	// MakeDescriptor(const char *structName) - static method
-	//                structName - the name of the C structure 
-	//                             to create descriptor of
-	// return a new instance of the TTableDescriptor or 0 
-	// if the "structName is not present with the dictionary
-	//
-	///////////////////////////////////////////////////////////
-	TTableDescriptor *dsc = 0;
+   ///////////////////////////////////////////////////////////
+   //
+   // MakeDescriptor(const char *structName) - static method
+   //                structName - the name of the C structure 
+   //                             to create descriptor of
+   // return a new instance of the TTableDescriptor or 0 
+   // if the "structName is not present with the dictionary
+   //
+   ///////////////////////////////////////////////////////////
+   TTableDescriptor *dsc = 0;
       TClass *cl = gROOT->GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
-	assert(cl!=0);
-	dsc = new TTableDescriptor(cl);
-	return dsc;
+   assert(cl!=0);
+   dsc = new TTableDescriptor(cl);
+   return dsc;
 }
 //______________________________________________________________________________
 TDataSet *TTableDescriptor::MakeCommentField(Bool_t createFlag){
    // Instantiate a comment dataset if any
-   TDataSet *comments = FindByName(fCommentsName.Data());
+   TDataSet *comments = FindByName(gfCommentsName.Data());
    if (!comments && createFlag) 
-      comments =  new TDataSet(fCommentsName.Data(),this,kTRUE);
+      comments =  new TDataSet(gfCommentsName.Data(),this,kTRUE);
    return comments;
 }
 //______________________________________________________________________________

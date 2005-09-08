@@ -1,4 +1,4 @@
-// @(#)root/star:$Name: v3-05-05-28May03 $:$Id: TVolumePosition.h,v 1.1.1.4 2003/05/28 16:18:58 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.5 2003/06/06 05:44:12 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -42,7 +42,7 @@ class TVolumePosition  : public TObject {
       };   
         TVolumePosition(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
         TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const Text_t *matrixname);
-	TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition);
+        TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition);
         TVolumePosition(const TVolumePosition&pos);
         virtual ~TVolumePosition();
         virtual void        Browse(TBrowser *b);
@@ -70,7 +70,7 @@ class TVolumePosition  : public TObject {
 
         Int_t               GetVisibility() const {return GetNode()?GetNode()->GetVisibility():0;}
         virtual Double_t    GetX(Int_t indx=0) const {return fX[indx];}
-	virtual const Double_t *GetXYZ() const {return fX;}
+        virtual const Double_t *GetXYZ() const {return fX;}
         virtual Double_t    GetY() const {return fX[1];}
         virtual Double_t    GetZ() const {return fX[2];}
         virtual UInt_t      GetId() const {return fId;}
@@ -96,7 +96,7 @@ class TVolumePosition  : public TObject {
         virtual void        SetZ(Double_t z){ fX[2]  =  z;}
         virtual void        SetXYZ(Double_t *xyz = 0);
         virtual void        SetId(UInt_t id){fId  = id;}
-	TVolumePosition    &operator=(const TVolumePosition &rhs);
+        TVolumePosition    &operator=(const TVolumePosition &rhs);
         ClassDef(TVolumePosition,2)  //Description of parameters to position a 3-D geometry object
 };
 
@@ -109,7 +109,7 @@ inline void TVolumePosition::DeleteOwnMatrix()
       TRotMatrix *erasing = fMatrix;
       fMatrix = 0;
       delete erasing;
-   }    
+   }
 }
 //______________________________________________________________________________
 inline TRotMatrix *TVolumePosition::GetMatrix()

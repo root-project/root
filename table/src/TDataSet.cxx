@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.8 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.9 2005/06/06 14:36:06 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -18,8 +18,8 @@ static const char *gCoPyRiGhT[] = {
      "************************************************************************"
 };
 
-static const char *Id = {
-    "$Id: TDataSet.cxx,v 1.8 2005/02/11 18:40:08 rdm Exp $"
+static const char *gId = {
+    "$Id: TDataSet.cxx,v 1.9 2005/06/06 14:36:06 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -853,10 +853,9 @@ Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize) const
 }
 
 
-class Copyright {public: Copyright(const Char_t *id=0){
+class TCopyright {public: TCopyright(const Char_t *id=0){
   if (!gSystem) return;
-  if (gSystem->Getenv("No_Copyright") ||
-     ( gSystem->Getenv("STAR") && !gSystem->Getenv("Copyright")) ) return;
+  if ( gSystem->Getenv("STAR") || !gSystem->Getenv("Copyright"))  return;
   Int_t i = 0;
   cout <<  " " << gCoPyRiGhT[i++] << endl
        <<  " " << id << endl;
@@ -865,4 +864,4 @@ class Copyright {public: Copyright(const Char_t *id=0){
     Int_t lCopy = sizeof(gCoPyRiGhT)/4;
     for (Int_t l =i; l < lCopy; l++) cout << " " << gCoPyRiGhT[l] << endl;
   }}};
-static Copyright TDataSetLibraryCopyright(Id);
+static TCopyright TDataSetLibraryCopyright(gId);

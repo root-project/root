@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.cxx,v 1.2 2003/01/03 15:03:13 fisyak Exp $
+// @(#)root/star:$Name:  $Id: TGenericTable.cxx,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
  
@@ -190,7 +190,7 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format");
   if (n > 0) Set(n);
   SetGenericType();
-}     
+}
 //______________________________________________________________________________
 TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
 {
@@ -203,7 +203,7 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n)
   //   n     - The initial number of allocated rows
   //
   ///////////////////////////////////////////////////////////
-	
+
   TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
   if (dsc) {
     SetDescriptorPointer(dsc);
@@ -212,7 +212,7 @@ TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n)
   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%x, size=%d",dsc,fSize);
   if (n > 0) Set(n);
   SetGenericType();
-}     
+}
 
 //______________________________________________________________________________
 TGenericTable::~TGenericTable()
