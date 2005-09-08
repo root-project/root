@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.23 2004/11/22 15:53:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.24 2005/03/03 08:04:16 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -368,6 +368,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             } else if (IsEnum()) {
                TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
                if (obj) l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
+	       else l = gROOT->ProcessLineFast(Form("%s;",ptr1));
             } else l = atol(ptr1);
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
