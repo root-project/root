@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.97 2005/08/29 15:54:54 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.98 2005/09/02 10:33:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -949,9 +949,15 @@ void TCanvas::UseCurrentStyle()
    }
    TPad::UseCurrentStyle();
 
-   SetFillColor(gStyle->GetCanvasColor());
-   fBorderSize = gStyle->GetCanvasBorderSize();
-   fBorderMode = gStyle->GetCanvasBorderMode();
+   if (gStyle->IsReading()) {
+      SetFillColor(gStyle->GetCanvasColor());
+      fBorderSize = gStyle->GetCanvasBorderSize();
+      fBorderMode = gStyle->GetCanvasBorderMode();
+   } else {
+      gStyle->SetCanvasColor(GetFillColor());
+      gStyle->SetCanvasBorderSize(fBorderSize);
+      gStyle->SetCanvasBorderMode(fBorderMode);
+   }
 }
 
 //______________________________________________________________________________

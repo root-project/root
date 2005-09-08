@@ -41,5 +41,8 @@
 #pragma link C++ class TGedPatternSelect;
 #pragma link C++ class TGedMarkerSelect;
 #pragma link C++ class TGedMarkerPopup;
+#pragma link C++ class TStyleManager;
+#pragma link C++ class TStylePreview;
+#pragma link C++ class TStyleDialog;
 
 #endif

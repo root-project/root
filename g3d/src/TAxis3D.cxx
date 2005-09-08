@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.15 2003/07/12 08:08:37 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.16 2005/08/30 09:11:39 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -35,6 +35,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TBrowser.h"
+#include "TStyle.h"
 
 //______________________________________________________________________________
 //   The 3D axis painter class
@@ -486,14 +487,52 @@ void TAxis3D::UseCurrentStyle()
 //*-*-*-*-*-*Replace current attributes by current style*-*-*-*-*
 //*-*        ===========================================
 
-   fAxis[0].ResetAttAxis("X");
-   fAxis[1].ResetAttAxis("Y");
-   fAxis[2].ResetAttAxis("Z");
+   if (gStyle->IsReading()) {
+      fAxis[0].ResetAttAxis("X");
+      fAxis[1].ResetAttAxis("Y");
+      fAxis[2].ResetAttAxis("Z");
 
-   fAxis[0].SetTitle("x"); fAxis[0].SetLabelColor(kRed);  fAxis[0].SetAxisColor(kRed);
-                           fAxis[1].SetLabelColor(kGreen);fAxis[1].SetAxisColor(kGreen);
-                           fAxis[2].SetLabelColor(kBlue); fAxis[2].SetAxisColor(kBlue);
+      fAxis[0].SetTitle("x");
+      fAxis[0].SetLabelColor(kRed);   fAxis[0].SetAxisColor(kRed);
+      fAxis[1].SetLabelColor(kGreen); fAxis[1].SetAxisColor(kGreen);
+      fAxis[2].SetLabelColor(kBlue);  fAxis[2].SetAxisColor(kBlue);
+   } else {
+      gStyle->SetNdivisions (fAxis[0].GetNdivisions(), "x");
+      gStyle->SetAxisColor  (fAxis[0].GetAxisColor(),  "x");
+      gStyle->SetLabelColor (fAxis[0].GetLabelColor(), "x");
+      gStyle->SetLabelFont  (fAxis[0].GetLabelFont(),  "x");
+      gStyle->SetLabelOffset(fAxis[0].GetLabelOffset(),"x");
+      gStyle->SetLabelSize  (fAxis[0].GetLabelSize(),  "x");
+      gStyle->SetTickLength (fAxis[0].GetTickLength(), "x");
+      gStyle->SetTitleOffset(fAxis[0].GetTitleOffset(),"x");
+      gStyle->SetTitleSize  (fAxis[0].GetTitleSize(),  "x");
+      gStyle->SetTitleColor (fAxis[0].GetTitleColor(), "x");
+      gStyle->SetTitleFont  (fAxis[0].GetTitleFont(),  "x");
 
+      gStyle->SetNdivisions (fAxis[1].GetNdivisions(), "y");
+      gStyle->SetAxisColor  (fAxis[1].GetAxisColor(),  "y");
+      gStyle->SetLabelColor (fAxis[1].GetLabelColor(), "y");
+      gStyle->SetLabelFont  (fAxis[1].GetLabelFont(),  "y");
+      gStyle->SetLabelOffset(fAxis[1].GetLabelOffset(),"y");
+      gStyle->SetLabelSize  (fAxis[1].GetLabelSize(),  "y");
+      gStyle->SetTickLength (fAxis[1].GetTickLength(), "y");
+      gStyle->SetTitleOffset(fAxis[1].GetTitleOffset(),"y");
+      gStyle->SetTitleSize  (fAxis[1].GetTitleSize(),  "y");
+      gStyle->SetTitleColor (fAxis[1].GetTitleColor(), "y");
+      gStyle->SetTitleFont  (fAxis[1].GetTitleFont(),  "y");
+
+      gStyle->SetNdivisions (fAxis[2].GetNdivisions(), "z");
+      gStyle->SetAxisColor  (fAxis[2].GetAxisColor(),  "z");
+      gStyle->SetLabelColor (fAxis[2].GetLabelColor(), "z");
+      gStyle->SetLabelFont  (fAxis[2].GetLabelFont(),  "z");
+      gStyle->SetLabelOffset(fAxis[2].GetLabelOffset(),"z");
+      gStyle->SetLabelSize  (fAxis[2].GetLabelSize(),  "z");
+      gStyle->SetTickLength (fAxis[2].GetTickLength(), "z");
+      gStyle->SetTitleOffset(fAxis[2].GetTitleOffset(),"z");
+      gStyle->SetTitleSize  (fAxis[2].GetTitleSize(),  "z");
+      gStyle->SetTitleColor (fAxis[2].GetTitleColor(), "z");
+      gStyle->SetTitleFont  (fAxis[2].GetTitleFont(),  "z");
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.27 2005/08/18 11:12:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.28 2005/09/02 07:51:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -396,8 +396,10 @@ public:
         void             ToggleToolBar() { fShowToolBar = fShowToolBar ? 0 : 1; }
         void             SetIsReading(Bool_t reading=kTRUE);
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
+        void             SavePrimitive(ofstream &out, Option_t *);
+        void             SaveSource(const char *filename, Option_t *option=0);
 
-        ClassDef(TStyle,12)  //A collection of all graphics attributes
+        ClassDef(TStyle, 13)  //A collection of all graphics attributes
 };
 
 

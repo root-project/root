@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.262 2005/08/15 10:11:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.263 2005/09/03 02:21:32 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4900,14 +4900,25 @@ void TTree::UseCurrentStyle()
 //*-*-*-*-*-*Replace current attributes by current style*-*-*-*-*
 //*-*        ===========================================
 
-   SetFillColor(gStyle->GetHistFillColor());
-   SetFillStyle(gStyle->GetHistFillStyle());
-   SetLineColor(gStyle->GetHistLineColor());
-   SetLineStyle(gStyle->GetHistLineStyle());
-   SetLineWidth(gStyle->GetHistLineWidth());
-   SetMarkerColor(gStyle->GetMarkerColor());
-   SetMarkerStyle(gStyle->GetMarkerStyle());
-   SetMarkerSize(gStyle->GetMarkerSize());
+   if (gStyle->IsReading()) {
+      SetFillColor(gStyle->GetHistFillColor());
+      SetFillStyle(gStyle->GetHistFillStyle());
+      SetLineColor(gStyle->GetHistLineColor());
+      SetLineStyle(gStyle->GetHistLineStyle());
+      SetLineWidth(gStyle->GetHistLineWidth());
+      SetMarkerColor(gStyle->GetMarkerColor());
+      SetMarkerStyle(gStyle->GetMarkerStyle());
+      SetMarkerSize(gStyle->GetMarkerSize());
+   } else {
+      gStyle->SetHistFillColor(GetFillColor());
+      gStyle->SetHistFillStyle(GetFillStyle());
+      gStyle->SetHistLineColor(GetLineColor());
+      gStyle->SetHistLineStyle(GetLineStyle());
+      gStyle->SetHistLineWidth(GetLineWidth());
+      gStyle->SetMarkerColor(GetMarkerColor());
+      gStyle->SetMarkerStyle(GetMarkerStyle());
+      gStyle->SetMarkerSize(GetMarkerSize());
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -4955,7 +4966,7 @@ TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &r
 {
    // Overridden assignment operator.
 
-   if (this != &rhs ) {
+   if (this != &rhs) {
       fDirection = rhs.fDirection;
    }
    return *this;

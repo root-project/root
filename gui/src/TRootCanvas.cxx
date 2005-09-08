@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.83 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.84 2005/08/25 16:38:43 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TClassTree.h"
 #include "TMarker.h"
 #include "TStyle.h"
+#include "TStyleManager.h"
 #include "TVirtualX.h"
 #include "TApplication.h"
 #include "TFile.h"
@@ -82,6 +83,7 @@ enum ERootCanvasCommands {
    kFileCloseCanvas,
    kFileQuit,
 
+   kEditStyle,
    kEditCut,
    kEditCopy,
    kEditPaste,
@@ -362,6 +364,8 @@ void TRootCanvas::CreateCanvas(const char *name)
    fEditClearMenu->AddEntry("&Canvas",  kEditClearCanvas);
 
    fEditMenu = new TGPopupMenu(fClient->GetDefaultRoot());
+   fEditMenu->AddEntry("&Style...",     kEditStyle);
+   fEditMenu->AddSeparator();
    fEditMenu->AddEntry("Cu&t",          kEditCut);
    fEditMenu->AddEntry("&Copy",         kEditCopy);
    fEditMenu->AddEntry("&Paste",        kEditPaste);
@@ -873,10 +877,17 @@ again:
                      } 
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
+                     if (gROOT->GetClass("TStyleManager"))
+                        gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
 
                   // Handle Edit menu items...
+                  case kEditStyle:
+                     if (!gROOT->GetClass("TStyleManager"))
+                        gSystem->Load("libGed"); 
+                     gROOT->ProcessLine("TStyleManager::Show()");
+                     break;
                   case kEditCut:
                      // still noop
                      break;
