@@ -1,4 +1,4 @@
-# Module.mk for reflex module
+# Module.mk for mathmore module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
@@ -179,6 +179,7 @@ clean::         clean-mathmore
 distclean-mathmore: clean-mathmore
 		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
 		@rm -rf $(GSLLIB) $(GSLDIRS)
+		@rm -rf include/MathMore
 
 distclean::     distclean-mathmore
 
