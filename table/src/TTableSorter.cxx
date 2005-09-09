@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.3 2004/07/05 13:31:10 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.3 2004/07/05 13:31:10 brun Exp $
+// $Id: TTableSorter.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -451,34 +451,34 @@ TTableSorter::~TTableSorter()
 
 #define BINARYSEARCH(valuetype) Int_t TTableSorter::BinarySearch(valuetype value) const {\
    switch (fColType) {                                \
-         case  TTable::kFloat:                                \
+         case  TTable::kFloat:                        \
            return SelectSearch(Float_t(value));       \
-         case  TTable::kInt :                                 \
+         case  TTable::kInt :                         \
            return SelectSearch(Int_t(value));         \
-         case  TTable::kLong :                                \
+         case  TTable::kLong :                        \
            return SelectSearch(Long_t(value));        \
-         case  TTable::kShort :                               \
+         case  TTable::kShort :                       \
            return SelectSearch(Short_t(value));       \
-         case  TTable::kDouble :                              \
+         case  TTable::kDouble :                      \
            return SelectSearch(Double_t(value));      \
-         case  TTable::kUInt:                                 \
+         case  TTable::kUInt:                         \
            return SelectSearch(UInt_t(value));        \
-         case  TTable::kULong :                               \
+         case  TTable::kULong :                       \
            return SelectSearch(ULong_t(value));       \
-         case  TTable::kUShort:                               \
+         case  TTable::kUShort:                       \
            return SelectSearch(UShort_t(value));      \
-         case  TTable::kBool:                                 \
+         case  TTable::kBool:                         \
            return SelectSearch(Bool_t(value));        \
-         case  TTable::kUChar:                                \
+         case  TTable::kUChar:                        \
            return SelectSearch(UChar_t(value));       \
-         case  TTable::kChar:                                 \
+         case  TTable::kChar:                         \
            return SelectSearch(Char_t(value));        \
          default:                                     \
            return -1;                                 \
            break;                                     \
       };                                              \
 }                                                     \
-Int_t TTableSorter::BSearch(valuetype value) const{ \
+Int_t TTableSorter::BSearch(valuetype value) const{   \
   union {  Bool_t   Bool;                             \
            Char_t   Char;                             \
            UChar_t  UChar;                            \
@@ -490,36 +490,36 @@ Int_t TTableSorter::BSearch(valuetype value) const{ \
            ULong_t  ULong;                            \
            Float_t  Float;                            \
            Double_t Double;                           \
-         } Value;                                     \
+         } value_;                                    \
                                                       \
-   switch (fColType) {                               \
-         case  TTable::kFloat:                                \
-           Value.Float = Float_t(value); break;       \
-         case  TTable::kInt :                                 \
-           Value.Int   = Int_t(value); break;         \
-         case  TTable::kLong :                                \
-           Value.Long  = Long_t(value); break;        \
-         case  TTable::kShort :                               \
-           Value.Short = Short_t(value); break;       \
-         case  TTable::kDouble :                              \
-           Value.Double=  Double_t(value); break;     \
-         case  TTable::kUInt:                                 \
-           Value.UInt  = UInt_t(value); break;        \
-         case  TTable::kULong :                               \
-           Value.ULong = ULong_t(value); break;       \
-         case  TTable::kUShort:                               \
-           Value.UShort= UShort_t(value); break;      \
-         case  TTable::kUChar:                                \
-           Value.UChar = UChar_t(value); break;       \
-         case  TTable::kChar:                                 \
-           Value.Char  = Char_t(value); break;        \
-         case  TTable::kBool:                                 \
-           Value.Bool  = Bool_t(value); break;        \
+   switch (fColType) {                                \
+         case  TTable::kFloat:                        \
+           value_.Float = Float_t(value); break;      \
+         case  TTable::kInt :                         \
+           value_.Int   = Int_t(value);   break;      \
+         case  TTable::kLong :                        \
+           value_.Long  = Long_t(value);  break;      \
+         case  TTable::kShort :                       \
+           value_.Short = Short_t(value); break;      \
+         case  TTable::kDouble :                      \
+           value_.Double=  Double_t(value);break;     \
+         case  TTable::kUInt:                         \
+           value_.UInt  = UInt_t(value);  break;      \
+         case  TTable::kULong :                       \
+           value_.ULong = ULong_t(value); break;      \
+         case  TTable::kUShort:                       \
+           value_.UShort= UShort_t(value);break;      \
+         case  TTable::kUChar:                        \
+           value_.UChar = UChar_t(value); break;      \
+         case  TTable::kChar:                         \
+           value_.Char  = Char_t(value);  break;      \
+         case  TTable::kBool:                         \
+           value_.Bool  = Bool_t(value);  break;      \
          default:                                     \
            return -1;                                 \
            break;                                     \
    };                                                 \
-   return BSearch(&Value);                            \
+   return BSearch(&value_);                           \
 }                                                     \
 Int_t TTableSorter::SelectSearch(valuetype value) const {         \
    valuetype **array = (valuetype **)fSortIndex;                  \
