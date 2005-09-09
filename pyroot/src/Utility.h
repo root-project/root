@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.17 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.18 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -16,29 +16,29 @@ namespace PyROOT {
 
    R__EXTERN PyObject* gNullObject;
 
-   typedef PyDictEntry* (*dictlookup) ( PyDictObject*, PyObject*, long );
-   R__EXTERN dictlookup gDictLookupOrg;
-   R__EXTERN bool gDictLookupActive;
+   typedef PyDictEntry* (*DictLookup_t) ( PyDictObject*, PyObject*, Long_t );
+   R__EXTERN DictLookup_t gDictLookupOrg;
+   R__EXTERN Bool_t gDictLookupActive;
 
    namespace Utility {
 
    // convenience functions for adding methods to classes
-      bool AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
+      Bool_t AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
                        int flags = METH_VARARGS );
-      bool AddToClass( PyObject* pyclass, const char* label, const char* func );
+      Bool_t AddToClass( PyObject* pyclass, const char* label, const char* func );
 
    // initialize proxy type objects
-      bool InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
+      Bool_t InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
 
    // retrieve the memory buffer from pyobject, return buflength, tc (optional) is python
    // array.array type code, size is type size, buf will point to buffer, and if check is
    // true, some heuristics will be applied to check buffer compatibility with the type
-      int GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, bool check = true );
+      int GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, Bool_t check = kTRUE );
 
    // memory handling
       enum EMemoryPolicy { kHeuristics = 1, kStrict = 2 };
       R__EXTERN EMemoryPolicy gMemoryPolicy;
-      bool SetMemoryPolicy( EMemoryPolicy e );
+      Bool_t SetMemoryPolicy( EMemoryPolicy e );
 
    // data/return types
       const int kPtrMask = 0x10000000;

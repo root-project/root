@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.8 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.9 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -93,9 +93,9 @@ namespace {
 
 
 //- instance handler ------------------------------------------------------------
-PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::Instance()
+PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 {
-   static PyBufferFactory* fac = new PyBufferFactory();
+   static TPyBufferFactory* fac = new TPyBufferFactory;
    return fac;
 }
 
@@ -106,7 +106,7 @@ PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::Instance()
    Py##name##Buffer_SeqMethods.sq_length    = (inquiry) &name##_buffer_length;  \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;
 
-PyROOT::PyBufferFactory::PyBufferFactory()
+PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
    PYROOT_INSTALL_PYBUFFER_METHODS( Short,  Short_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( UShort, UShort_t )
@@ -119,14 +119,14 @@ PyROOT::PyBufferFactory::PyBufferFactory()
 }
 
 //____________________________________________________________________________
-PyROOT::PyBufferFactory::~PyBufferFactory()
+PyROOT::TPyBufferFactory::~TPyBufferFactory()
 {
 }
 
 
 //- public members --------------------------------------------------------------
 #define PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( name, type )                     \
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( type* address, int size )\
+PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, int size )\
 {                                                                               \
    size = size < 0 ? int(INT_MAX/double(sizeof(type)))*sizeof(type) : size*sizeof(type);\
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );        \
@@ -135,7 +135,7 @@ PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( type* address, int size 
    return buf;                                                                  \
 }                                                                               \
                                                                                 \
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( type* address, PyObject* scb ) \
+PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, PyObject* scb )\
 {                                                                               \
    PyObject* buf = PyBuffer_FromMemory( address, 0 );                           \
    if ( buf != 0 && PyCallable_Check( scb ) ) {                                 \

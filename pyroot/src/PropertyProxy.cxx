@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.5 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.6 2005/08/04 18:46:01 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -33,7 +33,7 @@ namespace {
       }
 
    // normal getter access
-      long address = pyprop->GetAddress( pyobj );
+      Long_t address = pyprop->GetAddress( pyobj );
       if ( PyErr_Occurred() || address == 0 )
          return 0;
 
@@ -56,7 +56,7 @@ namespace {
             G__TypeInfo( pyprop->fDataMember->GetFullTypeName() ).TrueName(), 1 );
 
          TClass* klass = gROOT->GetClass( sname.c_str(), 1 );
-         long* ref = *((long**)address);
+         Long_t* ref = *((Long_t**)address);
 
          if ( klass && ref ) {
          // special case: cross-cast to real class for TGlobal returns
@@ -74,7 +74,7 @@ namespace {
    {
       const int errret = -1;
 
-      long address = pyprop->GetAddress( pyobj );
+      Long_t address = pyprop->GetAddress( pyobj );
       if ( PyErr_Occurred() )
          return errret;
 
@@ -181,15 +181,15 @@ void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
 }
 
 //____________________________________________________________________________
-long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
+Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // get offsets from CINT
    G__ClassInfo* clInfo = fDataMember->GetClass()->GetClassInfo();
 
 // class attributes
    if ( fDataMember->Property() & G__BIT_ISSTATIC ) {
-      long offset = 0;
+      Long_t offset = 0;
       G__DataMemberInfo dmi = clInfo->GetDataMember( fName.c_str(), &offset );
-      return (long)((G__var_array*)dmi.Handle())->p[dmi.Index()];
+      return (Long_t)((G__var_array*)dmi.Handle())->p[dmi.Index()];
    }
 
 // instance attributes; requires object for full address
@@ -205,7 +205,7 @@ long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
       return 0;
    }
 
-   long offset = G__isanybase(
-      clInfo->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (long)obj );
-   return (long)obj + offset + fDataMember->GetOffsetCint();
+   Long_t offset = G__isanybase(
+      clInfo->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (Long_t)obj );
+   return (Long_t)obj + offset + fDataMember->GetOffsetCint();
 }

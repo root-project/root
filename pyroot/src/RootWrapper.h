@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.7 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.8 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -32,8 +32,8 @@ namespace PyROOT {
    PyObject* GetRootGlobalFromString( const std::string& name );
 
 // bind a ROOT object into a Python object
-   PyObject* BindRootObjectNoCast( void* object, TClass* klass, bool isRef = false );
-   PyObject* BindRootObject( void* object, TClass* klass, bool isRef = false );
+   PyObject* BindRootObjectNoCast( void* object, TClass* klass, Bool_t isRef = kFALSE );
+   PyObject* BindRootObject( void* object, TClass* klass, Bool_t isRef = kFALSE );
    PyObject* BindRootGlobal( TGlobal* );
 
 } // namespace PyROOT

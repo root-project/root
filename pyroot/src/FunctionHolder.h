@@ -1,7 +1,7 @@
 // Author: Wim Lavrijsen, Apr 2005
 
-#ifndef PYROOT_FUNCTIONHOLDER_H
-#define PYROOT_FUNCTIONHOLDER_H
+#ifndef PYROOT_TFUNCTIONHOLDER_H
+#define PYROOT_TFUNCTIONHOLDER_H
 
 // ROOT
 class TFunction;
@@ -18,13 +18,13 @@ namespace PyROOT {
       @version 2.0
  */
 
-   class FunctionHolder : public MethodHolder {
+   class TFunctionHolder : public TMethodHolder {
    public:
-      FunctionHolder( TFunction* function );
+      TFunctionHolder( TFunction* function );
 
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );
    };
 
 } // namespace PyROOT
 
-#endif // !PYROOT_FUNCTIONHOLDER_H
+#endif // !PYROOT_TFUNCTIONHOLDER_H

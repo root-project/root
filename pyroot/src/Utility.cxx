@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.20 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.21 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -22,8 +22,8 @@
 //- data _____________________________________________________________________
 PyObject* PyROOT::gNullObject = 0;
 
-PyROOT::dictlookup PyROOT::gDictLookupOrg = 0;
-bool PyROOT::gDictLookupActive = false;
+PyROOT::DictLookup_t PyROOT::gDictLookupOrg = 0;
+Bool_t PyROOT::gDictLookupActive = kFALSE;
 
 PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility::kHeuristics;
 
@@ -33,9 +33,9 @@ namespace {
 
    using namespace PyROOT::Utility;
 
-   class InitOperatorMapping_ {
+   struct InitOperatorMapping_t {
    public:
-      InitOperatorMapping_() {
+      InitOperatorMapping_t() {
          gC2POperatorMapping[ "[]" ]  = "__getitem__";
          gC2POperatorMapping[ "()" ]  = "__call__";
          gC2POperatorMapping[ "+" ]   = "__add__";
@@ -73,18 +73,18 @@ namespace {
 
 
 //- public functions ---------------------------------------------------------
-bool PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
+Bool_t PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
 {
    if ( kHeuristics <= e && e <= kStrict ) {
       gMemoryPolicy = e;
-      return true;
+      return kTRUE;
    }
-   return false;
+   return kFALSE;
 }
 
 
 //____________________________________________________________________________
-bool PyROOT::Utility::AddToClass(
+Bool_t PyROOT::Utility::AddToClass(
       PyObject* pyclass, const char* label, PyCFunction cfunc, int flags )
 {
    PyMethodDef* pdef = new PyMethodDef;
@@ -100,42 +100,42 @@ bool PyROOT::Utility::AddToClass(
    Py_DECREF( func );
 
    if ( PyErr_Occurred() )
-      return false;
+      return kFALSE;
 
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-bool PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const char* func )
+Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const char* func )
 {
    PyObject* pyfunc = PyObject_GetAttrString( pyclass, const_cast< char* >( func ) );
    if ( ! pyfunc )
-      return false;
+      return kFALSE;
 
    return PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
 }
 
 
 //____________________________________________________________________________
-bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const char* name )
+Bool_t PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const char* name )
 {
 // finalize proxy type
    if ( PyType_Ready( pytype ) < 0 )
-      return false;
+      return kFALSE;
 
 // add proxy type to the given (ROOT) module
    Py_INCREF( pytype );         // PyModule_AddObject steals reference
    if ( PyModule_AddObject( module, (char*)name, (PyObject*)pytype ) < 0 ) {
       Py_DECREF( pytype );
-      return false;
+      return kFALSE;
    }
 
 // declare success
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, bool check )
+int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, Bool_t check )
 {
 // special case: don't handle strings here (yes, they're buffers, but not quite)
    if ( PyString_Check( pyobject ) )
@@ -150,7 +150,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
    // get the buffer
       int buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
 
-      if ( check == true ) {
+      if ( check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
          if ( pytc != 0 ) {     // for array objects

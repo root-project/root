@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.3 2005/08/25 06:44:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.4 2005/08/31 21:30:34 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_OBJECTPROXY_H
@@ -68,13 +68,13 @@ namespace PyROOT {
    R__EXTERN PyTypeObject ObjectProxy_Type;
 
    template< typename T >
-   inline bool ObjectProxy_Check( T* object )
+   inline Bool_t ObjectProxy_Check( T* object )
    {
       return object && PyObject_TypeCheck( object, &ObjectProxy_Type );
    }
 
    template< typename T >
-   inline bool ObjectProxy_CheckExact( T* object )
+   inline Bool_t ObjectProxy_CheckExact( T* object )
    {
       return object && object->ob_type == &ObjectProxy_Type;
    }

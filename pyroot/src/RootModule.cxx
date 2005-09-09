@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.17 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.18 2005/08/25 06:44:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -25,7 +25,7 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, long hash )
+   PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, Long_t hash )
    {
    // first search dictionary itself
       PyDictEntry* ep = (*gDictLookupOrg)( mp, key, hash );
@@ -46,7 +46,7 @@ namespace {
          return ep;
 
    // all failed, start calling into ROOT
-      gDictLookupActive = true;
+      gDictLookupActive = kTRUE;
 
    // attempt to get ROOT enum/global/class
       PyObject* val = PyObject_GetAttr( gRootModule, key );
@@ -83,7 +83,7 @@ namespace {
       }
 
    // stopped calling into ROOT
-      gDictLookupActive = false;
+      gDictLookupActive = kFALSE;
 
       return ep;
    }
@@ -95,7 +95,7 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
 
-      ((dictlookup&)((PyDictObject*)dict)->ma_lookup) = RootLookDictString;
+      ((DictLookup_t&)((PyDictObject*)dict)->ma_lookup) = RootLookDictString;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -232,7 +232,7 @@ namespace {
          return 0;
       }
 
-      return BindRootObjectNoCast( 0, klass, false );
+      return BindRootObjectNoCast( 0, klass, kFALSE );
    }
 
 //____________________________________________________________________________
@@ -242,7 +242,7 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
          return 0;
 
-      long l = PyInt_AS_LONG( policy );
+      Long_t l = PyInt_AS_LONG( policy );
       if ( Utility::SetMemoryPolicy( (Utility::EMemoryPolicy)l ) ) {
          Py_INCREF( Py_None );
          return Py_None;
@@ -260,7 +260,7 @@ namespace {
                 &ObjectProxy_Type, (PyObject*)&pyobj, &PyInt_Type, &pykeep ) )
          return 0;
 
-      (bool)PyLong_AsLong( pykeep ) ? pyobj->HoldOn() : pyobj->Release();
+      (Bool_t)PyLong_AsLong( pykeep ) ? pyobj->HoldOn() : pyobj->Release();
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -270,7 +270,7 @@ namespace {
 
 
 //- data -----------------------------------------------------------------------
-static PyMethodDef PyROOTMethods[] = {
+static PyMethodDef gPyROOTMethods[] = {
    { (char*) "makeRootClass", (PyCFunction) PyROOT::MakeRootClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "getRootGlobal", (PyCFunction) PyROOT::GetRootGlobal,
@@ -298,11 +298,11 @@ extern "C" void initlibPyROOT()
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();
-   gDictLookupOrg = (dictlookup)((PyDictObject*)dict)->ma_lookup;
+   gDictLookupOrg = (DictLookup_t)((PyDictObject*)dict)->ma_lookup;
    Py_DECREF( dict );
 
 // setup PyROOT
-   gRootModule = Py_InitModule( const_cast< char* >( "libPyROOT" ), PyROOTMethods );
+   gRootModule = Py_InitModule( const_cast< char* >( "libPyROOT" ), gPyROOTMethods );
    if ( ! gRootModule )
       return;
    Py_INCREF( gRootModule );

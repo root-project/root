@@ -1,8 +1,8 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.5 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.6 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
-#ifndef PYROOT_MEMORYREGULATOR_H
-#define PYROOT_MEMORYREGULATOR_H
+#ifndef PYROOT_TMEMORYREGULATOR_H
+#define PYROOT_TMEMORYREGULATOR_H
 
 // ROOT
 #include "TObject.h"
@@ -21,9 +21,9 @@ namespace PyROOT {
 
    class ObjectProxy;
 
-   class MemoryRegulator : public TObject {
+   class TMemoryRegulator : public TObject {
    public:
-      MemoryRegulator();
+      TMemoryRegulator();
 
    // callback for ROOT/CINT
       virtual void RecursiveRemove( TObject* object );
@@ -44,4 +44,4 @@ namespace PyROOT {
 
 } // namespace PyROOT
 
-#endif // !PYROOT_MEMORYREGULATOR_H
+#endif // !PYROOT_TMEMORYREGULATOR_H

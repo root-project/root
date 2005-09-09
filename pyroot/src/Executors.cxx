@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.10 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.11 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -10,7 +10,6 @@
 #include "Utility.h"
 
 // ROOT
-#include "Rtypes.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "DllImport.h"
@@ -28,46 +27,46 @@ PyROOT::ExecFactories_t PyROOT::gExecFactories;
 
 
 //- executors for built-ins ---------------------------------------------------
-PyObject* PyROOT::LongExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TLongExecutor::Execute( G__CallFunc* func, void* self )
 {
-   return PyLong_FromLong( (long)func->ExecInt( self ) );
+   return PyLong_FromLong( (Long_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::CharExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TCharExecutor::Execute( G__CallFunc* func, void* self )
 {
-   long result = func->ExecInt( self );
+   Long_t result = func->ExecInt( self );
    char c[2]; c[1] = '\0';
    c[0] = (char) result;
    return PyString_FromString( c );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::IntExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TIntExecutor::Execute( G__CallFunc* func, void* self )
 {
-   return PyInt_FromLong( (long)func->ExecInt( self ) );
+   return PyInt_FromLong( (Long_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::ULongExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TULongExecutor::Execute( G__CallFunc* func, void* self )
 {
-   return PyLong_FromUnsignedLong( (unsigned long)func->ExecInt( self ) );
+   return PyLong_FromUnsignedLong( (ULong_t)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::LongLongExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TLongLongExecutor::Execute( G__CallFunc* func, void* self )
 {
    return PyLong_FromLongLong( (Long64_t)G__Longlong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::DoubleExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TDoubleExecutor::Execute( G__CallFunc* func, void* self )
 {
    return PyFloat_FromDouble( (double)func->ExecDouble( self ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::VoidExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TVoidExecutor::Execute( G__CallFunc* func, void* self )
 {
    func->Exec( self );
    Py_INCREF( Py_None );
@@ -75,7 +74,7 @@ PyObject* PyROOT::VoidExecutor::Execute( G__CallFunc* func, void* self )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::CStringExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 {
    char* result = (char*)func->ExecInt( self );
    if ( ! result )
@@ -86,14 +85,14 @@ PyObject* PyROOT::CStringExecutor::Execute( G__CallFunc* func, void* self )
 
 
 //- pointer/array executors ---------------------------------------------------
-PyObject* PyROOT::VoidArrayExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TVoidArrayExecutor::Execute( G__CallFunc* func, void* self )
 {  
    return PyLong_FromVoidPtr( (void*)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
 #define PYROOT_IMPLEMENT_ARRAY_EXECUTOR( name, type )                        \
-PyObject* PyROOT::name##ArrayExecutor::Execute( G__CallFunc* func, void* self )\
+PyObject* PyROOT::T##name##ArrayExecutor::Execute( G__CallFunc* func, void* self )\
 {                                                                            \
    return BufFac_t::Instance()->PyBuffer_FromMemory( (type*)func->ExecInt( self ) );\
 }
@@ -109,7 +108,7 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 
 
 //- special cases ------------------------------------------------------------
-PyObject* PyROOT::STLStringExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
 {
    std::string* result = (std::string*)func->ExecInt( self );
    if ( ! result )
@@ -119,19 +118,19 @@ PyObject* PyROOT::STLStringExecutor::Execute( G__CallFunc* func, void* self )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TGlobalExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TTGlobalExecutor::Execute( G__CallFunc* func, void* self )
 {
    return BindRootGlobal( (TGlobal*)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::RootObjectExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TRootObjectExecutor::Execute( G__CallFunc* func, void* self )
 {
    return BindRootObject( (void*)func->ExecInt( self ), fClass );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* self )
+PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execution will bring a temporary in existence ...
    void* result1 = (void*)func->ExecInt( self );
@@ -157,7 +156,7 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::ConstructorExecutor::Execute( G__CallFunc* func, void* klass )
+PyObject* PyROOT::TConstructorExecutor::Execute( G__CallFunc* func, void* klass )
 {
 // package return address in PyObject* for caller to handle appropriately
    return (PyObject*)func->ExecInt( klass );
@@ -165,9 +164,9 @@ PyObject* PyROOT::ConstructorExecutor::Execute( G__CallFunc* func, void* klass )
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::Executor* PyROOT::CreateExecutor( const std::string& fullType )
+PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 {
-   Executor* result = 0;
+   TExecutor* result = 0;
    std::string realType = TClassEdit::ShortType( G__TypeInfo( fullType.c_str() ).TrueName(), 1 );
 
 // select and set executor
@@ -179,7 +178,7 @@ PyROOT::Executor* PyROOT::CreateExecutor( const std::string& fullType )
       TClass* klass = gROOT->GetClass( realType.c_str() );
       if ( klass != 0 ) {
          result = cpd != ""  ? \
-            new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
+            new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
       } else {
       // could still be an enum ...
          G__TypeInfo ti( fullType.c_str() );
@@ -201,9 +200,9 @@ PyROOT::Executor* PyROOT::CreateExecutor( const std::string& fullType )
 
 //____________________________________________________________________________
 #define PYROOT_EXECUTOR_FACTORY( name )                \
-Executor* Create##name()                               \
+TExecutor* Create##name()                              \
 {                                                      \
-   return new name ();                                 \
+   return new T##name;                                 \
 }
 
 namespace {
@@ -233,47 +232,47 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( ConstructorExecutor )
 
 // executor factories for ROOT types
-   typedef std::pair< const char*, ExecutorFactory_t > ncp_t;
+   typedef std::pair< const char*, ExecutorFactory_t > NFp_t;
 
-   ncp_t factories_[] = {
+   NFp_t factories_[] = {
    // factories for built-ins
-      ncp_t( "char",               &CreateCharExecutor                ),
-      ncp_t( "unsigned char",      &CreateCharExecutor                ),
-      ncp_t( "short",              &CreateIntExecutor                 ),
-      ncp_t( "unsigned short",     &CreateIntExecutor                 ),
-      ncp_t( "int",                &CreateIntExecutor                 ),
-      ncp_t( "unsigned int",       &CreateULongExecutor               ),
-      ncp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
-      ncp_t( "long",               &CreateLongExecutor                ),
-      ncp_t( "unsigned long",      &CreateULongExecutor               ),
-      ncp_t( "long long",          &CreateLongLongExecutor            ),
-      ncp_t( "float",              &CreateDoubleExecutor              ),
-      ncp_t( "double",             &CreateDoubleExecutor              ),
-      ncp_t( "void",               &CreateVoidExecutor                ),
-      ncp_t( "bool",               &CreateIntExecutor                 ),
-      ncp_t( "const char*",        &CreateCStringExecutor             ),
-      ncp_t( "char*",              &CreateCStringExecutor             ),
+      NFp_t( "char",               &CreateCharExecutor                ),
+      NFp_t( "unsigned char",      &CreateCharExecutor                ),
+      NFp_t( "short",              &CreateIntExecutor                 ),
+      NFp_t( "unsigned short",     &CreateIntExecutor                 ),
+      NFp_t( "int",                &CreateIntExecutor                 ),
+      NFp_t( "unsigned int",       &CreateULongExecutor               ),
+      NFp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
+      NFp_t( "long",               &CreateLongExecutor                ),
+      NFp_t( "unsigned long",      &CreateULongExecutor               ),
+      NFp_t( "long long",          &CreateLongLongExecutor            ),
+      NFp_t( "float",              &CreateDoubleExecutor              ),
+      NFp_t( "double",             &CreateDoubleExecutor              ),
+      NFp_t( "void",               &CreateVoidExecutor                ),
+      NFp_t( "bool",               &CreateIntExecutor                 ),
+      NFp_t( "const char*",        &CreateCStringExecutor             ),
+      NFp_t( "char*",              &CreateCStringExecutor             ),
 
    // pointer/array factories
-      ncp_t( "void*",              &CreateVoidArrayExecutor           ),
-      ncp_t( "short*",             &CreateShortArrayExecutor          ),
-      ncp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
-      ncp_t( "int*",               &CreateIntArrayExecutor            ),
-      ncp_t( "unsigned int*",      &CreateUIntArrayExecutor           ),
-      ncp_t( "long*",              &CreateLongArrayExecutor           ),
-      ncp_t( "unsigned long*",     &CreateULongArrayExecutor          ),
-      ncp_t( "float*",             &CreateFloatArrayExecutor          ),
-      ncp_t( "double*",            &CreateDoubleArrayExecutor         ),
+      NFp_t( "void*",              &CreateVoidArrayExecutor           ),
+      NFp_t( "short*",             &CreateShortArrayExecutor          ),
+      NFp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
+      NFp_t( "int*",               &CreateIntArrayExecutor            ),
+      NFp_t( "unsigned int*",      &CreateUIntArrayExecutor           ),
+      NFp_t( "long*",              &CreateLongArrayExecutor           ),
+      NFp_t( "unsigned long*",     &CreateULongArrayExecutor          ),
+      NFp_t( "float*",             &CreateFloatArrayExecutor          ),
+      NFp_t( "double*",            &CreateDoubleArrayExecutor         ),
 
    // factories for special cases
-      ncp_t( "std::string",        &CreateSTLStringExecutor           ),
-      ncp_t( "TGlobal*",           &CreateTGlobalExecutor             ),
-      ncp_t( "__init__",           &CreateConstructorExecutor         )
+      NFp_t( "std::string",        &CreateSTLStringExecutor           ),
+      NFp_t( "TGlobal*",           &CreateTGlobalExecutor             ),
+      NFp_t( "__init__",           &CreateConstructorExecutor         )
    };
 
-   class InitExecFactories_ {
+   struct InitExecFactories_t {
    public:
-      InitExecFactories_()
+      InitExecFactories_t()
       {
          int nf = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
          for ( int i = 0; i < nf; ++i ) {

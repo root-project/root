@@ -1,10 +1,9 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.10 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.11 2005/08/25 06:44:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
 
 // ROOT
-#include "Rtypes.h"
 #include "DllImport.h"
 #include "TString.h"
 #include "TClassRef.h"
@@ -26,38 +25,38 @@ namespace PyROOT {
       @version 1.0
 */
 
-   class Converter {
+   class TConverter {
    public:
-      virtual ~Converter() {}
+      virtual ~TConverter() {}
 
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* ) = 0;
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* ) = 0;
       virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual Bool_t ToMemory( PyObject* value, void* address );
    };
 
 #define PYROOT_DECLARE_BASIC_CONVERTER( name )                                \
-   class name##Converter : public Converter {                                 \
+   class T##name##Converter : public TConverter {                             \
    public:                                                                    \
-      virtual bool SetArg( PyObject*, G__CallFunc* );                         \
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );                       \
       virtual PyObject* FromMemory( void* );                                  \
-      virtual bool ToMemory( PyObject*, void* );                              \
+      virtual Bool_t ToMemory( PyObject*, void* );                            \
    }
 
 #define PYROOT_DECLARE_BASIC_CONVERTER2( name, base )                         \
-   class name##Converter : public base##Converter {                           \
+   class T##name##Converter : public T##base##Converter {                     \
    public:                                                                    \
       virtual PyObject* FromMemory( void* );                                  \
-      virtual bool ToMemory( PyObject*, void* );                              \
+      virtual Bool_t ToMemory( PyObject*, void* );                            \
    }
 
 #define PYROOT_DECLARE_ARRAY_CONVERTER( name )                                \
-   class name##Converter : public Converter {                                 \
+   class T##name##Converter : public TConverter {                             \
    public:                                                                    \
-      name##Converter( int size = -1 ) { fSize = size; }                      \
-      virtual bool SetArg( PyObject*, G__CallFunc* );                         \
+      T##name##Converter( int size = -1 ) { fSize = size; }                   \
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );                       \
       virtual PyObject* FromMemory( void* );                                  \
-      virtual bool ToMemory( PyObject*, void* );                              \
+      virtual Bool_t ToMemory( PyObject*, void* );                            \
    private:                                                                   \
      int fSize;                                                               \
    }
@@ -78,34 +77,34 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
    PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );
 
-   class VoidConverter : public Converter {
+   class TVoidConverter : public TConverter {
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
    };
 
-   class CStringConverter : public Converter {
+   class TCStringConverter : public TConverter {
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual Bool_t ToMemory( PyObject* value, void* address );
 
    private:
       std::string fBuffer;
    };
 
 // pointer/array conversions
-   class VoidArrayConverter : public Converter {
+   class TVoidArrayConverter : public TConverter {
    public:
-      VoidArrayConverter( bool keepControl = true ) { fKeepControl = keepControl; }
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      TVoidArrayConverter( Bool_t keepControl = kTRUE ) { fKeepControl = keepControl; }
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual Bool_t ToMemory( PyObject* value, void* address );
 
    protected:
-      bool KeepControl() { return fKeepControl; }
+      Bool_t KeepControl() { return fKeepControl; }
 
    private:
-      bool fKeepControl;
+      Bool_t fKeepControl;
    };
 
    PYROOT_DECLARE_ARRAY_CONVERTER( ShortArray );
@@ -117,18 +116,18 @@ namespace PyROOT {
    PYROOT_DECLARE_ARRAY_CONVERTER( FloatArray );
    PYROOT_DECLARE_ARRAY_CONVERTER( DoubleArray );
 
-   class LongLongArrayConverter : public VoidArrayConverter {
+   class TLongLongArrayConverter : public TVoidArrayConverter {
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
    };
 
 // converters for special cases
 #define PYROOT_DECLARE_STRING_CONVERTER( name, strtype )                      \
-   class name##Converter : public Converter {                                 \
+   class T##name##Converter : public TConverter {                             \
    public:                                                                    \
-      virtual bool SetArg( PyObject*, G__CallFunc* );                         \
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );                       \
       virtual PyObject* FromMemory( void* address );                          \
-      virtual bool ToMemory( PyObject* value, void* address );                \
+      virtual Bool_t ToMemory( PyObject* value, void* address );              \
    private:                                                                   \
       strtype fBuffer;                                                        \
    }
@@ -136,50 +135,50 @@ namespace PyROOT {
    PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
    PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
 
-   class RootObjectConverter: public VoidArrayConverter {
+   class TRootObjectConverter: public TVoidArrayConverter {
    public:
-      RootObjectConverter( const TClassRef& klass, bool keepControl = false ) :
-         VoidArrayConverter( keepControl ), fClass( klass ) {}
-      RootObjectConverter( TClass* klass, bool keepControl = false ) :
-         VoidArrayConverter( keepControl ), fClass( klass ) {}
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      TRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
+         TVoidArrayConverter( keepControl ), fClass( klass ) {}
+      TRootObjectConverter( TClass* klass, Bool_t keepControl = kFALSE ) :
+         TVoidArrayConverter( keepControl ), fClass( klass ) {}
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual Bool_t ToMemory( PyObject* value, void* address );
 
    protected:
       TClassRef fClass;
    };
 
-   class RootObjectPtrConverter : public RootObjectConverter {
+   class TRootObjectPtrConverter : public TRootObjectConverter {
    public:
-      RootObjectPtrConverter( const TClassRef& klass, bool keepControl = false ) :
-         RootObjectConverter( klass, keepControl ) {}
-      RootObjectPtrConverter( TClass* klass, bool keepControl = false ) :
-         RootObjectConverter( klass, keepControl ) {}
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      TRootObjectPtrConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
+         TRootObjectConverter( klass, keepControl ) {}
+      TRootObjectPtrConverter( TClass* klass, Bool_t keepControl = kFALSE ) :
+         TRootObjectConverter( klass, keepControl ) {}
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual Bool_t ToMemory( PyObject* value, void* address );
    };
 
-   class VoidPtrRefConverter : public Converter {
+   class TVoidPtrRefConverter : public TConverter {
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
    };
 
-   class VoidPtrPtrConverter : public Converter {
+   class TVoidPtrPtrConverter : public TConverter {
    public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
    };
 
    PYROOT_DECLARE_BASIC_CONVERTER( PyObject );
 
 // factories
-   typedef Converter* (*ConverterFactory_t) ( long user );
+   typedef TConverter* (*ConverterFactory_t) ( Long_t user );
    typedef std::map< std::string, ConverterFactory_t > ConvFactories_t;
    R__EXTERN ConvFactories_t gConvFactories;
 
 // create converter from fully qualified type
-   Converter* CreateConverter( const std::string& fullType, long user = -1 );
+   TConverter* CreateConverter( const std::string& fullType, Long_t user = -1 );
 
 } // namespace PyROOT
 

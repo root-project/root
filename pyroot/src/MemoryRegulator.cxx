@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.9 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.10 2005/08/31 21:30:34 pcanal Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -16,15 +16,15 @@
 
 
 //- static data -----------------------------------------------------------------
-PyROOT::MemoryRegulator::ObjectMap_t PyROOT::MemoryRegulator::fgObjectTable;
+PyROOT::TMemoryRegulator::ObjectMap_t PyROOT::TMemoryRegulator::fgObjectTable;
 
 
 namespace {
 
 // memory regulater callback for deletion of registered objects
    PyMethodDef methoddef_ = {
-      const_cast< char* >( "MemoryRegulator_internal_ObjectEraseCallback" ),
-      (PyCFunction) PyROOT::MemoryRegulator::ObjectEraseCallback,
+      const_cast< char* >( "TMemoryRegulator_internal_ObjectEraseCallback" ),
+      (PyCFunction) PyROOT::TMemoryRegulator::ObjectEraseCallback,
       METH_O,
       NULL
    };
@@ -49,8 +49,8 @@ namespace {
    };
 
 //____________________________________________________________________________
-   struct Init_PyROOT_NoneType {
-      Init_PyROOT_NoneType()
+   struct InitPyROOT_NoneType_t {
+      InitPyROOT_NoneType_t()
       {
          memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
@@ -63,26 +63,26 @@ namespace {
 
          PyROOT_NoneType.tp_traverse    = (traverseproc) 0;
          PyROOT_NoneType.tp_clear       = (inquiry) 0;
-         PyROOT_NoneType.tp_dealloc     = (destructor)  &Init_PyROOT_NoneType::dealloc;
+         PyROOT_NoneType.tp_dealloc     = (destructor)  &InitPyROOT_NoneType_t::DeAlloc;
          PyROOT_NoneType.tp_repr        = Py_None->ob_type->tp_repr;
-         PyROOT_NoneType.tp_richcompare = (richcmpfunc) &Init_PyROOT_NoneType::richcompare;
-         PyROOT_NoneType.tp_compare     = (cmpfunc) &Init_PyROOT_NoneType::compare;
-         PyROOT_NoneType.tp_hash        = (hashfunc) &Init_PyROOT_NoneType::ptrhash;
+         PyROOT_NoneType.tp_richcompare = (richcmpfunc) &InitPyROOT_NoneType_t::RichCompare;
+         PyROOT_NoneType.tp_compare     = (cmpfunc) &InitPyROOT_NoneType_t::Compare;
+         PyROOT_NoneType.tp_hash        = (hashfunc) &InitPyROOT_NoneType_t::PtrHash;
 
          PyROOT_NoneType.tp_as_mapping  = &PyROOT_NoneType_mapping;
 
          PyType_Ready( &PyROOT_NoneType );
       }
 
-      static void dealloc( PyObject* obj ) { obj->ob_type->tp_free( obj ); }
-      static int ptrhash( PyObject* obj ) { return (int) long(obj); }
+      static void DeAlloc( PyObject* obj ) { obj->ob_type->tp_free( obj ); }
+      static int PtrHash( PyObject* obj ) { return (int)Long_t(obj); }
 
-      static PyObject* richcompare( PyObject*, PyObject* other, int opid )
+      static PyObject* RichCompare( PyObject*, PyObject* other, int opid )
       {
          return PyObject_RichCompare( other, Py_None, opid );
       }
 
-      static int compare( PyObject*, PyObject* other )
+      static int Compare( PyObject*, PyObject* other )
       {
          return PyObject_Compare( other, Py_None );
       }
@@ -92,14 +92,14 @@ namespace {
 
 
 //- constructor -----------------------------------------------------------------
-PyROOT::MemoryRegulator::MemoryRegulator()
+PyROOT::TMemoryRegulator::TMemoryRegulator()
 {
-   static Init_PyROOT_NoneType init_PyROOT_NoneType;
+   static InitPyROOT_NoneType_t initPyROOT_NoneType;
 }
 
 
 //- public members --------------------------------------------------------------
-void PyROOT::MemoryRegulator::RecursiveRemove( TObject* object )
+void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 {
    if ( ! object || fgObjectTable.size() == 0 )   // table can be deleted before libCore is done
       return;
@@ -127,7 +127,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* object )
             PyROOT_NoneType.tp_clear      = pyobj->ob_type->tp_clear;
             PyROOT_NoneType.tp_free       = pyobj->ob_type->tp_free;
          } else if ( PyROOT_NoneType.tp_traverse != pyobj->ob_type->tp_traverse ) {
-            std::cerr << "in PyROOT::MemoryRegulater, unexpected object of type: "
+            std::cerr << "in PyROOT::TMemoryRegulater, unexpected object of type: "
                       << pyobj->ob_type->tp_name << std::endl;
 
          // leave before too much damage is done
@@ -156,7 +156,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* object )
 }
 
 //____________________________________________________________________________
-void PyROOT::MemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
+void PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
    if ( ! ( pyobj && object ) )
       return;
@@ -169,7 +169,7 @@ void PyROOT::MemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* objec
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* object )
+PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object )
 {
    if ( ! object )
       return 0;
@@ -186,7 +186,7 @@ PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* object )
 
 
 //- private static members ------------------------------------------------------
-PyObject* PyROOT::MemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* pyref )
+PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* pyref )
 {
 // called when one of the python objects we've registered is going away
    ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( pyref );

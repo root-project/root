@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.5 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.6 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -17,22 +17,22 @@
 
 
 //- protected members --------------------------------------------------------
-bool PyROOT::ConstructorHolder::InitExecutor_( Executor*& executor )
+Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
 {
    executor = (gExecFactories[ "__init__" ])();
-   return true;
+   return kTRUE;
 }
 
 
 //- constructor --------------------------------------------------------------
-PyROOT::ConstructorHolder::ConstructorHolder( TClass* klass, TMethod* method ) :
-      MethodHolder( klass, method )
+PyROOT::TConstructorHolder::TConstructorHolder( TClass* klass, TMethod* method ) :
+      TMethodHolder( klass, method )
 {
 }
 
 
 //- public members -----------------------------------------------------------
-PyObject* PyROOT::ConstructorHolder::GetDocString()
+PyObject* PyROOT::TConstructorHolder::GetDocString()
 {
 // GetMethod() may return zero if this is just a special case place holder
    const char* clName = GetClass()->GetName();
@@ -41,7 +41,7 @@ PyObject* PyROOT::ConstructorHolder::GetDocString()
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -60,11 +60,11 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
    TClass* klass = GetClass();
 
 // perform the call (TODO: fails for loaded macro's, and New() is insufficient)
-   long address = (long)Execute( klass );
+   Long_t address = (Long_t)Execute( klass );
    if ( ! address ) {
    // we're probably dealing with an interpreted class
       if ( PyTuple_GET_SIZE( args ) == 0 )
-         address = (long) klass->New();      // attempt default ctor
+         address = (Long_t)klass->New();      // attempt default ctor
 
    // else fail ...
 
@@ -85,7 +85,7 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
    // allow lookup upon destruction on the ROOT/CINT side for TObjects
       TObject* object = (TObject*) klass->DynamicCast( TObject::Class(), (void*)address );
       if ( object )
-         MemoryRegulator::RegisterObject( self, object );
+         TMemoryRegulator::RegisterObject( self, object );
 
    // done with self
       Py_DECREF( self );

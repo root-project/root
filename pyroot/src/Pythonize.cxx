@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.23 2005/07/11 16:11:59 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.24 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -37,7 +37,7 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   inline bool IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
+   inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
 
@@ -98,12 +98,12 @@ namespace {
 //____________________________________________________________________________
    PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
-      long idx = PyInt_AsLong( index );
+      Long_t idx = PyInt_AsLong( index );
       if ( PyErr_Occurred() )
          return 0;
 
       PyObject* pyindex = 0;
-      long size = PySequence_Size( self );
+      Long_t size = PySequence_Size( self );
       if ( idx >= size || ( idx < 0 && idx <= -size ) ) {
          PyErr_SetString( PyExc_IndexError, "index out of range" );
          return 0;
@@ -236,7 +236,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* TCollectionMul( PyObject*, PyObject* args )
    {
-      ObjectProxy* self = 0; long imul = 0;
+      ObjectProxy* self = 0; Long_t imul = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Ol:__mul__" ), &self, &imul ) )
          return 0;
 
@@ -247,7 +247,7 @@ namespace {
 
       PyObject* nseq = BindRootObject( self->ObjectIsA()->New(), self->ObjectIsA() );
 
-      for ( long i = 0; i < imul; ++i ) {
+      for ( Long_t i = 0; i < imul; ++i ) {
          PyObject* result = CallPyObjMethod( nseq, "extend", (PyObject*)self );
          Py_DECREF( result );
       }
@@ -258,13 +258,13 @@ namespace {
 //____________________________________________________________________________
    PyObject* TCollectionIMul( PyObject*, PyObject* args )
    {
-      PyObject* self = 0; long imul = 0;
+      PyObject* self = 0; Long_t imul = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Ol:__imul__" ), &self, &imul ) )
          return 0;
 
       PyObject* l = PySequence_List( self );
 
-      for ( long i = 0; i < imul - 1; ++i ) {
+      for ( Long_t i = 0; i < imul - 1; ++i ) {
          CallPyObjMethod( self, "extend", l );
       }
 
@@ -433,7 +433,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* TSeqCollectionInsert( PyObject*, PyObject* args )
    {
-      PyObject* self = 0, *obj = 0; long idx = 0;
+      PyObject* self = 0, *obj = 0; Long_t idx = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OlO:insert" ), &self, &idx, &obj ) )
          return 0;
 
@@ -743,7 +743,7 @@ namespace {
             wrt->GetObject(), wrt->ObjectIsA(), PyString_AS_STRING( name ) );
       }
 
-      return PyInt_FromLong( (long)result );
+      return PyInt_FromLong( (Long_t)result );
    }
 
 }
@@ -816,13 +816,13 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          // TODO: use Converter::FromMemory instead
             Utility::EDataType eType = Utility::EffectiveType( stname );
             if ( eType == Utility::kLong )
-               value = fac->PyBuffer_FromMemory( (long*) arr, scb );
+               value = fac->PyBuffer_FromMemory( (Long_t*) arr, scb );
             else if ( eType == Utility::kInt )
-               value = fac->PyBuffer_FromMemory( (int*) arr, scb );
+               value = fac->PyBuffer_FromMemory( (Int_t*) arr, scb );
             else if ( eType == Utility::kDouble )
-               value = fac->PyBuffer_FromMemory( (double*) arr, scb );
+               value = fac->PyBuffer_FromMemory( (Double_t*) arr, scb );
             else if ( eType == Utility::kFloat )
-               value = fac->PyBuffer_FromMemory( (float*) arr, scb );
+               value = fac->PyBuffer_FromMemory( (Float_t*) arr, scb );
 
             Py_DECREF( scb );
 
@@ -848,17 +848,17 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 //____________________________________________________________________________
    class TTreeBranch : public PyCallable {
    public:
-      TTreeBranch( MethodProxy* org ) { Py_INCREF( org ); m_org = org; }
-      TTreeBranch( const TTreeBranch& t ) : PyCallable( t ) { Py_INCREF( t.m_org ); m_org = t.m_org; }
+      TTreeBranch( MethodProxy* org ) { Py_INCREF( org ); fOrg = org; }
+      TTreeBranch( const TTreeBranch& t ) : PyCallable( t ) { Py_INCREF( t.fOrg ); fOrg = t.fOrg; }
       TTreeBranch& operator=( const TTreeBranch& t )
       {
          if ( &t != this ) {
-            Py_INCREF( t.m_org );
-            m_org = t.m_org;
+            Py_INCREF( t.fOrg );
+            fOrg = t.fOrg;
          }
          return *this;
       }
-      ~TTreeBranch() { Py_DECREF( m_org ); m_org = 0; }
+      ~TTreeBranch() { Py_DECREF( fOrg ); fOrg = 0; }
 
    public:
       virtual PyObject* GetDocString()
@@ -895,7 +895,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                if ( ObjectProxy_Check( address ) )
                   buf = (void*)((ObjectProxy*)address)->GetObject();
                else
-                  Utility::GetBuffer( address, '*', 1, buf, false );
+                  Utility::GetBuffer( address, '*', 1, buf, kFALSE );
  
                if ( buf != 0 ) {
                   TBranch* branch = 0;
@@ -915,20 +915,20 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
          // try: ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
          //  or: ( const char*,              T**, Int_t = 32000, Int_t = 99 ) 
-            bool bIsMatch = false;
+            Bool_t bIsMatch = kFALSE;
             if ( PyArg_ParseTuple( args, const_cast< char* >( "SSO|O!O!:Branch" ),
                     &name, &clName, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
-               bIsMatch = true;
+               bIsMatch = kTRUE;
             } else {
                PyErr_Clear();
                if ( PyArg_ParseTuple( args, const_cast< char* >( "SO|O!O!" ),
                        &name, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) )
-                  bIsMatch = true;
+                  bIsMatch = kTRUE;
                else
                   PyErr_Clear();
             }
 
-            if ( bIsMatch == true ) {
+            if ( bIsMatch == kTRUE ) {
                std::string klName = clName ? PyString_AS_STRING( clName ) : "";
                void* buf = 0;
 
@@ -943,7 +943,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                      argc += 1;
                   }
                } else
-                  Utility::GetBuffer( address, '*', 1, buf, false );
+                  Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
                if ( buf != 0 && klName != "" ) {
                   TBranch* branch = 0;
@@ -964,16 +964,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
       // still here? Then call original Branch() to reach the other overloads:
          Py_INCREF( (PyObject*)self );
-         m_org->fSelf = self;
-         PyObject* result = PyObject_Call( (PyObject*)m_org, args, kwds );
-         m_org->fSelf = 0;
+         fOrg->fSelf = self;
+         PyObject* result = PyObject_Call( (PyObject*)fOrg, args, kwds );
+         fOrg->fSelf = 0;
          Py_DECREF( (PyObject*)self );
 
          return result;
       }
 
    private:
-      MethodProxy* m_org;
+      MethodProxy* fOrg;
    };
 
 } // namespace PyROOT
@@ -1047,7 +1047,7 @@ namespace {
       typedef std::pair< PyObject*, int > pairPyObjInt_t;
 
    public:
-      TF1InitWithPyFunc( int ntf = 1 ) : m_nArgs( 2 + 2*ntf ) {}
+      TF1InitWithPyFunc( int ntf = 1 ) : fNArgs( 2 + 2*ntf ) {}
 
    public:
       virtual PyObject* GetDocString()
@@ -1061,11 +1061,11 @@ namespace {
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
-         if ( ! ( argc == m_nArgs || argc == m_nArgs+1 ) ) {
+         if ( ! ( argc == fNArgs || argc == fNArgs+1 ) ) {
             PyErr_Format( PyExc_TypeError,
                "TFN::TFN(const char*, PyObject* callable, ...) =>\n"
                "    takes at least %d and at most %d arguments (%d given)",
-               m_nArgs, m_nArgs+1, argc );
+               fNArgs, fNArgs+1, argc );
             return 0;              // reported as an overload failure
          }
 
@@ -1083,7 +1083,7 @@ namespace {
       // build CINT function placeholder
          G__ClassInfo gcl;                   // global namespace
 
-         long offset = 0;
+         Long_t offset = 0;
          G__MethodInfo m = gcl.GetMethod( name, "double*, double*", &offset );
 
          if ( ! m.IsValid() ) {
@@ -1103,7 +1103,7 @@ namespace {
             ifunc->pentry[index]->size        = -1;
             ifunc->pentry[index]->filenum     = -1;
             ifunc->pentry[index]->line_number = -1;
-            ifunc->pentry[index]->tp2f = (void*)((long)this + fgCount);
+            ifunc->pentry[index]->tp2f = (void*)((Long_t)this + fgCount);
             ifunc->pentry[index]->p    = (void*)PyFuncCallback;
 
          // setup association for ourselves
@@ -1117,8 +1117,8 @@ namespace {
 
       // verify/setup the callback parameters
          int npar = 0;             // default value if not given
-         if ( argc == m_nArgs+1 )
-            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, m_nArgs ) );
+         if ( argc == fNArgs+1 )
+            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, fNArgs ) );
 
          if ( ! ifunc->userparam[index] ) {
          // no func yet, install current one
@@ -1140,7 +1140,7 @@ namespace {
             (PyObject*)self, const_cast< char* >( "__init__" ) );
 
       // build new argument array
-         PyObject* newArgs = PyTuple_New( m_nArgs + 1 );
+         PyObject* newArgs = PyTuple_New( fNArgs + 1 );
 
          for ( int iarg = 0; iarg < argc; ++iarg ) {
             PyObject* item = PyTuple_GET_ITEM( args, iarg );
@@ -1153,8 +1153,8 @@ namespace {
             }
          }
 
-         if ( argc == m_nArgs )
-            PyTuple_SET_ITEM( args, m_nArgs, PyInt_FromLong( 0l ) );
+         if ( argc == fNArgs )
+            PyTuple_SET_ITEM( args, fNArgs, PyInt_FromLong( 0l ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
@@ -1166,7 +1166,7 @@ namespace {
       }
 
    private:
-      int m_nArgs;
+      Int_t fNArgs;
    };
 
    int TF1InitWithPyFunc::fgCount = 0;
@@ -1211,7 +1211,7 @@ namespace {
          return 0;
       }
 
-      return FunctionHolder(
+      return TFunctionHolder(
          (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, args, 0 );
    }
 
@@ -1219,10 +1219,10 @@ namespace {
 
 
 //- public functions -----------------------------------------------------------
-bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
+Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 {
    if ( pyclass == 0 )
-      return false;
+      return kFALSE;
 
    if ( name == "TObject" ) {
    // support for the 'in' operator
@@ -1232,7 +1232,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjectCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TCollection" ) {
@@ -1249,7 +1249,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__len__",  "GetSize" );
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TCollectionIter );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TSeqCollection" ) {
@@ -1264,7 +1264,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex );
 
-      return true;
+      return kTRUE;
    }
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
@@ -1277,14 +1277,14 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
       Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) StlSequenceIter );
 
-      return true;
+      return kTRUE;
    }
 
    if ( IsTemplatedSTLClass( name, "list" ) ) {
       Utility::AddToClass( pyclass, "__len__",  "size" );
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name.find( "iterator" ) != std::string::npos ) {
@@ -1292,7 +1292,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "string" || name == "std::string" ) {
@@ -1302,7 +1302,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsequal );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TString" ) {
@@ -1313,7 +1313,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__cmp__", "CompareTo" );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsequal );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TObjString" ) {
@@ -1324,20 +1324,20 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjStringCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsequal );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TIter" ) {
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TIterIter );
       Utility::AddToClass( pyclass, "next",     (PyCFunction) TIterNext );
 
-      return true;
+      return kTRUE;
    }
 
    if ( IsTemplatedSTLClass( name, "map" ) ) {
       Utility::AddToClass( pyclass, "__len__", "size" );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TDirectory" ) {
@@ -1347,7 +1347,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // note: this replaces the already existing TDirectory::WriteObject()
       Utility::AddToClass( pyclass, "WriteObject", (PyCFunction) TDirectoryWriteObject );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TTree" ) {
@@ -1364,7 +1364,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method );      
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TF1" ) {   // allow instantiation with python function
@@ -1373,7 +1373,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       method->AddMethod( new TF1InitWithPyFunc() );
       Py_DECREF( method );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TF2" ) {   // allow instantiation with python function
@@ -1382,7 +1382,7 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       method->AddMethod( new TF2InitWithPyFunc() );
       Py_DECREF( method );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TF3" ) {   // allow instantiation with python function
@@ -1391,15 +1391,15 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       method->AddMethod( new TF3InitWithPyFunc() );
       Py_DECREF( method );
 
-      return true;
+      return kTRUE;
    }
 
    if ( name == "TFunction" ) {
    // allow direct call
       Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
-      return true;
+      return kTRUE;
    }
 
-   return true;
+   return kTRUE;
 }

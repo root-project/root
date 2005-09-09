@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.2 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -30,13 +30,13 @@ namespace PyROOT {
       void Set( TDataMember* );
  
       const std::string& GetName() const { return fName; }
-      long GetAddress( ObjectProxy* pyobj /* owner */ );
+      Long_t GetAddress( ObjectProxy* pyobj /* owner */ );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
       std::string    fName;
       TDataMember*   fDataMember;
-      Converter*     fConverter;
+      TConverter*    fConverter;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}
@@ -47,13 +47,13 @@ namespace PyROOT {
    R__EXTERN PyTypeObject PropertyProxy_Type;
 
    template< typename T >
-   inline bool PropertyProxy_Check( T* object )
+   inline Bool_t PropertyProxy_Check( T* object )
    {
       return object && PyObject_TypeCheck( object, &PropertyProxy_Type );
    }
 
    template< typename T >
-   inline bool PropertyProxy_CheckExact( T* object )
+   inline Bool_t PropertyProxy_CheckExact( T* object )
    {
       return object && object->ob_type == &PropertyProxy_Type;
    }

@@ -6,14 +6,14 @@
 
 
 //- constructor -----------------------------------------------------------------
-PyROOT::FunctionHolder::FunctionHolder( TFunction* function ) :
-      MethodHolder( function )
+PyROOT::TFunctionHolder::TFunctionHolder( TFunction* function ) :
+      TMethodHolder( function )
 {
 }
 
 
 //- public members --------------------------------------------------------------
-PyObject* PyROOT::FunctionHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+PyObject* PyROOT::TFunctionHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -24,10 +24,10 @@ PyObject* PyROOT::FunctionHolder::operator()( ObjectProxy* self, PyObject* args,
       return 0;
       
 // translate the arguments
-   bool bConvertOk = SetMethodArgs( args );
+   Bool_t bConvertOk = SetMethodArgs( args );
    Py_DECREF( args );
    
-   if ( bConvertOk == false )
+   if ( bConvertOk == kFALSE )
       return 0;
    
 // execute function

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.2 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.3 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
@@ -7,14 +7,14 @@
 
 
 //- constructor -----------------------------------------------------------------
-PyROOT::ClassMethodHolder::ClassMethodHolder( TClass* klass, TMethod* method ) :
-      MethodHolder( klass, method )
+PyROOT::TClassMethodHolder::TClassMethodHolder( TClass* klass, TMethod* method ) :
+      TMethodHolder( klass, method )
 {
 }
 
 
 //- public members --------------------------------------------------------------
-PyObject* PyROOT::ClassMethodHolder::operator()( ObjectProxy*, PyObject* args, PyObject* )
+PyObject* PyROOT::TClassMethodHolder::operator()( ObjectProxy*, PyObject* args, PyObject* )
 {
 // setup as necessary
    if ( ! Initialize() )

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.38 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.39 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -34,9 +34,9 @@
 namespace {
 
 // CINT temp level guard
-   struct TempLevelGuard {
-      TempLevelGuard() { G__settemplevel( 1 ); }
-      ~TempLevelGuard() { G__settemplevel( -1 ); }
+   struct TempLevelGuard_t {
+      TempLevelGuard_t() { G__settemplevel( 1 ); }
+      ~TempLevelGuard_t() { G__settemplevel( -1 ); }
    };
 
    TClassRef GetGlobalNamespace() {
@@ -53,7 +53,7 @@ namespace {
 
 
 //- private helpers ----------------------------------------------------------
-inline void PyROOT::MethodHolder::Copy_( const MethodHolder& other )
+inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& other )
 {
 // yes, these pointer copy semantics are proper
    fClass  = other.fClass;
@@ -68,11 +68,11 @@ inline void PyROOT::MethodHolder::Copy_( const MethodHolder& other )
    fTagnum       = -1;
 
 // being uninitialized will trigger setting up caches as appropriate
-   fIsInitialized  = false;
+   fIsInitialized  = kFALSE;
 }
 
 //____________________________________________________________________________
-inline void PyROOT::MethodHolder::Destroy_() const
+inline void PyROOT::TMethodHolder::Destroy_() const
 {
 // no deletion of fMethod (ROOT responsibility)
    delete fMethodCall;
@@ -85,12 +85,12 @@ inline void PyROOT::MethodHolder::Destroy_() const
 }
 
 //____________________________________________________________________________
-bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
+Bool_t PyROOT::TMethodHolder::InitCallFunc_( std::string& callString )
 {
 // buffers for argument dispatching
    const int nArgs = fMethod ? fMethod->GetNargs() : 0;
    if ( nArgs == 0 )
-      return true;
+      return kTRUE;
 
    fConverters.resize( nArgs );    // id.
 
@@ -103,7 +103,7 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
 
       if ( ! fConverters[ iarg ] ) {
          PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
-         return false;
+         return kFALSE;
       }
 
    // setup call string
@@ -116,35 +116,35 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
       iarg += 1;
    }
 
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
+Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 {
    executor = CreateExecutor( fMethod ? fMethod->GetReturnTypeName() : fClass->GetName() );
    if ( ! executor )
-      return false;
+      return kFALSE;
 
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
+inline void PyROOT::TMethodHolder::CalcOffset_( void* obj, TClass* klass )
 {
 // actual offset calculation, as needed
-   long derivedtagnum = klass->GetClassInfo() ? klass->GetClassInfo()->Tagnum() : -1;
+   Long_t derivedtagnum = klass->GetClassInfo() ? klass->GetClassInfo()->Tagnum() : -1;
 
    if ( derivedtagnum != fTagnum ) {
       fOffset = G__isanybase(
          fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1,
-         derivedtagnum, (long)obj );
+         derivedtagnum, (Long_t)obj );
       fTagnum = derivedtagnum;
    }
 }
 
 //____________________________________________________________________________
-void PyROOT::MethodHolder::SetPyError_( PyObject* msg )
+void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 {
 // helper to report errors in a consistent format (derefs msg)
    PyObject *etype, *evalue, *etrace;
@@ -174,7 +174,7 @@ void PyROOT::MethodHolder::SetPyError_( PyObject* msg )
 }
 
 //- constructors and destructor ----------------------------------------------
-PyROOT::MethodHolder::MethodHolder( TClass* klass, TMethod* method ) :
+PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TMethod* method ) :
       fClass( klass ), fMethod( method )
 {
    fMethodCall    =  0;
@@ -183,11 +183,11 @@ PyROOT::MethodHolder::MethodHolder( TClass* klass, TMethod* method ) :
    fOffset        =  0;
    fTagnum        = -1;
 
-   fIsInitialized = false;
+   fIsInitialized = kFALSE;
 }
 
 //____________________________________________________________________________
-PyROOT::MethodHolder::MethodHolder( TFunction* function ) :
+PyROOT::TMethodHolder::TMethodHolder( TFunction* function ) :
       fClass( GetGlobalNamespace() ), fMethod( function )
 {
    fMethodCall    =  0;
@@ -196,17 +196,17 @@ PyROOT::MethodHolder::MethodHolder( TFunction* function ) :
    fOffset        =  0;
    fTagnum        = -1;
 
-   fIsInitialized = false;
+   fIsInitialized = kFALSE;
 }
 
 //____________________________________________________________________________
-PyROOT::MethodHolder::MethodHolder( const MethodHolder& other ) : PyCallable( other )
+PyROOT::TMethodHolder::TMethodHolder( const TMethodHolder& other ) : PyCallable( other )
 {
    Copy_( other );
 }
 
 //____________________________________________________________________________
-PyROOT::MethodHolder& PyROOT::MethodHolder::operator=( const MethodHolder& other )
+PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& other )
 {
    if ( this != &other ) {
       Destroy_();
@@ -217,32 +217,32 @@ PyROOT::MethodHolder& PyROOT::MethodHolder::operator=( const MethodHolder& other
 }
 
 //____________________________________________________________________________
-PyROOT::MethodHolder::~MethodHolder()
+PyROOT::TMethodHolder::~TMethodHolder()
 {
    Destroy_();
 }
 
 
 //- public members -----------------------------------------------------------
-PyObject* PyROOT::MethodHolder::GetDocString()
+PyObject* PyROOT::TMethodHolder::GetDocString()
 {
    return PyString_FromFormat( "%s%s",
       ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );
 }
 
 //____________________________________________________________________________
-bool PyROOT::MethodHolder::Initialize()
+Bool_t PyROOT::TMethodHolder::Initialize()
 {
 // done if cache is already setup
-   if ( fIsInitialized == true )
-      return true;
+   if ( fIsInitialized == kTRUE )
+      return kTRUE;
 
    std::string callString = "";
    if ( ! InitCallFunc_( callString ) )
-      return false;
+      return kFALSE;
 
    if ( ! InitExecutor_( fExecutor ) )
-      return false;
+      return kFALSE;
 
 // setup call func
    assert( fMethodCall == 0 );
@@ -261,13 +261,13 @@ bool PyROOT::MethodHolder::Initialize()
    fArgsRequired = fMethod ? fMethod->GetNargs() - fMethod->GetNargsOpt() : 0;
 
 // init done
-   fIsInitialized = true;
+   fIsInitialized = kTRUE;
 
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
+PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
 // verify existence of self, return if ok
    if ( self != 0 ) {
@@ -298,7 +298,7 @@ PyObject* PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, 
 }
 
 //____________________________________________________________________________
-bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
+Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args )
 {
 // clean slate
    fMethodCall->ResetArg();
@@ -310,34 +310,34 @@ bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
    if ( argc < fArgsRequired ) {
       SetPyError_( PyString_FromFormat(
          "takes at least %d arguments (%d given)", fArgsRequired, argc ) );
-      return false;
+      return kFALSE;
    } else if ( argMax < argc ) {
       SetPyError_( PyString_FromFormat(
          "takes at most %d arguments (%d given)", argMax, argc ) );
-      return false;
+      return kFALSE;
    }
 
 // convert the arguments to the method call array
    for ( int i = 0; i < argc; i++ ) {
       if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fMethodCall ) ) {
          SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
-         return false;
+         return kFALSE;
       }
    }
 
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MethodHolder::Execute( void* self )
+PyObject* PyROOT::TMethodHolder::Execute( void* self )
 {
    R__LOCKGUARD2( gCINTMutex );
-   TempLevelGuard g;
+   TempLevelGuard_t g;
 
    PyObject* result = 0;
 
    try {
-      result = fExecutor->Execute( fMethodCall, (void*)((long)self + fOffset) );
+      result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset) );
    } catch ( TPyException& ) {
       result = TPyExceptionMagic;
    } catch ( std::exception& e ) {
@@ -355,7 +355,7 @@ PyObject* PyROOT::MethodHolder::Execute( void* self )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -366,10 +366,10 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
       return 0;
 
 // translate the arguments
-   bool bConvertOk = SetMethodArgs( args );
+   Bool_t bConvertOk = SetMethodArgs( args );
    Py_DECREF( args );
 
-   if ( bConvertOk == false )
+   if ( bConvertOk == kFALSE )
       return 0;
 
 // get the ROOT object that this object proxy is a handle for

@@ -1,13 +1,8 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.5 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.6 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
-#ifndef PYROOT_PYBUFFERFACTORY_H
-#define PYROOT_PYBUFFERFACTORY_H
-
-// ROOT
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
+#ifndef PYROOT_TPYBUFFERFACTORY_H
+#define PYROOT_TPYBUFFERFACTORY_H
 
 
 namespace PyROOT {
@@ -18,9 +13,9 @@ namespace PyROOT {
       @version 1.5
 */
 
-class PyBufferFactory {
+class TPyBufferFactory {
 public:
-   static PyBufferFactory* Instance();
+   static TPyBufferFactory* Instance();
 
    PyObject* PyBuffer_FromMemory( Short_t* buf, int size = -1 );
    PyObject* PyBuffer_FromMemory( Short_t* buf, PyObject* sizeCallback );
@@ -40,13 +35,13 @@ public:
    PyObject* PyBuffer_FromMemory( Double_t* buf, PyObject* sizeCallback );
 
 protected:
-   PyBufferFactory();
-   ~PyBufferFactory();
+   TPyBufferFactory();
+   ~TPyBufferFactory();
 };
 
-typedef PyBufferFactory BufFac_t;
+typedef TPyBufferFactory BufFac_t;
 
 } // namespace PyROOT
 
 
-#endif // !PYROOT_PYBUFFERFACTORY_H
+#endif // !PYROOT_TPYBUFFERFACTORY_H

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.10 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.11 2005/06/25 04:25:46 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -98,7 +98,7 @@ Bool_t TPython::Initialize()
       if ( ! Py_IsInitialized() ) {
       // give up ...
          std::cerr << "Error: python has not been intialized; returning." << std::endl;           
-         return false;
+         return kFALSE;
       }
 
    // set argv
@@ -122,7 +122,7 @@ Bool_t TPython::Initialize()
    }
 
 // declare success ...
-   return true;
+   return kTRUE;
 }
 
 //____________________________________________________________________________
@@ -251,7 +251,7 @@ Bool_t TPython::Bind( TObject* object, const char* label )
 
 // check given address and setup
    if ( ! ( object && Initialize() ) )
-      return false;
+      return kFALSE;
 
 // bind object in the main namespace
    TClass* klass = object->IsA();
@@ -266,7 +266,7 @@ Bool_t TPython::Bind( TObject* object, const char* label )
       }
    }
 
-   return false;
+   return kFALSE;
 }
 
 //____________________________________________________________________________

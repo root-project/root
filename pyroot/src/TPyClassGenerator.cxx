@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.5 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.6 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -33,8 +33,8 @@ namespace {
          PyErr_Print();
       Py_DECREF( args );
 
-      res->obj.i = (long)result;
-      res->ref   = (long)result;
+      res->obj.i = (Long_t)result;
+      res->ref   = (Long_t)result;
       res->type  = 'u';
 
       G__linked_taginfo pti;
@@ -81,16 +81,16 @@ namespace {
             arg = PyLong_FromUnsignedLong( G__Mulong(libp->para[i] ) );
             break;
          case 'i':
-            arg = PyInt_FromLong( (long)G__Mint(libp->para[i]) );
+            arg = PyInt_FromLong( (Long_t)G__Mint(libp->para[i]) );
             break;
          case 'h':
-            arg = PyInt_FromLong( (long)G__Muint(libp->para[i]) );
+            arg = PyInt_FromLong( (Long_t)G__Muint(libp->para[i]) );
             break;
          case 's':
-            arg = PyInt_FromLong( (long)G__Mshort(libp->para[i]) );
+            arg = PyInt_FromLong( (Long_t)G__Mshort(libp->para[i]) );
             break;
          case 'r':
-            arg = PyInt_FromLong( (long)G__Mushort(libp->para[i]) );
+            arg = PyInt_FromLong( (Long_t)G__Mushort(libp->para[i]) );
             break;
          case 'u':
          // longlong, ulonglong, longdouble
@@ -126,8 +126,8 @@ namespace {
          PyErr_Print();
 
       TPyReturn* retval = new TPyReturn( result );
-      res->obj.i  = (long)retval;
-      res->ref    = (long)retval;
+      res->obj.i  = (Long_t)retval;
+      res->ref    = (Long_t)retval;
       res->type   = 'u';
       res->tagnum = TPyReturn::Class()->GetClassInfo()->Tagnum();
 
@@ -140,7 +140,7 @@ namespace {
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 {
-   if ( PyROOT::gDictLookupActive == true )
+   if ( PyROOT::gDictLookupActive == kTRUE )
       return 0;                              // call originated from python
 
    if ( ! load || ! name )
@@ -204,7 +204,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    G__MethodInfo m = gcl.AddMethod( "", clName.c_str(), "0 - -" );
 
    G__ifunc_table* ifunc = m.ifunc();
-   long index = m.Index();
+   Long_t index = m.Index();
 
    ifunc->pentry[index]->size        = -1;
    ifunc->pentry[index]->filenum     = -1;
@@ -231,7 +231,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
          G__MethodInfo m = gcl.AddMethod( "TPyReturn", mtName.c_str(), "0 - -" );
 
          G__ifunc_table* ifunc = m.ifunc();
-         long index = m.Index();
+         Long_t index = m.Index();
 
          ifunc->pentry[index]->size        = -1;
          ifunc->pentry[index]->filenum     = -1;

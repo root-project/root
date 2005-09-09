@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.2 2005/04/13 05:04:50 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_METHODPROXY_H
@@ -26,12 +26,12 @@ namespace PyROOT {
 
    class MethodProxy {
    public:
-      typedef std::map< long, int >      DispatchMap_t;
+      typedef std::map< Long_t, Int_t >      DispatchMap_t;
       typedef std::vector< PyCallable* > Methods_t;
 
-      struct MethodInfo {
-         MethodInfo() { fRefCount = new int(1); }
-         ~MethodInfo() { delete fRefCount; }
+      struct MethodInfo_t {
+         MethodInfo_t() { fRefCount = new int(1); }
+         ~MethodInfo_t() { delete fRefCount; }
 
          std::string                 fName;
          MethodProxy::DispatchMap_t  fDispatchMap;
@@ -50,7 +50,7 @@ namespace PyROOT {
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
       ObjectProxy*   fSelf;        // The instance it is bound to, or NULL
-      MethodInfo*    fMethodInfo;
+      MethodInfo_t*  fMethodInfo;
 
    private:              // private, as the python C-API will handle creation
       MethodProxy() {}
@@ -61,13 +61,13 @@ namespace PyROOT {
    R__EXTERN PyTypeObject MethodProxy_Type;
 
    template< typename T >
-   inline bool MethodProxy_Check( T* object )
+   inline Bool_t MethodProxy_Check( T* object )
    {
       return object && PyObject_TypeCheck( object, &MethodProxy_Type );
    }
 
    template< typename T >
-   inline bool MethodProxy_CheckExact( T* object )
+   inline Bool_t MethodProxy_CheckExact( T* object )
    {
       return object && object->ob_type == &MethodProxy_Type;
    }

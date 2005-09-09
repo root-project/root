@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.4 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.5 2005/06/24 07:19:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -23,14 +23,14 @@ namespace PyROOT {
       @version 1.0
 */
 
-   class Executor {
+   class TExecutor {
    public:
-      virtual ~Executor() {}
+      virtual ~TExecutor() {}
       virtual PyObject* Execute( G__CallFunc*, void* ) = 0;
    };
 
 #define PYROOT_DECLARE_BASIC_EXECUTOR( name )                                 \
-   class name##Executor : public Executor {                                   \
+   class T##name##Executor : public TExecutor {                               \
    public:                                                                    \
       virtual PyObject* Execute( G__CallFunc*, void* );                       \
    }
@@ -60,30 +60,30 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_EXECUTOR( STLString );
    PYROOT_DECLARE_BASIC_EXECUTOR( TGlobal );
 
-   class RootObjectExecutor : public Executor {
+   class TRootObjectExecutor : public TExecutor {
    public:
-      RootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
+      TRootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
       virtual PyObject* Execute( G__CallFunc*, void* );
 
    protected:
       TClassRef fClass;
    };
 
-   class RootObjectByValueExecutor : public RootObjectExecutor {
+   class TRootObjectByValueExecutor : public TRootObjectExecutor {
    public:
-      RootObjectByValueExecutor( const TClassRef& klass ) : RootObjectExecutor ( klass ) {}
+      TRootObjectByValueExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
       virtual PyObject* Execute( G__CallFunc*, void* );
    };
 
    PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
 
 // factories
-   typedef Executor* (*ExecutorFactory_t) ();
+   typedef TExecutor* (*ExecutorFactory_t) ();
    typedef std::map< std::string, ExecutorFactory_t > ExecFactories_t;
    R__EXTERN ExecFactories_t gExecFactories;
 
 // create executor from fully qualified type
-   Executor* CreateExecutor( const std::string& fullType );
+   TExecutor* CreateExecutor( const std::string& fullType );
 
 } // namespace PyROOT
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.34 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.35 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -49,9 +49,9 @@ R__EXTERN PyObject* gRootModule;
 //- helpers --------------------------------------------------------------------
 namespace {
 
-   class PyROOTApplication : public TApplication {
+   class TPyROOTApplication : public TApplication {
    public:
-      PyROOTApplication( const char* acn, int* argc, char** argv ) :
+      TPyROOTApplication( const char* acn, int* argc, char** argv ) :
             TApplication( acn, argc, argv )
       {
       // follow TRint to minimize differences with CINT
@@ -90,8 +90,8 @@ namespace {
    }
 
    std::set< std::string > gSTLTypes;
-   struct InitSTLTypes {
-      InitSTLTypes()
+   struct InitSTLTypes_t {
+      InitSTLTypes_t()
       {
          const char* stlTypes[] = { "complex", "exception",
             "deque", "list", "queue", "stack", /* "vector", : preloaded */
@@ -151,7 +151,7 @@ void PyROOT::InitRoot()
          argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
       argv[ 0 ] = Py_GetProgramName();
 
-      gApplication = new PyROOTApplication( "PyROOT", &argc, argv );
+      gApplication = new TPyROOTApplication( "PyROOT", &argc, argv );
 
    // CINT message callback (only if loaded from python, i.e. !gApplication)
       G__set_errmsgcallback( (void*)&PyROOT::Utility::ErrMsgCallback );
@@ -171,10 +171,10 @@ void PyROOT::InitRoot()
    PyModule_AddObject( gRootModule, const_cast< char* >( "NULL" ), gNullObject );
 
 // memory management
-   gROOT->GetListOfCleanups()->Add( new MemoryRegulator() );
+   gROOT->GetListOfCleanups()->Add( new TMemoryRegulator );
 
 // python side class construction, managed by ROOT
-   gROOT->AddClassGenerator( new TPyClassGenerator() );
+   gROOT->AddClassGenerator( new TPyClassGenerator );
 }
 
 //____________________________________________________________________________
@@ -186,8 +186,8 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
    std::string clName = clInfo ? clInfo->Name() : klass->GetName();
 
 // some properties that'll affect building the dictionary
-   bool isNamespace = klass->Property() & G__BIT_ISNAMESPACE;
-   bool hasConstructor = false;
+   Bool_t isNamespace = klass->Property() & G__BIT_ISNAMESPACE;
+   Bool_t hasConstructor = kFALSE;
 
 // special cases for C++ facilities that have no python equivalent
    TMethod* assign = 0;
@@ -247,7 +247,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       }
 
    // decide on method type: member or static (which includes globals)
-      bool isStatic = isNamespace || ( method->Property() & G__BIT_ISSTATIC );
+      Bool_t isStatic = isNamespace || ( method->Property() & G__BIT_ISSTATIC );
 
    // public methods are normally visible, private methods are mangled python-wise
    // note the overload implications which are name based, and note that rootcint
@@ -260,14 +260,14 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
    // construct the holder
       PyCallable* pycall = 0;
-      if ( isStatic == true )                // class method
-         pycall = new ClassMethodHolder( klass, method );
+      if ( isStatic == kTRUE )               // class method
+         pycall = new TClassMethodHolder( klass, method );
       else if ( mtName == clName ) {         // constructor
-         pycall = new ConstructorHolder( klass, method );
+         pycall = new TConstructorHolder( klass, method );
          mtName = "__init__";
-         hasConstructor = true;
+         hasConstructor = kTRUE;
       } else                                 // member function
-         pycall = new MethodHolder( klass, method );
+         pycall = new TMethodHolder( klass, method );
 
    // lookup method dispatcher and store method
       Callables_t& md = (*(cache.insert(
@@ -277,7 +277,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
 // add a pseudo-default ctor, if none defined
    if ( ! isNamespace && ! hasConstructor )
-      cache[ "__init__" ].push_back( new ConstructorHolder( klass, 0 ) );
+      cache[ "__init__" ].push_back( new TConstructorHolder( klass, 0 ) );
 
 //   if ( assign != 0 )
 //      std::cout << "found assignment operator for: " << klass->GetName() << std::endl;
@@ -299,7 +299,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
    // enums
       if ( mb->IsEnum() ) {
-         long offset = 0;
+         Long_t offset = 0;
          G__DataMemberInfo dmi = klass->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
          PyObject* val = PyInt_FromLong( *((int*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
          PyObject_SetAttrString( pyclass, const_cast< char* >( mb->GetName() ), val );
@@ -381,7 +381,7 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
 {
 // force building of the class if a scope is specified
-   bool force = scope != 0;
+   Bool_t force = scope != 0;
 
 // determine scope name, if a python scope has been given
    std::string scName = "";
@@ -475,7 +475,7 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyString_FromString( actual.c_str() );
    PyObject* pyclass = 0;
-   if ( force == false )
+   if ( force == kFALSE )
       pyclass = PyObject_GetAttr( scope, pyactual );
 
 // build if the class does not yet exist
@@ -567,7 +567,7 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef ) {
+PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isRef ) {
 // only known or knowable objects will be bound (null object is ok)
    if ( ! klass ) {
       PyErr_SetString( PyExc_TypeError, "attempt to bind ROOT object w/o class" );
@@ -600,7 +600,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
+PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 {
 // for safety (None can't be used as NULL pointer)
    if ( ! address ) {
@@ -619,10 +619,10 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
       TClass* clActual = klass->GetActualClass( address );
       if ( clActual && klass != clActual ) {
        // root/meta base class offset fails in the case of virtual inheritance
-       //   long offset = clActual->GetBaseClassOffset( klass );
-         long offset = G__isanybase(
-            klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (long)address );
-         (long&)address -= offset;
+       //   Long_t offset = clActual->GetBaseClassOffset( klass );
+         Long_t offset = G__isanybase(
+            klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (Long_t)address );
+         (Long_t&)address -= offset;
          klass = clActual;
       }
    }
@@ -634,7 +634,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 
    if ( ! isRef ) {
    // use the old reference if the object already exists
-      PyObject* oldPyObject = MemoryRegulator::RetrieveObject( object );
+      PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
       if ( oldPyObject )
          return oldPyObject;
    }
@@ -643,7 +643,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( address, klass, isRef );
 
 // memory management
-   MemoryRegulator::RegisterObject( pyobj, object );
+   TMemoryRegulator::RegisterObject( pyobj, object );
 
 // completion (returned object may be zero w/ a python exception set)
    return (PyObject*)pyobj;
@@ -661,7 +661,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 // determine type and cast as appropriate
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
    if ( ! klass ) {
-      Converter* pcnv = CreateConverter( gbl->GetFullTypeName() );
+      TConverter* pcnv = CreateConverter( gbl->GetFullTypeName() );
 
       if ( pcnv ) {
          PyObject* result = pcnv->FromMemory( (void*)gbl->GetAddress() );
@@ -678,7 +678,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
             // for now, only handle int, double, and C-string
                switch ( ((G__var_array*)dmi.Handle())->type[dmi.Index()] ) {
                case 'p':
-                  return PyInt_FromLong( (long) *(Int_t*)gbl->GetAddress() );
+                  return PyInt_FromLong( (Long_t) *(Int_t*)gbl->GetAddress() );
                case 'P':
                   return PyFloat_FromDouble( (double) *(Double_t*)gbl->GetAddress() );
                case 'T':
@@ -697,7 +697,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    }
 
    if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
-      return BindRootObject( (void*)gbl->GetAddress(), klass, true );
+      return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
    return BindRootObject( (void*)gbl->GetAddress(), klass );
 }

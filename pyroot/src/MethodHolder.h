@@ -1,8 +1,8 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.14 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.15 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
-#ifndef PYROOT_METHODHOLDER_H
-#define PYROOT_METHODHOLDER_H
+#ifndef PYROOT_TMETHODHOLDER_H
+#define PYROOT_TMETHODHOLDER_H
 
 // Bindings
 #include "Utility.h"
@@ -29,16 +29,16 @@ namespace PyROOT {
       @version 2.0
  */
 
-   class Executor;
-   class Converter;
+   class TExecutor;
+   class TConverter;
 
-   class MethodHolder : public PyCallable {
+   class TMethodHolder : public PyCallable {
    public:
-      MethodHolder( TClass* klass, TMethod* method );
-      MethodHolder( TFunction* function );
-      MethodHolder( const MethodHolder& );
-      MethodHolder& operator=( const MethodHolder& );
-      virtual ~MethodHolder();
+      TMethodHolder( TClass* klass, TMethod* method );
+      TMethodHolder( TFunction* function );
+      TMethodHolder( const TMethodHolder& );
+      TMethodHolder& operator=( const TMethodHolder& );
+      virtual ~TMethodHolder();
 
    public:
       virtual PyObject* GetDocString();
@@ -46,22 +46,22 @@ namespace PyROOT {
    public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds );
 
-      virtual bool Initialize();
+      virtual Bool_t Initialize();
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual bool SetMethodArgs( PyObject* args );
+      virtual Bool_t SetMethodArgs( PyObject* args );
       virtual PyObject* Execute( void* self );
 
    protected:
       TClass* GetClass() { return fClass.GetClass(); }
       TFunction* GetMethod() { return fMethod; }
 
-      virtual bool InitExecutor_( Executor*& );
+      virtual Bool_t InitExecutor_( TExecutor*& );
 
    private:
-      void Copy_( const MethodHolder& );
+      void Copy_( const TMethodHolder& );
       void Destroy_() const;
 
-      bool InitCallFunc_( std::string& );
+      Bool_t InitCallFunc_( std::string& );
       void CalcOffset_( void* self, TClass* klass );
 
       void SetPyError_( PyObject* msg );
@@ -71,18 +71,18 @@ namespace PyROOT {
       TClassRef    fClass;
       TFunction*   fMethod;
       G__CallFunc* fMethodCall;
-      Executor*    fExecutor;
+      TExecutor*   fExecutor;
 
    // call dispatch buffers
-      std::vector< Converter* > fConverters;
+      std::vector< TConverter* > fConverters;
 
    // cached values
-      int          fArgsRequired;
-      long         fOffset;
-      long         fTagnum;
+      Int_t        fArgsRequired;
+      Long_t       fOffset;
+      Long_t       fTagnum;
 
    // admin
-      bool fIsInitialized;
+      Bool_t fIsInitialized;
    };
 
 } // namespace PyROOT

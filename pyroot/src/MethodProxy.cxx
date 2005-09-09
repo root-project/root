@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.7 2005/06/12 17:21:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.8 2005/08/10 05:25:41 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -19,10 +19,10 @@ namespace PyROOT {
 namespace {
 
 // helper for collecting/maintaining exception data in overload dispatch
-   struct PyError {
-      PyError() { fType = fValue = fTrace = 0; }
+   struct PyError_t {
+      PyError_t() { fType = fValue = fTrace = 0; }
 
-      static void Clear( PyError& e )
+      static void Clear( PyError_t& e )
       {
          Py_XDECREF( e.fType ); Py_XDECREF( e.fValue ); Py_XDECREF( e.fTrace );
          e.fType = e.fValue = e.fTrace = 0;
@@ -32,13 +32,13 @@ namespace {
    };
 
 // helper to hash tuple (using tuple hash would cause self-tailing loops)
-   inline long HashSignature( PyObject* args )
+   inline Long_t HashSignature( PyObject* args )
    {
-      unsigned long hash = 0;
+      ULong_t hash = 0;
 
-      int nargs = PyTuple_GET_SIZE( args );
-      for ( int i = 0; i < nargs; ++i ) {
-         hash += (unsigned long) PyTuple_GET_ITEM( args, i )->ob_type;
+      Int_t nargs = PyTuple_GET_SIZE( args );
+      for ( Int_t i = 0; i < nargs; ++i ) {
+         hash += (ULong_t) PyTuple_GET_ITEM( args, i )->ob_type;
          hash += (hash << 10); hash ^= (hash >> 6);
       }
 
@@ -60,7 +60,7 @@ namespace {
       MethodProxy::Methods_t& methods = meth->fMethodInfo->fMethods;
 
    // collect doc strings
-      int nMethods = methods.size();
+      Int_t nMethods = methods.size();
       PyObject* doc = methods[0]->GetDocString();
 
    // simple case
@@ -69,7 +69,7 @@ namespace {
 
    // overloaded method
       PyObject* separator = PyString_FromString( "\n" );
-      for ( int i = 1; i < nMethods; ++i ) {
+      for ( Int_t i = 1; i < nMethods; ++i ) {
          PyString_Concat( &doc, separator );
          PyString_ConcatAndDel( &doc, methods[i]->GetDocString() );
       }
@@ -93,19 +93,19 @@ namespace {
       MethodProxy::Methods_t&     methods     = meth->fMethodInfo->fMethods;
       MethodProxy::DispatchMap_t& dispatchMap = meth->fMethodInfo->fDispatchMap;
 
-      int nMethods = methods.size();
+      Int_t nMethods = methods.size();
 
    // simple case
       if ( nMethods == 1 )
          return (*methods[0])( meth->fSelf, args, kwds );
 
    // handle overloading
-      long sighash = HashSignature( args );
+      Long_t sighash = HashSignature( args );
 
    // look for known signatures ...
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
-         int index = m->second;
+         Int_t index = m->second;
          PyObject* result = (*methods[ index ])( meth->fSelf, args, kwds );
 
          if ( result == TPyExceptionMagic )
@@ -119,24 +119,24 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
-      std::vector< PyError > errors;
-      for ( int i = 0; i < nMethods; ++i ) {
+      std::vector< PyError_t > errors;
+      for ( Int_t i = 0; i < nMethods; ++i ) {
          PyObject* result = (*methods[i])( meth->fSelf, args, kwds );
 
          if ( result == TPyExceptionMagic ) {
-            std::for_each( errors.begin(), errors.end(), PyError::Clear );
+            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
             return 0;              // exception info was already set
          }
 
          if ( result != 0 ) {
          // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
-            std::for_each( errors.begin(), errors.end(), PyError::Clear );
+            std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
             return result;
          }
 
       // failure: collect error message/trace (automatically clears exception, too)
-         PyError e;
+         PyError_t e;
          PyErr_Fetch( &e.fType, &e.fValue, &e.fTrace );
          errors.push_back( e );
       }
@@ -147,13 +147,13 @@ namespace {
       PyObject* separator = PyString_FromString( "\n  " );
 
    // if this point is reached, none of the overloads succeeded: notify user
-      for ( std::vector< PyError >::iterator e = errors.begin(); e != errors.end(); ++e ) {
+      for ( std::vector< PyError_t >::iterator e = errors.begin(); e != errors.end(); ++e ) {
          PyString_Concat( &value, separator );
          PyString_Concat( &value, e->fValue );
       }
 
       Py_DECREF( separator );
-      std::for_each( errors.begin(), errors.end(), PyError::Clear );
+      std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
 
    // report failure
       PyErr_SetObject( PyExc_TypeError, value );
@@ -184,7 +184,7 @@ namespace {
    {
       MethodProxy* pymeth = PyObject_GC_New( MethodProxy, &MethodProxy_Type );
       pymeth->fSelf = NULL;
-      pymeth->fMethodInfo = new MethodProxy::MethodInfo();
+      pymeth->fMethodInfo = new MethodProxy::MethodInfo_t;
 
       PyObject_GC_Track( pymeth );
       return pymeth;
