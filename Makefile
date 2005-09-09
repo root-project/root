@@ -205,12 +205,21 @@ ROOTLIBSDEP   = $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifeq ($(FORCELINK),yes)
 # Force linking of not referenced libraries
+ifeq ($(PLATFORM),aix5)
+ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Hist     \
+                -Wl,-u,.G__cpp_setupG__Graf1    \
+                -Wl,-u,.G__cpp_setupG__G3D      \
+                -Wl,-u,.G__cpp_setupG__GPad     \
+                -Wl,-u,.G__cpp_setupG__Tree     \
+                -Wl,-u,.G__cpp_setupG__Matrix
+else
 ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Hist    \
                 -Wl,-u,_G__cpp_setupG__Graf1   \
                 -Wl,-u,_G__cpp_setupG__G3D     \
                 -Wl,-u,_G__cpp_setupG__GPad    \
                 -Wl,-u,_G__cpp_setupG__Tree    \
                 -Wl,-u,_G__cpp_setupG__Matrix
+endif
 endif
 ifeq ($(PLATFORM),win32)
 # Force linking of not referenced libraries

@@ -24,16 +24,6 @@ newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
-rootulibs="-Wl,-u,_G__cpp_setupG__Hist       \
-           -Wl,-u,_G__cpp_setupG__Graf1      \
-           -Wl,-u,_G__cpp_setupG__G3D        \
-           -Wl,-u,_G__cpp_setupG__GPad       \
-           -Wl,-u,_G__cpp_setupG__Tree       \
-           -Wl,-u,_G__cpp_setupG__Rint       \
-           -Wl,-u,_G__cpp_setupG__PostScript \
-           -Wl,-u,_G__cpp_setupG__Matrix     \
-           -Wl,-u,_G__cpp_setupG__Physics"
-rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
@@ -45,6 +35,28 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Matrix     \
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
+elif test "$platform" = "aix5"; then
+   rootulibs="-Wl,-u,.G__cpp_setupG__Hist       \
+              -Wl,-u,.G__cpp_setupG__Graf1      \
+              -Wl,-u,.G__cpp_setupG__G3D        \
+              -Wl,-u,.G__cpp_setupG__GPad       \
+              -Wl,-u,.G__cpp_setupG__Tree       \
+              -Wl,-u,.G__cpp_setupG__Rint       \
+              -Wl,-u,.G__cpp_setupG__PostScript \
+              -Wl,-u,.G__cpp_setupG__Matrix     \
+              -Wl,-u,.G__cpp_setupG__Physics"
+   rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
+else
+   rootulibs="-Wl,-u,_G__cpp_setupG__Hist       \
+              -Wl,-u,_G__cpp_setupG__Graf1      \
+              -Wl,-u,_G__cpp_setupG__G3D        \
+              -Wl,-u,_G__cpp_setupG__GPad       \
+              -Wl,-u,_G__cpp_setupG__Tree       \
+              -Wl,-u,_G__cpp_setupG__Rint       \
+              -Wl,-u,_G__cpp_setupG__PostScript \
+              -Wl,-u,_G__cpp_setupG__Matrix     \
+              -Wl,-u,_G__cpp_setupG__Physics"
+   rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
 fi
 
 ### machine dependent settings ###
@@ -74,11 +86,15 @@ aix | aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 aixgcc)
    # IBM AIX with g++
    auxcflags="-fsigned-char"
    auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 solaris)
    # Solaris
