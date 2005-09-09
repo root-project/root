@@ -19,7 +19,7 @@ GSLETAG      := $(MODDIRS)/headers.d
 
 ##### libgsl #####
 ifeq ($(PLATFORM),win32)
-GSLLIBA      := $(GSLDIRS)/.libs/libgsl.lib
+GSLLIBA      := $(GSLDIRS)/libgsl.lib
 GSLLIB       := $(LPATH)/libgsl.lib
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 GSLBLD        = "libgsl - Win32 Debug"
@@ -100,9 +100,15 @@ ifeq ($(PLATFORM),win32)
 			gunzip -c $(GSLVERS).tar.gz | tar xf -; \
 		fi; \
 		cd $(GSLVERS); \
-		GNUMAKE=$(MAKE) ./configure $(GSLDBG) CC=cl LD=cl CFLAGS="$(CFLAGS)" ;  \
-		cd gsl; sed -e 's/ln -s/cp -p/' Makefile > MakefileNew; mv MakefileNew Makefile; cd ../; \
-		$(MAKE)) \
+		cp ./*.h ./gsl; \
+		cp ./gsl_version.h.win32 ./gsl_version.h; \
+		cp ./config.h.win32 ./config.h; \
+		cp ./*/*.h ./gsl; \
+		unset MAKEFLAGS; \
+		nmake -f Makefile.msc CFG=$(GSLBLD))
+#		GNUMAKE=$(MAKE) ./configure $(GSLDBG) CC=cl LD=cl CFLAGS="$(CFLAGS)" ;  \
+#		cd gsl; sed -e 's/ln -s/cp -p/' Makefile > MakefileNew; mv MakefileNew Makefile; cd ../; \
+#		$(MAKE)) \
 # 		unset MAKEFLAGS; \
 # 		nmake -nologo -f gsl.mak \
 # 		CFG=$(GSLBLD))
