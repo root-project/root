@@ -17,14 +17,16 @@ endif
 # Compiler:
 CXX           = xlC
 CC            = xlC
-CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti $(EXTRA_CXXFLAGS)
-CFLAGS        = -qchars=signed -qnoro -qnoroconst $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti -DG__REGEXP \
-                -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL \
-                -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -DG__REGEXP -D_POSIX2_SOURCE \
-                -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
-                -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+                $(EXTRA_CXXFLAGS)
+CFLAGS        = -qchars=signed -qnoro -qnoroconst -qstaticinline \
+                $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+                -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -qstaticinline \
+                -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
                 \$$SourceFiles ; /usr/vacpp/bin/makeC++SharedLib \
                 -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles
