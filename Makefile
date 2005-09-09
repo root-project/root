@@ -248,7 +248,9 @@ F77LDFLAGS   += -lfrtbegin
 endif
 endif
 ifeq ($(GCC_MAJOR),4)
+ifeq ($(F77),g77)
 F77LDFLAGS   += -lfrtbegin
+endif
 endif
 
 ##### Utilities #####
