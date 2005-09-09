@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.216 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.217 2005/09/07 08:20:26 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2376,7 +2376,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    fprintf(fp, "   namespace ROOT {\n");
 
-#if !defined(R__SGI)
+#if !defined(R__SGI) && !defined(R__AIX)
    fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();\n");
 #endif
 
@@ -2387,7 +2387,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    fprintf(fp, "      // Function generating the singleton type initializer\n");
 
-#if !defined(R__SGI)
+#if !defined(R__SGI) && !defined(R__AIX)
    fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()\n      {\n");
 #else
    fprintf(fp, "      ::ROOT::TGenericClassInfo *GenerateInitInstance()\n      {\n");
