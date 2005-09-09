@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.53 2005/08/29 08:24:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.54 2005/09/08 14:22:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1482,8 +1482,6 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
 
    char quote = '"';
 
-   // The number of digits after the decimal point will be 3
-   out << fixed << setprecision(3);
    out << "   // Add the saved style to the current ROOT session." << endl;
    out << endl;
    out<<"   "<<"delete gROOT->GetStyle("<<quote<<GetName()<<quote<<");"<< endl;
@@ -1575,6 +1573,8 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<"tmpStyle->SetHistLineWidth("   <<GetHistLineWidth()   <<");"<<endl;
    if (GetHistMinimumZero()) out<<"   tmpStyle->SetHistMinimumZero(kTRUE);" <<endl;
                         else out<<"   tmpStyle->SetHistMinimumZero(kFALSE);"<<endl;
+   if (GetCanvasPreferGL()) out<<"   tmpStyle->SetCanvasPreferGL(kTRUE);" <<endl;
+                       else out<<"   tmpStyle->SetCanvasPreferGL(kFALSE);"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasColor("     <<GetCanvasColor()     <<");"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasBorderSize("<<GetCanvasBorderSize()<<");"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasBorderMode("<<GetCanvasBorderMode()<<");"<<endl;
@@ -1663,7 +1663,7 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
                                             <<quote                  <<");"<<endl;
    out<<"   "<<"tmpStyle->SetLineScalePS("    <<GetLineScalePS()       <<");"<<endl;
    out<<"   "<<"tmpStyle->SetColorModelPS("   <<GetColorModelPS()      <<");"<<endl;
-   out<<"   "<<"tmpStyle->SetTimeOffset("     <<GetTimeOffset()        <<");"<<endl;
+   out<<"   "<<Form("tmpStyle->SetTimeOffset(%9.0f);", GetTimeOffset()) <<endl;
    out<<endl;
 
 // Inheritance :
