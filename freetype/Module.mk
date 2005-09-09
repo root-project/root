@@ -56,7 +56,11 @@ ifeq ($(USECONFIG),TRUE)
 		fi)
 endif
 else
+ifeq ($(PLATFORM),aix5)
+		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/.libs/*.o
+else
 		cp $< $@
+endif
 endif
 
 $(FREETYPELIBA): $(FREETYPELIBS)
