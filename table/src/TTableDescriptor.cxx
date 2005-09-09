@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2003/05/28 15:17:03 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.9 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.8 2003/05/28 15:17:03 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.9 2005/09/08 05:33:41 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -13,8 +13,8 @@
 #include "TInterpreter.h"
 
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
-// TString TTableDescriptor::gfCommentsName = TTableDescriptor::SetCommentsSetName();
-TString TTableDescriptor::gfCommentsName = ".comments";
+// TString TTableDescriptor::fgCommentsName = TTableDescriptor::SetCommentsSetName();
+TString TTableDescriptor::fgCommentsName = ".comments";
 TableClassImp(TTableDescriptor,tableDescriptor_st)
 
 //______________________________________________________________________________
@@ -270,9 +270,9 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 //______________________________________________________________________________
 TDataSet *TTableDescriptor::MakeCommentField(Bool_t createFlag){
    // Instantiate a comment dataset if any
-   TDataSet *comments = FindByName(gfCommentsName.Data());
+   TDataSet *comments = FindByName(fgCommentsName.Data());
    if (!comments && createFlag) 
-      comments =  new TDataSet(gfCommentsName.Data(),this,kTRUE);
+      comments =  new TDataSet(fgCommentsName.Data(),this,kTRUE);
    return comments;
 }
 //______________________________________________________________________________

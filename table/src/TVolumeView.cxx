@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.10 2005/03/10 08:56:27 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.11 2005/05/02 17:53:58 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -761,14 +761,14 @@ void TVolumeView::Paint(Option_t *option)
 ////---   if ( thisNode->TestBit(kSonsInvisible) ) return;
 
 //*-*- Paint all sons
-  TSeqCollection *Nodes =  GetCollection();
-  Int_t nsons = Nodes?Nodes->GetSize():0;
+  TSeqCollection *nodes =  GetCollection();
+  Int_t nsons = nodes?nodes->GetSize():0;
 
   if(!nsons) return;
 
   gGeometry->PushLevel();
   TVolumeView *node;
-  TIter  next(Nodes);
+  TIter  next(nodes);
   while ((node = (TVolumeView *)next())) {
      if (view3D)  view3D->PushMatrix();
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.9 2005/06/06 14:36:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.10 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *gId = {
-    "$Id: TDataSet.cxx,v 1.9 2005/06/06 14:36:06 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.10 2005/09/08 05:33:41 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -864,4 +864,4 @@ class TCopyright {public: TCopyright(const Char_t *id=0){
     Int_t lCopy = sizeof(gCoPyRiGhT)/4;
     for (Int_t l =i; l < lCopy; l++) cout << " " << gCoPyRiGhT[l] << endl;
   }}};
-static TCopyright TDataSetLibraryCopyright(gId);
+static TCopyright gTDataSetLibraryCopyright(gId);

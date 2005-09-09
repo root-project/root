@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.3 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 // ***********************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// $Id: TDataSetIter.h,v 1.3 2005/09/08 05:33:41 brun Exp $
 //
 // TDataSetIter                                                         //
 //                                                                      //
@@ -47,7 +47,7 @@ protected:
    TDataSet        *NextDataSet(Int_t nDataSet);
    TDataSet        *GetNullSet();      // return a fake pointer == -1 casted to (TDataSet *)
 
-   static TDataSet *gfNullDataSet;
+   static TDataSet *fgNullDataSet;
 public:
   TDataSetIter(TDataSet *l=0, Int_t depth=1, Bool_t dir=kIterForward);
   TDataSetIter(TDataSet *l, Bool_t dir);
@@ -110,7 +110,7 @@ public:
   ClassDef(TDataSetIter,0) // class-iterator to navigate TDataSet structure
 };
 
-inline TDataSet *TDataSetIter::operator *() const { return fDataSet == gfNullDataSet ? fWorkingDataSet : fDataSet; }
-inline TDataSet *TDataSetIter::GetNullSet() { return (TDataSet *)gfNullDataSet; } // return a fake pointer == -1 casted to (TDataSet *)
+inline TDataSet *TDataSetIter::operator *() const { return fDataSet == fgNullDataSet ? fWorkingDataSet : fDataSet; }
+inline TDataSet *TDataSetIter::GetNullSet() { return (TDataSet *)fgNullDataSet; } // return a fake pointer == -1 casted to (TDataSet *)
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.7 2005/05/02 17:53:58 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.8 2005/06/01 15:41:46 rdm Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -499,7 +499,7 @@ void TVolume::ExecuteEvent(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 TRotMatrix *TVolume::GetIdentity()
 {
- Double_t *IdentityMatrix = 0;
+ Double_t *identityMatrix = 0;
  // Return a pointer the "identity" matrix
  if (!gIdentity) {
       gIdentity = gGeometry->GetRotMatrix("Identity");
@@ -507,12 +507,11 @@ TRotMatrix *TVolume::GetIdentity()
          gIdentity  =  new TRotMatrix();
          gIdentity->SetName("Identity");
          gIdentity->SetTitle("Identity matrix");
-         gIdentity->SetMatrix(IdentityMatrix);
-         gIdentity->SetMatrix(IdentityMatrix);
-         IdentityMatrix = gIdentity->GetMatrix();
-                                *IdentityMatrix = 1;
-         IdentityMatrix += 4;   *IdentityMatrix = 1;
-         IdentityMatrix += 4;   *IdentityMatrix = 1;
+         gIdentity->SetMatrix((Double_t *)0);
+         identityMatrix = gIdentity->GetMatrix();
+                                *identityMatrix = 1;
+         identityMatrix += 4;   *identityMatrix = 1;
+         identityMatrix += 4;   *identityMatrix = 1;
          gGeometry->GetListOfMatrices()->AddFirst(gIdentity);
       }
  }
