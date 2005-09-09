@@ -185,6 +185,7 @@ enum EStyleManagerWid {
    kAxisTimeOffsetDate,
    kAxisTimeOffsetTime,
    kAxisStripDecimals,
+   kAxisApplyOnXYZ,
 
    kAxisXTitleSize,
    kAxisXTitleSizeInPixels,
@@ -314,6 +315,7 @@ TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
    fPreviewWindow = 0;
    fRealTimePreview = kFALSE;
    fCurTabNum = 0;
+   fCurTabAxisNum = 0;
    fMoreAndNotLess = kTRUE;
    fSigSlotConnected = kFALSE;
    fStyleChanged = kFALSE;
@@ -510,6 +512,7 @@ TStyleManager::~TStyleManager()
    delete fTimeOffsetDate;
    delete fTimeOffsetTime;
    delete fStripDecimals;
+   delete fApplyOnXYZ;
    delete fXTitleSize;
    delete fXTitleSizeInPixels;
    delete fXTitleColor;
@@ -1349,7 +1352,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fTimeOffsetTime->SetNumber(delta);
 
          if (fCurSelStyle->GetStripDecimals()) fStripDecimals->SetState(kButtonUp, kFALSE);
-                                  else fStripDecimals->SetState(kButtonDown, kFALSE);
+                                          else fStripDecimals->SetState(kButtonDown, kFALSE);
          fXTitleSize->SetNumber(fCurSelStyle->GetTitleSize("X"));
          if (fCurSelStyle->GetTitleFont("X")%10 > 2) {
             fXTitleSizeInPixels->SetState(kButtonDown, kFALSE);
@@ -1596,6 +1599,7 @@ void TStyleManager::ConnectAll()
    fEditionUpdatePreview->Connect("Clicked()", "TStyleManager", this, "DoEditionUpdatePreview()");
    fEditionReset->Connect("Clicked()", "TStyleManager", this, "DoImportMacro(Int_t=kFALSE)");
    fEditionTab->Connect("Selected(Int_t)", "TStyleManager", this, "DoChangeTab(Int_t)");
+   fAxisTab->Connect("Selected(Int_t)", "TStyleManager", this, "DoChangeAxisTab(Int_t)");
 
    // Connect signals emited when the current pad changed.
    TQObject::Connect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)", "TStyleManager",
@@ -1728,6 +1732,7 @@ void TStyleManager::ConnectEditor(Int_t tabNum)
          fTimeOffsetDate->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModTimeOffset()");
          fTimeOffsetTime->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModTimeOffset()");
          fStripDecimals->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModStripDecimals()");
+         fApplyOnXYZ->Connect("Clicked()", "TStyleManager", this, "ModApplyOnXYZ()");
          fXTitleSize->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModXTitleSize()");
          fXTitleSizeInPixels->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModXTitleSizeInPixels(Bool_t)");
          fXTitleColor->Connect("ColorSelected(Pixel_t)", "TStyleManager", this, "ModXTitleColor()");
@@ -1931,6 +1936,7 @@ void TStyleManager::DisconnectEditor(Int_t tabNum)
          fTimeOffsetDate->Disconnect("ValueSet(Long_t)");
          fTimeOffsetTime->Disconnect("ValueSet(Long_t)");
          fStripDecimals->Disconnect("Toggled(Bool_t)");
+         fApplyOnXYZ->Disconnect("Clicked()");
          fXTitleSize->Disconnect("ValueSet(Long_t)");
          fXTitleColor->Disconnect("ColorSelected(Pixel_t)");
          fXTitleOffset->Disconnect("ValueSet(Long_t)");
@@ -2809,15 +2815,20 @@ void TStyleManager::CreateTabAxis(TGCompositeFrame *tab)
 {
    // Add the tab 'Axis' to the editor.
 
-   TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal | kLHintsCenterY, 10, 20, 5, 5);
+   TGLayoutHints *layout =
+                  new TGLayoutHints(kLHintsNormal, 10, 13, 3);
    fTrashListLayout->Add(layout);
 
    TGHorizontalFrame *h = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h);
 
-   TGHorizontalFrame *h3 = new TGHorizontalFrame(h);
+   TGVerticalFrame *h3 = new TGVerticalFrame(h);
    fTrashListFrame->AddFirst(h3);
-   fStripDecimals = AddCheckButton(h3, "Decimal labels' part", kAxisStripDecimals);
+   fStripDecimals = AddCheckButton(h3, "Decimal labels' part", kAxisStripDecimals, 0, 8);
+   TGVerticalFrame *space = new TGVerticalFrame(h3);
+   fTrashListFrame->AddFirst(space);
+   h3->AddFrame(space, fLayoutExpandXY);
+   fApplyOnXYZ = AddTextButton(h3, "Apply on XYZ", kAxisApplyOnXYZ);
    h->AddFrame(h3, layout);
 
    TGGroupFrame *gf = new TGGroupFrame(h, "Date/Time Offset");
@@ -2844,6 +2855,7 @@ void TStyleManager::CreateTabAxis(TGCompositeFrame *tab)
    tab->AddFrame(fAxisTab, fLayoutExpandXY);
 
    fStripDecimals->SetToolTipText("Draw / Hide the decimal part of labels");
+   fApplyOnXYZ->SetToolTipText("Apply settings of the currently selected axis on XYZ.");
    fTimeOffsetDate->GetNumberEntry()->SetToolTipText("Date offset for axis (dd/mm/yyyy)");
    fTimeOffsetTime->GetNumberEntry()->SetToolTipText("Time offset for axis (hh/mm/ss)");
 }
@@ -4016,12 +4028,12 @@ TGComboBox *TStyleManager::AddDateFormatEntry(TGCompositeFrame *f, Int_t id)
 }
 
 //______________________________________________________________________________
-TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f,
-                                             Char_t *s, Int_t id, Int_t e)
+TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, Char_t *s,
+                                             Int_t id, Int_t e1, Int_t e2)
 {
    // Add a check button to the frame f.
 
-   TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal, 0, e, 4, 2);
+   TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal, 0, e1, 4, e2);
    fTrashListLayout->Add(layout);
 
    TGHorizontalFrame *h = new TGHorizontalFrame(f);
@@ -4366,6 +4378,14 @@ void TStyleManager::DoChangeTab(Int_t i)
    fCurTabNum = i;
    UpdateEditor(fCurTabNum);
    ConnectEditor(fCurTabNum);
+}
+
+//______________________________________________________________________________
+void TStyleManager::DoChangeAxisTab(Int_t i)
+{
+   // Slot called when the user changes the current axis tab.
+
+   fCurTabAxisNum = i;
 }
 
 //______________________________________________________________________________
@@ -5232,6 +5252,62 @@ void TStyleManager::ModStripDecimals()
    // Slot called whenever the strip decimal boolean is modified by the user.
 
    fCurSelStyle->SetStripDecimals(!fStripDecimals->IsDown());
+   DoEditor();
+}
+
+//______________________________________________________________________________
+void TStyleManager::ModApplyOnXYZ()
+{
+   //  Slot called whenever the apply on XYZ button is clicked. The settings of
+   // the current selected axis pad are applyed on all axis.
+   // NB: The logarithmic scale option isn't modified by this method.
+
+   switch (fCurTabAxisNum) {
+      case 0: // X axis
+         fCurSelStyle->SetAxisColor(fCurSelStyle->GetAxisColor("x"), "yz");
+         fCurSelStyle->SetTickLength(fCurSelStyle->GetTickLength("x"), "yz");
+         fCurSelStyle->SetTitleColor(fCurSelStyle->GetTitleColor("x"), "yz");
+         fCurSelStyle->SetTitleFont(fCurSelStyle->GetTitleFont("x"), "yz");
+         fCurSelStyle->SetTitleSize(fCurSelStyle->GetTitleSize("x"), "yz");
+         fCurSelStyle->SetTitleOffset(fCurSelStyle->GetTitleOffset("x"), "yz");
+         fCurSelStyle->SetNdivisions(fCurSelStyle->GetNdivisions("x"), "yz");
+         fCurSelStyle->SetLabelColor(fCurSelStyle->GetLabelColor("x"), "yz");
+         fCurSelStyle->SetLabelFont(fCurSelStyle->GetLabelFont("x"), "yz");
+         fCurSelStyle->SetLabelSize(fCurSelStyle->GetLabelSize("x"), "yz");
+         fCurSelStyle->SetLabelOffset(fCurSelStyle->GetLabelOffset("x"), "yz");
+         break;
+      case 1: // Y axis
+         fCurSelStyle->SetAxisColor(fCurSelStyle->GetAxisColor("y"), "xz");
+         fCurSelStyle->SetTickLength(fCurSelStyle->GetTickLength("y"), "xz");
+         fCurSelStyle->SetTitleColor(fCurSelStyle->GetTitleColor("y"), "xz");
+         fCurSelStyle->SetTitleFont(fCurSelStyle->GetTitleFont("y"), "xz");
+         fCurSelStyle->SetTitleSize(fCurSelStyle->GetTitleSize("y"), "xz");
+         fCurSelStyle->SetTitleOffset(fCurSelStyle->GetTitleOffset("y"), "xz");
+         fCurSelStyle->SetNdivisions(fCurSelStyle->GetNdivisions("y"), "xz");
+         fCurSelStyle->SetLabelColor(fCurSelStyle->GetLabelColor("y"), "xz");
+         fCurSelStyle->SetLabelFont(fCurSelStyle->GetLabelFont("y"), "xz");
+         fCurSelStyle->SetLabelSize(fCurSelStyle->GetLabelSize("y"), "xz");
+         fCurSelStyle->SetLabelOffset(fCurSelStyle->GetLabelOffset("y"), "xz");
+         break;
+
+      case 2: // Z axis
+         fCurSelStyle->SetAxisColor(fCurSelStyle->GetAxisColor("z"), "xy");
+         fCurSelStyle->SetTickLength(fCurSelStyle->GetTickLength("z"), "xy");
+         fCurSelStyle->SetTitleColor(fCurSelStyle->GetTitleColor("z"), "xy");
+         fCurSelStyle->SetTitleFont(fCurSelStyle->GetTitleFont("z"), "xy");
+         fCurSelStyle->SetTitleSize(fCurSelStyle->GetTitleSize("z"), "xy");
+         fCurSelStyle->SetTitleOffset(fCurSelStyle->GetTitleOffset("z"), "xy");
+         fCurSelStyle->SetNdivisions(fCurSelStyle->GetNdivisions("z"), "xy");
+         fCurSelStyle->SetLabelColor(fCurSelStyle->GetLabelColor("z"), "xy");
+         fCurSelStyle->SetLabelFont(fCurSelStyle->GetLabelFont("z"), "xy");
+         fCurSelStyle->SetLabelSize(fCurSelStyle->GetLabelSize("z"), "xy");
+         fCurSelStyle->SetLabelOffset(fCurSelStyle->GetLabelOffset("z"), "xy");
+         break;
+   }
+
+   DisconnectEditor(fCurTabNum);
+   UpdateEditor(fCurTabNum);
+   ConnectEditor(fCurTabNum);
    DoEditor();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.54 2005/09/08 14:22:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.55 2005/09/09 09:54:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -137,15 +137,10 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetFuncWidth(3);
       SetFuncColor(kGreen);
       SetLineWidth(3);
-      SetLabelSize(0.05,"X");
-      SetLabelSize(0.05,"Y");
-      SetLabelSize(0.05,"Z");
-      SetLabelOffset(0.01,"Y");
-      SetLabelColor(kBlue,"X");
-      SetLabelColor(kBlue,"Y");
-      SetTitleSize(0.06,"X");
-      SetTitleSize(0.06,"Y");
-      SetTitleSize(0.06,"Z");
+      SetLabelSize(0.05,"xyz");
+      SetLabelOffset(0.01,"y");
+      SetLabelColor(kBlue,"xy");
+      SetTitleSize(0.06,"xyz");
       SetTitleOffset(1.3,"Y");
       SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
@@ -166,15 +161,9 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetPadLeftMargin(0.2);
       SetHistLineWidth(8);
       SetHistLineColor(kRed);
-      SetLabelSize(0.06,"X");
-      SetLabelSize(0.06,"Y");
-      SetLabelSize(0.06,"Z");
-      SetLabelColor(kBlue,"X");
-      SetLabelColor(kBlue,"Y");
-      SetLabelColor(kBlue,"Z");
-      SetTitleSize(0.08,"X");
-      SetTitleSize(0.08,"Y");
-      SetTitleSize(0.08,"Z");
+      SetLabelSize(0.06,"xyz");
+      SetLabelColor(kBlue,"xyz");
+      SetTitleSize(0.08,"xyz");
       SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
       SetStatColor(10);
@@ -202,17 +191,11 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetFuncWidth(3);
       SetFuncColor(kGreen);
       SetLineWidth(3);
-      SetLabelSize(0.05,"X");
-      SetLabelSize(0.05,"Y");
-      SetLabelSize(0.05,"Z");
-      SetLabelOffset(0.01,"Y");
-      SetLabelColor(kBlack,"X");
-      SetLabelColor(kBlack,"Y");
-      SetLabelColor(kBlack,"Z");
-      SetTitleSize(0.06,"X");
-      SetTitleSize(0.06,"Y");
-      SetTitleSize(0.06,"Z");
-      SetTitleOffset(1.3,"Y");
+      SetLabelSize(0.05,"xyz");
+      SetLabelOffset(0.01,"y");
+      SetLabelColor(kBlack,"xyz");
+      SetTitleSize(0.06,"xyz");
+      SetTitleOffset(1.3,"y");
       SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
       return;

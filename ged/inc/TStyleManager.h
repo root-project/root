@@ -77,6 +77,7 @@ private:
    Bool_t               fLastChoice;         //=kTRUE if the user choose OK in the last TStyleDialog
    Bool_t               fRealTimePreview;    //=kTRUE if auto refreshed preview
    Int_t                fCurTabNum;          // current opened tab number
+   Int_t                fCurTabAxisNum;      // current opened axis tab number
    UInt_t               fSMWidth;            // style manager's width
    UInt_t               fSMHeight;           // style manager's height
    Bool_t               fStyleChanged;       //=kTRUE if the style has been modified
@@ -219,6 +220,7 @@ private:
    TGNumberEntry       *fTimeOffsetDate;     // axis time offset (mm/dd/yyyy) number entry
    TGNumberEntry       *fTimeOffsetTime;     // axis time offset (hh:mm:ss) number entry
    TGCheckButton       *fStripDecimals;      // axis label's decimal part show/hide check box
+   TGTextButton        *fApplyOnXYZ;         // axis apply on XYZ text button
    TGNumberEntry       *fXTitleSize;         // X axis title size number entry
    TGCheckButton       *fXTitleSizeInPixels; // X axis title size check box
    TGColorSelect       *fXTitleColor;        // X axis title color selection widget
@@ -449,7 +451,7 @@ private:
    TGComboBox          *AddTextAlignEntry(TGCompositeFrame *f, Int_t id);
    TGButtonGroup       *AddBorderModeEntry(TGCompositeFrame *f, Int_t id1, Int_t id2, Int_t id3);
    TGComboBox          *AddDateFormatEntry(TGCompositeFrame *f, Int_t id);
-   TGCheckButton       *AddCheckButton(TGCompositeFrame *f, Char_t *s, Int_t id, Int_t e = 0);
+   TGCheckButton       *AddCheckButton(TGCompositeFrame *f, Char_t *s, Int_t id, Int_t e1 = 0, Int_t e2 = 2);
    TGTextEntry         *AddTextEntry(TGCompositeFrame *f, Char_t *s, Int_t id);
    TGComboBox          *AddPaperSizeEntry(TGCompositeFrame *f, Int_t id);
 
@@ -479,6 +481,7 @@ public:
    void DoMoreLess();                        // SLOT
    void DoEditionUpdatePreview();            // SLOT
    void DoChangeTab(Int_t i);                // SLOT
+   void DoChangeAxisTab(Int_t i);            // SLOT
    void BuildList(TStyle *style = 0);
    void DoSelectNoCanvas();                  // SLOT
    void DoSelectCanvas(TVirtualPad *pad,
@@ -574,6 +577,7 @@ public:
 // AXIS
    void ModTimeOffset();                     // SLOT
    void ModStripDecimals();                  // SLOT
+   void ModApplyOnXYZ();                     // SLOT
 
 // AXIS X AXIS
    void ModXTitleSize();                     // SLOT
