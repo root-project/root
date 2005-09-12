@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.5 2002/08/05 09:26:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.6 2004/03/19 14:45:53 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -69,8 +69,8 @@ private:
    Int_t        fNT;               //
    Int_t        fNlevel;           //Number of color levels
    Int_t        fColorLevel[258];  //Color levels corresponding to functions
-   Int_t        fColorMain[10];    //
-   Int_t        fColorDark[10];    //
+   Int_t       *fColorMain;        //
+   Int_t       *fColorDark;        //
    Int_t        fColorTop;         //
    Int_t        fColorBottom;      //
    Int_t        fMesh;             //(=1 if mesh to draw, o otherwise)
@@ -78,6 +78,7 @@ private:
    Int_t        fLevelLine[200];   //
    Int_t        fLoff;             //
    Int_t        fNqs;              //
+   Int_t        fNStack;           //Number of histograms in the stack to be painted
    Int_t        fNxrast;           //
    Int_t        fNyrast;           //
    Int_t        fIfrast;           //

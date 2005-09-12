@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.21 2005/09/04 10:51:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.22 2005/09/07 14:52:03 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -66,6 +66,8 @@ TF3     *TPainter3dAlgorithms::fgCurrentF3 = 0;
 const Int_t kVSizeMax = 20;
 static Double_t gV[kVSizeMax];
 static Double_t gTT[4*kVSizeMax];
+static Int_t gColorMain[kVSizeMax+1];
+static Int_t gColorDark[kVSizeMax+1];
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;
@@ -76,8 +78,8 @@ ClassImp(TPainter3dAlgorithms)
 //______________________________________________________________________________
 TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Lego default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Lego default constructor
+
    Int_t i;
    fIfrast       = 0;
    fMesh         = 1;
@@ -86,7 +88,19 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    fColorBottom  = 1;
    fNlevel       = 0;
    fSystem       = kCARTESIAN;
-   for (i=0;i<10;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
+
+   TList *stack = gCurrentHist->GetPainter()->GetStack();
+   fNStack = 0;
+   if (stack) fNStack = stack->GetSize();
+   if (fNStack > kVSizeMax) {
+      fColorMain  = new Int_t[fNStack+1];
+      fColorDark  = new Int_t[fNStack+1];
+   } else {
+      fColorMain = &gColorMain[0];
+      fColorDark = &gColorDark[0];
+   }
+
+   for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
    for (i=0;i<3;i++)  { fRmin[i] = 0, fRmax[i] = 1; }
    for (i=0;i<4;i++)  { fYls[i] = 0; }
 }
@@ -112,7 +126,19 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fSystem       = system;
    if (system == kCARTESIAN || system == kPOLAR) psi =  0;
    else                                          psi = 90;
-   for (i=0;i<10;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
+
+   TList *stack = gCurrentHist->GetPainter()->GetStack();
+   fNStack = 0;
+   if (stack) fNStack = stack->GetSize();
+   if (fNStack > kVSizeMax) {
+      fColorMain  = new Int_t[fNStack+1];
+      fColorDark  = new Int_t[fNStack+1];
+   } else {
+      fColorMain = &gColorMain[0];
+      fColorDark = &gColorDark[0];
+   }
+
+   for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
    for (i=0;i<3;i++)  { fRmin[i] = rmin[i], fRmax[i] = rmax[i]; }
    for (i=0;i<4;i++)  { fYls[i] = 0; }
 
@@ -125,10 +151,13 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
 //______________________________________________________________________________
 TPainter3dAlgorithms::~TPainter3dAlgorithms()
 {
-//*-*-*-*-*-*-*-*-*-*-*Lego default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // Lego default destructor
 
    if (fRaster) {delete [] fRaster; fRaster = 0;}
+   if (fNStack > kVSizeMax) {
+      delete [] fColorMain;
+      delete [] fColorDark;
+   }
 }
 
 //______________________________________________________________________________
@@ -2336,9 +2365,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 
     // Allocate v and tt arrays
     Double_t *v, *tt;
-    TList *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t vSize = 0;
-    if (stack) vSize = stack->GetSize()+2;
+    Int_t vSize = fNStack+2;
     if (vSize > kVSizeMax) {
        v  = new Double_t[vSize];
        tt = new Double_t[4*vSize];
@@ -2534,9 +2561,7 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
 
     // Allocate v and tt arrays
     Double_t *v, *tt;
-    TList *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t vSize = 0;
-    if (stack) vSize = stack->GetSize()+2;
+    Int_t vSize = fNStack+2;
     if (vSize > kVSizeMax) {
        v  = new Double_t[vSize];
        tt = new Double_t[4*vSize];
@@ -2751,9 +2776,7 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
 
     // Allocate v and tt arrays
     Double_t *v, *tt;
-    TList *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t vSize = 0;
-    if (stack) vSize = stack->GetSize()+2;
+    Int_t vSize = fNStack+2;
     if (vSize > kVSizeMax) {
        v  = new Double_t[vSize];
        tt = new Double_t[4*vSize];
@@ -2980,9 +3003,7 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
 
     // Allocate v and tt arrays
     Double_t *v, *tt;
-    TList *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t vSize = 0;
-    if (stack) vSize = stack->GetSize()+2;
+    Int_t vSize = fNStack+2;
     if (vSize > kVSizeMax) {
        v  = new Double_t[vSize];
        tt = new Double_t[4*vSize];
@@ -3464,13 +3485,10 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
 //______________________________________________________________________________
 void TPainter3dAlgorithms::SetColorDark(Color_t color, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*Store dark color for stack number n-*-*-**-*-*-*-*-*-*-*
-//*-*              ===================================                    *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Store dark color for stack number n
 
    if (n < 0 ) {fColorBottom = color; return;}
-   if (n > 9 ) {fColorTop    = color; return;}
+   if (n > fNStack ) {fColorTop  = color; return;}
    fColorDark[n] = color;
 }
 
@@ -3478,13 +3496,10 @@ void TPainter3dAlgorithms::SetColorDark(Color_t color, Int_t n)
 //______________________________________________________________________________
 void TPainter3dAlgorithms::SetColorMain(Color_t color, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*Store color for stack number n*-*-*-*-*-**-*-*-*-*-*-*-*
-//*-*              ==============================                         *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Store color for stack number n
 
    if (n < 0 ) {fColorBottom = color; return;}
-   if (n > 9 ) {fColorTop    = color; return;}
+   if (n > fNStack ) {fColorTop = color; return;}
    fColorMain[n] = color;
 }
 
