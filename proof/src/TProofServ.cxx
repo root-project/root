@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.102 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.103 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -307,6 +307,9 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    if (gProofDebugLevel > 0)
       Info("TProofServ", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
 
+   // process startup options, find out if we are a master or a slave
+   GetOptions(argc, argv);
+
    // debug hooks
    if (IsMaster()) {
       // wait (loop) in master to allow debugger to connect
@@ -321,8 +324,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
             ;
       }
    }
-
-   GetOptions(argc, argv);
 
    if (gProofDebugLevel > 0)
       Info("TProofServ", "Service %s ConfDir %s IsMaster %d\n",
