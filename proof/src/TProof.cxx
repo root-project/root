@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.101 2005/08/30 10:47:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.102 2005/08/31 11:11:06 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -401,14 +401,14 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                     "Cannot find libThread: switch to serial startup");
             parallelStartup = kFALSE;
          }
-      }
 
-      // Get no of parallel requests and set semaphore correspondingly
-      Int_t parallelRequests = gEnv->GetValue("Proof.ParallelStartupRequests", 0);
-      if (parallelRequests > 0) {
-         PDB(kGlobal,1)
-            Info("Init", "Parallel Startup Requests: %d", parallelRequests);
-         fgSemaphore = new TSemaphore((UInt_t)(parallelRequests));
+         // Get no of parallel requests and set semaphore correspondingly
+         Int_t parallelRequests = gEnv->GetValue("Proof.ParallelStartupRequests", 0);
+         if (parallelRequests > 0) {
+            PDB(kGlobal,1)
+               Info("Init", "Parallel Startup Requests: %d", parallelRequests);
+            fgSemaphore = new TSemaphore((UInt_t)(parallelRequests));
+         }
       }
    }
 
@@ -530,7 +530,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
             thrHandlers.reserve(nSlaves);
             if (thrHandlers.max_size() < nSlaves) {
                PDB(kGlobal,1)
-                  Info("StartSlaves","cannot reserve enough space thread"
+                  Info("StartSlaves","cannot reserve enough space for thread"
                        " handlers - switch to serial startup");
                parallel = kFALSE;
             }
@@ -607,9 +607,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
                } else {
                   // create slave server
-                  TSlave *slave =
-                      CreateSlave(word[1], sport, fullord, perfidx,
-                                  image, workdir);
+                  TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx,
+                                              image, workdir);
 
                   fSlaves->Add(slave);
                   if (slave->IsValid()) {
@@ -2534,7 +2533,7 @@ Int_t TProof::GoParallel(Int_t nodes)
    TSlave *sl;
    while (cnt < nodes && (sl = (TSlave *)next())) {
       if (sl->IsValid()) {
-         if ( strcmp("IGNORE", sl->GetImage()) == 0 ) continue;
+         if (strcmp("IGNORE", sl->GetImage()) == 0) continue;
          Int_t slavenodes = 0;
          if (sl->GetSlaveType() == TSlave::kSlave) {
             fActiveSlaves->Add(sl);
