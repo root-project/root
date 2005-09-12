@@ -79,6 +79,7 @@ public:
    void   Paint(Option_t *option);
    void   PaintTriangles(Option_t *option);
    void   PaintPolyMarker(Option_t *option);
+   void   PaintPolyLine(Option_t *option);
    void   PaintContour(Option_t *option);
 
    ClassDef(TGraphPainter,1)  // TGraph painter

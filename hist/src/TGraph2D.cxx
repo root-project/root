@@ -1191,6 +1191,8 @@ void TGraph2D::Paint(Option_t *option)
           !opt.Contains("psr")) opt.Append("tri0");
    }
 
+   if (opt.Contains("line") && !opt.Contains("tri")) opt.Append("tri0");
+
    if (opt.Contains("tri0")) {
       GetHistogram("empty");
    } else {

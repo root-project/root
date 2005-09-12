@@ -325,14 +325,15 @@ void TGraphPainter::Paint(Option_t *option)
    //            painted with the current fill area color. The edges of each
    //            triangles are painted with the current line color.
    //   "TRIW" : The Delaunay triangles are drawn as wire frame
-   //   "TRi1" : The Delaunay triangles are painted with color levels. The edges
+   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
    //            of each triangles are painted with the current line color.
-   //   "TRi2" : the Delaunay triangles are painted with color levels.
+   //   "TRI2" : the Delaunay triangles are painted with color levels.
    //   "P"    : Draw a marker at each vertex
-   //   "p0"   : Draw a circle at each vertex. Each circle background is white.
+   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
    //   "PCOL" : Draw a marker at each vertex. The color of each marker is 
    //            defined according to its Z position. 
    //   "CONT" : Draw contours
+   //   "LINE" : Draw a 3D polyline
 
    TString opt = option;
    opt.ToLower();
@@ -343,6 +344,7 @@ void TGraphPainter::Paint(Option_t *option)
 
    Bool_t markers   = opt.Contains("p") && !triangles;
    Bool_t contour   = opt.Contains("cont");
+   Bool_t line      = opt.Contains("line");
 
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
@@ -366,6 +368,7 @@ void TGraphPainter::Paint(Option_t *option)
    if (triangles) PaintTriangles(option);
    if (markers)   PaintPolyMarker(option);
    if (contour)   PaintContour(option);
+   if (line)      PaintPolyLine(option);
 }
 
 
@@ -636,6 +639,50 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
    delete [] ym;
 }
 
+//______________________________________________________________________________
+void TGraphPainter::PaintPolyLine(Option_t * /* option */)
+{
+   // Paints the 2D graph as PaintPolyLine
+
+   Double_t temp1[3],temp2[3];
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintPolyLine", "No TView in current pad");
+      return;
+   }
+
+   Int_t  it;
+
+   Double_t *xm = new Double_t[fNpoints]; 
+   Double_t *ym = new Double_t[fNpoints];
+   Int_t    npd = 0;
+   for (it=0; it<fNpoints; it++) {
+      if(fX[it] < fXmin || fX[it] > fXmax) continue;
+      if(fY[it] < fYmin || fY[it] > fYmax) continue;
+      npd++;
+      temp1[0] = fX[it];
+      temp1[1] = fY[it];
+      temp1[2] = fZ[it];
+      temp1[0] = TMath::Max(temp1[0],fXmin);
+      temp1[1] = TMath::Max(temp1[1],fYmin);
+      temp1[2] = TMath::Max(temp1[2],fZmin);
+      temp1[2] = TMath::Min(temp1[2],fZmax);
+      if (Hoption.Logx) temp1[0] = TMath::Log10(temp1[0]);
+      if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
+      if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
+      view->WCtoNDC(temp1, &temp2[0]);
+      xm[it] = temp2[0];
+      ym[it] = temp2[1];
+   }
+   fGraph2D->SetLineStyle(fGraph2D->GetLineStyle());
+   fGraph2D->SetLineWidth(fGraph2D->GetLineWidth());
+   fGraph2D->SetLineColor(fGraph2D->GetLineColor());
+   fGraph2D->TAttLine::Modify();
+   gPad->PaintPolyLine(npd,xm,ym);
+   delete [] xm;
+   delete [] ym;
+}
 
 //______________________________________________________________________________
 void TGraphPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
