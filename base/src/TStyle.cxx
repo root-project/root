@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.55 2005/09/09 09:54:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.56 2005/09/09 15:16:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1066,7 +1066,7 @@ void TStyle::SetOptStat(Option_t *stat)
    if (opt.Contains("S")) mode+=20000000;
    if (opt.Contains("k")) mode+=100000000;
    if (opt.Contains("K")) mode+=200000000;
-   if (mode == 1) mode = 10000001;
+   if (mode == 1) mode = 1000000001;
 
    SetOptStat(mode);
 }
