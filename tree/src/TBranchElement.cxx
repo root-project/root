@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.177 2005/07/27 15:32:16 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.178 2005/08/29 10:57:28 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -170,6 +170,18 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
       fBasketBytes[i] = 0;
       fBasketEntry[i] = 0;
       fBasketSeek[i]  = 0;
+   }
+
+   // The fBits part of a TObject is of varying length,
+   // so we must ask the TBranch to inform the TBasket
+   // that we need a fEntryOffset table created.
+   //
+   // Note: The fBits is varying size because the pidf
+   //       is streamed only when the TObject is referenced
+   //       by a TRef.
+ 
+   if (fStreamerType == TStreamerInfo::kBits) {
+      fEntryOffsetLen = 1000;
    }
 
    // Create a basket for the terminal branch
