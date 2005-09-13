@@ -6198,7 +6198,7 @@ void TStyleManager::ModOptStat()
       if (fOptStatSkewness->IsDown()) stat +=10000000;
       if (fOptStatKurtosis->IsDown()) stat +=100000000;
    }
-   if (stat == 1) stat = 10000001;
+   if (stat == 1) stat = 1000000001;
    fCurSelStyle->SetOptStat(stat);
    DoEditor();
 }

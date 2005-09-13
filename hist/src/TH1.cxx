@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.251 2005/09/02 21:06:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.252 2005/09/05 10:02:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5065,7 +5065,7 @@ void TH1::UseCurrentStyle()
       SetMarkerStyle(gStyle->GetMarkerStyle());
       SetMarkerSize(gStyle->GetMarkerSize());
       Int_t dostat = gStyle->GetOptStat();
-      if (gStyle->GetOptFit() && !dostat) dostat = 10000001;
+      if (gStyle->GetOptFit() && !dostat) dostat = 1000000001;
       SetStats(dostat);
    } else {
       gStyle->SetBarOffset(fBarOffset);

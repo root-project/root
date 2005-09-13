@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.56 2005/09/09 15:16:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.57 2005/09/12 16:22:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1010,7 +1010,7 @@ void TStyle::SetOptStat(Int_t mode)
    //          be taken as an octal number !!
    //  WARNING: SetOptStat(1) is taken as SetOptStat(1111) (for back compatibility
    //           with older versions. If you want to print only the name of the histogram
-   //           call SetOptStat(10000001).
+   //           call SetOptStat(1000000001).
    //  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
    //        or overflow (100000), the stats box will show all combinations
    //        of underflow/overflows and not just one single number!
