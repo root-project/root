@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.103 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.104 2005/09/12 09:07:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1831,7 +1831,7 @@ void TProofServ::RedirectOutput()
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
 
-   // from this poInt_t on stdout and stderr are properly redirected
+   // from this point on stdout and stderr are properly redirected
    if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
       Warning("RedirectOutput", "no way to tell master (or client) where"
               " to upload packages");
