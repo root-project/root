@@ -46,7 +46,7 @@ public:
    TStylePreview(const TGWindow *p, TStyle *style, TVirtualPad *currentPad);
    virtual ~TStylePreview();
    void Update(TStyle *style, TVirtualPad *pad);
-   void TStylePreview::MapTheWindow();
+   void MapTheWindow();
    TCanvas *GetMainCanvas();
 
    ClassDef(TStylePreview, 0) // Preview window used by the TStyleManager class
