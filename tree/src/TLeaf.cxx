@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.12 2004/06/22 15:36:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.13 2005/01/28 13:53:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -96,10 +96,15 @@ void TLeaf::Browse(TBrowser *b)
 {
    char name[64];
    if (strchr(GetName(),'.')) {
-      fBranch->GetTree()->Draw(GetName(), b ? b->GetDrawOption() : "");
+      fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
    } else {
-      sprintf(name,"%s.%s",fBranch->GetName(),GetName());
-      fBranch->GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
+      if (fBranch->GetListOfLeaves()->GetEntries()>1 || 
+          strcmp(fBranch->GetName(),GetName()) != 0 ) {
+         sprintf(name,"%s.%s",fBranch->GetName(),GetName());
+         fBranch->GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
+      } else {
+         fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
+      }
    }
    if (gPad) gPad->Update();
 }
