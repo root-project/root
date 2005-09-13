@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.80 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.82 2005/09/05 14:26:43 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -62,6 +62,7 @@
 #include "KeySymbols.h"
 #include "THashTable.h"
 #include "TMethod.h"
+#include "TGeoVolume.h"
 
 #include "HelpText.h"
 
@@ -342,9 +343,9 @@ private:
    const TGPicture *fSmallCachedPic; //
    Bool_t           fWasGrouped;
    TObject         *fActiveObject;   //
-   Bool_t           fIsEmpty;  
+   Bool_t           fIsEmpty;
    THashTable      *fThumbnails;     // hash table with thumbnailed pictures
-   Bool_t           fAutoThumbnail;  // 
+   Bool_t           fAutoThumbnail;  //
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -422,9 +423,13 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
 
    TString xpm_magic(name, 3);
    Bool_t xpm = xpm_magic == "/* ";
-   const char *iconname = xpm ? obj->GetName() : name; 
+   const char *iconname = xpm ? obj->GetName() : name;
 
-   if(fCachedPicName == iconname) {
+   if (obj->IsA()->InheritsFrom("TGeoVolume")) {
+      iconname = ((TGeoVolume *)(obj))->GetShape()->GetName();
+   }
+
+   if (fCachedPicName == iconname) {
       *pic = fLargeCachedPic;
       *spic = fSmallCachedPic;
       return;
@@ -500,9 +505,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
             fListView->SetDefaultHeaders();
          fCheckHeaders = kFALSE;
       }
- 
+
       TIconBoxThumb *thumb = 0;
-      thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name : 
+      thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name :
                                       gSystem->ConcatFileName(gSystem->WorkingDirectory(), name));
 
       if (thumb) {
@@ -1058,7 +1063,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
    str.ToLower();
    fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
-   fIconBox->fAutoThumbnail ? fOptionMenu->CheckEntry(kOptionAutoThumbnail) : 
+   fIconBox->fAutoThumbnail ? fOptionMenu->CheckEntry(kOptionAutoThumbnail) :
                               fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
 
    str = gEnv->GetValue("Browser.GroupView", "10000");
@@ -1103,6 +1108,9 @@ void TRootBrowser::CreateBrowser(const char *name)
    MapSubwindows();
    SetDefaults();
    Resize();
+
+   Connect(fLt, "Checked(TObject*, Bool_t)", "TRootBrowser",
+           this, "Checked(TObject *,Bool_t)");
 }
 
 //______________________________________________________________________________
@@ -1137,24 +1145,110 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::Add(TObject *obj, const char *name)
+void TRootBrowser::Add(TObject *obj, const char *name, Int_t check)
 {
    // Add items to the browser. This function has to be called
    // by the Browse() member function of objects when they are
-   // called by a browser.
+   // called by a browser. If check < 0 (default) no check box is drawn,
+   // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
 
    if (!obj)
       return;
    if (!name) name = obj->GetName();
 
    AddToBox(obj, name);
+   if (check > -1) {
+      TGFrameElement *el;
+      TIter next(fIconBox->fList);
+      if (!obj->IsFolder()) {
+         while ((el = (TGFrameElement *) next())) {
+            TGLVEntry *f = (TGLVEntry *) el->fFrame;
+            if (f->GetUserData() == obj) {
+               f->SetCheckedEntry(check);
+            }
+         }
+      }
+   }
 
    // Don't show current dir and up dir links in the tree
    if (name[0] == '.' && (name[1] == '.' || name[1] == '\0'))
      return;
 
    if (obj->IsFolder())
-      AddToTree(obj, name);
+      AddToTree(obj, name, check);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::AddCheckBox(TObject *obj, Bool_t check)
+{
+   // Add a checkbox in the TGListTreeItem corresponding to obj
+   // and a checkmark on TGLVEntry if check = kTRUE.
+
+   if (obj) {
+      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
+      while (item) {
+         fLt->SetCheckBox(item, kTRUE);
+         fLt->CheckItem(item, check);
+         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
+      }
+      TGFrameElement *el;
+      TIter next(fIconBox->fList);
+      while ((el = (TGFrameElement *) next())) {
+         TGLVEntry *f = (TGLVEntry *) el->fFrame;
+         if (f->GetUserData() == obj) {
+            f->SetCheckedEntry(check);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::CheckObjectItem(TObject *obj, Bool_t check)
+{
+   // Check / uncheck the TGListTreeItem corresponding to this
+   // object and add a checkmark on TGLVEntry if check = kTRUE.
+
+   if (obj) {
+      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
+      while (item) {
+         fLt->CheckItem(item, check);
+         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
+         TGFrameElement *el;
+         TIter next(fIconBox->fList);
+         if (!obj->IsFolder()) {
+            while ((el = (TGFrameElement *) next())) {
+               TGLVEntry *f = (TGLVEntry *) el->fFrame;
+               if (f->GetUserData() == obj) {
+                  f->SetCheckedEntry(check);
+               }
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::RemoveCheckBox(TObject *obj)
+{
+   // Remove checkbox from TGListTree and checkmark from TGListView.
+
+   if (obj) {
+      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
+      while (item) {
+         fLt->SetCheckBox(item, kFALSE);
+         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
+         TGFrameElement *el;
+         TIter next(fIconBox->fList);
+         if (!obj->IsFolder()) {
+            while ((el = (TGFrameElement *) next())) {
+               TGLVEntry *f = (TGLVEntry *) el->fFrame;
+               if (f->GetUserData() == obj) {
+                  f->SetCheckedEntry(kFALSE);
+               }
+            }
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1180,7 +1274,7 @@ void TRootBrowser::AddToBox(TObject *obj, const char *name)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::AddToTree(TObject *obj, const char *name)
+void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
 {
    // Add items to the current TGListTree of the browser.
 
@@ -1188,7 +1282,18 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name)
       if (!name) name = obj->GetName();
       if (name[0] == '.' && name[1] == '.')
          Info("AddToTree", "up one level %s", name);
-      fLt->AddItem(fListLevel, name, obj);
+      if(check > -1) {
+         TGListTreeItem *item = fLt->AddItem(fListLevel, name, obj, 0, 0, kTRUE);
+         fLt->CheckItem(item, (Bool_t)check);
+         TString tip(obj->ClassName());
+         if (obj->GetTitle()) {
+            tip += " ";
+            tip += obj->GetTitle();
+         }
+         fLt->SetToolTipItem(item, tip.Data());
+      }
+      else
+         fLt->AddItem(fListLevel, name, obj);
    }
 }
 
@@ -1235,7 +1340,7 @@ void TRootBrowser::UpdateDrawOption()
          return;
       }
    }
- 
+
    Int_t nn = fDrawOption->GetNumberOfEntries() + 1;
    fDrawOption->AddEntry(opt.Data(), nn);
    fDrawOption->Select(nn);
@@ -1384,14 +1489,14 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          const TGPicture *pic, *spic;
 
          TIconBoxThumb *thumb = 0;
-         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() : 
+         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() :
                         gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
 
          thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path);
 
          if (thumb) {
             spic = thumb->fSmall;
-            pic = thumb->fLarge; 
+            pic = thumb->fLarge;
          } else {
             TImage *img = TImage::Create();
             nowp->Modified();
@@ -1549,7 +1654,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
 
                   case kOptionAutoThumbnail:
-                     if (fOptionMenu->IsEntryChecked(kOptionAutoThumbnail)) { 
+                     if (fOptionMenu->IsEntryChecked(kOptionAutoThumbnail)) {
                         fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
                         fIconBox->fThumbnails->Delete();
                         fIconBox->fAutoThumbnail = kFALSE;
@@ -1582,13 +1687,13 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
                      }
                      if (fListLevel) item = fListLevel->GetParent();
-                     
+
 
                      if (item) {
                         fListLevel = item;
                         obj = (TObject *)fListLevel->GetUserData();
                         HighlightListLevel();
-                        DisplayDirectory();                     
+                        DisplayDirectory();
                         if (obj) BrowseObj(obj);
                         fClient->NeedRedraw(fLt);
                      } else {
@@ -1882,7 +1987,7 @@ void TRootBrowser::AddToHistory(TGListTreeItem *item)
 
    TGButton *btn = fToolBar->GetButton(kHistoryBack);
 
-   if (!item || (fHistoryCursor && 
+   if (!item || (fHistoryCursor &&
        (item == ((TRootBrowserHistoryCursor*)fHistoryCursor)->fItem))) return;
 
    TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistoryCursor;
@@ -2090,12 +2195,24 @@ void TRootBrowser::DoubleClicked(TObject *obj)
 }
 
 //______________________________________________________________________________
+void TRootBrowser::Checked(TObject *obj, Bool_t checked)
+{
+   // Emits signal when double clicking on icon.
+   Long_t args[2];
+
+   args[0] = (Long_t)obj;
+   args[1] = checked;
+
+   Emit("Checked(TObject*,Bool_t)", args);
+}
+
+//______________________________________________________________________________
 void TRootBrowser::IconBoxAction(TObject *obj)
 {
    // Default action when double clicking on icon.
 
    Bool_t browsable = kFALSE;
-   const char *dirname = 0; 
+   const char *dirname = 0;
    if (obj) {
       TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
 
@@ -2250,6 +2367,7 @@ void TRootBrowser::Refresh(Bool_t force)
          }
       }
    }
+   fClient->NeedRedraw(fLt);
 }
 
 //______________________________________________________________________________
@@ -2414,7 +2532,7 @@ void TRootBrowser::Search()
 //______________________________________________________________________________
 static Bool_t isBinary(const char *str, int len)
 {
-   // test 
+   // test
 
    for (int i = 0; i < len; i++) {
       char c = str[i];
@@ -2428,7 +2546,7 @@ static Bool_t isBinary(const char *str, int len)
 //______________________________________________________________________________
 void TRootBrowser::HideTextEdit()
 {
-   // hide text edit 
+   // hide text edit
 
    if (!fTextEdit) return;
 
@@ -2472,11 +2590,11 @@ void TRootBrowser::BrowseTextFile(const char *file)
    }
 
    if (!fTextEdit) {
-      fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(), 
+      fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(),
                                  kSunkenFrame | kDoubleBorder);
-      if (TGSearchDialog::gDialog()) {
-         TGSearchDialog::gDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
-                                             fTextEdit, "Search(char *,Bool_t,Bool_t)");
+      if (TGSearchDialog::SearchDialog()) {
+         TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
+                                                 fTextEdit, "Search(char *,Bool_t,Bool_t)");
       }
       fV2->AddFrame(fTextEdit, fExpandLayout);
    }
