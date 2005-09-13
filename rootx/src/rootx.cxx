@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.17 2005/06/01 14:07:58 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.18 2005/09/04 09:13:27 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -198,22 +198,7 @@ static void SetLibraryPath()
 
    char *msg;
 
-#  if defined(__linux) || defined(__alpha) || defined(__sgi) || \
-      defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__) || \
-      defined(__OpenBSD__)
-   if (getenv("LD_LIBRARY_PATH")) {
-      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LD_LIBRARY_PATH"))+100];
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
-                                                getenv("LD_LIBRARY_PATH"));
-   } else {
-      msg = new char [strlen(getenv("ROOTSYS"))+100];
-#  if defined(__sun)
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", getenv("ROOTSYS"));
-#  else
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
-#  endif
-   }
-#  elif defined(__hpux)  || defined(_HIUX_SOURCE)
+#  if defined(__hpux)  || defined(_HIUX_SOURCE)
    if (getenv("SHLIB_PATH")) {
       msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("SHLIB_PATH"))+100];
       sprintf(msg, "SHLIB_PATH=%s/lib:%s", getenv("ROOTSYS"),
@@ -230,6 +215,28 @@ static void SetLibraryPath()
    } else {
       msg = new char [strlen(getenv("ROOTSYS"))+100];
       sprintf(msg, "LIBPATH=%s/lib:/lib:/usr/lib", getenv("ROOTSYS"));
+   }
+#  elif defined(__APPLE__)
+   if (getenv("DYLD_LIBRARY_PATH")) {
+      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("DYLD_LIBRARY_PATH"))+100];
+      sprintf(msg, "DYLD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
+                                                  getenv("DYLD_LIBRARY_PATH"));
+   } else {
+      msg = new char [strlen(getenv("ROOTSYS"))+100];
+      sprintf(msg, "DYLD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
+   }
+#  else
+   if (getenv("LD_LIBRARY_PATH")) {
+      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LD_LIBRARY_PATH"))+100];
+      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
+                                                getenv("LD_LIBRARY_PATH"));
+   } else {
+      msg = new char [strlen(getenv("ROOTSYS"))+100];
+#  if defined(__sun)
+      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", getenv("ROOTSYS"));
+#  else
+      sprintf(msg, "LD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
+#  endif
    }
 #  endif
    putenv(msg);
