@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.140 2005/09/05 09:42:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.141 2005/09/07 08:20:42 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -290,7 +290,7 @@ const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
 
 class TFdSet {
 private:
-   Long_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
+   ULong_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
    TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
@@ -299,7 +299,7 @@ public:
    void   Set(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] |= (1L << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] |= (1UL << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Set","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -307,7 +307,7 @@ public:
    void   Clr(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] &= ~(1L << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] &= ~(1UL << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Clr","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -315,13 +315,13 @@ public:
    Int_t  IsSet(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         return fds_bits[n/kNFDBITS] & (1L << (n % kNFDBITS));
+         return (fds_bits[n/kNFDBITS] & (1UL << (n % kNFDBITS))) != 0;
       } else {
          ::Fatal("TFdSet::IsSet","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
          return 0;
       }
    }
-   Long_t *GetBits() { return (Long_t *)fds_bits; }
+   ULong_t *GetBits() { return (ULong_t *)fds_bits; }
 };
 
 //______________________________________________________________________________
@@ -3181,7 +3181,7 @@ int TUnixSystem::UnixSetitimer(Long_t ms)
 //---- file descriptors --------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
+int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                             Long_t timeout)
 {
    // Wait for events on the file descriptors specified in the readready and
@@ -3189,12 +3189,14 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
 
    int retcode;
 
-#if (defined(R__HPUX) && defined(R__B64))
+#if defined(R__HPUX) && defined(R__B64)
    fd_set frd;
    fd_set fwr;
+   FD_ZERO(&frd);
+   FD_ZERO(&fwr);
    for (int i = 0; i < nfds; i++) {
-      if (readready)  FD_SET(readready->IsSet(i),  &frd);
-      if (writeready) FD_SET(writeready->IsSet(i), &fwr);
+      if (readready  && readready->IsSet(i))  FD_SET(i, &frd);
+      if (writeready && writeready->IsSet(i)) FD_SET(i, &fwr);
    }
    fd_set *rd = (readready)  ? &frd : 0;
    fd_set *wr = (writeready) ? &fwr : 0;
@@ -3220,6 +3222,15 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
          return -3;
       return -1;
    }
+
+#if defined(R__HPUX) && defined(R__B64)
+   if (rd) readready->Zero();
+   if (wr) writeready->Zero();
+   for (int i = 0; i < nfds; i++) {
+      if (rd && FD_ISSET(i, rd)) readready->Set(i);
+      if (wr && FD_ISSET(i, wr)) writeready->Set(i);
+   }
+#endif
 
    return retcode;
 }

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.22 2004/12/15 16:04:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.23 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ protected:
    static Long_t       UnixNow();
    static int          UnixWaitchild();
    static int          UnixSetitimer(Long_t ms);
-   static int          UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
+   static int          UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
    static void         UnixSignal(ESignals sig, SigHandler_t h);
    static const char  *UnixSigname(ESignals sig);
