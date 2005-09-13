@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.70 2005/08/29 04:16:08 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.71 2005/08/31 19:42:21 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -881,11 +881,11 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 
 
 //____________________________________________________________________________
-void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
+void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expectedClass)
 {
 // return pointer to object identified by namecycle if and only if the actual
-// object is a type suitable to be stored as a pointer to a "cl"
-// If cl is null, no check is performed.
+// object is a type suitable to be stored as a pointer to a "expectedClass"
+// If expectedClass is null, no check is performed.
 //
 //   namecycle has the format name;cycle
 //   name  = * is illegal, cycle = * is illegal
@@ -922,7 +922,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   if (cl->InheritsFrom(TObject::Class())) {
+   if (expectedClass->InheritsFrom(TObject::Class())) {
       TObject *objcur = fList->FindObject(namobj);
       if (objcur) {
          if (objcur==gDirectory && strlen(namobj)!=0) {
@@ -932,7 +932,9 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
             objcur = 0;
          } else if (cycle == 9999) {
             cursav->cd();
-            return objcur;
+            // Check type
+            if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return 0;
+            else return objcur;
          } else {
             if (objcur->InheritsFrom(TCollection::Class()))
                objcur->Delete();  // delete also list elements
@@ -950,7 +952,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
    while ((key = (TKey *) nextkey())) {
      if (strcmp(namobj,key->GetName()) == 0) {
         if ((cycle == 9999) || (cycle == key->GetCycle())) {
-           idcur = key->ReadObjectAny(cl);
+           idcur = key->ReadObjectAny(expectedClass);
            break;
         }
      }
