@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.80 2005/08/31 11:11:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.81 2005/09/03 13:17:38 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -607,6 +607,15 @@ void ProofdExec()
    } else {
       ldpath = new char[32+gConfDir.length()];
       sprintf(ldpath, "LIBPATH=%s/lib", gConfDir.c_str());
+   }
+#   elif defined(__APPLE__)
+   if (getenv("DYLD_LIBRARY_PATH")) {
+      ldpath = new char[32+gConfDir.length()+strlen(getenv("DYLD_LIBRARY_PATH"))];
+      sprintf(ldpath, "DYLD_LIBRARY_PATH=%s/lib:%s",
+                      gConfDir.c_str(), getenv("DYLD_LIBRARY_PATH"));
+   } else {
+      ldpath = new char[32+gConfDir.length()];
+      sprintf(ldpath, "DYLD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   else
    if (getenv("LD_LIBRARY_PATH")) {
