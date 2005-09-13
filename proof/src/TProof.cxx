@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.102 2005/08/31 11:11:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.103 2005/09/12 09:05:15 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3511,43 +3511,34 @@ void TProof::RedirectLog(Bool_t on)
 {
    // Redirect stderr and stdout messages to log file.
 
-   static FILE *tmpout = 0, *stdout_svd = 0, *stderr_svd = 0;
-   static Int_t tmperr_fno = -1, stdout_fno = -1, stderr_fno = -1;
+#ifndef WIN32
+   static char stdoutsav[128] = {0};
+   static char stderrsav[128] = {0};
+#endif
 
    if (on) {
-      //
-      // redirect stdout
-      stdout_fno = fileno(stdout);
-      if (!(stdout_svd = fdopen(dup(fileno(stdout)),"w"))) {
-         Error("RedirectLog", "stdout could not been duplicated, do not redirect");
-      } else {
-         if ((tmpout = freopen(fLogFileName, "a", stdout)) == 0)
-            Error("RedirectLog", "could not freopen stdout");
-      }
-      //
-      // redirect stderr
-      stderr_fno = fileno(stderr);
-      if (!(stderr_svd = fdopen(dup(fileno(stderr)),"w"))) {
-         Error("RedirectLog", "stderr could not been duplicated, do not redirect");
-      } else {
-         if ((tmperr_fno = dup2(fileno(stdout), fileno(stderr))) < 0)
-            Error("RedirectLog", "could not redirect stderr");
-      }
+      // redirect stdout & stderr
+#ifndef WIN32
+      // Save the paths on unixes
+      if (!strlen(stdoutsav))
+         strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+      if (!strlen(stderrsav))
+         strcpy(stderrsav,ttyname(STDERR_FILENO));
+#endif
+      if (freopen(fLogFileName, "a", stdout) == 0)
+         Error("RedirectLog", "could not freopen stdout");
+      if (freopen(fLogFileName, "a", stderr) == 0)
+         Error("RedirectLog", "could not freopen stderr");
 
    } else {
-      //
-      // Restore stdout
-      if (stdout_svd) {
-         fflush(stdout);
-         *stdout = *stdout_svd;
-         dup2(fileno(stdout), stdout_fno);
-      }
-      //
-      // Restore stderr
-      if (stderr_svd) {
-         *stderr = *stderr_svd;
-         dup2(fileno(stderr), stderr_fno);
-      }
+      // Restore stdout & stderr
+#ifndef WIN32
+      freopen(stdoutsav, "a", stdout);
+      freopen(stderrsav, "a", stderr);
+#else
+      freopen("CONOUT$", "a", stdout);
+      freopen("CONOUT$", "a", stderr);
+#endif
    }
 }
 
