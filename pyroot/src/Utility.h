@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.18 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.19 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -14,6 +14,8 @@
 
 namespace PyROOT {
 
+   class PyCallable;
+
    R__EXTERN PyObject* gNullObject;
 
    typedef PyDictEntry* (*DictLookup_t) ( PyDictObject*, PyObject*, Long_t );
@@ -26,6 +28,7 @@ namespace PyROOT {
       Bool_t AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
                        int flags = METH_VARARGS );
       Bool_t AddToClass( PyObject* pyclass, const char* label, const char* func );
+      Bool_t AddToClass( PyObject* pyclass, const char* label, PyCallable* pfunc );
 
    // initialize proxy type objects
       Bool_t InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );

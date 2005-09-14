@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.11 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.12 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -86,7 +86,7 @@ PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 
 //- pointer/array executors ---------------------------------------------------
 PyObject* PyROOT::TVoidArrayExecutor::Execute( G__CallFunc* func, void* self )
-{  
+{
    return PyLong_FromVoidPtr( (void*)func->ExecInt( self ) );
 }
 

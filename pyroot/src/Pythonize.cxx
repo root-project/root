@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.24 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.25 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -985,44 +985,32 @@ namespace {
    using namespace PyROOT;
 
 //- TFN behaviour ------------------------------------------------------------
-   std::map< int, std::pair< PyObject*, int > > gPyObjectCallbacks;
    typedef std::pair< PyObject*, int > CallInfo_t;
 
-   int gLastTag = 99;
-   CallInfo_t* gLastCallInfo = 0;
-
-   int PyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
+   int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
       PyObject* result = 0;
 
    // retrieve function information
-      int tag = res->tagnum;
-      if ( gLastTag != tag || ! gLastCallInfo ) {
-         G__ifunc_table* ifunc = 0;
-         int index = 0;
-         G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+      G__ifunc_table* ifunc = 0;
+      int index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
 
-         gLastCallInfo = (CallInfo_t*)ifunc->userparam[index];
-         gLastTag = tag;
-      }
+      CallInfo_t* ci = (CallInfo_t*)ifunc->userparam[index];
 
-      if ( gLastCallInfo->first != 0 ) {
+      if ( ci->first != 0 ) {
       // prepare arguments and call
          PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
             (double*)G__int(libp->para[0]), 4 );
 
-         if ( gLastCallInfo->second != 0 ) {
+         if ( ci->second != 0 ) {
             PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
-               (double*)G__int(libp->para[1]), gLastCallInfo->second );
+               (double*)G__int(libp->para[1]), ci->second );
 
-            result = PyObject_CallFunction(
-               gLastCallInfo->first, const_cast< char* >( "OO" ), arg1, arg2 );
-
+            result = PyObject_CallFunction( ci->first, (char*)"OO", arg1, arg2 );
             Py_DECREF( arg2 );
-         } else {
-            result = PyObject_CallFunction(
-               gLastCallInfo->first, const_cast< char* >( "O" ), arg1 );
-         }
+         } else
+            result = PyObject_CallFunction( ci->first, (char*)"O", arg1 );
 
          Py_DECREF( arg1 );
       }
@@ -1031,7 +1019,7 @@ namespace {
       double d = 0.;
       if ( ! result ) {
          PyErr_Print();
-         throw std::runtime_error( "TF1 python function call failed" );
+         throw std::runtime_error( "TFN python function call failed" );
       } else {
          d = PyFloat_AsDouble( result );
          Py_DECREF( result );
@@ -1041,13 +1029,121 @@ namespace {
       return ( 1 || hash || res || libp );
    }
 
+//- TMinuit behaviour --------------------------------------------------------
+   int TMinuitPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
+   {
+      PyObject* result = 0;
+
+   // retrieve function information
+      G__ifunc_table* ifunc = 0;
+      int index = 0;
+      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+
+      PyObject* pyfunc = (PyObject*)ifunc->userparam[index];
+
+      if ( pyfunc != 0 ) {
+      // prepare arguments
+         int npar = G__int(libp->para[0]);
+
+         PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
+            (double*)G__int(libp->para[1]), npar );
+
+         PyObject* arg3 = PyList_New(1);
+         PyList_SetItem( arg3, 0, PyFloat_FromDouble( G__double(libp->para[2]) ) );
+
+         PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
+            (double*)G__int(libp->para[3]), npar );
+
+      // perform actual call
+         result = PyObject_CallFunction( pyfunc, (char*)"iOOOi",
+            npar, arg2, arg3, arg4, (int)G__int(libp->para[4]) );
+         *(Double_t*)G__Doubleref(&libp->para[2]) = PyFloat_AsDouble( PyList_GetItem( arg3, 0 ) );
+
+         Py_DECREF( arg2 ); Py_DECREF( arg3 ); Py_DECREF( arg4 );
+      }
+
+      if ( ! result ) {
+         PyErr_Print();
+         throw std::runtime_error( "TMinuit python fit function call failed" );
+      }
+
+      Py_XDECREF( result );
+
+      return ( 1 || hash || res || libp );
+   }
+
 //____________________________________________________________________________
-   class TF1InitWithPyFunc : public PyCallable {
+   class TPretendInterpreted: public PyCallable {
       static int fgCount;
+
+   public:
+      TPretendInterpreted( int nArgs ) : fNArgs( nArgs ) {}
+
+   public:
+      Int_t GetNArgs() { return fNArgs; }
+
+      Bool_t IsCallable( PyObject* pyobject )
+      {
+         if ( ! pyobject || ! PyCallable_Check( pyobject ) ) {
+            PyObject* str = pyobject ? PyObject_Str( pyobject ) : PyString_FromString( "null pointer" );
+            PyErr_Format( PyExc_ValueError,
+               "\"%s\" is not a valid python callable", PyString_AS_STRING( str ) );
+            Py_DECREF( str );
+            return kFALSE;
+         }
+
+         return kTRUE;
+      }
+
+      G__MethodInfo Register( void* callback,
+         const char* name, const char* signature, const char* retcode )
+      {
+      // build CINT function placeholder
+         G__ClassInfo gcl;                   // global namespace
+
+         Long_t offset = 0;
+         G__MethodInfo m = gcl.GetMethod( name, signature, &offset );
+
+         if ( ! m.IsValid() ) {
+            G__lastifuncposition();
+            gcl.AddMethod( retcode, name, signature );      // boundary safe
+            G__resetifuncposition();
+
+         // offset counter from this that services to associate pyobject with tp2f
+            fgCount += 1;
+
+         // setup association for CINT
+            m = gcl.GetMethod( name, signature, &offset );
+
+            G__ifunc_table* ifunc = m.ifunc();
+            int index = m.Index();
+
+            ifunc->pentry[index]->size        = -1;
+            ifunc->pentry[index]->filenum     = -1;
+            ifunc->pentry[index]->line_number = -1;
+            ifunc->pentry[index]->tp2f = (void*)((Long_t)this + fgCount);
+            ifunc->pentry[index]->p    = callback;
+
+         // setup association for ourselves
+            int tag = -1 - fgCount;
+            ifunc->p_tagtable[index] = tag;
+         }
+
+         return m;
+      }
+
+   private:
+      Int_t fNArgs;
+   };
+
+   int TPretendInterpreted::fgCount = 0;
+
+//____________________________________________________________________________
+   class TF1InitWithPyFunc : public TPretendInterpreted {
       typedef std::pair< PyObject*, int > pairPyObjInt_t;
 
    public:
-      TF1InitWithPyFunc( int ntf = 1 ) : fNArgs( 2 + 2*ntf ) {}
+      TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 
    public:
       virtual PyObject* GetDocString()
@@ -1061,64 +1157,35 @@ namespace {
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
-         if ( ! ( argc == fNArgs || argc == fNArgs+1 ) ) {
+         const int reqNArgs = GetNArgs();
+         if ( ! ( argc == reqNArgs || argc == reqNArgs+1 ) ) {
             PyErr_Format( PyExc_TypeError,
                "TFN::TFN(const char*, PyObject* callable, ...) =>\n"
                "    takes at least %d and at most %d arguments (%d given)",
-               fNArgs, fNArgs+1, argc );
+               reqNArgs, reqNArgs+1, argc );
             return 0;              // reported as an overload failure
          }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 1 );
-         if ( ! pyfunc || ! PyCallable_Check( pyfunc ) ) {
-            PyErr_SetString( PyExc_ValueError, "not a valid python callable" );
+         if ( ! IsCallable( pyfunc ) )
             return 0;
-         }
 
       // use requested function name as identifier
          const char* name = PyString_AsString( PyTuple_GET_ITEM( args, 0 ) );
          if ( PyErr_Occurred() )
             return 0;
 
-      // build CINT function placeholder
-         G__ClassInfo gcl;                   // global namespace
-
-         Long_t offset = 0;
-         G__MethodInfo m = gcl.GetMethod( name, "double*, double*", &offset );
-
-         if ( ! m.IsValid() ) {
-            G__lastifuncposition();
-            gcl.AddMethod( "D", name, "double*, double*" );      // boundary safe
-            G__resetifuncposition();
-
-         // offset counter from this that services to associate pyobject with tp2f
-            fgCount += 1;
-
-         // setup association for CINT
-            m = gcl.GetMethod( name, "double*, double*", &offset );
-
-            G__ifunc_table* ifunc = m.ifunc();
-            int index = m.Index();
-
-            ifunc->pentry[index]->size        = -1;
-            ifunc->pentry[index]->filenum     = -1;
-            ifunc->pentry[index]->line_number = -1;
-            ifunc->pentry[index]->tp2f = (void*)((Long_t)this + fgCount);
-            ifunc->pentry[index]->p    = (void*)PyFuncCallback;
-
-         // setup association for ourselves
-            int tag = -1 - fgCount;
-            ifunc->p_tagtable[index] = tag;
-         }
-
-      // get proper table block of "interpreted" functions and the index into it
+      // build placeholder, get CINT info
+         G__MethodInfo m = Register( (void*)TFNPyCallback, name, "double*, double*", "D" );
+ 
+      // get proper table block of "interpreted" function and the index into it
          G__ifunc_table* ifunc = m.ifunc();
          int index = m.Index();
 
       // verify/setup the callback parameters
          int npar = 0;             // default value if not given
-         if ( argc == fNArgs+1 )
-            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, fNArgs ) );
+         if ( argc == reqNArgs+1 )
+            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, reqNArgs ) );
 
          if ( ! ifunc->userparam[index] ) {
          // no func yet, install current one
@@ -1136,11 +1203,11 @@ namespace {
          }
 
       // get constructor
-         MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
-            (PyObject*)self, const_cast< char* >( "__init__" ) );
+         MethodProxy* method =
+            (MethodProxy*)PyObject_GetAttrString( (PyObject*)self, (char*)"__init__" );
 
       // build new argument array
-         PyObject* newArgs = PyTuple_New( fNArgs + 1 );
+         PyObject* newArgs = PyTuple_New( reqNArgs + 1 );
 
          for ( int iarg = 0; iarg < argc; ++iarg ) {
             PyObject* item = PyTuple_GET_ITEM( args, iarg );
@@ -1149,12 +1216,12 @@ namespace {
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
                PyTuple_SET_ITEM( newArgs, iarg,
-                  BindRootObjectNoCast( (void*)ifunc->pentry[index]->tp2f, TObject::Class() ) );
+                  PyCObject_FromVoidPtr( (void*)ifunc->pentry[index]->tp2f, NULL ) );
             }
          }
 
-         if ( argc == fNArgs )
-            PyTuple_SET_ITEM( args, fNArgs, PyInt_FromLong( 0l ) );
+         if ( argc == reqNArgs )
+            PyTuple_SET_ITEM( args, reqNArgs, PyInt_FromLong( 0l ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
@@ -1164,12 +1231,7 @@ namespace {
          Py_DECREF( method );
          return result;
       }
-
-   private:
-      Int_t fNArgs;
    };
-
-   int TF1InitWithPyFunc::fgCount = 0;
 
 //____________________________________________________________________________
    class TF2InitWithPyFunc : public TF1InitWithPyFunc {
@@ -1214,6 +1276,74 @@ namespace {
       return TFunctionHolder(
          (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, args, 0 );
    }
+
+
+//- TMinuit behaviour ----------------------------------------------------------
+   class TMinuitSetFCN : public TPretendInterpreted {
+   public:
+      TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
+
+   public:
+      virtual PyObject* GetDocString()
+      {
+         return PyString_FromString(
+            "TMinuit::SetFCN( PyObject* callable )" );
+      }
+
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* )
+      {
+      // expected signature: ( pyfunc )
+         int argc = PyTuple_GET_SIZE( args );
+         if ( argc != 1 ) {
+            PyErr_Format( PyExc_TypeError,
+               "TMinuit::SetFCN( PyObject* callable, ...) =>\n"
+               "    takes exactly 1 argument (%d given)", argc );
+            return 0;              // reported as an overload failure
+         }
+
+         PyObject* pyfunc = PyTuple_GET_ITEM( args, 0 );
+         if ( ! IsCallable( pyfunc ) )
+            return 0;
+
+      // use callable name (if available) as identifier
+         PyObject* pyname = PyObject_GetAttrString( pyfunc, (char*)"__name__" );
+         const char* name = "dummy";
+         if ( pyname != 0 )
+            name = PyString_AsString( pyname );
+
+      // build placeholder, get CINT info
+         G__MethodInfo m = Register( (void*)TMinuitPyCallback, name,
+            "int&, double*, double&, double*, int", "V" );
+
+      // get proper table block of "interpreted" function and the index into it
+         G__ifunc_table* ifunc = m.ifunc();
+         int index = m.Index();
+
+      // setup the callback parameter
+         Py_INCREF( pyfunc );
+         if ( ifunc->userparam[index] )
+            Py_DECREF((PyObject*)ifunc->userparam[index]);
+         ifunc->userparam[index] = (void*)pyfunc;
+
+      // get function
+         MethodProxy* method =
+            (MethodProxy*)PyObject_GetAttrString( (PyObject*)self, (char*)"SetFCN" );
+
+      // build new argument array
+         PyObject* newArgs = PyTuple_New( 1 );
+         PyTuple_SET_ITEM( newArgs, 0,
+            PyCObject_FromVoidPtr( (void*)ifunc->pentry[index]->tp2f, NULL ) );
+
+      // re-run
+         PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
+
+      // done, may have worked, if not: 0 is returned
+         Py_DECREF( newArgs );
+         Py_DECREF( method );
+         return result;
+      }
+   };
+
 
 } // unnamed namespace
 
@@ -1334,11 +1464,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
-   if ( IsTemplatedSTLClass( name, "map" ) ) {
-      Utility::AddToClass( pyclass, "__len__", "size" );
-
-      return kTRUE;
-   }
+   if ( IsTemplatedSTLClass( name, "map" ) )
+      return Utility::AddToClass( pyclass, "__len__", "size" );
 
    if ( name == "TDirectory" ) {
    // note: this replaces the already existing TDirectory::GetObject()
@@ -1367,39 +1494,21 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
-   if ( name == "TF1" ) {   // allow instantiation with python function
-      MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
-         pyclass, const_cast< char* >( "__init__" ) );
-      method->AddMethod( new TF1InitWithPyFunc() );
-      Py_DECREF( method );
+   if ( name == "TF1" )       // allow instantiation with python callable
+      return Utility::AddToClass( pyclass, "__init__", new TF1InitWithPyFunc );
 
-      return kTRUE;
-   }
+   if ( name == "TF2" )       // allow instantiation with python callable
+      return Utility::AddToClass( pyclass, "__init__", new TF2InitWithPyFunc );
 
-   if ( name == "TF2" ) {   // allow instantiation with python function
-      MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
-         pyclass, const_cast< char* >( "__init__" ) );
-      method->AddMethod( new TF2InitWithPyFunc() );
-      Py_DECREF( method );
+   if ( name == "TF3" )       // allow instantiation with python callable
+      return Utility::AddToClass( pyclass, "__init__", new TF3InitWithPyFunc );
 
-      return kTRUE;
-   }
+   if ( name == "TFunction" ) // allow direct call
+      return Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
-   if ( name == "TF3" ) {   // allow instantiation with python function
-      MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
-         pyclass, const_cast< char* >( "__init__" ) );
-      method->AddMethod( new TF3InitWithPyFunc() );
-      Py_DECREF( method );
+   if ( name == "TMinuit" )   // allow call with python callable
+      return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
 
-      return kTRUE;
-   }
-
-   if ( name == "TFunction" ) {
-   // allow direct call
-      Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
-
-      return kTRUE;
-   }
-
+// default, no pythonization, is by definition ok
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.15 2005/08/25 06:44:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.16 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -304,7 +304,13 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
       return kTRUE;
    }
 
-// get the buffer
+// special case: opaque CObject from somewhere
+   if ( PyCObject_Check( pyobject ) ) {
+      func->SetArg( (Long_t)PyCObject_AsVoidPtr( pyobject ) );
+      return kTRUE;
+   }
+
+// final try: attempt to get buffer
    void* buf = 0;
    int buflen = Utility::GetBuffer( pyobject, '*', 1, buf, kFALSE );
 
@@ -760,6 +766,7 @@ namespace {
       NFp_t( "short",              &CreateShortConverter              ),
       NFp_t( "unsigned short",     &CreateUShortConverter             ),
       NFp_t( "int",                &CreateIntConverter                ),
+      NFp_t( "int&",               &CreateLongRefConverter            ),
       NFp_t( "unsigned int",       &CreateUIntConverter               ),
       NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
       NFp_t( "long",               &CreateLongConverter               ),

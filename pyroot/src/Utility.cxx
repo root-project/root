@@ -1,11 +1,13 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.21 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.22 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "Utility.h"
 #include "ObjectProxy.h"
+#include "MethodProxy.h"
 #include "RootWrapper.h"
+#include "PyCallable.h"
 
 // ROOT
 #include "TClassEdit.h"
@@ -115,6 +117,20 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const 
    return PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
 }
 
+//____________________________________________________________________________
+Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCallable* pfunc )
+{
+   MethodProxy* method =
+      (MethodProxy*)PyObject_GetAttrString( pyclass, const_cast< char* >( label ) );
+
+   if ( ! method )
+      return kFALSE;
+
+   method->AddMethod( pfunc );
+
+   Py_DECREF( method );
+   return kTRUE;
+}
 
 //____________________________________________________________________________
 Bool_t PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const char* name )
