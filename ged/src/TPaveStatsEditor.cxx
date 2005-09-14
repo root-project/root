@@ -272,6 +272,10 @@ void TPaveStatsEditor::DoStatOptions()
       if (fKurtosis->GetState() == kButtonDown) stat +=100000000;
    }
    
+   if (!stat) {
+      stat = 1;
+      fHistoName->SetState(kButtonDown);
+   }
    if (stat == 1) stat = 1000000001;
    fPaveStats->SetOptStat(stat);
    Update();

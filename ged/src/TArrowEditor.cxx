@@ -95,8 +95,8 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
    f5->AddFrame(fStartPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
    fStartPointXEntry = new TGNumberEntry(f5, 0.0, 8, kARROW_STAX,
                                   TGNumberFormat::kNESRealThree,
-                                  TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNEAAnyNumber, 
+                                  TGNumberFormat::kNELNoLimits);
    fStartPointXEntry->GetNumberEntry()->SetToolTipText("Set start point X coordinate of arrow.");
    f5->AddFrame(fStartPointXEntry, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
 //
@@ -107,8 +107,8 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
    f6->AddFrame(fStartPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 37, 0, 1, 1));
    fStartPointYEntry = new TGNumberEntry(f6, 0.0, 8, kARROW_STAY,
                                   TGNumberFormat::kNESRealThree,
-                                  TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNEAAnyNumber, 
+                                  TGNumberFormat::kNELNoLimits);
    fStartPointYEntry->GetNumberEntry()->SetToolTipText("Set start point Y coordinate of arrow.");
    f6->AddFrame(fStartPointYEntry, new TGLayoutHints(kLHintsLeft, 10, 1, 1, 1));
 //
@@ -119,8 +119,8 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
    f7->AddFrame(fEndPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 7, 0, 1, 1));
    fEndPointXEntry = new TGNumberEntry(f7, 0.0, 8, kARROW_ENDX,
                                   TGNumberFormat::kNESRealThree,
-                                  TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNEAAnyNumber, 
+                                  TGNumberFormat::kNELNoLimits);
    fEndPointXEntry->GetNumberEntry()->SetToolTipText("Set end point X xoordinate of arrow.");
    f7->AddFrame(fEndPointXEntry, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
 //
@@ -131,8 +131,8 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
    f8->AddFrame(fEndPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 37, 0, 1, 1));
    fEndPointYEntry = new TGNumberEntry(f8, 0.0, 8, kARROW_ENDY,
                                   TGNumberFormat::kNESRealThree,
-                                  TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNEAAnyNumber, 
+                                  TGNumberFormat::kNELNoLimits);
    fEndPointYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of arrow.");
    f8->AddFrame(fEndPointYEntry, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
 
