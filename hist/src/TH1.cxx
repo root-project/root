@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.252 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.253 2005/09/13 07:54:28 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3334,6 +3334,7 @@ void TH1::LabelsInflate(Option_t *ax)
 
    //now loop on all bins and refill
    Double_t err,cu;
+   Double_t oldEntries = fEntries;
    Int_t bin,ibin,binx,biny,binz;
    for (binz=1;binz<=nbinsz;binz++) {
       for (biny=1;biny<=nbinsy;biny++) {
@@ -3352,6 +3353,7 @@ void TH1::LabelsInflate(Option_t *ax)
          }
       }
    }
+   fEntries = oldEntries;
    delete hold;
 }
 
