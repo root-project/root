@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.125 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.126 2005/09/06 16:45:48 rdm Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2234,6 +2234,10 @@ Double_t TGeoManager::Safety(Bool_t inside)
    if (!inside) fSafety = TGeoShape::Big();
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
+      if (fSafety < TGeoShape::Tolerance()) {
+         fSafety = 0;
+         fIsOnBoundary = kTRUE;
+      }   
       return fSafety;
    }
    //---> convert point to local reference frame of current node
@@ -2352,13 +2356,16 @@ void TGeoManager::SafetyOverlaps()
       ovlp = fCurrentNode->GetOverlaps(novlp);
       CdUp();
       vol = fCurrentNode->GetVolume();
-      if (!novlp) continue;
-      // we are now in the container, check safety to all candidates
       gGeoManager->MasterToLocal(fPoint, point);
+      contains = fCurrentNode->GetVolume()->Contains(point);
+      safe = fCurrentNode->GetVolume()->GetShape()->Safety(point, contains);
+      if (safe<fSafety && safe>=0) fSafety=safe;
+      if (!novlp || !contains) continue;
+      // we are now in the container, check safety to all candidates
       for (io=0; io<novlp; io++) {
          nodeovlp = vol->GetNode(ovlp[io]);
          nodeovlp->GetMatrix()->MasterToLocal(point,local);
-         contains = nodeovlp->GetVolume()->GetShape()->Contains(local);
+         contains = nodeovlp->GetVolume()->Contains(local);
          if (contains) {
             CdDown(ovlp[io]);
             safe = Safety(kTRUE);
@@ -2393,8 +2400,8 @@ void TGeoManager::SafetyOverlaps()
             if (safe<fSafety) fSafety = safe;
             current = mother;
             ovlp = nextovlp;
-            up++;            
          }
+         up++;
       }      
    }
    PopPath();
@@ -2907,7 +2914,10 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
    fIsStepEntering = kFALSE;
    fStep = stepmax;
    Double_t snext = TGeoShape::Big();
-   if (compsafe) Safety();
+   if (compsafe) {
+      fIsOnBoundary = kFALSE;
+      Safety();
+   }   
    Double_t extra = (fIsOnBoundary)?TGeoShape::Tolerance():0.0;
    fIsOnBoundary = kFALSE;
    fPoint[0] += extra*fDirection[0];
@@ -3037,8 +3047,8 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
                current->cd();
                current->MasterToLocal(&mothpt[0], &dpt[0]);
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
-               if (current->GetVolume()->GetNdaughters()) {
-                  if (current->GetVolume()->Contains(dpt)) {
+               if (current->GetVolume()->Contains(dpt)) {
+                  if (current->GetVolume()->GetNdaughters()) {
                      CdDown(ovlps[i]);
                      dnode = FindNextDaughterBoundary(dpt,dvec,idaughter,kFALSE);
                      if (dnode) {
@@ -3299,8 +3309,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                current->cd();
                current->MasterToLocal(&mothpt[0], &dpt[0]);
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
-               if (current->GetVolume()->GetNdaughters()) {
-                  if (current->GetVolume()->Contains(dpt)) {
+               if (current->GetVolume()->Contains(dpt)) {
+                  if (current->GetVolume()->GetNdaughters()) {
                      CdDown(ovlps[i]);
                      dnode = FindNextDaughterBoundary(dpt,dvec,idovlp,computeGlobal);
                      if (dnode && computeGlobal) {
