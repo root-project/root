@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.28 2005/08/19 07:32:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.29 2005/08/26 12:17:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -138,7 +138,7 @@
 //  - compute a pointer to the referenced object and communicate this pointer
 //    back to the calling function TRef::GetObject via:
 //      TRef::SetStaticObject(object).
-//    When the TExec is called, it has access to the dereferencing TRef 
+//    When the TExec is called, it has access to the dereferencing TRef
 //    by calling GetStaticObject() (TRef::GetObject() sets fgObject to "this"
 //    before the call to TExec). This can be useful for accessing the TRef's
 //    fUniqueID.
@@ -340,7 +340,7 @@ TObject *TRef::GetObject() const
       table->Notify();
       obj = fPID->GetObjectWithID(uid);
    }
-   
+
    //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid in the first 8 bits
@@ -352,7 +352,7 @@ TObject *TRef::GetObject() const
             //we expect the object to be returned via TRef::SetStaticObject
             fgObject = const_cast<TRef*>(this);
             exec->Exec();
-            if ((const TRef* const)fgObject!=this)
+            if ((const TRef*)fgObject != this)
                obj = fgObject;
             else obj=0;
             if (obj){
@@ -410,7 +410,7 @@ void TRef::SetAction(TObject *parent)
       return;
    }
 }
- 
+
  //______________________________________________________________________________
 TObject *TRef::GetStaticObject() {
    // Returns the static object.
@@ -432,7 +432,7 @@ void TRef::SetStaticObject(TObject *obj)
    // Static function to set the object found on the Action on Demand function.
    // This function may be called by the user in the function called
    // when a "EXEC:" keyword is specified in the data member field of the TRef.
-   // The function can get access to the dereferencing TRef (i.e. this)using 
+   // The function can get access to the dereferencing TRef (i.e. this)using
    // the static function GetStaticObject().
 
    fgObject = obj;
