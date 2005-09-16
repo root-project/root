@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.166 2005/08/30 16:45:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.167 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4219,6 +4219,13 @@ void TGraph::UseCurrentStyle()
       gStyle->SetMarkerSize(GetMarkerSize());
    }
    if (fHistogram) fHistogram->UseCurrentStyle();
+
+   TIter next(GetListOfFunctions());
+   TObject *obj;
+
+   while ((obj = next())) {
+      obj->UseCurrentStyle();
+   }
 }
 
 //______________________________________________________________________________

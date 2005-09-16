@@ -644,10 +644,10 @@ public:
    void ModLegendBorderSize();               // SLOT
 
 // STATS
-   void ModStatColor();                      // SLOT
-   void ModStatStyle();                      // SLOT
-   void ModStatTextColor();                  // SLOT
-   void ModStatFontSize();                   // SLOT
+   void ModStatColor(Pixel_t color);         // SLOT
+   void ModStatStyle(Style_t pattern);       // SLOT
+   void ModStatTextColor(Pixel_t color);     // SLOT
+   void ModStatFontSize(Long_t number);      // SLOT
    void ModStatFontSizeInPixels(Bool_t b);   // SLOT
    void ModStatFont();                       // SLOT
    void ModStatX();                          // SLOT

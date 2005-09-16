@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.21 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.22 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -383,5 +383,31 @@ void TPaveStats::Streamer(TBuffer &R__b)
 
    } else {
       TPaveStats::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
+void TPaveStats::UseCurrentStyle()
+{
+   // Replace current attributes by current style.
+
+   if (gStyle->IsReading()) {
+      SetOptStat(gStyle->GetOptStat());
+      SetOptFit(gStyle->GetOptFit());
+      SetStatFormat(gStyle->GetStatFormat());
+      SetFitFormat(gStyle->GetFitFormat());
+      SetBorderSize(gStyle->GetStatBorderSize());
+      SetFillColor(gStyle->GetStatColor());
+      SetFillStyle(gStyle->GetStatStyle());
+   } else {
+      gStyle->SetOptStat(GetOptStat());
+      gStyle->SetOptFit(GetOptFit());
+      gStyle->SetStatFormat(GetStatFormat());
+      gStyle->SetFitFormat(GetFitFormat());
+      gStyle->SetStatX(GetX1NDC());
+      gStyle->SetStatY(GetY1NDC());
+      gStyle->SetStatBorderSize(GetBorderSize());
+      gStyle->SetStatColor(GetFillColor());
+      gStyle->SetStatStyle(GetFillStyle());
    }
 }

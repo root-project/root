@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.57 2005/09/12 16:22:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.58 2005/09/13 07:54:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -367,7 +367,7 @@ Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-void TStyle::Reset(Option_t *)
+void TStyle::Reset(Option_t *opt)
 {
    fIsReading = kTRUE;
    TAttLine::ResetAttLine();
@@ -490,6 +490,97 @@ void TStyle::Reset(Option_t *)
    SetPalette();
 
    fTimeOffset = 788918400; // UTC time at 01/01/95
+
+   if (strcmp(opt,"Plain") == 0) {
+      SetFrameBorderMode(0);
+      SetCanvasBorderMode(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetCanvasColor(0);
+      SetTitleFillColor(0);
+      SetTitleBorderSize(1);
+      SetStatColor(0);
+      SetStatBorderSize(1);
+      SetLegendBorderSize(1);
+      return;
+   }
+   if (strcmp(opt,"Bold") == 0) {
+      SetPalette(1,0);
+      SetCanvasColor(10);
+      SetCanvasBorderMode(0);
+      SetFrameLineWidth(3);
+      SetFrameFillColor(10);
+      SetPadColor(10);
+      SetPadTickX(1);
+      SetPadTickY(1);
+      SetPadBottomMargin(0.15);
+      SetPadLeftMargin(0.15);
+      SetHistLineWidth(3);
+      SetHistLineColor(kRed);
+      SetFuncWidth(3);
+      SetFuncColor(kGreen);
+      SetLineWidth(3);
+      SetLabelSize(0.05,"xyz");
+      SetLabelOffset(0.01,"y");
+      SetLabelColor(kBlue,"xy");
+      SetTitleSize(0.06,"xyz");
+      SetTitleOffset(1.3,"Y");
+      SetTitleFillColor(10);
+      SetTitleTextColor(kBlue);
+      SetStatColor(10);
+      return;
+   }
+   if (strcmp(opt,"Video") == 0) {
+      SetPalette(1,0);
+      SetCanvasColor(10);
+      SetCanvasBorderMode(0);
+      SetFrameLineWidth(3);
+      SetFrameFillColor(10);
+      SetPadColor(10);
+      SetPadTickX(1);
+      SetPadTickY(1);
+      SetPadBottomMargin(0.2);
+      SetPadLeftMargin(0.2);
+      SetHistLineWidth(8);
+      SetHistLineColor(kRed);
+      SetLabelSize(0.06,"xyz");
+      SetLabelColor(kBlue,"xyz");
+      SetTitleSize(0.08,"xyz");
+      SetTitleFillColor(10);
+      SetTitleTextColor(kBlue);
+      SetStatColor(10);
+      SetFuncWidth(8);
+      SetFuncColor(kGreen);
+      SetLineWidth(3);
+      return;
+   }
+   if (strcmp(opt,"Pub") == 0) {
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetPalette(8,0);
+      SetCanvasColor(10);
+      SetCanvasBorderMode(0);
+      SetFrameLineWidth(3);
+      SetFrameFillColor(10);
+      SetPadColor(10);
+      SetPadTickX(1);
+      SetPadTickY(1);
+      SetPadBottomMargin(0.15);
+      SetPadLeftMargin(0.15);
+      SetHistLineWidth(3);
+      SetHistLineColor(kRed);
+      SetFuncWidth(3);
+      SetFuncColor(kGreen);
+      SetLineWidth(3);
+      SetLabelSize(0.05,"xyz");
+      SetLabelOffset(0.01,"y");
+      SetLabelColor(kBlack,"xyz");
+      SetTitleSize(0.06,"xyz");
+      SetTitleOffset(1.3,"y");
+      SetTitleFillColor(10);
+      SetTitleTextColor(kBlue);
+      return;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.10 2003/03/07 10:18:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.11 2004/05/13 19:39:18 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -60,6 +60,7 @@ public:
    void             SetOptFit(Int_t fit=1);                     // *MENU*
    void             SetOptStat(Int_t stat=1);                   // *MENU*
    void             SetParent(TObject*obj) {fParent = obj;}
+   virtual void     UseCurrentStyle();
 
    ClassDef(TPaveStats,4)  //A special TPaveText to draw histogram statistics.
 };

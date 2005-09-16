@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.253 2005/09/13 07:54:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.254 2005/09/15 11:12:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5081,6 +5081,12 @@ void TH1::UseCurrentStyle()
       gStyle->SetMarkerStyle(GetMarkerStyle());
       gStyle->SetMarkerSize(GetMarkerSize());
       gStyle->SetOptStat(TestBit(kNoStats));
+   }
+   TIter next(GetListOfFunctions());
+   TObject *obj;
+
+   while ((obj = next())) {
+      obj->UseCurrentStyle();
    }
 }
 

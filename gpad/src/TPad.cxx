@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.197 2005/09/05 15:45:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.198 2005/09/08 14:22:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5106,24 +5106,6 @@ void TPad::UseCurrentStyle()
 
    while ((obj = next())) {
       obj->UseCurrentStyle();
-   }
-
-   TPaveText *stats  = (TPaveText*)FindObject("stats");
-   if (stats) {
-      if (gStyle->IsReading()) {
-         stats->SetFillStyle(gStyle->GetStatStyle());
-         stats->SetFillColor(gStyle->GetStatColor());
-         stats->SetTextFont(gStyle->GetStatFont());
-         stats->SetTextColor(gStyle->GetStatTextColor());
-         stats->SetBorderSize(gStyle->GetStatBorderSize());
-         if (!gStyle->GetOptStat()) delete stats;
-      } else {
-         gStyle->SetStatStyle(stats->GetFillStyle());
-         gStyle->SetStatColor(stats->GetFillColor());
-         gStyle->SetStatFont(stats->GetTextFont());
-         gStyle->SetStatTextColor(stats->GetTextColor());
-         gStyle->SetStatBorderSize(stats->GetBorderSize());
-      }
    }
 
    TPaveText *title  = (TPaveText*)FindObject("title");
