@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.103 2005/09/12 09:05:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.104 2005/09/13 09:27:24 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 #include "TROOT.h"
 #include "TH1.h"
 #include "TProofPlayer.h"
-#include "TProofQuery.h"
+#include "TQueryResult.h"
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TPluginManager.h"
@@ -221,11 +221,7 @@ TProof::TProof(const char *masterurl, const char *conffile,
    if (!confdir  || strlen(confdir) == 0)
       confdir = kPROOF_ConfDir;
 
-   // Can have only one PROOF session open at a time (for the time being).
-   if (gProof) {
-      Warning("TProof", "closing currently open PROOF session");
-      gProof->Close();
-   }
+   gROOT->GetListOfProofs()->Add(this);
 
    Init(masterurl, conffile, confdir, loglevel);
 
@@ -242,11 +238,7 @@ TProof::TProof()
    // This constructor simply closes any previous gProof and sets gProof
    // to this instance.
 
-   // Can have only one PROOF session open at a time (for the time being).
-   if (gProof) {
-      Warning("TProof", "closing currently open PROOF session");
-      gProof->Close();
-   }
+   gROOT->GetListOfProofs()->Add(this);
 
    gProof = this;
 }
@@ -290,9 +282,10 @@ TProof::~TProof()
       gROOT->GetListOfSockets()->Remove(this);
    }
 
-   if (gProof == this) {
-      gProof = 0;
-   }
+   gROOT->GetListOfProofs()->Remove(this);
+   if (gProof == this)
+      // Set previous one as default
+      gProof = (TVirtualProof *) gROOT->GetListOfProofs()->Last();
 }
 
 //______________________________________________________________________________
@@ -358,6 +351,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    // List of queries
    fQueries = 0;
+   fOtherQueries = 0;
+   fDrawQueries = 0;
+   fMaxDrawQueries = 1;
+   fSeqNum = 0;
 
    fPlayer   = MakePlayer();
    fFeedback = new TList;
@@ -910,40 +907,154 @@ void TProof::AskParallel()
 }
 
 //______________________________________________________________________________
-void TProof::GetListOfQueries()
+TList *TProof::GetListOfQueries(Option_t *opt)
 {
    // Ask the master for the list of queries.
 
-   if (!IsValid() || IsMaster()) return;
+   if (!IsValid() || IsMaster()) return (TList *)0;
 
-   Broadcast(kPROOF_QUERYLIST, kActive);
+   Bool_t all = ((strchr(opt,'A') || strchr(opt,'a'))) ? kTRUE : kFALSE;
+   TMessage m(kPROOF_QUERYLIST);
+   m << all;
+   Broadcast(m, kActive);
    Collect(kActive);
+
+   // This should have been filled by now
+   return fQueries;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetNumberOfQueries()
+{
+   // Number of queries processed by this session
+
+   if (fQueries)
+      return fQueries->GetSize() - fOtherQueries;
+   return 0;
+}
+
+//______________________________________________________________________________
+void TProof::SetMaxDrawQueries(Int_t max)
+{
+   // Set max number of draw queries whose results are saved
+
+   if (max > 0) {
+      if (fPlayer)
+         fPlayer->SetMaxDrawQueries(max);
+      fMaxDrawQueries = max;
+   }
+}
+
+//______________________________________________________________________________
+void TProof::GetMaxQueries()
+{
+   // Get max number of queries whose full results are kept in the
+   // remote sandbox
+
+   TMessage m(kPROOF_MAXQUERIES);
+   m << kFALSE;
+   Broadcast(m, kActive);
+   Collect(kActive);
+}
+
+//______________________________________________________________________________
+TList *TProof::GetQueryResults()
+{
+   // Return pointer to the list of query results in the player
+
+   return fPlayer->GetListOfResults();
+}
+
+//______________________________________________________________________________
+TQueryResult *TProof::GetQueryResult(const char *ref)
+{
+   // Return pointer to the full TQueryResult instance owned by the player
+   // and referenced by 'ref'
+
+   return fPlayer->GetQueryResult(ref);
 }
 
 //______________________________________________________________________________
 void TProof::ShowQueries(Option_t *opt)
 {
    // Ask the master for the list of queries.
+   // Options:
+   //           "A"     show information about all the queries known to the
+   //                   server, i.e. even those processed by other sessions
+   //           "L"     show only information about queries locally available
+   //                   i.e. already retrieved. If "L" is specified, "A" is
+   //                   ignored.
+   //           "F"     show all details available about queries
+   //           "H"     print help menu
+   // Default ""
+
+   Bool_t help = ((strchr(opt,'H') || strchr(opt,'h'))) ? kTRUE : kFALSE;
+   if (help) {
+
+      // Help
+      
+      Printf("+++");
+      Printf("+++ Options: \"A\" show all queries known to server");
+      Printf("+++          \"L\" show retrieved queries");
+      Printf("+++          \"F\" full listing of query info");
+      Printf("+++          \"H\" print this menu");
+      Printf("+++");
+      Printf("+++ (case insensitive)");
+      Printf("+++");
+      Printf("+++ Use Retrieve(<#>) to retrieve the full"
+             " query results from the master");
+      Printf("+++     e.g. Retrieve(8)");
+      
+      Printf("+++");
+
+      return;
+   }
 
    if (!IsValid()) return;
 
-   GetListOfQueries();
+   Bool_t local = ((strchr(opt,'L') || strchr(opt,'l'))) ? kTRUE : kFALSE;
 
-   if (!fQueries) return;
+   TObject *pq = 0;
+   if (!local) {
+      GetListOfQueries(opt);
 
-   Printf("+++");
-   Printf("+++ Processed queries: %d", fQueries->GetSize());
-   TIter nxq(fQueries);
-   TProofQuery *pq = 0;
-   while ((pq = (TProofQuery *)nxq()))
-      pq->Print(opt);
-
-   // Advise
-   if (strncasecmp(opt,"F",1)) {
+      if (!fQueries) return;
+      
+      TIter nxq(fQueries);
+      
+      // Queries processed by other sessions
+      if (fOtherQueries > 0) {
+         Printf("+++");
+         Printf("+++ Queries processed during other sessions: %d", fOtherQueries);
+         Int_t nq = 0;
+         while (nq++ < fOtherQueries && (pq = nxq()))
+            pq->Print(opt);
+      }
+      
+      // Queries processed by this session
       Printf("+++");
-      Printf("+++ NB: use ShowQueries(\"F\") to get the full listing");
-   }
+      Printf("+++ Queries processed during this session: selector: %d, draw: %d",
+              GetNumberOfQueries(), fDrawQueries);
+      while ((pq = nxq()))
+         pq->Print(opt);
 
+   } else {
+
+      // Queries processed by this session
+      Printf("+++");
+      Printf("+++ Queries processed during this session: selector: %d, draw: %d",
+              GetNumberOfQueries(), fDrawQueries);
+
+      // Queries available locally
+      TList *listlocal = fPlayer->GetListOfResults();
+      if (listlocal) {
+         Printf("+++");
+         Printf("+++ Queries available locally: %d", listlocal->GetSize());
+         TIter nxlq(listlocal);
+         while ((pq = nxlq()))
+            pq->Print(opt);
+      }
+   }
    Printf("+++");
 }
 
@@ -1443,40 +1554,59 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_OUTPUTLIST:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
-            TList *out = (TList *) mess->ReadObject(TList::Class());
+            TList *out = 0;
+            if (IsMaster() || fProtocol < 7) {
+               out = (TList *) mess->ReadObject(TList::Class());
+            } else {
+               TQueryResult *pq = 
+                  (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+               if (pq) {
+                  fPlayer->AddQueryResult(pq);
+                  fPlayer->SetCurrentQuery(pq);
+                  TList *tmp = (TList *) pq->GetOutputList();
+                  if (tmp) {
+                     out = new TList;
+                     TIter nxo(tmp);
+                     TObject *o = 0;
+                     while ((o = nxo()))
+                        out->Add(o->Clone());
+                  }
+                  // Notify the GUI that the result arrived
+                  QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+               } else {
+                  PDB(kGlobal,2)
+                     Info("Collect:kPROOF_OUTPUTLIST","query result missing");
+               }
+            }
             if (out) {
                out->SetOwner();
                fPlayer->StoreOutput(out); // Adopts the list
             } else {
                PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
             }
+
             // On clients at this point processing is over
             if (!IsMaster()) {
 
-               // Set idle ...
-               fIdle = kTRUE;
-
                // Handle abort ...
                if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
-                  if (!fSync) RedirectLog(kTRUE);
-                  Info("CollectInputFrom",
-                       "the processing was aborted - %lld events processed",
-                       fPlayer->GetEventsProcessed());
-                  if (!fSync) RedirectLog(kFALSE);
+                  if (fSync)
+                     Info("CollectInputFrom",
+                          "the processing was aborted - %lld events processed",
+                          fPlayer->GetEventsProcessed());
 
-                  gProof->Progress(-1, fPlayer->GetEventsProcessed());
+                  Progress(-1, fPlayer->GetEventsProcessed());
                   Emit("StopProcess(Bool_t)", kTRUE);
                }
 
                // Handle stop ...
                if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
-                  if (!fSync) RedirectLog(kTRUE);
-                  Info("CollectInputFrom",
-                       "the processing was stopped - %lld events processed",
-                       fPlayer->GetEventsProcessed());
-                  if (!fSync) RedirectLog(kFALSE);
+                  if (fSync)
+                     Info("CollectInputFrom",
+                          "the processing was stopped - %lld events processed",
+                          fPlayer->GetEventsProcessed());
 
-                  gProof->Progress(-1, fPlayer->GetEventsProcessed());
+                  Progress(-1, fPlayer->GetEventsProcessed());
                   Emit("StopProcess(Bool_t)", kFALSE);
                }
             }
@@ -1486,12 +1616,92 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_QUERYLIST:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_QUERYLIST","Enter");
+            (*mess) >> fOtherQueries >> fDrawQueries; 
             if (fQueries) {
                fQueries->Delete();
                delete fQueries;
                fQueries = 0;
             }
             fQueries = (TList *) mess->ReadObject(TList::Class());
+         }
+         break;
+
+      case kPROOF_RETRIEVE:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_RETRIEVE","Enter");
+            TQueryResult *pq = 
+               (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+            if (pq) {
+               fPlayer->AddQueryResult(pq);
+               // Notify the GUI that the result arrived
+               QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+            } else {
+               PDB(kGlobal,2)
+                  Info("Collect:kPROOF_RETRIEVE", "query result missing");
+            }
+         }
+         break;
+
+      case kPROOF_MAXQUERIES:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_MAXQUERIES","Enter");
+            Int_t max = 0;
+
+            (*mess) >> max; 
+            Printf("Number of queries fully kept remotely: %d", max);
+         }
+         break;
+
+      case kPROOF_STARTPROCESS:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_STARTPROCESS","Enter");
+
+            fIdle = kFALSE;
+
+            TString selec;
+            Int_t dsz = -1;
+            Long64_t first = -1, nent = -1;
+            (*mess) >> selec >> dsz >> first >> nent; 
+
+            // Start or reset the progress dialog
+            if (fProgressDialog) {
+               if (!fProgressDialogStarted) {
+                  fProgressDialog->ExecPlugin(5, this,
+                                              selec.Data(), dsz, first, nent);
+                  fProgressDialogStarted = kTRUE;
+               } else {
+                  ResetProgressDialog(selec, dsz, first, nent);
+               }
+            }
+         }
+         break;
+
+      case kPROOF_SETIDLE:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_SETIDLE","Enter");
+
+            // The session is idle
+            fIdle = kTRUE;
+         }
+         break;
+
+      case kPROOF_QUERYSUBMITTED:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_QUERYSUBMITTED","Enter");
+
+            // We have received the sequential number
+            (*mess) >> fSeqNum; 
+
+            rc = 1;
+         }
+         break;
+
+      case kPROOF_SESSIONTAG:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_SESSIONTAG","Enter");
+
+            // We have received the sequential number
+            (*mess) >> fSessionTag; 
          }
          break;
 
@@ -1759,6 +1969,7 @@ void TProof::Print(Option_t *option) const
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
+      Printf("Session unique tag:       %s", IsValid() ? GetSessionTag() : "");
       if (IsValid())
          const_cast<TProof*>(this)->SendPrint(option);
    } else {
@@ -1786,7 +1997,7 @@ void TProof::Print(Option_t *option) const
       Printf("Total MB's processed:     %.2f", float(GetBytesRead())/(1024*1024));
       Printf("Total real time used (s): %.3f", GetRealTime());
       Printf("Total CPU time used (s):  %.3f", GetCpuTime());
-      if (TString(option).Contains("a") && GetNumberOfSlaves()) {
+      if (TString(option).Contains("a", TString::kIgnoreCase) && GetNumberOfSlaves()) {
          Printf("List of slaves:");
          TList masters;
          TIter nextslave(fSlaves);
@@ -1821,27 +2032,13 @@ Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    if (!IsValid()) return -1;
 
-   if (!IsIdle()) {
-      Info("Process","not idle, cannot submit query");
-      return -1;
-   }
-
-   // Set non idle
-   fIdle = kFALSE;
-
-   // Start or reset the progress dialog
-   if (fProgressDialog) {
-      Int_t dsz = dset->GetListOfElements()->GetSize();
-      if (!fProgressDialogStarted) {
-         fProgressDialog->ExecPlugin(5, this, selector, dsz, first, nentries);
-         fProgressDialogStarted = kTRUE;
-      } else {
-         ResetProgressDialog(selector, dsz, first, nentries);
-      }
-   }
-
    // Resolve query mode
    fSync = (GetQueryMode(option) == kSync);
+
+   if (fSync && !IsIdle()) {
+      Info("Process","not idle, cannot submit synchronous query");
+      return -1;
+   }
 
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
@@ -1863,25 +2060,242 @@ Int_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 }
 
 //______________________________________________________________________________
-Int_t TProof::Finalize()
+Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
 {
-   // Finalize current query.
-   // Return 0 on success, -1 on error
+   // Get reference for the qry-th query in fQueries (as
+   // displayed by ShowQueries).
 
-   return (fPlayer ? fPlayer->Finalize() : -1);
-}
-
-//______________________________________________________________________________
-Int_t TProof::Retrieve(Int_t)
-{
-   MayNotUse("Retrieve");
+   ref = "";
+   if (qry > 0) {
+      if (fQueries) {
+         TIter nxq(fQueries);
+         TQueryResult *qr = 0;
+         while ((qr = (TQueryResult *) nxq()))
+            if (qr->GetSeqNum() == qry) {
+               ref = Form("%s:%s", qr->GetTitle(), qr->GetName());
+               return 0;
+            }
+      }
+   }
    return -1;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Archive(Int_t, const char *)
+Int_t TProof::Finalize(Int_t qry, Bool_t force)
 {
-   MayNotUse("Archive");
+   // Finalize the qry-th query in fQueries.
+   // If force, force new retrieve if the query is found in the local list
+   // but has already been finalized (default kFALSE). 
+   // If query < 0, finalize current query.
+   // Return 0 on success, -1 on error
+
+   if (fPlayer) {
+      if (qry > 0) {
+         TString ref;
+         if (GetQueryReference(qry, ref) == 0) {
+            return Finalize(ref, force);
+         } else {
+            Info("Finalize", "query #%d not found", qry);
+         }
+      } else {
+         // The last query
+         return fPlayer->Finalize(force);
+      }
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Finalize(const char *ref, Bool_t force)
+{
+   // Finalize query with reference ref.
+   // If force, force new retrieve if the query is found in the local list
+   // but has already been finalized (default kFALSE). 
+   // If ref = 0, finalize current query.
+   // Return 0 on success, -1 on error
+
+   if (fPlayer) {
+      if (ref) {
+         // Get the pointer to the query
+         TQueryResult *qr = fPlayer->GetQueryResult(ref);
+         // If not found, try retrieving it
+         Bool_t retrieve = kFALSE;
+         if (!qr) {
+            retrieve = kTRUE;
+         } else {
+            if (qr->IsFinalized() && force) {
+               retrieve = kTRUE;
+            } else {
+               Info("Retrieve","query already finalized:"
+                    " use Finalize(<qry>,kTRUE) to force new retrieve");
+               qr = 0;
+            }
+         }
+         if (retrieve) {
+            Retrieve(ref);
+            qr = fPlayer->GetQueryResult(ref);
+         }
+         if (qr) 
+            return fPlayer->Finalize(qr);
+      }
+   }
+
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Retrieve(Int_t qry, const char *path)
+{
+   // Send retrieve request for the qry-th query in fQueries.
+   // If path is defined save it to path.
+
+   if (qry > 0) {
+      TString ref;
+      if (GetQueryReference(qry, ref) == 0)
+         return Retrieve(ref, path);
+      else
+         Info("Retrieve", "query #%d not found", qry);
+   } else {
+      Info("Retrieve","positive argument required - do nothing");
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Retrieve(const char *ref, const char *path)
+{
+   // Send retrieve request for the query specified by ref.
+   // If path is defined save it to path.
+   // Generic method working for all queries known by the server.
+
+   if (ref) {
+      TMessage m(kPROOF_RETRIEVE);
+      m << TString(ref);
+      Broadcast(m, kActive);
+      Collect(kActive);
+
+      // Archive ir locally, if required
+      if (path) {
+
+         // Get pointer to query
+         TQueryResult *qr = fPlayer ? fPlayer->GetQueryResult(ref) : 0;
+         
+         if (qr) {
+         
+            TFile *farc = TFile::Open(path,"UPDATE");
+            if (!(farc->IsOpen())) {
+               Info("Retrieve", "archive file cannot be open (%s)", path);
+               return 0;
+            }
+            farc->cd();
+            
+            // Update query status
+            qr->SetArchived(path);
+            
+            // Write to file
+            qr->Write();
+            
+            farc->Close();
+            SafeDelete(farc);
+         
+         } else {
+            Info("Retrieve", "query not found after retrieve");
+            return -1;
+         }
+      }
+
+      return 0;
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Remove(Int_t qry)
+{
+   // Send remove request for the qry-th query in fQueries.
+
+   if (qry > 0) {
+      TString ref;
+      if (GetQueryReference(qry, ref) == 0)
+         return Remove(ref);
+      else
+         Info("Remove", "query #%d not found", qry);
+   } else {
+      Info("Remove","positive argument required - do nothing");
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Remove(const char *ref, Bool_t all)
+{
+   // Send remove request for the query specified by ref.
+   // If all = TRUE remove also local copies of the query, if any.
+   // Generic method working for all queries known by the server.
+
+   if (all) {
+      // Remove also local copies, if any
+      if (fPlayer)
+         fPlayer->RemoveQueryResult(ref);
+   }
+
+   if (ref) {
+      TMessage m(kPROOF_REMOVE);
+      m << TString(ref);
+      Broadcast(m, kActive);
+      Collect(kActive);
+      return 0;
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Archive(Int_t qry, const char *path)
+{
+   // Send archive request for the qry-th query in fQueries.
+
+   if (qry > 0) {
+      TString ref;
+      if (GetQueryReference(qry, ref) == 0)
+         return Archive(ref, path);
+      else
+         Info("Archive", "query #%d not found", qry);
+   } else {
+      Info("Archive","positive argument required - do nothing");
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Archive(const char *ref, const char *path)
+{
+   // Send archive request for the query specified by ref.
+   // Generic method working for all queries known by the server.
+   // If ref == "Default", path is understood as a default path for
+   // archiving.
+
+   if (ref) {
+      TMessage m(kPROOF_ARCHIVE);
+      m << TString(ref) << TString(path);
+      Broadcast(m, kActive);
+      Collect(kActive);
+      return 0;
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::CleanupSession(const char *sessiontag)
+{
+   // Send cleanup request for the session specified by tag.
+
+   if (sessiontag) {
+      TMessage m(kPROOF_CLEANUPSESSION);
+      m << TString(sessiontag);
+      Broadcast(m, kActive);
+      Collect(kActive);
+      return 0;
+   }
    return -1;
 }
 
@@ -3117,6 +3531,17 @@ void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
 }
 
 //______________________________________________________________________________
+void TProof::QueryResultReady(const char *ref)
+{
+   // Notify availability of a query result.
+
+   PDB(kGlobal,1)
+      Info("QueryResultReady","ref: %s", ref);
+
+   Emit("QueryResultReady(const char*)",ref);
+}
+
+//______________________________________________________________________________
 void TProof::ValidateDSet(TDSet *dset)
 {
    // Validate a TDSet.
@@ -3435,6 +3860,9 @@ void TProof::Browse(TBrowser *b)
    b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
    if (fPlayer->GetOutputList())
       b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
+   if (fPlayer->GetListOfResults())
+      b->Add(fPlayer->GetListOfResults(),
+             fPlayer->GetListOfResults()->Class(), "ListOfResults");
 }
 
 //______________________________________________________________________________
@@ -3559,6 +3987,48 @@ void TProof::GetLog(Int_t start, Int_t end)
 }
 
 //______________________________________________________________________________
+void TProof::PutLog(TQueryResult *pq)
+{
+   // Display log of query pq into the log window frame
+
+   if (!pq) return;
+
+   TList *lines = pq->GetLogFile()->GetListOfLines();
+   if (lines) {
+      TIter nxl(lines);
+      TObjString *l = 0;
+      while ((l = (TObjString *)nxl()))
+         EmitVA("LogMessage(const char*,Bool_t)", 2, l->GetName(), kFALSE);
+   }
+}
+
+//______________________________________________________________________________
+void TProof::ShowLog(const char *queryref)
+{
+   // Display on screen the content of the temporary log file for query
+   // in reference
+
+   // Make sure we have all info (GetListOfQueries retrieves the 
+   // head info only)
+   Retrieve(queryref);
+
+   if (fPlayer) {
+      if (queryref) {
+         if (fPlayer->GetListOfResults()) {
+            TIter nxq(fPlayer->GetListOfResults());
+            TQueryResult *qr = 0;
+            while ((qr = (TQueryResult *) nxq()))
+               if (strstr(queryref, qr->GetTitle()) &&
+                   strstr(queryref, qr->GetName()))
+                  break;
+            if (qr)
+               return PutLog(qr);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TProof::ShowLog(Int_t qry)
 {
    // Display on screen the content of the temporary log file.
@@ -3580,25 +4050,24 @@ void TProof::ShowLog(Int_t qry)
       startlog = 0;
       lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
    } else if (qry != -1) {
-      // Get update the list of queries
+
+      // Get update the list of queries (from this session only)
       GetListOfQueries();
       if (fQueries) {
-         TProofQuery *pq = 0;
+         TQueryResult *pq = 0;
          if (qry > 0) {
             TIter nxq(fQueries);
-            while ((pq = (TProofQuery *)nxq()))
+            while ((pq = (TQueryResult *)nxq()))
                if (qry == pq->GetSeqNum())
                   break;
          } else if (qry == -2) {
             // Pickup the last one
-            pq = (TProofQuery *)(fQueries->Last());
+            pq = (TQueryResult *)(fQueries->Last());
          } else
             qry = -1;
 
          if (pq) {
-            startlog = pq->GetStartLog();
-            endlog = pq->GetEndLog();
-            GetLog(startlog, endlog);
+            ShowLog(Form("%s:%s", pq->GetTitle(), pq->GetName()));
             return;
          } else {
             Info("ShowLog","query %d not found in list", qry);

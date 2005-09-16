@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.160 2005/08/16 12:56:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.161 2005/08/16 15:58:15 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -87,6 +87,7 @@
 #include "THashList.h"
 #include "TObjArray.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TColor.h"
 #include "TGlobal.h"
 #include "TFunction.h"
@@ -383,6 +384,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSecContexts = new TList;
    fProofs      = new TList;
    fClipboard   = new TList;
+   fDataSets    = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -1699,48 +1701,65 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    return result;
 }
 
-//______________________________________________________________________________
-TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
+//_____________________________________________________________________________
+TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
+                            const char *confdir, Int_t loglevel)
 {
-   // Start PROOF session on a specific cluster (default is
-   // "proof://localhost"). The TProof object can be accessed via
-   // the gProof global. Creating a new TProof object will reset
-   // the gProof global. For more on PROOF see the TProof ctor.
+   // Start a PROOF session on a specific cluster. If cluster is 0
+   // (the default) then the PROOF Control GUI pops up. If cluster is ""
+   // (empty string) then we connect to the localhost ("proof://localhost").
+   // The TProof object is returned. The object is also added to the list
+   // of proof sessions (accessible via TROOT::GetListOfProofs()) and
+   // accessible via gProof. Use TProof::cd() to switch between PROOF
+   // sessions (changes gProof).
+   // For more info on PROOF see the TProof ctor.
 
-   // make sure libProof and dependents are loaded and TProof can be created,
+   // Make sure libProof and dependents are loaded and TProof can be created,
    // dependents are loaded via the information in the [system].rootmap file
-   TPluginManager *pm = GetPluginManager();
+   TPluginManager *pm = gROOT->GetPluginManager();
    if (!pm) {
       Error("Proof", "plugin manager not found");
       return 0;
    }
 
-   // load regular TProof for client
+   // Load regular TProof for client
    TPluginHandler *h = pm->FindHandler("TVirtualProof", "");
    if (!h) {
       Error("Proof", "no plugin found for TVirtualProof");
       return 0;
    }
-
    if (h->LoadPlugin() == -1) {
       Error("Proof", "plugin for TVirtualProof could not be loaded");
       return 0;
    }
 
-   TVirtualProof *proof = 0;
-   if (!configfile)
-      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(1, cluster));
-   else
-      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(2, cluster,
-                                                                configfile));
+   if (!cluster) {
 
-   if (!proof || !proof->IsValid()) {
-      Error("Proof", "plugin for TVirtualProof could not be executed");
-      delete proof;
+      if (IsBatch()) {
+         Error("Proof", "we are in batch mode, cannot show PROOF Control GUI");
+         return 0;
+      }
+      // start PROOF Controller
       return 0;
+
+   } else {
+
+      if (!strlen(cluster))
+         cluster = "proof://localhost";
+
+      // start the PROOF session
+      TVirtualProof *proof = 0;
+      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(4, cluster,
+                                                             conffile, confdir,
+                                                             loglevel));
+      if (!proof || !proof->IsValid()) {
+         Error("Proof", "plugin for TVirtualProof could not be executed");
+         delete proof;
+         return 0;
+      }
+      return proof;
+
    }
-   fProofs->Add(proof);
-   return proof;
 }
 
 //______________________________________________________________________________

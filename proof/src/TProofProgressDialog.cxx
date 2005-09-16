@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.11 2005/05/03 13:13:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.12 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -263,6 +263,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
    }
+
+   // Reset start time
+   fStartTime = gSystem->Now();
 }
 
 //______________________________________________________________________________

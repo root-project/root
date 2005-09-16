@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.24 2005/03/10 17:57:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.25 2005/08/30 10:25:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -70,6 +70,13 @@ enum EMessageTypes {
    kPROOF_QUERYLIST,                     //ask/send the list of queries
    kPROOF_RETRIEVE,                      //asynchronous retrieve of query results
    kPROOF_ARCHIVE,                       //archive query results
+   kPROOF_REMOVE,                        //remove query results from the lists
+   kPROOF_STARTPROCESS,                  //Signals the start of query processing
+   kPROOF_SETIDLE,                       //Signals idle state of session
+   kPROOF_QUERYSUBMITTED,                //Signals querysubmission
+   kPROOF_SESSIONTAG,                    //Message with unique session tag
+   kPROOF_MAXQUERIES,                    //Message with max number of queries
+   kPROOF_CLEANUPSESSION,                //Cleanup session query area
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.24 2005/07/21 17:41:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.25 2005/08/29 10:57:28 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -296,6 +296,9 @@ TDSet::TDSet()
    fIterator  = 0;
    fCurrent   = 0;
    fEventList = 0;
+
+   // Add to the global list
+   gROOT->GetListOfDataSets()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -339,6 +342,9 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
 
    if (dir)
       fTitle = dir;
+
+   // Add to the global list
+   gROOT->GetListOfDataSets()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -347,6 +353,8 @@ TDSet::~TDSet()
    // Cleanup.
    delete fElements;
    delete fIterator;
+
+   gROOT->GetListOfDataSets()->Remove(this);
 }
 
 

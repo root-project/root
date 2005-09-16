@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.62 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.63 2005/08/30 10:47:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -84,17 +84,20 @@ class TVirtualMutex;
 // 3 -> 4: introduction of multi-level-master support
 // 4 -> 5: added friends support
 // 5 -> 6: drop TFTP, support for asynchronous queries
+// 6 -> 7: support for multisessions, archieve, retrieve, ...
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 6;             // protocol version number
+const Int_t       kPROOF_Protocol = 7;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
 const char* const kPROOF_WorkDir  = "~/proof";     // default working directory
 const char* const kPROOF_CacheDir = "cache";       // file cache dir, under WorkDir
 const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
+const char* const kPROOF_QueryDir = "queries";     // query dir, under WorkDir
 const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
+const char* const kPROOF_QueryLockFile = "/tmp/proof-query-lock-"; // package lock file
 
 R__EXTERN TVirtualMutex *gProofMutex;
 
@@ -189,6 +192,8 @@ public:
 
 class TProof : public TVirtualProof {
 
+friend class TPacketizer;
+friend class TPacketizer2;
 friend class TProofServ;
 friend class TProofInputHandler;
 friend class TProofInterruptHandler;
@@ -196,8 +201,6 @@ friend class TProofPlayer;
 friend class TProofPlayerRemote;
 friend class TProofProgressDialog;
 friend class TSlave;
-friend class TPacketizer;
-friend class TPacketizer2;
 
 private:
    enum EUrgent {
@@ -235,6 +238,7 @@ private:
    Bool_t          fValid;          //is this a valid proof object
    TString         fMaster;         //name of master server (use "" if this is a master)
    TString         fWorkDir;        //current work directory on remote servers
+   TString         fSessionTag;     //unique tag of the remote session
    TString         fUser;           //user under which to run
    TString         fUrlProtocol;    //net protocol name
    Int_t           fLogLevel;       //server debug logging level
@@ -274,6 +278,10 @@ private:
    Bool_t          fLogToWindowOnly; //send log to window only
 
    TList          *fQueries;        //list of TProofQuery objects
+   Int_t           fOtherQueries;   //number of queries in list from previous sessions
+   Int_t           fDrawQueries;    //number of draw queries during this sessions
+   Int_t           fMaxDrawQueries; //max number of draw queries kept
+   Int_t           fSeqNum;         //Remote sequential # of the last query submitted
 
 protected:
    enum ESlaves { kAll, kActive, kUnique };
@@ -355,6 +363,8 @@ private:
 
    void     RedirectLog(Bool_t on = kTRUE);  // redirect log msgs
 
+   Int_t    GetQueryReference(Int_t qry, TString &ref);
+
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
@@ -392,12 +402,19 @@ public:
    Int_t       Process(TDSet *set, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
                        Long64_t firstentry = 0, TEventList *evl = 0);
-   Int_t       DrawSelect(TDSet *set, const char *varexp, const char *selection,
+   Int_t       DrawSelect(TDSet *set, const char *varexp,
+                          const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
-   Int_t       Finalize();
-   Int_t       Retrieve(Int_t query);
    Int_t       Archive(Int_t query, const char *url);
+   Int_t       Archive(const char *queryref, const char *url = 0);
+   Int_t       CleanupSession(const char *sessiontag);
+   Int_t       Finalize(Int_t query = -1, Bool_t force = kFALSE);
+   Int_t       Finalize(const char *queryref, Bool_t force = kFALSE);
+   Int_t       Remove(Int_t query);
+   Int_t       Remove(const char *queryref, Bool_t all = kFALSE);
+   Int_t       Retrieve(Int_t query, const char *path = 0);
+   Int_t       Retrieve(const char *queryref, const char *path = 0);
 
    void        StopProcess(Bool_t abort);
    void        AddInput(TObject *obj);
@@ -426,6 +443,7 @@ public:
    const char *GetConfFile() const { return fConfFile; }
    const char *GetUser() const { return fUser; }
    const char *GetWorkDir() const { return fWorkDir; }
+   const char *GetSessionTag() const { return fSessionTag; }
    const char *GetImage() const { return fImage; }
    const char *GetUrlProtocol() const { return fUrlProtocol; }
    Int_t       GetPort() const { return fPort; }
@@ -456,7 +474,13 @@ public:
    void        ShowFeedback() const;
    TList      *GetFeedbackList() const;
 
-   void        GetListOfQueries();
+   TList      *GetListOfQueries(Option_t *opt = "");
+   Int_t       GetNumberOfQueries();
+   Int_t       GetNumberOfDrawQueries() { return fDrawQueries; }
+   TList      *GetQueryResults();
+   TQueryResult *GetQueryResult(const char *ref);
+   void        GetMaxQueries();
+   void        SetMaxDrawQueries(Int_t max);
    void        ShowQueries(Option_t *opt = "");
 
    Bool_t      IsDataReady(Long64_t &totalbytes, Long64_t &bytesready);
@@ -466,11 +490,14 @@ public:
    void        LogMessage(const char *msg, Bool_t all); //*SIGNAL*
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
+   void        QueryResultReady(const char *ref); //*SIGNAL*
    void        ResetProgressDialog(const char *sel, Int_t sz,
                                    Long64_t fst, Long64_t ent); //*SIGNAL*
 
    void        GetLog(Int_t start = -1, Int_t end = -1);
+   void        PutLog(TQueryResult *qr);
    void        ShowLog(Int_t qry = -1);
+   void        ShowLog(const char *queryref);
    Bool_t      GetLogToWindow() const { return fLogToWindowOnly; }
    void        SetLogToWindow(Bool_t mode) { fLogToWindowOnly = mode; }
 

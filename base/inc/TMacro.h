@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.1 2005/08/16 12:57:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.2 2005/08/16 15:58:15 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 //                                                                      //
 // TMacro                                                               //
 //                                                                      //
-// class supporting a collection of lines with C++ code.                //
-// A TMacro can be executed, saved to a ROOT file, edited, etc          //
+// Class supporting a collection of lines with C++ code.                //
+// A TMacro can be executed, saved to a ROOT file, edited, etc.         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,31 +31,34 @@
 #include "TObjString.h"
 #endif
 
+class TMD5;
+
+
 class TMacro : public TNamed {
 
 protected:
-    TList         *fLines;      //collection of lines
-    TString        fParams;     //default string of macro parameters
-    
-public:
+   TList         *fLines;      //collection of lines
+   TString        fParams;     //default string of macro parameters
 
-    TMacro();
-    TMacro(const TMacro&);
-    TMacro(const char *name, const char *title="");
-    virtual ~TMacro();
-    virtual TObjString  *AddLine(const char *text);
-    virtual void         Browse(TBrowser *b);
-    virtual TObjString  *GetLineWith(const char *text) const;
-    virtual void         Exec(const char *params=0);  //*MENU*
-    TList               *GetListOfLines() const {return fLines;}
-    virtual void         Paint(Option_t *option="");
-    virtual void         Print(Option_t *option="") const;
-    virtual Int_t        ReadFile(const char *filename);
-    virtual void         SaveSource(const char *filename);  //*MENU*
-    virtual void         SavePrimitive(ofstream &out, Option_t *option);
-    virtual void         SetParams(const char *params=0); //*MENU*
-        
-    ClassDef(TMacro,1)  //class supporting a collection of lines with C++ code.
+public:
+   TMacro();
+   TMacro(const TMacro&);
+   TMacro(const char *name, const char *title="");
+   virtual ~TMacro();
+   virtual TObjString  *AddLine(const char *text);
+   virtual void         Browse(TBrowser *b);
+   virtual TMD5        *Checksum();
+   virtual TObjString  *GetLineWith(const char *text) const;
+   virtual void         Exec(const char *params=0);  //*MENU*
+   TList               *GetListOfLines() const {return fLines;}
+   virtual void         Paint(Option_t *option="");
+   virtual void         Print(Option_t *option="") const;
+   virtual Int_t        ReadFile(const char *filename);
+   virtual void         SaveSource(const char *filename);  //*MENU*
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
+   virtual void         SetParams(const char *params=0); //*MENU*
+
+   ClassDef(TMacro,1)  // Class supporting a collection of lines with C++ code.
 };
 
 #endif

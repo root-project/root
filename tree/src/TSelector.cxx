@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.17 2005/06/07 20:28:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.18 2005/08/29 10:57:28 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -61,7 +61,6 @@ TSelector::~TSelector()
    delete fOutput;
 }
 
-
 //______________________________________________________________________________
 TSelector *TSelector::GetSelector(const char *filename)
 {
@@ -97,7 +96,7 @@ TSelector *TSelector::GetSelector(const char *filename)
 //     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events.
 //
-//   WARNING when a selector is used with a TChain: 
+//   WARNING when a selector is used with a TChain:
 //    in the Process, ProcessCut, ProcessFill function, you must use
 //    the pointer to the current Tree to call GetEntry(entry).
 //    entry is always the local entry number in the current tree.
@@ -166,3 +165,32 @@ TSelector *TSelector::GetSelector(const char *filename)
    return select;
 }
 
+//______________________________________________________________________________
+Bool_t TSelector::IsStandardDraw(const char *selec)
+{
+   // Find out if this is a standard selection used for Draw actions
+   // (either TSelectorDraw, TProofDraw or deriving from them).
+
+   // Make sure we have a name
+   if (!selec) {
+      ::Info("TSelector::IsStandardDraw",
+             "selector name undefined - do nothing");
+      return kFALSE;
+   }
+
+   Bool_t stdselec = kFALSE;
+   if (!strchr(selec, '.')) {
+      if (strstr(selec, "TSelectorDraw")) {
+         stdselec = kTRUE;
+      } else {
+         TClass *cl = TClass::GetClass(selec);
+         if (cl && (cl->InheritsFrom("TProofDraw") ||
+                    cl->InheritsFrom("TSelectorDraw")))
+            stdselec = kTRUE;
+         SafeDelete(cl);
+      }
+   }
+
+   // We are done
+   return stdselec;
+}

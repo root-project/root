@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.3 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.4 2005/03/11 08:25:53 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -110,8 +110,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    Int_t nslaves = 0;
    TVirtualProof *proof = gProofServ->GetProof();
    TList *l = proof ? proof->GetSlaveInfo() : 0 ;
-   TIter NextSlaveInfo(l);
-   while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(NextSlaveInfo()))
+   TIter nextslaveinfo(l);
+   while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
       if (si->fStatus == TSlaveInfo::kActive) nslaves++;
 
    PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", nslaves);
@@ -178,9 +178,9 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fCpuTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fCpuTimeHist);
 
-      NextSlaveInfo.Reset();
+      nextslaveinfo.Reset();
       Int_t slavebin=1;
-      while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(NextSlaveInfo())) {
+      while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo())) {
          if (si->fStatus == TSlaveInfo::kActive) {
             fPacketsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fEventsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());

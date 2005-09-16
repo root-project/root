@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.29 2005/07/09 04:03:23 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.30 2005/08/15 21:29:58 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -58,6 +58,7 @@
 #pragma link C++ class TCollectionPropertyBrowsable+;
 #pragma link C++ class TCollectionMethodBrowsable+;
 #pragma link C++ class TSelectorScalar+;
+#pragma link C++ class TQueryResult+;
 #pragma link C++ class std::pair<TDSet*, TString>;
 #pragma link C++ class std::pair<TDSetElement*, TString>;
 

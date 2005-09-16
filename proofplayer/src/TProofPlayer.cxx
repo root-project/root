@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.62 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.63 2005/08/30 10:47:31 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -14,6 +14,8 @@
 // TProofPlayer                                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include <string.h>
 
 #include "TProofPlayer.h"
 #include "THashList.h"
@@ -48,6 +50,8 @@
 #include "TNamed.h"
 #include "TObjString.h"
 #include "Api.h"
+#include "TQueryResult.h"
+#include "TMD5.h"
 
 
 class TAutoBinVal : public TNamed {
@@ -81,7 +85,8 @@ ClassImp(TProofPlayer)
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer()
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
-     fFeedbackTimer(0), fEvIter(0), fSelStatus(0)
+     fFeedbackTimer(0), fEvIter(0), fSelStatus(0), fQueryResults(0),
+     fQuery(0), fDrawQueries(0), fMaxDrawQueries(1)
 {
    // Default ctor.
 
@@ -92,10 +97,11 @@ TProofPlayer::TProofPlayer()
 //______________________________________________________________________________
 TProofPlayer::~TProofPlayer()
 {
-   delete fInput;
-   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
-   delete fFeedbackTimer;
-   delete fEvIter;
+   SafeDelete(fInput);
+   SafeDelete(fSelector);
+   SafeDelete(fFeedbackTimer);
+   SafeDelete(fEvIter);
+   SafeDelete(fQueryResults);
 }
 
 //______________________________________________________________________________
@@ -106,6 +112,115 @@ void TProofPlayer::StopProcess(Bool_t abort)
       fExitStatus = kAborted;
    else
       fExitStatus = kStopped;
+}
+
+//______________________________________________________________________________
+void TProofPlayer::AddQueryResult(TQueryResult *q)
+{
+   // Add query result to the list, making sure that there are no
+   // duplicates
+
+   if (!q) {
+      Warning("AddQueryResult","query undefined - do nothing");
+      return;
+   }
+
+   // Treat differently normal and draw queries
+   if (!(q->IsDraw())) {
+      if (!fQueryResults) {
+         fQueryResults = new TList;
+         fQueryResults->Add(q);
+      } else {
+         TIter nxr(fQueryResults);
+         TQueryResult *qr = 0;
+         TQueryResult *qp = 0;
+         while ((qr = (TQueryResult *) nxr())) {
+            // If same query, remove old version and break
+            if (*qr == *q) {
+               fQueryResults->Remove(qr);
+               delete qr;
+               break;
+            }
+            // Record position according to end time
+            if (qr->GetEndTime().Convert() < q->GetEndTime().Convert())
+               qp = qr;
+         }
+
+         if (!qp) {
+            fQueryResults->AddFirst(q);
+         } else {
+            fQueryResults->AddAfter(qp, q);
+         }
+      }
+   } else if(IsClient()) {
+      // If max reached, eliminate first the oldest one
+      if (fDrawQueries == fMaxDrawQueries && fMaxDrawQueries > 0) {
+         TIter nxr(fQueryResults);
+         TQueryResult *qr = 0;
+         while ((qr = (TQueryResult *) nxr())) {
+            // If same query, remove old version and break
+            if (qr->IsDraw()) {
+               fDrawQueries--;
+               fQueryResults->Remove(qr);
+               delete qr;
+               break;
+            }
+         }
+      }
+      // Add new draw query
+      if (fDrawQueries >= 0 && fDrawQueries < fMaxDrawQueries) {
+         fDrawQueries++;
+         if (!fQueryResults)
+            fQueryResults = new TList;
+         fQueryResults->Add(q);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TProofPlayer::RemoveQueryResult(const char *ref)
+{
+   // Remove all query result instances referenced 'ref' from
+   // the list of results
+
+   if (fQueryResults) {
+      TIter nxq(fQueryResults);
+      TQueryResult *qr = 0;
+      while ((qr = (TQueryResult *) nxq())) {
+         if (qr->Matches(ref)) {
+            fQueryResults->Remove(qr);
+            delete qr;
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
+{
+   // Get query result instances referenced 'ref' from
+   // the list of results
+
+   if (fQueryResults) {
+      TIter nxq(fQueryResults);
+      TQueryResult *qr = 0;
+      while ((qr = (TQueryResult *) nxq())) {
+         if (qr->Matches(ref))
+            return qr;
+      }
+   }
+
+   // Nothing found
+   return (TQueryResult *)0;
+}
+
+//______________________________________________________________________________
+void TProofPlayer::SetCurrentQuery(TQueryResult *q)
+{
+   // Set current query and save previous value
+
+   fPreviousQuery = fQuery;
+   fQuery = q;
 }
 
 //______________________________________________________________________________
@@ -134,6 +249,117 @@ TObject *TProofPlayer::GetOutput(const char *name) const
 TList *TProofPlayer::GetOutputList() const
 {
    return fOutput;
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
+{
+   // Reinitialize fSelector using the selector files in the query result.
+   // Needed when Finalize is called after a Process execution for the same
+   // selector name
+
+   // Make sure we have a query
+   if (!qr) {
+      Info("ReinitSelector", "query undefined - do nothing");
+      return -1;
+   }
+
+   // Selector name
+   TString selec = qr->GetSelecImp()->GetName();
+   if (selec.Length() <= 0) {
+      Info("ReinitSelector", "selector name undefined - do nothing");
+      return -1;
+   }
+
+   // Find out if this is a standard selection used for Draw actions
+   Bool_t stdselec = TSelector::IsStandardDraw(selec);
+
+   // If not, find out if it needs to be expanded
+   TString ipathold;
+   if (!stdselec) {
+      // Check checksums for the versions of the selector files
+      Bool_t expandselec = kTRUE;
+      TString dir, ipath;
+      char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
+      if (selc) {
+         // Check checksums
+         TMD5 *md5icur = 0, *md5iold = 0, *md5hcur = 0, *md5hold = 0;
+         // Implementation files
+         md5icur = TMD5::FileChecksum(selc);
+         md5iold = qr->GetSelecImp()->Checksum();
+         // Header files
+         char *selh = StrDup(selc);
+         char *p = (char *) strrchr(selh,'.');
+         if (p) strcpy(p+1,"h");
+         if (!gSystem->AccessPathName(selh, kReadPermission))
+            md5hcur = TMD5::FileChecksum(selh);
+         md5hold = qr->GetSelecHdr()->Checksum();
+
+         // If nothing has changed nothing to do
+         if (*md5hcur != *md5hold || *md5icur != *md5iold)
+            expandselec = kFALSE;
+
+         SafeDelete(md5icur);
+         SafeDelete(md5hcur);
+         SafeDelete(md5iold);
+         SafeDelete(md5hold);
+         if (selc) delete [] selc;
+         if (selh) delete [] selh;
+      }
+
+      Bool_t ok = kFALSE;
+      // Expand selector files, if needed
+      if (expandselec) {
+
+         // Expand files in a temporary directory
+         TUUID u;
+         dir = Form("%s/%s",gSystem->TempDirectory(),u.AsString());
+         if (!(gSystem->MakeDirectory(dir))) {
+
+            // Export implementation file
+            selec = Form("%s/%s",dir.Data(),selec.Data());
+            qr->GetSelecImp()->SaveSource(selec);
+
+            // Export header file
+            TString seleh = Form("%s/%s",dir.Data(),qr->GetSelecHdr()->GetName());
+            qr->GetSelecHdr()->SaveSource(seleh);
+
+            // Adjust include path
+            ipathold = gSystem->GetIncludePath();
+            ipath = Form("-I%s %s", dir.Data(), gSystem->GetIncludePath());
+            gSystem->SetIncludePath(ipath.Data());
+
+            ok = kTRUE;
+         }
+      }
+
+      if (!ok) {
+         Info("ReinitSelector", "problems locating or exporting selector files");
+         return -1;
+      }
+   }
+
+   // Cleanup previous stuff
+   SafeDelete(fSelector);
+   fSelectorClass = 0;
+
+   // Init the selector now
+   if ((fSelector = TSelector::GetSelector(selec))) {
+      fSelectorClass = fSelector->IsA();
+      fSelector->SetOption(qr->GetOptions());
+
+      // Draw needs to reinit temp histos
+      if (stdselec) {
+         fSelector->SetInputList(qr->GetInputList());
+         fSelector->Begin(0);
+      }
+   }
+
+   // Restore original include path, if needed
+   if (ipathold.Length() > 0)
+      gSystem->SetIncludePath(ipathold.Data());
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -169,11 +395,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fExitStatus = kFinished;
    fOutput = 0;
-   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
-   fSelector = TSelector::GetSelector(selector_file);
 
-   if ( !fSelector ) {
-      fSelectorClass = 0;
+   SafeDelete(fSelector);
+   fSelectorClass = 0;
+   if (!(fSelector = TSelector::GetSelector(selector_file))) {
       Error("Process", "cannot load: %s", selector_file );
       return -1;
    }
@@ -234,10 +459,31 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
       fEventsProcessed++;
 
+      // If in sequential (0-PROOF) mode send some info for the GUI dialog
+      // to show that things are moving, though the progress bar will
+      // be meaningless for the time being (the real total number of entries
+      // does not seem accessible at this level: to be investigated)
+      if (gProofServ && !gProofServ->IsParallel()) {
+         if (fEventsProcessed%20 == 0) {
+            TMessage m(kPROOF_PROGRESS);
+            // We need to send different numbers here, otherwise processing
+            // will stop
+            m << fEventsProcessed+1 <<  fEventsProcessed;
+            gProofServ->GetSocket()->Send(m);
+         }
+      }
+
       gSystem->DispatchOneEvent(kTRUE);
       if (gROOT->IsInterrupted()) break;
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
+
+   // If in sequential (0-PROOF) mode send final info for the GUI dialog
+   if (gProofServ && !gProofServ->IsParallel()) {
+      TMessage m(kPROOF_PROGRESS);
+      m << fEventsProcessed << fEventsProcessed;
+      gProofServ->GetSocket()->Send(m);
+   }
 
    if (fFeedbackTimer != 0) HandleTimer(0);
 
@@ -274,7 +520,14 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayer::Finalize()
+Long64_t TProofPlayer::Finalize(Bool_t)
+{
+   MayNotUse("Finalize");
+   return -1;
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayer::Finalize(TQueryResult *)
 {
    MayNotUse("Finalize");
    return -1;
@@ -376,7 +629,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fExitStatus = kFinished;
    fEventsProcessed = 0;
 
-//   delete fOutput;
+   //   delete fOutput;
    if (!fOutput)
       fOutput = new TList;
    else
@@ -423,24 +676,26 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    } else {
 
-      if (IsClient() && !sync) {
-         fProof->RedirectLog(kTRUE);
-         Printf(" ");
-         Info("Process","starting new query");
-      }
-
       // For a new query clients should make sure that the temporary
       // output list is empty
-      if (IsClient() && fOutputLists) {
+      if (fOutputLists) {
          fOutputLists->Delete();
          delete fOutputLists;
          fOutputLists = 0;
       }
 
-      if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
+      if (!sync) {
+         fProof->RedirectLog(kTRUE);
+         Printf(" ");
+         Info("Process","starting new query");
+      }
+
+      SafeDelete(fSelector);
       fSelectorClass = 0;
-      fSelector = TSelector::GetSelector(selector_file);
-      if (fSelector == 0) return -1;
+      if (!(fSelector = TSelector::GetSelector(selector_file))) {
+         if (!sync) fProof->RedirectLog(kFALSE);
+         return -1;
+      }
       fSelectorClass = fSelector->IsA();
       fSelector->SetInputList(fInput);
       fSelector->SetOption(option);
@@ -448,7 +703,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
 
-      if (IsClient() && !sync) fProof->RedirectLog(kFALSE);
+      if (!sync) fProof->RedirectLog(kFALSE);
    }
 
    TCleanup clean(this);
@@ -459,7 +714,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    if (!fProof->IsMaster() && set->GetEventList()) {
       elist = set->GetEventList();
    }
-   mesg << set << fn << fInput << opt << nentries << first << elist;
+   mesg << set << fn << fInput << opt << nentries << first << elist << sync;
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
@@ -475,7 +730,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          PDB(kGlobal,1) Info("Process","Asynchronous processing:"
                                        " activating CollectInputFrom");
          fProof->Activate();
-         return 0;
+
+         // Receive the acknowledgement and query sequential number
+         fProof->Collect();
+
+         return fProof->fSeqNum;
+
       } else {
          PDB(kGlobal,1) Info("Process","Calling Collect");
          fProof->Collect();
@@ -495,7 +755,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (IsClient())
          fProof->fRedirLog = kFALSE;
 
-      if (!IsClient()) HandleTimer(0); // force an update of final result
+      if (!IsClient())
+         HandleTimer(0); // force an update of final result
       StopFeedback();
 
       if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
@@ -506,17 +767,22 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayerRemote::Finalize()
+Long64_t TProofPlayerRemote::Finalize(Bool_t force)
 {
    // Finalize a query.
    // Returns -1 in case error, 0 otherwise.
 
    if (fOutputLists == 0) {
-      if (IsClient())
+      if (IsClient()) {
+         if (force)
+            if (fQuery)
+               return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
+                                                     fQuery->GetName()), force);
          Info("Finalize","Output list is empty (already finalized?)");
-      else
+      } else {
          PDB(kGlobal,1)
              Info("Finalize","Output list is empty (already finalized?)");
+      }
       return -1;
    }
 
@@ -528,6 +794,16 @@ Long64_t TProofPlayerRemote::Finalize()
       TPerfStats::Stop();
    } else {
       if (fExitStatus != kAborted) {
+
+         // Reinit selector (with multi-sessioning we must do this until
+         // TSelector::GetSelector() is optimized to i) avoid reloading of an
+         // unchanged selector and ii) invalidate existing instances of
+         // reloaded selector)
+         if (ReinitSelector(fQuery) == -1) {
+            Info("Finalize", "problems reinitializing selector \"%s\"",
+                 fQuery->GetSelecImp()->GetName());
+            return -1;
+         }
 
          TIter next(fOutput);
          TList *output = fSelector->GetOutputList();
@@ -551,6 +827,12 @@ Long64_t TProofPlayerRemote::Finalize()
          while(TObject* o = it()) {
             fOutput->Add(o);
          }
+         // Save the output list in the current query
+         fQuery->SetOutputList((TList *) fOutput->Clone());
+
+         // Set in finlaized state (cannot be done twice)
+         fQuery->SetFinalized();
+
          // FIXME
          output->SetOwner(kFALSE);
          output->Clear("nodelete");
@@ -558,6 +840,71 @@ Long64_t TProofPlayerRemote::Finalize()
    }
    PDB(kGlobal,1) Info("Process","exit");
    return rv;
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
+{
+   // Finalize the results of a query already processed
+
+   PDB(kGlobal,1) Info("Finalize(TQueryResult *)","Enter");
+
+   if (!IsClient()) {
+      Info("Finalize(TQueryResult *)","method to be executed only clients");
+      return -1;
+   }
+
+   if (!qr) {
+      Info("Finalize(TQueryResult *)", "query undefined");
+      return -1;
+   }
+
+   if (qr->IsFinalized()) {
+      Info("Finalize(TQueryResult *)", "query already finalized");
+      return -1;
+   }
+
+   // Reset the list
+   if (!fOutput)
+      fOutput = new TList;
+   else
+      fOutput->Clear();
+
+   // Make sure that the temporary output list is empty
+   if (fOutputLists) {
+      fOutputLists->Delete();
+      delete fOutputLists;
+      fOutputLists = 0;
+   }
+
+   // Re-init the selector
+   fProof->RedirectLog(kTRUE);
+
+   // Import the output list
+   TList *tmp = (TList *) qr->GetOutputList();
+   if (!tmp) {
+      fProof->RedirectLog(kFALSE);
+      Info("Finalize(TQueryResult *)", "ouputlist is empty");
+      return -1;
+   }
+   TList *out = new TList;
+   TIter nxo(tmp);
+   TObject *o = 0;
+   while ((o = nxo()))
+      out->Add(o->Clone());
+
+   // Adopts the list
+   out->SetOwner();
+   StoreOutput(out);
+
+   fProof->RedirectLog(kFALSE);
+
+   // Finalize it
+   SetCurrentQuery(qr);
+   Long64_t rc = Finalize();
+   RestorePreviousQuery();
+
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -1168,8 +1515,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
       valueholder.SetOwner();
 
       // Construct msd list using the slaves
-      TIter NextSlave(proof->GetListOfActiveSlaves());
-      while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+      TIter nextslave(proof->GetListOfActiveSlaves());
+      while (TSlave *sl = dynamic_cast<TSlave*>(nextslave())) {
          TList *submasters = 0;
          TPair *msd = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
          if (!msd) {
@@ -1188,8 +1535,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
 
       // Add TDSetElements to msd list
       Long64_t cur = 0; //start of next element
-      TIter NextElement(dset->GetListOfElements());
-      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElement())) {
+      TIter nextelement(dset->GetListOfElements());
+      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextelement())) {
 
          if (elem->GetNum()<1) continue; // get rid of empty elements
 
@@ -1232,8 +1579,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
       }
 
       TList usedmasters;
-      TIter NextMsd(msds.MakeIterator());
-      while (TPair *msd = dynamic_cast<TPair*>(NextMsd())) {
+      TIter nextmsd(msds.MakeIterator());
+      while (TPair *msd = dynamic_cast<TPair*>(nextmsd())) {
          TList *submasters = dynamic_cast<TList*>(msd->Key());
          TList *setelements = dynamic_cast<TList*>(msd->Value());
 

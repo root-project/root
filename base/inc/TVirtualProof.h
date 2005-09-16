@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.18 2005/08/30 10:47:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.19 2005/08/30 13:47:16 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -37,7 +37,11 @@ class TTree;
 class TDSet;
 class TDrawFeedback;
 class TChain;
+class TQueryResult;
 
+// Global object with default PROOF session
+class TVirtualProof;
+R__EXTERN TVirtualProof *gProof;
 
 class TVirtualProof : public TObject, public TQObject {
 
@@ -55,6 +59,8 @@ public:
       : fQueryMode(kSync) { }
    virtual ~TVirtualProof() { Emit("~TVirtualProof()"); }
 
+   virtual void        cd() { gProof = this; }
+
    virtual Int_t       Ping() = 0;
    virtual Int_t       Exec(const char *cmd) = 0;
    virtual Int_t       Process(TDSet *set, const char *selector,
@@ -63,13 +69,19 @@ public:
                                Long64_t firstentry = 0,
                                TEventList *evl = 0) = 0;
    virtual Int_t       DrawSelect(TDSet *set, const char *varexp,
-                                  const char *selection,
+                                  const char *selection = "",
                                   Option_t *option = "",
                                   Long64_t nentries = -1,
                                   Long64_t firstentry = 0) = 0;
-   virtual Int_t       Finalize() = 0;
-   virtual Int_t       Retrieve(Int_t query) = 0;
    virtual Int_t       Archive(Int_t query, const char *url) = 0;
+   virtual Int_t       Archive(const char *queryref, const char *url = 0) = 0;
+   virtual Int_t       CleanupSession(const char *sessiontag) = 0;
+   virtual Int_t       Finalize(Int_t qry = -1, Bool_t force = kFALSE) = 0;
+   virtual Int_t       Finalize(const char *queryref, Bool_t force = kFALSE) = 0;
+   virtual Int_t       Remove(Int_t query) = 0;
+   virtual Int_t       Remove(const char *queryref, Bool_t all = kFALSE) = 0;
+   virtual Int_t       Retrieve(Int_t query, const char *path = 0) = 0;
+   virtual Int_t       Retrieve(const char *queryref, const char *path = 0) = 0;
 
    virtual void        StopProcess(Bool_t abort) = 0;
    virtual void        AddInput(TObject *obj) = 0;
@@ -97,6 +109,7 @@ public:
    virtual const char *GetConfFile() const = 0;
    virtual const char *GetUser() const = 0;
    virtual const char *GetWorkDir() const = 0;
+   virtual const char *GetSessionTag() const = 0;
    virtual const char *GetImage() const = 0;
    virtual Int_t       GetPort() const = 0;
    virtual Int_t       GetRemoteProtocol() const = 0;
@@ -125,7 +138,13 @@ public:
    virtual void        ShowFeedback() const = 0;
    virtual TList      *GetFeedbackList() const = 0;
 
-   virtual void        GetListOfQueries() = 0;
+   virtual TList      *GetListOfQueries(Option_t *opt = "") = 0;
+   virtual Int_t       GetNumberOfQueries() = 0;
+   virtual Int_t       GetNumberOfDrawQueries() = 0;
+   virtual TList      *GetQueryResults() = 0;
+   virtual TQueryResult *GetQueryResult(const char *ref) = 0;
+   virtual void        GetMaxQueries() = 0;
+   virtual void        SetMaxDrawQueries(Int_t max) = 0;
    virtual void        ShowQueries(Option_t *opt = "") = 0;
 
    virtual void        SetActive(Bool_t active = kTRUE) = 0;
@@ -133,11 +152,14 @@ public:
    virtual void        LogMessage(const char *msg, Bool_t all) = 0; //*SIGNAL*
    virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
    virtual void        Feedback(TList *objs) = 0; //*SIGNAL*
+   virtual void        QueryResultReady(const char *ref) = 0; //*SIGNAL*
    virtual void        ResetProgressDialog(const char *sel, Int_t sz,
                                    Long64_t fst, Long64_t ent) = 0; //*SIGNAL*
 
    virtual void        GetLog(Int_t start = -1, Int_t end = -1) = 0;
+   virtual void        PutLog(TQueryResult *qr) = 0;
    virtual void        ShowLog(Int_t qry = -1) = 0;
+   virtual void        ShowLog(const char *queryref) = 0;
    virtual Bool_t      GetLogToWindow() const = 0;
    virtual void        SetLogToWindow(Bool_t mode) = 0;
 
@@ -155,7 +177,5 @@ public:
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };
-
-R__EXTERN TVirtualProof *gProof;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:$:$Id:$
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.1 2005/03/21 16:20:56 rdm Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 
 class TDSet;
 class TDrawFeedback;
+class TVirtualProof;
 
 
 class TChainProof : public TTree {

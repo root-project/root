@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.3 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.4 2005/03/11 08:25:53 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TQObject.h"
 #endif
 
+class TVirtualProof;
 class TProof;
 class THashList;
 class TSeqCollection;

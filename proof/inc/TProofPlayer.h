@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.29 2005/06/07 20:28:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.30 2005/08/30 10:25:29 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -34,7 +34,9 @@
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
-
+#ifndef ROOT_TQueryResult
+#include "TQueryResult.h"
+#endif
 
 class TSelector;
 class TDSet;
@@ -59,18 +61,24 @@ public:
    enum EExitStatus { kFinished, kStopped, kAborted };
 
 private:
-   TList      *fAutoBins;  // Map of min/max values by name for slaves
+   TList        *fAutoBins;  // Map of min/max values by name for slaves
 
 protected:
-   TList      *fInput;           //-> list with input objects
-   TList      *fOutput;          //   list with output objects
-   TSelector  *fSelector;        //!  the latest selector
-   TClass     *fSelectorClass;   //!  class of the latest selector
-   TTimer     *fFeedbackTimer;   //!  timer for sending intermediate results
-   TEventIter *fEvIter;          //!  iterator on events or objects
-   TStatus    *fSelStatus;       //!  status of query in progress
-   EExitStatus fExitStatus;      //   exit status
-   Long64_t    fEventsProcessed; //   number of events processed
+   TList        *fInput;           //-> list with input objects
+   TList        *fOutput;          //   list with output objects
+   TSelector    *fSelector;        //!  the latest selector
+   TClass       *fSelectorClass;   //!  class of the latest selector
+   TTimer       *fFeedbackTimer;   //!  timer for sending intermediate results
+   TEventIter   *fEvIter;          //!  iterator on events or objects
+   TStatus      *fSelStatus;       //!  status of query in progress
+   EExitStatus   fExitStatus;      //   exit status
+   Long64_t      fEventsProcessed; //   number of events processed
+
+   TList        *fQueryResults;    //List of TQueryResult
+   TQueryResult *fQuery;           //Instance of TQueryResult currently processed
+   TQueryResult *fPreviousQuery;   //Previous instance of TQueryResult processed
+   Int_t         fDrawQueries;     //Number of Draw queries in the list
+   Int_t         fMaxDrawQueries;  //Max number of Draw queries kept
 
    void       *GetSender() { return this; }  //used to set gTQSender
 
@@ -96,7 +104,8 @@ public:
                              const char *selector, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0,
                              TEventList *evl = 0);
-   virtual Long64_t  Finalize();
+   virtual Long64_t  Finalize(Bool_t force = kFALSE);
+   virtual Long64_t  Finalize(TQueryResult *qr);
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0);
@@ -107,6 +116,13 @@ public:
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
    virtual TList    *GetInputList() const { return fInput; }
+   virtual TList    *GetListOfResults() const { return fQueryResults; }
+   virtual void      AddQueryResult(TQueryResult *q);
+   virtual TQueryResult *GetQueryResult(const char *ref);
+   virtual void      RemoveQueryResult(const char *ref);
+   virtual void      SetCurrentQuery(TQueryResult *q);
+   virtual void      SetMaxDrawQueries(Int_t max) { fMaxDrawQueries = max; }
+   virtual void      RestorePreviousQuery() { fQuery = fPreviousQuery; }
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
@@ -115,6 +131,8 @@ public:
    virtual void      Feedback(TList *objs); // *SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
+
+   virtual Int_t     ReinitSelector(TQueryResult *qr);
 
    void              UpdateAutoBin(const char *name,
                                    Double_t& xmin, Double_t& xmax,
@@ -171,7 +189,8 @@ public:
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0, TEventList *evl = 0);
-   Long64_t       Finalize();
+   Long64_t       Finalize(Bool_t force = kFALSE);
+   Long64_t       Finalize(TQueryResult *qr);
    Long64_t       DrawSelect(TDSet *set, const char *varexp,
                              const char *selection, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0);

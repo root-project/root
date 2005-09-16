@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.44 2005/04/28 07:29:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.45 2005/07/09 04:03:23 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@ class TBrowser;
 class TCut;
 class TChainProof;
 class TDSet;
+class TVirtualProof;
 
 class TChain : public TTree {
 

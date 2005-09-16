@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.110 2005/06/14 08:52:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.111 2005/07/09 04:03:23 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -69,6 +69,9 @@ TChain::TChain(): TTree()
    fPageSize       = 0;
    fCanDeleteRefs  = kFALSE;
    fChainProof     = 0;
+
+   // Add to the global list
+   gROOT->GetListOfDataSets()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -115,6 +118,9 @@ TChain::TChain(const char *name, const char *title)
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
    fChainProof = 0;
+
+   // Add to the global list
+   gROOT->GetListOfDataSets()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -131,6 +137,9 @@ TChain::~TChain()
    delete fFiles;
    fStatus->Delete();
    delete fStatus;
+
+   // Remove from the global list
+   gROOT->GetListOfDataSets()->Remove(this);
 }
 
 

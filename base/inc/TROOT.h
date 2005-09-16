@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.48 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.49 2005/08/16 15:58:15 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -38,7 +38,6 @@ class TDataType;
 class TFile;
 class TStyle;
 class TVirtualPad;
-class TVirtualProof;
 class TApplication;
 class TInterpreter;
 class TBrowser;
@@ -49,6 +48,7 @@ class TPluginManager;
 class TProcessUUID;
 class TClassGenerator;
 class TVirtualMutex;
+class TVirtualProof;
 
 namespace ROOT {
    class TMapTypeToTClass;
@@ -115,6 +115,7 @@ protected:
    TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
    TSeqCollection  *fProofs;              //List of proof sessions
    TSeqCollection  *fClipboard;           //List of clipbard objects
+   TSeqCollection  *fDataSets;            //List of data sets (TDSet or TChain)
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
@@ -185,7 +186,9 @@ public:
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TSeqCollection   *GetListOfClassGenerators() const { return fClassGenerators; }
    TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
+   TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
+   TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { return fFile; }
@@ -220,7 +223,8 @@ public:
    void              ProcessLine(const char *line, Int_t *error = 0);
    void              ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   TVirtualProof    *Proof(const char *cluster = "proof://localhost", const char *configfile = 0);
+   TVirtualProof    *Proof(const char *cluster = 0, const char *conffile = 0,
+                           const char *confdir = 0, Int_t loglevel = 0);
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();
    void              RemoveClass(TClass *);

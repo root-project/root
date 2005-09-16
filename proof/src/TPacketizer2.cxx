@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.38 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.39 2005/07/21 17:41:32 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -418,12 +418,12 @@ TPacketizer2::~TPacketizer2()
       fSlaveStats->DeleteValues();
    }
 
-   delete fPackets;
-   delete fSlaveStats;
-   delete fUnAllocated;
-   delete fActive;
-   delete fFileNodes;
-   delete fProgress;
+   SafeDelete(fPackets);
+   SafeDelete(fSlaveStats);
+   SafeDelete(fUnAllocated);
+   SafeDelete(fActive);
+   SafeDelete(fFileNodes);
+   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________

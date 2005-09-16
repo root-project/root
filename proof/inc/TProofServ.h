@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.29 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.30 2005/08/30 10:25:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -36,12 +36,16 @@
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
 #endif
+#ifndef ROOT_TProofQueryResult
+#include "TProofQueryResult.h"
+#endif
 
 class TProof;
 class TProofPlayer;
 class TSocket;
 class TList;
 class TDSetElement;
+class TMessage;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -57,11 +61,15 @@ private:
    TString       fConfDir;          //directory containing cluster config information
    TString       fConfFile;         //file containing config information
    TString       fWorkDir;          //directory containing all proof related info
+   TString       fSessionTag;       //tag for the session
    TString       fSessionDir;       //directory containing session dependent files
    TString       fPackageDir;       //directory containing packages and user libs
    TString       fCacheDir;         //directory containing cache of user files
+   TString       fQueryDir;         //directory containing query results and status
    TString       fPackageLock;      //package dir lock file
    TString       fCacheLock;        //cache dir lock file
+   TString       fQueryLock;        //query dir lock file
+   TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers
    TProofPlayer *fPlayer;           //actual player
@@ -69,6 +77,7 @@ private:
    TList        *fEnabledPackages;  //list of enabled packages
    Int_t         fPackageLockId;    //file id of package dir lock
    Int_t         fCacheLockId;      //file id of cache dir lock
+   Int_t         fQueryLockId;      //file id of query dir lock
    Int_t         fProtocol;         //protocol version number
    TString       fOrdinal;          //slave ordinal number
    Int_t         fGroupId;          //slave unique id in the active slave group
@@ -83,7 +92,14 @@ private:
    TStopwatch    fCompute;          //measures time spend processing a packet
 
    Int_t         fSeqNum;           //sequential number of last processed query
+   Int_t         fDrawQueries;      //number of draw queries processed 
+   Int_t         fKeptQueries;      //number of queries fully in memory and in dir
    TList        *fQueries;          //list of TProofQuery objects
+   TList        *fPreviousQueries;  //list of TProofQuery objects from previous sections
+   TList        *fWaitingQueries;   //list of TProofQuery wating to be processed
+   Bool_t        fIdle;             //TRUE if idle
+
+   static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
    void          RedirectOutput();
    Int_t         CatMotd();
@@ -97,7 +113,31 @@ private:
    Int_t         UnloadPackages();
    Int_t         OldAuthSetup(TString &wconf);
 
+   // Query handlers
+   void          AddLogFile(TProofQueryResult *pq);
+   void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
+   TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
+                                      TList *inl, Long64_t first, TDSet *dset,
+                                      const char *selec, TEventList *evl);
+   TProofQueryResult *LocateQuery(TString queryref, Int_t &qry, TString &qdir);
+   void          RemoveQuery(TQueryResult *qr, Bool_t soft = kFALSE);
+   void          RemoveQuery(const char *queryref);
+   void          SaveQuery(TQueryResult *qr, const char *fout = 0);
+   void          SetQueryRunning(TProofQueryResult *pq);
+
+   Int_t         LockQueryFile(const char *qlock);
+   Int_t         UnlockQueryFile(Int_t fid);
+   Int_t         LockSession(const char *sessiontag, Int_t &fid, TString &qlock);
+   Int_t         CleanupSession(const char *sessiontag);
+   void          ScanPreviousQueries(const char *dir);
+
 protected:
+   virtual void  HandleArchive(TMessage *mess);
+   virtual void  HandleProcess(TMessage *mess);
+   virtual void  HandleQueryList(TMessage *mess);
+   virtual void  HandleRemove(TMessage *mess);
+   virtual void  HandleRetrieve(TMessage *mess);
+
    virtual void  HandleSocketInputDuringProcess();
    virtual void  Setup();
 

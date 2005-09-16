@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.15 2005/06/10 18:01:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.16 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -190,7 +190,16 @@ TEventIterObj::~TEventIterObj()
 //______________________________________________________________________________
 Long64_t TEventIterObj::GetNextEvent()
 {
-   if ( fStop || fNum == 0 ) return -1;
+
+   if (fStop) return -1;
+
+   // GGanis, Sep 2005:
+   // this is needed to communicate the send the last timer message
+   // (it does not harm, but perhaps there is a more legant solution)
+   if (fNum == 0) {
+      fDSet->Next();
+      return -1;
+   }
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
@@ -348,7 +357,16 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 //______________________________________________________________________________
 Long64_t TEventIterTree::GetNextEvent()
 {
-   if ( fStop || fNum == 0 ) return -1;
+
+   if (fStop) return -1;
+
+   // GGanis, Sep 2005:
+   // this is needed to communicate the send the last timer message
+   // (it does not harm, but perhaps there is a more legant solution)
+   if (fNum == 0) {
+      fDSet->Next();
+      return -1;
+   }
 
    Bool_t attach = kFALSE;
 

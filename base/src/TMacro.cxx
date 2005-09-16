@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.2 2005/08/16 15:58:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.3 2005/08/16 17:25:54 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -14,8 +14,8 @@
 //                                                                      //
 // TMacro                                                               //
 //                                                                      //
-// class supporting a collection of lines with C++ code.                //
-// A TMacro can be executed, saved to a ROOT file, edited, etc          //
+// Class supporting a collection of lines with C++ code.                //
+// A TMacro can be executed, saved to a ROOT file, edited, etc.         //
 //                                                                      //
 // A macro can be built line by line by calling the AddLine function.   //
 // or it can be created directly from a file via the special constructor//
@@ -48,14 +48,15 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMacro.h"
+#include "TMD5.h"
 
 ClassImp(TMacro)
 
 //______________________________________________________________________________
 TMacro::TMacro(): TNamed()
 {
-   // create an empty macro
-   // use AddLine or ReadFile to fill this macro.
+   // Create an empty macro, use AddLine() or ReadFile() to fill this macro.
+
    fLines  = 0;
    fParams = "";
 }
@@ -65,11 +66,11 @@ TMacro::TMacro(): TNamed()
 TMacro::TMacro(const char *name, const char *title)
        :TNamed(name,title)
 {
-   // create a macro with a name and a title.
-   // if name is the name of a file, the macro is automatically filled
+   // Create a macro with a name and a title.
+   // If name is the name of a file, the macro is automatically filled
    // by reading all the lines in the file. In this case, if the title
    // is empty, it will be the name of the file.
-   
+
    fLines  = new TList();
    fParams = "";
    if (!name) return;
@@ -91,23 +92,21 @@ TMacro::TMacro(const char *name, const char *title)
 //______________________________________________________________________________
 TMacro::TMacro(const TMacro &macro): TNamed(macro)
 {
-  // copy constructor
+  // Copy constructor.
 
   fLines = new TList();
   TIter next(macro.GetListOfLines());
   TObjString *obj;
   while ((obj = (TObjString*) next())) {
      fLines->Add(new TObjString(obj->GetName()));
-  }   
+  }
 }
-
-
 
 //______________________________________________________________________________
 TMacro::~TMacro()
 {
-   // delete this macro
-   
+   // Delete this macro.
+
    if (fLines) fLines->Delete();
    delete fLines;
 }
@@ -115,8 +114,8 @@ TMacro::~TMacro()
 //______________________________________________________________________________
 TObjString *TMacro::AddLine(const char *text)
 {
-   //add line with text in the list of lines of this macro
-   
+   // Add line with text in the list of lines of this macro.
+
    if (!fLines) fLines = new TList();
    TObjString *obj = new TObjString(text);
    fLines->Add(obj);
@@ -126,17 +125,70 @@ TObjString *TMacro::AddLine(const char *text)
 //______________________________________________________________________________
 void TMacro::Browse(TBrowser * /*b*/)
 {
-    // when clicking in the browser, the macro will be executed.
-   
+    // When clicking in the browser, the macro will be executed.
+
    Exec();
+}
+
+//______________________________________________________________________________
+TMD5 *TMacro::Checksum()
+{
+   // Returns checksum of the current content. The returned TMD5 object must
+   // be deleted by the user. Returns 0 in case of error.
+
+   if (!fLines || fLines->GetSize() <= 0)
+      return (TMD5 *)0;
+
+   TMD5 *md5 = new TMD5;
+
+   // Fill (same params as in TMD5::FileChecksum)
+   const Int_t bufSize = 8192;
+   UChar_t buf[bufSize];
+   Long64_t pos = 0;
+   Long64_t left = bufSize;
+
+   TIter nxl(fLines);
+   TObjString *l;
+   while ((l = (TObjString *) nxl())) {
+      TString line = l->GetString();
+      line += '\n';
+      Int_t len = line.Length();
+      char *p = (char *) line.Data();
+      if (left > len) {
+         strncpy((char *)&buf[pos], p, len);
+         pos += len;
+         left -= len;
+      } else if (left == len) {
+         strncpy((char *)&buf[pos], p, len);
+         md5->Update(buf, bufSize);
+         pos = 0;
+         left = bufSize;
+      } else {
+         strncpy((char *)&buf[pos], p, left);
+         md5->Update(buf, bufSize);
+         len -= left;
+         p += left;
+         pos = 0;
+         left = bufSize;
+         strncpy((char *)&buf[pos], p, len);
+         pos += len;
+         left -= len;
+      }
+   }
+   md5->Update(buf, pos);
+
+   // Finalize
+   md5->Final();
+
+   return md5;
 }
 
 //______________________________________________________________________________
 void TMacro::Exec(const char *params)
 {
-   // execute this macro with params
-   // if params is null, default parameters (set via SetParams)  are used
-   
+   // Execute this macro with params, if params is 0, default parameters
+   // (set via SetParams) are used.
+
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
    char fname[1000];
@@ -155,10 +207,10 @@ void TMacro::Exec(const char *params)
 }
 
 //______________________________________________________________________________
-TObjString *TMacro::GetLineWith(const char *text) const 
+TObjString *TMacro::GetLineWith(const char *text) const
 {
-   //search the first line containing text
-   
+   // Search the first line containing text.
+
    if (!fLines) return 0;
    TIter next(fLines);
    TObjString *obj;
@@ -171,15 +223,15 @@ TObjString *TMacro::GetLineWith(const char *text) const
 //______________________________________________________________________________
 void TMacro::Paint(Option_t *option)
 {
-   // execute this macro (called by TPad::Paint)
+   // Execute this macro (called by TPad::Paint).
 
    Exec(option);
-}   
+}
 
 //______________________________________________________________________________
 void TMacro::Print(Option_t * /*option*/) const
 {
-   // print contents of this macro
+   // Print contents of this macro.
 
    if (!fLines) return;
    TIter next(fLines);
@@ -187,13 +239,13 @@ void TMacro::Print(Option_t * /*option*/) const
    while ((obj = (TObjString*) next())) {
       printf("%s\n",obj->GetName());
    }
-}   
+}
 
 //______________________________________________________________________________
 Int_t TMacro::ReadFile(const char *filename)
 {
-   //read lines in filename in this macro
-   
+   // Read lines in filename in this macro.
+
    if (!fLines) fLines = new TList();
    ifstream in;
    in.open(filename);
@@ -212,13 +264,13 @@ Int_t TMacro::ReadFile(const char *filename)
    delete [] line;
    return nlines;
 }
-     
+
 
 //______________________________________________________________________________
 void TMacro::SaveSource(const char *filename)
 {
-   //save macro source in filename
-     
+   // Save macro source in filename.
+
    ofstream out;
    out.open(filename, ios::out);
    if (!out.good ()) {
@@ -237,7 +289,8 @@ void TMacro::SaveSource(const char *filename)
 //______________________________________________________________________________
 void TMacro::SavePrimitive(ofstream &out, Option_t *option)
 {
-   //save macro source on stream out
+   // Save macro source on stream out.
+
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TMacro::Class())) {
@@ -256,12 +309,11 @@ void TMacro::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   macro->Draw("<<quote<<option<<quote<<");"<<endl;
 }
-     
 
 //______________________________________________________________________________
 void TMacro::SetParams(const char *params)
 {
-  //set default parameters to execute this macro
-   
+   // Set default parameters to execute this macro.
+
    if (params) fParams = params;
 }

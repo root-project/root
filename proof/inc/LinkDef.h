@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.26 2005/05/27 13:47:37 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.27 2005/08/30 10:25:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,6 +36,7 @@
 #pragma link C++ class TProofPlayerSlave+;
 #pragma link C++ class TProofPlayerSuperMaster+;
 #pragma link C++ class TProofQuery+;
+#pragma link C++ class TProofQueryResult+;
 #pragma link C++ class TEventIter+;
 #pragma link C++ class TEventIterObj+;
 #pragma link C++ class TEventIterTree+;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.18 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.19 2005/02/21 09:41:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
    virtual void        Terminate() { }
 
    static  TSelector  *GetSelector(const char *filename);
+   static  Bool_t      IsStandardDraw(const char *selec);
 
    ClassDef(TSelector,0)  //A utility class for tree and object processing
 };
