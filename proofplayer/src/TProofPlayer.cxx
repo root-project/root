@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.63 2005/08/30 10:47:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.64 2005/09/16 08:48:39 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -85,8 +85,9 @@ ClassImp(TProofPlayer)
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer()
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
-     fFeedbackTimer(0), fEvIter(0), fSelStatus(0), fQueryResults(0),
-     fQuery(0), fDrawQueries(0), fMaxDrawQueries(1)
+     fFeedbackTimer(0), fEvIter(0), fSelStatus(0), fEventsProcessed(0),
+     fTotalEvents(0), fQueryResults(0), fQuery(0), fDrawQueries(0),
+     fMaxDrawQueries(1)
 {
    // Default ctor.
 
@@ -419,6 +420,19 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fSelector->SetOption(option);
    fSelector->SetInputList(fInput);
 
+   // If in sequential (0-PROOF) mode validate the data set to get
+   // the number of entries
+   Long64_t fTotalEvents = nentries;
+   if (fTotalEvents < 0 && gProofServ &&
+       gProofServ->IsMaster() && !gProofServ->IsParallel()) {
+      dset->Validate();
+      dset->Reset();
+      TDSetElement *e = 0;
+      while ((e = dset->Next())) {
+         fTotalEvents += e->GetNum();
+      }
+   }
+
    dset->Reset();
 
    fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
@@ -445,7 +459,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Loop over range
    Long64_t entry;
    fEventsProcessed = 0;
-   while (fSelStatus->IsOk() && (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+   while (fSelStatus->IsOk() &&
+         (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
       if (version == 0) {
          PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
@@ -459,31 +474,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
       fEventsProcessed++;
 
-      // If in sequential (0-PROOF) mode send some info for the GUI dialog
-      // to show that things are moving, though the progress bar will
-      // be meaningless for the time being (the real total number of entries
-      // does not seem accessible at this level: to be investigated)
-      if (gProofServ && !gProofServ->IsParallel()) {
-         if (fEventsProcessed%20 == 0) {
-            TMessage m(kPROOF_PROGRESS);
-            // We need to send different numbers here, otherwise processing
-            // will stop
-            m << fEventsProcessed+1 <<  fEventsProcessed;
-            gProofServ->GetSocket()->Send(m);
-         }
-      }
-
       gSystem->DispatchOneEvent(kTRUE);
       if (gROOT->IsInterrupted()) break;
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
-
-   // If in sequential (0-PROOF) mode send final info for the GUI dialog
-   if (gProofServ && !gProofServ->IsParallel()) {
-      TMessage m(kPROOF_PROGRESS);
-      m << fEventsProcessed << fEventsProcessed;
-      gProofServ->GetSocket()->Send(m);
-   }
 
    if (fFeedbackTimer != 0) HandleTimer(0);
 
@@ -1421,6 +1415,22 @@ void TProofPlayerSlave::StopFeedback()
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
+
+   // If in sequential (0-PROOF) mode send some info for the GUI dialog
+   // to show that things are moving, though the progress bar will
+   // be meaningless for the time being (the real total number of entries
+   // does not seem accessible at this level: to be investigated)
+   if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsParallel()) {
+      TMessage m(kPROOF_PROGRESS);
+      // We need to send different numbers here, otherwise processing
+      // will stop
+      m << fTotalEvents << fEventsProcessed;
+      gProofServ->GetSocket()->Send(m);
+
+      fFeedbackTimer->Start(500,kTRUE);
+
+      return kFALSE;
+   }
 
    if ( fFeedback == 0 ) return kFALSE;
 
