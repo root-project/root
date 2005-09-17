@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.30 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.31 2005/09/16 08:48:38 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -94,9 +94,9 @@ private:
    Int_t         fSeqNum;           //sequential number of last processed query
    Int_t         fDrawQueries;      //number of draw queries processed 
    Int_t         fKeptQueries;      //number of queries fully in memory and in dir
-   TList        *fQueries;          //list of TProofQuery objects
-   TList        *fPreviousQueries;  //list of TProofQuery objects from previous sections
-   TList        *fWaitingQueries;   //list of TProofQuery wating to be processed
+   TList        *fQueries;          //list of TProofQueryResult objects
+   TList        *fPreviousQueries;  //list of TProofQueryResult objects from previous sections
+   TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
 
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
