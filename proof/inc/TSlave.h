@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.16 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.17 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -46,12 +46,13 @@ class TSlave : public TObject {
 
 friend class TProof;
 
-private:
+public:
    enum ESlaveType {
       kMaster,
       kSlave
    };
 
+private:
    TString       fName;      //slave's hostname
    TString       fImage;     //slave's image name
    TString       fProofWorkDir; //base proofserv working directory (info obtained from slave)
@@ -77,19 +78,18 @@ private:
 
    TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
           const char *image, TProof *proof, ESlaveType stype,
-          const char *workdir, const char *conffile, const char *msd);
+          const char *workdir, const char *msd);
 
-   void  Init(TSocket *s, ESlaveType stype, const char *conffile);
+   void  Init(TSocket *s, ESlaveType stype);
    Int_t OldAuthSetup(Bool_t master, TString wconf);
 
    static TSlave *Create(const char *host, Int_t port, const char *ord, Int_t perf,
                          const char *image, TProof *proof, ESlaveType stype,
-                         const char *workdir, const char *conffile, const char *msd);
+                         const char *workdir, const char *msd);
 
 protected:
    TSlave();
-   virtual void  Init(const char *host,
-                      Int_t port, ESlaveType stype, const char *conffile);
+   virtual void  Init(const char *host, Int_t port, ESlaveType stype);
    virtual void  Interrupt(Int_t type);
    virtual Int_t Ping();
 
@@ -125,6 +125,8 @@ public:
    Bool_t         IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
    void           Print(Option_t *option="") const;
+
+   virtual void   SetupServ(ESlaveType stype, const char *conffile);
 
    ClassDef(TSlave,0)  //PROOF slave server
 };

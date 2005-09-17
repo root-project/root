@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.43 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.44 2005/08/15 15:57:18 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -38,7 +38,7 @@ ClassImp(TSlave)
 //______________________________________________________________________________
 TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
                const char *image, TProof *proof, ESlaveType stype,
-               const char *workdir, const char *conffile, const char *msd)
+               const char *workdir, const char *msd)
   : fName(host), fImage(image), fProofWorkDir(workdir),
     fWorkDir(workdir), fPort(port),
     fOrdinal(ord), fPerfIdx(perf),
@@ -49,7 +49,7 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
-   Init(host, port, stype, conffile);
+   Init(host, port, stype);
 }
 
 //______________________________________________________________________________
@@ -73,8 +73,7 @@ TSlave::TSlave()
 }
 
 //______________________________________________________________________________
-void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
-                  const char *conffile)
+void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
 {
    // Init a PROOF slave object. Called via the TSlave ctor.
    // The Init method is technology specific and is overwritten by derived
@@ -103,7 +102,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
       iam = "Local Client";
       hurl += TString("/?MC");
    } else {
-      Error("TSlave","Impossible PROOF <-> SlaveType Configuration Requested");
+      Error("Init","Impossible PROOF <-> SlaveType Configuration Requested");
       Assert(0);
    }
 
@@ -134,7 +133,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
    fUser              = fSocket->GetSecContext()->GetUser();
    fProof->fUser      = fUser;
    PDB(kGlobal,3) {
-      Info("TSlave","%s: fUser is .... %s", iam.Data(), fUser.Data());
+      Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
    }
 
    char buf[512];
@@ -145,11 +144,21 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
       return;
    }
 
+}
+
+//______________________________________________________________________________
+void TSlave::SetupServ(ESlaveType stype, const char *conffile)
+{
+   // Init a PROOF slave object. Called via the TSlave ctor.
+   // The Init method is technology specific and is overwritten by derived
+   // classes.
+
    // get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
    Int_t what;
+   char buf[512];
    if (fSocket->Recv(buf, sizeof(buf), what) <= 0) {
-      Error("TSlave", "failed to receive slave startup message");
+      Error("SetupServ", "failed to receive slave startup message");
       SafeDelete(fSocket);
       return;
    }
@@ -162,20 +171,20 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
    // exchange protocol level between client and master and between
    // master and slave
    if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
-      Error("TSlave", "failed to send local PROOF protocol");
+      Error("SetupServ", "failed to send local PROOF protocol");
       SafeDelete(fSocket);
       return;
    }
 
    if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
-      Error("TSlave", "failed to receive remote PROOF protocol");
+      Error("SetupServ", "failed to receive remote PROOF protocol");
       SafeDelete(fSocket);
       return;
    }
 
    // protocols less than 4 are incompatible
    if (fProtocol < 4) {
-      Error("TSlave", "incompatible PROOF versions (remote version"
+      Error("SetupServ", "incompatible PROOF versions (remote version"
                       " must be >= 4, is %d)", fProtocol);
       SafeDelete(fSocket);
       return;
@@ -190,7 +199,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
       Bool_t isMaster = (stype == kMaster);
       TString wconf = isMaster ? TString(conffile) : fProofWorkDir;
       if (OldAuthSetup(isMaster, wconf) != 0) {
-         Error("TSlave", "OldAuthSetup: failed to setup authentication");
+         Error("SetupServ", "OldAuthSetup: failed to setup authentication");
          SafeDelete(fSocket);
          return;
       }
@@ -204,7 +213,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
          mess << fUser << fOrdinal << fProofWorkDir;
 
       if (fSocket->Send(mess) < 0) {
-         Error("TSlave", "failed to send ordinal and config info");
+         Error("SetupServ", "failed to send ordinal and config info");
          SafeDelete(fSocket);
          return;
       }
@@ -215,12 +224,12 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype,
 }
 
 //______________________________________________________________________________
-void TSlave::Init(TSocket *s, ESlaveType stype, const char *conffile)
+void TSlave::Init(TSocket *s, ESlaveType stype)
 {
    // Init a PROOF slave object using the connection opened via s. Used to
    // avoid double opening when an attempt via TXSlave found a remote proofd.
 
-   Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype, conffile);
+   Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype);
 }
 
 //______________________________________________________________________________
@@ -367,7 +376,7 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 //______________________________________________________________________________
 TSlave *TSlave::Create(const char *host, Int_t port, const char *ord, Int_t perf,
                        const char *image, TProof *proof, ESlaveType stype,
-                       const char *workdir, const char *conffile, const char *msd)
+                       const char *workdir, const char *msd)
 {
    // Static method returning the appropriate TSlave object for the remote
    // server.
@@ -379,10 +388,9 @@ TSlave *TSlave::Create(const char *host, Int_t port, const char *ord, Int_t perf
    if ((h = gROOT->GetPluginManager()->FindHandler("TSlave")) &&
        h->LoadPlugin() == 0) {
       s = (TSlave *) h->ExecPlugin(10, host, port, ord, perf, image, proof, stype,
-                                       workdir, conffile, msd);
+                                       workdir, msd);
    } else {
-      s = new TSlave(host, port, ord, perf, image, proof, stype, workdir,
-                     conffile, msd);
+      s = new TSlave(host, port, ord, perf, image, proof, stype, workdir, msd);
    }
 
    return s;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.63 2005/08/30 10:47:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.64 2005/09/16 08:48:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -105,17 +105,18 @@ R__EXTERN TVirtualMutex *gProofMutex;
 // Helper classes used for parallel startup
 class TProofThreadArg {
 public:
-   const char   *host;
-   Int_t         port;
-   const char   *ord;
-   Int_t         perf;
-   const char   *image;
-   const char   *workdir;
-   const char   *msd;
-   TList        *slaves;
-   TProof       *proof;
-   TCondorSlave *cslave;
-   TList        *claims;
+   TString       fHost;
+   Int_t         fPort;
+   TString       fOrd;
+   Int_t         fPerf;
+   TString       fImage;
+   TString       fWorkdir;
+   TString       fMsd;
+   TList        *fSlaves;
+   TProof       *fProof;
+   TCondorSlave *fCslave;
+   TList        *fClaims;
+   Int_t         fType;
 
    TProofThreadArg(const char *h, Int_t po, const char *o, Int_t pe,
                    const char *i, const char *w,
@@ -128,7 +129,7 @@ public:
                    const char *i, const char *w, const char *m,
                    TList *s, TProof *prf);
 
-   virtual ~TProofThreadArg();
+   virtual ~TProofThreadArg() { }
 };
 
 // PROOF Thread class for parallel startup
@@ -164,7 +165,6 @@ public:
 
 // Slaves info class
 class TSlaveInfo : public TObject {
-
 public:
    enum ESlaveStatus { kActive, kNotActive, kBad };
 
@@ -378,9 +378,8 @@ protected:
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TSlave *CreateSlave(const char *host, Int_t port, const char *ord,
                        Int_t perf, const char *image, const char *workdir);
-   TSlave *CreateSubmaster(const char *host, Int_t port,
-                           const char *ord, const char *image,
-                           const char *conffile, const char *msd);
+   TSlave *CreateSubmaster(const char *host, Int_t port, const char *ord,
+                           const char *image, const char *msd);
 
    Int_t    Collect(ESlaves list = kActive);
    Int_t    Collect(TList *slaves);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.1 2005/06/22 20:25:28 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.2 2005/06/23 09:56:11 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -236,7 +236,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
 	   if (pt && pt->thread->GetState() == TThread::kRunningState) {
 	       Info("Init",
 		    "parallel startup: waiting for slave %s (%s:%d)",
-		    pt->args->ord, pt->args->host, pt->args->port);
+		    pt->args->fOrd.Data(), pt->args->fHost.Data(),
+                    pt->args->fPort);
 	       pt->thread->Join();
 	   }
 	 }
@@ -310,7 +311,13 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
 
          // add slave to appropriate list
          if (trial<ntries) {
+
+            if (slave->IsValid())
+               // Finalize server startup (to be optmized)
+               slave->SetupServ(TSlave::kSlave,0);
+
             if (slave->IsValid()) {
+
                fSlaves->Add(slave);
                fAllMonitor->Add(slave->GetSocket());
                if (trial == 1) {
@@ -334,6 +341,11 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
                idx++;
             }
          } else {
+
+            if (slave->IsValid())
+               // Finalize server startup (to be optmized)
+               slave->SetupServ(TSlave::kSlave,0);
+
             fSlaves->Add(slave);
             if (slave->IsValid()) {
                fAllMonitor->Add(slave->GetSocket());

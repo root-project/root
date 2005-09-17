@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.104 2005/09/13 09:27:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.105 2005/09/16 08:48:39 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -69,30 +69,31 @@
 
 TVirtualMutex *gProofMutex = 0;
 
-// Helper classes used for parallel startup
+//----- Helper classes used for parallel startup -------------------------------
 //______________________________________________________________________________
 TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
                                  Int_t pe, const char *i, const char *w,
                                  TList *s, TProof *prf)
-  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0),
-    perf(pe), image(i ? StrDup(i) : 0), workdir(w ? StrDup(w) : 0),
-    msd(0), slaves(s), proof(prf), cslave(0), claims(0)
+  : fHost(h), fPort(po), fOrd(o), fPerf(pe), fImage(i), fWorkdir(w),
+    fMsd(0), fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
+    fType(TSlave::kSlave)
 {
 }
 
 //______________________________________________________________________________
 TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
                                  TList *s, TProof *prf)
-  : host(0), port(-1), ord(0), perf(-1), image(0), workdir(0),
-    msd(0), slaves(s), proof(prf), cslave(csl), claims(clist)
+  : fHost(0), fPort(-1), fOrd(0), fPerf(-1), fImage(0), fWorkdir(0),
+    fMsd(0), fSlaves(s), fProof(prf), fCslave(csl), fClaims(clist),
+    fType(TSlave::kSlave)
 {
-   if(csl){
-      host = StrDup(csl->fHostname.Data());
-      image = StrDup(csl->fImage.Data());
-      ord = StrDup(csl->fOrdinal.Data());
-      workdir = StrDup(csl->fWorkDir.Data());
-      port = csl->fPort;
-      perf = csl->fPerfIdx;
+   if (csl) {
+      fHost    = csl->fHostname;
+      fImage   = csl->fImage;
+      fOrd     = csl->fOrdinal;
+      fWorkdir = csl->fWorkDir;
+      fPort    = csl->fPort;
+      fPerf    = csl->fPerfIdx;
    }
 }
 
@@ -100,20 +101,10 @@ TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
 TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
                                  const char *i, const char *w, const char *m,
                                 TList *s, TProof *prf)
-  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0),
-    perf(-1), image(i ? StrDup(i) : 0), workdir(w ? StrDup(w) : 0),
-    msd(m ? StrDup(m) : 0), slaves(s), proof(prf), cslave(0), claims(0)
+  : fHost(h), fPort(po), fOrd(o), fPerf(-1), fImage(i), fWorkdir(w),
+    fMsd(m), fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
+    fType(TSlave::kSlave)
 {
-}
-
-//______________________________________________________________________________
-TProofThreadArg::~TProofThreadArg()
-{
-   if (host)    delete [] (char*)host;
-   if (ord)     delete [] (char*)ord;
-   if (image)   delete [] (char*)image;
-   if (msd)     delete [] (char*)msd;
-   if (workdir) delete [] (char*)workdir;
 }
 
 //----- PROOF Interrupt signal handler -----------------------------------------
@@ -390,12 +381,14 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             delete[]p;
             if (gSystem->Load(threadLib) == -1) {
                Warning("Init",
-                       "Cannot load libThread: switch to serial startup");
+                       "Cannot load libThread: switch to serial startup (%s)",
+                       threadLib.Data());
                parallelStartup = kFALSE;
             }
          } else {
             Warning("Init",
-                    "Cannot find libThread: switch to serial startup");
+                    "Cannot find libThread: switch to serial startup (%s)",
+                    threadLib.Data());
             parallelStartup = kFALSE;
          }
 
@@ -607,16 +600,16 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                   TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx,
                                               image, workdir);
 
-                  fSlaves->Add(slave);
+                  // Add to global list (we will add to the monitor list after
+                  // finalizing the server startup)
                   if (slave->IsValid()) {
-                     fAllMonitor->Add(slave->GetSocket());
+                     fSlaves->Add(slave);
                   } else {
                      fBadSlaves->Add(slave);
                   }
                   PDB(kGlobal,3)
                      Info("StartSlaves", "slave on host %s created"
                                          " and added to list", word[1]);
-
                }
                ord++;
             }
@@ -634,7 +627,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                   PDB(kGlobal,3)
                      Info("Init",
                           "parallel startup: waiting for slave %s (%s:%d)",
-                           pt->args->ord, pt->args->host, pt->args->port);
+                           pt->args->fOrd.Data(), pt->args->fHost.Data(),
+                           pt->args->fPort);
                   pt->thread->Join();
                }
             }
@@ -657,16 +651,39 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                }
             }
 
+         } else {
+
+            // Here we finalize the server startup: in this way the bulk
+            // of remote operations are almost parallelized
+            TIter nxsl(fSlaves);
+            TSlave *sl = 0;
+            while ((sl = (TSlave *) nxsl())) {
+
+               // Finalize setup of the server
+               sl->SetupServ(TSlave::kSlave, 0);
+
+               // Monitor good slaves
+               if (sl->IsValid()) {
+                  fAllMonitor->Add(sl->GetSocket());
+               } else {
+                  fBadSlaves->Add(sl);
+               }
+            }
          }
+
       }
       fclose(pconf);
 
    } else {
 
       // create master server
-      TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", fConfFile, 0);
+      TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", 0);
 
       if (slave->IsValid()) {
+
+         // Finalize setup of the server
+         slave->SetupServ(TSlave::kMaster, fConfFile);
+
          // check protocol compatability
          // protocol 1 is not supported anymore
          if (fProtocol == 1) {
@@ -743,7 +760,7 @@ TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
    // Derived classes must use this function to create slaves.
 
    TSlave* sl = TSlave::Create(host, port, ord, perf, image,
-                               this, TSlave::kSlave, workdir, 0, 0);
+                               this, TSlave::kSlave, workdir, 0);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -757,15 +774,14 @@ TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
 
 //______________________________________________________________________________
 TSlave *TProof::CreateSubmaster(const char *host, Int_t port, const char *ord,
-                                const char *image, const char *conffile,
-                                const char *msd)
+                                const char *image, const char *msd)
 {
    // Create a new TSlave of type TSlave::kMaster.
    // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
    TSlave *sl = TSlave::Create(host, port, ord, 100, image, this,
-                               TSlave::kMaster, 0, conffile, msd);
+                               TSlave::kMaster, 0, msd);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -992,7 +1008,7 @@ void TProof::ShowQueries(Option_t *opt)
    if (help) {
 
       // Help
-      
+
       Printf("+++");
       Printf("+++ Options: \"A\" show all queries known to server");
       Printf("+++          \"L\" show retrieved queries");
@@ -1004,7 +1020,7 @@ void TProof::ShowQueries(Option_t *opt)
       Printf("+++ Use Retrieve(<#>) to retrieve the full"
              " query results from the master");
       Printf("+++     e.g. Retrieve(8)");
-      
+
       Printf("+++");
 
       return;
@@ -1019,9 +1035,9 @@ void TProof::ShowQueries(Option_t *opt)
       GetListOfQueries(opt);
 
       if (!fQueries) return;
-      
+
       TIter nxq(fQueries);
-      
+
       // Queries processed by other sessions
       if (fOtherQueries > 0) {
          Printf("+++");
@@ -1030,7 +1046,7 @@ void TProof::ShowQueries(Option_t *opt)
          while (nq++ < fOtherQueries && (pq = nxq()))
             pq->Print(opt);
       }
-      
+
       // Queries processed by this session
       Printf("+++");
       Printf("+++ Queries processed during this session: selector: %d, draw: %d",
@@ -1558,7 +1574,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             if (IsMaster() || fProtocol < 7) {
                out = (TList *) mess->ReadObject(TList::Class());
             } else {
-               TQueryResult *pq = 
+               TQueryResult *pq =
                   (TQueryResult *) mess->ReadObject(TQueryResult::Class());
                if (pq) {
                   fPlayer->AddQueryResult(pq);
@@ -1616,7 +1632,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_QUERYLIST:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_QUERYLIST","Enter");
-            (*mess) >> fOtherQueries >> fDrawQueries; 
+            (*mess) >> fOtherQueries >> fDrawQueries;
             if (fQueries) {
                fQueries->Delete();
                delete fQueries;
@@ -1629,7 +1645,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_RETRIEVE:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_RETRIEVE","Enter");
-            TQueryResult *pq = 
+            TQueryResult *pq =
                (TQueryResult *) mess->ReadObject(TQueryResult::Class());
             if (pq) {
                fPlayer->AddQueryResult(pq);
@@ -1647,7 +1663,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             PDB(kGlobal,2) Info("Collect:kPROOF_MAXQUERIES","Enter");
             Int_t max = 0;
 
-            (*mess) >> max; 
+            (*mess) >> max;
             Printf("Number of queries fully kept remotely: %d", max);
          }
          break;
@@ -1661,7 +1677,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             TString selec;
             Int_t dsz = -1;
             Long64_t first = -1, nent = -1;
-            (*mess) >> selec >> dsz >> first >> nent; 
+            (*mess) >> selec >> dsz >> first >> nent;
 
             // Start or reset the progress dialog
             if (fProgressDialog) {
@@ -1690,7 +1706,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             PDB(kGlobal,2) Info("Collect:kPROOF_QUERYSUBMITTED","Enter");
 
             // We have received the sequential number
-            (*mess) >> fSeqNum; 
+            (*mess) >> fSeqNum;
 
             rc = 1;
          }
@@ -1701,7 +1717,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             PDB(kGlobal,2) Info("Collect:kPROOF_SESSIONTAG","Enter");
 
             // We have received the sequential number
-            (*mess) >> fSessionTag; 
+            (*mess) >> fSessionTag;
          }
          break;
 
@@ -2085,7 +2101,7 @@ Int_t TProof::Finalize(Int_t qry, Bool_t force)
 {
    // Finalize the qry-th query in fQueries.
    // If force, force new retrieve if the query is found in the local list
-   // but has already been finalized (default kFALSE). 
+   // but has already been finalized (default kFALSE).
    // If query < 0, finalize current query.
    // Return 0 on success, -1 on error
 
@@ -2110,7 +2126,7 @@ Int_t TProof::Finalize(const char *ref, Bool_t force)
 {
    // Finalize query with reference ref.
    // If force, force new retrieve if the query is found in the local list
-   // but has already been finalized (default kFALSE). 
+   // but has already been finalized (default kFALSE).
    // If ref = 0, finalize current query.
    // Return 0 on success, -1 on error
 
@@ -2135,7 +2151,7 @@ Int_t TProof::Finalize(const char *ref, Bool_t force)
             Retrieve(ref);
             qr = fPlayer->GetQueryResult(ref);
          }
-         if (qr) 
+         if (qr)
             return fPlayer->Finalize(qr);
       }
    }
@@ -2179,25 +2195,25 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
 
          // Get pointer to query
          TQueryResult *qr = fPlayer ? fPlayer->GetQueryResult(ref) : 0;
-         
+
          if (qr) {
-         
+
             TFile *farc = TFile::Open(path,"UPDATE");
             if (!(farc->IsOpen())) {
                Info("Retrieve", "archive file cannot be open (%s)", path);
                return 0;
             }
             farc->cd();
-            
+
             // Update query status
             qr->SetArchived(path);
-            
+
             // Write to file
             qr->Write();
-            
+
             farc->Close();
             SafeDelete(farc);
-         
+
          } else {
             Info("Retrieve", "query not found after retrieve");
             return -1;
@@ -3889,7 +3905,7 @@ void TProof::RemoveChain(TChain *chain)
 //_____________________________________________________________________________
 void *TProof::SlaveStartupThread(void * arg)
 {
-   // Function executed in the slave startup thread
+   // Function executed in the slave startup thread.
 
    if (fgSemaphore) fgSemaphore->Wait();
 
@@ -3897,37 +3913,41 @@ void *TProof::SlaveStartupThread(void * arg)
 
    PDB(kGlobal,1)
       ::Info("TProof::SlaveStartupThread",
-             "Starting slave %s on host %s",ta->ord,ta->host);
+             "Starting slave %s on host %s", ta->fOrd.Data(), ta->fHost.Data());
 
    TSlave *sl = 0;
 
-   if(ta->msd)
-      sl = ta->proof->CreateSubmaster(ta->host, ta->port, ta->ord,
-                                      ta->image, ta->workdir, ta->msd);
+   if(ta->fMsd)
+      sl = ta->fProof->CreateSubmaster(ta->fHost, ta->fPort, ta->fOrd,
+                                       ta->fImage, ta->fMsd);
    else
-      sl = ta->proof->CreateSlave(ta->host, ta->port, ta->ord,
-                                  ta->perf, ta->image, ta->workdir);
+      sl = ta->fProof->CreateSlave(ta->fHost, ta->fPort, ta->fOrd,
+                                   ta->fPerf, ta->fImage, ta->fWorkdir);
+
+   // Finalize setup of the server
+   if (ta->fType == TSlave::kSlave)
+      sl->SetupServ(TSlave::kSlave, 0);
+   else
+      sl->SetupServ(TSlave::kMaster, ta->fWorkdir);
 
    {
       R__LOCKGUARD2(gProofMutex);
 
-
       // Add to the started slaves list
-      ta->slaves->Add(sl);
+      ta->fSlaves->Add(sl);
 
-      if (ta->claims) { // Condor slave
+      if (ta->fClaims) { // Condor slave
          // Remove from the pending claims list
-         TCondorSlave *c = ta->cslave;
-         ta->claims->Remove(c);
+         TCondorSlave *c = ta->fCslave;
+         ta->fClaims->Remove(c);
       }
-
    }
 
    // Notify we are done
    PDB(kGlobal,1)
       ::Info("TProof::SlaveStartupThread",
              "slave %s on host %s created and added to list",
-             ta->ord, ta->host);
+             ta->fOrd.Data(), ta->fHost.Data());
 
    if (fgSemaphore) fgSemaphore->Post();
 
@@ -4008,7 +4028,7 @@ void TProof::ShowLog(const char *queryref)
    // Display on screen the content of the temporary log file for query
    // in reference
 
-   // Make sure we have all info (GetListOfQueries retrieves the 
+   // Make sure we have all info (GetListOfQueries retrieves the
    // head info only)
    Retrieve(queryref);
 
