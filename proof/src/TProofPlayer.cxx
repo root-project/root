@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.64 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.65 2005/09/17 13:53:55 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -14,8 +14,6 @@
 // TProofPlayer                                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#include <string.h>
 
 #include "TProofPlayer.h"
 #include "THashList.h"
@@ -422,7 +420,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // If in sequential (0-PROOF) mode validate the data set to get
    // the number of entries
-   Long64_t fTotalEvents = nentries;
+   fTotalEvents = nentries;
    if (fTotalEvents < 0 && gProofServ &&
        gProofServ->IsMaster() && !gProofServ->IsParallel()) {
       dset->Validate();
@@ -1416,20 +1414,12 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
-   // If in sequential (0-PROOF) mode send some info for the GUI dialog
-   // to show that things are moving, though the progress bar will
-   // be meaningless for the time being (the real total number of entries
-   // does not seem accessible at this level: to be investigated)
+   // If in sequential (0-slave-PROOF) mode we do not have a packetizer
+   // so we also send the info to update the progress bar.
    if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsParallel()) {
       TMessage m(kPROOF_PROGRESS);
-      // We need to send different numbers here, otherwise processing
-      // will stop
       m << fTotalEvents << fEventsProcessed;
       gProofServ->GetSocket()->Send(m);
-
-      fFeedbackTimer->Start(500,kTRUE);
-
-      return kFALSE;
    }
 
    if ( fFeedback == 0 ) return kFALSE;

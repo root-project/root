@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.105 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.106 2005/09/17 13:52:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #endif
 #include <vector>
 
+#include "config.h"
 #include "TProof.h"
 #include "TSortedList.h"
 #include "TSlave.h"
@@ -3916,19 +3917,19 @@ void *TProof::SlaveStartupThread(void * arg)
              "Starting slave %s on host %s", ta->fOrd.Data(), ta->fHost.Data());
 
    TSlave *sl = 0;
-
-   if(ta->fMsd)
-      sl = ta->fProof->CreateSubmaster(ta->fHost, ta->fPort, ta->fOrd,
-                                       ta->fImage, ta->fMsd);
-   else
+   if (ta->fType == TSlave::kSlave) {
+      // Open the connection
       sl = ta->fProof->CreateSlave(ta->fHost, ta->fPort, ta->fOrd,
                                    ta->fPerf, ta->fImage, ta->fWorkdir);
-
-   // Finalize setup of the server
-   if (ta->fType == TSlave::kSlave)
+      // Finalize setup of the server
       sl->SetupServ(TSlave::kSlave, 0);
-   else
+   } else {
+      // Open the connection
+      sl = ta->fProof->CreateSubmaster(ta->fHost, ta->fPort, ta->fOrd,
+                                       ta->fImage, ta->fMsd);
+      // Finalize setup of the server
       sl->SetupServ(TSlave::kMaster, ta->fWorkdir);
+   }
 
    {
       R__LOCKGUARD2(gProofMutex);
