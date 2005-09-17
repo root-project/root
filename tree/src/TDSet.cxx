@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.25 2005/08/29 10:57:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.26 2005/09/16 08:48:39 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -533,7 +533,7 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
    TList* thisList = GetListOfElements();
    TList* friendsList = friendset->GetListOfElements();
    if (thisList->GetSize() != friendsList->GetSize() && friendsList->GetSize() != 1) {
-      Error("AddFriend", "The friend Set has %d elements while the main one has %d", 
+      Error("AddFriend", "The friend Set has %d elements while the main one has %d",
             thisList->GetSize(), friendsList->GetSize());
       return;
    }
@@ -718,7 +718,6 @@ Bool_t TDSet::ElementsValid() const
       if (!elem->GetValid()) return kFALSE;
    }
    return kTRUE;
-
 }
 
 //______________________________________________________________________________
@@ -730,7 +729,6 @@ void TDSet::Validate()
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
       if (!elem->GetValid()) elem->Validate(IsTree());
    }
-
 }
 
 //______________________________________________________________________________
@@ -782,5 +780,3 @@ void TDSet::Validate(TDSet* dset)
       }
    }
 }
-
-

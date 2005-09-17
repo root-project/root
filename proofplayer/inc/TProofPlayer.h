@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.30 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.31 2005/09/16 08:48:38 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -73,6 +73,7 @@ protected:
    TStatus      *fSelStatus;       //!  status of query in progress
    EExitStatus   fExitStatus;      //   exit status
    Long64_t      fEventsProcessed; //   number of events processed
+   Long64_t      fTotalEvents;     //   number of events requested
 
    TList        *fQueryResults;    //List of TQueryResult
    TQueryResult *fQuery;           //Instance of TQueryResult currently processed

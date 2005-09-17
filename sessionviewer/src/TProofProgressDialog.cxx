@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.12 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.13 2005/09/16 08:48:39 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -124,6 +124,8 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fTextQuery = new TGTextBuffer();
    fTextQuery->AddText(0, fgTextQueryDefault.Data(), 32);
    fEntry = new TGTextEntry(hflog, fTextQuery);
+   if (fLogQuery)
+      fEntry->SetToolTipText("Enter the query number ('last' for the last query)",50);
    fEntry->SetEnabled(fLogQuery);
    hflog->AddFrame(fEntry, new TGLayoutHints(kLHintsCenterY |
                                           kLHintsExpandX, 2, 0, 0, 0));
@@ -461,6 +463,10 @@ void TProofProgressDialog::DoSetLogQuery(Bool_t)
 
    fLogQuery = !fLogQuery;
    fEntry->SetEnabled(fLogQuery);
+   if (fLogQuery)
+      fEntry->SetToolTipText("Enter the query number ('last' for the last query)",50);
+   else
+      fEntry->SetToolTipText(0);
 
    // Last choice will be the default for the future
    fgLogQueryDefault = fLogQuery;
