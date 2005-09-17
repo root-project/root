@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.16 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.17 2005/09/16 08:48:38 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -28,12 +28,12 @@
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
 
-//------------------------------------------------------------------------
+
+TEventIterTree::TFileCache *TEventIterTree::TFileCache::fgInstance = 0;
+TEventIterTree::TDirectoryCache *TEventIterTree::TDirectoryCache::fgInstance = 0;
+
 
 ClassImp(TEventIter)
-TEventIterTree::TFileCache*  TEventIterTree::TFileCache::fInstance = 0;
-TEventIterTree::TDirectoryCache*  TEventIterTree::TDirectoryCache::fInstance = 0;
-
 
 //______________________________________________________________________________
 TEventIter::TEventIter()
@@ -48,7 +48,6 @@ TEventIter::TEventIter()
    fNum   = 0;
    fStop  = kFALSE;
 }
-
 
 //______________________________________________________________________________
 TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
@@ -65,20 +64,17 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fEventListPos = 0;
 }
 
-
 //______________________________________________________________________________
 TEventIter::~TEventIter()
 {
    delete fFile;
 }
 
-
 //______________________________________________________________________________
 void TEventIter::StopProcess(Bool_t /*abort*/)
 {
    fStop = kTRUE;
 }
-
 
 //______________________________________________________________________________
 TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
@@ -89,7 +85,6 @@ TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long
       return new TEventIterObj(dset, sel, first, num);
    }
 }
-
 
 //______________________________________________________________________________
 Int_t TEventIter::LoadDir()
@@ -150,11 +145,10 @@ Int_t TEventIter::LoadDir()
    return ret;
 }
 
-
 //------------------------------------------------------------------------
 
-ClassImp(TEventIterObj)
 
+ClassImp(TEventIterObj)
 
 //______________________________________________________________________________
 TEventIterObj::TEventIterObj()
@@ -164,7 +158,6 @@ TEventIterObj::TEventIterObj()
    fKeys     = 0;
    fNextKey  = 0;
    fObj      = 0;
-
 }
 
 //______________________________________________________________________________
@@ -186,20 +179,10 @@ TEventIterObj::~TEventIterObj()
    delete fObj;
 }
 
-
 //______________________________________________________________________________
 Long64_t TEventIterObj::GetNextEvent()
 {
-
-   if (fStop) return -1;
-
-   // GGanis, Sep 2005:
-   // this is needed to communicate the send the last timer message
-   // (it does not harm, but perhaps there is a more legant solution)
-   if (fNum == 0) {
-      fDSet->Next();
-      return -1;
-   }
+   if (fStop || fNum == 0) return -1;
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
@@ -286,11 +269,10 @@ Long64_t TEventIterObj::GetNextEvent()
    return fElemCur;
 }
 
-
 //------------------------------------------------------------------------
 
-ClassImp(TEventIterTree)
 
+ClassImp(TEventIterTree)
 
 //______________________________________________________________________________
 TEventIterTree::TEventIterTree()
@@ -308,13 +290,11 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    fTree = 0;
 }
 
-
 //______________________________________________________________________________
 TEventIterTree::~TEventIterTree()
 {
    ReleaseAllTrees();
 }
-
 
 //______________________________________________________________________________
 void TEventIterTree::ReleaseAllTrees() {
@@ -358,15 +338,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 Long64_t TEventIterTree::GetNextEvent()
 {
 
-   if (fStop) return -1;
-
-   // GGanis, Sep 2005:
-   // this is needed to communicate the send the last timer message
-   // (it does not harm, but perhaps there is a more legant solution)
-   if (fNum == 0) {
-      fDSet->Next();
-      return -1;
-   }
+   if (fStop || fNum == 0) return -1;
 
    Bool_t attach = kFALSE;
 
@@ -453,11 +425,11 @@ Long64_t TEventIterTree::GetNextEvent()
    }
 }
 
-
 //______________________________________________________________________________
 TEventIterTree::TFileCache::ObjectAndBool_t TEventIterTree::TFileCache::Load(const TString &fileName)
 {
    // Loads a file given its filename. See TObjectCache::Load().
+
    TDirectory *dirsave = gDirectory;
 
    Double_t start = 0;
@@ -489,24 +461,28 @@ TEventIterTree::TFileCache::ObjectAndBool_t TEventIterTree::TFileCache::Load(con
 }
 
 //______________________________________________________________________________
-void TEventIterTree::TFileCache::Unload(TFile* &f) {
+void TEventIterTree::TFileCache::Unload(TFile* &f)
+{
    // Deletes the file. See TObjectCache::Load().
+
    delete f;
 }
 
 //______________________________________________________________________________
-TEventIterTree::TFileCache* TEventIterTree::TFileCache::Instance() {
-   // returns an instance (only one in the system) of the class.
-   if (fInstance == 0)
-      fInstance = new TFileCache();
-   return fInstance;
-}
+TEventIterTree::TFileCache* TEventIterTree::TFileCache::Instance()
+{
+   // Returns an instance (only one in the system) of the class.
 
+   if (fgInstance == 0)
+      fgInstance = new TFileCache();
+   return fgInstance;
+}
 
 //______________________________________________________________________________
 TDirectory* TEventIterTree::TDirectoryCache::Acquire(const TString& fileName, const TString& dirName)
 {
    // Included for more clear syntax. See TObjectCache::Acquire.
+
    return TObjectCache<TCacheKey, TCacheObject>
                ::Acquire(std::make_pair(fileName, dirName));
 }
@@ -516,6 +492,7 @@ TEventIterTree::TDirectoryCache::ObjectAndBool_t TEventIterTree::TDirectoryCache
 {
    // Loads a directory given the file name and the directory name.
    // See TObjectCache::Acquire().
+
    const TString fileName = k.first;
    const TString dirName = k.second;
    using namespace std;
@@ -542,24 +519,28 @@ TEventIterTree::TDirectoryCache::ObjectAndBool_t TEventIterTree::TDirectoryCache
 void TEventIterTree::TDirectoryCache::Unload(TDirectory* &dir)
 {
    // Releases the file in which the directory was stored.
-   // The directory itself is not deleted. It will be deleted when the file is closed.
+   // The directory itself is not deleted. It will be deleted when the file
+   // is closed.
+
    TFileCache::Instance()->Release(fDirectoryFiles[dir]);
    fDirectoryFiles.erase(dir);
 }
 
 //______________________________________________________________________________
-TEventIterTree::TDirectoryCache* TEventIterTree::TDirectoryCache::Instance() {
-   // returns an instance (only one in the system) of the class.
-   if (fInstance == 0)
-      fInstance = new TDirectoryCache();
-   return fInstance;
-}
+TEventIterTree::TDirectoryCache* TEventIterTree::TDirectoryCache::Instance()
+{
+   // Returns an instance (only one in the system) of the class.
 
+   if (fgInstance == 0)
+      fgInstance = new TDirectoryCache();
+   return fgInstance;
+}
 
 //______________________________________________________________________________
 void TEventIterTree::TTreeCache::Unload(TTree* &tree)
 {
    // Deleted the tree. Releases the file in which it was stored.
+
    delete tree;
    TDirectoryCache::Instance()->Release(fTreeDirectories[tree]);
    fTreeDirectories.erase(tree);
@@ -569,15 +550,17 @@ void TEventIterTree::TTreeCache::Unload(TTree* &tree)
 TTree* TEventIterTree::TTreeCache::Acquire(const TString& fileName, const TString& dirName, const TString& treeName)
 {
    // Included for more clear syntax. See TObjectCache::Acquire.
+
    return TObjectCache<TCacheKey, TCacheObject>
                ::Acquire(std::make_pair(fileName, std::make_pair(dirName, treeName)));
 }
-                                                                                                        
+
 //______________________________________________________________________________
 TEventIterTree::TTreeCache::ObjectAndBool_t TEventIterTree::TTreeCache::Load(const TCacheKey &k)
 {
    // Loads a tree given the file name where it's stored, the directory name in the file
    // and the tree name. See TObjectCache::Acquire().
+
    const TString fileName = k.first;
    const TString dirName = k.second.first;
    const TString treeName = k.second.second;
@@ -608,4 +591,3 @@ TEventIterTree::TTreeCache::ObjectAndBool_t TEventIterTree::TTreeCache::Load(con
    fTreeDirectories[tree] = dir;
    return make_pair(tree, kTRUE);
 }
-

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.8 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.9 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -126,7 +126,8 @@ public:
 
    private:
       // A list element. Helper structure for the implementation of the object cache.
-      struct TCacheElem : public TObject {
+      class TCacheElem : public TObject {
+      public:
          TCacheElem(const Obj &obj, const TCacheKey &objKey) 
             : fObj(obj), fKey(objKey), fCount(0) {}
          TCacheObject fObj;
@@ -286,7 +287,7 @@ public:
    // A File Cache. Uses a singleton pattern with Instance() method.
    class TFileCache : public TObjectCache<TString, TFile*> {
    private:
-      static TFileCache* fInstance;
+      static TFileCache* fgInstance;
       TFileCache() {}
    public:
       ObjectAndBool_t Load(const TString &fileName);
@@ -298,7 +299,7 @@ public:
    class TDirectoryCache : public TObjectCache<std::pair<TString, TString>, TDirectory*> {
    private:
       std::map<TDirectory*, TFile*> fDirectoryFiles; // an assotiation Directory <-> its File
-      static TDirectoryCache* fInstance;
+      static TDirectoryCache* fgInstance;
       TDirectoryCache() {}
    public:
       TDirectory* Acquire(const TString& fileName, const TString& dirName) ;
