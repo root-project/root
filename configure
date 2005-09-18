@@ -3317,7 +3317,6 @@ sed \
     -e "s|@setresuid@|$setresuid|"         \
     -e "s|@krb5init@|$krb5init|"           \
     -e "s|@configoptions@|$configoptions|" \
-    -e "s|@configoptions@|$enable_mathmore|" \
     -e "s|@hasmathmore@|$enable_mathmore|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
