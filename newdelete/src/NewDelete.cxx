@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.5 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.6 2005/09/02 19:39:26 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -72,11 +72,11 @@
 void *CustomReAlloc1(void *ovp, size_t size);
 void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize);
 
-class ReAllocInit {
+class TReAllocInit {
 public:
-   ReAllocInit() { TStorage::SetReAllocHooks(&CustomReAlloc1, &CustomReAlloc2); }
+   TReAllocInit() { TStorage::SetReAllocHooks(&CustomReAlloc1, &CustomReAlloc2); }
 };
-static ReAllocInit gReallocInit;
+static TReAllocInit gReallocInit;
 
 
 //---- memory checking macros --------------------------------------------------

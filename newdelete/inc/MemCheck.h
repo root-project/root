@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.5 2001/09/26 15:51:29 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.1 2002/03/07 01:48:32 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -100,13 +100,15 @@ public:
 };
 
 
-struct TMemInfo {
+class TMemInfo {
+public:
    void   *fAddress;    //mem address
    size_t  fSize;       //size of the allocated memory
    Int_t   fStackIndex; //index of the stack info
 };
 
-struct TMemTable {
+class TMemTable {
+public:
    Int_t     fAllocCount;    //number of memory allocation blocks
    Int_t     fMemSize;       //total memory allocated size
    Int_t     fTableSize;     //amount of entries in the below array
@@ -114,7 +116,8 @@ struct TMemTable {
    TMemInfo *fLeaks;         //leak table
 };
 
-struct TDeleteTable {
+class TDeleteTable {
+public:
    Int_t     fAllocCount;    //how many memory blocks do we have
    Int_t     fTableSize;     //amount of entries in the below array
    TMemInfo *fLeaks;         //leak table

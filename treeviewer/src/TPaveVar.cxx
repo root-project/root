@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
 // Author: Rene Brun   08/12/98
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,6 @@ TPaveVar::TPaveVar(): TPaveLabel()
 //*-*-*-*-*-*-*-*-*-*-*PaveVar default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 
    fViewer  = 0;
-//*-*                  =============================
 }
 
 //______________________________________________________________________________
@@ -103,7 +102,7 @@ void TPaveVar::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold, pxdold, pydold;
    static Int_t px1p, px2p, py1p, py2p;
-   static Bool_t L, R, INSIDE;
+   static Bool_t ll, rr, inside;
    Int_t  wx, wy;
 
    Bool_t doing_again = kFALSE;
@@ -175,23 +174,23 @@ again:
       px2p = parent->XtoAbsPixel(parent->GetX2()) - parent->GetBorderSize();
       py2p = parent->YtoAbsPixel(parent->GetY2()) + parent->GetBorderSize();
 
-      L = R = INSIDE = kFALSE;
+      ll = rr = inside = kFALSE;
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
-         pxold = pxl; pyold = pyl; L = kTRUE;
+         pxold = pxl; pyold = pyl; ll = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; R = kTRUE;
+          pxold = pxt; pyold = pyt; rr = kTRUE;
           gPad->SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
           (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
-         pxold = px; pyold = py; INSIDE = kTRUE;
+         pxold = px; pyold = py; inside = kTRUE;
          if (event == kButton1Down)
             gPad->SetCursor(kMove);
          else
@@ -199,10 +198,10 @@ again:
       }
 
       fResizing = kFALSE;
-      if (L || R)
+      if (ll || rr)
          fResizing = kTRUE;
 
-      if (!L && !R && !INSIDE)
+      if (!ll && !rr && !inside)
          gPad->SetCursor(kCross);
 
       break;
@@ -211,21 +210,21 @@ again:
 
       wx = wy = 0;
 
-      if (L) {
+      if (ll) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (R) {
+      if (rr) {
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
-      if (INSIDE) {
+      if (inside) {
          if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
@@ -246,7 +245,7 @@ again:
       pxold = px;
       pyold = py;
 
-      if ((INSIDE && opaque) || (fResizing && ropaque)) {
+      if ((inside && opaque) || (fResizing && ropaque)) {
          event = kButton1Up;
          doing_again = kTRUE;
          goto again;
@@ -258,21 +257,21 @@ again:
 
       if (px1 < 0 ) break;
       if (px == pxdold && py == pydold) break;
-      if (L || R || INSIDE) {
+      if (ll || rr || inside) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fX2 = gPad->AbsPixeltoX(px2);
          fY2 = gPad->AbsPixeltoY(py2);
       }
 
-      if (INSIDE) {
+      if (inside) {
          // if it was not a pad that was moved then it must have been
          // a box or something like that so we have to redraw the pad
          gPad->Modified(kTRUE);
          if (!doing_again) gPad->SetCursor(kCross);
       }
 
-      if (L || R)
+      if (ll || rr)
          gPad->Modified(kTRUE);
 
       // In case pave coordinates have been modified, recompute NDC coordinates

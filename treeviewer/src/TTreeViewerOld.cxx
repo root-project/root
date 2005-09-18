@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.3 2001/07/11 16:49:26 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.4 2005/09/18 13:07:40 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -400,9 +400,9 @@ void TTreeViewer::ExecuteDraw(Option_t *option)
       printf("Breaking event loop\n");
       return;
    }
-   char *VarDraw = 0;
+   char *varDraw = 0;
    if (opt.Contains("VarDraw:")) { //we double clicked on a TPaveVar
-      VarDraw = (char*)strstr(option,":");
+      varDraw = (char*)strstr(option,":");
    }
 
    char varexp[80];
@@ -413,8 +413,8 @@ void TTreeViewer::ExecuteDraw(Option_t *option)
    TPaveVar *ply = IsUnder(fY);
    // find label under Z
    TPaveVar *plz = IsUnder(fZ);
-   if (VarDraw) {
-      plx = (TPaveVar*)GetListOfPrimitives()->FindObject(VarDraw+1);
+   if (varDraw) {
+      plx = (TPaveVar*)GetListOfPrimitives()->FindObject(varDraw+1);
       if (plx == 0) return;
       ply = 0;
       plz = 0;
