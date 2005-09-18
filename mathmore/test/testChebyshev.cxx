@@ -1,7 +1,7 @@
 
-#include "MathMore/Chebyshev.h"
-#include "MathMore/IGenFunction.h"
-#include "MathCore/SpecFunc.h"
+#include "Math/Chebyshev.h"
+#include "Math/IGenFunction.h"
+#include "Math/SpecFunc.h"
 
 //#include "MathCore/GSLIntegrator.h"
 
@@ -56,6 +56,8 @@ int printCheb( const ROOT::Math::Chebyshev & c, double x0, double x1, FP func = 
     std::cout << " x = " << x << " true Val = " << fVal << " y = " << y << " +/- " << ey << "    y@10 = " << y10 << " +/- " << ey10 << std::endl; 
   }
 
+
+
   return 0; 
 }
 
@@ -81,6 +83,9 @@ int main() {
   std::cout << "Test derivative of gammma :" << std::endl;
   std::auto_ptr<ROOT::Math::Chebyshev> cDeriv = c2.Deriv();
   printCheb(*cDeriv, 1.0, 2.0); 
+
+  std::cout << ROOT::Math::cyl_bessel_j(1.2, 3.4);
+
  
   return 0; 
 
