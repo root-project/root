@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.108 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.109 2005/09/18 01:14:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -563,13 +563,12 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                }
 
                // Get slave FQDN ...
-               TString SlaveFqdn;
-               TInetAddress SlaveAddr =
-                  gSystem->GetHostByName((const char *)word[1]);
-               if (SlaveAddr.IsValid()) {
-                  SlaveFqdn = SlaveAddr.GetHostName();
-                  if (SlaveFqdn == "UnNamedHost")
-                  SlaveFqdn = SlaveAddr.GetHostAddress();
+               TString slaveFqdn;
+               TInetAddress slaveAddr = gSystem->GetHostByName(word[1]);
+               if (slaveAddr.IsValid()) {
+                  slaveFqdn = slaveAddr.GetHostName();
+                  if (slaveFqdn == "UnNamedHost")
+                  slaveFqdn = slaveAddr.GetHostAddress();
                }
 
                // create slave server
@@ -578,20 +577,19 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                if (parallel) {
 
                   // Prepare arguments
-                  TProofThreadArg *ta =
-                      new TProofThreadArg((const char *)(word[1]), sport,
-                                         fullord, perfidx, image, workdir,
-                                         fSlaves, this);
+                  TProofThreadArg *ta = new TProofThreadArg(word[1], sport,
+                                           fullord, perfidx, image, workdir,
+                                           fSlaves, this);
                   if (ta) {
                      // The type of the thread func makes it a detached thread
-                     TThread *th = new TThread(SlaveStartupThread,ta);
+                     TThread *th = new TThread(SlaveStartupThread, ta);
                      if (!th) {
                         Info("StartSlaves","Can't create startup thread:"
                                       " out of system resources");
                         SafeDelete(ta);
                      } else {
                         // Save in vector
-                        thrHandlers.push_back(new TProofThread(th,ta));
+                        thrHandlers.push_back(new TProofThread(th, ta));
                         // Run the thread
                         th->Run();
                      }
@@ -628,13 +626,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                TProofThread *pt = *i;
 
                // Wait on this condition
-               if (pt && pt->thread->GetState() == TThread::kRunningState) {
+               if (pt && pt->fThread->GetState() == TThread::kRunningState) {
                   PDB(kGlobal,3)
                      Info("Init",
                           "parallel startup: waiting for slave %s (%s:%d)",
-                           pt->args->fOrd.Data(), pt->args->fHost.Data(),
-                           pt->args->fPort);
-                  pt->thread->Join();
+                           pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
+                           pt->fArgs->fPort);
+                  pt->fThread->Join();
                }
             }
 
@@ -1087,8 +1085,8 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
    if (!IsValid()) return kFALSE;
 
    TList submasters;
-   TIter NextSlave(GetListOfActiveSlaves());
-   while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+   TIter nextSlave(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(nextSlave())) {
       if (sl->GetSlaveType() == TSlave::kMaster) {
          submasters.Add(sl);
       }
@@ -1150,9 +1148,9 @@ Int_t TProof::GetParallel() const
    if (!IsValid()) return -1;
 
    // iterate over active slaves and return total number of slaves
-   TIter NextSlave(GetListOfActiveSlaves());
+   TIter nextSlave(GetListOfActiveSlaves());
    Int_t nparallel = 0;
-   while (TSlave* sl = dynamic_cast<TSlave*>(NextSlave()))
+   while (TSlave* sl = dynamic_cast<TSlave*>(nextSlave()))
       if (sl->GetParallel() >= 0)
          nparallel += sl->GetParallel();
 
@@ -3605,8 +3603,8 @@ void TProof::ValidateDSet(TDSet *dset)
    elemholder.SetOwner();
 
    // build nodelist with slaves and elements
-   TIter NextSlave(GetListOfActiveSlaves());
-   while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+   TIter nextSlave(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(nextSlave())) {
       TList *sllist = 0;
       TPair *p = dynamic_cast<TPair*>(nodes.FindObject(sl->GetName()));
       if (!p) {
@@ -3624,12 +3622,12 @@ void TProof::ValidateDSet(TDSet *dset)
    }
 
    // add local elements to nodes
-   TList NonLocal; // list of nonlocal elements
+   TList nonLocal; // list of nonlocal elements
    // make two iterations - first add local elements - then distribute nonlocals
    for (Int_t i = 0; i < 2; i++) {
       Bool_t local = i>0?kFALSE:kTRUE;
-      TIter NextElem(local?dset->GetListOfElements():&NonLocal);
-      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+      TIter nextElem(local ? dset->GetListOfElements() : &nonLocal);
+      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
          if (elem->GetValid()) continue;
          TPair *p = dynamic_cast<TPair*>(local?nodes.FindObject(TUrl(elem->GetFileName()).GetHost()):nodes.At(0));
          if (p) {
@@ -3659,7 +3657,7 @@ void TProof::ValidateDSet(TDSet *dset)
 
          } else {
             if (local) {
-               NonLocal.Add(elem);
+               nonLocal.Add(elem);
             } else {
                Error("ValidateDSet", "No Node to allocate TDSetElement to");
                Assert(0);
@@ -3670,9 +3668,9 @@ void TProof::ValidateDSet(TDSet *dset)
 
    // send to slaves
    TList usedslaves;
-   TIter NextNode(&nodes);
+   TIter nextNode(&nodes);
    SetDSet(dset); // set dset to be validated in Collect()
-   while (TPair *node = dynamic_cast<TPair*>(NextNode())) {
+   while (TPair *node = dynamic_cast<TPair*>(nextNode())) {
       TList *slaves = dynamic_cast<TList*>(node->Key());
       TList *setelements = dynamic_cast<TList*>(node->Value());
 
@@ -3935,7 +3933,7 @@ void TProof::RemoveChain(TChain *chain)
 }
 
 //_____________________________________________________________________________
-void *TProof::SlaveStartupThread(void * arg)
+void *TProof::SlaveStartupThread(void *arg)
 {
    // Function executed in the slave startup thread.
 

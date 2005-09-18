@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.3 2005/06/26 17:59:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.4 2005/09/17 13:52:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -245,13 +245,13 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
          for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
             TProofThread *pt = *i;
             // Wait on this condition
-            if (pt && pt->thread->GetState() == TThread::kRunningState) {
+            if (pt && pt->fThread->GetState() == TThread::kRunningState) {
                PDB(kGlobal,3)
                   Info("StartSlaves",
                        "parallel startup: waiting for submaster %s (%s:%d)",
-                        pt->args->fOrd.Data(), pt->args->fHost.Data(),
-                        pt->args->fPort);
-               pt->thread->Join();
+                        pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
+                        pt->fArgs->fPort);
+               pt->fThread->Join();
             }
          }
 

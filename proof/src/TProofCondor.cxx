@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.2 2005/06/23 09:56:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.3 2005/09/17 13:52:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TProofServ.h"
 #include "TSocket.h"
 #include "TMonitor.h"
+
 
 ClassImp(TProofCondor)
 
@@ -108,10 +109,10 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
          fConfFile = fconf;
 
          // check for valid slave lines and claim condor nodes
-	 Int_t ord = 0;
-         Char_t line[1024];
+         Int_t ord = 0;
+         char line[1024];
          while (fgets(line, sizeof(line), pconf)) {
-            Char_t word[12][128];
+            char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
             int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
                 word[0], word[1],
@@ -123,10 +124,10 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
                                !strcmp(word[0], "condorworker"))) {
                int perfidx  = 100;
 
-               const Char_t *stripvm = strchr(word[1], '@');
-               const Char_t *image = stripvm ? stripvm+1 : word[1];
+               const char *stripvm = strchr(word[1], '@');
+               const char *image = stripvm ? stripvm+1 : word[1];
 
-               const Char_t *workdir = 0;
+               const char *workdir = 0;
 
                for (int i = 2; i < nword; i++) {
                   if (!strncmp(word[i], "perf=", 5))
@@ -137,20 +138,20 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
                      workdir = word[i]+8;
                }
 
-	       gSystem->Sleep(100);
+               gSystem->Sleep(100);
                TCondorSlave* csl = fCondor->Claim(word[1], jobad);
                if (csl) {
-		  Char_t *expworkdir = 0;
-		  if (workdir) expworkdir=gSystem->ExpandPathName(workdir);
+                  char *expworkdir = 0;
+                  if (workdir) expworkdir=gSystem->ExpandPathName(workdir);
                   csl->fPerfIdx = perfidx;
                   csl->fImage = image;
                   csl->fWorkDir = expworkdir;
-		  TString fullord = TString(gProofServ->GetOrdinal()) +
-		                    "." + ((Long_t) ord);
-		  csl->fOrdinal=fullord.Data();
+                  TString fullord = TString(gProofServ->GetOrdinal()) +
+                                    "." + ((Long_t) ord);
+                  csl->fOrdinal=fullord.Data();
                   claims.Add(csl);
-		  ord++;
-		  if (expworkdir) delete [] expworkdir;
+                  ord++;
+                  if (expworkdir) delete [] expworkdir;
                }
             }
          }
@@ -228,19 +229,19 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
             ptimer->Reset();
          }
 
-	 // Wait completion of startup operations
-	 std::vector<TProofThread *>::iterator i;
-	 for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
-	   TProofThread *pt = *i;
-	   // Wait on this condition
-	   if (pt && pt->thread->GetState() == TThread::kRunningState) {
-	       Info("Init",
-		    "parallel startup: waiting for slave %s (%s:%d)",
-		    pt->args->fOrd.Data(), pt->args->fHost.Data(),
-                    pt->args->fPort);
-	       pt->thread->Join();
-	   }
-	 }
+         // Wait completion of startup operations
+         std::vector<TProofThread *>::iterator i;
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            TProofThread *pt = *i;
+            // Wait on this condition
+            if (pt && pt->fThread->GetState() == TThread::kRunningState) {
+               Info("Init",
+                    "parallel startup: waiting for slave %s (%s:%d)",
+                    pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
+                    pt->fArgs->fPort);
+               pt->fThread->Join();
+            }
+         }
 
          // Add the good slaves to the lists
          nextsl->Reset();
@@ -283,8 +284,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
          trial++;
 
          // Thread vector cleanup
-	 while (!thrHandlers.empty()) {
-	   std::vector<TProofThread *>::iterator i = thrHandlers.end()-1;
+         while (!thrHandlers.empty()) {
+           std::vector<TProofThread *>::iterator i = thrHandlers.end()-1;
             if (*i) {
                SafeDelete(*i);
                thrHandlers.erase(i);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.65 2005/09/17 13:52:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.66 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -136,10 +136,11 @@ public:
 // PROOF Thread class for parallel startup
 class TProofThread {
 public:
-   TThread       *thread;
-   TProofThreadArg *args;
-   TProofThread(TThread *t, TProofThreadArg *a) { thread = t; args = a; }
-   virtual ~TProofThread() { SafeDelete(thread); SafeDelete(args); }
+   TThread         *fThread;
+   TProofThreadArg *fArgs;
+
+   TProofThread(TThread *t, TProofThreadArg *a) { fThread = t; fArgs = a; }
+   virtual ~TProofThread() { SafeDelete(fThread); SafeDelete(fArgs); }
 };
 
 // PROOF Interrupt signal handler
