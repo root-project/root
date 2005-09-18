@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.107 2005/09/17 14:57:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.108 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1439,24 +1439,21 @@ Int_t TProof::Collect(TMonitor *mon)
    if (!IsIdle() && !IsSync())
       fRedirLog = kFALSE;
 
-   int cnt = 0, loop = 1, rc = 0;
+   int cnt = 0, rc = 0;
 
    fBytesRead = 0;
    fRealTime  = 0.0;
    fCpuTime   = 0.0;
 
-   while (loop) {
+   while (mon->GetActive()) {
 
       // Wait for a ready socket
-      TSocket  *s = mon->Select();
+      TSocket *s = mon->Select();
 
       // Get and analyse the info it did receive
       if ((rc = CollectInputFrom(s)) == 1)
          // Deactivate it if we are done with it
          mon->DeActivate(s);
-
-      // Check if we are done
-      if (!mon->GetActive()) loop = 0;
 
       // Update counter (if no error occured)
       if (rc >= 0) cnt++;

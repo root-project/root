@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.14 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.15 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPacketizer                                                         //
+// TPacketizer                                                          //
 //                                                                      //
 // This class generates packets to be processed on PROOF slave servers. //
 // A packet is an event range (begin entry and number of entries) or    //
