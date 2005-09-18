@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -29,7 +29,7 @@
 // Last update: Sun Nov 14 14:07:50 2004
 // 
 
-#include "MathMore/RootFinderAlgorithms.h"
+#include "Math/RootFinderAlgorithms.h"
 #include "GSLRootFSolver.h"
 #include "GSLRootFdFSolver.h"
 

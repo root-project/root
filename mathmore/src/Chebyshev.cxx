@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -32,8 +32,8 @@
 
 #include <assert.h>
 
-#include "MathMore/Chebyshev.h"
-#include "MathMore/IGenFunction.h"
+#include "Math/Chebyshev.h"
+#include "Math/IGenFunction.h"
 #include "GSLFunctionWrapper.h"
 #include "GSLChebSeries.h"
 

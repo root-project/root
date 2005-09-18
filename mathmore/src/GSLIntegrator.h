@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -31,14 +31,14 @@
 #ifndef ROOT_Math_GSLIntegrator
 #define ROOT_Math_GSLIntegrator
 
-#include "MathMore/IGenFunction.h"
-#include "MathMore/Integrator.h"
+#include "Math/IGenFunction.h"
+#include "Math/Integrator.h"
 
 #include <vector>
 
 
 
-#include "MathMore/GSLFunctionAdapter.h"
+#include "Math/GSLFunctionAdapter.h"
 
 /**
 

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxx,v 1.2 2005/09/08 08:16:16 rdm Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -29,7 +29,7 @@
 // Last update: Fri Nov 26 15:00:25 2004
 //
 
-#include "MathMore/Interpolator.h"
+#include "Math/Interpolator.h"
 #include "GSLInterpolator.h"
 
 

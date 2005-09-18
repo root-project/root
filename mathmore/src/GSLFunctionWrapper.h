@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -33,7 +33,7 @@
 
 #include "gsl/gsl_math.h"
 
-#include "MathMore/IGenFunction.h"
+#include "Math/IGenFunction.h"
 
 
 namespace ROOT {

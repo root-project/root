@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -34,7 +34,7 @@
 #include <vector>
 #include <string>
 
-#include "MathMore/InterpolationTypes.h"
+#include "Math/InterpolationTypes.h"
 
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"

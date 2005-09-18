@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootHelper.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootHelper.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -29,7 +29,7 @@
 // Last update: Sun Nov 14 21:34:15 2004
 // 
 
-#include "MathMore/GSLRootHelper.h"
+#include "Math/GSLRootHelper.h"
 
 #include "gsl/gsl_roots.h"
 
