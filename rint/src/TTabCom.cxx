@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.30 2005/08/30 12:10:37 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.31 2005/09/03 02:26:31 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1567,7 +1567,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    // initialize
    fBuf = buf;
    fpLoc = pLoc;
-   
+
    // frodo: iteration counter for recursive MakeClassFromVarName
    fLastIter = 0;
 
@@ -1846,15 +1846,15 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const EContext_t original_context = context;  // save this for later
 
          TClass *pClass;
-         
+
          // frodo: Instead of just passing the last portion of the string to
          //        MakeClassFromVarName(), we now pass the all string and let
          //        it decide how to handle it... I know it's not the best way
          //        because of the context handling, but I wanted to "minimize"
-         //        the changes to the current code and this seemed the best way 
+         //        the changes to the current code and this seemed the best way
          //        to do it
 //         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
-         TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():]*$");
+         TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():.]*$");
 
          IfDebug(cerr << endl);
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
@@ -2019,7 +2019,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
 
          // frodo: Again, passing the all string
-         TString namerec = s1;  
+         TString namerec = s1;
 
          switch (context) {
          case kCXX_ScopeProto:
@@ -2306,9 +2306,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //   returns 0 in case of error.
    //   if user has operator.() or operator->() backwards, will modify: context, *fpLoc and fBuf.
    //   context sensitive behavior.
-   
+
    // frodo:
-   // Because of the Member and Proto recursion, this has become a bit 
+   // Because of the Member and Proto recursion, this has become a bit
    // complicated, so here is how it works:
    //
    // root [1] var.a.b.c[TAB]
@@ -2328,43 +2328,43 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //
    // frodo: Member and Proto recursion code
    //
-   if (0) printf("varName is [%s] with iteration [%i]\n", varName, iter);   
+   if (0) printf("varName is [%s] with iteration [%i]\n", varName, iter);
 
    // ParseReverse will return 0 if there are no "." or "->" in the varName
    int cut = ParseReverse(varName, strlen(varName));
 
    // If it's not a "simple" variable and if there is at least one "." or "->"
-   if (!varName_exists && cut != 0) 
+   if (!varName_exists && cut != 0)
    {
       TString parentName = varName;
       TString memberName = varName;
-      
+
       // Check to see if this is the last call (last member/method)
       if (iter > fLastIter) fLastIter = iter;
 
-      parentName[cut] = 0;      
+      parentName[cut] = 0;
       if (0) printf("Parent string is [%s]\n", parentName.Data());
 
       // Can be "." or "->"
       if (varName[cut] == '.') memberName = varName+cut+1;
-      else memberName = varName+cut+2; 
+      else memberName = varName+cut+2;
 
       if (0) printf("Member/method is [%s]\n", memberName.Data());
 
       TClass *pclass = MakeClassFromVarName(parentName.Data(), context, iter+1);
 
       if (0) printf("I got [%s] from MakeClassFromVarName()\n", pclass->GetName());
-      
-      if (pclass) 
-      {            
-          if (0) printf("Variable [%s] exists!\n", parentName.Data());  
-          
+
+      if (pclass)
+      {
+          if (0) printf("Variable [%s] exists!\n", parentName.Data());
+
           // If it's back in the first call of the function, return immediatly
           if (iter == 0) return pclass;
 
-          if (0) printf("Trying data member [%s] of class [%s] ...\n", 
+          if (0) printf("Trying data member [%s] of class [%s] ...\n",
                   memberName.Data(), pclass->GetName());
-          
+
           // Check if it's a member
           TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
           TList  *dlist = pclass->GetListOfDataMembers();
@@ -2380,7 +2380,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
               TString returnName = dmptr->GetTypeName();
 //              if (returnName[returnName.Length()-1] == '*')
 //                  printf("It's a pointer!\n");
-              
+
               TClass *mclass = new TClass(returnName.Data());
               return mclass;
           }
@@ -2392,11 +2392,11 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
           if (parentesis_ptr) *parentesis_ptr = 0;
 
 
-          if (0) printf("Trying method [%s] of class [%s] ...\n", 
+          if (0) printf("Trying method [%s] of class [%s] ...\n",
                   memberName.Data(), pclass->GetName());
 
           // Check if it's a method
-          TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data()); 
+          TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data());
           TList  *mlist = pclass->GetListOfAllPublicMethods();
           next = mlist;
           while ((mptr = (TMethod *) next())) {
@@ -2408,23 +2408,23 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
           {
               TString returnName = mptr->GetReturnTypeName();
 
-              if (0) printf("It's a method called [%s] with return type [%s]\n", 
+              if (0) printf("It's a method called [%s] with return type [%s]\n",
                       memberName.Data(), returnName.Data());
-              
+
               // This will handle the methods that returns a pointer to a class
               if (returnName[returnName.Length()-1] == '*')
               {
                   returnName[returnName.Length()-1] = 0;
                   fVarIsPointer = kTRUE;
-              } 
-              else 
+              }
+              else
               {
                   fVarIsPointer = kFALSE;
               }
-              
+
               TClass *mclass = new TClass(returnName.Data());
-              return mclass;      
-          }      
+              return mclass;
+          }
       }
    }
 
@@ -2451,10 +2451,10 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    TString className = DetermineClass(varName);
 
-   // frodo: I shouldn't have to do this, but for some reason now I have to 
+   // frodo: I shouldn't have to do this, but for some reason now I have to
    //        otherwise the varptr->[TAB] won't work    :(
-   if (className[className.Length()-1] == '*') 
-       className[className.Length()-1] = 0;  
+   if (className[className.Length()-1] == '*')
+       className[className.Length()-1] = 0;
 
    if (className.Length() < 1) {
       // this will happen if "varName" is a fundamental type (as opposed to class type).
@@ -2521,7 +2521,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
          if (className[className.Length() - 1] == '*') {
             cerr << endl << "can't handle pointers to pointers." << endl;
-            return 0;           // RETURN 
+            return 0;           // RETURN
          }
       } else {
          // user is using operator->() instead of operator.()
@@ -2595,7 +2595,7 @@ int TTabCom::ParseReverse(const char *var_str, int start)
     for (int i = start; i > 0; i--)
     {
         if (var_str[i] == '.') return i;
-        if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;        
+        if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;
     }
 
     return end;
