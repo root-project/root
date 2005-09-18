@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.28 2005/09/16 08:48:38 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.29 2005/09/17 14:02:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,6 +43,7 @@
 #pragma link C++ class TVirtualPacketizer+;
 #pragma link C++ class TPacketizer+;
 #pragma link C++ class TPacketizer2+;
+#pragma link C++ class TPacketizerProgressive+;
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
 #pragma link C++ class TProofDraw+;
@@ -65,6 +66,5 @@
 #pragma link C++ class std::vector<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
 #pragma link C++ class TProofVectorContainer<TProofDrawListOfGraphs::Point3D_t>+;
 #pragma link C++ class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
-
 
 #endif

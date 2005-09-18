@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TDSetProxy.cxx,v 1.1 2002/03/13 01:52:20 rdm Exp $
 // Author: Maarten Ballintijn  12/03/02
 
 /*************************************************************************
@@ -23,13 +23,11 @@
 
 ClassImp(TDSetProxy)
 
-
 //______________________________________________________________________________
 TDSetProxy::TDSetProxy()
 {
    fServ = 0;
 }
-
 
 //______________________________________________________________________________
 TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
@@ -39,7 +37,6 @@ TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
    fCurrent = 0;
 }
 
-
 //______________________________________________________________________________
 void TDSetProxy::SetProofServ(TProofServ *serv)
 {
@@ -47,18 +44,16 @@ void TDSetProxy::SetProofServ(TProofServ *serv)
    fCurrent = 0;
 }
 
-
 //______________________________________________________________________________
 void TDSetProxy::Reset()
 {
    delete fCurrent; fCurrent = 0;
 }
 
-
 //______________________________________________________________________________
-TDSetElement *TDSetProxy::Next()
+TDSetElement *TDSetProxy::Next(Long64_t totalEntries)
 {
-   fCurrent = fServ->GetNextPacket();
+   fCurrent = fServ->GetNextPacket(totalEntries);
 
    return fCurrent;
 }

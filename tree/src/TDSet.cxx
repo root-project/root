@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.26 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.27 2005/09/17 13:55:15 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -564,7 +564,7 @@ void TDSet::Reset()
 }
 
 //______________________________________________________________________________
-TDSetElement *TDSet::Next()
+TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
 {
    // Returns next TDSetElement.
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.105 2005/09/13 10:20:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.106 2005/09/16 08:48:39 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -540,7 +540,7 @@ TObject *TProofServ::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-TDSetElement *TProofServ::GetNextPacket()
+TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 {
    // Get next range of entries to be processed on this server.
 
@@ -552,7 +552,8 @@ TDSetElement *TProofServ::GetNextPacket()
       fCompute.Stop();
 
    TMessage req(kPROOF_GETPACKET);
-   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime() << bytesRead;
+   req << fLatency.RealTime() << fCompute.RealTime()
+       << fCompute.CpuTime() << bytesRead << totalEntries;
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);

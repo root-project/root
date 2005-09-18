@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.64 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.65 2005/09/17 13:52:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -85,9 +85,10 @@ class TVirtualMutex;
 // 4 -> 5: added friends support
 // 5 -> 6: drop TFTP, support for asynchronous queries
 // 6 -> 7: support for multisessions, archieve, retrieve, ...
+// 7 -> 8: return number of entries in GetNextPacket
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 7;             // protocol version number
+const Int_t       kPROOF_Protocol = 8;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -277,6 +278,7 @@ private:
    FILE           *fLogFileR;       //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
 
+   TList          *fWaitingSlaves;  //stores a TPair of the slaves's TSocket and TMessage
    TList          *fQueries;        //list of TProofQuery objects
    Int_t           fOtherQueries;   //number of queries in list from previous sessions
    Int_t           fDrawQueries;    //number of draw queries during this sessions

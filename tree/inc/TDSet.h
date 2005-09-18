@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.13 2005/07/09 04:03:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.14 2005/07/21 17:41:32 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -167,7 +167,7 @@ public:
    TList                *GetListOfElements() const { return fElements; }
 
    virtual void          Reset();
-   virtual TDSetElement *Next();
+   virtual TDSetElement *Next(Long64_t totalEntries = -1);
    TDSetElement         *Current() const { return fCurrent; };
 
    static Long64_t       GetEntries(Bool_t isTree, const char *filename,

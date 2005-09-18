@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.106 2005/09/17 13:52:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.107 2005/09/17 14:57:46 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -259,6 +259,7 @@ TProof::~TProof()
    SafeDelete(fChains);
    SafeDelete(fPlayer);
    SafeDelete(fFeedback);
+   SafeDelete(fWaitingSlaves);
 
    // remove file with redirected logs
    if (!IsMaster()) {
@@ -347,6 +348,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fDrawQueries = 0;
    fMaxDrawQueries = 1;
    fSeqNum = 0;
+
+   // Part of active query
+   fWaitingSlaves = 0;
 
    fPlayer   = MakePlayer();
    fFeedback = new TList;
@@ -1482,6 +1486,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
    TSlave   *sl;
    TObject  *obj;
    Int_t     what;
+   Bool_t    delete_mess = kTRUE;
 
    if (s->Recv(mess) < 0) {
       MarkBad(s);
@@ -1529,9 +1534,37 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             sl = FindSlave(s);
             elem = fPlayer->GetNextPacket(sl, mess);
 
-            TMessage answ(kPROOF_GETPACKET);
-            answ << elem;
-            s->Send(answ);
+            if (elem != (TDSetElement*) -1) {
+               TMessage answ(kPROOF_GETPACKET);
+               answ << elem;
+               s->Send(answ);
+
+               while (fWaitingSlaves != 0 && fWaitingSlaves->GetSize()) {
+                  TPair *p = (TPair*) fWaitingSlaves->First();
+                  s = (TSocket*) p->Key();
+                  sl = FindSlave(s);
+                  TMessage *m = (TMessage*) p->Value();
+
+                  elem = fPlayer->GetNextPacket(sl, m);
+                  if (elem != (TDSetElement*) -1) {
+                     TMessage a(kPROOF_GETPACKET);
+                     a << elem;
+                     s->Send(a);
+                     // remove has to happen via Links because TPair does not have
+                     // a Compare() function and therefore RemoveFirst() and
+                     // Remove(TObject*) do not work
+                     fWaitingSlaves->Remove(fWaitingSlaves->FirstLink());
+                     delete p;
+                     delete m;
+                  } else {
+                     break;
+                  }
+               }
+            } else {
+               if (fWaitingSlaves == 0) fWaitingSlaves = new TList;
+               fWaitingSlaves->Add(new TPair(s, mess));
+               delete_mess = kFALSE;
+            }
          }
          break;
 
@@ -1835,7 +1868,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
    }
 
    // Cleanup
-   delete mess;
+   if (delete_mess)
+      delete mess;
 
    // We are done successfully
    return rc;

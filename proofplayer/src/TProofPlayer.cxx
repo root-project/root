@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.65 2005/09/17 13:53:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.66 2005/09/17 14:57:46 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TVirtualPacketizer.h"
 #include "TPacketizer.h"
 #include "TPacketizer2.h"
+#include "TPacketizerProgressive.h"
 #include "TSelector.h"
 #include "TSocket.h"
 #include "TProofServ.h"
@@ -435,7 +436,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
-
    if (version == 0) {
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
@@ -653,6 +653,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          Info("Process","!!! Using TPacketizer2 !!!");
          fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
                                         first, nentries, fInput);
+      } else if (fInput->FindObject("PROOF_ProgressivePacketizer") != 0) {
+         Info("Process","!!! Using TPacketizerProgressive !!!");
+         fPacketizer = new TPacketizerProgressive(dset, fProof->GetListOfActiveSlaves(),
+                                                  first, nentries, fInput);
       } else {
          PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
          fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
@@ -1290,13 +1294,15 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
-   if ( e != 0 ) {
+   if (e == 0) {
+      PDB(kPacketizer,2) Info("GetNextPacket","Done");
+   } else if (e == (TDSetElement*) -1) {
+      PDB(kPacketizer,2) Info("GetNextPacket","Waiting");
+   } else {
       PDB(kPacketizer,2)
          Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %lld %lld",
               slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
-   } else {
-      PDB(kPacketizer,2) Info("GetNextPacket","Done");
    }
 
    return e;

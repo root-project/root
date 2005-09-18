@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.17 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.18 2005/09/17 13:54:47 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -192,7 +192,7 @@ Long64_t TEventIterObj::GetNextEvent()
          fOldBytesRead = bytesRead;
       }
 
-      fElem = fDSet->Next();
+      fElem = fDSet->Next(fKeys->GetSize());
       if (fElem->GetEventList()) {
          Error("GetNextEvent", "EventLists not implemented");
          return -1;
@@ -350,7 +350,11 @@ Long64_t TEventIterTree::GetNextEvent()
          fOldBytesRead = bytesRead;
       }
 
-      fElem = fDSet->Next();
+      if (fTree) {
+         fElem = fDSet->Next(fTree->GetEntries());
+      } else {
+         fElem = fDSet->Next();
+      }
 
       if ( fElem == 0 ) {
          fNum = 0;

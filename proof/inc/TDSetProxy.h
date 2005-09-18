@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TDSetProxy.h,v 1.1 2002/03/13 01:52:20 rdm Exp $
 // Author: Maarten Ballintijn  12/03/02
 
 /*************************************************************************
@@ -30,8 +30,6 @@ class TProofServ;
 
 class TDSetProxy : public TDSet {
 
-   // skeleton implementation need to properly deal with all TDSet methods ...
-
 private:
    TProofServ     *fServ;     //!
 
@@ -40,7 +38,7 @@ public:
    TDSetProxy(const char *type, const char *objname = "*", const char *dir = "/");
 
    void           Reset();
-   TDSetElement  *Next();
+   TDSetElement  *Next(Long64_t totalEntries = -1);
 
    void  SetProofServ(TProofServ *serv);
 

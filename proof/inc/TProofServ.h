@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.31 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.32 2005/09/17 14:02:53 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -92,7 +92,7 @@ private:
    TStopwatch    fCompute;          //measures time spend processing a packet
 
    Int_t         fSeqNum;           //sequential number of last processed query
-   Int_t         fDrawQueries;      //number of draw queries processed 
+   Int_t         fDrawQueries;      //number of draw queries processed
    Int_t         fKeptQueries;      //number of queries fully in memory and in dir
    TList        *fQueries;          //list of TProofQueryResult objects
    TList        *fPreviousQueries;  //list of TProofQueryResult objects from previous sections
@@ -175,7 +175,7 @@ public:
    void           Print(Option_t *option="") const;
 
    TObject       *Get(const char *namecycle);
-   TDSetElement  *GetNextPacket();
+   TDSetElement  *GetNextPacket(Long64_t totalEntries = -1);
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
    void           SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
