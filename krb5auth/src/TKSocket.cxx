@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.2 2005/02/08 00:57:13 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.3 2005/02/10 12:47:27 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #include "config.h"
@@ -124,7 +124,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
 Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
 {
    Int_t rc;
-   TDesc desc;
+   Desc_t desc;
    Int_t fd = fSocket->GetDescriptor();
 
    rc = krb5_net_read(fgContext, fd, (char *)&desc, sizeof(desc));
@@ -136,10 +136,10 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
       return -1;
    }
 
-   type = static_cast<EEncoding>(ntohs(desc.type));
+   type = static_cast<EEncoding>(ntohs(desc.fType));
 
    krb5_data enc;
-   enc.length = ntohs(desc.length);
+   enc.length = ntohs(desc.fLength);
    enc.data = new char[enc.length+1];
 
    rc = krb5_net_read(fgContext, fd, enc.data, enc.length);
@@ -173,7 +173,7 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    if (type != kNone) {
       // copy data to buffer that is new'ed
       buf = new char[out.length+1];
-      memcpy(buf, out.data,out.length);
+      memcpy(buf, out.data, out.length);
       buf[out.length] = 0;
       free(out.data);
       delete enc.data;
@@ -186,7 +186,7 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
 
 Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
 {
-   TDesc desc;
+   Desc_t desc;
    krb5_data in;
    krb5_data enc;
    Int_t rc;
@@ -209,8 +209,8 @@ Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
          return -1;
    }
 
-   desc.length = htons(enc.length);
-   desc.type = htons(type);
+   desc.fLength = htons(enc.length);
+   desc.fType = htons(type);
 
    Int_t fd = fSocket->GetDescriptor();
    rc = krb5_net_write(fgContext, fd, (char *)&desc, sizeof(desc));

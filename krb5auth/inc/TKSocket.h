@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name: PROOF_MLM $:$Id: TKSocket.h,v 1.1.4.2 2004/11/02 22:02:53 maartenb Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #ifndef ROOT_TKSocket
@@ -46,9 +46,9 @@ public:
 
    enum EEncoding { kNone = 0, kSafe = 1, kPriv = 2 };
 
-   struct TDesc {
-      Short_t  length;
-      Short_t  type;
+   struct Desc_t {
+      Short_t  fLength;
+      Short_t  fType;
    };
 
    Int_t BlockRead(char *&buf, EEncoding &type);
