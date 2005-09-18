@@ -20,3 +20,4 @@
 #define R__KRB5INIT   "@krb5init@"
 
 #define R__CONFIGUREOPTIONS   "@configoptions@"
+#define R__HASMATHMORE   "@hasmathmore@"
