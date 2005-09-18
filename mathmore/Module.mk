@@ -1,0 +1,194 @@
+# Module.mk for mathmore module
+# Copyright (c) 2000 Rene Brun and Fons Rademakers
+#
+# Author: Fons Rademakers, 29/2/2000
+
+MODDIR       := mathmore
+MODDIRS      := $(MODDIR)/src
+MODDIRI      := $(MODDIR)/inc
+
+MATHMOREDIR  := $(MODDIR)
+MATHMOREDIRS := $(MATHMOREDIR)/src
+MATHMOREDIRI := $(MATHMOREDIR)/inc
+
+GSLVERS      := gsl-1.5
+GSLSRCS      := $(MODDIRS)/$(GSLVERS).tar.gz
+GSLDIRS      := $(MODDIRS)/$(GSLVERS)
+GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
+GSLETAG      := $(MODDIRS)/headers.d
+
+##### libgsl #####
+ifeq ($(PLATFORM),win32)
+GSLLIBA      := $(GSLDIRS)/libgsl.lib
+GSLLIB       := $(LPATH)/libgsl.lib
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+GSLBLD        = "libgsl - Win32 Debug"
+else
+GSLBLD        = "libgsl - Win32 Release"
+endif
+else
+GSLLIBA      := $(GSLDIRS)/.libs/libgsl.a
+GSLLIB       := $(LPATH)/libgsl.a
+endif
+GSLDEP       := $(GSLLIB)
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+GSLDBG      = "--enable-gdb"
+else
+GSLDBG      =
+endif
+
+##### libMathMore #####
+MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
+MATHMORELINC := $(MODDIRI)/Math/LinkDef_SpecFunc.h \
+		$(MODDIRI)/Math/LinkDef_StatFunc.h \
+		$(MODDIRI)/Math/LinkDef_RootFinding.h \
+		$(MODDIRI)/Math/LinkDef_Func.h 
+MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx
+MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
+MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
+MATHMOREDH1  := $(MODDIRI)/Math/ProbFuncMathMore.h \
+		$(MODDIRI)/Math/ProbFuncInv.h \
+		$(MODDIRI)/Math/SpecFuncMathMore.h \
+		$(MODDIRI)/Math/IGenFunction.h \
+		$(MODDIRI)/Math/IParamFunction.h \
+		$(MODDIRI)/Math/ParamFunction.h \
+		$(MODDIRI)/Math/WrappedFunction.h \
+		$(MODDIRI)/Math/Polynomial.h \
+		$(MODDIRI)/Math/Derivator.h \
+		$(MODDIRI)/Math/Interpolator.h \
+		$(MODDIRI)/Math/InterpolationTypes.h \
+		$(MODDIRI)/Math/RootFinder.h \
+		$(MODDIRI)/Math/GSLRootFinder.h \
+		$(MODDIRI)/Math/GSLRootFinderDeriv.h \
+		$(MODDIRI)/Math/RootFinderAlgorithms.h \
+		$(MODDIRI)/Math/Integrator.h \
+		$(MODDIRI)/Math/Chebyshev.h
+
+MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+MATHMORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+MATHMOREO    := $(MATHMORES:.cxx=.o)
+
+MATHMOREDEP  := $(MATHMOREO:.o=.d) $(MATHMOREDO:.o=.d)
+
+MATHMORELIB  := $(LPATH)/libMathMore.$(SOEXT)
+
+# used in the main Makefile
+ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
+ALLLIBS      += $(MATHMORELIB)
+
+# include all dependency files
+INCLUDEFILES += $(MATHMOREDEP)
+
+##### local rules #####
+include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
+		@(if [ ! -d "include/Math" ]; then     \
+		   mkdir include/Math;                 \
+		fi)
+		cp $< $@
+
+$(GSLLIB):      $(GSLLIBA)
+		cp $< $@
+
+$(GSLLIBA):     $(GSLSRCS)
+ifeq ($(PLATFORM),win32)
+		@(if [ -d $(GSLDIRS) ]; then \
+			rm -rf $(GSLDIRS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(MATHMOREDIRS); \
+		if [ ! -d $(GSLVERS) ]; then \
+			gunzip -c $(GSLVERS).tar.gz | tar xf -; \
+		fi; \
+		cd $(GSLVERS); \
+		cp ./*.h ./gsl; \
+		cp ./gsl_version.h.win32 ./gsl_version.h; \
+		cp ./config.h.win32 ./config.h; \
+		cp ./*/*.h ./gsl; \
+		unset MAKEFLAGS; \
+		nmake -f Makefile.msc CFG=$(GSLBLD))
+#		GNUMAKE=$(MAKE) ./configure $(GSLDBG) CC=cl LD=cl CFLAGS="$(CFLAGS)" ;  \
+#		cd gsl; sed -e 's/ln -s/cp -p/' Makefile > MakefileNew; mv MakefileNew Makefile; cd ../; \
+#		$(MAKE)) \
+# 		unset MAKEFLAGS; \
+# 		nmake -nologo -f gsl.mak \
+# 		CFG=$(GSLBLD))
+else
+		@(if [ -d $(GSLDIRS) ]; then \
+			rm -rf $(GSLDIRS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(MATHMOREDIRS); \
+		if [ ! -d $(GSLVERS) ]; then \
+			gunzip -c $(GSLVERS).tar.gz | tar xf -; \
+		fi; \
+		cd $(GSLVERS); \
+		ACC=$(CC); \
+		ACFLAGS="-O"; \
+		if [ "$(CC)" = "icc" ]; then \
+			ACC="icc"; \
+		fi; \
+		if [ "$(ARCH)" = "sgicc64" ]; then \
+			ACC="gcc -mabi=64"; \
+		fi; \
+		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
+			ACC="cc +DD64 -Ae"; \
+		fi; \
+		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
+			ACC="gcc -m64"; \
+		fi; \
+		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
+			ACC="gcc -m64"; \
+		fi; \
+		GNUMAKE=$(MAKE) ./configure $(GSLDBG);  \
+		$(MAKE))
+endif
+
+$(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(MAINLIBS)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
+		   "$(SOFLAGS)" libMathMore.$(SOEXT) $@     \
+		   "$(MATHMOREO) $(MATHMOREDO)"             \
+		   "$(MATHMORELIBEXTRA) $(GSLLIB)"
+
+$(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(MATHMOREDH1) $(MATHMOREL)
+
+$(MATHMOREDO):  $(MATHMOREDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+
+all-mathmore:   $(MATHMORELIB)
+
+map-mathmore:   $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHMORELIB) \
+		   -d $(MATHMORELIBDEP) -c $(MATHMOREL) $(MATHMORELINC)
+
+map::           map-mathmore
+
+clean-mathmore:
+		@rm -f $(MATHMOREO) $(MATHMOREDO)
+ifeq ($(PLATFORM),win32)
+		-@(if [ -d $(GSLDIRS) ]; then \
+			cd $(GSLDIRS); \
+			unset MAKEFLAGS; \
+			nmake -nologo -f gsl.mak clean \
+			CFG=$(GSLBLD); \
+		fi)
+else
+		-@(if [ -d $(GSLDIRS) ]; then \
+			cd $(GSLDIRS); \
+			$(MAKE) clean; \
+		fi)
+endif
+
+clean::         clean-mathmore
+
+distclean-mathmore: clean-mathmore
+		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
+		@rm -rf $(GSLLIB) $(GSLDIRS)
+		@rm -rf include/Math
+
+distclean::     distclean-mathmore
+
+##### extra rules ######
+$(MATHMOREO): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(GSLDIRI) -o $@ -c $<
