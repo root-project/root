@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.64 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.h,v 1.1 2005/09/18 01:06:02 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -60,7 +60,7 @@ class TMessage;
 
 class TPacketizerProgressive : public TVirtualPacketizer {
 
-private:
+public:
    class TFileStat;
 
    class TFileNode : public TObject {
@@ -132,6 +132,7 @@ private:
       void            IncEntriesProcessed(Long64_t n) { fProcessed += n; }
    };
 
+private:
    enum {
       kSlaveHostConnLim    = 2,
       kNonSlaveHostConnLim = 2,
