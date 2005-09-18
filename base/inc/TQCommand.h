@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.2 2004/04/27 07:30:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.3 2004/10/13 15:46:37 rdm Exp $
 // Author: Valeriy Onuchin   04/27/2004
 
 /*************************************************************************
@@ -90,7 +90,8 @@ public:
    virtual void   Delete(Option_t *option="");
    virtual const char *GetName() const;
    virtual const char *GetTitle() const;
-   static TQCommand *gCommand();
+
+   static TQCommand *GetCommand();
 
    ClassDef(TQCommand,0) // encapsulates the information for undo/redo a single action.
 };

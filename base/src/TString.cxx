@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.41 2005/06/23 10:54:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.42 2005/08/15 21:21:46 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1616,9 +1616,9 @@ static const int cb_size  = 4096;
 static const int fld_size = 2048;
 
 // a circular formating buffer
-static char formbuf[cb_size];       // some slob for form overflow
-static char *bfree  = formbuf;
-static char *endbuf = &formbuf[cb_size-1];
+static char gFormbuf[cb_size];       // some slob for form overflow
+static char *gBfree  = gFormbuf;
+static char *gEndbuf = &gFormbuf[cb_size-1];
 
 //______________________________________________________________________________
 static char *SlowFormat(const char *format, va_list ap, int hint)
@@ -1658,10 +1658,10 @@ static char *Format(const char *format, va_list ap)
 
    R__LOCKGUARD2(gStringMutex);
 
-   char *buf = bfree;
+   char *buf = gBfree;
 
-   if (buf+fld_size > endbuf)
-      buf = formbuf;
+   if (buf+fld_size > gEndbuf)
+      buf = gFormbuf;
 
    int n = vsnprintf(buf, fld_size, format, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
@@ -1670,7 +1670,7 @@ static char *Format(const char *format, va_list ap)
       return SlowFormat(format, ap, n);
    }
 
-   bfree = buf+n+1;
+   gBfree = buf+n+1;
    return buf;
 }
 

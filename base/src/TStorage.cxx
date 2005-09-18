@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.16 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.17 2005/06/23 20:51:14 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -87,11 +87,12 @@ static const char *kSpaceErr = "storage exhausted";
 
 const size_t kObjMaxSize = 10024;
 
-static Bool_t   memStatistics;
-static Int_t    allocated[kObjMaxSize], freed[kObjMaxSize];
-static Int_t    allocatedTotal, freedTotal;
-static void   **traceArray = 0;
-static Int_t    traceCapacity = 10, traceIndex = 0, memSize = -1, memIndex = -1;
+static Bool_t   gMemStatistics;
+static Int_t    gAllocated[kObjMaxSize], gFreed[kObjMaxSize];
+static Int_t    gAllocatedTotal, gFreedTotal;
+static void   **gTraceArray = 0;
+static Int_t    gTraceCapacity = 10, gTraceIndex = 0,
+                gMemSize = -1, gMemIndex = -1;
 
 
 //______________________________________________________________________________
@@ -104,25 +105,26 @@ void TStorage::EnterStat(size_t size, void *p)
 
    TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), size));
 
-   if (!memStatistics) return;
+   if (!gMemStatistics) return;
 
-   if ((Int_t)size == memSize) {
-      if (traceIndex == memIndex)
-         Fatal("EnterStat", "trapped allocation %d", memIndex);
+   if ((Int_t)size == gMemSize) {
+      if (gTraceIndex == gMemIndex)
+         Fatal("EnterStat", "trapped allocation %d", gMemIndex);
 
-      if (!traceArray) traceArray = (void**) malloc(sizeof(void*)*traceCapacity);
+      if (!gTraceArray)
+         gTraceArray = (void**) malloc(sizeof(void*)*gTraceCapacity);
 
-      if (traceIndex >= traceCapacity) {
-         traceCapacity = traceCapacity*2;
-         traceArray = (void**) realloc(traceArray, sizeof(void*)*traceCapacity);
+      if (gTraceIndex >= gTraceCapacity) {
+         gTraceCapacity = gTraceCapacity*2;
+         gTraceArray = (void**) realloc(gTraceArray, sizeof(void*)*gTraceCapacity);
       }
-      traceArray[traceIndex++] = p;
+      gTraceArray[gTraceIndex++] = p;
    }
    if (size >= kObjMaxSize)
-      allocated[kObjMaxSize-1]++;
+      gAllocated[kObjMaxSize-1]++;
    else
-      allocated[size]++;
-   allocatedTotal += size;
+      gAllocated[size]++;
+   gAllocatedTotal += size;
 }
 
 //______________________________________________________________________________
@@ -131,21 +133,21 @@ void TStorage::RemoveStat(void *vp)
    // Register a memory free operation. This function is only called via
    // the custom ROOT delete operator.
 
-   if (!memStatistics) return;
+   if (!gMemStatistics) return;
 
    size_t size = storage_size(vp);
-   if ((Int_t)size == memSize) {
-      for (int i = 0; i < traceIndex; i++)
-         if (traceArray[i] == vp) {
-            traceArray[i] = 0;
+   if ((Int_t)size == gMemSize) {
+      for (int i = 0; i < gTraceIndex; i++)
+         if (gTraceArray[i] == vp) {
+            gTraceArray[i] = 0;
             break;
          }
    }
    if (size >= kObjMaxSize)
-      freed[kObjMaxSize-1]++;
+      gFreed[kObjMaxSize-1]++;
    else
-      freed[size]++;
-   freedTotal += size;
+      gFreed[size]++;
+   gFreedTotal += size;
 }
 
 //______________________________________________________________________________
@@ -420,7 +422,7 @@ void TStorage::PrintStatistics()
 
 #if defined(MEM_DEBUG) && defined(MEM_STAT)
 
-   if (!memStatistics || !HasCustomNewDelete())
+   if (!gMemStatistics || !HasCustomNewDelete())
       return;
 
    //Printf("");
@@ -430,22 +432,22 @@ void TStorage::PrintStatistics()
 
    int i;
    for (i = 0; i < (int)kObjMaxSize; i++)
-      if (allocated[i] != freed[i])
-      //if (allocated[i])
-         Printf("%12d%12d%12d%12d", i, allocated[i], freed[i],
-                allocated[i]-freed[i]);
+      if (gAllocated[i] != gFreed[i])
+      //if (gAllocated[i])
+         Printf("%12d%12d%12d%12d", i, gAllocated[i], gFreed[i],
+                gAllocated[i]-gFreed[i]);
 
-   if (allocatedTotal != freedTotal) {
+   if (gAllocatedTotal != gFreedTotal) {
       Printf("------------------------------------------------");
-      Printf("Total:      %12d%12d%12d", allocatedTotal, freedTotal,
-              allocatedTotal-freedTotal);
+      Printf("Total:      %12d%12d%12d", gAllocatedTotal, gFreedTotal,
+              gAllocatedTotal-gFreedTotal);
    }
 
-   if (memSize != -1) {
+   if (gMemSize != -1) {
       Printf("------------------------------------------------");
-      for (i= 0; i < traceIndex; i++)
-         if (traceArray[i])
-            Printf("block %d of size %d not freed", i, memSize);
+      for (i= 0; i < gTraceIndex; i++)
+         if (gTraceArray[i])
+            Printf("block %d of size %d not freed", i, gMemSize);
    }
    Printf("================================================");
    Printf("");
@@ -460,9 +462,9 @@ void TStorage::EnableStatistics(int size, int ix)
    // the trap should happen.
 
 #ifdef MEM_STAT
-   memSize       = size;
-   memIndex      = ix;
-   memStatistics = kTRUE;
+   gMemSize       = size;
+   gMemIndex      = ix;
+   gMemStatistics = kTRUE;
 #else
    int idum = size; int iidum = ix;
 #endif

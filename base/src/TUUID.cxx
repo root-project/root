@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.17 2003/04/11 11:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.18 2003/08/26 11:03:34 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -189,7 +189,7 @@ void TUUID::SetFromString(const char *uuid)
    // TUUID::AsString() format).
 
    // Format is tttttttt-tttt-cccc-cccc-nnnnnnnnnnnn.
-   long    timeLo;
+   Long_t  timeLo;
    int     timeMid;
    int     timeHiAndVersion;
    int     clockSeqHiAndRes;

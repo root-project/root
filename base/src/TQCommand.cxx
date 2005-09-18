@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.3 2004/04/27 07:30:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.4 2005/02/11 18:40:08 rdm Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -349,9 +349,9 @@ TQCommand::~TQCommand()
 }
 
 //______________________________________________________________________________
-TQCommand *TQCommand::gCommand()
+TQCommand *TQCommand::GetCommand()
 {
-   // Return a command which is doing redo/undo action
+   // Return a command which is doing redo/undo action.
    //
    // This static method allows to set undo parameters dynamically, i.e.
    // during execution of Redo function.
@@ -363,7 +363,7 @@ TQCommand *TQCommand::gCommand()
    //    one needs to call TQCommand::SetUndoArgs(1, character) from
    //    inside of TGTextEdit::DelChar() method, i.e.
    //
-   //    TQCommand::gCommand()->SetUndoArgs(1, somechar);
+   //    TQCommand::GetCommand()->SetUndoArgs(1, somechar);
 
    return gActiveCommand;
 }
