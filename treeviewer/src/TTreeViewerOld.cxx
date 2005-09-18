@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.2 2000/11/23 10:02:56 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.3 2001/07/11 16:49:26 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -509,11 +509,11 @@ void TTreeViewer::ExecuteDraw(Option_t *option)
    if (gROOT->IsInterrupted()) {
       printf("Break event loop at event: %d\n",fTree->GetReadEntry());
    }
-	
+
    // Print and save the draw command
    char command[512];
    const char *treeName = GetTreeName();
-	
+
    // show the command on the Viewer
    sprintf(command,"%s->Draw(\"%s\", \"%s\", \"%s\", %d, %d);\n",
            treeName, varexp, select, gopt, nevents, firstEntry);
@@ -522,7 +522,7 @@ void TTreeViewer::ExecuteDraw(Option_t *option)
    fRecord->SetTitle(command);
    fRecord->Modified();
    fRecord->Update();
-   	
+
    // record the draw command if the fRecordFlag is on
    if (fRecordFlag) {
         // show the command on the command line

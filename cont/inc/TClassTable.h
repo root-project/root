@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.8 2004/02/13 11:25:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.9 2005/08/30 02:45:05 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -29,7 +29,8 @@
 #include "TString.h"
 #endif
 
-struct TClassRec {
+class TClassRec {
+public:
    char            *fName;
    Version_t        fId;
    Int_t            fBits;

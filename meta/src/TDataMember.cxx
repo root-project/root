@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.24 2005/03/03 08:04:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.25 2005/09/08 11:27:19 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -367,9 +367,12 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
                 l     = (Long_t)(*value);
             } else if (IsEnum()) {
                TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
-               if (obj) l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
-	       else l = gROOT->ProcessLineFast(Form("%s;",ptr1));
-            } else l = atol(ptr1);
+               if (obj)
+                  l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
+               else
+                  l = gROOT->ProcessLineFast(Form("%s;",ptr1));
+            } else
+               l = atol(ptr1);
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);
@@ -646,7 +649,7 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
          delete fValueGetter;
          fValueGetter = new TMethodCall(cl, methodname.Data(), "");
 
-      } else { 
+      } else {
          // try to guess Getter function:
          // we strip the fist character of name of data field ('f') and then
          // try to find the name of Getter by applying "Get", "Is" or "Has"
