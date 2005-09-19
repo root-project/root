@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.1 2005/09/16 08:48:39 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -67,7 +67,6 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
    // Selector files
    fDraw = selec ? TSelector::IsStandardDraw(selec) : kFALSE;
    if (fDraw) {
-      Info("TQueryResult","selec: %s", selec);
       // The input list should contain info about the variables and
       // selection cuts: save them into the macro title
       TString varsel;
@@ -75,8 +74,6 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
          TIter nxo(fInputList);
          TObject *o = 0;
          while ((o = nxo())) {
-            Info("TQueryResult","input list: found obj: %s %s",
-                 o->GetName(), o->GetTitle());
             if (!strcmp(o->GetName(),"varexp")) {
                varsel = o->GetTitle();
                Int_t iht = varsel.Index(">>htemp");
@@ -87,7 +84,11 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
             if (!strcmp(o->GetName(),"selection"))
                varsel += Form("\"%s\"", o->GetTitle());
          }
-         Info("TQueryResult","varsel: %s", varsel.Data());
+         if (gDebug > 0)
+            Info("TQueryResult","selec: %s, varsel: %s", selec, varsel.Data());
+         // Log notification also in the instance
+         fLogFile->AddLine(Form("TQueryResult: selec: %s, varsel: %s",
+                                selec, varsel.Data()));
       }
       // Standard draw action: save only the name
       fSelecImp = new TMacro(selec, varsel);

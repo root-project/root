@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.109 2005/09/18 01:14:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.110 2005/09/18 11:51:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2113,6 +2113,8 @@ Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
 
    ref = "";
    if (qry > 0) {
+      if (!fQueries)
+         GetListOfQueries();
       if (fQueries) {
          TIter nxq(fQueries);
          TQueryResult *qr = 0;
@@ -2169,12 +2171,14 @@ Int_t TProof::Finalize(const char *ref, Bool_t force)
          if (!qr) {
             retrieve = kTRUE;
          } else {
-            if (qr->IsFinalized() && force) {
-               retrieve = kTRUE;
-            } else {
-               Info("Retrieve","query already finalized:"
-                    " use Finalize(<qry>,kTRUE) to force new retrieve");
-               qr = 0;
+            if (qr->IsFinalized()) {
+               if (force) {
+                  retrieve = kTRUE;
+               } else {
+                  Info("Finalize","query already finalized:"
+                       " use Finalize(<qry>,kTRUE) to force new retrieve");
+                  qr = 0;
+               }
             }
          }
          if (retrieve) {
@@ -2377,10 +2381,15 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
    EQueryMode qmode = fQueryMode;
 
    if (mode) {
-      if (strchr(mode, 'A'))
+      TString m(mode);
+      m.ToUpper();
+      if (m.Contains("ASYN")) {
          qmode = kAsync;
-      if (strchr(mode, 'S'))
+      } else if (m.Contains("SYNC")) {
          qmode = kSync;
+      } else {
+         Info("GetQueryMode","unknown option %s (use \"ASYNC\" or \"SYNC\")", mode);
+      }
    }
    return qmode;
 }
@@ -2394,7 +2403,17 @@ Int_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection,
 
    if (!IsValid()) return -1;
 
-   return fPlayer->DrawSelect(dset, varexp, selection, option, nentries, first);
+   // Make sure that asynchronous processing is not active
+   if (!IsIdle()) {
+      Info("DrawSelect","not idle, asynchronous Draw not supported");
+      return -1;
+   }
+   TString opt(option);
+   Int_t idx = opt.Index("ASYN", 0, TString::kIgnoreCase);
+   if (idx != kNPOS)
+      opt.Replace(idx,4,"");
+
+   return fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
 }
 
 //______________________________________________________________________________
@@ -4101,31 +4120,37 @@ void TProof::ShowLog(Int_t qry)
       lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
    } else if (qry != -1) {
 
-      // Get update the list of queries (from this session only)
-      GetListOfQueries();
-      if (fQueries) {
-         TQueryResult *pq = 0;
-         if (qry > 0) {
-            TIter nxq(fQueries);
+      TQueryResult *pq = 0;
+      if (qry == -2) {
+         // Pickup the last one
+         pq = (TQueryResult *)(GetQueryResults()->Last());
+         if (!pq) {
+            GetListOfQueries();
+            if (fQueries)
+               pq = (TQueryResult *)(fQueries->Last());
+         }
+      } else if (qry > 0) {
+         TList *queries = GetQueryResults();
+         TIter nxq(queries);
+         while ((pq = (TQueryResult *)nxq()))
+            if (qry == pq->GetSeqNum())
+               break;
+         if (!pq) {
+            queries = GetListOfQueries();
+            TIter nxq(queries);
             while ((pq = (TQueryResult *)nxq()))
                if (qry == pq->GetSeqNum())
                   break;
-         } else if (qry == -2) {
-            // Pickup the last one
-            pq = (TQueryResult *)(fQueries->Last());
-         } else
-            qry = -1;
-
-         if (pq) {
-            ShowLog(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-            return;
-         } else {
-            Info("ShowLog","query %d not found in list", qry);
-            qry = -1;
          }
-
-      } else
+      }
+      if (pq) {
+         PutLog(pq);
+         return;
+      } else {
+         if (gDebug > 0)
+            Info("ShowLog","query %d not found in list", qry);
          qry = -1;
+      }
    }
 
    // Number of bytes to log
@@ -4142,39 +4167,48 @@ void TProof::ShowLog(Int_t qry)
    char line[2048];
    Int_t wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
    while (fgets(line, wanted, fLogFileR)) {
+
       Int_t r = strlen(line);
-      if (line[r-1] != '\n') line[r-1] = '\n';
-      if (r > 0) {
-         char *p = line;
-         while (r) {
-            Int_t w = write(fileno(stdout), p, r);
-            if (w < 0) {
-               SysError("ShowLogFile", "error writing to stdout");
-               break;
+      if (!GetLogToWindow()) {
+         if (line[r-1] != '\n') line[r-1] = '\n';
+         if (r > 0) {
+            char *p = line;
+            while (r) {
+               Int_t w = write(fileno(stdout), p, r);
+               if (w < 0) {
+                  SysError("ShowLogFile", "error writing to stdout");
+                  break;
+               }
+               r -= w;
+               p += w;
             }
-            r -= w;
-            p += w;
          }
-      }
-      tolog -= strlen(line);
-      np++;
-
-      // Ask if more is wanted
-      if (!(np%10)) {
-         char *opt = Getline("More (y/n)? [y]");
-         if (opt[0] == 'n')
+         tolog -= strlen(line);
+         np++;
+         
+         // Ask if more is wanted
+         if (!(np%10)) {
+            char *opt = Getline("More (y/n)? [y]");
+            if (opt[0] == 'n')
+               break;
+         }
+         
+         // We may be over
+         if (tolog <= 0)
             break;
+         
+         // Update wanted bytes
+         wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
+      } else {
+         // Log to window
+         if (line[r-1] == '\n') line[r-1] = 0;
+         LogMessage(line, kFALSE);
       }
-
-      // We may be over
-      if (tolog <= 0)
-         break;
-
-      // Update wanted bytes
-      wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
    }
-   // Avoid screwing up the prompt
-   write(fileno(stdout), "\n", 1);
+   if (!GetLogToWindow()) {
+      // Avoid screwing up the prompt
+      write(fileno(stdout), "\n", 1);
+   }
 
    // Restore original pointer
    if (qry > -1)
