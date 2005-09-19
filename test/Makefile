@@ -224,7 +224,11 @@ $(STRESSL):     $(STRESSLO)
 		@echo "$@ done"
 
 $(STRESSVEC):   $(STRESSVECO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libMathCore.lib $(OutPutOpt)$@
+else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(TESTBITS):    $(TESTBITSO)
