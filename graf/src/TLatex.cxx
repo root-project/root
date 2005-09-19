@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.50 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.51 2005/09/05 07:24:47 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1061,8 +1061,11 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             case 8: // tilde
                x2 = x+fs1.Width()/2 ;
                y2 = y -fs1.Over() ;
-               if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) y2 -= 2*sub;
                {
+                  // tilde must be drawn separately on screen and on PostScript
+                  // because an adjustment is required along Y for PostScript.
+                  TVirtualPS *saveps = gVirtualPS;
+                  if (gVirtualPS) gVirtualPS = 0;
                   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
                   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
                   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1076,6 +1079,13 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                   tilde.SetTextAlign(22);
                   tilde.SetTextAngle(fTextAngle);
                   tilde.PaintText(xx,yy,"~");
+                  if (saveps) {
+                     y2 -= 4*sub;
+                     yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+                     gVirtualPS = saveps;
+                     gVirtualPS->SetTextAlign(22);
+                     gVirtualPS->Text(xx, yy, "~");
+                  } 
                }
                break;
             case 9: // slash
