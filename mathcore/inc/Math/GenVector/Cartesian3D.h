@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -46,6 +46,8 @@ namespace ROOT {
   /** 
       Class describing a 3D cartesian coordinate system
       (x, y, z coordinates) 
+
+      @ingroup GenVector
    */ 
 
 template <class T = double> 

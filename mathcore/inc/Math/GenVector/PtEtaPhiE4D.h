@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
 // 
-// Last update: $Id: PtEtaPhiE4D.h,v 1.6 2005/07/22 19:49:35 fischler Exp $
+// Last update: $Id: PtEtaPhiE4D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
@@ -41,6 +41,8 @@ namespace Math {
    Class describing a 4D cylindrical coordinate system
    using Pt , Phi, Eta and E (or rho, phi, eta , T) 
    The metric used is (-,-,-,+). 
+
+   @ingroup GenVector
 */ 
 
 template <class ScalarType> 

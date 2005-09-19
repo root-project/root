@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -33,6 +33,9 @@ namespace Math {
   /**
      AxisAngle class describing a rotation as a direction axis and an
      angle of rotation around that axis.
+
+     @ingroup GenVector
+
   */
 class AxisAngle {
 

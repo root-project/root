@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationX.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: RotationX.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationX.h,v 1.10 2005/08/23 15:03:37 fischler Exp $
+// Last update: $Id: RotationX.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_RotationX 
 #define ROOT_Math_GenVector_RotationX  1
@@ -35,6 +35,8 @@ namespace Math {
   /**
      Rotation class representing a rotation about the X axis.
      The Rotation is stored by holding the sine and cosine of the angle.
+
+     @ingroup GenVector
   */
 
 class RotationX {
@@ -105,10 +107,9 @@ public:
   /**
      Rotation operation on a cartesian vector
    */
-  DisplacementVector3D< ROOT::Math::Cartesian3D<double> >
-  operator() (const DisplacementVector3D< ROOT::Math::Cartesian3D<double> > & v) const {
-    return DisplacementVector3D< ROOT::Math::Cartesian3D<double> > 
-      ( v.x(), fCos*v.y()-fSin*v.z(), fCos*v.z()+fSin*v.y() );
+  typedef  DisplacementVector3D< Cartesian3D<double> > XYZVector; 
+  XYZVector operator() (const XYZVector & v) const {
+    return XYZVector ( v.x(), fCos*v.y()-fSin*v.z(), fCos*v.z()+fSin*v.y() );
   }
 
   /**

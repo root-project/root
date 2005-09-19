@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar3D.h,v 1.15 2005/08/17 16:59:34 fischler Exp $
+// Last update: $Id: Polar3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_Polar3D 
 #define ROOT_Math_GenVector_Polar3D  1
@@ -37,6 +37,8 @@ namespace ROOT {
 
   /** 
       Class describing a polar coordinate system based on r, theta and phi
+
+      @ingroup GenVector
    */ 
 
 

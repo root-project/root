@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,8 +14,9 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 //
+
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
 #define ROOT_Math_GenVector_DisplacementVector3D  1
 
@@ -26,6 +27,12 @@
 #include "Math/GenVector/BitReproducible.h"
 
 #include <cassert>
+
+//doxygen tag
+/**
+   @defgroup GenVector 3D and 4D Vectors
+ */
+
 
 namespace ROOT {
 
@@ -38,6 +45,8 @@ namespace ROOT {
               One example is the XYZVector which is a vector based on
               double precision x,y,z data members by using the
               Cartesian3D<double> Coordinate system.
+
+	      @ingroup GenVector
     */
 
     template <class CoordSystem>

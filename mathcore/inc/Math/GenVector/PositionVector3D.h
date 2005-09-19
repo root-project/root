@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: PositionVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
@@ -33,6 +33,8 @@ namespace ROOT {
               One example is the XYZPoint which is a vector based on
               double precision x,y,z data members by using the
               Cartesian3D<double> Coordinate system.
+
+	      @ingroup GenVector
     */
 
     template <class CoordSystem>

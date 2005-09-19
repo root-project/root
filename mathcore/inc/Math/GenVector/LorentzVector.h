@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.17 2005/07/27 19:54:22 wbrown Exp $
+// Last update: $Id: LorentzVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -37,6 +37,8 @@ namespace ROOT {
         relativistic particles. A LorentzVector behaves like a
         DisplacementVector in 4D.  The Minkowski components could be viewed as
         v and t, or for kinematic 4-vectors, as p and E.
+
+	@ingroup GenVector
     */
     template< class CoordSystem >
     class LorentzVector {

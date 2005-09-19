@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.19 2005/08/18 22:14:28 fischler Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #define ROOT_Math_GenVector_CylindricalEta3D  1
@@ -39,6 +39,7 @@ namespace ROOT {
       Class describing a cylindrical coordinate system based on eta (pseudorapidity) instead of z.  
       The base coordinates are rho (transverse component) , eta and phi
   
+      @ingroup GenVector
    */ 
 
 template <class T> 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.22 2005/08/23 15:03:37 fischler Exp $
+// Last update: $Id: Rotation3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -50,6 +50,8 @@ namespace Math {
      This is the optimal representation for application to vectors.
      See also AxisAngle, EulerAngles, and Quaternion for classes
      which have conversion operators to Rotation3D.
+
+     @ingroup GenVector
   */
 
 class Rotation3D {

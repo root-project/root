@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -35,6 +35,8 @@ namespace Math {
      See also 
      <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
      Euler angles definition.
+
+     @ingroup GenVector
   */
 class EulerAngles {
 
