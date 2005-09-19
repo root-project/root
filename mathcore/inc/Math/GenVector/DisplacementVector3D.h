@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.32 2005/08/17 16:59:34 fischler Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
 #define ROOT_Math_GenVector_DisplacementVector3D  1
@@ -575,9 +575,9 @@ namespace ROOT {
       if( detail::get_manip( os, detail::bitforbit ) )  {
         detail::set_manip( os, detail::bitforbit, '\00' );
         typedef GenVector_detail::BitReproducible BR;
-        BR::output(os, a);
-        BR::output(os, b);
-        BR::output(os, c);
+        BR::Output(os, a);
+        BR::Output(os, b);
+        BR::Output(os, c);
       }
       else  {
         os << detail::get_manip( os, detail::open  ) << a
@@ -605,9 +605,9 @@ namespace ROOT {
       if( detail::get_manip( is, detail::bitforbit ) )  {
         detail::set_manip( is, detail::bitforbit, '\00' );
         typedef GenVector_detail::BitReproducible BR;
-        BR::input(is, a);
-        BR::input(is, b);
-        BR::input(is, c);
+        BR::Input(is, a);
+        BR::Input(is, b);
+        BR::Input(is, c);
       }
       else  {
         detail::require_delim( is, detail::open  );  is >> a;

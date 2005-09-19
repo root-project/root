@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.4 2005/08/09 19:58:38 fischler Exp $
+// Last update: $Id: LorentzRotation.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -78,10 +78,10 @@ public:
      Construct from a pure boost 
   */
 
-  explicit LorentzRotation( Boost  const & b ) {} // TODO
-  explicit LorentzRotation( BoostX const & b ) {} // TODO
-  explicit LorentzRotation( BoostY const & b ) {} // TODO
-  explicit LorentzRotation( BoostZ const & b ) {} // TODO
+  explicit LorentzRotation( Boost  const &  ) {} // TODO
+  explicit LorentzRotation( BoostX const &  ) {} // TODO
+  explicit LorentzRotation( BoostY const &  ) {} // TODO
+  explicit LorentzRotation( BoostZ const &  ) {} // TODO
 
 
   /**

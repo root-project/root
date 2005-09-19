@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/BitReproducible.h"
@@ -14,7 +14,7 @@ namespace ROOT {
 bool BitReproducible::byte_order_known = false;
 int  BitReproducible::byte_order[8];
 
-void BitReproducible::fill_byte_order () {
+void BitReproducible::Fill_byte_order () {
   double x = 1.0;
   int t30 = 1 << 30;
   int t22 = 1 << 22;
@@ -69,11 +69,11 @@ void BitReproducible::fill_byte_order () {
         break;
       default:
         throw BitReproducibleException(
-		"Cannot determine byte-ordering of doubles on this system");
+        "Cannot determine byte-ordering of doubles on this system");
     }
     if (byte_order[n] != UNSET) {
         throw BitReproducibleException(
-		"Confusion in byte-ordering of doubles on this system");
+        "Confusion in byte-ordering of doubles on this system");
     }
     byte_order[n] = order;
     byte_order_known = true;
@@ -81,8 +81,8 @@ void BitReproducible::fill_byte_order () {
   return;
 }
 
-std::string BitReproducible::d2x(double d) {
-  if ( !byte_order_known ) fill_byte_order ();
+std::string BitReproducible::D2x(double d) {
+  if ( !byte_order_known ) Fill_byte_order ();
   DB8 db;
   db.d = d;
   std::ostringstream ss;
@@ -93,8 +93,8 @@ std::string BitReproducible::d2x(double d) {
   return ss.str();
 }
 
-void BitReproducible::dto2longs(double d, unsigned long& i, unsigned long& j) {
-  if ( !byte_order_known ) fill_byte_order ();
+void BitReproducible::Dto2longs(double d, unsigned long& i, unsigned long& j) {
+  if ( !byte_order_known ) Fill_byte_order ();
   DB8 db;
   db.d = d;
   i    =   ((static_cast<unsigned long>(db.b[byte_order[0]])) << 24)
@@ -107,10 +107,10 @@ void BitReproducible::dto2longs(double d, unsigned long& i, unsigned long& j) {
          | ((static_cast<unsigned long>(db.b[byte_order[7]]))      );
 }
 
-double BitReproducible::longs2double (unsigned long i, unsigned long j) {
+double BitReproducible::Longs2double (unsigned long i, unsigned long j) {
   DB8 db;
   unsigned char bytes[8];
-  if ( !byte_order_known ) fill_byte_order ();
+  if ( !byte_order_known ) Fill_byte_order ();
   bytes[0] = static_cast<unsigned char>((i >> 24) & 0xFF);
   bytes[1] = static_cast<unsigned char>((i >> 16) & 0xFF);
   bytes[2] = static_cast<unsigned char>((i >>  8) & 0xFF);

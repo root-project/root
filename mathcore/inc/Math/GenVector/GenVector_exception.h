@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: GenVector_exception.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: GenVector_exception.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_GenVector_GenVector_exception 
@@ -38,12 +38,12 @@ public:
 // Compiler-generated copy ctor, copy assignment, dtor are fine
 // Inherited what() from runtime_error is fine
 
-  static bool EnableThrow()  { bool tmp = on; on = true;  return tmp; }
-  static bool DisableThrow() { bool tmp = on; on = false; return tmp; }
+  static bool EnableThrow()  { bool tmp = fgOn; fgOn = true;  return tmp; }
+  static bool DisableThrow() { bool tmp = fgOn; fgOn = false; return tmp; }
 
 private:
   friend void Throw(GenVector_exception &);
-  static bool on;
+  static bool fgOn;
   
 };  // GenVector_exception
 

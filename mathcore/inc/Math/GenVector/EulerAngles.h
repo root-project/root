@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -296,7 +296,7 @@ private:
   double fTheta;
   double fPsi;
 
-  static double pi() { return 3.14159265358979323; }
+  static double Pi() { return 3.14159265358979323; }
 
 };  // EulerAngles
 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: fischler  at Mon Jun 25  2005
 //
-// Last update: $Id: BitReproducible.h,v 1.3 2005/07/21 21:42:11 wbrown Exp $
+// Last update: $Id: BitReproducible.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1
@@ -30,11 +30,11 @@ namespace ROOT {
 class BitReproducibleException  : public std::exception
 {
 public:
-  BitReproducibleException(const std::string & w) throw() : msg(w) {}
+  BitReproducibleException(const std::string & w) throw() : fMsg(w) {}
   ~BitReproducibleException() throw() {}
-  const char* what() const throw() { return msg.c_str(); }
+  const char* what() const throw() { return fMsg.c_str(); }
 private:
-  std::string msg;
+  std::string fMsg;
 };  // DoubConvException
 
 class BitReproducible {
@@ -46,7 +46,7 @@ public:
   // to the IEEE 754 standard for 64-bit floating point representation.
   // The first unsigned long contains the high-order bits in IEEE; thus
   // 1.0 will always be 0x3FF00000, 00000000
-  static void dto2longs(double d, unsigned long & i1, unsigned long & i2);
+  static void Dto2longs(double d, unsigned long & i1, unsigned long & i2);
 
   // longs2double (i1,i2) returns a double containing the value represented by
   // its input, which must be a 2 unsigned longs.
@@ -54,36 +54,36 @@ public:
   // the IEEE 754 standard for a 64-bit floating point number, whose value
   // is returned as a double.  The byte-ordering of the double result is,
   // of course, tailored to the proper byte-ordering for the system.
-  static double longs2double (unsigned long i1, unsigned long i2);
+  static double Longs2double (unsigned long i1, unsigned long i2);
 
   // dtox(d) returns a 16-character string containing the (zero-filled) hex
   // representation of its double input.  This is byte-ordering
   // independant, and depends for complete portability ONLY on adherance
   // to the IEEE 754 standard for 64-bit floating point representation.
-  static std::string d2x(double d);
+  static std::string D2x(double d);
 
-  static void output ( std::ostream & os, double d ) {
+  static void Output ( std::ostream & os, double d ) {
     unsigned long i1, i2;
-    dto2longs(d, i1, i2);
+    Dto2longs(d, i1, i2);
     os << " " << i1 << " " << i2;
   }
 
-  static void input ( std::istream & is, double & d ) {
+  static void Input ( std::istream & is, double & d ) {
     unsigned long i1, i2;
     is >> i1 >> i2;
-    d = longs2double(i1, i2);
+    d = Longs2double(i1, i2);
   }
 
-  static void output ( std::ostream & os, float f ) {
+  static void Output ( std::ostream & os, float f ) {
     unsigned long i1, i2;
-    dto2longs( double(f), i1, i2 );
+    Dto2longs( double(f), i1, i2 );
     os << " " << i1 << " " << i2;
   }
 
-  static void input ( std::istream & is, float & f ) {
+  static void Input ( std::istream & is, float & f ) {
     unsigned long i1, i2;
     is >> i1 >> i2;
-    f = float( longs2double(i1, i2) );
+    f = float( Longs2double(i1, i2) );
   }
 
 
@@ -92,7 +92,7 @@ private:
     unsigned char b[8];
     double d;
   };
-  static void fill_byte_order ();
+  static void Fill_byte_order ();
   static bool byte_order_known;
   static int  byte_order[8];
     // Meaning of byte_order:  The first (high-order in IEEE 754) byte to

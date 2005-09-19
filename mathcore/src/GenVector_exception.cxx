@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: GenVector_exception.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: GenVector_exception.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -16,9 +16,9 @@
 
 namespace ROOT {
 namespace Math {
-bool GenVector_exception::on = false;
+bool GenVector_exception::fgOn = false;
 
-void Throw(GenVector_exception & e) { if (GenVector_exception::on) throw e; }
+void Throw(GenVector_exception & e) { if (GenVector_exception::fgOn) throw e; }
 
 
 }  // namespace Math

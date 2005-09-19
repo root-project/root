@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: EulerAngles.cpp,v 1.3 2005/08/18 22:14:28 fischler Exp $
+// Last update: $Id: EulerAngles.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #include "Math/GenVector/EulerAngles.h"
 
@@ -38,23 +38,23 @@ namespace ROOT {
 void
 EulerAngles::Rectify()
 {
-  if ( fTheta < 0 || fTheta > pi() ) {
-    Scalar t = fTheta - std::floor( fTheta/(2*pi()) ) * 2*pi();
-    if ( t <= pi() ) {
+  if ( fTheta < 0 || fTheta > Pi() ) {
+    Scalar t = fTheta - std::floor( fTheta/(2*Pi()) ) * 2*Pi();
+    if ( t <= Pi() ) {
       fTheta = t;
     } else {
-      fTheta = 2*pi() - t;
+      fTheta = 2*Pi() - t;
       fPhi = - fPhi;
       fPsi = - fPsi;
     }
   }
 
-  if ( fPhi <= -pi()|| fPhi > pi() ) {
-    fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+  if ( fPhi <= -Pi()|| fPhi > Pi() ) {
+    fPhi = fPhi - std::floor( fPhi/(2*Pi()) +.5 ) * 2*Pi();
   }
 
-  if ( fPsi <= -pi()|| fPsi > pi() ) {
-    fPsi = fPsi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+  if ( fPsi <= -Pi()|| fPsi > Pi() ) {
+    fPsi = fPsi - std::floor( fPhi/(2*Pi()) +.5 ) * 2*Pi();
   }
 
 } // Rectify()
@@ -110,8 +110,8 @@ operator * (const RotationZ  & r) const {
   // TODO -- this can be made much faster because it merely adds
   //         the r.Angle() to phi.
   Scalar newPhi = fPhi + r.Angle();
-  if ( newPhi <= -pi()|| newPhi > pi() ) {
-    newPhi = newPhi - std::floor( newPhi/(2*pi()) +.5 ) * 2*pi();
+  if ( newPhi <= -Pi()|| newPhi > Pi() ) {
+    newPhi = newPhi - std::floor( newPhi/(2*Pi()) +.5 ) * 2*Pi();
   }
   return EulerAngles ( newPhi, fTheta, fPsi );
 }

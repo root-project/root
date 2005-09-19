@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.26 2005/07/27 15:41:29 wbrown Exp $
+// Last update: $Id: PositionVector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
@@ -488,9 +488,9 @@ namespace ROOT {
       if( detail::get_manip( os, detail::bitforbit ) )  {
         detail::set_manip( os, detail::bitforbit, '\00' );
         typedef GenVector_detail::BitReproducible BR;
-        BR::output(os, a);
-        BR::output(os, b);
-        BR::output(os, c);
+        BR::Output(os, a);
+        BR::Output(os, b);
+        BR::Output(os, c);
       }
       else  {
         os << detail::get_manip( os, detail::open  ) << a
@@ -518,9 +518,9 @@ namespace ROOT {
       if( detail::get_manip( is, detail::bitforbit ) )  {
         detail::set_manip( is, detail::bitforbit, '\00' );
         typedef GenVector_detail::BitReproducible BR;
-        BR::input(is, a);
-        BR::input(is, b);
-        BR::input(is, c);
+        BR::Input(is, a);
+        BR::Input(is, b);
+        BR::Input(is, c);
       }
       else  {
         detail::require_delim( is, detail::open  );  is >> a;

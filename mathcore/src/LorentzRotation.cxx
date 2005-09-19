@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -39,8 +39,8 @@ LorentzRotation::LorentzRotation() {
 
 LorentzRotation::LorentzRotation(Rotation3D  const & r) {  
   r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-  		    fM[YX], fM[YY], fM[YZ],
-		    fM[ZX], fM[ZY], fM[ZZ] );
+                    fM[YX], fM[YY], fM[YZ],
+                    fM[ZX], fM[ZY], fM[ZZ] );
    					     fM[XT] = 0.0;
    					     fM[YT] = 0.0;
    					     fM[ZT] = 0.0;
@@ -50,8 +50,8 @@ LorentzRotation::LorentzRotation(Rotation3D  const & r) {
 LorentzRotation::LorentzRotation(AxisAngle  const & a) {  
   const Rotation3D r(a);
   r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-  		    fM[YX], fM[YY], fM[YZ],
-		    fM[ZX], fM[ZY], fM[ZZ] );
+                    fM[YX], fM[YY], fM[YZ],
+                    fM[ZX], fM[ZY], fM[ZZ] );
    					     fM[XT] = 0.0;
    					     fM[YT] = 0.0;
    					     fM[ZT] = 0.0;
@@ -61,8 +61,8 @@ LorentzRotation::LorentzRotation(AxisAngle  const & a) {
 LorentzRotation::LorentzRotation(EulerAngles  const & e) {  
   const Rotation3D r(e);
   r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-  		    fM[YX], fM[YY], fM[YZ],
-		    fM[ZX], fM[ZY], fM[ZZ] );
+                    fM[YX], fM[YY], fM[YZ],
+                    fM[ZX], fM[ZY], fM[ZZ] );
    					     fM[XT] = 0.0;
    					     fM[YT] = 0.0;
    					     fM[ZT] = 0.0;
@@ -72,8 +72,8 @@ LorentzRotation::LorentzRotation(EulerAngles  const & e) {
 LorentzRotation::LorentzRotation(Quaternion  const & q) {  
   const Rotation3D r(q);
   r.GetComponents ( fM[XX], fM[XY], fM[XZ],
-  		    fM[YX], fM[YY], fM[YZ],
-		    fM[ZX], fM[ZY], fM[ZZ] );
+                    fM[YX], fM[YY], fM[YZ],
+                    fM[ZX], fM[ZY], fM[ZZ] );
    					     fM[XT] = 0.0;
    					     fM[YT] = 0.0;
    					     fM[ZT] = 0.0;

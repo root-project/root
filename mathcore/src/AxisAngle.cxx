@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -34,14 +34,14 @@ AxisAngle::RectifyAngle() {
   //       can represent negative angles by flipping the axis.
   //       We choose not to do this.
 
-  if ( fAngle <= pi() && fAngle > -pi() ) return;
+  if ( fAngle <= Pi() && fAngle > -Pi() ) return;
   
   if ( fAngle > 0 ) {
-    int n = static_cast<int>( (fAngle+pi())/(2*pi()) );
-    fAngle -= 2*pi()*n;
+    int n = static_cast<int>( (fAngle+Pi())/(2*Pi()) );
+    fAngle -= 2*Pi()*n;
   } else {
-    int n = static_cast<int>( -(fAngle-pi())/(2*pi()) );
-    fAngle += 2*pi()*n;  
+    int n = static_cast<int>( -(fAngle-Pi())/(2*Pi()) );
+    fAngle += 2*Pi()*n;  
   }
 } // RectifyAngle()
 

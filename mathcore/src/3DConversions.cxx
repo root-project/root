@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DConversions.cpp,v 1.5 2005/08/20 00:07:40 fischler Exp $
+// Last update: $Id: 3DConversions.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 
 // TODO - For now, all conversions are grouped in this one compilation unit.
@@ -272,7 +272,7 @@ void convert( AxisAngle const & from, Rotation3D  & to)
   to.SetComponents(m,m+9);
 } // convert to Rotation3D
 
-void convert( AxisAngle const & from, EulerAngles & to)
+void convert( AxisAngle const & /* from */ , EulerAngles & /* to */ )
 {
   // TODO
 }
@@ -380,7 +380,7 @@ void convert( Quaternion const & from, AxisAngle   & to)
   }
 } // conversion to AxisAngle
 
-void convert( Quaternion const & from, EulerAngles & to)
+void convert( Quaternion const & /* from */ , EulerAngles & /* to */ )
 {
   // TODO
 }
@@ -405,7 +405,7 @@ void convert( RotationX const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationX const & from, EulerAngles & to)
+void convert( RotationX const & /* from */ , EulerAngles & /* to */ )
 {
   // TODO
 }
@@ -435,7 +435,7 @@ void convert( RotationY const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationY const & from, EulerAngles & to)
+void convert( RotationY const & /* from */ , EulerAngles & /* to */ )
 {
   // TODO
 }
@@ -465,8 +465,9 @@ void convert( RotationZ const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationZ const & from, EulerAngles & to)
+void convert( RotationZ const & /* from */ , EulerAngles & /* to */ )
 {
+  // TODO
 }
 
 void convert( RotationZ const & from, Quaternion  & to)
