@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.1 2005/06/29 05:38:53 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.2 2005/09/19 08:45:05 brun Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -49,7 +49,7 @@
 
 #include "limits"
 
-
+//#define DEBUG
 
 using namespace ROOT::Math;
 
@@ -311,7 +311,7 @@ int main(int argc,const char *argv[]) {
   int niter = 1;
   for (int i = 0; i < niter; ++i) { 
 
-#ifdef DEBUUG
+#ifdef DEBUG
       std::cout << "iteration " << i << std::endl;
 #endif
     
@@ -358,6 +358,10 @@ int main(int argc,const char *argv[]) {
       std::cout.precision(16);
       std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
 #else
+      //windows is bad here 
+#ifdef WIN32
+      eps *= 10;
+#endif
       assert( std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
 #endif
 
@@ -386,7 +390,7 @@ int main(int argc,const char *argv[]) {
       
       a.clear(v3);
       std::cout << "\n";
-      a.testConversion  (v2, v3, t, t3,   "Conversion XYZT-> PtEtaPhiEVector " ); 
+      a.testConversion  (v2, v3, t, t3,   "Conversion XYZT->PtEtaPhiE " ); 
 
 
       // clean all
@@ -395,9 +399,9 @@ int main(int argc,const char *argv[]) {
       a.clear(v3);
 
       std::cout << std::endl;
-      std::cout << "Total Real Time for  TLorentzVector                = " << t1 << " sec" << std::endl;
-      std::cout << "Total Real Time for  ROOT::Math::XYZTVector        = " << t2 << " sec" << std::endl;
-      std::cout << "Total Real Time for  ROOT::Math::PtRhoPhiEtaVector = " << t3 << " sec" << std::endl;
+      std::cout << "Total Time for  TLorentzVector        = " << t1 << "\t(sec)" << std::endl;
+      std::cout << "Total Time for  XYZTVector            = " << t2 << "\t(sec)" << std::endl;
+      std::cout << "Total Time for  PtRhoPhiEtaVector     = " << t3 << "\t(sec)" << std::endl;
    }
 
   //tr.dump(); 
