@@ -224,7 +224,7 @@ $(STRESSL):     $(STRESSLO)
 		@echo "$@ done"
 
 $(STRESSVEC):   $(STRESSVECO)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(TESTBITS):    $(TESTBITSO)

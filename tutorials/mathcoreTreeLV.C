@@ -39,8 +39,8 @@ void write(int n) {
   // create tree
   TTree t1("t1","Tree with new LorentzVector");
 
-  LorentzVector *v1 = new LorentzVector();
-  t1.Branch("LV branch","LorentzVector",&v1);
+  XYZTVector *v1 = new XYZTVector();
+  t1.Branch("LV branch","XYZTVector",&v1);
 
   timer.Start();
   for (int i = 0; i < n; ++i) { 
@@ -50,7 +50,7 @@ void write(int n) {
 	double E  = R.Gaus(100,10);
 	//CylindricalEta4D<double> & c = v1->Coordinates();
 	//c.SetValues(Px,pY,pZ,E);
-	v1->Set(Px,Py,Pz,E);
+	v1->SetCoordinates(Px,Py,Pz,E);
 	t1.Fill(); 
   }
 
@@ -107,7 +107,7 @@ void read() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  LorentzVector *v1 = 0;
+  XYZTVector *v1 = 0;
   t1->SetBranchAddress("LV branch",&v1);
 
   timer.Start();

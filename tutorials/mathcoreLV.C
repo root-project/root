@@ -27,9 +27,9 @@ void write(int n) {
   // create tree
   TTree t1("t1","Tree with new LorentzVector");
 
-  std::vector<ROOT::Math::LorentzVector>  tracks; 
-  std::vector<ROOT::Math::LorentzVector> * pTracks = &tracks; 
-  t1.Branch("tracks","std::vector<LorentzVector>",&pTracks);
+  std::vector<ROOT::Math::XYZTVector>  tracks; 
+  std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks; 
+  t1.Branch("tracks","std::vector<XYZTVector>",&pTracks);
 
   timer.Start();
   for (int i = 0; i < n; ++i) { 
@@ -41,7 +41,7 @@ void write(int n) {
       double Py = R.Gaus(0,10);
       double Pz = R.Gaus(0,10);
       double E  = TMath::Max(R.Gaus(100,30),0.0);
-      LorentzVector v1(Px,Py,Pz,E);
+      XYZTVector v1(Px,Py,Pz,E);
       pTracks->push_back(v1);
     }
     t1.Fill(); 
@@ -74,7 +74,7 @@ void read() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  std::vector<ROOT::Math::LorentzVector> * pTracks = 0;
+  std::vector<ROOT::Math::XYZTVector> * pTracks = 0;
   t1->SetBranchAddress("tracks",&pTracks);
 
   timer.Start();
@@ -85,9 +85,9 @@ void read() {
     t1->GetEntry(i);
     int ntrk = pTracks->size(); 
     h3->Fill(ntrk);
-    LorentzVector q; 
+    XYZTVector q; 
     for (int j = 0; j < ntrk; ++j) { 
-      LorentzVector v = (*pTracks)[j]; 
+      XYZTVector v = (*pTracks)[j]; 
       q += v; 
       h2->Fill(v.E());
     }

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: StressVector.cxx,v 1.1 2005/06/28 18:54:24 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.1 2005/06/29 05:38:53 brun Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -44,8 +44,8 @@
 #include "TLorentzVector.h"
 
 
-#include "MathCore/Vector4D.h"
-#include "MathCore/VectorUtil.h"
+#include "Math/Vector4D.h"
+#include "Math/VectorUtil.h"
 
 #include "limits"
 
