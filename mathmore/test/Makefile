@@ -10,7 +10,11 @@ include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
+ifeq ($(PLATFORM),win32)
+EXTRALIBS        = $(ROOTSYS)/lib/libMathMore.lib $(ROOTSYS)/lib/libMathCore.lib
+else
 EXTRALIBS        = -lMathMore -lMathCore
+endif
 
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
 CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
@@ -39,6 +43,8 @@ OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDERO
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
                   $(INTERPOLATION)
+		  
+.SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
 
 all:            $(PROGRAMS)
