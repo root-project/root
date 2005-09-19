@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -120,24 +120,27 @@ std::pair<double, double>  Chebyshev::EvalErr( double x, size_t n) const {
 
 
 // need to return auto_ptr because copying is not supported. 
-std::auto_ptr<Chebyshev>  Chebyshev::Deriv() { 
+Chebyshev *   Chebyshev::Deriv() { 
 
   Chebyshev * deriv = new Chebyshev(fOrder); 
   
   // check for errors ? 
   gsl_cheb_calc_deriv( (deriv->fSeries)->get(), fSeries->get() );
-  std::auto_ptr<Chebyshev> pDeriv(deriv);
-  return pDeriv;  
+  return deriv;
+  // diable auto_ptr to fix AIX compilation
+//   std::auto_ptr<Chebyshev> pDeriv(deriv);
+//   return pDeriv;  
 }
   
-std::auto_ptr<Chebyshev>  Chebyshev::Integral() { 
+Chebyshev * Chebyshev::Integral() { 
 
   Chebyshev * integ = new Chebyshev(fOrder); 
   
   // check for errors ? 
   gsl_cheb_calc_integ( (integ->fSeries)->get(), fSeries->get() );
-  std::auto_ptr<Chebyshev> pInteg(integ);
-  return pInteg;  
+  return integ;
+//   std::auto_ptr<Chebyshev> pInteg(integ);
+//   return pInteg;  
 }
 
 } // namespace Math

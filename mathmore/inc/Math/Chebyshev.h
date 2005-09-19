@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.2 2005/09/19 15:17:08 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -35,10 +35,10 @@
    @defgroup FuncApprox Function Approximation (Chebyshev)
  */
 
-
+#include <memory>
 
 #include "Math/GSLFunctionAdapter.h"
-#include <memory>
+
 
 namespace ROOT {
 namespace Math {
@@ -117,15 +117,18 @@ public:
 
   /**
      Compute the derivative of the series and return a pointer to a new Chebyshev series with the 
-     derivatives coefficients
+     derivatives coefficients. The returned pointer must be managed by the user.
   */
-  std::auto_ptr<Chebyshev> Deriv(); 
+  //TO DO: implement copying to return by value
+  Chebyshev * Deriv(); 
 
   /**
      Compute the integral of the series and return a pointer to a new Chebyshev series with the 
      integral coefficients. The lower limit of the integration is the left range value a.
+     The returned pointer must be managed by the user
   */
-  std::auto_ptr<Chebyshev> Integral(); 
+  //TO DO: implement copying to return by value
+  Chebyshev * Integral(); 
 
 protected: 
 
