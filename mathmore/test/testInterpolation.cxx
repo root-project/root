@@ -1,6 +1,6 @@
 #include "TGraph.h"
 #include "TCanvas.h"
-#include "MathMore/Interpolator.h"
+#include "Math/Interpolator.h"
 #include <iostream>
 
 

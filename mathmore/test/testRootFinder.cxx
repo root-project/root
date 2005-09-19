@@ -1,6 +1,6 @@
-#include "MathMore/Polynomial.h"
-#include "MathMore/RootFinder.h"
-#include "MathMore/RootFinderAlgorithms.h"
+#include "Math/Polynomial.h"
+#include "Math/RootFinder.h"
+#include "Math/RootFinderAlgorithms.h"
 
 #include <iostream>
 

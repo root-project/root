@@ -10,43 +10,67 @@ include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
-#EXTRALIBS        = -llcg_Minuit -lGMinuit -lMathMore
 EXTRALIBS        = -lMathMore -lMathCore
 
-USERFUNCOBJ      = testChebyshev.$(ObjSuf)
-USERFUNCSRC      = testChebyshev.$(SrcSuf)
-USERFUNC         = testChebyshev$(ExeSuf)
+CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
+CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
+CHEBYSHEV         = testChebyshev$(ExeSuf)
+
+DERIVATIONOBJ      = testDerivation.$(ObjSuf)
+DERIVATIONSRC      = testDerivation.$(SrcSuf)
+DERIVATION         = testDerivation$(ExeSuf)
+
+INTEGRATIONOBJ      = testIntegration.$(ObjSuf)
+INTEGRATIONSRC      = testIntegration.$(SrcSuf)
+INTEGRATION         = testIntegration$(ExeSuf)
+
+ROOTFINDEROBJ      = testRootFinder.$(ObjSuf)
+ROOTFINDERSRC      = testRootFinder.$(SrcSuf)
+ROOTFINDER         = testRootFinder$(ExeSuf)
+
+INTERPOLATIONOBJ      = testInterpolation.$(ObjSuf)
+INTERPOLATIONSRC      = testInterpolation.$(SrcSuf)
+INTERPOLATION         = testInterpolation$(ExeSuf)
 
 
-OBJS          = $(USERFUNCOBJ) 
-#                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-#                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-#                 $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(TESTBITSO) \
-#                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO)
 
-PROGRAMS      = $(USERFUNC)
-#                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-#                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-#                 $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
-#                 $(THREADS) $(STRESSVEC)
+OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
+                  $(INTERPOLATIONOBJ)
+
+PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
+                  $(INTERPOLATION)
 
 
+all:            $(PROGRAMS)
 
 
-$(USERFUNC):    $(USERFUNCOBJ)
+$(CHEBYSHEV):   $(CHEBYSHEVOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(DERIVATION):  $(DERIVATIONOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(INTEGRATION): $(INTEGRATIONOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(ROOTFINDER):  $(ROOTFINDEROBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(INTERPOLATION):  $(INTERPOLATIONOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
 
 
 clean:
 		@rm -f $(OBJS) core
 
 distclean:      clean
-		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
-		   *.root *.ps *.so *.lib *.dll *.d .def so_locations
-		@rm -rf cxx_repository
-		-@cd RootShower && $(MAKE) distclean
+		@rm -f $(PROGRAMS) 
+
 
 .SUFFIXES: .$(SrcSuf)
 

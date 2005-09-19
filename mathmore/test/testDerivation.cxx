@@ -1,6 +1,6 @@
-#include "MathMore/Polynomial.h"
-#include "MathMore/Derivator.h"
-#include "MathMore/WrappedFunction.h"
+#include "Math/Polynomial.h"
+#include "Math/Derivator.h"
+#include "Math/WrappedFunction.h"
 #include "TF1.h"
 #include <iostream>
 
