@@ -72,7 +72,7 @@ void testDerivation() {
   ROOT::Math::WrappedFunction<double (&)(double)> *f3 = new ROOT::Math::WrappedFunction<double (&)(double)>(myfunc2);
 
   std::cout << "Derivative of a free function wrapped in WrappedFunction f(x) = x^(3/2) at x = 2" << std::endl;
-  std::cout << "EvalCentral:  " << der->EvalCentral( ROOT::Math::WrappedFunction<double (&)(double)>(myfunc2), x0) << std::endl;
+  std::cout << "EvalCentral:  " << der->EvalCentral( *f3, x0) << std::endl;
   der->SetFunction(*f3);
   std::cout << "EvalForward:  " << der->EvalForward(x0) << std::endl;
   std::cout << "EvalBackward: " << der->EvalBackward(x0) << std::endl;
