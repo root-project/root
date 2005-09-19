@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -29,6 +29,7 @@
 // Last update: Thu Nov 11 14:22:32 2004
 // 
 
+#include "gsl/gsl_integration.h"
 #include "GSLIntegrator.h"
 //#include "MathMore/IGenFunction.h"
 
@@ -36,7 +37,6 @@
 #include "GSLIntegrationWorkspace.h"
 #include "GSLFunctionWrapper.h"
 
-#include "gsl/gsl_integration.h"
 
 
 

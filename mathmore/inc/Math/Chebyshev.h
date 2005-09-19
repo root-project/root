@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -36,9 +36,9 @@
  */
 
 
-#include <memory>
 
 #include "Math/GSLFunctionAdapter.h"
+#include <memory>
 
 namespace ROOT {
 namespace Math {
