@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -49,7 +49,7 @@ namespace Math {
       IParamFunction interface.
       Specific parameteric function classes should derive from this class if they want to profit from 
       default implementations for the abstract methods. 
-      The derived classes need to implement only the ParamFunction::operator(double x) and ParamFunction::clone() methods. 
+      The derived classes need to implement only the ParamFunction::operator(double x) and ParamFunction::Clone() methods. 
 
       @ingroup CppFunctions
   */
@@ -83,7 +83,7 @@ namespace Math {
     /**
        Deep copy of function (to be implemented by the derived classes)
      */
-    virtual IGenFunction *  clone() const = 0; 
+    virtual IGenFunction *  Clone() const = 0; 
 
 
     

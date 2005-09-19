@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: WrappedFunction.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: WrappedFunction.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -43,7 +43,7 @@ class WrappedFunction : public IGenFunction {
 
   explicit WrappedFunction( CALLABLE f ) : fFunc( f ) { /**/ }
 
-  virtual WrappedFunction * clone() const {
+  virtual WrappedFunction * Clone() const {
 
     //return new WrappedFunction( *this );
     return new WrappedFunction<CALLABLE>(fFunc);

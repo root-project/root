@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -101,7 +101,7 @@ const std::vector<double> &  Polynomial::ParameterGradient (double x) {
 
 
 
-IGenFunction * Polynomial::clone() const { 
+IGenFunction * Polynomial::Clone() const { 
     Polynomial * f =  new Polynomial(fOrder);
     f->fDerived_params = fDerived_params; 
     f->SetParameters( Parameters() ); 
