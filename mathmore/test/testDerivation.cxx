@@ -7,6 +7,7 @@
 
 
 typedef double ( * FP ) ( double, void * ); 
+typedef double ( * FP2 ) ( double ); 
 
 
 double myfunc ( double x, void * ) { 
@@ -69,7 +70,7 @@ void testDerivation() {
   
   // Derivative of a free function wrapped in an IGenFunction
   // Works when compiled c++, compiled ACLiC, does not work when interpreted by CINT  
-  ROOT::Math::WrappedFunction<double (&)(double)> *f3 = new ROOT::Math::WrappedFunction<double (&)(double)>(myfunc2);
+  ROOT::Math::WrappedFunction<FP2> *f3 = new ROOT::Math::WrappedFunction<FP2>(myfunc2);
 
   std::cout << "Derivative of a free function wrapped in WrappedFunction f(x) = x^(3/2) at x = 2" << std::endl;
   std::cout << "EvalCentral:  " << der->EvalCentral( *f3, x0) << std::endl;
