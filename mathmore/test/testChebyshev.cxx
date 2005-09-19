@@ -35,7 +35,7 @@ public:
     return ROOT::Math::tgamma(x);
   }
 
-  ROOT::Math::IGenFunction * clone() const { 
+  ROOT::Math::IGenFunction * Clone() const { 
     return new GammaFunction();
   }
 
@@ -71,9 +71,9 @@ int main() {
   ROOT::Math::Chebyshev c(myfunc, 0, 0., 1.0, 40); 
   printCheb(c, 0, 1, myfunc); 
   std::cout << "Test integral of step function :" << std::endl;
-  std::auto_ptr<ROOT::Math::Chebyshev> cInteg = c.Integral();
+  ROOT::Math::Chebyshev *  cInteg = c.Integral();
   printCheb(*cInteg, 0., 1); 
-
+  delete cInteg;
   
 
   std::cout << "Test Cheb approx to Gamma function :" << std::endl;
@@ -81,8 +81,9 @@ int main() {
   ROOT::Math::Chebyshev c2(gf, 1.0, 2.0, 40); 
   printCheb(c2, 1.0, 2.0,  gamma_func); 
   std::cout << "Test derivative of gammma :" << std::endl;
-  std::auto_ptr<ROOT::Math::Chebyshev> cDeriv = c2.Deriv();
+  ROOT::Math::Chebyshev * cDeriv = c2.Deriv();
   printCheb(*cDeriv, 1.0, 2.0); 
+  delete cDeriv;
 
   std::cout << ROOT::Math::cyl_bessel_j(1.2, 3.4);
 
