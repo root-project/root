@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.22 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.23 2005/09/16 17:19:40 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -399,15 +399,28 @@ void TPaveStats::UseCurrentStyle()
       SetBorderSize(gStyle->GetStatBorderSize());
       SetFillColor(gStyle->GetStatColor());
       SetFillStyle(gStyle->GetStatStyle());
+      SetTextFont(gStyle->GetStatFont());
+      SetTextSize(gStyle->GetStatFontSize());
+      SetTextColor(gStyle->GetStatTextColor());
+      SetX2NDC(gStyle->GetStatX());
+      SetY2NDC(gStyle->GetStatY());
+      SetX1NDC(gStyle->GetStatX()-gStyle->GetStatW());
+      SetY1NDC(gStyle->GetStatY()-gStyle->GetStatH());
    } else {
       gStyle->SetOptStat(GetOptStat());
       gStyle->SetOptFit(GetOptFit());
       gStyle->SetStatFormat(GetStatFormat());
       gStyle->SetFitFormat(GetFitFormat());
-      gStyle->SetStatX(GetX1NDC());
-      gStyle->SetStatY(GetY1NDC());
       gStyle->SetStatBorderSize(GetBorderSize());
+      gStyle->SetTextColor(GetTextColor());
       gStyle->SetStatColor(GetFillColor());
       gStyle->SetStatStyle(GetFillStyle());
+      gStyle->SetTextFont(GetTextFont());
+      gStyle->SetStatFontSize(GetTextSize());
+      gStyle->SetStatTextColor(GetTextColor());
+      gStyle->SetStatX(GetX2NDC());
+      gStyle->SetStatY(GetY2NDC());
+      gStyle->SetStatW(GetX2NDC()-GetX1NDC());
+      gStyle->SetStatH(GetY2NDC()-GetY1NDC());
    }
 }

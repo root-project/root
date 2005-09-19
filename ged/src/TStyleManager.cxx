@@ -1601,8 +1601,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fStatColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetStatColor()));
          fStatStyle->SetPattern(fCurSelStyle->GetStatStyle());
          fStatTextColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetStatTextColor()));
-         fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
-         
+         fStatFont->Select(fCurSelStyle->GetStatFont()/10);
          if (fCurSelStyle->GetStatFont()%10 > 2) {
             fStatFontSizeInPixels->SetState(kButtonDown, kFALSE);
             ModStatFontSizeInPixels(kTRUE);
@@ -1610,12 +1609,12 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fStatFontSizeInPixels->SetState(kButtonUp, kFALSE);
             ModStatFontSizeInPixels(kFALSE);
          }
+         fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
          
-         fStatFont->Select(fCurSelStyle->GetStatFont()/10);
-         fStatX->SetIntNumber((Int_t) (fCurSelStyle->GetStatX()*100 + 0.5));
-         fStatY->SetIntNumber((Int_t) (fCurSelStyle->GetStatY()*100 + 0.5));
-         fStatW->SetIntNumber((Int_t) (fCurSelStyle->GetStatW()*100 + 0.5));
-         fStatH->SetIntNumber((Int_t) (fCurSelStyle->GetStatH()*100 + 0.5));
+         fStatX->SetNumber(fCurSelStyle->GetStatX());
+         fStatY->SetNumber(fCurSelStyle->GetStatY());
+         fStatW->SetNumber(fCurSelStyle->GetStatW());
+         fStatH->SetNumber(fCurSelStyle->GetStatH());
          fStatBorderSize->Select(fCurSelStyle->GetStatBorderSize());
          tmp = fCurSelStyle->GetOptStat();
          
@@ -1932,7 +1931,7 @@ void TStyleManager::ConnectEditor(Int_t tabNum)
          fStatColor->Connect("ColorSelected(Pixel_t)", "TStyleManager", this, "ModStatColor(Pixel_t)");
          fStatStyle->Connect("PatternSelected(Style_t)", "TStyleManager", this, "ModStatStyle(Style_t)");
          fStatTextColor->Connect("ColorSelected(Pixel_t)", "TStyleManager", this, "ModStatTextColor(Pixel_t)");
-         fStatFontSize->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModStatFontSize(Long_t)");
+         fStatFontSize->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModStatFontSize()");
          fStatFontSizeInPixels->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModStatFontSizeInPixels(Bool_t)");
          fStatFont->Connect("Selected(Int_t)", "TStyleManager", this, "ModStatFont()");
          fStatX->Connect("ValueSet(Long_t)", "TStyleManager", this, "ModStatX()");
@@ -1950,12 +1949,12 @@ void TStyleManager::ConnectEditor(Int_t tabNum)
          fOptStatIntegral->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptStat()");
          fOptStatKurtosis->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptStat()");
          fOptStatErrors->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptStat()");
-         fStatFormat->Connect("TextChanged(const char *)", "TStyleManager", this, "ModStatFormat()");
+         fStatFormat->Connect("TextChanged(const char *)", "TStyleManager", this, "ModStatFormat(const char *)");
          fOptFitValues->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptFit()");
          fOptFitErrors->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptFit()");
          fOptFitProbability->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptFit()");
          fOptFitChi->Connect("Toggled(Bool_t)", "TStyleManager", this, "ModOptFit()");
-         fFitFormat->Connect("TextChanged(const char *)", "TStyleManager", this, "ModFitFormat()");
+         fFitFormat->Connect("TextChanged(const char *)", "TStyleManager", this, "ModFitFormat(const char *)");
          break;
       case 7: // PS / PDF
          fHeaderPS->Connect("TextChanged(const char *)", "TStyleManager", this, "ModHeaderPS()");
@@ -2342,7 +2341,7 @@ void TStyleManager::AddGeneralText(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fTextColor->SetToolTipText("General text color");
-   fTextSizeInPixels->SetToolTipText("Set the text size in pixels or in % of pad");
+   fTextSizeInPixels->SetToolTipText("Set the text size in pixels if selected, otherwise - in % of pad.");
    fTextSize->GetNumberEntry()->SetToolTipText("General text size (in pixels or in % of pad)");
    fTextAngle->GetNumberEntry()->SetToolTipText("General text angle");
 }
@@ -2498,7 +2497,7 @@ void TStyleManager::AddCanvasDate(TGCompositeFrame *f)
    fOptDateBool->SetToolTipText("Show / Hide the date in canvases");
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fAttDateTextColor->SetToolTipText("Color of the date text");
-   fAttDateTextSizeInPixels->SetToolTipText("Set the date text size in pixels or in % of pad");
+   fAttDateTextSizeInPixels->SetToolTipText("Set the date text size in pixels if selected, otherwise - in % of pad");
    fAttDateTextSize->GetNumberEntry()->SetToolTipText("Date text size (in pixels or in % of pad)");
    fAttDateTextAngle->GetNumberEntry()->SetToolTipText("Date text angle");
    fDateX->GetNumberEntry()->SetToolTipText("Date abscissa in percent of pad");
@@ -2982,7 +2981,7 @@ void TStyleManager::CreateTabAxis(TGCompositeFrame *tab)
    tab->AddFrame(fAxisTab, fLayoutExpandXY);
 
    fStripDecimals->SetToolTipText("Draw / Hide the decimal part of labels");
-   fApplyOnXYZ->SetToolTipText("Apply settings of the currently selected axis on XYZ.");
+   fApplyOnXYZ->SetToolTipText("Apply settings of the currently selected axis on XYZ");
    fTimeOffsetDate->GetNumberEntry()->SetToolTipText("Date offset for axis (dd/mm/yyyy)");
    fTimeOffsetTime->GetNumberEntry()->SetToolTipText("Time offset for axis (hh/mm/ss)");
 }
@@ -3063,7 +3062,7 @@ void TStyleManager::AddAxisXTitle(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fXTitleColor->SetToolTipText("Color of axis' title");
-   fXTitleSizeInPixels->SetToolTipText("Set the title size in pixels or in % of pad");
+   fXTitleSizeInPixels->SetToolTipText("Set the title size in pixels if selected, otherwise - in % of pad");
    fXTitleSize->GetNumberEntry()->SetToolTipText("Title size (in pixels or in % of pad)");
    fXTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
@@ -3101,7 +3100,7 @@ void TStyleManager::AddAxisXDivisions(TGCompositeFrame *f)
    fXNdivMain->GetNumberEntry()->SetToolTipText("Primary axis divisions");
    fXNdivSub->GetNumberEntry()->SetToolTipText("Secondary axis divisions");
    fXNdivSubSub->GetNumberEntry()->SetToolTipText("Tertiary axis divisions");
-   fXNdivisionsOptimize->SetToolTipText("Optimize the number of axis divisions");
+   fXNdivisionsOptimize->SetToolTipText("Optimize the number of axis divisions if selected");
 }
 
 //______________________________________________________________________________
@@ -3132,7 +3131,7 @@ void TStyleManager::AddAxisXLabels(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fXLabelColor->SetToolTipText("Color of axis' labels");
-   fXLabelSizeInPixels->SetToolTipText("Set the labels size in pixels or in % of pad");
+   fXLabelSizeInPixels->SetToolTipText("Set the labels size in pixels if selected, otherwise - in % of pad");
    fXLabelSize->GetNumberEntry()->SetToolTipText("Label size (in pixels or in % of pad)");
    fXLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
@@ -3213,7 +3212,7 @@ void TStyleManager::AddAxisYTitle(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fYTitleColor->SetToolTipText("Color of axis' title");
-   fYTitleSizeInPixels->SetToolTipText("Set the title size in pixels or in % of pad");
+   fYTitleSizeInPixels->SetToolTipText("Set the title size in pixels if selected, otherwise - in % of pad");
    fYTitleSize->GetNumberEntry()->SetToolTipText("Title size (in pixels or in % of pad)");
    fYTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
@@ -3282,7 +3281,7 @@ void TStyleManager::AddAxisYLabels(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fYLabelColor->SetToolTipText("Color of axis' labels");
-   fYLabelSizeInPixels->SetToolTipText("Set the labels size in pixels or in % of pad");
+   fYLabelSizeInPixels->SetToolTipText("Set the labels size in pixels if selected, otherwise - in % of pad");
    fYLabelSize->GetNumberEntry()->SetToolTipText("Label size (in pixels or in % of pad)");
    fYLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
@@ -3364,7 +3363,7 @@ void TStyleManager::AddAxisZTitle(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fZTitleColor->SetToolTipText("Color of axis' title");
-   fZTitleSizeInPixels->SetToolTipText("Set the title size in pixels or in % of pad");
+   fZTitleSizeInPixels->SetToolTipText("Set the title size in pixels if selected, otherwise - in % of pad");
    fZTitleSize->GetNumberEntry()->SetToolTipText("Title size (in pixels or in % of pad)");
    fZTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
@@ -3433,7 +3432,7 @@ void TStyleManager::AddAxisZLabels(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fZLabelColor->SetToolTipText("Color of axis' labels");
-   fZLabelSizeInPixels->SetToolTipText("Set the labels size in pixels or in % of pad");
+   fZLabelSizeInPixels->SetToolTipText("Set the labels size in pixels if selected, otherwise - in % of pad");
    fZLabelSize->GetNumberEntry()->SetToolTipText("Label size (in pixels or in % of pad)");
    fZLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
@@ -3542,7 +3541,7 @@ void TStyleManager::AddTitleText(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fTitleTextColor->SetToolTipText("Color of the title's text");
-   fTitleFontSizeInPixels->SetToolTipText("Set the title's text size in pixels or in % of pad");
+   fTitleFontSizeInPixels->SetToolTipText("Set the title's text size in pixels if selected, otherwise - in % of pad");
    fTitleFontSize->GetNumberEntry()->SetToolTipText("Title's text size (in pixels or in % of pad)");
 }
 
@@ -3661,7 +3660,7 @@ void TStyleManager::AddStatsText(TGCompositeFrame *f)
 
 // TODO Delete the // when the selectColor and selectPattern tooltips are OK.
 //   fStatTextColor->SetToolTipText("Color of the stats's text");
-   fStatFontSizeInPixels->SetToolTipText("Set the stats's text size in pixels or in % of pad");
+   fStatFontSizeInPixels->SetToolTipText("Set the stats's text size in pixels if selected, otherwise - in % of pad");
    fStatFontSize->GetNumberEntry()->SetToolTipText("Stats's text size (in pixels or in % of pad)");
 }
 
@@ -3676,32 +3675,32 @@ void TStyleManager::AddStatsGeometry(TGCompositeFrame *f)
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
    fTrashListFrame->AddFirst(h1);
    fStatX = AddNumberEntry(h1, 0, 7, 0, kStatX, "X:",
-                        0, 4, TGNumberFormat::kNESInteger,
-                        TGNumberFormat::kNEAAnyNumber,
-                        TGNumberFormat::kNELLimitMinMax, 0, 100);
+                        0., 4, TGNumberFormat::kNESRealTwo,
+                        TGNumberFormat::kNEANonNegative,
+                        TGNumberFormat::kNELLimitMinMax, 0., 1.);
    fStatY = AddNumberEntry(h1, 8, 7, 0, kStatY, "Y:",
-                        0, 4, TGNumberFormat::kNESInteger,
-                        TGNumberFormat::kNEAAnyNumber,
-                        TGNumberFormat::kNELLimitMinMax, 0, 100);
+                        0., 4, TGNumberFormat::kNESRealTwo,
+                        TGNumberFormat::kNEANonNegative,
+                        TGNumberFormat::kNELLimitMinMax, 0., 1.);
    gf->AddFrame(h1, fLayoutExpandXY);
 
    TGHorizontalFrame *h2 = new TGHorizontalFrame(gf);
    fTrashListFrame->AddFirst(h2);
    fStatW = AddNumberEntry(h2, 0, 5, 0, kStatW, "W:",
-                        0, 4, TGNumberFormat::kNESInteger,
-                        TGNumberFormat::kNEAAnyNumber,
-                        TGNumberFormat::kNELLimitMinMax, 0, 100);
+                        0., 4, TGNumberFormat::kNESRealTwo,
+                        TGNumberFormat::kNEANonNegative,
+                        TGNumberFormat::kNELLimitMinMax, 0., 1.);
    fStatH = AddNumberEntry(h2, 8, 7, 0, kStatH, "H:",
-                        0, 4, TGNumberFormat::kNESInteger,
-                        TGNumberFormat::kNEAAnyNumber,
-                        TGNumberFormat::kNELLimitMinMax, 0, 100);
+                        0., 4, TGNumberFormat::kNESRealTwo,
+                        TGNumberFormat::kNEANonNegative,
+                        TGNumberFormat::kNELLimitMinMax, 0., 1.);
    gf->AddFrame(h2, fLayoutExpandXY);
    f->AddFrame(gf, fLayoutExpandXYMargin);
 
-   fStatX->GetNumberEntry()->SetToolTipText("Stats' default abscissa");
-   fStatY->GetNumberEntry()->SetToolTipText("Stats' default ordinate");
-   fStatW->GetNumberEntry()->SetToolTipText("Stats' default width");
-   fStatH->GetNumberEntry()->SetToolTipText("Stats' default height");
+   fStatX->GetNumberEntry()->SetToolTipText("X position of top right corner of stat box.");
+   fStatY->GetNumberEntry()->SetToolTipText("Y position of top right corner of stat box.");
+   fStatW->GetNumberEntry()->SetToolTipText("Width of stat box.");
+   fStatH->GetNumberEntry()->SetToolTipText("Height of stat box.");
 }
 
 //______________________________________________________________________________
@@ -6142,11 +6141,10 @@ void TStyleManager::ModStatTextColor(Pixel_t color)
 }
 
 //______________________________________________________________________________
-void TStyleManager::ModStatFontSize(Long_t number)
+void TStyleManager::ModStatFontSize()
 {
    // Slot called whenever the text size is modified by the user.
-
-   fCurSelStyle->SetStatFontSize(number);
+   fCurSelStyle->SetStatFontSize(fStatFontSize->GetNumber());
    DoEditor();
 }
 
@@ -6161,17 +6159,19 @@ void TStyleManager::ModStatFontSizeInPixels(Bool_t b)
    if (b) {
       fCurSelStyle->SetStatFont(tmp * 10 + 3);
       fStatFontSize->SetFormat(TGNumberFormat::kNESInteger,
-                           TGNumberFormat::kNEAPositive);
+                               TGNumberFormat::kNEANonNegative);
       fStatFontSize->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, h);
       if (mod == 2)
          fCurSelStyle->SetStatFontSize(fCurSelStyle->GetStatFontSize() * h);
+      fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
    } else {
       fCurSelStyle->SetStatFont(tmp * 10 + 2);
       fStatFontSize->SetFormat(TGNumberFormat::kNESRealThree,
-                           TGNumberFormat::kNEAPositive);
-      fStatFontSize->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, 1);
+                               TGNumberFormat::kNEANonNegative);
+      fStatFontSize->SetLimits(TGNumberFormat::kNELLimitMinMax, 0., 1.);
       if (mod == 3)
          fCurSelStyle->SetStatFontSize(fCurSelStyle->GetStatFontSize() / h);
+      fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
    }
    fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
    DoEditor();
@@ -6192,7 +6192,7 @@ void TStyleManager::ModStatX()
 {
    // Slot called whenever the stats abscissa is modified by the user.
 
-   fCurSelStyle->SetStatX(fStatX->GetIntNumber() * 0.01);
+   fCurSelStyle->SetStatX((Float_t)fStatX->GetNumber());
    DoEditor();
 }
 
@@ -6201,7 +6201,7 @@ void TStyleManager::ModStatY()
 {
    // Slot called whenever the stats ordinate is modified by the user.
 
-   fCurSelStyle->SetStatY(fStatY->GetIntNumber() * 0.01);
+   fCurSelStyle->SetStatY((Float_t)fStatY->GetNumber());
    DoEditor();
 }
 
@@ -6210,7 +6210,7 @@ void TStyleManager::ModStatW()
 {
    // Slot called whenever the stats width is modified by the user.
 
-   fCurSelStyle->SetStatW(fStatW->GetIntNumber() * 0.01);
+   fCurSelStyle->SetStatW((Float_t)fStatW->GetNumber());
    DoEditor();
 }
 
@@ -6219,7 +6219,7 @@ void TStyleManager::ModStatH()
 {
    // Slot called whenever the stats height is modified by the user.
 
-   fCurSelStyle->SetStatH(fStatH->GetIntNumber() * 0.01);
+   fCurSelStyle->SetStatH((Float_t)fStatH->GetNumber());
    DoEditor();
 }
 
@@ -6259,11 +6259,11 @@ void TStyleManager::ModOptStat()
 }
 
 //______________________________________________________________________________
-void TStyleManager::ModStatFormat()
+void TStyleManager::ModStatFormat(const char *sformat)
 {
    // Slot called whenever the stats paint format is modified by the user.
 
-   fCurSelStyle->SetStatFormat(fStatFormat->GetText());
+   fCurSelStyle->SetStatFormat(sformat);
    DoEditor();
 }
 
@@ -6283,11 +6283,11 @@ void TStyleManager::ModOptFit()
 }
 
 //______________________________________________________________________________
-void TStyleManager::ModFitFormat()
+void TStyleManager::ModFitFormat(const char *fitformat)
 {
    // Slot called whenever the fit paint format is modified by the user.
 
-   fCurSelStyle->SetFitFormat(fFitFormat->GetText());
+   fCurSelStyle->SetFitFormat(fitformat);
    DoEditor();
 }
 

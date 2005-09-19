@@ -647,7 +647,7 @@ public:
    void ModStatColor(Pixel_t color);         // SLOT
    void ModStatStyle(Style_t pattern);       // SLOT
    void ModStatTextColor(Pixel_t color);     // SLOT
-   void ModStatFontSize(Long_t number);      // SLOT
+   void ModStatFontSize();                   // SLOT
    void ModStatFontSizeInPixels(Bool_t b);   // SLOT
    void ModStatFont();                       // SLOT
    void ModStatX();                          // SLOT
@@ -656,9 +656,9 @@ public:
    void ModStatH();                          // SLOT
    void ModStatBorderSize();                 // SLOT
    void ModOptStat();                        // SLOT
-   void ModStatFormat();                     // SLOT
+   void ModStatFormat(const char *sformat);  // SLOT
    void ModOptFit();                         // SLOT
-   void ModFitFormat();                      // SLOT
+   void ModFitFormat(const char *fitformat); // SLOT
 
 // PS / PDF
    void ModHeaderPS();                       // SLOT
