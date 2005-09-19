@@ -81,7 +81,7 @@ void testRootFinder() {
   
 
   ROOT::Math::Roots::Newton *rf5 = new ROOT::Math::Roots::Newton();
-  void * ptr2; 
+  void * ptr2 = 0; 
   rf5->SetFunction(myfunc, myfunc_deriv, myfunc_fdf, ptr2, 5.); 
   findRoot(rf5); 
 
@@ -90,7 +90,7 @@ void testRootFinder() {
   // the following two examples won't work when interpreted CINT
   //const FP funcPtr = &myfunc;
   ROOT::Math::GSLRootFinder::GSLFuncPointer funcPtr = &myfunc;
-  void * ptr1; 
+  void * ptr1 = 0; 
   ROOT::Math::Roots::Brent *rf6 = new ROOT::Math::Roots::Brent();
   //ROOT::Math::RootFinder<ROOT::Math::Roots::Brent> *rf6 = new ROOT::Math::RootFinder<ROOT::Math::Roots::Brent>;
   rf6->SetFunction( funcPtr, ptr1, 0.0, 5.0); 
