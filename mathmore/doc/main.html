@@ -1,0 +1,71 @@
+// top doc page
+
+/**  \mainpage MathMore library
+
+@b MathCore provides an advanced  collection of functions and C++ classes for HEP numerical computing. 
+The current set includes classes and functions for:   
+<ul>
+<li>Special functions, with all the major functions used in HEP (Bessel, Gamma, Error functions, etc..)   
+<li>Mathematical functions used in statistics such as  probability density functions, cumulative distributions functions and their inverse.
+<li>Numerical algorithms  for one dimensional functions : 
+<ul>
+<li>Numerical integration
+<li>Numerical differentiation 
+<li>Root finder
+<li>Minimization 
+</ul>
+<li>Interpolation 
+<li>Function approximation based on Chebyshev polynomials
+<li>Polynomial evaluation and root solvers
+
+</ul>
+In addition the package includes the interfaces for generic (mathlib::IGenFunction) and parameteric (mathlib::IParamFunction) one-dimensional functions. 
+<p>
+The mathematical functions are implemented as a set of free functions in the namespace \em ROOT::Math. The naming used for the special functions is the same proposed for the C++ standard (see C++ standard extension <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf"> proposal document</A>).
+
+The MathCore library is implemented wrapping in C++ the GNU Scientific Library (<A HREF="http://www.gnu.org/software/gsl">GSL</A>). The needed routine of GSL are compiled in the library.   
+
+The source code is distributed under the GNU General Public License. 
+
+@authors Lorenzo Moneta <Lorenzo.Moneta@cern.ch> &  Andras Zsenei  <Andras.Zsenei@cern.ch> 
+
+
+
+*/
+
+
+
+
+#ifndef MATHCORE_MathCore_H_
+#define MATHCORE_MathCore_H_
+
+
+// include here all the files
+
+
+#include  "Chebyshev.h"             
+#include  "CParamFunction.h"        
+#include  "Derivator.h"    	        
+#include  "DistFunc.h"              
+#include  "GSLFunctionAdapter.h"    
+#include  "GSLRootFinder.h"         
+#include  "GSLRootFinderDeriv.h"    
+#include  "GSLRootHelper.h" 	
+#include  "IGenFunction.h" 	        
+#include  "IParamFunction.h" 	
+#include  "Integrator.h"	        
+#include  "IIntegrator.h"    	
+#include  "Interpolator.h"    	
+#include  "InterpolationTypes.h"    
+#include  "MathlibException.h"      
+#include  "ParamFunction.h" 	
+#include  "Polynomial.h"            
+#include  "ProbFunc.h"              
+#include  "ProbFuncInv.h"           
+#include  "RootFinder.h" 	        
+#include  "RootFinderAlgorithms.h"  
+#include  "SimpleMinimizer.h"       
+#include  "SpecFunc.h"                 		
+
+#endif
+
