@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.15 2005/06/21 17:09:26 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.16 2005/06/24 12:27:29 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -499,11 +499,144 @@ bool TQtGrabPointerFilter::eventFilter( QObject *, QEvent *e)
    return FALSE;
 }
 //______________________________________________________________________________
+class TXlfd {
+   // Naive parsinf and comparision of XLDF font descriptors
+   public:
+         QString fFontFoundry;
+         QString fFontFamily;
+         Int_t   fIsFontBold;
+         Int_t   fIsFontItalic;
+         Int_t   fPointSize;
+         Int_t   fPixelSize;
+   //______________________________________________________________________________
+   TXlfd (const char* fontName)    { Init(QString(fontName)); }
+
+   //______________________________________________________________________________
+   TXlfd (const char* fontFamily, Int_t isFontBold, Int_t isFontItalic=-1)
+   { Init(QString(fontFamily), isFontBold, isFontItalic);       }
+
+   //______________________________________________________________________________
+   TXlfd (const QString &fontFamily, Int_t isFontBold, Int_t isFontItalic)
+   { Init(fontFamily, isFontBold, isFontItalic);                }
+
+      //______________________________________________________________________________
+   TXlfd (const QString &fontName) { Init(fontName);          }
+
+   //______________________________________________________________________________
+   inline void Init(const QString &fontName) {
+      // Undefine all values;
+      fIsFontBold  = fIsFontItalic = fPointSize = fPixelSize = -1;
+      fFontFoundry = "*";
+      fFontFamily  = fontName.section('-',2,2);
+
+      QString fontWeight  = fontName.section('-',3,3);
+      if (fontWeight != "*") 
+         fIsFontBold = fontWeight.startsWith("bold") ? 1 : 0;
+
+      QString fontSlant = fontName.section('-',4,4);
+      if (fontSlant != "*" ) 
+         fIsFontItalic = ((fontSlant[0] == 'i') || (fontSlant[0] == 'o')) ? 1 : 0;
+      
+      bool ok;
+      QString fontPointSize = fontName.section('-',8,8);
+      if (fontPointSize != "*") 
+        fPointSize = fontPointSize.toInt(&ok);
+      if (!ok) fPointSize = -1;
+
+      QString fontPixelSize = fontName.section('-',7,7);
+      if (fontPixelSize != "*") 
+        fPixelSize = fontPixelSize .toInt(&ok);
+      if (!ok) fPixelSize = -1;
+   }
+    //______________________________________________________________________________
+    inline void Init(const QString &fontFamily, Int_t isFontBold
+                   ,Int_t isFontItalic=-1, Int_t pointSize=-1, Int_t pixelSize=-1)
+    {
+       fFontFoundry = "*";
+       fFontFamily  = fontFamily;
+       fIsFontBold  = isFontBold;  fIsFontItalic = isFontItalic;
+       fPointSize   = pointSize;   fPixelSize    = pixelSize;
+       // ROOT doesn't want to see the point size.
+       // To make it happy let calculate it
+       fPixelSize = SetPointSize(pointSize);
+       if (fPixelSize == -1) fPixelSize = pixelSize;
+   }
+   //______________________________________________________________________________
+   inline Int_t SetPointSize(Int_t pointSize)
+   {
+     // Set the point size and return the pixel size of the font
+       Int_t pixelSize = -1;
+       fPointSize = pointSize;
+       if (fPointSize > 0) {
+          QFont sizeFont( fFontFamily, fPointSize, QFont::Normal, FALSE );
+          pixelSize = sizeFont.pixelSize();
+       }
+       return pixelSize;
+   }
+   //______________________________________________________________________________
+   inline bool operator==(const TXlfd &xlfd) const {
+      return    ( (fFontFamily  == "*") || (xlfd.fFontFamily  == "*") || ( fFontFamily   == xlfd.fFontFamily)   )
+             && ( (fFontFoundry == "*") || (xlfd.fFontFoundry == "*") || ( fFontFoundry  == xlfd.fFontFoundry)  )
+             && ( (fIsFontBold  == -1 ) || (xlfd.fIsFontBold  == -1 ) || ( fIsFontBold   == xlfd.fIsFontBold)  )
+             && ( (fIsFontItalic== -1 ) || (xlfd.fIsFontItalic== -1 ) || ( fIsFontItalic == xlfd.fIsFontItalic))
+             && ( (fPointSize   == -1 ) || (xlfd.fPointSize   == -1 ) || ( fPointSize    == xlfd.fPointSize)   )
+             && ( (fPixelSize   == -1 ) || (xlfd.fPixelSize   == -1 ) || ( fPixelSize    == xlfd.fPixelSize)   );
+   }
+   //______________________________________________________________________________
+   inline bool operator!=(const TXlfd  &xlfd) const { return !operator==(xlfd); }
+   //______________________________________________________________________________
+   inline QString ToString() const 
+   {
+      QString xLDF = "-";
+      xLDF += fFontFoundry + "-";  // text name of font creator
+      xLDF += fFontFamily  + "-";  // name of the font. 
+                                   // Related fonts generally have the same base names; 
+                                   // i.e. helvetica, helvetica narrow , etc.
+      QString weight_name = "*";   // usually one of [light|medium|demibold|bold] but other types may exist
+      if (fIsFontBold > -1) 
+         weight_name = fIsFontBold ? "bold" : "medium";
+      xLDF += weight_name  + "-";
+      
+      QString slant_name = "*";   // one of [r|i|o]. i and o are used similarly, AFAIK
+      if (fIsFontItalic  > -1) 
+         slant_name = fIsFontItalic ? "i" : "r";
+      xLDF += slant_name  + "-";
+      
+      // SETWIDTH_NAME    - [normal|condensed|narrow|double wide] 
+      // ADD_STYLE_NAME   - not a classification field, used only for additional differentiation 
+      xLDF += "*-*-";  // we do not crae (yet) about SETWIDTH and ADD_STYLE
+      
+      QString pixelsize = "*";   // 0 = scalable font; integer typicially height of bounding box  
+      if (fPixelSize   > -1) 
+         pixelsize  = QString::number(fPixelSize);
+      xLDF += pixelsize  + "-";
+
+      QString pointsize = "*";   // 0 = scalable font; integer typicially height of bounding box  
+      if (fPointSize   > -1) 
+         pointsize  = QString::number(fPointSize);
+      xLDF += pointsize  + "-";
+
+      // RESOLUTION_X - horizontal dots per inch 
+      // RESOLUTION_Y - vertical dots per inch 
+      // SPACING      - [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is 
+      //                 a special case of monospaced where no glyphs have pixels outside 
+      //                 the character cell; i.e. there is no kerning (no negative metrics). 
+      // AVERAGE_WIDTH  - unweighted arithmetic mean of absolute value of width of each glyph 
+      //                  in tenths of pixels
+      
+      xLDF += "*-*-*-*-";  // we do not crae (yet) about  RESOLUTION_X RESOLUTION_Y  SPACING  AVERAGE_WIDTH
+
+      // CHARSET_REGISTRY and CHARSET_ENCODING 
+      //                         the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts 
+      xLDF += "ISO8859-1";
+      return xLDF;
+   }
+};
+
+//______________________________________________________________________________
 void  TGQt::SetOpacity(Int_t) { }
 //______________________________________________________________________________
 Window_t TGQt::GetWindowID(Int_t id) {
-
-//   return (Window_t)iwid(id);
    // Create a "client" wrapper for the "canvas" widget to make Fons happy
    QPaintDevice *widDev = iwid(id);
    TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(iwid(id));
@@ -532,7 +665,6 @@ Window_t TGQt::GetWindowID(Int_t id) {
    }
    return rootwid(client);
 }
-
 //______________________________________________________________________________
 Window_t  TGQt::GetDefaultRootWindow() const
 {
@@ -1391,7 +1523,7 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
       if (pix && mask && (qtcontext(gc).fMask & QtGContext::kClipMask)) {
          if ((pix->width() != mask->width()) || (pix->height() != mask->height())) {
             pix->resize(mask->width(), mask->height());
-         }
+        }
          pix->setMask(*mask);
          bitBlt(iwid(dest), dest_x,dest_y,pix, src_x,src_y,width,height, qtcontext(gc).fROp);
       } else {
@@ -2438,7 +2570,7 @@ void TGQt::GetRegionBox(Region_t reg, Rectangle_t *rect)
 	rect->fHeight = rc.height();
 }
 //______________________________________________________________________________
-char **TGQt::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
+char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
 {
    // Returns list of font names matching fontname regexp, like "-*-times-*".
    // The pattern string can contain any characters, but each asterisk (*)
@@ -2452,15 +2584,101 @@ char **TGQt::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*
    //            contain wildcard characters
    // max      - specifies the maximum number of names to be returned
    // count    - returns the actual number of font names
-   fprintf(stderr,"No implementation: TGQt::ListFonts\n");
-   return 0;
+
+   // ------------------------------------------------------
+   //  ROOT uses nin-portable XLDF font description:
+   //  XLFD 
+   // ------------------------------------------------------
+
+   // The X Logical Font Descriptor (XLFD) is a text string made up of 13 parts separated by a minus sign, i.e.: 
+   // -Misc-Fixed-Medium-R-Normal-13-120-75-75-C-70-ISO8859-1 -Adobe-Helvetica-Medium-R-Normal-12-120-75-75-P-67-ISO8859-1 
+   // 
+   // 
+   // FOUNDRY 
+   // text name of font creator 
+   // 
+   // FAMILY_NAME 
+   // name of the font. Related fonts generally have the same base names; i.e. helvetica, helvetica narrow , etc. 
+   
+   // WEIGHT_NAME 
+   // usually one of [light|medium|demibold|bold] but other types may exist 
+   // 
+   // SLANT 
+   // one of [r|i|o]. i and o are used similarly, AFAIK 
+   // 
+   // SETWIDTH_NAME 
+   // [normal|condensed|narrow|double wide] 
+   // 
+   // ADD_STYLE_NAME 
+   // not a classification field, used only for additional differentiation 
+   //
+   // PIXEL_SIZE 
+   // 0 = scalable font; integer typicially height of bounding box 
+   //
+   // POINT_SIZE 
+   // typically height of bounding box in tenths of pixels 
+   // 
+   // RESOLUTION_X 
+   // horizontal dots per inch 
+   // 
+   // RESOLUTION_Y 
+   // vertical dots per inch 
+   // 
+   // SPACING 
+   // [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is a special case of monospaced where no glyphs have pixels outside the character cell; i.e. there is no kerning (no negative metrics). 
+   // 
+   // AVERAGE_WIDTH 
+   // unweighted arithmetic mean of absolute value of width of each glyph in tenths of pixels 
+   // CHARSET_REGISTRY and CHARSET_ENCODING 
+   // the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts    fprintf(stderr,"No implementation: TGQt::ListFonts\n");
+   
+   //  Check whether "Symbol" font is available
+    count = 0;
+    TXlfd  patternFont(fontname);
+    QFontDatabase fdb;
+    QStringList xlFonts;
+    QStringList families = fdb.families();
+    for ( QStringList::Iterator f = families.begin(); f != families.end(); ++f ) {
+        QString family = *f;
+        QStringList styles = fdb.styles( family );
+        for ( QStringList::Iterator s = styles.begin(); s != styles.end(); ++s ) {
+            QString style = *s;
+            // fprintf(stderr," family %s style = %s\n", (const char *)family, (const char *) style);
+            Int_t bold   = fdb.bold  (family, style);
+            Int_t italic = fdb.italic(family, style);
+            TXlfd currentFont(family,bold,italic);
+            if (currentFont != patternFont) continue;
+            
+            QValueList<int> sizes = fdb.pointSizes( family, style );
+            for ( QValueList<int>::Iterator points = sizes.begin();
+                  points != sizes.end() && (Int_t)xlFonts.size() < max; ++points ) 
+            {
+              currentFont.SetPointSize(*points);
+              if (currentFont ==  patternFont )  xlFonts.push_back(currentFont.ToString());
+            }
+        }
+    }
+    count = xlFonts.size();
+    char **listFont = 0;
+    if (count) {
+       char **list = listFont = new char*[count+1];  list[count] = 0;
+       for ( QStringList::Iterator it = xlFonts.begin(); it != xlFonts.end(); ++it ) {
+          char *nextFont = new char[(*it).length()+1];
+          *list = nextFont; list++;
+          strncpy(nextFont,(*it).ascii(),(*it).length());
+       }
+    }
+    return listFont;
 }
 
 //______________________________________________________________________________
-void TGQt::FreeFontNames(char ** /*fontlist*/)
+void TGQt::FreeFontNames(char ** fontlist)
 {
    // Frees the specified the array of strings "fontlist".
-   fprintf(stderr,"No implementation: TGQt::FreeFontNames\n");
+//   fprintf(stderr,"No implementation: TGQt::FreeFontNames\n");
+   char ** list =  fontlist;
+   while (*list) {  delete [] *list; list++;  }
+   delete [] fontlist;
 }
 
 //______________________________________________________________________________
@@ -2618,13 +2836,14 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
    ((TGQt *)this)->SendEvent(TGQt::kDefault,&destroyEvent);
 }
 
-// -- Dummy staff
+
+// -- V.Onuchine's method to back ASIMage
 
 
 //______________________________________________________________________________
 unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
    // in format:
    // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
    //
@@ -2632,7 +2851,6 @@ unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UI
    // By default all pixels from the whole drawable are returned.
    //
    // Note that return array is 32-bit aligned
-
 
    if (!wid || (int(wid) == -1) ) return 0;
 
@@ -2681,8 +2899,9 @@ unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UI
    return 0;
 }
 
+
 //______________________________________________________________________________
-Pixmap_t TGQt::CreatePixmapFromData(unsigned char * bits, UInt_t width, 
+Pixmap_t TGQt::CreatePixmapFromData(unsigned char * bits, UInt_t width,
                                        UInt_t height)
 {
    // create pixmap from RGB data. RGB data is in format :
@@ -2701,9 +2920,8 @@ Pixmap_t TGQt::CreatePixmapFromData(unsigned char * bits, UInt_t width,
 Window_t TGQt::GetCurrentWindow() const
 {
    // Return current/selected window pointer.
-   // This method removes the protection. The code eventually will crash.
-   // Must be moved to some protected area.
+   fprintf(stderr, " Qt layer is not ready for GetCurrentWindow \n");
+   assert(0);
 
    return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
 }
-

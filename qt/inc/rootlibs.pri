@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.6 2005/07/01 21:14:19 fine Exp $
+# $Id: rootlibs.pri,v 1.15 2005/09/20 03:07:34 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -32,6 +32,21 @@
 #       include ($(ROOTSYS)/include/rootlibs.pri)
 #    }
 #
+
+# QMake must be defined by Qmake alone but ... It is not :(  Sept 6, 2005 V.Fine)
+
+unix {
+  QMAKE_EXTENSION_SHLIB = so
+}
+
+mac {
+  QMAKE_EXTENSION_SHLIB = dylib
+  CONFIG += no_smart_library_merge
+}
+
+win32 {
+  QMAKE_EXTENSION_SHLIB = dll
+}
 
 #-- permanent components to be included into any ".pro" file to build the RootCint dictionary
 
@@ -67,37 +82,46 @@ win32 {
    }   
 }
 
-mac {
-   CONFIG +=  no_smart_library_merge
-   LIBS	   += $$system(root-config --glibs) 
-    
-    exists( $(ROOTSYS)/lib/libTable.so ) {
-        LIBS	+= -lTable    
-    }   
-
-    exists( $(ROOTSYS)/lib/libQtGui.so ) {
-#        LIBS	+=  -u _G__cpp_setupG__QtGUI     
-    }   
-   
-    LIBS	   +=  -lGQt 
-    exists( $(ROOTSYS)/lib/libQtGui.so ) {
-        LIBS	+=  -lQtGui   
-    }   
-}
-
 unix {
-    LIBS	+= $$system(root-config --glibs)
-    
-    exists( $(ROOTSYS)/lib/libTable.so ) {
+    LIBS	+= $$system(${ROOTSYS}/bin/root-config --glibs)
+    exists( $(ROOTSYS)/lib/libTable.$$QMAKE_EXTENSION_SHLIB ) {
         LIBS	+= -lTable    
     }   
     
-    exists( $(ROOTSYS)/lib/libQtGui.so ) {
-          LIBS += -lGQt 
-    }   
+    LIBS += -lGQt 
     
-    exists( $(ROOTSYS)/lib/libQtGui.so ) {
+    exists( $(ROOTSYS)/lib/libQtGui.$$QMAKE_EXTENSION_SHLIB ) {
           LIBS	+=  -lQtGui  
           message ( "Found Qt extensions library !!!") 
-    }   
+    }
 }
+FORCELINKLIST	+=                                                                   \
+        _G__cpp_setupG__Hist        _G__cpp_setupG__Graf1   _G__cpp_setupG__G3D     \
+        _G__cpp_setupG__GPad        _G__cpp_setupG__Tree    _G__cpp_setupG__Rint    \
+        _G__cpp_setupG__PostScript  _G__cpp_setupG__Matrix  _G__cpp_setupG__Physics \
+        _G__cpp_setupG__Gui1        _G__cpp_setupG__Geom1   
+
+mac {
+  equals(TEMPLATE, app_fake) {
+  # this trick does not work yet (To be fixed. V.Fine)
+      LIBS	+=  $$join( FORCELINKLIST, " -u ")                                                                
+
+      exists( $(ROOTSYS)/lib/libTable.lib ) {
+         LIBS	+= -u _G__cpp_setupG__Table
+      }   
+
+      exists( $(ROOTSYS)/lib/libQtGui.lib ) {
+         LIBS	+=  -u _G__cpp_setupG__QtGUI     
+      }
+  }
+# -- trick to force the trivial symbolic link under UNIX
+
+  equals(TEMPLATE, lib) {
+     sharedso.target       = lib$${TARGET}.so 
+     sharedso.commands     =  ( rm  -f  $(DESTDIR)$$sharedso.target; ln -s  lib$${TARGET}.$$QMAKE_EXTENSION_SHLIB $$sharedso.target; mv -f  $$sharedso.target $(DESTDIR) )
+
+     QMAKE_EXTRA_UNIX_TARGETS += sharedso
+     POST_TARGETDEPS          += $$sharedso.target
+     QMAKE_CLEAN              += $$sharedso.target
+  }
+ 

@@ -1,14 +1,15 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.10 2005/03/07 07:44:12 brun Exp $
-// Author: Valeri Fine   21/01/2002
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.16 2005/06/24 12:27:29 brun Exp $
+// Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
+ * Copyright (C) 2003 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 #ifndef ROOT_TQtWidget
 #define ROOT_TQtWidget
@@ -50,6 +51,7 @@
   class QEvent;
   class QSizePolicy;
 #endif
+  class TApplication;
 //
 // TQtWidget is a custom QWidget to back ROOT TCanvas.
 //
@@ -171,6 +173,9 @@ protected:
    void     EmitSignal (UInt_t f);
    void     EmitTestedSignal();
 public:
+   // Static method to inmitate ROOT as needed
+   static TApplication *InitRint(Bool_t prompt=kFALSE, const char *appClassName="QtRint", int *argc=0, char **argv=0,
+          void *options = 0, int numOptions = 0, Bool_t noLogo = kFALSE);
    //  Proxy methods to access the TCanvas selected TObject 
    //  and last processed ROOT TCanvas event
    Int_t             GetEvent()       const;

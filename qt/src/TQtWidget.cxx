@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.57 2005/08/17 17:40:57 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.58 2005/09/07 18:47:55 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -125,16 +125,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
-    static int argc   =0;
-    if (!gApplication) {
-        argc = qApp->argc();
-        TRint *rint = new TRint("Rint", &argc, qApp->argv(),0,0,kTRUE);
-        // To mimic what TRint::Run(kTRUE) does.
-        const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
-        if (prompt)
-            Getlinem(kInit, rint->GetPrompt());
-        TQtTimer::Create()->start(0,TRUE);
-    }
+    if (!gApplication) InitRint();
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     TGQt::RegisterWid(this);
@@ -177,6 +168,35 @@ TQtWidget::~TQtWidget()
   }
 }
 
+//_____________________________________________________________________________
+TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, int *argc, char **argv,
+          void *options, int numOptions, Bool_t /*noLogo*/)
+{
+   //
+   // Instantiate ROOT from within Qt application if needed
+   // Return the TRint pointer
+   // Most parametrs are passed to TRint class ctor
+   //
+   // Bool_t prompt = kTRUE;  Instantiate ROOT with ROOT command prompt
+   //                 kFALSE; No ROOT prompt. The default for Qt GUI applications
+   //
+   //  The prompt option can be defined via ROOT parameter file ".rootrc"
+   // .rootrc:
+   //    . . . 
+   //  Gui.Prompt   yes
+   //
+   static int localArgc   =0;
+   if (!gApplication) {
+       localArgc = argc ? *argc : qApp->argc();
+       TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
+       // To mimic what TRint::Run(kTRUE) does.
+       const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
+       if (prompt)
+            Getlinem(kInit, rint->GetPrompt());
+        TQtTimer::Create()->start(0,TRUE);
+    }
+    return gApplication;
+}
 //_____________________________________________________________________________
 void TQtWidget::adjustSize()
 {

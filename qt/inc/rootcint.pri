@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcint.pri,v 1.1 2005/06/28 13:21:39 brun Exp $
+# $Id: rootcint.pri,v 1.4 2005/08/17 18:46:49 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -58,17 +58,15 @@
 ROOTLIBSPRI = 
 ROOTLIBSPRIFILE = rootlibs.pri
 
-isEmpty(ROOTLIBSPRI) 
-{
+
 # Wow !!! Qt exists function for the nested include file applies the relative path
-  exists ($$ROOTLIBSPRIFILE){
-     ROOTLIBSPRI = inc/$$ROOTLIBSPRIFILE
-  }
+exists ($$ROOTLIBSPRIFILE){
+  ROOTLIBSPRI = inc/$$ROOTLIBSPRIFILE
 }
 
 isEmpty(ROOTLIBSPRI) 
 {
-  exists ($(QTROOTSYS)/include/$$ROOTLIBSPRIFILE){
+  exists ($(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE){
      ROOTLIBSPRI = $(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE
   }
 }
@@ -89,7 +87,7 @@ isEmpty(ROOTLIBSPRI){
 }
 
 #
-# ----------  define ootcintrule.pri  -----------------
+# ----------  define rootcintrule.pri  -----------------
 # -- define the RootCint ROOT dictionary building rule
 #
 ROOTCINTRULEPRI = 
