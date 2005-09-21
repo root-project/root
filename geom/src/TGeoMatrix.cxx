@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.41 2005/07/27 12:08:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.42 2005/09/21 12:12:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1763,7 +1763,6 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    // assignment
    if (matrix == this) return *this;
    Clear();
-   if (matrix == gGeoIdentity) return *this;
    TGeoMatrix::operator=(*matrix);
    if (matrix->IsIdentity()) return *this;
    if (matrix->IsTranslation()) {
@@ -1786,6 +1785,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
 {
    // assignment
    if (&matrix == this) return *this;
+   Clear();
    TGeoMatrix::operator=(matrix);
    if (matrix.IsIdentity()) return *this;
    if (matrix.IsTranslation()) {
