@@ -56,9 +56,9 @@ Rotations can be expressed in various ways according to their representations. F
   <li>Rotation described by Euler angles
   <li>Rotation described by a direction axis and an angle 
 <li>Rotation described by a quaternion
+<li>Optimized rotation around the x, y and z axis and described by just one angle.
 </ul> 
  </li>
-In the current release, only the implementation based on 3D matrix is present.
 <li><h4>3D Transformation</h4> 
 A 3D transformation is composed of a rotation and a translation. We describe transformations using a class which is template on the 3D rotation types and the vector type. 
 It is important to note that transformations act differently on  Vectors and Points. The Vectors only rotate, therefore when applying a transfomation (rotation + translation) on a Vector, only the rotation operates while the translation has no effect. The interface for Transformations is similar to the one used in the CLHEP Geometry package 
@@ -101,10 +101,10 @@ All of the classes and functions will be in the namespace,
 <em>ROOT::Math</em>. 
 
 <h2>Current Status and Time Scale</h2>
-This current version is avaliable with the <A href="http://root.cern.ch/root/Version502.html">ROOT development version 5.02</A>. 
+This current version is avaliable with the <A href="http://root.cern.ch/root/Version504.html">ROOT development version 5.04</A>. 
 A tar file of all MathCore is downloadable from 
-<A href="http://seal.web.cern.ch/seal/MathLibs/MathCore-1_0_0.tar.gz">here</A>.
-The current version provides Vectors and 3d Rotations based on 3x3 matrices.
+<A href="http://seal.web.cern.ch/seal/MathLibs/MathCore-5_0_4.tar.gz">here</A>.
+
 
 <h2>Backward compatibility with %ROOT and CLHEP Vector classes</h2>
 
