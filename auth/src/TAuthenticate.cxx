@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.4 2005/08/31 11:11:46 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.5 2005/09/06 09:34:33 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1165,6 +1165,8 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
    //
    // secure <machine fqdn> login <user> password <passwd>
    //
+   // <machine fqdn> may be a domain name or contain the wild card '*'.
+   //
    // for the secure protocols. All lines must start in the first column.
 
    Bool_t result = kFALSE;
@@ -1218,16 +1220,12 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
                    strcmp(word[4], "password") && strcmp(word[4], "password-hash"))
                   continue;
 
-               // Determine FQDN of the host name found in the file ...
-               TString host_tmp = word[1];
-               TInetAddress addr = gSystem->GetHostByName(word[1]);
-               if (addr.IsValid()) {
-                  host_tmp = addr.GetHostName();
-                  if (host_tmp == "UnNamedHost")
-                     host_tmp = addr.GetHostAddress();
-               }
-
-               if (host_tmp == remote) {
+               // Treat the host name found in file as a regular expression
+               // with '*' as a wild card
+               TString href(word[1]);
+               href.ReplaceAll("*",".*");
+               TRegexp rg(href);
+               if (remote.Index(rg) != kNPOS) {
                   if (user == "") {
                      user = word[3];
                      passwd = word[5];
@@ -1417,7 +1415,9 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
          Gl_config("noecho", 0);
          if (pw[0]) {
             pw[strlen(pw) - 1] = 0;   // get rid of \n
-            return StrDup(pw);
+            char *rpw = StrDup(pw);
+            memset(pw, 0, strlen(pw));
+            return rpw;
          }
          return 0;
       }
