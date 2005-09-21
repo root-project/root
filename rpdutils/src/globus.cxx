@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.9 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.10 2005/02/22 17:14:28 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -493,11 +493,12 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
 
    // Attach segment to address
    gss_buffer_t databuf = (gss_buffer_t) shmat(ShmId, 0, 0);
-   if ((int) databuf < 0) {
+   if (databuf == (gss_buffer_t)(-1)) {
       ErrorInfo
           ("GlbsToolStoreContext: while attaching to shared memory segment (rc=%d)",
            (int) databuf);
       gss_release_buffer(&MinStat,SecContExp);
+      shmctl(ShmId, IPC_RMID, &shm_ds);
       return 0;
    }
    databuf->length = SecContExp->length;
@@ -526,6 +527,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
       ErrorInfo
           ("GlbsToolStoreContext: can't get info about shared memory segment %d",
            ShmId);
+      shmctl(ShmId, IPC_RMID, &shm_ds);
       return 0;
    }
    // Get info about user logging in
@@ -538,6 +540,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
       ErrorInfo
           ("GlbsToolStoreContext: can't change ownership of shared memory segment %d",
            ShmId);
+      shmctl(ShmId, IPC_RMID, &shm_ds);
       return 0;
    }
    // return shmid to rootd
@@ -552,6 +555,7 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *ShmId)
 
    key_t shm_key = IPC_PRIVATE;
    int shm_flg = 0777;
+   struct shmid_ds shm_ds;
 
    if (gDebug > 2)
       ErrorInfo("GlbsToolStoreToShm: Enter: ShmId: %d", *ShmId);
@@ -579,10 +583,11 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *ShmId)
 
    // Attach segment to address
    gss_buffer_t databuf = (gss_buffer_t) shmat(lShmId, 0, 0);
-   if ((int) databuf < 0) {
+   if (databuf == (gss_buffer_t)(-1)) {
       ErrorInfo
           ("GlbsToolStoreToShm: while attaching to shared memory segment (rc=%d)",
            (int) databuf);
+      shmctl(ShmId, IPC_RMID, &shm_ds);
       return 2;
    }
    databuf->length = buffer->length;
