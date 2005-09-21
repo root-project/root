@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.40 2005/06/30 13:09:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.41 2005/07/27 12:08:22 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -842,10 +842,15 @@ void TGeoRotation::FastRotZ(Double_t *sincos)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoRotation::GetPhiRotation() const
+Double_t TGeoRotation::GetPhiRotation(Bool_t fixX) const
 {
-//--- Returns rotation angle about Z axis in degrees.
-   Double_t phi = 180.*TMath::ATan2(fRotationMatrix[3], fRotationMatrix[0])/TMath::Pi();
+//--- Returns rotation angle about Z axis in degrees. If the rotation is a pure
+//    rotation about Z, fixX parameter does not matter, otherwise its meaning is:
+//    - fixX = true  : result is the phi angle of the projection of the rotated X axis in the un-rotated XY
+//    - fixX = false : result is the phi angle of the projection of the rotated Y axis - 90 degrees
+   Double_t phi;
+   if (fixX) phi = 180.*TMath::ATan2(-fRotationMatrix[1],fRotationMatrix[4])/TMath::Pi();
+   else      phi = 180.*TMath::ATan2(fRotationMatrix[3], fRotationMatrix[0])/TMath::Pi();
    return phi;
 }   
 
