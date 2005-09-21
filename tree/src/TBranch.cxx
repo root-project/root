@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.91 2005/08/15 21:23:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.92 2005/09/21 19:02:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -537,8 +537,8 @@ Int_t TBranch::Fill()
       fWriteBasket++;
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
       if (fWriteBasket >= fMaxBaskets) {
-           //Increase BasketEntry buffer of a minimum of 10 locations
-           // and a maximum of 50 per cent of current size
+           //Increase BasketEntry buffer to a minimum of 10 locations
+           //and a maximum of 50 per cent of current size
          Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
          fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
          fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
@@ -1423,8 +1423,8 @@ void TBranch::SetFile(const char *fname)
 //_______________________________________________________________________
 void TBranch::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+// Stream a class object
+
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       fTree = gTree;
@@ -1550,8 +1550,8 @@ void TBranch::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      fMaxBaskets = fBaskets.GetEntriesFast();
       Int_t maxBaskets = fMaxBaskets;
+      fMaxBaskets = fBaskets.GetEntriesFast();
       if (fMaxBaskets < 10) fMaxBaskets=10;
       TBranch::Class()->WriteBuffer(b,this);
       fMaxBaskets = maxBaskets;
@@ -1561,8 +1561,7 @@ void TBranch::Streamer(TBuffer &b)
 //_______________________________________________________________________
 void TBranch::WriteBasket(TBasket* basket)
 {
-//*-*-*-*-*-*-*-*-*Write the current basket to disk*-*-*-*-*
-//*-*              =========================================
+// Write the current basket to disk
 
    Int_t nout  = basket->WriteBuffer();    //  Write buffer
    fBasketBytes[fWriteBasket]  = basket->GetNbytes();
@@ -1580,8 +1579,8 @@ void TBranch::WriteBasket(TBasket* basket)
    fWriteBasket++;
    fBaskets.AddAtAndExpand(basket,fWriteBasket);
    if (fWriteBasket >= fMaxBaskets) {
-      //Increase BasketEntry buffer of a minimum of 10 locations
-      // and a maximum of 50 per cent of current size
+      //Increase BasketEntry buffer to a minimum of 10 locations
+      //and a maximum of 50 per cent of current size
       Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
       fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
       fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
