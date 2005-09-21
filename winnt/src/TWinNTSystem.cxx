@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.121 2005/08/18 16:32:24 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.122 2005/09/05 09:42:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -898,8 +898,10 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
-      fReadmask->Zero();
-      fWritemask->Zero();
+//      fReadmask->Zero();
+//      fWritemask->Zero();
+      fReadmask->Clr(h->GetFd());
+      fWritemask->Clr(h->GetFd());
 
       while ((th = (TFileHandler *) next())) {
          int fd = th->GetFd();
