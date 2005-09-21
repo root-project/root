@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.10 2005/02/22 17:14:28 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.11 2005/09/21 10:51:24 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -587,7 +587,7 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *ShmId)
       ErrorInfo
           ("GlbsToolStoreToShm: while attaching to shared memory segment (rc=%d)",
            (int) databuf);
-      shmctl(ShmId, IPC_RMID, &shm_ds);
+      shmctl(lShmId, IPC_RMID, &shm_ds);
       return 2;
    }
    databuf->length = buffer->length;
