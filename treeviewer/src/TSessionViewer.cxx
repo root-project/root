@@ -36,6 +36,7 @@
 #include <TGMenu.h>
 #include <TGStatusBar.h>
 #include <TGIcon.h>
+#include <TChain.h>
 #include <TDSet.h>
 #include <TProof.h>
 #include <TRandom.h>
@@ -871,6 +872,7 @@ void TSessionQueryFrame::OnBtnFinalize()
 {
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+      gPad->SetEditable(kFALSE);
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       TQueryDescription *query = (TQueryDescription *)item->GetUserData();
       fViewer->GetActDesc()->fProof->Finalize(query->fReference);
@@ -1010,25 +1012,51 @@ void TSessionQueryFrame::OnBtnAbort()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnSubmit()
 {
+   Long64_t id = 0;
+   TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
+   TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
+   fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
 
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
 
-      TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
-      TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
-
-      fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
-      Int_t id = fViewer->GetActDesc()->fProof->Process(
-                                          newquery->fDSet,
-                                          newquery->fSelectorString,
-                                          newquery->fOptions,
-                                          newquery->fNoEntries,
-                                          newquery->fFirstEntry);
-
+      fViewer->GetActDesc()->fProof->cd();
+      if (newquery->fChain) {
+         if (newquery->fChain->IsA() == TChain::Class()) {
+            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
+            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
+                                                       newquery->fOptions,
+                                                       newquery->fNoEntries,
+                                                       newquery->fFirstEntry);
+         }
+         else if (newquery->fChain->IsA() == TDSet::Class()) {
+            id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
+                                                      newquery->fOptions,
+                                                      newquery->fNoEntries,
+                                                      newquery->fFirstEntry);
+         }
+      }
       newquery->fReference= Form("session-%s:q%d",
             fViewer->GetActDesc()->fProof->GetSessionTag(), id);
 
       fViewer->SetChangePic(kTRUE);
+   }
+   else if (fViewer->GetActDesc()->fLocal){
+      if (newquery->fChain) {
+         if (newquery->fChain->IsA() == TChain::Class()) {
+            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
+                            newquery->fOptions,
+                            newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
+                            newquery->fFirstEntry);
+         }
+         else if (newquery->fChain->IsA() == TDSet::Class()) {
+            id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
+                                                      newquery->fOptions,
+                                                      newquery->fNoEntries,
+                                                      newquery->fFirstEntry);
+         }
+      }
+      newquery->fReference = Form("local-session-%s:q%d", newquery->fQueryName.Data(), id);
    }
 }
 
@@ -1938,7 +1966,7 @@ void TSessionViewer::QueryResultReady(char *query)
    char strtmp[256];
    sprintf(strtmp,"Query Result Ready for %s\n", query);
    ShowInfo(strtmp);
-   TGListTreeItem *item, *item2;
+   TGListTreeItem *item=0, *item2=0;
    TQueryDescription *lquery = 0;
    TIter nextp(fActDesc->fQueries);
    while ((lquery = (TQueryDescription *)nextp())) {
@@ -1947,7 +1975,7 @@ void TSessionViewer::QueryResultReady(char *query)
          if (!lquery->fResult)
             break;
          if (lquery->fResult->GetDSet())
-            lquery->fDSet = lquery->fResult->GetDSet();
+            lquery->fChain = lquery->fResult->GetDSet();
          item = fSessionHierarchy->FindItemByObj(fSessionItem, fActDesc);
          if (item) {
             item2 = fSessionHierarchy->FindItemByObj(item, lquery);
@@ -2048,12 +2076,13 @@ void TSessionViewer::StartViewer()
    TObject *obj = (TObject *)item->GetUserData();
    if (obj->IsA() != TQueryDescription::Class()) return;
    TQueryDescription *query = (TQueryDescription *)obj;
-   if (query->fDSet)
-      query->fDSet->StartViewer();
-   else if (query->fResult && query->fResult->GetDSet()) {
-      query->fDSet = query->fResult->GetDSet();
-      query->fDSet->StartViewer();
+   if (!query->fChain && query->fResult && query->fResult->GetDSet()) {
+      query->fChain = query->fResult->GetDSet();
    }
+   if (query->fChain->IsA() == TChain::Class())
+      ((TChain *)query->fChain)->StartViewer();
+   else if (query->fChain->IsA() == TDSet::Class())
+      ((TDSet *)query->fChain)->StartViewer();
 }
 
 //______________________________________________________________________________

@@ -44,6 +44,7 @@
 #include <time.h>
 
 class TList;
+class TChain;
 class TDSet;
 class TGNumberEntry;
 class TGTextEntry;
@@ -105,7 +106,7 @@ public:
    TString        fParFile;         // parameter file name
    Int_t          fNoEntries;       // number of events/entries to process
    Int_t          fFirstEntry;      // first event/entry to process
-   TDSet          *fDSet;           // dataset on which to process selector
+   TObject        *fChain;          // dataset on which to process selector
    TQueryResult   *fResult;         // query result received back
 
 public:

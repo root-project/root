@@ -27,6 +27,7 @@
 #endif
 
 class TList;
+class TChain;
 class TDSet;
 class TGTextEntry;
 class TGTextButton;
@@ -51,8 +52,8 @@ private:
    TGTextEntry          *fName;           // dataset name text entry
    TGTextButton         *fApplyButton;    // apply button
    TGTextButton         *fCloseButton;    // close button
-   TSeqCollection       *fDSets;          // collection of datasets
-   TDSet                *fDSet;           // actual dataset
+   TSeqCollection       *fChains;         // collection of datasets
+   TObject              *fChain;          // actual TDSet or TChain
 
 public:
    TNewChainDlg(const TGWindow *p=0, const TGWindow *main=0);
@@ -62,7 +63,7 @@ public:
    virtual void OnDoubleClick(TGLVEntry*,Int_t);
    virtual void DisplayDirectory(const TString &fname);
    void         OnElementDblClicked(TGLVEntry* entry, Int_t btn);
-   void         OnElementSelected(TDSet *dset); //*SIGNAL*
+   void         OnElementSelected(TObject *obj); //*SIGNAL*
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void CloseWindow();
@@ -94,7 +95,7 @@ private:
    TGTextEntry       *fTxtEventList;   // event list text entry
    TSessionViewer    *fViewer;         // pointer on main viewer
    TQueryDescription *fQuery;          // query description class
-   TDSet             *fDSet;           // actual dataset
+   TObject           *fChain;          // actual TChain
 
 public:
    TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
@@ -108,7 +109,7 @@ public:
    void     OnBrowseEventList();
    void     OnBtnSaveClicked();
    void     OnBtnCloseClicked();
-   void     OnElementSelected(TDSet *dset);
+   void     OnElementSelected(TObject *obj);
    void     CloseWindow();
    void     Popup();
    void     UpdateFields(TQueryDescription *desc);

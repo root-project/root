@@ -23,6 +23,7 @@
 #include <TSystem.h>
 #include <TGButton.h>
 #include <TList.h>
+#include <TChain.h>
 #include <TDSet.h>
 #include <TGTextEntry.h>
 #include <TGTextBuffer.h>
@@ -140,11 +141,11 @@ TNewChainDlg::~TNewChainDlg()
 }
 
 //______________________________________________________________________________
-void TNewChainDlg::OnElementSelected(TDSet *dset)
+void TNewChainDlg::OnElementSelected(TObject *obj)
 {
    // Emits OnElementSelected signal if dset is not zero
-   if (dset) {
-      Emit("OnElementSelected(TDSet *)", (Long_t)dset);
+   if (obj) {
+      Emit("OnElementSelected(TObject *)", (Long_t)obj);
    }
 }
 
@@ -153,9 +154,17 @@ void TNewChainDlg::OnElementDblClicked(TGLVEntry *entry, Int_t)
 {
    // Handle double click in the Memory list view and put the type 
    // and name of selected object in the text entry
-   fDSet = (TDSet *)entry->GetUserData();
-   TString s = Form("%s : %s" ,fDSet->GetName(),fDSet->GetObjName());
-   fName->SetText(s);
+   fChain = (TObject *)entry->GetUserData();
+   if (fChain->IsA() == TChain::Class()) {
+      TString s = Form("%s : %s" , ((TChain *)fChain)->GetTitle(), 
+                      ((TChain *)fChain)->GetName());
+      fName->SetText(s);
+   }
+   else if (fChain->IsA() == TDSet::Class()) {
+      TString s = Form("%s : %s" , ((TDSet *)fChain)->GetName(), 
+                      ((TDSet *)fChain)->GetObjName());
+      fName->SetText(s);
+   }
 }
 
 //______________________________________________________________________________
@@ -163,17 +172,22 @@ void TNewChainDlg::UpdateList()
 {
    // Update Memory list view 
 
-   TGLVEntry *item;
-   TDSet *dset = 0;
-   fDSets = gROOT->GetListOfDataSets();
+   TGLVEntry *item=0;
+   TObject *obj = 0;
+   fChains = gROOT->GetListOfDataSets();
    fLVContainer->RemoveAll();
-   if (!fDSets) return;
-   TIter next(fDSets);
+   if (!fChains) return;
+   TIter next(fChains);
    // loop on the list of chains/datasets in memory,
    // and fill the associated listview
-   while ((dset = (TDSet *)next())) {
-      item = new TGLVEntry(fLVContainer, dset->GetObjName(), dset->GetName());
-      item->SetUserData(dset);
+   while ((obj = (TObject *)next())) {
+      if (obj->IsA() == TChain::Class())
+         item = new TGLVEntry(fLVContainer, ((TChain *)obj)->GetName(), 
+                              ((TChain *)obj)->GetTitle());
+      else if (obj->IsA() == TDSet::Class())
+         item = new TGLVEntry(fLVContainer, ((TDSet *)obj)->GetObjName(), 
+                              ((TDSet *)obj)->GetName());
+      item->SetUserData(obj);
       fLVContainer->AddItem(item);
    }
    fClient->NeedRedraw(fLVContainer);
@@ -230,12 +244,12 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case 0:
                      // Apply button
-                     OnElementSelected(fDSet);
+                     OnElementSelected(fChain);
                      break;
 
                   case 1:
                      // Close button
-                     fDSet = 0;
+                     fChain = 0;
                      DeleteWindow();
                      break;
                }
@@ -282,10 +296,10 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
    Window_t wdummy;
    Int_t  ax, ay;
    fEditMode = editmode;
-   fDSet = 0;
+   fChain = 0;
    fQuery = query;
-   if (fQuery && fQuery->fDSet) {
-      fDSet = fQuery->fDSet;
+   if (fQuery && fQuery->fChain) {
+      fChain = fQuery->fChain;
    }
    Build(gui);
    // if in edit mode, update fields with query description data
@@ -459,17 +473,19 @@ void TNewQueryDlg::OnNewQueryMore()
 void TNewQueryDlg::OnBrowseChain()
 {
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
-   dlg->Connect("OnElementSelected(TDSet *)", "TNewQueryDlg", 
-                this, "OnElementSelected(TDSet *)");
+   dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg", 
+                this, "OnElementSelected(TObject *)");
 }
 
 //____________________________________________________________________________
-void TNewQueryDlg::OnElementSelected(TDSet *dset)
+void TNewQueryDlg::OnElementSelected(TObject *obj)
 {
-   if (dset) {
-      fDSet = dset;
-      TString s = Form("%s : %s" , fDSet->GetName(), fDSet->GetObjName());
-      fTxtChain->SetText(s.Data());
+   if (obj) {
+      fChain = obj;
+      if (obj->IsA() == TChain::Class())
+         fTxtChain->SetText(((TChain *)fChain)->GetName());
+      else if (obj->IsA() == TDSet::Class())
+         fTxtChain->SetText(((TDSet *)fChain)->GetObjName());
    }
 }
 
@@ -510,13 +526,13 @@ void TNewQueryDlg::OnBtnSaveClicked()
       newquery = new TQueryDescription();
 
    newquery->fSelectorString  = fTxtSelector->GetText();
-   if (fDSet) {
-      newquery->fTDSetString  = fDSet->GetObjName();
-      newquery->fDSet         = fDSet;
+   if (fChain) {
+      newquery->fTDSetString  = fChain->GetName();
+      newquery->fChain        = fChain;
    }
    else {
       newquery->fTDSetString  = "";
-      newquery->fDSet         = 0;
+      newquery->fChain         = 0;
    }
    newquery->fQueryName       = fTxtQueryName->GetText();
    newquery->fOptions         = fTxtOptions->GetText();
@@ -532,14 +548,16 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->AddItem(item,
          newquery->fQueryName, fViewer->GetQueryConPict(), fViewer->GetQueryConPict());
       item2->SetUserData(newquery);
-
    }
    else {
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       item->SetUserData(newquery);
    }
-   if (newquery->fDSet) {
-      nbElements = newquery->fDSet->GetListOfElements()->GetSize();
+   if (newquery->fChain) {
+      if (newquery->fChain->IsA() == TChain::Class())
+         nbElements = ((TChain *)newquery->fChain)->GetEntries();
+      else if (newquery->fChain->IsA() == TDSet::Class())
+         nbElements = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
    }
    fViewer->GetSessionFrame()->SetNumberOfFiles(nbElements);
    fViewer->GetSessionFrame()->SetEntries(newquery->fNoEntries);
