@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.110 2005/09/18 11:51:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.111 2005/09/19 14:49:09 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -687,39 +687,43 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          // Finalize setup of the server
          slave->SetupServ(TSlave::kMaster, fConfFile);
 
-         // check protocol compatability
-         // protocol 1 is not supported anymore
-         if (fProtocol == 1) {
-            Error("StartSlaves",
-                  "client and remote protocols not compatible (%d and %d)",
-                  kPROOF_Protocol, fProtocol);
-            delete slave;
-            return kFALSE;
-         }
 
-         fSlaves->Add(slave);
-         fAllMonitor->Add(slave->GetSocket());
-         Collect(slave);
-         if (slave->GetStatus() == -99) {
-            Error("StartSlaves", "not allowed to connect to PROOF master server");
-            return 0;
-         }
+         if (slave->IsValid()) {
 
-         if (!slave->IsValid()) {
-            delete slave;
-            Error("StartSlaves",
-                  "failed to setup connection with PROOF master server");
-            return kFALSE;
-         }
-
-         fIntHandler = new TProofInterruptHandler(this);
-         fIntHandler->Add();
-
-         if (!gROOT->IsBatch()) {
-            if ((fProgressDialog =
-                 gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
-               if (fProgressDialog->LoadPlugin() == -1)
-                  fProgressDialog = 0;
+            // check protocol compatability
+            // protocol 1 is not supported anymore
+            if (fProtocol == 1) {
+               Error("StartSlaves",
+                     "client and remote protocols not compatible (%d and %d)",
+                     kPROOF_Protocol, fProtocol);
+               delete slave;
+               return kFALSE;
+            }
+            
+            fSlaves->Add(slave);
+            fAllMonitor->Add(slave->GetSocket());
+            Collect(slave);
+            if (slave->GetStatus() == -99) {
+               Error("StartSlaves", "not allowed to connect to PROOF master server");
+               return 0;
+            }
+            
+            if (!slave->IsValid()) {
+               delete slave;
+               Error("StartSlaves",
+                     "failed to setup connection with PROOF master server");
+               return kFALSE;
+            }
+            
+            fIntHandler = new TProofInterruptHandler(this);
+            fIntHandler->Add();
+            
+            if (!gROOT->IsBatch()) {
+               if ((fProgressDialog =
+                    gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
+                  if (fProgressDialog->LoadPlugin() == -1)
+                     fProgressDialog = 0;
+            }
          }
 
       } else {
@@ -2387,8 +2391,6 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
          qmode = kAsync;
       } else if (m.Contains("SYNC")) {
          qmode = kSync;
-      } else {
-         Info("GetQueryMode","unknown option %s (use \"ASYNC\" or \"SYNC\")", mode);
       }
    }
    return qmode;
