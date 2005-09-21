@@ -1,0 +1,18 @@
+# @(#)root/mathcore:$Name:  $:$Id: doc_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# Author: L. Moneta    2005  
+# 
+#
+#
+
+# The following is set; otherwise, it would have to follow GNU
+# conventions.
+AUTOMAKE_OPTIONS = foreign
+
+EXTRA_DIST =	main.html doxyconfig.in
+
+
+docs:
+	if test -d html; then \
+	(cd html; rm -rf *.html *.gif *.css *.dot *.png formula.repository ) \
+	fi
+	doxygen doxyconfig
