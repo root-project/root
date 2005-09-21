@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.90 2005/06/08 21:19:36 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.91 2005/08/15 21:23:51 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1551,8 +1551,10 @@ void TBranch::Streamer(TBuffer &b)
 
    } else {
       fMaxBaskets = fBaskets.GetEntriesFast();
+      Int_t maxBaskets = fMaxBaskets;
       if (fMaxBaskets < 10) fMaxBaskets=10;
       TBranch::Class()->WriteBuffer(b,this);
+      fMaxBaskets = maxBaskets;
    }
 }
 
