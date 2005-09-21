@@ -371,16 +371,15 @@ Bool_t TSessionServerFrame::WriteConfigFile(const TString &filePath, TList *vec)
       sprintf(line, "%s%c%s%c%d%c%s%c", desc->fName.Data(), c,
               desc->fAddress.Data(), c, desc->fPort, c,
               desc->fConfigFile.Data(), c);
-      sprintf(line, "%s%s%c%d%c%s%c%s%c%d",line, "loglevel", c,
+      sprintf(line, "%s%s%c%d%c%s%c%s%c%s%c%d",line, "loglevel", c,
               desc->fLogLevel, c, "user", c, desc->fUserName.Data(),
-              c, desc->fSync);
+              c, "sync", c, desc->fSync);
       sprintf(line,"%s\n", line);
       if (fprintf(f, line) == 0) {
          Error("WriteConfigFile", "Error writing to the config file");
          fclose(f);
          return kFALSE;
       }
-      break;
    }
    fclose(f);
    return kTRUE;
@@ -395,7 +394,7 @@ TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
    homefilePath.Append(filePath);
    FILE* f = fopen(homefilePath.Data(), "r");
    if (!f) {
-      Error("ReadConfigFile", "Cannot open the confile %s", filePath.Data());
+      Error("ReadConfigFile", "Cannot open the config file %s", filePath.Data());
       return vec;
    }
    char line[2048];
