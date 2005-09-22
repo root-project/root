@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.40 2005/05/23 16:58:00 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.41 2005/06/08 21:19:36 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -108,6 +108,7 @@ public:
     virtual void    *GetValuePointer() const;
             Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
+    virtual void     KeepCircular(Long64_t maxEntries);
     virtual Bool_t   Notify() {fAddress = 0; return 1;}
     virtual void     Print(Option_t *option="") const;
             void     PrintValue(Int_t i) const;

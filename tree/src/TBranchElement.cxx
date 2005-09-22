@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.178 2005/08/29 10:57:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.179 2005/09/13 14:35:01 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1536,6 +1536,21 @@ Bool_t TBranchElement::IsMissingCollection() const
       }
    }
    return ismissing;
+}
+
+//______________________________________________________________________________
+void TBranchElement::KeepCircular(Long64_t maxEntries)
+{
+   // keep a maximum of fMaxEntries in memory
+
+   TBranch::KeepCircular(maxEntries);
+
+   Int_t nb = fBranches.GetEntriesFast();
+   TBranch *branch;
+   for (Int_t i=0;i<nb;i++)  {
+      branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->KeepCircular(maxEntries);
+   }
 }
 
 //______________________________________________________________________________
