@@ -2,7 +2,7 @@
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -400,7 +400,8 @@ TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
    homefilePath.Append(filePath);
    FILE* f = fopen(homefilePath.Data(), "r");
    if (!f) {
-      Error("ReadConfigFile", "Cannot open the config file %s", filePath.Data());
+      if (gDebug > 0)
+         Info("ReadConfigFile", "Cannot open the config file %s", filePath.Data());
       return vec;
    }
    char line[2048];

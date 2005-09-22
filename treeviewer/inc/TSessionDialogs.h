@@ -2,7 +2,7 @@
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,14 +16,14 @@
 //                                                                      //
 // TSessionDialogs                                                      //
 //                                                                      //
-// This file defines several dialogs that are used by TSessionViewer    //
-// The following dialogs are available: TNewChainDlg and TNewQueryDlg   //
+// This file defines several dialogs that are used by TSessionViewer.   //
+// The following dialogs are available: TNewChainDlg and TNewQueryDlg.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 
 #ifndef ROOT_TSessionViewer
-#include <TSessionViewer.h>
+#include "TSessionViewer.h"
 #endif
 
 class TList;

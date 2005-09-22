@@ -2,7 +2,7 @@
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,41 +13,41 @@
 //                                                                      //
 // TSessionDialogs                                                      //
 //                                                                      //
-// This file defines several dialogs that are used by TSessionViewer    //
-// The following dialogs are available: TNewChainDlg and TNewQueryDlg   //
+// This file defines several dialogs that are used by TSessionViewer.   //
+// The following dialogs are available: TNewChainDlg and TNewQueryDlg.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <TSessionDialogs.h>
-#include <TSessionViewer.h>
-#include <TSystem.h>
-#include <TGButton.h>
-#include <TList.h>
-#include <TChain.h>
-#include <TDSet.h>
-#include <TGTextEntry.h>
-#include <TGTextBuffer.h>
-#include <TGNumberEntry.h>
-#include <TGLabel.h>
-#include <TGListView.h>
-#include <TGPicture.h>
-#include <TGFSContainer.h>
-#include <TGFileDialog.h>
-#include <TGListTree.h>
-#include <TInterpreter.h>
-#include <TApplication.h>
-#include <TKey.h>
-#include <TGTableLayout.h>
-#include <TGFileDialog.h>
+#include "TSessionDialogs.h"
+#include "TSessionViewer.h"
+#include "TSystem.h"
+#include "TGButton.h"
+#include "TList.h"
+#include "TChain.h"
+#include "TDSet.h"
+#include "TGTextEntry.h"
+#include "TGTextBuffer.h"
+#include "TGNumberEntry.h"
+#include "TGLabel.h"
+#include "TGListView.h"
+#include "TGPicture.h"
+#include "TGFSContainer.h"
+#include "TGFileDialog.h"
+#include "TGListTree.h"
+#include "TInterpreter.h"
+#include "TApplication.h"
+#include "TKey.h"
+#include "TGTableLayout.h"
+#include "TGFileDialog.h"
 
 ClassImp(TNewChainDlg)
 ClassImp(TNewQueryDlg)
 
-const char *filetypes[] = { 
+const char *filetypes[] = {
    "C files",       "*.C",
    "ROOT files",    "*.root",
    "All files",     "*",
-   0,               0 
+   0,               0
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    TGTransientFrame(p, main, 350, 300, kVerticalFrame)
 {
    // Create a new chain dialog box. Used to list chains present in memory
-   // and offers the possibility to create new ones by executing macros 
+   // and offers the possibility to create new ones by executing macros
    // directly from the associate file container.
 
    SetCleanup(kDeepCleanup);
@@ -74,7 +74,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    fLVContainer->SetCleanup(kDeepCleanup);
    AddFrame(fListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 4, 4, 4, 4));
 
-   fListView->Connect("DoubleClicked(TGLVEntry*, Int_t)", "TNewChainDlg", 
+   fListView->Connect("DoubleClicked(TGLVEntry*, Int_t)", "TNewChainDlg",
                       this, "OnElementDblClicked(TGLVEntry* ,Int_t)");
 
    // Add text entry showing type and name of user's selection
@@ -152,16 +152,16 @@ void TNewChainDlg::OnElementSelected(TObject *obj)
 //______________________________________________________________________________
 void TNewChainDlg::OnElementDblClicked(TGLVEntry *entry, Int_t)
 {
-   // Handle double click in the Memory list view and put the type 
+   // Handle double click in the Memory list view and put the type
    // and name of selected object in the text entry
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
-      TString s = Form("%s : %s" , ((TChain *)fChain)->GetTitle(), 
+      TString s = Form("%s : %s" , ((TChain *)fChain)->GetTitle(),
                       ((TChain *)fChain)->GetName());
       fName->SetText(s);
    }
    else if (fChain->IsA() == TDSet::Class()) {
-      TString s = Form("%s : %s" , ((TDSet *)fChain)->GetName(), 
+      TString s = Form("%s : %s" , ((TDSet *)fChain)->GetName(),
                       ((TDSet *)fChain)->GetObjName());
       fName->SetText(s);
    }
@@ -170,7 +170,7 @@ void TNewChainDlg::OnElementDblClicked(TGLVEntry *entry, Int_t)
 //______________________________________________________________________________
 void TNewChainDlg::UpdateList()
 {
-   // Update Memory list view 
+   // Update Memory list view
 
    TGLVEntry *item=0;
    TObject *obj = 0;
@@ -182,10 +182,10 @@ void TNewChainDlg::UpdateList()
    // and fill the associated listview
    while ((obj = (TObject *)next())) {
       if (obj->IsA() == TChain::Class())
-         item = new TGLVEntry(fLVContainer, ((TChain *)obj)->GetName(), 
+         item = new TGLVEntry(fLVContainer, ((TChain *)obj)->GetName(),
                               ((TChain *)obj)->GetTitle());
       else if (obj->IsA() == TDSet::Class())
-         item = new TGLVEntry(fLVContainer, ((TDSet *)obj)->GetObjName(), 
+         item = new TGLVEntry(fLVContainer, ((TDSet *)obj)->GetObjName(),
                               ((TDSet *)obj)->GetName());
       item->SetUserData(obj);
       fLVContainer->AddItem(item);
@@ -262,7 +262,7 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       case kC_CONTAINER:
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMDBLCLICK:
-               if (parm1==kButton1) 
+               if (parm1==kButton1)
                   OnDoubleClick((TGLVEntry*)fContents->GetLastActive(), parm1);
                break;
          }
@@ -290,7 +290,7 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
          TQueryDescription *query, Bool_t editmode) :
          TGTransientFrame(gClient->GetRoot(), gui, Width, Height)
 {
-   // Create a new Query dialog, used by the Session Viewer, to Edit a Query if 
+   // Create a new Query dialog, used by the Session Viewer, to Edit a Query if
    // the editmode flag is set, or to create a new one if not set
 
    Window_t wdummy;
@@ -336,7 +336,7 @@ TNewQueryDlg::~TNewQueryDlg()
 void TNewQueryDlg::Build(TSessionViewer *gui)
 {
    // builds the dialog
-   
+
    TGButton*   btnTmp;
    fViewer = gui;
    SetLayoutManager(new TGVerticalLayout(this));
@@ -345,20 +345,20 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmNewQuery = new TGGroupFrame(this, "New Query");
    fFrmNewQuery->SetCleanup(kDeepCleanup);
 
-   AddFrame(fFrmNewQuery, new TGLayoutHints(kLHintsExpandX | 
+   AddFrame(fFrmNewQuery, new TGLayoutHints(kLHintsExpandX |
          kLHintsExpandY, 2, 2, 2, 2));
    fFrmNewQuery->SetLayoutManager(new TGTableLayout(fFrmNewQuery, 6, 5));
 
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Query Name :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 4, 0));
-   fFrmNewQuery->AddFrame(fTxtQueryName = new TGTextEntry(fFrmNewQuery, 
-         (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1, 
+   fFrmNewQuery->AddFrame(fTxtQueryName = new TGTextEntry(fFrmNewQuery,
+         (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
          kLHintsCenterY, 5, 5, 4, 0));
 
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "TDSet or TChain :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 4, 0));
-   fFrmNewQuery->AddFrame(fTxtChain = new TGTextEntry(fFrmNewQuery, 
-         (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2, 
+   fFrmNewQuery->AddFrame(fTxtChain = new TGTextEntry(fFrmNewQuery,
+         (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
@@ -366,8 +366,8 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Selector :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmNewQuery->AddFrame(fTxtSelector = new TGTextEntry(fFrmNewQuery, 
-         (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3, 
+   fFrmNewQuery->AddFrame(fTxtSelector = new TGTextEntry(fFrmNewQuery,
+         (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3,
          kLHintsCenterY, 5, 5, 0, 0));
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 2, 3, kLHintsCenterY, 5, 0, 0, 8));
@@ -376,8 +376,8 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Options :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmNewQuery->AddFrame(fTxtOptions = new TGTextEntry(fFrmNewQuery, 
-         (const char *)0, 4), new TGTableLayoutHints(1, 2, 3, 4, 
+   fFrmNewQuery->AddFrame(fTxtOptions = new TGTextEntry(fFrmNewQuery,
+         (const char *)0, 4), new TGTableLayoutHints(1, 2, 3, 4,
          kLHintsCenterY, 5, 0, 0, 8));
    fTxtOptions->SetText("\"ASYN\"");
 
@@ -394,22 +394,22 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1, 
-         TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber, 
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1, 
+   fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1,
+         TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber,
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1,
          0, 37, 0, 0, 8));
    fNumEntries->SetIntNumber(-1);
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fNumFirstEntry = new TGNumberEntry(fFrmMore, 0, 5, -1,
-         TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative, 
-         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0, 
+         TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
          37, 0, 0, 8));
 
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Par file :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore, 
-         (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37, 
+   fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore,
+         (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37,
          5, 0, 0));
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
          new TGTableLayoutHints(2, 3, 2, 3, 0, 6, 0, 0, 8));
@@ -417,8 +417,8 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore, 
-         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37, 
+   fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
+         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37,
          5, 0, 0));
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
          new TGTableLayoutHints(2, 3, 3, 4, 0, 6, 0, 0, 8));
@@ -473,7 +473,7 @@ void TNewQueryDlg::OnNewQueryMore()
 void TNewQueryDlg::OnBrowseChain()
 {
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
-   dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg", 
+   dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg",
                 this, "OnElementSelected(TObject *)");
 }
 
@@ -542,6 +542,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
 
    if (!fEditMode) {
       newquery->fResult = 0;
+      newquery->fStatus = TQueryDescription::kSessionQueryCreated;
       fViewer->GetActDesc()->fQueries->Add((TObject *)newquery);
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->FindChildByData(
          fViewer->GetSessionItem(), fViewer->GetActDesc());
