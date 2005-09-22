@@ -1,4 +1,4 @@
-// $Id:$
+// $Id: make_event_trees.C,v 1.6 2005/02/08 22:38:23 rdm Exp $
 //
 //
 
@@ -7,10 +7,12 @@
 #include "TString.h"
 
 
-Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t files_per_node)
+Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
+                        Int_t files_per_node)
 {
-   // This script generates files on PROOF nodes with trees containing Event objects.
-   // The created files can be used for benchmarking and demonstrations
+   // This script generates files on PROOF nodes with trees containing
+   // Event objects.
+   // The created files can be used for benchmarking and demonstrations.
 
    if (!gProof) {
       cout << "Must Start PROOF before using make_event_trees.C" << endl;
@@ -45,14 +47,14 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    slavemacro << "#include \"TTree.h\""                                                   << endl;
    slavemacro << "#include \"Riostream.h\""                                               << endl;
    slavemacro << "#include \"Event.h\""                                                   << endl;
-   slavemacro << "void build_trees(const Char_t* basedir, Int_t nevents, Int_t nfiles) {" << endl;
+   slavemacro << "void build_trees(const char *basedir, Int_t nevents, Int_t nfiles) {" << endl;
    slavemacro << "   Int_t slave_number = -1;"                                            << endl;
    slavemacro << "   Int_t nslaves = 0;"                                                  << endl;
    slavemacro << "   TString hn = gSystem->HostName();"                                   << endl;
    slavemacro << "   TString ord = gProofServ->GetOrdinal();"                             << endl;
    slavemacro <<                                                                             endl;
    TList* l = gProof->GetSlaveInfo();
-   for(Int_t i=0; i<l->GetSize(); i++) {
+   for (Int_t i=0; i<l->GetSize(); i++) {
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
       if (si->fStatus != TSlaveInfo::kActive) continue;
       slavemacro << "   if (hn == \"";

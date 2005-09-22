@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.27 2005/09/17 13:55:15 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.28 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -184,7 +184,7 @@ void TDSetElement::Validate(Bool_t isTree)
 }
 
 //______________________________________________________________________________
-void TDSetElement::Validate(TDSetElement* elem)
+void TDSetElement::Validate(TDSetElement *elem)
 {
    // Validate by checking against another element.
 
@@ -258,7 +258,7 @@ Int_t TDSetElement::Compare(const TObject *obj) const
 
 
 //______________________________________________________________________________
-void TDSetElement::AddFriend(TDSetElement *friendElement, const char* alias)
+void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
 {
    // Add friend TDSetElement to this set. The friend element will be copied to this object.
 

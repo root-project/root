@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.111 2005/07/09 04:03:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.112 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -273,7 +273,7 @@ Int_t TChain::Add(const char *name, Long64_t nentries)
 Int_t TChain::AddFile(const char *name, Long64_t nentries, const char *tname)
 {
 //       Add a new file to this chain.
-//       if tname is specified, the chain will load the tree named tname
+//       If tname is specified, the chain will load the tree named tname
 //       from the file, otherwise the original treename specified in the
 //       TChain constructor will be used.
 //
@@ -287,9 +287,9 @@ Int_t TChain::AddFile(const char *name, Long64_t nentries, const char *tname)
 //       in a run data base for example.
 //
 //    C- if (nentries == kBigNumber) (default), the file is not connected.
-//       the number of entries in each file will be read only when the file
+//       The number of entries in each file will be read only when the file
 //       will need to be connected to read an entry.
-//       This option is the default and very efficient if one process
+//       This option is the default and very efficient if one processes
 //       the chain sequentially. Note that in case TChain::GetEntry(entry)
 //       is called and entry refers to an entry in the 3rd file, for example,
 //       this forces the Tree headers in the first and second file
@@ -1488,10 +1488,10 @@ TDSet* TChain::MakeTDSet() const
    // Creates a new TDSet containing files from this chain
    // and creates separate TDSet for each friend of this
    // chain and friends of friends of this chain, and so on.
-   // If a chain apprears more than once in this friendship 
+   // If a chain apprears more than once in this friendship
    // graph only one TDSet will be created.
    // All the chains from the friendship graph will be added as
-   // friends to the main TDSet (so friends hierarchy in the 
+   // friends to the main TDSet (so friends hierarchy in the
    // result TDSet will be flat.
    // Keep in mind that the destructor of a TDSet does delete
    // the friend TDSets.
@@ -1517,7 +1517,7 @@ TDSet* TChain::MakeTDSet() const
          else {
             // cleanup
             delete mainDSet;
-            Error("MakeTDSetWithFriends", 
+            Error("MakeTDSetWithFriends",
                   "Only TChains supported. Illegal tree %s.\n", friendElement->GetTree()->GetName());
             return 0;
          }

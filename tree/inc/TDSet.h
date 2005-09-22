@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.14 2005/07/21 17:41:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.15 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -78,7 +78,7 @@ private:
    TEventList      *fEventList;  // event list to be used in processing
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
-   FriendsList_t    *fFriends;   // friend elements
+   FriendsList_t   *fFriends;    // friend elements
    Bool_t           fIsTree;     // true if type is a TTree (or TTree derived)
 
 public:
@@ -90,7 +90,7 @@ public:
    virtual ~TDSetElement();
 
    virtual FriendsList_t *GetListOfFriends() const { return fFriends; }
-   virtual void     AddFriend(TDSetElement *friendElement, const char* alias);
+   virtual void     AddFriend(TDSetElement *friendElement, const char *alias);
    virtual void     DeleteFriends();
    const char      *GetFileName() const { return fFileName; }
    Long64_t         GetFirst() const { return fFirst; }
@@ -139,7 +139,7 @@ public:
                              const char *dir = 0, Long64_t first = 0,
                              Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
-   virtual void          AddFriend(TDSet *friendset, const char* alias);
+   virtual void          AddFriend(TDSet *friendset, const char *alias);
 
    virtual Int_t         Process(const char *selector, Option_t *option = "",
                                  Long64_t nentries = -1,
@@ -180,7 +180,7 @@ public:
    virtual void          StartViewer(); // *MENU*
 
    virtual TTree        *GetTreeHeader(TVirtualProof *proof);
-   virtual void          SetEventList(TEventList* evl) { fEventList = evl;}
+   virtual void          SetEventList(TEventList *evl) { fEventList = evl;}
    TEventList           *GetEventList() const {return fEventList; }
    void                  Validate();
    void                  Validate(TDSet *dset);
