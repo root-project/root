@@ -13,7 +13,7 @@
 //                                                                      //
 // TSessionViewer                                                       //
 //                                                                      //
-// Widget used to manage PROOF or local sessions, PROOF connections,    //
+// Widget used to manage Proof or local sessions, proof connections,    //
 // queries construction and results handling.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ class TQueryResult;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSessionViewer - A GUI for ROOT / PROOF Sessions                     //
+// TSessionViewer - A GUI for ROOT / Proof Sessions                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -102,10 +102,17 @@ class TQueryDescription : public TObject {
 
 public:
    enum ESessionQueryStatus {
+      kSessionQueryAborted = 0,
+      kSessionQuerySubmitted,
       kSessionQueryRunning,
-      kSessionQueryFinished
+      kSessionQueryStopped,
+      kSessionQueryCompleted,
+      kSessionQueryFinalized,
+      kSessionQueryCreated,
+      kSessionQueryFromProof
    };
 
+   ESessionQueryStatus fStatus;     // query status
    TString        fReference;       // query reference string (unique identifier)
    TString        fQueryName;       // query name
    TString        fSelectorString;  // selector name
@@ -364,6 +371,7 @@ public:
    void     OnBtnShowLog();
    void     OnBtnRetrieve();
    void     UpdateInfos();
+   void     UpdateButtons(TQueryDescription *desc);
 
    void     SetTab(Int_t tab) { fTab->SetTab(tab); }
    void     SetTabEnabled(Int_t tab, Bool_t en) { fTab->SetEnabled(tab, en); }
@@ -476,11 +484,11 @@ private:
    TGPopupMenu            *fPopupQry;           // query related popup menu
    TContextMenu           *fContextMenu;        // input/output objects context menu
 
+   TGHProgressBar         *fConnectProg;        // connection progress bar
    TGCanvas               *fTreeView;           // main right sessions/queries tree view
    TGListTree             *fSessionHierarchy;   // main sessions/queries hierarchy list tree
    TGListTreeItem         *fSessionItem;        // base (main) session list tree item
    TGStatusBar            *fStatusBar;          // bottom status bar
-   TGTableLayout          *fLayout;             // main table layout
    TGPicture              *fRightIconPicture;   // lower bottom left icon used to show connection status
    TGIcon                 *fRightIcon;          // associated picture
    TTimer                 *fTimer;              // timer used to change icon picture
@@ -513,6 +521,8 @@ public:
    TGPopupMenu            *GetPopupSrv() { return fPopupSrv; }
    TGPopupMenu            *GetPopupQry() { return fPopupQry; }
    TContextMenu           *GetContextMenu() { return fContextMenu; }
+   TGStatusBar            *GetStatusBar() { return fStatusBar; }
+   TGHProgressBar         *GetConnectProg() { return fConnectProg; }
 
    void     ChangeRightLogo(const char *name);
    void     CleanupSession();
@@ -531,6 +541,7 @@ public:
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }
    void     ShowInfo(const char *txt);
    void     ShowLog(const char *queryref);
+   void     StartupMessage(char *msg, Bool_t stat, Int_t curr, Int_t total);
    void     StartViewer();
 
    ClassDef(TSessionViewer,0)
