@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.12 2005/08/30 08:27:42 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.13 2005/09/02 19:03:11 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -42,7 +42,7 @@
 // Simple example of the use of FOAM:
 // ==================================
 // Int_t kanwa(){
-//   gSystem->Load("libFoam.so");
+//   gSystem->Load("libFoam");
 //   TH2D  *hst_xy = new TH2D("hst_xy" ,  "x-y plot", 50,0,1.0, 50,0,1.0);
 //   Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
 //   TRandom3  *PseRan   = new TRandom3();  // Create random number generator
@@ -1338,7 +1338,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
   // allocate list of pointers, if it was not done before
   if(fXdivPRD == 0){
     fXdivPRD = new TFoamVect*[fDim];
-    for(i=0; i<fDim; i++)  fXdivPRD[i]=0; 
+    for(i=0; i<fDim; i++)  fXdivPRD[i]=0;
   }
   // set division list for direction iDim in H-cubic space!!!
   if( ( 0<=iDim) && (iDim<fDim)){
@@ -1352,7 +1352,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
   }else
     Error("SetXdivPRD", "Wrong iDim  \n");
 
-  // Priting predefined division points 
+  // Priting predefined division points
   cout<<" SetXdivPRD, idim= "<<iDim<<"  len= "<<len<<"   "<<endl;
   for(i=0; i<len; i++){
     cout<< (*fXdivPRD[iDim])[i] <<"  ";
