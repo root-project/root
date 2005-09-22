@@ -1888,10 +1888,12 @@ if test ! "x$enable_xml" = "xno" ; then
        if test $xml2_version -lt 2004 ; then
           echo "no (`xml2-config --version`)"
           enable_xml="no"
+          xmllibdir=""
        else
           echo "ok"
           xmllib=`xml2-config --libs`
           xmlincdir=`xml2-config --cflags | sed 's/-I//g'`
+          xmllibdir=""
        fi
     else
        echo "not found"

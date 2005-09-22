@@ -683,7 +683,7 @@ install: all
 	   $(INSTALLDATA) include/*.cw          $(DESTDIR)$(INCDIR); \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
-	   $(INSTALLDATA) include/*.h           $(DESTDIR)$(INCDIR); \
+	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
 	   echo "Installing main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDATA) main/src/rmain.cxx    $(DESTDIR)$(INCDIR); \
 	   echo "Installing $(MAKEINFO) in $(DESTDIR)$(CINTINCDIR)"; \
