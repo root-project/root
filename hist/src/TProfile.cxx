@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.66 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.67 2005/09/07 14:44:31 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -930,6 +930,22 @@ Option_t *TProfile::GetErrorOption() const
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
+}
+
+//______________________________________________________________________________
+char* TProfile::GetObjectInfo(Int_t px, Int_t py) const 
+{
+   //   Redefines TObject::GetObjectInfo.
+   //   Displays the profile info (bin number, contents, eroor, entries per bin
+   //   corresponding to cursor position px,py
+   //
+   if (!gPad) return (char*)"";
+   static char info[64];
+   Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Int_t binx   = GetXaxis()->FindFixBin(x);
+   sprintf(info,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, GetBinContent(binx), GetBinError(binx), (Int_t)GetBinEntries(binx));
+   return info;
 }
 
 //______________________________________________________________________________
