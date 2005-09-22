@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.19 2005/08/30 13:47:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.20 2005/09/16 08:48:39 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -160,8 +160,8 @@ public:
    virtual void        PutLog(TQueryResult *qr) = 0;
    virtual void        ShowLog(Int_t qry = -1) = 0;
    virtual void        ShowLog(const char *queryref) = 0;
-   virtual Bool_t      GetLogToWindow() const = 0;
-   virtual void        SetLogToWindow(Bool_t mode) = 0;
+   virtual Bool_t      SendingLogToWindow() const = 0;
+   virtual void        SendLogToWindow(Bool_t mode) = 0;
 
    virtual void        ResetProgressDialogStatus() = 0;
 

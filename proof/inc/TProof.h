@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.66 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.67 2005/09/18 11:51:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -500,8 +500,8 @@ public:
    void        PutLog(TQueryResult *qr);
    void        ShowLog(Int_t qry = -1);
    void        ShowLog(const char *queryref);
-   Bool_t      GetLogToWindow() const { return fLogToWindowOnly; }
-   void        SetLogToWindow(Bool_t mode) { fLogToWindowOnly = mode; }
+   Bool_t      SendingLogToWindow() const { return fLogToWindowOnly; }
+   void        SendLogToWindow(Bool_t mode) { fLogToWindowOnly = mode; }
 
    void        ResetProgressDialogStatus() { fProgressDialogStarted = kFALSE; }
 

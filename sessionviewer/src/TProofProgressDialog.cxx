@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.13 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.14 2005/09/17 13:55:15 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -437,10 +437,10 @@ void TProofProgressDialog::DoLog()
          TString qs = fTextQuery->GetString();
          if (qs != "last" && qs.IsDigit())
             qry = qs.Atoi();
-         Bool_t logonly = fProof->GetLogToWindow();
-         fProof->SetLogToWindow(kTRUE);
+         Bool_t logonly = fProof->SendingLogToWindow();
+         fProof->SendLogToWindow(kTRUE);
          fProof->ShowLog(qry);
-         fProof->SetLogToWindow(logonly);
+         fProof->SendLogToWindow(logonly);
       }
    }
 }

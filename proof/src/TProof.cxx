@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.111 2005/09/19 14:49:09 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.112 2005/09/21 11:00:50 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -76,7 +76,7 @@ TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
                                  Int_t pe, const char *i, const char *w,
                                  TList *s, TProof *prf)
   : fHost(h), fPort(po), fOrd(o), fPerf(pe), fImage(i), fWorkdir(w),
-    fMsd(0), fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
+    fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
     fType(TSlave::kSlave)
 {
 }
@@ -85,7 +85,7 @@ TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
 TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
                                  TList *s, TProof *prf)
   : fHost(0), fPort(-1), fOrd(0), fPerf(-1), fImage(0), fWorkdir(0),
-    fMsd(0), fSlaves(s), fProof(prf), fCslave(csl), fClaims(clist),
+    fSlaves(s), fProof(prf), fCslave(csl), fClaims(clist),
     fType(TSlave::kSlave)
 {
    if (csl) {
@@ -170,6 +170,7 @@ void TSlaveInfo::Print(Option_t *opt) const
    TString stat = fStatus == kActive ? "active" :
                   fStatus == kBad ? "bad" :
                   "not active";
+   TString msd  = fMsd.IsNull() ? "<null>" : fMsd;
 
    if (!opt) opt = "";
    if (!strcmp(opt, "active") && fStatus != kActive)
@@ -181,7 +182,7 @@ void TSlaveInfo::Print(Option_t *opt) const
 
    cout << "Slave: "          << fOrdinal
         << "  hostname: "     << fHostName
-        << "  msd: "          << fMsd
+        << "  msd: "          << msd
         << "  perf index: "   << fPerfIndex
         << "  "               << stat
         << endl;
@@ -699,7 +700,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                delete slave;
                return kFALSE;
             }
-            
+
             fSlaves->Add(slave);
             fAllMonitor->Add(slave->GetSocket());
             Collect(slave);
@@ -707,17 +708,17 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                Error("StartSlaves", "not allowed to connect to PROOF master server");
                return 0;
             }
-            
+
             if (!slave->IsValid()) {
                delete slave;
                Error("StartSlaves",
                      "failed to setup connection with PROOF master server");
                return kFALSE;
             }
-            
+
             fIntHandler = new TProofInterruptHandler(this);
             fIntHandler->Add();
-            
+
             if (!gROOT->IsBatch()) {
                if ((fProgressDialog =
                     gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
@@ -4171,7 +4172,7 @@ void TProof::ShowLog(Int_t qry)
    while (fgets(line, wanted, fLogFileR)) {
 
       Int_t r = strlen(line);
-      if (!GetLogToWindow()) {
+      if (!SendingLogToWindow()) {
          if (line[r-1] != '\n') line[r-1] = '\n';
          if (r > 0) {
             char *p = line;
@@ -4187,18 +4188,18 @@ void TProof::ShowLog(Int_t qry)
          }
          tolog -= strlen(line);
          np++;
-         
+
          // Ask if more is wanted
          if (!(np%10)) {
             char *opt = Getline("More (y/n)? [y]");
             if (opt[0] == 'n')
                break;
          }
-         
+
          // We may be over
          if (tolog <= 0)
             break;
-         
+
          // Update wanted bytes
          wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
       } else {
@@ -4207,7 +4208,7 @@ void TProof::ShowLog(Int_t qry)
          LogMessage(line, kFALSE);
       }
    }
-   if (!GetLogToWindow()) {
+   if (!SendingLogToWindow()) {
       // Avoid screwing up the prompt
       write(fileno(stdout), "\n", 1);
    }

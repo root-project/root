@@ -1,5 +1,5 @@
 // @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h
-// Author: Marek Biskup, Jakub Madejczyk 10/08/2005
+// Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -8,6 +8,15 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TSessionViewer                                                       //
+//                                                                      //
+// Widget used to manage PROOF or local sessions, PROOF connections,    //
+// queries construction and results handling.                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TSessionViewer
 #define ROOT_TSessionViewer
@@ -81,7 +90,7 @@ class TQueryResult;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSessionViewer - A GUI for ROOT / Proof Sessions                     //
+// TSessionViewer - A GUI for ROOT / PROOF Sessions                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -160,8 +169,8 @@ private:
    TGLabel           *fLabFrequency;      // update frequency label
    TGTextEntry       *fTexEntAdd;         // item to add text entry
    TGTextBuffer      *fTBAdd;             // related text buffer
-   TGLVContainer     *fLVContainer;       // container for the list of items in feedback 
-   TGListView        *fListView;          // list of items in feedback 
+   TGLVContainer     *fLVContainer;       // container for the list of items in feedback
+   TGListView        *fListView;          // list of items in feedback
 
    TGLVEntry         *fDelEntry;          // pointer to the element chosen to be removed
    TGPopupMenu       *fPopupMenu;         // popup menu to use with items in the listview
@@ -242,7 +251,7 @@ public:
    ClassDef(TSessionServerFrame,0)
 };
 
-   
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSessionFrame                                                        //
@@ -283,7 +292,7 @@ private:
 public:
    TSessionFrame(TGWindow* parent, Int_t w, Int_t h);
    virtual ~TSessionFrame();
-   
+
    void     Build(TSessionViewer *gui);
 
    TTime    GetStartTime() { return fStartTime; }
@@ -328,7 +337,7 @@ private:
    TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
    TGTab             *fTab;                  // main tab frame
    TGCompositeFrame  *fFA, *fFB;             // two tabs element
-   TRootEmbeddedCanvas *fECanvas;            // node statistics canvas 
+   TRootEmbeddedCanvas *fECanvas;            // node statistics canvas
    TGTextButton      *fBtnSubmit;            // submit query button
    TGTextButton      *fBtnFinalize;          // finalize query button
    TGTextButton      *fBtnStop;              // stop process button
@@ -344,9 +353,9 @@ private:
 public:
    TSessionQueryFrame(TGWindow* parent, Int_t w, Int_t h);
    virtual ~TSessionQueryFrame();
-   
+
    void     Build(TSessionViewer *gui);
-   
+
    //Function that handle input from user:
    void     OnBtnSubmit();
    void     OnBtnFinalize();
