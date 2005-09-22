@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -94,7 +94,7 @@ Float_t TAlienMasterJobStatus::PercentFinished()
 
       if (jobStatus) {
          if (jobStatus->GetStatus() == kDONE)
-	    ++done;
+            ++done;
       }
    }
 
