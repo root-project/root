@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.20 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.21 2005/09/22 09:42:55 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -155,6 +155,8 @@ public:
    virtual void        QueryResultReady(const char *ref) = 0; //*SIGNAL*
    virtual void        ResetProgressDialog(const char *sel, Int_t sz,
                                    Long64_t fst, Long64_t ent) = 0; //*SIGNAL*
+   virtual void        StartupMessage(const char *msg, Bool_t status,
+                                      Int_t done, Int_t total) = 0; //*SIGNAL*
 
    virtual void        GetLog(Int_t start = -1, Int_t end = -1) = 0;
    virtual void        PutLog(TQueryResult *qr) = 0;

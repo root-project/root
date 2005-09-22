@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.12 2005/04/06 15:56:14 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.13 2005/05/18 12:31:09 brun Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -48,6 +48,8 @@ class TCollection;
 
 class TProofDraw : public TSelector {
 
+friend class TProofPlayer;
+
 protected:
    TTreeDrawArgsParser  fTreeDrawArgsParser;
    TStatus             *fStatus;
@@ -70,6 +72,7 @@ protected:
    virtual void        ClearFormula();
    virtual Bool_t      ProcessSingle(Long64_t /*entry*/, Int_t /*i*/);
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v) = 0;
+   virtual void        DefVar() = 0;
 
 public:
    TProofDraw();
@@ -89,6 +92,11 @@ public:
 
 class TProofDrawHist : public TProofDraw {
 
+private:
+   void                DefVar1D();
+   void                DefVar2D();
+   void                DefVar3D();
+
 protected:
    TH1                *fHistogram;
 
@@ -96,6 +104,7 @@ protected:
    virtual void        Begin2D(TTree *t);
    virtual void        Begin3D(TTree *t);
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar();
 
 public:
    TProofDrawHist() : fHistogram(0) { }
@@ -115,6 +124,7 @@ protected:
    TList*         fEventLists;     //  a list of EventLists
 
    virtual void   DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void   DefVar() { }
 
 public:
    TProofDrawEventList() : fElist(0), fEventLists(0) {}
@@ -135,6 +145,7 @@ protected:
    TProfile           *fProfile;
 
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar();
 
 public:
    TProofDrawProfile() : fProfile(0) { }
@@ -153,6 +164,7 @@ protected:
    TProfile2D         *fProfile;
 
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar();
 
 public:
    TProofDrawProfile2D() : fProfile(0) { }
@@ -171,6 +183,7 @@ protected:
    TGraph             *fGraph;
 
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar() { }
 
 public:
    TProofDrawGraph() : fGraph(0) { }
@@ -188,6 +201,7 @@ protected:
    TPolyMarker3D      *fPolyMarker3D;
 
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar() { }
 
 public:
    TProofDrawPolyMarker3D() : fPolyMarker3D(0) { }
@@ -230,6 +244,7 @@ public:
 protected:
    TProofVectorContainer<Point3D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar() { }
 
 public:
    TProofDrawListOfGraphs() : fPoints(0) { }
@@ -253,6 +268,7 @@ public:
 protected:
    TProofVectorContainer<Point4D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void        DefVar() { }
 
 public:
    TProofDrawListOfPolyMarkers3D() : fPoints(0) { }

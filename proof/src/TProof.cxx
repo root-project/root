@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.112 2005/09/21 11:00:50 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.113 2005/09/22 09:42:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -463,6 +463,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
 
       UInt_t nSlaves = 0;
+      UInt_t nSlavesDone = 0;
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -593,6 +594,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                         thrHandlers.push_back(new TProofThread(th, ta));
                         // Run the thread
                         th->Run();
+
+                        // Notify opening of connection
+                        nSlavesDone++;
+                        TMessage m(kPROOF_SERVERSTARTED);
+                        m << TString("Opening connections to slaves") << nSlaves
+                        << nSlavesDone << kTRUE;
+                        gProofServ->GetSocket()->Send(m);
                      }
                   } else {
                      Info("StartSlaves","Can't create thread arguments object:"
@@ -606,19 +614,29 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
                   // Add to global list (we will add to the monitor list after
                   // finalizing the server startup)
+                  Bool_t slaveOk = kTRUE;
                   if (slave->IsValid()) {
                      fSlaves->Add(slave);
                   } else {
+                     slaveOk = kFALSE;
                      fBadSlaves->Add(slave);
                   }
                   PDB(kGlobal,3)
                      Info("StartSlaves", "slave on host %s created"
                                          " and added to list", word[1]);
+
+                  // Notify opening of connection
+                  nSlavesDone++;
+                  TMessage m(kPROOF_SERVERSTARTED);
+                  m << TString("Opening connections to slaves") << nSlaves
+                    << nSlavesDone << slaveOk;
+                  gProofServ->GetSocket()->Send(m);
                }
                ord++;
             }
          }
 
+         nSlavesDone = 0;
          if (parallel) {
 
             // Wait completion of startup operations
@@ -635,6 +653,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                            pt->fArgs->fPort);
                   pt->fThread->Join();
                }
+
+               // Notify end of startup operations
+               nSlavesDone++;
+               TMessage m(kPROOF_SERVERSTARTED);
+               m << TString("Setting up slave servers") << nSlaves
+                 << nSlavesDone << kTRUE;
+               gProofServ->GetSocket()->Send(m);
             }
 
             TIter next(fSlaves);
@@ -667,11 +692,20 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                sl->SetupServ(TSlave::kSlave, 0);
 
                // Monitor good slaves
+               Bool_t slaveOk = kTRUE;
                if (sl->IsValid()) {
                   fAllMonitor->Add(sl->GetSocket());
                } else {
+                  slaveOk = kFALSE;
                   fBadSlaves->Add(sl);
                }
+
+               // Notify end of startup operations
+               nSlavesDone++;
+               TMessage m(kPROOF_SERVERSTARTED);
+               m << TString("Setting up slave servers") << nSlaves
+                 << nSlavesDone << slaveOk;
+               gProofServ->GetSocket()->Send(m);
             }
          }
 
@@ -681,15 +715,24 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
    } else {
 
       // create master server
+      fprintf(stderr,"Starting master: opening connection ... \r");
       TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", 0);
 
       if (slave->IsValid()) {
 
+         // Notify
+         fprintf(stderr,"Starting master:"
+                        " connection open: setting up server ...             \r");
+         StartupMessage("Connection to master opened", kTRUE, 1, 1);
+
          // Finalize setup of the server
          slave->SetupServ(TSlave::kMaster, fConfFile);
 
-
          if (slave->IsValid()) {
+
+            // Notify
+            fprintf(stderr,"Starting master: OK                                     \n");
+            StartupMessage("Master started", kTRUE, 1, 1);
 
             // check protocol compatability
             // protocol 1 is not supported anymore
@@ -725,6 +768,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                   if (fProgressDialog->LoadPlugin() == -1)
                      fProgressDialog = 0;
             }
+         } else {
+            // Notify
+            fprintf(stderr,"Starting master: failure\n");
          }
 
       } else {
@@ -1611,16 +1657,13 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                TQueryResult *pq =
                   (TQueryResult *) mess->ReadObject(TQueryResult::Class());
                if (pq) {
+                  // Remove duplicates of the data set from the official list
+                  gROOT->GetListOfDataSets()->Remove(pq->GetDSet());
+                  // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
-                  TList *tmp = (TList *) pq->GetOutputList();
-                  if (tmp) {
-                     out = new TList;
-                     TIter nxo(tmp);
-                     TObject *o = 0;
-                     while ((o = nxo()))
-                        out->Add(o->Clone());
-                  }
+                  // Close the output list
+                  out = (TList *) pq->GetOutputList()->Clone();
                   // Notify the GUI that the result arrived
                   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                } else {
@@ -1699,6 +1742,27 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             (*mess) >> max;
             Printf("Number of queries fully kept remotely: %d", max);
+         }
+         break;
+
+      case kPROOF_SERVERSTARTED:
+         {
+            PDB(kGlobal,2) Info("Collect:kPROOF_SERVERSTARTED","Enter");
+            UInt_t tot = 0, done = 0;
+            TString action;
+            Bool_t st = kTRUE;
+
+            (*mess) >> action >> tot >> done >> st;
+            if (tot) {
+               Int_t frac = (Int_t) (done*100.)/tot;
+               fprintf(stderr,"%s: %d out of %d (%d %%)\r",
+                       action.Data(), done, tot, frac);
+               if (frac >= 100)
+                  fprintf(stderr,"%s: OK (%d slaves)                 \n",
+                          action.Data(),tot);
+            }
+            // Notify GUIs
+            StartupMessage(action.Data(), st, (Int_t)done, (Int_t)tot);
          }
          break;
 
@@ -2444,6 +2508,9 @@ void TProof::StopProcess(Bool_t abort)
          s->Send(msg);
       }
    }
+
+   // To update the GUIs
+   Emit("StopProcess(Bool_t)", abort);
 }
 
 //______________________________________________________________________________
@@ -3596,6 +3663,19 @@ void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
 
    EmitVA("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
           4, sel, sz, fst, ent);
+}
+
+//______________________________________________________________________________
+void TProof::StartupMessage(const char *msg, Bool_t st, Int_t done,
+                                 Int_t total)
+{
+   // Send startup message.
+
+   PDB(kGlobal,1)
+      Info("StartupMessge","(%s,%d,%d,%d)", msg, st, done, total);
+
+   EmitVA("StartupMessage(const char*,Bool_t,Int_t,Int_t)",
+          4, msg, st, done, total);
 }
 
 //______________________________________________________________________________

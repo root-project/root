@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.1 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.2 2005/09/19 14:49:09 brun Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -57,6 +57,9 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
 
    // Data set
    fDSet = dset ? (TDSet *)(dset->Clone()) : 0;
+
+   // We keep only the original in the official list
+   gROOT->GetListOfDataSets()->Remove(fDSet);
 
    // Save event list
    fEventList = elist ? (TEventList *)(elist->Clone()) : 0;
@@ -232,12 +235,12 @@ void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
 
    // Clone the results
    if (outlist) {
-      if (!fOutputList)
-         fOutputList = new TList;
-      TIter nxo(outlist);
-      TObject *o = 0;
-      while ((o = nxo()))
-         fOutputList->Add(o->Clone());
+      if (fOutputList) {
+         fOutputList->Delete();
+         SafeDelete(fOutputList);
+      }
+      fOutputList = (TList *) (outlist->Clone());
+      fOutputList->SetOwner();
    }
 }
 
@@ -379,11 +382,12 @@ void TQueryResult::SetOutputList(TList *out)
 {
    // Set / change the output list.
 
-   if (fOutputList)
-      delete fOutputList;
+   SafeDelete(fOutputList);
 
-   out->SetOwner();
-   fOutputList = out;
+   if (out) {
+      fOutputList = (TList *) (out->Clone());
+      fOutputList->SetOwner();
+   }
 }
 
 //______________________________________________________________________________

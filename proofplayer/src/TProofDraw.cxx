@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.19 2005/04/12 09:26:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.20 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,6 @@ Bool_t TProofDraw::Notify()
    fManager->UpdateFormulaLeaves();
    return kTRUE;
 }
-
 
 //______________________________________________________________________________
 void TProofDraw::Begin(TTree *tree)
@@ -291,32 +290,7 @@ void TProofDrawHist::Begin1D(TTree *)
       fInput->Add(hnew);
    } else {
       delete orig;
-      fTreeDrawArgsParser.SetOriginal(0);
-      TString exp = fTreeDrawArgsParser.GetVarExp();
-      exp += ">>";
-      double binsx, minx, maxx;
-      if (fTreeDrawArgsParser.IsSpecified(0))
-         gEnv->SetValue("Hist.Binning.1D.x", fTreeDrawArgsParser.GetParameter(0));
-      binsx = gEnv->GetValue("Hist.Binning.1D.x",100);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-      exp += fTreeDrawArgsParser.GetObjectName();
-      exp += '(';
-      exp +=      binsx;
-      exp +=         ',';
-      exp +=      minx;
-      exp +=         ',';
-      exp +=      maxx;
-      exp += ')';
-
-      fInitialExp = exp;
-      TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
-      if (n)
-         n->SetTitle(exp);
-      else
-         Error("Begin", "Cannot find varexp on the fInput");
-      if (fTreeDrawArgsParser.GetNoParameters() != 3)
-         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+      DefVar1D();
    }
 }
 
@@ -335,43 +309,7 @@ void TProofDrawHist::Begin2D(TTree *)
       fInput->Add(hnew);
    } else {
       delete orig;
-      fTreeDrawArgsParser.SetOriginal(0);
-      TString exp = fTreeDrawArgsParser.GetVarExp();
-      exp += ">>";
-      double binsx, minx, maxx;
-      double binsy, miny, maxy;
-      if (fTreeDrawArgsParser.IsSpecified(0))
-         gEnv->SetValue("Hist.Binning.2D.x", fTreeDrawArgsParser.GetParameter(0));
-      if (fTreeDrawArgsParser.IsSpecified(3))
-         gEnv->SetValue("Hist.Binning.2D.y", fTreeDrawArgsParser.GetParameter(3));
-      binsx = gEnv->GetValue("Hist.Binning.2D.x",100);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-      binsy = gEnv->GetValue("Hist.Binning.2D.y",100);
-      miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
-      maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
-      exp += fTreeDrawArgsParser.GetObjectName();
-      exp += '(';
-      exp +=      binsx;
-      exp +=         ',';
-      exp +=      minx;
-      exp +=         ',';
-      exp +=      maxx;
-      exp += ',';
-      exp +=      binsy;
-      exp +=         ',';
-      exp +=      miny;
-      exp +=         ',';
-      exp +=      maxy;
-      exp += ')';
-      fInitialExp = exp;
-      TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
-      if (n)
-         n->SetTitle(exp);
-      else
-         Error("Begin", "Cannot find varexp on the fInput");
-      if (fTreeDrawArgsParser.GetNoParameters() != 6)
-         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+      DefVar2D();
    }
 }
 
@@ -390,58 +328,9 @@ void TProofDrawHist::Begin3D(TTree *)
       fInput->Add(hnew);
    } else {
       delete orig;
-      fTreeDrawArgsParser.SetOriginal(0);
-      TString exp = fTreeDrawArgsParser.GetVarExp();
-      exp += ">>";
-      double binsx, minx, maxx;
-      double binsy, miny, maxy;
-      double binsz, minz, maxz;
-      if (fTreeDrawArgsParser.IsSpecified(0))
-         gEnv->SetValue("Hist.Binning.3D.x", fTreeDrawArgsParser.GetParameter(0));
-      if (fTreeDrawArgsParser.IsSpecified(3))
-         gEnv->SetValue("Hist.Binning.3D.y", fTreeDrawArgsParser.GetParameter(3));
-      if (fTreeDrawArgsParser.IsSpecified(6))
-         gEnv->SetValue("Hist.Binning.3D.z", fTreeDrawArgsParser.GetParameter(6));
-      binsx = gEnv->GetValue("Hist.Binning.3D.x",100);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-      binsy = gEnv->GetValue("Hist.Binning.3D.y",100);
-      miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
-      maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
-      binsz = gEnv->GetValue("Hist.Binning.3D.z",100);
-      minz =  fTreeDrawArgsParser.GetIfSpecified(7, 0);
-      maxz =  fTreeDrawArgsParser.GetIfSpecified(8, 0);
-      exp += fTreeDrawArgsParser.GetObjectName();
-      exp += '(';
-      exp +=      binsx;
-      exp +=         ',';
-      exp +=      minx;
-      exp +=         ',';
-      exp +=      maxx;
-      exp += ',';
-      exp +=      binsy;
-      exp +=         ',';
-      exp +=      miny;
-      exp +=         ',';
-      exp +=      maxy;
-      exp += ',';
-      exp +=      binsz;
-      exp +=         ',';
-      exp +=      minz;
-      exp +=         ',';
-      exp +=      maxz;
-      exp += ')';
-      fInitialExp = exp;
-      TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
-      if (n)
-         n->SetTitle(exp);
-      else
-         Error("Begin", "Cannot find varexp on the fInput");
-      if (fTreeDrawArgsParser.GetNoParameters() != 9)
-         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+      DefVar3D();
    }
 }
-
 
 //______________________________________________________________________________
 void TProofDrawHist::Begin(TTree *tree)
@@ -476,6 +365,177 @@ void TProofDrawHist::Begin(TTree *tree)
    fTree = 0;
 }
 
+//______________________________________________________________________________
+void TProofDrawHist::DefVar1D()
+{
+   // Define vars for 1D Histogram.
+
+   Assert(fTreeDrawArgsParser.GetDimension() == 1);
+
+   fTreeDrawArgsParser.SetOriginal(0);
+   TString exp = fTreeDrawArgsParser.GetVarExp();
+   exp += ">>";
+   double binsx, minx, maxx;
+   if (fTreeDrawArgsParser.IsSpecified(0))
+      gEnv->SetValue("Hist.Binning.1D.x", fTreeDrawArgsParser.GetParameter(0));
+   binsx = gEnv->GetValue("Hist.Binning.1D.x",100);
+   minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+   maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+   exp += fTreeDrawArgsParser.GetObjectName();
+   exp += '(';
+   exp +=      binsx;
+   exp +=         ',';
+   exp +=      minx;
+   exp +=         ',';
+   exp +=      maxx;
+   exp += ')';
+
+   fInitialExp = exp;
+   TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
+   if (n)
+      n->SetTitle(exp);
+   else
+      Error("DefVar1D", "Cannot find varexp on the fInput");
+   if (fTreeDrawArgsParser.GetNoParameters() != 3)
+      fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+}
+
+//______________________________________________________________________________
+void TProofDrawHist::DefVar2D()
+{
+   // Define variables for 2D histogram.
+
+   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+
+   fTreeDrawArgsParser.SetOriginal(0);
+   TString exp = fTreeDrawArgsParser.GetVarExp();
+   exp += ">>";
+   double binsx, minx, maxx;
+   double binsy, miny, maxy;
+   if (fTreeDrawArgsParser.IsSpecified(0))
+      gEnv->SetValue("Hist.Binning.2D.x", fTreeDrawArgsParser.GetParameter(0));
+   if (fTreeDrawArgsParser.IsSpecified(3))
+      gEnv->SetValue("Hist.Binning.2D.y", fTreeDrawArgsParser.GetParameter(3));
+   binsx = gEnv->GetValue("Hist.Binning.2D.x",100);
+   minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+   maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+   binsy = gEnv->GetValue("Hist.Binning.2D.y",100);
+   miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
+   maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
+   exp += fTreeDrawArgsParser.GetObjectName();
+   exp += '(';
+   exp +=      binsx;
+   exp +=         ',';
+   exp +=      minx;
+   exp +=         ',';
+   exp +=      maxx;
+   exp += ',';
+   exp +=      binsy;
+   exp +=         ',';
+   exp +=      miny;
+   exp +=         ',';
+   exp +=      maxy;
+   exp += ')';
+   fInitialExp = exp;
+   TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
+   if (n)
+      n->SetTitle(exp);
+   else
+      Error("DefVar2D", "Cannot find varexp on the fInput");
+   if (fTreeDrawArgsParser.GetNoParameters() != 6)
+      fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+}
+
+//______________________________________________________________________________
+void TProofDrawHist::DefVar3D()
+{
+   // Define variables for 3D histogram.
+
+   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+
+   fTreeDrawArgsParser.SetOriginal(0);
+   TString exp = fTreeDrawArgsParser.GetVarExp();
+   exp += ">>";
+   double binsx, minx, maxx;
+   double binsy, miny, maxy;
+   double binsz, minz, maxz;
+   if (fTreeDrawArgsParser.IsSpecified(0))
+      gEnv->SetValue("Hist.Binning.3D.x", fTreeDrawArgsParser.GetParameter(0));
+   if (fTreeDrawArgsParser.IsSpecified(3))
+      gEnv->SetValue("Hist.Binning.3D.y", fTreeDrawArgsParser.GetParameter(3));
+   if (fTreeDrawArgsParser.IsSpecified(6))
+      gEnv->SetValue("Hist.Binning.3D.z", fTreeDrawArgsParser.GetParameter(6));
+   binsx = gEnv->GetValue("Hist.Binning.3D.x",100);
+   minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+   maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+   binsy = gEnv->GetValue("Hist.Binning.3D.y",100);
+   miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
+   maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
+   binsz = gEnv->GetValue("Hist.Binning.3D.z",100);
+   minz =  fTreeDrawArgsParser.GetIfSpecified(7, 0);
+   maxz =  fTreeDrawArgsParser.GetIfSpecified(8, 0);
+   exp += fTreeDrawArgsParser.GetObjectName();
+   exp += '(';
+   exp +=      binsx;
+   exp +=         ',';
+   exp +=      minx;
+   exp +=         ',';
+   exp +=      maxx;
+   exp += ',';
+   exp +=      binsy;
+   exp +=         ',';
+   exp +=      miny;
+   exp +=         ',';
+   exp +=      maxy;
+   exp += ',';
+   exp +=      binsz;
+   exp +=         ',';
+   exp +=      minz;
+   exp +=         ',';
+   exp +=      maxz;
+   exp += ')';
+   fInitialExp = exp;
+   TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
+   if (n)
+      n->SetTitle(exp);
+   else
+      Error("DefVar3D", "Cannot find varexp on the fInput");
+   if (fTreeDrawArgsParser.GetNoParameters() != 9)
+      fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+}
+
+//______________________________________________________________________________
+void TProofDrawHist::DefVar()
+{
+   // Define variables according to arguments.
+
+   PDB(kDraw,1) Info("DefVar","Enter");
+
+   fSelection = fInput->FindObject("selection")->GetTitle();
+   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+
+   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   if (fTreeDrawArgsParser.GetObjectName() == "")
+      fTreeDrawArgsParser.SetObjectName("htemp");
+
+   switch (fTreeDrawArgsParser.GetDimension()) {
+      case 1:
+         DefVar1D();
+         break;
+      case 2:
+         DefVar2D();
+         break;
+      case 3:
+         DefVar3D();
+         break;
+      default:
+         Error("DefVar", "Wrong dimension");
+         break;
+   }
+   PDB(kDraw,1) Info("DefVar","selection: %s", fSelection.Data());
+   PDB(kDraw,1) Info("DefVar","varexp: %s", fInitialExp.Data());
+   fTree = 0;
+}
 
 //______________________________________________________________________________
 void TProofDrawHist::Init(TTree *tree)
@@ -756,6 +816,52 @@ void TProofDrawProfile::Init(TTree *tree)
    CompileVariables();
 }
 
+//______________________________________________________________________________
+void TProofDrawProfile::DefVar()
+{
+   // Define relevant variables
+
+   PDB(kDraw,1) Info("DefVar","Enter");
+
+   if (fTreeDrawArgsParser.GetDimension() < 0) {
+
+      // Init parser
+      fSelection = fInput->FindObject("selection")->GetTitle();
+      fInitialExp = fInput->FindObject("varexp")->GetTitle();
+
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   }
+
+   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+
+   fTreeDrawArgsParser.SetOriginal(0);
+   TString exp = fTreeDrawArgsParser.GetVarExp();
+   exp += ">>";
+   double binsx, minx, maxx;
+   if (fTreeDrawArgsParser.IsSpecified(0))
+      gEnv->SetValue("Hist.Binning.2D.Prof", fTreeDrawArgsParser.GetParameter(0));
+   binsx = gEnv->GetValue("Hist.Binning.2D.Prof",100);
+   minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+   maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+   if (fTreeDrawArgsParser.GetObjectName() == "")
+      fTreeDrawArgsParser.SetObjectName("htemp");
+   exp += fTreeDrawArgsParser.GetObjectName();
+   exp += '(';
+   exp +=      binsx;
+   exp +=         ',';
+   exp +=      minx;
+   exp +=         ',';
+   exp +=      maxx;
+   exp += ')';
+   fInitialExp = exp;
+   TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
+   if (n)
+      n->SetTitle(exp);
+   else
+      Error("DefVar", "Cannot find varexp on the fInput");
+   if (fTreeDrawArgsParser.GetNoParameters() != 3)
+      fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+}
 
 //______________________________________________________________________________
 void TProofDrawProfile::Begin(TTree *tree)
@@ -779,33 +885,7 @@ void TProofDrawProfile::Begin(TTree *tree)
       fInput->Add(pnew);
    } else {
       delete orig;
-      fTreeDrawArgsParser.SetOriginal(0);
-      TString exp = fTreeDrawArgsParser.GetVarExp();
-      exp += ">>";
-      double binsx, minx, maxx;
-      if (fTreeDrawArgsParser.IsSpecified(0))
-         gEnv->SetValue("Hist.Binning.2D.Prof", fTreeDrawArgsParser.GetParameter(0));
-      binsx = gEnv->GetValue("Hist.Binning.2D.Prof",100);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-      if (fTreeDrawArgsParser.GetObjectName() == "")
-         fTreeDrawArgsParser.SetObjectName("htemp");
-      exp += fTreeDrawArgsParser.GetObjectName();
-      exp += '(';
-      exp +=      binsx;
-      exp +=         ',';
-      exp +=      minx;
-      exp +=         ',';
-      exp +=      maxx;
-      exp += ')';
-      fInitialExp = exp;
-      TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
-      if (n)
-         n->SetTitle(exp);
-      else
-         Error("Begin", "Cannot find varexp on the fInput");
-      if (fTreeDrawArgsParser.GetNoParameters() != 3)
-         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+      DefVar();
    }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -943,6 +1023,63 @@ void TProofDrawProfile2D::Init(TTree *tree)
    CompileVariables();
 }
 
+//______________________________________________________________________________
+void TProofDrawProfile2D::DefVar()
+{
+   // Define relevant variables
+
+   PDB(kDraw,1) Info("DefVar","Enter");
+
+   if (fTreeDrawArgsParser.GetDimension() < 0) {
+
+      // Init parser
+      fSelection = fInput->FindObject("selection")->GetTitle();
+      fInitialExp = fInput->FindObject("varexp")->GetTitle();
+
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   }
+   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+
+   fTreeDrawArgsParser.SetOriginal(0);
+   TString exp = fTreeDrawArgsParser.GetVarExp();
+   exp += ">>";
+   double binsx, minx, maxx;
+   double binsy, miny, maxy;
+   if (fTreeDrawArgsParser.IsSpecified(0))
+      gEnv->SetValue("Hist.Binning.3D.Profx", fTreeDrawArgsParser.GetParameter(0));
+   if (fTreeDrawArgsParser.IsSpecified(3))
+      gEnv->SetValue("Hist.Binning.3D.Profy", fTreeDrawArgsParser.GetParameter(3));
+   binsx = gEnv->GetValue("Hist.Binning.3D.Profx",20);
+   minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+   maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+   binsy = gEnv->GetValue("Hist.Binning.3D.Profy",20);
+   miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
+   maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
+   if (fTreeDrawArgsParser.GetObjectName() == "")
+      fTreeDrawArgsParser.SetObjectName("htemp");
+   exp += fTreeDrawArgsParser.GetObjectName();
+   exp += '(';
+   exp +=      binsx;
+   exp +=         ',';
+   exp +=      minx;
+   exp +=         ',';
+   exp +=      maxx;
+   exp += ',';
+   exp +=      binsy;
+   exp +=         ',';
+   exp +=      miny;
+   exp +=         ',';
+   exp +=      maxy;
+   exp += ')';
+   fInitialExp = exp;
+   TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
+   if (n)
+      n->SetTitle(exp);
+   else
+      Error("DefVar", "Cannot find varexp on the fInput");
+   if (fTreeDrawArgsParser.GetNoParameters() != 6)
+      fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+}
 
 //______________________________________________________________________________
 void TProofDrawProfile2D::Begin(TTree *tree)
@@ -966,51 +1103,12 @@ void TProofDrawProfile2D::Begin(TTree *tree)
       fInput->Add(pnew);
    } else {
       delete orig;
-      fTreeDrawArgsParser.SetOriginal(0);
-      TString exp = fTreeDrawArgsParser.GetVarExp();
-      exp += ">>";
-      double binsx, minx, maxx;
-      double binsy, miny, maxy;
-      if (fTreeDrawArgsParser.IsSpecified(0))
-         gEnv->SetValue("Hist.Binning.3D.Profx", fTreeDrawArgsParser.GetParameter(0));
-      if (fTreeDrawArgsParser.IsSpecified(3))
-         gEnv->SetValue("Hist.Binning.3D.Profy", fTreeDrawArgsParser.GetParameter(3));
-      binsx = gEnv->GetValue("Hist.Binning.3D.Profx",20);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-      binsy = gEnv->GetValue("Hist.Binning.3D.Profy",20);
-      miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
-      maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
-      if (fTreeDrawArgsParser.GetObjectName() == "")
-         fTreeDrawArgsParser.SetObjectName("htemp");
-      exp += fTreeDrawArgsParser.GetObjectName();
-      exp += '(';
-      exp +=      binsx;
-      exp +=         ',';
-      exp +=      minx;
-      exp +=         ',';
-      exp +=      maxx;
-      exp += ',';
-      exp +=      binsy;
-      exp +=         ',';
-      exp +=      miny;
-      exp +=         ',';
-      exp +=      maxy;
-      exp += ')';
-      fInitialExp = exp;
-      TNamed *n = dynamic_cast<TNamed*> (fInput->FindObject("varexp"));
-      if (n)
-         n->SetTitle(exp);
-      else
-         Error("Begin", "Cannot find varexp on the fInput");
-      if (fTreeDrawArgsParser.GetNoParameters() != 6)
-         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
+      DefVar();
    }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
-
 
 //______________________________________________________________________________
 void TProofDrawProfile2D::SlaveBegin(TTree *tree)

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.25 2005/08/30 10:25:29 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.26 2005/09/16 08:48:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -77,6 +77,7 @@ enum EMessageTypes {
    kPROOF_SESSIONTAG,                    //Message with unique session tag
    kPROOF_MAXQUERIES,                    //Message with max number of queries
    kPROOF_CLEANUPSESSION,                //Cleanup session query area
+   kPROOF_SERVERSTARTED,                 //Signal completion of a server startup
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

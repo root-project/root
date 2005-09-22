@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.66 2005/09/17 14:57:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.67 2005/09/18 01:06:02 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TProofDraw.h"
 #include "TProofPlayer.h"
 #include "THashList.h"
 #include "TEventIter.h"
@@ -351,7 +352,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
       // Draw needs to reinit temp histos
       if (stdselec) {
          fSelector->SetInputList(qr->GetInputList());
-         fSelector->Begin(0);
+         ((TProofDraw *)fSelector)->DefVar();
       }
    }
 
@@ -595,8 +596,8 @@ ClassImp(TProofPlayerRemote)
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
-   delete fOutput;      // owns the output list
-   delete fOutputLists;
+   SafeDelete(fOutput);      // owns the output list
+   SafeDelete(fOutputLists);
 
    if (fFeedbackLists != 0) {
       TIter next(fFeedbackLists);
@@ -604,8 +605,8 @@ TProofPlayerRemote::~TProofPlayerRemote()
          m->DeleteValues();
       }
    }
-   delete fFeedbackLists;
-   delete fPacketizer;
+   SafeDelete(fFeedbackLists);
+   SafeDelete(fPacketizer);
 }
 
 //______________________________________________________________________________
@@ -710,7 +711,13 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    if (!fProof->IsMaster() && set->GetEventList()) {
       elist = set->GetEventList();
    }
-   mesg << set << fn << fInput << opt << nentries << first << elist << sync;
+
+   if (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) {
+      // Slaves will get the entry ranges from the packetizer
+      mesg << set << fn << fInput << opt << (Long64_t)-1 << (Long64_t)0 << elist << sync;
+   } else {
+      mesg << set << fn << fInput << opt << nentries << first << elist << sync;
+   }
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
@@ -813,9 +820,11 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force)
             else
                output->Add(obj);
          }
+
          PDB(kLoop,1) Info("Process","Call Terminate()");
          fOutput->Clear("nodelete");
          fSelector->Terminate();
+
          rv = fSelector->GetStatus();
 
          // copy the output list back and clean the selector's list
@@ -824,7 +833,8 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force)
             fOutput->Add(o);
          }
          // Save the output list in the current query
-         fQuery->SetOutputList((TList *) fOutput->Clone());
+         // (list contents is duplicated inside)
+         fQuery->SetOutputList(fOutput);
 
          // Set in finlaized state (cannot be done twice)
          fQuery->SetFinalized();
@@ -936,7 +946,7 @@ void TProofPlayerRemote::MergeOutput()
 {
    PDB(kOutput,1) Info("MergeOutput","Enter");
 
-   if ( fOutputLists == 0 ) {
+   if (fOutputLists == 0) {
       PDB(kOutput,1) Info("MergeOutput","Leave (no output)");
       return;
    }
@@ -961,10 +971,10 @@ void TProofPlayerRemote::MergeOutput()
       G__ClassInfo ci(obj->ClassName());
       G__CallFunc cf;
 
-      if ( ci.IsValid() )
+      if (ci.IsValid())
          cf.SetFuncProto( &ci, "Merge", "TCollection*", &offset);
 
-      if ( cf.IsValid() ) {
+      if (cf.IsValid()) {
          cf.SetArg((Long_t)list);
          cf.Exec(obj);
       } else {
@@ -976,7 +986,8 @@ void TProofPlayerRemote::MergeOutput()
       }
    }
 
-   delete fOutputLists; fOutputLists = 0;
+   SafeDelete(fOutputLists);
+
    PDB(kOutput,1) Info("MergeOutput","Leave (%d object(s))", fOutput->GetSize());
 }
 

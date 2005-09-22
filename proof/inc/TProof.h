@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.67 2005/09/18 11:51:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.68 2005/09/22 09:42:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -495,6 +495,8 @@ public:
    void        QueryResultReady(const char *ref); //*SIGNAL*
    void        ResetProgressDialog(const char *sel, Int_t sz,
                                    Long64_t fst, Long64_t ent); //*SIGNAL*
+   void        StartupMessage(const char *msg, Bool_t status, Int_t done,
+                              Int_t total); //*SIGNAL*
 
    void        GetLog(Int_t start = -1, Int_t end = -1);
    void        PutLog(TQueryResult *qr);

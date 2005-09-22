@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.2 2005/03/21 16:14:33 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -124,7 +124,7 @@ Bool_t TTreeDrawArgsParser::ParseName(TString name)
    // num's are floating point numbers
    // sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
    // to apropriate values.
-   // Returns fKALSE in case of an error.
+   // Returns kFALSE in case of an error.
 
    name.ReplaceAll(" ", "");
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.14 2005/09/17 13:55:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.15 2005/09/22 09:42:55 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -384,6 +384,9 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
                          "Progress(Long64_t,Long64_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
+      // These buttons are meaningless at this point
+      fStop->SetState(kButtonDisabled);
+      fAbort->SetState(kButtonDisabled);
    }
 
    fClose->SetState(kButtonUp);
