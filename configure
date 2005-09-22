@@ -592,6 +592,12 @@ MIMEWIN32IN=config/mimes.win32.in
 MIMEOUT=etc/root.mimes
 ROOTDIN=config/rootd.in
 ROOTDOUT=etc/rootd
+ROOTDXINETDIN=config/rootd.xinetd.in
+ROOTDXINETDOUT=etc/rootd.xinetd
+PROOFDIN=config/proofd.in
+PROOFDOUT=etc/proofd
+PROOFDXINETDIN=config/proofd.xinetd.in
+PROOFDXINETDOUT=etc/proofd.xinetd
 ROOTHELPIN=config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 HTMLIN=config/html.C.in
@@ -827,7 +833,8 @@ fi
 #
 trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
       rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
-      conftest.mk conftest.c conftest; exit 1" 1 2 3 15
+      proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
+      conftest.c conftest; exit 1" 1 2 3 15
 
 ######################################################################
 #
@@ -972,6 +979,9 @@ if test "x$noact" = "xno"; then
     cp -f $ROOTDAEMONRCIN rootdaemonrc.tmp
     cp -f $MEMPROBEIN memprobe.tmp
     cp -f $ROOTDIN rootd.tmp
+    cp -f $ROOTDXINETDIN rootd.xinetd.tmp
+    cp -f $PROOFDIN proofd.tmp
+    cp -f $PROOFDXINETDIN proofd.xinetd.tmp
 fi
 
 ######################################################################
@@ -3412,7 +3422,38 @@ echo "done"
 message "Writing $ROOTDOUT"
 sed -e "s|@bindir@|$bindir|" \
     < rootd.tmp > $ROOTDOUT
+chmod a+x $ROOTDOUT
 rm -f rootd.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/rootd.xinetd
+#
+message "Writing $ROOTDXINETDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    -e "s|@prefix@|$prefix|" \
+    < rootd.xinetd.tmp > $ROOTDXINETDOUT
+rm -f rootd.xinetd.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/proofd
+#
+message "Writing $PROOFDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    < proofd.tmp > $PROOFDOUT
+chmod a+x $PROOFDOUT
+rm -f proofd.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/proofd.xinetd
+#
+message "Writing $PROOFDXINETDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    -e "s|@prefix@|$prefix|" \
+    < proofd.xinetd.tmp > $PROOFDXINETDOUT
+rm -f proofd.xinetd.tmp
 echo "done"
 
 #---------------------------------------------------------------------
