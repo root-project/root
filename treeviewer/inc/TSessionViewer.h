@@ -80,13 +80,13 @@ class TGTextView;
 class TGTab;
 class TRootEmbeddedCanvas;
 class TGListBox;
+class TCanvas;
 
 class TVirtualProof;
 class TProofServer;
 class TSessionViewer;
 class TSessionLogView;
 class TQueryResult;
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -344,13 +344,15 @@ private:
    TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
    TGTab             *fTab;                  // main tab frame
    TGCompositeFrame  *fFA, *fFB;             // two tabs element
-   TRootEmbeddedCanvas *fECanvas;            // node statistics canvas
+   TRootEmbeddedCanvas *fECanvas;            // node statistics embeded canvas
+   TCanvas           *fStatsCanvas;          // node statistics canvas
    TGTextButton      *fBtnSubmit;            // submit query button
    TGTextButton      *fBtnFinalize;          // finalize query button
    TGTextButton      *fBtnStop;              // stop process button
    TGTextButton      *fBtnAbort;             // abort process button
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnRetrieve;          // retrieve query button
+   TGCheckButton     *fFeedbackChk;          // Feedback check button
    TGTextView        *fInfoTextView;         // summary on current query
    TSessionLogView   *fLogWindow;            // external log window
    TSessionViewer    *fViewer;               // pointer on main viewer
@@ -362,6 +364,7 @@ public:
    virtual ~TSessionQueryFrame();
 
    void     Build(TSessionViewer *gui);
+   void     Feedback(TList *objs);
 
    //Function that handle input from user:
    void     OnBtnSubmit();

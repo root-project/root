@@ -55,6 +55,8 @@
 #include "TContextMenu.h"
 #include "TG3DLine.h"
 #include "TSessionDialogs.h"
+#include "TEnv.h"
+#include "TH1.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -277,6 +279,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
             fViewer->GetActDesc()->fLogLevel);
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+
       fViewer->GetActDesc()->fProof->SetQueryType(fViewer->GetActDesc()->fSync ?
                              TVirtualProof::kSync : TVirtualProof::kAsync);
       fViewer->GetActDesc()->fConnected = kTRUE;
@@ -296,9 +299,6 @@ void TSessionServerFrame::OnBtnConnectClicked()
                   "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                   "TSessionFrame", fViewer->GetSessionFrame(),
                   "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
-
-      fViewer->GetActDesc()->fProof->Connect("Feedback(TList*)",
-             "TSessionFrame", fViewer->GetSessionFrame(), "Feedback(TList*)");
 
       fViewer->EnableTimer();
       fViewer->ChangeRightLogo("monitor01.xpm");
@@ -854,13 +854,17 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFB = new TGCompositeFrame(tf, 300, 150, kVerticalFrame);
    tf->AddFrame(fFB, new TGLayoutHints(kLHintsTop | kLHintsLeft |
                 kLHintsExpandX | kLHintsExpandY));
-   fFB->SetLayoutManager(new TGTableLayout(fFB, 4, 4));
 
    fECanvas = new TRootEmbeddedCanvas("fECanvas", fFB, 400, 150);
-   fFB->AddFrame(fECanvas, new TGTableLayoutHints(0, 4, 0, 2,
-            kLHintsFillX | kLHintsTop | kLHintsExpandX | kLHintsExpandY |
-            kLHintsShrinkX | kLHintsShrinkY, 5, 5, 5, 5));
-   fECanvas->GetCanvas()->SetBorderMode(0);
+   fStatsCanvas = fECanvas->GetCanvas();
+   fStatsCanvas->SetFillColor(10);
+   fStatsCanvas->SetBorderMode(0);
+   fFB->AddFrame(fECanvas, new TGLayoutHints(kLHintsTop | kLHintsLeft |
+                 kLHintsExpandX, 5, 5, 5, 5));
+
+   fFeedbackChk = new TGCheckButton(fFB, "Feedback Events processed per Slave");
+   fFB->AddFrame(fFeedbackChk, new TGLayoutHints(kLHintsTop | kLHintsLeft,
+                 5, 5, 5, 5));
 
    fBtnSubmit->Connect("Clicked()", "TSessionQueryFrame", this,
                        "OnBtnSubmit()");
@@ -876,6 +880,32 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
                          "OnBtnRetrieve()");
 
    Resize(350, 310);
+}
+
+//______________________________________________________________________________
+void TSessionQueryFrame::Feedback(TList *objs)
+{
+   TVirtualPad *save = gPad;
+   TIter next(objs);
+   TObject *o;
+   while( (o = next()) ) {
+      fStatsCanvas->cd();
+      gPad->SetEditable(kTRUE);
+      if (TH1 *h = dynamic_cast<TH1*>(o)) {
+         h->SetStats(0);
+         h->SetBarWidth(0.75);
+         h->SetBarOffset(0.125);
+         h->SetFillColor(9);
+         h->Draw("bar");
+      }
+      fStatsCanvas->Modified();
+      fStatsCanvas->Update();
+   }
+   if (save != 0) {
+      save->cd();
+   } else {
+      gPad = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -939,9 +969,24 @@ void TSessionQueryFrame::OnBtnSubmit()
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
    fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
+   newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
 
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+
+      if (fFeedbackChk->GetState() == kButtonDown) {
+         fViewer->GetActDesc()->fProof->AddFeedback("PROOF_EventsHist");
+         fViewer->GetActDesc()->fProof->Connect("Feedback(TList *objs)",
+                           "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                           "Feedback(TList *objs)");
+         fViewer->GetActDesc()->fProof->Connect("Feedback(TList *objs)",
+                           "TSessionFrame", fViewer->GetSessionFrame(),
+                           "Feedback(TList *objs)");
+         gROOT->Time();
+      }
+      else {
+         fViewer->GetActDesc()->fProof->ClearFeedback();
+      }
 
       fViewer->GetActDesc()->fProof->cd();
       if (newquery->fChain) {
@@ -959,7 +1004,6 @@ void TSessionQueryFrame::OnBtnSubmit()
                     newquery->fNoEntries,
                     newquery->fFirstEntry);
          }
-         fViewer->GetQueryFrame()->UpdateButtons(newquery);
       }
       newquery->fReference= Form("session-%s:q%d",
             fViewer->GetActDesc()->fProof->GetSessionTag(), id);
@@ -983,6 +1027,7 @@ void TSessionQueryFrame::OnBtnSubmit()
       }
       newquery->fReference = Form("local-session-%s:q%d", newquery->fQueryName.Data(), id);
    }
+   UpdateButtons(newquery);
 }
 
 //______________________________________________________________________________
@@ -1027,8 +1072,8 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
       case TQueryDescription::kSessionQuerySubmitted:
          fBtnSubmit->SetEnabled(kFALSE);
          fBtnFinalize->SetEnabled(kFALSE);
-         fBtnStop->SetEnabled(kFALSE);
-         fBtnAbort->SetEnabled(kFALSE);
+         fBtnStop->SetEnabled(kTRUE);
+         fBtnAbort->SetEnabled(kTRUE);
          fBtnShowLog->SetEnabled(kTRUE);
          fBtnRetrieve->SetEnabled(kFALSE);
          break;
@@ -1353,12 +1398,17 @@ void TSessionFeedbackFrame::AddToFeedback(TGLVEntry* entry)
 //______________________________________________________________________________
 void TSessionFeedbackFrame::AddToFeedback(TObject* obj)
 {
-   TGLVEntry *entry;
+   TGLVEntry *entry = 0;
+   TGFrame *fnd = 0;
    if (obj) {
-      entry = new TGLVEntry(fLVContainer, obj->GetName(), obj->GetName());
-      entry->SetTitle(obj->GetName());
-      AddToFeedback(entry);
+      entry = new TGLVEntry(fLVContainer, obj->GetName(), obj->IsA()->GetName());
+      entry->SetUserData(obj);
+      if ((fnd = fLVContainer->FindFrameByName(entry->GetTitle()))) {
+         fLVContainer->RemoveItem(fnd);
+      }
+      fLVContainer->AddItem(entry);
    }
+   fClient->NeedRedraw(fLVContainer);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1527,6 +1577,9 @@ void TSessionInputFrame::AddObject(TObject *obj)
 TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
    TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(0), fSessionItem(0)
 {
+   gEnv->SetValue("Proof.StatsHist", 1);
+   gEnv->SetValue("Proof.StatsTrace", 1);
+   gEnv->SetValue("Proof.SlaveStatsTrace", 1);
    Build();
    SetWindowName(name);
    Resize(w, h);
@@ -1537,6 +1590,9 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
                               UInt_t h) : TGMainFrame(gClient->GetRoot(), w, h),
                               fSessionHierarchy(0), fSessionItem(0)
 {
+   gEnv->SetValue("Proof.StatsHist", 1);
+   gEnv->SetValue("Proof.StatsTrace", 1);
+   gEnv->SetValue("Proof.SlaveStatsTrace", 1);
    Build();
    SetWindowName(name);
    Move(x, y);
@@ -2116,6 +2172,7 @@ void TSessionViewer::QueryResultReady(char *query)
                   fSessionHierarchy->AddItem(item2, "OutputList");
          }
          fClient->NeedRedraw(fSessionHierarchy);
+         fQueryFrame->UpdateInfos();
          fQueryFrame->UpdateButtons(lquery);
          break;
       }
@@ -2301,7 +2358,7 @@ void TSessionViewer::MyHandleMenu(Int_t id)
          break;
 
       case kQuerySubmit:
-         fServerFrame->OnBtnConnectClicked();
+         fQueryFrame->OnBtnSubmit();
          break;
    }
 }

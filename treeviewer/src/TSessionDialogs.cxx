@@ -116,9 +116,9 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    Move(ax + 200, ay + 35);
 
    // Apply and Close buttons
-   AddFrame(fApplyButton = new TGTextButton(this, "Apply", 0),
+   AddFrame(fApplyButton = new TGTextButton(this, "Apply && Return", 0),
             new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
-   AddFrame(fCloseButton = new TGTextButton(this, "Close", 1),
+   AddFrame(fCloseButton = new TGTextButton(this, "Cancel", 1),
             new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
    fApplyButton->Associate(this);
    fCloseButton->Associate(this);
@@ -245,6 +245,7 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 0:
                      // Apply button
                      OnElementSelected(fChain);
+                     DeleteWindow();
                      break;
 
                   case 1:
