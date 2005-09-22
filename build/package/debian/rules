@@ -167,39 +167,36 @@ install-arch:
 	# debian/tmp.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 
-	# Make ROOT look in `/usr/lib/root/<version>' for loadable module 
-	# sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$(SOVER)|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
 	# Make root-config output `/usr/lib/root' instead of 
 	# `/usr/lib/root/<version>' 
-	sed 's,/usr/lib/root/[0-9.][0-9.]*,/usr/lib/root,' \
+	sed 's,/usr/lib/root/$(SOVERS),/usr/lib/root,' \
 		< debian/tmp/usr/bin/root-config > root-config.tmp 
 	mv root-config.tmp debian/tmp/usr/bin/root-config
 
-	# mv tmp.systemrc debian/tmp/etc/root/system.rootrc
+	# Remove some unwanted files 
+	rm -rf debian/tmp/usr/doc/root/INSTALL 
+	rm -rf debian/tmp/usr/share/root/fonts/LICENSE
 
 	# Remove the CVS directories if present
 	find debian/tmp -name "CVS" | xargs rm -fr
 	find debian/tmp -name ".cvsignore" | xargs rm -fr
 
-	./debian/rules pkglists
-	# Make symlinks in `<prefix>/lib/root/<version>'
 	mkdir -p debian/tmp/usr/lib/root
-	(cd debian/tmp/usr/lib/root && \
-	  for i in $(SOVERS)/*.so.$(SOVERS) $(SOVERS)/libXrd*.so ; do \
-		ln -fs $$i . ; ln -fs $$i `basename $$i .$(SOVERS)` ; done)
+	./debian/rules pkglists
 
 	dh_install --list-missing \
-		--sourcedir=debian/tmp $(SPKGOPTS) \
-		-Xetc/root/rootd \
-		-Xusr/include/root/config.h \
-		-Xusr/share/man/man1/rlibmap.1 \
-		-Xusr/lib/root/*/libAfterImage.a \
-		-Xusr/include/root/rootcint.pri \
-		-Xusr/include/root/rootcintrule.pri \
-		-Xusr/include/root/rootlibs.pri \
-		-Xusr/include/root/TQtWidget.cw \
-		-Xusr/share/root/fonts \
-		-Xusr/share/doc/root
+		--sourcedir=debian/tmp $(SPKGOPTS) 	\
+		-Xetc/root/rootd 			\
+		-Xusr/include/root/config.h 		\
+		-Xusr/share/man/man1/rlibmap.1 		\
+		-Xusr/lib/root/*/libAfterImage.a 	\
+		-Xusr/include/root/rootcint.pri 	\
+		-Xusr/include/root/rootcintrule.pri 	\
+		-Xusr/include/root/rootlibs.pri 	\
+		-Xusr/include/root/TQtWidget.cw 	\
+		-Xusr/share/root/fonts 			\
+		-Xusr/share/doc/root			\
+		-Xusr/lib/root/$(SOVERS)/lib*.so.$(MAJOR)
 
 	# Fix some permissions 
 	find debian/root-bin/usr/share/root/icons \
@@ -209,6 +206,11 @@ install-arch:
 	chmod a+x debian/root-cint/usr/lib/root/cint/lib/pthread/setup
 	chmod a+x debian/root-cint/usr/lib/root/cint/include/makehpib
 	-chmod a-x debian/root-plugin-python/usr/lib/root/$(SOVERS)/ROOT.py
+	# Install desktop entry and icon 
+	mkdir -p debian/root-bin/usr/share/applications
+	cp debian/root-bin.desktop debian/root-bin/usr/share/applications
+	mkdir -p debian/root-bin/usr/share/icons
+	cp debian/root-bin.png debian/root-bin/usr/share/icons
 
 	# This is for alternatives registration, if one want's to install
         # Richard Kreckels cint package next to ROOT
@@ -232,6 +234,7 @@ binary-common:
 	dh_installexamples
 	dh_installmenu
 	dh_installdebconf	
+	dh_desktop
 #	dh_installlogrotate	
 #	dh_installemacsen
 #	dh_installpam
@@ -246,7 +249,7 @@ binary-common:
 	dh_fixperms
 #	dh_perl
 	dh_python
-	dh_makeshlibs -V
+	dh_makeshlibs -n -V
 	dh_installdeb
 #	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
 	dh_shlibdeps $(SPKGLIST:%=-L%) -l$(shell echo $(SPKGLIST:%=debian/%/usr/lib/root) | tr ' ' ':')

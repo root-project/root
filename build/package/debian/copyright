@@ -4,7 +4,8 @@ Mon, 21 Feb 2005 16:28:37 +0100.
 It was downloaded from :pserver:cvs@root.cern.ch:/user/cvs
 (anonymous CVS access to main repository - password is "cvs")
 
-Copyright:
+Copyright: 1994, 1995, 1996, 1997, 1998, 1999 ROOT Team
+           2000, 2001, 2002, 2003, 2004, 2005 ROOT Team
 
 Upstream Authors: The ROOT Team consiting of Rene Brun
 <Rene.Brun@cern.ch> and Fons Rademarkers <Fons.Rademarkers@cern.ch>

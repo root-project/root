@@ -2,8 +2,8 @@ Source: root
 Section: science
 Priority: optional
 Maintainer: Christian Holm Christensen <cholm@nbi.dk>
-Build-Depends: debhelper (>= 4.1.16), fakeroot, libssl-dev, comerr-dev, libxpm4-dev | libxpm-dev, libfreetype6-dev@builddepends@
-Standards-Version: 3.6.1
+Build-Depends: debhelper (>= 4.1.16), libssl-dev, comerr-dev, libxpm4-dev | libxpm-dev, libfreetype6-dev@builddepends@
+Standards-Version: 3.6.2
 
 Package: root
 Architecture: all

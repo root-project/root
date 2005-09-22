@@ -12,6 +12,7 @@ case "$1" in
 	if ! grep -qs ^@prefix@/lib/root\$ /etc/ld.so.conf ; then
                 echo @prefix@/lib/root >> /etc/ld.so.conf
 	fi
+	ldconfig 
 
 	# Alternatives update 
 	 update-alternatives --install @prefix@/bin/cint cint \

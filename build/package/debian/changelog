@@ -1,19 +1,36 @@
-root (5.03.01) unstable; urgency=low
+root (5.04.00-2) unstable; urgency=low
+
+  * Some new stuff to handle the libraries and plugins installed by the
+    packages.   For the plugin packages, we do not install the link 
+    libraries in /usr/lib/root, but in /usr/lib/root/<version>, as these
+    libraries are really plugins and should not be linked against.  
+    However, we do need to install the `lib<Name>.so.<version>' in
+    /usr/lib/root, as some may incrementally link against these.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 21 Sep 2005 22:07:12 +0200
+
+root (5.04.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 20 Sep 2005 22:34:53 +0200
+
+root (5.03.01-2) unstable; urgency=low
 
   * New upstream version
   * Make links in /usr/lib/root/<version> to shared libraries, so that
     we can have many versions of the libraries installed, and we do not
     need libroot-dev
 
- -- Christian Holm Christensen <cholm@cholm>  Mon, 15 Aug 2005 00:46:18 +0200
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 15 Aug 2005 00:46:18 +0200
 
 root (5.01.01-1) unstable; urgency=low
 
   * New upstream
 
- -- Christian Holm Christensen <cholm@cholm>  Mon, 23 May 2005 13:42:03 +0200
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 23 May 2005 13:42:03 +0200
 
-root (4.03.03) unstable; urgency=low
+root (4.03.03-1) unstable; urgency=low
 
   * New upstream ROOT version
   * New package root-plugin-oracle 
@@ -21,43 +38,43 @@ root (4.03.03) unstable; urgency=low
 	
  -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 20 Mar 2005 16:28:37 +0100
 
-root (4.03.02) unstable; urgency=low
+root (4.03.02-1) unstable; urgency=low
 
   * New packaging scripts
 
  -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 21 Feb 2005 16:28:37 +0100
 
-root (3.03.05) unstable; urgency=low
+root (3.03.05-1) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT
 
  -- Christian Holm <cholm@nbi.dk>  Mon, 13 May 2002 13:32:54 +0200
 
-root (3.02.06) unstable; urgency=low
+root (3.02.06-1) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT
 
  -- Christian Holm <cholm@nbi.dk>  Wed,  9 Jan 2002 04:08:19 +0100
 
-root (3.02.04) unstable; urgency=low
+root (3.02.04-1) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT
 
  -- Christian Holm <cholm@nbi.dk>  Tue,  8 Jan 2002 03:16:39 +0100
 
-root (3.02.00) unstable; urgency=low
+root (3.02.00-1) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT
 
  -- Christian Holm <cholm@nbi.dk>  Thu, 15 Nov 2001 21:34:26 +0100
 
-root (3.00.06) unstable; urgency=low
+root (3.00.06-1) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT
 
  -- Christian Holm <cholm@nbi.dk>  Sat, 24 Mar 2001 16:12:08 +0100
 
-root (3.00.04) unstable; urgency=low
+root (3.00.04-1) unstable; urgency=low
 
   * Bump version to 3.00/04 
 

@@ -1,5 +1,5 @@
 #! /bin/sh
-# prerm script for root-daemon
+# prerm script for root-cint
 #
 # see: dh_installdeb(1)
 

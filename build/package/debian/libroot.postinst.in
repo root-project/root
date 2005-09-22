@@ -1,5 +1,5 @@
 #! /bin/sh
-# postinst script for root-cint
+# postinst script for libroot
 #
 # see: dh_installdeb(1)
 
@@ -12,6 +12,7 @@ case "$1" in
 	if ! grep -qs ^@prefix@/lib/root\$ /etc/ld.so.conf ; then
                 echo @prefix@/lib/root >> /etc/ld.so.conf
 	fi
+	ldconfig 
 	;;
     abort-upgrade|abort-remove|abort-deconfigure)
 	# Nothing to be done here

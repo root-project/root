@@ -1,6 +1,6 @@
 Package: root-plugin-dcache
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, libdcap1
 Description: dCache plugin for ROOT
  This package contains the dCache plug-in for ROOT, that allows
  transparent access to files data via a dCache server. Given a path

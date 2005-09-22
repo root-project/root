@@ -475,7 +475,7 @@ debian:
 	rm -rf debian
 	build/package/lib/makedebdir.sh
 	fakeroot debian/rules debian/control
-	dpkg-buildpackage -rfakeroot -us -uc -i"G__|^debian|\.d$$"
+	dpkg-buildpackage -rfakeroot -us -uc -i"G__|^debian|root-bin.png|\.d$$"
 	@echo "Debian GNU/Linux packages done. They are put in '../'"
 
 redhat:
@@ -608,11 +608,11 @@ endif
 
 
 maintainer-clean:: distclean
-	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
 	   etc/root.mimes build/misc/root-help.el \
-	   rootd/misc/rootd.rc.d
+	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
+	   configure-stamp config.status 
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)

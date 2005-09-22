@@ -1,5 +1,5 @@
 #! /bin/sh
-# prerm script for root-daemon
+# prerm script for ttf-root-installer
 #
 # see: dh_installdeb(1)
 

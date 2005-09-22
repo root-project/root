@@ -1,5 +1,5 @@
 #! /bin/sh
-# preinst script for root-daemon
+# preinst script for root-rootd
 #
 # see: dh_installdeb(1)
 
@@ -64,7 +64,7 @@ case "$1" in
 	#echo "SECURITY: Fixing permission of /var/spool/rootd !"
 	#echo "(I.e. replacing GIDs other than root and rootd with rootd.)"
 	#echo
-	chown rootd.rootd /var/spool/rootd
+	chown rootd:rootd /var/spool/rootd
 	find /var/spool/rootd \
 	    -not \( -group root -or -group rootd \) \
 	    -exec chgrp rootd {} \;

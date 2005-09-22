@@ -1,5 +1,5 @@
 #! /bin/sh
-# postrm script for root-daemon 
+# postrm script for root-rootd
 #
 # see: dh_installdeb(1)
 

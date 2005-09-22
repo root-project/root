@@ -14,9 +14,11 @@ ifneq ($(DIRS),)
 include $(foreach i, $(DIRS), $(i)/Module.mk)
 include config/Makefile.config 
 endif
+
 ifneq ($(DEV),)
 PKGHDRS:=$(shell echo $(ALLHDRS) | sed -e 's,[^ ]*inc/,include/,g' -e 's,include/,usr/include/root/,g')
 endif
+
 ifneq ($(PKG),)
 PKGLIBS=$(ALLLIBS:%.so=%.so*)
 PKGBINS=$(ALLEXECS:bin/%=usr/bin/%)
@@ -26,34 +28,63 @@ all:	liblist devlist binlist
 
 ifneq ($(LIB),)
 ifneq ($(LIB),$(DEV))
-PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(MAJOR)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(SOVER)) \
+PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
 	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
-	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR)) 
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER)) 
 DEVLIBS := $(ALLLIBS) 
-else
+else # ! $(LIB) = $(DEV)
 ifneq ($(NOVERS),1)
-PKGLIBS	:= $(ALLLIBS) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(MAJOR)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%.so=$(PREFIX)/lib/root/$(SOVER)/%.so.$(SOVER)) \
+ifeq ($(DIRS), cint)
+PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
 	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
-	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR)) 
-else 
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER)) \
+	   $(ALLLIBS)
+else # ! $(DIRS) = cint
+PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) 
+endif # $(DIRS) = cint
+else # ! $(NOVERS) != 1
 ifeq ($(DIRS), xrootd)
 XRDLIBS := $(patsubst lib/%, $(LPATH)/%, $(wildcard lib/libXrd*.so))
-PKGLIBS	:= $(XRDLIBS) \
-	   $(XRDLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
-else
+PKGLIBS	:= $(XRDLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
+else  # ! $(LIB)
 PKGLIBS	:= $(ALLLIBS) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
-endif
-endif 
-endif
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
+	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER))
+endif # $(DIRS) = xrootd
+endif # $(NOVERS) != 1
+endif # $(LIB) = $(DEV)
 liblist:
+	@echo "$(PKGLIBS)" 
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
-else
-liblist:
+ifneq ($(LIB),$(DEV))
+	(cd debian/tmp/usr/lib/root && \
+	   for i in $(ALLLIBS) ; do \
+	      b=`basename $$i` ; \
+	      ln -fs $(SOVER)/$$b . ; \
+	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
+else 
+ifeq ($(DIRS), cint)
+	(cd debian/tmp/usr/lib/root && \
+	   for i in $(ALLLIBS) ; do \
+	      b=`basename $$i` ; \
+	      ln -fs $(SOVER)/$$b . ; \
+	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
+else 
+ifneq ($(DIRS), xrootd) 
+	(cd debian/tmp/usr/lib/root && \
+	   for i in $(ALLLIBS) ; do \
+	      b=`basename $$i` ; \
+	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 endif
+endif # $(DIRS) = cint
+endif # $(LIB) = $(DEV)
+else  # ! $(LIB)
+liblist:
+endif # $(LIB)
 
 ifneq ($(DEV),)
 PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) $(DEVLIBS)
