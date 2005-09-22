@@ -7,7 +7,9 @@
 #
 # processname: rootd
 # pidfile: /var/run/rootd.pid
-# config: 
+# config:
+
+ROOTD=@bindir@/rootd
 
 # Source function library.
 . /etc/init.d/functions
@@ -25,14 +27,16 @@ then
 	exit 0
 fi
 
-[ -x @bindir@/rootd ] || exit 0
+[ -x $ROOTD ] || exit 0
 
 RETVAL=0
 prog="rootd"
 
 start() {
         echo -n $"Starting $prog: "
-        daemon @bindir@/rootd $ROOTDOPTS
+        # when not built with --prefix, add as last argument the
+        # path where ROOT is installed
+        daemon $ROOTD $ROOTDOPTS
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch /var/lock/subsys/rootd
@@ -40,7 +44,7 @@ start() {
 }
 
 stop() {
-        echo -n $"Stopping $prog: " 
+        echo -n $"Stopping $prog: "
         killproc rootd
         RETVAL=$?
         echo
