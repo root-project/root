@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.161 2005/08/16 15:58:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.162 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1706,10 +1706,10 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
                             const char *confdir, Int_t loglevel)
 {
    // Start a PROOF session on a specific cluster. If cluster is 0
-   // (the default) then the PROOF Control GUI pops up. If cluster is ""
+   // (the default) then the PROOF Session Viewer GUI pops up. If cluster is ""
    // (empty string) then we connect to the localhost ("proof://localhost").
    // The TProof object is returned. The object is also added to the list
-   // of proof sessions (accessible via TROOT::GetListOfProofs()) and
+   // of PROOF sessions (accessible via TROOT::GetListOfProofs()) and
    // accessible via gProof. Use TProof::cd() to switch between PROOF
    // sessions (changes gProof).
    // For more info on PROOF see the TProof ctor.
@@ -1736,10 +1736,20 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
    if (!cluster) {
 
       if (IsBatch()) {
-         Error("Proof", "we are in batch mode, cannot show PROOF Control GUI");
+         Error("Proof", "we are in batch mode, cannot show PROOF Session Viewer");
          return 0;
       }
-      // start PROOF Controller
+      // start PROOF Session Viewer
+      TPluginHandler *sv = pm->FindHandler("TSessionViewer", "");
+      if (!sv) {
+         Error("Proof", "no plugin found for TSessionViewer");
+         return 0;
+      }
+      if (sv->LoadPlugin() == -1) {
+         Error("Proof", "plugin for TSessionViewer could not be loaded");
+         return 0;
+      }
+      sv->ExecPlugin(0);
       return 0;
 
    } else {
