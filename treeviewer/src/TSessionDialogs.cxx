@@ -43,6 +43,12 @@
 ClassImp(TNewChainDlg)
 ClassImp(TNewQueryDlg)
 
+const char *partypes[] = {
+   "Par files",  "*.par",
+   "All files",  "*",
+    0,            0
+};
+
 const char *filetypes[] = {
    "C files",       "*.C",
    "ROOT files",    "*.root",
@@ -356,11 +362,12 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
          kLHintsCenterY, 5, 5, 4, 0));
 
-   fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "TDSet or TChain :"),
+   fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "TChain :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 4, 0));
    fFrmNewQuery->AddFrame(fTxtChain = new TGTextEntry(fFrmNewQuery,
          (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
+   fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseChain()");
@@ -445,6 +452,9 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
       tmp->AddFrame(fBtnSave = new TGTextButton(tmp, "Add Query"),
          new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    fBtnSave->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSaveClicked()");
+   tmp->AddFrame(fBtnSubmit = new TGTextButton(tmp, "Save && Submit"),
+      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
+   fBtnSubmit->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSubmitClicked()");
    tmp->AddFrame(fBtnClose = new TGTextButton(tmp, "Close"),
       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    fBtnClose->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnCloseClicked()");
@@ -504,7 +514,7 @@ void TNewQueryDlg::OnBrowseSelector()
 void TNewQueryDlg::OnBrowseParFile()
 {
    TGFileInfo fi;
-   fi.fFileTypes = filetypes;
+   fi.fFileTypes = partypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
    if (!fi.fFilename) return;
    fTxtParFile->SetText(gSystem->BaseName(fi.fFilename));
@@ -550,6 +560,10 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->AddItem(item,
          newquery->fQueryName, fViewer->GetQueryConPict(), fViewer->GetQueryConPict());
       item2->SetUserData(newquery);
+      fViewer->GetSessionHierarchy()->ClearHighlighted();
+      fViewer->GetSessionHierarchy()->HighlightItem(item2);
+      fViewer->GetSessionHierarchy()->SetSelected(item2);
+      fViewer->OnListTreeClicked(item2, 1, 0, 0);
    }
    else {
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
@@ -568,6 +582,13 @@ void TNewQueryDlg::OnBtnSaveClicked()
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
+}
+
+//______________________________________________________________________________
+void TNewQueryDlg::OnBtnSubmitClicked()
+{
+   OnBtnSaveClicked();
+   fViewer->GetQueryFrame()->OnBtnSubmit();
 }
 
 //______________________________________________________________________________
@@ -606,33 +627,6 @@ Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       case kC_TEXTENTRY:
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
-               switch (parm1) {
-                  case 1:
-                     fTxtChain->SelectAll();
-                     fTxtChain->SetFocus();
-                     break;
-                  case 2:
-                     fTxtSelector->SelectAll();
-                     fTxtSelector->SetFocus();
-                     break;
-                  case 3:
-                     fTxtOptions->SelectAll();
-                     fTxtOptions->SetFocus();
-                     break;
-                  case 4:
-                     fTxtParFile->SelectAll();
-                     fTxtParFile->SetFocus();
-                     break;
-                  case 5:
-                     fTxtEventList->SelectAll();
-                     fTxtEventList->SetFocus();
-                     break;
-                  case 6:
-                     fTxtQueryName->SelectAll();
-                     fTxtQueryName->SetFocus();
-                     break;
-               }
-               break;
             case kTE_TAB:
                switch (parm1) {
                   case 1:
@@ -661,6 +655,7 @@ Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                }
                break;
+
             default:
                break;
          }

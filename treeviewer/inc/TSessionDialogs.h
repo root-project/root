@@ -84,6 +84,7 @@ private:
    TGTextButton      *fBtnMore;        // "more >>" / "less <<" button
    TGTextButton      *fBtnClose;       // close button
    TGTextButton      *fBtnSave;        // save button
+   TGTextButton      *fBtnSubmit;      // save & submit button
 
    TGTextEntry       *fTxtQueryName;   // query name text entry
    TGTextEntry       *fTxtChain;       // chain name text entry
@@ -109,6 +110,7 @@ public:
    void     OnBrowseEventList();
    void     OnBtnSaveClicked();
    void     OnBtnCloseClicked();
+   void     OnBtnSubmitClicked();
    void     OnElementSelected(TObject *obj);
    void     CloseWindow();
    void     Popup();

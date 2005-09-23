@@ -251,6 +251,8 @@ public:
    void        OnBtnAddClicked();
    void        OnConfigFileClicked();
    void        Update(TSessionDescription* desc);
+   virtual Bool_t HandleExpose(Event_t *event);
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    Bool_t      WriteConfigFile(const TString &filePath, TList *vec);
    TList      *ReadConfigFile(const TString &filePath);
