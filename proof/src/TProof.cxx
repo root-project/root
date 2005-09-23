@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.113 2005/09/22 09:42:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.114 2005/09/22 23:29:30 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -202,12 +202,13 @@ TProof::TProof(const char *masterurl, const char *conffile,
    // Create a PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
    // directly starting as master server (if master = ""). Masterurl is of
-   // the form: proof://host[:port] or proofs://host[:port]. Conffile is
-   // the name of the config file describing the remote PROOF cluster
-   // (this argument alows you to describe different cluster configurations).
+   // the form: [proof[s]://]host[:port]. Conffile is the name of the config
+   // file describing the remote PROOF cluster (this argument alows you to
+   // describe different cluster configurations).
    // The default is proof.conf. Confdir is the directory where the config
    // file and other PROOF related files are (like motd and noproof files).
-   // Loglevel is the log level (default = 1).
+   // Loglevel is the log level (default = 1). User specified custom config
+   // files will be first looked for in $HOME/.conffile.
 
    if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
@@ -598,8 +599,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                         // Notify opening of connection
                         nSlavesDone++;
                         TMessage m(kPROOF_SERVERSTARTED);
-                        m << TString("Opening connections to slaves") << nSlaves
-                        << nSlavesDone << kTRUE;
+                        m << TString("Opening connections to workers") << nSlaves
+                          << nSlavesDone << kTRUE;
                         gProofServ->GetSocket()->Send(m);
                      }
                   } else {
@@ -622,13 +623,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                      fBadSlaves->Add(slave);
                   }
                   PDB(kGlobal,3)
-                     Info("StartSlaves", "slave on host %s created"
+                     Info("StartSlaves", "worker on host %s created"
                                          " and added to list", word[1]);
 
                   // Notify opening of connection
                   nSlavesDone++;
                   TMessage m(kPROOF_SERVERSTARTED);
-                  m << TString("Opening connections to slaves") << nSlaves
+                  m << TString("Opening connections to workers") << nSlaves
                     << nSlavesDone << slaveOk;
                   gProofServ->GetSocket()->Send(m);
                }
@@ -648,7 +649,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                if (pt && pt->fThread->GetState() == TThread::kRunningState) {
                   PDB(kGlobal,3)
                      Info("Init",
-                          "parallel startup: waiting for slave %s (%s:%d)",
+                          "parallel startup: waiting for worker %s (%s:%d)",
                            pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
                            pt->fArgs->fPort);
                   pt->fThread->Join();
@@ -657,7 +658,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                // Notify end of startup operations
                nSlavesDone++;
                TMessage m(kPROOF_SERVERSTARTED);
-               m << TString("Setting up slave servers") << nSlaves
+               m << TString("Setting up worker servers") << nSlaves
                  << nSlavesDone << kTRUE;
                gProofServ->GetSocket()->Send(m);
             }
@@ -703,7 +704,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                // Notify end of startup operations
                nSlavesDone++;
                TMessage m(kPROOF_SERVERSTARTED);
-               m << TString("Setting up slave servers") << nSlaves
+               m << TString("Setting up worker servers") << nSlaves
                  << nSlavesDone << slaveOk;
                gProofServ->GetSocket()->Send(m);
             }
@@ -715,7 +716,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
    } else {
 
       // create master server
-      fprintf(stderr,"Starting master: opening connection ... \r");
+      fprintf(stderr,"Starting master: opening connection ... \n");
       TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", 0);
 
       if (slave->IsValid()) {
@@ -1758,7 +1759,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                fprintf(stderr,"%s: %d out of %d (%d %%)\r",
                        action.Data(), done, tot, frac);
                if (frac >= 100)
-                  fprintf(stderr,"%s: OK (%d slaves)                 \n",
+                  fprintf(stderr,"%s: OK (%d workers)                 \n",
                           action.Data(),tot);
             }
             // Notify GUIs
@@ -3056,7 +3057,7 @@ Int_t TProof::SetParallel(Int_t nodes)
       Int_t parallel = GetParallel();
       PDB(kGlobal,1) Info("SetParallel", "got %d node%s", parallel,
          parallel == 1 ? "" : "s");
-      if (parallel > 0) printf("PROOF set to parallel mode (%d slaves)\n", parallel);
+      if (parallel > 0) printf("PROOF set to parallel mode (%d workers)\n", parallel);
       return parallel;
    }
 }
@@ -3126,7 +3127,7 @@ Int_t TProof::GoParallel(Int_t nodes)
       if (n < 1)
          printf("PROOF set to sequential mode\n");
    } else {
-      printf("PROOF set to parallel mode (%d slaves)\n", n);
+      printf("PROOF set to parallel mode (%d workers)\n", n);
    }
 
    PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
