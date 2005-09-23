@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.3 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.3 2005/09/19 16:43:07 brun Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
@@ -361,7 +361,7 @@ namespace ROOT {
       }
 
 
-#ifdef __CINT__
+#ifndef __CINT__
 
       /**
           Self Addition with a displacement vector.
