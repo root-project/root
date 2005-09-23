@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.12 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.13 2005/08/12 15:46:40 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -120,7 +120,12 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    if (gDebug > 1)
       Info("TAlien", "%s => %s port: %d user: %s",gridurl,fHost.Data(),fPort,fUser.Data());
 
-   fGc = GliteUI::MakeGliteUI(kFALSE);
+   if (options && (options[0] == 't')) {
+       fGc = GliteUI::MakeGliteUI(kTRUE);
+   } else {
+       fGc = GliteUI::MakeGliteUI(kFALSE);
+   }
+
    if (!fGc) {
       Error("TAlien", "could not connect to a alien service at:");
       Error("TAlien", "host: %s port: %d user: %s", fHost.Data(), fPort, fUser.Data());
@@ -290,7 +295,7 @@ void TAlien::Stderr()
 TGridResult *TAlien::Query(const char *path, const char *pattern,
                            const char *conditions, const char *options)
 {
-   TString cmdline = TString("find -r ") + TString(options) + TString(" ") + TString(path) + TString(" ")  + TString(pattern) + TString(" ") + TString(conditions);
+   TString cmdline = TString("find -z ") + TString(options) + TString(" ") + TString(path) + TString(" ")  + TString(pattern) + TString(" ") + TString(conditions);
    return Command(cmdline.Data());
 }
 

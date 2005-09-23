@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:$:$Id: TAlienCollection.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TFile.h"
 #include "TXMLEngine.h"
 #include "TObjString.h"
-
+#include "glite_file_operations.h"
 
 ClassImp(TAlienCollection)
 
@@ -39,8 +39,9 @@ TAlienCollection::TAlienCollection(const char *localcollectionfile)
    fEventList->SetOwner(kTRUE);
    fEventListIter = new TIter(fEventList);
    fCurrent = 0;
-
-   ParseXML();
+   if (localcollectionfile!=0) {
+      ParseXML();
+   }
 }
 
 //______________________________________________________________________________
@@ -181,4 +182,54 @@ void TAlienCollection::Print(Option_t *opt) const
       Info("Print", "printing element %d", count);
       filemap->Print();
    }
+}
+
+//______________________________________________________________________________
+TAlienCollection *TAlienCollection::Query(const char *path, const char *pattern, Int_t maxresult)
+{
+   Int_t nresults=0;
+   TAlienCollection* coll = new TAlienCollection(0);
+   if ((nresults=glite_find(path,pattern,maxresult))<0) {
+      coll->Error("Query","Could not execute Query!\n");
+      delete coll;
+      return 0;
+   }
+
+   if (coll) {
+      // fill them into the stringlist
+      Int_t found=0;
+      for (Int_t i = 0 ; i < nresults; i++) {
+         const char* field = glite_getfindresult("lfn",i);
+         if (field) {
+            found++;
+            TMap *files = new TMap();
+            TString turl = "alien://" + TString(field);
+            TString bname="";
+            files->Add(new TObjString(bname) , new TObjString(turl));
+            coll->GetEventList()->Add(files);
+         } else {
+            break;
+         }
+      }
+      coll->Info("Query","I found %d Files for you!",found);
+   }
+   return coll;
+}
+
+//______________________________________________________________________________
+TDSet *TAlienCollection::GetDataset(const char *type, const char *objname ,
+                                    const char *dir)
+{
+   Reset();
+   TMap* mapp;
+   TDSet* dset = new TDSet(type,objname,dir);
+   if (!dset) {
+      return 0;
+   }
+
+   while ( (mapp = Next())) {
+      if (((TObjString*)fCurrent->GetValue("")))
+         dset->Add(((TObjString*)fCurrent->GetValue(""))->GetName());
+   }
+   return dset;
 }

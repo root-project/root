@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.38 2005/06/10 18:01:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.39 2005/08/23 19:41:36 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TCache.h"
 #endif
 
+class TUrl;
 class TFree;
 class TArrayC;
 class TArchiveFile;
@@ -62,7 +63,7 @@ protected:
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
    Bool_t        fIsRootFile;     //!True is this is a ROOT file
-   
+
    TList        *fInfoCache;      //!Cached list of the streamer infos in this file
 
    static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
@@ -100,76 +101,77 @@ public:
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);
    virtual ~TFile();
-   virtual void      Close(Option_t *option=""); // *MENU*
-   virtual void      Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
-   virtual void      Delete(const char *namecycle="");
-   virtual void      Draw(Option_t *option="");
-   virtual void      DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
-   virtual void      FillBuffer(char *&buffer);
-   virtual void      Flush();
-   TArchiveFile     *GetArchive() const { return fArchive; }
-   Int_t             GetBestBuffer() const;
-   TArrayC          *GetClassIndex() const { return fClassIndex; }
-   Int_t             GetCompressionLevel() const { return fCompress; }
-   Float_t           GetCompressionFactor();
-   virtual Long64_t  GetEND() const { return fEND; }
-   virtual Int_t     GetErrno() const;
-   virtual void      ResetErrno() const;
-   Int_t             GetFd() const { return fD; }
-   TObjArray        *GetListOfProcessIDs() const {return fProcessIDs;}
-   TList            *GetListOfFree() const { return fFree; }
-   virtual Int_t     GetNfree() const { return fFree->GetSize(); }
-   virtual Int_t     GetNProcessIDs() const { return fNProcessIDs; }
-   Option_t         *GetOption() const { return fOption.Data(); }
-   virtual Long64_t  GetBytesRead() const { return fBytesRead; }
-   virtual Long64_t  GetBytesWritten() const { return fBytesWrite; }
-   Int_t             GetVersion() const { return fVersion; }
-   Int_t             GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}
-   virtual Int_t     GetNbytesFree() const {return fNbytesFree;}
-   virtual Long64_t  GetSeekFree() const {return fSeekFree;}
-   virtual Long64_t  GetSeekInfo() const {return fSeekInfo;}
-   virtual Long64_t  GetSize() const;
-   virtual TList    *GetStreamerInfoList();
-     const TList    *GetStreamerInfoCache();
-   virtual void      IncrementProcessIDs() {fNProcessIDs++;}
-   virtual Bool_t    IsArchive() const { return fIsArchive; }
-   virtual Bool_t    IsOpen() const;
-   virtual void      ls(Option_t *option="") const;
-   virtual void      MakeFree(Long64_t first, Long64_t last);
-   virtual void      MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
-   virtual void      Map(); // *MENU*
-   virtual void      Paint(Option_t *option="");
-   virtual void      Print(Option_t *option="") const;
-   virtual Bool_t    ReadBuffer(char *buf, Int_t len);
-   virtual void      ReadFree();
-   virtual void      ReadStreamerInfo();
-   virtual Int_t     Recover();
-   virtual Int_t     ReOpen(Option_t *mode);
-   virtual void      Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   virtual void      SetCompressionLevel(Int_t level=1);
-   virtual void      SetEND(Long64_t last) { fEND = last; }
-   virtual void      SetOption(Option_t *option=">") { fOption = option; }
-   virtual void      ShowStreamerInfo();
-   virtual Int_t     Sizeof() const;
-   void              SumBuffer(Int_t bufsize);
-   virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
-   virtual Bool_t    WriteBuffer(const char *buf, Int_t len);
-   virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
-   virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
-   virtual void      WriteFree();
-   virtual void      WriteHeader();
-   virtual void      WriteStreamerInfo();
+   virtual void        Close(Option_t *option=""); // *MENU*
+   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   virtual void        Delete(const char *namecycle="");
+   virtual void        Draw(Option_t *option="");
+   virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
+   virtual void        FillBuffer(char *&buffer);
+   virtual void        Flush();
+   TArchiveFile       *GetArchive() const { return fArchive; }
+   Int_t               GetBestBuffer() const;
+   TArrayC            *GetClassIndex() const { return fClassIndex; }
+   Int_t               GetCompressionLevel() const { return fCompress; }
+   Float_t             GetCompressionFactor();
+   virtual Long64_t    GetEND() const { return fEND; }
+   virtual Int_t       GetErrno() const;
+   virtual void        ResetErrno() const;
+   Int_t               GetFd() const { return fD; }
+   virtual const TUrl *GetEndpointUrl() const { return 0; }
+   TObjArray          *GetListOfProcessIDs() const {return fProcessIDs;}
+   TList              *GetListOfFree() const { return fFree; }
+   virtual Int_t       GetNfree() const { return fFree->GetSize(); }
+   virtual Int_t       GetNProcessIDs() const { return fNProcessIDs; }
+   Option_t           *GetOption() const { return fOption.Data(); }
+   virtual Long64_t    GetBytesRead() const { return fBytesRead; }
+   virtual Long64_t    GetBytesWritten() const { return fBytesWrite; }
+   Int_t               GetVersion() const { return fVersion; }
+   Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
+   virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
+   virtual Long64_t    GetSeekFree() const {return fSeekFree;}
+   virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
+   virtual Long64_t    GetSize() const;
+   virtual TList      *GetStreamerInfoList();
+     const TList      *GetStreamerInfoCache();
+   virtual void        IncrementProcessIDs() { fNProcessIDs++; }
+   virtual Bool_t      IsArchive() const { return fIsArchive; }
+   virtual Bool_t      IsOpen() const;
+   virtual void        ls(Option_t *option="") const;
+   virtual void        MakeFree(Long64_t first, Long64_t last);
+   virtual void        MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
+   virtual void        Map(); // *MENU*
+   virtual void        Paint(Option_t *option="");
+   virtual void        Print(Option_t *option="") const;
+   virtual Bool_t      ReadBuffer(char *buf, Int_t len);
+   virtual void        ReadFree();
+   virtual void        ReadStreamerInfo();
+   virtual Int_t       Recover();
+   virtual Int_t       ReOpen(Option_t *mode);
+   virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   virtual void        SetCompressionLevel(Int_t level=1);
+   virtual void        SetEND(Long64_t last) { fEND = last; }
+   virtual void        SetOption(Option_t *option=">") { fOption = option; }
+   virtual void        ShowStreamerInfo();
+   virtual Int_t       Sizeof() const;
+   void                SumBuffer(Int_t bufsize);
+   virtual void        UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
+   virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
+   virtual void        WriteFree();
+   virtual void        WriteHeader();
+   virtual void        WriteStreamerInfo();
 
-   static TFile     *Open(const char *name, Option_t *option = "",
-                          const char *ftitle = "", Int_t compress = 1,
-                          Int_t netopt = 0);
+   static TFile       *Open(const char *name, Option_t *option = "",
+                            const char *ftitle = "", Int_t compress = 1,
+                            Int_t netopt = 0);
 
-   static Long64_t   GetFileBytesRead();
-   static Long64_t   GetFileBytesWritten();
+   static Long64_t     GetFileBytesRead();
+   static Long64_t     GetFileBytesWritten();
 
-   static void       SetFileBytesRead(Long64_t bytes = 0);
-   static void       SetFileBytesWritten(Long64_t bytes = 0);
+   static void         SetFileBytesRead(Long64_t bytes = 0);
+   static void         SetFileBytesWritten(Long64_t bytes = 0);
 
    ClassDef(TFile,7)  //ROOT file
 };

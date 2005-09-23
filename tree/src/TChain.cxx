@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.112 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.113 2005/09/22 09:57:25 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -46,6 +46,9 @@
 #include "TDSet.h"
 #include "TError.h"
 #include "TVirtualIndex.h"
+#include "TFileInfo.h"
+#include "TUrl.h"
+
 #include <queue>
 #include <map>
 
@@ -378,6 +381,28 @@ Int_t TChain::AddFile(const char *name, Long64_t nentries, const char *tname)
 
    delete [] filename;
    if (cursav) cursav->cd();
+   return 1;
+}
+
+//______________________________________________________________________________
+Int_t TChain::AddFileInfoList(TList *fileinfolist, Long64_t nfiles)
+{
+   // Add all files referenced in the List of TFileInfo objects to the chain.
+
+   if (!fileinfolist)
+      return 0;
+   TIter next(fileinfolist);
+   TFileInfo* finfo;
+   Long64_t cnt=0;
+   while ((finfo = (TFileInfo*)next())) {
+      cnt++;
+      // read the first url
+      finfo->ResetUrl();
+      if (finfo->GetCurrentUrl())
+         Add((finfo->GetCurrentUrl())->GetUrl());
+      if (cnt>=nfiles)
+         break;
+   }
    return 1;
 }
 
@@ -1018,6 +1043,39 @@ Long64_t TChain::LoadTree(Long64_t entry)
    return fReadEntry;
 }
 
+
+//______________________________________________________________________________
+void TChain::Lookup()
+{
+   TIter next(fFiles);
+   TChainElement *element;
+   Int_t nelements = fFiles->GetEntries();
+   printf("\n");
+   printf("TChain::Lookup - Looking up %d files .... \n",nelements);
+   Int_t nlook = 0;
+
+   while ((element = (TChainElement*)next())) {
+      nlook++;
+      TUrl cachefileurl(element->GetTitle());
+      TString options=cachefileurl.GetOptions();
+      cachefileurl.SetOptions(options+="&filetype=raw");
+      TFile *cachefile = TFile::Open(cachefileurl.GetUrl());
+
+      if ((!cachefile) || cachefile->IsZombie()) {
+         fFiles->Remove(element);
+         Error("Lookup","Couldn't open %s\n",cachefileurl.GetUrl());
+      } else {
+         printf("Lookup | %03.02f %% finished\r",100.0*nlook/nelements);
+         fflush(stdout);
+         TString urlstring = ((TUrl*)cachefile->GetEndpointUrl())->GetUrl();
+         urlstring.ReplaceAll("&filetype=raw","");
+         urlstring.ReplaceAll("///","//");
+         element->SetTitle( urlstring );
+         delete cachefile;
+      }
+   }
+   printf("\n");
+}
 
 //______________________________________________________________________________
 void TChain::Loop(Option_t *option, Long64_t nentries, Long64_t firstentry)

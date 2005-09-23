@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.9 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.10 2005/08/12 15:46:40 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -33,6 +33,9 @@
 #include "TString.h"
 #include "Rtypes.h"
 #include "TSystem.h"
+#include "TVirtualMutex.h"
+#include "TProcessUUID.h"
+#include "TArchiveFile.h"
 
 ClassImp(TAlienFile)
 
@@ -61,7 +64,7 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    TString name(TString("alien://")+TString(lUrl.GetFile()));
    SetName(name);
 
-   TFile::TFile("dummy", "NET", ftitle, compress);
+   TFile::TFile(name, "NET", ftitle, compress);
 
    fOption = option;
 
@@ -86,7 +89,9 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
        Error("TAlienFile", "cannot open %s!", url);
        goto zombie;
    }
-   fSubFile->SetName(name);
+
+   // gFile would point now to fSubFile, but we don't want that
+   gFile=this;
    return;
 
 zombie:
@@ -278,8 +283,13 @@ TAlienFile::~TAlienFile()
 {
    // TAlienFile file dtor.
 
-   if (fSubFile)
-      fSubFile->Close();
+   if (fSubFile) {
+      Close();
+      delete fSubFile;
+   }
+   fSubFile=0;
+   if (gDebug)
+      Info("~TAlienFile", "dtor called for %s", GetName());
 }
 
 //______________________________________________________________________________

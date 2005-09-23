@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.9 2005/08/18 14:16:28 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.10 2005/08/18 17:46:31 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -85,8 +85,12 @@ public:
                  { return (fSubFile) ? fSubFile->GetList() : 0; }
    TList      *GetListOfKeys() const
                  { return (fSubFile) ? fSubFile->GetListOfKeys() : 0; }
-
    TFile      *GetSubFile() const { return fSubFile; }
+
+   void        UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize)
+                 { if (fSubFile) fSubFile->UseCache(maxCacheSize, pageSize); }
+
+   const TUrl *GetEndpointUrl() const { return (fSubFile) ? fSubFile->GetEndpointUrl() : 0; }
 
    ClassDef(TAlienFile,1)  //A ROOT file that reads/writes via AliEn services and sub protocols
 };

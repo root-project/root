@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.141 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.142 2005/08/23 19:41:36 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -406,7 +406,7 @@ TFile::~TFile()
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (gDebug)
-      Info("~TFile", "dtor called for %s", GetName());
+      Info("~TFile", "dtor called for %s [%d]", GetName(),this);
 }
 
 //______________________________________________________________________________

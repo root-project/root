@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.h,v 1.3 2004/11/01 17:38:08 jgrosseo Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -26,6 +26,9 @@
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TDSet
+#include "TDSet.h"
 #endif
 
 class TMap;
@@ -55,8 +58,12 @@ public:
    const char *GetTURL(const char *name) const;
    void        Print(Option_t *opt) const;
    TFile      *OpenFile(const char *filename) const;
+   TList      *GetEventList() const { return fEventList; }
+
+   TDSet      *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
 
    static TAlienCollection *Open(const char *localcollectionfile);
+   static TAlienCollection *Query(const char *path, const char *pattern, Int_t maxfiles=1000);
 
    ClassDef(TAlienCollection,1)  // Manages collection of files on AliEn
 };

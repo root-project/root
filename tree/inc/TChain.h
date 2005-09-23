@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.45 2005/07/09 04:03:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.46 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -69,6 +69,8 @@ public:
    virtual Int_t     Add(TChain *chain);
    virtual Int_t     Add(const char *name, Long64_t nentries=kBigNumber);
    virtual Int_t     AddFile(const char *name, Long64_t nentries=kBigNumber, const char *tname="");
+   virtual Int_t     AddFileInfoList(TList *list, Long64_t nfiles=kBigNumber);
+
    virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
    virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
    virtual TFriendElement *AddFriend(TTree *chain, const char *alias, Bool_t warn = kFALSE);
@@ -108,6 +110,7 @@ public:
    virtual Double_t  GetWeight() const;
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
            Long64_t  LoadTree(Long64_t entry);
+           void      Lookup();
    virtual void      Loop(Option_t *option="",Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
    virtual TDSet    *MakeTDSet() const;

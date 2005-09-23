@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.9 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.10 2005/08/12 15:46:40 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -35,6 +35,10 @@
 #include "TGrid.h"
 #endif
 
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
+
 #ifndef ROOT_TGridResult
 #include "TGridResult.h"
 #endif
@@ -67,13 +71,14 @@ private:
    TGridResult         *Command(const char *command, bool interactive = kFALSE,
                                 UInt_t stream = kOUTPUT);
    virtual TGridResult *Query(const char *path, const char *pattern,
-                              const char *conditions, const char *options);
+                              const char *conditions = "", const char *options = "");
+
    virtual TGridResult *LocateSites();
    virtual TGridResult *OpenDataset(const char *lfn, const char *options = "");
 
 public:
    TAlien(const char *gridurl, const char *uid=0, const char *passwd=0,
-	  const char *options=0);
+          const char *options=0);
    virtual ~TAlien();
 
    void Shell();           // start an interactive ALIEN shell

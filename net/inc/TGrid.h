@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.13 2005/05/27 13:47:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.14 2005/08/12 15:46:41 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 class TGridResult;
 class TGridJDL;
 class TGridJob;
-class TDSet;
 
 
 class TGrid : public TObject {
@@ -76,16 +75,10 @@ public:
       { MayNotUse("Command"); return 0; }
 
    virtual TGridResult *Query(const char * /*path*/, const char * /*pattern*/,
-                              const char * /*conditions*/, const char * /*options*/)
+                              const char * /*conditions*/ = "", const char * /*options*/ = "")
       { MayNotUse("Query"); return 0; }
 
    virtual TGridResult *LocateSites() { MayNotUse("LocalSites"); return 0; }
-
-   virtual Bool_t Query2Dataset(TDSet * /*dset*/, const char * /*path*/,
-                                const char * /*pattern*/,
-                                const char * /*conditions*/,
-                                const char * /*options*/)
-      { MayNotUse("Query2Dataset"); return kFALSE; }
 
    //--- Catalogue Interface
    virtual TGridResult *Ls(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
