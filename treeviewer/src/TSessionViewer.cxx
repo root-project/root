@@ -87,6 +87,7 @@ const char *conftypes[] = {
 
 const char* const kPROOF_GuiConfFile = ".proofservers.conf";
 const char* const kSession_RedirectFile = ".templog";
+const char* const kSession_RedirectCmd = ".tempcmd";
 char const kPROOF_GuiConfFileSeparator = '\t';
 
 // Menu command id's
@@ -648,8 +649,8 @@ void TSessionFrame::Build(TSessionViewer *gui)
 
    fFeedbackFrame = new TSessionFeedbackFrame(fFB, 350, 310);
    fFeedbackFrame->Build(fViewer);
-   fFB->AddFrame(fFeedbackFrame, new TGLayoutHints(kLHintsExpandX,
-                 0, 0, 0, 0));
+   fFB->AddFrame(fFeedbackFrame, new TGLayoutHints(kLHintsExpandX |
+                 kLHintsExpandY, 0, 0, 0, 0));
 
    tf = fTab->AddTab("Commands");
    fFC = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
@@ -668,12 +669,16 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fCommandTxt->Connect("ReturnPressed()", "TSessionFrame", this,
                            "OnCommandLine()");
 
+   fClearCheck = new TGCheckButton(fFC, "Clear view after each command");
+   fFC->AddFrame(fClearCheck,new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+                 10, 5, 5, 5));
+   fClearCheck->SetState(kButtonUp);
    fFC->AddFrame(new TGLabel(fFC, "Output :"),
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 10, 5, 5, 5));
-   fInfoTextView = new TGTextView(fFC, 330, 160, "", kSunkenFrame |
+   fInfoTextView = new TGTextView(fFC, 330, 150, "", kSunkenFrame |
                                   kDoubleBorder);
    fFC->AddFrame(fInfoTextView, new TGLayoutHints(kLHintsLeft |
-      kLHintsTop | kLHintsExpandX, 10, 10, 5, 5));
+      kLHintsTop | kLHintsExpandX | kLHintsExpandY, 10, 10, 5, 5));
 
    //connecting button actions to functions
    fBtnDisconnect->Connect("Clicked()", "TSessionFrame", this,
@@ -891,10 +896,16 @@ void TSessionFrame::OnBtnGetQueriesClicked()
 void TSessionFrame::OnCommandLine()
 {
    const char *cmd = fCommandTxt->GetText();
+   char opt[2];
+   if (fClearCheck->IsOn())
+      sprintf(opt, "w");
+   else
+      sprintf(opt, "a");
+
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
 
-      if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
+      if (gSystem->RedirectOutput(kSession_RedirectCmd, opt) != 0) {
          Error("ShowStatus", "stdout/stderr redirection failed; skipping");
          return;
       }
@@ -903,12 +914,13 @@ void TSessionFrame::OnCommandLine()
          Error("ShowStatus", "stdout/stderr retore failed; skipping");
          return;
       }
-      fInfoTextView->Clear();
-      fInfoTextView->LoadFile(kSession_RedirectFile);
+      if (fClearCheck->IsOn())
+         fInfoTextView->Clear();
+      fInfoTextView->LoadFile(kSession_RedirectCmd);
       fCommandTxt->SetFocus();
    }
    else {
-      if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
+      if (gSystem->RedirectOutput(kSession_RedirectCmd, opt) != 0) {
          Error("ShowStatus", "stdout/stderr redirection failed; skipping");
          return;
       }
@@ -917,10 +929,12 @@ void TSessionFrame::OnCommandLine()
          Error("ShowStatus", "stdout/stderr retore failed; skipping");
          return;
       }
-      fInfoTextView->Clear();
-      fInfoTextView->LoadFile(kSession_RedirectFile);
+      if (fClearCheck->IsOn())
+         fInfoTextView->Clear();
+      fInfoTextView->LoadFile(kSession_RedirectCmd);
       fCommandTxt->SetFocus();
    }
+   fInfoTextView->ShowBottom();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -952,8 +966,8 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fInfoTextView = new TGTextView(this, 330, 185, "", kSunkenFrame |
                                   kDoubleBorder);
    AddFrame(fInfoTextView, new TGTableLayoutHints(0, 2, 0, 1,
-                 kLHintsCenterY | kLHintsExpandX | kLHintsShrinkX |
-                 kLHintsFillX, 5, 5, 2, 2));
+            kLHintsExpandY | kLHintsShrinkY | kLHintsExpandX | 
+            kLHintsShrinkX | kLHintsFillX | kLHintsFillY, 5, 5, 2, 2));
 
    fBtnSubmit = new TGTextButton(this, "Submit");
    AddFrame(fBtnSubmit,new TGTableLayoutHints(0, 1, 1, 2,

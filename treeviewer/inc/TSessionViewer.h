@@ -281,6 +281,7 @@ private:
    TGTextEntry       *fCommandTxt;           // Command line text entry
    TGTextBuffer      *fCommandBuf;           // Command line text buffer
    TGTextView        *fInfoTextView;         // summary on current query
+   TGCheckButton     *fClearCheck;           // clear text view after each command
    TGTextButton      *fBtnDisconnect;        // disconnect button
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnNewQuery;          // new query button
