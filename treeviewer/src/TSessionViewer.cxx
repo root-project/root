@@ -148,7 +148,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
 
    fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Connection Name:"),
                            new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
-   fFrmNewServer->AddFrame(fTxtName = new TGTextEntry(fFrmNewServer, 
+   fFrmNewServer->AddFrame(fTxtName = new TGTextEntry(fFrmNewServer,
                            (const char *)0, 1), new TGLayoutHints());
    fTxtName->Resize(156, fTxtName->GetDefaultHeight());
    fTxtName->Associate(this);
@@ -327,7 +327,9 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->SetChangePic(kFALSE);
       fViewer->GetActDesc()->fProof->Connect("QueryResultReady(char *)",
                        "TSessionViewer", fViewer, "QueryResultReady(char *)");
-      fViewer->GetStatusBar()->SetText("Proof Cluster Ready", 1);
+      TString msg;
+      msg.Form("PROOF Cluster %s ready", fViewer->GetActDesc()->fName.Data());
+      fViewer->GetStatusBar()->SetText(msg.Data(), 1);
    }
    fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
 }
@@ -669,7 +671,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 10, 5, 5, 5));
    fInfoTextView = new TGTextView(fFC, 330, 160, "", kSunkenFrame |
                                   kDoubleBorder);
-   fFC->AddFrame(fInfoTextView, new TGLayoutHints(kLHintsLeft | 
+   fFC->AddFrame(fInfoTextView, new TGLayoutHints(kLHintsLeft |
       kLHintsTop | kLHintsExpandX, 10, 10, 5, 5));
 
    //connecting button actions to functions
@@ -1672,12 +1674,6 @@ void TSessionViewer::Build()
    fQueryFrame->Build(this);
    fV2->AddFrame(fQueryFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
                  kLHintsExpandY, 2, 0, 1, 2));
-/*
-   fFeedbackFrame = new TSessionFeedbackFrame(fV2, 350, 310);
-   fFeedbackFrame->Build(this);
-   fV2->AddFrame(fFeedbackFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
-*/
    fOutputFrame = new TSessionOutputFrame(fV2, 350, 310);
    fOutputFrame->Build(this);
    fV2->AddFrame(fOutputFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
@@ -1687,8 +1683,6 @@ void TSessionViewer::Build()
    fInputFrame->Build(this);
    fV2->AddFrame(fInputFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
                  kLHintsExpandY, 2, 0, 1, 2));
-
-//   fOutputFrame->SetFeedbackFrame(fFeedbackFrame);
 
    fHf->AddFrame(fV1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
                  kLHintsExpandY));
@@ -1766,6 +1760,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
 
    TList *objlist;
    TObject *obj;
+   TString msg;
    TQueryDescription *desc;
    if (entry->GetParent() == 0) {  // PROOF
       if (fActFrame != fServerFrame) {
@@ -1778,8 +1773,14 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       if (entry->GetUserData()) {
          fServerFrame->Update((TSessionDescription*)entry->GetUserData());
          fActDesc = (TSessionDescription*)entry->GetUserData();
-         if (fActDesc->fProof && fActDesc->fProof->IsValid())
+         if (fActDesc->fProof && fActDesc->fProof->IsValid()) {
             fActDesc->fProof->cd();
+            msg.Form("PROOF Cluster %s ready", fActDesc->fName.Data());
+         }
+         else {
+            msg.Form("PROOF Cluster %s not connected", fActDesc->fName.Data());
+         }
+         fStatusBar->SetText(msg.Data(), 1);
       }
       if ((fActDesc->fLocal) && (fActFrame != fSessionFrame)) {
          fV2->HideFrame(fActFrame);
@@ -1956,7 +1957,7 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
          newdesc->fAddress    = proof->GetMaster();
          newdesc->fQueries    = new TList();
          newdesc->fActQuery   = 0;
-         newdesc->fConnected = kFALSE;
+         newdesc->fConnected = kTRUE;
          newdesc->fLocal = kFALSE;
          newdesc->fSync = kFALSE;
 
@@ -1989,8 +1990,14 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
    TIter next(list);
    TSessionDescription *desc = 0;
    while ((desc = (TSessionDescription *)next())) {
-      item = fSessionHierarchy->AddItem(fSessionItem, desc->fName.Data(),
-               fProofDiscon, fProofDiscon);
+      if (desc->fConnected) {
+         item = fSessionHierarchy->AddItem(fSessionItem, desc->fName.Data(),
+                  fProofCon, fProofCon);
+      }
+      else {
+         item = fSessionHierarchy->AddItem(fSessionItem, desc->fName.Data(),
+                  fProofDiscon, fProofDiscon);
+      }
       fSessionHierarchy->SetToolTipItem(item, "Proof Session");
       item->SetUserData(desc);
       fActDesc = desc;
