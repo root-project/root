@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.67 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.68 2005/09/22 23:29:30 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -297,7 +297,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          md5hold = qr->GetSelecHdr()->Checksum();
 
          // If nothing has changed nothing to do
-         if (*md5hcur != *md5hold || *md5icur != *md5iold)
+         if (*md5hcur == *md5hold && *md5icur == *md5iold)
             expandselec = kFALSE;
 
          SafeDelete(md5icur);
@@ -308,10 +308,11 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          if (selh) delete [] selh;
       }
 
-      Bool_t ok = kFALSE;
+      Bool_t ok = kTRUE;
       // Expand selector files, if needed
       if (expandselec) {
 
+         ok = kFALSE;
          // Expand files in a temporary directory
          TUUID u;
          dir = Form("%s/%s",gSystem->TempDirectory(),u.AsString());
@@ -331,6 +332,14 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
             gSystem->SetIncludePath(ipath.Data());
 
             ok = kTRUE;
+         }
+      } else {
+         // Add Aclic mode, if any
+         TString opts(qr->GetOptions());
+         Int_t idx = opts.Index("#");
+         if (idx != kNPOS) {
+            opts.Remove(0,idx+1);
+            selec += opts;
          }
       }
 
@@ -513,7 +522,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayer::Finalize(Bool_t)
+Long64_t TProofPlayer::Finalize(Bool_t, Bool_t)
 {
    MayNotUse("Finalize");
    return -1;
@@ -746,7 +755,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          HandleTimer(0); // force an update of final result
          StopFeedback();
 
-         return Finalize();
+         return Finalize(kFALSE,sync);
       }
    } else {
 
@@ -763,14 +772,14 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       StopFeedback();
 
       if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
-         return Finalize();
+         return Finalize(kFALSE,sync);
       else
          return -1;
    }
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayerRemote::Finalize(Bool_t force)
+Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 {
    // Finalize a query.
    // Returns -1 in case error, 0 otherwise.
@@ -798,14 +807,16 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force)
    } else {
       if (fExitStatus != kAborted) {
 
-         // Reinit selector (with multi-sessioning we must do this until
-         // TSelector::GetSelector() is optimized to i) avoid reloading of an
-         // unchanged selector and ii) invalidate existing instances of
-         // reloaded selector)
-         if (ReinitSelector(fQuery) == -1) {
-            Info("Finalize", "problems reinitializing selector \"%s\"",
-                 fQuery->GetSelecImp()->GetName());
-            return -1;
+         if (!sync) {
+            // Reinit selector (with multi-sessioning we must do this until
+            // TSelector::GetSelector() is optimized to i) avoid reloading of an
+            // unchanged selector and ii) invalidate existing instances of
+            // reloaded selector)
+            if (ReinitSelector(fQuery) == -1) {
+               Info("Finalize", "problems reinitializing selector \"%s\"",
+                    fQuery->GetSelecImp()->GetName());
+               return -1;
+            }
          }
 
          TIter next(fOutput);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.1 2005/09/16 08:48:39 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
    TDatime         fStart;        //time when processing started
    TDatime         fEnd;          //time when processing ended
    Float_t         fUsedCPU;      //real CPU time used (seconds)
-   TString         fOptions;      //processing options
+   TString         fOptions;      //processing options + aclic mode (<opt>#<aclic_mode>)
    TList          *fInputList;    //input list
    TDSet          *fDSet;         //input data set
    TEventList     *fEventList;    //input event list

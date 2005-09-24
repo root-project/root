@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.2 2005/09/19 14:49:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.3 2005/09/22 23:29:30 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -182,6 +182,10 @@ void TQueryResult::SaveSelector(const char *selector)
    TString arguments;
    TString io;
    selec = gSystem->SplitAclicMode(selec, aclicMode, arguments, io);
+
+   // Store aclic options, if any
+   if (aclicMode.Length() > 0)
+      fOptions += Form("#%s", aclicMode.Data());
 
    // Selector name
    TString selname = gSystem->BaseName(selec);
