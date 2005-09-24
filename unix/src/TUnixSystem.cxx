@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.141 2005/09/07 08:20:42 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.142 2005/09/13 10:20:30 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2150,6 +2150,54 @@ void TUnixSystem::Closelog()
    ::closelog();
 }
 
+//---- Standard output redirection ---------------------------------------------
+
+//______________________________________________________________________________
+Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
+{
+   // Redirect standard output (stdout, stderr) to the specified file.
+   // If the file argument is 0 the output is set again to stderr, stdout.
+   // The second argument specifies whether the output should be added to the
+   // file ("a", default) or the file be truncated before ("w").
+   // Returns 0 on success, -1 in case of error.
+
+   static char stdoutsav[128] = {0};
+   static char stderrsav[128] = {0};
+   Int_t rc = 0;
+
+   if (file) {
+      // Save the paths
+      if (!strlen(stdoutsav))
+         strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+      if (!strlen(stderrsav))
+         strcpy(stderrsav,ttyname(STDERR_FILENO));
+      // Make sure mode makes sense; default "a"
+      const char *m = (mode[0] == 'a' || mode[0] == 'w') ? mode : "a";
+      // Redirect stdout & stderr
+      if (freopen(file, m, stdout) == 0) {
+         SysError("RedirectOutput", "could not freopen stdout");
+         return -1;
+      }
+      if (freopen(file, m, stderr) == 0) {
+         SysError("RedirectOutput", "could not freopen stderr");
+         freopen(stderrsav, "a", stderr);
+         return -1;
+      }
+   } else {
+      // Restore stdout & stderr
+      fflush(stdout);
+      if (freopen(stdoutsav, "a", stdout) == 0) {
+         SysError("RedirectOutput", "could not restore stdout");
+         rc = -1;
+      }
+      fflush(stderr);
+      if (freopen(stderrsav, "a", stderr) == 0) {
+         SysError("RedirectOutput", "could not restore stderr");
+         rc = -1;
+      }
+   }
+   return rc;
+}
 
 //---- dynamic loading and linking ---------------------------------------------
 

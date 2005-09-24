@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.49 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.50 2005/09/05 10:55:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -354,6 +354,9 @@ public:
    virtual void            Openlog(const char *name, Int_t options, ELogFacility facility);
    virtual void            Syslog(ELogLevel level, const char *mess);
    virtual void            Closelog();
+
+   //---- Standard Output redirection
+   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a");
 
    //---- Dynamic Loading
    virtual const char     *GetDynamicPath();

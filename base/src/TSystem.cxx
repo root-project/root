@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.127 2005/09/04 15:33:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.128 2005/09/05 10:55:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1350,6 +1350,21 @@ void TSystem::Closelog()
    // Close connection to system log daemon.
 
    AbstractMethod("Closelog");
+}
+
+//---- Standard output redirection ---------------------------------------------
+
+//______________________________________________________________________________
+Int_t TSystem::RedirectOutput(const char *, const char *)
+{
+   // Redirect standard output (stdout, stderr) to the specified file.
+   // If the file argument is 0 the output is set again to stderr, stdout.
+   // The second argument specifies whether the output should be added to the
+   // file ("a", default) or the file be truncated before ("w").
+   // Returns 0 on success, -1 in case of error.
+
+   AbstractMethod("RedirectOutput");
+   return -1;
 }
 
 //---- Dynamic Loading ---------------------------------------------------------

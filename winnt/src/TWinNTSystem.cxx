@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.122 2005/09/05 09:42:32 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.123 2005/09/21 06:54:53 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2862,6 +2862,48 @@ void TWinNTSystem::Abort(int)
    // Abort the application.
 
    ::abort();
+}
+
+//---- Standard output redirection ---------------------------------------------
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode)
+{
+   // Redirect standard output (stdout, stderr) to the specified file.
+   // If the file argument is 0 the output is set again to stderr, stdout.
+   // The second argument specifies whether the output should be added to the
+   // file ("a", default) or the file be truncated before ("w").
+   // Returns 0 on success, -1 in case of error.
+
+   Int_t rc = 0;
+
+   if (file) {
+      // Make sure mode makes sense; default "a"
+      const char *m = (mode[0] == 'a' || mode[0] == 'w') ? mode : "a";
+      // redirect stdout & stderr
+      if (freopen(file, m, stdout) == 0) {
+         SysError("RedirectOutput", "could not freopen stdout");
+         return -1;
+      }
+      if (freopen(file, m, stderr) == 0) {
+         SysError("RedirectOutput", "could not freopen stderr");
+         freopen("CONOUT$", "a", stdout);
+         return -1;
+      }
+   } else {
+      // Restore stdout & stderr
+      fflush(stdout);
+      if (freopen("CONOUT$", "a", stdout) == 0) {
+         SysError("RedirectOutput", "could not restore stdout");
+         rc = -1;
+      }
+      fflush(stderr);
+      if (freopen("CONOUT$", "a", stderr) == 0) {
+         SysError("RedirectOutput", "could not restore stderr");
+         rc = -1;
+      }
+   }
+   return rc;
 }
 
 //---- dynamic loading and linking ---------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.35 2004/12/15 22:26:04 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.36 2005/02/12 09:52:25 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
    void              SetProgname(const char *name);
    const char       *GetError();
    const char       *HostName();
+
    //---- EventLoop --------------------------------------------
    Bool_t            ProcessEvents();
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
@@ -127,16 +128,18 @@ public:
    Int_t             Select(TList *active, Long_t timeout);
    Int_t             Select(TFileHandler *fh, Long_t timeout);
 
-   //---- Handling of system events
+   //---- Handling of system events ----------------------------
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
-   //---- Floating Point Exceptions Control
+
+   //---- Floating Point Exceptions Control --------------------
    Int_t             GetFPEMask();
    Int_t             SetFPEMask(Int_t mask = kDefaultMask);
+
    //---- Processes --------------------------------------------
    int               Exec(const char *shellcmd);
    FILE             *OpenPipe(const char *shellcmd, const char *mode);
@@ -144,9 +147,11 @@ public:
    void              Exit(int code, Bool_t mode = kTRUE);
    void              Abort(int code = 0);
    int               GetPid();
+
    //---- Environment manipulation -----------------------------
    const char       *Getenv(const char *name);
    void              Setenv(const char *name, const char *value);
+
    //---- Directories ------------------------------------------
    int               mkdir(const char *name, Bool_t recursive = kFALSE);
    int               MakeDirectory(const char *name);
@@ -161,7 +166,8 @@ public:
    char             *ConcatFileName(const char *dir, const char *name);
    const char       *TempDirectory() const;
    FILE             *TempFileName(TString &base, const char *dir = 0);
-   //---- Users & Groups
+
+   //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = 0);
    Int_t             GetGid(const char *group = 0);
    Int_t             GetEffectiveUid();
@@ -170,6 +176,7 @@ public:
    UserGroup_t      *GetUserInfo(const char *user = 0);
    UserGroup_t      *GetGroupInfo(Int_t gid);
    UserGroup_t      *GetGroupInfo(const char *group = 0);
+
    //---- Paths & Files ----------------------------------------
    const char        DriveName(const char *pathname="/");
    Bool_t            ExpandPathName(TString &patbuf);
@@ -189,6 +196,10 @@ public:
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    const char       *UnixPathName(const char *unixpathname);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+
+   //---- Standard Output redirection --------------------------
+   Int_t             RedirectOutput(const char *name, const char *mode = "a");
+
    //---- Dynamic Loading --------------------------------------
    const char      *GetDynamicPath();
    void             SetDynamicPath(const char *lib);
@@ -196,13 +207,15 @@ public:
    const char       *GetLibraries(const char *regexp = "",
                                   const char *option = "",
                                   Bool_t isRegexp = kTRUE);
-   //---- Time & Date
+
+   //---- Time & Date -------------------------------------------
    TTime             Now();
    void              AddTimer(TTimer *ti);
    TTimer           *RemoveTimer(TTimer *ti);
    void              Sleep(UInt_t milliSec);
    Double_t          GetRealTime();
    Double_t          GetCPUTime();
+
    //---- RPC --------------------------------------------------
    int               ConnectService(const char *servername, int port, int tcpwindowsize);
    TInetAddress      GetHostByName(const char *server);

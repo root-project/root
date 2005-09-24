@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.23 2004/12/15 22:26:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.24 2005/09/13 10:20:30 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
 
-   //---- Floating Point Exceptions Control
+   //---- Floating Point Exceptions Control --------------------
    Int_t             GetFPEMask();
    Int_t             SetFPEMask(Int_t mask = kDefaultMask);
 
@@ -156,7 +156,7 @@ public:
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 
-   //---- Users & Groups
+   //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = 0);
    Int_t             GetGid(const char *group = 0);
    Int_t             GetEffectiveUid();
@@ -174,6 +174,9 @@ public:
    void              Openlog(const char *name, Int_t options, ELogFacility facility);
    void              Syslog(ELogLevel level, const char *mess);
    void              Closelog();
+
+   //---- Standard Output redirection --------------------------
+   Int_t             RedirectOutput(const char *name, const char *mode = "a");
 
    //---- Dynamic Loading --------------------------------------
    const char       *GetDynamicPath();
