@@ -449,20 +449,20 @@ TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
          }
       }
       if (noParts < 8) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (1)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (1)");
          continue;
       }
       Int_t port, loglevel, sync;
       if (sscanf(parts[2], "%d", &port) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (2)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (2)");
          continue;
       }
       if (strcmp(parts[4], "loglevel") != 0) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (3)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (3)");
          continue;
       }
       if (sscanf(parts[5], "%d", &loglevel) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (4)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (4)");
          continue;
       }
       TSessionDescription *proofDesc = new TSessionDescription();
@@ -477,24 +477,24 @@ TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
       proofDesc->fActQuery = 0;
       proofDesc->fProof = 0;
       if (strcmp(parts[8], "sync") != 0) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (5)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (5)");
          continue;
       }
       if (sscanf(parts[9], "%d", &sync) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (6)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (6)");
          continue;
       }
       proofDesc->fSync = (Bool_t)sync;
       if (strcmp(parts[6], "user") == 0) {
          if (noParts != 10) {
-            Error("ReadConfigFile",  "PROOF Servers config file corrupted; skipping (7)\n");
+            Error("ReadConfigFile",  "PROOF Servers config file corrupted; skipping (7)");
             delete proofDesc;
             continue;
          }
          proofDesc->fUserName = TString(parts[7]);
       }
       else {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (8)\n");
+         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (8)");
          delete proofDesc;
          continue;
       }
@@ -503,6 +503,7 @@ TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
    fclose(f);
    return vec;
 }
+
 //______________________________________________________________________________
 Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
@@ -892,8 +893,32 @@ void TSessionFrame::OnCommandLine()
    const char *cmd = fCommandTxt->GetText();
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+
+      if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
+         Error("ShowStatus", "stdout/stderr redirection failed; skipping");
+         return;
+      }
       fViewer->GetActDesc()->fProof->Exec(cmd);
-      fCommandTxt->SelectAll();
+      if (gSystem->RedirectOutput(0) != 0) {
+         Error("ShowStatus", "stdout/stderr retore failed; skipping");
+         return;
+      }
+      fInfoTextView->Clear();
+      fInfoTextView->LoadFile(kSession_RedirectFile);
+      fCommandTxt->SetFocus();
+   }
+   else {
+      if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
+         Error("ShowStatus", "stdout/stderr redirection failed; skipping");
+         return;
+      }
+      gApplication->ProcessLine(cmd);
+      if (gSystem->RedirectOutput(0) != 0) {
+         Error("ShowStatus", "stdout/stderr retore failed; skipping");
+         return;
+      }
+      fInfoTextView->Clear();
+      fInfoTextView->LoadFile(kSession_RedirectFile);
       fCommandTxt->SetFocus();
    }
 }
@@ -1065,8 +1090,14 @@ void TSessionQueryFrame::OnBtnSubmit()
       else {
          fViewer->GetActDesc()->fProof->ClearFeedback();
       }
-
       fViewer->GetActDesc()->fProof->cd();
+      if (newquery->fParFile.Length() > 1) {
+         const char *packname = newquery->fParFile.Data();
+         if (fViewer->GetActDesc()->fProof->UploadPackage(packname) != 0)
+            Error("Submit", "Upload package failed");
+         if (fViewer->GetActDesc()->fProof->EnablePackage(packname) != 0)
+            Error("Submit", "Enable package failed");
+      }
       if (newquery->fChain) {
          if (newquery->fChain->IsA() == TChain::Class()) {
             newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
@@ -2271,12 +2302,12 @@ void TSessionViewer::ShowStatus()
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
    if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
-      Error("ShowStatus", "stdout/stderr redirection failed; skipping\n");
+      Error("ShowStatus", "stdout/stderr redirection failed; skipping");
       return;
    }
    fActDesc->fProof->GetStatus();
    if (gSystem->RedirectOutput(0) != 0) {
-      Error("ShowStatus", "stdout/stderr retore failed; skipping\n");
+      Error("ShowStatus", "stdout/stderr retore failed; skipping");
       return;
    }
    if (!fLogWindow) {
