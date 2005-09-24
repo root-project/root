@@ -187,12 +187,17 @@ void TNewChainDlg::UpdateList()
    // loop on the list of chains/datasets in memory,
    // and fill the associated listview
    while ((obj = (TObject *)next())) {
-      if (obj->IsA() == TChain::Class())
+      if (obj->IsA() == TChain::Class()) {
+         const char *title = ((TChain *)obj)->GetTitle();
+         if (strlen(title) == 0)
+            ((TChain *)obj)->SetTitle("TChain");
          item = new TGLVEntry(fLVContainer, ((TChain *)obj)->GetName(),
                               ((TChain *)obj)->GetTitle());
-      else if (obj->IsA() == TDSet::Class())
+      }
+      else if (obj->IsA() == TDSet::Class()) {
          item = new TGLVEntry(fLVContainer, ((TDSet *)obj)->GetObjName(),
                               ((TDSet *)obj)->GetName());
+      }
       item->SetUserData(obj);
       fLVContainer->AddItem(item);
    }

@@ -122,8 +122,8 @@ public:
    TString        fParFile;         // parameter file name
    Int_t          fNoEntries;       // number of events/entries to process
    Int_t          fFirstEntry;      // first event/entry to process
-   TObject        *fChain;          // dataset on which to process selector
-   TQueryResult   *fResult;         // query result received back
+   TObject       *fChain;           // dataset on which to process selector
+   TQueryResult  *fResult;          // query result received back
 
 public:
    ClassDef(TQueryDescription,0)
@@ -152,9 +152,9 @@ public:
    Bool_t                     fConnected;    // kTRUE if connected
    Bool_t                     fLocal;        // kTRUE if session is local
    Bool_t                     fSync;         // kTRUE if in sync mode
-   TList                      *fQueries;     // list of queries in this session
-   TQueryDescription          *fActQuery;    // current (actual) query
-   TVirtualProof              *fProof;       // pointer on TVirtualProof used by this session
+   TList                     *fQueries;      // list of queries in this session
+   TQueryDescription         *fActQuery;     // current (actual) query
+   TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
 
    ClassDef(TSessionDescription,0)
 };
@@ -170,34 +170,20 @@ public:
 class TSessionFeedbackFrame : public TGCompositeFrame {
 
 private:
-   TGTextButton      *fBtnAdd;            // Add button
-   TGTextButton      *fBtnSet;            // Set button
-   TGNumberEntry     *fNumEntFrequency;   // update frequency selector
-   TGLabel           *fLabFrequency;      // update frequency label
-   TGTextEntry       *fTexEntAdd;         // item to add text entry
-   TGTextBuffer      *fTBAdd;             // related text buffer
-   TGLVContainer     *fLVContainer;       // container for the list of items in feedback
-   TGListView        *fListView;          // list of items in feedback
+   TGCheckButton       *fFeedbackChk;     // Feedback check button
+   TGListBox           *fListBox;         // name list of histos to feedback
+   TRootEmbeddedCanvas *fECanvas;         // node statistics embeded canvas
+   TCanvas             *fStatsCanvas;     // node statistics canvas
 
-   TGLVEntry         *fDelEntry;          // pointer to the element chosen to be removed
-   TGPopupMenu       *fPopupMenu;         // popup menu to use with items in the listview
-   TSessionViewer    *fViewer;            // pointer on the main viewer
+   TSessionViewer      *fViewer;          // pointer on the main viewer
 
 public:
    TSessionFeedbackFrame(TGWindow *parent, Int_t w, Int_t h);
    virtual ~TSessionFeedbackFrame();
 
    void     Build(TSessionViewer *gui);
-   void     AddToFeedback(TObject *obj);
-   void     AddToFeedback(TGLVEntry *entry);
-
-   //Function that handle input from user:
-   void     OnChBtnPressed();
-   void     OnChBtnReleased();
-   void     OnBtnAddClicked();
-
-   void     OnElementClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
-   void     MyHandleMenu(Int_t id);
+   void     Feedback(TList *objs);
+   Bool_t   IsFeedBack() { return (fFeedbackChk->GetState() == kButtonDown); }
 
    ClassDef(TSessionFeedbackFrame,0)
 };
@@ -224,7 +210,7 @@ private:
    TSessionViewer    *fViewer;         // pointer on the main viewer
 
 public:
-   TSessionServerFrame(TGWindow* parent, Int_t w, Int_t h);
+   TSessionServerFrame(TGWindow *parent, Int_t w, Int_t h);
    virtual ~TSessionServerFrame();
 
    void        Build(TSessionViewer *gui);
@@ -276,21 +262,25 @@ private:
 
    enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted };
 
-   Int_t             fFiles;                 // number of files processed
-   TTime             fStartTime, fEndTime;   // start and end time of the process
-   Long64_t          fFirst;                 // first event/entry to process
-   Long64_t          fEntries;               // number of events/entries to process
-   Long64_t          fPrevTotal;             // used for progress bar
+   Int_t              fFiles;                // number of files processed
+   TTime              fStartTime;            // start time of the process
+   TTime              fEndTime;              // end time of the process
+   Long64_t           fFirst;                // first event/entry to process
+   Long64_t           fEntries;              // number of events/entries to process
+   Long64_t           fPrevTotal;            // used for progress bar
    TGLabel           *fLabStatus;            // actual process status
    TGLabel           *fProcessed;            // actual progress informations
    TGLabel           *fTotal;                // total progress info
    TGLabel           *fRate;                 // rate of process in events/sec
    EQueryStatus      fStatus;                // status of actual query
    TGTab             *fTab;                  // main tab frame
-   TGCompositeFrame  *fFA, *fFB;             // two tabs element
+   TGCompositeFrame  *fFA, *fFB, *fFC;       // three tabs element
    TSessionFeedbackFrame *fFeedbackFrame;    // current session feedback
    TGTextEntry       *fTexEntResultsURL;     // results URL text entry
    TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
+   TGTextEntry       *fCommandTxt;           // Command line text entry
+   TGTextBuffer      *fCommandBuf;           // Command line text buffer
+   TGTextView        *fInfoTextView;         // summary on current query
    TGTextButton      *fBtnDisconnect;        // disconnect button
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnNewQuery;          // new query button
@@ -309,6 +299,7 @@ public:
    Int_t    GetNumberOfFiles() { return fFiles; }
    Long64_t GetFirstEntry() { return fFirst; }
    Long64_t GetEntries() { return fEntries; }
+   TSessionFeedbackFrame  *GetFeedbackFrame() { return fFeedbackFrame; }
 
    void     SetStartTime(TTime time) { fStartTime = time; }
    void     SetEndTime(TTime time) { fEndTime = time; }
@@ -321,6 +312,7 @@ public:
    void     OnBtnNewQueryClicked();
    void     OnBtnGetQueriesClicked();
    void     OnBtnDisconnectClicked();
+   void     OnCommandLine();
 
    void     Feedback(TList *objs);
    void     Progress(Long64_t total, Long64_t processed);
@@ -344,19 +336,13 @@ private:
 
    TGTextEntry       *fTexEntResultsURL;     // results URL text entry
    TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
-   TGTab             *fTab;                  // main tab frame
-   TGCompositeFrame  *fFA, *fFB;             // two tabs element
-   TRootEmbeddedCanvas *fECanvas;            // node statistics embeded canvas
-   TCanvas           *fStatsCanvas;          // node statistics canvas
    TGTextButton      *fBtnSubmit;            // submit query button
    TGTextButton      *fBtnFinalize;          // finalize query button
    TGTextButton      *fBtnStop;              // stop process button
    TGTextButton      *fBtnAbort;             // abort process button
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnRetrieve;          // retrieve query button
-   TGCheckButton     *fFeedbackChk;          // Feedback check button
    TGTextView        *fInfoTextView;         // summary on current query
-   TSessionLogView   *fLogWindow;            // external log window
    TSessionViewer    *fViewer;               // pointer on main viewer
 
    TQueryDescription *fDesc;
@@ -366,7 +352,6 @@ public:
    virtual ~TSessionQueryFrame();
 
    void     Build(TSessionViewer *gui);
-   void     Feedback(TList *objs);
 
    //Function that handle input from user:
    void     OnBtnSubmit();
@@ -377,9 +362,6 @@ public:
    void     OnBtnRetrieve();
    void     UpdateInfos();
    void     UpdateButtons(TQueryDescription *desc);
-
-   void     SetTab(Int_t tab) { fTab->SetTab(tab); }
-   void     SetTabEnabled(Int_t tab, Bool_t en) { fTab->SetEnabled(tab, en); }
 
    ClassDef(TSessionQueryFrame,0)
 };
@@ -395,10 +377,9 @@ public:
 class TSessionOutputFrame : public TGCompositeFrame {
 
 private:
-   TGLVEntry        *fEntryTmp;     // used to transfer to feedback
-   TGLVContainer    *fLVContainer;  // output list view
-   TGPopupMenu      *fPopupMenu;    // popup menu to use with items in the listview
-   TSessionViewer   *fViewer;       // pointer on the main viewer
+   TGLVEntry              *fEntryTmp;      // used to transfer to feedback
+   TGLVContainer          *fLVContainer;   // output list view
+   TSessionViewer         *fViewer;        // pointer on the main viewer
    TSessionFeedbackFrame  *fFeedbackFrame;
 
 public:
@@ -408,7 +389,6 @@ public:
    void           AddObject(TObject *obj);
    void           Build(TSessionViewer *gui);
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
-   void           MyHandleMenu(Int_t id);
    void           OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x, Int_t y);
    void           OnElementDblClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
    void           RemoveAll() { fLVContainer->RemoveAll(); }
@@ -532,7 +512,6 @@ public:
    void     ChangeRightLogo(const char *name);
    void     CleanupSession();
    void     CloseWindow();
-   void     DeleteQuery();
    void     DisableTimer();
    void     EditQuery();
    void     EnableTimer();
@@ -541,11 +520,12 @@ public:
    void     MyHandleMenu(Int_t);
    void     OnListTreeClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);
    void     QueryResultReady(char *query);
-   void     RemoveQuery();
+   void     DeleteQuery();
    void     SetChangePic(Bool_t change) { fChangePic = change;}
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }
    void     ShowInfo(const char *txt);
    void     ShowLog(const char *queryref);
+   void     ShowStatus();
    void     StartupMessage(char *msg, Bool_t stat, Int_t curr, Int_t total);
    void     StartViewer();
 
