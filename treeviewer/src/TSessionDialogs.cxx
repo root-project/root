@@ -80,8 +80,8 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    fLVContainer->SetCleanup(kDeepCleanup);
    AddFrame(fListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 4, 4, 4, 4));
 
-   fListView->Connect("DoubleClicked(TGLVEntry*, Int_t)", "TNewChainDlg",
-                      this, "OnElementDblClicked(TGLVEntry* ,Int_t)");
+   fListView->Connect("Clicked(TGLVEntry*, Int_t)", "TNewChainDlg",
+                      this, "OnElementClicked(TGLVEntry* ,Int_t)");
 
    // Add text entry showing type and name of user's selection
    TGCompositeFrame* frmSel = new TGHorizontalFrame(this, 300, 100);
@@ -121,13 +121,18 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
                                     0, 0, ax, ay, wdummy);
    Move(ax + 200, ay + 35);
 
+   TGCompositeFrame *tmp;
+   AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
+                       new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+   tmp->SetCleanup(kDeepCleanup);
    // Apply and Close buttons
-   AddFrame(fApplyButton = new TGTextButton(this, "Apply && Return", 0),
+   tmp->AddFrame(fOkButton = new TGTextButton(tmp, "&Ok", 0),
             new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
-   AddFrame(fCloseButton = new TGTextButton(this, "Cancel", 1),
+   tmp->AddFrame(fCancelButton = new TGTextButton(tmp, "&Cancel", 1),
             new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
-   fApplyButton->Associate(this);
-   fCloseButton->Associate(this);
+   fOkButton->Associate(this);
+   fCancelButton->Associate(this);
+   fOkButton->SetEnabled(kFALSE);
 
    SetWindowName("Chains Selection Dialog");
    MapSubwindows();
@@ -156,9 +161,9 @@ void TNewChainDlg::OnElementSelected(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TNewChainDlg::OnElementDblClicked(TGLVEntry *entry, Int_t)
+void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 {
-   // Handle double click in the Memory list view and put the type
+   // Handle click in the Memory list view and put the type
    // and name of selected object in the text entry
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
@@ -171,6 +176,7 @@ void TNewChainDlg::OnElementDblClicked(TGLVEntry *entry, Int_t)
                       ((TDSet *)fChain)->GetObjName());
       fName->SetText(s);
    }
+   fOkButton->SetEnabled(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -450,15 +456,19 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
                        new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
-   if (fEditMode)
-      tmp->AddFrame(fBtnSave = new TGTextButton(tmp, "Save Query"),
-         new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
-   else
-      tmp->AddFrame(fBtnSave = new TGTextButton(tmp, "Add Query"),
-         new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
+   if (fEditMode) {
+      fBtnSave = new TGTextButton(tmp, "Save");
+      fBtnSubmit = new TGTextButton(tmp, "Save && Submit");
+   }
+   else {
+      fBtnSave = new TGTextButton(tmp, "Add");
+      fBtnSubmit = new TGTextButton(tmp, "Add && Submit");
+   }
+   tmp->AddFrame(fBtnSave, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                 3, 3, 3, 3));
+   tmp->AddFrame(fBtnSubmit, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                 3, 3, 3, 3));
    fBtnSave->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSaveClicked()");
-   tmp->AddFrame(fBtnSubmit = new TGTextButton(tmp, "Save && Submit"),
-      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    fBtnSubmit->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSubmitClicked()");
    tmp->AddFrame(fBtnClose = new TGTextButton(tmp, "Close"),
       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));

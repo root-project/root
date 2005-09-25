@@ -50,8 +50,8 @@ private:
    TGLVContainer        *fLVContainer;    // and its container
    TGTextBuffer         *fNameBuf;        // buffer for dataset name
    TGTextEntry          *fName;           // dataset name text entry
-   TGTextButton         *fApplyButton;    // apply button
-   TGTextButton         *fCloseButton;    // close button
+   TGTextButton         *fOkButton;       // ok button
+   TGTextButton         *fCancelButton;   // cancel button
    TSeqCollection       *fChains;         // collection of datasets
    TObject              *fChain;          // actual TDSet or TChain
 
@@ -62,7 +62,7 @@ public:
    void         UpdateList();
    virtual void OnDoubleClick(TGLVEntry*,Int_t);
    virtual void DisplayDirectory(const TString &fname);
-   void         OnElementDblClicked(TGLVEntry* entry, Int_t btn);
+   void         OnElementClicked(TGLVEntry* entry, Int_t btn);
    void         OnElementSelected(TObject *obj); //*SIGNAL*
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
