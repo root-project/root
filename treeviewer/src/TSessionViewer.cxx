@@ -918,7 +918,7 @@ void TSessionFrame::OnCommandLine()
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
 
-      if (gSystem->RedirectOutput(kSession_RedirectCmd, opt) != 0) {
+      if (gSystem->RedirectOutput(pathtmp.Data(), opt) != 0) {
          Error("ShowStatus", "stdout/stderr redirection failed; skipping");
          return;
       }
