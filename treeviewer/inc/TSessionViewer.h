@@ -467,6 +467,7 @@ private:
    TGPopupMenu            *fFileMenu;           // file menu entry
    TGPopupMenu            *fSessionMenu;        // session menu entry
    TGPopupMenu            *fQueryMenu;          // query menu entry
+   TGPopupMenu            *fOptionsMenu;        // options menu entry
    TGPopupMenu            *fHelpMenu;           // help menu entry
 
    TGPopupMenu            *fPopupSrv;           // server related popup menu

@@ -119,6 +119,10 @@ enum ESessionViewerCommands {
    kQuerySubmit,
    kQueryStartViewer,
 
+   kOptionsStatsHist,
+   kOptionsStatsTrace,
+   kOptionsSlaveStatsTrace,
+
    kHelpAbout
 };
 
@@ -1042,12 +1046,14 @@ void TSessionQueryFrame::OnBtnFinalize()
 {
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kWatch));
       gPad->SetEditable(kFALSE);
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       if (!item) return;
       TQueryDescription *query = (TQueryDescription *)item->GetUserData();
       fViewer->GetActDesc()->fProof->Finalize(query->fReference);
       UpdateButtons(query);
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kPointer));
    }
 }
 
@@ -1076,10 +1082,12 @@ void TSessionQueryFrame::OnBtnRetrieve()
 {
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kWatch));
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       if (!item) return;
       TQueryDescription *query = (TQueryDescription *)item->GetUserData();
       fViewer->GetActDesc()->fProof->Retrieve(query->fReference);
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kPointer));
    }
 }
 
@@ -1495,7 +1503,8 @@ void TSessionOutputFrame::Build(TSessionViewer *gui)
                   GetWhitePixel());
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
-   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX, 4, 4, 4, 4));
+   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 
+            4, 4, 4, 4));
 
    frmListView->Connect("Clicked(TGLVEntry*, Int_t, Int_t, Int_t)",
       "TSessionOutputFrame", this,
@@ -1529,7 +1538,8 @@ void TSessionOutputFrame::OnElementDblClicked(TGLVEntry* entry, Int_t , Int_t, I
          act.Remove(0, 1);
          gSystem->Exec(act.Data());
       } else {
-         gROOT->ProcessLine(act.Data());
+         if (!act.Contains("Browse"))
+            gROOT->ProcessLine(act.Data());
       }
    }
 }
@@ -1576,7 +1586,8 @@ void TSessionInputFrame::Build(TSessionViewer *gui)
    fLVContainer = new TGLVContainer(frmListView, kSunkenFrame, GetWhitePixel());
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
-   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX, 4, 4, 4, 4));
+   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 
+            4, 4, 4, 4));
 
    TGLVEntry* entry1 = new TGLVEntry(fLVContainer, "name", "mane");
    TGLVEntry* entry2 = new TGLVEntry(fLVContainer, "name2", "mane222222");
@@ -1603,9 +1614,6 @@ void TSessionInputFrame::AddObject(TObject *obj)
 TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
    TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(0), fSessionItem(0)
 {
-   gEnv->SetValue("Proof.StatsHist", 1);
-   gEnv->SetValue("Proof.StatsTrace", 1);
-   gEnv->SetValue("Proof.SlaveStatsTrace", 1);
    Build();
    SetWindowName(name);
    Resize(w, h);
@@ -1616,9 +1624,6 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
                               UInt_t h) : TGMainFrame(gClient->GetRoot(), w, h),
                               fSessionHierarchy(0), fSessionItem(0)
 {
-   gEnv->SetValue("Proof.StatsHist", 1);
-   gEnv->SetValue("Proof.StatsTrace", 1);
-   gEnv->SetValue("Proof.SlaveStatsTrace", 1);
    Build();
    SetWindowName(name);
    Move(x, y);
@@ -1641,14 +1646,14 @@ void TSessionViewer::Build()
    fQueryDiscon = fClient->GetPicture("query_disconnected.xpm");
    fBaseIcon = fClient->GetPicture("proof_base.xpm");
 
-
+   //--- File menu
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
    fFileMenu->AddEntry("&Load Library...", kFileLoadLibrary);
    fFileMenu->AddEntry("&Close Viewer",    kFileCloseViewer);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);
 
-   //--- Edit menu
+   //--- Session menu
    fSessionMenu = new TGPopupMenu(gClient->GetRoot());
    fSessionMenu->AddEntry("&Connect...", kSessionConnect);
    fSessionMenu->AddEntry("&Disconnect", kSessionDisconnect);
@@ -1656,7 +1661,7 @@ void TSessionViewer::Build()
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&Cleanup", kSessionCleanup);
 
-   //---Run menu
+   //--- Query menu
    fQueryMenu = new TGPopupMenu(gClient->GetRoot());
    fQueryMenu->AddEntry("&New...", kQueryNew);
    fQueryMenu->AddEntry("&Edit", kQueryEdit);
@@ -1666,12 +1671,21 @@ void TSessionViewer::Build()
    fQueryMenu->AddSeparator();
    fQueryMenu->AddEntry("&Delete", kQueryDelete);
 
+   //--- Options menu
+   fOptionsMenu = new TGPopupMenu(fClient->GetRoot());
+   fOptionsMenu->AddLabel("Performance Monitoring");
+   fOptionsMenu->AddSeparator();
+   fOptionsMenu->AddEntry("Master &Histos", kOptionsStatsHist);
+   fOptionsMenu->AddEntry("&Master Events", kOptionsStatsTrace);
+   fOptionsMenu->AddEntry("&Slaves Events", kOptionsSlaveStatsTrace);
+
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
    fHelpMenu->AddEntry("&About ROOT...",  kHelpAbout);
 
    fFileMenu->Associate(this);
    fSessionMenu->Associate(this);
    fQueryMenu->Associate(this);
+   fOptionsMenu->Associate(this);
    fHelpMenu->Associate(this);
 
    //--- create menubar and add popup menus
@@ -1682,6 +1696,8 @@ void TSessionViewer::Build()
    fMenuBar->AddPopup("&Session", fSessionMenu, new TGLayoutHints(kLHintsTop |
                       kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Query",  fQueryMenu,  new TGLayoutHints(kLHintsTop |
+            kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Options",  fOptionsMenu,  new TGLayoutHints(kLHintsTop |
             kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Help", fHelpMenu, new TGLayoutHints(kLHintsTop |
             kLHintsRight));
@@ -2335,6 +2351,7 @@ void TSessionViewer::ShowLog(const char *queryref)
    Int_t  ax, ay;
 
    if (fActDesc->fProof) {
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kWatch));
       if (!fLogWindow) {
          fLogWindow = new TSessionLogView(this, 700, 100);
       } else {
@@ -2355,6 +2372,7 @@ void TSessionViewer::ShowLog(const char *queryref)
                                       0, 0, ax, ay, wdummy);
       fLogWindow->Move(ax, ay + GetHeight() + 35);
       fLogWindow->Popup();
+      gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kPointer));
    }
 }
 
@@ -2515,6 +2533,39 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kQuerySubmit:
                      fQueryFrame->OnBtnSubmit();
+                     break;
+
+                  case kOptionsStatsHist:
+                     if(fOptionsMenu->IsEntryChecked(kOptionsStatsHist)) {
+                        fOptionsMenu->UnCheckEntry(kOptionsStatsHist);
+                        gEnv->SetValue("Proof.StatsHist", 0);
+                     }
+                     else {
+                        fOptionsMenu->CheckEntry(kOptionsStatsHist);
+                        gEnv->SetValue("Proof.StatsHist", 1);
+                     }
+                     break;
+                  
+                  case kOptionsStatsTrace:
+                     if(fOptionsMenu->IsEntryChecked(kOptionsStatsTrace)) {
+                        fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
+                        gEnv->SetValue("Proof.StatsTrace", 0);
+                     }
+                     else {
+                        fOptionsMenu->CheckEntry(kOptionsStatsTrace);
+                        gEnv->SetValue("Proof.StatsTrace", 1);
+                     }
+                     break;
+   
+                  case kOptionsSlaveStatsTrace:
+                     if(fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace)) {
+                        fOptionsMenu->UnCheckEntry(kOptionsSlaveStatsTrace);
+                        gEnv->SetValue("Proof.SlaveStatsTrace", 0);
+                     }
+                     else {
+                        fOptionsMenu->CheckEntry(kOptionsSlaveStatsTrace);
+                        gEnv->SetValue("Proof.SlaveStatsTrace", 1);
+                     }
                      break;
 
                   case kHelpAbout:
