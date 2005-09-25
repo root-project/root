@@ -681,7 +681,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
                            "OnCommandLine()");
 
    fClearCheck = new TGCheckButton(fFC, "Clear view after each command");
-   fFC->AddFrame(fClearCheck,new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+   fFC->AddFrame(fClearCheck,new TGLayoutHints(kLHintsLeft | kLHintsTop,
                  10, 5, 5, 5));
    fClearCheck->SetState(kButtonUp);
    fFC->AddFrame(new TGLabel(fFC, "Output :"),
@@ -979,7 +979,7 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fInfoTextView = new TGTextView(this, 330, 185, "", kSunkenFrame |
                                   kDoubleBorder);
    AddFrame(fInfoTextView, new TGTableLayoutHints(0, 2, 0, 1,
-            kLHintsExpandY | kLHintsShrinkY | kLHintsExpandX | 
+            kLHintsExpandY | kLHintsShrinkY | kLHintsExpandX |
             kLHintsShrinkX | kLHintsFillX | kLHintsFillY, 5, 5, 2, 2));
 
    fBtnSubmit = new TGTextButton(this, "Submit");
@@ -1110,7 +1110,7 @@ void TSessionQueryFrame::OnBtnSubmit()
       if (fViewer->GetFeedbackFrame()->IsFeedBack()) {
          Int_t i = 0;
          while (kFeedbackHistos[i]) {
-            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) { 
+            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) {
                fViewer->GetActDesc()->fProof->AddFeedback(kFeedbackHistos[i]);
                fViewer->GetActDesc()->fNbHistos++;
             }
@@ -1157,7 +1157,7 @@ void TSessionQueryFrame::OnBtnSubmit()
       if (fViewer->GetFeedbackFrame()->IsFeedBack()) {
          Int_t i = 0;
          while (kFeedbackHistos[i]) {
-            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) { 
+            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) {
                fViewer->GetActDesc()->fNbHistos++;
             }
             i++;
@@ -1435,7 +1435,7 @@ void TSessionFeedbackFrame::Feedback(TList *objs)
       gPad->SetEditable(kTRUE);
       Int_t i = 0;
       while (kFeedbackHistos[i]) {
-         if (fListBox->GetSelection(i) && 
+         if (fListBox->GetSelection(i) &&
                name.Contains(kFeedbackHistos[i])) {
             fStatsCanvas->cd(pos);
             if (TH1 *h = dynamic_cast<TH1*>(o)) {
@@ -2109,30 +2109,14 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
 void TSessionViewer::CloseWindow()
 {
    TString pathtmp;
-   TString cmd;
-#ifndef WIN32
    pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
-   if (!gSystem->AccessPathName(pathtmp.Data())) {
-      cmd = Form("rm %s", pathtmp.Data());
-      gSystem->Exec(cmd);
+   if (!gSystem->AccessPathName(pathtmp)) {
+      gSystem->Unlink(pathtmp);
    }
    pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
-   if (!gSystem->AccessPathName(pathtmp.Data())) {
-      cmd = Form("rm %s", pathtmp.Data());
-      gSystem->Exec(cmd);
+   if (!gSystem->AccessPathName(pathtmp)) {
+      gSystem->Unlink(pathtmp);
    }
-#else
-   pathtmp = Form("%s\\%s", gSystem->TempDirectory(), kSession_RedirectFile);
-   if (!gSystem->AccessPathName(pathtmp.Data())) {
-      cmd = Form("del %s", pathtmp.Data());
-      gSystem->Exec(cmd);
-   }
-   pathtmp = Form("%s\\%s", gSystem->TempDirectory(), kSession_RedirectCmd);
-   if (!gSystem->AccessPathName(pathtmp.Data())) {
-      cmd = Form("del %s", pathtmp.Data());
-      gSystem->Exec(cmd);
-   }
-#endif
 
    TIter next(fSessions);
    TSessionDescription *desc = 0;

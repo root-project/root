@@ -126,7 +126,7 @@ public:
    TQueryResult  *fResult;          // query result received back
 
 public:
-   ClassDef(TQueryDescription,0)
+   ClassDef(TQueryDescription,1)
 };
 
 
@@ -157,7 +157,7 @@ public:
    TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
    Int_t                      fNbHistos;     // number of feedback histos
 
-   ClassDef(TSessionDescription,0)
+   ClassDef(TSessionDescription,1)
 };
 
 //////////////////////////////////////////////////////////////////////////
