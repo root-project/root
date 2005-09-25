@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.28 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.29 2005/09/22 09:57:25 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -145,13 +145,13 @@ void TDSetElement::Print(Option_t *opt) const
 
    if (opt && opt[0] == 'a') {
       cout << IsA()->GetName()
-           << " file='" << fFileName
-           << "' dir='" << fDirectory
-           << "' obj='" << fObjName
-           << "' first=" << fFirst
+           << " file=\"" << fFileName
+           << "\" dir=\"" << fDirectory
+           << "\" obj=\"" << fObjName
+           << "\" first=" << fFirst
            << " num=" << fNum
-           << " msd=" << fMsd
-           << endl;
+           << " msd=\"" << fMsd
+           << "\"" << endl;
    } else
       cout << "\tLFN: " << fFileName << endl;
 }
