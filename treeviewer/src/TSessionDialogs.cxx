@@ -584,14 +584,12 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       item->SetUserData(newquery);
    }
-#if 0
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
-         nbElements = ((TChain *)newquery->fChain)->GetEntries();
+         nbElements = ((TChain *)newquery->fChain)->GetListOfFiles()->GetSize();
       else if (newquery->fChain->IsA() == TDSet::Class())
          nbElements = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
    }
-#endif
    fViewer->GetSessionFrame()->SetNumberOfFiles(nbElements);
    fViewer->GetSessionFrame()->SetEntries(newquery->fNoEntries);
    fViewer->GetSessionFrame()->SetFirstEntry(newquery->fFirstEntry);
