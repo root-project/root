@@ -30,12 +30,12 @@ CFLAGS        = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
 CINTCXXFLAGS  = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
                 -fsigned-char -fno-common \
                 -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-		-DG__UNIX -DG__SHAREDLIB \
+                -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
 CINTCFLAGS    = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 COMPILER      = gnu
 
 # OS version
