@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.13 2005/07/28 16:27:46 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.14 2005/09/05 10:28:08 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -376,7 +376,8 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
                                        ->GetCurrentUrl()).GetUrl().c_str());
             TString uu;
             FormUrl(uut,uu);
-            Info("CreateXClient"," url: %s",uu.Data());
+            if (gDebug > 2)
+               Info("CreateXClient"," url: %s",uu.Data());
             s->SetUrl(uu.Data());
             s->SetService("rootd");
             s->SetServType(TSocket::kROOTD);
