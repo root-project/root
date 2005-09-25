@@ -464,9 +464,9 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
       fBtnSave = new TGTextButton(tmp, "Add");
       fBtnSubmit = new TGTextButton(tmp, "Add && Submit");
    }
-   tmp->AddFrame(fBtnSave, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+   tmp->AddFrame(fBtnSave, new TGLayoutHints(kLHintsLeft | kLHintsExpandX,
                  3, 3, 3, 3));
-   tmp->AddFrame(fBtnSubmit, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+   tmp->AddFrame(fBtnSubmit, new TGLayoutHints(kLHintsLeft | kLHintsExpandX,
                  3, 3, 3, 3));
    fBtnSave->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSaveClicked()");
    fBtnSubmit->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSubmitClicked()");
@@ -584,12 +584,14 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       item->SetUserData(newquery);
    }
+#if 0
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
          nbElements = ((TChain *)newquery->fChain)->GetEntries();
       else if (newquery->fChain->IsA() == TDSet::Class())
          nbElements = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
    }
+#endif
    fViewer->GetSessionFrame()->SetNumberOfFiles(nbElements);
    fViewer->GetSessionFrame()->SetEntries(newquery->fNoEntries);
    fViewer->GetSessionFrame()->SetFirstEntry(newquery->fFirstEntry);
