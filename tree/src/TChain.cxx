@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.113 2005/09/22 09:57:25 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.114 2005/09/23 13:04:53 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -399,7 +399,7 @@ Int_t TChain::AddFileInfoList(TList *fileinfolist, Long64_t nfiles)
       // read the first url
       finfo->ResetUrl();
       if (finfo->GetCurrentUrl())
-         Add((finfo->GetCurrentUrl())->GetUrl());
+         AddFile((finfo->GetCurrentUrl())->GetUrl());
       if (cnt>=nfiles)
          break;
    }

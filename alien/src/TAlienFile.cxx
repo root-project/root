@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.10 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.11 2005/09/23 13:04:53 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    newopt = nUrl.GetOptions();
 
    // add the original options from the alien URL
-   nUrl.SetOptions(newopt + oldopt);
+   nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
    fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
 
    if ((!fSubFile) || (fSubFile->IsZombie())) {
@@ -117,6 +117,7 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    TString storageelement="";
    TString file = purl.GetFile();
 
+   Bool_t publicaccess=kFALSE;
    storageelement = gSystem->Getenv("alien_CLOSE_SE");
 
    // get the options and set the storage element
@@ -130,6 +131,11 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
          TString value =  ((TObjString*)objTags->At(1))->GetName();
          if ( (key == "se") || (key == "SE") || (key == "Se") ) {
             storageelement = value;
+         }
+         if ((key == "publicaccess") || (key == "PublicAccess") ||
+             (key == "PUBLICACCESS")) {
+            if (atoi( value.Data()))
+               publicaccess = kTRUE;
          }
       }
       delete objTags;
@@ -194,7 +200,10 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
 
    if (read) {
       // get the read access
-      command = TString("access read ");
+      if (publicaccess)
+         command = TString("access -p read ");
+      else
+         command = TString("access read ");
    }
 
    if (create) {
@@ -287,7 +296,9 @@ TAlienFile::~TAlienFile()
       Close();
       delete fSubFile;
    }
-   fSubFile=0;
+   fSubFile = 0;
+   gFile = 0;
+   gDirectory = gROOT;
    if (gDebug)
       Info("~TAlienFile", "dtor called for %s", GetName());
 }

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.6 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.7 2005/09/23 13:04:53 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -128,9 +128,9 @@ TList *TAlienResult::GetFileInfoList() const
       if (uuid && !strlen(uuid))
          uuid=0;
 
-      TString lfn = TString("alien://") + GetKey(i,"lfn");
+      TString turl = GetKey(i,"turl");
 
-      newfileinfolist->Add (new TFileInfo(lfn, size, uuid, md5));
+      newfileinfolist->Add (new TFileInfo(turl, size, uuid, md5));
    }
    return newfileinfolist;
 }
