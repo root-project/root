@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.142 2005/08/23 19:41:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.143 2005/09/23 13:04:53 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -414,7 +414,10 @@ void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
 
-   if (!fIsRootFile) return;
+   if (!fIsRootFile) {
+      gDirectory = gROOT;
+      return;
+   }
 
    if (fArchive) {
       if (fOption != "READ") {
@@ -597,7 +600,7 @@ void TFile::Init(Bool_t create)
       }
    }
 
-   {   
+   {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
@@ -940,7 +943,7 @@ Long64_t TFile::GetSize() const
 }
 
 //______________________________________________________________________________
-const TList *TFile::GetStreamerInfoCache()   
+const TList *TFile::GetStreamerInfoCache()
 {
    // Returns the cached list of StreamerInfos used in this file.
    return fInfoCache ?  fInfoCache : (fInfoCache=GetStreamerInfoList());
