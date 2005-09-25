@@ -57,6 +57,7 @@
 #include "TSessionDialogs.h"
 #include "TEnv.h"
 #include "TH1.h"
+#include "TH2.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -83,6 +84,16 @@ const char *conftypes[] = {
    "Config files",  "*.conf",
    "All files",     "*",
     0,               0
+};
+
+const char *kFeedbackHistos[] = {
+   "PROOF_PacketsHist",
+   "PROOF_EventsHist",
+   "PROOF_NodeHist",
+   "PROOF_LatencyHist",
+   "PROOF_ProcTimeHist",
+   "PROOF_CpuTimeHist",
+   0
 };
 
 const char* const kPROOF_GuiConfFile = ".proofservers.conf";
@@ -897,6 +908,8 @@ void TSessionFrame::OnCommandLine()
 {
    const char *cmd = fCommandTxt->GetText();
    char opt[2];
+   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
+                          kSession_RedirectCmd);
    if (fClearCheck->IsOn())
       sprintf(opt, "w");
    else
@@ -916,11 +929,11 @@ void TSessionFrame::OnCommandLine()
       }
       if (fClearCheck->IsOn())
          fInfoTextView->Clear();
-      fInfoTextView->LoadFile(kSession_RedirectCmd);
+      fInfoTextView->LoadFile(pathtmp.Data());
       fCommandTxt->SetFocus();
    }
    else {
-      if (gSystem->RedirectOutput(kSession_RedirectCmd, opt) != 0) {
+      if (gSystem->RedirectOutput(pathtmp.Data(), opt) != 0) {
          Error("ShowStatus", "stdout/stderr redirection failed; skipping");
          return;
       }
@@ -931,7 +944,7 @@ void TSessionFrame::OnCommandLine()
       }
       if (fClearCheck->IsOn())
          fInfoTextView->Clear();
-      fInfoTextView->LoadFile(kSession_RedirectCmd);
+      fInfoTextView->LoadFile(pathtmp.Data());
       fCommandTxt->SetFocus();
    }
    fInfoTextView->ShowBottom();
@@ -1090,12 +1103,19 @@ void TSessionQueryFrame::OnBtnSubmit()
    TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
    fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
    newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
-
+   fViewer->GetActDesc()->fNbHistos = 0;
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
 
       if (fViewer->GetFeedbackFrame()->IsFeedBack()) {
-         fViewer->GetActDesc()->fProof->AddFeedback("PROOF_EventsHist");
+         Int_t i = 0;
+         while (kFeedbackHistos[i]) {
+            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) { 
+               fViewer->GetActDesc()->fProof->AddFeedback(kFeedbackHistos[i]);
+               fViewer->GetActDesc()->fNbHistos++;
+            }
+            i++;
+         }
          fViewer->GetActDesc()->fProof->Connect("Feedback(TList *objs)",
                            "TSessionFrame", fViewer->GetSessionFrame(),
                            "Feedback(TList *objs)");
@@ -1134,6 +1154,15 @@ void TSessionQueryFrame::OnBtnSubmit()
       fViewer->SetChangePic(kTRUE);
    }
    else if (fViewer->GetActDesc()->fLocal){
+      if (fViewer->GetFeedbackFrame()->IsFeedBack()) {
+         Int_t i = 0;
+         while (kFeedbackHistos[i]) {
+            if (fViewer->GetFeedbackFrame()->GetListBox()->GetSelection(i)) { 
+               fViewer->GetActDesc()->fNbHistos++;
+            }
+            i++;
+         }
+      }
       if (newquery->fChain) {
          if (newquery->fChain->IsA() == TChain::Class()) {
             id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
@@ -1376,14 +1405,14 @@ void TSessionFeedbackFrame::Build(TSessionViewer *gui)
    frmFeed->AddFrame(fListBox = new TGListBox(frmFeed), new TGLayoutHints(kLHintsTop |
             kLHintsLeft, 5, 5, 5, 5));
    fListBox->SetMultipleSelections(kTRUE);
-   fListBox->AddEntry("PacketsHist", 0);
-   fListBox->AddEntry("EventsHist", 1);
-   fListBox->AddEntry("NodeHist", 2);
-   fListBox->AddEntry("LatencyHist", 3);
-   fListBox->AddEntry("ProcTimeHist", 4);
-   fListBox->AddEntry("CpuTimeHist", 5);
-   fListBox->Resize(150, 80);
+   Int_t i = 0;
+   while (kFeedbackHistos[i]) {
+      fListBox->AddEntry(kFeedbackHistos[i], i);
+      i++;
+   }
+   fListBox->Resize(175, 80);
    fListBox->Select(1);
+
    //Feedback
 
    fFeedbackChk = new TGCheckButton(frmFeed, "Feedback", 1);
@@ -1400,18 +1429,28 @@ void TSessionFeedbackFrame::Feedback(TList *objs)
    TVirtualPad *save = gPad;
    TIter next(objs);
    TObject *o;
+   Int_t pos = 1;
    while( (o = next()) ) {
-      fStatsCanvas->cd();
+      TString name = o->GetName();
       gPad->SetEditable(kTRUE);
-      if (TH1 *h = dynamic_cast<TH1*>(o)) {
-         TString name = h->GetName();
-         if (name.Contains("PROOF_EventsHist")) {
-            h->SetStats(0);
-            h->SetBarWidth(0.75);
-            h->SetBarOffset(0.125);
-            h->SetFillColor(9);
-            h->Draw("bar");
+      Int_t i = 0;
+      while (kFeedbackHistos[i]) {
+         if (fListBox->GetSelection(i) && 
+               name.Contains(kFeedbackHistos[i])) {
+            fStatsCanvas->cd(pos);
+            if (TH1 *h = dynamic_cast<TH1*>(o)) {
+               h->SetStats(0);
+               h->SetBarWidth(0.75);
+               h->SetBarOffset(0.125);
+               h->SetFillColor(9);
+               h->Draw("bar");
+            }
+            else if (TH2 *h2 = dynamic_cast<TH2*>(o)) {
+               h2->Draw();
+            }
+            pos++;
          }
+         i++;
       }
       fStatsCanvas->Modified();
       fStatsCanvas->Update();
@@ -1844,6 +1883,14 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fV2->ShowFrame(fSessionFrame);
          fActFrame = fSessionFrame;
       }
+      fFeedbackFrame->GetStatsCanvas()->cd();
+      fFeedbackFrame->GetStatsCanvas()->Clear();
+      if (fActDesc->fNbHistos == 4)
+         fFeedbackFrame->GetStatsCanvas()->Divide(2, 2);
+      else if (fActDesc->fNbHistos > 4)
+         fFeedbackFrame->GetStatsCanvas()->Divide(3, 2);
+      else
+         fFeedbackFrame->GetStatsCanvas()->Divide(fActDesc->fNbHistos, 1);
    }
    else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
       fActDesc = (TSessionDescription*)entry->GetParent()->GetUserData();
@@ -1970,6 +2017,7 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
    localdesc->fProof = 0;
    localdesc->fLocal = kTRUE;
    localdesc->fSync = kTRUE;
+   localdesc->fNbHistos = 0;
    item->SetUserData(localdesc);
 
    TSeqCollection *proofs = gROOT->GetListOfProofs();
@@ -2005,6 +2053,7 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
          newdesc->fConnected = kTRUE;
          newdesc->fLocal = kFALSE;
          newdesc->fSync = kFALSE;
+         newdesc->fNbHistos = 0;
 
          TIter nextq(proof->GetListOfQueries());
 
@@ -2059,6 +2108,32 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
 //______________________________________________________________________________
 void TSessionViewer::CloseWindow()
 {
+   TString pathtmp;
+   TString cmd;
+#ifndef WIN32
+   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
+   if (!gSystem->AccessPathName(pathtmp.Data())) {
+      cmd = Form("rm %s", pathtmp.Data());
+      gSystem->Exec(cmd);
+   }
+   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
+   if (!gSystem->AccessPathName(pathtmp.Data())) {
+      cmd = Form("rm %s", pathtmp.Data());
+      gSystem->Exec(cmd);
+   }
+#else
+   pathtmp = Form("%s\\%s", gSystem->TempDirectory(), kSession_RedirectFile);
+   if (!gSystem->AccessPathName(pathtmp.Data())) {
+      cmd = Form("del %s", pathtmp.Data());
+      gSystem->Exec(cmd);
+   }
+   pathtmp = Form("%s\\%s", gSystem->TempDirectory(), kSession_RedirectCmd);
+   if (!gSystem->AccessPathName(pathtmp.Data())) {
+      cmd = Form("del %s", pathtmp.Data());
+      gSystem->Exec(cmd);
+   }
+#endif
+
    TIter next(fSessions);
    TSessionDescription *desc = 0;
    while ((desc = (TSessionDescription *)next())) {
@@ -2315,7 +2390,9 @@ void TSessionViewer::ShowStatus()
 
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
-   if (gSystem->RedirectOutput(kSession_RedirectFile, "w") != 0) {
+   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
+                          kSession_RedirectFile);
+   if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
       Error("ShowStatus", "stdout/stderr redirection failed; skipping");
       return;
    }
@@ -2330,7 +2407,7 @@ void TSessionViewer::ShowStatus()
       // Clear window
       fLogWindow->Clear();
    }
-   fLogWindow->LoadFile(kSession_RedirectFile);
+   fLogWindow->LoadFile(pathtmp.Data());
    gVirtualX->TranslateCoordinates(GetId(),
               fClient->GetDefaultRoot()->GetId(),
               0, 0, ax, ay, wdummy);
@@ -2415,6 +2492,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kFileQuit:
+                     CloseWindow();
                      gApplication->Terminate(0);
                      break;
 

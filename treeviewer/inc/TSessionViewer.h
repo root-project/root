@@ -155,6 +155,7 @@ public:
    TList                     *fQueries;      // list of queries in this session
    TQueryDescription         *fActQuery;     // current (actual) query
    TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
+   Int_t                      fNbHistos;     // number of feedback histos
 
    ClassDef(TSessionDescription,0)
 };
@@ -181,9 +182,11 @@ public:
    TSessionFeedbackFrame(TGWindow *parent, Int_t w, Int_t h);
    virtual ~TSessionFeedbackFrame();
 
-   void     Build(TSessionViewer *gui);
-   void     Feedback(TList *objs);
-   Bool_t   IsFeedBack() { return (fFeedbackChk->GetState() == kButtonDown); }
+   void        Build(TSessionViewer *gui);
+   void        Feedback(TList *objs);
+   Bool_t      IsFeedBack() { return (fFeedbackChk->GetState() == kButtonDown); }
+   TGListBox  *GetListBox() { return fListBox; }
+   TCanvas    *GetStatsCanvas() { return fStatsCanvas; }
 
    ClassDef(TSessionFeedbackFrame,0)
 };
