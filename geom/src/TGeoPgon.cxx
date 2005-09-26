@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.52 2005/07/27 10:32:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.53 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -286,17 +286,6 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
    if (r > rmax) return kFALSE;
    
    return kTRUE;
-}
-
-//_____________________________________________________________________________
-void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax)
-{
-// defines z position of a section plane, rmin and rmax at this z.
-   if ((snum<0) || (snum>=fNz)) return;
-   fZ[snum]    = z;
-   fRmin[snum] = rmin;
-   fRmax[snum] = rmax;
-   if (snum==(fNz-1)) ComputeBBox();
 }
 
 //_____________________________________________________________________________

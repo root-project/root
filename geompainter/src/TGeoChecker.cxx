@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.34 2005/09/04 11:50:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.35 2005/09/04 19:24:00 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -362,7 +362,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          if (extrude) {
             // skip points on mother mesh that have no neghbourhood ouside mother
             safety = shapem->Safety(point,kTRUE);
-            if (safety>1E-4) {
+            if (safety>1E-6) {
                extrude = kFALSE;
             } else {   
                safety = shaped->Safety(local,kTRUE);

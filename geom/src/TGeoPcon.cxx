@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.48 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.49 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -467,14 +467,37 @@ Double_t TGeoPcon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 //_____________________________________________________________________________
 void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax)
 {
-// defines z position of a section plane, rmin and rmax at this z.
+// Defines z position of a section plane, rmin and rmax at this z. Sections
+// should be defined in increasing or decreasing Z order and the last section 
+// HAS to be snum = fNz-1
    if ((snum<0) || (snum>=fNz)) return;
    fZ[snum]    = z;
    fRmin[snum] = rmin;
    fRmax[snum] = rmax;
    if (rmin>rmax) 
       Warning("DefineSection", "Shape %s: invalid rmin=%g rmax=%g", GetName(), rmin, rmax);
-   if (snum==(fNz-1)) ComputeBBox();
+   if (snum==(fNz-1)) {
+      // Reorder sections in increasing Z order
+      if (fZ[0] > fZ[snum]) {
+         Int_t iz = 0;
+         Int_t izi = fNz-1;
+         Double_t temp;
+         while (iz<izi) {
+            temp = fZ[iz];
+            fZ[iz] = fZ[izi];
+            fZ[izi] = temp;
+            temp = fRmin[iz];
+            fRmin[iz] = fRmin[izi];
+            fRmin[izi] = temp;
+            temp = fRmax[iz];
+            fRmax[iz] = fRmax[izi];
+            fRmax[izi] = temp;
+            iz++;
+            izi--;
+         }   
+      }      
+      ComputeBBox();
+   }   
 }
 
 //_____________________________________________________________________________
@@ -923,8 +946,22 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       ipl = TMath::BinarySearch(fNz, fZ, point[2]);
       if (ipl==(fNz-1)) return 0;   // point on last Z boundary
       if (ipl<0) return 0;          // point on first Z boundary
+      if (ipl>0 && fZ[ipl-1]==fZ[ipl]) ipl--;
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-      if (dz<1E-8) return 0;
+      if (dz<1E-8) {
+         // Point on a segment-changing plane
+         safmin = TMath::Min(point[2]-fZ[ipl-1],fZ[ipl+2]-point[2]);
+         saftmp = TGeoShape::Big();
+         if (fDphi<360) saftmp = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi1+fDphi);
+         if (saftmp<safmin) safmin = saftmp;
+         Double_t radius = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+         if (fRmin[ipl]>0) safmin = TMath::Min(safmin, radius-fRmin[ipl]);
+         if (fRmin[ipl+1]>0) safmin = TMath::Min(safmin, radius-fRmin[ipl+1]);
+         safmin = TMath::Min(safmin, fRmax[ipl]-radius);
+         safmin = TMath::Min(safmin, fRmax[ipl+1]-radius);
+         if (safmin<0) safmin = 0;
+         return safmin;
+      }   
       // Check safety for current segment
       safmin = SafetyToSegment(point, ipl);
       if (safmin>1E10) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.19 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.20 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -56,7 +56,6 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
-   virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
