@@ -163,10 +163,17 @@ TPadEditor::~TPadEditor()
    TIter next(GetList());
    
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
+      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
+         TGFrameElement *el1;
+         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
+         while ((el1 = (TGFrameElement *)next1())) {
+            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
+               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
+         }
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      }
    }
-   Cleanup(); 
+   Cleanup();
 }
 
 //______________________________________________________________________________

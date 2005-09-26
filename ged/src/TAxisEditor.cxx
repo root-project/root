@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.8 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.9 2005/06/18 09:57:54 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -250,8 +250,15 @@ TAxisEditor::~TAxisEditor()
    TIter next(GetList());
    
    while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
+      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
+         TGFrameElement *el1;
+         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
+         while ((el1 = (TGFrameElement *)next1())) {
+            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
+               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
+         }
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      }
    }
    Cleanup();
 }
