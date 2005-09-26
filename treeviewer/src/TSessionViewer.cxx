@@ -593,6 +593,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    SetLayoutManager(new TGVerticalLayout(this));
    SetCleanup(kDeepCleanup);
    fFirst = fEntries = fPrevTotal = 0;
+   fPrevProcessed = 0;
    fStatus    = kRunning;
    fViewer  = gui;
 
@@ -606,14 +607,11 @@ void TSessionFrame::Build(TSessionViewer *gui)
                 kLHintsExpandX | kLHintsExpandY));
 
    // Status
-   TGCompositeFrame* frmStat = new TGHorizontalFrame(fFA, 350, 100);
-   frmStat->SetCleanup(kDeepCleanup);
-   frmStat->AddFrame(new TGLabel(frmStat, "Status :"),
-         new TGLayoutHints(kLHintsLeft, 5, 5, 5, 0));
-   fLabStatus = new TGLabel(frmStat, "");
-   frmStat->AddFrame(fLabStatus,
-         new TGLayoutHints(kLHintsLeft, 35, 5, 5, 0));
-   fFA->AddFrame(frmStat,  new TGLayoutHints(kLHintsExpandX, 0, 0, 5, 0));
+   fLabInfos = new TGLabel(fFA, "                                  ");
+   fFA->AddFrame(fLabInfos, new TGLayoutHints(kLHintsLeft, 5, 5, 10, 5));
+
+   fLabStatus = new TGLabel(fFA, "                                  ");
+   fFA->AddFrame(fLabStatus, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    //progress bar
    frmProg = new TGHProgressBar(fFA, TGProgressBar::kFancy, 350 - 20);
@@ -623,9 +621,11 @@ void TSessionFrame::Build(TSessionViewer *gui)
 
    fFA->AddFrame(fProcessed = new TGLabel(fFA, " Estimated time left : "),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-   fFA->AddFrame(fTotal = new TGLabel(fFA, " 00:00:00 (--- events of --- processed) "),
+   fFA->AddFrame(fTotal = new TGLabel(fFA, 
+      " 00:00:00 (--- events of --- processed) "),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-   fFA->AddFrame(fRate = new TGLabel(fFA, " -- events/sec "),
+   fFA->AddFrame(fRate = new TGLabel(fFA, 
+      " Processing Rate : -- events/sec    "),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    TGCompositeFrame* frmBut0 = new TGHorizontalFrame(fFA, 350, 100);
@@ -635,7 +635,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
       " Disconnect "),new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
    fBtnShowLog = new TGTextButton(frmBut0, "Show log...");
    frmBut0->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 0, 0, 45, 0));
+   fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 0, 0, 10, 0));
 
    //Abort Disconnect
    TGCompositeFrame* frmBut1 = new TGHorizontalFrame(fFA, 350, 100);
@@ -732,10 +732,19 @@ void TSessionFrame::Progress(Long64_t total, Long64_t processed)
    else
       fPrevTotal = total;
 
+   if (fPrevProcessed == processed)
+      return;
    char buf[256];
+
    if (fEntries != total) {
+
+      sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
+           fViewer->GetActDesc()->fProof->GetMaster(),
+           fViewer->GetActDesc()->fProof->GetParallel());
+      fLabInfos->SetText(buf);
+
       fEntries = total;
-      sprintf(buf, " %d files, number of events %lld, starting event %lld",
+      sprintf(buf, " %d files, %lld events, starting event %lld",
               fFiles, fEntries, fFirst);
       fLabStatus->SetText(buf);
    }
@@ -756,21 +765,25 @@ void TSessionFrame::Progress(Long64_t total, Long64_t processed)
             Long_t(tdiff))/1000.;
 
    if (processed == total) {
-      fProcessed->SetText(" Processed:");
+      fProcessed->SetText(" Processed :");
       sprintf(buf, " %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
    } else {
+      fProcessed->SetText("Estimated time left :");
       if (fStatus > kDone) {
-         sprintf(buf, " %.1f sec (%lld events of %lld processed) - %s",
+         sprintf(buf, " %.1f sec (%lld events of %lld processed) - %s  ",
                       eta, processed, total, cproc[fStatus]);
       } else {
-         sprintf(buf, " %.1f sec (%lld events of %lld processed)",
+         sprintf(buf, " %.1f sec (%lld events of %lld processed)        ",
                       eta, processed, total);
       }
       fTotal->SetText(buf);
-      sprintf(buf, " %.1f events/sec", Float_t(processed)/Long_t(tdiff)*1000.);
+      sprintf(buf, " Processing Rate : %.1f events/sec   ",
+              Float_t(processed)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
    }
+   fPrevProcessed = processed;
+
    Layout();
 }
 
@@ -798,13 +811,23 @@ void TSessionFrame::IndicateStop(Bool_t aborted)
 }
 
 //______________________________________________________________________________
-void TSessionFrame::ResetProgressDialog(const char *, Int_t, Long64_t, Long64_t)
+void TSessionFrame::ResetProgressDialog(const char *selector, Int_t files, 
+                                        Long64_t first, Long64_t entries)
 {
+   char buf[256];
+   fFiles         = files;
+   fFirst         = first;
+   fEntries       = entries;
+   fPrevProcessed = 0;
    fPrevTotal     = 0;
+   fStatus        = kRunning;
 
    frmProg->SetBarColor("green");
    frmProg->Reset();
 
+   sprintf(buf, "%d files, %lld events, starting event %lld",  fFiles, 
+           fEntries, fFirst);
+   fLabStatus->SetText(buf);
    // Reconnect the slots
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
@@ -890,6 +913,7 @@ void TSessionFrame::OnBtnGetQueriesClicked()
          newquery->fOptions         = query->GetOptions();
          newquery->fEventList       = "";
          newquery->fParFile         = "";
+         newquery->fNbFiles         = 0;
          newquery->fNoEntries       = query->GetEntries();
          newquery->fFirstEntry      = query->GetFirst();
          newquery->fResult          = query;
@@ -1109,6 +1133,8 @@ void TSessionQueryFrame::OnBtnSubmit()
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
    TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
+   fViewer->GetSessionFrame()->ResetProgressDialog(newquery->fSelectorString,
+         newquery->fNbFiles, newquery->fFirstEntry, newquery->fNoEntries);
    fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
    newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
    fViewer->GetActDesc()->fNbHistos = 0;
@@ -2083,6 +2109,7 @@ void TSessionViewer::BuildSessionHierarchy(TList *list)
             newquery->fOptions         = query->GetOptions();
             newquery->fEventList       = "";
             newquery->fParFile         = "";
+            newquery->fNbFiles         = 0;
             newquery->fNoEntries       = query->GetEntries();
             newquery->fFirstEntry      = query->GetFirst();
             newquery->fResult          = query;

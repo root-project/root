@@ -544,7 +544,6 @@ void TNewQueryDlg::OnBrowseEventList()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnSaveClicked()
 {
-   Int_t nbElements = 0;
    TQueryDescription *newquery;
    if (fEditMode && fQuery)
       newquery = fQuery;
@@ -566,6 +565,12 @@ void TNewQueryDlg::OnBtnSaveClicked()
    newquery->fNoEntries       = fNumEntries->GetIntNumber();
    newquery->fFirstEntry      = fNumFirstEntry->GetIntNumber();
 
+   if (newquery->fChain) {
+      if (newquery->fChain->IsA() == TChain::Class())
+         newquery->fNbFiles = ((TChain *)newquery->fChain)->GetListOfFiles()->GetEntriesFast();
+      else if (newquery->fChain->IsA() == TDSet::Class())
+         newquery->fNbFiles = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
+   }
    if (!fEditMode) {
       newquery->fResult = 0;
       newquery->fStatus = TQueryDescription::kSessionQueryCreated;
@@ -584,15 +589,6 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       item->SetUserData(newquery);
    }
-   if (newquery->fChain) {
-      if (newquery->fChain->IsA() == TChain::Class())
-         nbElements = ((TChain *)newquery->fChain)->GetListOfFiles()->GetSize();
-      else if (newquery->fChain->IsA() == TDSet::Class())
-         nbElements = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
-   }
-   fViewer->GetSessionFrame()->SetNumberOfFiles(nbElements);
-   fViewer->GetSessionFrame()->SetEntries(newquery->fNoEntries);
-   fViewer->GetSessionFrame()->SetFirstEntry(newquery->fFirstEntry);
 
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fTxtQueryName->SelectAll();

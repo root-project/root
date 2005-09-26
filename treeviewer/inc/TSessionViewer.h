@@ -120,6 +120,7 @@ public:
    TString        fOptions;         // query processing options
    TString        fEventList;       // event list
    TString        fParFile;         // parameter file name
+   Int_t          fNbFiles;         // number of files to process
    Int_t          fNoEntries;       // number of events/entries to process
    Int_t          fFirstEntry;      // first event/entry to process
    TObject       *fChain;           // dataset on which to process selector
@@ -184,9 +185,9 @@ public:
 
    void        Build(TSessionViewer *gui);
    void        Feedback(TList *objs);
-   Bool_t      IsFeedBack() { return (fFeedbackChk->GetState() == kButtonDown); }
-   TGListBox  *GetListBox() { return fListBox; }
-   TCanvas    *GetStatsCanvas() { return fStatsCanvas; }
+   Bool_t      IsFeedBack() const { return (fFeedbackChk->GetState() == kButtonDown); }
+   TGListBox  *GetListBox() const { return fListBox; }
+   TCanvas    *GetStatsCanvas() const { return fStatsCanvas; }
 
    ClassDef(TSessionFeedbackFrame,0)
 };
@@ -220,11 +221,11 @@ public:
 
    const char *GetName() const { return fTxtName->GetText(); }
    const char *GetAddress() const { return fTxtAddress->GetText(); }
-   Int_t       GetPortNumber() { return fNumPort->GetIntNumber(); }
-   Int_t       GetLogLevel() { return fLogLevel->GetIntNumber(); }
+   Int_t       GetPortNumber() const { return fNumPort->GetIntNumber(); }
+   Int_t       GetLogLevel() const { return fLogLevel->GetIntNumber(); }
    const char *GetConfigText() const { return fTxtConfig->GetText(); }
    const char *GetUserName() const { return fTxtUsrName->GetText(); }
-   Bool_t      IsSync() { return (Bool_t)(fSync->GetState() == kButtonDown); }
+   Bool_t      IsSync() const { return (Bool_t)(fSync->GetState() == kButtonDown); }
 
    void        SetName(const char *str) { fTxtName->SetText(str); }
    void        SetAddress(const char *str) { fTxtAddress->SetText(str); }
@@ -271,6 +272,8 @@ private:
    Long64_t           fFirst;                // first event/entry to process
    Long64_t           fEntries;              // number of events/entries to process
    Long64_t           fPrevTotal;            // used for progress bar
+   Long64_t           fPrevProcessed;        // used for progress bar
+   TGLabel           *fLabInfos;             // infos on current process
    TGLabel           *fLabStatus;            // actual process status
    TGLabel           *fProcessed;            // actual progress informations
    TGLabel           *fTotal;                // total progress info
@@ -298,18 +301,12 @@ public:
 
    void     Build(TSessionViewer *gui);
 
-   TTime    GetStartTime() { return fStartTime; }
-   TTime    GetEndTime()   { return fEndTime; }
-   Int_t    GetNumberOfFiles() { return fFiles; }
-   Long64_t GetFirstEntry() { return fFirst; }
-   Long64_t GetEntries() { return fEntries; }
-   TSessionFeedbackFrame  *GetFeedbackFrame() { return fFeedbackFrame; }
+   TTime    GetStartTime() const { return fStartTime; }
+   TTime    GetEndTime() const   { return fEndTime; }
+   TSessionFeedbackFrame  *GetFeedbackFrame() const { return fFeedbackFrame; }
 
    void     SetStartTime(TTime time) { fStartTime = time; }
    void     SetEndTime(TTime time) { fEndTime = time; }
-   void     SetNumberOfFiles(Int_t number) { fFiles = number; }
-   void     SetFirstEntry(Long64_t entry) { fFirst = entry; }
-   void     SetEntries(Long64_t entries) { fEntries = entries; }
 
    //Function that handle input from user:
    void     OnBtnShowLogClicked();
@@ -492,27 +489,27 @@ public:
    virtual void BuildSessionHierarchy(TList *vec);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
 
-   TSessionServerFrame    *GetServerFrame() { return fServerFrame; }
-   TSessionFrame          *GetSessionFrame() { return fSessionFrame; }
-   TSessionQueryFrame     *GetQueryFrame() { return fQueryFrame; }
-   TSessionFeedbackFrame  *GetFeedbackFrame() { return fFeedbackFrame; }
-   TSessionOutputFrame    *GetOutputFrame() { return fOutputFrame; }
-   TSessionInputFrame     *GetInputFrame() { return fInputFrame; }
-   TSessionDescription    *GetActDesc() { return fActDesc; }
-   TList                  *GetSessions() { return fSessions; }
-   TGListTree             *GetSessionHierarchy() { return fSessionHierarchy; }
-   TGListTreeItem         *GetSessionItem() { return fSessionItem; }
-   const TGPicture        *GetLocalPict() { return fLocal; }
-   const TGPicture        *GetProofConPict() { return fProofCon; }
-   const TGPicture        *GetProofDisconPict() { return fProofDiscon; }
-   const TGPicture        *GetQueryConPict() { return fQueryCon; }
-   const TGPicture        *GetQueryDisconPict() { return fQueryDiscon; }
-   const TGPicture        *GetBasePict() { return fBaseIcon; }
-   TGPopupMenu            *GetPopupSrv() { return fPopupSrv; }
-   TGPopupMenu            *GetPopupQry() { return fPopupQry; }
-   TContextMenu           *GetContextMenu() { return fContextMenu; }
-   TGStatusBar            *GetStatusBar() { return fStatusBar; }
-   TGHProgressBar         *GetConnectProg() { return fConnectProg; }
+   TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
+   TSessionFrame          *GetSessionFrame() const { return fSessionFrame; }
+   TSessionQueryFrame     *GetQueryFrame() const { return fQueryFrame; }
+   TSessionFeedbackFrame  *GetFeedbackFrame() const { return fFeedbackFrame; }
+   TSessionOutputFrame    *GetOutputFrame() const { return fOutputFrame; }
+   TSessionInputFrame     *GetInputFrame() const { return fInputFrame; }
+   TSessionDescription    *GetActDesc() const { return fActDesc; }
+   TList                  *GetSessions() const { return fSessions; }
+   TGListTree             *GetSessionHierarchy() const { return fSessionHierarchy; }
+   TGListTreeItem         *GetSessionItem() const { return fSessionItem; }
+   const TGPicture        *GetLocalPict() const { return fLocal; }
+   const TGPicture        *GetProofConPict() const { return fProofCon; }
+   const TGPicture        *GetProofDisconPict() const { return fProofDiscon; }
+   const TGPicture        *GetQueryConPict() const { return fQueryCon; }
+   const TGPicture        *GetQueryDisconPict() const { return fQueryDiscon; }
+   const TGPicture        *GetBasePict() const { return fBaseIcon; }
+   TGPopupMenu            *GetPopupSrv() const { return fPopupSrv; }
+   TGPopupMenu            *GetPopupQry() const { return fPopupQry; }
+   TContextMenu           *GetContextMenu() const { return fContextMenu; }
+   TGStatusBar            *GetStatusBar() const { return fStatusBar; }
+   TGHProgressBar         *GetConnectProg() const { return fConnectProg; }
 
    void     ChangeRightLogo(const char *name);
    void     CleanupSession();
