@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.15 2005/09/22 09:42:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.16 2005/09/22 23:29:30 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -112,23 +112,22 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
 
    // logs-from-given-query-only toggle button
    TGHorizontalFrame *hflog = new TGHorizontalFrame(fDialog, 200, 20, kFixedWidth);
-   fLogQueryToggle =
-      new TGCheckButton(hflog,
-          new TGHotString("Show only logs from query"));
+   fLogQueryToggle = new TGCheckButton(hflog,
+                        new TGHotString("Show only logs from query"));
    if (!fLogQuery) fLogQueryToggle->SetState(kButtonUp);
    fLogQueryToggle->Connect("Toggled(Bool_t)",
-                              "TProofProgressDialog", this, "DoSetLogQuery(Bool_t)");
+                            "TProofProgressDialog", this, "DoSetLogQuery(Bool_t)");
    hflog->AddFrame(fLogQueryToggle,
                    new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 0, 0, 0, 0));
-   // Text entry for logs-from-given-query-only toggle button
+   // text entry for logs-from-given-query-only toggle button
    fTextQuery = new TGTextBuffer();
-   fTextQuery->AddText(0, fgTextQueryDefault.Data(), 32);
+   fTextQuery->AddText(0, fgTextQueryDefault, 32);
    fEntry = new TGTextEntry(hflog, fTextQuery);
    if (fLogQuery)
       fEntry->SetToolTipText("Enter the query number ('last' for the last query)",50);
    fEntry->SetEnabled(fLogQuery);
    hflog->AddFrame(fEntry, new TGLayoutHints(kLHintsCenterY |
-                                          kLHintsExpandX, 2, 0, 0, 0));
+                                             kLHintsExpandX, 2, 0, 0, 0));
 
    fDialog->AddFrame(hflog, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
 
