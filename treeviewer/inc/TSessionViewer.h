@@ -81,6 +81,7 @@ class TGTab;
 class TRootEmbeddedCanvas;
 class TGListBox;
 class TCanvas;
+struct UserGroup_t;
 
 class TVirtualProof;
 class TProofServer;
@@ -275,7 +276,6 @@ private:
    Long64_t           fPrevProcessed;        // used for progress bar
    TGLabel           *fLabInfos;             // infos on current process
    TGLabel           *fLabStatus;            // actual process status
-   TGLabel           *fProcessed;            // actual progress informations
    TGLabel           *fTotal;                // total progress info
    TGLabel           *fRate;                 // rate of process in events/sec
    EQueryStatus      fStatus;                // status of actual query
@@ -479,6 +479,7 @@ private:
    TGPicture              *fRightIconPicture;   // lower bottom left icon used to show connection status
    TGIcon                 *fRightIcon;          // associated picture
    TTimer                 *fTimer;              // timer used to change icon picture
+   UserGroup_t            *fUserGroup;          // user connected to session
 
 public:
 

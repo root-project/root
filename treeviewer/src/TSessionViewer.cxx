@@ -619,12 +619,10 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmProg->SetBarColor("green");
    fFA->AddFrame(frmProg, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
 
-   fFA->AddFrame(fProcessed = new TGLabel(fFA, " Estimated time left : "),
-            new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-   fFA->AddFrame(fTotal = new TGLabel(fFA, 
-      " 00:00:00 (--- events of --- processed) "),
-            new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-   fFA->AddFrame(fRate = new TGLabel(fFA, 
+   fFA->AddFrame(fTotal = new TGLabel(fFA,
+      " Estimated time left : 00:00:00 (--- events of --- processed) "),
+             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+   fFA->AddFrame(fRate = new TGLabel(fFA,
       " Processing Rate : -- events/sec    "),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
@@ -765,16 +763,14 @@ void TSessionFrame::Progress(Long64_t total, Long64_t processed)
             Long_t(tdiff))/1000.;
 
    if (processed == total) {
-      fProcessed->SetText(" Processed :");
-      sprintf(buf, " %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
+      sprintf(buf, " Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
    } else {
-      fProcessed->SetText("Estimated time left :");
       if (fStatus > kDone) {
-         sprintf(buf, " %.1f sec (%lld events of %lld processed) - %s  ",
+         sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
                       eta, processed, total, cproc[fStatus]);
       } else {
-         sprintf(buf, " %.1f sec (%lld events of %lld processed)        ",
+         sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed)        ",
                       eta, processed, total);
       }
       fTotal->SetText(buf);
@@ -784,7 +780,7 @@ void TSessionFrame::Progress(Long64_t total, Long64_t processed)
    }
    fPrevProcessed = processed;
 
-   Layout();
+   fFA->Layout();
 }
 
 //______________________________________________________________________________
@@ -811,7 +807,7 @@ void TSessionFrame::IndicateStop(Bool_t aborted)
 }
 
 //______________________________________________________________________________
-void TSessionFrame::ResetProgressDialog(const char * /*selector*/, Int_t files, 
+void TSessionFrame::ResetProgressDialog(const char * /*selector*/, Int_t files,
                                         Long64_t first, Long64_t entries)
 {
    char buf[256];
@@ -825,7 +821,7 @@ void TSessionFrame::ResetProgressDialog(const char * /*selector*/, Int_t files,
    frmProg->SetBarColor("green");
    frmProg->Reset();
 
-   sprintf(buf, "%d files, %lld events, starting event %lld",  fFiles, 
+   sprintf(buf, "%d files, %lld events, starting event %lld",  fFiles,
            fEntries, fFirst);
    fLabStatus->SetText(buf);
    // Reconnect the slots
@@ -1167,13 +1163,20 @@ void TSessionQueryFrame::OnBtnSubmit()
             Error("Submit", "Enable package failed");
       }
       if (newquery->fChain) {
+         // Quick FIX just for the demo. Creating a new TDSet causes a memory leak.
          if (newquery->fChain->IsA() == TChain::Class()) {
             newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
-            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
-            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
+            TDSet* s = ((TChain *)newquery->fChain)->MakeTDSet();
+            gProof = fViewer->GetActDesc()->fProof;
+            id = s->Process(newquery->fSelectorString,
                     newquery->fOptions,
                     newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
                     newquery->fFirstEntry);
+//            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
+//            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
+//                    newquery->fOptions,
+//                    newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
+//                    newquery->fFirstEntry);
          }
          else if (newquery->fChain->IsA() == TDSet::Class()) {
             id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
@@ -1477,10 +1480,10 @@ void TSessionFeedbackFrame::Feedback(TList *objs)
                h->SetBarWidth(0.75);
                h->SetBarOffset(0.125);
                h->SetFillColor(9);
-               h->Draw("bar");
+               h->DrawCopy("bar");
             }
             else if (TH2 *h2 = dynamic_cast<TH2*>(o)) {
-               h2->Draw();
+               h2->DrawCopy();
             }
             pos++;
          }
@@ -1529,7 +1532,7 @@ void TSessionOutputFrame::Build(TSessionViewer *gui)
                   GetWhitePixel());
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
-   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 
+   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
             4, 4, 4, 4));
 
    frmListView->Connect("Clicked(TGLVEntry*, Int_t, Int_t, Int_t)",
@@ -1612,7 +1615,7 @@ void TSessionInputFrame::Build(TSessionViewer *gui)
    fLVContainer = new TGLVContainer(frmListView, kSunkenFrame, GetWhitePixel());
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
-   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 
+   AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
             4, 4, 4, 4));
 
    TGLVEntry* entry1 = new TGLVEntry(fLVContainer, "name", "mane");
@@ -1780,7 +1783,7 @@ void TSessionViewer::Build()
    fV1->Resize(fTreeView->GetDefaultWidth()+100, fV1->GetDefaultHeight());
 
    //--- fV2
-   fV2 = new TGVerticalFrame(fHf, 350, 310, kFixedWidth);
+   fV2 = new TGVerticalFrame(fHf, 350, 310);
    fV2->SetCleanup(kDeepCleanup);
 
    fServerFrame = new TSessionServerFrame(fV2, 350, 310);
@@ -1810,16 +1813,16 @@ void TSessionViewer::Build()
    fV2->AddFrame(fInputFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
                  kLHintsExpandY, 2, 0, 1, 2));
 
-   fHf->AddFrame(fV1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-                 kLHintsExpandY));
+   fHf->AddFrame(fV1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
    TGVSplitter *splitter = new TGVSplitter(fHf, 4);
-   splitter->SetFrame(fV2, kFALSE);
+   splitter->SetFrame(fV1, kTRUE);
    fHf->AddFrame(splitter,new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
    fHf->AddFrame(new TGVertical3DLine(fHf), new TGLayoutHints(kLHintsLeft |
                  kLHintsExpandY));
 
-   fHf->AddFrame(fV2, new TGLayoutHints(kLHintsRight | kLHintsExpandY));
+   fHf->AddFrame(fV2, new TGLayoutHints(kLHintsRight | kLHintsExpandX |
+                 kLHintsExpandY));
 
    AddFrame(fHf, new TGLayoutHints(kLHintsRight | kLHintsExpandX |
             kLHintsExpandY));
@@ -1850,9 +1853,9 @@ void TSessionViewer::Build()
    fConnectProg->SetBarColor("green");
    rightpart->AddFrame(fConnectProg, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
 
-   UserGroup_t *fUserGroup = gSystem->GetUserInfo();
-   sprintf(line,"User : %s - %s",fUserGroup->fRealName.Data(),
-            fUserGroup->fGroup.Data());
+   fUserGroup = gSystem->GetUserInfo();
+   sprintf(line,"User : %s - %s", fUserGroup->fRealName.Data(),
+           fUserGroup->fGroup.Data());
    fStatusBar->SetText(line, 1);
 
    fTimer = 0;
@@ -1877,6 +1880,7 @@ void TSessionViewer::Build()
 TSessionViewer::~TSessionViewer()
 {
    Cleanup();
+   delete fUserGroup;
 }
 
 //______________________________________________________________________________
@@ -2572,7 +2576,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         gEnv->SetValue("Proof.StatsHist", 1);
                      }
                      break;
-                  
+
                   case kOptionsStatsTrace:
                      if(fOptionsMenu->IsEntryChecked(kOptionsStatsTrace)) {
                         fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
@@ -2583,7 +2587,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         gEnv->SetValue("Proof.StatsTrace", 1);
                      }
                      break;
-   
+
                   case kOptionsSlaveStatsTrace:
                      if(fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace)) {
                         fOptionsMenu->UnCheckEntry(kOptionsSlaveStatsTrace);
