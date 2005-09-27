@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.58 2005/06/24 20:30:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.59 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -620,6 +620,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
 
@@ -651,6 +652,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
 
@@ -675,6 +677,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   fOwnDisabledPic = kFALSE;
    SetWindowName();
 }
 
