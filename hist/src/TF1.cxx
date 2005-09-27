@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.107 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.108 2005/09/02 19:18:11 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2465,7 +2465,14 @@ L160:
    if (relerr < 1e-3 && aresult < 1e-10) ifail = 0;
    if (relerr < 1e-5 && aresult < 1e-5)  ifail = 0;
    if (isbrgs+irgnst > iwk) ifail = 2;
-   if (ifncls+2*irlcls > maxpts) ifail = 1;
+   if (ifncls+2*irlcls > maxpts) {
+      if (sum1==0 && sum2==0 && sum3==0 && sum4==0 && sum5==0){
+         ifail = 0;
+         result = 0;
+      }
+      else
+         ifail = 1;
+   }
    if (relerr < eps && ifncls >= minpts) ifail = 0;
    if (ifail == 3) {
       ldv = kTRUE;
