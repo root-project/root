@@ -189,6 +189,7 @@ public:
    Bool_t      IsFeedBack() const { return (fFeedbackChk->GetState() == kButtonDown); }
    TGListBox  *GetListBox() const { return fListBox; }
    TCanvas    *GetStatsCanvas() const { return fStatsCanvas; }
+   void        OnLBSelected(Int_t);
 
    ClassDef(TSessionFeedbackFrame,0)
 };

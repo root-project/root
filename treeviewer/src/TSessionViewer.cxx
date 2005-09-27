@@ -617,32 +617,14 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmProg = new TGHProgressBar(fFA, TGProgressBar::kFancy, 350 - 20);
    frmProg->ShowPosition();
    frmProg->SetBarColor("green");
-   fFA->AddFrame(frmProg, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
+   fFA->AddFrame(frmProg, new TGLayoutHints(kLHintsExpandX, 5, 5, 10, 5));
 
    fFA->AddFrame(fTotal = new TGLabel(fFA,
       " Estimated time left : 00:00:00 (--- events of --- processed) "),
-             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+             new TGLayoutHints(kLHintsLeft, 5, 5, 10, 5));
    fFA->AddFrame(fRate = new TGLabel(fFA,
       " Processing Rate : -- events/sec    "),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-   TGCompositeFrame* frmBut0 = new TGHorizontalFrame(fFA, 350, 100);
-   frmBut0->SetCleanup(kDeepCleanup);
-
-   frmBut0->AddFrame(fBtnDisconnect = new TGTextButton(frmBut0,
-      " Disconnect "),new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fBtnShowLog = new TGTextButton(frmBut0, "Show log...");
-   frmBut0->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 0, 0, 10, 0));
-
-   //Abort Disconnect
-   TGCompositeFrame* frmBut1 = new TGHorizontalFrame(fFA, 350, 100);
-   frmBut1->SetCleanup(kDeepCleanup);
-   frmBut1->AddFrame(fBtnNewQuery = new TGTextButton(frmBut1, "New Query..."),
-      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries  "),
-       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
 
    // REsults URL + Update
    TGCompositeFrame* frmRes = new TGHorizontalFrame(fFA, 350, 100);
@@ -653,7 +635,24 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmRes->AddFrame(fTexEntResultsURL = new TGTextEntry(frmRes,
       fTexBufResultsURL ),new TGLayoutHints(kLHintsRight |
       kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmRes, new TGLayoutHints(kLHintsExpandX));
+   fFA->AddFrame(frmRes, new TGLayoutHints(kLHintsBottom | kLHintsExpandX));
+
+   //Abort Disconnect
+   TGCompositeFrame* frmBut1 = new TGHorizontalFrame(fFA, 350, 100);
+   frmBut1->SetCleanup(kDeepCleanup);
+   frmBut1->AddFrame(fBtnNewQuery = new TGTextButton(frmBut1, "New Query..."),
+      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries  "),
+       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
+
+   TGCompositeFrame* frmBut0 = new TGHorizontalFrame(fFA, 350, 100);
+   frmBut0->SetCleanup(kDeepCleanup);
+   frmBut0->AddFrame(fBtnDisconnect = new TGTextButton(frmBut0,
+      " Disconnect "),new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fBtnShowLog = new TGTextButton(frmBut0, "Show log...");
+   frmBut0->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
 
    tf = fTab->AddTab("Feedback");
    fFB = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
@@ -1449,6 +1448,8 @@ void TSessionFeedbackFrame::Build(TSessionViewer *gui)
    }
    fListBox->Resize(175, 80);
    fListBox->Select(1);
+   fListBox->Connect("Selected(Int_t)", "TSessionFeedbackFrame", this, 
+                     "OnLBSelected(Int_t)");
 
    //Feedback
 
@@ -1458,6 +1459,32 @@ void TSessionFeedbackFrame::Build(TSessionViewer *gui)
                      15, 5, 2, 2));
    AddFrame(frmFeed, new TGLayoutHints(kLHintsExpandX, 4, 4, 4, 4));
 
+}
+
+ //______________________________________________________________________________
+void TSessionFeedbackFrame::OnLBSelected(Int_t)
+{
+   if (!fViewer->GetActDesc() || !fViewer->GetActDesc()->fActQuery) return;
+   fViewer->GetActDesc()->fNbHistos = 0;
+   Int_t i = 0;
+   while (kFeedbackHistos[i]) {
+      if (fListBox->GetSelection(i))
+         fViewer->GetActDesc()->fNbHistos++;
+      i++;
+   }
+   fStatsCanvas->cd();
+   fStatsCanvas->Clear();
+   if (fViewer->GetActDesc()->fNbHistos == 4)
+      fStatsCanvas->Divide(2, 2);
+   else if (fViewer->GetActDesc()->fNbHistos > 4)
+      fStatsCanvas->Divide(3, 2);
+   else
+      fStatsCanvas->Divide(fViewer->GetActDesc()->fNbHistos, 1);
+   if (fViewer->GetActDesc()->fActQuery && fViewer->GetActDesc()->fActQuery->fResult) {
+      if (fViewer->GetActDesc()->fActQuery->fResult->GetOutputList()) {
+         Feedback(fViewer->GetActDesc()->fActQuery->fResult->GetOutputList());
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1929,14 +1956,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fV2->ShowFrame(fSessionFrame);
          fActFrame = fSessionFrame;
       }
-      fFeedbackFrame->GetStatsCanvas()->cd();
-      fFeedbackFrame->GetStatsCanvas()->Clear();
-      if (fActDesc->fNbHistos == 4)
-         fFeedbackFrame->GetStatsCanvas()->Divide(2, 2);
-      else if (fActDesc->fNbHistos > 4)
-         fFeedbackFrame->GetStatsCanvas()->Divide(3, 2);
-      else
-         fFeedbackFrame->GetStatsCanvas()->Divide(fActDesc->fNbHistos, 1);
+      fFeedbackFrame->OnLBSelected(0);
    }
    else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
       fActDesc = (TSessionDescription*)entry->GetParent()->GetUserData();
