@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.80 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.81 2005/09/05 10:02:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TMatrixFBase.h"
 #include "TMatrixDBase.h"
 #include "THLimitsFinder.h"
+#include "TError.h"
 
 ClassImp(TH2)
 
@@ -1311,6 +1312,7 @@ Long64_t TH2::Merge(TCollection *list)
                                                                                                     
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1440,7 +1442,8 @@ Long64_t TH2::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   if (hclone) delete hclone;
+   inlist.Remove(hclone);
+   delete hclone;
    return (Long64_t)nentries;
 }
 

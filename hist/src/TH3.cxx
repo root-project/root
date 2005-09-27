@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.66 2005/08/11 09:38:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.67 2005/09/05 10:02:38 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "THLimitsFinder.h"
 #include "TRandom.h"
 #include "TFile.h"
+#include "TError.h"
 
 ClassImp(TH3)
 
@@ -1209,6 +1210,7 @@ Long64_t TH3::Merge(TCollection *list)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1356,7 +1358,8 @@ Long64_t TH3::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   if (hclone) delete hclone;
+   inlist.Remove(hclone);
+   delete hclone;
    return (Long64_t)nentries;
 }   
 

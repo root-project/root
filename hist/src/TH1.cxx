@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.254 2005/09/15 11:12:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.255 2005/09/16 17:19:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TVectorD.h"
 #include "TBrowser.h"
 #include "TObjString.h"
+#include "TError.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -3714,6 +3715,7 @@ Long64_t TH1::Merge(TCollection *li)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -3859,7 +3861,8 @@ Long64_t TH1::Merge(TCollection *li)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   if (hclone) delete hclone;
+   inlist.Remove(hclone);
+   delete hclone;
    return (Long64_t)nentries;
 }
 
