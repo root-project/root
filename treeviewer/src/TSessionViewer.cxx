@@ -811,7 +811,7 @@ void TSessionFrame::IndicateStop(Bool_t aborted)
 }
 
 //______________________________________________________________________________
-void TSessionFrame::ResetProgressDialog(const char *selector, Int_t files, 
+void TSessionFrame::ResetProgressDialog(const char * /*selector*/, Int_t files, 
                                         Long64_t first, Long64_t entries)
 {
    char buf[256];
