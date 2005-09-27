@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.67 2005/09/07 14:44:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.68 2005/09/22 08:55:07 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "THLimitsFinder.h"
 #include "Riostream.h"
 #include "TVirtualPad.h"
+#include "TError.h"
 
 const Int_t kNstat = 11;
 Bool_t TProfile::fgApproximate = kFALSE;
@@ -1222,6 +1223,7 @@ Long64_t TProfile::Merge(TCollection *li)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1330,7 +1332,8 @@ Long64_t TProfile::Merge(TCollection *li)
 
    PutStats(totstats);
    SetEntries(nentries);
-   if (hclone) delete hclone;
+   inlist.Remove(hclone);
+   delete hclone;
    return (Long64_t) nentries;
 }
 

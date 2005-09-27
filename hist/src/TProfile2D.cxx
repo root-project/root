@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.39 2005/08/09 10:52:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.40 2005/08/09 11:02:30 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "THLimitsFinder.h"
 #include "Riostream.h"
 #include "TVirtualPad.h"
+#include "TError.h"
 
 const Int_t kNstat = 11;
 Bool_t TProfile2D::fgApproximate = kFALSE;
@@ -1298,6 +1299,7 @@ Long64_t TProfile2D::Merge(TCollection *li)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1434,7 +1436,8 @@ Long64_t TProfile2D::Merge(TCollection *li)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   if (hclone) delete hclone;
+   inlist.Remove(hclone);
+   delete hclone;
    return (Long64_t)nentries;
 }
 
