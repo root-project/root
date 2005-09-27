@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.9 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.10 2005/09/17 13:54:47 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -128,7 +128,7 @@ public:
       // A list element. Helper structure for the implementation of the object cache.
       class TCacheElem : public TObject {
       public:
-         TCacheElem(const Obj &obj, const TCacheKey &objKey) 
+         TCacheElem(const TCacheObject &obj, const TCacheKey &objKey) 
             : fObj(obj), fKey(objKey), fCount(0) {}
          TCacheObject fObj;
          TCacheKey fKey;
@@ -159,7 +159,7 @@ public:
          else
             return 0;
       }
-      TList fMRU;                // Most recently used list element
+      TList fMRU;                // Most recently used list element (but not used right now)
       TList fInUse;              // A list of all the objects in use.
 
       Int_t fSize;                // The number of objects currently stored in the cache.
@@ -209,13 +209,14 @@ public:
          TIter next(&fInUse);
          while (TCacheElem* elem = dynamic_cast<TCacheElem*>(next())) {
             Unload(elem->fObj);
-            delete elem;
          }
+         fInUse.SetOwner();  // ~fInUse will delete all the elements
+
          TIter next2(&fMRU);
          while (TCacheElem* elem = dynamic_cast<TCacheElem*>(next2())) {
             Unload(elem->fObj);
-            delete elem;
          }
+         fInUse.SetOwner();  // ~fMRU will delete all the elements
       }
 
       TCacheObject Acquire(const TCacheKey &k) 
