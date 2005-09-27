@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.106 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.107 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1292,7 +1292,6 @@ void TProofServ::HandleSocketInput()
 
             TDSet* dset;
             (*mess) >> dset;
-            const char *name = dset->GetObjName();
             dset->Reset();
             TDSetElement *e = dset->Next();
             Long64_t entries = 0;
@@ -1305,7 +1304,7 @@ void TProofServ::HandleSocketInput()
                f = TFile::Open(e->GetFileName());
                t = 0;
                if (f) {
-                  t = (TTree*) f->Get(name);
+                  t = (TTree*) f->Get(e->GetObjName());
                   if (t) {
                      t->SetMaxVirtualSize(0);
                      t->DropBaskets();
@@ -1315,7 +1314,7 @@ void TProofServ::HandleSocketInput()
                      while ((e = dset->Next()) != 0) {
                         TFile *f1 = TFile::Open(e->GetFileName());
                         if (f1) {
-                           TTree* t1 = (TTree*) f1->Get(name);
+                           TTree* t1 = (TTree*) f1->Get(e->GetObjName());
                            if (t1) {
                               entries += t1->GetEntries();
                               delete t1;
