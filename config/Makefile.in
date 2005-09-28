@@ -149,6 +149,7 @@ XMLCLILIB      := @xmllib@
 XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
 
 BUILDXRD       := @buildxrd@
+XROOTDDIR      := @xrootddir@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

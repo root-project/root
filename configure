@@ -755,6 +755,7 @@ with options, prefix with --with-, enables corresponding support
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
   xpm-libdir         XPM support, path to libXpm
+  xrootd             XROOTD support, path to alternative XROOTD distribution
 
 Supported Architectures:
 
@@ -903,6 +904,7 @@ if test $# -gt 0 ; then
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
+      --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -1960,45 +1962,57 @@ fi
 message "Checking whether to build xrootd"
 xrdcomm=""
 
-# Xrootd and its client need thread support
-if test "x$enable_thread" = "xyes"; then
-    # Ok, now check the architecture
-    case $arch in
-    # The server builds on Linux and Solaris only (for the time being)
-    linux*)
-        if test "x$enable_xrootd" = "x"; then
-            enable_xrootd="yes"
-        fi
-        ;;
-    macos*)
-        if test "x$enable_xrootd" = "x"; then
-            enable_xrootd="yes"
-        fi
-        ;;
-    solaris*)
-           if test "x$enable_xrootd" = "x"; then
-              enable_xrootd="yes"
-           fi
-        ;;
-    *)
-        if test "x$enable_xrootd" = "xyes"; then
-            enable_xrootd="yes"
-            xrdcomm=", but not officially supported"
-        else
-            enable_xrootd="no"
-        fi
-        ;;
-    esac
+# If we are required to use an external XROOTD distribution
+# we just define the pointers
+if test ! "x$xrootddir" = "x"; then
+
+   # We do not need to build, just the paths for includes and libs
+   xrdcomm="no, using xrootd at $xrootddir"
+
 else
-   if test "x$enable_xrootd" = "xyes"; then
-      enable_xrootd="no"
-      xrdcomm=", needs thread support (rerun with --enable-thread)"
+
+   # Xrootd and its client need thread support
+   if test "x$enable_thread" = "xyes"; then
+       # Ok, now check the architecture
+       case $arch in
+       # The server builds on Linux and Solaris only (for the time being)
+       linux*)
+           if test "x$enable_xrootd" = "x"; then
+               enable_xrootd="yes"
+           fi
+           ;;
+       macos*)
+           if test "x$enable_xrootd" = "x"; then
+               enable_xrootd="yes"
+           fi
+           ;;
+       solaris*)
+              if test "x$enable_xrootd" = "x"; then
+                 enable_xrootd="yes"
+              fi
+           ;;
+       *)
+           if test "x$enable_xrootd" = "xyes"; then
+               enable_xrootd="yes"
+               xrdcomm=", but not officially supported"
+           else
+               enable_xrootd="no"
+           fi
+           ;;
+       esac
    else
-      enable_xrootd="no"
+      if test "x$enable_xrootd" = "xyes"; then
+         enable_xrootd="no"
+         xrdcomm=", needs thread support (rerun with --enable-thread)"
+      else
+         enable_xrootd="no"
+      fi
    fi
+
+   xrdcomm="$enable_xrootd$xrdcomm"
 fi
 
-echo $enable_xrootd$xrdcomm
+echo $xrdcomm
 
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
@@ -3271,6 +3285,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
+    -e "s|@xrootddir@|$xrootddir|"              \
     -e "s|@buildgl@|$enable_opengl|"            \
     -e "s|@buildhbook@|$enable_cern|"           \
     -e "s|@buildldap@|$enable_ldap|"            \

@@ -32,6 +32,12 @@ ALLLIBS      += $(NETXLIB)
 # include all dependency files
 INCLUDEFILES += $(NETXDEP)
 
+# These are undefined if using an external XROOTD distribution
+ifeq ($(XROOTDDIRI),)
+XROOTDDIRI   := $(XROOTDDIR)/src
+XROOTDDIRL   := $(XROOTDDIR)/lib
+endif
+
 # Xrootd includes
 NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 

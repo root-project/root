@@ -155,7 +155,11 @@ ifeq ($(BUILDHBOOK),yes)
 MODULES      += hbook
 endif
 ifeq ($(BUILDXRD),yes)
+ifneq ($(XROOTDDIR),)
+MODULES      += netx
+else
 MODULES      += xrootd netx
+endif
 endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += clarens
