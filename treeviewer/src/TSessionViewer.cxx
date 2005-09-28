@@ -1131,11 +1131,10 @@ void TSessionQueryFrame::OnBtnSubmit()
    fViewer->GetSessionFrame()->ResetProgressDialog(newquery->fSelectorString,
          newquery->fNbFiles, newquery->fFirstEntry, newquery->fNoEntries);
    fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
-   newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
    fViewer->GetActDesc()->fNbHistos = 0;
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
-
+      newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
       if (fViewer->GetFeedbackFrame()->IsFeedBack()) {
          Int_t i = 0;
          while (kFeedbackHistos[i]) {
@@ -1455,6 +1454,8 @@ void TSessionFeedbackFrame::Build(TSessionViewer *gui)
 
    fFeedbackChk = new TGCheckButton(frmFeed, "Feedback", 1);
    fFeedbackChk->SetState(kButtonDown);
+   fFeedbackChk->Connect("Toggled(Bool_t)", "TSessionViewer", fViewer, 
+                         "OnFeedBackToggled(Bool_t)" );
    frmFeed->AddFrame(fFeedbackChk, new TGLayoutHints(kLHintsCenterY | kLHintsLeft,
                      15, 5, 2, 2));
    AddFrame(frmFeed, new TGLayoutHints(kLHintsExpandX, 4, 4, 4, 4));
@@ -1734,6 +1735,8 @@ void TSessionViewer::Build()
    fOptionsMenu->AddEntry("Master &Histos", kOptionsStatsHist);
    fOptionsMenu->AddEntry("&Master Events", kOptionsStatsTrace);
    fOptionsMenu->AddEntry("&Slaves Events", kOptionsSlaveStatsTrace);
+   fOptionsMenu->CheckEntry(kOptionsStatsHist);
+   gEnv->SetValue("Proof.StatsHist", 1);
 
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
    fHelpMenu->AddEntry("&About ROOT...",  kHelpAbout);
@@ -1908,6 +1911,18 @@ TSessionViewer::~TSessionViewer()
 {
    Cleanup();
    delete fUserGroup;
+}
+
+//______________________________________________________________________________
+void TSessionViewer::OnFeedBackToggled(Bool_t on)
+{
+   // If user wants to see feedback histos, automatically enable the filling 
+   // of performance histograms by calling gEnv->SetValue("Proof.StatsHist",1)
+   // and checking corresponding options menu entry
+   if (on) {
+      fOptionsMenu->CheckEntry(kOptionsStatsHist);
+      gEnv->SetValue("Proof.StatsHist", 1);
+   }
 }
 
 //______________________________________________________________________________
@@ -2590,6 +2605,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if(fOptionsMenu->IsEntryChecked(kOptionsStatsHist)) {
                         fOptionsMenu->UnCheckEntry(kOptionsStatsHist);
                         gEnv->SetValue("Proof.StatsHist", 0);
+                        fFeedbackFrame->SetFeedBack(kFALSE);
                      }
                      else {
                         fOptionsMenu->CheckEntry(kOptionsStatsHist);

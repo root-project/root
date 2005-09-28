@@ -187,6 +187,7 @@ public:
    void        Build(TSessionViewer *gui);
    void        Feedback(TList *objs);
    Bool_t      IsFeedBack() const { return (fFeedbackChk->GetState() == kButtonDown); }
+   void        SetFeedBack(Bool_t on) { fFeedbackChk->SetState(on ? kButtonDown : kButtonUp); }
    TGListBox  *GetListBox() const { return fListBox; }
    TCanvas    *GetStatsCanvas() const { return fStatsCanvas; }
    void        OnLBSelected(Int_t);
@@ -522,6 +523,7 @@ public:
    Bool_t   HandleTimer(TTimer *);
    void     LogMessage(const char *msg, Bool_t all);
    void     MyHandleMenu(Int_t);
+   void     OnFeedBackToggled(Bool_t on);
    void     OnListTreeClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);
    void     QueryResultReady(char *query);
    void     DeleteQuery();
