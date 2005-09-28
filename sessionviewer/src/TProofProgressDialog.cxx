@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.16 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.17 2005/09/27 16:10:10 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -201,9 +201,9 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    Int_t    mh = ((TGFrame *) main)->GetHeight();
 
    gVirtualX->TranslateCoordinates(main->GetId(), main->GetId(),
-                          (mw - width) >> 1, (mh - height) >> 1, ax, ay, wdum);
-   fDialog->Move(ax + mw/2 , ay - mh/4);
-   fDialog->SetWMPosition(ax + mw/2, ay - mh/4);
+                          (mw - width), (mh - height) >> 1, ax, ay, wdum);
+   fDialog->Move(ax-5, ay - mh/4);
+   fDialog->SetWMPosition(ax-5, ay - mh/4);
 
    // make the message box non-resizable
    fDialog->SetWMSize(width, height);
