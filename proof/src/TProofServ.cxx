@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.107 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.108 2005/09/27 17:07:54 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2707,6 +2707,10 @@ void TProofServ::ScanPreviousQueries(const char *dir)
       if (strlen(sess) < 7 || strncmp(sess,"session",7))
          continue;
 
+      // We do not want this session at this level
+      if (strstr(sess, fSessionTag))
+         continue;
+
       // Loop over query dirs
       void *dirq = gSystem->OpenDirectory(Form("%s/%s", dir, sess));
       char *qry = 0;
@@ -2731,7 +2735,20 @@ void TProofServ::ScanPreviousQueries(const char *dir)
                      TQueryResult *qr = pqr->CloneInfo();
                      if (!fPreviousQueries)
                         fPreviousQueries = new TList;
-                     fPreviousQueries->Add(qr);
+                     if (qr->GetStatus() > TQueryResult::kRunning) {
+                        fPreviousQueries->Add(qr);
+                     } else {
+                        // (For the time being) remove a non completed
+                        // query if not owned by anybody
+                        Int_t fid = -1;
+                        TString qlock;
+                        if (LockSession(qr->GetTitle(), fid, qlock) == 0) {
+                           RemoveQuery(qr);
+                           // Unlock and remove the lock file
+                           if (fid > -1)
+                              UnlockQueryFile(fid);
+                        }
+                     }
                   }
                }
             }
@@ -2753,6 +2770,10 @@ Int_t TProofServ::LockSession(const char *sessiontag, Int_t &fid, TString &qlock
 
    fid = -1;
    qlock = "";
+
+   // We do not need to lock our own session
+   if (strstr(sessiontag, fSessionTag))
+      return 0;
 
    // Check the format
    TString stag = sessiontag;
@@ -2805,7 +2826,7 @@ Int_t TProofServ::CleanupSession(const char *sessiontag)
 
    // Query dir
    TString qdir = fQueryDir;
-   qdir.ReplaceAll(fSessionTag, sessiontag);
+   qdir.ReplaceAll(Form("session-%s", fSessionTag.Data()), sessiontag);
    Int_t idx = qdir.Index(":q");
    if (idx != kNPOS)
       qdir.Remove(idx);
@@ -2909,8 +2930,11 @@ void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
       return;
 
    // Remove the directory
-   TString qdir = Form("%s/%d", fQueryDir.Data(), qr->GetSeqNum());
-   Info("RemoveQuery", "removing directory: %s", qdir.Data());
+   TString qdir = fQueryDir;
+   qdir = qdir.Remove(qdir.Index(kPROOF_QueryDir)+strlen(kPROOF_QueryDir));
+   qdir = Form("%s/%s/%d", qdir.Data(), qr->GetTitle(), qr->GetSeqNum());
+   PDB(kGlobal, 1)
+      Info("RemoveQuery", "removing directory: %s", qdir.Data());
    gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
 
    // Remove from memory lists
@@ -3069,8 +3093,12 @@ void TProofServ::HandleArchive(TMessage *mess)
       PDB(kGlobal, 1) Info("HandleArchive",
                            "archive path for query #%d: %s",
                            qry, path.Data());
-      TFile *farc = TFile::Open(path,"UPDATE");
-      if (!(farc->IsOpen())) {
+      TFile *farc = 0;
+      if (gSystem->AccessPathName(path))
+         farc = TFile::Open(path,"NEW");
+      else
+         farc = TFile::Open(path,"UPDATE");
+      if (!farc || !(farc->IsOpen())) {
          Info("HandleArchive",
               "archive file cannot be open (%s)",path.Data());
          return;
