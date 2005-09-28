@@ -330,8 +330,8 @@ win32)
    ;;
 win32gcc)
    # Win32 with cygwin gcc
-   auxcflags="-MD"
-   auxlibs="-lm"
+   auxcflags=
+   auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
    ;;
