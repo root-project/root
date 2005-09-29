@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.181 2005/08/09 20:11:53 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.182 2005/08/29 12:05:56 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1566,8 +1566,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                         return -2;
                   }
 
+                  if (object && !useCollectionObject &&
+                      ( element->GetClassPointer() ==  TClonesArray::Class()
+                        || element->GetClassPointer()->GetCollectionProxy() ) ) 
+                  {
+                     object = kFALSE;
+                  }
                   if (object && leafinfo) {
-                     // leafinfo->fOffset += offset;
                      leafinfo->AddOffset(offset,element);
                   } else if (objarr) {
                      // This is an embedded array of objects. We can not increase the offset.
