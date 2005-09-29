@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.106 2005/09/03 00:48:25 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.107 2005/09/07 15:58:46 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -294,6 +294,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
    Int_t ret = 0;
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
+         R__LOCKGUARD2(gCINTMutex);
          gROOT->SetLineIsProcessing();
 
          G__value local_res;
@@ -387,7 +388,7 @@ Long_t TCint::Calc(const char *line, EErrorCode *error)
       gROOT->SetLineIsProcessing();
    }
 #endif
-
+   R__LOCKGUARD2(gCINTMutex);
    result = (Long_t) G__int_cast(G__calc((char *)line));
    if (error) *error = (EErrorCode)G__lasterror();
 
