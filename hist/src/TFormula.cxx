@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.102 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.103 2005/09/05 10:13:27 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2170,6 +2170,15 @@ Int_t TFormula::Compile(const char *expression)
            // to a char array:
            if (GetAction(i-2) == kDefinedString) {
               SetAction( i-2, kDefinedVariable, GetActionParam(i-2) );
+              fNval++;
+              fNstring--;
+           }
+        }
+        if (i==fNoper-1) {
+           // the i-1 element is a string not used in a string operation, let's down grade it
+           // to a char array:
+           if (GetAction(i-1) == kDefinedString) {
+              SetAction( i-1, kDefinedVariable, GetActionParam(i-1) );
               fNval++;
               fNstring--;
            }
