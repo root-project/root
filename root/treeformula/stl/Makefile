@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES)
 #  the name of the target is changed in the rules then the name should be changed accordingly in
 #  this list.
 
-TEST_TARGETS += pair  stlString
+TEST_TARGETS += embedstl pair  stlString
 #stlBrowse
 
 # Searched for Rules.mk in roottest/scripts
@@ -69,4 +69,7 @@ stlBrowse: stlBrowse.log
 	$(TestDiff)
 
 pair: pair.log
+	$(TestDiff)
+
+embedstl: embedstl.log
 	$(TestDiff)
