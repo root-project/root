@@ -1,2 +1,2 @@
-*.log *.d *.dll *.so *.exp *.lib *.pdb *.root *.def 
+*.log *.d *.dll *.so *.exp *.lib *.pdb *.root *.def *.ilk 
 Event Event.exe EventDict*
