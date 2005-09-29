@@ -3292,8 +3292,14 @@ void G__CMP2_equal(G__value *bufm1,G__value *bufm2)
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
     bufm2->obj.i = (G__doubleM(bufm2)==G__doubleM(bufm1));
-  else
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.i=G__Longlong(*bufm2) == G__Longlong(*bufm1);
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.i=G__ULonglong(*bufm2)== G__ULonglong(*bufm1);
+  } else {
     bufm2->obj.i = (bufm2->obj.i == bufm1->obj.i);
+  }
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -3307,7 +3313,12 @@ void G__CMP2_notequal(G__value *bufm1,G__value *bufm2)
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
   if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
     bufm2->obj.i = (G__doubleM(bufm2)!=G__doubleM(bufm1));
-  else
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.i=G__Longlong(*bufm2) != G__Longlong(*bufm1);
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.i=G__ULonglong(*bufm2)!= G__ULonglong(*bufm1);
+  } else
     bufm2->obj.i = (bufm2->obj.i != bufm1->obj.i);
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
