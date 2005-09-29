@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.179 2005/09/13 14:35:01 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.180 2005/09/22 07:17:33 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -932,7 +932,7 @@ void TBranchElement::BuildTitle(const char *name)
       // -its primary branchcount pointing to the branch fTracks
       // -its secondary branchcount pointing to fTracks.fNpoint
       Int_t stype = bre->GetStreamerType();
-      if (stype > 40 && stype < 55) {
+      if (stype > 40 && stype < 61) { 
          char name2[kMaxLen];
          strcpy(name2,bre->GetName());
          char *bn = strrchr(name2,'.');
