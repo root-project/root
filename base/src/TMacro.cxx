@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.3 2005/08/16 17:25:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.4 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -61,7 +61,6 @@ TMacro::TMacro(): TNamed()
    fParams = "";
 }
 
-
 //______________________________________________________________________________
 TMacro::TMacro(const char *name, const char *title)
        :TNamed(name,title)
@@ -92,14 +91,14 @@ TMacro::TMacro(const char *name, const char *title)
 //______________________________________________________________________________
 TMacro::TMacro(const TMacro &macro): TNamed(macro)
 {
-  // Copy constructor.
+   // Copy constructor.
 
-  fLines = new TList();
-  TIter next(macro.GetListOfLines());
-  TObjString *obj;
-  while ((obj = (TObjString*) next())) {
-     fLines->Add(new TObjString(obj->GetName()));
-  }
+   fLines = new TList();
+   TIter next(macro.GetListOfLines());
+   TObjString *obj;
+   while ((obj = (TObjString*) next())) {
+      fLines->Add(new TObjString(obj->GetName()));
+   }
 }
 
 //______________________________________________________________________________
@@ -191,15 +190,18 @@ void TMacro::Exec(const char *params)
 
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
-   char fname[1000];
-   sprintf(fname,"%s.Cexec",GetName());
+   TString fname = GetName();
+   fname += ".Cexec";
    SaveSource(fname);
    //disable a possible call to gROOT->Reset from the executed script
    gROOT->SetExecutingMacro(kTRUE);
    //execute script in /tmp
-   if (!params) params = fParams.Data();
-   if (strlen(params) > 0) gROOT->ProcessLine(Form(".x %s(%s)",fname,params));
-   else                    gROOT->ProcessLine(Form(".x %s",fname));
+   TString exec = ".x " + fname;
+   TString p = params;
+   if (p == "") p = fParams;
+   if (p != "")
+      exec += "(" + p + ")";
+   gROOT->ProcessLine(exec);
    //enable gROOT->Reset
    gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
@@ -264,7 +266,6 @@ Int_t TMacro::ReadFile(const char *filename)
    delete [] line;
    return nlines;
 }
-
 
 //______________________________________________________________________________
 void TMacro::SaveSource(const char *filename)
