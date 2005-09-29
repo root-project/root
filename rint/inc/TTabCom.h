@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.7 2005/08/24 12:52:08 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.8 2005/09/03 02:26:31 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -172,18 +172,18 @@ public: // enums
       /******************************************************************/
       kSYS_FileName,
 
+      // time to print prototype
+      kCXX_NewProto, // kCXX_NewProto must come before kCXX_ConstructorProto
+      kCXX_ConstructorProto, // kCXX_ConstructorProto this must come before kCXX_GlobalProto
+      kCXX_ScopeProto,
+      kCXX_DirectProto,
+      kCXX_IndirectProto,
+
       // general member access
       // should come after specific member access
       kCXX_ScopeMember,
       kCXX_DirectMember,
       kCXX_IndirectMember,
-
-      // time to print prototype
-      kCXX_ScopeProto,
-      kCXX_DirectProto,
-      kCXX_IndirectProto,
-      kCXX_NewProto, // kCXX_NewProto must come before kCXX_ConstructorProto
-      kCXX_ConstructorProto, // kCXX_ConstructorProto this must come before kCXX_GlobalProto
 
       // arbitrary global identifiers
       // should really come last
