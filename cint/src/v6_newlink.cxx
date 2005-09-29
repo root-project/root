@@ -3837,7 +3837,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffun
 #endif
 
   char *typestring;
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
   char *ptr;
 #endif
   type = ifunc->type[ifn];
@@ -3866,7 +3866,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffun
       else              isconst |= G__CONSTVAR;
    }
    typestring = G__type2string(type,tagnum,typenum,reftype,isconst);
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
    ptr = strstr(typestring, "long long");
    if (ptr) {
       memcpy(ptr, " __int64 ", strlen( " __int64 "));
@@ -3959,7 +3959,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffun
         fprintf(fp,"      {\n");
         if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
         typestring = G__type2string('u',tagnum,deftyp,0,0);
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and v7.0*/
         ptr = strstr(typestring, "long long");
         if (ptr) {
           memcpy(ptr, " __int64 ", strlen( " __int64 "));
@@ -4130,7 +4130,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc, int k)
           break;
         case 'n':
           fprintf(fp,"*(%s*)G__Longlongref(&libp->para[%d])"
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
                   ,"__int64",k);
 #else
                   ,G__type2string(type,tagnum,typenum,0,0),k);
@@ -4138,7 +4138,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc, int k)
           break;
         case 'm':
           fprintf(fp,"*(%s*)G__ULonglongref(&libp->para[%d])"
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
                   ,"unsigned __int64",k);
 #else
                   ,G__type2string(type,tagnum,typenum,0,0),k);
