@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.31 2005/09/03 02:26:31 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.32 2005/09/18 23:09:35 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1163,7 +1163,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
    //
    //////////////////////////////////////////////////////////////////
 
-   const Int_t kNotDefined = -1;
+   const Int_t kNotDefined = -2;
    static Int_t old_level = kNotDefined;
 
    if (errorLevel < 0)          // reset
@@ -1293,6 +1293,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    TString partialMatch = "";
 
    if (nMatches == 0) {
+      // Ring a bell!
       cout << "\a" << flush;
       pos = -1;
       goto done;                //* RETURN *//
@@ -1312,8 +1313,8 @@ Int_t TTabCom::Complete(const TRegexp & re,
          if (0);
          else if (className == "TMethod" || className == "TFunction") {
             TFunction *pFunc = (TFunction *) pObj;
-            if (pFunc->GetNargsOpt() == pFunc->GetNargs())
-               appendage = "()";  // all args have default values
+            if (0 == pFunc->GetNargs())
+               appendage = "()";  // no args
             else
                appendage = "("; // user needs to supply some args
          } else if (className == "TDataMember") {
@@ -1572,7 +1573,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    fLastIter = 0;
 
    // default
-   Int_t pos = -2;              // position of the first character that was changed in the buffer (needed for redrawing)
+   Int_t pos = -2;  // position of the first character that was changed in the buffer (needed for redrawing)
 
    // get the context this tab was triggered in.
    EContext_t context = DetermineContext();
@@ -1853,7 +1854,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          //        because of the context handling, but I wanted to "minimize"
          //        the changes to the current code and this seemed the best way
          //        to do it
-//         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
          TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():.]*$");
 
          IfDebug(cerr << endl);
@@ -2007,12 +2007,12 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          TClass *pClass;
          TString name;
          if (context == kCXX_NewProto) {
-            name = s3("[_a-zA-Z][_a-zA-Z0-9]* *($", 3);
+            name = s3("[_a-zA-Z][_a-zA-Z0-9:]* *($", 3);
             name.Chop();
             name.Remove(TString::kTrailing, ' ');
             // "name" should now be the name of a class
          } else {
-            name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");
+            name = s3("^[_a-zA-Z][_a-zA-Z0-9:]*");
             // "name" may now be the name of a class, object, or pointer
          }
          IfDebug(cerr << endl);
@@ -2049,7 +2049,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          TString methodName;
          if (context == kCXX_ConstructorProto || context == kCXX_NewProto) {
             // (constructor)
-            methodName = name;
+            methodName = name("[_a-zA-Z][_a-zA-Z0-9]*$");
          } else {
             // (normal member function)
             methodName = s3("[^:>\\.(]*($");
@@ -2221,24 +2221,22 @@ void TTabCom::InitPatterns()
 
    SetPattern(kROOT_Load, "gSystem *-> *Load *( *\"[^\"]*$");
 
-   SetPattern(kCXX_ScopeMember,
-              "[_a-zA-Z][_a-zA-Z0-9]* *:: *[_a-zA-Z0-9]*$");
-   SetPattern(kCXX_DirectMember,
-//              "[_a-zA-Z][_a-zA-Z0-9]* *\\. *[_a-zA-Z0-9]*$");
-              "[_a-zA-Z][_a-zA-Z0-9()]* *\\. *[_a-zA-Z0-9()]*$");  // frodo
-   SetPattern(kCXX_IndirectMember,
-//              "[_a-zA-Z][_a-zA-Z0-9]* *-> *[_a-zA-Z0-9]*$");
-              "[_a-zA-Z][_a-zA-Z0-9()]* *-> *[_a-zA-Z0-9()]*$");    // frodo
-
+   SetPattern(kCXX_NewProto, "new +[_a-zA-Z][_a-zA-Z0-9:]* *($");
+   SetPattern(kCXX_ConstructorProto,
+              "[_a-zA-Z][_a-zA-Z0-9:]* +[_a-zA-Z][_a-zA-Z0-9]* *($");
    SetPattern(kCXX_ScopeProto,
               "[_a-zA-Z][_a-zA-Z0-9]* *:: *[_a-zA-Z0-9]* *($");
    SetPattern(kCXX_DirectProto,
-              "[_a-zA-Z][_a-zA-Z0-9]* *\\. *[_a-zA-Z0-9]* *($");
+              "[_a-zA-Z][_a-zA-Z0-9()]* *\\. *[_a-zA-Z0-9]* *($");
    SetPattern(kCXX_IndirectProto,
-              "[_a-zA-Z][_a-zA-Z0-9]* *-> *[_a-zA-Z0-9]* *($");
-   SetPattern(kCXX_NewProto, "new +[_a-zA-Z][_a-zA-Z0-9]* *($");
-   SetPattern(kCXX_ConstructorProto,
-              "[_a-zA-Z][_a-zA-Z0-9]* +[_a-zA-Z][_a-zA-Z0-9]* *($");
+              "[_a-zA-Z][_a-zA-Z0-9()]* *-> *[_a-zA-Z0-9]* *($");
+
+   SetPattern(kCXX_ScopeMember,
+              "[_a-zA-Z][_a-zA-Z0-9]* *:: *[_a-zA-Z0-9]*$");
+   SetPattern(kCXX_DirectMember,
+              "[_a-zA-Z][_a-zA-Z0-9()]* *\\. *[_a-zA-Z0-9()]*$");  // frodo
+   SetPattern(kCXX_IndirectMember,
+              "[_a-zA-Z][_a-zA-Z0-9()]* *-> *[_a-zA-Z0-9()]*$");    // frodo
 
    SetPattern(kSYS_FileName, "\"[-0-9_a-zA-Z~$./]*$");
    SetPattern(kCXX_Global, "[_a-zA-Z][_a-zA-Z0-9]*$");
@@ -2331,7 +2329,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    if (0) printf("varName is [%s] with iteration [%i]\n", varName, iter);
 
    // ParseReverse will return 0 if there are no "." or "->" in the varName
-   int cut = ParseReverse(varName, strlen(varName));
+   Int_t cut = ParseReverse(varName, strlen(varName));
 
    // If it's not a "simple" variable and if there is at least one "." or "->"
    if (!varName_exists && cut != 0)
@@ -2344,6 +2342,26 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
       parentName[cut] = 0;
       if (0) printf("Parent string is [%s]\n", parentName.Data());
+
+      // We are treating here case like h->SetXTitle(gROOT->Get
+      // i.e. when the parentName has an unbalanced number of 
+      // paranthesis.
+      if (cut>2) {
+         UInt_t level = 0;
+         for(Int_t i = cut-1; i>=0; --i) {
+            switch (parentName[i]) {
+               case '(': 
+                  if (level) --level;
+                  else {  
+                     parentName = parentName(i+1,cut-i-1);
+                     i = 0;
+                  }
+                  break;
+               case ')':
+                  ++level; break;
+            }
+         }
+      }
 
       // Can be "." or "->"
       if (varName[cut] == '.') memberName = varName+cut+1;
@@ -2451,6 +2469,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    TString className = DetermineClass(varName);
 
+   Bool_t fVarIsPointer = className[className.Length() - 1] == '*';
+
    // frodo: I shouldn't have to do this, but for some reason now I have to
    //        otherwise the varptr->[TAB] won't work    :(
    if (className[className.Length()-1] == '*')
@@ -2470,11 +2490,10 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //        so I just commented out.
    //
 
-/*
-//   Bool_t varIsPointer = className[className.Length() - 1] == '*';
-   Bool_t fVarIsPointer = className[className.Length() - 1] == '*';
 
-   printf("Context is %i, fContext is %i, pointer is %i\n", context, fContext, fVarIsPointer);
+//   Bool_t varIsPointer = className[className.Length() - 1] == '*';
+
+   //printf("Context is %i, fContext is %i, pointer is %i\n", context, fContext, fVarIsPointer);
 
    if (fVarIsPointer &&
        (context == kCXX_DirectMember || context == kCXX_DirectProto)) {
@@ -2559,7 +2578,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
              " is not of pointer type. Use this operator: ." << endl;
       }
    }
-*/
+
    return new TClass(className);
 }
 
