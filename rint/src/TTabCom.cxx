@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.32 2005/09/18 23:09:35 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.33 2005/09/29 08:27:58 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -2343,9 +2343,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       parentName[cut] = 0;
       if (0) printf("Parent string is [%s]\n", parentName.Data());
 
-      // We are treating here case like h->SetXTitle(gROOT->Get
-      // i.e. when the parentName has an unbalanced number of 
-      // paranthesis.
+      // We are treating here cases like h->SetXTitle(gROOT->Get<TAB>
+      // i.e. when the parentName has an unbalanced number of paranthesis.
       if (cut>2) {
          UInt_t level = 0;
          for(Int_t i = cut-1; i>=0; --i) {
