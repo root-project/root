@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.71 2005/08/31 19:42:21 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.72 2005/09/13 12:26:58 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -800,19 +800,16 @@ TObject *TDirectory::Get(const char *namecycle)
    Short_t  cycle;
    char     name[kMaxLen];
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
    DecodeNameCycle(namecycle, name, cycle);
    char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
          name[i] = 0;
-         cd(name);
+         TDirectory* dirToSearch=GetDirectory(name);
          namobj = name + i + 1;
          name[i] = '/';
-         break;
+         return dirToSearch->Get(namobj);
       }
    }
 
@@ -820,13 +817,12 @@ TObject *TDirectory::Get(const char *namecycle)
 //                        ========================
    TObject *idcur = fList->FindObject(namobj);
    if (idcur) {
-      if (idcur==gDirectory && strlen(namobj)!=0) {
+      if (idcur==this && strlen(namobj)!=0) {
          // The object has the same name has the directory and
          // that's what we picked-up!  We just need to ignore
          // it ...
          idcur = 0;
       } else if (cycle == 9999) {
-         cursav->cd();
          return idcur;
       } else {
          if (idcur->InheritsFrom(TCollection::Class()))
@@ -839,16 +835,16 @@ TObject *TDirectory::Get(const char *namecycle)
 //*-*---------------------Case of Key---------------------
 //                        ===========
    TKey *key;
-   TIter nextkey(gDirectory->GetListOfKeys());
+   TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
      if (strcmp(namobj,key->GetName()) == 0) {
         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+           TDirectory::TContext ctxt(this);
            idcur = key->ReadObj();
            break;
         }
      }
    }
-   cursav->cd();
 
    return idcur;
 }
@@ -904,34 +900,30 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
    Short_t  cycle;
    char     name[kMaxLen];
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
    DecodeNameCycle(namecycle, name, cycle);
    char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
          name[i] = 0;
-         cd(name);
+         TDirectory* dirToSearch=GetDirectory(name);
          namobj = name + i + 1;
          name[i] = '/';
-         break;
+         return dirToSearch->GetObjectChecked(namobj, expectedClass);
       }
    }
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   if (expectedClass->InheritsFrom(TObject::Class())) {
+   if (expectedClass==0 || expectedClass->InheritsFrom(TObject::Class())) {
       TObject *objcur = fList->FindObject(namobj);
       if (objcur) {
-         if (objcur==gDirectory && strlen(namobj)!=0) {
+         if (objcur==this && strlen(namobj)!=0) {
             // The object has the same name has the directory and
             // that's what we picked-up!  We just need to ignore
             // it ...
             objcur = 0;
          } else if (cycle == 9999) {
-            cursav->cd();
             // Check type
             if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return 0;
             else return objcur;
@@ -948,16 +940,16 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
 //                        ===========
    void *idcur = 0;
    TKey *key;
-   TIter nextkey(gDirectory->GetListOfKeys());
+   TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
      if (strcmp(namobj,key->GetName()) == 0) {
         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+           TDirectory::TContext ctxt(this);
            idcur = key->ReadObjectAny(expectedClass);
            break;
         }
      }
    }
-   cursav->cd();
 
    return idcur;
 }
@@ -1048,12 +1040,10 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       return 0;
    }
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this); 
 
    TDirectory *newdir = new TDirectory(name, title);
 
-   cursav->cd();
    return newdir;
 }
 
@@ -1145,8 +1135,7 @@ void TDirectory::Purge(Short_t)
 
    if (!IsWritable()) return;
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    TKey  *key;
    TIter  prev(GetListOfKeys(), kIterBackward);
@@ -1164,7 +1153,6 @@ void TDirectory::Purge(Short_t)
       gFile->WriteFree();            // Write new free segments list
       gFile->WriteHeader();          // Write new file header
    }
-   cursav->cd();
 }
 
 //______________________________________________________________________________
@@ -1182,8 +1170,7 @@ void TDirectory::ReadAll(Option_t *)
    // If an object is already in memory, the memory copy is deleted
    // and the object is again read from the file.
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    TKey *key;
    TIter next(GetListOfKeys());
@@ -1193,7 +1180,6 @@ void TDirectory::ReadAll(Option_t *)
       key->ReadObj();
    }
 
-   cursav->cd();
 }
 
 //______________________________________________________________________________
@@ -1221,8 +1207,7 @@ Int_t TDirectory::ReadKeys()
 //  the latest updates of a file being modified by another process
 //  as it is typically the case in a data acquisition system.
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    fKeys->Delete();
    //In case directory was updated by another process, read new
@@ -1288,7 +1273,6 @@ Int_t TDirectory::ReadKeys()
       delete headerkey;
    }
 
-   cursav->cd();
    return nkeys;
 }
 
@@ -1307,8 +1291,7 @@ void TDirectory::Save()
 //*-*-*-*-*-*-*-*-*-*Save recursively all directory keys and headers-*-*-*-*-*
 //*-*                ===============================================
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    SaveSelf();
 
@@ -1323,7 +1306,6 @@ void TDirectory::Save()
          }
       }
    }
-   cursav->cd();
 }
 
 //______________________________________________________________________________
@@ -1370,8 +1352,7 @@ void TDirectory::SetWritable(Bool_t writable)
 {
 //  Set the new value of fWritable recursively
 
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    fWritable = writable;
 
@@ -1386,7 +1367,6 @@ void TDirectory::SetWritable(Bool_t writable)
          }
       }
    }
-   cursav->cd();
 }
 
 
@@ -1480,8 +1460,7 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    // The directory header info is rewritten on the directory header record.
 
    if (!IsWritable()) return 0;
-   TDirectory *cursav = gDirectory;
-   cd();
+   TDirectory::TContext ctxt(this);
 
    // Loop on all objects (including subdirs)
    TIter next(fList);
@@ -1492,7 +1471,6 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    }
    SaveSelf(kTRUE);   // force save itself
 
-   cursav->cd();
    return nbytes;
 }
 
@@ -1552,7 +1530,8 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  The function returns the total number of bytes written to the directory.
    //  It returns 0 if the object cannot be written.
 
-   TDirectory::TContext ctxt(gDirectory, this);
+   TDirectory::TContext ctxt(this);
+
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
@@ -1661,7 +1640,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    // An alternative is to call the function WriteObjectAny above.
    // see TDirectory::WriteObject for comments
 
-   TDirectory::TContext ctxt(gDirectory, this);
+   TDirectory::TContext ctxt(this);
 
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
