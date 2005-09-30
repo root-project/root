@@ -1,7 +1,6 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.3 2005/02/10 12:47:27 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.4 2005/09/18 12:44:04 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
-#include "config.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -30,12 +29,13 @@ krb5_ccache TKSocket::fgCCDef = 0;
 krb5_principal TKSocket::fgClient = 0;
 
 
+//______________________________________________________________________________
 TKSocket::TKSocket(TSocket *s)
    : fSocket(s), fServer(0), fAuthContext(0)
 {
 }
 
-
+//______________________________________________________________________________
 TKSocket::~TKSocket()
 {
    krb5_free_principal(fgContext, fServer);
@@ -43,7 +43,7 @@ TKSocket::~TKSocket()
    delete fSocket;
 }
 
-
+//______________________________________________________________________________
 TKSocket *TKSocket::Connect(const char *server, Int_t port)
 {
    Int_t rc;
@@ -120,7 +120,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
    return ks;
 }
 
-
+//______________________________________________________________________________
 Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
 {
    Int_t rc;
@@ -183,7 +183,7 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    return rc;
 }
 
-
+//______________________________________________________________________________
 Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
 {
    Desc_t desc;
