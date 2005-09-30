@@ -2643,7 +2643,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     krb5mit=no
     krb5lib=""
     krb5libdir=""
-    check_library libk5crypto "no" "$krb5libdirorg" $krb5libdirs
+    check_library libk5crypto "$enable_shared" "$krb5libdirorg" $krb5libdirs
     if test ! "x$found_lib" = "x" ; then
 	krb5mit=yes
         krb5lib=$found_lib
@@ -2652,23 +2652,14 @@ if test ! "x$enable_krb5" = "xno" ; then
     message "Checking whether we're using MIT Kerberos"
     echo "$krb5mit"
 
-    check_library libkrb5 "no" "$krb5libdirorg" $krb5libdirs
+    check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
     if test "x$found_lib" = "x" ; then
 	enable_krb5=no
     else
 	# The order is important here
 	krb5lib="$found_lib $krb5lib"
 	krb5libdir="$found_dir $krb5libdir"
-	if test "x$krb5mit" = "xyes" ; then
-	    # check_library libss "no" "$krb5libdirorg" $krb5libdirs
-	    # if test "x$found_lib" = "x" ; then
-	    #    enable_krb5=no
-	    # else
-	    #    krb5lib="$krb5lib $found_lib"
-	    #    krb5libdir="$krb5libdir $found_dir"
-	    # fi
-	    :
-	elif test "x$cryptolib" = "x" ; then
+	if test "x$cryptolib" = "x" ; then
             check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
                           $krb5libdirs
             cryptolib=$found_lib
@@ -2798,9 +2789,11 @@ fi
 message "Checking whether to build libMathMore"
 if test "x$enable_mathmore" = "xyes" || test ! "x$MATHMORE" = "x"; then
     enable_mathmore="yes"
+    hasmathmore="define"
     echo "yes"
 else
     enable_mathmore=""
+    hasmathmore="undef"
     echo "no"
 fi
 
@@ -3209,6 +3202,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@krb5lib@|$krb5lib|"                  \
     -e "s|@krb5libdir@|$krb5libdir|"            \
     -e "s|@krb5extracflags@|$krb5extracflags|"  \
+    -e "s|@krb5init@|$krb5init|"                \
     -e "s|@ldapincdir@|$ldapincdir|"            \
     -e "s|@ldaplib@|$ldaplib|"                  \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
@@ -3342,9 +3336,8 @@ sed \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@setresuid@|$setresuid|"         \
-    -e "s|@krb5init@|$krb5init|"           \
     -e "s|@configoptions@|$configoptions|" \
-    -e "s|@hasmathmore@|$enable_mathmore|" \
+    -e "s|@hasmathmore@|$hasmathmore|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 echo "done"

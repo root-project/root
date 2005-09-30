@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.27 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.28 2005/09/18 12:44:04 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -35,8 +35,6 @@
  * or implied warranty.
  *
  */
-
-#include "config.h"
 
 #include <errno.h>
 #include <signal.h>

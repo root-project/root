@@ -15,9 +15,7 @@
 #define CINTINCDIR    "@cintincdir@"
 #endif
 
-#@setresuid@ HAS_SETRESUID  /**/
-
-#define R__KRB5INIT   "@krb5init@"
+#@setresuid@ R__HAS_SETRESUID   /**/
+#@hasmathmore@ R__HAS_MATHMORE   /**/
 
 #define R__CONFIGUREOPTIONS   "@configoptions@"
-#define R__HASMATHMORE   "@hasmathmore@"

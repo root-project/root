@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.87 2005/09/02 20:21:08 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.88 2005/09/05 13:37:02 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -228,7 +228,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #else
-#if defined(linux) && !defined(HAS_SETRESUID)
+#if defined(linux) && !defined(R__HAS_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);
@@ -271,7 +271,7 @@ static std::string gTmpDir = "/tmp";
 
 //
 // Local global vars
-static int gAuthProtocol = -1;  // Protocol used fro a successful authentication 
+static int gAuthProtocol = -1;  // Protocol used fro a successful authentication
 static char gBufOld[kMAXRECVBUF] = {0}; // msg sync for old client (<=3.05/07)
 static bool gCheckHostsEquiv = 1;
 static int gClientOld = 0;              // msg sync for old client (<=3.05/07)
