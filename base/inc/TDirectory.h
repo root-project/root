@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.28 2005/07/21 20:52:25 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.29 2005/09/23 13:04:53 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 class TBrowser;
 class TKey;
 class TFile;
+
+R__EXTERN TDirectory *gDirectory;
 
 class TDirectory : public TNamed {
 
@@ -80,6 +82,12 @@ public:
    public:
       TContext(TDirectory* previous, TDirectory* newCurrent) 
          : fPrevious(previous)
+      {
+         // Store the current directory so we can restore it
+         // later and cd to the new directory.
+         if ( newCurrent ) newCurrent->cd();
+      } 
+      TContext(TDirectory* newCurrent) : fPrevious(gDirectory)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -176,8 +184,6 @@ public:
 
    ClassDef(TDirectory,4)  //Describe directory structure in memory
 };
-
-R__EXTERN TDirectory   *gDirectory;
 
 #endif
 
