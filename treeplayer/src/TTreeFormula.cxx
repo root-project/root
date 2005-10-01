@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.182 2005/08/29 12:05:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.183 2005/09/29 08:36:30 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2691,7 +2691,14 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
          // holder.
          if (branchcur==((TBranchElement*)branchcur)->GetMother()
              || !leafcur || (!leafcur->IsOnTerminalBranch()) ) {
-            clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+            TBranchElement *branchEl = (TBranchElement *)branch;
+            TStreamerElement* element = (TStreamerElement*)
+               branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+            if (element->IsaPointer()) {
+               clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+            } else {
+               clones = (TClonesArray*)((TBranchElement*)branchcur)->GetAddress();
+            }
          }
          if (clones==0) {
             TBranch *branchcur = branch;
