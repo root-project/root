@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake*
+CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake* test.root *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += cscan gaus aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean \
+TEST_TARGETS += functca cscan gaus aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean \
 	templateBase
 
 # adjust the location of Rules.mk as needed.
@@ -64,4 +64,9 @@ gaus: gaus.log
 	$(TestDiff)
 
 cscan: cscan.clog
+	$(TestDiff)
+
+functca.log: EventTcaMember_cc.$(DllSuf)
+
+functca: functca.log
 	$(TestDiff)
