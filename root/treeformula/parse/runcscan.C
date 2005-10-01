@@ -12,11 +12,12 @@ TTree *create() {
    charge[1] = -2;
    charge[2] = 2;
    tree->Fill();
+   tree->ResetBranchAddresses(); 
    return tree;
 }
 
 int runcscan() {
-   static auto_ptr<TTree> p( create() );
+   TTree *p = create(); 
    p->Scan("charge*1.0:1.0*charge","","colsize=13");
    return 0;
 }
