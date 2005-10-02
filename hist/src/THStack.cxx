@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.35 2005/03/08 17:43:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.36 2005/09/05 10:02:38 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -527,6 +527,8 @@ void THStack::Modified()
    fStack->Delete();
    delete fStack;
    fStack = 0;
+   delete fHistogram;
+   fHistogram = 0;
 }
 
 //______________________________________________________________________________
