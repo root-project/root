@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.70 2005/09/04 11:50:47 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.71 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -827,7 +827,7 @@ void TGeoPainter::Paint(Option_t *option)
       }
       fGeoManager->CdTop();
       TGeoNode *top = fGeoManager->GetTopNode();
-      PaintNode(top,option);
+//      PaintNode(top,option);
       if (fGeoManager->IsDrawingExtra()) {
          // loop the list of physical volumes
          TObjArray *nodeList = fGeoManager->GetListOfPhysicalNodes();
@@ -838,7 +838,10 @@ void TGeoPainter::Paint(Option_t *option)
             node = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
             PaintPhysicalNode(node, option);
          }
-      }      
+      } else {
+         PaintNode(top,option);
+      }   
+              
       
       // If we are drawing into the pad, then the view needs to be
       // set to perspective
@@ -1085,6 +1088,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
    if (!node->IsVisibleFull()) {
       // Paint only last node in the branch
       vcrt  = node->GetVolume();
+      if (!strstr(option,"range")) ((TAttLine*)vcrt)->Modify(); 
       shape = vcrt->GetShape();
       *matrix = node->GetMatrix();
       fGeoManager->SetMatrixReflection(matrix->IsReflection());
@@ -1097,17 +1101,18 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
          vcrt->SetLineWidth(node->GetLineWidth());
          vcrt->SetLineStyle(node->GetLineStyle());
          ((TAttLine*)vcrt)->Modify(); 
-         shape->Paint(option);
+         PaintShape(*shape,option);
          vcrt->SetLineColor(col);
          vcrt->SetLineWidth(wid);
          vcrt->SetLineStyle(sty);
       } else {    
-         shape->Paint(option);
+         PaintShape(*shape,option);
       }
    } else {
       // Paint full branch, except top node
       for (i=1;i<=level; i++) {
          vcrt  = node->GetVolume(i);
+         if (!strstr(option,"range")) ((TAttLine*)vcrt)->Modify(); 
          shape = vcrt->GetShape();
          *matrix = node->GetMatrix(i);
          fGeoManager->SetMatrixReflection(matrix->IsReflection());
@@ -1120,12 +1125,12 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
             vcrt->SetLineWidth(node->GetLineWidth());
             vcrt->SetLineStyle(node->GetLineStyle());
             ((TAttLine*)vcrt)->Modify();
-            shape->Paint(option);
+            PaintShape(*shape,option);
             vcrt->SetLineColor(col);
             vcrt->SetLineWidth(wid);
             vcrt->SetLineStyle(sty);
-         } else {     
-            shape->Paint(option);
+         } else {  
+            PaintShape(*shape,option);
          }   
       }
    }      

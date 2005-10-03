@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.126 2005/09/06 16:45:48 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.127 2005/09/16 12:11:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2004,6 +2004,7 @@ Bool_t TGeoManager::GotoSafeLevel()
       TGeoHMatrix *matrix;
       while (nmany) {
          mother = GetMother(up);
+         if (!mother) return kTRUE;
          mup = mother;
          imother = up+1;
          while (mup->IsOffset()) mup = GetMother(imother++);
