@@ -1069,9 +1069,12 @@ void TSessionQueryFrame::OnBtnFinalize()
       gPad->SetEditable(kFALSE);
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       if (!item) return;
-      TQueryDescription *query = (TQueryDescription *)item->GetUserData();
-      fViewer->GetActDesc()->fProof->Finalize(query->fReference);
-      UpdateButtons(query);
+      TObject *obj = (TObject *)item->GetUserData();
+      if (obj->IsA() == TQueryDescription::Class()) {
+         TQueryDescription *query = (TQueryDescription *)obj;
+         fViewer->GetActDesc()->fProof->Finalize(query->fReference);
+         UpdateButtons(query);
+      }
       gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kPointer));
    }
 }
@@ -1092,7 +1095,10 @@ void TSessionQueryFrame::OnBtnShowLog()
 {
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
-   TQueryDescription *query = (TQueryDescription *)item->GetUserData();
+   TObject *obj = (TObject *)item->GetUserData();
+   if (obj->IsA() != TQueryDescription::Class())
+      return;
+   TQueryDescription *query = (TQueryDescription *)obj;
    fViewer->ShowLog(query->fReference.Data());
 }
 
@@ -1104,8 +1110,11 @@ void TSessionQueryFrame::OnBtnRetrieve()
       gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kWatch));
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       if (!item) return;
-      TQueryDescription *query = (TQueryDescription *)item->GetUserData();
-      fViewer->GetActDesc()->fProof->Retrieve(query->fReference);
+      TObject *obj = (TObject *)item->GetUserData();
+      if (obj->IsA() == TQueryDescription::Class()) {
+         TQueryDescription *query = (TQueryDescription *)obj;
+         fViewer->GetActDesc()->fProof->Retrieve(query->fReference);
+      }
       gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kPointer));
    }
 }
@@ -1127,7 +1136,10 @@ void TSessionQueryFrame::OnBtnSubmit()
    Long64_t id = 0;
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
-   TQueryDescription *newquery = (TQueryDescription *)item->GetUserData();
+   TObject *obj = (TObject *)item->GetUserData();
+   if (obj->IsA() != TQueryDescription::Class())
+      return;
+   TQueryDescription *newquery = (TQueryDescription *)obj;
    fViewer->GetSessionFrame()->ResetProgressDialog(newquery->fSelectorString,
          newquery->fNbFiles, newquery->fFirstEntry, newquery->fNoEntries);
    fViewer->GetSessionFrame()->SetStartTime(gSystem->Now());
@@ -1224,7 +1236,10 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
 
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
-   TQueryDescription *query = (TQueryDescription *)item->GetUserData();
+   TObject *obj = (TObject *)item->GetUserData();
+   if (obj->IsA() != TQueryDescription::Class())
+      return;
+   TQueryDescription *query = (TQueryDescription *)obj;
    if (desc != query) return;
    switch (desc->fStatus) {
 
@@ -1943,8 +1958,11 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    }
    else if (entry->GetParent()->GetParent() == 0) {   // Server
       if (entry->GetUserData()) {
-         fServerFrame->Update((TSessionDescription*)entry->GetUserData());
-         fActDesc = (TSessionDescription*)entry->GetUserData();
+         obj = (TObject *)entry->GetUserData();
+         if (obj->IsA() != TSessionDescription::Class())
+            return;
+         fServerFrame->Update((TSessionDescription *)obj);
+         fActDesc = (TSessionDescription*)obj;
          if (fActDesc->fProof && fActDesc->fProof->IsValid()) {
             fActDesc->fProof->cd();
             msg.Form("PROOF Cluster %s ready", fActDesc->fName.Data());
@@ -1974,8 +1992,14 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fFeedbackFrame->OnLBSelected(0);
    }
    else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
-      fActDesc = (TSessionDescription*)entry->GetParent()->GetUserData();
-      fActDesc->fActQuery = (TQueryDescription*)entry->GetUserData();
+      obj = (TObject *)entry->GetParent()->GetUserData();
+      if (obj->IsA() == TSessionDescription::Class()) {
+         fActDesc = (TSessionDescription *)obj;
+      }
+      obj = (TObject *)entry->GetUserData();
+      if (obj->IsA() == TQueryDescription::Class()) {
+         fActDesc->fActQuery = (TQueryDescription *)obj;
+      }
       fQueryFrame->UpdateInfos();
       fQueryFrame->UpdateButtons(fActDesc->fActQuery);
       if (fActFrame != fQueryFrame) {
@@ -1985,22 +2009,26 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       }
    }
    else {      // a list (input, output, feedback
-      fActDesc = (TSessionDescription*)entry->GetParent()->GetParent()->GetUserData();
-      fActDesc->fActQuery = (TQueryDescription*)entry->GetParent()->GetUserData();
-
-      desc = (TQueryDescription *)entry->GetParent()->GetUserData();
-      if (desc) {
+      obj = (TObject *)entry->GetParent()->GetParent()->GetUserData();
+      if (obj->IsA() == TSessionDescription::Class()) {
+         fActDesc = (TSessionDescription *)obj;
+      }
+      obj = (TObject *)entry->GetParent()->GetUserData();
+      if (obj->IsA() == TQueryDescription::Class()) {
+         fActDesc->fActQuery = (TQueryDescription *)obj;
+      }
+      if (fActDesc->fActQuery) {
          fInputFrame->RemoveAll();
          fOutputFrame->RemoveAll();
-         if (desc->fResult) {
-            objlist = desc->fResult->GetOutputList();
+         if (fActDesc->fActQuery->fResult) {
+            objlist = fActDesc->fActQuery->fResult->GetOutputList();
             if (objlist) {
                TIter nexto(objlist);
                while ((obj = (TObject *) nexto())) {
                   fOutputFrame->AddObject(obj);
                }
             }
-            objlist = desc->fResult->GetInputList();
+            objlist = fActDesc->fActQuery->fResult->GetInputList();
             if (objlist) {
                TIter nexti(objlist);
                while ((obj = (TObject *) nexti())) {
@@ -2329,7 +2357,7 @@ void TSessionViewer::CleanupSession()
    TObject *obj = (TObject *)item->GetUserData();
    if (obj->IsA() != TQueryDescription::Class()) return;
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid()) return;
-   TQueryDescription *query = (TQueryDescription *)item->GetUserData();
+   TQueryDescription *query = (TQueryDescription *)obj;
    TString m;
    m.Form("Are you sure to cleanup the session \"%s::%s\"",
            fActDesc->fAddress.Data(), fActDesc->fName.Data());
@@ -2351,7 +2379,7 @@ void TSessionViewer::DeleteQuery()
    if (!item) return;
    TObject *obj = (TObject *)item->GetUserData();
    if (obj->IsA() != TQueryDescription::Class()) return;
-   TQueryDescription *query = (TQueryDescription *)item->GetUserData();
+   TQueryDescription *query = (TQueryDescription *)obj;
    TString m;
    Int_t result = 0;
 

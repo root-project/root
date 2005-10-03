@@ -580,6 +580,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->AddItem(item,
          newquery->fQueryName, fViewer->GetQueryConPict(), fViewer->GetQueryConPict());
       item2->SetUserData(newquery);
+      fViewer->GetSessionHierarchy()->OpenItem(item);
       fViewer->GetSessionHierarchy()->ClearHighlighted();
       fViewer->GetSessionHierarchy()->HighlightItem(item2);
       fViewer->GetSessionHierarchy()->SetSelected(item2);
