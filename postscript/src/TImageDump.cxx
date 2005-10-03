@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.10 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.11 2005/09/02 10:16:13 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -413,6 +413,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? gStipples[fasi] : 0;
 
          if (!line && fFillStyle) {
+            if (!fcol) return;
             if (n < 5) {
                fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
             } else {
@@ -420,6 +421,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
             }          
          }
          if (line || !fFillStyle || stipple) {
+            if (!lcol) return;
             fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
          }
          if (del) delete [] pt;
