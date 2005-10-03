@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.40 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.41 2005/09/05 16:20:23 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -375,14 +375,38 @@ Bool_t TGListTree::HandleButton(Event_t *event)
 
    if (event->fType == kButtonPress) {
       if ((item = FindItem(event->fY)) != 0) {
-         if ((event->fCode == kButton1) && (item->HasCheckBox())) {
-            if ((event->fX < (item->fXtext - Int_t(item->fPicWidth)) +
-                              Int_t(item->fCheckedPic->GetWidth()) - 4) &&
-                (event->fX > (item->fXtext - Int_t(item->fPicWidth)))) {
+         if (event->fCode == kButton1) {
+            Int_t minx, maxx;
+            Int_t minxchk = 0, maxxchk = 0;
+            if (item->HasCheckBox()) {
+               minxchk = (item->fXtext - Int_t(item->fPicWidth));
+               maxxchk = (item->fXtext - Int_t(item->fPicWidth)) +
+                       Int_t(item->fCheckedPic->GetWidth()) - 4;
+               maxx = maxxchk - 8;
+               minx = minxchk - 16;
+            }
+            else {
+               maxx = (item->fXtext - Int_t(item->fPicWidth)) - 8;
+               minx = (item->fXtext - Int_t(item->fPicWidth)) - 16;
+            }
+            if ((item->HasCheckBox()) && (event->fX < maxxchk) && 
+               (event->fX > minxchk)) {
                fLastY = event->fY;
                ToggleItem(item);
                UpdateChecked(item, kTRUE);
                Checked((TObject *)item->GetUserData(), item->IsChecked());
+               return kTRUE;
+            }
+            if ((event->fX < maxx) && (event->fX > minx)) {
+               ClearViewPort();
+               item->fOpen = !item->fOpen;
+               if (item != fSelected) {
+                  if (fSelected) fSelected->fActive = kFALSE;
+                  UnselectAll(kTRUE);
+                  fSelected = item;
+                  HighlightItem(item, kTRUE, kTRUE);
+               }
+               fClient->NeedRedraw(this);
                return kTRUE;
             }
          }
