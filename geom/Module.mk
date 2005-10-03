@@ -29,8 +29,8 @@ GEOMH1       := TGeoAtt.h TGeoBoolNode.h \
                 TGeoPara.h TGeoTube.h TGeoTorus.h TGeoSphere.h \
                 TGeoEltu.h TGeoHype.h TGeoCone.h TGeoPcon.h \
                 TGeoPgon.h TGeoArb8.h TGeoTrd1.h TGeoTrd2.h \
-                TGeoManager.h TGeoCompositeShape.h TGeoShapeAssembly.h TGeoScaledShape.h \
-                TVirtualGeoPainter.h TVirtualGeoTrack.h \
+                TGeoManager.h TGeoCompositeShape.h TGeoShapeAssembly.h \
+                TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h \
 		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h

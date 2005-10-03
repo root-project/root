@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.4 2005/09/18 12:44:04 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.5 2005/09/30 09:10:56 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #include <stdlib.h>
@@ -56,7 +56,6 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
          return 0;
       }
 
-
       rc = krb5_cc_default(fgContext, &fgCCDef);
       if (rc != 0) {
          ::Error("TKSocket::Connect","while getting default credential cache (%d), %s",
@@ -102,11 +101,11 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
 
    int sock = ks->fSocket->GetDescriptor();
    rc = krb5_sendauth(fgContext, &ks->fAuthContext, (krb5_pointer) &sock,
-                           "KRB5_TCP_Python_v1.0", fgClient, ks->fServer,
-                           AP_OPTS_MUTUAL_REQUIRED,
-                           &cksum_data,
-                           0,           /* no creds, use ccache instead */
-                           fgCCDef, &err_ret, &rep_ret, NULL);
+                      "KRB5_TCP_Python_v1.0", fgClient, ks->fServer,
+                      AP_OPTS_MUTUAL_REQUIRED,
+                      &cksum_data,
+                      0,           /* no creds, use ccache instead */
+                      fgCCDef, &err_ret, &rep_ret, NULL);
 
    delete [] cksum_data.data;
 
@@ -156,18 +155,18 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    krb5_data out;
    switch (type) {
    case kNone:
-         buf = enc.data;
-         rc = enc.length;
-         break;
+      buf = enc.data;
+      rc = enc.length;
+      break;
    case kSafe:
-         rc = krb5_rd_safe(fgContext, fAuthContext, &enc, &out, 0);
-         break;
+      rc = krb5_rd_safe(fgContext, fAuthContext, &enc, &out, 0);
+      break;
    case kPriv:
-         rc = krb5_rd_priv(fgContext, fAuthContext, &enc, &out, 0);
-         break;
+      rc = krb5_rd_priv(fgContext, fAuthContext, &enc, &out, 0);
+      break;
    default:
-         Error("BlockWrite","unknown encoding type (%d)", type);
-         return -1;
+      Error("BlockWrite","unknown encoding type (%d)", type);
+      return -1;
    }
 
    if (type != kNone) {
@@ -195,18 +194,18 @@ Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
 
    switch (type) {
    case kNone:
-         enc.data = in.data;
-         enc.length = in.length;
-         break;
+      enc.data = in.data;
+      enc.length = in.length;
+      break;
    case kSafe:
-         rc = krb5_mk_safe(fgContext, fAuthContext, &in, &enc, 0);
-         break;
+      rc = krb5_mk_safe(fgContext, fAuthContext, &in, &enc, 0);
+      break;
    case kPriv:
-         rc = krb5_mk_priv(fgContext, fAuthContext, &in, &enc, 0);
-         break;
+      rc = krb5_mk_priv(fgContext, fAuthContext, &in, &enc, 0);
+      break;
    default:
-         Error("BlockWrite","unknown encoding type (%d)", type);
-         return -1;
+      Error("BlockWrite","unknown encoding type (%d)", type);
+      return -1;
    }
 
    desc.fLength = htons(enc.length);
