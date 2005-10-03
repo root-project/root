@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.3 2005/10/03 15:19:35 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -104,23 +104,26 @@ const char * TGLSAViewer::fgHelpText = "\
      You can edit object's location and stretch it by entering\n\
      desired values in respective number entry controls.\n\n"
 "     CLIPPING\n\n\
-     Select a clip type: None, Plane, Box\n\
-     For Plane & Box the lower space shows the relevant parameters\n\
-     \tPlane: Equation coefficients of form - aX + bY + cZ + d = 0\n\
+     Select a 'Clip Type': None, Plane, Box\n\n\
+     For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
+     \tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
      \tBox: Center X/Y/Z and Length X/Y/Z\n\n\
-     For Box you can check the 'Show / Edit' checkbox to show the box\n\
-     in light blue in viewer. This also attaches the current\n\
-     manipulator to the box - enabling direct editing.\n\n\
-     MANIPULATORS\n\
-     A widget attached to a the select object - allowing direct\n\
-     manipulation of the object with respect to it's local axes.\n\n\
-     \tType\t\tWidget Style\t\tKey\n\
-     \t----\t\t------------\t\t---\n\
-     \tTranslation\tLocal axes with arrows\tv\n\
-     \tScale\t\tLocal axes with boxes\tx\n\
-     \tRotate\t\tLocal axes rings\tc NOT IMPLEMENTED YET\n\n\
-     Rollover the local axis widget component (red/green/blue)\n\
-     which turns yellow (active). Left click/drag on this to adjust.\n";
+     For Box checking the 'Show / Edit' checkbox shows the clip box\n\
+     (in light blue) in viewer. It also attaches the current\n\
+     manipulator to the box - enabling direct editing in viewer.\n\n\
+     MANIPULATORS\n\n\
+     A widget attached to the selected object - allowing direct\n\
+     manipulation of the object with respect to its local axes.\n\
+     There are three modes, toggled with keys:\n\
+     \tMode\t\tWidget Component Style\t\tKey\n\
+     \t----\t\t----------------------\t\t---\n\
+     \tTranslation\tLocal axes with arrows\t\tv\n\
+     \tScale\t\tLocal axes with boxes\t\tx\n\
+     \tRotate\t\tLocal axes rings\t\tc NOT IMPLEMENTED YET\n\n\
+     Each widget has three axis components - red (X), green (Y) and\n\
+     blue (Z). The component turns yellow, indicating an active state,\n\
+     when the mouse is moved over it. Left click and drag on the active\n\
+     component to adjust the objects translation, scale or rotation.\n";
 
 ClassImp(TGLSAViewer)
 
