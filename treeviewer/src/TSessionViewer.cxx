@@ -1948,7 +1948,6 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    TList *objlist;
    TObject *obj;
    TString msg;
-   TQueryDescription *desc;
    if (entry->GetParent() == 0) {  // PROOF
       if (fActFrame != fServerFrame) {
          fV2->HideFrame(fActFrame);
