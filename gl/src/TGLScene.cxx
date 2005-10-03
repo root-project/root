@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.18 2005/08/26 07:13:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.17 2005/08/16 15:59:47 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -19,6 +19,7 @@
 #include "TGLPhysicalShape.h"
 #include "TGLStopwatch.h"
 #include "TGLDisplayListCache.h"
+#include "TGLClip.h"
 #include "TGLIncludes.h"
 #include "TError.h"
 #include "TString.h"
@@ -248,33 +249,152 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 
 //______________________________________________________________________________
 //TODO: Merge axes flag and LOD into general draw flag
-UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLOD, Double_t timeout)
+void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+                    Double_t timeout, const TGLClip * clip)
 {
-   UInt_t opaqueDrawn = 0;
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::Draw", "expected Draw or Select Lock");
    }
 
-   void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
+   // Reset debug draw stats
+   ResetDrawStats();
 
+   // Sort the draw list if required
+   if (!fDrawListValid) {
+      SortDrawList();
+   }
+
+   // Setup GL for current draw style - fill, wireframe, outline
+   // Any GL modifications need to be defered until drawing time - 
+   // to ensure we are in correct thread/context under Windows
+   // TODO: Could detect change and only mod if changed for speed
+   switch (style) {
+      case (kFill): {
+         glEnable(GL_LIGHTING);
+         glEnable(GL_CULL_FACE);
+         glPolygonMode(GL_FRONT, GL_FILL);
+         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
+         break;
+      }
+      case (kWireFrame): {
+         glDisable(GL_CULL_FACE);
+         glDisable(GL_LIGHTING);
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
+         break;
+      }
+      case (kOutline): {
+         glEnable(GL_LIGHTING);
+         glEnable(GL_CULL_FACE);
+         glPolygonMode(GL_FRONT, GL_FILL);
+         glClearColor(1.0, 1.0, 1.0, 1.0); // White
+         break;
+      }
+      default: {
+         assert(kFALSE);
+      }
+   }
+
+   // If no clip object
+   if (!clip) {
+      DrawPass(camera, style, LOD, timeout);
+   } else {
+      // Get the clip plane set from the clipping object
+      std::vector<TGLPlane> planeSet;
+      clip->PlaneSet(planeSet);
+
+      // Strip any planes that outside the scene bounding box - no effect
+      for (std::vector<TGLPlane>::iterator it = planeSet.begin();
+           it != planeSet.end(); ) {
+         if (BoundingBox().Overlap(*it) == kOutside) {
+            it = planeSet.erase(it);
+         } else {
+            ++it;
+         }
+      }
+
+      if (gDebug>2) {
+         Info("TGLScene::Draw()", "%d active clip planes", planeSet.size());
+      }
+      // Limit to smaller of plane set size or GL implementation plane support
+      Int_t maxGLPlanes;
+      glGetIntegerv(GL_MAX_CLIP_PLANES, &maxGLPlanes);
+      UInt_t maxPlanes = maxGLPlanes;
+      UInt_t planeInd;
+      if (planeSet.size() < maxPlanes) {
+         maxPlanes = planeSet.size();
+      }
+
+      // Note : OpenGL Reference (Blue Book) states
+      // GL_CLIP_PLANEi = CL_CLIP_PLANE0 + i
+
+      // Clip away scene outside of the clip object
+      if (clip->Mode() == TGLClip::kOutside) {
+         // Load all negated clip planes (up to max) at once
+         for (UInt_t i=0; i<maxPlanes; i++) {
+            planeSet[i].Negate();
+            glClipPlane(GL_CLIP_PLANE0+i, planeSet[i].CArr());
+            glEnable(GL_CLIP_PLANE0+i);
+         }
+
+          // Draw scene once with full time slot, passing all the planes
+          DrawPass(camera, style, LOD, timeout, &planeSet);
+      }
+      // Clip away scene inside of the clip object
+      else {
+         std::vector<TGLPlane> activePlanes;
+         for (planeInd=0; planeInd<maxPlanes; planeInd++) {
+            if (planeInd > 0) {
+               activePlanes[planeInd - 1].Negate();
+               glClipPlane(GL_CLIP_PLANE0+planeInd - 1, activePlanes[planeInd - 1].CArr());
+            }
+            activePlanes.push_back(planeSet[planeInd]);
+            glClipPlane(GL_CLIP_PLANE0+planeInd, activePlanes[planeInd].CArr());
+            glEnable(GL_CLIP_PLANE0+planeInd);
+            DrawPass(camera, style, LOD, timeout/maxPlanes, &activePlanes);
+         }
+      }
+      // Ensure all clip planes turned off again
+      for (planeInd=0; planeInd<maxPlanes; planeInd++) {
+         glDisable(GL_CLIP_PLANE0+planeInd);
+      }
+   }
+
+   // Reset style related modes set above to defaults
+   glEnable(GL_LIGHTING);
+   glEnable(GL_CULL_FACE);
+   glPolygonMode(GL_FRONT, GL_FILL);
+
+   // Record this so that any Select() draw can be redone at same quality and ensure
+   // accuracy of picking
+   fLastDrawLOD = LOD;
+
+   // TODO: Should record if full scene can be drawn at 100% in a target time (set on scene)
+   // Then timeout should not be passed - just bool if termination is permitted - which may
+   // be ignored if all can be done. Pass back bool to indicate if whole scene could be drawn
+   // at desired quality. Need a fixed target time so valid across multiple draws
+
+   // Dump debug draw stats
+   DumpDrawStats();
+
+   return;
+}
+
+//______________________________________________________________________________
+void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+                        Double_t timeout, const std::vector<TGLPlane> * clipPlanes)
+{
+   // Set stopwatch running
+   TGLStopwatch stopwatch;
+   stopwatch.Start();
+
+   // Setup draw style function pointer
+   void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
    if (style == kWireFrame) {
       drawPtr = &TGLPhysicalShape::DrawWireFrame;
    } else if (style == kOutline) {
       drawPtr = &TGLPhysicalShape::DrawOutline;
    }
-
-   TGLStopwatch stopwatch;
-   stopwatch.Start();
-
-   // If the scene bounding box is inside the camera frustum then
-   // no need to check individual shapes - everything is visible
-   Bool_t doFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
-
-   if (!fDrawListValid) {
-      SortDrawList();
-   }
-
-   // TODO: Tidy up draw loop to make this less complicated
 
    // Step 1: Loop through the main sorted draw list 
    Bool_t                   run = kTRUE;
@@ -289,6 +409,10 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    // Opaque only objects drawn in first loop
    // TODO: Sort front -> back for better performance
    glDepthMask(GL_TRUE);
+   // If the scene bounding box is inside the camera frustum then
+   // no need to check individual shapes - everything is visible
+   Bool_t useFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
+
    glDisable(GL_BLEND);
 
    DrawListIt_t drawIt;
@@ -310,38 +434,52 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
       // TODO: Do small skipping first? Probably cheaper than frustum check
       // Profile relative costs? The frustum check could be done implictly 
       // from the LOD as we project all 8 verticies of the BB onto viewport
-      EOverlap frustumOverlap = kInside;
-      if (doFrustumCheck)
-      {
-         frustumOverlap = camera.FrustumOverlap(drawShape->BoundingBox());
+
+      // Work out if we need to draw this shape - assume we do first
+      Bool_t drawNeeded = kTRUE;
+      EOverlap overlap;
+
+      // Draw test against passed clipping planes
+      // Do before camera clipping on assumption clip planes remove more objects
+      if (clipPlanes) {
+         for (UInt_t i = 0; i < clipPlanes->size(); i++) {
+            overlap = drawShape->BoundingBox().Overlap((*clipPlanes)[i]);
+            if (overlap == kOutside) {
+               drawNeeded = kFALSE;
+               break;
+            }
+         }
       }
 
-      if (frustumOverlap == kInside || frustumOverlap == kPartial)
+      // Draw test against camera frustum if require
+      if (drawNeeded && useFrustumCheck)
       {
-         // Collect transparent shapes for drawing at end
+         overlap = camera.FrustumOverlap(drawShape->BoundingBox());
+         drawNeeded = overlap == kInside || overlap == kPartial;
+      }
+
+      // Draw?
+      if (drawNeeded)
+      {
+         // Collect transparent shapes and draw after opaque
          if (drawShape->IsTransparent()) {
             transDrawList.push_back(drawShape);
             continue;
          }
 
          // Get the shape draw quality
-         UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
+         UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
 
          //Draw, DrawWireFrame, DrawOutline
          (drawShape->*drawPtr)(shapeLOD);
-         ++opaqueDrawn;
-
-         // Debug stats
-         if (gDebug>3) {
-            UpdateDrawStats(drawShape);
-         }
+         UpdateDrawStats(*drawShape);
       }
 
       // Terminate the draw if over opaque fraction timeout
       if (timeout > 0.0) {
          Double_t opaqueTimeFraction = 1.0;
-         if (opaqueDrawn > 0) {
-            opaqueTimeFraction = (transDrawList.size() + opaqueDrawn) / opaqueDrawn; 
+         if (fDrawStats.fOpaque > 0) {
+            opaqueTimeFraction = (transDrawList.size() + fDrawStats.fOpaque) / fDrawStats.fOpaque; 
          }
          if (stopwatch.Lap() * opaqueTimeFraction > timeout) {
             run = kFALSE;
@@ -353,14 +491,9 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    if (doSelected) {
       // Draw now if non-transparent
       if (!fSelectedPhysical->IsTransparent()) {
-         UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
+         UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, LOD);
          (fSelectedPhysical->*drawPtr)(shapeLOD);
-         ++opaqueDrawn;
-
-         // Debug stats
-         if (gDebug>3) {
-            UpdateDrawStats(fSelectedPhysical);
-         }
+         UpdateDrawStats(*fSelectedPhysical);
       } else {
          // Add to transparent drawlist
          transDrawList.push_back(fSelectedPhysical);
@@ -374,19 +507,14 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-   UInt_t transparentDrawn = 0;
    for (drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
       drawShape = *drawIt;
 
-      UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
+      UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
 
       //Draw, DrawWireFrame, DrawOutline
       (drawShape->*drawPtr)(shapeLOD);
-      ++transparentDrawn;
-      // Debug stats
-      if (gDebug>2) {
-         UpdateDrawStats(drawShape);
-      }
+      UpdateDrawStats(*drawShape);
    }
 
    // Reset these after transparent done
@@ -423,29 +551,7 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLO
       glEnable(GL_DEPTH_TEST);
    }
 
-   // Record this so that any Select() draw can be redone at same quality and ensure
-   // accuracy of picking
-   fLastDrawLOD = sceneLOD;
-
-   // TODO: Should record if full scene can be drawn at 100% in a target time (set on scene)
-   // Then timeout should not be passed - just bool if termination is permitted - which may
-   // be ignored if all can be done. Pass back bool to indicate if whole scene could be drawn
-   // at desired quality. Need a fixed target time so valid across multiple draws
-
-   if (gDebug>2) {
-      Info("TGLScene::Draw()", "Drew %i Opaque %i Trans at %i LOD", opaqueDrawn, transparentDrawn, sceneLOD);
-   }
-   if (gDebug>3) {
-      const std::map<std::string, UInt_t> & stats = UpdateDrawStats();
-      std::map<std::string, UInt_t>::const_iterator it = stats.begin();
-      while (it != stats.end()) {
-         std::cout << it->first << " (" << it->second << ")\t";
-         it++;
-      }
-      std::cout << std::endl;
-   }
-
-   return opaqueDrawn + transparentDrawn;
+   return;
 }
 
 //______________________________________________________________________________
@@ -501,44 +607,42 @@ void TGLScene::DrawAxes() const
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
 
-   const Double_t axeColors[][3] = {{1., 0., 0.}, // X axis red
-                                    {0., 1., 0.}, // Y axis green
-                                    {0., 0., 1.}};// Z axis blue
-   //glColor3dv(axeColors[3]);
-
+   const Double_t axisColors[][3] = {{1., 0., 0.}, // X axis red
+                                     {0., 1., 0.}, // Y axis green
+                                     {0., 0., 1.}};// Z axis blue
    const TGLBoundingBox & box = BoundingBox();
    Double_t xmin = box.XMin(), xmax = box.XMax();
    Double_t ymin = box.YMin(), ymax = box.YMax();
    Double_t zmin = box.ZMin(), zmax = box.ZMax();
 
    glBegin(GL_LINES);
-   glColor3dv(axeColors[0]);
+   glColor3dv(axisColors[0]);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmax, ymin, zmin);
-   glColor3dv(axeColors[1]);
+   glColor3dv(axisColors[1]);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmin, ymax, zmin);
-   glColor3dv(axeColors[2]);
+   glColor3dv(axisColors[2]);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmin, ymin, zmax);
    glEnd();
 
    // X label
-   glColor3dv(axeColors[0]);
+   glColor3dv(axisColors[0]);
    glRasterPos3d(xmax, ymin + 12, zmin);
    glBitmap(8, 8, 0., 0., 0., 0., xyz[0]);
    DrawNumber(xmax, xmax, ymin, zmin, 9.);
    DrawNumber(xmin, xmin, ymin, zmin, 0.);
 
    // Y label
-   glColor3dv(axeColors[1]);
+   glColor3dv(axisColors[1]);
    glRasterPos3d(xmin, ymax + 12, zmin);
    glBitmap(8, 8, 0, 0, 12., 0, xyz[1]);
    DrawNumber(ymax, xmin, ymax, zmin, 9.);
    DrawNumber(ymin, xmin, ymin, zmin, 9.);
 
    // Z label
-   glColor3dv(axeColors[2]);
+   glColor3dv(axisColors[2]);
    glRasterPos3d(xmin, ymin, zmax);
    glBitmap(8, 8, 0, 0, 0., 0, xyz[2]);
    DrawNumber(zmax, xmin, ymin, zmax, 9.);
@@ -617,7 +721,7 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
+Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip)
 {
    Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
@@ -636,11 +740,11 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style)
    glInitNames();
    glPushName(0);
 
-   // Draw out scene at best quality
-   Draw(camera, style, kHigh, kFALSE); // No axes
+   // Draw out scene at best quality with clipping, no timelimit
+   Draw(camera, style, kHigh, 0.0, clip);
 
    // Retrieve the hit count and return to render
-   GLint hits = glRenderMode(GL_RENDER);
+   Int_t hits = glRenderMode(GL_RENDER);
 
    if (hits < 0) {
       Error("TGLScene::Select", "selection buffer overflow");
@@ -839,35 +943,57 @@ UInt_t TGLScene::SizeOf() const
 }
 
 //______________________________________________________________________________
-const std::map<std::string, UInt_t> & TGLScene::UpdateDrawStats(const TGLPhysicalShape * drawnShape) const
-{  
-   // Update the draw stats for supplied shape draw, and return cuurent stats
-   // If no drawnShape passed reset the stats
-   static Bool_t reset = kTRUE;
-   static std::map<std::string, UInt_t> stats;
-   
-   // No shape - flag for reset
-   if (!drawnShape) {
-      reset = kTRUE;
-      return stats;
-   }
-   
-   if (reset) {
-      stats.clear();
-      reset = kFALSE;
-   }
-
-   // Update the stats 
-   std::string shapeType = drawnShape->GetLogical().IsA()->GetName();
-   typedef std::map<std::string, UInt_t>::iterator MapIt_t;
-   MapIt_t statIt = stats.find(shapeType);
-
-   if (statIt == stats.end()) {
-      //do not need to check insert(.....).second, because statIt was stats.end() before
-      statIt = stats.insert(std::make_pair(shapeType, 0u)).first;
-   }
-
-   statIt->second++;
-   return stats;
+void TGLScene::ResetDrawStats()
+{
+   fDrawStats.fOpaque = 0;
+   fDrawStats.fTrans = 0;
+   fDrawStats.fByShape.clear();
 }
 
+//______________________________________________________________________________
+void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape)
+{
+   // Update opaque/transparent draw count
+   if (shape.IsTransparent()) {
+      ++fDrawStats.fTrans;
+   } else {
+      ++fDrawStats.fOpaque;
+   }
+
+   // By type only needed for debug currently
+   if (gDebug>3) {
+      // Update the stats 
+      std::string shapeType = shape.GetLogical().IsA()->GetName();
+      typedef std::map<std::string, UInt_t>::iterator MapIt_t;
+      MapIt_t statIt = fDrawStats.fByShape.find(shapeType);
+
+      if (statIt == fDrawStats.fByShape.end()) {
+         //do not need to check insert(.....).second, because statIt was stats.end() before
+         statIt = fDrawStats.fByShape.insert(std::make_pair(shapeType, 0u)).first;
+      }
+
+      statIt->second++;   
+   }
+}
+ 
+//______________________________________________________________________________
+void TGLScene::DumpDrawStats()
+{
+   // Dump some current draw stats for debuggin
+
+   // Draw counts
+   if (gDebug>2) {
+      Info("TGLScene::DumpDrawStats()", "Drew %i, %i Opaque %i Transparent", fDrawStats.fOpaque + fDrawStats.fTrans,
+         fDrawStats.fOpaque, fDrawStats.fTrans);
+   }
+
+   // By shape type counts
+   if (gDebug>3) {
+      std::map<std::string, UInt_t>::const_iterator it = fDrawStats.fByShape.begin();
+      while (it != fDrawStats.fByShape.end()) {
+         std::cout << it->first << " (" << it->second << ")\t";
+         it++;
+      }
+      std::cout << std::endl;
+   }
+}

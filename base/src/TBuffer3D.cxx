@@ -184,6 +184,8 @@ TVirtualViewer3D provides for two methods of object addition:virtual Int_t AddOb
 TBuffer3D &amp; buffer, Bool_t * addChildren = 0)<br>
 <pre>virtual Int_t AddObject(UInt_t physicalID, const TBuffer3D &amp; buffer, Bool_t * addChildren = 0)</pre>
 <p>If you use the first (simple) case a viewer using logical/physical pairs
+
+   SetSectionsValid(TBuffer3D::kBoundingBox);
     will generate IDs for each physical object internally. In the second you
     can specify
       a unique identifier from the client, which allows the viewer to be more

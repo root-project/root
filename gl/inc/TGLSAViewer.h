@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.2 2005/08/11 15:28:53 rdm Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -73,6 +73,13 @@ private:
 
    static const char * fgHelpText;
 
+   // Setup
+   void CreateViewer();
+
+   // non-copyable class
+   TGLSAViewer(const TGLSAViewer &);
+   TGLSAViewer & operator = (const TGLSAViewer &);
+
 public:
    TGLSAViewer(TVirtualPad * pad);
    ~TGLSAViewer();
@@ -85,14 +92,9 @@ public:
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
 
    void SelectionChanged();
-
-private:
-   // Setup
-   void CreateViewer();
-
-   // non-copyable class
-   TGLSAViewer(const TGLSAViewer &);
-   TGLSAViewer & operator = (const TGLSAViewer &);
+   void ClipChanged();
+   
+   void SetDefaultClips();
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

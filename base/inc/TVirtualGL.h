@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.20 2005/08/23 11:29:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.21 2005/09/02 07:51:51 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -160,6 +160,7 @@ public:
    virtual void DrawSphere(const Float_t *rgba) = 0;
    virtual void DrawViewer(TGLViewer *viewer) = 0;
    virtual Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect) = 0;
+   virtual void SelectViewerManip(TGLViewer *viewer, const TGLRect * rect) = 0;
    virtual void CaptureViewer(TGLViewer *viewer, Int_t format, const char * filePath = 0) = 0;
 
    static TVirtualGL *&Instance();

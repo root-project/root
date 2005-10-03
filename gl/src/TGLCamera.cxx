@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.16 2005/08/30 10:29:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -30,7 +30,7 @@ TGLCamera::TGLCamera() :
    fLargestInterest(0.0)
 {
    for (UInt_t i = 0; i < kPlanesPerFrustum; i++ ) {
-      fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0, 0.0);
+      fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0);
    }
 }
 
@@ -250,7 +250,7 @@ TGLRect TGLCamera::ViewportSize(const TGLBoundingBox & box) const
       const TGLVertex3 & vertex = box[i];
 
       //TODO: Convert TGLRect so this not required
-      GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+      Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
 
       gluProject(vertex.X(), vertex.Y(), vertex.Z(), fModVM.CArr(), fProjM.CArr(), viewport, &winX, &winY, &winZ);
 
@@ -272,7 +272,7 @@ TGLVector3 TGLCamera::ProjectedShift(const TGLVertex3 & vertex, Int_t xDelta, In
       Error("TGLCamera::ProjectedShift()", "cache dirty");
    }
    //TODO: Convert TGLRect so this not required
-   GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
    TGLVertex3 winVertex;
    gluProject(vertex[0], vertex[1], vertex[2], fModVM.CArr(), fProjM.CArr(), viewport, &winVertex[0], &winVertex[1], &winVertex[2]);
    winVertex.Shift(xDelta, yDelta, 0.0);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.5 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -193,8 +193,8 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
       }
    }
    // Add 1% each way to avoid any rounding conflicts with drawn objects
-   nearClipDist *= 0.99;
-   farClipDist *= 1.01;
+   nearClipDist *= .49; //0.99; TODO Look at - avoid removing clipping + manip objs
+   farClipDist *= 2.01; // 1.01
    if (farClipDist < 2.0) {
       farClipDist = 2.0;
    }

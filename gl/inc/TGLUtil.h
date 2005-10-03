@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.10 2005/07/14 14:34:41 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.11 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "Rtypes.h"
 #endif
 
+#include <vector>
 #include <math.h>
 #include <assert.h>
 
@@ -63,6 +64,14 @@ enum EDrawStyle
    kOutline, 
    kWireFrame
 };
+
+enum EClipType 
+{ 
+   kClipNone = 0, 
+   kClipPlane, 
+   kClipBox
+};
+
 
 // TODO: Namespace
 // TODO: Mark all headers as INTERNAL
@@ -121,7 +130,10 @@ public:
 //______________________________________________________________________________
 inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs) 
 { 
-   Set(rhs); 
+   // Check for self-assignment
+   if (this != &rhs) {
+      Set(rhs); 
+   }
    return *this; 
 }
 
@@ -322,12 +334,12 @@ inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vec
  *************************************************************************/
 class TGLRect
 {
-private:
+   private:
    // Fields
    Int_t    fX, fY;           //! Corner
    UInt_t   fWidth, fHeight;  //! Positive width/height
 
-public:
+   public:
    TGLRect();
    TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TGLRect(); // ClassDef introduces virtual fns
@@ -407,15 +419,17 @@ private:
 public:
    TGLPlane();
    TGLPlane(const TGLPlane & other);
-   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
-   TGLPlane(Double_t eq[4], Bool_t norm = kTRUE);
-   TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE);
+   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d);
+   TGLPlane(Double_t eq[4]);
+   TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point);
+   TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
 
    void Set(const TGLPlane & other);
-   void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise = kTRUE);
-   void Set(Double_t eq[4], Bool_t norm = kTRUE);
-   void Set(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise = kTRUE); 
+   void Set(Double_t a, Double_t b, Double_t c, Double_t d);
+   void Set(Double_t eq[4]);
+   void Set(const TGLVector3 & norm, const TGLVertex3 & point); 
+   void Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
 
    Double_t A() const { return fVals[0]; }
    Double_t B() const { return fVals[1]; }
@@ -426,11 +440,17 @@ public:
    Double_t DistanceTo(const TGLVertex3 & vertex) const;
    TGLVertex3 NearestOn(const TGLVertex3 & point) const;
 
+   void Negate();
+   
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
 
+   void Dump() const;
+
    ClassDef(TGLPlane,0) // GL plane helper/wrapper class
 };
+
+typedef std::vector<TGLPlane> TGLPlaneSet_t;
 
 //______________________________________________________________________________
 inline void TGLPlane::Set(const TGLPlane & other)
@@ -442,40 +462,66 @@ inline void TGLPlane::Set(const TGLPlane & other)
 }
 
 //______________________________________________________________________________
-inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise)
+inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d)
 {
    fVals[0] = a;
    fVals[1] = b;
    fVals[2] = c;
    fVals[3] = d;
-   if (normalise) {
-      Normalise();
-   }
+   Normalise();
 }
 
 //______________________________________________________________________________
-inline void TGLPlane::Set(Double_t eq[4], Bool_t normalise)
+inline void TGLPlane::Set(Double_t eq[4])
 {
    fVals[0] = eq[0];
    fVals[1] = eq[1];
    fVals[2] = eq[2];
    fVals[3] = eq[3];
-   if (normalise) {
-      Normalise();
-   }
+   Normalise();
 }
-
+   
 //______________________________________________________________________________
-inline void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise)
+inline void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point)
 {
    // Set plane from a normal vector and in-plane point pair
    fVals[0] = norm[0];
    fVals[1] = norm[1];
    fVals[2] = norm[2];
    fVals[3] = -(fVals[0]*point[0] + fVals[1]*point[1] + fVals[2]*point[2]);
-   if (normalise) {
-      Normalise();
+   Normalise();
+}
+
+//______________________________________________________________________________
+inline void TGLPlane::Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3)
+{
+   TGLVector3 norm = Cross(p2 - p1, p3 - p1);
+   Set(norm, p2);
+}
+
+//______________________________________________________________________________
+inline void TGLPlane::Negate()
+{
+   fVals[0] = -fVals[0];
+   fVals[1] = -fVals[1];
+   fVals[2] = -fVals[2];
+   fVals[3] = -fVals[3];
+}
+
+//______________________________________________________________________________
+inline void TGLPlane::Normalise()
+{
+   Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
+
+   if ( mag == 0.0 ) {
+      assert( kFALSE );
+      return;
    }
+
+   fVals[0] /= mag;
+   fVals[1] /= mag;
+   fVals[2] /= mag;
+   fVals[3] /= mag;
 }
 
 //______________________________________________________________________________
@@ -499,22 +545,6 @@ inline TGLVertex3 Intersection(const TGLPlane & p1, const TGLPlane & p2, const T
    return v / m;
 }
 
-//______________________________________________________________________________
-inline void TGLPlane::Normalise()
-{
-   Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
-
-   if ( mag == 0.0 ) {
-      assert( kFALSE );
-      return;
-   }
-
-   fVals[0] /= mag;
-   fVals[1] /= mag;
-   fVals[2] /= mag;
-   fVals[3] /= mag;
-}
-
 /*************************************************************************
  * TGLMatrix - TODO
  *
@@ -533,21 +563,26 @@ private:
 public:
    TGLMatrix();
    TGLMatrix(Double_t x, Double_t y, Double_t z);
+   TGLMatrix(const TGLVertex3 & translation);
+   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis);
    TGLMatrix(const Double_t vals[16]);
    TGLMatrix(const TGLMatrix & other);
    virtual ~TGLMatrix(); // ClassDef introduces virtual fns
 
-   const TGLMatrix & operator=(const TGLMatrix & rhs);
+   const TGLMatrix & operator =(const TGLMatrix & rhs);
 
    Double_t & operator [] (Int_t index);
 
+   void Set(Double_t x, Double_t y, Double_t z);
+   void Set(const TGLVertex3 & translation);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
-   TGLVertex3  GetTranslation() const;
-   void        SetTranslation(const TGLVertex3 & trans);
    void        Shift(const TGLVector3 & shift);
-   TGLVector3  GetScale() const;
+
+   TGLVertex3  Translation() const;
+   TGLVector3  Scale() const;
    void        SetScale(const TGLVector3 & scale);
 
    void TransformVertex(TGLVertex3 & vertex) const;
@@ -562,9 +597,12 @@ public:
 };
 
 //______________________________________________________________________________
-inline const TGLMatrix & TGLMatrix::operator=(const TGLMatrix & rhs) 
-{ 
-   Set(rhs.fVals); 
+inline const TGLMatrix & TGLMatrix::operator =(const TGLMatrix & rhs) 
+{
+   // Check for self-assignment
+   if (this != &rhs) {
+      Set(rhs.fVals); 
+   }
    return *this; 
 }
 

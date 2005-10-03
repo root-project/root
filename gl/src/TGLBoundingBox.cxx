@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.11 2005/07/14 19:13:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.12 2005/08/30 10:29:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -114,7 +114,7 @@ void TGLBoundingBox::UpdateCache()
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 {
-  // Set a bounding box from provided 8 verticies
+  // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = vertex[v];
    }
@@ -125,7 +125,7 @@ void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const Double_t vertex[8][3])
 {
-  // Set a bounding box from provided 8 verticies
+  // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       for (UInt_t a = 0; a < 3; a++) {
          fVertex[v][a] = vertex[v][a];
@@ -138,7 +138,7 @@ void TGLBoundingBox::Set(const Double_t vertex[8][3])
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const TGLBoundingBox & other)
 {
-  // Set a bounding box from verticies of other
+  // Set a bounding box from vertices of other
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Set(other.fVertex[v]);
    }
@@ -149,7 +149,7 @@ void TGLBoundingBox::Set(const TGLBoundingBox & other)
 //______________________________________________________________________________
 void TGLBoundingBox::SetEmpty()
 {
-  // Set bounding box empty - all vertexes at (0,0,0)
+  // Set bounding box empty - all vertices at (0,0,0)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Fill(0.0);
    }
@@ -161,7 +161,7 @@ void TGLBoundingBox::SetEmpty()
 void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
 {
    // Set ALIGNED box from two low/high vertices. Box axes are aligned with 
-   // global frame axes that verticies are specified in.
+   // global frame axes that vertices are specified in.
 
    // lowVertex = vertex[0]
    // highVertex = vertex[6]
@@ -267,7 +267,7 @@ void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
 //______________________________________________________________________________
 void TGLBoundingBox::Translate(const TGLVector3 & offset)
 {
-   // Translate all vertexes by offset
+   // Translate all vertices by offset
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = fVertex[v] + offset;
    }
@@ -278,7 +278,7 @@ void TGLBoundingBox::Translate(const TGLVector3 & offset)
 //______________________________________________________________________________
 void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 {
-   // Transform all vertexes with matrix
+   // Transform all vertices with matrix
    for (UInt_t v = 0; v < 8; v++) {
       matrix.TransformVertex(fVertex[v]);
    }
@@ -288,12 +288,45 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 }
 
 //______________________________________________________________________________
+void TGLBoundingBox::PlaneSet(TGLPlaneSet_t & planeSet) const
+{
+   // Fill out supplied plane set vector with TGLPlane objects
+   // representing six faces of box
+   assert(planeSet.empty());
+
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
+   //
+   // Construct plane set using axis + vertices
+   // Order is unimportant
+   planeSet.push_back(TGLPlane(-fAxesNorm[2], fVertex[0])); // Far
+   planeSet.push_back(TGLPlane(fAxesNorm[2], fVertex[4]));  // Near
+   planeSet.push_back(TGLPlane(-fAxesNorm[0], fVertex[0])); // Left
+   planeSet.push_back(TGLPlane(fAxesNorm[0], fVertex[1]));  // Right
+   planeSet.push_back(TGLPlane(-fAxesNorm[1], fVertex[0])); // Bottom
+   planeSet.push_back(TGLPlane(fAxesNorm[1], fVertex[3]));  // Top
+}
+
+//______________________________________________________________________________
 EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 {
    // Find overlap (Inside, Outside, Partial) of plane c.f. bounding box
 
-   // TODO: Cheaper sphere test
-   // Test all 8 box vertices against plane
+   // First : cheap square approxiamtion test. If distance of our 
+   // center to plane > our half extent length we are outside plane
+   if (plane.DistanceTo(Center()) + (Extents().Mag()/2.0) < 0.0) {
+      return kOutside;
+   }
+
+   // Second : test all 8 box vertices against plane
    Int_t verticesInsidePlane = 8;
    for (UInt_t v = 0; v < 8; v++) {
       if (plane.DistanceTo(fVertex[v]) < 0.0) {
@@ -482,29 +515,86 @@ EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
 }
 
 //______________________________________________________________________________
-void TGLBoundingBox::Draw() const
+void TGLBoundingBox::Draw(Bool_t solid) const
 {
-   // Draw the bounding box out using current GL color
-   glBegin(GL_LINE_LOOP);
-   glVertex3dv(fVertex[0].CArr());
-   glVertex3dv(fVertex[1].CArr());
-   glVertex3dv(fVertex[2].CArr());
-   glVertex3dv(fVertex[3].CArr());
-   glVertex3dv(fVertex[7].CArr());
-   glVertex3dv(fVertex[6].CArr());
-   glVertex3dv(fVertex[5].CArr());
-   glVertex3dv(fVertex[4].CArr());
-   glEnd();
-   glBegin(GL_LINES);
-   glVertex3dv(fVertex[1].CArr());
-   glVertex3dv(fVertex[5].CArr());
-   glVertex3dv(fVertex[2].CArr());
-   glVertex3dv(fVertex[6].CArr());
-   glVertex3dv(fVertex[0].CArr());
-   glVertex3dv(fVertex[3].CArr());
-   glVertex3dv(fVertex[4].CArr());
-   glVertex3dv(fVertex[7].CArr());
-   glEnd();
+   // Draw the bounding box as either wireframe (default) of solid using current GL color
+   if (!solid){
+      glBegin(GL_LINE_LOOP);
+      glVertex3dv(fVertex[0].CArr());
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[3].CArr());
+      glVertex3dv(fVertex[7].CArr());
+      glVertex3dv(fVertex[6].CArr());
+      glVertex3dv(fVertex[5].CArr());
+      glVertex3dv(fVertex[4].CArr());
+      glEnd();
+      glBegin(GL_LINES);
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[5].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[6].CArr());
+      glVertex3dv(fVertex[0].CArr());
+      glVertex3dv(fVertex[3].CArr());
+      glVertex3dv(fVertex[4].CArr());
+      glVertex3dv(fVertex[7].CArr());
+      glEnd();
+   } else {
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
+      // Clockwise winding
+      // Far
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[0].CArr());
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[3].CArr());
+      glEnd();
+      // Near
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[4].CArr());
+      glVertex3dv(fVertex[7].CArr());
+      glVertex3dv(fVertex[6].CArr());
+      glVertex3dv(fVertex[5].CArr());
+      glEnd();
+      // Left
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[0].CArr());
+      glVertex3dv(fVertex[3].CArr());
+      glVertex3dv(fVertex[7].CArr());
+      glVertex3dv(fVertex[4].CArr());
+      glEnd();
+      // Right
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[6].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[5].CArr());
+      glEnd();
+      // Top
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[3].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[6].CArr());
+      glVertex3dv(fVertex[7].CArr());
+      glEnd();
+      // Far
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[4].CArr());
+      glVertex3dv(fVertex[5].CArr());
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[0].CArr());
+      glEnd();
+   }
+
 }
 
 //______________________________________________________________________________
@@ -536,7 +626,7 @@ Double_t TGLBoundingBox::Max(UInt_t index) const
 //______________________________________________________________________________
 void TGLBoundingBox::Dump() const
 {
-   // Output to std::cout the vertexes, center and volume of box
+   // Output to std::cout the vertices, center and volume of box
    for (UInt_t i = 0; i<8; i++) {
       std::cout << "[" << i << "] (" << fVertex[i].X() << "," << fVertex[i].Y() << "," << fVertex[i].Z() << ")" << std::endl;
    }

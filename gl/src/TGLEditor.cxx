@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.14 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TGCanvas.h"
 #include "TGLayout.h"
 #include "TGButton.h"
+#include "TGButtonGroup.h"
 #include "TGSlider.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
@@ -534,7 +535,7 @@ void TGLGeometryEditor::CreateStretchControls()
 //______________________________________________________________________________
 TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TGLSAViewer *v)
                      :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
-                      fViewer(v)
+                      fViewer(v), fCurrentClip(kClipNone)
 {
    fTrash.SetOwner(kTRUE);
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
@@ -542,92 +543,210 @@ TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TGLSAViewer *v)
    fL2 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3);
    fTrash.AddLast(fL2);
    CreateControls();
-   //create button
-   fApplyButton = new TGTextButton(this, "Modify scene", kTBcpm);
-   fTrash.AddLast(fApplyButton);
-   AddFrame(fApplyButton, fL1);
-   fApplyButton->SetState(kButtonDisabled);
-   fApplyButton->Connect("Pressed()", "TGLSceneEditor", this, "DoButton()");
-
-   fAxesCheck = new TGCheckButton(this, "Show axes", kTBda);
-   fTrash.AddLast(fAxesCheck);
-   AddFrame(fAxesCheck, fL1);
-   fAxesCheck->Connect("Clicked()", "TGLSceneEditor", this, "DoButton()");
 }
 
 //______________________________________________________________________________
 void TGLSceneEditor::CreateControls()
 {
-   fClipActivate = new TGCheckButton(this, "Clipping plane", kTBcp);
-   fTrash.AddLast(fClipActivate);
-   AddFrame(fClipActivate, fL1);
-   fClipActivate->Connect("Clicked()", "TGLSceneEditor", this, "DoButton()");
-   TGLabel *label = new TGLabel(this, "Ax+By+Cz+D=0");
-   fTrash.AddLast(label);
-   AddFrame(label, fL1);
-   
-   label = new TGLabel(this, "Plane's A:");
-   fTrash.AddLast(label);
-   fGeomData[kPlaneA] = new TGNumberEntry(this, 1., 6, kNExp);
-   fTrash.AddLast(fGeomData[kPlaneA]);
-   AddFrame(label, fL2);
-   AddFrame(fGeomData[kPlaneA], fL1);
-   fGeomData[kPlaneA]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
-                               this, "ValueSet(Long_t)");
-   
-   label = new TGLabel(this, "Plane's B:");
-   fTrash.AddLast(label);
-   fGeomData[kPlaneB] = new TGNumberEntry(this, 0., 6, kNEyp);
-   fTrash.AddLast(fGeomData[kPlaneB]);
-   AddFrame(label, fL2);
-   AddFrame(fGeomData[kPlaneB], fL1);
-   fGeomData[kPlaneB]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
-                               this, "ValueSet(Long_t)");
-   
-   label = new TGLabel(this, "Plane's C:");
-   fTrash.AddLast(label);
-   fGeomData[kPlaneC] = new TGNumberEntry(this, 0., 6, kNEzp);
-   fTrash.AddLast(fGeomData[kPlaneC]);
-   AddFrame(label, fL2);
-   AddFrame(fGeomData[kPlaneC], fL1);
-   fGeomData[kPlaneC]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
-                               this, "ValueSet(Long_t)");
-   
-   label = new TGLabel(this, "Plane's D:");
-   fTrash.AddLast(label);
-   fGeomData[kPlaneD] = new TGNumberEntry(this, 0., 6, kNEat);
-   fTrash.AddLast(fGeomData[kPlaneD]);
-   AddFrame(label, fL2);
-   AddFrame(fGeomData[kPlaneD], fL1);
-   fGeomData[kPlaneD]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
-                               this, "ValueSet(Long_t)");   
+   fTypeButtons = new TGButtonGroup(this, "Clip Type");
+   fTrash.AddLast(fTypeButtons);
+   TGRadioButton * clipNone = new TGRadioButton(fTypeButtons, "None");
+   fTrash.AddLast(clipNone);
+   TGRadioButton * clipPlane = new TGRadioButton(fTypeButtons, "Plane");
+   fTrash.AddLast(clipPlane);
+   TGRadioButton * clipBox = new TGRadioButton(fTypeButtons, "Box");
+   fTrash.AddLast(clipBox);
+   AddFrame(fTypeButtons, fL1);
+   Bool_t ok = fTypeButtons->Connect("Pressed(Int_t)", "TGLSceneEditor", this, "ClipTypeChanged(Int_t)");
+   assert(ok);
+
+   // Plane properties
+   fPlanePropFrame = new TGCompositeFrame(this);
+   fTrash.AddLast(fPlanePropFrame);
+   AddFrame(fPlanePropFrame, fL1);
+   TGLabel * label;
+   std::string planeStr[4] = { "aX + ", "bY +", "cZ + ", "d = 0" };
+   for (UInt_t i=0; i<4; i++) {
+      label = new TGLabel(fPlanePropFrame, planeStr[i].c_str());
+      fTrash.AddLast(label);
+      fPlanePropFrame->AddFrame(label, fL2);
+      fPlaneProp[i] = new TGNumberEntry(fPlanePropFrame, 1., 8);
+      fTrash.AddLast(fPlaneProp[i]);
+      fPlanePropFrame->AddFrame(fPlaneProp[i], fL1);
+      fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                             this, "ClipValueChanged(Long_t)");   
+   }
+   HideFrame(fPlanePropFrame);
+
+   // Box properties
+   fBoxPropFrame = new TGCompositeFrame(this);
+   fTrash.AddLast(fBoxPropFrame);
+   AddFrame(fBoxPropFrame, fL1);
+
+   // Show in viewer edit (box only at present)
+   fEdit = new TGCheckButton(fBoxPropFrame, "Show / Edit", kTBda);
+   fTrash.AddLast(fEdit);
+   fBoxPropFrame->AddFrame(fEdit, fL1);
+   fEdit->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
+
+   std::string boxStr[6] = { "Center X", "Center Y", "Center Y", "Length X", "Length Y", "Length Z" };
+   for (UInt_t i=0; i<6; i++) {
+      label = new TGLabel(fBoxPropFrame, boxStr[i].c_str());
+      fTrash.AddLast(label);
+      fBoxPropFrame->AddFrame(label, fL2);
+      fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
+      fTrash.AddLast(fBoxProp[i]);
+      fBoxPropFrame->AddFrame(fBoxProp[i], fL1);
+      fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                           this, "ClipValueChanged(Long_t)");   
+   }
+   HideFrame(fBoxPropFrame);
+
+   // Apply button
+   fApplyButton = new TGTextButton(this, "Apply", kTBcpm);
+   fTrash.AddLast(fApplyButton);
+   AddFrame(fApplyButton, fL1);
+   fApplyButton->SetState(kButtonDisabled);
+   fApplyButton->Connect("Pressed()", "TGLSceneEditor", this, "UpdateViewer()");
+
+   // Show axes
+   fAxes = new TGCheckButton(this, "Show Axes", kTBda);
+   fTrash.AddLast(fAxes);
+   AddFrame(fAxes, fL1);
+   fAxes->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
+
+   clipNone->SetState(kButtonDown);
 }
 
 //______________________________________________________________________________
-void TGLSceneEditor::ValueSet(Long_t)
+void TGLSceneEditor::ClipValueChanged(Long_t)
 {
-   fApplyButton->SetState(kButtonUp);   
+   fApplyButton->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
-void TGLSceneEditor::DoButton()
+void TGLSceneEditor::ClipTypeChanged(Int_t id)
+{  
+   switch(id) { // Radio button ids run from 1
+      case(1): {
+         SetCurrentClip(kClipNone);
+         break;
+      }
+      case(2): {
+         SetCurrentClip(kClipPlane);
+         break;
+      }
+      case(3): {
+         SetCurrentClip(kClipBox);
+         break;
+      }
+   }
+
+   // Internal GUI change - need to update the viewer
+   UpdateViewer();
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::UpdateViewer()
 {
-   if (TGButton *btn = (TGButton *)gTQSender) {
-      Int_t wid = btn->WidgetId();
-      fViewer->ProcessGUIEvent(wid);
-      if (wid == kTBcpm) {
-         fApplyButton->SetState(kButtonDisabled);
-      } 
+   // Generic 'something changed' event - everything is pulled from GUI
+   fViewer->ProcessGUIEvent(kTBcpm);
+   fApplyButton->SetState(kButtonDisabled);
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::GetDefaults()
+{
+   std::vector<Double_t> data;
+   fViewer->GetClipState(kClipPlane, data);
+   SetClipState(kClipPlane, data);
+   fViewer->GetClipState(kClipBox, data);
+   SetClipState(kClipBox, data);
+   fApplyButton->SetState(kButtonDisabled);
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::GetClipState(EClipType type, std::vector<Double_t> & data) const
+{
+   UInt_t i;
+   data.clear();
+   if (type == kNone) {
+      // Nothing to do
+   } else if (type == kClipPlane) {
+      for (i=0; i<4; i++) {
+         data.push_back(fPlaneProp[i]->GetNumber());
+      }
+   } else if (type == kClipBox) {
+      for (i=0; i<6; i++) {
+         data.push_back(fBoxProp[i]->GetNumber());
+      }
+   } else {
+      Error("TGLSceneEditor::GetClipState", "Invalid clip type");
    }
 }
 
 //______________________________________________________________________________
-void TGLSceneEditor::GetPlaneEqn(Double_t *eqn)
+void TGLSceneEditor::SetClipState(EClipType type, const std::vector<Double_t> & data)
 {
-   eqn[0] = fGeomData[kPlaneA]->GetNumber();
-   eqn[1] = fGeomData[kPlaneB]->GetNumber();
-   eqn[2] = fGeomData[kPlaneC]->GetNumber();
-   eqn[3] = fGeomData[kPlaneD]->GetNumber();
+   UInt_t i;
+   if (type == kNone) {
+      // Nothing to do
+   } else if (type == kClipPlane) {
+      for (i=0; i<4; i++) {
+         fPlaneProp[i]->SetNumber(data[i]);
+      }
+   } else if (type == kClipBox) {
+      for (i=0; i<6; i++) {
+         fBoxProp[i]->SetNumber(data[i]);
+      }
+   } else {
+      Error("TGLSceneEditor::SetClipState", "Invalid clip type");
+   }
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::GetCurrentClip(EClipType & type, Bool_t & edit) const
+{
+   type = fCurrentClip;
+   edit = fEdit->IsDown();
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::SetCurrentClip(EClipType type)
+{
+   fCurrentClip = type;
+   switch(fCurrentClip) {
+      case(kClipNone): {
+         fTypeButtons->SetButton(1);
+         fEdit->SetDown(kFALSE);
+         HideFrame(fPlanePropFrame);
+         HideFrame(fBoxPropFrame);
+         break;
+      }
+      case(kClipPlane): {
+         fTypeButtons->SetButton(2);
+         fEdit->SetDown(kFALSE);
+         ShowFrame(fPlanePropFrame);
+         HideFrame(fBoxPropFrame);
+         break;
+      }
+      case(kClipBox): {
+         fTypeButtons->SetButton(3);
+         HideFrame(fPlanePropFrame);
+         ShowFrame(fBoxPropFrame);
+         break;
+      }
+      default: {
+         Error("TGLSceneEditor::SetCurrentClip", "Invalid clip type");
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLSceneEditor::GetAxes() const
+{
+   return fAxes->IsDown();
 }
 
 //______________________________________________________________________________
@@ -674,6 +793,7 @@ TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
    ligFrame->AddFrame(fLights[kFront]);
 }
 
+//______________________________________________________________________________
 void TGLLightEditor::DoButton()
 {
    TGButton *btn = (TGButton *) gTQSender;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.6 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.7 2005/06/23 15:08:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -42,6 +42,10 @@ private:
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
    Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
+
+   // Methods
+   void            UpdateBoundingBox(); 
+
 protected:
    // Methods
    virtual void DirectDraw(UInt_t LOD) const;
@@ -71,31 +75,30 @@ public:
    void            Select(Bool_t select)              { fSelected = select; }
 
    // Color
-   const Float_t * GetColor() const                   { return fColor; }
+   const Float_t * Color() const                      { return fColor; }
    Bool_t          IsTransparent() const              { return fColor[3] < 1.f; }
    void            SetColor(const Float_t rgba[4]);
 
    // Geometry
-   void            UpdateBoundingBox(); 
-   TGLVertex3      GetTranslation() const;
+   TGLVertex3      Translation() const;
    void            SetTranslation(const TGLVertex3 & trans);
    void            Shift(const TGLVector3 & shift);
-   TGLVector3      GetScale() const;
+   TGLVector3      Scale() const;
    void            SetScale(const TGLVector3 & scale);
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
 
 //______________________________________________________________________________
-inline TGLVertex3 TGLPhysicalShape::GetTranslation() const
+inline TGLVertex3 TGLPhysicalShape::Translation() const
 { 
-   return fTransform.GetTranslation(); 
+   return fTransform.Translation(); 
 }
 
 //______________________________________________________________________________
 inline void TGLPhysicalShape::SetTranslation(const TGLVertex3 & trans) 
 { 
-   fTransform.SetTranslation(trans);
+   fTransform.Set(trans);
    UpdateBoundingBox();
 }
 
@@ -108,15 +111,19 @@ inline void TGLPhysicalShape::Shift(const TGLVector3 & shift)
 }
 
 //______________________________________________________________________________
-inline TGLVector3 TGLPhysicalShape::GetScale() const
+inline TGLVector3 TGLPhysicalShape::Scale() const
 { 
-   return fTransform.GetScale(); 
+   return fTransform.Scale(); 
 }
 
 //______________________________________________________________________________
 inline void TGLPhysicalShape::SetScale(const TGLVector3 & scale) 
 { 
+   TGLVertex3 origCenter = fBoundingBox.Center();
    fTransform.SetScale(scale); 
+   UpdateBoundingBox();
+   TGLVector3 shift = fBoundingBox.Center() - origCenter;
+   Shift(-shift);
    UpdateBoundingBox();
    fModified = kTRUE;
 }

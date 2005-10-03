@@ -20,11 +20,18 @@
 #pragma link C++ class TGLPlane;
 #pragma link C++ class TGLMatrix;
 #pragma link C++ class TGLUtil;
+#pragma link C++ class TGLQuadric;
 
 #pragma link C++ class TGLBoundingBox;
 #pragma link C++ class TGLDrawable;
 #pragma link C++ class TGLLogicalShape;
 #pragma link C++ class TGLPhysicalShape;
+#pragma link C++ class TGLClip;
+#pragma link C++ class TGLClipPlane;
+#pragma link C++ class TGLClipShape;
+#pragma link C++ class TGLManip;
+#pragma link C++ class TGLScaleManip;
+#pragma link C++ class TGLTransManip;
 
 #pragma link C++ class TGLCamera;
 #pragma link C++ class TGLOrthoCamera;

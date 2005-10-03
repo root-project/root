@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TGLOutput.h"
 
 #include "TGLPhysicalShape.h"
+#include "TGLClip.h"
 
 #include <assert.h>
 
@@ -42,11 +43,12 @@ const char * TGLSAViewer::fgHelpText = "\
      PRESS \n\
      \tw\t--- wireframe mode\n\
      \tr\t--- filled polygons mode\n\
-     \tj\t--- zoom in\n\
-     \tk\t--- zoom out\n\n\
-	  \tArrow Keys\tpan (truck) across scene\n\
+     \tt\t--- outline mode\n\
+     \tj\t--- ZOOM in\n\
+     \tk\t--- ZOOM out\n\
+	  \tArrow Keys\t--- PAN (TRUCK) across scene\n\n\
      You can ROTATE (ORBIT) the scene by holding the left \n\
-     mouse button and moving the mouse (pespective camera only).\n\
+     mouse button and moving the mouse (perspective camera only).\n\
      You can PAN (TRUCK) the camera using the middle mouse\n\
      button or arrow keys.\n\
      You can ZOOM (DOLLY) the camera by dragging side\n\
@@ -59,51 +61,66 @@ const char * TGLSAViewer::fgHelpText = "\
      PROJECTIONS\n\n\
      You can select the different plane projections\n\
      in \"Projections\" menu.\n\n\
-     COLOR\n\n\
+     OBJECT COLOR\n\n\
      After you selected an object or a light source,\n\
      you can modify object's material and light\n\
      source color.\n\n\
-     \tLIGHT SOURCES.\n\n\
-     \tThere are two pickable light sources in\n\
-     \tthe current implementation. They are shown as\n\
-     \tspheres. Each light source has three light\n\
-     \tcomponents : DIFFUSE, AMBIENT, SPECULAR.\n\
-     \tEach of this components is defined by the\n\
-     \tamounts of red, green and blue light it emits.\n\
-     \tYou can EDIT this parameters:\n\
+     LIGHT SOURCES.\n\n\
+     There are two pickable light sources in\n\
+     the current implementation. They are shown as\n\
+     spheres. Each light source has three light\n\
+     components : DIFFUSE, AMBIENT, SPECULAR.\n\
+     Each of this components is defined by the\n\
+     amounts of red, green and blue light it emits.\n\
+     You can EDIT this parameters:\n\
      \t1. Select light source sphere.\n" //hehe, too long string literal :)))
 "    \t2. Select light component you want to modify\n\
      \t   by pressing one of radio buttons.\n\
      \t3. Change RGB by moving sliders\n\n\
-     \tMATERIAL\n\n\
-     \tObject's material is specified by the percentage\n\
-     \tof red, green, blue light it reflects. A surface can\n\
-     \treflect diffuse, ambient and specular light. \n\
-     \tA surface has two additional parameters: EMISSION\n\
-     \t- you can make surface self-luminous; SHININESS -\n\
-     \tmodifying this parameter you can change surface\n\
-     \thighlights.\n\
-     \tSometimes changes are not visible, or light\n\
-     \tsources seem not to work - you should understand\n\
-     \tthe meaning of diffuse, ambient etc. light and material\n\
-     \tcomponents. For example, if you define material, wich has\n\
-     \tdiffuse component (1., 0., 0.) and you have a light source\n\
-     \twith diffuse component (0., 1., 0.) - you surface does not\n\
-     \treflect diffuse light from this source. For another example\n\
-     \t- the color of highlight on the surface is specified by:\n\
-     \tlight's specular component, material specular component.\n\
-     \tAt the top of the color editor there is a small window\n\
-     \twith sphere. When you are editing surface material,\n\
-     \tyou can see this material applyed to sphere.\n\
-     \tWhen edit light source, you see this light reflected\n\
-     \tby sphere whith DIFFUSE and SPECULAR components\n\
-     \t(1., 1., 1.).\n\n\
-     OBJECT'S GEOMETRY\n\n\
+     MATERIAL\n\n\
+     Object's material is specified by the percentage\n\
+     of red, green, blue light it reflects. A surface can\n\
+     reflect diffuse, ambient and specular light. \n\
+     A surface has two additional parameters: EMISSION\n\
+     - you can make surface self-luminous; SHININESS -\n\
+     modifying this parameter you can change surface\n\
+     highlights.\n\
+     Sometimes changes are not visible, or light\n\
+     sources seem not to work - you should understand\n\
+     the meaning of diffuse, ambient etc. light and material\n\
+     components. For example, if you define material, which has\n\
+     diffuse component (1., 0., 0.) and you have a light source\n\
+     with diffuse component (0., 1., 0.) - you surface does not\n\
+     reflect diffuse light from this source. For another example\n\
+     - the color of highlight on the surface is specified by:\n\
+     light's specular component, material specular component.\n\
+     At the top of the color editor there is a small window\n\
+     with sphere. When you are editing surface material,\n\
+     you can see this material applied to sphere.\n\
+     When edit light source, you see this light reflected\n\
+     by sphere with DIFFUSE and SPECULAR components\n\
+     (1., 1., 1.).\n\n\
+     OBJECT GEOMETRY\n\n\
      You can edit object's location and stretch it by entering\n\
      desired values in respective number entry controls.\n\n"
-"    SCENE PROPERTIES\n\n\
-     You can add clipping plane by clicking the checkbox and\n\
-     specifying the plane's equation A*x+B*y+C*z+D=0.";
+"     CLIPPING\n\n\
+     Select a clip type: None, Plane, Box\n\
+     For Plane & Box the lower space shows the relevant parameters\n\
+     \tPlane: Equation coefficients of form - aX + bY + cZ + d = 0\n\
+     \tBox: Center X/Y/Z and Length X/Y/Z\n\n\
+     For Box you can check the 'Show / Edit' checkbox to show the box\n\
+     in light blue in viewer. This also attaches the current\n\
+     manipulator to the box - enabling direct editing.\n\n\
+     MANIPULATORS\n\
+     A widget attached to a the select object - allowing direct\n\
+     manipulation of the object with respect to it's local axes.\n\n\
+     \tType\t\tWidget Style\t\tKey\n\
+     \t----\t\t------------\t\t---\n\
+     \tTranslation\tLocal axes with arrows\tv\n\
+     \tScale\t\tLocal axes with boxes\tx\n\
+     \tRotate\t\tLocal axes rings\tc NOT IMPLEMENTED YET\n\n\
+     Rollover the local axis widget component (red/green/blue)\n\
+     which turns yellow (active). Left click/drag on this to adjust.\n";
 
 ClassImp(TGLSAViewer)
 
@@ -176,10 +193,10 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
    fV1 = new TGVerticalFrame(fCompositeFrame, 150, 10, kSunkenFrame | kFixedWidth);
    fShutter = new TGShutter(fV1, kSunkenFrame | kFixedWidth);
-   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Color"), 5001);
-   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Object's geometry"), 5002);
-   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Scene"), 5003);
-   fShutItem4 = new TGShutterItem(fShutter, new TGHotString("Lights"), 5004);
+   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Object Color"), 5001);
+   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Object Geometry"), 5002);
+   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Clipping"), 5003);
+   fShutItem4 = new TGShutterItem(fShutter, new TGHotString("Lighting"), 5004);
    fShutter->AddItem(fShutItem1);
    fShutter->AddItem(fShutItem2);
    fShutter->AddItem(fShutItem3);
@@ -364,15 +381,21 @@ void TGLSAViewer::ProcessGUIEvent(Int_t wid)
       SetSelectedGeom(trans,scale);
       break;
    }
-   case kTBda:
-      ToggleAxes();
-      break;
-   case kTBcp:
-      ToggleClip();
    case kTBcpm: {
-      TGLPlane eqn;
-      fSceneEditor->GetPlaneEqn(eqn.Arr());
-      SetClipPlaneEq(eqn); // Don't normalise
+      if (!fSceneEditor) {
+         return;
+      }
+      // Sync axes state
+      SetAxes(fSceneEditor->GetAxes());
+
+      // Sync clipping
+      EClipType clipType;
+      std::vector<Double_t> clipData;
+      Bool_t  clipEdit;
+      fSceneEditor->GetCurrentClip(clipType, clipEdit);
+      fSceneEditor->GetClipState(clipType, clipData);
+      SetClipState(clipType, clipData);
+      SetCurrentClip(clipType, clipEdit);
       break;
    }
    case kTBFront:
@@ -400,11 +423,33 @@ void TGLSAViewer::SelectionChanged()
 
    const TGLPhysicalShape * selected = GetSelected();
    if (selected) {
-      fColorEditor->SetRGBA(selected->GetColor());
-      fGeomEditor->SetCenter(selected->GetTranslation().CArr());
-      fGeomEditor->SetScale(selected->GetScale().CArr());
+      fColorEditor->SetRGBA(selected->Color());
+      fGeomEditor->SetCenter(selected->Translation().CArr());
+      fGeomEditor->SetScale(selected->Scale().CArr());
    } else { // No selection
       fColorEditor->Disable();
       fGeomEditor->Disable();
    }
 }
+
+//______________________________________________________________________________
+void TGLSAViewer::ClipChanged()
+{
+   // Update GUI components for embedded viewer clipping change
+
+   EClipType type = GetCurrentClip();
+   std::vector<Double_t> data;
+   GetClipState(type, data);
+   fSceneEditor->SetClipState(type, data);
+   fSceneEditor->SetCurrentClip(type);
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::SetDefaultClips()
+{
+   TGLViewer::SetDefaultClips();
+
+   // Now default clips are established ensure they are published to GUI
+   fSceneEditor->GetDefaults();
+}
+

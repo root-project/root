@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.10 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.11 2005/08/10 16:26:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -21,6 +21,9 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
+#ifndef ROOT_TGLUtil
+#include "TGLUtil.h" // For clip type enum
+#endif
 
 class TGLStandalone;
 class TGLSAViewer;
@@ -30,6 +33,7 @@ class TGNumberEntry;
 class TGLMatView;
 class TGHSlider;
 class TGButton;
+class TGButtonGroup;
 class TGCanvas;
 class TGLabel;
 
@@ -143,29 +147,39 @@ private:
 };
 
 class TGLSceneEditor : public TGCompositeFrame {
+public:
+
 private:
-   enum {
-      kPlaneA,
-      kPlaneB,
-      kPlaneC,
-      kPlaneD,
-      kTot
-   };
 
    TGLSAViewer   *fViewer;
    TList          fTrash;
    TGLayoutHints  *fL1, *fL2;
-   TGNumberEntry  *fGeomData[kTot];
    TGButton       *fApplyButton;
-   TGCheckButton  *fClipActivate;
-   TGCheckButton  *fAxesCheck;
+   TGButtonGroup    * fTypeButtons;
+   TGCompositeFrame * fPlanePropFrame;
+   TGNumberEntry    * fPlaneProp[4];
+   TGCompositeFrame * fBoxPropFrame;
+   TGNumberEntry    * fBoxProp[6];
+
+   TGCheckButton  *fEdit;
+   TGCheckButton  *fAxes;
+   EClipType       fCurrentClip;
 
 public:
    TGLSceneEditor(const TGWindow *parent, TGLSAViewer *viewer);   
 
-   void GetPlaneEqn(Double_t *eqn);
-   void DoButton();
-   void ValueSet(Long_t unusedVal);
+   // Internal GUI event callbacks
+   void ClipValueChanged(Long_t);
+   void ClipTypeChanged(Int_t);
+   void UpdateViewer();
+   void GetDefaults();
+
+   // External viewer interface
+   void GetClipState(EClipType type, std::vector<Double_t> & data) const;
+   void SetClipState(EClipType type, const std::vector<Double_t> & data);
+   void GetCurrentClip(EClipType & type, Bool_t & edit) const;
+   void SetCurrentClip(EClipType type);
+   Bool_t GetAxes() const;
 
 private:
    void CreateControls();

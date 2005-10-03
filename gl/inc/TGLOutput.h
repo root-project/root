@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.2 2005/08/11 15:28:53 rdm Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -27,6 +27,8 @@ public:
 private:
    static Bool_t CapturePostscript(TGLViewer & viewer, EFormat format,
                                    const char * filePath);
+
+   ClassDef(TGLOutput,0) // Collection of GL capture & output routines
 };
 
 #endif

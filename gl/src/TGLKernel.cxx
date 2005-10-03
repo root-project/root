@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.35 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.36 2005/09/07 11:43:36 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1468,6 +1468,12 @@ void TGLKernel::DrawViewer(TGLViewer *viewer)
 Bool_t TGLKernel::SelectViewer(TGLViewer *viewer, const TGLRect * rect)
 {
    return viewer->DoSelect(*rect);
+}
+
+//______________________________________________________________________________
+void TGLKernel::SelectViewerManip(TGLViewer *viewer, const TGLRect * rect)
+{
+   viewer->DoSelectManip(*rect);
 }
 
 //______________________________________________________________________________

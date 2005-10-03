@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.8 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.9 2005/08/10 16:26:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -93,13 +93,13 @@ ClassImp(TGLRect)
 
 //______________________________________________________________________________
 TGLRect::TGLRect() :
-   fX(0), fY(0), fWidth(0), fHeight(0)
+      fX(0), fY(0), fWidth(0), fHeight(0)
 {
 }
 
 //______________________________________________________________________________
 TGLRect::TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height) :
-   fX(x), fY(y), fWidth(width), fHeight(height)
+      fX(x), fY(y), fWidth(width), fHeight(height)
 {
 }
 
@@ -145,13 +145,13 @@ Double_t TGLRect::Aspect() const
 EOverlap TGLRect::Overlap(const TGLRect & other) const
 {
    if ((fX <= other.fX) && (fX + fWidth >= other.fX + other.fWidth) &&
-       (fY <= other.fY) && (fY +fHeight >= other.fY + other.fHeight)) {
+        (fY <= other.fY) && (fY +fHeight >= other.fY + other.fHeight)) {
       return kInside;
    }
    else if ((fX >= other.fX + static_cast<Int_t>(other.fWidth)) ||
-             (fX + static_cast<Int_t>(fWidth) <= other.fX) ||
-             (fY >= other.fY + static_cast<Int_t>(other.fHeight)) ||
-             (fY + static_cast<Int_t>(fHeight) <= other.fY)) {
+            (fX + static_cast<Int_t>(fWidth) <= other.fX) ||
+            (fY >= other.fY + static_cast<Int_t>(other.fHeight)) ||
+            (fY + static_cast<Int_t>(fHeight) <= other.fY)) {
       return kOutside;
    } else {
       return kPartial;
@@ -163,6 +163,7 @@ ClassImp(TGLPlane)
 //______________________________________________________________________________
 TGLPlane::TGLPlane()
 {
+   // Construct a default plane of x + y + z = 0
    Set(1.0, 1.0, 1.0, 0.0);
 }
 
@@ -173,26 +174,50 @@ TGLPlane::TGLPlane(const TGLPlane & other)
 }
 
 //______________________________________________________________________________
-TGLPlane::TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t normalise)
+TGLPlane::TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d)
 {
-   Set(a, b, c, d, normalise);
+   // Construct plane with equation a.x + b.y + c.z + d = 0
+   // with optional normalisation
+   Set(a, b, c, d);
 }
 
 //______________________________________________________________________________
-TGLPlane::TGLPlane(Double_t eq[4], Bool_t normalise)
+TGLPlane::TGLPlane(Double_t eq[4])
 {
-   Set(eq, normalise);
+   // Construct plane with equation eq[0].x + eq[1].y + eq[2].z + eq[3] = 0
+   // with optional normalisation
+   Set(eq);
 }
 
-TGLPlane::TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point, Bool_t normalise)
+//______________________________________________________________________________
+TGLPlane::TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, 
+                   const TGLVertex3 & p3)
 {
-   Set(norm, point, normalise);
+   // Construct plane passing through 3 supplied points
+   // with optional normalisation
+   Set(p1, p2, p3);
+}
+
+//______________________________________________________________________________
+TGLPlane::TGLPlane(const TGLVector3 & v, const TGLVertex3 & p)
+{
+   // Construct plane with supplied normal vector, passing through point
+   // with optional normalisation
+   Set(v, p);
 }
 
 //______________________________________________________________________________
 TGLPlane::~TGLPlane()
 {
 }
+
+//______________________________________________________________________________
+void TGLPlane::Dump() const
+{
+   std::cout.precision(6);
+ 	std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] <<
+	std::endl;
+ }
 
 ClassImp(TGLMatrix)
 
@@ -206,7 +231,21 @@ TGLMatrix::TGLMatrix()
 TGLMatrix::TGLMatrix(Double_t x, Double_t y, Double_t z)
 {
    SetIdentity();
-   SetTranslation(TGLVertex3(x,y,z));
+   Set(x, y, z);
+}
+
+//______________________________________________________________________________
+TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
+{
+   SetIdentity();
+   Set(translation);
+}
+
+//______________________________________________________________________________
+TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis)
+{
+   SetIdentity();
+   Set(origin, zAxis);
 }
 
 //______________________________________________________________________________
@@ -227,6 +266,48 @@ TGLMatrix::~TGLMatrix()
 }
 
 //______________________________________________________________________________
+void TGLMatrix::Set(Double_t x, Double_t y, Double_t z)
+{
+   Set(TGLVertex3(x,y,z));
+}
+
+//______________________________________________________________________________
+void TGLMatrix::Set(const TGLVertex3 & translation)
+{
+   // Set the translation component of matirx - rest left unaffected
+   fVals[12] = translation[0];
+   fVals[13] = translation[1];
+   fVals[14] = translation[2];
+}
+
+//______________________________________________________________________________
+void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
+{
+   // Establish matrix transformation which when applied puts local origin at 
+   // passed 'origin' and the local Z axis in direction 'z'. Both
+   // 'origin' and 'zAxisVec' are expressed in the parent frame
+   TGLVector3 zAxis(z);
+   zAxis.Normalise();
+   TGLVector3 axis; 
+   if (fabsf(zAxis.X()) <= fabsf(zAxis.Y()) && fabsf(zAxis.X()) <= fabsf(zAxis.Z())) {
+      axis.Set(1, 0, 0); 
+   } else if (fabsf(zAxis.Y()) <= fabsf(zAxis.X()) && fabsf(zAxis.Y()) <= fabsf(zAxis.Z())) {
+      axis.Set(0, 1, 0); 
+   } else { 
+      axis.Set(0, 0, 1);
+   }
+
+   TGLVector3 xAxis = Cross(zAxis, axis);
+   xAxis.Normalise();
+   TGLVector3 yAxis = Cross(zAxis, xAxis);
+
+   fVals[0] = xAxis.X(); fVals[4] = yAxis.X(); fVals[8 ] = zAxis.X(); fVals[12] = origin.X();
+   fVals[1] = xAxis.Y(); fVals[5] = yAxis.Y(); fVals[9 ] = zAxis.Y(); fVals[13] = origin.Y();
+   fVals[2] = xAxis.Z(); fVals[6] = yAxis.Z(); fVals[10] = zAxis.Z(); fVals[14] = origin.Z();
+   fVals[3] = 0.0;       fVals[7] = 0.0;       fVals[11] = 0.0;       fVals[15] = 1.0;
+}
+
+//______________________________________________________________________________
 void TGLMatrix::Set(const Double_t vals[16])
 {
    for (UInt_t i=0; i < 16; i++) {
@@ -244,17 +325,9 @@ void TGLMatrix::SetIdentity()
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLMatrix::GetTranslation() const
+TGLVertex3 TGLMatrix::Translation() const
 {
    return TGLVertex3(fVals[12], fVals[13], fVals[14]);
-}
-
-//______________________________________________________________________________
-void TGLMatrix::SetTranslation(const TGLVertex3 & trans)
-{
-   fVals[12] = trans[0];
-   fVals[13] = trans[1];
-   fVals[14] = trans[2];
 }
 
 //______________________________________________________________________________
@@ -266,7 +339,7 @@ void TGLMatrix::Shift(const TGLVector3 & shift)
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLMatrix::GetScale() const
+TGLVector3 TGLMatrix::Scale() const
 {
    // Get local axis scaling factors
    TGLVector3 x(fVals[0], fVals[1], fVals[2]);
@@ -278,8 +351,9 @@ TGLVector3 TGLMatrix::GetScale() const
 //______________________________________________________________________________
 void TGLMatrix::SetScale(const TGLVector3 & scale)
 {
+
    // Set local axis scaling factors
-   TGLVector3 currentScale = GetScale();
+   TGLVector3 currentScale = Scale();
    
    // x
    if (currentScale[0] != 0.0) {

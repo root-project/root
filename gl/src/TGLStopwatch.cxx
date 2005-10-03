@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.4 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -68,6 +68,18 @@ Double_t TGLStopwatch::End()
 Double_t TGLStopwatch::GetClock(void) const
 {
 #ifdef R__WIN32
+   // Use performance counter (system dependent support) if possible
+   static LARGE_INTEGER perfFreq;
+   static Bool_t usePerformanceCounter = QueryPerformanceFrequency(&perfFreq);
+
+   if (usePerformanceCounter) {
+      LARGE_INTEGER counter;
+      QueryPerformanceCounter(&counter);
+      Double_t time = static_cast<Double_t>(counter.QuadPart)*1000.0 / 
+                      static_cast<Double_t>(perfFreq.QuadPart);
+      return time;
+   }
+
    // TODO: Portability - check with Rene
    FILETIME        ft;
    ULARGE_INTEGER  uli;

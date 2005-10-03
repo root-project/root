@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.7 2005/07/13 15:27:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.8 2005/07/14 19:13:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -67,23 +67,26 @@ public:
    TGLBoundingBox(const TGLBoundingBox & other);
    virtual ~TGLBoundingBox(); // ClassDef introduces virtual fns
 
-   // Set orientated BB
-   TGLBoundingBox & operator=(const TGLBoundingBox & other) { Set(other); return *this; }
+   // Set orientated box
+   TGLBoundingBox & operator =(const TGLBoundingBox & other);
    void Set(const TGLVertex3 vertex[8]);
    void Set(const Double_t vertex[8][3]);
    void Set(const TGLBoundingBox & other);
    void SetEmpty();
 
-   // Set orientated AA
+   // Set axis aligned box
    void SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex); // axis aligned
    void SetAligned(UInt_t nbPnts, const Double_t * pnts); // axis aligned
 
+   // Manipulation
    void Transform(const TGLMatrix & matrix);
    void Scale(Double_t factor);
    void Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor);
    void Translate(const TGLVector3 & offset);
 
+   // Corner vertex accessors
    const TGLVertex3 & operator [] (UInt_t index) const;
+   const TGLVertex3 & Vertex(UInt_t index) const;
    Double_t XMin() const { return Min(0); }
    Double_t XMax() const { return Max(0); }
    Double_t YMin() const { return Min(1); }
@@ -91,20 +94,33 @@ public:
    Double_t ZMin() const { return Min(2); }
    Double_t ZMax() const { return Max(2); }
 
-         TGLVertex3   Center() const;
-         TGLVector3   Extents() const;
-   const TGLVector3 & Axis(UInt_t i, Bool_t normalised = kTRUE) const;
-         Double_t     Volume() const { return fVolume; }
-         Bool_t       IsEmpty() const;
+   // Other properties
+          TGLVertex3   Center() const;
+          TGLVector3   Extents() const;
+   const  TGLVector3 & Axis(UInt_t i, Bool_t normalised = kTRUE) const;
+          Bool_t       IsEmpty() const;
+          Double_t     Volume() const { return fVolume; }
+          void         PlaneSet(TGLPlaneSet_t & planeSet) const;
 
+   // Overlap testing
    EOverlap Overlap(const TGLPlane & plane) const;
    EOverlap Overlap(const TGLBoundingBox & box) const;
 
-   void Draw() const;
+   void Draw(Bool_t solid = kFALSE) const;
    void Dump() const;
 
    ClassDef(TGLBoundingBox,0); // a 3D orientated bounding box
 };
+
+//______________________________________________________________________________
+inline TGLBoundingBox & TGLBoundingBox::operator =(const TGLBoundingBox & other)
+{
+   // Check for self-assignment
+   if (this != &other) {
+      Set(other);
+   }
+   return *this;
+}
 
 //______________________________________________________________________________
 inline const TGLVertex3 & TGLBoundingBox::operator [] (UInt_t index) const
@@ -115,6 +131,12 @@ inline const TGLVertex3 & TGLBoundingBox::operator [] (UInt_t index) const
       assert(kFALSE);
       return fVertex[0];
    }*/
+}
+
+//______________________________________________________________________________
+inline const TGLVertex3 & TGLBoundingBox::Vertex(UInt_t index) const
+{
+   return fVertex[index];
 }
 
 //______________________________________________________________________________

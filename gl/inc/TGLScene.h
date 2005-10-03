@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.12 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.13 2005/08/12 07:38:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -28,6 +28,7 @@ class TGLCamera;
 class TGLDrawable;
 class TGLLogicalShape;
 class TGLPhysicalShape;
+class TGLClip;
 
 /*************************************************************************
  * TGLScene - TODO
@@ -71,13 +72,26 @@ private:
    mutable TGLBoundingBox fBoundingBox;      //! bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
    mutable Bool_t         fBoundingBoxValid; //! bounding box valid?
    UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
+
+   // Selection
    TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
+
+   // Draw stats
+   struct {
+      UInt_t fOpaque;
+      UInt_t fTrans;
+      std::map<std::string, UInt_t> fByShape;
+   } fDrawStats;
 
    // Methods
 
    // Draw sorting
    void   SortDrawList();
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2);
+
+   // Internal draw passes - repeated calls for cliping
+   void  DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+                  Double_t timeout, const std::vector<TGLPlane> * clipPlanes = 0);
    
    // Misc
    void   DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const;
@@ -85,8 +99,10 @@ private:
                           const TGLCamera & camera,
                           UInt_t sceneLOD) const;
 
-   // Draw stats (debug)
-   const std::map<std::string, UInt_t> & UpdateDrawStats(const TGLPhysicalShape * drawnShape = 0) const;
+   // Draw stats
+   void ResetDrawStats();
+   void UpdateDrawStats(const TGLPhysicalShape & shape);
+   void DumpDrawStats(); // Debug
 
    // Non-copyable class
    TGLScene(const TGLScene &);
@@ -98,9 +114,11 @@ public:
 
    // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const;
-   UInt_t                 Draw(const TGLCamera & camera, EDrawStyle style, UInt_t sceneLOD, Double_t timeout = 0.0);
+ 
+   void                   Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+                               Double_t timeout, const TGLClip * clip);
    void                   DrawAxes() const;
-   Bool_t                 Select(const TGLCamera & camera, EDrawStyle style);
+   Bool_t                 Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip);
 
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);
@@ -138,6 +156,7 @@ public:
    ClassDef(TGLScene,0) // a GL scene - collection of physical and logical shapes
 };
 
+//______________________________________________________________________________
 inline Bool_t TGLScene::TakeLock(ELock lock) const
 {
    if (LockValid(lock) && fLock == kUnlocked) {
@@ -151,6 +170,7 @@ inline Bool_t TGLScene::TakeLock(ELock lock) const
    return kFALSE;
 }
 
+//______________________________________________________________________________
 inline Bool_t TGLScene::ReleaseLock(ELock lock) const
 {
    if (LockValid(lock) && fLock == lock) {
@@ -164,16 +184,19 @@ inline Bool_t TGLScene::ReleaseLock(ELock lock) const
    return kFALSE;
 }
 
+//______________________________________________________________________________
 inline Bool_t TGLScene::IsLocked() const
 {
    return (fLock != kUnlocked);
 }
 
+//______________________________________________________________________________
 inline TGLScene::ELock TGLScene::CurrentLock() const
 {
    return fLock;
 }
 
+//______________________________________________________________________________
 inline const char * TGLScene::LockName(ELock lock)
 {
    static const std::string names[5] 
@@ -190,6 +213,7 @@ inline const char * TGLScene::LockName(ELock lock)
    }
 }
 
+//______________________________________________________________________________
 inline Bool_t TGLScene::LockValid(ELock lock) 
 {
    // Test if lock is a valid type to take/release
