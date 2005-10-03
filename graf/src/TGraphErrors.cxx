@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.50 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.51 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -574,10 +574,18 @@ void TGraphErrors::Paint(Option_t *option)
    for (Int_t i=0;i<fNpoints;i++) {
       x  = gPad->XtoPad(fX[i]);
       y  = gPad->YtoPad(fY[i]);
-      if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
-      if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
-      if (y < gPad->GetUymin()) y = gPad->GetUymin();
-      if (y > gPad->GetUymax()) y = gPad->GetUymax();
+      if (option3) {
+         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+         if (y < gPad->GetUymin()) y = gPad->GetUymin();
+         if (y > gPad->GetUymax()) y = gPad->GetUymax();
+      } else {
+         if (x < gPad->GetUxmin()) continue;
+         if (x > gPad->GetUxmax()) continue;
+         if (y < gPad->GetUymin()) continue;
+         if (y > gPad->GetUymax()) continue;
+      }
+      ex = fEX[i];
       ex = fEX[i];
       ey = fEY[i];
 
