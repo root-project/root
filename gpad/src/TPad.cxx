@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.198 2005/09/08 14:22:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.199 2005/09/16 17:19:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -700,7 +700,11 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    nc2 = 0;
    for (Int_t i=0; i<n; i++) {
       x2 = x[i]; y2 = y[i];
-      slope = (y2-y1)/(x2-x1);
+      if (x1 == x2) {
+         slope = 0;
+      } else {
+         slope = (y2-y1)/(x2-x1);
+      }
       if (x1 >= xclipl) {
          if (x2 < xclipl) {
             xc2[nc2] = xclipl; yc2[nc2++] = slope*(xclipl-x1)+y1;
@@ -721,16 +725,20 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    nc = 0;
    for (Int_t i=0; i<nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
-      slope = (y2-y1)/(x2-x1);
+      if (y1 == y2) {
+         slope = 0;
+      } else {
+         slope = (x2-x1)/(y2-y1);
+      }
       if (y1 <= yclipt) {
          if (y2 > yclipt) {
-            xc[nc] = x1+(yclipt-y1)/slope; yc[nc++] = yclipt;
+            xc[nc] = x1+(yclipt-y1)*slope; yc[nc++] = yclipt;
          } else {
             xc[nc] = x2; yc[nc++] = y2;
          }
       } else {
          if (y2 <= yclipt) {
-            xc[nc] = x1+(yclipt-y1)/slope; yc[nc++] = yclipt;
+            xc[nc] = x1+(yclipt-y1)*slope; yc[nc++] = yclipt;
             xc[nc] = x2; yc[nc++] = y2;
          }
       }
@@ -742,7 +750,11 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    nc2 = 0;
    for (Int_t i=0; i<nc; i++) {
       x2 = xc[i]; y2 = yc[i];
-      slope = (y2-y1)/(x2-x1);
+      if (x1 == x2) {
+         slope = 0;
+      } else {
+         slope = (y2-y1)/(x2-x1);
+      }
       if (x1 <= xclipr) {
          if (x2 > xclipr) {
             xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
@@ -763,16 +775,20 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    nc = 0;
    for (Int_t i=0; i<nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
-      slope = (y2-y1)/(x2-x1);
+      if (y1 == y2) {
+         slope = 0;
+      } else {
+         slope = (x2-x1)/(y2-y1);
+      }
       if (y1 >= yclipb) {
          if (y2 < yclipb) {
-            xc[nc] = x1+(yclipb-y1)/slope; yc[nc++] = yclipb;
+            xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
          } else {
             xc[nc] = x2; yc[nc++] = y2;
          }
       } else {
          if (y2 >= yclipb) {
-            xc[nc] = x1+(yclipb-y1)/slope; yc[nc++] = yclipb;
+            xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
             xc[nc] = x2; yc[nc++] = y2;
          }
       }
