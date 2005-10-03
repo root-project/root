@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.1 2005/10/03 06:54:51 brun Exp $
 // Author: Andrei Gheata   26/09/05
 
 /*************************************************************************
@@ -23,6 +23,11 @@
 //_____________________________________________________________________________
 // TGeoScaledShape - A shape scaled by a TGeoScale transformation
 //    
+//Begin_Html
+/*
+<img src="gif/TGeoScaledShape.gif">
+*/
+//End_Html
 //_____________________________________________________________________________
 
 
