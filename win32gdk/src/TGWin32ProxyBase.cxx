@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.15 2005/04/21 18:46:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.16 2005/06/23 14:01:22 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -286,7 +286,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    }
 
    // limiting wait time
-   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, INFINITE); //fMaxResponseTime);
+   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, fMaxResponseTime);
    ::ResetEvent(fPimpl->fEvent);
 
    if (res == WAIT_TIMEOUT) { // server thread is blocked

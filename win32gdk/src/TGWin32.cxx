@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.97 2005/06/21 17:09:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.98 2005/08/17 09:10:44 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1062,6 +1062,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       TTF::SetSmoothing(kFALSE);
    }
 
+   TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    fHasTTFonts = kTRUE;
    return 0;
 }

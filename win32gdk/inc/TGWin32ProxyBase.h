@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.8 2004/05/10 12:10:09 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.9 2005/04/21 18:46:24 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -22,6 +22,7 @@ class TGWin32ProxyBasePrivate;
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32ProxyBase {
 friend class TGWin32;
+friend class TGWin32GL;
 
 protected:
    TGWin32ProxyBasePrivate *fPimpl;       // very private data

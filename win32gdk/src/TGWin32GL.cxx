@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.6 2005/08/18 11:12:59 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.7 2005/08/23 11:29:06 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -40,6 +40,7 @@ TGWin32GL::TGWin32GL()
    // Ctor.
 
    gPtr2VirtualGL = &TGWin32VirtualGLProxy::ProxyObject;
+   TGWin32VirtualGLProxy::fMaxResponseTime = INFINITE;
 }
 
 //______________________________________________________________________________
