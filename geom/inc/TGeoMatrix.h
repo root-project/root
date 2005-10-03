@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.20 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.21 2005/09/21 12:12:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -90,6 +90,7 @@ public :
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
+   static void          Normalize(Double_t *vect);
    void                 Print(Option_t *option="") const;
    virtual void         RotateX(Double_t) {;}
    virtual void         RotateY(Double_t) {;}
@@ -231,9 +232,16 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
    
-   virtual TGeoMatrix&        Inverse() const;
-   void                       SetScale(Double_t sx, Double_t sy, Double_t sz);
-   Bool_t                     Normalize();
+   virtual TGeoMatrix&  Inverse() const;
+   void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
+   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
+   Double_t             LocalToMaster(Double_t dist, const Double_t *dir=0) const;
+   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
+                          {TGeoScale::LocalToMaster(local, master);}
+   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
+   Double_t             MasterToLocal(Double_t dist, const Double_t *dir=0) const;
+   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const
+                          {TGeoScale::MasterToLocal(master, local);}
    
    virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.42 2005/09/21 12:12:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.43 2005/09/21 16:27:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -452,6 +452,18 @@ void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local) cons
                + (master[1]-bombtr[1])*rot[i+3]
                + (master[2]-bombtr[2])*rot[i+6];
   }
+}
+
+//_____________________________________________________________________________
+void TGeoMatrix::Normalize(Double_t *vect)
+{
+// Normalize a vector.
+   Double_t normfactor = vect[0]*vect[0] + vect[1]*vect[1] + vect[2]*vect[2];
+   if (normfactor <= 1E-10) return;
+   normfactor = 1./TMath::Sqrt(normfactor);
+   vect[0] *= normfactor;
+   vect[1] *= normfactor;
+   vect[2] *= normfactor;
 }
 
 //_____________________________________________________________________________
@@ -1166,25 +1178,74 @@ TGeoMatrix& TGeoScale::Inverse() const
 void TGeoScale::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
 // scale setter
+   if (sx*sy*sz < 1.E-10) {
+      Error("SetScale", "Invalid scale %f, %f, %f for transformation %s",sx,sy,sx,GetName());
+      return;
+   }   
    fScale[0] = sx;
    fScale[1] = sy;
    fScale[2] = sz;
-   if (!(Normalize())) {
-      Error("ctor", "Invalid scale");
-      return;
-   }
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoScale::Normalize()
+void TGeoScale::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// A scale transformation should be normalized by sx*sy*sz factor
-   Double_t normfactor = fScale[0]*fScale[1]*fScale[2];
-   if (normfactor <= 1E-5) return kFALSE;
-   for (Int_t i=0; i<3; i++)
-      fScale[i] /= normfactor;
-   return kTRUE;
+// Convert a local point to the master frame.
+   master[0] = local[0]*fScale[0];
+   master[1] = local[1]*fScale[1];
+   master[2] = local[2]*fScale[2];
 }
+
+//_____________________________________________________________________________
+Double_t TGeoScale::LocalToMaster(Double_t dist, const Double_t *dir) const
+{
+// Convert the local distance along unit vector DIR to master frame. If DIR
+// is not specified perform a conversion such as the returned distance is the
+// the minimum for all possible directions.
+   Double_t scale;
+   if (!dir) {
+      scale = fScale[0];
+      if (fScale[1]<scale) scale = fScale[1];
+      if (fScale[2]<scale) scale = fScale[2];
+   } else {
+      scale = fScale[0]*fScale[0]*dir[0]*dir[0] +
+              fScale[1]*fScale[1]*dir[1]*dir[1] +
+              fScale[2]*fScale[2]*dir[2]*dir[2];
+      scale = TMath::Sqrt(scale);        
+   }   
+   return scale*dist;   
+}   
+      
+//_____________________________________________________________________________
+void TGeoScale::MasterToLocal(const Double_t *master, Double_t *local) const
+{
+// Convert a global point to local frame.
+   local[0] = master[0]/fScale[0];
+   local[1] = master[1]/fScale[1];
+   local[2] = master[2]/fScale[2];
+}
+
+//_____________________________________________________________________________
+Double_t TGeoScale::MasterToLocal(Double_t dist, const Double_t *dir) const
+{
+// Convert the distance along unit vector DIR to local frame. If DIR
+// is not specified perform a conversion such as the returned distance is the
+// the minimum for all possible directions.
+   Double_t scale;
+   if (!dir) {
+      scale = fScale[0];
+      if (fScale[1]>scale) scale = fScale[1];
+      if (fScale[2]>scale) scale = fScale[2];
+      scale = 1./scale;
+   } else {
+      scale = (dir[0]*dir[0])/(fScale[0]*fScale[0]) +
+              (dir[1]*dir[1])/(fScale[1]*fScale[1]) +
+              (dir[2]*dir[2])/(fScale[2]*fScale[2]);
+      scale = TMath::Sqrt(scale);        
+   }   
+   return scale*dist;   
+}   
+
 //=============================================================================
 
 ClassImp(TGeoCombiTrans)
