@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.7 2005/08/18 11:12:58 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.8 2005/08/23 11:29:06 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -416,7 +416,7 @@ Bool_t TX11GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, U
    
    if (prevInd == -1 || !fPimpl->fPaintDevices[prevInd].fGLXContext) {
       GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd],
-                                           None, True);
+                                           None, False);
 
       if (!glxCtx) {
          Error("CreateGLPixmap", "glXCreateContext failed\n");
