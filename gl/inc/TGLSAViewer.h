@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.2 2005/08/11 15:28:53 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.3 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -21,8 +21,7 @@ class TGCompositeFrame;
 class TGVerticalFrame;
 class TGLayoutHints;
 class TGLGeometryEditor;
-class TGShutterItem;
-class TGShutter;
+class TGTab;
 class TGLSelection;
 class TGVSplitter;
 class TGPopupMenu;
@@ -47,8 +46,11 @@ private:
    TGCompositeFrame  *fCompositeFrame;
    TGVerticalFrame   *fV1;
    TGVerticalFrame   *fV2;
-   TGShutter         *fShutter;
-   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3, *fShutItem4;
+
+   TGTab             *fEditorTab;
+   TGTab             *fObjectTab;
+   TGTab             *fSceneTab;
+
    TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
    TGLayoutHints     *fCanvasLayout;
    TGMenuBar         *fMenuBar;

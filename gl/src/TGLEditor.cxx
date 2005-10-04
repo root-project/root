@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.15 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.16 2005/10/03 15:19:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -71,7 +71,7 @@ enum EGLEditorIdent {
 
 //______________________________________________________________________________
 TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
-               :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+               :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
                 fViewer(v), fRedSlider(0), fGreenSlider(0), fBlueSlider(0), 
                 fAlphaSlider(0), fApplyButton(0), fIsActive(kFALSE), 
                 fIsLight(kFALSE), fRGBA()
@@ -249,7 +249,7 @@ void TGLColorEditor::Disable()
 //______________________________________________________________________________
 void TGLColorEditor::CreateRadioButtons()
 {
-   TGGroupFrame *partFrame = new TGGroupFrame(this, "Light:", kLHintsTop | kLHintsCenterX);
+   TGGroupFrame *partFrame = new TGGroupFrame(this, "Color components:", kLHintsTop | kLHintsCenterX);
    fTrash.Add(partFrame);
    partFrame->SetTitlePos(TGGroupFrame::kLeft);
    AddFrame(partFrame, fFrameLayout);
@@ -257,17 +257,21 @@ void TGLColorEditor::CreateRadioButtons()
    fTrash.Add(ml);
    partFrame->SetLayoutManager(ml);
 
-   fLightTypes[kDiffuse] = new TGRadioButton(partFrame, "Diffuse color", kCPd);
+   fLightTypes[kDiffuse] = new TGRadioButton(partFrame, "Diffuse", kCPd);
    fLightTypes[kDiffuse]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
+   fLightTypes[kDiffuse]->SetToolTipText("Diffuse component of color");	
    fTrash.Add(fLightTypes[kDiffuse]);
-   fLightTypes[kAmbient] = new TGRadioButton(partFrame, "Ambient color", kCPa);
+   fLightTypes[kAmbient] = new TGRadioButton(partFrame, "Ambient", kCPa);
    fLightTypes[kAmbient]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
+   fLightTypes[kAmbient]->SetToolTipText("Ambient component of color");	
    fTrash.Add(fLightTypes[kAmbient]);
-   fLightTypes[kSpecular] = new TGRadioButton(partFrame, "Specular color", kCPs);
+   fLightTypes[kSpecular] = new TGRadioButton(partFrame, "Specular", kCPs);
    fLightTypes[kSpecular]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
+   fLightTypes[kSpecular]->SetToolTipText("Specular component of color");	
    fTrash.Add(fLightTypes[kSpecular]);
-   fLightTypes[kEmission] = new TGRadioButton(partFrame, "Emission color", kCPe);
+   fLightTypes[kEmission] = new TGRadioButton(partFrame, "Emissive", kCPe);
    fLightTypes[kEmission]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
+   fLightTypes[kEmission]->SetToolTipText("Emissive component of color");	
    fTrash.Add(fLightTypes[kEmission]);
 
    partFrame->AddFrame(fLightTypes[kDiffuse]);
@@ -391,7 +395,7 @@ void TGLColorEditor::SwapBuffers()const
 
 //______________________________________________________________________________
 TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TGLSAViewer *v)
-                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
                       fViewer(v)
 {
    fTrash.SetOwner(kTRUE);
@@ -534,7 +538,7 @@ void TGLGeometryEditor::CreateStretchControls()
 
 //______________________________________________________________________________
 TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TGLSAViewer *v)
-                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
                       fViewer(v), fCurrentClip(kClipNone)
 {
    fTrash.SetOwner(kTRUE);
@@ -576,7 +580,8 @@ void TGLSceneEditor::CreateControls()
       fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
                              this, "ClipValueChanged(Long_t)");   
    }
-   HideFrame(fPlanePropFrame);
+	
+
 
    // Box properties
    fBoxPropFrame = new TGCompositeFrame(this);
@@ -600,8 +605,7 @@ void TGLSceneEditor::CreateControls()
       fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
                            this, "ClipValueChanged(Long_t)");   
    }
-   HideFrame(fBoxPropFrame);
-
+	
    // Apply button
    fApplyButton = new TGTextButton(this, "Apply", kTBcpm);
    fTrash.AddLast(fApplyButton);
@@ -616,6 +620,13 @@ void TGLSceneEditor::CreateControls()
    fAxes->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
 
    clipNone->SetState(kButtonDown);
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::HideParts()
+{
+	HideFrame(fPlanePropFrame);
+	HideFrame(fBoxPropFrame);
 }
 
 //______________________________________________________________________________
@@ -751,7 +762,7 @@ Bool_t TGLSceneEditor::GetAxes() const
 
 //______________________________________________________________________________
 TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
-               :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+               :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
                 fViewer(v)
 {
    fTrash.SetOwner(kTRUE);

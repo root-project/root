@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.11 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.12 2005/10/03 15:19:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -59,7 +59,7 @@ private:
    TGLayoutHints *fFrameLayout;
 
    enum ELightMode{kDiffuse, kAmbient, kSpecular, kEmission, kTot};
-   ELightMode    fLMode;
+   ELightMode     fLMode;
    TGButton      *fLightTypes[kTot];
 
    TGHSlider     *fRedSlider;
@@ -70,12 +70,12 @@ private:
 
    TGButton      *fApplyButton;
    TGButton      *fApplyFamily;
-   Bool_t        fIsActive;
-   Bool_t        fIsLight;   
-   Float_t       fRGBA[17];
+   Bool_t         fIsActive;
+   Bool_t         fIsLight;   
+   Float_t        fRGBA[17];
 
-   Window_t      fGLWin;
-   ULong_t       fCtx;
+   Window_t       fGLWin;
+   ULong_t        fCtx;
 
    TList fTrash;
 public:
@@ -180,6 +180,8 @@ public:
    void GetCurrentClip(EClipType & type, Bool_t & edit) const;
    void SetCurrentClip(EClipType type);
    Bool_t GetAxes() const;
+
+	void HideParts();
 
 private:
    void CreateControls();

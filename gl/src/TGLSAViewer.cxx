@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.3 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.4 2005/10/03 16:19:18 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
 #include "KeySymbols.h"
-#include "TGShutter.h"
 #include "TGButton.h"
 #include "TGClient.h"
 #include "TGCanvas.h"
@@ -25,6 +24,7 @@
 #include "TColor.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TGTab.h"
 
 #include "TGLEditor.h"
 #include "TGLOutput.h"
@@ -136,8 +136,8 @@ const Int_t TGLSAViewer::fgInitH = 670;
 TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
-   fCompositeFrame(0), fV1(0), fV2(0), fShutter(0), fShutItem1(0), fShutItem2(0),
-   fShutItem3(0), fShutItem4(0), fL1(0), fL2(0), fL3(0), fL4(0),
+   fCompositeFrame(0), fV1(0), fV2(0), /*fShutter(0), fShutItem1(0), fShutItem2(0),
+   fShutItem3(0), fShutItem4(0),*/ fL1(0), fL2(0), fL3(0), fL4(0),
    fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fViewMenu(0), fHelpMenu(0),
    fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
    fCanvasWindow(0),
@@ -193,37 +193,38 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->AddFrame(fMenuBar, fMenuBarLayout);
 
    // Internal frames creation
-   fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
-   fV1 = new TGVerticalFrame(fCompositeFrame, 150, 10, kSunkenFrame | kFixedWidth);
-   fShutter = new TGShutter(fV1, kSunkenFrame | kFixedWidth);
-   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Object Color"), 5001);
-   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Object Geometry"), 5002);
-   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Clipping"), 5003);
-   fShutItem4 = new TGShutterItem(fShutter, new TGHotString("Lighting"), 5004);
-   fShutter->AddItem(fShutItem1);
-   fShutter->AddItem(fShutItem2);
-   fShutter->AddItem(fShutItem3);
-   fShutter->AddItem(fShutItem4);
+	fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
+   fV1 = new TGVerticalFrame(fCompositeFrame, 160, 10, /*kSunkenFrame |*/ kFixedWidth);
+   fEditorTab = new TGTab(fV1, 160, 10);
+   fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 2, 1, 2);
+   fV1->AddFrame(fEditorTab, fL4);
+   
+   //
+   TGCompositeFrame *objTabFrame = fEditorTab->AddTab("Object");
+   fObjectTab = new TGTab(objTabFrame, 160, 10);
+   objTabFrame->AddFrame(fObjectTab, fL4);
+   
+   //color and geom editors
+   TGCompositeFrame *tabCont = fObjectTab->AddTab("Color");
+   fColorEditor = new TGLColorEditor(tabCont, this);
+   tabCont->AddFrame(fColorEditor, fL4);
+   tabCont = fObjectTab->AddTab("Geom");
+   fGeomEditor = new TGLGeometryEditor(tabCont, this);
+   tabCont->AddFrame(fGeomEditor, fL4);
+   
+   TGCompositeFrame *sceneTabFrame = fEditorTab->AddTab("Scene");
+   fSceneTab = new TGTab(sceneTabFrame, 160, 10);
+   sceneTabFrame->AddFrame(fSceneTab, fL4);
 
-   TGCompositeFrame *shutCont = (TGCompositeFrame *)fShutItem1->GetContainer();
-   fColorEditor = new TGLColorEditor(shutCont, this);
-   fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 5, 1, 2);
-   shutCont->AddFrame(fColorEditor, fL4);
-   fV1->AddFrame(fShutter, fL4);
-   fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
+   //scene and light
+   tabCont = fSceneTab->AddTab("Scene");
+   fSceneEditor = new TGLSceneEditor(tabCont, this);
+   tabCont->AddFrame(fSceneEditor, fL4);
+   tabCont = fSceneTab->AddTab("Lights");
+   fLightEditor = new TGLLightEditor(tabCont, this);
+   tabCont->AddFrame(fLightEditor, fL4);
+	fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
    fCompositeFrame->AddFrame(fV1, fL1);
-
-   shutCont = (TGCompositeFrame *)fShutItem2->GetContainer();
-   fGeomEditor = new TGLGeometryEditor(shutCont, this);
-   shutCont->AddFrame(fGeomEditor, fL4);
-
-   shutCont = (TGCompositeFrame *)fShutItem3->GetContainer();
-   fSceneEditor = new TGLSceneEditor(shutCont, this);
-   shutCont->AddFrame(fSceneEditor, fL4);
-
-   shutCont = (TGCompositeFrame *)fShutItem4->GetContainer();
-   fLightEditor = new TGLLightEditor(shutCont, this);
-   shutCont->AddFrame(fLightEditor, fL4);
 
    fV2 = new TGVerticalFrame(fCompositeFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
@@ -253,6 +254,9 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->SetClassHints("GLViewer", "GLViewer");
    fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    fFrame->MapSubwindows();
+
+	fSceneEditor->HideParts();
+	
    fFrame->Resize(fFrame->GetDefaultSize());
    fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    fFrame->SetWMPosition(fgInitX, fgInitY);
@@ -280,11 +284,9 @@ TGLSAViewer::~TGLSAViewer()
    delete fL2;
    delete fL3;
    delete fL4;
-   delete fShutter;
-   delete fShutItem1;
-   delete fShutItem2;
-   delete fShutItem3;
-   delete fShutItem4;
+	delete fEditorTab;
+	delete fObjectTab;
+	delete fSceneTab;
    delete fFrame;
 }
 
