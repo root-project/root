@@ -8,9 +8,9 @@
  *  source stream reader
  *    possibly with preprocessor macro resolution in future implementation
  ************************************************************************
- * Copyright(c) 2004~2005  Masaharu Goto 
+ * Copyright(c) 2004~2005  Masaharu Goto
  *
- * Permission to use, copy, modify and distribute this software and its 
+ * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -60,11 +60,19 @@ class G__fstream {
   void storepos(int c=0);
   int rewindpos() ;
   unsigned long getpos() { return((unsigned long)0 /* m_pos */ ); } //not used
-  void setspos(unsigned long pos) { 
-#if defined(__linux) && !(__GNUC__==2 && __GNUC_MINOR__<96)
-     m_pos.__pos = pos;
+  void setspos(unsigned long pos) {
+#if defined(__linux)
+  #if (__GNUC__==2 && __GNUC_MINOR__<96)
+     #if defined(_G_IO_IO_FILE_VERSION) && _G_IO_IO_FILE_VERSION == 0x20001
+        m_pos.__pos = pos;    // this is for Debian
+     #else
+        m_pos = pos; // this is for RedHat 6
+     #endif
+  #else
+     m_pos.__pos = pos; // this is for rest linux distribution
+  #endif
 #else
-     m_pos=pos; 
+  m_pos = pos;
 #endif
   }
 };
@@ -152,7 +160,7 @@ class G__srcreader : public G__virtualreader {
 
   void setpos(fpos_t pos) { m_stream.setpos(pos); }
 
-  int fgetc() { return(m_stream.fgetc()); } 
+  int fgetc() { return(m_stream.fgetc()); }
   int fgetc_gettoken() { return(fskipcomment(fgetc())); }
   int fgetc_separator();
 
@@ -165,24 +173,24 @@ class G__srcreader : public G__virtualreader {
 
   int fappendtoken(string& token,int c,const string& endmark=G__endmark) ;
 
-  int fgetstream(string& phrase,const string& endmark,int nest=0) 
+  int fgetstream(string& phrase,const string& endmark,int nest=0)
    {return(fgetstream_core(phrase,endmark,nest,0));}
-  int fgetstream_template(string& phrase,const string& endmark,int nest=0) 
+  int fgetstream_template(string& phrase,const string& endmark,int nest=0)
    {return(fgetstream_core(phrase,endmark,nest,1));}
 
-  int fignorestream(const string& endmark,int nest=0) 
+  int fignorestream(const string& endmark,int nest=0)
    {string phrase; return(fgetstream_core(phrase,endmark,nest,0));}
-  int fignorestream_template(const string& endmark,int nest=0) 
+  int fignorestream_template(const string& endmark,int nest=0)
    {string phrase; return(fgetstream_core(phrase,endmark,nest,1));}
 
-  int fgetstream_(string& phrase,const string& endmark,int nest=0) 
+  int fgetstream_(string& phrase,const string& endmark,int nest=0)
    {return(fgetstream_core(phrase,endmark,nest,0,1));}
-  int fgetstream_template_(string& phrase,const string& endmark,int nest=0) 
+  int fgetstream_template_(string& phrase,const string& endmark,int nest=0)
    {return(fgetstream_core(phrase,endmark,nest,1,1));}
 
-  int fignorestream_(const string& endmark,int nest=0) 
+  int fignorestream_(const string& endmark,int nest=0)
    {string phrase; return(fgetstream_core(phrase,endmark,nest,0,1));}
-  int fignorestream_template_(const string& endmark,int nest=0) 
+  int fignorestream_template_(const string& endmark,int nest=0)
    {string phrase; return(fgetstream_core(phrase,endmark,nest,1,1));}
 
   void fignoreline() { G__fignoreline(); }          // legacy
@@ -235,7 +243,7 @@ int G__srcreader<T>::fgettoken(string& token,const string& endmark) {
   }
 
   for(;;) {
-    if(c=='-' && token.size()>1 
+    if(c=='-' && token.size()>1
        && (isdigit(token[0])||'.'==token[0])
        && tolower(token[token.size()-1])=='e') {
     }
@@ -408,7 +416,7 @@ int G__srcreader<T>::fgetstream_core(string& phrase,const string& endmark
       break;
     case '>':
       if(!istemplate) break;
-      if(phrase.size() && phrase[phrase.size()-1]=='>') 
+      if(phrase.size() && phrase[phrase.size()-1]=='>')
 	phrase.append((string::size_type)1,' ');
     case ']':
     case '}':
