@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.18 2005/09/17 13:54:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.19 2005/09/18 01:06:02 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -483,15 +483,6 @@ TEventIterTree::TFileCache* TEventIterTree::TFileCache::Instance()
 }
 
 //______________________________________________________________________________
-TDirectory* TEventIterTree::TDirectoryCache::Acquire(const TString& fileName, const TString& dirName)
-{
-   // Included for more clear syntax. See TObjectCache::Acquire.
-
-   return TObjectCache<TCacheKey, TCacheObject>
-               ::Acquire(std::make_pair(fileName, dirName));
-}
-
-//______________________________________________________________________________
 TEventIterTree::TDirectoryCache::ObjectAndBool_t TEventIterTree::TDirectoryCache::Load(const TCacheKey &k)
 {
    // Loads a directory given the file name and the directory name.
@@ -548,15 +539,6 @@ void TEventIterTree::TTreeCache::Unload(TTree* &tree)
    delete tree;
    TDirectoryCache::Instance()->Release(fTreeDirectories[tree]);
    fTreeDirectories.erase(tree);
-}
-
-//______________________________________________________________________________
-TTree* TEventIterTree::TTreeCache::Acquire(const TString& fileName, const TString& dirName, const TString& treeName)
-{
-   // Included for more clear syntax. See TObjectCache::Acquire.
-
-   return TObjectCache<TCacheKey, TCacheObject>
-               ::Acquire(std::make_pair(fileName, std::make_pair(dirName, treeName)));
 }
 
 //______________________________________________________________________________

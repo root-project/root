@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.114 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.115 2005/09/23 13:25:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ void TSlaveInfo::Print(Option_t *opt) const
    TString stat = fStatus == kActive ? "active" :
                   fStatus == kBad ? "bad" :
                   "not active";
-   TString msd  = fMsd.IsNull() ? "<null>" : fMsd;
+   TString msd  = fMsd.IsNull() ? "<null>" : fMsd.Data();
 
    if (!opt) opt = "";
    if (!strcmp(opt, "active") && fStatus != kActive)

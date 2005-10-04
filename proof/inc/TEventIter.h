@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.10 2005/09/17 13:54:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.11 2005/09/27 13:11:08 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -116,7 +116,7 @@ public:
    template <class ObjKey, class Obj> class TObjectCache {
       // Template base class for a cache. ObjKey is a class used to identify objects and
       // Obj class are the objects themselves. The cache uses LRU strategy and removes objects
-      // if the number of objects in the cache is too big. The lookup in the cache takes O(n) 
+      // if the number of objects in the cache is too big. The lookup in the cache takes O(n)
       // operations, where n is the cache size.
       // Both ObjKey and Obj classes should implement ordering operators (equal, less then).
    public:
@@ -128,13 +128,13 @@ public:
       // A list element. Helper structure for the implementation of the object cache.
       class TCacheElem : public TObject {
       public:
-         TCacheElem(const TCacheObject &obj, const TCacheKey &objKey) 
+         TCacheElem(const TCacheObject &obj, const TCacheKey &objKey)
             : fObj(obj), fKey(objKey), fCount(0) {}
          TCacheObject fObj;
          TCacheKey fKey;
          Int_t fCount;
       };
-      // The maximum size of the cache. If the size exceeds this value the least recently 
+      // The maximum size of the cache. If the size exceeds this value the least recently
       // used object are removed, until the cache size drops below this threshold or there
       // all other objects are in use.
       Int_t fMaxSize;
@@ -146,7 +146,7 @@ public:
          typename std::map<TCacheKey, TObjLink*>::iterator i = fKeyMap.find(k);
          if (i != fKeyMap.end())
             return i->second;
-         else 
+         else
             return 0;
       }
       TObjLink* FindByObj(const TCacheObject &obj)
@@ -182,8 +182,8 @@ public:
       }
    protected:
       // The load function loads an objects given its key. Should be defined in subclasses.
-      // The first element of the pair returned is the loaded object. The second tells wether 
-      // or not the loading was successfull (kTRUE - success, kFALSE - error). Only if the value 
+      // The first element of the pair returned is the loaded object. The second tells wether
+      // or not the loading was successfull (kTRUE - success, kFALSE - error). Only if the value
       // is kTRUE the object will be stored in the cache.
       virtual ObjectAndBool_t Load(const TCacheKey &k) = 0;
 
@@ -191,13 +191,13 @@ public:
       virtual void Unload(TCacheObject &/* o */) {}
 
    public:
-      TObjectCache() 
+      TObjectCache()
       {
          // Constructor.
          fSize = 0;
          fMaxSize = 10;
       }
-      virtual ~TObjectCache() 
+      virtual ~TObjectCache()
       {
          // Destructor. Calls Unload for all the objects cached.
          // The existence of objects which haven't been released is considered
@@ -219,7 +219,7 @@ public:
          fInUse.SetOwner();  // ~fMRU will delete all the elements
       }
 
-      TCacheObject Acquire(const TCacheKey &k) 
+      TCacheObject Acquire(const TCacheKey &k)
       {
          // Returns an object given it's key. The object should be later released.
          // The same object can be acquired several times (returning the same, cached object)
@@ -253,9 +253,20 @@ public:
          return elem->fObj;
       }
 
-      void Release(TCacheObject &obj) {
+      TCacheObject Acquire(const TString& fileName, const TString& dirName)
+      {
+         return Acquire(std::make_pair(fileName, dirName));
+      }
+
+      TCacheObject Acquire(const TString& fileName, const TString& dirName, const TString& treeName)
+      {
+         return Acquire(std::make_pair(fileName, std::make_pair(dirName, treeName)));
+      }
+
+      void Release(TCacheObject &obj)
+      {
          // Releases the element acquired using Acquire() function. The object is not
-         // deleted imediatelly but is kept in the cache. The next Acquire call with 
+         // deleted imediatelly but is kept in the cache. The next Acquire call with
          // the key of this object will return the same obj value. Objects are deleted
          // from the cache when its size is too big.
          TObjLink *link = FindByObj(obj);
@@ -269,7 +280,7 @@ public:
                ::Error("TEventIterTree::TObjectCache::Release()",
                        "Releasing an object more times than it has been acquired");
                elem->fCount = 0;
-            } 
+            }
             else if (elem->fCount == 0) {      // move it to the MRU list
                fInUse.Remove(link);
                fMRU.AddFirst(elem);
@@ -303,7 +314,6 @@ public:
       static TDirectoryCache* fgInstance;
       TDirectoryCache() {}
    public:
-      TDirectory* Acquire(const TString& fileName, const TString& dirName) ;
       ObjectAndBool_t Load(const TCacheKey &k);
       virtual void Unload(TDirectory* &dir);
       static TDirectoryCache* Instance();
@@ -315,7 +325,6 @@ public:
    private:
       std::map<TTree*, TDirectory*> fTreeDirectories; // an assotiation Tree <-> its File
    public:
-      TTree* Acquire(const TString& fileName, const TString& dirName, const TString& treeName);
       ObjectAndBool_t Load(const TCacheKey &k);
       virtual void Unload(TTree* &tree);
    };
