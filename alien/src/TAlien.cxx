@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.13 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.14 2005/09/23 13:04:53 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -30,6 +30,10 @@
 // -------------------------------------------------------------------- //
 // connect in an initialized gShell environemnt (see above)             //
 // > TGrid::Connect("alien://");                                        //
+// -> this is not thread safe                                           //
+// connect using an already established shell token:                    //
+// > TGrid::Connect("alien://",0,0,"t");                                //
+// -> this is thread safe                                               //
 // -------------------------------------------------------------------- //
 // change the working directory                                         //
 // > gGrid->Cd("/alice"); //=> returns 1 for success, 0 for error       //
@@ -120,8 +124,11 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    if (gDebug > 1)
       Info("TAlien", "%s => %s port: %d user: %s",gridurl,fHost.Data(),fPort,fUser.Data());
 
+   Bool_t fstoken = kFALSE;
+
    if (options && (options[0] == 't')) {
        fGc = GliteUI::MakeGliteUI(kTRUE);
+       fstoken = kTRUE;
    } else {
        fGc = GliteUI::MakeGliteUI(kFALSE);
    }
@@ -133,10 +140,18 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    } else {
       if (passwd) {
          if (!strlen(passwd)) {
-            passwd=0;
+            passwd = 0;
          }
       }
-      fGc->Connect(fHost.Data(), fPort, fUser.Data(), passwd);
+      if (fstoken) {
+         if (!Command("motd")) {
+            Error("TAlien", "we have no valid connection ... I try to connect ...");
+            fGc->Connect(fHost, fPort, fUser, passwd);
+         }
+      } else {
+         fGc->Connect(fHost, fPort, fUser, passwd);
+      }
+
       if (!fGc->Connected()) {
          Error("TAlien", "could not authenticate at:");
          Error("TAlien", "host: %s port: %d user: %s",fHost.Data(),fPort,fUser.Data());
@@ -296,14 +311,14 @@ TGridResult *TAlien::Query(const char *path, const char *pattern,
                            const char *conditions, const char *options)
 {
    TString cmdline = TString("find -z ") + TString(options) + TString(" ") + TString(path) + TString(" ")  + TString(pattern) + TString(" ") + TString(conditions);
-   return Command(cmdline.Data());
+   return Command(cmdline);
 }
 
 //______________________________________________________________________________
 TGridResult *TAlien::OpenDataset(const char *lfn, const char *options)
 {
    TString cmdline = TString("getdataset") + TString(" ") + TString(options) + TString(" ") + TString(lfn);
-   return Command(cmdline.Data(),kTRUE);
+   return Command(cmdline, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -342,7 +357,7 @@ TGridResult *TAlien::Ls(const char* ldn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("ls") + TString(" ") + TString(options) + TString(" ") + TString(ldn);
 
-   return Command(cmdline.Data(),verbose);
+   return Command(cmdline, verbose);
 }
 
 //______________________________________________________________________________
@@ -350,7 +365,7 @@ Bool_t TAlien::Cd(const char* ldn, Bool_t verbose)
 {
    TString cmdline = TString("cd") + TString(" ") + TString(ldn);
 
-   Command(cmdline.Data(),kFALSE);
+   Command(cmdline, kFALSE);
 
    if (verbose) {
       Stdout();
@@ -376,7 +391,7 @@ const char* TAlien::Pwd(Bool_t verbose)
 {
    TString cmdline = TString("pwd");
 
-   TGridResult* result = Command(cmdline.Data(),kFALSE,kENVIR);
+   TGridResult* result = Command(cmdline, kFALSE, kENVIR);
 
    if (verbose) {
       Stdout();
@@ -413,7 +428,7 @@ Bool_t TAlien::Mkdir(const char* ldn, Option_t* options, Bool_t verbose)
       cmdline += (TString(" -s ") + TString(ldn));
    }
 
-   Command(cmdline.Data(),kFALSE);
+   Command(cmdline, kFALSE);
 
    if (verbose) {
       Stdout();
@@ -444,7 +459,7 @@ Bool_t TAlien::Rmdir(const char* ldn, Option_t* options, Bool_t verbose)
       cmdline += (TString(" -s ") + TString(ldn));
    }
 
-   Command(cmdline.Data(),kFALSE);
+   Command(cmdline, kFALSE);
 
    if (verbose) {
       Stdout();
@@ -479,7 +494,7 @@ Bool_t TAlien::Register(const char* lfn, const char* turl, Long_t size, const ch
       }
    }
 
-   Command(cmdline.Data(),kFALSE);
+   Command(cmdline, kFALSE);
 
    if (verbose) {
       Stdout();
@@ -503,7 +518,7 @@ Bool_t TAlien::Rm(const char* lfn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("rm") + TString(" -s ") + TString(options) + TString(" ") + TString(lfn);
 
-   Command(cmdline.Data(),kFALSE);
+   Command(cmdline, kFALSE);
 
    if (verbose) {
       Stdout();
