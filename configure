@@ -247,7 +247,7 @@ check_library() {
         fi
         # look first in the lib64 directories
         if test "x$checklib64" = "xyes" ; then
-            i64=`echo $i | sed 's|lib|lib64|'`
+            i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
             #i="$i64 $i"
             i="$i64"
         fi
