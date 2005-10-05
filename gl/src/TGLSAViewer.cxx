@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.4 2005/10/03 16:19:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.5 2005/10/04 20:33:11 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -32,6 +32,11 @@
 #include "TGLPhysicalShape.h"
 #include "TGLClip.h"
 
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
+
+
 #include <assert.h>
 
 // Remove - replace with TGLManager
@@ -40,90 +45,56 @@
 #include "TGLRenderArea.h"
 
 const char * TGLSAViewer::fgHelpText = "\
-     PRESS \n\
-     \tw\t--- wireframe mode\n\
-     \tr\t--- filled polygons mode\n\
-     \tt\t--- outline mode\n\
-     \tj\t--- ZOOM in\n\
-     \tk\t--- ZOOM out\n\
-	  \tArrow Keys\t--- PAN (TRUCK) across scene\n\n\
-     You can ROTATE (ORBIT) the scene by holding the left \n\
-     mouse button and moving the mouse (perspective camera only).\n\
-     You can PAN (TRUCK) the camera using the middle mouse\n\
-     button or arrow keys.\n\
-     You can ZOOM (DOLLY) the camera by dragging side\n\
-     to side holding the right mouse button or using the\n\
-     mouse wheel.\n\
-     RESET the camera by double clicking any button\n\
-     SELECT an object with Shift+Left mouse button click.\n\
-     MOVE the object using Shift+Mid mouse drag.\n\
-     Invoked the CONTEXT menu with Shift+Right mouse click.\n\
-     PROJECTIONS\n\n\
-     You can select the different plane projections\n\
-     in \"Projections\" menu.\n\n\
-     OBJECT COLOR\n\n\
-     After you selected an object or a light source,\n\
-     you can modify object's material and light\n\
-     source color.\n\n\
-     LIGHT SOURCES.\n\n\
-     There are two pickable light sources in\n\
-     the current implementation. They are shown as\n\
-     spheres. Each light source has three light\n\
-     components : DIFFUSE, AMBIENT, SPECULAR.\n\
-     Each of this components is defined by the\n\
-     amounts of red, green and blue light it emits.\n\
-     You can EDIT this parameters:\n\
-     \t1. Select light source sphere.\n" //hehe, too long string literal :)))
-"    \t2. Select light component you want to modify\n\
-     \t   by pressing one of radio buttons.\n\
-     \t3. Change RGB by moving sliders\n\n\
-     MATERIAL\n\n\
-     Object's material is specified by the percentage\n\
-     of red, green, blue light it reflects. A surface can\n\
-     reflect diffuse, ambient and specular light. \n\
-     A surface has two additional parameters: EMISSION\n\
-     - you can make surface self-luminous; SHININESS -\n\
-     modifying this parameter you can change surface\n\
-     highlights.\n\
-     Sometimes changes are not visible, or light\n\
-     sources seem not to work - you should understand\n\
-     the meaning of diffuse, ambient etc. light and material\n\
-     components. For example, if you define material, which has\n\
-     diffuse component (1., 0., 0.) and you have a light source\n\
-     with diffuse component (0., 1., 0.) - you surface does not\n\
-     reflect diffuse light from this source. For another example\n\
-     - the color of highlight on the surface is specified by:\n\
-     light's specular component, material specular component.\n\
-     At the top of the color editor there is a small window\n\
-     with sphere. When you are editing surface material,\n\
-     you can see this material applied to sphere.\n\
-     When edit light source, you see this light reflected\n\
-     by sphere with DIFFUSE and SPECULAR components\n\
-     (1., 1., 1.).\n\n\
-     OBJECT GEOMETRY\n\n\
-     You can edit object's location and stretch it by entering\n\
-     desired values in respective number entry controls.\n\n"
-"     CLIPPING\n\n\
-     Select a 'Clip Type': None, Plane, Box\n\n\
-     For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
-     \tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
-     \tBox: Center X/Y/Z and Length X/Y/Z\n\n\
-     For Box checking the 'Show / Edit' checkbox shows the clip box\n\
-     (in light blue) in viewer. It also attaches the current\n\
-     manipulator to the box - enabling direct editing in viewer.\n\n\
-     MANIPULATORS\n\n\
-     A widget attached to the selected object - allowing direct\n\
-     manipulation of the object with respect to its local axes.\n\
-     There are three modes, toggled with keys:\n\
-     \tMode\t\tWidget Component Style\t\tKey\n\
-     \t----\t\t----------------------\t\t---\n\
-     \tTranslation\tLocal axes with arrows\t\tv\n\
-     \tScale\t\tLocal axes with boxes\t\tx\n\
-     \tRotate\t\tLocal axes rings\t\tc NOT IMPLEMENTED YET\n\n\
-     Each widget has three axis components - red (X), green (Y) and\n\
-     blue (Z). The component turns yellow, indicating an active state,\n\
-     when the mouse is moved over it. Left click and drag on the active\n\
-     component to adjust the objects translation, scale or rotation.\n";
+DIRECT SCENE INTERACTIONS\n\n\
+   Press:\n\
+   \tw          --- wireframe mode\n\
+   \tr          --- filled polygons mode\n\
+   \tt          --- outline mode\n\
+   \tj          --- ZOOM in\n\
+   \tk          --- ZOOM out\n\
+   \tArrow Keys --- PAN (TRUCK) across scene\n\n\
+   You can ROTATE (ORBIT) the scene by holding the left mouse button and moving\n\
+   the mouse (perspective camera only).\n\n\
+   You can PAN (TRUCK) the camera using the middle mouse button or arrow keys.\n\n\
+   You can ZOOM (DOLLY) the camera by dragging side to side holding the right\n\
+   mouse button or using the mouse wheel.\n\n\
+   RESET the camera by double clicking any button.\n\n\
+   SELECT a shape with Shift+Left mouse button click.\n\n\
+   MOVE a selected shape using Shift+Mid mouse drag.\n\n\
+   Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
+PROJECTIONS\n\n\
+   The \"Projections\" menu allows to select the different plane projections\n\n\
+SHAPES COLOR AND MATERIAL\n\n\
+   The selected shape's color can be modified in the Shapes-Color tabs.\n\
+   Shape's color is specified by the percentage of red, green, blue light\n\
+   it reflects. A surface can reflect DIFFUSE, AMBIENT and SPECULAR light.\n\
+   A surface can also emit light. The EMISSIVE parameter allows to define it.\n\
+   The surface SHININESS can also be modified.\n\n\
+SHAPES GEOMETRY\n\n\
+   The selected shape's location and geometry can be modified in the Shapes-Geom\n\
+   tabs by entering desired values in respective number entry controls.\n\n"
+"  SCENE CLIPPING\n\n\
+   In the Scene-Clipping tabs select a 'Clip Type': None, Plane, Box\n\n\
+   For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
+\tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
+\tBox: Center X/Y/Z and Length X/Y/Z\n\n\
+   For Box checking the 'Show / Edit' checkbox shows the clip box (in light blue)\n\
+   in viewer. It also attaches the current manipulator to the box - enabling\n\
+   direct editing in viewer.\n\n\
+MANIPULATORS\n\n\
+   A widget attached to the selected object - allowing direct manipulation\n\
+   of the object with respect to its local axes.\n\
+   There are three modes, toggled with keys:\n\
+   \tMode\t\tWidget Component Style\t\tKey\n\
+   \t----\t\t----------------------\t\t---\n\
+   \tTranslation\tLocal axes with arrows\t\tv\n\
+   \tScale\t\tLocal axes with boxes\t\tx\n\
+   \tRotate\t\tLocal axes rings\t\tc NOT IMPLEMENTED YET\n\n\
+   Each widget has three axis components - red (X), green (Y) and blue (Z).\n\
+   The component turns yellow, indicating an active state, when the mouse is moved\n\
+   over it. Left click and drag on the active component to adjust the objects\n\
+   translation, scale or rotation.\n";
+
 
 ClassImp(TGLSAViewer)
 
@@ -175,9 +146,9 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fViewMenu->Associate(fFrame);
 
    fHelpMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
-   fHelpMenu->AddEntry("&About ROOT...", kGLHelpAbout);
+   fHelpMenu->AddEntry("Help on GL Viewer...", kGLHelpViewer);
    fHelpMenu->AddSeparator();
-   fHelpMenu->AddEntry("Help on OpenGL Viewer...", kGLHelpViewer);
+   fHelpMenu->AddEntry("&About ROOT...", kGLHelpAbout);
    fHelpMenu->Associate(fFrame);
 
    // Create menubar layout hints
@@ -193,38 +164,40 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->AddFrame(fMenuBar, fMenuBarLayout);
 
    // Internal frames creation
-	fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
+   fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
    fV1 = new TGVerticalFrame(fCompositeFrame, 160, 10, /*kSunkenFrame |*/ kFixedWidth);
    fEditorTab = new TGTab(fV1, 160, 10);
    fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 2, 1, 2);
    fV1->AddFrame(fEditorTab, fL4);
    
-   //
-   TGCompositeFrame *objTabFrame = fEditorTab->AddTab("Object");
-   fObjectTab = new TGTab(objTabFrame, 160, 10);
-   objTabFrame->AddFrame(fObjectTab, fL4);
-   
-   //color and geom editors
-   TGCompositeFrame *tabCont = fObjectTab->AddTab("Color");
-   fColorEditor = new TGLColorEditor(tabCont, this);
-   tabCont->AddFrame(fColorEditor, fL4);
-   tabCont = fObjectTab->AddTab("Geom");
-   fGeomEditor = new TGLGeometryEditor(tabCont, this);
-   tabCont->AddFrame(fGeomEditor, fL4);
-   
+ 
    TGCompositeFrame *sceneTabFrame = fEditorTab->AddTab("Scene");
    fSceneTab = new TGTab(sceneTabFrame, 160, 10);
    sceneTabFrame->AddFrame(fSceneTab, fL4);
 
    //scene and light
-   tabCont = fSceneTab->AddTab("Scene");
+   TGCompositeFrame *tabCont = fSceneTab->AddTab("Clipping");
    fSceneEditor = new TGLSceneEditor(tabCont, this);
    tabCont->AddFrame(fSceneEditor, fL4);
    tabCont = fSceneTab->AddTab("Lights");
    fLightEditor = new TGLLightEditor(tabCont, this);
    tabCont->AddFrame(fLightEditor, fL4);
-	fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
+   fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
    fCompositeFrame->AddFrame(fV1, fL1);
+
+   //
+   TGCompositeFrame *objTabFrame = fEditorTab->AddTab("Shapes");
+   fObjectTab = new TGTab(objTabFrame, 160, 10);
+   objTabFrame->AddFrame(fObjectTab, fL4);
+   
+   //color and geom editors
+   tabCont = fObjectTab->AddTab("Color");
+   fColorEditor = new TGLColorEditor(tabCont, this);
+   tabCont->AddFrame(fColorEditor, fL4);
+   tabCont = fObjectTab->AddTab("Geom");
+   fGeomEditor = new TGLGeometryEditor(tabCont, this);
+   tabCont->AddFrame(fGeomEditor, fL4);
+
 
    fV2 = new TGVerticalFrame(fCompositeFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
@@ -250,13 +223,13 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fV2->AddFrame(fCanvasWindow, fCanvasLayout);
    fFrame->AddFrame(fCompositeFrame, fCanvasLayout);
 
-   fFrame->SetWindowName("OpenGL experimental viewer");
+   fFrame->SetWindowName("ROOT's GL viewer");
    fFrame->SetClassHints("GLViewer", "GLViewer");
    fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    fFrame->MapSubwindows();
 
-	fSceneEditor->HideParts();
-	
+   fSceneEditor->HideParts();
+
    fFrame->Resize(fFrame->GetDefaultSize());
    fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    fFrame->SetWMPosition(fgInitX, fgInitY);
@@ -284,9 +257,9 @@ TGLSAViewer::~TGLSAViewer()
    delete fL2;
    delete fL3;
    delete fL4;
-	delete fEditorTab;
-	delete fObjectTab;
-	delete fSceneTab;
+   delete fEditorTab;
+   delete fObjectTab;
+   delete fSceneTab;
    delete fFrame;
 }
 
@@ -311,14 +284,30 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
    case kC_COMMAND:
       switch (GET_SUBMSG(msg)) {
       case kCM_BUTTON:
-	   case kCM_MENU:
-	      switch (parm1) {
+      case kCM_MENU:
+         switch (parm1) {
          case kGLHelpAbout: {
+#ifdef R__UNIX
+            TString rootx;
+# ifdef ROOTBINDIR
+            rootx = ROOTBINDIR;
+# else
+            rootx = gSystem->Getenv("ROOTSYS");
+            if (!rootx.IsNull()) rootx += "/bin";
+# endif
+            rootx += "/root -a &";
+            gSystem->Exec(rootx);
+#else
+#ifdef WIN32
+            new TWin32SplashThread(kTRUE);
+#else
             char str[32];
             sprintf(str, "About ROOT %s...", gROOT->GetVersion());
-            TRootHelpDialog * hd = new TRootHelpDialog(fFrame, str, 600, 400);
+            hd = new TRootHelpDialog(this, str, 600, 400);
             hd->SetText(gHelpAbout);
             hd->Popup();
+#endif
+#endif
             break;
          }
          case kGLHelpViewer: {
@@ -356,11 +345,11 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             // will all be changed in future anyway
             TTimer::SingleShot(50, "TGLSAFrame", fFrame, "SendCloseMessage()");
             break;
-	      default:
-	         break;
-	      }
-	   default:
-	      break;
+            default:
+            break;
+            }
+            default:
+            break;
       }
    default:
       break;
