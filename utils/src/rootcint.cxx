@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.217 2005/09/07 08:20:26 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.218 2005/09/09 09:38:35 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -680,7 +680,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
       //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
    }
 
-   delete proto;
+   delete [] proto;
    return has_input_error;
 }
 
