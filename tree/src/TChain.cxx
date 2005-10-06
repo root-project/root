@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.114 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.115 2005/09/25 23:01:27 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1137,6 +1137,18 @@ Long64_t TChain::Merge(const char *name)
 {
    // Merge all files in this chain into a new file.
    // See important note in the following function Merge().
+   //
+   // If the chain is expecting the input tree inside a directory,
+   // this directory is NOT created by this routine.
+   // So in a case where we have:
+   //   TChain ch("mydir/mytree");
+   //   ch.Merge("newfile.root");
+   // The resulting file will have not subdirectory.  To
+   // recreate the directory structure do:
+   //   TFile *file = TFile::Open("newfile.root","RECREATE");
+   //   file->mkdir("mydir")->cd();
+   //   ch.Merge(file);
+   //
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
    return Merge(file,0,"");
@@ -1156,40 +1168,51 @@ Long64_t TChain::Merge(TCollection * /* list */ )
 //______________________________________________________________________________
 Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 {
-//     Merge all files in this chain into a new file
-//     if option ="C" is given, the compression level for all branches
-//        in the new Tree is set to the file compression level.
-//     By default, the compression level of all branches is the
-//     original compression level in the old Trees.
-//
-//     if (basketsize > 1000, the basket size for all branches of the
-//     new Tree will be set to basketsize.
-//
-//  example using the file generated in $ROOTSYS/test/Event
-//  merge two copies of Event.root
-//
-//        gSystem.Load("libEvent");
-//        TChain ch("T");
-//        ch.Add("Event1.root");
-//        ch.Add("Event2.root");
-//        ch.Merge("all.root");
-//
-// IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
-// -----------------------------------------
-// When merging many files, it may happen that the resulting file
-// reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes). In this case
-// the current file is automatically closed and a new file started.
-// If the name of the merged file was "merged.root", the subsequent files
-// will be named "merged_1.root", "merged_2.root", etc.
-// fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
-//
-// IMPORTANT Note 2: The output file is automatically closed and deleted.
-// This is required because in general the automatic file overflow described
-// above may happen during the merge.
-// If only the current file is produced (the file passed as first argument),
-// one can instruct Merge to not close the file by specifying the option "keep".
-//
-// The function returns the total number of files produced.
+   //     Merge all files in this chain into a new file
+   //     if option ="C" is given, the compression level for all branches
+   //        in the new Tree is set to the file compression level.
+   //     By default, the compression level of all branches is the
+   //     original compression level in the old Trees.
+   //
+   //     if (basketsize > 1000, the basket size for all branches of the
+   //     new Tree will be set to basketsize.
+   //
+   //  example using the file generated in $ROOTSYS/test/Event
+   //  merge two copies of Event.root
+   //
+   //        gSystem.Load("libEvent");
+   //        TChain ch("T");
+   //        ch.Add("Event1.root");
+   //        ch.Add("Event2.root");
+   //        ch.Merge("all.root");
+   //
+   // If the chain is expecting the input tree inside a directory,
+   // this directory is NOT created by this routine.
+   // So in a case where we have:
+   //   TChain ch("mydir/mytree");
+   //   ch.Merge("newfile.root");
+   // The resulting file will have not subdirectory.  To
+   // recreate the directory structure do:
+   //   TFile *file = TFile::Open("newfile.root","RECREATE");
+   //   file->mkdir("mydir")->cd();
+   //   ch.Merge(file);
+   //
+   // IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
+   // -----------------------------------------
+   // When merging many files, it may happen that the resulting file
+   // reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes). In this case
+   // the current file is automatically closed and a new file started.
+   // If the name of the merged file was "merged.root", the subsequent files
+   // will be named "merged_1.root", "merged_2.root", etc.
+   // fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
+   //
+   // IMPORTANT Note 2: The output file is automatically closed and deleted.
+   // This is required because in general the automatic file overflow described
+   // above may happen during the merge.
+   // If only the current file is produced (the file passed as first argument),
+   // one can instruct Merge to not close the file by specifying the option "keep".
+   //
+   // The function returns the total number of files produced.
 
    if (!file) return 0;
    TString opt = option;
@@ -1203,7 +1226,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    //file->cd();  //in case a user wants to write in a file/subdir
    TTree *hnew = CloneTree(0);
    if (!hnew) return 0;
-   hnew->SetName(GetName());
+   hnew->SetName(gSystem->BaseName(GetName())); // Strip out the (potential) directory name
    hnew->SetAutoSave(2000000000);
 
 // May be reset branches compression level?
