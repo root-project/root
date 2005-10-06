@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.14 2005/09/05 10:28:08 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.15 2005/09/25 19:48:38 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -491,7 +491,7 @@ void TXNetFile::Open(Option_t *option)
 }
 
 //_____________________________________________________________________________
-Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t BufferLength)
+Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
 {
    // Override TNetFile::ReadBuffer to deal with the xrootd server.
    // Returns kTRUE in case of errors.
@@ -505,7 +505,7 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t BufferLength)
    if (fIsRootd) {
       if (gDebug > 1)
          Info("ReadBuffer","Calling TNetFile::ReadBuffer");
-      return TNetFile::ReadBuffer(buffer, BufferLength);
+      return TNetFile::ReadBuffer(buffer, bufferLength);
    }
 
    if (!IsOpen()) {
@@ -515,44 +515,36 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t BufferLength)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buffer, BufferLength)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
+   Int_t st;
+   if ((st = ReadBufferViaCache(buffer, bufferLength))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         Seek(off + BufferLength);
-         return result;
-      }
+      return kFALSE;
    }
 
-   //
    // Read for the remote xrootd
-   Int_t nr = fClient->Read(buffer, fOffset, BufferLength);
+   Int_t nr = fClient->Read(buffer, fOffset, bufferLength);
 
-   if ((result = (nr > 0))) {
+   if (!nr)
+      return kTRUE;
 
-      if (gDebug > 1)
-         Info("ReadBuffer", " %d bytes of data read from offset"
-                            " %Ld (%d requested)", nr, fOffset, BufferLength);
+   if (gDebug > 1)
+      Info("ReadBuffer", "%d bytes of data read from offset"
+                         " %lld (%d requested)", nr, fOffset, bufferLength);
 
-      fOffset += BufferLength;
-      fBytesRead += BufferLength;
+   fOffset += bufferLength;
+   fBytesRead += bufferLength;
 #ifdef WIN32
-      SetFileBytesRead(GetFileBytesRead() + BufferLength);
+   SetFileBytesRead(GetFileBytesRead() + bufferLength);
 #else
-      fgBytesRead += BufferLength;
+   fgBytesRead += bufferLength;
 #endif
-   }
 
    return result;
 }
 
 //_____________________________________________________________________________
-Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
+Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
 {
    // Override TNetFile::WriteBuffer to deal with the xrootd server.
    // Returns kTRUE in case of errors.
@@ -572,7 +564,7 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
    if (fIsRootd) {
       if (gDebug > 1)
          Info("WriteBuffer","Calling TNetFile::WriteBuffer");
-      return TNetFile::WriteBuffer(buffer, BufferLength );
+      return TNetFile::WriteBuffer(buffer, bufferLength );
    }
 
    if (!IsOpen()) {
@@ -582,37 +574,28 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buffer, BufferLength)) < 0) {
-         SetBit(kWriteError);
-         Error("WriteBuffer", "error writing to cache");
+   Int_t st;
+   if ((st = WriteBufferViaCache(buffer, bufferLength))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         Seek(off + BufferLength);
-         return result;
-      }
+      return kFALSE;
    }
 
-   //
    // Read for the remote xrootd
-   Int_t nw = fClient->Write(buffer, fOffset, BufferLength);
+   Int_t nw = fClient->Write(buffer, fOffset, bufferLength);
 
    if ((result = (nw > 0))) {
 
       if (gDebug > 1)
          Info("WriteBuffer", " %d bytes of data wrote to offset"
-                            " %Ld (%d requested)", nw, fOffset, BufferLength);
+                            " %Ld (%d requested)", nw, fOffset, bufferLength);
 
-      fOffset += BufferLength;
-      fBytesWrite += BufferLength;
+      fOffset += bufferLength;
+      fBytesWrite += bufferLength;
 #ifdef WIN32
-      SetFileBytesWritten(GetFileBytesWritten() + BufferLength);
+      SetFileBytesWritten(GetFileBytesWritten() + bufferLength);
 #else
-      fgBytesWrite += BufferLength;
+      fgBytesWrite += bufferLength;
 #endif
    }
    return result;
