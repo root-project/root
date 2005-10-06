@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.36 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.37 2005/10/02 17:31:40 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -25,7 +25,7 @@ ClassImp(THStack)
 //
 //   A THStack is a collection of TH1 (or derived) objects
 //   Use THStack::Add to add a new histogram to the list.
-//   The THStack owns the objects in the list.
+//   The THStack does not own the objects in the list.
 //   By default (if option "nostack" is not specified), histograms will be paint
 //   stacked on top of each other.
 //   Example;
@@ -262,7 +262,7 @@ THStack::~THStack()
 
    gROOT->GetListOfCleanups()->Remove(this);   
    if (!fHists) return;
-   fHists->Delete();
+   fHists->Clear("nodelete");
    delete fHists;
    fHists = 0;
    if (fStack) {fStack->Delete(); delete fStack;}
