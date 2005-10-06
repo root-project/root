@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.29 2005/06/20 08:34:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.30 2005/09/05 10:02:38 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -2447,8 +2447,10 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
             maxch = working_space[2 * size_ext + i];
          plocha += working_space[2 * size_ext + i];
       }
-      if(maxch == 0)
+      if(maxch == 0) {
+         delete [] working_space;
          return 0;
+      }
          
       nom = 1;
       working_space[fXmin] = 1;
@@ -2661,15 +2663,15 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                }
                else{
                   Warning("Search1HighRes", "Peak buffer full");
+                  delete [] working_space;
                   return 0;
                }                  
             }
          }
       }
    }
-   for(i = 0; i < size; i++)
-      dest[i] = working_space[i + shift];      
-   delete[]working_space;
+   for(i = 0; i < size; i++) dest[i] = working_space[i + shift];      
+   delete [] working_space;
    fNPeaks = peak_index;
    return fNPeaks;
 }
