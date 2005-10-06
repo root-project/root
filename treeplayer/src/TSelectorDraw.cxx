@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.54 2005/08/29 12:05:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.55 2005/09/03 02:21:32 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1027,6 +1027,20 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
       if (fSelectMultiple) {
          ww = fWeight*fSelect->EvalInstance(i);
          if (ww == 0) continue;
+         if (fNfill == nfill0) {
+            if (fVar1) {
+               if (!fVar1Multiple) fV1[nfill0] = fVar1->EvalInstance(0);
+               if (fVar2) {
+                  if (!fVar2Multiple) fV2[nfill0] = fVar2->EvalInstance(0);
+                  if (fVar3) {
+                     if (!fVar3Multiple) fV3[nfill0] = fVar3->EvalInstance(0);
+                     if (fVar4) {
+                        if (!fVar4Multiple) fV4[nfill0] = fVar4->EvalInstance(0);
+                     }
+                  }
+               }
+            }
+         }
       }
       if (fVar1) {
          if (fVar1Multiple) fV1[fNfill] = fVar1->EvalInstance(i);
