@@ -616,7 +616,7 @@ maintainer-clean:: distclean
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
 	   etc/root.mimes build/misc/root-help.el \
 	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
-	   configure-stamp config.status 
+	   configure-stamp config.status
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
@@ -683,8 +683,6 @@ install: all
 		 $(INSTALLDATA) $(GDKDLLS)      $(DESTDIR)$(BINDIR); \
 	      fi; \
 	   fi; \
-	   $(INSTALLDATA) include/*.pri         $(DESTDIR)$(INCDIR); \
-	   $(INSTALLDATA) include/*.cw          $(DESTDIR)$(INCDIR); \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
@@ -697,9 +695,7 @@ install: all
 	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
-	   rm -rf $(DESTDIR)$(CINTINCDIR)/include/CVS; \
-	   rm -rf $(DESTDIR)$(CINTINCDIR)/lib/CVS; \
-	   rm -rf $(DESTDIR)$(CINTINCDIR)/stl/CVS; \
+	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing PROOF files in $(DESTDIR)$(PROOFDATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(PROOFDATADIR); \
 	   $(INSTALLDATA) proof/etc             $(DESTDIR)$(PROOFDATADIR); \
@@ -725,7 +721,7 @@ install: all
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
-	   rm -rf $(DESTDIR)$(TESTDIR)/CVS; \
+	   find $(DESTDIR)$(TESTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
