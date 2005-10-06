@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.15 2005/07/05 12:36:05 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.16 2005/08/08 18:51:48 pcanal Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -181,6 +181,7 @@ public:
    // Input / output
    void  ReadImage(const char *file, EImageFileTypes type = TImage::kUnknown);
    void  WriteImage(const char *file, EImageFileTypes type = TImage::kUnknown); //*MENU*
+   void  SetImage(ASImage * aimag) { DestroyImage(); fImage = aimag; }
    void  SetImage(const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette = 0);
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);
