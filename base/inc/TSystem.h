@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.50 2005/09/05 10:55:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.51 2005/09/24 11:57:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ enum ELogFacility {
 
 enum ESysConstants {
    kMAXSIGNALS       = 15,
-   kMAXPATHLEN       = 2048,
+   kMAXPATHLEN       = 4096,
    kBUFFERSIZE       = 8192,
    kItimerResolution = 10      // interval-timer resolution in ms
 };

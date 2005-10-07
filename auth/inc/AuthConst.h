@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: AuthConst.h,v 1.4 2004/12/08 14:52:26 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: AuthConst.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerardo Ganis   3/12/2003
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 
 // Number of security levels and masks
 const Int_t       kMAXSEC         = 6;
-const Int_t       kMAXSECBUF      = 2048;
+const Int_t       kMAXSECBUF      = 4096;
 const Int_t       kAUTH_REUSE_MSK = 0x1;
 const Int_t       kAUTH_CRYPT_MSK = 0x2;
 const Int_t       kAUTH_SSALT_MSK = 0x4;

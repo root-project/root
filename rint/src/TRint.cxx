@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.48 2005/07/29 21:33:58 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.49 2005/09/03 02:26:31 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -127,7 +127,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
    ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
-   ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are 
+   ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
    ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionaries
                                              //   and CINT will not be able to properly unload these files
 
@@ -177,7 +177,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    fInputHandler->Add();
 
    // Goto into raw terminal input mode
-   char defhist[128];
+   char defhist[kMAXPATHLEN];
 #ifndef R__VMS
    sprintf(defhist, "%s/.root_hist", gSystem->Getenv("HOME"));
 #else

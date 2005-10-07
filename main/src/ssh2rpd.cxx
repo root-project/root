@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.7 2004/04/20 22:12:42 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.8 2005/09/02 19:23:01 brun Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ namespace std { using ::string; }
 #endif
 
 
-#define kMAXPATHLEN 2048
+#define kMAXPATHLEN 4096
 
 //______________________________________________________________________________
 void Info(const char *va_(fmt), ...)
