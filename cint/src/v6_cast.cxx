@@ -20,6 +20,16 @@
 
 #include "common.h"
 
+static void G__SlideString(char *str, unsigned int slide) 
+{
+   // do the equivalent of strcpy(str,str+slide);
+   unsigned int i = 0;
+   while (str[i+slide]) {
+      str[i] = str[i+slide];
+      ++i;
+   }
+}
+
 extern "C" {
 
 /**************************************************************************
@@ -164,18 +174,18 @@ G__value G__castvalue(char *casttype,G__value result3)
 
   /* ignore volatile */
   if(strncmp(casttype,"volatile",8)==0) {
-    strcpy(casttype,casttype+8);
+    G__SlideString(casttype,8);
   }
   else if (strncmp (casttype, "mutable", 7) == 0) {
-    strcpy (casttype, casttype+7);
+    G__SlideString(casttype,7);
   }
   else if (strncmp (casttype, "typename", 8) == 0) {
-    strcpy (casttype, casttype+8);
+    G__SlideString(casttype,8);
   }
   if (casttype[0]==' ') strcpy (casttype, casttype+1);
   while (strncmp(casttype,"const ",6)==0) {
     isconst=1;
-    strcpy(casttype,casttype+6);
+    G__SlideString(casttype,6);
   } 
 #ifndef G__OLDIMPLEMENTATION1857
   if(strstr(casttype," const")) {
@@ -209,12 +219,12 @@ G__value G__castvalue(char *casttype,G__value result3)
      if (-1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
         isconst=1;
         if (hasstar) casttype[lenitem] = hasstar;
-        strcpy(casttype,casttype+5);
+        G__SlideString(casttype,5);
      } else if (hasstar) casttype[lenitem] = hasstar;
   }
   /* since we have the information let's return it */
   result3.isconst = isconst;
-  if(isspace(casttype[0])) strcpy(casttype,casttype+1);
+  if(isspace(casttype[0])) G__SlideString(casttype,1);
   lenitem=strlen(casttype);
   castflag=0;
 
