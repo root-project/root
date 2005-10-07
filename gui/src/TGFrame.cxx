@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.112 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.113 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -123,7 +123,7 @@ ClassImp(TGGroupFrame)
 
 //______________________________________________________________________________
 TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
-                 UInt_t options, ULong_t back)
+                 UInt_t options, Pixel_t back)
    : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
 {
    // Create a TGFrame object. Options is an OR of the EFrameTypes.
@@ -234,7 +234,7 @@ void TGFrame::DeleteWindow()
 }
 
 //______________________________________________________________________________
-void TGFrame::ChangeBackground(ULong_t back)
+void TGFrame::ChangeBackground(Pixel_t back)
 {
    // Change frame background color.
 
@@ -761,7 +761,7 @@ void TGFrame::StartGuiBuilding(Bool_t on)
 
 //______________________________________________________________________________
 TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
-         UInt_t options, ULong_t back) : TGFrame(p, w, h, options, back)
+         UInt_t options, Pixel_t back) : TGFrame(p, w, h, options, back)
 {
    // Create a composite frame. A composite frame has in addition to a TGFrame
    // also a layout manager and a list of child frames.
@@ -1545,7 +1545,7 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
       Pixmap_t pic = iconPic->GetPicture();
       gVirtualX->SetIconPixmap(fId, pic);
       return iconPic;
-   } else 
+   } else
       return 0;
 }
 
@@ -1768,7 +1768,7 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
 //______________________________________________________________________________
 TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
                            UInt_t options, GContext_t norm,
-                           FontStruct_t font, ULong_t back) :
+                           FontStruct_t font, Pixel_t back) :
    TGCompositeFrame(p, 1, 1, options, back)
 {
    // Create a group frame. The title will be adopted and deleted by the
@@ -1787,7 +1787,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
 //______________________________________________________________________________
 TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
                            UInt_t options, GContext_t norm,
-                           FontStruct_t font, ULong_t back) :
+                           FontStruct_t font, Pixel_t back) :
    TGCompositeFrame(p, 1, 1, options, back)
 {
    // Create a group frame.
@@ -2303,7 +2303,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       sname[i] = *fname;
       i++; fname++;
    }
-   if (i == lenfname) 
+   if (i == lenfname)
       ff += ".C";
    sname[i] = 0;
 
@@ -2699,7 +2699,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       sname[i] = *fname;
       i++; fname++;
    }
-   if (i == lenfname) 
+   if (i == lenfname)
       ff += ".C";
    sname[i] = 0;
 

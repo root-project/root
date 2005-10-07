@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.16 2005/08/08 18:51:48 pcanal Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.17 2005/10/06 10:12:11 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -76,7 +76,7 @@ protected:
    UInt_t    fZoomWidth;    //! width of zoomed image in image pixels
    UInt_t    fZoomHeight;   //! hight of zoomed image in image pixels
    Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
-   Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad 
+   Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad
    Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
    Pixmap_t  fPic;          //! pixmap
    Pixmap_t  fMask;         //! mask
@@ -131,13 +131,13 @@ public:
    void  Scale(UInt_t width, UInt_t height);                            //*MENU*
    void  Tile(UInt_t width, UInt_t height);                             //*MENU*
    void  Crop(Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0); //*MENU*
-   void  Pad(const char *color = "#00FFFFFF", UInt_t left = 0, 
+   void  Pad(const char *color = "#00FFFFFF", UInt_t left = 0,
              UInt_t right = 0, UInt_t top = 0, UInt_t bottom = 0);      //*MENU*
    void  Blur(Double_t hr = 3, Double_t vr = 3);                        //*MENU*
    void  Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);
    void  Gray(Bool_t on = kTRUE);                                       //*TOGGLE* *GETTER=IsGray
    void  StartPaletteEditor();                                          //*MENU*
-   void  HSV(UInt_t hue = 0, UInt_t radius = 360, Int_t H = 0, Int_t S = 0, Int_t V = 0, 
+   void  HSV(UInt_t hue = 0, UInt_t radius = 360, Int_t H = 0, Int_t S = 0, Int_t V = 0,
              Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0);
    void  Merge(const TImage *im, const char *op = "alphablend", Int_t x = 0, Int_t y = 0);
    void  Append(const TImage *im, const char * option = "+", const char *color = "#00000000");
@@ -149,7 +149,7 @@ public:
                   const char *color = 0, const char *font = "fixed", EText3DType type = TImage::kPlain,
                   const char *fore_file = 0, Float_t angle = 0);
 
-   // vector graphics
+   // Vector graphics
    void  BeginPaint(Bool_t fast = kTRUE);
    void  EndPaint();
    void  DrawLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, const char *col = "#000000", UInt_t thick = 1);
@@ -181,7 +181,6 @@ public:
    // Input / output
    void  ReadImage(const char *file, EImageFileTypes type = TImage::kUnknown);
    void  WriteImage(const char *file, EImageFileTypes type = TImage::kUnknown); //*MENU*
-   void  SetImage(ASImage * aimag) { DestroyImage(); fImage = aimag; }
    void  SetImage(const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette = 0);
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);
@@ -189,25 +188,26 @@ public:
    void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
 
    // Utilities
-   UInt_t GetWidth() const;
-   UInt_t GetHeight() const;
-   UInt_t GetScaledWidth() const;
-   UInt_t GetScaledHeight() const;
-   Bool_t IsValid() const { return fImage ? kTRUE : kFALSE; }
-   Bool_t IsGray() const { return fIsGray; }
-   ASImage         *GetImage() const { return fImage; }
-   TImage          *GetScaledImage() const { return fScaledImage; }
-   Pixmap_t         GetPixmap();
-   Pixmap_t         GetMask();
-   TArrayL         *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
-   TArrayD         *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette);
-   UInt_t          *GetArgbArray();
-   UInt_t          *GetScanline(UInt_t y);
-   void             GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
-   Bool_t           SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
-   void             PaintImage(Drawable_t wid, Int_t x, Int_t y);
-   void             SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
-   void             SavePrimitive(ofstream &out, Option_t *option);
+   UInt_t     GetWidth() const;
+   UInt_t     GetHeight() const;
+   UInt_t     GetScaledWidth() const;
+   UInt_t     GetScaledHeight() const;
+   Bool_t     IsValid() const { return fImage ? kTRUE : kFALSE; }
+   Bool_t     IsGray() const { return fIsGray; }
+   ASImage   *GetImage() const { return fImage; }
+   void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
+   TImage    *GetScaledImage() const { return fScaledImage; }
+   Pixmap_t   GetPixmap();
+   Pixmap_t   GetMask();
+   TArrayL   *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette);
+   UInt_t    *GetArgbArray();
+   UInt_t    *GetScanline(UInt_t y);
+   void       GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
+   Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
+   void       PaintImage(Drawable_t wid, Int_t x, Int_t y);
+   void       SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
+   void       SavePrimitive(ofstream &out, Option_t *option);
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);

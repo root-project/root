@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.27 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.28 2005/08/16 10:44:39 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -92,7 +92,7 @@ protected:
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
 
 public:
-   TGMenuEntry() {fUserData=0; fLabel=0; fPic=0; fPopup=0;}
+   TGMenuEntry() { fUserData = 0; fLabel = 0; fPic = 0; fPopup = 0; }
    virtual ~TGMenuEntry() { if (fLabel) delete fLabel; }
 
    Int_t          GetEntryId() const { return fEntryId; }
@@ -176,8 +176,8 @@ public:
                          TGMenuEntry *before = 0);
    virtual void AddPopup(const char *s, TGPopupMenu *popup,
                          TGMenuEntry *before = 0);
-   virtual void EnableEntry(Int_t id);
-   virtual void DisableEntry(Int_t id);
+   virtual void   EnableEntry(Int_t id);
+   virtual void   DisableEntry(Int_t id);
    virtual Bool_t IsEntryEnabled(Int_t id);
    virtual void   HideEntry(Int_t id);
    virtual Bool_t IsEntryHidden(Int_t id);
@@ -203,7 +203,7 @@ public:
    virtual Bool_t  HandleTimer(TTimer *t);
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void    SetMenuBar(TGMenuBar *bar) { fMenuBar = bar; }
-   TGMenuBar  *GetMenuBar() const {  return fMenuBar; }
+   TGMenuBar      *GetMenuBar() const { return fMenuBar; }
 
    virtual void PoppedUp() { Emit("PoppedUp()"); }  //*SIGNAL
    virtual void PoppedDown() { Emit("PoppedDown()"); }  //*SIGNAL

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.h,v 1.1 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -173,6 +173,8 @@ public:
    // Colormaps...
 
    Colormap_t GetDefaultColormap() const { return fDefaultColormap; }
+
+   // Miscellaneous...
 
    TGMimeTypes *GetMimeTypes() const { return fMimeTypeList; }
 
