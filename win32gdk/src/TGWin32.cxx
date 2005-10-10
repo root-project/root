@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.98 2005/08/17 09:10:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.99 2005/10/03 17:31:20 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6946,7 +6946,10 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
    } else {
       ::ReleaseDC((HWND)GDK_DRAWABLE_XID(wid), hdc);
    }
-   return (unsigned char *)bmbits;
+   ULong_t sz = width*height*4;
+   unsigned char *ret = new unsigned char[sz];
+   memcpy(ret, bmbits, sz);
+   return ret;
 }
 
 //______________________________________________________________________________
