@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.88 2005/09/05 13:37:02 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.89 2005/09/30 09:47:00 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5268,6 +5268,10 @@ int RpdGenRSAKeys(int setrndinit)
    if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: SSL: export pub:\n%.*s",
            gRSAPubExport[1].len,gRSAPubExport[1].keys);
+
+   // We have at least one key
+   gRSAInit = 1;
+
 #endif
 
    // Sometimes some bunch is not decrypted correctly
