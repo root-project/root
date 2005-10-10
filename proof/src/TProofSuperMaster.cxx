@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.4 2005/09/17 13:52:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.5 2005/09/18 11:51:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,7 +42,6 @@ ClassImp(TProofSuperMaster)
 //______________________________________________________________________________
 TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile,
                                      const char *confdir, Int_t loglevel)
-  : TProof(masterurl, conffile, confdir, loglevel)
 {
    // Start super master PROOF session.
 
@@ -82,9 +81,10 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 
    PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
 
-   TList validSlaves;
+   TList validSubmasters;
    TList validPairs;
-   UInt_t nSlaves = 0;
+   UInt_t nSubmasters = 0;
+   UInt_t nSubmastersDone = 0;
 
    FILE *pconf;
    if ((pconf = fopen(fconf, "r"))) {
@@ -124,7 +124,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                fImage = image;
             }
          } else if (nword >= 2 && (!strcmp(word[0], "submaster")))
-            nSlaves++;
+            nSubmasters++;
       }
 
       if (fImage.Length() == 0) {
@@ -136,8 +136,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
       // Init arrays for threads, if neeeded
       std::vector<TProofThread *> thrHandlers;
       if (parallel) {
-         thrHandlers.reserve(nSlaves);
-         if (thrHandlers.max_size() < nSlaves) {
+         thrHandlers.reserve(nSubmasters);
+         if (thrHandlers.max_size() < nSubmasters) {
             PDB(kGlobal,1)
                Info("StartSlaves","cannot reserve enough space thread"
                     " handlers - switch to serial startup");
@@ -208,6 +208,13 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                      thrHandlers.push_back(new TProofThread(th,ta));
                      // Run the thread
                      th->Run();
+
+                     // Notify opening of connection
+                     nSubmastersDone++;
+                     TMessage m(kPROOF_SERVERSTARTED);
+                     m << TString("Opening connections to submasters") << nSubmasters
+                       << nSubmastersDone << kTRUE;
+                     gProofServ->GetSocket()->Send(m);
                   }
                } else {
                   Info("StartSlaves","Can't create thread arguments object:"
@@ -222,22 +229,32 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 
                // Add to global list (we will add to the monitor list after
                // finalizing the server startup)
+               Bool_t submasterOk = kTRUE;
                fSlaves->Add(slave);
                if (slave->IsValid()) {
                   validPairs.Add(new TPair(slave,new TObjString(conffile)));
                } else {
+                  submasterOk = kFALSE;
                   fBadSlaves->Add(slave);
                }
 
                PDB(kGlobal,3)
                   Info("StartSlaves","submaster on host %s created and"
                                      " added to list", word[1]);
+
+               // Notify opening of connection
+               nSubmastersDone++;
+               TMessage m(kPROOF_SERVERSTARTED);
+               m << TString("Opening connections to submasters") << nSubmasters
+                 << nSubmastersDone << submasterOk;
+               gProofServ->GetSocket()->Send(m);
             }
             ord++;
          }
 
       }
 
+      nSubmastersDone = 0;
       if (parallel) {
 
          // Wait completion of startup operations
@@ -253,6 +270,13 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                         pt->fArgs->fPort);
                pt->fThread->Join();
             }
+
+            // Notify end of startup operations
+            nSubmastersDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Setting up submasters") << nSubmasters
+              << nSubmastersDone << kTRUE;
+            gProofServ->GetSocket()->Send(m);
          }
 
          TIter next(fSlaves);
@@ -266,7 +290,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                   fBadSlaves->Add(sl);
                } else {
                   fAllMonitor->Add(sl->GetSocket());
-                  validSlaves.Add(sl);
+                  validSubmasters.Add(sl);
                }
             } else {
                fBadSlaves->Add(sl);
@@ -297,6 +321,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
             sl->SetupServ(TSlave::kMaster, cf->GetName());
 
             // Monitor good slaves
+            Bool_t submasterOk = kTRUE;
             if (sl->IsValid()) {
                // check protocol compatability
                // protocol 1 is not supported anymore
@@ -304,14 +329,23 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                   Error("StartSlaves", "master and submaster protocols"
                         " not compatible (%d and %d)",
                         kPROOF_Protocol, fProtocol);
+                  submasterOk = kFALSE;
                   fBadSlaves->Add(sl);
                } else {
                   fAllMonitor->Add(sl->GetSocket());
-                  validSlaves.Add(sl);
+                  validSubmasters.Add(sl);
                }
             } else {
+               submasterOk = kFALSE;
                fBadSlaves->Add(sl);
             }
+
+            // Notify end of startup operations
+            nSubmastersDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Setting up submasters") << nSubmasters
+              << nSubmastersDone << submasterOk;
+            gProofServ->GetSocket()->Send(m);
 
             // Drop the temporary pairs
             validPairs.Remove(sc);
@@ -321,8 +355,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
    }
    fclose(pconf);
    Collect(kAll); //Get kPROOF_LOGFILE and kPROOF_LOGDONE messages
-   TIter nextSlave(&validSlaves);
-   while (TSlave* sl = dynamic_cast<TSlave*>(nextSlave())){
+   TIter nextSubmaster(&validSubmasters);
+   while (TSlave* sl = dynamic_cast<TSlave*>(nextSubmaster())){
       if (sl->GetStatus() == -99) {
          Error("StartSlaves", "not allowed to connect to PROOF master server");
          fBadSlaves->Add(sl);
@@ -373,8 +407,8 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
    elemholder.SetOwner();
 
    // build nodelist with slaves and elements
-   TIter nextSlave(GetListOfActiveSlaves());
-   while (TSlave *sl = dynamic_cast<TSlave*>(nextSlave())) {
+   TIter nextSubmaster(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(nextSubmaster())) {
       TList *smlist = 0;
       TPair *p = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
       if (!p) {

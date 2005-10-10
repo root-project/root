@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.115 2005/09/23 13:25:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.116 2005/10/04 16:13:22 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1749,21 +1749,35 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_SERVERSTARTED:
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_SERVERSTARTED","Enter");
+
             UInt_t tot = 0, done = 0;
             TString action;
             Bool_t st = kTRUE;
 
             (*mess) >> action >> tot >> done >> st;
-            if (tot) {
-               Int_t frac = (Int_t) (done*100.)/tot;
-               fprintf(stderr,"%s: %d out of %d (%d %%)\r",
-                       action.Data(), done, tot, frac);
-               if (frac >= 100)
-                  fprintf(stderr,"%s: OK (%d workers)                 \n",
-                          action.Data(),tot);
+
+            if (!IsMaster()) {
+               if (tot) {
+                  TString type = (action.Contains("submas")) ? "submasters"
+                                                             : "workers";
+                  Int_t frac = (Int_t) (done*100.)/tot;
+                  if (frac >= 100) {
+                     fprintf(stderr,"%s: OK (%d %s)                 \n",
+                             action.Data(),tot, type.Data());
+                  } else {
+                     fprintf(stderr,"%s: %d out of %d (%d %%)\r",
+                             action.Data(), done, tot, frac);
+                  }
+               }
+               // Notify GUIs
+               StartupMessage(action.Data(), st, (Int_t)done, (Int_t)tot);
+            } else {
+
+               // Just send the message one level up
+               TMessage m(kPROOF_SERVERSTARTED);
+               m << action << tot << done << st;
+               gProofServ->GetSocket()->Send(m);
             }
-            // Notify GUIs
-            StartupMessage(action.Data(), st, (Int_t)done, (Int_t)tot);
          }
          break;
 
