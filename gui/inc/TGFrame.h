@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.60 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.61 2005/10/07 13:00:30 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -240,7 +240,7 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0)
-                            { TGWindow::ReparentWindow(p, x, y); fX = x; fY = y; }
+                            { TGWindow::ReparentWindow(p, x, y); Move(x, y); }
    virtual void    MapWindow() { TGWindow::MapWindow(); if (fFE) fFE->fState |= kIsVisible; }
    virtual void    MapRaised() { TGWindow::MapRaised(); if (fFE) fFE->fState |= kIsVisible; }
    virtual void    UnmapWindow() { TGWindow::UnmapWindow(); if (fFE) fFE->fState &= ~kIsVisible; }
