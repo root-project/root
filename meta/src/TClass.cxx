@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.178 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.179 2005/09/03 00:48:25 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -425,6 +425,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
+   fContextMenuTitle = "";
 
    fClassEditors  = new TList();
 }
@@ -473,6 +474,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    ResetInstanceCount();
 
    fClassMenuList  = new TList();
+   fContextMenuTitle = "";
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
 
    fClassEditors  = new TList();
@@ -563,6 +565,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fInterStreamer  = 0;
    fClassMenuList  = 0;
    fClassEditors   = 0;
+   fContextMenuTitle = "";
 
    ResetInstanceCount();
 
@@ -2539,6 +2542,14 @@ Long_t TClass::Property() const
    return fProperty;
 }
 
+
+//______________________________________________________________________________
+void TClass::SetContextMenuTitle(const char *title)
+{
+   // Change (i.e. set) the title of the TNamed.
+
+   fContextMenuTitle = title;
+}
 
 //______________________________________________________________________________
 void TClass::SetGlobalIsA(IsAGlobalFunc_t func)

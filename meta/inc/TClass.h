@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.54 2005/06/23 15:11:54 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.55 2005/09/03 00:48:25 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -85,6 +85,7 @@ private:
    TVirtualCollectionProxy *fCollectionProxy; //Collection interface
    Version_t          fClassVersion;    //Class version Identifier
    G__ClassInfo      *fClassInfo;       //pointer to CINT class info class
+   TString            fContextMenuTitle;//context menu title
    TList             *fClassMenuList;   //list of class menu items
    TList             *fClassEditors;    //list of class editors
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
@@ -173,6 +174,7 @@ public:
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
    G__ClassInfo      *GetClassInfo() const { return fClassInfo; }
+   const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TList             *GetListOfDataMembers();
    TList             *GetListOfBases();
    TList             *GetListOfMethods();
@@ -226,6 +228,7 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
+   void               SetContextMenuTitle(const char *title);
    void               SetGlobalIsA(IsAGlobalFunc_t);
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);

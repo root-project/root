@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.7 2002/05/11 14:36:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.8 2005/05/30 10:21:14 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -297,10 +297,19 @@ char *TContextMenu::CreatePopupTitle(TObject *object)
          TGlobal *global = (TGlobal *) gROOT->GetGlobal(object);
          if (global && *(global->GetName()))
             sprintf(popupTitle, "  %s::%s  ", object->ClassName(), global->GetName());
+         else {
+            if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
+               sprintf(popupTitle, "  %s  ", object->ClassName());
+            else
+               sprintf(popupTitle, "  %s  ", object->IsA()->GetContextMenuTitle());
+         }
+      } else {
+         if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
+            sprintf(popupTitle, "  %s::%s  ", object->ClassName(), object->GetName());
          else
-            sprintf(popupTitle, "  %s  ", object->ClassName());
-      } else
-         sprintf(popupTitle, "  %s::%s  ", object->ClassName(), object->GetName());
+            sprintf(popupTitle, "  %s::%s  ", object->IsA()->GetContextMenuTitle(), 
+                    object->GetName());
+      }
    } else
       *popupTitle = 0;
 
