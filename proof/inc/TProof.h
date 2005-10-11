@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.68 2005/09/22 09:42:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.69 2005/09/22 23:29:30 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -363,9 +363,6 @@ private:
    void     ActivateAsyncInput();
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
-
-   void     RedirectLog(Bool_t on = kTRUE);  // redirect log msgs
-
    Int_t    GetQueryReference(Int_t qry, TString &ref);
 
 protected:

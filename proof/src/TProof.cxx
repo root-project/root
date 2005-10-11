@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.116 2005/10/04 16:13:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.117 2005/10/10 11:07:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4099,42 +4099,6 @@ void *TProof::SlaveStartupThread(void *arg)
    if (fgSemaphore) fgSemaphore->Post();
 
    return 0;
-}
-
-//______________________________________________________________________________
-void TProof::RedirectLog(Bool_t on)
-{
-   // Redirect stderr and stdout messages to log file.
-
-#ifndef WIN32
-   static char stdoutsav[128] = {0};
-   static char stderrsav[128] = {0};
-#endif
-
-   if (on) {
-      // redirect stdout & stderr
-#ifndef WIN32
-      // Save the paths on unixes
-      if (!strlen(stdoutsav))
-         strcpy(stdoutsav,ttyname(STDOUT_FILENO));
-      if (!strlen(stderrsav))
-         strcpy(stderrsav,ttyname(STDERR_FILENO));
-#endif
-      if (freopen(fLogFileName, "a", stdout) == 0)
-         Error("RedirectLog", "could not freopen stdout");
-      if (freopen(fLogFileName, "a", stderr) == 0)
-         Error("RedirectLog", "could not freopen stderr");
-
-   } else {
-      // Restore stdout & stderr
-#ifndef WIN32
-      freopen(stdoutsav, "a", stdout);
-      freopen(stderrsav, "a", stderr);
-#else
-      freopen("CONOUT$", "a", stdout);
-      freopen("CONOUT$", "a", stderr);
-#endif
-   }
 }
 
 //______________________________________________________________________________

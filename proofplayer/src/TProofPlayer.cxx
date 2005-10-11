@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.68 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.69 2005/09/24 11:33:41 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -691,7 +691,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       }
 
       if (!sync) {
-         fProof->RedirectLog(kTRUE);
+         gSystem->RedirectOutput(fProof->fLogFileName);
          Printf(" ");
          Info("Process","starting new query");
       }
@@ -699,7 +699,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       SafeDelete(fSelector);
       fSelectorClass = 0;
       if (!(fSelector = TSelector::GetSelector(selector_file))) {
-         if (!sync) fProof->RedirectLog(kFALSE);
+         if (!sync)
+            gSystem->RedirectOutput(0);
          return -1;
       }
       fSelectorClass = fSelector->IsA();
@@ -709,7 +710,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
 
-      if (!sync) fProof->RedirectLog(kFALSE);
+      if (!sync)
+         gSystem->RedirectOutput(0);
    }
 
    TCleanup clean(this);
@@ -895,12 +897,12 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    }
 
    // Re-init the selector
-   fProof->RedirectLog(kTRUE);
+   gSystem->RedirectOutput(fProof->fLogFileName);
 
    // Import the output list
    TList *tmp = (TList *) qr->GetOutputList();
    if (!tmp) {
-      fProof->RedirectLog(kFALSE);
+      gSystem->RedirectOutput(0);
       Info("Finalize(TQueryResult *)", "ouputlist is empty");
       return -1;
    }
@@ -914,7 +916,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    out->SetOwner();
    StoreOutput(out);
 
-   fProof->RedirectLog(kFALSE);
+   gSystem->RedirectOutput(0);
 
    // Finalize it
    SetCurrentQuery(qr);
