@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.199 2005/09/16 17:19:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.200 2005/10/03 14:58:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -294,7 +294,7 @@ TPad::~TPad()
    SafeDelete(fPrimitives);
    SafeDelete(fExecs);
    delete fViewer3D;
-   
+
    if (fGLDevice != -1)
       gGLManager->DeletePaintDevice(fGLDevice);
 }
@@ -360,16 +360,16 @@ void TPad::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
+TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                            const char* title)
 {
    //
    // Build a legend from the graphical objects in the pad
    //
    // A simple method to to build automatically a TLegend from the primitives in
-   // a TPad. Only those deriving from TAttLine, TAttMarker and TAttFill are 
-   // added, excluding TPave and TFrame derived classes. 
-   // x1, y1, x2, y2 are the Tlegend coordinates. 
+   // a TPad. Only those deriving from TAttLine, TAttMarker and TAttFill are
+   // added, excluding TPave and TFrame derived classes.
+   // x1, y1, x2, y2 are the Tlegend coordinates.
    // title is the legend title. By default it is " ".
 
    TList *lop=GetListOfPrimitives();
@@ -398,7 +398,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    if (leg) leg->Draw();
    else Info("BuildLegend(void)","No object to build a TLegend.");
    return leg;
-} 
+}
 
 //______________________________________________________________________________
 TVirtualPad *TPad::cd(Int_t subpadnumber)
@@ -662,8 +662,8 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    //
    // nn: number of points in xc and yc
    // xc, yc: clipped polygon vertices. The Int_t returned by this function is
-   //         the number of points in the clipped polygon. These vectors must 
-   //         be allocated by the calling function. A size of 2*n for each is 
+   //         the number of points in the clipped polygon. These vectors must
+   //         be allocated by the calling function. A size of 2*n for each is
    //         enough.
    //
    // Sutherland and Hodgman's polygon-clipping algorithm uses a divide-and-conquer
@@ -687,8 +687,8 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    // * Case 1 : Wholly inside visible region - save endpoint
    // * Case 2 : Exit visible region - save the intersection
    // * Case 3 : Wholly outside visible region - save nothing
-   // * Case 4 : Enter visible region - save intersection and endpoint 
-   
+   // * Case 4 : Enter visible region - save intersection and endpoint
+
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
@@ -1484,7 +1484,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!IsEditable() && event != kMouseEnter) return;
    TVirtualPad  *parent = GetMother();
    if (!parent->IsEditable()) return;
-   
+
    HideToolTip(event);
 
    if (fXlowNDC < 0 && event != kButton1Down) return;
@@ -2830,7 +2830,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    Int_t nc = 2*nn+1;
    Double_t *x = new Double_t[nc];
    Double_t *y = new Double_t[nc];
-                                                                                    
+
    n = ClipPolygon(nn, xx, yy, nc, x, y,xmin,ymin,xmax,ymax);
    if (!n) {
       delete [] x;
@@ -3524,7 +3524,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
    //We can have 3d stuff in pad. If canvas prefers to draw
    //such stuff with OpenGL, the selection of 3d objects is
-   //a gl viewer business so, in first cycle we do not 
+   //a gl viewer business so, in first cycle we do not
    //call DistancetoPrimitive for TAtt3D descendants.
    //In case of gl we first try to select 2d object first.
 
@@ -3579,7 +3579,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
             px -= Int_t(GetXlowNDC() * GetWw());
             fViewer3D->DistancetoPrimitive(px, py);
          }
-         else 
+         else
             dummyLink.SetObject(fView);
       }
    }
@@ -3616,23 +3616,19 @@ void TPad::Pop()
 //______________________________________________________________________________
 void TPad::Print(const char *filename) const
 {
-//  Save Pad contents on a  file in various formats
-//  ===============================================
-//
-//   if filename is "", the file produced is padname.ps
-//   if filename starts with a dot, the padname is added in front
-//   if filename contains .eps, an Encapsulated Postscript file is produced
-//   if filename contains .gif, a GIF file is produced
-//   if filename contains .C or .cxx, a C++ macro file is produced
-//   if filename contains .root, a Root file is produced
-//   if filename contains .xml,  a XML file is produced
-//
-//  See comments in TPad::SaveAs or the TPad::Print function below
-//
-//
+   // Save Pad contents on a file in various formats
+   //
+   //   if filename is "", the file produced is padname.ps
+   //   if filename starts with a dot, the padname is added in front
+   //   if filename contains .eps, an Encapsulated Postscript file is produced
+   //   if filename contains .gif, a GIF file is produced
+   //   if filename contains .C or .cxx, a C++ macro file is produced
+   //   if filename contains .root, a Root file is produced
+   //   if filename contains .xml,  a XML file is produced
+   //
+   //  See comments in TPad::SaveAs or the TPad::Print function below
 
    ((TPad*)this)->SaveAs(filename);
-
 }
 
 //______________________________________________________________________________
@@ -3751,8 +3747,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    const char *opt = option;
    Bool_t image = kFALSE;
 
-//*-*   Set the default option as "Postscript" (Should be a data member of TPad)
-
+   // Set the default option as "Postscript" (Should be a data member of TPad)
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
 
@@ -3773,7 +3768,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    delete [] filename;
 
-//==============Save pad/canvas as a GIF file==================================
+   // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
    if (strstr(opt, "gif")) {
       gtype = TImage::kGif;
@@ -3819,10 +3814,10 @@ void TPad::Print(const char *filenam, Option_t *option)
             gSystem->Sleep(30); // syncronize
             TImage *img = TImage::Create();
             img->FromPad(this);
-            img->WriteImage(psname.Data(), gtype);
-            gErrorIgnoreLevel = saver;     
+            img->WriteImage(psname, gtype);
+            gErrorIgnoreLevel = saver;
          }
-         if (!gSystem->AccessPathName(psname.Data())) {
+         if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
       } else {
@@ -3907,7 +3902,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
 //==============Save pad/canvas as an image file in batch mode============================
    if (image) {
-      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname.Data());
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       TPad *padsav = (TPad*)gPad;
       cd();
@@ -3923,7 +3918,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          }
       }
       if (gVirtualPS) {
-         gVirtualPS->Open(psname.Data());
+         gVirtualPS->Open(psname);
          gVirtualPS->SetBit(kPrintingPS);
          //gVirtualPS->NewPage();
          Paint();
@@ -4358,24 +4353,23 @@ void TPad::ResizePad(Option_t *option)
 //______________________________________________________________________________
 void TPad::SaveAs(const char *filename)
 {
-//*-*-*-*-*Save Pad contents on a  file in various formats*-*-*-*-*-*
-//*-*      ===============================================
-//
-//   if filename is "", the file produced is padname.ps
-//   if filename starts with a dot, the padname is added in front
-//   if filename contains .eps, an Encapsulated Postscript file is produced
-//   if filename contains .pdf, a PDF file is produced
-//   if filename contains .svg, a SVG file is produced
-//   if filename contains .gif, a GIF file is produced
-//   if filename contains  .xpm, a XPM file is produced
-//   if filename contains . png, a PNG file is produced
-//   if filename contains . jpg, a JPEG file is produced
-//   if filename contains . tiff, a TIFF file is produced
-//   if filename contains .C or .cxx, a C++ macro file is produced
-//   if filename contains .root, a Root file is produced
-//   if filename contains .xml, a XML file is produced
-//
-//   See comments in TPad::Print for the Postscript formats
+   // Save Pad contents on a  file in various formats
+   //
+   //   if filename is "", the file produced is padname.ps
+   //   if filename starts with a dot, the padname is added in front
+   //   if filename contains .eps, an Encapsulated Postscript file is produced
+   //   if filename contains .pdf, a PDF file is produced
+   //   if filename contains .svg, a SVG file is produced
+   //   if filename contains .gif, a GIF file is produced
+   //   if filename contains .xpm, a XPM file is produced
+   //   if filename contains .png, a PNG file is produced
+   //   if filename contains .jpg, a JPEG file is produced
+   //   if filename contains .tiff, a TIFF file is produced
+   //   if filename contains .C or .cxx, a C++ macro file is produced
+   //   if filename contains .root, a Root file is produced
+   //   if filename contains .xml, a XML file is produced
+   //
+   //   See comments in TPad::Print for the Postscript formats
 
    TString psname;
    Int_t lenfil =  filename ? strlen(filename) : 0;
@@ -4419,7 +4413,6 @@ void TPad::SaveAs(const char *filename)
                 Print(psname,"tiff");
    else
                 Print(psname,"ps");
-
  }
 
 //______________________________________________________________________________
@@ -5384,14 +5377,14 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
             if (ph && ph->LoadPlugin() != -1)
                newViewer = (TVirtualViewer3D *)ph->ExecPlugin(6, this, fGLDevice, px, py, w, h);
-            
+
             if (newViewer) {
                Info("GetViewer3D", "pixmap gl render created sucsessfully\n");
             } else
                Error("GetViewer3D", "Error with plugin manager for pixmap gl render\n");
          } else {
             Error(
-                  "GetViewer3D", 
+                  "GetViewer3D",
                   "Cannot create off-screen gl device, will use default instead\n"
                  );
          }

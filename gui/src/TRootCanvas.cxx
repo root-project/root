@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.84 2005/08/25 16:38:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.85 2005/09/08 14:22:16 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -508,23 +508,23 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create canvas and canvas container that will host the ROOT graphics
    fCanvasWindow = new TGCanvas(fMainFrame, GetWidth()+4, GetHeight()+4,
                                 kSunkenFrame | kDoubleBorder);
-             
-   fCanvasID = -1;             
-                                
+
+   fCanvasID = -1;
+
    if (fCanvas && fCanvas->UseGL()) {
       //first, initialize GL (if not yet)
       if (!gGLManager) {
          TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
-         
+
          if (ph && ph->LoadPlugin() != -1) {
             if (!ph->ExecPlugin(0))
                Warning(
-                       "CreateCanvas", 
+                       "CreateCanvas",
                        "Can not load GL, will use default canvas imp instead\n"
                       );
          }
       }
-      
+
       if (gGLManager) {
          fCanvasID = gGLManager->InitGLWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId(), kTRUE);
          if (fCanvasID != -1)
@@ -533,10 +533,10 @@ void TRootCanvas::CreateCanvas(const char *name)
             Warning("CreateCanvas", "Cannot init gl window, will use default instead\n");
       }
    }
-   
+
    if (fCanvasID == -1)
       fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
-      
+
    Window_t win = gVirtualX->GetWindowID(fCanvasID);
    fCanvasContainer = new TRootContainer(this, win, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);
@@ -823,7 +823,6 @@ again:
                             fn.EndsWith(".png")  ||
                             fn.EndsWith(".xcf")  ||
                             fn.EndsWith(".tiff")) {
-                           gSystem->Sleep(60); // give X server time to refresh
                            fCanvas->SaveAs(fn);
                         } else if (fn.EndsWith(".C"))
                            fCanvas->SaveSource(fn);
@@ -874,7 +873,7 @@ again:
                         if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
                            TVirtualPadEditor::Terminate();
                         delete this;
-                     } 
+                     }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
                      if (gROOT->GetClass("TStyleManager"))
@@ -885,7 +884,7 @@ again:
                   // Handle Edit menu items...
                   case kEditStyle:
                      if (!gROOT->GetClass("TStyleManager"))
-                        gSystem->Load("libGed"); 
+                        gSystem->Load("libGed");
                      gROOT->ProcessLine("TStyleManager::Show()");
                      break;
                   case kEditCut:
@@ -1203,7 +1202,7 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
 void TRootCanvas::RaiseWindow()
 {
    // Put canvas window on top of the window stack.
-   
+
    gVirtualX->RaiseWindow(GetId());
 }
 
@@ -1326,11 +1325,11 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
-   
+
    TVirtualPad *savedPad = 0;
    savedPad = (TVirtualPad *) gPad;
    gPad = Canvas();
-   
+
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
    UInt_t h = GetHeight();
@@ -1444,7 +1443,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
          fToolDock->DockContainer();
          h = h + 2*sh;
       } else h = h - dh;
-         
+
       HideFrame(fToolDock);
       if (!fViewMenu->IsEntryChecked(kViewEditor)) {
          HideFrame(fHorizontal1);
@@ -1452,7 +1451,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
       }
       HideFrame(fToolBarSep);
       h = h - sh;
-      fViewMenu->UnCheckEntry(kViewToolbar); 
+      fViewMenu->UnCheckEntry(kViewToolbar);
    }
    Resize(GetWidth(), h);
 }
@@ -1460,12 +1459,12 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 //______________________________________________________________________________
 void TRootCanvas::AdjustSize()
 {
-   // Keep the same canvas size while docking/undocking toolbar. 
-   
+   // Keep the same canvas size while docking/undocking toolbar.
+
    UInt_t h = GetHeight();
    UInt_t dh = fToolBar->GetHeight();
    UInt_t sh = fHorizontal1->GetHeight();
-   
+
    if (fToolDock->IsUndocked()) {
       if (!fViewMenu->IsEntryChecked(kViewEditor)) {
          HideFrame(fHorizontal1);
