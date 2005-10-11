@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.103 2005/09/05 10:13:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.104 2005/09/29 13:01:15 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3143,11 +3143,15 @@ void TFormula::Streamer(TBuffer &b)
             // Compiles will reset the parameter values so we need
             // to temporarily keep them
             Double_t *param = fParams;
+            TString *names = fNames;
             Int_t npar = fNpar;
             fParams = 0;
+            fNames = 0;
             Compile();
             for (Int_t i = 0; i<npar && i<fNpar; ++i) fParams[i] = param[i];
             delete [] param;
+            delete [] fNames;
+            fNames = names;
          } else if (v<6) {
             Convert(v);
          }
