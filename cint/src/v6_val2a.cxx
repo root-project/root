@@ -556,7 +556,7 @@ char *G__fulltagname(int tagnum,int mask_dollar)
   sprintf(string+len,"%s",G__struct.name[tagnum]+os);
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
    {
       char *ptr = strstr(string, "long long");
       if (ptr) {
