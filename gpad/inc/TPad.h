@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.37 2005/08/18 11:12:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.38 2005/09/05 15:45:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -254,6 +254,8 @@ public:
    void              Modified(Bool_t flag=1);  // *SIGNAL*
    virtual Bool_t    OpaqueMoving() const;
    virtual Bool_t    OpaqueResizing() const;
+   void              PadMaximize();  // *MENU*
+   void              PadRestoreDown();  // *MENU*
    Double_t          PadtoX(Double_t x) const;
    Double_t          PadtoY(Double_t y) const;
    virtual void      Paint(Option_t *option="");

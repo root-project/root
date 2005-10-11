@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.200 2005/10/03 14:58:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.201 2005/10/11 09:09:18 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -62,6 +62,11 @@ const Int_t kPXY       = 1002;
 
 static TPoint gPXY[kPXY];
 static Int_t gReadLevel = 0;
+
+static Double_t gXlowNDCSave = 0. ;
+static Double_t gYlowNDCSave = 0.;
+static Double_t gWNDCSave    = 0.;
+static Double_t gHNDCSave    = 0.;
 
 Int_t TPad::fgMaxPickDistance = 5;
 
@@ -2276,6 +2281,42 @@ void TPad::ls(Option_t *option) const
    fPrimitives->ls(option);
    TROOT::DecreaseDirLevel();
 }
+
+//______________________________________________________________________________
+void TPad::PadMaximize()
+{
+   // Resize this pad to the canvas size (maximize it).
+
+   gXlowNDCSave = fXlowNDC;
+   gYlowNDCSave = fYlowNDC;
+   gWNDCSave    = fWNDC;
+   gHNDCSave    = fHNDC;
+   fXlowNDC     = 0. ;
+   fYlowNDC     = 0.;
+   fWNDC        = 1.;
+   fHNDC        = 1.;
+   Pop();
+   ResizePad();
+   Modified();
+   Update();
+}
+
+//______________________________________________________________________________
+void TPad::PadRestoreDown()
+{
+   // Restore the pad sive after a call to PadMaximize
+
+   if (gXlowNDCSave + gYlowNDCSave + gWNDCSave + gHNDCSave == 0) return;
+   fXlowNDC     = gXlowNDCSave;
+   fYlowNDC     = gYlowNDCSave;
+   fWNDC        = gWNDCSave;
+   fHNDC        = gHNDCSave;
+   ResizePad();
+   Modified();
+   Update();
+   gXlowNDCSave = gYlowNDCSave = gWNDCSave = gHNDCSave = 0;
+}
+
 
 //______________________________________________________________________________
 Double_t TPad::PadtoX(Double_t x) const
