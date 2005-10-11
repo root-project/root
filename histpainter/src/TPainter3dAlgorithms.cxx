@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.23 2005/09/12 13:04:39 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.24 2005/09/27 12:38:14 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2161,6 +2161,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 
     Int_t i, j, ixt, iyt;
     Double_t xval1l, xval2l, yval1l,  yval2l;
+    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
     Double_t rinrad = gStyle->GetLegoInnerR();
     Double_t dangle = 10; //Delta angle for Rapidity option
 
@@ -2206,26 +2207,45 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
     if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
 
+    xlab1l = gCurrentHist->GetXaxis()->GetXmin();
+    xlab2l = gCurrentHist->GetXaxis()->GetXmax();
+    if (Hoption.Logx) {
+       if (xlab2l>0) {
+          if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
+          else          xlab1l = TMath::Log10(0.001*xlab2l);
+          xlab2l = TMath::Log10(xlab2l);
+       }
+    }
+    ylab1l = gCurrentHist->GetYaxis()->GetXmin();
+    ylab2l = gCurrentHist->GetYaxis()->GetXmax();
+    if (Hoption.Logy) {
+       if (ylab2l>0) {
+          if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
+          else          ylab1l = TMath::Log10(0.001*ylab2l);
+          ylab2l = TMath::Log10(ylab2l);
+       }
+    }
+
 //*-*-       Transform the cell position in the required coordinate system
 
     if (Hoption.System == kPOLAR) {
-        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
         ab[4] = (ab[4] - yval1l) / (yval2l - yval1l);
         ab[8] = (ab[8] - yval1l) / (yval2l - yval1l);
     } else if (Hoption.System == kCYLINDRICAL) {
-        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
+        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
     } else if (Hoption.System == kSPHERICAL) {
-        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
-        ab[4] = 180*(ab[4] - yval1l) / (yval2l - yval1l);
-        ab[8] = 180*(ab[8] - yval1l) / (yval2l - yval1l);
+        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+        ab[4] = 180*(ab[4] - ylab1l) / (ylab2l - ylab1l);
+        ab[8] = 180*(ab[8] - ylab1l) / (ylab2l - ylab1l);
     } else if (Hoption.System == kRAPIDITY) {
-        ab[3] = 360*(ab[3] - xval1l) / (xval2l - xval1l);
-        ab[5] = 360*(ab[5] - xval1l) / (xval2l - xval1l);
-        ab[4] = (180 - dangle*2)*(ab[4] - yval1l) / (yval2l - yval1l) + dangle;
-        ab[8] = (180 - dangle*2)*(ab[8] - yval1l) / (yval2l - yval1l) + dangle;
+        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+        ab[4] = (180 - dangle*2)*(ab[4] - ylab1l) / (ylab2l - ylab1l) + dangle;
+        ab[8] = (180 - dangle*2)*(ab[8] - ylab1l) / (ylab2l - ylab1l) + dangle;
     }
 
 //*-*-             Complete the cell coordinates
@@ -3783,6 +3803,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
     Double_t rinrad = gStyle->GetLegoInnerR();
     Double_t dangle = 10; //Delta angle for Rapidity option
     Double_t xval1l, xval2l, yval1l, yval2l;
+    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
     Int_t i, ixa, iya, icx, ixt, iyt;
 
     /* Parameter adjustments */
@@ -3792,10 +3813,29 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
     ixt = ia + Hparam.xfirst - 1;
     iyt = ib + Hparam.yfirst - 1;
 
-        xval1l = Hparam.xmin;
-        xval2l = Hparam.xmax;
-        yval1l = Hparam.ymin;
-        yval2l = Hparam.ymax;
+    xval1l = Hparam.xmin;
+    xval2l = Hparam.xmax;
+    yval1l = Hparam.ymin;
+    yval2l = Hparam.ymax;
+
+    xlab1l = gCurrentHist->GetXaxis()->GetXmin();
+    xlab2l = gCurrentHist->GetXaxis()->GetXmax();
+    if (Hoption.Logx) {
+       if (xlab2l>0) {
+          if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
+          else          xlab1l = TMath::Log10(0.001*xlab2l);
+          xlab2l = TMath::Log10(xlab2l);
+       }
+    }
+    ylab1l = gCurrentHist->GetYaxis()->GetXmin();
+    ylab2l = gCurrentHist->GetYaxis()->GetXmax();
+    if (Hoption.Logy) {
+       if (ylab2l>0) {
+          if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
+          else          ylab1l = TMath::Log10(0.001*ylab2l);
+          ylab2l = TMath::Log10(ylab2l);
+       }
+    }
 
     for (i = 1; i <= 4; ++i) {
         ixa = ixadd[i - 1];
@@ -3820,16 +3860,16 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 //*-*-     Transform the cell position in the required coordinate system
 
         if (Hoption.System == kPOLAR) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
             f[i*3 + 2] = (f[i*3 + 2] - yval1l) / (yval2l - yval1l);
         } else if (Hoption.System == kCYLINDRICAL) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
         } else if (Hoption.System == kSPHERICAL) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
-            f[i*3 + 2] = 360*(f[i*3 + 2] - yval1l) / (yval2l - yval1l);
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+            f[i*3 + 2] = 360*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l);
         } else if (Hoption.System == kRAPIDITY) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xval1l) / (xval2l - xval1l);
-            f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - yval1l) / (yval2l - yval1l) + dangle;
+            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+            f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l) + dangle;
         }
 
 //*-*-          Get the content of the table. If the X index (ICX) is
