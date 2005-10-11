@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.202 2005/10/11 12:48:38 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.203 2005/10/11 13:15:22 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -62,11 +62,6 @@ const Int_t kPXY       = 1002;
 
 static TPoint gPXY[kPXY];
 static Int_t gReadLevel = 0;
-
-static Double_t gXlowNDCSave = 0. ;
-static Double_t gYlowNDCSave = 0.;
-static Double_t gWNDCSave    = 0.;
-static Double_t gHNDCSave    = 0.;
 
 Int_t TPad::fgMaxPickDistance = 5;
 
