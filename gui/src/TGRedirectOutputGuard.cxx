@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TObject.h,v 1.27 2005/05/13 15:55:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGRedirectOutputGuard.cxx,v 1.1 2005/10/11 12:39:36 rdm Exp $
 // Author: G. Ganis   10/10/2005
 
 /*************************************************************************
@@ -35,6 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
+#include <sys/types.h>
+#ifdef WIN32
+#   include <io.h>
+#else
+#   include <unistd.h>
+#endif
 
 #include "TError.h"
 #include "TGRedirectOutputGuard.h"
