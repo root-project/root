@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.16 2005/09/06 09:26:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.17 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1254,17 +1254,17 @@ void TGLViewer::ClearClips()
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetSelectedColor(const Float_t rgba[4])
+void TGLViewer::SetSelectedColor(const Float_t color[17])
 {
-   if (fScene.SetSelectedColor(rgba)) {
+   if (fScene.SetSelectedColor(color)) {
       RequestDraw();
    }
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetColorOnSelectedFamily(const Float_t rgba[4])
+void TGLViewer::SetColorOnSelectedFamily(const Float_t color[17])
 {
-   if (fScene.SetColorOnSelectedFamily(rgba)) {
+   if (fScene.SetColorOnSelectedFamily(color)) {
       RequestDraw();
    }
 }

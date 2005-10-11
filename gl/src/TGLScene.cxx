@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.17 2005/08/16 15:59:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.20 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -806,10 +806,10 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style, const TGLCli
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::SetSelectedColor(const Float_t rgba[4])
+Bool_t TGLScene::SetSelectedColor(const Float_t color[17])
 {
    if (fSelectedPhysical) {
-      fSelectedPhysical->SetColor(rgba);
+      fSelectedPhysical->SetColor(color);
       return kTRUE;
    } else {
       assert(kFALSE);
@@ -818,7 +818,7 @@ Bool_t TGLScene::SetSelectedColor(const Float_t rgba[4])
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t rgba[4])
+Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
 {
    if (fSelectedPhysical) {
       TGLPhysicalShape * physical;
@@ -827,7 +827,7 @@ Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t rgba[4])
          physical = physicalShapeIt->second;
          if (physical) {
             if (physical->GetLogical().ID() == fSelectedPhysical->GetLogical().ID()) {
-               physical->SetColor(rgba);
+               physical->SetColor(color);
             }
          } else {
             assert(kFALSE);

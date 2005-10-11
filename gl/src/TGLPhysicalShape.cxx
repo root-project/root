@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.9 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.10 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -38,9 +38,8 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    fLogicalShape.AddRef();
    UpdateBoundingBox();
 
-   // Set color and reset modified flag as we are just initialising
+   // Initialise color
    SetColor(rgba);
-   fModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -61,9 +60,8 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    fTransform.Transpose3x3();
    UpdateBoundingBox();
 
-   // Set color and reset modified flag as we are just initialising
-   SetColor(rgba);
-   fModified = kFALSE;
+   // Initialise color
+   InitColor(rgba);
 }
 
 //______________________________________________________________________________
@@ -80,8 +78,9 @@ void TGLPhysicalShape::UpdateBoundingBox()
 }
 
 //______________________________________________________________________________
-void TGLPhysicalShape::SetColor(const Float_t rgba[4])
+void TGLPhysicalShape::InitColor(const Float_t rgba[4])
 {
+   // Initialise the colors, using basic RGBA diffuse material color supplied
    // TODO: Make a color class
    fColor[0] = rgba[0];
    fColor[1] = rgba[1];
@@ -99,6 +98,16 @@ void TGLPhysicalShape::SetColor(const Float_t rgba[4])
    //shininess
    fColor[16] = 60.f;
 
+   // Modified flag not set - just initialising
+}
+
+//______________________________________________________________________________
+void TGLPhysicalShape::SetColor(const Float_t color[17])
+{
+   // TODO: Make a color class
+   for (UInt_t i = 0; i < 17; i++) {
+      fColor[i] = color[i];
+   }
    fModified = kTRUE;
 }
 

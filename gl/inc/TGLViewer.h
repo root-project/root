@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.11 2005/09/06 09:26:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.12 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -207,8 +207,8 @@ public:
    void  SetClipState(EClipType type, const std::vector<Double_t> & data);
    EClipType GetCurrentClip() const;
    void  SetCurrentClip(EClipType type, Bool_t edit);
-   void  SetSelectedColor(const Float_t rgba[4]);
-   void  SetColorOnSelectedFamily(const Float_t rgba[4]);
+   void  SetSelectedColor(const Float_t rgba[17]);
+   void  SetColorOnSelectedFamily(const Float_t rgba[17]);
    void  SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
    const TGLPhysicalShape * GetSelected() const { return fScene.GetSelected(); }
    

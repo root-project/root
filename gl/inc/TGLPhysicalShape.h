@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.7 2005/06/23 15:08:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.8 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -45,6 +45,7 @@ private:
 
    // Methods
    void            UpdateBoundingBox(); 
+   void            InitColor(const Float_t rgba[4]);
 
 protected:
    // Methods
@@ -77,7 +78,7 @@ public:
    // Color
    const Float_t * Color() const                      { return fColor; }
    Bool_t          IsTransparent() const              { return fColor[3] < 1.f; }
-   void            SetColor(const Float_t rgba[4]);
+   void            SetColor(const Float_t rgba[17]);
 
    // Geometry
    TGLVertex3      Translation() const;

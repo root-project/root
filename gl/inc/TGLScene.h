@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.13 2005/08/12 07:38:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.14 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -135,8 +135,8 @@ public:
 
    // Selected Object
    const TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
-   Bool_t                   SetSelectedColor(const Float_t rgba[4]);
-   Bool_t                   SetColorOnSelectedFamily(const Float_t rgba[4]);
+   Bool_t                   SetSelectedColor(const Float_t rgba[17]);
+   Bool_t                   SetColorOnSelectedFamily(const Float_t rgba[17]);
    Bool_t                   ShiftSelected(const TGLVector3 & shift);
    Bool_t                   SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
 
