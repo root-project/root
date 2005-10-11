@@ -44,7 +44,7 @@ GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TGColorDialog.h TGColorSelect.h TGFontDialog.h \
                 TGDockableFrame.h TGMdi.h TGMdiFrame.h TGMdiMainFrame.h \
                 TGMdiDecorFrame.h TGMdiMenu.h TVirtualDragManager.h \
-                TGuiBuilder.h
+                TGuiBuilder.h TGRedirectOutputGuard.h
 
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
