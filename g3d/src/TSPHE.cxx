@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.15 2005/05/25 14:25:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.16 2005/08/30 09:11:39 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -308,32 +308,9 @@ void TSPHE::Streamer(TBuffer &b)
 //_______________________________________________________________________
 const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
 {
-   static TBuffer3DSphere buffer;
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);
-
-   if (reqSections & TBuffer3D::kShapeSpecific) {
-      buffer.fRadiusInner  = fRmin;
-      buffer.fRadiusOuter  = fRmax;
-      buffer.fThetaMin     = fThemin;
-      buffer.fThetaMax     = fThemax;
-      buffer.fPhiMin       = fPhimin;
-      buffer.fPhiMax       = fPhimax;
-      buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
-   }
-   // We only provide the bounding box for uncut spheres
-   if (reqSections & TBuffer3D::kBoundingBox &&
-      fThemin == 0 && fThemax == 180 &&
-      fPhimin == 0 && fPhimax == 360) {
-
-      Double_t origin[3] = { 0.0, 0.0, 0.0 };
-      Double_t halfLengths[3] = { fRmax, fRmax, fRmax };
-      buffer.SetAABoundingBox(origin, halfLengths);
-      if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fBBVertex[0], 8);
-      }
-      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
-   }
 
    // Needed by kRawSizes / kRaw
    const Int_t n = GetNumberOfDivisions()+1;

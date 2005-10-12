@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.8 2005/03/11 11:44:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.9 2005/09/04 14:53:18 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -191,7 +191,11 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 
    if (reqSections & TBuffer3D::kCore) {
       buffer.ClearSectionsValid();
-      buffer.fID = const_cast<TShape *>(this);
+
+      // We are only filling TBuffer3D in the master frame. Therefore the shape 
+      // described in buffer is a specific placement - and this needs to be
+      // identified uniquely. Use the current node set in TNode::Paint which calls us
+      buffer.fID = gNode;
       buffer.fColor = GetLineColor();
       buffer.fTransparency = 0;    
       buffer.fLocalFrame = kFALSE; // Only support master frame for these shapes

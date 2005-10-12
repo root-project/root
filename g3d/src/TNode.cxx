@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.26 2005/05/25 14:25:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.27 2005/08/18 11:12:58 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -647,11 +647,11 @@ void TNode::Paint(Option_t *option)
          // Not all will support the last two - which is fine
          const TBuffer3D & buffer = 
             fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
+
          Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
          if (reqSections != TBuffer3D::kNone)
          {
             fShape->GetBuffer3D(reqSections);
-            const_cast<TBuffer3D &>(buffer).fID = this;
             viewer3D->AddObject(buffer, &viewerWantsSons);
          }
       }
