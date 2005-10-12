@@ -13,12 +13,13 @@
 //                                                                      //
 // TSessionViewer                                                       //
 //                                                                      //
-// Widget used to manage Proof or local sessions, proof connections,    //
+// Widget used to manage PROOF or local sessions, PROOF connections,    //
 // queries construction and results handling.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TApplication.h"
+#include "TSystem.h"
 #include "TGFileDialog.h"
 #include "TBrowser.h"
 #include "TGButton.h"
@@ -39,7 +40,7 @@
 #include "TGIcon.h"
 #include "TChain.h"
 #include "TDSet.h"
-#include "TProof.h"
+#include "TVirtualProof.h"
 #include "TRandom.h"
 #include "TSessionViewer.h"
 #include "TSessionLogView.h"
@@ -1462,14 +1463,14 @@ void TSessionFeedbackFrame::Build(TSessionViewer *gui)
    }
    fListBox->Resize(175, 80);
    fListBox->Select(1);
-   fListBox->Connect("Selected(Int_t)", "TSessionFeedbackFrame", this, 
+   fListBox->Connect("Selected(Int_t)", "TSessionFeedbackFrame", this,
                      "OnLBSelected(Int_t)");
 
    //Feedback
 
    fFeedbackChk = new TGCheckButton(frmFeed, "Feedback", 1);
    fFeedbackChk->SetState(kButtonDown);
-   fFeedbackChk->Connect("Toggled(Bool_t)", "TSessionViewer", fViewer, 
+   fFeedbackChk->Connect("Toggled(Bool_t)", "TSessionViewer", fViewer,
                          "OnFeedBackToggled(Bool_t)" );
    frmFeed->AddFrame(fFeedbackChk, new TGLayoutHints(kLHintsCenterY | kLHintsLeft,
                      15, 5, 2, 2));
@@ -1931,7 +1932,7 @@ TSessionViewer::~TSessionViewer()
 //______________________________________________________________________________
 void TSessionViewer::OnFeedBackToggled(Bool_t on)
 {
-   // If user wants to see feedback histos, automatically enable the filling 
+   // If user wants to see feedback histos, automatically enable the filling
    // of performance histograms by calling gEnv->SetValue("Proof.StatsHist",1)
    // and checking corresponding options menu entry
    if (on) {

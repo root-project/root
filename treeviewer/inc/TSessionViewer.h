@@ -13,7 +13,7 @@
 //                                                                      //
 // TSessionViewer                                                       //
 //                                                                      //
-// Widget used to manage Proof or local sessions, proof connections,    //
+// Widget used to manage PROOF or local sessions, PROOF connections,    //
 // queries construction and results handling.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -84,14 +84,13 @@ class TCanvas;
 struct UserGroup_t;
 
 class TVirtualProof;
-class TProofServer;
 class TSessionViewer;
 class TSessionLogView;
 class TQueryResult;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSessionViewer - A GUI for ROOT / Proof Sessions                     //
+// TSessionViewer - A GUI for ROOT / PROOF Sessions                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
