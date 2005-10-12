@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.9 2005/09/08 05:33:41 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.10 2005/09/09 04:57:59 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.9 2005/09/08 05:33:41 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.10 2005/09/09 04:57:59 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -292,7 +292,7 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
    for (Int_t colCounter=0; colCounter < maxColumns; colCounter++) {
       Int_t colNewIndx = newDescriptor->ColumnByName(ColumnName(colCounter));
       // look for analog
-      EColumnType newType = newDescriptor->ColumnType(colNewIndx);
+      EColumnType newType = colNewIndx >=0 ? newDescriptor->ColumnType(colNewIndx): kNAN;
 #ifdef __STAR__
       if (newType == kInt)       newType = kLong;
       else if (newType == kUInt) newType = kULong;
