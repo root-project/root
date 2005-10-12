@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.9 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.10 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -289,9 +289,9 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
    TGLVector3 zAxis(z);
    zAxis.Normalise();
    TGLVector3 axis; 
-   if (fabsf(zAxis.X()) <= fabsf(zAxis.Y()) && fabsf(zAxis.X()) <= fabsf(zAxis.Z())) {
+   if (fabs(zAxis.X()) <= fabs(zAxis.Y()) && fabs(zAxis.X()) <= fabs(zAxis.Z())) {
       axis.Set(1, 0, 0); 
-   } else if (fabsf(zAxis.Y()) <= fabsf(zAxis.X()) && fabsf(zAxis.Y()) <= fabsf(zAxis.Z())) {
+   } else if (fabs(zAxis.Y()) <= fabs(zAxis.X()) && fabs(zAxis.Y()) <= fabs(zAxis.Z())) {
       axis.Set(0, 1, 0); 
    } else { 
       axis.Set(0, 0, 1);
