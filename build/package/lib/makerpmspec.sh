@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.9 2005/07/14 13:42:31 rdm Exp $
+# $Id: makerpmspec.sh,v 1.10 2005/08/15 16:05:24 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -30,7 +30,7 @@ dpkglist="`echo $pkglist | sed -e 's/ *ttf-root[-a-z]* *//g' -e 's/ /, /g'`, roo
 
 # ROOT version 
 version=`cat build/version_number | tr '/' '.'`
-major=`echo $version | sed 's/\([[:digit:]]*\)\.[[:digit:]]*\.([[:digit:]]/\1/'`
+major=`echo $version | cut -f1 -d.`
 ### echo %%% make sure we've got a fresh file 
 rm -f root.spec
 
@@ -67,6 +67,7 @@ for p in $pkglist ; do
 	    ;;
 	*minuit|*fumili)
 	    echo "Provides: root-fitter"			>> root.spec
+            ;;
 	libroot)
 	    echo "Provides: libroot"				>> root.spec
 	    ;;
@@ -93,7 +94,7 @@ for p in $pkglist ; do
 
     for s in post postun pre preun ; do 
 	if test -f build/package/rpm/$p.$s ; then 
-	    echo "%$s -n $p" 			>> root.spec
+	    echo "%$s -n $pp" 			>> root.spec
 	    cat build/package/rpm/$p.$s		>> root.spec
 echo "" >> root.spec
 	fi

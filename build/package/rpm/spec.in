@@ -58,6 +58,7 @@ ROOT web-site: http://root.cern.ch
 #
 #
 %build
+sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 ./configure --enable-table				\
 	    --enable-ruby				\
 	    --enable-qt					\
@@ -71,9 +72,10 @@ ROOT web-site: http://root.cern.ch
 	    --disable-srp				\
 	    --disable-builtin-freetype			\
 	    --prefix=%_prefix 				\
+	    --libdir=%_prefix/lib/root/${sovers}	\
 	    --mandir=%_prefix/share/man/man1		\
 	    --docdir=%_defaultdocdir			\
-	    --cintincdir=%_prefix/lib/root/cint		\
+	    --cintincdir=%_prefix/lib/root/${sovers}/cint \
 	    --etcdir=%_sysconfdir/root			\
             --with-sys-iconpath=%_datadir/pixmaps 	
 
@@ -95,11 +97,11 @@ rm -rf ${RPM_BUILD_ROOT}
 make install DESTDIR=${RPM_BUILD_ROOT}
 find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
 sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
-mkdir -p ${RPM_BUILD_ROOT}/usr/lib/root
-(cd ${RPM_BUILD_ROOT}/usr/lib/root && \ 
+(cd ${RPM_BUILD_ROOT}/usr/lib/root && \
     for i in ${sovers}/*.so.${sovers} ${sovers}/libXrd*.so ; do  \
-	ln -sf $$i . ; \
-        ln -sf $$i `basename $$i .${sovers}` ; done) 
+        ln -sf $i . ; \
+        ln -sf $i `basename $i .${sovers}` ; done; \
+    ln -sf ${sovers}/cint .)
 #sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$sover|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
 #	mv tmp.systemrc debian/tmp/etc/root/system.rootrc
 mkdir -p rpm

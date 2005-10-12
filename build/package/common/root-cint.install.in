@@ -1,4 +1,5 @@
 @prefix@/lib/root/cint
+@prefix@/lib/root/@version@/cint
 @prefix@/bin/cint
 @prefix@/bin/makecint
 @prefix@/share/man/man1/cint.1

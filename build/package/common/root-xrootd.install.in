@@ -1,5 +1,4 @@
 @prefix@/lib/root/libXrdOfs.so
-@prefix@/lib/root/libXrdPosix.so 
 @prefix@/lib/root/libXrdRootd.so
 @prefix@/lib/root/libXrdSeckrb4.so
 @prefix@/lib/root/libXrdSeckrb5.so
