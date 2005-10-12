@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.16 2005/06/24 12:27:29 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.17 2005/09/20 06:38:10 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -1099,12 +1099,14 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win =  fQClientGuard.Create(pWidget,"MainFrame");
       win->setFrameShape(QFrame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
    }  else if (wtype & kTempFrame) {
-//      win =  fQClientGuard.Create(pWidget,"tooltip",Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop);
-      win =  fQClientGuard.Create(pWidget,"tooltip",Qt::WStyle_Customize | Qt::WStyle_StaysOnTop);
+      win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
+//      win =  fQClientGuard.Create(pWidget,"tooltip",Qt::WStyle_Customize | Qt::WStyle_StaysOnTop);
       win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
    } else {
-      win =  fQClientGuard.Create(pWidget,"Other",Qt::WStyle_Customize | Qt::WStyle_NoBorder);
-   }
+//      win =  fQClientGuard.Create(pWidget,"Other",Qt::WStyle_Customize | Qt::WStyle_NoBorder);
+      win =  fQClientGuard.Create(pWidget,"Other",Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM );
+      // if (!pWidget) printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
+  }
 
    // printf(" TQt::CreateWindow %p parent = %p \n", win,pWidget);
 
@@ -1561,10 +1563,17 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
    }
    if ( attr->fMask & kWABorderPixel) {
       // ULong_t    fBorderPixel;          // border pixel value
+       // f.setFrameShape( QFrame::PopupPanel );
+       f.setFrameStyle( QFrame::Box | QFrame::Plain );
+       // printf("TGQt::ChangeWindowAttributes  kWABorderPixel %p name = %s; shape = %d; margin = %d width=%d \n",&f,(const char*)f.name(),f.frameShape(),f.margin(),f.lineWidth() );
    }
    if ( attr->fMask & kWABorderWidth) {
       // border width in pixels)
-      f.setMargin (attr->fBorderWidth);
+        f.setMargin   (attr->fBorderWidth);
+      //  f.setMargin   (attr->fBorderWidth);
+       f.setLineWidth(attr->fBorderWidth);
+       f.setMidLineWidth(attr->fBorderWidth);
+       // printf("TGQt::ChangeWindowAttributes  kWABorderWidth %p %d margin=%d\n",&f, attr->fBorderWidth,f.margin());
    }
    if ( attr->fMask & kWABitGravity) {
       //  Int_t      fBitGravity;           // one of bit gravity values
