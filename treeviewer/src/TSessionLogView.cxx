@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TSessionLogView.h>
-#include <TSessionViewer.h>
-#include <TProof.h>
-#include <KeySymbols.h>
+#include "TSessionLogView.h"
+#include "TSessionViewer.h"
+#include "TVirtualProof.h"
+#include "KeySymbols.h"
 
 //____________________________________________________________________________
-TSessionLogView::TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h) : 
+TSessionLogView::TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h) :
    TGTransientFrame(gClient->GetRoot(), viewer, w, h)
 {
    // Create an editor in a dialog.
@@ -49,7 +49,7 @@ void TSessionLogView::SetTitle()
 
    char title[256] = {0};
    strcpy(title,Form("PROOF Processing Logs: %s",
-         (fViewer->GetActDesc()->fProof ? 
+         (fViewer->GetActDesc()->fProof ?
           fViewer->GetActDesc()->fProof->GetMaster() : "<dummy>")));
    SetWindowName(title);
    SetIconName(title);
@@ -106,7 +106,7 @@ void TSessionLogView::CloseWindow()
    // Called when closed via window manager action.
    if (fViewer->GetActDesc()->fProof) {
       fViewer->GetActDesc()->fProof->Disconnect(
-            "LogMessage(const char*,Bool_t)", fViewer, 
+            "LogMessage(const char*,Bool_t)", fViewer,
             "LogMessage(const char*,Bool_t)");
    }
    fViewer->SetLogWindow(0);
