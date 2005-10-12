@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.10 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.11 2005/10/11 10:25:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -39,7 +39,7 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    UpdateBoundingBox();
 
    // Initialise color
-   SetColor(rgba);
+   InitColor(rgba);
 }
 
 //______________________________________________________________________________
@@ -119,7 +119,9 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
       Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
-   //TODO: Sorting - Min. state swap for attributes
+   // Setup current colors
+   // TODO: Sorting - Min. state swap for attributes
+   glColor4fv(fColor);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.43 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.44 2005/09/07 11:43:36 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -461,7 +461,7 @@ void TGLPolyMarker::DirectDraw(UInt_t LOD) const
 void TGLPolyMarker::DrawStars()const
 {
    glDisable(GL_LIGHTING);
-   
+
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {
       Double_t x = fVertices[i];
       Double_t y = fVertices[i + 1];
