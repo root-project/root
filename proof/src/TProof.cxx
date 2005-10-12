@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.117 2005/10/10 11:07:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.118 2005/10/11 12:32:21 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3810,7 +3810,7 @@ void TProof::ValidateDSet(TDSet *dset)
 
          if (copyset.GetListOfElements()->GetSize()>0) {
             TMessage mesg(kPROOF_VALIDATE_DSET);
-            mesg << &dset;
+            mesg << &copyset;
 
             TSlave *sl = dynamic_cast<TSlave*>(slaves->At(i));
             PDB(kGlobal,1) Info("ValidateDSet",
