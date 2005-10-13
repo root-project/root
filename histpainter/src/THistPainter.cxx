@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.222 2005/09/04 10:33:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.223 2005/10/13 08:10:27 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2307,8 +2307,8 @@ void THistPainter::PaintContour(Option_t *option)
       Hoption.Axis = 1;
       thesave = gPad->GetTheta();
       phisave = gPad->GetPhi();
-      gPad->SetPhi(0.0001);
-      gPad->SetTheta(89.99);
+      gPad->SetPhi(0.);
+      gPad->SetTheta(90.);
       PaintSurface(option);
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
