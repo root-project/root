@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.82 2005/05/31 19:47:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -173,7 +173,8 @@ protected:
 public:
    // TTree status bits
    enum {
-      kForceRead   = BIT(11)
+      kForceRead   = BIT(11),
+      kCircular    = BIT(12)
    };
 
    TTree();

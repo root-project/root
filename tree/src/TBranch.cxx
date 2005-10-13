@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.92 2005/09/21 19:02:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.93 2005/09/21 21:04:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -521,6 +521,7 @@ Int_t TBranch::Fill()
    if ( (fSkipZip && (lnew>=TBuffer::kMinimalSize))  // fSkipZip force one entry per buffer
         || (buf->TestBit(TBuffer::kNotDecompressed)) // Transfer full compressed buffer only
         || (lnew +2*nsize +nbytes >= fBasketSize) ) {
+      if (fTree->TestBit(TTree::kCircular)) return nbytes;
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       fBasketBytes[fWriteBasket]  = basket->GetNbytes();
       fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
@@ -1013,36 +1014,17 @@ void TBranch::KeepCircular(Long64_t maxEntries)
    // keep a maximum of fMaxEntries in memory
 
    Int_t dentries = (Int_t)(fEntries - maxEntries);
-   Int_t nbaskets = fBaskets.GetEntriesFast();
-   Int_t i, ndrop = -1;
-   TBasket *basket;
-   for (i=0;i<nbaskets;i++) {
-      fBasketEntry[i] -= dentries;
-      if (fBasketEntry[i] < 0) {
-         ndrop++;
-         basket = (TBasket*)fBaskets.UncheckedAt(i);
-         basket->MoveEntries(-fBasketEntry[i]);
-         if (!i) fBasketEntry[i] = 0;
-      }
-   }
-   if (ndrop > 0) {
-      for (i=0;i<ndrop;i++) {
-         fBaskets.RemoveAt(i);
-      }
-      fBaskets.Compress();
-      nbaskets -= ndrop;
-      fBasketEntry[0] = 0;
-      for (i=1;i<nbaskets;i++) {
-         basket = (TBasket*)fBaskets.UncheckedAt(i-1);
-         fBasketEntry[i] = fBasketEntry[i-1] + basket->GetNevBuf();
-      }
-      fMaxBaskets = fBaskets.GetEntriesFast();
-      fWriteBasket -= ndrop;
-      fReadBasket = 0;
-      fReadEntry = -1;
-   }
+   TBasket *basket = (TBasket*)fBaskets.UncheckedAt(0);
+   basket->MoveEntries(dentries);
    fEntries     = maxEntries;
    fEntryNumber = maxEntries;
+   //loop on sub branches
+   Int_t nb = fBranches.GetEntriesFast();
+   TBranch *branch;
+   for (Int_t i=0;i<nb;i++)  {
+      branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->KeepCircular(maxEntries);
+   }
 }
 
 //______________________________________________________________________________

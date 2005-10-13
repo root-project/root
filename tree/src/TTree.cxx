@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.263 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.264 2005/09/08 14:22:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4567,6 +4567,7 @@ void TTree::SetCircular(Long64_t maxEntries)
    // a maximum of maxEntries
 
    fMaxEntries = maxEntries;
+   SetBit(kCircular);
 }
 
 //______________________________________________________________________________
