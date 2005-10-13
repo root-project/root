@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.115 2005/09/25 23:01:27 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.116 2005/10/06 19:20:42 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -589,8 +589,7 @@ TBranch *TChain::GetBranch(const char *name)
 {
 // Return pointer to the branch name in the current tree
 
-   if (fChainProof)
-      return fChainProof->GetBranch(name);
+   if (fChainProof) return fChainProof->GetBranch(name);
    if (fTree) return fTree->GetBranch(name);
    LoadTree(0);
    if (fTree) return fTree->GetBranch(name);
@@ -613,8 +612,7 @@ Long64_t TChain::GetEntries() const
 // In case the number of entries in each tree is not yet known,
 // the offset table is computed
 
-   if (fChainProof)
-      return fChainProof->GetEntries();
+   if (fChainProof) return fChainProof->GetEntries();
    if (fEntries >= kBigNumber) {
       const_cast<TChain*>(this)->LoadTree(fEntries-1);
    }
@@ -672,8 +670,7 @@ TLeaf *TChain::GetLeaf(const char *name)
 {
 //  Return pointer to the leaf name in the current tree
 
-   if (fChainProof)
-      return fChainProof->GetLeaf(name);
+   if (fChainProof) return fChainProof->GetLeaf(name);
    if (fTree) return fTree->GetLeaf(name);
    LoadTree(0);
    if (fTree) return fTree->GetLeaf(name);
@@ -686,8 +683,8 @@ TObjArray *TChain::GetListOfBranches()
 {
 // Return pointer to list of branches of current tree
 
-   if (fChainProof)
-      return fChainProof->GetListOfBranches();
+   if (fChainProof) return fChainProof->GetListOfBranches();
+
    if (fTree) return fTree->GetListOfBranches();
    LoadTree(0);
    if (fTree) return fTree->GetListOfBranches();
@@ -700,10 +697,9 @@ TObjArray *TChain::GetListOfLeaves()
 {
 // Return pointer to list of leaves of current tree
 
-   if (fChainProof)
-      return fChainProof->GetListOfLeaves();
-   if (fTree) return fTree->GetListOfLeaves();
+   if (fChainProof) return fChainProof->GetListOfLeaves();
 
+   if (fTree) return fTree->GetListOfLeaves();
    LoadTree(0);
    if (fTree) return fTree->GetListOfLeaves();
    return 0;
@@ -1556,8 +1552,8 @@ void TChain::ReleaseChainProof()
 {
    // Removes the PROOF chain (if present).
 
-   if (!fChainProof)
-      return;
+   if (!fChainProof) return;
+
    fChainProof->GetProof()->RemoveChain(this);
    SafeDelete(fChainProof);
 }
@@ -1665,41 +1661,41 @@ Long64_t TChain::GetReadEntry() const
 {
    // See TTree::GetReadEntry().
 
-   if (fChainProof)
-      return fChainProof->GetReadEntry();
-   else
-      return TTree::GetReadEntry();
+   if (fChainProof) return fChainProof->GetReadEntry();
+
+   return TTree::GetReadEntry();
 }
+
 //______________________________________________________________________________
 TBranch *TChain::FindBranch(const char* branchname)
 {
    // See TTree::GetReadEntry().
 
-   if (fChainProof)
-      return fChainProof->FindBranch(branchname);
-   else
-      return TTree::FindBranch(branchname);
-}
+   if (fChainProof) return fChainProof->FindBranch(branchname);
 
+   if (fTree) return fTree->FindBranch(branchname);
+   LoadTree(0);
+   if (fTree) return fTree->FindBranch(branchname);
+   return 0;
+}
 
 //______________________________________________________________________________
 TLeaf *TChain::FindLeaf(const char* searchname)
 {
    // See TTree::GetReadEntry()
-   if (fChainProof)
-      return fChainProof->FindLeaf(searchname);
-   else
-      return TTree::FindLeaf(searchname);
+   if (fChainProof) return fChainProof->FindLeaf(searchname);
+
+   if (fTree) return fTree->FindLeaf(searchname);
+   LoadTree(0);
+   if (fTree) return fTree->FindLeaf(searchname);
+   return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TChain::GetBranchStatus(const char *branchname) const
 {
    // See TTree::GetReadEntry()
-   if (fChainProof)
-      return fChainProof->GetBranchStatus(branchname);
-   else
-      return TTree::GetBranchStatus(branchname);
+   if (fChainProof) return fChainProof->GetBranchStatus(branchname);
+
+   return TTree::GetBranchStatus(branchname);
 }
-
-
