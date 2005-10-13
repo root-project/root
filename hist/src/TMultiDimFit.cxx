@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.21 2005/08/29 10:45:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.22 2005/09/05 10:02:38 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1805,12 +1805,14 @@ TMultiDimFit::TMultiDimFit()
 
   fHistograms              = 0;
   fHistogramMask           = 0;
-
-  fQuantity(0);
-  fVariables(0);
-  fMaxVariables(0);
-  fMinVariables(0);
-  fMeanVariables(0);
+  fPowerIndex              = 0;
+  fFunctionCodes           = 0;
+  
+  //fQuantity(0);
+  //fVariables(0);
+  //fMaxVariables(0);
+  //fMinVariables(0);
+  //fMeanVariables(0);
 
   fFitter                  = 0;
 }
@@ -1880,6 +1882,9 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 
   fHistograms             = 0;
   fHistogramMask          = 0;
+  
+  fPowerIndex             = 0;
+  fFunctionCodes          = 0;
 
   fPowers                 = 0;
   fMaxPowers              = new Int_t[dimension];
@@ -1897,7 +1902,7 @@ TMultiDimFit::~TMultiDimFit()
   delete [] fMaxPowersFinal;
   delete [] fPowerIndex;
   delete [] fFunctionCodes;
-  fHistograms->Clear("nodelete");
+  if (fHistograms) fHistograms->Clear("nodelete");
   delete fHistograms;
 }
 
