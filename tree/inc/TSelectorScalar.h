@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.2 2005/05/18 12:31:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.3 2005/07/09 04:03:23 brun Exp $
 // Author: Maarten Ballintijn   13/02/2005
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
    void     Inc(Long_t n = 1);
    Int_t    Merge(TCollection *list);
 
-   ClassDef(TSelectorScalar,1)  //Mergable scalar
+   ClassDef(TSelectorScalar,0)  //Mergable scalar
 };
 
 
