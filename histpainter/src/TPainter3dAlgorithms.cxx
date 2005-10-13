@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.24 2005/09/27 12:38:14 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.25 2005/10/11 08:54:19 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -89,7 +89,8 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    fNlevel       = 0;
    fSystem       = kCARTESIAN;
 
-   TList *stack = gCurrentHist->GetPainter()->GetStack();
+   TList *stack = 0;
+   if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
    fNStack = 0;
    if (stack) fNStack = stack->GetSize();
    if (fNStack > kVSizeMax) {
