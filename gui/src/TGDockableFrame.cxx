@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.8 2005/06/08 17:05:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.9 2005/06/09 17:44:40 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -169,7 +169,7 @@ void TGDockHideButton::DoRedraw()
 
 //______________________________________________________________________________
 TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
-   TGTransientFrame(p, dockable->GetMainFrame(), 10, 10)
+   TGTransientFrame(p, dockable ? dockable->GetMainFrame() : 0, 10, 10)
 {
    // Create the undocked (transient) frame.
 

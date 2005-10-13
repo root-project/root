@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.20 2004/12/06 07:22:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.21 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
 
    static Int_t        GetCounter();
 
-   ClassDef(TGWindow,0)  // GUI Window base class
+   ClassDef(TGWindow,1)  // GUI Window base class
 };
 
 
