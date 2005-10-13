@@ -68,6 +68,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    // and offers the possibility to create new ones by executing macros
    // directly from the associate file container.
 
+   if (!p || !main) return;
    SetCleanup(kDeepCleanup);
    AddFrame(new TGLabel(this, new TGHotString("List of Chains in Memory :")),
             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5) );
