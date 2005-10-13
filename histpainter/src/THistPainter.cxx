@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.221 2005/08/29 12:52:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.222 2005/09/04 10:33:36 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1614,7 +1614,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 //
 //   Assume tx = gPad->GetTickx() and ty = gPad->GetTicky()
 //   by default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
-//    tx = 1 ;  tick marks on top side are drawn (inside)
+//    tx = 1;   tick marks on top side are drawn (inside)
 //    tx = 2;   tick marks and labels on top side are drawn
 //    ty = 1;   tick marks on right side are drawn (inside)
 //    ty = 2;   tick marks and labels on right side are drawn
@@ -1656,12 +1656,12 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    if (Hoption.Logx) {
       strcat(chopt, "G");
       ndiv =TMath::Abs(ndivx);
-      umin = TMath::Power(10,axmin);
-      umax = TMath::Power(10,axmax);
+      umin = TMath::Power(10,Hparam.xmin);
+      umax = TMath::Power(10,Hparam.xmax);
    } else {
       ndiv =TMath::Abs(ndivx);
-      umin = axmin;
-      umax = axmax;
+      umin = Hparam.xmin;
+      umax = Hparam.xmax;
    }
 
 //   Display axis as time
@@ -1690,7 +1690,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 //     Y axis
    axis.ImportAxisAttributes(fYaxis);
 
-      chopt[0] = 0;
+   chopt[0] = 0;
    strcat(chopt, "SDH");
    if (ndivy < 0) {
       nx2   = ndivy/100;
@@ -1705,12 +1705,12 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    if (Hoption.Logy) {
       strcat(chopt, "G");
       ndiv =TMath::Abs(ndivy);
-      umin = TMath::Power(10,aymin);
-      umax = TMath::Power(10,aymax);
+      umin = TMath::Power(10,Hparam.ymin);
+      umax = TMath::Power(10,Hparam.ymax);
    } else {
       ndiv =TMath::Abs(ndivy);
-      umin = aymin;
-      umax = aymax;
+      umin = Hparam.ymin;
+      umax = Hparam.ymax;
    }
 
 //   Display axis as time
@@ -2304,6 +2304,7 @@ void THistPainter::PaintContour(Option_t *option)
 
    if (Hoption.Contour == 14) {
       Hoption.Surf = 12;
+      Hoption.Axis = 1;
       thesave = gPad->GetTheta();
       phisave = gPad->GetPhi();
       gPad->SetPhi(0.0001);
@@ -2312,6 +2313,7 @@ void THistPainter::PaintContour(Option_t *option)
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
       gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
+      PaintAxis();
       return;
    }
 
