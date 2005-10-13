@@ -1,6 +1,6 @@
 CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
      treeChainFriend.log $(ALL_LIBRARIES) [a-f][0-4].root treeparent.root treefriend.root *.log
-TEST_TARGETS += treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices
+TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -63,4 +63,7 @@ FriendsIndices.log: testFriendsIndices_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l 'testFriendsIndices.C+(7)' > FriendsIndices.log
 
 FriendsIndices: FriendsIndices.log
+	$(TestDiff)
+
+friendInChain: friendInChain.log
 	$(TestDiff)
