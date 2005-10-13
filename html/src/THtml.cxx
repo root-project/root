@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.79 2005/09/04 10:47:08 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.80 2005/09/04 19:12:32 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3400,6 +3400,7 @@ void THtml::MakeClass(const char *className, Bool_t force)
               || !strncmp(htmlFile, "https://", 8)
               || gSystem->IsAbsoluteFileName(htmlFile))
           ) {
+         //printf("CASE skipped, class=%s, htmlFile=%s\n",className,htmlFile);
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3460,6 +3461,7 @@ void THtml::MakeIndex(const char *filter)
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
       if (!classPtr) continue;
+      if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
             
       const char *impname=0;
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
