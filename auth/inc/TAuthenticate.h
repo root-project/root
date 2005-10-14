@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.30 2005/06/23 06:24:27 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 
 class TAuthenticate;
 class THostAuth;
+class TPluginHandler;
 class TSocket;
 class TRootSecContext;
 class TVirtualMutex;
@@ -101,42 +102,43 @@ private:
    Int_t        SshAuth(TString &user);
    Int_t        SshError(const char *errfile);
 
-   static TList         *fgAuthInfo;
-   static TString        fgAuthMeth[kMAXSEC];
-   static Bool_t         fgAuthReUse;      // kTRUE is ReUse required
-   static TString        fgDefaultUser;    // Default user information
-   static TDatime        fgExpDate;        // Expiring date for new security contexts
-   static GlobusAuth_t   fgGlobusAuthHook;
-   static Krb5Auth_t     fgKrb5AuthHook;
-   static TString        fgKrb5Principal;  // Principal for Krb5 ticket
-   static TDatime        fgLastAuthrc;     // Time of last reading of fgRootAuthrc
-   static TString        fgPasswd;
-   static Bool_t         fgPromptUser;     // kTRUE if user prompt required
-   static TList         *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
-   static Bool_t         fgPwHash;         // kTRUE if fgPasswd is a passwd hash
-   static Bool_t         fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
-   static TString        fgRootAuthrc;     // Path to last rootauthrc-like file read
-   static Int_t          fgRSAKey;         // Default type of RSA key to be tried
-   static Int_t          fgRSAInit;
-   static rsa_KEY        fgRSAPriKey;
-   static rsa_KEY        fgRSAPubKey;
-   static rsa_KEY_export fgRSAPubExport[2];
+   static TList          *fgAuthInfo;
+   static TString         fgAuthMeth[kMAXSEC];
+   static Bool_t          fgAuthReUse;      // kTRUE is ReUse required
+   static TString         fgDefaultUser;    // Default user information
+   static TDatime         fgExpDate;        // Expiring date for new security contexts
+   static GlobusAuth_t    fgGlobusAuthHook;
+   static Krb5Auth_t      fgKrb5AuthHook;
+   static TString         fgKrb5Principal;  // Principal for Krb5 ticket
+   static TDatime         fgLastAuthrc;     // Time of last reading of fgRootAuthrc
+   static TString         fgPasswd;
+   static TPluginHandler *fgPasswdDialog;   // Passwd dialog GUI plugin
+   static Bool_t          fgPromptUser;     // kTRUE if user prompt required
+   static TList          *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
+   static Bool_t          fgPwHash;         // kTRUE if fgPasswd is a passwd hash
+   static Bool_t          fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
+   static TString         fgRootAuthrc;     // Path to last rootauthrc-like file read
+   static Int_t           fgRSAKey;         // Default type of RSA key to be tried
+   static Int_t           fgRSAInit;
+   static rsa_KEY         fgRSAPriKey;
+   static rsa_KEY         fgRSAPubKey;
+   static rsa_KEY_export  fgRSAPubExport[2];
 #ifdef R__SSL
-   static BF_KEY         fgBFKey;          // Blowfish symmetric key
+   static BF_KEY          fgBFKey;          // Blowfish symmetric key
 #endif
-   static SecureAuth_t   fgSecAuthHook;
-   static Bool_t         fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
-   static TString        fgUser;
-   static Bool_t         fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
-   static Int_t          fgLastError;      // Last error code processed by AuthError()
-   static Int_t          fgAuthTO;         // if > 0, timeout in sec
-   static Int_t          fgProcessID;      // ID of the main thread as unique identifier
+   static SecureAuth_t    fgSecAuthHook;
+   static Bool_t          fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
+   static TString         fgUser;
+   static Bool_t          fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
+   static Int_t           fgLastError;      // Last error code processed by AuthError()
+   static Int_t           fgAuthTO;         // if > 0, timeout in sec
+   static Int_t           fgProcessID;      // ID of the main thread as unique identifier
 
-   static Bool_t         CheckHost(const char *Host, const char *host);
+   static Bool_t          CheckHost(const char *Host, const char *host);
 
-   static void           FileExpand(const char *fin, FILE *ftmp);
-   static Int_t          ProofAuthSetup(TSocket *sock, Bool_t client);
-   static void           RemoveSecContext(TRootSecContext *ctx);
+   static void            FileExpand(const char *fin, FILE *ftmp);
+   static Int_t           ProofAuthSetup(TSocket *sock, Bool_t client);
+   static void            RemoveSecContext(TRootSecContext *ctx);
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,

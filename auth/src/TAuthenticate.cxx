@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.5 2005/09/06 09:34:33 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.6 2005/09/21 12:39:47 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -76,50 +76,52 @@ extern "C" char *crypt(const char *, const char *);
 #endif
 
 // Statics initialization
-TList         *TAuthenticate::fgAuthInfo = 0;
-TString        TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5",
-                                               "Globus", "SSH", "UidGid" };
-Bool_t         TAuthenticate::fgAuthReUse;
-TString        TAuthenticate::fgDefaultUser;
-TDatime        TAuthenticate::fgExpDate;
-GlobusAuth_t   TAuthenticate::fgGlobusAuthHook;
-Krb5Auth_t     TAuthenticate::fgKrb5AuthHook;
-TString        TAuthenticate::fgKrb5Principal;
-TDatime        TAuthenticate::fgLastAuthrc;    // Time of last reading of fgRootAuthrc
-TString        TAuthenticate::fgPasswd;
-Bool_t         TAuthenticate::fgPromptUser;
-TList         *TAuthenticate::fgProofAuthInfo = 0;
-Bool_t         TAuthenticate::fgPwHash;
-Bool_t         TAuthenticate::fgReadHomeAuthrc = kTRUE; // on/off search for $HOME/.rootauthrc
-TString        TAuthenticate::fgRootAuthrc;    // Path to last rootauthrc-like file read
-Int_t          TAuthenticate::fgRSAKey  = -1;  // Default RSA key type to be used
-Int_t          TAuthenticate::fgRSAInit = 0;
-rsa_KEY        TAuthenticate::fgRSAPriKey;
-rsa_KEY_export TAuthenticate::fgRSAPubExport[2] = {{0,0},{0,0}};
-rsa_KEY        TAuthenticate::fgRSAPubKey;
+TList          *TAuthenticate::fgAuthInfo = 0;
+TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5",
+                                                "Globus", "SSH", "UidGid" };
+Bool_t          TAuthenticate::fgAuthReUse;
+TString         TAuthenticate::fgDefaultUser;
+TDatime         TAuthenticate::fgExpDate;
+GlobusAuth_t    TAuthenticate::fgGlobusAuthHook;
+Krb5Auth_t      TAuthenticate::fgKrb5AuthHook;
+TString         TAuthenticate::fgKrb5Principal;
+TDatime         TAuthenticate::fgLastAuthrc;    // Time of last reading of fgRootAuthrc
+TString         TAuthenticate::fgPasswd;
+TPluginHandler *TAuthenticate::fgPasswdDialog = (TPluginHandler *)(-1);
+Bool_t          TAuthenticate::fgPromptUser;
+TList          *TAuthenticate::fgProofAuthInfo = 0;
+Bool_t          TAuthenticate::fgPwHash;
+Bool_t          TAuthenticate::fgReadHomeAuthrc = kTRUE; // on/off search for $HOME/.rootauthrc
+TString         TAuthenticate::fgRootAuthrc;    // Path to last rootauthrc-like file read
+Int_t           TAuthenticate::fgRSAKey  = -1;  // Default RSA key type to be used
+Int_t           TAuthenticate::fgRSAInit = 0;
+rsa_KEY         TAuthenticate::fgRSAPriKey;
+rsa_KEY_export  TAuthenticate::fgRSAPubExport[2] = {{0,0},{0,0}};
+rsa_KEY         TAuthenticate::fgRSAPubKey;
 #ifdef R__SSL
-BF_KEY         TAuthenticate::fgBFKey;
+BF_KEY          TAuthenticate::fgBFKey;
 #endif
-SecureAuth_t   TAuthenticate::fgSecAuthHook;
-Bool_t         TAuthenticate::fgSRPPwd;
-TString        TAuthenticate::fgUser;
-Bool_t         TAuthenticate::fgUsrPwdCrypt;
-Int_t          TAuthenticate::fgLastError = -1;
-Int_t          TAuthenticate::fgAuthTO = -2;       // Timeout value
+SecureAuth_t    TAuthenticate::fgSecAuthHook;
+Bool_t          TAuthenticate::fgSRPPwd;
+TString         TAuthenticate::fgUser;
+Bool_t          TAuthenticate::fgUsrPwdCrypt;
+Int_t           TAuthenticate::fgLastError = -1;
+Int_t           TAuthenticate::fgAuthTO = -2;       // Timeout value
 
 // ID of the main thread as unique identifier
-Int_t TAuthenticate::fgProcessID = -1;
+Int_t           TAuthenticate::fgProcessID = -1;
 
 TVirtualMutex *gAuthenticateMutex = 0;
 
-// Standar version of Sec Context match checking
+// Standard version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TRootSecContext *);
+
 
 ClassImp(TAuthenticate)
 
 //______________________________________________________________________________
-   TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
-                                const char *proto, const char *user)
+TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
+                             const char *proto, const char *user)
 {
    // Create authentication object.
 
@@ -143,6 +145,24 @@ ClassImp(TAuthenticate)
    fHostAuth = 0;
    fVersion  = 5;                // The latest, by default
    fSecContext = 0;
+
+   // Get the plugin for the passwd dialog box, if needed
+   if (gEnv->GetValue("Auth.UsePasswdDialogBox", 1) == 1) {
+      if (fgPasswdDialog == (TPluginHandler *)(-1)) {
+         if (!gROOT->IsBatch()) {
+            if ((fgPasswdDialog =
+                 gROOT->GetPluginManager()->FindHandler("TGPasswdDialog")))
+               if (fgPasswdDialog->LoadPlugin() == -1) {
+                  fgPasswdDialog = 0;
+                  Warning("TAuthenticate",
+                          "could not load plugin for the password dialog box");
+               }
+         } else
+            fgPasswdDialog = 0;
+      }
+   } else {
+      fgPasswdDialog = 0;
+   }
 
    if (gDebug > 2)
       Info("TAuthenticate", "Enter: local host: %s, user is: %s (proto: %s)",
@@ -1410,11 +1430,27 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
             return StrDup(noint);
          }
 
-         Gl_config("noecho", 1);
-         char *pw = Getline((char *) prompt);
-         Gl_config("noecho", 0);
+         char buf[128];
+         char *pw = buf;
+         if (fgPasswdDialog) {
+
+            // Use graphic dialog
+            fgPasswdDialog->ExecPlugin(3, prompt, buf, 128);
+
+            // Wait until the user is done
+            while (gROOT->IsInterrupted())
+               gSystem->DispatchOneEvent(kFALSE);
+
+         } else {
+            Gl_config("noecho", 1);
+            pw = Getline((char *) prompt);
+            Gl_config("noecho", 0);
+         }
+
+         // Final checks
          if (pw[0]) {
-            pw[strlen(pw) - 1] = 0;   // get rid of \n
+            if (pw[strlen(pw)-1] == '\n')
+               pw[strlen(pw) - 1] = 0;   // get rid of \n
             char *rpw = StrDup(pw);
             memset(pw, 0, strlen(pw));
             return rpw;
@@ -5114,7 +5150,7 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
    TString messb64;
    TAuthenticate::EncodeBase64(mbuf, mlen, messb64);
 
-   if (gDebug > 2) 
+   if (gDebug > 2)
       ::Info("ProofAuthSetup","sending %d bytes", messb64.Length());
 
    // Send it over
@@ -5538,4 +5574,5 @@ extern "C" {
 
       // We are done
       return 0;
-   }}
+   }
+}
