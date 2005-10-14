@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.116 2005/10/06 19:20:42 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.117 2005/10/13 19:58:27 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1224,6 +1224,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    if (!hnew) return 0;
    hnew->SetName(gSystem->BaseName(GetName())); // Strip out the (potential) directory name
    hnew->SetAutoSave(2000000000);
+   hnew->SetCircular(0);  //otherwise circularity is incompatible with merging
 
 // May be reset branches compression level?
    TBranch *branch;

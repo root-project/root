@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.264 2005/09/08 14:22:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.265 2005/10/13 10:26:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4563,11 +4563,48 @@ void TTree::SetBranchStyle(Int_t style)
 //______________________________________________________________________________
 void TTree::SetCircular(Long64_t maxEntries)
 {
-   // Organize this Tree with circular buffers, keeping in memory
-   // a maximum of maxEntries
-
-   fMaxEntries = maxEntries;
-   SetBit(kCircular);
+   // Enable/Disable circularity with this Tree
+   // if maxEntries > 0 a maximum of maxEntries is kept in one buffer/basket
+   // per branch in memory.
+   //   Note that when this function is called (maxEntries>0) the Tree
+   //   must be empty or having only one basket per branch.
+   // if maxEntries <= 0 the tree circularity is disabled.
+   //
+   // NOTE 1:
+   //  Circular Trees are interesting in online real time environments
+   //  to store the results of the last maxEntries events.
+   // NOTE 2:
+   //  Calling SetCircular with maxEntries <= 0 is necessary before
+   //  merging circular Trees that have been saved on files.
+   // NOTE 3:
+   //  SetCircular with maxEntries <= 0 is automatically called
+   //  by TChain::Merge
+   // NOTE 4:
+   //  A circular Tree can still be saved in a file. When read back,
+   //  it is still a circular Tree and can be filled again.
+   
+   if (maxEntries <= 0) {
+      //disable circularity
+      fMaxEntries     = 1000000000; fMaxEntries   *= 1000;
+      ResetBit(kCircular);
+      //in case the Tree was originally created in gROOT, the branch
+      //compression level was set to -1. If the Tree is now associated to 
+      //a file, reset the compression level to the file compression level
+      if (fDirectory) {
+         TFile *bfile = fDirectory->GetFile();
+         Int_t compress = 1;
+         if (bfile) compress = bfile->GetCompressionLevel();
+         Int_t nb = fBranches.GetEntriesFast();
+         for (Int_t i=0;i<nb;i++)  {
+            TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
+            branch->SetCompressionLevel(compress);
+         }
+      }
+   } else {
+      // enable circularity
+      fMaxEntries = maxEntries;
+      SetBit(kCircular);
+   }
 }
 
 //______________________________________________________________________________
