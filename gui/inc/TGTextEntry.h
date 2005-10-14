@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.19 2004/09/12 10:43:49 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.20 2004/12/10 10:57:54 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -103,8 +103,8 @@ public:
                UInt_t option = kSunkenFrame | kDoubleBorder,
                Pixel_t back = GetWhitePixel());
 
-   TGTextEntry(const TGWindow *parent = 0, const char *text =  0, Int_t id = -1);
-   TGTextEntry(const TString &contents, const TGWindow *parent,  Int_t id = -1);
+   TGTextEntry(const TGWindow *parent = 0, const char *text = 0, Int_t id = -1);
+   TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id = -1);
 
    virtual ~TGTextEntry();
 
@@ -164,7 +164,7 @@ public:
    virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
    virtual  void        SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
    Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
-   Bool_t HasOwnFont() const { return fHasOwnFont; }
+   Bool_t               HasOwnFont() const { return fHasOwnFont; }
 
    virtual  void        SavePrimitive(ofstream &out, Option_t *option);
 

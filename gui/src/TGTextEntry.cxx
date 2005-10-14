@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.31 2004/12/14 11:44:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.32 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -474,7 +474,7 @@ void TGTextEntry::SetState(Bool_t state)
 //______________________________________________________________________________
 Int_t TGTextEntry::GetCharacterIndex(Int_t xcoord)
 {
-   // Returns the index of the character to whose left edge goalx is closest.
+   // Returns the index of the character to whose left edge xcoord is closest.
 
    int tw, ix, up, down, len;
 
