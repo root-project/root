@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.113 2005/09/22 09:43:31 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.114 2005/09/22 22:31:32 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -215,6 +215,13 @@ Proofd.Authentication:  0
 # with the static method TAuthenticate::SetTimeOut(to_value)
 #
 # Auth.Timeout:        -1
+
+# Password dialog box.
+# Set to 0 if you do not want a dialog box to be popped-up
+# when a password is requested.
+# Default is 1.
+#
+#  Auth.UsePasswdDialogBox: 0
 
 # Set this to 1 if you want full SRP authentication in PROOF
 # (Client-to-Master and Master-to-Slave).
@@ -446,6 +453,7 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
+Plugin.TGPasswdDialog: *       TGPasswdDialog Gui         "TGPasswdDialog(const char*,char*,Int_t,UInt_t,UInt_t)"
 Plugin.TVirtualProof:  ^condor: TProofCondor Proof        "TProofCondor(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof: ^sm:    TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof: ^peac:  TProofPEAC    Peac         "TProofPEAC(const char*,const char*,const char*,Int_t)"
