@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.17 2005/09/20 06:38:10 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.18 2005/10/12 06:33:39 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -1100,12 +1100,13 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win->setFrameShape(QFrame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
    }  else if (wtype & kTempFrame) {
       win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
-//      win =  fQClientGuard.Create(pWidget,"tooltip",Qt::WStyle_Customize | Qt::WStyle_StaysOnTop);
       win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
    } else {
-//      win =  fQClientGuard.Create(pWidget,"Other",Qt::WStyle_Customize | Qt::WStyle_NoBorder);
-      win =  fQClientGuard.Create(pWidget,"Other",Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM );
-      // if (!pWidget) printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
+      win =  fQClientGuard.Create(pWidget,"Other",   Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM  );
+      if (!pWidget) {
+         // win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
+         // printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
+      }
   }
 
    // printf(" TQt::CreateWindow %p parent = %p \n", win,pWidget);
@@ -1150,37 +1151,60 @@ void    TGQt::CloseDisplay()
    qApp->closeAllWindows();
 }
 //______________________________________________________________________________
-Display_t  TGQt::GetDisplay() const {
+Display_t  TGQt::GetDisplay() const
+{
+   // Returns handle to display (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   // Calling implies the direct X11 manipulation
+   // Using this method makes the rest of the ROOT X11 depended
+
 #ifdef R__QTX11
    return (Display_t)QPaintDevice::x11AppDisplay ();
 #else
+   // The dummy method to fit the X11-like interface
    return 0;
 #endif
 }
 //______________________________________________________________________________
 Visual_t   TGQt::GetVisual() const
 {
-   // The dummy method to fit the X11-like interface
+   // Returns handle to visual (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   // Calling implies the direct X11 manipulation
+   // Using this method makes the rest of the ROOT X11 depended
+
 #ifdef R__QTX11
    return (Visual_t)QPaintDevice::x11AppVisual ();
 #else
+   // The dummy method to fit the X11-like interface
    return 0;
 #endif
 }
 //______________________________________________________________________________
 Int_t      TGQt::GetScreen() const
 {
-   // The dummy method to fit the X11-like interface
+   // Returns screen number (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   // Calling implies the direct X11 manipulation
+   // Using this method makes the rest of the ROOT X11 depended
+
 #ifdef R__QTX11
    return QPaintDevice::x11AppScreen ();
 #else
+   // The dummy method to fit the X11-like interface
    return 0;
 #endif
 }
 //______________________________________________________________________________
 Int_t      TGQt::GetDepth() const
 {
-   // The dummy method to fit the X11-like interface
+   // Returns depth of screen (number of bit planes).
 #ifdef R__QTX11
    return QPaintDevice::x11AppDepth ();
 #else
@@ -1569,10 +1593,7 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
    }
    if ( attr->fMask & kWABorderWidth) {
       // border width in pixels)
-        f.setMargin   (attr->fBorderWidth);
-      //  f.setMargin   (attr->fBorderWidth);
        f.setLineWidth(attr->fBorderWidth);
-       f.setMidLineWidth(attr->fBorderWidth);
        // printf("TGQt::ChangeWindowAttributes  kWABorderWidth %p %d margin=%d\n",&f, attr->fBorderWidth,f.margin());
    }
    if ( attr->fMask & kWABitGravity) {

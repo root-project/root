@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.7 2005/07/07 06:06:05 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.8 2005/08/17 20:08:37 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include "TQtClientFilter.h"
 #include "TQtRConfig.h"
 
@@ -51,6 +50,27 @@ static inline UInt_t  MapModifierState(Qt::ButtonState qState)
 }
 
 //______________________________________________________________________________________
+static inline void MapEvent( QWheelEvent &qev, Event_t &ev)
+{
+    // Map Qt QWheelEvent (like MouseEvent) to ROOT kButton4 and kButton5 events
+   ev.fX      = qev.x();
+   ev.fY      = qev.y();
+   ev.fXRoot  = qev.globalX();
+   ev.fYRoot  = qev.globalY();
+
+   if ( qev.delta() > 0 ) {
+      ev.fCode   = kButton4;
+      ev.fState |= kButton4Mask;
+   } else {
+      ev.fCode   = kButton5;
+      ev.fState |= kButton5Mask;
+   }
+   ev.fState |= MapModifierState(qev.state());
+   ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
+   qev.ignore(); // propage the mouse event further
+   // fprintf(stderr, "QEvent::Wheel %p %d child=%p\n",ev.fWindow, ev.fCode, ev.fUser[0]);
+}
+//______________________________________________________________________________________
 static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
 {
    ev.fX      = qev.x();
@@ -63,17 +83,14 @@ static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
          // Set if the left button is pressed, or if this event refers to the left button.
          //(The left button may be the right button on left-handed mice.)
          ev.fCode  = kButton1;
-         // ev.fState = kButton1Mask;
          break;
       case Qt::MidButton:
          // the middle button.
          ev.fCode  = kButton2;
-         // ev.fState = kButton2Mask;
          break;
       case Qt::RightButton:
          //  the right button
          ev.fCode  = kButton3;
-         // ev.fState = kButton3Mask;
          break;
       default:
          if (qev.type() != QEvent::MouseMove) {
@@ -308,11 +325,28 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    event.fY         = frame->y();
    event.fWidth     = frame->width();	// width and
    event.fHeight    = frame->height();	// height excluding the frame
+  
+   QPoint pointRoot = frame->mapToGlobal(QPoint(0,0));
+   event.fXRoot     = pointRoot.x();
+   event.fYRoot     = pointRoot.y();
 
    QMouseEvent *mouseEvent = 0;
+   QWheelEvent *wheelEvent = 0; //    
    QKeyEvent   *keyEvent   = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    QFocusEvent *focusEvent = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    switch ( e->type() ) {
+      case QEvent::Wheel:                // mouse wheel event
+         event.fType = kButtonPress;
+         wheelEvent  = (QWheelEvent *)e;
+         MapEvent(*wheelEvent,event);
+         selectEventMask |=  kButtonPressMask;
+         // See QEvent::MouseButtonPress event also
+         if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
+         {
+            ((QMouseEvent *)e)->accept();
+            grabEvent = kTRUE;
+         };
+         break;
       case QEvent::MouseButtonPress:     // mouse button pressed
          event.fType   = kButtonPress;
          mouseEvent = (QMouseEvent *)e;
@@ -596,6 +630,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    qApp->unlock();
    // We should hold ALL events because we want to process them themsleves.
    // However non-accepted mouse event should be propagated further
+   if (wheelEvent && !wheelEvent->isAccepted () ) return kFALSE;
    if (mouseEvent && !mouseEvent->isAccepted () ) return kFALSE;
    if (keyEvent   && !keyEvent->isAccepted ()   ) return kFALSE;
    if (focusEvent                               ) return kFALSE;
