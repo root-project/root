@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.127 2005/09/16 12:11:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.128 2005/10/03 15:26:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -543,7 +543,6 @@ TGeoManager::TGeoManager()
       Init();
       gGeoIdentity = 0;
    }
-//   BuildDefaultMaterials(); // not creating any data member
 }
 
 //_____________________________________________________________________________
@@ -563,7 +562,7 @@ void TGeoManager::Init()
 // Initialize manager class.
 
    if (gGeoManager) {
-//      Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
+      Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
       delete gGeoManager;
    }
 
@@ -595,7 +594,6 @@ void TGeoManager::Init()
    memset(fLastPoint, 0, kN3);
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
-//   fNormalChecked = 0;
    fCldirChecked = new Double_t[3];
    memset(fNormal, 0, kN3);
    fCldir = new Double_t[3];
@@ -658,9 +656,8 @@ void TGeoManager::Init()
 TGeoManager::~TGeoManager()
 {
 // Destructor
-   if (!gGeoManager || !fVolumes) return;
+   if (gGeoManager != this) gGeoManager = this;
 
-   Warning("dtor", "deleting geometry: %s/%s",GetName(),GetTitle());
    gROOT->GetListOfBrowsables()->Remove(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
@@ -669,6 +666,7 @@ TGeoManager::~TGeoManager()
    delete [] fBits;
    if (fCache) delete fCache;
    if (fNodes) delete fNodes;
+   if (fTopNode) delete fTopNode;
    if (fOverlaps) {fOverlaps->Delete(); delete fOverlaps;}
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
    if (fElementTable) delete fElementTable;
@@ -689,8 +687,6 @@ TGeoManager::~TGeoManager()
    delete [] fDirection;
    delete [] fCldirChecked;
    delete [] fCldir;
-   delete fGVolumes;
-   delete fGShapes;
    delete [] fDblBuffer;
    delete [] fIntBuffer;
    delete [] fOverlapClusters;
@@ -707,8 +703,6 @@ Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
       Error("AddMaterial", "invalid material");
       return -1;
    }
-//   Int_t index = GetMaterialIndex(material->GetName());
-//   if (index >= 0) return index;
    Int_t index = fMaterials->GetSize();
    ((TGeoMaterial*)material)->SetIndex(index);
    fMaterials->Add((TGeoMaterial*)material);
@@ -1593,16 +1587,21 @@ void TGeoManager::CleanGarbage()
 {
 // Clean temporary volumes and shapes from garbage collection.
    if (!fGVolumes && !fGShapes) return;
+   Int_t i,nentries;
    if (fGVolumes) {
-      TIter nextv(fGVolumes);
+      nentries = fGVolumes->GetEntries();
       TGeoVolume *vol = 0;
-      while ((vol=(TGeoVolume*)nextv()))
-         vol->SetFinder(0);
+      for (i=0; i<nentries; i++) {
+         vol=(TGeoVolume*)fGVolumes->At(i);
+         if (vol) vol->SetFinder(0);
+      }   
       fGVolumes->Delete();
+      delete fGVolumes;
       fGVolumes = 0;
    }   
    if (fGShapes) {
       fGShapes->Delete();
+      delete fGShapes;
       fGShapes = 0;
    }   
 }

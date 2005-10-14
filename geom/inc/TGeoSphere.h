@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.19 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.20 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
+   Int_t                 IsOnBoundary(Double_t *point) const;
    Bool_t                IsPointInside(Double_t *point, Bool_t checkR=kTRUE, Bool_t checkTh=kTRUE, Bool_t checkPh=kTRUE) const;
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

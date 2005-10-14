@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.44 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.45 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -228,6 +228,56 @@ void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
+Int_t TGeoSphere::IsOnBoundary(Double_t *point) const
+{
+// Check if a point in local sphere coordinates is close to a boundary within
+// shape tolerance. Return values:
+//   0 - not close to boundary
+//   1 - close to Rmin boundary
+//   2 - close to Rmax boundary
+//   3,4 - close to phi1/phi2 boundary
+//   5,6 - close to theta1/theta2 boundary
+   Int_t icode = 0;
+   Double_t tol = TGeoShape::Tolerance();
+   Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
+   Double_t drsqout = r2-fRmax*fRmax;
+   // Test if point is on fRmax boundary
+   if (TMath::Abs(drsqout)<2.*fRmax*tol) return 2;
+   Double_t drsqin = r2;
+   // Test if point is on fRmin boundary
+   if (TestShapeBit(kGeoRSeg)) {
+      drsqin -= fRmin*fRmin;
+      if (TMath::Abs(drsqin)<2.*fRmin*tol) return 1;
+   } 
+   if (TestShapeBit(kGeoPhiSeg)) { 
+      Double_t phi = TMath::ATan2(point[1], point[0]);
+      if (phi<0) phi+=2*TMath::Pi();
+      Double_t phi1 = fPhi1*TMath::DegToRad();
+      Double_t phi2 = fPhi2*TMath::DegToRad();
+      Double_t ddp = phi-phi1;
+      if (r2*ddp*ddp < tol*tol) return 3;
+      ddp = phi - phi2;
+      if (r2*ddp*ddp < tol*tol) return 4;
+   }   
+   if (TestShapeBit(kGeoThetaSeg)) { 
+      Double_t r = TMath::Sqrt(r2);
+      Double_t theta = TMath::ACos(point[2]/r2);
+      Double_t theta1 = fTheta1*TMath::DegToRad();
+      Double_t theta2 = fTheta2*TMath::DegToRad();
+      Double_t ddt;
+      if (fTheta1>0) {
+         ddt = TMath::Abs(theta-theta1);
+         if (r*ddt < tol) return 5;
+      }
+      if (fTheta2<180) {
+         ddt = TMath::Abs(theta-theta2);
+         if (r*ddt < tol) return 6;
+      }   
+   }
+   return icode;
+}      
+
+//_____________________________________________________________________________
 Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh, Bool_t checkPh) const
 {
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
@@ -300,7 +350,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
    Double_t r2 = rxy2+point[2]*point[2];
    Double_t r=TMath::Sqrt(r2);
    Bool_t rzero=kFALSE;
-   Double_t phi=0;;
+   Double_t phi=0;
    if (r<1E-20) rzero=kTRUE;
    //localize theta
    Double_t th=0.;
@@ -337,9 +387,16 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to shape
+   // first check if any crossing at all
    Double_t snxt = TGeoShape::Big();
    Double_t rdotn = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
    Bool_t fullsph = (!TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?kTRUE:kFALSE;
+   if (r>fRmax) {
+      Double_t b = rdotn;
+      Double_t c = r2-fRmax*fRmax;
+      Double_t d=b*b-c;
+      if (d<0) return TGeoShape::Big();
+   }
    if (fullsph) {
       Bool_t inrmax = kFALSE;
       Bool_t inrmin = kFALSE;
@@ -358,13 +415,6 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
       }
    }   
    
-   // first check if any crossing at all
-   if (r>fRmax) {
-      Double_t b = rdotn;
-      Double_t c = r2-fRmax*fRmax;
-      Double_t d=b*b-c;
-      if (d<0) return TGeoShape::Big();
-   }
    // do rmin, rmax,  checking phi and theta ranges
    if (r<fRmin) {
       // check first cross of rmin
@@ -375,28 +425,17 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
          // point outside rmax, check first cross of rmax
          snxt = DistToSphere(point, dir, fRmax, kTRUE);
          if (snxt<1E20) return snxt;
-         // now check first crossing of rmin
-         if (fRmin>0) {
-            snxt = DistToSphere(point, dir, fRmin, kTRUE);
-            // if this is outside range, check second crossing of rmin
-            if (snxt>1E20) {
-               snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
-               if (snxt<1E20) return snxt;
-            }
-         }       
+         // now check second crossing of rmin
+         if (fRmin>0) snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
       } else {
-         // point between rmin and rmax, check first cross of rmin
-         snxt = DistToSphere(point, dir, fRmin, kTRUE);
-       // if this is outside range, check second crossing of rmin
-         if (snxt>1E20) {
-         snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
-         if (snxt<1E20) return snxt;
-       }    
+         // point between rmin and rmax, check second cross of rmin
+         if (fRmin>0) snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
       } 
    }       
    // check theta conical surfaces
    Double_t ptnew[3];
    Double_t b,delta, znew;
+   Double_t snext = snxt;
    Double_t st1=TGeoShape::Big(), st2=TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
       if (fTheta1>0) {
@@ -408,7 +447,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
              ptnew[1] = point[1]+snxt*dir[1];
              ptnew[2] = 0;
              // check range
-             if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return snxt;
+             if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
           }       
        } else {
           Double_t r1,r2,z1,z2,dz;
@@ -455,7 +494,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                ptnew[1] = point[1]+snxt*dir[1];
                ptnew[2] = 0;
                // check range
-               if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return snxt;
+               if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
             }       
          } else {
             Double_t r1,r2,z1,z2,dz;
@@ -494,6 +533,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
     }
    }
    snxt = TMath::Min(st1, st2);
+   snxt = TMath::Min(snxt,snext);
 //   if (snxt<1E20) return snxt;       
    if (TestShapeBit(kGeoPhiSeg)) {
       Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());

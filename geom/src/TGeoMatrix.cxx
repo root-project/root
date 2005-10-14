@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.43 2005/09/21 16:27:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.44 2005/10/03 06:54:51 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1408,6 +1408,8 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
 // Return a temporary inverse of this.
    static TGeoHMatrix h;
    h = *this;
+   Bool_t is_tr = IsTranslation();
+   Bool_t is_rot = IsRotation();
    Double_t tr[3];
    Double_t newrot[9];
    const Double_t *rot = GetRotationMatrix();
@@ -1425,6 +1427,8 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
    newrot[7] = rot[5];
    newrot[8] = rot[8];
    h.SetRotation(newrot);
+   h.SetBit(kGeoTranslation,is_tr);
+   h.SetBit(kGeoRotation,is_rot);
    return h;
 }   
 
