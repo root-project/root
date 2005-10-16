@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.6 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.1 2005/09/23 12:53:49 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -26,7 +26,8 @@ ClassImp(TFileInfo)
 //______________________________________________________________________________
 TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
    const char *md5, Long64_t entries, Long64_t first, Long64_t last,
-   TObject *meta) : fSize(size), fMD5(new TMD5((const UChar_t*) md5)),
+   TObject *meta) : fCurrentUrl(0), fUrlList(0), fSize(size), fUUID(0),
+   fMD5(new TMD5((const UChar_t*) md5)),
    fEntries(entries), fFirst(first), fLast(last), fMetaDataObject(meta)
 {
    if (uuid) {

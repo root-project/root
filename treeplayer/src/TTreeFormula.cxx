@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.183 2005/09/29 08:36:30 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.184 2005/10/01 12:45:40 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
-                              fDidBooleanOptimization(kFALSE)
+                              fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default constructor*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
@@ -155,7 +155,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
                            const std::vector<std::string>& aliases)
    :TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
-    fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE)
+    fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 {
    // Constructor used during the expansion of an alias
    Init(name,expression);
