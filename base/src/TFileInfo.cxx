@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.1 2005/09/23 12:53:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.2 2005/10/16 04:10:37 pcanal Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -141,7 +141,7 @@ void TFileInfo::RemoveMetaDataObject()
 }
 
 //______________________________________________________________________________
-void TFileInfo::Print(Option_t *option) const
+void TFileInfo::Print(Option_t * /* option */) const
 {
    cout << "UUID: " << GetUUID()->AsString() << " Size: " << GetSize() << " MD5: " << GetMD5()->AsString() << endl;
    TIter next(fUrlList);
