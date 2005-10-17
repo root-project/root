@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.21 2005/08/18 13:53:08 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.22 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1272,12 +1272,14 @@ namespace ROOT {
             AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
 
             if ( branchname[strlen(branchname)-1] != '.' ) {
-               // If there is no dot also included the data member directly
+               // If there is no dot also include the data member directly
                subnext.Reset();
                while ( (subbranch = (TBranch*)subnext()) ) {
                   skipped = AnalyzeBranch(subbranch,1,0);
-                  if (skipped != 0) Error("AnalyzeTree",
-                                          "Unexpectly read more than one branch in AnalyzeTree.");
+                  UInt_t s = 0;
+                  while( s<skipped && subnext() ) { s++; };
+//                 if (skipped != 0) Error("AnalyzeTree",
+//                                          "Unexpectly read more than one branch in AnalyzeTree.");
                }
             }
 
