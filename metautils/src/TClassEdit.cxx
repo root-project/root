@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.15 2004/11/17 06:02:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.16 2005/03/20 18:20:40 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -176,18 +176,20 @@ string TClassEdit::GetLong64_Name(const string& original)
 {
    // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
 
-   static const string longlong_s  = "long long";
-   static const string ulonglong_s = "unsigned long long";
+   static const char* longlong_s  = "long long";
+   static const char* ulonglong_s = "unsigned long long";
+   static const unsigned int longlong_len  = strlen(longlong_s);
+   static const unsigned int ulonglong_len = strlen(ulonglong_s);
 
    string result = original;
 
    int pos = 0;
    while( (pos = result.find(ulonglong_s,pos) ) >=0 ) {
-      result.replace(pos, ulonglong_s.length(), "ULong64_t");
+      result.replace(pos, ulonglong_len, "ULong64_t");
    }
    pos = 0;
    while( (pos = result.find(longlong_s,pos) ) >=0 ) {
-      result.replace(pos, longlong_s.length(), "Long64_t");
+      result.replace(pos, longlong_len, "Long64_t");
    }
    return result;
 }
