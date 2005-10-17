@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.181 2005/09/29 15:10:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.182 2005/10/13 10:26:46 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TBranchElement::TBranchElement(): TBranch(), fCurrentClass(), fParentClass(), fB
    fBranchTypes   = 0;
    fParentOffset  = 0;
    fInit = fInitOffsets = kFALSE;
+   fType          = 0;
 }
 
 
