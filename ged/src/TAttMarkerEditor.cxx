@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.6 2005/05/14 00:19:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 #include "TGedMarkerSelect.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
-#include "TGComboBox.h"
+#include "TGNumberEntry.h"
 #include "TGClient.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -59,14 +59,17 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
 
-   fMarkerSelect = new TGedMarkerSelect(f2, 1, kMARKER);
-   f2->AddFrame(fMarkerSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
-   fMarkerSelect->Associate(this);
+   fMarkerType = new TGedMarkerSelect(f2, 1, kMARKER);
+   f2->AddFrame(fMarkerType, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
+   fMarkerType->Associate(this);
 
-   fSizeCombo = BuildMarkerSizeComboBox(f2, kMARKER_SIZE);
-   f2->AddFrame(fSizeCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
-   fSizeCombo->Resize(50, 20);
-   fSizeCombo->Associate(this);
+   fMarkerSize = new TGNumberEntry(f2, 0., 4, kMARKER_SIZE, 
+                                   TGNumberFormat::kNESRealOne,
+                                   TGNumberFormat::kNEANonNegative, 
+                                   TGNumberFormat::kNELLimitMinMax, 0.2, 5.0);
+   fMarkerSize->GetNumberEntry()->SetToolTipText("Set marker size");
+   f2->AddFrame(fMarkerSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
+   fMarkerSize->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TClass *cl = TAttMarker::Class();
@@ -97,8 +100,9 @@ void TAttMarkerEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
-   fMarkerSelect->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
-   fSizeCombo->Connect("Selected(Int_t)", "TAttMarkerEditor", this, "DoMarkerSize(Int_t)");
+   fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
+   fMarkerSize->Connect("ValueSet(Long_t)", "TAttMarkerEditor", this, "DoMarkerSize()");
+   (fMarkerSize->GetNumberEntry())->Connect("ReturnPressed()", "TAttMarkerEditor", this, "DoMarkerSize()");
    fInit = kFALSE;
 }
 
@@ -121,16 +125,16 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fAttMarker = dynamic_cast<TAttMarker *>(fModel);
 
-   Float_t s = fAttMarker->GetMarkerSize();
-   s = TMath::Nint(s * 5);
-
-   if (s > 15) s = 15;
-
-   if (s < 1)  s = 1;
-
-   fSizeCombo->Select((Int_t) s);
-
-   fMarkerSelect->SetMarkerStyle(fAttMarker->GetMarkerStyle());
+   Style_t marker = fAttMarker->GetMarkerStyle();
+   if (marker==1 || marker==6 || marker==7) {
+      fMarkerSize->SetNumber(1.);
+      fMarkerSize->SetState(kFALSE);
+   } else {
+      Float_t s = fAttMarker->GetMarkerSize();
+      fMarkerSize->SetState(kTRUE);
+      fMarkerSize->SetNumber(s);
+   }
+   fMarkerType->SetMarkerStyle(marker);
 
    Color_t c = fAttMarker->GetMarkerColor();
    Pixel_t p = TColor::Number2Pixel(c);
@@ -140,26 +144,11 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    SetActive();
 }
 
-//______________________________________________________________________________
-TGComboBox* TAttMarkerEditor::BuildMarkerSizeComboBox(TGFrame* parent, Int_t id)
-{
-   // Marker size combobox.
-
-   char a[100];
-   TGComboBox *c = new TGComboBox(parent, id);
-
-   for (int i = 1; i <= 15; i++) {
-      snprintf(a, 100, "%.1f", 0.2*i);
-      c->AddEntry(a, i);
-   }
-
-   return c;
-}
 
 //______________________________________________________________________________
 void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 {
-   // Slot connected to the fill area color.
+   // Slot connected to the marker color.
 
    fAttMarker->SetMarkerColor(TColor::GetColor(color));
    Update();
@@ -168,17 +157,24 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 //______________________________________________________________________________
 void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
 {
-   // Slot connected to the fill area pattern.
+   // Slot connected to the marker type.
+
+   if (marker==1 || marker==6 || marker==7) {
+      fMarkerSize->SetNumber(1.);
+      fMarkerSize->SetState(kFALSE);
+   } else
+      fMarkerSize->SetState(kTRUE);
 
    fAttMarker->SetMarkerStyle(marker);
    Update();
 }
 
 //______________________________________________________________________________
-void TAttMarkerEditor::DoMarkerSize(Int_t size)
+void TAttMarkerEditor::DoMarkerSize()
 {
-   // Slot connected to the fill area pattern.
+   // Slot connected to the marker size.
 
-   fAttMarker->SetMarkerSize(0.2 * size);
+   Float_t size = fMarkerSize->GetNumber();
+   fAttMarker->SetMarkerSize(size);
    Update();
 }

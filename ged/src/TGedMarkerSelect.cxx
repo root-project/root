@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.8 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.9 2005/09/05 10:01:46 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -48,15 +48,12 @@ struct MarkerDescription_t {
 static MarkerDescription_t  gMarkers[] = {
 
    {"marker1.xpm", "1", 1},
+   {"marker6.xpm", "6", 6},
+   {"marker7.xpm", "7", 7},
    {"marker2.xpm", "2", 2},
    {"marker3.xpm", "3", 3},
    {"marker4.xpm", "4", 4},
    {"marker5.xpm", "5", 5},
-   {"marker6.xpm", "6", 6},
-   {"marker7.xpm", "7", 7},
-   {"marker8.xpm", "8", 8},
-//   {"marker16.xpm", "16", 16 },
-//   {"marker18.xpm", "18", 18},
    {"marker20.xpm", "20", 20},
    {"marker21.xpm", "21", 21},
    {"marker22.xpm", "22", 22},
@@ -101,7 +98,7 @@ TGedMarkerPopup::TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t m
       b->SetToolTipText(gMarkers[i].fName);
    }
 
-   Resize(74, 90);
+   Resize(65, 94);
    MapSubwindows();
 }
 

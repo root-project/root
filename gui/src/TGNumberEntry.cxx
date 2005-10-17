@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.13 2005/09/05 14:26:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.14 2005/09/05 14:52:00 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -2113,4 +2113,6 @@ void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
              << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
    }
+   if (fButtonDown->GetState() == kButtonDisabled)
+      out << "   " << GetName() << "->SetState(kFALSE);" << endl;
 }
