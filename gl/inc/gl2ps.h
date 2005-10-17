@@ -1,4 +1,4 @@
-/* @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $ */
+/* $Id: gl2ps.h,v 1.100 2005/06/23 07:04:59 geuzaine Exp $ */
 /*
  * GL2PS, an OpenGL to PostScript Printing Library
  * Copyright (C) 1999-2005 Christophe Geuzaine <geuz@geuz.org>
@@ -77,7 +77,7 @@
 
 #define GL2PS_MAJOR_VERSION 1
 #define GL2PS_MINOR_VERSION 2
-#define GL2PS_PATCH_VERSION 4
+#define GL2PS_PATCH_VERSION 6
 
 #define GL2PS_VERSION (GL2PS_MAJOR_VERSION + \
                        0.01 * GL2PS_MINOR_VERSION + \
@@ -121,6 +121,7 @@
 #define GL2PS_USE_CURRENT_VIEWPORT (1<<9)
 #define GL2PS_COMPRESS             (1<<10)
 #define GL2PS_NO_BLENDING          (1<<11)
+#define GL2PS_TIGHT_BOUNDING_BOX   (1<<12)
 
 /* Arguments for gl2psEnable/gl2psDisable */
 
@@ -130,9 +131,9 @@
 #define GL2PS_BLEND               4
 
 /* Text alignment (o=raster position; default mode is BL):
-   +---+ +---+ +---+ +---+ +---+ +---+ +-o-+ o---+ +---o
-   | o | o   | |   o |   | |   | |   | |   | |   | |   |
-   +---+ +---+ +---+ +-o-+ o---+ +---o +---+ +---+ +---+
+   +---+ +---+ +---+ +---+ +---+ +---+ +-o-+ o---+ +---o 
+   | o | o   | |   o |   | |   | |   | |   | |   | |   | 
+   +---+ +---+ +---+ +-o-+ o---+ +---o +---+ +---+ +---+ 
     C     CL    CR    B     BL    BR    T     TL    TR */
 
 #define GL2PS_TEXT_C  1
@@ -151,19 +152,19 @@ typedef GLfloat GL2PSrgba[4];
 extern "C" {
 #endif
 
-GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer,
+GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer, 
                                   GLint viewport[4], GLint format, GLint sort,
                                   GLint options, GLint colormode,
-                                  GLint colorsize, GL2PSrgba *colormap,
+                                  GLint colorsize, GL2PSrgba *colormap, 
                                   GLint nr, GLint ng, GLint nb, GLint buffersize,
                                   FILE *stream, const char *filename);
 GL2PSDLL_API GLint gl2psEndPage(void);
 GL2PSDLL_API GLint gl2psSetOptions(GLint options);
 GL2PSDLL_API GLint gl2psBeginViewport(GLint viewport[4]);
 GL2PSDLL_API GLint gl2psEndViewport(void);
-GL2PSDLL_API GLint gl2psText(const char *str, const char *fontname,
+GL2PSDLL_API GLint gl2psText(const char *str, const char *fontname, 
                              GLshort fontsize);
-GL2PSDLL_API GLint gl2psTextOpt(const char *str, const char *fontname,
+GL2PSDLL_API GLint gl2psTextOpt(const char *str, const char *fontname, 
                                 GLshort fontsize, GLint align, GLfloat angle);
 GL2PSDLL_API GLint gl2psDrawPixels(GLsizei width, GLsizei height,
                                    GLint xorig, GLint yorig,
