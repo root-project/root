@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.162 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.163 2005/09/22 22:31:32 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1434,6 +1434,14 @@ TClass *TROOT::LoadClass(const char *classname) const
    if (!dict) {
       if (gInterpreter->AutoLoad(classname)) {
          dict = TClassTable::GetDict(classname);
+      }
+   }
+   if (!dict) {
+      // Try with Long64_t instead of long long
+      string long64name = TClassEdit::GetLong64_Name( classname );
+      if ( long64name != classname ) {
+        TClass *res = LoadClass(long64name.c_str());
+        if (res) return res;
       }
    }
 
