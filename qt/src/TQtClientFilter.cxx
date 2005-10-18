@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.9 2005/10/14 05:11:03 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.10 2005/10/18 18:53:42 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -263,6 +263,7 @@ TQtClientFilter::~TQtClientFilter()
       fRootEventQueue = 0;
    }
 }
+#ifdef QTCLOSE_DESTROY_RESPOND
 //______________________________________________________________________________
 static void SendCloseMessage(Event_t &closeEvent)
 {
@@ -282,9 +283,11 @@ static void SendCloseMessage(Event_t &closeEvent)
    event.fUser[2] = 0;
    event.fUser[3] = 0;
    event.fUser[4] = 0;
-   fprintf(stderr,"SendCloseMessage Closing %p \n", event.fWindow);
+   fprintf(stderr,"SendCloseMessage Closing %p \n", (void *)event.fWindow);
    gVirtualX->SendEvent(event.fWindow, &event);
 }
+#endif
+
 //______________________________________________________________________________
 void DebugMe() {
    // fprintf(stderr, "Debug me please \n");
@@ -578,8 +581,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
                 fprintf(stderr, "** Error ** TQUserEvent:  %d %d\n", event.fType, kClientMessage);
             else if (event.fType == kDestroyNotify) {
                //  remove all events related to the dead window
-               int nRemoved = fRootEventQueue->RemoveItems(&event);
 #ifdef QTDEBUG
+               int nRemoved = fRootEventQueue->RemoveItems(&event);
                fprintf(stderr,"kDestroyNotify %p %d events have been removed from the queue\n",event.fWindow,nRemoved );
 #endif
             }
