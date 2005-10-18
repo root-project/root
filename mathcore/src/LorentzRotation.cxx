@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,6 +13,9 @@
 //
 // Created by: Mark Fischler Mon Aug 8  2005
 //
+
+#include "Math/GenVector/GenVectorIO.h"
+
 #include "Math/GenVector/LorentzRotation.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "Math/GenVector/PxPyPzE4D.h"
