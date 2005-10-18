@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.31 2005/08/12 09:49:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.32 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -172,16 +172,16 @@ TGComboBox::~TGComboBox()
    fClient->FreePicture(fBpic);
 
    if (!MustCleanup()) {
-      delete fDDButton;
-      delete fSelEntry;
-      delete fTextEntry;
-      delete fLhs;
-      delete fLhb;
+      delete fDDButton;  fDDButton = 0;
+      delete fSelEntry;  fSelEntry = 0;
+      delete fTextEntry; fTextEntry= 0;
+      delete fLhs;       fLhs      = 0;
+      delete fLhb;       fLhb      = 0;
    }
 
-   delete fLhdd;
-   delete fListBox;
-   delete fComboFrame;
+   delete fLhdd;       fLhdd       = 0;
+   delete fListBox;    fListBox    = 0;
+   delete fComboFrame; fComboFrame = 0;
 }
 
 //______________________________________________________________________________
@@ -289,6 +289,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 {
    // Handle mouse button events in the combo box.
 
+   if (!fDDButton) return kTRUE;
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
 
