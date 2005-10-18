@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.12 2003/11/25 13:17:33 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.13 2003/11/25 15:16:23 brun Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "HelpTextTV.h"
 
-#if !defined(R__WIN32) || defined(GDK_WIN32)
 const char gTVHelpAbout[] = "\
 The TreeViewer is a graphic user interface designed to handle ROOT\n\
 trees and to take advantage of TTree class features. It uses ROOT native\n\
@@ -224,17 +223,3 @@ Macros can be loaded and executed in this version only by issuing\n\
 the corresponding user commands (see help on user commands).\n\n\
 ";
 
-#else
-
-const char gTVHelpAbout[]               = "empty";
-const char gTVHelpStart[]               = "empty";
-const char gTVHelpLayout[]              = "empty";
-const char gTVHelpOpenSave[]            = "empty";
-const char gTVHelpDraggingItems[]       = "empty";
-const char gTVHelpEditExpressions[]     = "empty";
-const char gTVHelpUserCommands[]        = "empty";
-const char gTVHelpContext[]             = "empty";
-const char gTVHelpDrawing[]             = "empty";
-const char gTVHelpMacros[]              = "empty";
-
-#endif

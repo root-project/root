@@ -368,32 +368,37 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          kLHintsExpandY, 2, 2, 2, 2));
    fFrmNewQuery->SetLayoutManager(new TGTableLayout(fFrmNewQuery, 6, 5));
 
+   // add "Query Name" label and text entry
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Query Name :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 4, 0));
    fFrmNewQuery->AddFrame(fTxtQueryName = new TGTextEntry(fFrmNewQuery,
          (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
          kLHintsCenterY, 5, 5, 4, 0));
 
+   // add "TChain" label and text entry
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "TChain :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 4, 0));
    fFrmNewQuery->AddFrame(fTxtChain = new TGTextEntry(fFrmNewQuery,
          (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
+   // add "Browse" button
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseChain()");
 
+   // add "Selector" label and text entry
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Selector :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
    fFrmNewQuery->AddFrame(fTxtSelector = new TGTextEntry(fFrmNewQuery,
          (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3,
          kLHintsCenterY, 5, 5, 0, 0));
+   // add "Browse" button
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 2, 3, kLHintsCenterY, 5, 0, 0, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseSelector()");
 
-
+   // add "Options" label and text entry
    fFrmNewQuery->AddFrame(new TGLabel(fFrmNewQuery, "Options :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
    fFrmNewQuery->AddFrame(fTxtOptions = new TGTextEntry(fFrmNewQuery,
@@ -401,10 +406,12 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          kLHintsCenterY, 5, 0, 0, 8));
    fTxtOptions->SetText("\"ASYN\"");
 
+   // add "Less <<" ("More >>") button
    fFrmNewQuery->AddFrame(fBtnMore = new TGTextButton(fFrmNewQuery, " Less << "),
          new TGTableLayoutHints(2, 3, 4, 5, kLHintsCenterY, 5, 5, 4, 0));
    fBtnMore->Connect("Clicked()", "TNewQueryDlg", this, "OnNewQueryMore()");
 
+   // add (initially hidden) options frame
    fFrmMore = new TGCompositeFrame(fFrmNewQuery, 200, 200);
    fFrmMore->SetCleanup(kDeepCleanup);
 
@@ -412,6 +419,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
                           kLHintsExpandX | kLHintsExpandY));
    fFrmMore->SetLayoutManager(new TGTableLayout(fFrmMore, 4, 3));
 
+   // add "Nb Entries" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
          new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1,
@@ -419,6 +427,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1,
          0, 37, 0, 0, 8));
    fNumEntries->SetIntNumber(-1);
+   // add "First Entry" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
          new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fNumFirstEntry = new TGNumberEntry(fFrmMore, 0, 5, -1,
@@ -426,20 +435,24 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
          37, 0, 0, 8));
 
+   // add "Par file" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Par file :"),
          new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore,
          (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37,
          5, 0, 0));
+   // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
          new TGTableLayoutHints(2, 3, 2, 3, 0, 6, 0, 0, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseParFile()");
 
+   // add "Event list" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
    fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
          (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37,
          5, 0, 0));
+   // add "Browse" button
    fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
          new TGTableLayoutHints(2, 3, 3, 4, 0, 6, 0, 0, 8));
    btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseEventList()");
@@ -457,6 +470,8 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
                        new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
+   // Add "Save" and "Save & Submit" buttons if we are in edition mode
+   // or "Add" and "Add & Submit" if we are not in edition mode.
    if (fEditMode) {
       fBtnSave = new TGTextButton(tmp, "Save");
       fBtnSubmit = new TGTextButton(tmp, "Save && Submit");
@@ -486,6 +501,8 @@ void TNewQueryDlg::CloseWindow()
 //______________________________________________________________________________
 void TNewQueryDlg::OnNewQueryMore()
 {
+   // show/hide options frame and update button text accordingly
+
    if (fFrmNewQuery->IsVisible(fFrmMore)) {
       fFrmNewQuery->HideFrame(fFrmMore);
       fBtnMore->SetText(" More >> ");
@@ -499,6 +516,8 @@ void TNewQueryDlg::OnNewQueryMore()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseChain()
 {
+   // call new chain dialog
+
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
    dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg",
                 this, "OnElementSelected(TObject *)");
@@ -507,6 +526,7 @@ void TNewQueryDlg::OnBrowseChain()
 //____________________________________________________________________________
 void TNewQueryDlg::OnElementSelected(TObject *obj)
 {
+   // handle OnElementSelected signal coming from new chain dialog
    if (obj) {
       fChain = obj;
       if (obj->IsA() == TChain::Class())
@@ -519,6 +539,8 @@ void TNewQueryDlg::OnElementSelected(TObject *obj)
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseSelector()
 {
+   // Open file browser to choose selector macro
+
    TGFileInfo fi;
    fi.fFileTypes = filetypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
@@ -529,6 +551,8 @@ void TNewQueryDlg::OnBrowseSelector()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseParFile()
 {
+   // Open file browser to choose parameter file
+
    TGFileInfo fi;
    fi.fFileTypes = partypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
@@ -539,32 +563,39 @@ void TNewQueryDlg::OnBrowseParFile()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseEventList()
 {
+   //
 
 }
 
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnSaveClicked()
 {
+   // Save current settings in main session viewer
+
+   // if we are in edition mode and query description is valid,
+   // use it, otherwise create a new one
    TQueryDescription *newquery;
    if (fEditMode && fQuery)
       newquery = fQuery;
    else
       newquery = new TQueryDescription();
 
+   // update query description fields
    newquery->fSelectorString  = fTxtSelector->GetText();
    if (fChain) {
       newquery->fTDSetString  = fChain->GetName();
       newquery->fChain        = fChain;
    }
    else {
-      newquery->fTDSetString  = "";
-      newquery->fChain         = 0;
+      newquery->fTDSetString = "";
+      newquery->fChain       = 0;
    }
-   newquery->fQueryName       = fTxtQueryName->GetText();
-   newquery->fOptions         = fTxtOptions->GetText();
-   newquery->fParFile         = fTxtParFile->GetText();
-   newquery->fNoEntries       = fNumEntries->GetIntNumber();
-   newquery->fFirstEntry      = fNumFirstEntry->GetIntNumber();
+   newquery->fQueryName      = fTxtQueryName->GetText();
+   newquery->fOptions        = fTxtOptions->GetText();
+   newquery->fParFile        = fTxtParFile->GetText();
+   newquery->fNoEntries      = fNumEntries->GetIntNumber();
+   newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
+   newquery->fNbFiles        = 0;
 
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
@@ -573,6 +604,8 @@ void TNewQueryDlg::OnBtnSaveClicked()
          newquery->fNbFiles = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
    }
    if (!fEditMode) {
+      // if not in editor mode, create a new list tree item
+      // and set user data to the newly created query description
       newquery->fResult = 0;
       newquery->fStatus = TQueryDescription::kSessionQueryCreated;
       fViewer->GetActDesc()->fQueries->Add((TObject *)newquery);
@@ -588,10 +621,12 @@ void TNewQueryDlg::OnBtnSaveClicked()
       fViewer->OnListTreeClicked(item2, 1, 0, 0);
    }
    else {
+      // else if in editor mode, just update user data with modified 
+      // query description
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       item->SetUserData(newquery);
    }
-
+   // update list tree
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
@@ -600,6 +635,8 @@ void TNewQueryDlg::OnBtnSaveClicked()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnSubmitClicked()
 {
+   // Save and submit query description
+
    OnBtnSaveClicked();
    fViewer->GetQueryFrame()->OnBtnSubmit();
 }
@@ -607,12 +644,16 @@ void TNewQueryDlg::OnBtnSubmitClicked()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnCloseClicked()
 {
+   // close dialog
+
    CloseWindow();
 }
 
 //______________________________________________________________________________
 void TNewQueryDlg::Popup()
 {
+   // display dialog and set focus to query name text entry
+
    MapWindow();
    fTxtQueryName->SetFocus();
 }
@@ -620,6 +661,8 @@ void TNewQueryDlg::Popup()
 //______________________________________________________________________________
 void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 {
+   // update entry fields with query description values
+
    fQuery = desc;
    fTxtQueryName->SetText(desc->fQueryName);
    fTxtChain->SetText(desc->fTDSetString);
@@ -642,27 +685,27 @@ Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kTE_ENTER:
             case kTE_TAB:
                switch (parm1) {
-                  case 1:
+                  case 1: // Query Name
                      fTxtChain->SelectAll();
                      fTxtChain->SetFocus();
                      break;
-                  case 2:
+                  case 2: // Chain Name
                      fTxtSelector->SelectAll();
                      fTxtSelector->SetFocus();
                      break;
-                  case 3:
+                  case 3: // Selector Name
                      fTxtOptions->SelectAll();
                      fTxtOptions->SetFocus();
                      break;
-                  case 4:
+                  case 4: // Options
                      fTxtParFile->SelectAll();
                      fTxtParFile->SetFocus();
                      break;
-                  case 5:
+                  case 5: // Parameter file
                      fTxtEventList->SelectAll();
                      fTxtEventList->SetFocus();
                      break;
-                  case 6:
+                  case 6: // Event List
                      fTxtQueryName->SelectAll();
                      fTxtQueryName->SetFocus();
                      break;

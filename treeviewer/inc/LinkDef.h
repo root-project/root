@@ -1,4 +1,4 @@
-/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.5 2001/02/22 14:45:17 brun Exp $ */
+/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.6 2005/09/21 07:18:45 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,6 +14,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ global gSessionViewer;
+
 #pragma link C++ class TTreeViewer+;
 #pragma link C++ class TTVLVContainer+;
 #pragma link C++ class TTVLVEntry+;
@@ -25,7 +27,6 @@
 #pragma link C++ class TSessionServerFrame+;
 #pragma link C++ class TSessionFrame+;
 #pragma link C++ class TSessionQueryFrame+;
-#pragma link C++ class TSessionFeedbackFrame+;
 #pragma link C++ class TSessionOutputFrame+;
 #pragma link C++ class TSessionInputFrame+;
 #pragma link C++ class TSessionViewer+;

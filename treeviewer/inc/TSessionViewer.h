@@ -163,39 +163,6 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSessionFeedbackFrame                                                //
-// A composite Frame used in the right part of the Session Viewer GUI   //
-// displaying feedback coming from server on actual query process.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TSessionFeedbackFrame : public TGCompositeFrame {
-
-private:
-   TGCheckButton       *fFeedbackChk;     // Feedback check button
-   TGListBox           *fListBox;         // name list of histos to feedback
-   TRootEmbeddedCanvas *fECanvas;         // node statistics embeded canvas
-   TCanvas             *fStatsCanvas;     // node statistics canvas
-
-   TSessionViewer      *fViewer;          // pointer on the main viewer
-
-public:
-   TSessionFeedbackFrame(TGWindow *parent, Int_t w, Int_t h);
-   virtual ~TSessionFeedbackFrame();
-
-   void        Build(TSessionViewer *gui);
-   void        Feedback(TList *objs);
-   Bool_t      IsFeedBack() const { return (fFeedbackChk->GetState() == kButtonDown); }
-   void        SetFeedBack(Bool_t on) { fFeedbackChk->SetState(on ? kButtonDown : kButtonUp); }
-   TGListBox  *GetListBox() const { return fListBox; }
-   TCanvas    *GetStatsCanvas() const { return fStatsCanvas; }
-   void        OnLBSelected(Int_t);
-
-   ClassDef(TSessionFeedbackFrame,0)
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
 // TSessionServerFrame                                                  //
 // A composite Frame used in the right part of the Session Viewer GUI   //
 // for any information relative to server side : address, port, user... //
@@ -266,25 +233,8 @@ class TSessionFrame : public TGCompositeFrame {
 
 private:
 
-   enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted };
-
-   Int_t              fFiles;                // number of files processed
-   TTime              fStartTime;            // start time of the process
-   TTime              fEndTime;              // end time of the process
-   Long64_t           fFirst;                // first event/entry to process
-   Long64_t           fEntries;              // number of events/entries to process
-   Long64_t           fPrevTotal;            // used for progress bar
-   Long64_t           fPrevProcessed;        // used for progress bar
-   TGLabel           *fLabInfos;             // infos on current process
-   TGLabel           *fLabStatus;            // actual process status
-   TGLabel           *fTotal;                // total progress info
-   TGLabel           *fRate;                 // rate of process in events/sec
-   EQueryStatus      fStatus;                // status of actual query
    TGTab             *fTab;                  // main tab frame
-   TGCompositeFrame  *fFA, *fFB, *fFC;       // three tabs element
-   TSessionFeedbackFrame *fFeedbackFrame;    // current session feedback
-   TGTextEntry       *fTexEntResultsURL;     // results URL text entry
-   TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
+   TGCompositeFrame  *fFA, *fFC;             // three tabs element
    TGTextEntry       *fCommandTxt;           // Command line text entry
    TGTextBuffer      *fCommandBuf;           // Command line text buffer
    TGTextView        *fInfoTextView;         // summary on current query
@@ -293,8 +243,8 @@ private:
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnNewQuery;          // new query button
    TGTextButton      *fBtnGetQueries;        // get entries button
-   TGHProgressBar    *frmProg;               // current process progress bar
    TSessionViewer    *fViewer;               // pointer on main viewer
+   TGLabel           *fInfoLine[13];         // infos on session
 
 public:
    TSessionFrame(TGWindow* parent, Int_t w, Int_t h);
@@ -302,24 +252,13 @@ public:
 
    void     Build(TSessionViewer *gui);
 
-   TTime    GetStartTime() const { return fStartTime; }
-   TTime    GetEndTime() const   { return fEndTime; }
-   TSessionFeedbackFrame  *GetFeedbackFrame() const { return fFeedbackFrame; }
-
-   void     SetStartTime(TTime time) { fStartTime = time; }
-   void     SetEndTime(TTime time) { fEndTime = time; }
-
    //Function that handle input from user:
    void     OnBtnShowLogClicked();
    void     OnBtnNewQueryClicked();
    void     OnBtnGetQueriesClicked();
    void     OnBtnDisconnectClicked();
    void     OnCommandLine();
-
-   void     Feedback(TList *objs);
-   void     Progress(Long64_t total, Long64_t processed);
-   void     IndicateStop(Bool_t aborted);
-   void     ResetProgressDialog(const char *selec, Int_t files, Long64_t first, Long64_t entries);
+   void     ProofInfos();
 
    ClassDef(TSessionFrame,0)
 };
@@ -336,24 +275,55 @@ class TSessionQueryFrame : public TGCompositeFrame {
 
 private:
 
-   TGTextEntry       *fTexEntResultsURL;     // results URL text entry
-   TGTextBuffer      *fTexBufResultsURL;     // results URL text buffer
-   TGTextButton      *fBtnSubmit;            // submit query button
-   TGTextButton      *fBtnFinalize;          // finalize query button
-   TGTextButton      *fBtnStop;              // stop process button
-   TGTextButton      *fBtnAbort;             // abort process button
-   TGTextButton      *fBtnShowLog;           // show log button
-   TGTextButton      *fBtnRetrieve;          // retrieve query button
-   TGTextView        *fInfoTextView;         // summary on current query
-   TSessionViewer    *fViewer;               // pointer on main viewer
+   enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted };
 
-   TQueryDescription *fDesc;
+   TGTextButton         *fBtnSubmit;         // submit query button
+   TGTextButton         *fBtnFinalize;       // finalize query button
+   TGTextButton         *fBtnStop;           // stop process button
+   TGTextButton         *fBtnAbort;          // abort process button
+   TGTextButton         *fBtnShowLog;        // show log button
+   TGTextButton         *fBtnRetrieve;       // retrieve query button
+   TGTextView           *fInfoTextView;      // summary on current query
+
+   Int_t                fFiles;              // number of files processed
+   TTime                fStartTime;          // start time of the process
+   TTime                fEndTime;            // end time of the process
+   Long64_t             fFirst;              // first event/entry to process
+   Long64_t             fEntries;            // number of events/entries to process
+   Long64_t             fPrevTotal;          // used for progress bar
+   Long64_t             fPrevProcessed;      // used for progress bar
+   TGLabel              *fLabInfos;          // infos on current process
+   TGLabel              *fLabStatus;         // actual process status
+   TGLabel              *fTotal;             // total progress info
+   TGLabel              *fRate;              // rate of process in events/sec
+   EQueryStatus         fStatus;             // status of actual query
+   TGTab                *fTab;               // main tab frame
+   TGCompositeFrame     *fFA, *fFB, *fFC;    // three tabs element
+   TGHProgressBar       *frmProg;            // current process progress bar
+   TRootEmbeddedCanvas  *fECanvas;           // node statistics embeded canvas
+   TCanvas              *fStatsCanvas;       // node statistics canvas
+
+   TSessionViewer       *fViewer;            // pointer on main viewer
+
+   TQueryDescription    *fDesc;
 
 public:
    TSessionQueryFrame(TGWindow* parent, Int_t w, Int_t h);
    virtual ~TSessionQueryFrame();
 
    void     Build(TSessionViewer *gui);
+
+   TCanvas *GetStatsCanvas() const { return fStatsCanvas;}
+   TTime    GetStartTime() const { return fStartTime; }
+   TTime    GetEndTime() const   { return fEndTime; }
+
+   void     SetStartTime(TTime time) { fStartTime = time; }
+   void     SetEndTime(TTime time) { fEndTime = time; }
+
+   void     Feedback(TList *objs);
+   void     Progress(Long64_t total, Long64_t processed);
+   void     IndicateStop(Bool_t aborted);
+   void     ResetProgressDialog(const char *selec, Int_t files, Long64_t first, Long64_t entries);
 
    //Function that handle input from user:
    void     OnBtnSubmit();
@@ -364,6 +334,7 @@ public:
    void     OnBtnRetrieve();
    void     UpdateInfos();
    void     UpdateButtons(TQueryDescription *desc);
+   void     UpdateHistos(TList *objs);
 
    ClassDef(TSessionQueryFrame,0)
 };
@@ -382,7 +353,6 @@ private:
    TGLVEntry              *fEntryTmp;      // used to transfer to feedback
    TGLVContainer          *fLVContainer;   // output list view
    TSessionViewer         *fViewer;        // pointer on the main viewer
-   TSessionFeedbackFrame  *fFeedbackFrame;
 
 public:
    TSessionOutputFrame(TGWindow* parent, Int_t w, Int_t h);
@@ -394,8 +364,6 @@ public:
    void           OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x, Int_t y);
    void           OnElementDblClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
    void           RemoveAll() { fLVContainer->RemoveAll(); }
-   void           SetFeedbackFrame(TSessionFeedbackFrame* feedbackFrame)
-                     { fFeedbackFrame = feedbackFrame; }
 
    ClassDef(TSessionOutputFrame,0)
 };
@@ -440,13 +408,13 @@ class TSessionViewer : public TGMainFrame {
 private:
    time_t                  fStart, fElapsed;    // time of connection
    Bool_t                  fChangePic;          // KTRUE if animation active
+   Bool_t                  fBusy;               // KTRUE if busy i.e : connecting
    TGHorizontalFrame      *fHf;                 //
    TGVerticalFrame        *fV1;                 //
    TGVerticalFrame        *fV2;                 //
    TSessionServerFrame    *fServerFrame;        // right side server frame
    TSessionFrame          *fSessionFrame;       // right side session frame
    TSessionQueryFrame     *fQueryFrame;         // right side query frame
-   TSessionFeedbackFrame  *fFeedbackFrame;      // feedback frame
    TSessionOutputFrame    *fOutputFrame;        // output frame
    TSessionInputFrame     *fInputFrame;         // input frame
    TSessionLogView        *fLogWindow;          // external log window
@@ -466,6 +434,7 @@ private:
    TGPopupMenu            *fSessionMenu;        // session menu entry
    TGPopupMenu            *fQueryMenu;          // query menu entry
    TGPopupMenu            *fOptionsMenu;        // options menu entry
+   TGPopupMenu            *fCascadeMenu;        // options menu entry
    TGPopupMenu            *fHelpMenu;           // help menu entry
 
    TGPopupMenu            *fPopupSrv;           // server related popup menu
@@ -494,7 +463,6 @@ public:
    TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
    TSessionFrame          *GetSessionFrame() const { return fSessionFrame; }
    TSessionQueryFrame     *GetQueryFrame() const { return fQueryFrame; }
-   TSessionFeedbackFrame  *GetFeedbackFrame() const { return fFeedbackFrame; }
    TSessionOutputFrame    *GetOutputFrame() const { return fOutputFrame; }
    TSessionInputFrame     *GetInputFrame() const { return fInputFrame; }
    TSessionDescription    *GetActDesc() const { return fActDesc; }
@@ -512,6 +480,8 @@ public:
    TContextMenu           *GetContextMenu() const { return fContextMenu; }
    TGStatusBar            *GetStatusBar() const { return fStatusBar; }
    TGHProgressBar         *GetConnectProg() const { return fConnectProg; }
+   TGPopupMenu            *GetCascadeMenu() const { return fCascadeMenu; }
+   TGPopupMenu            *GetOptionsMenu() const { return fOptionsMenu; }
 
    void     ChangeRightLogo(const char *name);
    void     CleanupSession();
@@ -520,12 +490,14 @@ public:
    void     EditQuery();
    void     EnableTimer();
    Bool_t   HandleTimer(TTimer *);
+   Bool_t   IsBusy() const {return fBusy; }
    void     LogMessage(const char *msg, Bool_t all);
    void     MyHandleMenu(Int_t);
-   void     OnFeedBackToggled(Bool_t on);
+   void     OnCascadeMenu();
    void     OnListTreeClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);
    void     QueryResultReady(char *query);
    void     DeleteQuery();
+   void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }
    void     ShowInfo(const char *txt);
@@ -536,5 +508,7 @@ public:
 
    ClassDef(TSessionViewer,0)
 };
+
+R__EXTERN TSessionViewer *gSessionViewer;
 
 #endif
