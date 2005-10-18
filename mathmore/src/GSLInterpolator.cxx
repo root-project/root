@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLInterpolator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -31,7 +31,7 @@
 
 #include "GSLInterpolator.h"
 
-#include <assert.h>
+#include <cassert>
 
 namespace ROOT {
 namespace Math {
@@ -87,8 +87,8 @@ GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vec
 
   //  if (fSpline == 0 || fAccel == 0) 
   //  throw std::exception();
-  assert (fSpline); 
-  assert (fAccel); 
+  assert (fSpline != 0); 
+  assert (fAccel != 0); 
 }
 
 GSLInterpolator::~GSLInterpolator() 

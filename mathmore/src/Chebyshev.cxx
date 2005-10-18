@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.3 2005/09/19 15:50:04 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -30,7 +30,7 @@
 // Last update: Thu Dec  2 14:51:15 2004
 // 
 
-#include <assert.h>
+#include <cassert>
 
 #include "Math/Chebyshev.h"
 #include "Math/IGenFunction.h"
@@ -87,7 +87,7 @@ Chebyshev & Chebyshev::operator = (const Chebyshev &rhs)
 
 void Chebyshev::Initialize( GSLFuncPointer f, void * params, double a, double b) { 
   // delete previous existing one
-  assert(fSeries); 
+  assert(fSeries != 0); 
   if (fFunction) delete fFunction;
   
   fFunction = new GSLFunctionWrapper(); 
