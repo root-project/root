@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.10 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.11 2005/09/03 07:54:00 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -138,7 +138,10 @@ namespace ROOT {
          fClass->SetDeleteArray(fDeleteArray);
          fClass->SetDestructor(fDestructor);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
-         if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+         // If IsZombie is true, something went wront and we will not be 
+         // able to properly copy the collection proxy
+         if (!fClass->IsZombie() 
+             && fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
          fClass->SetClassSize(fSizeof);
       }
       return fClass;
@@ -193,7 +196,7 @@ namespace ROOT {
    Short_t TGenericClassInfo::AdoptCollectionProxy(TVirtualCollectionProxy *collProxy) {
       delete fCollectionProxy; fCollectionProxy = 0;
       fCollectionProxy = collProxy;
-      if (fClass && fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+      if (fClass && fCollectionProxy && !fClass->IsZombie()) fClass->CopyCollectionProxy(*fCollectionProxy);
       return 0;
    }
 
