@@ -361,6 +361,7 @@ class vector {
   //iterator_category(vector::reverse_iterator& x);
 #endif
 
+  T& at(size_type n);
   iterator begin(void) ;
   iterator end(void) ;
   reverse_iterator rbegin(void) ;

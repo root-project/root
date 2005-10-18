@@ -72,90 +72,92 @@ public:
     size_type max_size() const { return static_allocator.max_size(); }
     size_type capacity() const { return size_type(end_of_storage - begin()); }
     bool empty() const { return begin() == end(); }
+    reference at(size_type n) { if (n>=size()) throw "out-of-bounds"; return *(begin() + n); }
+    const_reference at(size_type n) const { if (n>=size()) throw "out-of-bounds"; return *(begin() + n); }
     reference operator[](size_type n) { return *(begin() + n); }
     const_reference operator[](size_type n) const { return *(begin() + n); }
     vector() : start(0), finish(0), end_of_storage(0) {}
     vector(size_type n, const T& value = T()) {
-	start = static_allocator.allocate(n);
-	uninitialized_fill_n(start, n, value);
-	finish = start + n;
-	end_of_storage = finish;
+      start = static_allocator.allocate(n);
+      uninitialized_fill_n(start, n, value);
+      finish = start + n;
+      end_of_storage = finish;
     }
     vector(const vector<T>& x) {
-	start = static_allocator.allocate(x.end() - x.begin());
-	finish = uninitialized_copy(x.begin(), x.end(), start);
-	end_of_storage = finish;
+      start = static_allocator.allocate(x.end() - x.begin());
+      finish = uninitialized_copy(x.begin(), x.end(), start);
+      end_of_storage = finish;
     }
     vector(const_iterator first, const_iterator last) {
-	size_type n = 0;
-	distance(first, last, n);
-	start = static_allocator.allocate(n);
-	finish = uninitialized_copy(first, last, start);
-	end_of_storage = finish;
+      size_type n = 0;
+      distance(first, last, n);
+      start = static_allocator.allocate(n);
+      finish = uninitialized_copy(first, last, start);
+      end_of_storage = finish;
     }
     ~vector() { 
-	destroy(start, finish);
-	static_allocator.deallocate(start);
+      destroy(start, finish);
+      static_allocator.deallocate(start);
     }
     vector<T>& operator=(const vector<T>& x);
     void reserve(size_type n) {
-	if (capacity() < n) {
-	    iterator tmp = static_allocator.allocate(n);
-	    uninitialized_copy(begin(), end(), tmp);
-	    destroy(start, finish);
-	    static_allocator.deallocate(start);
-	    finish = tmp + size();
-	    start = tmp;
-	    end_of_storage = begin() + n;
-	}
+      if (capacity() < n) {
+          iterator tmp = static_allocator.allocate(n);
+          uninitialized_copy(begin(), end(), tmp);
+          destroy(start, finish);
+          static_allocator.deallocate(start);
+          finish = tmp + size();
+          start = tmp;
+          end_of_storage = begin() + n;
+      }
     }
     reference front() { return *begin(); }
     const_reference front() const { return *begin(); }
     reference back() { return *(end() - 1); }
     const_reference back() const { return *(end() - 1); }
     void push_back(const T& x) {
-	if (finish != end_of_storage) {
-	    /* Borland bug */
-	    construct(finish, x);
-	    finish++;
-	} else
-	    insert_aux(end(), x);
+      if (finish != end_of_storage) {
+          /* Borland bug */
+          construct(finish, x);
+          finish++;
+      } else
+          insert_aux(end(), x);
     }
     void swap(vector<T>& x) {
-	::swap(start, x.start);
-	::swap(finish, x.finish);
-	::swap(end_of_storage, x.end_of_storage);
+      ::swap(start, x.start);
+      ::swap(finish, x.finish);
+      ::swap(end_of_storage, x.end_of_storage);
     }
     iterator insert(iterator position, const T& x) {
-	size_type n = position - begin();
-	if (finish != end_of_storage && position == end()) {
-	    /* Borland bug */
-	    construct(finish, x);
-	    finish++;
-	} else
-	    insert_aux(position, x);
-	return begin() + n;
+      size_type n = position - begin();
+      if (finish != end_of_storage && position == end()) {
+          /* Borland bug */
+          construct(finish, x);
+          finish++;
+      } else
+          insert_aux(position, x);
+      return begin() + n;
     }
     void insert (iterator position, const_iterator first, 
-		 const_iterator last);
+             const_iterator last);
     void insert (iterator position, size_type n, const T& x);
     void pop_back() {
-	/* Borland bug */
+      /* Borland bug */
         --finish;
         destroy(finish);
     }
     void erase(iterator position) {
-	if (position + 1 != end())
-	    copy(position + 1, end(), position);
-	/* Borland bug */
-	--finish;
-	destroy(finish);
+      if (position + 1 != end())
+          copy(position + 1, end(), position);
+      /* Borland bug */
+      --finish;
+      destroy(finish);
     }
     void erase(iterator first, iterator last) {
-	vector<T>::iterator i = copy(last, end(), first);
-	destroy(i, finish);
-	// work around for destroy(copy(last, end(), first), finish);
-	finish = finish - (last - first); 
+      vector<T>::iterator i = copy(last, end(), first);
+      destroy(i, finish);
+      // work around for destroy(copy(last, end(), first), finish);
+      finish = finish - (last - first); 
     }
     void resize(size_type __new_size, const T& __x) {
       if (__new_size < size()) 
@@ -186,17 +188,17 @@ template <class T>
 vector<T>& vector<T>::operator=(const vector<T>& x) {
     if (&x == this) return *this;
     if (x.size() > capacity()) {
-	destroy(start, finish);
-	static_allocator.deallocate(start);
-	start = static_allocator.allocate(x.end() - x.begin());
-	end_of_storage = uninitialized_copy(x.begin(), x.end(), start);
+      destroy(start, finish);
+      static_allocator.deallocate(start);
+      start = static_allocator.allocate(x.end() - x.begin());
+      end_of_storage = uninitialized_copy(x.begin(), x.end(), start);
     } else if (size() >= x.size()) {
-	vector<T>::iterator i = copy(x.begin(), x.end(), begin());
-	destroy(i, finish);
-	// work around for destroy(copy(x.begin(), x.end(), begin()), finish);
+      vector<T>::iterator i = copy(x.begin(), x.end(), begin());
+      destroy(i, finish);
+      // work around for destroy(copy(x.begin(), x.end(), begin()), finish);
     } else {
-	copy(x.begin(), x.begin() + size(), begin());
-	uninitialized_copy(x.begin() + size(), x.end(), begin() + size());
+      copy(x.begin(), x.begin() + size(), begin());
+      uninitialized_copy(x.begin() + size(), x.end(), begin() + size());
     }
     finish = begin() + x.size();
     return *this;
@@ -205,27 +207,27 @@ vector<T>& vector<T>::operator=(const vector<T>& x) {
 template <class T>
 void vector<T>::insert_aux(iterator position, const T& x) {
     if (finish != end_of_storage) {
-	construct(finish, *(finish - 1));
-	copy_backward(position, finish - 1, finish);
-	*position = x;
-	++finish;
+      construct(finish, *(finish - 1));
+      copy_backward(position, finish - 1, finish);
+      *position = x;
+      ++finish;
     } else {
-	size_type len = size() ? 2 * size() 
-	    : static_allocator.init_page_size();
+      size_type len = size() ? 2 * size() 
+          : static_allocator.init_page_size();
 #ifdef __CINT__
         iterator tmp;
-	tmp = static_allocator.allocate(len);
+      tmp = static_allocator.allocate(len);
 #else
-	iterator tmp = static_allocator.allocate(len);
+      iterator tmp = static_allocator.allocate(len);
 #endif
-	uninitialized_copy(begin(), position, tmp);
-	construct(tmp + (position - begin()), x);
-	uninitialized_copy(position, end(), tmp + (position - begin()) + 1); 
-	destroy(begin(), end());
-	static_allocator.deallocate(begin());
-	end_of_storage = tmp + len;
-	finish = tmp + size() + 1;
-	start = tmp;
+      uninitialized_copy(begin(), position, tmp);
+      construct(tmp + (position - begin()), x);
+      uninitialized_copy(position, end(), tmp + (position - begin()) + 1); 
+      destroy(begin(), end());
+      static_allocator.deallocate(begin());
+      end_of_storage = tmp + len;
+      finish = tmp + size() + 1;
+      start = tmp;
     }
 }
 
@@ -233,59 +235,59 @@ template <class T>
 void vector<T>::insert(iterator position, size_type n, const T& x) {
     if (n == 0) return;
     if (end_of_storage - finish >= n) {
-	if (end() - position > n) {
-	    uninitialized_copy(end() - n, end(), end());
-	    copy_backward(position, end() - n, end());
-	    fill(position, position + n, x);
-	} else {
-	    uninitialized_copy(position, end(), position + n);
-	    fill(position, end(), x);
-	    uninitialized_fill_n(end(), n - (end() - position), x);
-	}
-	finish += n;
+      if (end() - position > n) {
+          uninitialized_copy(end() - n, end(), end());
+          copy_backward(position, end() - n, end());
+          fill(position, position + n, x);
+      } else {
+          uninitialized_copy(position, end(), position + n);
+          fill(position, end(), x);
+          uninitialized_fill_n(end(), n - (end() - position), x);
+      }
+      finish += n;
     } else {
-	size_type len = size() + max(size(), n);
-	iterator tmp = static_allocator.allocate(len);
-	uninitialized_copy(begin(), position, tmp);
-	uninitialized_fill_n(tmp + (position - begin()), n, x);
-	uninitialized_copy(position, end(), tmp + (position - begin() + n));
-	destroy(begin(), end());
-	static_allocator.deallocate(begin());
-	end_of_storage = tmp + len;
-	finish = tmp + size() + n;
-	start = tmp;
+      size_type len = size() + max(size(), n);
+      iterator tmp = static_allocator.allocate(len);
+      uninitialized_copy(begin(), position, tmp);
+      uninitialized_fill_n(tmp + (position - begin()), n, x);
+      uninitialized_copy(position, end(), tmp + (position - begin() + n));
+      destroy(begin(), end());
+      static_allocator.deallocate(begin());
+      end_of_storage = tmp + len;
+      finish = tmp + size() + n;
+      start = tmp;
     }
 }
 
 template <class T>
 void vector<T>::insert(iterator position, 
-		       const_iterator first, 
-		       const_iterator last) {
+                   const_iterator first, 
+                   const_iterator last) {
     if (first == last) return;
     size_type n = 0;
     distance(first, last, n);
     if (end_of_storage - finish >= n) {
-	if (end() - position > n) {
-	    uninitialized_copy(end() - n, end(), end());
-	    copy_backward(position, end() - n, end());
-	    copy(first, last, position);
-	} else {
-	    uninitialized_copy(position, end(), position + n);
-	    copy(first, first + (end() - position), position);
-	    uninitialized_copy(first + (end() - position), last, end());
-	}
-	finish += n;
+      if (end() - position > n) {
+          uninitialized_copy(end() - n, end(), end());
+          copy_backward(position, end() - n, end());
+          copy(first, last, position);
+      } else {
+          uninitialized_copy(position, end(), position + n);
+          copy(first, first + (end() - position), position);
+          uninitialized_copy(first + (end() - position), last, end());
+      }
+      finish += n;
     } else {
-	size_type len = size() + max(size(), n);
-	iterator tmp = static_allocator.allocate(len);
-	uninitialized_copy(begin(), position, tmp);
-	uninitialized_copy(first, last, tmp + (position - begin()));
-	uninitialized_copy(position, end(), tmp + (position - begin() + n));
-	destroy(begin(), end());
-	static_allocator.deallocate(begin());
-	end_of_storage = tmp + len;
-	finish = tmp + size() + n;
-	start = tmp;
+      size_type len = size() + max(size(), n);
+      iterator tmp = static_allocator.allocate(len);
+      uninitialized_copy(begin(), position, tmp);
+      uninitialized_copy(first, last, tmp + (position - begin()));
+      uninitialized_copy(position, end(), tmp + (position - begin() + n));
+      destroy(begin(), end());
+      static_allocator.deallocate(begin());
+      end_of_storage = tmp + len;
+      finish = tmp + size() + n;
+      start = tmp;
     }
 }
 
