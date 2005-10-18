@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.16 2005/06/24 12:27:29 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.12 2005/09/20 06:38:10 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TQtWidget
 #define ROOT_TQtWidget
@@ -200,12 +199,14 @@ public slots:
    virtual bool Save(const char    *fileName) const;
    virtual bool Save(const QString &fileName,const char *format,int quality=60) const;
    virtual bool Save(const char    *fileName,const char *format,int quality=60) const;
+#ifndef __CINT__
 signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
    void CanvasPainted();  // Signal the TCanvas has been painted onto the screen
    void Saved(bool ok);   // Signal the TCanvas has been saved into the file
    virtual void polish();
    void  RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
+#endif
 //MOC_SKIP_BEGIN  
    ClassDef(TQtWidget,0) // QWidget to back ROOT TCanvas (Can be used with Qt designer)
 //MOC_SKIP_END

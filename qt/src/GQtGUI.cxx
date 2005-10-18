@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.18 2005/10/12 06:33:39 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.19 2005/10/14 05:11:03 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -1681,7 +1681,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
          // fprintf(stderr, "  TGQt::SendEvent(Window_t id=%d, Event_t *ev=%d) to %p\n", id, ev->fType,  receiver);
       }
 
-      // fprintf(stderr, "  TGQt::SendEvent(Window_t id, Event_t *ev) %p\n", wid(id));
+      // fprintf(stderr, "  TGQt::SendEvent(Window_t id, Event_t *ev) %p type=%d\n", wid(id), ev->fType);
       QApplication::postEvent(receiver,new TQUserEvent(*ev));
    } else {
       fprintf(stderr,"TQt::SendEvent:: unknown event %d for widget: %p\n",ev->fType,wid(id));
@@ -1693,6 +1693,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
     // WMDeleteNotify causes the filter to treat QEventClose event
     if (id == kNone || id == kDefault ) return;
     ((TQtClientWidget *)wid(id))->SetDeleteNotify();
+    // fprintf(stderr,"TGQt::WMDeleteNotify %p\n",id);
  }
 //______________________________________________________________________________
  void         TGQt::SetKeyAutoRepeat(Bool_t) { }
@@ -2855,10 +2856,11 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
       // Send the ROOT kDestroyEvent via Qt event loop
    Event_t destroyEvent;
    memset(&destroyEvent,0,sizeof(Event_t));
-
-   destroyEvent.fType      = kDestroyNotify;
-   destroyEvent.fHandle    = rootwid(widget);        // general resource handle (used for atoms or windows)
+   destroyEvent.fType      = kClientMessage;
+   destroyEvent.fFormat    = 32;
+   destroyEvent.fHandle    = gWM_DELETE_WINDOW;        // general resource handle (used for atoms or windows)
    destroyEvent.fWindow    = rootwid(widget);
+   destroyEvent.fUser[0]   = (Long_t) gWM_DELETE_WINDOW;
    destroyEvent.fSendEvent = kTRUE;
    destroyEvent.fTime      = QTime::currentTime().msec();
 

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.8 2005/08/17 20:08:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.9 2005/10/14 05:11:03 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TGQt.h"
 #include "TQtEventQueue.h"
 #include "TQUserEvent.h"
+#include "TQtLock.h"
 
 #include "TSystem.h"
 #include "TStopwatch.h"
@@ -253,7 +254,7 @@ static inline bool GrabPointer(Event_t &event,TQtClientWidget * grabber)
 //______________________________________________________________________________
 TQtClientFilter::~TQtClientFilter()
 {
-   qApp->lock();
+   TQtLock lock;  // critical section
 #ifdef R__QTGUITHREAD
    delete fNotifyClient;fNotifyClient=0;
 #endif
@@ -261,13 +262,12 @@ TQtClientFilter::~TQtClientFilter()
       delete fRootEventQueue;
       fRootEventQueue = 0;
    }
-   qApp->unlock();
 }
 //______________________________________________________________________________
 static void SendCloseMessage(Event_t &closeEvent)
 {
    // Send close message to window provided via closeEvent.
-   // This method should be called just use close window via WM
+   // This method should be called just the user closes the window via WM
 
    if (closeEvent.fType != kDestroyNotify) return;
    Event_t event = closeEvent;
@@ -282,7 +282,7 @@ static void SendCloseMessage(Event_t &closeEvent)
    event.fUser[2] = 0;
    event.fUser[3] = 0;
    event.fUser[4] = 0;
-
+   fprintf(stderr,"SendCloseMessage Closing %p \n", event.fWindow);
    gVirtualX->SendEvent(event.fWindow, &event);
 }
 //______________________________________________________________________________
@@ -510,13 +510,16 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          event.fType   = kDestroyNotify;
          ((QCloseEvent *)e)->accept();
          // ((QCloseEvent *)e)->ignore();
-         fprintf(stderr, " QEvent::Close spontaneous %d:\n",e->spontaneous());
+         // fprintf(stderr, " QEvent::Close spontaneous %d: for %p \n",e->spontaneous(),frame);
          if (fIsGrabbing && (fPointerGrabber == frame))
          {
             fIsGrabbing = false;
             gVirtualX->GrabPointer(0, 0, 0, 0,kFALSE);
          }
+#ifdef QTCLOSE_DESTROY_RESPOND
+         // ROOT GUI does not expect this messages to be dispatched.
          SendCloseMessage(event);
+#endif         
          selectEventMask |=  kStructureNotifyMask;
          break;
       case QEvent::Destroy:              //  during object destruction
@@ -528,7 +531,10 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          }
          selectEventMask |=  kStructureNotifyMask;
          fprintf(stderr, " Event::Destroy: \n");
-         // SendCloseMessage(event); nothing to do here
+#ifdef QTCLOSE_DESTROY_RESPOND
+         // ROOT GUI does not expect this messages to be dispatched.
+         SendCloseMessage(event); // nothing to do here yet 
+#endif         
          break;
       case QEvent::Show:                 // Widget was shown on screen,
       case QEvent::ShowWindowRequest:    //  (obsolete)  widget's window should be mapped
@@ -572,9 +578,9 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
                 fprintf(stderr, "** Error ** TQUserEvent:  %d %d\n", event.fType, kClientMessage);
             else if (event.fType == kDestroyNotify) {
                //  remove all events related to the dead window
-#ifdef QTDEBUG
                int nRemoved = fRootEventQueue->RemoveItems(&event);
-               fprintf(stderr,"kDestroyNotify %d %d events have been removed from the queue\n",event.fWindow,nRemoved );
+#ifdef QTDEBUG
+               fprintf(stderr,"kDestroyNotify %p %d events have been removed from the queue\n",event.fWindow,nRemoved );
 #endif
             }
             // else fprintf(stderr, "TQUserEvent: %p  %d %d\n", event.fWindow, event.fType, kClientMessage);
@@ -593,7 +599,9 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
         //};
        break;
    };
-   qApp->lock();
+   
+   { TQtLock lock; // critical section
+
    bool justInit =  false;
    if (!fRootEventQueue) {
       fRootEventQueue = new TQtEventQueue();
@@ -627,7 +635,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 #else
    // gSystem->DispatchOneEvent(kTRUE);
 #endif
-   qApp->unlock();
+   } // End of the critical section 
+   
    // We should hold ALL events because we want to process them themsleves.
    // However non-accepted mouse event should be propagated further
    if (wheelEvent && !wheelEvent->isAccepted () ) return kFALSE;

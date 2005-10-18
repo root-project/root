@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.37 2005/07/10 00:34:57 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.39 2005/10/17 22:55:12 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -98,8 +98,10 @@ public:
     UInt_t ButtonMask  () const;
     EMouseButton Button() const ;
     UInt_t PointerMask () const;
+#ifndef __CINT__
 protected slots:
       void Disconnect();
+#endif
 public slots:
     virtual void Accelerate(int id);
     virtual void polish();

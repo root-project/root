@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcintrule.pri,v 1.6 2005/06/25 23:32:02 fine Exp $
+# $Id: rootcintrule.pri,v 1.9 2005/10/18 17:46:47 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -63,24 +63,26 @@ exists ($(ROOTSYS)/include){
      INCLUDEPATH	*= "%ROOTSYS%/include"
   }
 
-  mac {
-     INCLUDEPATH	*= "$(ROOTSYS)/include" 
-  }
-
   unix {
      INCLUDEPATH	*= "$(ROOTSYS)/include"
   }
 }
 !isEmpty( CREATE_ROOT_DICT_FOR_CLASSES ) {
-  SOURCES	  *= ${QMAKE_TARGET}Dict.cxx 
+  ROOT_CINT_TARGET = ${QMAKE_TARGET}
+  SOURCES	  *= $${ROOT_CINT_TARGET}Dict.cxx 
 
-  rootcint.target       = ${QMAKE_TARGET}Dict.cxx 
-  rootcint.commands    += $(ROOTSYS)/bin/rootcint -f $$rootcint.target  -c $(CXXFLAGS) $$CREATE_ROOT_DICT_FOR_CLASSES
+  rootcint.target       = $(QMAKE_TARGET)Dict.cxx 
+
+  win32:  rootcint.commands    +=$(ROOTSYS)\bin\rootcint.exe
+  unix:   rootcint.commands    +=$(ROOTSYS)/bin/rootcint
+
+  rootcint.commands    +=  -f $$rootcint.target  -c $(CXXFLAGS) $$CREATE_ROOT_DICT_FOR_CLASSES
   rootcint.depends      = $$CREATE_ROOT_DICT_FOR_CLASSES
   
   rootcintecho.commands = @echo "Generating dictionary $$rootcint.target for $$CREATE_ROOT_DICT_FOR_CLASSES classes"
 
-  QMAKE_EXTRA_UNIX_TARGETS += rootcintecho rootcint 
+unix:   QMAKE_EXTRA_UNIX_TARGETS += rootcintecho rootcint 
+win32:  QMAKE_EXTRA_WIN_TARGETS  += rootcintecho rootcint 
 
-  QMAKE_CLEAN       +=  ${QMAKE_TARGET}Dict.cxx ${QMAKE_TARGET}Dict.h
+  QMAKE_CLEAN       +=  $${ROOT_CINT_TARGET}Dict.cxx $${ROOT_CINT_TARGET}Dict.h
 }

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.4 2005/06/24 12:27:30 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.5 2005/08/17 20:08:37 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, WFlag
 void TQtClientGuard::Delete(QWidget *w)
 {
    // Delete and unregister the object
-   if (w)
+   if (w && (fQClientGuard.find(w)>=0))
    {
       w->hide();
       Disconnect(w);
@@ -52,9 +52,8 @@ void TQtClientGuard::Delete(QWidget *w)
 void TQtClientGuard::Disconnect(QWidget *w)
 {
    // Disconnect and unregister the object
-   fQClientGuard.find(w);
    // fprintf(stderr, "TQtClientGuard::Disconnecting widget %p\n", w);
-   if ( fQClientGuard.current() ) {
+   if ( w && (fQClientGuard.find(w) >=0 ) ) {
       // ungrab the poiner just in case
       QWidget *grabber = QWidget::mouseGrabber();
       fQClientGuard.remove();
@@ -90,7 +89,7 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
             }
          }
       }
-      // redundant disconnect // Disconnect(w);
+      Disconnect(w);
    }
 }
 
