@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.17 2005/07/20 08:58:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.18 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -214,9 +214,12 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Double_t length = TMath::Sqrt(Double_t((x2n-x1n)*(x2n-x1n)+(y2n-y1n)*(y2n-y1n)));
    Double_t rSize  = 0.7*arrowsize;
    Double_t dSize  = rSize*TMath::Tan(TMath::Pi()*fAngle/360);
-   Double_t cosT   = (x2n-x1n)/length;
-   Double_t sinT   = (y2n-y1n)/length;
-
+   Double_t cosT   = 1;
+   Double_t sinT   = 0;
+   if (length > 0) {
+      cosT   = (x2n-x1n)/length;
+      sinT   = (y2n-y1n)/length;
+   }
    // Arrays holding the arrows coordinates
    Double_t x1ar[4], y1ar[4];
    Double_t x2ar[4], y2ar[4];
