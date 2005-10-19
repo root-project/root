@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.10 2005/10/18 18:53:42 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.11 2005/10/18 20:32:53 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include <qtextcodec.h>
 
 #include "KeySymbols.h"
-
+#define QTCLOSE_DESTROY_RESPOND 1
 ClassImp(TQtClientFilter)
 
 //
@@ -283,7 +283,7 @@ static void SendCloseMessage(Event_t &closeEvent)
    event.fUser[2] = 0;
    event.fUser[3] = 0;
    event.fUser[4] = 0;
-   fprintf(stderr,"SendCloseMessage Closing %p \n", (void *)event.fWindow);
+   // fprintf(stderr,"SendCloseMessage Closing %p \n", (void *)event.fWindow);
    gVirtualX->SendEvent(event.fWindow, &event);
 }
 #endif
@@ -521,7 +521,10 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          }
 #ifdef QTCLOSE_DESTROY_RESPOND
          // ROOT GUI does not expect this messages to be dispatched.
-         SendCloseMessage(event);
+         if (frame->DeleteNotify() ) {
+            frame->SetDeleteNotify(kFALSE);
+            SendCloseMessage(event);
+         }
 #endif         
          selectEventMask |=  kStructureNotifyMask;
          break;
