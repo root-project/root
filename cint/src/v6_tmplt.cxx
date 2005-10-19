@@ -1114,7 +1114,7 @@ struct G__Definedtemplateclass *G__defined_templateclass(char *name)
   /* scope operator resolution, A::templatename<int> ... */
   strcpy(atom_name,name);
   G__hash(atom_name,hash,temp)
-  G__scopeoperator(atom_name,&hash,&dmy_struct_offset,&scope_tagnum);
+  int scope = G__scopeoperator(atom_name,&hash,&dmy_struct_offset,&scope_tagnum);
 
   /* Don't crash on a null name (like 'std::'). */
   if('\0' == atom_name[0])
@@ -1122,48 +1122,59 @@ struct G__Definedtemplateclass *G__defined_templateclass(char *name)
 
   /* search for template name and scope match */
   deftmplt = &G__definedtemplateclass;
-  while(deftmplt->next) { /* BUG FIX */
+  G__Definedtemplateclass *candidate = 0;
+  for( deftmplt = &G__definedtemplateclass;
+       deftmplt->next;
+       deftmplt=deftmplt->next ) {
     if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
-      /* look for ordinary scope resolution */
-      if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
-                             env_tagnum==deftmplt->parent_tagnum))||
-         scope_tagnum==deftmplt->parent_tagnum) {
-        return(deftmplt);
+      if (scope != G__NOSCOPEOPR) {
+        /* look for ordinary scope resolution */
+        if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
+                               env_tagnum==deftmplt->parent_tagnum))||
+           scope_tagnum==deftmplt->parent_tagnum) {
+           return deftmplt;
+        }
       }
-      else if(-1==scope_tagnum) {
+      else if(env_tagnum==deftmplt->parent_tagnum) {
+         // Exact environment scope match
+         return deftmplt;
+      } else if(-1==scope_tagnum) {
         int env_parent_tagnum = env_tagnum;
-        if(baseclass) {
+        if(baseclass && !candidate) {
           /* look for using directive scope resolution */
           for(temp=0;temp<baseclass->basen;temp++) {
             if(baseclass->basetagnum[temp]==deftmplt->parent_tagnum) {
-              return(deftmplt);
+              candidate = deftmplt;
             }
           }
         }
         /* look for enclosing scope resolution */
-        while(-1!=env_parent_tagnum) {
+        while(!candidate && -1!=env_parent_tagnum) {
           env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
-          if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
+          if(env_parent_tagnum==deftmplt->parent_tagnum) {
+             candidate = deftmplt;
+             break;
+          }
           if(G__struct.baseclass[env_parent_tagnum]) {
             for(temp=0;temp<G__struct.baseclass[env_parent_tagnum]->basen;temp++) {
               if(G__struct.baseclass[env_parent_tagnum]->basetagnum[temp]==deftmplt->parent_tagnum) {
-                return(deftmplt);
+                candidate = deftmplt;
+                break;
               }
             }
+            if (candidate) break;
           }
         }
         /* look in global scope (handle for using declaration info */
-        for(temp=0;temp<G__globalusingnamespace.basen;temp++) {
+        if (!candidate) for(temp=0;temp<G__globalusingnamespace.basen;temp++) {
           if(G__globalusingnamespace.basetagnum[temp]==deftmplt->parent_tagnum) {
-            return(deftmplt);
+             candidate = deftmplt;
           }
         }
       }
     }
-    deftmplt=deftmplt->next;
   }
-  return((struct G__Definedtemplateclass *)NULL);
-
+  return candidate;
 }
 
 /***********************************************************************
@@ -1330,6 +1341,8 @@ void G__declare_template()
     if(';'==c) {
       isforwarddecl = 1;
     }
+    // Friend declaration are NOT forward declaration.
+    if (isforwarddecl && isfrienddecl) return;
     fsetpos(G__ifile.fp,&pos);
     if(G__dispsource) G__disp_mask=0;
     G__ifile.line_number = store_line_number;
@@ -3325,8 +3338,17 @@ int G__createtemplatefunc(char *funcname,G__Templatearg *targ
       do {
         ntarg[nt]=G__istemplatearg(paraname,deftmpfunc->def_para);
         if(0==ntarg[nt]) {
-          ntargc[nt] = (char*)malloc(strlen(paraname)+1);
-          strcpy(ntargc[nt],paraname);
+          G__Definedtemplateclass *deftmpclass = G__defined_templateclass(paraname);
+          if (deftmpclass && deftmpclass->parent_tagnum!=-1) {
+             const char *parent_name = G__fulltagname(deftmpclass->parent_tagnum,1);
+             ntargc[nt] = (char*)malloc(strlen(parent_name)+strlen(deftmpclass->name)+3);
+             strcpy(ntargc[nt],parent_name);
+             strcat(ntargc[nt],"::");
+             strcat(ntargc[nt],deftmpclass->name);
+          } else {
+             ntargc[nt] = (char*)malloc(strlen(paraname)+1);
+             strcpy(ntargc[nt],paraname);
+          }
         }
         ++nt;
         c = G__fgetstream(paraname,",>");
@@ -3334,8 +3356,17 @@ int G__createtemplatefunc(char *funcname,G__Templatearg *targ
       if('>'==c) {
         ntarg[nt]=G__istemplatearg(paraname,deftmpfunc->def_para);
         if(0==ntarg[nt]) {
-          ntargc[nt] = (char*)malloc(strlen(paraname)+1);
-          strcpy(ntargc[nt],paraname);
+          G__Definedtemplateclass *deftmpclass = G__defined_templateclass(paraname);
+          if (deftmpclass && deftmpclass->parent_tagnum!=-1) {
+             const char *parent_name = G__fulltagname(deftmpclass->parent_tagnum,1);
+             ntargc[nt] = (char*)malloc(strlen(parent_name)+strlen(deftmpclass->name)+3);
+             strcpy(ntargc[nt],parent_name);
+             strcat(ntargc[nt],"::");
+             strcat(ntargc[nt],deftmpclass->name);
+          } else {
+             ntargc[nt] = (char*)malloc(strlen(paraname)+1);
+             strcpy(ntargc[nt],paraname);
+          }
         }
         ++nt;
       }
