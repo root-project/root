@@ -4446,7 +4446,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
             ifunc->hash[ifn] = hash;
           }
 #endif
-          if(0==ifunc->pentry[ifn]->p) {
+          if(0==ifunc->pentry[ifn]->p && G__NOLINK==G__globalcomp) {
             /* This was only a prototype template, search for definition
              * template */
             deftmpfunc = deftmpfunc->next;
