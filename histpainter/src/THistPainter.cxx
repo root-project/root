@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.223 2005/10/13 08:10:27 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.224 2005/10/13 16:37:20 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2024,8 +2024,9 @@ void THistPainter::PaintBoxes(Option_t *)
          if (z <  zmin) continue; //   Can be the case with 
          if (z >  zmax) z = zmax; // option Same
 
+         if (dz == 0) continue;
          zratio = TMath::Sqrt((z-zmin)/dz);
-         if (zratio==0) continue;
+         if (zratio == 0) continue;
 
          xup  = xcent*zratio + xk + xcent;
          xlow = 2*(xk + xcent) - xup;
