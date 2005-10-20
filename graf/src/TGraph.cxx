@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.167 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.168 2005/09/16 17:19:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1932,16 +1932,20 @@ void TGraph::Paint(Option_t *option)
       PaintGraph(fNpoints, fX, fY, option);
    }
 
-   TObject *f;
-   if (fFunctions) {
-     TIter   next(fFunctions);
-     while ((f = (TObject*) next())) {
-      if (f->InheritsFrom(TF1::Class())) {
-         if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+   //paint associated objects in the list of functions
+   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
+   TObject *obj;
+
+   while (lnk) {
+      obj = lnk->GetObject();
+      TVirtualPad *padsave = gPad;
+      if (obj->InheritsFrom(TF1::Class())) {
+         if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
-         f->Paint();
+         obj->Paint(lnk->GetOption());
       }
-     }
+      lnk = (TObjOptLink*)lnk->Next();
+      padsave->cd();
    }
 }
 
