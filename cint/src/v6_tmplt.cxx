@@ -1369,16 +1369,24 @@ void G__declare_template()
     if (c=='*' && strncmp(temp2,"operator",strlen("operator"))==0) {
        strcat(temp2,"*");
        c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+
+    } else if (c=='&' && strncmp(temp2,"operator",strlen("operator"))==0) {
+       strcat(temp2,"&");
+       c = G__fgetname_template(temp2+strlen(temp2),"*(;=");
     }
     while (c=='&'||c=='*') {
        /* we skip all the & and * we see and what's in between.
           This should be removed from the func name (what we are looking for)
           anything preceding combinations of *,& and const. */
        c = G__fgetname_template(temp2,"*&(;=");
-        if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
-           strcat(temp2,"=");
-           c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
-        }
+       if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
+          strcat(temp2,"=");
+          c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+       }
+       if (c=='&' && strncmp(temp2,"operator",strlen("operator"))==0) {
+          strcat(temp2,"&");
+          c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+       }
     }
     if(0==temp2[0]) { /* constructor template in class definition */
       strcat(temp,"<");
@@ -1500,9 +1508,15 @@ void G__declare_template()
      *                               ^              */
     do {
       c=G__fgetname_template(temp,"(<&*");
-      if(isspace(c) && strcmp(temp,"operator")==0) {
-        c=G__fgetstream(temp+8,"(");
-        if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
+      if(strcmp(temp,"operator")==0) {
+         if (isspace(c)){
+            c=G__fgetstream(temp+8,"(");
+            if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
+         } else if (c=='&' || c=='*') {
+            temp[8]=c;
+            temp[9]=0;
+            c=G__fgetstream(temp+9,"(");
+         }
       }
     } while('('!=c && '<'!=c) ;
   }
