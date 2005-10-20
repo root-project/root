@@ -1057,23 +1057,111 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          }
          continue;
 
-         case TStreamerInfo::kStreamLoop:{
-            UInt_t start,count;
-            b.ReadVersion(&start, &count, cle);
-            if (pstreamer == 0) {
-               if (1 || gDebug > 0) {
-                  printf("ERROR, Streamer is null\n");
-                  aElement->ls();
-               }
-            } else {
+         case TStreamerInfo::kStreamLoop:
+         case TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
+         {
+            TClass *cl = fComp[i].fClass;
+            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
+            ROOT::NewArrFunc_t arrayNew = cl->GetNewArray();
+            ROOT::DelArrFunc_t arrayDel = cl->GetDeleteArray();
+            //ROOT::DelFunc_t   normalDel = cl->GetDelete();
+            UInt_t start, count;
+            b.ReadVersion(&start, &count, cl);
+            if (pstreamer) {
                int imethod = fMethod[i]+eoffset;
                DOLOOP {
                   Int_t *counter = (Int_t*)(arr[k]+imethod);
                   (*pstreamer)(b,arr[k]+ioffset,*counter);
                }
+               b.CheckByteCount(start, count, aElement->GetFullName());
+               continue;
             }
-            b.CheckByteCount(start,count,aElement->GetFullName());
-         }
+            DOLOOP {
+               Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
+               char **pp = (char**)(arr[k] + ioffset);
+               if (pp == 0) continue;
+               for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                  if (!isPtrPtr) {
+                     if (arrayDel != 0) {
+                        arrayDel(pp[ndx]);
+                     } else {
+                        //Warning("ReadBuffer", "Leaking memory because class %s does not have an operator delete[]!\n", cl->GetName());
+                        // Assume this is the emulated class case,
+                        // we cannot tell for sure because that info
+                        // is private to TClass.
+                        delete[] pp[ndx];
+                     }
+                     pp[ndx] = 0;
+                  } else {
+                     // Using vlen is wrong here because it has already
+                     // been overwritten with the value needed to read
+                     // the current record.  Fixing this will require
+                     // remembering the old values of counters as they
+                     // are overwritten so that the old values may be
+                     // used here to do this deletion properly.
+                     //
+                     // For now we will just leak memory, just as we
+                     // have always done in the past.  Fix this.
+                     //
+                     //char **r = (char**)(pp[ndx]);
+                     //if (r != 0) {
+                     //   for (Int_t v = 0; v < vlen; ++v) {
+                     //      if (normalDel != 0) {
+                     //         normalDel(r[v]);
+                     //      } else {
+                     //         Warning("ReadBuffer", "Leaking memory because class %s does not have an operator delete!\n", cl->GetName());
+                     //      }
+                     //   }
+                     //}
+                     delete[] pp[ndx];
+                     pp[ndx] = 0;
+                  }
+                  if (vlen == 0) continue;
+                  if (!isPtrPtr) {
+                     if (arrayNew != 0) {
+                        pp[ndx] = (char*)(arrayNew(vlen));
+                        if (pp[ndx] == 0) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                     } else {
+                        //Error("ReadBuffer", "Cannot allocate requested array because class %s does not have an operator new[]!\n", cl->GetName());
+                        // Assume this is the emulated class case,
+                        // we cannot tell for sure because that info
+                        // is private to TClass.
+                        pp[ndx] = new char[cl->Size()*vlen];
+                        if (pp[ndx] == 0) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                        memset(pp[ndx], 0, cl->Size()*vlen);
+                     }
+                  } else {
+                     pp[ndx] = (char*)(new char*[vlen]);
+                     if (pp[ndx] == 0) {
+                        Error("ReadBuffer", "Memory allocation failed!\n");
+                        continue;
+                     }
+                     memset(pp[ndx], 0, sizeof(char*)*vlen);
+                  }
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     if (!isPtrPtr) {
+                        cl->Streamer(pp[ndx] + (cl->Size() * v), b);
+                     } else {
+                        char **r = (char**)(pp[ndx]);
+                        r[v] = (char*)(cl->New());
+                        if (r[v] == 0) {
+                           // Do not print a second error messsage here.
+                           //Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                        cl->Streamer(r[v], b);
+                     } // if
+                  } // v
+              } // ndx
+            } // k
+            b.CheckByteCount(start, count, aElement->GetFullName());
+         } // case
          continue;
 
 

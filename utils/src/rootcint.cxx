@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.218 2005/09/09 09:38:35 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.219 2005/10/05 16:39:03 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2958,6 +2958,9 @@ void WritePointersSTL(G__ClassInfo &cl)
       // Check whether we need a streamer function.
       // For now we use it only for variable size array of objects (well maybe ... it is not really tested!)
       if (!pCounter) continue;
+
+      // We no longer need a custom streamer for variable size arrays of objects.
+      continue;
 
       {
          string fun ( string("R__")+ clName +"_" + m.Name() );

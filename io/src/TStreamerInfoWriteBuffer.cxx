@@ -541,20 +541,42 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          continue;
 
 
-         case TStreamerInfo::kStreamLoop:{
+         case TStreamerInfo::kStreamLoop:
+         case TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
+         {
+            TClass *cl = fComp[i].fClass;
+            Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
+            UInt_t pos = b.WriteVersion(thisVar->IsA(), kTRUE);
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
-            UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
-            if (pstreamer == 0) {
-               printf("ERROR, Streamer is null\n");
-               aElement->ls(); continue;
-            }
-            Int_t imethod = fMethod[i]+eoffset;
-            DOLOOP {
-               Int_t *counter = (Int_t*)(arr[k]+imethod);
-               (*pstreamer)(b,arr[k]+ioffset,*counter);
-            }
-            b.SetByteCount(pos,kTRUE);
-         }
+            if (pstreamer) {
+               Int_t imethod = fMethod[i]+eoffset;
+               DOLOOP {
+                  Int_t *counter = (Int_t*)(arr[k]+imethod);
+                  (*pstreamer)(b,arr[k]+ioffset,*counter);
+               }
+               b.SetByteCount(pos, kTRUE);
+               continue;
+           }
+           DOLOOP  {
+               Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
+               char **pp = (char**)(arr[k] + ioffset);
+               for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                  if (pp[ndx] == 0) {
+                     Error("WriteBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
+                     continue;
+                  }
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     if (!isPtrPtr) {
+                        cl->Streamer(pp[ndx] + (cl->Size() * v), b);
+                     } else {
+                        char **r = (char**)(pp[ndx]);
+                        cl->Streamer(r[v], b);
+                     }
+                  } // v
+               } // ndx
+            } // k
+            b.SetByteCount(pos, kTRUE);
+         } // case
          continue;
 
          default:

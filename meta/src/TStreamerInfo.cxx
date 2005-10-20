@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.226 2005/06/23 18:19:26 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.227 2005/09/03 00:48:25 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -352,7 +352,7 @@ void TStreamerInfo::Build()
          if (streamer) continue;
          int k = element->GetType();
 //          if (k!=kSTL && k!=kSTL+kOffsetL && k!=kStreamer && k!=kStreamLoop) continue;
-         if (k!=kStreamer && k!=kStreamLoop) continue;
+         if (k!=kStreamer) continue;
          element->SetType(-1);
       
 
