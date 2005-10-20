@@ -4305,8 +4305,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
 #ifndef G__OLDIMPLEMENTATION1560
   char *ptmplt;
 #endif
-  char *pexplicitarg=(char*)NULL;
-  int templatedConstructor = 0;
+  char *pexplicitarg=0;
 
   funcname = (char*)malloc(strlen(funcnamein)+1);
   strcpy(funcname,funcnamein);
@@ -4323,11 +4322,16 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
 #ifndef G__OLDIMPLEMENTATION1560
   ptmplt = strchr(funcname,'<');
   if(ptmplt) {
+     if (strncmp("operator",funcname,ptmplt-funcname)==0) {
+        /* We have operator< */
+        if (ptmplt[1]=='<') ptmplt = strchr(ptmplt+2,'<');
+        else ptmplt = strchr(ptmplt+1,'<');
+     }
+  }
+  if(ptmplt) {
     if ((-1!=env_tagnum) && strcmp(funcname,G__struct.name[env_tagnum])==0) {
        /* this is probably a template constructor of a class template */
-       templatedConstructor = 1;
        ptmplt = (char*)0;
-       pexplicitarg = 0;
     } 
     else {
       int tmp;
@@ -4336,23 +4340,23 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
          G__hash(funcname,hash,tmp);
       }
       else {
+         pexplicitarg = ptmplt;
          *ptmplt = '<';
          ptmplt = (char*)0;
       }
     }
   }
+#else 
+  pexplicitarg = strchr(funcname,'<');
 #endif
 
-  if(
-      !templatedConstructor &&
-      (pexplicitarg=strchr(funcname,'<'))) {
+  if(pexplicitarg) {
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;
     ++pexplicitarg;
     G__hash(funcname,hash,tmp);
   }
-  /* else {pexplicitarg=NULL;} */
   
   /* Search matching template function name */
   while(deftmpfunc->next) {
