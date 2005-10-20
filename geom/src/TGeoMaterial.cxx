@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.24 2005/07/28 11:57:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.25 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -136,7 +136,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    fRadLen = TMath::Abs(radlen);
    fIntLen = TMath::Abs(intlen);
    // compute radlen systematically with G3 formula for a valid material
-   if (fA > 0 && fZ > 0 && radlen>0) {
+   if (fA > 0 && fZ > 0 && radlen>=0) {
       //taken grom Geant3 routine GSMATE
       const Double_t alr2av=1.39621E-03, al183=5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
