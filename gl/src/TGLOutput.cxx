@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.3 2005/09/06 09:26:40 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -90,7 +90,7 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
          buffsize += 1024*1024;
          gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
          gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
-         | GL2PS_SIMPLE_LINE_OFFSET | GL2PS_SILENT
+         | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
          | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
          | 0,
          GL_RGBA, 0, NULL,0, 0, 0,
