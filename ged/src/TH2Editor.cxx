@@ -2584,7 +2584,7 @@ TGComboBox* TH2Editor::BuildHistContComboBox(TGFrame* parent, Int_t id)
 
 void TH2Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4) 
 {
-   // Paints a square in 3D
+   // Paints a square in 3D.
 
    fPad->PaintLine3D(p1, p2);
    fPad->PaintLine3D(p2, p3);
@@ -2595,33 +2595,32 @@ void TH2Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
 
 Int_t* TH2Editor::Dividers(Int_t n)
 {
-   // gives an array of the dividers of n (without the trivial divider n))
+   // Gives an array of the dividers of n (without the trivial divider n))
    // in the first entry the number of dividers is saved.
-   
-   if (n <= 0) {
-      Int_t* div = new Int_t[1];
-      div[0]=0;
-      return 0;
-   }
-   if (n == 1) {
-      Int_t* div = new Int_t[2];
-      div[0]=div[1]=1;
-      return div;
-   }  
-   Int_t* div = new Int_t[(Int_t) n/2];
-   div[0]=0; 
-   div[1]=1;
 
-   Int_t num = 1;
-   for (Int_t i=2; i <= n/2; i++) {
-      if (n % i == 0) {
-         num++;
-         div[num] = i;
+   Int_t* div;
+   if (n <= 0) {
+      div = new Int_t[1];
+      div[0]=0;
+   } else if (n == 1) {
+      div = new Int_t[2];
+      div[0]=div[1]=1;
+   } else {
+      div = new Int_t[(Int_t) n/2];
+      div[0]=0; 
+      div[1]=1;
+
+      Int_t num = 1;
+      for (Int_t i=2; i <= n/2; i++) {
+         if (n % i == 0) {
+            num++;
+            div[num] = i;
+         } 
       }
+      num++;
+      div[num]=n;
+      div[0] = num;
    }
-   num++;
-   div[num]=n;
-   div[0] = num;
    return div;
 }   
    
