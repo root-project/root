@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.21 2005/05/13 16:20:38 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.22 2005/05/25 14:25:16 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -312,11 +312,16 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
 {
 // Find if a union of two shapes contains a given point
    Double_t local[3];
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
-   if (inside) return kTRUE;
+   if (inside) {
+      node->SetSelected(1);
+      return kTRUE;
+   }   
    fRightMat->MasterToLocal(point, &local[0]);
    inside = fRight->Contains(&local[0]);
+   if (inside) node->SetSelected(2);
    return inside;
 }
 
@@ -632,7 +637,7 @@ void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *no
       fRight->ComputeNormal(local,ldir,lnorm);
       fRightMat->LocalToMasterVect(lnorm, norm);
       return;
-   }            
+   }
    fRightMat->MasterToLocal(point,local);
    if (fRight->Contains(local)) {
       fRightMat->MasterToLocalVect(dir,ldir);
@@ -665,11 +670,14 @@ Bool_t TGeoSubtraction::Contains(Double_t *point) const
 {
 // Find if a subtraction of two shapes contains a given point
    Double_t local[3];
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
-   if (!inside) return kFALSE;
+   if (inside) node->SetSelected(1);
+   else return kFALSE;
    fRightMat->MasterToLocal(point, &local[0]);
    inside = !fRight->Contains(&local[0]);
+   if (!inside) node->SetSelected(2);
    return inside;
 }
 //-----------------------------------------------------------------------------
@@ -732,28 +740,24 @@ Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t 
    while (1) {
       if (inside) {
          // propagate to outside of '-'
+         node->SetSelected(2);
          d1 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
          epsil = 1.E-8;
          // now master outside '-'; check if inside '+'
          fLeftMat->MasterToLocal(&master[0], &local[0]);
-         if (fLeft->Contains(&local[0])) {
-            node->SetSelected(2);
-            return snxt;
-         }   
+         if (fLeft->Contains(&local[0])) return snxt;
       } 
       // master outside '-' and outside '+' ;  find distances to both
+      node->SetSelected(1);
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
-      if (d2>1E20) {
-         node->SetSelected(0);
-         return TGeoShape::Big();
-      }   
+      if (d2>1E20) return TGeoShape::Big();
+      
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
       if (d2<d1) {
-         node->SetSelected(1);
          snxt += d2+epsil;
          return snxt;
       }   

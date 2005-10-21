@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.30 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.31 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -143,11 +143,14 @@ void TGeoTrd1::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       safe=TMath::Abs(distx-TMath::Abs(point[0]))*calf;
       if (safe<safemin) {
          safemin = safe;
-         norm[0] = calf;
+         norm[0] = (point[0]>0)?calf:(-calf);
          norm[1] = 0;
          norm[2] = calf*fx;
          Double_t dot = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
-         if (dot<0) norm[0]=-norm[0];
+         if (dot<0) {
+            norm[0] = -norm[0];
+            norm[2] = -norm[2];
+         }   
          if (safe<1E-6) return;
       }
    }      

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.128 2005/10/03 15:26:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.129 2005/10/14 14:55:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3138,6 +3138,10 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
          return 0;
       }   
       CdUp();
+      while (fCurrentNode->GetVolume()->IsAssembly()) {
+         CdUp();
+         skip = fCurrentNode;
+      }   
       return CrossBoundaryAndLocate(kFALSE, skip);
    }   
       
@@ -3457,14 +3461,19 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                 fCurrentMatrix->Multiply(current->GetMatrix());
-                if (indnext>=0) fCurrentMatrix->Multiply(current->GetDaughter(indnext)->GetMatrix());
-            }
+            }    
             fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
-            if (indnext>=0) fNextNode = current->GetDaughter(indnext);
             nodefound = fNextNode;   
             idaughter = i;   
+            while (indnext>=0) {
+               current = current->GetDaughter(indnext);
+               if (compmatrix) fCurrentMatrix->Multiply(current->GetMatrix());
+               fNextNode = current;
+               nodefound = current;
+               indnext = current->GetVolume()->GetNextNodeIndex();
+            }
          }
       }
       return nodefound;
@@ -3486,14 +3495,19 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                 fCurrentMatrix->Multiply(current->GetMatrix());
-                if (indnext>=0) fCurrentMatrix->Multiply(current->GetDaughter(indnext)->GetMatrix());
              }
              fIsStepEntering = kTRUE;
              fStep=snext;
              fNextNode = current;
-             if (indnext>=0) fNextNode = current->GetDaughter(indnext);
              nodefound = fNextNode;
              idaughter = vlist[i];
+             while (indnext>=0) {
+               current = current->GetDaughter(indnext);
+               if (compmatrix) fCurrentMatrix->Multiply(current->GetMatrix());
+               fNextNode = current;
+               nodefound = current;
+               indnext = current->GetVolume()->GetNextNodeIndex();
+            }
          }
       }
    }
