@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.8 2004/01/25 11:56:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.9 2004/01/26 11:10:07 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -35,6 +35,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 class TBits : public TObject {
 
@@ -43,8 +46,13 @@ protected:
    UInt_t   fNbits;         // Number of bits (around fNbytes*8)
    UInt_t   fNbytes;        // Number of UChars in fAllBits
    UChar_t *fAllBits;       //[fNbytes] array of UChars 
-   
    void ReserveBytes(UInt_t nbytes);
+   void DoAndEqual(const TBits& rhs);
+   void DoOrEqual (const TBits& rhs);
+   void DoXorEqual(const TBits& rhs);
+   void DoLeftShift(UInt_t shift);
+   void DoRightShift(UInt_t shift);
+   void DoFlip();
    
 public:
    TBits(UInt_t nbits = 8);
@@ -52,12 +60,59 @@ public:
    TBits& operator=(const TBits&);
    virtual ~TBits();
 
+   class TReference {
+      friend class TBits;
+
+#ifndef __CINT__
+      TBits  &fBits; //!
+      UInt_t  fPos;  //!
+#endif
+
+      TReference(); // left undefined
+
+    public:
+       TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) {}
+      ~TReference() { }
+
+       // For b[i] = val;
+      TReference& operator=(Bool_t val) { 
+         fBits.SetBitNumber(fPos,val); return *this;
+      }
+
+      // For b[i] = b[__j];
+      TReference& operator=(const TReference& rhs) { 
+         fBits.SetBitNumber(fPos,rhs.fBits.TestBitNumber(rhs.fPos)); return *this;
+      }
+
+#ifndef __CINT__
+      // Flips the bit
+      Bool_t operator~() const { return !fBits.TestBitNumber(fPos); }
+#endif
+
+      // For val = b[i];
+      operator Bool_t() const { return fBits.TestBitNumber(fPos); }
+
+   };
+
    //----- bit manipulation
    //----- (note the difference with TObject's bit manipulations)
    void   ResetAllBits(Bool_t value=kFALSE);  // if value=1 set all bits to 1
    void   ResetBitNumber(UInt_t bitnumber);
    void   SetBitNumber(UInt_t bitnumber, Bool_t value = kTRUE);
    Bool_t TestBitNumber(UInt_t bitnumber) const;
+
+   //----- Accessors and operator
+   TBits::TReference operator[](UInt_t bitnumber) { return TReference(*this,bitnumber); }
+   const Bool_t operator[](UInt_t bitnumber) const { return TestBitNumber(bitnumber); }
+
+   TBits& operator&=(const TBits& rhs) { DoAndEqual(rhs); return *this; }
+   TBits& operator|=(const TBits& rhs) {  DoOrEqual(rhs); return *this; }
+   TBits& operator^=(const TBits& rhs) { DoXorEqual(rhs); return *this; }
+   TBits& operator<<=(UInt_t rhs) { DoLeftShift(rhs); return *this; }
+   TBits& operator>>=(UInt_t rhs) { DoRightShift(rhs); return *this; }
+   TBits  operator<<(UInt_t rhs) { return TBits(*this)<<= rhs; }
+   TBits  operator>>(UInt_t rhs) { return TBits(*this)>>= rhs; }
+   TBits  operator~() { TBits res(*this); res.DoFlip(); return res; }
 
    //----- Optimized setters
    // Each of these will replace the contents of the receiver with the bitvector
@@ -100,12 +155,56 @@ public:
    UInt_t  GetNbytes()     const { return fNbytes; }
    
    Bool_t  operator==(const TBits &other) const;
+   Bool_t  operator!=(const TBits &other) const { return !(*this==other); }
    
-   void   Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
-   void   Print(Option_t *option="") const;  // to show the list of active bits
-   
+   void    Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
+   void    Print(Option_t *option="") const;  // to show the list of active bits
+   void    Output(ostream &) const;
+
    ClassDef(TBits,1)        // Bit container
 };
+
+
+inline Bool_t operator&(const TBits::TReference& lhs, const TBits::TReference& rhs)
+{
+   return (bool)lhs & rhs;
+}
+
+inline Bool_t operator|(const TBits::TReference& lhs, const TBits::TReference& rhs)
+{
+   return (bool)lhs | rhs;
+}
+
+inline Bool_t operator^(const TBits::TReference& lhs, const TBits::TReference& rhs)
+{
+   return (bool)lhs ^ rhs;
+}
+
+inline TBits operator&(const TBits& lhs, const TBits& rhs)
+{
+   TBits result(lhs);
+   result &= rhs;
+   return result;
+}
+
+inline TBits operator|(const TBits& lhs, const TBits& rhs)
+{
+   TBits result(lhs);
+   result |= rhs;
+   return result;
+}
+
+inline TBits operator^(const TBits& lhs, const TBits& rhs)
+{
+   TBits result(lhs);
+   result ^= rhs;
+   return result;
+}
+
+inline ostream &operator<<(ostream& os, const TBits& rhs)
+{
+   rhs.Output(os); return os;
+}
 
 // inline functions...
 

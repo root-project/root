@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.15 2004/01/25 11:56:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.16 2004/01/26 11:52:40 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -23,6 +23,7 @@
 
 #include "TBits.h"
 #include "string.h"
+#include "Riostream.h"
 
 ClassImp(TBits)
 
@@ -155,6 +156,103 @@ UInt_t TBits::CountBits(UInt_t startBit) const
 }
 
 //______________________________________________________________________________
+void TBits::DoAndEqual(const TBits& rhs) 
+{
+   // Execute (*this) &= rhs;
+   // Extra bits in rhs are ignored
+   // Missing bits in rhs are assumed to be zero.
+
+   UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
+   for(UInt_t i=0; i<min; ++i) {
+      fAllBits[i] &= rhs.fAllBits[i];
+   }
+   if (fNbytes>min) {
+      memset(&(fAllBits[min]),0,fNbytes-min);
+   }
+}
+
+//______________________________________________________________________________
+void TBits::DoOrEqual(const TBits& rhs) 
+{
+   // Execute (*this) &= rhs;
+   // Extra bits in rhs are ignored
+   // Missing bits in rhs are assumed to be zero.
+
+   UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
+   for(UInt_t i=0; i<min; ++i) {
+      fAllBits[i] |= rhs.fAllBits[i];
+   }
+}
+
+//______________________________________________________________________________
+void TBits::DoXorEqual(const TBits& rhs) 
+{
+   // Execute (*this) ^= rhs;
+   // Extra bits in rhs are ignored
+   // Missing bits in rhs are assumed to be zero.
+
+   UInt_t min = (fNbytes<rhs.fNbytes) ? fNbytes : rhs.fNbytes;
+   for(UInt_t i=0; i<min; ++i) {
+      fAllBits[i] ^= rhs.fAllBits[i];
+   }
+}
+
+//______________________________________________________________________________
+void TBits::DoFlip() 
+{
+   // Execute ~(*this)
+
+   for(UInt_t i=0; i<fNbytes; ++i) {
+      fAllBits[i] = ~fAllBits[i];
+   }
+   // NOTE: out-of-bounds bit were also flipped!
+}
+
+//______________________________________________________________________________
+void TBits::DoLeftShift(UInt_t shift) 
+{
+   if (shift==0) return;
+   const UInt_t wordshift = shift / 8;
+   const UInt_t offset = shift % 8;
+   if (offset==0) {
+      for(UInt_t n = fNbytes - 1; n >= wordshift; --n) {
+         fAllBits[n] = fAllBits[ n - wordshift ];
+      }
+   } else {
+      const UInt_t sub_offset = 8 - offset;
+      for(UInt_t n = fNbytes - 1; n > wordshift; --n) {
+         fAllBits[n] = (fAllBits[n - wordshift] << offset) |
+                       (fAllBits[n - wordshift - 1] >> sub_offset);
+      }
+      fAllBits[wordshift] = fAllBits[0] << offset;
+   }
+   memset(fAllBits,0,wordshift);
+}
+
+//______________________________________________________________________________
+void TBits::DoRightShift(UInt_t shift) 
+{
+   if (shift==0) return;
+   const UInt_t wordshift = shift / 8;
+   const UInt_t offset = shift % 8;
+   const UInt_t limit = fNbytes - wordshift - 1;
+
+   if (offset == 0)
+      for (UInt_t n = 0; n <= limit; ++n)
+         fAllBits[n] = fAllBits[n + wordshift];
+   else
+   {
+      const UInt_t sub_offset = 8 - offset;
+      for (UInt_t n = 0; n < limit; ++n)
+         fAllBits[n] = (fAllBits[n + wordshift] >> offset) |
+                       (fAllBits[n + wordshift + 1] << sub_offset);
+      fAllBits[limit] = fAllBits[fNbytes-1] >> offset;
+   }
+
+   memset(&(fAllBits[limit + 1]),0, fNbytes - limit - 1);
+}
+
+//______________________________________________________________________________
 UInt_t TBits::FirstNullBit(UInt_t startBit) const
 {
    // Return position of first null bit
@@ -242,6 +340,18 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
       if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];
    }
    return fNbits;
+}
+
+//______________________________________________________________________________
+void TBits::Output(ostream &os) const
+{
+   for(UInt_t i=0; i<fNbytes; i++) {
+      UChar_t val = fAllBits[i];
+      for (UInt_t j=0; j<8; j++) {
+         os << (bool)(val&1);
+         val >>= 1;
+      }
+   }
 }
 
 //______________________________________________________________________________

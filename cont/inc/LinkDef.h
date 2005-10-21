@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.11 2005/02/25 17:06:34 brun Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.13 2005/03/20 19:35:50 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -66,5 +66,14 @@
 #pragma link C++ class TCollectionStreamer-;
 #pragma link C++ class TCollectionClassStreamer-;
 #pragma link C++ class TCollectionMemberStreamer-;
+
+#pragma link C++ class TBits::TReference-;
+#pragma link C++ function operator&(const TBits::TReference&, const TBits::TReference&);
+#pragma link C++ function operator|(const TBits::TReference&, const TBits::TReference&);
+#pragma link C++ function operator^(const TBits::TReference&, const TBits::TReference&);
+#pragma link C++ function operator&(const TBits&, const TBits&);
+#pragma link C++ function operator|(const TBits&, const TBits&);
+#pragma link C++ function operator^(const TBits&, const TBits&);
+#pragma link C++ function operator<<(ostream&, const TBits&);
 
 #endif
