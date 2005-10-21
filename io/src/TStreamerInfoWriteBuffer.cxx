@@ -561,6 +561,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
                char **pp = (char**)(arr[k] + ioffset);
                for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                  if (vlen == 0) continue;
                   if (pp[ndx] == 0) {
                      Error("WriteBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
                      continue;
