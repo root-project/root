@@ -449,7 +449,7 @@ void TSessionServerFrame::OnBtnAddClicked()
    desc->fPort = fNumPort->GetIntNumber();
    desc->fConnected = kFALSE;
    desc->fLocal = kFALSE;
-   desc->fQueries = 0;
+   desc->fQueries = new TList();
    desc->fActQuery = 0;
    if (strlen(fTxtConfig->GetText()) > 1)
       desc->fConfigFile = TString(fTxtConfig->GetText());
