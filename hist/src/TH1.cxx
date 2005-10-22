@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.255 2005/09/16 17:19:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.256 2005/09/27 15:00:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1048,6 +1048,9 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
   //  the Pearson test, ie probability.
   //
+  // NOTE: If the x axis has a bin range defined via TAxis::SetRange,
+  //       only the bins in this range are used for the test.
+  //
   // algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
   //
@@ -1082,7 +1085,11 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
 
   i_start = 1;
   i_end = nbins1;
-  Int_t ndf = nbins1-constraint;
+  if (fXaxis.TestBit(TAxis::kAxisRange)) {
+     i_start = fXaxis.GetFirst();
+     i_end   = fXaxis.GetLast();
+  }
+  Int_t ndf = i_end-i_start+1-constraint;
 
   if(opt.Contains("O")) {
      i_end = nbins1+1;
