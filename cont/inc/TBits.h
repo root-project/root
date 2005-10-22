@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.9 2004/01/26 11:10:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.10 2005/10/21 22:01:35 pcanal Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
 
    UInt_t   fNbits;         // Number of bits (around fNbytes*8)
    UInt_t   fNbytes;        // Number of UChars in fAllBits
-   UChar_t *fAllBits;       //[fNbytes] array of UChars 
+   UChar_t *fAllBits;       //[fNbytes] array of UChars
    void ReserveBytes(UInt_t nbytes);
    void DoAndEqual(const TBits& rhs);
    void DoOrEqual (const TBits& rhs);
@@ -53,7 +53,7 @@ protected:
    void DoLeftShift(UInt_t shift);
    void DoRightShift(UInt_t shift);
    void DoFlip();
-   
+
 public:
    TBits(UInt_t nbits = 8);
    TBits(const TBits&);
@@ -75,12 +75,12 @@ public:
       ~TReference() { }
 
        // For b[i] = val;
-      TReference& operator=(Bool_t val) { 
+      TReference& operator=(Bool_t val) {
          fBits.SetBitNumber(fPos,val); return *this;
       }
 
       // For b[i] = b[__j];
-      TReference& operator=(const TReference& rhs) { 
+      TReference& operator=(const TReference& rhs) {
          fBits.SetBitNumber(fPos,rhs.fBits.TestBitNumber(rhs.fPos)); return *this;
       }
 
@@ -103,7 +103,7 @@ public:
 
    //----- Accessors and operator
    TBits::TReference operator[](UInt_t bitnumber) { return TReference(*this,bitnumber); }
-   const Bool_t operator[](UInt_t bitnumber) const { return TestBitNumber(bitnumber); }
+   Bool_t operator[](UInt_t bitnumber) const { return TestBitNumber(bitnumber); }
 
    TBits& operator&=(const TBits& rhs) { DoAndEqual(rhs); return *this; }
    TBits& operator|=(const TBits& rhs) {  DoOrEqual(rhs); return *this; }
@@ -126,7 +126,7 @@ public:
    void   Set(UInt_t nbits, const UInt_t *array) { Set(nbits, (const Int_t*)array); }
    void   Set(UInt_t nbits, const Long64_t *array);
    void   Set(UInt_t nbits, const ULong64_t *array) { Set(nbits, (const Long64_t*)array); }
-   
+
    //----- Optimized getters
    // Each of these will replace the contents of the parameter array with the
    // bits in the receiver.  The parameter array must be large enough to hold
@@ -144,7 +144,7 @@ public:
    void   Get(UInt_t *array) const { Get((Int_t*)array); }
    void   Get(Long64_t *array) const;
    void   Get(ULong64_t *array) const { Get((Long64_t*)array); }
-   
+
    //----- Utilities
    void    Clear(Option_t *option="");
    void    Compact();               // Reduce the space used.
@@ -153,10 +153,10 @@ public:
    UInt_t  FirstSetBit(UInt_t startBit=0)   const;
    UInt_t  GetNbits()      const { return fNbits; }
    UInt_t  GetNbytes()     const { return fNbytes; }
-   
+
    Bool_t  operator==(const TBits &other) const;
    Bool_t  operator!=(const TBits &other) const { return !(*this==other); }
-   
+
    void    Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
    void    Print(Option_t *option="") const;  // to show the list of active bits
    void    Output(ostream &) const;
@@ -245,7 +245,7 @@ inline Bool_t TBits::TestBitNumber(UInt_t bitnumber) const
    // short: return 0 != (fAllBits[bitnumber/8] & (1<< (bitnumber%8)));
 }
 
-inline void TBits::ResetBitNumber(UInt_t bitnumber) 
+inline void TBits::ResetBitNumber(UInt_t bitnumber)
 {
    SetBitNumber(bitnumber,kFALSE);
 }
