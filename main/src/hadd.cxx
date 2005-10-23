@@ -116,9 +116,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
         nextsource->cd( path );
         TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
         if (key2) {
-           listH.Add( key2->ReadObj() );
+           listH.Add(key2->ReadObj());
            h1->Merge(&listH);
-           listH.Clear();
+           listH.Delete();
         }
 
         nextsource = (TFile*)sourcelist->After( nextsource );
