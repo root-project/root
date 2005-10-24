@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.8 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.9 2005/10/11 10:25:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -33,6 +33,22 @@ class TContextMenu;
  *************************************************************************/
 class TGLPhysicalShape : public TGLDrawable
 {
+public:
+   // Flags for permitted manipulation of object
+   enum EManip  { kTranslateX   = 1 << 0,
+                  kTranslateY   = 1 << 1,
+                  kTranslateZ   = 1 << 2,
+                  kTranslateAll = kTranslateX | kTranslateY | kTranslateZ,
+                  kScaleX       = 1 << 3,
+                  kScaleY       = 1 << 4,
+                  kScaleZ       = 1 << 5,
+                  kScaleAll     = kScaleX | kScaleY | kScaleZ,
+                  kRotateX      = 1 << 6,
+                  kRotateY      = 1 << 7,
+                  kRotateZ      = 1 << 8,
+                  kRotateAll    = kRotateX | kRotateY | kRotateZ,
+                  kManipAll     = kTranslateAll | kScaleAll | kRotateAll
+                  };
 private:
    // Fields
    const TGLLogicalShape & fLogicalShape; //! the associate logical shape
@@ -41,6 +57,7 @@ private:
    Bool_t                  fSelected;     //! selected state
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
    Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
+   EManip                  fManip;        //! permitted manipulation bitflags - see EManip
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
 
    // Methods
@@ -68,7 +85,10 @@ public:
    virtual void DrawOutline(UInt_t lod) const;
    void         InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
-   // Modified - selected treated as temporary modification
+   // Modification and manipulation
+   // Selected treated as temporary modification
+   EManip          GetManip() const         { return fManip; }
+   void            SetManip(EManip manip)   { fManip = manip; }
    Bool_t          IsModified() const                 { return fModified || IsSelected(); }
 
    // Selection
@@ -81,50 +101,69 @@ public:
    void            SetColor(const Float_t rgba[17]);
 
    // Geometry
-   TGLVertex3      Translation() const;
-   void            SetTranslation(const TGLVertex3 & trans);
-   void            Shift(const TGLVector3 & shift);
-   TGLVector3      Scale() const;
-   void            SetScale(const TGLVector3 & scale);
+   TGLVector3      GetScale() const;
+   TGLVertex3      GetTranslation() const;
+
+   void            SetTransform(const TGLMatrix & transform);
+   void            SetTranslation(const TGLVertex3 & translation);
+   void            Translate(const TGLVector3 & vect);
+   void            Scale(const TGLVector3 & scale);
+   void            Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
 
 //______________________________________________________________________________
-inline TGLVertex3 TGLPhysicalShape::Translation() const
+inline TGLVector3 TGLPhysicalShape::GetScale() const
 { 
-   return fTransform.Translation(); 
+   return fTransform.GetScale(); 
 }
 
 //______________________________________________________________________________
-inline void TGLPhysicalShape::SetTranslation(const TGLVertex3 & trans) 
+inline TGLVertex3 TGLPhysicalShape::GetTranslation() const
 { 
-   fTransform.Set(trans);
+   return fTransform.GetTranslation(); 
+}
+
+//______________________________________________________________________________
+inline void TGLPhysicalShape::SetTransform(const TGLMatrix & transform)
+{
+   fTransform = transform;
    UpdateBoundingBox();
 }
 
 //______________________________________________________________________________
-inline void TGLPhysicalShape::Shift(const TGLVector3 & shift)
+inline void TGLPhysicalShape::SetTranslation(const TGLVertex3 & translation) 
+{ 
+   fTransform.SetTranslation(translation);
+   UpdateBoundingBox();
+}
+
+//______________________________________________________________________________
+inline void TGLPhysicalShape::Translate(const TGLVector3 & vect)
 {
-   fTransform.Shift(shift);
+   fTransform.Translate(vect);
    UpdateBoundingBox();
    fModified = kTRUE;
 }
 
 //______________________________________________________________________________
-inline TGLVector3 TGLPhysicalShape::Scale() const
+inline void TGLPhysicalShape::Scale(const TGLVector3 & scale) 
 { 
-   return fTransform.Scale(); 
+   TGLVertex3 origCenter = fBoundingBox.Center();
+   fTransform.Scale(scale); 
+   UpdateBoundingBox();
+   TGLVector3 shift = fBoundingBox.Center() - origCenter;
+   Translate(-shift);
+   UpdateBoundingBox();
+   fModified = kTRUE;
 }
 
 //______________________________________________________________________________
-inline void TGLPhysicalShape::SetScale(const TGLVector3 & scale) 
+inline void TGLPhysicalShape::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle)
 { 
-   TGLVertex3 origCenter = fBoundingBox.Center();
-   fTransform.SetScale(scale); 
-   UpdateBoundingBox();
-   TGLVector3 shift = fBoundingBox.Center() - origCenter;
-   Shift(-shift);
+   TGLVertex3 c = BoundingBox().Center();
+   fTransform.Rotate(pivot, axis, angle);
    UpdateBoundingBox();
    fModified = kTRUE;
 }

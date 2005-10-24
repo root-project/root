@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.16 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.17 2005/10/04 20:33:11 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -561,8 +561,19 @@ void TGLSceneEditor::CreateControls()
    TGRadioButton * clipBox = new TGRadioButton(fTypeButtons, "Box");
    fTrash.AddLast(clipBox);
    AddFrame(fTypeButtons, fL1);
-   Bool_t ok = fTypeButtons->Connect("Pressed(Int_t)", "TGLSceneEditor", this, "ClipTypeChanged(Int_t)");
-   assert(ok);
+   fTypeButtons->Connect("Pressed(Int_t)", "TGLSceneEditor", this, "ClipTypeChanged(Int_t)");
+
+   // Show axes
+   fAxes = new TGCheckButton(this, "Show Axes", kTBda);
+   fTrash.AddLast(fAxes);
+   AddFrame(fAxes, fL1);
+   fAxes->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
+
+   // Show in viewer edit (box only at present)
+   fEdit = new TGCheckButton(this, "Show / Edit", kTBda);
+   fTrash.AddLast(fEdit);
+   AddFrame(fEdit, fL1);
+   fEdit->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
 
    // Plane properties
    fPlanePropFrame = new TGCompositeFrame(this);
@@ -580,19 +591,11 @@ void TGLSceneEditor::CreateControls()
       fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
                              this, "ClipValueChanged(Long_t)");   
    }
-	
-
 
    // Box properties
    fBoxPropFrame = new TGCompositeFrame(this);
    fTrash.AddLast(fBoxPropFrame);
    AddFrame(fBoxPropFrame, fL1);
-
-   // Show in viewer edit (box only at present)
-   fEdit = new TGCheckButton(fBoxPropFrame, "Show / Edit", kTBda);
-   fTrash.AddLast(fEdit);
-   fBoxPropFrame->AddFrame(fEdit, fL1);
-   fEdit->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
 
    std::string boxStr[6] = { "Center X", "Center Y", "Center Y", "Length X", "Length Y", "Length Z" };
    for (UInt_t i=0; i<6; i++) {
@@ -612,12 +615,6 @@ void TGLSceneEditor::CreateControls()
    AddFrame(fApplyButton, fL1);
    fApplyButton->SetState(kButtonDisabled);
    fApplyButton->Connect("Pressed()", "TGLSceneEditor", this, "UpdateViewer()");
-
-   // Show axes
-   fAxes = new TGCheckButton(this, "Show Axes", kTBda);
-   fTrash.AddLast(fAxes);
-   AddFrame(fAxes, fL1);
-   fAxes->Connect("Clicked()", "TGLSceneEditor", this, "UpdateViewer()");
 
    clipNone->SetState(kButtonDown);
 }
@@ -641,14 +638,17 @@ void TGLSceneEditor::ClipTypeChanged(Int_t id)
    switch(id) { // Radio button ids run from 1
       case(1): {
          SetCurrentClip(kClipNone);
+         fEdit->SetState(kButtonDisabled);
          break;
       }
       case(2): {
          SetCurrentClip(kClipPlane);
+         fEdit->SetState(kButtonUp);
          break;
       }
       case(3): {
          SetCurrentClip(kClipBox);
+         fEdit->SetState(kButtonUp);
          break;
       }
    }
@@ -729,14 +729,12 @@ void TGLSceneEditor::SetCurrentClip(EClipType type)
    switch(fCurrentClip) {
       case(kClipNone): {
          fTypeButtons->SetButton(1);
-         fEdit->SetDown(kFALSE);
          HideFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;
       }
       case(kClipPlane): {
          fTypeButtons->SetButton(2);
-         fEdit->SetDown(kFALSE);
          ShowFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;

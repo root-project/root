@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.11 2005/08/10 16:26:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.12 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,9 +15,14 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
 
 #include <vector>
-#include <math.h>
 #include <assert.h>
 
 /*************************************************************************
@@ -103,14 +108,15 @@ public:
    const TGLVertex3 & operator += (const TGLVector3 & val);
          TGLVertex3   operator -  () const;
 
+   // Manipulators
    void Fill(Double_t val);
    void Set(Double_t x, Double_t y, Double_t z);
    void Set(const TGLVertex3 & other);
    void Shift(TGLVector3 & shift);
    void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
+   Double_t & operator [] (Int_t index);
 
    // Accessors
-   Double_t & operator [] (Int_t index);
    const Double_t& operator [] (Int_t index) const;
    Double_t   X() const { return fVals[0]; }
    Double_t & X()       { return fVals[0]; }
@@ -264,7 +270,7 @@ inline void TGLVector3::Normalise()
 {
    Double_t mag = Mag();
    if ( mag == 0.0 ) {
-      assert( kFALSE );
+      Error("TGLVector3::Normalise", "vector has zero magnitude");
       return;
    }
    fVals[0] /= mag;
@@ -284,6 +290,27 @@ inline TGLVector3 Cross(const TGLVector3 & v1, const TGLVector3 & v2)
     return TGLVector3(v1[1]*v2[2] - v2[1]*v1[2],
                       v1[2]*v2[0] - v2[2]*v1[0],
                       v1[0]*v2[1] - v2[0]*v1[1]);
+}
+
+//______________________________________________________________________________
+inline Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2)
+{
+   // Calculate unsigned angle between vectors v1 and v2
+   return TMath::ACos(Dot(v1, v2) / (v1.Mag() * v2.Mag()));
+}
+
+//______________________________________________________________________________
+inline Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2, const TGLVector3 & ref)
+{
+   // Calculate signed angle between vectors v1 and v2, using ref to define right handed coord system
+   // If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
+   // If v1.v2 antiparallel to ref vector: -ive for clockwise, +ive for anticlockwise
+   TGLVector3 cross = Cross(v1, v2);
+   if (Dot(cross,ref) > 0.0) {
+      return Angle(v1, v2);
+   } else {
+      return -Angle(v1, v2);
+   }
 }
 
 //______________________________________________________________________________
@@ -327,6 +354,39 @@ inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vec
 }
 
 /*************************************************************************
+ * TGLLine3 - A fixed length line in 3D space, with direction / length 'vector', 
+ * passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 pair.
+ *
+ *************************************************************************/
+class TGLLine3
+{
+private:
+   // Fields
+   TGLVertex3 fVertex; //! Start vertex of line
+   TGLVector3 fVector; //! Vector of line from fVertex
+
+public:
+   TGLLine3(const TGLVertex3 & vert1, const TGLVertex3 & vert2);
+   TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vector);
+   virtual ~TGLLine3();
+
+   void Set(const TGLVertex3 & vert1, const TGLVertex3 & vert2);
+   void Set(const TGLVertex3 & vert, const TGLVector3 & vector);
+
+   // Bitwise copy constructor and = operator are fine
+
+   // Accessors
+   const TGLVertex3 & Start()  const { return fVertex; }
+   const TGLVertex3   End()    const { return fVertex + fVector; }
+   const TGLVector3 & Vector() const { return fVector; }
+
+   // Debug
+   void Draw() const;
+
+   ClassDef(TGLLine3,0) // GL line wrapper class
+};
+
+/*************************************************************************
  * TGLRect - TODO
  *
  *
@@ -334,22 +394,25 @@ inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vec
  *************************************************************************/
 class TGLRect
 {
-   private:
+private:
    // Fields
    Int_t    fX, fY;           //! Corner
    UInt_t   fWidth, fHeight;  //! Positive width/height
 
-   public:
+public:
    TGLRect();
    TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TGLRect(); // ClassDef introduces virtual fns
 
    // Bitwise copy const & =op are ok at present
+
+   // Manipulators
    void Set(Int_t x, Int_t y, UInt_t width, UInt_t height);
    void SetCorner(Int_t x, Int_t y);
    void Offset(Int_t dX, Int_t dY);
    void Expand(Int_t x, Int_t y);
 
+   // Accessors
    Int_t    X()       const { return fX; }
    Int_t &  X()             { return fX; }
    Int_t    Y()       const { return fY; }
@@ -370,10 +433,6 @@ class TGLRect
 
    Double_t Aspect() const;
    EOverlap Overlap(const TGLRect & other) const;
-
-   // TODO: Change fields
-   //const Double_t * CArr() const { return fVals; }
-   //Double_t * Arr() { return fVals; }
 
    ClassDef(TGLRect,0) // GL rect helper/wrapper class
 };
@@ -425,12 +484,15 @@ public:
    TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
 
+   // Manipulators
    void Set(const TGLPlane & other);
    void Set(Double_t a, Double_t b, Double_t c, Double_t d);
    void Set(Double_t eq[4]);
    void Set(const TGLVector3 & norm, const TGLVertex3 & point); 
    void Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
+   void Negate();
 
+   // Accessors
    Double_t A() const { return fVals[0]; }
    Double_t B() const { return fVals[1]; }
    Double_t C() const { return fVals[2]; }
@@ -439,9 +501,9 @@ public:
    TGLVector3 Norm() const { return TGLVector3( fVals[0], fVals[1], fVals[2]); }
    Double_t DistanceTo(const TGLVertex3 & vertex) const;
    TGLVertex3 NearestOn(const TGLVertex3 & point) const;
+   std::pair<Bool_t, TGLVertex3> Intersection(const TGLLine3 & line) const; 
 
-   void Negate();
-   
+   // Internal data accessors - for GL API
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
 
@@ -530,11 +592,26 @@ inline Double_t TGLPlane::DistanceTo(const TGLVertex3 & vertex) const
    return (fVals[0]*vertex[0] + fVals[1]*vertex[1] + fVals[2]*vertex[2] + fVals[3]);
 }
 
+//______________________________________________________________________________
 inline TGLVertex3 TGLPlane::NearestOn(const TGLVertex3 & point) const
 {
    TGLVector3 o = Norm() * (Dot(Norm(), TGLVector3(point[0], point[1], point[2])) + D() / Dot(Norm(), Norm()));
    TGLVertex3 v = point - o;
    return v;
+}
+
+//______________________________________________________________________________
+inline std::pair<Bool_t, TGLVertex3> TGLPlane::Intersection(const TGLLine3 & line) const
+{
+   Double_t denom = -(A()*line.Vector().X() + B()*line.Vector().Y() + C()*line.Vector().Z());
+
+   if (denom == 0.0) {
+      return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
+   }
+
+   Double_t num = A()*line.Start().X() + B()*line.Start().Y() + C()*line.Start().Z() + D();
+   TGLVector3 toPlane = line.Vector() * (num/denom);
+   return std::make_pair(kTRUE, line.Start() + toPlane);
 }
 
 //______________________________________________________________________________
@@ -569,35 +646,40 @@ public:
    TGLMatrix(const TGLMatrix & other);
    virtual ~TGLMatrix(); // ClassDef introduces virtual fns
 
-   const TGLMatrix & operator =(const TGLMatrix & rhs);
-
+   // Operators
+   TGLMatrix & operator =(const TGLMatrix & rhs);
    Double_t & operator [] (Int_t index);
+   Double_t operator [] (Int_t index) const;
 
-   void Set(Double_t x, Double_t y, Double_t z);
-   void Set(const TGLVertex3 & translation);
+   // Manipulators
    void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
-   void        Shift(const TGLVector3 & shift);
+   void SetTranslation(Double_t x, Double_t y, Double_t z);
+   void SetTranslation(const TGLVertex3 & translation);
 
-   TGLVertex3  Translation() const;
-   TGLVector3  Scale() const;
-   void        SetScale(const TGLVector3 & scale);
-
+   void Translate(const TGLVector3 & vect);
+   void Scale(const TGLVector3 & scale);
+   void Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
    void TransformVertex(TGLVertex3 & vertex) const;
 	void Transpose3x3();
 
-   void Dump() const;
+   // Accesors
+   TGLVertex3  GetTranslation() const;
+   TGLVector3  GetScale() const;
 
+   // Internal data accessors - for GL API
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
+
+   void Dump() const;
 
    ClassDef(TGLMatrix,0) // GL matrix helper/wrapper class
 };
 
 //______________________________________________________________________________
-inline const TGLMatrix & TGLMatrix::operator =(const TGLMatrix & rhs) 
+inline TGLMatrix & TGLMatrix::operator =(const TGLMatrix & rhs) 
 {
    // Check for self-assignment
    if (this != &rhs) {
@@ -615,6 +697,45 @@ inline Double_t & TGLMatrix::operator [] (Int_t index)
    } else {*/
       return fVals[index]; 
    //} 
+}
+
+//______________________________________________________________________________
+inline Double_t TGLMatrix::operator [] (Int_t index) const
+{ 
+   /*if (!ValidIndex(index)) { 
+      assert(kFALSE); 
+      return fVals[0]; 
+   } else {*/
+      return fVals[index]; 
+   //} 
+}
+
+//______________________________________________________________________________
+inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
+{
+   TGLMatrix res;
+
+   res[ 0] = rhs[ 0] * lhs[ 0] + rhs[ 1] * lhs[ 4] + rhs[ 2] * lhs[ 8] + rhs[ 3] * lhs[12];
+   res[ 1] = rhs[ 0] * lhs[ 1] + rhs[ 1] * lhs[ 5] + rhs[ 2] * lhs[ 9] + rhs[ 3] * lhs[13];
+   res[ 2] = rhs[ 0] * lhs[ 2] + rhs[ 1] * lhs[ 6] + rhs[ 2] * lhs[10] + rhs[ 3] * lhs[14];
+   res[ 3] = rhs[ 0] * lhs[ 3] + rhs[ 1] * lhs[ 7] + rhs[ 2] * lhs[11] + rhs[ 3] * lhs[15];
+
+   res[ 4] = rhs[ 4] * lhs[ 0] + rhs[ 5] * lhs[ 4] + rhs[ 6] * lhs[ 8] + rhs[ 7] * lhs[12];
+   res[ 5] = rhs[ 4] * lhs[ 1] + rhs[ 5] * lhs[ 5] + rhs[ 6] * lhs[ 9] + rhs[ 7] * lhs[13];
+   res[ 6] = rhs[ 4] * lhs[ 2] + rhs[ 5] * lhs[ 6] + rhs[ 6] * lhs[10] + rhs[ 7] * lhs[14];
+   res[ 7] = rhs[ 4] * lhs[ 3] + rhs[ 5] * lhs[ 7] + rhs[ 6] * lhs[11] + rhs[ 7] * lhs[15];
+
+   res[ 8] = rhs[ 8] * lhs[ 0] + rhs[ 9] * lhs[ 4] + rhs[10] * lhs[ 8] + rhs[11] * lhs[12];
+   res[ 9] = rhs[ 8] * lhs[ 1] + rhs[ 9] * lhs[ 5] + rhs[10] * lhs[ 9] + rhs[11] * lhs[13];
+   res[10] = rhs[ 8] * lhs[ 2] + rhs[ 9] * lhs[ 6] + rhs[10] * lhs[10] + rhs[11] * lhs[14];
+   res[11] = rhs[ 8] * lhs[ 3] + rhs[ 9] * lhs[ 7] + rhs[10] * lhs[11] + rhs[11] * lhs[15];
+
+   res[12] = rhs[12] * lhs[ 0] + rhs[13] * lhs[ 4] + rhs[14] * lhs[ 8] + rhs[15] * lhs[12];
+   res[13] = rhs[12] * lhs[ 1] + rhs[13] * lhs[ 5] + rhs[14] * lhs[ 9] + rhs[15] * lhs[13];
+   res[14] = rhs[12] * lhs[ 2] + rhs[13] * lhs[ 6] + rhs[14] * lhs[10] + rhs[15] * lhs[14];
+   res[15] = rhs[12] * lhs[ 3] + rhs[13] * lhs[ 7] + rhs[14] * lhs[11] + rhs[15] * lhs[15];
+      
+   return res;
 }
 
 /*************************************************************************

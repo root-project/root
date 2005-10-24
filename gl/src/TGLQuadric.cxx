@@ -15,30 +15,30 @@
 ClassImp(TGLQuadric)
 
 //______________________________________________________________________________
-TGLQuadric::TGLQuadric() 
+TGLQuadric::TGLQuadric() :
+   fQuad(0)
 {
-   fgQuad = 0;
 }
 
 //______________________________________________________________________________
 TGLQuadric::~TGLQuadric() 
 { 
-   if (fgQuad) {
-      gluDeleteQuadric(fgQuad); 
+   if (fQuad) {
+      gluDeleteQuadric(fQuad); 
    }
 }
 
 //______________________________________________________________________________
 GLUquadric * TGLQuadric::Get()
 {
-   if (!fgQuad) {
-      fgQuad = gluNewQuadric();
-      if (!fgQuad) {
+   if (!fQuad) {
+      fQuad = gluNewQuadric();
+      if (!fQuad) {
          Error("TGLQuadric::Get", "create failed");
       } else {
-         gluQuadricOrientation(fgQuad, (GLenum)GLU_OUTSIDE);
-         gluQuadricNormals(fgQuad, (GLenum)GLU_SMOOTH);
+         gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
+         gluQuadricNormals(fQuad, (GLenum)GLU_SMOOTH);
       }
    }
-   return fgQuad;
+   return fQuad;
 }

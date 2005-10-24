@@ -16,26 +16,20 @@
 #include "TGLPhysicalShape.h"
 #endif
 
-// Do we actually need this ? Could just use TGLPhysical + external
-// mode flag in viewer...? TGLPhysical could just impl. PlaneSet
-// get from BB and overload for other weird shapes (in TGLLogical)
-
-// Or maybe embedded TGLPhysical so can be passed - just expose Draw() + BB()
-
-class TGLClip
+class TGLClip : public TGLPhysicalShape
 {
 public:
    enum EMode { kInside, kOutside };
 private:
    EMode fMode;
 public:
-   TGLClip();
+   TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]);
    virtual ~TGLClip();
 
    EMode Mode() const         { return fMode; }
    void  SetMode(EMode mode)  { fMode = mode; }
  
-   virtual void Draw(UInt_t LOD) const = 0;
+   virtual void Draw(UInt_t LOD) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
    ClassDef(TGLClip,0); // abstract clipping object   
@@ -44,32 +38,31 @@ public:
 class TGLClipPlane : public TGLClip
 {
 private:
-   TGLPlane fPlane;
+   static const float fgColor[4];
+
 public:
-   TGLClipPlane(const TGLPlane &);
+   TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, Double_t extents);
    virtual ~TGLClipPlane();
 
    void Set(const TGLPlane & plane);
 
-   virtual void Draw(UInt_t LOD) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
 
    ClassDef(TGLClipPlane,0); // clipping plane
 };
 
-class TGLClipShape : public TGLClip, public TGLPhysicalShape
+class TGLClipBox : public TGLClip 
 {
 private:
-   static float fgColor[4];
+   static const float fgColor[4];
 
 public:   
-   TGLClipShape(const TGLLogicalShape & logicalShape, const TGLMatrix & transform);
-   virtual ~TGLClipShape();   
+   TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center);
+   virtual ~TGLClipBox();   
 
-   virtual void Draw(UInt_t LOD) const;
-   virtual void PlaneSet(TGLPlaneSet_t & set) const { return BoundingBox().PlaneSet(set); }
+   virtual void PlaneSet(TGLPlaneSet_t & set) const;
    
-   ClassDef(TGLClipShape,0); // clipping shape
+   ClassDef(TGLClipBox,0); // clipping box
 };
 
 #endif

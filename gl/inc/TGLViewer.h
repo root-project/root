@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.12 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.13 2005/10/11 10:25:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -47,10 +47,11 @@ class TGLWindow; // Remove - TGLManager
 class TContextMenu;
 class TGLClip;
 class TGLClipPlane;
-class TGLClipShape;
+class TGLClipBox;
 class TGLManip;
 class TGLTransManip;
 class TGLScaleManip;
+class TGLRotateManip;
 
 /*************************************************************************
  * TGLViewer - TODO
@@ -127,14 +128,15 @@ private:
 
    // Clipping
    TGLClipPlane   * fClipPlane;
-   TGLClipShape   * fClipBox;
+   TGLClipBox     * fClipBox;
    TGLClip        * fCurrentClip;  //! the current clipping shape
    Bool_t           fClipEdit;
 
    // Object manipulators - physical + clipping shapes
-   TGLTransManip * fTransManip;    //! translation manipulator
-   TGLScaleManip * fScaleManip;    //! scaling manipulator
-   TGLManip      * fCurrentManip;  //! current manipulator
+   TGLTransManip  * fTransManip;    //! translation manipulator
+   TGLScaleManip  * fScaleManip;    //! scaling manipulator
+   TGLRotateManip * fRotateManip;   //! rotation manipulator 
+   TGLManip       * fCurrentManip;  //! current manipulator
     
    // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
@@ -168,10 +170,6 @@ private:
    // Lights
    void        SetupLights();
 
-   // Coordinate conversion
-   void WindowToGL(TGLRect & rect)      const { rect.Y() = fViewport.Height() - rect.Y(); }
-   void WindowToGL(TGLVertex3 & vertex) const { vertex.Y() = fViewport.Height() - vertex.Y(); }
-
    void ClearClips();
 
    // Non-copyable class
@@ -202,7 +200,7 @@ public:
    void  SetCurrentCamera(ECameraType camera);
    void  ToggleLight(ELight light);
    void  SetAxes(Bool_t on);
-   virtual void  SetDefaultClips();
+   virtual void  SetupClips();
    void  GetClipState(EClipType type, std::vector<Double_t> & data) const;
    void  SetClipState(EClipType type, const std::vector<Double_t> & data);
    EClipType GetCurrentClip() const;

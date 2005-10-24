@@ -17,13 +17,16 @@
 #include "TGLIncludes.h"
 
 TGLQuadric TGLManip::fgQuad;
-UInt_t TGLManip::fgQuality = 40;
+
+//TODO: Should really use LOD adjustment on top?
+UInt_t TGLManip::fgQuality = 60;
 
 Float_t TGLManip::fgRed[4]    = {1.0, 0.0, 0.0, 1.0 };
 Float_t TGLManip::fgGreen[4]  = {0.0, 1.0, 0.0, 1.0 };
 Float_t TGLManip::fgBlue[4]   = {0.0, 0.0, 1.0, 1.0 };
 Float_t TGLManip::fgYellow[4] = {1.0, 1.0, 0.0, 1.0 };
 Float_t TGLManip::fgWhite[4]  = {1.0, 1.0, 1.0, 1.0 };
+Float_t TGLManip::fgGrey[4]   = {0.5, 0.5, 0.5, 0.4 };
 
 ClassImp(TGLManip)
 
@@ -31,8 +34,8 @@ ClassImp(TGLManip)
 TGLManip::TGLManip(TGLViewer & viewer) : 
    fViewer(viewer), fShape(0), 
    fSelectedWidget(0), fActive(kFALSE),
-   fFirstMouseX(0), fFirstMouseY(0), 
-   fLastMouseX(0), fLastMouseY(0)
+   fFirstMouse(0, 0), 
+   fLastMouse(0, 0)
 {
 }
 
@@ -40,8 +43,8 @@ TGLManip::TGLManip(TGLViewer & viewer) :
 TGLManip::TGLManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
    fViewer(viewer), fShape(shape), 
    fSelectedWidget(0), fActive(kFALSE),
-   fFirstMouseX(0), fFirstMouseY(0), 
-   fLastMouseX(0), fLastMouseY(0)
+   fFirstMouse(0, 0), 
+   fLastMouse(0, 0)
 {
 }
 
@@ -51,13 +54,13 @@ TGLManip::~TGLManip()
 }
 
 //______________________________________________________________________________
-void TGLManip::Select() 
+void TGLManip::Select(const TGLCamera & camera) 
 {
    static UInt_t selectBuffer[4*4];
    glSelectBuffer(4*4, &selectBuffer[0]);
    glRenderMode(GL_SELECT);
    glInitNames();
-   Draw();
+   Draw(camera);
    Int_t hits = glRenderMode(GL_RENDER);
    TGLUtil::CheckError();
    if (hits < 0) {
@@ -66,13 +69,12 @@ void TGLManip::Select()
    }
 
    if (hits > 0) {
-      UInt_t minDepth = selectBuffer[1];
-      fSelectedWidget = selectBuffer[3];
-      for (Int_t i = 1; i < hits; i++) {
-         // Skip selection on sphere (unnamed hit)
-         // drawn last so doesn't effect array offsets - just terminate
+      fSelectedWidget = 0;
+      UInt_t minDepth = kMaxUInt;
+      for (Int_t i = 0; i < hits; i++) {
+         // Skip selection on unnamed hits
          if (selectBuffer[i * 4] == 0) {
-            break;
+            continue;
          }
          if (selectBuffer[i * 4 + 1] < minDepth) {
             fSelectedWidget = selectBuffer[i * 4 + 3];
@@ -84,7 +86,7 @@ void TGLManip::Select()
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleButton(Event_t * event)
+Bool_t TGLManip::HandleButton(const Event_t * event, const TGLCamera & /*camera*/)
 {
    // Only interested in Left mouse button actions
    if (event->fCode != kButton1) {
@@ -93,10 +95,10 @@ Bool_t TGLManip::HandleButton(Event_t * event)
 
    // Mouse down on selected widget?
    if (event->fType == kButtonPress && fSelectedWidget != 0) {
-      fFirstMouseX = event->fX;
-      fFirstMouseY = event->fY;
-      fLastMouseX = event->fX;
-      fLastMouseY = event->fY;
+      fFirstMouse.SetX(event->fX);
+      fFirstMouse.SetY(event->fY);
+      fLastMouse.SetX(event->fX);
+      fLastMouse.SetY(event->fY);
       fActive = kTRUE;
       return kTRUE;
    } else if (event->fType == kButtonRelease && fActive) {
@@ -108,7 +110,7 @@ Bool_t TGLManip::HandleButton(Event_t * event)
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleMotion(Event_t * event, const TGLCamera & /*camera*/ )
+Bool_t TGLManip::HandleMotion(const Event_t * event, const TGLCamera & /*camera*/)
 {
    TGLRect selectRect(event->fX, event->fY, 3, 3);
    // Need to do this cross thread under Windows for gVirtualGL context - very ugly...
@@ -118,67 +120,56 @@ Bool_t TGLManip::HandleMotion(Event_t * event, const TGLCamera & /*camera*/ )
 }
 
 //______________________________________________________________________________
-void TGLManip::DrawAxisWidgets(EHeadShape head) const
+Double_t TGLManip::DrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const
 {
-   if (!fShape) {
-      return;
+   TGLVector3 pixelInWorld = camera.ViewportDeltaToWorld(box.Center(), 1, 1);
+   Double_t pixelScale = pixelInWorld.Mag();
+   Double_t scale = box.Extents().Mag() / 100.0;
+   if (scale < pixelScale * 2.0) {
+      scale = pixelScale * 2.0;
+   } else if (scale > pixelScale * 5.0) {
+      scale = pixelScale * 5.0;
    }
-
-   const TGLBoundingBox & box = fShape->BoundingBox();
-
-   Double_t widgetSize = box.Extents().Mag() / 300.0;
-
-   // Draw three axis widgets out of bounding box
-   // GL name loading for hit testing - 0 reserved for no selection
-   glPushName(1);
-   DrawAxisWidget(head, box.Center(), box.Axis(0, kFALSE)*-0.51, widgetSize, fSelectedWidget == 1 ? fgYellow : fgRed);
-   glPopName();
-   glPushName(2);
-   DrawAxisWidget(head, box.Center(), box.Axis(1, kFALSE)*-0.51, widgetSize, fSelectedWidget == 2 ? fgYellow : fgGreen);
-   glPopName();
-   glPushName(3);
-   DrawAxisWidget(head, box.Center(), box.Axis(2, kFALSE)*-0.51, widgetSize, fSelectedWidget == 3 ? fgYellow : fgBlue);
-   glPopName();
-
-   // Draw central origin sphere
-   DrawOrigin(box.Center(), widgetSize*2.0, fgWhite);
+   return scale;
 }
 
 //______________________________________________________________________________
-void TGLManip::DrawAxisWidget(EHeadShape head, const TGLVertex3 & origin, const TGLVector3 & vector, Double_t size, Float_t rgba[4]) const
+void TGLManip::DrawAxisWidget(EHeadShape head, Double_t scale, const TGLVertex3 & origin, const TGLVector3 & vector, Float_t rgba[4]) const
 {    
    // Draw an axis widget with head type of arrow or box
    SetDrawColors(rgba);
    glPushMatrix();
    TGLMatrix local(origin, vector);
    glMultMatrixd(local.CArr());
-   gluCylinder(fgQuad.Get(), size, size, vector.Mag(), fgQuality, fgQuality); // Line
+   gluCylinder(fgQuad.Get(), scale/4.0, scale/4.0, vector.Mag(), fgQuality, fgQuality); // Line
    gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(fgQuad.Get(), 0.0, size, fgQuality, fgQuality); 
+   gluDisk(fgQuad.Get(), 0.0, scale/4.0, fgQuality, fgQuality); 
 
    // TODO: axis is longer than vector by head object - this is attached at end
    // doesn't really matter...?
    glTranslated(0.0, 0.0, vector.Mag()); // Shift down local Z to end of vector
 
    if (head == kArrow) {
-      gluDisk(fgQuad.Get(), 0.0, size*4.0, fgQuality, fgQuality); 
+      gluDisk(fgQuad.Get(), 0.0, scale, fgQuality, fgQuality); 
       gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_OUTSIDE);
-      gluCylinder(fgQuad.Get(), size*4.0, 0.0, size*8.0, fgQuality, fgQuality); // Arrow head
+      gluCylinder(fgQuad.Get(), scale, 0.0, scale*2.0, fgQuality, fgQuality); // Arrow head
    } else if (head == kBox) {
       gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_OUTSIDE);
-      TGLBoundingBox box(TGLVertex3(-size*2.0, -size*2.0, 0.0), TGLVertex3(size*2.0, size*2.0, size*4.0));
+      // TODO: Drawing box should be simplier - maybe make a static helper which BB + others use.
+      // This doesn't tesselate properly - ugly lighting 
+      TGLBoundingBox box(TGLVertex3(-scale*.7, -scale*.7, 0.0), TGLVertex3(scale*.7, scale*.7, scale*1.4));
       box.Draw(kTRUE);
    }
    glPopMatrix();
 }
 
 //______________________________________________________________________________
-void TGLManip::DrawOrigin(const TGLVertex3 & origin, Double_t size, Float_t rgba[4]) const
+void TGLManip::DrawOrigin(const TGLVertex3 & origin, Double_t scale, Float_t rgba[4]) const
 {
    SetDrawColors(rgba);
    glPushMatrix();
    glTranslated(origin.X(), origin.Y(), origin.Z());
-   gluSphere(fgQuad.Get(), size, fgQuality, fgQuality);
+   gluSphere(fgQuad.Get(), scale*2.0, fgQuality, fgQuality);
    glPopMatrix();
 }
 

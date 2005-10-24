@@ -25,8 +25,8 @@ public:
    TGLTransManip(TGLViewer & viewer, TGLPhysicalShape * shape);
    virtual ~TGLTransManip();
    
-   virtual void   Draw() const; 
-   virtual Bool_t HandleMotion(Event_t * event, const TGLCamera & camera);
+   virtual void   Draw(const TGLCamera & camera) const; 
+   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
 
    ClassDef(TGLTransManip,0) // GL translation manipulator widget
 };

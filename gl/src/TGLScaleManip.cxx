@@ -12,7 +12,7 @@
 #include "TGLScaleManip.h"
 #include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
-#include "TError.h"
+#include "TGLIncludes.h"
 
 ClassImp(TGLScaleManip)
 
@@ -33,46 +33,95 @@ TGLScaleManip::~TGLScaleManip()
 }
 
 //______________________________________________________________________________
-void TGLScaleManip::Draw() const
+void TGLScaleManip::Draw(const TGLCamera & camera) const
 {
-   TGLManip::DrawAxisWidgets(kBox);
+   if (!fShape) {
+      return;
+   }
+
+   const TGLBoundingBox & box = fShape->BoundingBox();
+   Double_t widgetScale = DrawScale(box, camera);
+
+   // Get permitted manipulations on shape
+   TGLPhysicalShape::EManip manip = fShape->GetManip();
+
+   TGLVector3 scaleAxes[3];
+   for (UInt_t i = 0; i<3; i++) {
+      if (box.IsEmpty()) {
+         scaleAxes[i] = box.Axis(i, kTRUE)*widgetScale*-10.0;
+      } else {
+         scaleAxes[i] = box.Axis(i, kFALSE)*-0.51;
+      }
+   }
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDisable(GL_CULL_FACE);
+
+   // Draw three axis widgets out of bounding box where permitted
+   // Not drawing will prevent interaction
+   // GL name loading for hit testing - 0 reserved for no selection
+   if (manip & TGLPhysicalShape::kScaleX) {
+      glPushName(1);
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[0], fSelectedWidget == 1 ? fgYellow : fgRed);
+      glPopName();
+   } else {
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[0], fgGrey);
+   }
+   if (manip & TGLPhysicalShape::kScaleY) {
+      glPushName(2);
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[1], fSelectedWidget == 2 ? fgYellow : fgGreen);
+      glPopName();
+   } else {
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[1], fgGrey);
+   }
+   if (manip & TGLPhysicalShape::kScaleZ) {
+      glPushName(3);
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[2], fSelectedWidget == 3 ? fgYellow : fgBlue);
+      glPopName();
+   } else {
+      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[2], fgGrey);
+   }
+   // Draw central origin sphere
+   DrawOrigin(box.Center(), widgetScale/2.0, fgWhite);
+
+   glEnable(GL_CULL_FACE);
+   glDisable(GL_BLEND);
 }
  
 //______________________________________________________________________________
-Bool_t TGLScaleManip::HandleButton(Event_t * event)
+Bool_t TGLScaleManip::HandleButton(const Event_t * event, const TGLCamera & camera)
 {
    if (event->fType == kButtonPress && fSelectedWidget != 0) {
-      fStartScale = fShape->Scale();
+      fStartScale = fShape->GetScale();
    }
 
-   return TGLManip::HandleButton(event);
+   return TGLManip::HandleButton(event, camera);
 }
 
 //______________________________________________________________________________
-Bool_t TGLScaleManip::HandleMotion(Event_t * event, const TGLCamera & camera)
+Bool_t TGLScaleManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
 {
    if (fActive) {
       // Find mouse delta projected into world at attached object center
-      TGLVector3 shift = camera.ProjectedShift(fShape->BoundingBox().Center(), 
-                                               event->fX - fFirstMouseX,
-                                               -event->fY + fFirstMouseY); // Y inverted
+      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
+                                                     event->fX - fFirstMouse.GetX(),
+                                                     -event->fY + fFirstMouse.GetY()); // Y inverted
 
-      TGLVector3 screenSize = camera.ProjectedShift(fShape->BoundingBox().Center(), 500, 500);
       UInt_t axisIndex = fSelectedWidget - 1; // Ugg sort out axis / widget id mapping
       TGLVector3 widgetAxis = fShape->BoundingBox().Axis(axisIndex, kTRUE);
-      Double_t factor = -5.0*Dot(shift, widgetAxis) / screenSize.Mag();
+
+      // Scale by projected screen factor
+      TGLVector3 screenScale = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 500, 500);
+      Double_t factor = -5.0*Dot(shift, widgetAxis) / screenScale.Mag();
+
       TGLVector3 newScale = fStartScale;
       newScale[axisIndex] += factor;
       LimitScale(newScale[axisIndex]);
-      TGLVector3 oldE = fShape->BoundingBox().Extents();
-//      Info("Old Extents", " (%f,%f,%f)", oldE.X(), oldE.Y(), oldE.Z());
-//      Info("Scale", "%d by factor %f -> %f", axisIndex, factor, newScale[axisIndex]);
-      fShape->SetScale(newScale);
-      TGLVector3 newE = fShape->BoundingBox().Extents();
-//      Info("New Extents", " (%f,%f,%f)", newE.X(), newE.Y(), newE.Z());
+      fShape->Scale(newScale);
 
-      fLastMouseX = event->fX;
-      fLastMouseY = event->fY;
+      fLastMouse.SetX(event->fX);
+      fLastMouse.SetY(event->fY);
 
       return kTRUE;
    } else {

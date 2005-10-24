@@ -461,7 +461,7 @@ void TGLPolyMarker::DirectDraw(UInt_t LOD) const
 void TGLPolyMarker::DrawStars()const
 {
    glDisable(GL_LIGHTING);
-
+   
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {
       Double_t x = fVertices[i];
       Double_t y = fVertices[i + 1];

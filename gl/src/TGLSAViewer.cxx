@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.5 2005/10/04 20:33:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.6 2005/10/05 12:35:49 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -89,11 +89,14 @@ MANIPULATORS\n\n\
    \t----\t\t----------------------\t\t---\n\
    \tTranslation\tLocal axes with arrows\t\tv\n\
    \tScale\t\tLocal axes with boxes\t\tx\n\
-   \tRotate\t\tLocal axes rings\t\tc NOT IMPLEMENTED YET\n\n\
+   \tRotate\t\tLocal axes rings\t\tc\n\n\
    Each widget has three axis components - red (X), green (Y) and blue (Z).\n\
    The component turns yellow, indicating an active state, when the mouse is moved\n\
    over it. Left click and drag on the active component to adjust the objects\n\
-   translation, scale or rotation.\n";
+   translation, scale or rotation.\n\
+   Some objects do not support all manipulations (e.g. clipping planes cannot be \n\
+   scaled). If a manipulation is not permitted the component it drawn in grey and \n\
+   cannot be selected/dragged.\n";
 
 
 ClassImp(TGLSAViewer)
@@ -418,8 +421,8 @@ void TGLSAViewer::SelectionChanged()
    const TGLPhysicalShape * selected = GetSelected();
    if (selected) {
       fColorEditor->SetRGBA(selected->Color());
-      fGeomEditor->SetCenter(selected->Translation().CArr());
-      fGeomEditor->SetScale(selected->Scale().CArr());
+      fGeomEditor->SetCenter(selected->GetTranslation().CArr());
+      fGeomEditor->SetScale(selected->GetScale().CArr());
    } else { // No selection
       fColorEditor->Disable();
       fGeomEditor->Disable();
@@ -439,9 +442,9 @@ void TGLSAViewer::ClipChanged()
 }
 
 //______________________________________________________________________________
-void TGLSAViewer::SetDefaultClips()
+void TGLSAViewer::SetupClips()
 {
-   TGLViewer::SetDefaultClips();
+   TGLViewer::SetupClips();
 
    // Now default clips are established ensure they are published to GUI
    fSceneEditor->GetDefaults();

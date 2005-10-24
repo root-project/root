@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.12 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.13 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #include "TGLBoundingBox.h"
 #include "TGLIncludes.h"
 #include "Riostream.h"
+
+#include <math.h>
 
 ClassImp(TGLBoundingBox)
 
@@ -108,7 +110,7 @@ void TGLBoundingBox::UpdateCache()
    }
 
    TGLVector3 extents = Extents();
-   fVolume = fabs(extents.X() * extents.Y() * extents.Z());
+   fVolume = TMath::Abs(extents.X() * extents.Y() * extents.Z());
 }
 
 //______________________________________________________________________________
@@ -306,9 +308,8 @@ void TGLBoundingBox::PlaneSet(TGLPlaneSet_t & planeSet) const
    //    4-------5 
    //
    // Construct plane set using axis + vertices
-   // Order is unimportant
-   planeSet.push_back(TGLPlane(-fAxesNorm[2], fVertex[0])); // Far
    planeSet.push_back(TGLPlane(fAxesNorm[2], fVertex[4]));  // Near
+   planeSet.push_back(TGLPlane(-fAxesNorm[2], fVertex[0])); // Far
    planeSet.push_back(TGLPlane(-fAxesNorm[0], fVertex[0])); // Left
    planeSet.push_back(TGLPlane(fAxesNorm[0], fVertex[1]));  // Right
    planeSet.push_back(TGLPlane(-fAxesNorm[1], fVertex[0])); // Bottom
@@ -551,19 +552,19 @@ void TGLBoundingBox::Draw(Bool_t solid) const
    //    |/      |/ 
    //    4-------5 
       // Clockwise winding
-      // Far
-      glBegin(GL_POLYGON);
-      glVertex3dv(fVertex[0].CArr());
-      glVertex3dv(fVertex[1].CArr());
-      glVertex3dv(fVertex[2].CArr());
-      glVertex3dv(fVertex[3].CArr());
-      glEnd();
       // Near
       glBegin(GL_POLYGON);
       glVertex3dv(fVertex[4].CArr());
       glVertex3dv(fVertex[7].CArr());
       glVertex3dv(fVertex[6].CArr());
       glVertex3dv(fVertex[5].CArr());
+      glEnd();
+      // Far
+      glBegin(GL_POLYGON);
+      glVertex3dv(fVertex[0].CArr());
+      glVertex3dv(fVertex[1].CArr());
+      glVertex3dv(fVertex[2].CArr());
+      glVertex3dv(fVertex[3].CArr());
       glEnd();
       // Left
       glBegin(GL_POLYGON);

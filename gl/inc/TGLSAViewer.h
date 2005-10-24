@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.3 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.4 2005/10/04 20:33:11 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    void SelectionChanged();
    void ClipChanged();
    
-   void SetDefaultClips();
+   void SetupClips();
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

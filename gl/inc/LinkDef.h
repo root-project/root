@@ -16,6 +16,7 @@
 
 #pragma link C++ class TGLVertex3;
 #pragma link C++ class TGLVector3;
+#pragma link C++ class TGLLine3;
 #pragma link C++ class TGLRect;
 #pragma link C++ class TGLPlane;
 #pragma link C++ class TGLMatrix;
@@ -28,10 +29,11 @@
 #pragma link C++ class TGLPhysicalShape;
 #pragma link C++ class TGLClip;
 #pragma link C++ class TGLClipPlane;
-#pragma link C++ class TGLClipShape;
+#pragma link C++ class TGLClipBox;
 #pragma link C++ class TGLManip;
 #pragma link C++ class TGLScaleManip;
 #pragma link C++ class TGLTransManip;
+#pragma link C++ class TGLRotateManip;
 
 #pragma link C++ class TGLCamera;
 #pragma link C++ class TGLOrthoCamera;

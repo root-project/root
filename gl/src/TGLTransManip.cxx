@@ -12,6 +12,7 @@
 #include "TGLTransManip.h"
 #include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
+#include "TGLIncludes.h"
 
 ClassImp(TGLTransManip)
 
@@ -32,29 +33,83 @@ TGLTransManip::~TGLTransManip()
 }
    
 //______________________________________________________________________________
-void TGLTransManip::Draw() const
+void TGLTransManip::Draw(const TGLCamera & camera) const
 {
-   TGLManip::DrawAxisWidgets(kArrow);
+   if (!fShape) {
+      return;
+   }
+
+   const TGLBoundingBox & box = fShape->BoundingBox();
+   Double_t widgetScale = DrawScale(box, camera);
+
+   // Get permitted manipulations on shape
+   TGLPhysicalShape::EManip manip = fShape->GetManip();
+
+   TGLVector3 translateAxes[3];
+   for (UInt_t i = 0; i<3; i++) {
+      if (box.IsEmpty()) {
+         translateAxes[i] = box.Axis(i, kTRUE)*widgetScale*-10.0;
+      } else {
+         translateAxes[i] = box.Axis(i, kFALSE)*-0.51;
+      }
+   }
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDisable(GL_CULL_FACE);
+
+   // Draw three axis widgets out of bounding box where permitted
+   // Not drawing will prevent interaction
+   // GL name loading for hit testing - 0 reserved for no selection
+   if (manip & TGLPhysicalShape::kTranslateX) {
+      glPushName(1);
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[0],
+                     fSelectedWidget == 1 ? fgYellow : fgRed);
+      glPopName();
+   } else {
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[0], fgGrey);
+   }
+   if (manip & TGLPhysicalShape::kTranslateY) {
+      glPushName(2);
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[1], 
+                     fSelectedWidget == 2 ? fgYellow : fgGreen);
+      glPopName();
+   } else {
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[1], fgGrey);
+   }
+   if (manip & TGLPhysicalShape::kTranslateZ) {
+      glPushName(3);
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[2],
+                     fSelectedWidget == 3 ? fgYellow : fgBlue);
+      glPopName();
+   } else {
+      DrawAxisWidget(kArrow, widgetScale, box.Center(), translateAxes[2], fgGrey);
+   }
+   // Draw central origin sphere
+   DrawOrigin(box.Center(), widgetScale/2.0, fgWhite);
+
+   glEnable(GL_CULL_FACE);
+   glDisable(GL_BLEND);
 }
 
 //______________________________________________________________________________
-Bool_t TGLTransManip::HandleMotion(Event_t * event, const TGLCamera & camera)
+Bool_t TGLTransManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
 {
    if (fActive) {
       // Find mouse delta projected into world at attached object center
-      TGLVector3 shift = camera.ProjectedShift(fShape->BoundingBox().Center(), 
-                                               event->fX - fLastMouseX,
-                                               -event->fY + fLastMouseY); // Y inverted
+      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
+                                                     event->fX - fLastMouse.GetX(),
+                                                     -event->fY + fLastMouse.GetY()); // Y inverted
       
       // Now project this delta onto the current widget (axis) to give
       // a constrained shift along this
       UInt_t axisIndex = fSelectedWidget - 1; // Ugg sort out axis / widget id mapping
       TGLVector3 widgetAxis = fShape->BoundingBox().Axis(axisIndex, kTRUE);
       TGLVector3 constrainedShift = widgetAxis * Dot(shift, widgetAxis);
-      fShape->Shift(constrainedShift);
+      fShape->Translate(constrainedShift);
 
-      fLastMouseX = event->fX;
-      fLastMouseY = event->fY;
+      fLastMouse.SetX(event->fX);
+      fLastMouse.SetY(event->fY);
 
       return kTRUE;
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.10 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.11 2005/08/30 10:29:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -18,6 +18,9 @@
 #endif
 #ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
+#endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
 #endif
 
 #include <assert.h>
@@ -100,11 +103,24 @@ public:
    TGLVertex3 EyePoint() const;
    TGLVector3 EyeDirection() const;
 
-   // Projection and overlap tests
+   // Overlap / projection / intersection tests
+   // Viewport is GL coorinate system - origin bottom/left
    EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
-   TGLVector3 ProjectedShift (const TGLVertex3 & vertex, Int_t xDelta, Int_t yDelta) const;
+   TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
+   TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex) const;
+   TGLLine3   ViewportToWorld(Int_t viewportX, Int_t viewportY) const;
+   TGLLine3   ViewportToWorld(const TPoint & viewport) const;
+   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Int_t viewportXDelta, Int_t viewportYDelta) const;
+   std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(Int_t viewportX, Int_t viewportY, const TGLPlane & worldPlane) const;
+   std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(const TPoint & viewport, const TGLPlane & worldPlane) const;
+
+   // Window to GL viewport conversion - invert Y
+   void WindowToViewport(Int_t & /* x */, Int_t & y) const { y = fViewport.Height() - y; }
+   void WindowToViewport(TPoint & point)       const { point.SetY(fViewport.Height() - point.GetY()); }
+   void WindowToViewport(TGLRect & rect)       const { rect.Y() = fViewport.Height() - rect.Y(); }
+   void WindowToViewport(TGLVertex3 & vertex)  const { vertex.Y() = fViewport.Height() - vertex.Y(); }
 
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box) const;

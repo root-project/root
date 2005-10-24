@@ -33,7 +33,8 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    fTransform(transform),
    fSelected(kFALSE),
    fInvertedWind(invertedWind),
-   fModified(kFALSE)
+   fModified(kFALSE), 
+   fManip(kManipAll)
 {
    fLogicalShape.AddRef();
    UpdateBoundingBox();
@@ -51,7 +52,8 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    fTransform(transform),
    fSelected(kFALSE),
    fInvertedWind(invertedWind),
-   fModified(kFALSE)
+   fModified(kFALSE),
+   fManip(kManipAll)
 {
    fLogicalShape.AddRef();
    // Temporary hack - invert the 3x3 part of martix as TGeo sends this

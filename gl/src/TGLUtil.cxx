@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.10 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.11 2005/10/12 16:09:09 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 #include "TError.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TGLVertex3)
@@ -87,6 +88,48 @@ TGLVector3::TGLVector3(const TGLVector3 & other) :
 //______________________________________________________________________________
 TGLVector3::~TGLVector3()
 {
+}
+
+ClassImp(TGLLine3)
+
+//______________________________________________________________________________
+TGLLine3::TGLLine3(const TGLVertex3 & vert1, const TGLVertex3 & vert2) :
+   fVertex(vert1), fVector(vert2 - vert1)
+{
+}
+
+//______________________________________________________________________________
+TGLLine3::TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vector) :
+   fVertex(vert), fVector(vector)
+{
+}
+
+//______________________________________________________________________________
+TGLLine3::~TGLLine3()
+{
+}
+
+//______________________________________________________________________________
+void TGLLine3::Set(const TGLVertex3 & vert, const TGLVertex3 & end)
+{
+   fVertex = vert;
+   fVector = end - fVertex;
+}
+
+//______________________________________________________________________________
+void TGLLine3::Set(const TGLVertex3 & vert, const TGLVector3 & vector)
+{
+   fVertex = vert;
+   fVector = vector;
+}
+
+//______________________________________________________________________________
+void TGLLine3::Draw() const
+{
+   glBegin(GL_LINE_LOOP);
+   glVertex3dv(fVertex.CArr());
+   glVertex3dv(End().CArr());
+   glEnd();
 }
 
 ClassImp(TGLRect)
@@ -231,14 +274,14 @@ TGLMatrix::TGLMatrix()
 TGLMatrix::TGLMatrix(Double_t x, Double_t y, Double_t z)
 {
    SetIdentity();
-   Set(x, y, z);
+   SetTranslation(x, y, z);
 }
 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 {
    SetIdentity();
-   Set(translation);
+   SetTranslation(translation);
 }
 
 //______________________________________________________________________________
@@ -266,21 +309,6 @@ TGLMatrix::~TGLMatrix()
 }
 
 //______________________________________________________________________________
-void TGLMatrix::Set(Double_t x, Double_t y, Double_t z)
-{
-   Set(TGLVertex3(x,y,z));
-}
-
-//______________________________________________________________________________
-void TGLMatrix::Set(const TGLVertex3 & translation)
-{
-   // Set the translation component of matirx - rest left unaffected
-   fVals[12] = translation[0];
-   fVals[13] = translation[1];
-   fVals[14] = translation[2];
-}
-
-//______________________________________________________________________________
 void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
 {
    // Establish matrix transformation which when applied puts local origin at 
@@ -289,9 +317,9 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
    TGLVector3 zAxis(z);
    zAxis.Normalise();
    TGLVector3 axis; 
-   if (fabs(zAxis.X()) <= fabs(zAxis.Y()) && fabs(zAxis.X()) <= fabs(zAxis.Z())) {
+   if (TMath::Abs(zAxis.X()) <= TMath::Abs(zAxis.Y()) && TMath::Abs(zAxis.X()) <= TMath::Abs(zAxis.Z())) {
       axis.Set(1, 0, 0); 
-   } else if (fabs(zAxis.Y()) <= fabs(zAxis.X()) && fabs(zAxis.Y()) <= fabs(zAxis.Z())) {
+   } else if (TMath::Abs(zAxis.Y()) <= TMath::Abs(zAxis.X()) && TMath::Abs(zAxis.Y()) <= TMath::Abs(zAxis.Z())) {
       axis.Set(0, 1, 0); 
    } else { 
       axis.Set(0, 0, 1);
@@ -325,35 +353,40 @@ void TGLMatrix::SetIdentity()
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLMatrix::Translation() const
+void TGLMatrix::SetTranslation(Double_t x, Double_t y, Double_t z)
+{
+   SetTranslation(TGLVertex3(x,y,z));
+}
+
+//______________________________________________________________________________
+void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
+{
+   // Set the translation component of matrix
+   fVals[12] = translation[0];
+   fVals[13] = translation[1];
+   fVals[14] = translation[2];
+}
+
+//______________________________________________________________________________
+TGLVertex3 TGLMatrix::GetTranslation() const
 {
    return TGLVertex3(fVals[12], fVals[13], fVals[14]);
 }
 
 //______________________________________________________________________________
-void TGLMatrix::Shift(const TGLVector3 & shift)
+void TGLMatrix::Translate(const TGLVector3 & vect)
 {
-   fVals[12] += shift[0];
-   fVals[13] += shift[1];
-   fVals[14] += shift[2];
+   fVals[12] += vect[0];
+   fVals[13] += vect[1];
+   fVals[14] += vect[2];
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLMatrix::Scale() const
-{
-   // Get local axis scaling factors
-   TGLVector3 x(fVals[0], fVals[1], fVals[2]);
-   TGLVector3 y(fVals[4], fVals[5], fVals[6]);
-   TGLVector3 z(fVals[8], fVals[9], fVals[10]);
-   return TGLVector3(x.Mag(), y.Mag(), z.Mag());
-}
-
-//______________________________________________________________________________
-void TGLMatrix::SetScale(const TGLVector3 & scale)
+void TGLMatrix::Scale(const TGLVector3 & scale)
 {
 
    // Set local axis scaling factors
-   TGLVector3 currentScale = Scale();
+   TGLVector3 currentScale = GetScale();
    
    // x
    if (currentScale[0] != 0.0) {
@@ -361,7 +394,7 @@ void TGLMatrix::SetScale(const TGLVector3 & scale)
       fVals[1] *= scale[0]/currentScale[0];
       fVals[2] *= scale[0]/currentScale[0];
    } else {
-      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+      Error("TGLMatrix::Scale()", "zero scale div by zero");
    }
    // y
    if (currentScale[1] != 0.0) {
@@ -369,7 +402,7 @@ void TGLMatrix::SetScale(const TGLVector3 & scale)
       fVals[5] *= scale[1]/currentScale[1];
       fVals[6] *= scale[1]/currentScale[1];
    } else {
-      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+      Error("TGLMatrix::Scale()", "zero scale div by zero");
    }
    // z
    if (currentScale[2] != 0.0) {
@@ -377,7 +410,41 @@ void TGLMatrix::SetScale(const TGLVector3 & scale)
       fVals[9] *= scale[2]/currentScale[2];
       fVals[10] *= scale[2]/currentScale[2];
    } else {
-      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+      Error("TGLMatrix::Scale()", "zero scale div by zero");
+   }
+}
+
+//______________________________________________________________________________
+void TGLMatrix::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle)
+{
+   TGLVector3 nAxis = axis;
+   nAxis.Normalise();
+   Double_t x = nAxis.X();
+   Double_t y = nAxis.Y();
+   Double_t z = nAxis.Z();
+   Double_t c = TMath::Cos(angle);
+   Double_t s = TMath::Sin(angle);
+
+   // Calculate local rotation, with pre-translation to local pivot origin
+   TGLMatrix rotMat;
+   rotMat[ 0] = x*x*(1-c) + c;   rotMat[ 4] = x*y*(1-c) - z*s; rotMat[ 8] = x*z*(1-c) + y*s; rotMat[12] = pivot[0];
+   rotMat[ 1] = y*x*(1-c) + z*s; rotMat[ 5] = y*y*(1-c) + c;   rotMat[ 9] = y*z*(1-c) - x*s; rotMat[13] = pivot[1];
+   rotMat[ 2] = x*z*(1-c) - y*s; rotMat[ 6] = y*z*(1-c) + x*s; rotMat[10] = z*z*(1-c) + c;   rotMat[14] = pivot[2];
+   rotMat[ 3] = 0.0;             rotMat[ 7] = 0.0;             rotMat[11] = 0.0;             rotMat[15] = 1.0;
+   TGLMatrix localToWorld(-pivot);
+
+   // TODO: Ugly - should use quaternions to avoid compound rounding errors and 
+   // triple multiplication
+   *this = rotMat * localToWorld * (*this);
+}
+
+//______________________________________________________________________________
+void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
+{
+   TGLVertex3 orig = vertex;
+   for (UInt_t i = 0; i < 3; i++) {
+      vertex[i] = orig[0] * fVals[0+i] + orig[1] * fVals[4+i] +
+                  orig[2] * fVals[8+i] + fVals[12+i];
    }
 }
 
@@ -405,13 +472,13 @@ void TGLMatrix::Transpose3x3()
 }
 
 //______________________________________________________________________________
-void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
+TGLVector3 TGLMatrix::GetScale() const
 {
-   TGLVertex3 orig = vertex;
-   for (UInt_t i = 0; i < 3; i++) {
-      vertex[i] = orig[0] * fVals[0+i] + orig[1] * fVals[4+i] +
-                  orig[2] * fVals[8+i] + fVals[12+i];
-   }
+   // Get local axis scaling factors
+   TGLVector3 x(fVals[0], fVals[1], fVals[2]);
+   TGLVector3 y(fVals[4], fVals[5], fVals[6]);
+   TGLVector3 z(fVals[8], fVals[9], fVals[10]);
+   return TGLVector3(x.Mag(), y.Mag(), z.Mag());
 }
 
 //______________________________________________________________________________

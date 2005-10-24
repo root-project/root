@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.16 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.17 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -266,19 +266,79 @@ TGLRect TGLCamera::ViewportSize(const TGLBoundingBox & box) const
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::ProjectedShift(const TGLVertex3 & vertex, Int_t xDelta, Int_t yDelta) const
+TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex) const
 {
    if (fCacheDirty) {
-      Error("TGLCamera::ProjectedShift()", "cache dirty");
+      Error("TGLCamera::WorldToViewport()", "cache dirty");
    }
    //TODO: Convert TGLRect so this not required
    Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
-   TGLVertex3 winVertex;
-   gluProject(vertex[0], vertex[1], vertex[2], fModVM.CArr(), fProjM.CArr(), viewport, &winVertex[0], &winVertex[1], &winVertex[2]);
-   winVertex.Shift(xDelta, yDelta, 0.0);
-   TGLVertex3 newVertex;
-   gluUnProject(winVertex[0], winVertex[1], winVertex[2], fModVM.CArr(), fProjM.CArr(), viewport, &newVertex[0], &newVertex[1], &newVertex[2]);
-   return (newVertex - vertex);
+   TGLVertex3 viewportVertex;
+   gluProject(worldVertex[0], worldVertex[1], worldVertex[2], fModVM.CArr(), fProjM.CArr(), 
+              viewport, &viewportVertex[0], &viewportVertex[1], &viewportVertex[2]);
+   return viewportVertex;
+}
+
+//______________________________________________________________________________
+TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::ViewportToWorld()", "cache dirty");
+   }
+   //TODO: Convert TGLRect so this not required
+   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+   TGLVertex3 worldVertex;
+   gluUnProject(viewportVertex[0], viewportVertex[1], viewportVertex[2], fModVM.CArr(), fProjM.CArr(), 
+                viewport, &worldVertex[0], &worldVertex[1], &worldVertex[2]);
+   return worldVertex;
+}
+
+//______________________________________________________________________________
+TGLLine3 TGLCamera::ViewportToWorld(Int_t viewportX, Int_t viewportY) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::Viewport2DToWorldLine()", "cache dirty");
+   }
+   // Find world verticies at near and far clip planes, and return line through them
+   TGLVertex3 nearClipWorld = ViewportToWorld(TGLVertex3(viewportX, viewportY, 0.0));
+   TGLVertex3 farClipWorld = ViewportToWorld(TGLVertex3(viewportX, viewportY, 1.0));
+   return TGLLine3(nearClipWorld, farClipWorld - nearClipWorld);
+}
+
+//______________________________________________________________________________
+TGLLine3 TGLCamera::ViewportToWorld(const TPoint & viewport) const
+{
+   return ViewportToWorld(viewport.GetX(), viewport.GetY());
+}
+
+//______________________________________________________________________________
+std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Int_t viewportX, Int_t viewportY, 
+                                                                   const TGLPlane & worldPlane) const
+{
+   // Find 3D projection line of viewport point
+   TGLLine3 worldLine = ViewportToWorld(viewportX, viewportY);
+
+   // Find intersection of line with plane
+   return worldPlane.Intersection(worldLine);
+}
+
+//______________________________________________________________________________
+std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(const TPoint & viewport, 
+                                                                   const TGLPlane & worldPlane) const
+{
+   return ViewportPlaneIntersection(viewport.GetX(), viewport.GetY(), worldPlane);
+}
+
+//______________________________________________________________________________
+TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Int_t viewportXDelta, 
+                                           Int_t viewportYDelta) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::ViewportDeltaToWorld()", "cache dirty");
+   }
+   TGLVertex3 winVertex = WorldToViewport(worldRef);
+   winVertex.Shift(viewportXDelta, viewportYDelta, 0.0);
+   return (ViewportToWorld(winVertex) - worldRef);
 }
 
 //______________________________________________________________________________

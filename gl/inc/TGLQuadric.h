@@ -27,7 +27,7 @@ class GLUquadric;
 class TGLQuadric
 {
 private:
-   GLUquadric * fgQuad;
+   GLUquadric * fQuad;
 public:
    TGLQuadric();
    virtual ~TGLQuadric(); // ClassDef introduces virtuals

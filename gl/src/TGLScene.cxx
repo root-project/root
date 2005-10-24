@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.20 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.21 2005/10/11 10:25:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -845,7 +845,7 @@ Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
 Bool_t TGLScene::ShiftSelected(const TGLVector3 & shift)
 {
    if (fSelectedPhysical) {
-      fSelectedPhysical->Shift(shift);
+      fSelectedPhysical->Translate(shift);
       fBoundingBoxValid = kFALSE;
       return kTRUE;
    }
@@ -860,7 +860,7 @@ Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & sc
 {
    if (fSelectedPhysical) {
       fSelectedPhysical->SetTranslation(trans);
-      fSelectedPhysical->SetScale(scale);
+      fSelectedPhysical->Scale(scale);
       fBoundingBoxValid = kFALSE;
       return kTRUE;
    } else {

@@ -15,6 +15,9 @@
 #ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
 #endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
@@ -26,6 +29,7 @@ class TGLPhysicalShape;
 class TGLVertex3;
 class TGLVector3;
 class TGLCamera;
+class TGLBoundingBox;
 class TGLViewer;
 
 class TGLManip
@@ -39,10 +43,10 @@ protected:
    TGLPhysicalShape * fShape;
    UInt_t             fSelectedWidget;
    Bool_t             fActive;
-   Int_t              fFirstMouseX;
-   Int_t              fFirstMouseY;
-   Int_t              fLastMouseX;
-   Int_t              fLastMouseY;
+
+   // Mouse tracking - in WINDOW coords
+   TPoint             fFirstMouse;
+   TPoint             fLastMouse;
 
    //void TestHit() {}; // Draw out with gl names hit stack - process hit in overload
    static TGLQuadric  fgQuad;
@@ -53,11 +57,12 @@ protected:
    static Float_t     fgBlue[4];
    static Float_t     fgYellow[4];
    static Float_t     fgWhite[4];
+   static Float_t     fgGrey[4];
 
-   void DrawAxisWidgets(EHeadShape head) const; 
-   void DrawAxisWidget(EHeadShape head, const TGLVertex3 & origin, const TGLVector3 & vector, 
-                       Double_t size, Float_t rgba[4]) const;
-   void DrawOrigin(const TGLVertex3 & origin, Double_t size, Float_t rgba[4]) const;
+   Double_t DrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const;
+   void DrawAxisWidget(EHeadShape head, Double_t scale, const TGLVertex3 & origin, 
+                       const TGLVector3 & vector, Float_t rgba[4]) const;
+   void DrawOrigin(const TGLVertex3 & origin, Double_t scale, Float_t rgba[4]) const;
    void SetDrawColors(Float_t rgba[4]) const;
 
 public:
@@ -68,10 +73,10 @@ public:
    void               Attach(TGLPhysicalShape * shape) { fShape = shape; }
    TGLPhysicalShape * GetAttached() const { return fShape; }
 
-   virtual void   Draw() const = 0; 
-   virtual void   Select();
-   virtual Bool_t HandleButton(Event_t * event);
-   virtual Bool_t HandleMotion(Event_t * event, const TGLCamera & camera);
+   virtual void   Draw(const TGLCamera & camera) const = 0; 
+   virtual void   Select(const TGLCamera & camera);
+   virtual Bool_t HandleButton(const Event_t * event, const TGLCamera & camera);
+   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
 
    ClassDef(TGLManip,0) // abstract base GL manipulator widget
 };
