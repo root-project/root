@@ -1390,6 +1390,15 @@ if test ! "x$enable_qt" = "xno"; then
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
 	test "x$qtmocexe" = "x"; then
         enable_qt="no"
+    else
+        message "Checking whether Qt version = 3.xx"
+        grep "QT_VERSION 0x03" $qtincdir/qglobal.h > /dev/null 2>&1
+        if test $? -ne 0 ; then
+            echo "no"
+            enable_qt="no"
+        else
+            echo "yes"
+        fi
     fi
 fi
 
