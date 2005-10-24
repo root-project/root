@@ -71,6 +71,9 @@ int main( int argc, char **argv ) {
 
   MergeRootfile( Target, FileList );
 
+ //must delete Target to avoid a problem with dictionaries in~ TROOT
+  delete Target;
+
   return 0;
 }
 
