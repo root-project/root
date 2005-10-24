@@ -88,7 +88,7 @@ class GlobalCppFunctionTestCase( unittest.TestCase ):
    def test1CallGlobalCppFunction( self ):
       """Test calling of a C++ global function."""
 
-      gROOT.LoadMacro( "GlobalFunction.C+" )
+      gROOT.LoadMacro( "GlobalFunction.C" )
 
       self.assertEqual( round( Divide( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( Divide( 7. ) - 7./2., 8), 0 )
