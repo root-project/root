@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.182 2005/10/13 10:26:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.183 2005/10/17 14:20:05 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2071,8 +2071,25 @@ void TBranchElement::InitializeOffsets()
             TString parentDataName( GetName() );
             const char *ename = fID<0 ? 0 : ((TStreamerElement*)fInfo->GetElems()[fID])->GetName();
             Int_t lOffset    = clm->GetStreamerInfo()->GetOffset(ename); // offset in the local streamerInfo.
+            TString parentName( parent->GetName() );
+            if (parentElem->IsBase()) {
+               TBranchElement *pparent = (TBranchElement*) parent->GetMother()->GetSubBranch(parent);
+               if (pparent != GetMother())  // And not at the 2nd level 
+               {
+                  TString pattern( Form(".%s",parentElem->GetName()) );
+                  if (pattern.Length()<parentName.Length()) {
+                     if ( strcmp(parentName.Data()+(parentName.Length()-pattern.Length()),
+                        pattern.Data()) == 0 ) {
+                           // The parent branch name contains the name of the base class in it.
+                           // This name is not reproduce in the sub-branches, so we need to
+                           // remove it.
+                           parentName.Remove(parentName.Length()-pattern.Length());
+                        }
+                  }
+               }
+            }
             // remove the parent branch name (if present)
-            CleanParentName(parentDataName,parent->GetName());
+            CleanParentName(parentDataName,parentName);
 
             fParentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
 
