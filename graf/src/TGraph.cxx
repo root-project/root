@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.168 2005/09/16 17:19:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.169 2005/10/20 05:25:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1933,6 +1933,7 @@ void TGraph::Paint(Option_t *option)
    }
 
    //paint associated objects in the list of functions
+   if (!fFunctions) return;
    TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
    TObject *obj;
 
