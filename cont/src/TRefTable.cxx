@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.2 2004/08/20 21:23:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.3 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -178,6 +178,18 @@ void TRefTable::ReadBuffer(TBuffer &b)
    b.ReadFastArray(fParentIDs,fN);
 }
  
+//______________________________________________________________________________
+void TRefTable::Reset(Option_t * /*option*/)
+{
+   // clear all entries in the table
+   for (Int_t i=0;i<fN;i++) {
+      fParentIDs[i] = 0;
+   }
+   fN = 0;
+   fParentID = -1;
+   fParents->Clear();
+}
+
 //______________________________________________________________________________
 Int_t TRefTable::SetParent(const TObject *parent)
 {

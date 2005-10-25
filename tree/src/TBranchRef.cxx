@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.4 2004/08/24 10:41:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.5 2004/12/13 12:12:35 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -155,7 +155,7 @@ void TBranchRef::Reset(Option_t *option)
   //    TRefTable is cleared
 
    TBranch::Reset(option);
-   fRefTable->Clear();
+   fRefTable->Reset();
 }
 
 //______________________________________________________________________________

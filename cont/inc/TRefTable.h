@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.2 2004/08/20 21:23:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.3 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   17/08/2004
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    UInt_t             GetUID() const {return fUID;}
    virtual Bool_t     Notify();
    virtual void       ReadBuffer(TBuffer &b);
+   virtual void       Reset(Option_t * /* option */ ="");
    virtual Int_t      SetParent(const TObject *parent);
    static  void       SetRefTable(TRefTable *table);
    virtual void       SetUID(UInt_t uid) {fUID=uid;}
