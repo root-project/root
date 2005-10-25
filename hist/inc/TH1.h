@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.67 2005/04/26 13:03:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.68 2005/08/11 09:38:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -137,7 +137,8 @@ public:
     static  void     AddDirectory(Bool_t add=kTRUE);
     static  Bool_t   AddDirectoryStatus();
     virtual void     Browse(TBrowser *b);
-    virtual Double_t Chi2Test(const TH1 *h, Option_t *option, Int_t constraint =0 ) const;
+    virtual Double_t Chi2Test (const TH1 *h, Option_t *option, Int_t constraint =0 ) const;
+    virtual Double_t Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *option, Int_t constraint =0 ) const;
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
     virtual void     Divide(TF1 *f1, Double_t c1=1);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.256 2005/09/27 15:00:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.257 2005/10/22 07:33:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1048,6 +1048,55 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   //  if none of the options "Chi2" or "Chi2/ndf" is specified, the function returns
   //  the Pearson test, ie probability.
   //
+  // NOTE1: If the x axis has a bin range defined via TAxis::SetRange,
+  //       only the bins in this range are used for the test.
+  //
+  // NOTE2: This function calls TH1::Chi2TestX. In case you need to return
+  // the probability or/and chisquare and/or ndf, you should call Chi2TestX directly.
+
+  Double_t chi2 = 0;
+  Int_t ndf = 0;
+  
+  TString opt = option;
+  opt.ToUpper();
+
+  Double_t prob = Chi2TestX(h,chi2,ndf,option,constraint);
+
+  if (opt.Contains("P")){
+     Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chi2,prob,ndf);
+  }
+  if (opt.Contains("CHI2/NDF")){
+     if (ndf == 0) return 0;
+     return chi2/ndf;
+  }
+  if (opt.Contains("CHI2")){
+     return chi2;
+  }
+
+  return prob;
+}
+
+//______________________________________________________________________________
+Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *option, Int_t constraint) const
+{
+  //The Chi2 (Pearson's) test for differences between h and this histogram.
+  //a small value of prob indicates a significant difference between the distributions
+  //
+  //if the data was collected in such a way that the number of entries
+  //in the first histogram is necessarily equal to the number of entries
+  //in the second, the parameter _constraint_ must be made 1. Default is 0.
+  //any additional constraints on the data lower the number of degrees of freedom
+  //(i.e. increase constraint to more positive values) in accordance with
+  //their number
+  //
+  // The function returns the probability as the return value
+  // and the value of the chi2 and ndf as arguments.
+  //
+  ///options:
+  //  "O" : overflows included
+  //  "U" : underflows included
+  //  by default underflows and overflows are not included
+  //
   // NOTE: If the x axis has a bin range defined via TAxis::SetRange,
   //       only the bins in this range are used for the test.
   //
@@ -1059,7 +1108,9 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   //  See also TH1::KolmogorovTest (including NOTE2)
   
   Int_t i, i_start, i_end;
-
+  chi2 = 0;
+  ndf = 0;
+  
   TString opt = option;
   opt.ToUpper();
 
@@ -1071,13 +1122,13 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
 
   //check dimensions
   if (this->GetDimension()!=1 || h->GetDimension()!=1){
-     Error("Chi2Test","for 1-d only");
+     Error("Chi2TestX","for 1-d only");
      return 0;
   }
 
   //check number of channels
   if (nbins1 != nbins2){
-     Error("Chi2Test","different number of channels");
+     Error("Chi2TestX","different number of channels");
      return 0;
   }
 
@@ -1089,7 +1140,7 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
      i_start = fXaxis.GetFirst();
      i_end   = fXaxis.GetLast();
   }
-  Int_t ndf = i_end-i_start+1-constraint;
+  ndf = i_end-i_start+1-constraint;
 
   if(opt.Contains("O")) {
      i_end = nbins1+1;
@@ -1108,11 +1159,10 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
   }
   //check that the histograms are not empty
   if (sum1 == 0 || sum2 == 0){
-     Error("Chi2Test","one of the histograms is empty");
+     Error("Chi2TestX","one of the histograms is empty");
      return 0;
   }
 
-  Double_t chsq = 0;
   Double_t bin1, bin2, err1, err2, temp;
   for (i=i_start; i<=i_end; i++){
      bin1 = this->GetBinContent(i)/sum1;
@@ -1132,22 +1182,11 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
         err2*=err2;
         err1/=sum1*sum1;
         err2/=sum2*sum2;
-        chsq+=temp*temp/(err1+err2);
+        chi2+=temp*temp/(err1+err2);
      }
   }
 
-  Double_t prob = TMath::Prob(0.5*chsq, Int_t(0.5*ndf));
-
-  if (opt.Contains("P")){
-     Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chsq,prob,ndf);
-  }
-  if (opt.Contains("CHI2/NDF")){
-     if (ndf == 0) return 0;
-     return chsq/ndf;
-  }
-  if (opt.Contains("CHI2")){
-     return chsq;
-  }
+  Double_t prob = TMath::Prob(0.5*chi2, Int_t(0.5*ndf));
 
   return prob;
 }
