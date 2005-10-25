@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += importErrorHandling PyROOT_basictests PyROOT_overloadtests PyROOT_datatypetest PyROOT_operatortests
+TEST_TARGETS += PyROOT_basictests PyROOT_overloadtests PyROOT_datatypetest PyROOT_operatortests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -19,9 +19,6 @@ endif
 
 
 PyROOT_basictests: PyROOT_basictests.log
-	$(TestDiff)
-
-importErrorHandling: importErrorHandling.log
 	$(TestDiff)
 
 PyROOT_overloadtests.log: Overloads_C.$(DllSuf)
