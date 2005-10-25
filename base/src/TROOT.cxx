@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.163 2005/09/22 22:31:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.164 2005/10/17 14:21:26 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -975,8 +975,14 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(name,kTRUE);
+   
+   // CheckClassInfo might modify the content of its parameter if it is 
+   // a template and has extra or missing space (eg. one<two<tree>> becomes
+   // one<two<three> >
+   char *modifiable_name = new char[strlen(name)*2];
+   strcpy(modifiable_name,name);
+   if (gInterpreter->CheckClassInfo(modifiable_name)) {
+      const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
       if (strcmp(altname,name)!=0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
