@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.2 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.3 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -10,6 +10,10 @@
 // ROOT
 #include "DllImport.h"
 class TDataMember;
+class TGlobal;
+
+// CINT
+#include "DataMbr.h"
 
 // Standard
 #include <string>
@@ -20,7 +24,7 @@ namespace PyROOT {
 /** Proxy to ROOT data presented as python property
       @author  WLAV
       @date    02/12/2005
-      @version 1.1
+      @version 2.0
  */
 
    class ObjectProxy;
@@ -28,15 +32,16 @@ namespace PyROOT {
    class PropertyProxy {
    public:
       void Set( TDataMember* );
+      void Set( TGlobal* );
  
-      const std::string& GetName() const { return fName; }
+      std::string GetName() { return fDMInfo.Name(); }
       Long_t GetAddress( ObjectProxy* pyobj /* owner */ );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      std::string    fName;
-      TDataMember*   fDataMember;
-      TConverter*    fConverter;
+      G__DataMemberInfo fDMInfo;
+      Bool_t            fIsStatic;
+      TConverter*       fConverter;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}
@@ -59,11 +64,12 @@ namespace PyROOT {
    }
 
 //- creation -----------------------------------------------------------------
-   inline PropertyProxy* PropertyProxy_New( TDataMember* dataMember )
+   template< class T >
+   inline PropertyProxy* PropertyProxy_New( T* dmi )
    {
       PropertyProxy* pyprop =
          (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
-      pyprop->Set( dataMember );
+      pyprop->Set( dmi );
       return pyprop;
    }
 

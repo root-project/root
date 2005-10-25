@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.5 2005/06/24 07:19:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.6 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -76,6 +76,30 @@ namespace PyROOT {
    };
 
    PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( PyObject );
+
+   class TRefExecutor : public TExecutor {
+   public:
+      TRefExecutor() : fAssignable( 0 ) {}
+
+   public:
+      virtual Bool_t SetAssignable( PyObject* );
+
+   protected:
+      PyObject* fAssignable;
+   };
+
+#define PYROOT_DECLARE_BASIC_REFEXECUTOR( name )                              \
+   class T##name##RefExecutor : public TRefExecutor {                         \
+   public:                                                                    \
+      virtual PyObject* Execute( G__CallFunc*, void* );                       \
+   }
+
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Int );
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Long );
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Float );
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Double );
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( STLString );
 
 // factories
    typedef TExecutor* (*ExecutorFactory_t) ();

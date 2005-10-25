@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.15 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.16 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -54,12 +54,16 @@ namespace PyROOT {
    protected:
       TClass* GetClass() { return fClass.GetClass(); }
       TFunction* GetMethod() { return fMethod; }
+      TExecutor* GetExecutor() { return fExecutor; }
 
       virtual Bool_t InitExecutor_( TExecutor*& );
 
    private:
       void Copy_( const TMethodHolder& );
       void Destroy_() const;
+
+      PyObject* CallFast( void* );
+      PyObject* CallSafe( void* );
 
       Bool_t InitCallFunc_( std::string& );
       void CalcOffset_( void* self, TClass* klass );

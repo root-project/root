@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.6 2005/08/04 18:46:01 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDataMember.h"
+#include "TGlobal.h"
 #include "TDataType.h"
 #include "TClassEdit.h"
 
@@ -26,12 +27,6 @@ namespace {
 //= PyROOT property proxy property behaviour =================================
    PyObject* pp_get( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* )
    {
-   // special case to allow access at class-level (e.g. MyClass.fProperty) to succeed
-      if ( ! ( pyobj || (pyprop->fDataMember->Property() & G__BIT_ISSTATIC) ) ) {
-         Py_INCREF( (PyObject*)pyprop );
-         return (PyObject*)pyprop;
-      }
-
    // normal getter access
       Long_t address = pyprop->GetAddress( pyobj );
       if ( PyErr_Occurred() || address == 0 )
@@ -39,34 +34,15 @@ namespace {
 
    // for fixed size arrays
       void* ptr = (void*)address;
-      if ( pyprop->fDataMember->GetArrayDim() != 0 )
+      if ( pyprop->fDMInfo.ArrayDim() != 0 )
          ptr = &address;
 
       if ( pyprop->fConverter != 0 )
          return pyprop->fConverter->FromMemory( ptr );
 
       PyErr_Format( PyExc_NotImplementedError,
-         "could not convert %s", pyprop->fDataMember->GetName() );
+         "no converter available for \"%s\"", pyprop->fDMInfo.Name() );
       return 0;
-
-   /*
-      case Utility::kOther: {
-      // TODO: refactor this code with TMethodHolder returns
-         std::string sname = TClassEdit::ShortType(
-            G__TypeInfo( pyprop->fDataMember->GetFullTypeName() ).TrueName(), 1 );
-
-         TClass* klass = gROOT->GetClass( sname.c_str(), 1 );
-         Long_t* ref = *((Long_t**)address);
-
-         if ( klass && ref ) {
-         // special case: cross-cast to real class for TGlobal returns
-            if ( sname == "TGlobal" )
-               return BindRootGlobal( (TGlobal*)ref );
-
-            return BindRootObject( (void*)ref, klass );
-         }
-      }
-   */
    }
 
 //____________________________________________________________________________
@@ -80,7 +56,7 @@ namespace {
 
    // for fixed size arrays
       void* ptr = (void*)address;
-      if ( pyprop->fDataMember->GetArrayDim() != 0 )
+      if ( pyprop->fDMInfo.ArrayDim() != 0 )
          ptr = &address;
 
    // actual conversion; return on success
@@ -100,7 +76,7 @@ namespace {
    PropertyProxy* pp_new( PyTypeObject* pytype, PyObject*, PyObject* )
    {
       PropertyProxy* pyprop = (PropertyProxy*)pytype->tp_alloc( pytype, 0 );
-      new ( &pyprop->fName ) std::string("");
+      new ( &pyprop->fDMInfo ) G__DataMemberInfo();
 
       return pyprop;
    }
@@ -166,36 +142,56 @@ PyTypeObject PropertyProxy_Type = {
 
 
 //- public members -----------------------------------------------------------
-void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
+void PyROOT::PropertyProxy::Set( TDataMember* dm )
 {
-   fName       = dataMember->GetName();
-   fDataMember = dataMember;
+   G__ClassInfo* clInfo = dm->GetClass()->GetClassInfo();
+   if ( clInfo ) {
+      Long_t offset = 0;
+      fDMInfo = clInfo->GetDataMember( dm->GetName(), &offset );
+   }
 
-   std::string fullType = fDataMember->GetFullTypeName();
-   if ( (int)fDataMember->GetArrayDim() != 0 ||
-        ( ! fDataMember->IsBasic() && fDataMember->IsaPointer() ) ) {
+   std::string fullType = dm->GetFullTypeName();
+   if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
       fullType.append( "*" );
    }
 
-   fConverter  = CreateConverter( fullType, fDataMember->GetMaxIndex( 0 ) );
+   fIsStatic = (Bool_t)(fDMInfo.Property() & G__BIT_ISSTATIC);
+   fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
+}
+
+//____________________________________________________________________________
+void PyROOT::PropertyProxy::Set( TGlobal* gbl )
+{
+   TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
+   G__ClassInfo* clInfo = klass ? klass->GetClassInfo() : 0;
+   if ( clInfo ) {
+      Long_t offset = 0;
+      fDMInfo = clInfo->GetDataMember( gbl->GetName(), &offset );
+   } else {
+      G__DataMemberInfo dmi;
+      Long_t address = (Long_t)gbl->GetAddress();
+      while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
+         if ( address == ((G__var_array*)dmi.Handle())->p[dmi.Index()] ) {
+            fDMInfo = dmi;
+            break;
+         }
+      }
+   }
+
+   fIsStatic = kTRUE;
+   fConverter = CreateConverter( gbl->GetFullTypeName(), gbl->GetMaxIndex( 0 ) );
 }
 
 //____________________________________________________________________________
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
-// get offsets from CINT
-   G__ClassInfo* clInfo = fDataMember->GetClass()->GetClassInfo();
-
-// class attributes
-   if ( fDataMember->Property() & G__BIT_ISSTATIC ) {
-      Long_t offset = 0;
-      G__DataMemberInfo dmi = clInfo->GetDataMember( fName.c_str(), &offset );
-      return (Long_t)((G__var_array*)dmi.Handle())->p[dmi.Index()];
-   }
+// class attributes, global properties
+   if ( fIsStatic )
+      return (Long_t)((G__var_array*)fDMInfo.Handle())->p[fDMInfo.Index()];
 
 // instance attributes; requires object for full address
    if ( ! ObjectProxy_Check( pyobj ) ) {
       PyErr_Format( PyExc_TypeError,
-         "object instance required for access to property \"%s\"", fName.c_str() );
+         "object instance required for access to property \"%s\"", fDMInfo.Name() );
       return 0;
    }
 
@@ -206,6 +202,6 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    }
 
    Long_t offset = G__isanybase(
-      clInfo->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (Long_t)obj );
-   return (Long_t)obj + offset + fDataMember->GetOffsetCint();
+      fDMInfo.MemberOf()->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (Long_t)obj );
+   return (Long_t)obj + offset + fDMInfo.Offset();
 }

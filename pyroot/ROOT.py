@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.28 2005/08/10 05:25:41 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.29 2005/08/25 06:44:14 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 08/24/05
@@ -80,12 +80,11 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '3.1.0'
+__version__ = '3.2.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 __pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
-                    'AddressOf', 'NULL', 'MakeNullPointer',
-                    'Template', 'std' ]
+                    'AddressOf', 'MakeNullPointer', 'Template', 'std' ]
 __all__         = []                         # purposedly empty
 
 _orig_ehook = sys.excepthook
@@ -94,6 +93,11 @@ _orig_ehook = sys.excepthook
 _memPolicyAPI = [ 'SetMemoryPolicy', 'SetOwnership', 'kMemoryHeuristics', 'kMemoryStrict' ]
 kMemoryHeuristics = 1
 kMemoryStrict     = 2
+
+## speed hack
+_sigPolicyAPI = [ 'SetSignalPolicy', 'kSignalFast', 'kSignalSafe' ]
+kSignalFast = 1
+kSignalSafe = 2
 
 
 ### helpers ---------------------------------------------------------------------
@@ -232,27 +236,28 @@ _orig_dhook = sys.displayhook
 sys.displayhook = _displayhook
 
 
-### root thread -----------------------------------------------------------------
-def _processRootEvents():
-   global gSystem
-   gSystemProcessEvents = gSystem.ProcessEvents
-   while 1:
-      try:
-         gSystemProcessEvents()
-         time.sleep( 0.01 )
-      except: # in case gSystem gets destroyed early on exit
-         pass
+### root thread to prevent GUIs from starving -----------------------------------
+if not gROOT.IsBatch():
+   def _processRootEvents():
+      global gSystem
+      gSystemProcessEvents = gSystem.ProcessEvents
+      while 1:
+         try:
+            gSystemProcessEvents()
+            time.sleep( 0.01 )
+         except: # in case gSystem gets destroyed early on exit
+            pass
 
-thread.start_new_thread( _processRootEvents, () )
+   thread.start_new_thread( _processRootEvents, () )
 
 
 ### allow loading ROOT classes as attributes ------------------------------------
 _thismodule = sys.modules[ __name__ ]
 
-class ModuleFacade:
+class ModuleFacade( object ):
    def __init__( self ):
     # store already available ROOT objects to prevent spurious lookups
-      for name in _thismodule.__pseudo__all__ + _memPolicyAPI:
+      for name in _thismodule.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
           self.__dict__[ name ] = getattr( _thismodule, name )
 
       self.__dict__[ '__doc__'  ] = _thismodule.__doc__
@@ -288,13 +293,17 @@ class ModuleFacade:
        # no global either ... try through gROOT (e.g. objects from files)
          attr = gROOT.FindObject( name )
 
-    # cache value locally so that we don't come back here
+    # if available, cache attribute as appropriate, so we don't come back
       if attr != None:
-         self.__dict__[ name ] = attr
-      else:
-         raise AttributeError( name )
+         if type(attr) == PropertyProxy:
+            setattr( self.__class__, name, attr )      # descriptor
+            return getattr( self, name )
+         else:
+            self.__dict__[ name ] = attr               # normal member
+            return attr
 
-    # success!
-      return attr
+
+    # reaching this point means failure ...
+      raise AttributeError( name )
 
 sys.modules[ __name__ ] = ModuleFacade()

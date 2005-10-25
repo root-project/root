@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.12 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.13 2005/09/14 08:07:16 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -63,6 +63,57 @@ PyObject* PyROOT::TLongLongExecutor::Execute( G__CallFunc* func, void* self )
 PyObject* PyROOT::TDoubleExecutor::Execute( G__CallFunc* func, void* self )
 {
    return PyFloat_FromDouble( (double)func->ExecDouble( self ) );
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
+{
+   if ( pyobject != 0 ) {
+      Py_INCREF( pyobject );
+      fAssignable = pyobject;
+      return kTRUE;
+   }
+
+   fAssignable = 0;
+   return kFALSE;
+}
+
+//____________________________________________________________________________
+#define PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( name, type, stype, F1, F2, CF )  \
+PyObject* PyROOT::T##name##RefExecutor::Execute( G__CallFunc* func, void* self )\
+{                                                                            \
+   if ( ! fAssignable )                                                      \
+      return F1( (stype)func->CF( self ) );                                  \
+   else {                                                                    \
+      const G__value& result = func->Execute( self );                        \
+      *((type*)result.ref) = (type)F2( fAssignable );                        \
+      Py_DECREF( fAssignable );                                              \
+      fAssignable = 0;                                                       \
+      Py_INCREF( Py_None );                                                  \
+      return Py_None;                                                        \
+   }                                                                         \
+}
+
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong,    ExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong,    ExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, ExecDouble )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, ExecDouble )
+
+//____________________________________________________________________________
+PyObject* PyROOT::TSTLStringRefExecutor::Execute( G__CallFunc* func, void* self )
+{
+   if ( ! fAssignable ) {
+      return PyString_FromString( ((std::string*)func->ExecInt( self ))->c_str() );
+   } else {
+      std::string* result = (std::string*)func->ExecInt( self );
+      *result = std::string( PyString_AsString( fAssignable ) );
+
+      Py_DECREF( fAssignable );
+      fAssignable = 0;
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
 }
 
 //____________________________________________________________________________
@@ -162,32 +213,56 @@ PyObject* PyROOT::TConstructorExecutor::Execute( G__CallFunc* func, void* klass 
    return (PyObject*)func->ExecInt( klass );
 }
 
+//____________________________________________________________________________
+PyObject* PyROOT::TPyObjectExecutor::Execute( G__CallFunc* func, void* self )
+{
+   return (PyObject*)func->ExecInt( self );
+}
+
 
 //- factories -----------------------------------------------------------------
 PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 {
+// The matching of the fulltype to an executor factory goes through up to 4 levels:
+//   1) full, unqualified match
+//   2) drop '&' as as by ref/full type is often pretty much the same python-wise
+//   3) ROOT classes, either by ref/ptr or by value
+//   4) additional special case for enums
+//
+// If all fails, void is used, which will cause the return type to be ignored on use
+
+// resolve typedefs etc., and collect qualifiers
+   G__TypeInfo ti( fullType.c_str() );
+   std::string resolvedType = ti.TrueName();
+   if ( ! ti.IsValid() )
+      resolvedType = fullType;     // otherwise, resolvedType will be "(unknown)"
+   const std::string& cpd = Utility::Compound( resolvedType );
+   std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
+
+// a full, unqualified matching executor is preferred
+   ExecFactories_t::iterator h = gExecFactories.find( realType + cpd );
+   if ( h != gExecFactories.end() )
+      return (h->second)();
+
+// accept ref as by value
+   if ( cpd == "&" ) {
+      h = gExecFactories.find( realType );
+      if ( h != gExecFactories.end() )
+         return (h->second)();
+   }
+
+// ROOT classes and special cases (enum)
    TExecutor* result = 0;
-   std::string realType = TClassEdit::ShortType( G__TypeInfo( fullType.c_str() ).TrueName(), 1 );
-
-// select and set executor
-   const std::string& cpd = Utility::Compound( fullType );
-   const char* q = cpd == "*" ? "*" : "";
-
-   ExecFactories_t::iterator h = gExecFactories.find( realType + q );
-   if ( h == gExecFactories.end() ) {
-      TClass* klass = gROOT->GetClass( realType.c_str() );
-      if ( klass != 0 ) {
-         result = cpd != ""  ? \
-            new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
-      } else {
-      // could still be an enum ...
-         G__TypeInfo ti( fullType.c_str() );
-         if ( ti.Property() & G__BIT_ISENUM )
-            h = gExecFactories.find( "UInt_t" );
-         else {
-            std::cerr << "return type in not handled (using void): " << fullType << std::endl;
-            h = gExecFactories.find( "void" );
-         }
+   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+      result = cpd != ""  ? \
+         new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
+   } else {
+   // could still be an enum ...
+      if ( ti.Property() & G__BIT_ISENUM )
+         h = gExecFactories.find( "UInt_t" );
+      else {
+         std::cerr << "return type not handled (using void): " << fullType << std::endl;
+         h = gExecFactories.find( "void" );
       }
    }
 
@@ -200,36 +275,42 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 
 //____________________________________________________________________________
 #define PYROOT_EXECUTOR_FACTORY( name )                \
-TExecutor* Create##name()                              \
+TExecutor* Create##name##Executor()                    \
 {                                                      \
-   return new T##name;                                 \
+   return new T##name##Executor;                       \
 }
 
 namespace {
 
    using namespace PyROOT;
 
-// us macro rather than template for portability ...
-   PYROOT_EXECUTOR_FACTORY( CharExecutor )
-   PYROOT_EXECUTOR_FACTORY( IntExecutor )
-   PYROOT_EXECUTOR_FACTORY( ULongExecutor )
-   PYROOT_EXECUTOR_FACTORY( LongExecutor )
-   PYROOT_EXECUTOR_FACTORY( DoubleExecutor )
-   PYROOT_EXECUTOR_FACTORY( VoidExecutor )
-   PYROOT_EXECUTOR_FACTORY( LongLongExecutor )
-   PYROOT_EXECUTOR_FACTORY( CStringExecutor )
-   PYROOT_EXECUTOR_FACTORY( VoidArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( ShortArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( UShortArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( IntArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( UIntArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( LongArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( ULongArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( FloatArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( DoubleArrayExecutor )
-   PYROOT_EXECUTOR_FACTORY( STLStringExecutor )
-   PYROOT_EXECUTOR_FACTORY( TGlobalExecutor )
-   PYROOT_EXECUTOR_FACTORY( ConstructorExecutor )
+// use macro rather than template for portability ...
+   PYROOT_EXECUTOR_FACTORY( Char )
+   PYROOT_EXECUTOR_FACTORY( Int )
+   PYROOT_EXECUTOR_FACTORY( IntRef )
+   PYROOT_EXECUTOR_FACTORY( ULong )
+   PYROOT_EXECUTOR_FACTORY( Long )
+   PYROOT_EXECUTOR_FACTORY( LongRef )
+   PYROOT_EXECUTOR_FACTORY( FloatRef )
+   PYROOT_EXECUTOR_FACTORY( Double )
+   PYROOT_EXECUTOR_FACTORY( DoubleRef )
+   PYROOT_EXECUTOR_FACTORY( Void )
+   PYROOT_EXECUTOR_FACTORY( LongLong )
+   PYROOT_EXECUTOR_FACTORY( CString )
+   PYROOT_EXECUTOR_FACTORY( VoidArray )
+   PYROOT_EXECUTOR_FACTORY( ShortArray )
+   PYROOT_EXECUTOR_FACTORY( UShortArray )
+   PYROOT_EXECUTOR_FACTORY( IntArray )
+   PYROOT_EXECUTOR_FACTORY( UIntArray )
+   PYROOT_EXECUTOR_FACTORY( LongArray )
+   PYROOT_EXECUTOR_FACTORY( ULongArray )
+   PYROOT_EXECUTOR_FACTORY( FloatArray )
+   PYROOT_EXECUTOR_FACTORY( DoubleArray )
+   PYROOT_EXECUTOR_FACTORY( STLString )
+   PYROOT_EXECUTOR_FACTORY( STLStringRef )
+   PYROOT_EXECUTOR_FACTORY( TGlobal )
+   PYROOT_EXECUTOR_FACTORY( Constructor )
+   PYROOT_EXECUTOR_FACTORY( PyObject )
 
 // executor factories for ROOT types
    typedef std::pair< const char*, ExecutorFactory_t > NFp_t;
@@ -241,13 +322,17 @@ namespace {
       NFp_t( "short",              &CreateIntExecutor                 ),
       NFp_t( "unsigned short",     &CreateIntExecutor                 ),
       NFp_t( "int",                &CreateIntExecutor                 ),
+      NFp_t( "int&",               &CreateIntRefExecutor              ),
       NFp_t( "unsigned int",       &CreateULongExecutor               ),
       NFp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
       NFp_t( "long",               &CreateLongExecutor                ),
+      NFp_t( "long&",              &CreateLongRefExecutor             ),
       NFp_t( "unsigned long",      &CreateULongExecutor               ),
       NFp_t( "long long",          &CreateLongLongExecutor            ),
       NFp_t( "float",              &CreateDoubleExecutor              ),
+      NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
+      NFp_t( "double&",            &CreateDoubleRefExecutor           ),
       NFp_t( "void",               &CreateVoidExecutor                ),
       NFp_t( "bool",               &CreateIntExecutor                 ),
       NFp_t( "const char*",        &CreateCStringExecutor             ),
@@ -266,8 +351,13 @@ namespace {
 
    // factories for special cases
       NFp_t( "std::string",        &CreateSTLStringExecutor           ),
+      NFp_t( "string",             &CreateSTLStringExecutor           ),
+      NFp_t( "std::string&",       &CreateSTLStringRefExecutor        ),
+      NFp_t( "string&",            &CreateSTLStringRefExecutor        ),
       NFp_t( "TGlobal*",           &CreateTGlobalExecutor             ),
-      NFp_t( "__init__",           &CreateConstructorExecutor         )
+      NFp_t( "__init__",           &CreateConstructorExecutor         ),
+      NFp_t( "PyObject*",          &CreatePyObjectExecutor            ),
+      NFp_t( "_object*",           &CreatePyObjectExecutor            )
    };
 
    struct InitExecFactories_t {

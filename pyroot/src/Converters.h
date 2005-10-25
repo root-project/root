@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.11 2005/08/25 06:44:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.12 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -80,6 +80,12 @@ namespace PyROOT {
    class TVoidConverter : public TConverter {
    public:
       virtual Bool_t SetArg( PyObject*, G__CallFunc* );
+   };
+
+   class TMacroConverter : public TConverter {
+   public:
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );
+      virtual PyObject* FromMemory( void* address );
    };
 
    class TCStringConverter : public TConverter {

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.25 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.26 2005/09/14 08:07:16 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1105,16 +1105,13 @@ namespace {
          G__MethodInfo m = gcl.GetMethod( name, signature, &offset );
 
          if ( ! m.IsValid() ) {
-            G__lastifuncposition();
-            gcl.AddMethod( retcode, name, signature );      // boundary safe
-            G__resetifuncposition();
+         // create a new global function
+            m = gcl.AddMethod( retcode, name, signature );       // boundary safe
 
          // offset counter from this that services to associate pyobject with tp2f
             fgCount += 1;
 
          // setup association for CINT
-            m = gcl.GetMethod( name, signature, &offset );
-
             G__ifunc_table* ifunc = m.ifunc();
             int index = m.Index();
 
@@ -1125,7 +1122,7 @@ namespace {
             ifunc->pentry[index]->p    = callback;
 
          // setup association for ourselves
-            int tag = -1 - fgCount;
+            int tag = -6666 - fgCount;
             ifunc->p_tagtable[index] = tag;
          }
 
@@ -1509,6 +1506,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
 
-// default, no pythonization, is by definition ok
+// default (no pythonization) is by definition ok
    return kTRUE;
 }

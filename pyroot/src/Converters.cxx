@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.16 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.17 2005/09/14 08:07:16 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -23,6 +23,39 @@
 
 //- data ______________________________________________________________________
 PyROOT::ConvFactories_t PyROOT::gConvFactories;
+
+//- helpers -------------------------------------------------------------------
+namespace {
+
+   Bool_t GetAddressSpecialCase( PyObject* pyobject, void*& address )
+   {
+   // (1): "null pointer"
+      if ( pyobject == Py_None ) {
+         address = (void*)0;
+         return kTRUE;
+      }
+
+   // (2): allow integer zero to act as a null pointer, no deriveds
+      if ( PyInt_CheckExact( pyobject ) || PyLong_CheckExact( pyobject ) ) {
+         long val = PyLong_AsLong( pyobject );
+         if ( val == 0l ) {
+            address = (void*)val;
+            return kTRUE;
+         }
+
+         return kFALSE;
+      }
+
+   // (3): opaque CObject from somewhere
+      if ( PyCObject_Check( pyobject ) ) {
+         address = (void*)PyCObject_AsVoidPtr( pyobject );
+         return kTRUE;
+      }
+
+      return kFALSE;
+   }
+
+} // unnamed namespace
 
 //- base converter implementation ---------------------------------------------
 PyObject* PyROOT::TConverter::FromMemory( void* )
@@ -217,6 +250,40 @@ Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, G__CallFunc* )
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, G__CallFunc* ) {
+   PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
+   return kFALSE;
+}
+   
+PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
+{
+// no info available from ROOT/meta; go directly to CINT for the type info
+   G__DataMemberInfo dmi;
+   while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
+
+      if ( (Long_t)address == ((G__var_array*)dmi.Handle())->p[dmi.Index()] ) {
+      // for now, only handle int, double, and C-string
+         switch ( ((G__var_array*)dmi.Handle())->type[dmi.Index()] ) {
+         case 'p':
+            return PyInt_FromLong( (Long_t) *(Int_t*)address );
+         case 'P':
+            return PyFloat_FromDouble( (double) *(Double_t*)address );
+         case 'T':
+            return PyString_FromString( *(char**)address );
+         default:
+         // type unknown/not implemented
+            PyErr_SetString( PyExc_NotImplementedError, "macro value could not be converted" );
+            return 0;
+         }
+      }
+   }
+
+// type unknown/not implemented
+   PyErr_SetString( PyExc_AttributeError, "requested macro not found" );
+   return 0;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    func->SetArg( PyLong_AsLongLong( pyobject ) );
@@ -298,15 +365,10 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
       return kTRUE;
    }
 
-// special case: NULL pointer
-   if ( pyobject == gNullObject ) {
-      func->SetArg( 0l );
-      return kTRUE;
-   }
-
-// special case: opaque CObject from somewhere
-   if ( PyCObject_Check( pyobject ) ) {
-      func->SetArg( (Long_t)PyCObject_AsVoidPtr( pyobject ) );
+// handle special cases
+   void* ptr = 0;
+   if ( GetAddressSpecialCase( pyobject, ptr ) ) {
+      func->SetArg( (Long_t)ptr );
       return kTRUE;
    }
 
@@ -344,12 +406,14 @@ Bool_t PyROOT::TVoidArrayConverter::ToMemory( PyObject* value, void* address )
       return kTRUE;
    }
 
-// special case: NULL pointer
-   if ( value == gNullObject ) {
-      *(void**)address = 0;
+// handle special cases
+   void* ptr = 0;
+   if ( GetAddressSpecialCase( value, ptr ) ) {
+      *(void**)address = ptr;
       return kTRUE;
    }
 
+// final try: attempt to get buffer
    void* buf = 0;
    int buflen = Utility::GetBuffer( value, '*', 1, buf, kFALSE );
    if ( ! buf || buflen == 0 )
@@ -447,9 +511,10 @@ PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    if ( ! ObjectProxy_Check( pyobject ) ) {
-      if ( pyobject == gNullObject ) {   // allow NULL pointer as a special case
-          func->SetArg( 0l );
-          return kTRUE;
+      void* ptr = 0;
+      if ( GetAddressSpecialCase( pyobject, ptr ) ) {
+         func->SetArg( (Long_t)ptr );        // allow special cases such as NULL
+         return kTRUE;
       }
 
    // not a PyROOT object (TODO: handle SWIG etc.)
@@ -457,7 +522,7 @@ Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
    }
 
    ObjectProxy* pyobj = (ObjectProxy*)pyobject;
-   if ( pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
+   if ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
       if ( ! KeepControl() )
          ((ObjectProxy*)pyobject)->Release();
@@ -493,9 +558,10 @@ PyObject* PyROOT::TRootObjectConverter::FromMemory( void* address )
 Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
 {
    if ( ! ObjectProxy_Check( value ) ) {
-      if ( value == gNullObject ) {   // allow NULL pointer as a special case
-          *(Long_t**)address = 0l;
-          return kTRUE;
+      void* ptr = 0;
+      if ( GetAddressSpecialCase( value, ptr ) ) {
+         *(void**)address = ptr;             // allow special cases such as NULL
+         return kTRUE;
       }
 
    // not a PyROOT object (TODO: handle SWIG etc.)
@@ -624,7 +690,7 @@ Bool_t PyROOT::TPyObjectConverter::ToMemory( PyObject* value, void* address )
 //- factories -----------------------------------------------------------------
 PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t user )
 {
-// The matching of the fulltype to a converter factory goes in five steps:
+// The matching of the fulltype to a converter factory goes through up to five levels:
 //   1) full, exact match
 //   2) match of decorated, unqualified type
 //   3) accept const ref as by value
@@ -636,6 +702,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 // resolve typedefs etc.
    G__TypeInfo ti( fullType.c_str() );
    std::string resolvedType = ti.TrueName();
+   if ( ! ti.IsValid() )
+      resolvedType = fullType;     // otherwise, resolvedType will be "(unknown)"
 
 // an exactly matching converter is preferred
    ConvFactories_t::iterator h = gConvFactories.find( resolvedType );
@@ -737,6 +805,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
    PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
+   PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
    PYROOT_BASIC_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
@@ -777,6 +846,7 @@ namespace {
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),
       NFp_t( "void",               &CreateVoidConverter               ),
+      NFp_t( "#define",            &CreateMacroConverter              ),
 
    // pointer/array factories
       NFp_t( "short*",             &CreateShortArrayConverter         ),

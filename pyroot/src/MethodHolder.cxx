@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.39 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.40 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -9,6 +9,7 @@
 #include "ObjectProxy.h"
 #include "RootWrapper.h"
 #include "TPyException.h"
+#include "Utility.h"
 
 // ROOT
 #include "TROOT.h"
@@ -18,6 +19,7 @@
 #include "TMethodArg.h"
 #include "TClassEdit.h"
 #include "TVirtualMutex.h"
+#include "TException.h"
 
 // CINT
 #include "Api.h"
@@ -82,6 +84,45 @@ inline void PyROOT::TMethodHolder::Destroy_() const
 
    for ( int i = 0; i < (int)fConverters.size(); ++i )
       delete fConverters[ i ];
+}
+
+//____________________________________________________________________________
+inline PyObject* PyROOT::TMethodHolder::CallFast( void* self )
+{
+// helper code to prevent some duplication; this is called from CallSafe() as well
+// as directly from TMethodHolder::Execute in fast mode
+
+   PyObject* result = 0;
+
+   try {       // C++ try block
+      result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset) );
+   } catch ( TPyException& ) {
+      result = TPyExceptionMagic;
+   } catch ( std::exception& e ) {
+      PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
+      result = 0;
+   }
+
+   return result;
+}
+
+//____________________________________________________________________________
+inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self )
+{
+// helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
+// block that saves the stack for restoration in case of an otherwise fatal signal
+
+   PyObject* result = 0;
+
+   TRY {       // ROOT "try block"
+      result = CallFast( self );
+   } CATCH( excode ) {
+      PyErr_SetString( PyExc_SystemError, "problem in C++; program state has been reset" );
+      result = 0;
+      Throw( excode );
+   } ENDTRY;
+
+   return result;
 }
 
 //____________________________________________________________________________
@@ -336,13 +377,12 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self )
 
    PyObject* result = 0;
 
-   try {
-      result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset) );
-   } catch ( TPyException& ) {
-      result = TPyExceptionMagic;
-   } catch ( std::exception& e ) {
-      PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
-      result = 0;
+   if ( Utility::gSignalPolicy == Utility::kFast ) {
+   // bypasses ROOT try block (i.e. segfaults will abort)
+      result = CallFast( self );
+   } else {
+   // at the cost of ~10% performance, don't abort the interpreter on any signal
+      result = CallSafe( self );
    }
 
    if ( result && PyErr_Occurred() ) {

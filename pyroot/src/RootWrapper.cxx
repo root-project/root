@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.35 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.36 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,6 +12,7 @@
 #include "MethodHolder.h"
 #include "ConstructorHolder.h"
 #include "ClassMethodHolder.h"
+#include "TSetItemHolder.h"
 #include "MemoryRegulator.h"
 #include "TPyClassGenerator.h"
 #include "Utility.h"
@@ -49,6 +50,7 @@ R__EXTERN PyObject* gRootModule;
 //- helpers --------------------------------------------------------------------
 namespace {
 
+   //______________________________________________________________________________
    class TPyROOTApplication : public TApplication {
    public:
       TPyROOTApplication( const char* acn, int* argc, char** argv ) :
@@ -165,11 +167,6 @@ void PyROOT::InitRoot()
    AddToScope( "gSystem", gSystem, gSystem->IsA() );
    AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
-// explicit NULL pointer (typed object pointers can not be passed as NULL)
-   gNullObject = PyLong_FromLong( 0l );
-   Py_INCREF( gNullObject );
-   PyModule_AddObject( gRootModule, const_cast< char* >( "NULL" ), gNullObject );
-
 // memory management
    gROOT->GetListOfCleanups()->Add( new TMemoryRegulator );
 
@@ -199,6 +196,9 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
    TIter nextmethod( klass->GetListOfMethods() );
    while ( TMethod* method = (TMethod*)nextmethod() ) {
+   // special case tracker
+      Bool_t setupSetItem = kFALSE;
+
    // retrieve method name
       std::string mtName = method->GetName();
 
@@ -224,6 +224,13 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
          if ( pop != Utility::gC2POperatorMapping.end() ) {
             mtName = pop->second;
+         } else if ( op == "[]" ) {
+            mtName = "__getitem__";
+
+         // operator[] returning a reference type will be used for __setitem__
+            std::string cpd = Utility::Compound( method->GetReturnTypeName() );
+            if ( cpd[ cpd.size() - 1 ] == '&' )
+               setupSetItem = kTRUE;
          } else if ( op == "*" ) {
             if ( method->GetNargs() == 0 )   // dereference
                mtName = "__deref__";
@@ -273,6 +280,13 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       Callables_t& md = (*(cache.insert(
          std::make_pair( mtName, Callables_t() ) ).first)).second;
       md.push_back( pycall );
+
+   // special case for operator[] that returns by ref, use for getitem and setitem
+      if ( setupSetItem ) {
+         Callables_t& setitem = (*(cache.insert(
+            std::make_pair( "__setitem__", Callables_t() ) ).first)).second;
+         setitem.push_back( new TSetItemHolder( klass, method ) );
+      }
    }
 
 // add a pseudo-default ctor, if none defined
@@ -308,7 +322,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
    // properties
       else {
-         PropertyProxy* property = PropertyProxy_New( mb );
+         PropertyProxy* property = PropertyProxy_New< TDataMember >( mb );
          PyObject_SetAttrString(
             pyclass, const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
          Py_DECREF( property );
@@ -660,44 +674,13 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 
 // determine type and cast as appropriate
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
-   if ( ! klass ) {
-      TConverter* pcnv = CreateConverter( gbl->GetFullTypeName() );
+   if ( klass != 0 ) {
+      if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
+         return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
-      if ( pcnv ) {
-         PyObject* result = pcnv->FromMemory( (void*)gbl->GetAddress() );
-         delete pcnv;
-         return result;
-      } else if ( Utility::EffectiveType( gbl->GetFullTypeName() ) == Utility::kMacro ) {
-         std::string gblName = gbl->GetName();    // == macro label
-
-      // TGlobal offers no specifics; go directly to CINT for the type info
-         G__DataMemberInfo dmi;
-         while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() causes overwrite
-
-            if ( dmi.Name() == gblName ) {
-            // for now, only handle int, double, and C-string
-               switch ( ((G__var_array*)dmi.Handle())->type[dmi.Index()] ) {
-               case 'p':
-                  return PyInt_FromLong( (Long_t) *(Int_t*)gbl->GetAddress() );
-               case 'P':
-                  return PyFloat_FromDouble( (double) *(Double_t*)gbl->GetAddress() );
-               case 'T':
-                  return PyString_FromString( *(char**)gbl->GetAddress() );
-               default:
-                  return 0;
-               }
-            }
-         }
-
-      // type unknown; this will be reported as if the TGlobal doesn't exist
-         return 0;
-      }
-      else
-         klass = TGlobal::Class();
+      return BindRootObject( (void*)gbl->GetAddress(), klass );
    }
 
-   if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
-      return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
-
-   return BindRootObject( (void*)gbl->GetAddress(), klass );
+// for built-in types, to ensure setability
+   return (PyObject*)PropertyProxy_New< TGlobal >( gbl );
 }

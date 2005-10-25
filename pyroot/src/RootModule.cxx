@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.18 2005/08/25 06:44:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.19 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -32,7 +32,7 @@ namespace {
       if ( ! ep || ep->me_value != 0 )
          return ep;
 
-   // then search builtins
+   // filter for builtins
       if ( PyDict_GetItem( PyEval_GetBuiltins(), key ) != 0 ) {
          return ep;
       }
@@ -69,17 +69,25 @@ namespace {
       }
 
       if ( val != 0 ) {
-      // success ... store reference to ROOT entity in the dictionary
-         Py_INCREF( key );
+      // success ...
+         if ( PropertyProxy_Check( val ) ) {
+         // pretend something was actually found, but don't add to dictionary
+            ep->me_key   = key;
+            ep->me_hash  = hash;
+            ep->me_value = val->ob_type->tp_descr_get( val, NULL, NULL );
+         } else {
+         // add reference to ROOT entity in the module dictionary
+            Py_INCREF( key );
 
-         if ( ! ep->me_key )
-            mp->ma_fill++;
-         else
-            Py_DECREF( ep->me_key );
-         ep->me_key   = key;
-         ep->me_hash  = hash;
-         ep->me_value = val;
-         mp->ma_used++;
+            if ( ! ep->me_key )
+               mp->ma_fill++;
+            else
+               Py_DECREF( ep->me_key );
+            ep->me_key   = key;
+            ep->me_hash  = hash;
+            ep->me_value = val;
+            mp->ma_used++;
+         }
       }
 
    // stopped calling into ROOT
@@ -142,7 +150,12 @@ namespace {
          if ( i != nArgs - 1 )
             PyString_ConcatAndDel( &pyname, PyString_FromString( "," ) );
       }
-      PyString_ConcatAndDel( &pyname, PyString_FromString( ">" ) );
+
+   // close template name; prevent '>>', which should be '> >'
+      if ( PyString_AsString( pyname )[ PyString_Size( pyname ) - 1 ] == '>' )
+         PyString_ConcatAndDel( &pyname, PyString_FromString( " >" ) );
+      else
+         PyString_ConcatAndDel( &pyname, PyString_FromString( ">" ) );
 
       std::string name = PyString_AS_STRING( pyname );
       Py_DECREF( pyname );
@@ -205,10 +218,10 @@ namespace {
          return 0;
       }
 
-   // no class given: use the general NULL object
+   // no class given, use None as generic
       if ( argc == 0 ) {
-         Py_INCREF( gNullObject );
-         return gNullObject;
+         Py_INCREF( Py_None );
+         return Py_None;
       }
 
    // check argument for either string name, or named python object
@@ -253,6 +266,23 @@ namespace {
   }
 
 //____________________________________________________________________________
+   PyObject* SetSignalPolicy( PyObject*, PyObject* args )
+   {
+      PyObject* policy = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
+         return 0;
+
+      Long_t l = PyInt_AS_LONG( policy );
+      if ( Utility::SetSignalPolicy( (Utility::ESignalPolicy)l ) ) {
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
+      return 0;
+  }
+
+//____________________________________________________________________________
    PyObject* SetOwnership( PyObject*, PyObject* args )
    {
       ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
@@ -285,6 +315,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
      METH_VARARGS, (char*) "Determines object ownership model" },
+   { (char*) "SetSignalPolicy", (PyCFunction)SetSignalPolicy,
+     METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
    { (char*) "SetOwnership", (PyCFunction)SetOwnership,
      METH_VARARGS, (char*) "Modify held C++ object ownership" },
    { NULL, NULL, 0, NULL }
@@ -325,4 +357,7 @@ extern "C" void initlibPyROOT()
 
 // setup ROOT
    PyROOT::InitRoot();
+
+// signal policy: don't abort interpreter in interactive mode
+   Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
 }

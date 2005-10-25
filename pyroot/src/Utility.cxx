@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.22 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.23 2005/09/14 08:07:16 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -22,12 +22,13 @@
 
 
 //- data _____________________________________________________________________
-PyObject* PyROOT::gNullObject = 0;
-
 PyROOT::DictLookup_t PyROOT::gDictLookupOrg = 0;
 Bool_t PyROOT::gDictLookupActive = kFALSE;
 
 PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility::kHeuristics;
+
+// this is just a data holder for linking; actual value is set in RootModule.cxx
+PyROOT::Utility::ESignalPolicy PyROOT::Utility::gSignalPolicy = PyROOT::Utility::kSafe;
 
 PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
 
@@ -38,7 +39,8 @@ namespace {
    struct InitOperatorMapping_t {
    public:
       InitOperatorMapping_t() {
-         gC2POperatorMapping[ "[]" ]  = "__getitem__";
+         // gC2POperatorMapping[ "[]" ]  = "__getitem__";   // depends on return type
+         // gC2POperatorMapping[ "[]" ]  = "__setitem__";   // id.
          gC2POperatorMapping[ "()" ]  = "__call__";
          gC2POperatorMapping[ "+" ]   = "__add__";
          gC2POperatorMapping[ "-" ]   = "__sub__";
@@ -84,6 +86,15 @@ Bool_t PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
    return kFALSE;
 }
 
+//____________________________________________________________________________
+Bool_t PyROOT::Utility::SetSignalPolicy( ESignalPolicy e )
+{
+   if ( kFast <= e && e <= kSafe ) {
+      gSignalPolicy = e;
+      return kTRUE;
+   }
+   return kFALSE;
+}
 
 //____________________________________________________________________________
 Bool_t PyROOT::Utility::AddToClass(
@@ -239,7 +250,7 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
    std::string compound = "";
    for ( int pos = (int)name.size()-1; 0 <= pos; --pos ) {
       if ( isspace( name[pos] ) ) continue;
-      if ( isalnum( name[pos] ) ) break;
+      if ( isalnum( name[pos] ) || name[pos] == '>' ) break;
 
       compound = name[pos] + compound;
    }

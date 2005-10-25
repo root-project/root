@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.19 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.20 2005/09/14 08:07:16 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -15,8 +15,6 @@
 namespace PyROOT {
 
    class PyCallable;
-
-   R__EXTERN PyObject* gNullObject;
 
    typedef PyDictEntry* (*DictLookup_t) ( PyDictObject*, PyObject*, Long_t );
    R__EXTERN DictLookup_t gDictLookupOrg;
@@ -42,6 +40,11 @@ namespace PyROOT {
       enum EMemoryPolicy { kHeuristics = 1, kStrict = 2 };
       R__EXTERN EMemoryPolicy gMemoryPolicy;
       Bool_t SetMemoryPolicy( EMemoryPolicy e );
+
+   // signal safety
+      enum ESignalPolicy { kFast = 1, kSafe = 2 };
+      R__EXTERN ESignalPolicy gSignalPolicy;
+      Bool_t SetSignalPolicy( ESignalPolicy e );
 
    // data/return types
       const int kPtrMask = 0x10000000;
