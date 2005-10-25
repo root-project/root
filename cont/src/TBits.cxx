@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.16 2004/01/26 11:52:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.17 2005/10/21 22:01:36 pcanal Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -345,11 +345,11 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
 //______________________________________________________________________________
 void TBits::Output(ostream &os) const
 {
-   for(UInt_t i=0; i<fNbytes; i++) {
-      UChar_t val = fAllBits[i];
-      for (UInt_t j=0; j<8; j++) {
-         os << (bool)(val&1);
-         val >>= 1;
+   for(UInt_t i=0; i<fNbytes; ++i) {
+      UChar_t val = fAllBits[fNbytes - 1 - i];
+      for (UInt_t j=0; j<8; ++j) {
+         os << (bool)(val&0x80);
+         val <<= 1;
       }
    }
 }
@@ -368,9 +368,9 @@ void TBits::Print(Option_t *) const
    // Print the list of active bits
 
    Int_t count = 0;
-   for(UInt_t i=0; i<fNbytes; i++) {
+   for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[i];
-      for (UInt_t j=0; j<8; j++) {
+      for (UInt_t j=0; j<8; ++j) {
          if (val & 1) printf(" bit:%4d = 1\n",count);
          count++;
          val = val >> 1;
