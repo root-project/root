@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.12 2004/11/23 17:05:49 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.13 2005/04/26 16:36:48 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -1448,7 +1448,20 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       sprintf(str,"&#x%2.2x;", chars[0] & 255);
       PrintStr(str);
    } else {
-      PrintStr(chars);
+      Int_t len=strlen(chars);
+      for (Int_t i=0; i<len;i++) {
+         if (chars[i]!='\n') {
+            if (chars[i]=='<') {
+               PrintFast(4,"&lt;");
+            } else if (chars[i]=='>') {
+               PrintFast(4,"&gt;");
+            } else if (chars[i]=='&') {
+               PrintFast(5,"&amp;");
+            } else {
+               PrintFast(1,&chars[i]);
+            }
+         }
+      }
    }
    PrintFast(7,"</text>");
 
