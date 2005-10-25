@@ -18,7 +18,7 @@ gROOT.LoadMacro( "DataTypes.C+" )
 
 ### access to instance data members ==========================================
 class DataTypes1InstanceDataTestCase( unittest.TestCase ):
-   N  = 5
+ # N = 5 (imported from ROOT as global)
 
    def test1ReadAccess( self ):
       """Test read access to instance public data and verify values"""

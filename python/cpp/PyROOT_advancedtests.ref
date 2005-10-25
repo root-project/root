@@ -1,5 +1,7 @@
 Test data member access when using virtual inheritence ... ok
 Test reference passing when using virtual inheritence ... ok
+Test data member access for a templated class ... ok
+Test data member access for a templated class instantiated with a template ... ok
 
 ----------------------------------------------------------------------
 

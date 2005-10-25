@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 05/11/05
+# Last: 10/18/05
 
 """Basic unit tests for PyROOT package."""
 
@@ -38,12 +38,24 @@ class Basic2SetupTestCase( unittest.TestCase ):
       self.assert_( gInterpreter )
       self.assert_( gDirectory )
 
-   def test2AutoLoading( self ):
+   def test2AccessToGlobals( self ):
+      """Test overwritability of ROOT globals"""
+
+      import ROOT
+      oldval = ROOT.gDebug
+
+      ROOT.gDebug = 3
+      proxy = gROOT.GetGlobal( 'gDebug', 1 )
+      self.assertEqual( proxy.__get__( proxy ), 3 )
+
+      ROOT.gDebug = oldval
+
+   def test3AutoLoading( self ):
       """Test auto-loading by retrieving a non-preloaded class"""
 
       t = TLorentzVector()
 
-   def test3MacroLoading( self ):
+   def test4MacroLoading( self ):
       """Test accessibility to macro classes"""
 
       gROOT.LoadMacro( 'SimpleClass.C' )

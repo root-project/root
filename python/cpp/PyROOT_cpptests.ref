@@ -5,6 +5,8 @@ Test object validity checking ... ok
 Test access to elements in matrix and array objects. ... ok
 Test call to static function. ... ok
 Test access to namespaces and inner classes ... ok
+Test passing of variants of void pointer arguments ... ok
+Test access to cpp macro's ... ok
 
 ----------------------------------------------------------------------
 

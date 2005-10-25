@@ -41,3 +41,24 @@ int GetA( A& a ) { return a.m_a; }
 int GetB( B& b ) { return b.m_b; }
 int GetC( C& c ) { return c.m_c; }
 int GetD( D& d ) { return d.m_d; }
+
+template< typename T >
+class T1 {
+public:
+   T1( T t = T(0) ) : m_t1( t ) {}
+   T value() { return m_t1; }
+
+public:
+   T m_t1;
+};
+
+template< typename T >
+class T2 {
+public:
+   T m_t2;
+};
+
+namespace {
+   T1< int > tt1;
+   T2< T1< int > > tt2;
+}

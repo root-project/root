@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 05/26/05
+# Last: 10/17/05
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -108,6 +108,37 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assertEqual( A.D.E.F.sf,    6 )
       self.assertEqual( A.D.E.F().ff, -6 )
 
+   def test8VoidPointerPassing( self ):
+      """Test passing of variants of void pointer arguments"""
+
+      gROOT.LoadMacro( "PointerPassing.C+" )
+
+      o = TObject()
+      self.assertEqual( AddressOf( o )[0], Z.GimeAddressPtr( o ) )
+      self.assertEqual( AddressOf( o )[0], Z.GimeAddressPtrRef( o ) )
+
+      import array
+      if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
+         addressofo = array.array( 'l', [o.IsA().DynamicCast( o.IsA(), o )] )
+         self.assertEqual( addressofo.buffer_info()[0], Z.GimeAddressPtrPtr( addressofo ) )
+
+      self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
+      self.assertEqual( 0, Z.GimeAddressPtr( None ) );
+      self.assertEqual( 0, Z.GimeAddressObject( 0 ) );
+      self.assertEqual( 0, Z.GimeAddressObject( None ) );
+
+   def test9Macro( self ):
+      """Test access to cpp macro's"""
+
+      self.assertEqual( NULL, 0 );
+
+      gROOT.ProcessLine( '#define aap "aap"' )
+      gROOT.ProcessLine( '#define noot 1' )
+      gROOT.ProcessLine( '#define mies 2.0' )
+
+      self.assertEqual( aap, "aap" )
+      self.assertEqual( noot, 1 )
+      self.assertEqual( mies, 2.0 )
 
 ## actual test run
 if __name__ == '__main__':

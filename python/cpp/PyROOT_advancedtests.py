@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 06/04/05
+# Last: 10/24/05
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -110,6 +110,28 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
       self.assertEqual( GetC( d ), 33 )
       self.assertEqual( GetD( d ), 44 )
       del d
+
+
+### C++ template tests =======================================================
+class Cpp2TemplateLookupTestCase( unittest.TestCase ):
+   def test1SingleInstantiatedTemplate( self ):
+      """Test data member access for a templated class"""
+
+      t1 = T1( int )( 32 )
+      self.assertEqual( t1.value(), 32 )
+      self.assertEqual( t1.m_t1, 32 )
+
+      t1.m_t1 = 41
+      self.assertEqual( t1.value(), 41 )
+      self.assertEqual( t1.m_t1, 41 )
+
+   def test2TemplateInstantiatedTemplate( self ):
+      """Test data member access for a templated class instantiated with a template"""
+
+      t2 = T2( T1( int ) )()
+      t2.m_t2.m_t1 = 32
+      self.assertEqual( t2.m_t2.value(), 32 )
+      self.assertEqual( t2.m_t2.m_t1, 32 )
 
 
 ## actual test run
