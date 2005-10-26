@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.18 2005/10/11 10:25:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.19 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -281,16 +281,14 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
       return TBuffer3D::kNone;
    }
 
+   // Assume children are always sent initially
    if (addChildren) {
-      *addChildren = kFALSE;
+      *addChildren = kTRUE;
    }
    
    // Scene should be modify locked
    if (fScene.CurrentLock() != TGLScene::kModifyLock) {
       Error("TGLViewer::AddObject", "expected scene to be in mofifed locked");
-      // TODO: For the moment live with this - DrawOverlap() problems to discuss with Andrei
-      // Just reject as pad will redraw anyway
-      // assert(kFALSE);
       return TBuffer3D::kNone;
    }
    
@@ -317,19 +315,15 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
    if (physicalID != lastPID) {
       // Existing physical
       if (physical) {
-         assert(logical); // Have physical - should have logical
-         
-         if (addChildren) {
-            // For internal PID we request all children even if we will reject them.
-            // This ensures PID always represent same external entity.
-            if (fInternalPIDs) {
-               *addChildren = kTRUE;
-            } else 
-            // For external PIDs we check child interest as we may have reject children previously
-            // with a different camera configuration
-            {
-               *addChildren = CurrentCamera().OfInterest(physical->BoundingBox());
-            }
+         // If we have physical we should have logical cached too
+         if (!logical) {
+            Error("TGLViewer::AddObject", "cached physical with no assocaited cached logical");
+         }
+
+         // For external PIDs we check child interest as we may have reject children previously
+         // with a different camera configuration
+         if (addChildren && !fInternalPIDs) {
+            *addChildren = kTRUE;
          }
          
          // Always increment the internal physical ID so they
@@ -349,19 +343,16 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
          // If already have logical use it's BB
          if (logical) {
             box = logical->BoundingBox();
-            //assert(!box.IsEmpty());
          }
          // else if bounding box in buffer valid use this
          else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
             box.Set(buffer.fBBVertex);
-            //assert(!box.IsEmpty());
 
          // otherwise we need to use raw points to build a bounding box with
          // If raw sections not set it will be requested by ValidateObjectBuffer
          // below and we will re-enter here
          } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
             box.SetAligned(buffer.NbPnts(), buffer.fPnts);
-            //assert(!box.IsEmpty());
          }
       
          // Box is valid?
@@ -369,18 +360,13 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
             // Test transformed box with camera
             box.Transform(TGLMatrix(buffer.fLocalMaster));
             Bool_t ofInterest = CurrentCamera().OfInterest(box);
-            if (addChildren) {
-               // For internal PID we request all children even if we will reject them.
-               // This ensures PID always represent same external entity.
-               if (fInternalPIDs) {
-                  *addChildren = kTRUE;
-               } else 
-               // For external PID request children if physical of interest
-               {
-                  *addChildren = ofInterest;
-               }
-            }            
-            // Physical is of interest?
+               
+            // For external PID request children if physical of interest
+            if (addChildren &&!fInternalPIDs) {
+               *addChildren = ofInterest;
+            }
+
+            // Physical is of interest? If not record rejection
             if (!ofInterest) {
                ++fRejectedPhysicals;
                fAcceptedAllPhysicals = kFALSE;
@@ -407,20 +393,19 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 
    if(lastPID != physicalID)
    {
-      assert(kFALSE);
+      Error("TGLViewer::AddObject", "internal physical ID tracking error?");
    }
    // By now we should need to add a physical at least
    if (physical) {
-      assert(kFALSE);
+      Error("TGLViewer::AddObject", "expecting to require physical");
       return TBuffer3D::kNone; 
    }
 
    // Create logical if required
    if (!logical) {
-      assert(ValidateObjectBuffer(buffer,true) == TBuffer3D::kNone); // Buffer should be ready
       logical = CreateNewLogical(buffer);
       if (!logical) { 
-         assert(kFALSE);
+         Error("TGLViewer::AddObject", "failed to create logical");
          return TBuffer3D::kNone;
       }
       // Add logical to scene
@@ -437,7 +422,7 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
          Info("TGLViewer::AddObject", "added %d physicals", fAcceptedPhysicals);
       }
    } else {
-      assert(kFALSE);
+      Error("TGLViewer::AddObject", "failed to create physical");
    }
 
    // Always increment the internal physical ID so they
@@ -454,9 +439,14 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 //______________________________________________________________________________
 Bool_t TGLViewer::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   assert(!fComposite);
+   if (fComposite) {
+      Error("TGLViewer::OpenComposite", "composite already open");
+      return kFALSE;
+   }
    UInt_t extraSections = AddObject(buffer, addChildren);
-   assert(extraSections == TBuffer3D::kNone);
+   if (extraSections != TBuffer3D::kNone) {
+      Error("TGLViewer::OpenComposite", "expected top level composite to not require extra buffer sections");
+   }
    
    // If composite was created it is of interest - we want the rest of the
    // child components   
@@ -495,7 +485,7 @@ Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) 
 {
    // kCore: Should always be filled
    if (!buffer.SectionsValid(TBuffer3D::kCore)) {
-      assert(kFALSE);
+      Error("TGLViewer::ValidateObjectBuffer", "kCore section of buffer should be filled always");
       return TBuffer3D::kNone;
    }
 
@@ -527,7 +517,7 @@ Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) 
             needRaw = kTRUE;
          }
       } else {
-         assert(kFALSE);
+         Error("TGLViewer::ValidateObjectBuffer", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
          return TBuffer3D::kNone;
       }
    }
@@ -555,9 +545,6 @@ Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) 
 //______________________________________________________________________________
 TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
 {
-   // Buffer should now be correctly filled
-   assert(ValidateObjectBuffer(buffer,true) == TBuffer3D::kNone);
-
    TGLLogicalShape * newLogical = 0;
 
    switch (buffer.Type()) {
@@ -578,7 +565,7 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
          }
       }
       else {
-         assert(kFALSE);
+         Error("TGLViewer::CreateNewLogical", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
       }
       break;
    }
@@ -591,14 +578,16 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
          newLogical = new TGLCylinder(*tubeBuffer, tubeBuffer->fID);
       }
       else {
-         assert(kFALSE);
+         Error("TGLViewer::CreateNewLogical", "failed to cast buffer of type 'kTube/kTubeSeg/kCutTube' to TBuffer3DTube");
       }
       break;
    }
    case TBuffer3DTypes::kComposite: {
       // Create empty faceset and record partial complete composite object
       // Will be populated with mesh in CloseComposite()
-      assert(!fComposite);
+      if (fComposite) {
+         Error("TGLViewer::CreateNewLogical", "composite already open");
+      }
       fComposite = new TGLFaceSet(buffer, buffer.fID);
       newLogical = fComposite;
       break;
@@ -661,10 +650,11 @@ RootCsg::BaseMesh *TGLViewer::BuildComposite()
 }
 
 //______________________________________________________________________________
-void TGLViewer::InitGL
-()
+void TGLViewer::InitGL()
 {
-   assert(!fInitGL);
+   if (fInitGL) {
+      Error("TGLViewer::InitGL", "GL already initialised");
+   }
 
    // GL initialisation 
    glEnable(GL_LIGHTING);
@@ -1033,7 +1023,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
          break;
       }
       default: {
-         assert(kFALSE);
+         Error("TGLViewer::SetCurrentCamera", "invalid camera type");
          break;
       }
    }
@@ -1053,7 +1043,7 @@ void TGLViewer::ToggleLight(ELight light)
    // N.B. We can't directly call glEnable here as may not be in correct gl context
    // adjust mask and set when drawing
    if (light >= kLightMask) {
-      assert(kFALSE);
+      Error("TGLViewer::ToggleLight", "invalid light type");
       return;
    }
 
@@ -1104,7 +1094,7 @@ void TGLViewer::GetClipState(EClipType type, std::vector<Double_t> & data) const
       data.push_back(box.Extents().Y());
       data.push_back(box.Extents().Z());
    } else {
-      assert(kFALSE);
+      Error("TGLViewer::GetClipState", "invalid clip type");
    }
 }
 
@@ -1118,13 +1108,11 @@ void TGLViewer::SetClipState(EClipType type, const std::vector<Double_t> & data)
          break;
       }
       case(kClipPlane): {
-         assert(data.size() == 4);
          TGLPlane newPlane(data[0], data[1], data[2], data[3]);
          fClipPlane->Set(newPlane);
          break;
       }
       case(kClipBox): {
-         assert(data.size() == 6);
          //TODO: Pull these inside TGLPhysicalShape
          // Update clip box center
          const TGLBoundingBox & currentBox = fClipBox->BoundingBox();
@@ -1315,7 +1303,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       default: 
       {
-         assert(kFALSE);
+         Error("TGLViewer::ExecuteEvent", "invalid event type");
       }
    }
 };
@@ -1324,7 +1312,9 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 Bool_t TGLViewer::HandleEvent(Event_t *event)
 {
    if (event->fType == kFocusIn) {
-      assert(fAction == kNone);
+      if (fAction != kNone) {
+         Error("TGLViewer::HandleEvent", "active action at focus in");
+      }
       fAction = kNone;
    }
    if (event->fType == kFocusOut) {
