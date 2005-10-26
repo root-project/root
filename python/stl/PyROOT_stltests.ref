@@ -1,0 +1,8 @@
+Test access to a vector<int> (part of cintdlls) ... ok
+Test access to a ACLiC generated vector type ... ok
+Test access to a list<int> (part of cintdlls) ... ok
+Test access to a map<int,int> (part of cintdlls) ... ok
+
+----------------------------------------------------------------------
+
+OK

@@ -1,7 +1,7 @@
-# File: roottest/python/cpp/PyROOT_cpptests.py
+# File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 10/24/05
+# Last: 10/25/05
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -9,7 +9,8 @@ import os, sys, unittest
 from ROOT import *
 
 __all__ = [
-   'Cpp1VirtualInheritenceTestCase'
+   'Cpp1VirtualInheritenceTestCase',
+   'Cpp2TemplateLookupTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
