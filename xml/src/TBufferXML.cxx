@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.1 2005/05/06 14:25:34 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.2 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1078,7 +1078,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
 
        if (prstr.Length()>0) {
          node = fXML->NewChild(elemnode, 0, xmlNames_UShort, 0);
-         fXML->NewAttr(node, 0, xmlNames_v, sbuf);
+         fXML->NewAttr(node, 0, xmlNames_v, prstr.Data());
        }
    }
 }
