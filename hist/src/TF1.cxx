@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.108 2005/09/02 19:18:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.109 2005/09/27 16:10:41 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2048,11 +2048,54 @@ The requested accuracy cannot be
 obtained (see <B>Method</B>).
 The function value is set equal to zero.
 <P>
-<p><b>Notes:</b><p>
+<p><b>Note1:</b><p>
 Values of the function <I>f</I>(<I>x</I>) at the interval end-points
 <I>A</I> and <I>B</I> are not required. The subprogram may therefore
 be used when these values are undefined.
 <BR><HR>
+<p><b>Note2:</b><p>
+Instead of TF1::Integral, you may want to use the combination of
+<b>TF1::CalcGaussLegendreSamplingPoints</b> and <b>TF1::IntegralFast</b>.
+See an example with the following script:
+<pre>
+void gint() {
+   TF1 *g = new TF1("g","gaus",-5,5);
+   g->SetParameters(1,0,1);
+   //default gaus integration method uses 6 points
+   //not suitable to integrate on a large domain
+   double r1 = g->Integral(0,5);
+   double r2 = g->Integral(0,1000);
+   
+   //try with user directives computing more points
+   Int_t np = 1000;
+   double *x=new double[np];
+   double *w=new double[np];
+   g->CalcGaussLegendreSamplingPoints(np,x,w,1e-15);
+   double r3 = g->IntegralFast(np,x,w,0,5);
+   double r4 = g->IntegralFast(np,x,w,0,1000);
+   double r5 = g->IntegralFast(np,x,w,0,10000);
+   double r6 = g->IntegralFast(np,x,w,0,100000);
+   printf("g->Integral(0,5)               = %g\n",r1);
+   printf("g->Integral(0,1000)            = %g\n",r2);
+   printf("g->IntegralFast(n,x,w,0,5)     = %g\n",r3);
+   printf("g->IntegralFast(n,x,w,0,1000)  = %g\n",r4);
+   printf("g->IntegralFast(n,x,w,0,10000) = %g\n",r5);
+   printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
+   delete [] x;
+   delete [] w;
+}   
+</pre>
+   <p>This example produces the following results:
+<pre>
+   g->Integral(0,5)               = 1.25331
+   g->Integral(0,1000)            = 1.25319
+   g->IntegralFast(n,x,w,0,5)     = 1.25331
+   g->IntegralFast(n,x,w,0,1000)  = 1.25331
+   g->IntegralFast(n,x,w,0,10000) = 1.25331
+   g->IntegralFast(n,x,w,0,100000)= 1.253
+</pre>
+   <BR><HR>
+
 */
 //End_Html
 //---------------------------------------------------------------
