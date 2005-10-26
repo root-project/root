@@ -1,6 +1,8 @@
 import sys
 import ROOT
 
+ROOT.SetSignalPolicy( ROOT.kSignalFast )
+
 ### macro files
 macros = [
    'framework.py', 'hsimple.py', 'hsum.py', 'formula1.py',

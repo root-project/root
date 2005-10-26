@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.40 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.41 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -320,9 +320,12 @@ PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args,
    if ( PyTuple_GET_SIZE( args ) != 0 ) {
       ObjectProxy* pyobj = (ObjectProxy*)PyTuple_GET_ITEM( args, 0 );
 
-   // demand PyROOT object, and either free global or matching class instance
-      if ( ObjectProxy_Check( pyobj ) && ( strlen( fClass->GetName() ) == 0 ||
-           ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass ) ) ) ) {
+   // demand PyROOT object, and an argument that may match down the road
+      if ( ObjectProxy_Check( pyobj ) &&
+           ( strlen( fClass->GetName() ) == 0 ||            // free global
+           ( pyobj->ObjectIsA() == 0 ) ||                   // null pointer or ctor call
+           ( pyobj->ObjectIsA()->GetBaseClass( fClass ) ) ) // matching types
+         ) {
       // reset self (will live for the life time of args; i.e. call of function)
          self = pyobj;
 

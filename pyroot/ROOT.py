@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.29 2005/08/25 06:44:14 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.30 2005/10/25 05:13:15 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 08/24/05
+# Last: 10/25/05
 
 """PyROOT user module.
 

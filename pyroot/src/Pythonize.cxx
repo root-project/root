@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.26 2005/09/14 08:07:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.27 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -11,6 +11,7 @@
 #include "PyCallable.h"
 #include "PyBufferFactory.h"
 #include "FunctionHolder.h"
+#include "Converters.h"
 
 // ROOT
 #include "TClass.h"
@@ -808,26 +809,17 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             Py_DECREF( ptr );
 
             PyObject* tname = CallPyObjMethod( leaf, "GetTypeName" );
-            std::string stname( PyString_AS_STRING( tname ) );
-
-            BufFac_t* fac = BufFac_t::Instance();
             PyObject* scb = PyObject_GetAttrString( leaf, const_cast< char* >( "GetNdata" ) );
 
-         // TODO: use Converter::FromMemory instead
-            Utility::EDataType eType = Utility::EffectiveType( stname );
-            if ( eType == Utility::kLong )
-               value = fac->PyBuffer_FromMemory( (Long_t*) arr, scb );
-            else if ( eType == Utility::kInt )
-               value = fac->PyBuffer_FromMemory( (Int_t*) arr, scb );
-            else if ( eType == Utility::kDouble )
-               value = fac->PyBuffer_FromMemory( (Double_t*) arr, scb );
-            else if ( eType == Utility::kFloat )
-               value = fac->PyBuffer_FromMemory( (Float_t*) arr, scb );
+            TConverter* pcnv = CreateConverter( PyString_AS_STRING( tname ), PyInt_AS_LONG( scb ) );
+            value = pcnv->FromMemory( arr );
+            delete pcnv;
 
             Py_DECREF( scb );
+            Py_DECREF( tname );
 
-         // we're working with addresses: cache result
-            PyObject_SetAttr( self, name, value );
+            if ( ! PyString_Check( value ) )      // if not, ordinary array: cache result
+               PyObject_SetAttr( self, name, value );
          }
 
          Py_DECREF( length );
@@ -1395,14 +1387,19 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
+      Utility::AddToClass( pyclass, "__len__",     "size" );
+
       if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "at" ) ) )
          Utility::AddToClass( pyclass, "_vector__at", "at" );
-      else
+      else if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "__getitem__" ) ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
+      // for unchecked getitem, it is necessary to have a checked iterator protocol
+         Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) StlSequenceIter );
+      }
 
-      Utility::AddToClass( pyclass, "__len__",     "size" );
-      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
-      Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) StlSequenceIter );
+   // provide a slice-able __getitem__, if possible
+      if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "_vector__at" ) ) )
+         Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
 
       return kTRUE;
    }

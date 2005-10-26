@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.17 2005/09/14 08:07:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.18 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -24,38 +24,6 @@
 //- data ______________________________________________________________________
 PyROOT::ConvFactories_t PyROOT::gConvFactories;
 
-//- helpers -------------------------------------------------------------------
-namespace {
-
-   Bool_t GetAddressSpecialCase( PyObject* pyobject, void*& address )
-   {
-   // (1): "null pointer"
-      if ( pyobject == Py_None ) {
-         address = (void*)0;
-         return kTRUE;
-      }
-
-   // (2): allow integer zero to act as a null pointer, no deriveds
-      if ( PyInt_CheckExact( pyobject ) || PyLong_CheckExact( pyobject ) ) {
-         long val = PyLong_AsLong( pyobject );
-         if ( val == 0l ) {
-            address = (void*)val;
-            return kTRUE;
-         }
-
-         return kFALSE;
-      }
-
-   // (3): opaque CObject from somewhere
-      if ( PyCObject_Check( pyobject ) ) {
-         address = (void*)PyCObject_AsVoidPtr( pyobject );
-         return kTRUE;
-      }
-
-      return kFALSE;
-   }
-
-} // unnamed namespace
 
 //- base converter implementation ---------------------------------------------
 PyObject* PyROOT::TConverter::FromMemory( void* )
@@ -352,6 +320,36 @@ namespace {
 
 } // unnamed namespace
 
+//____________________________________________________________________________
+Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
+{
+// (1): "null pointer"
+   if ( pyobject == Py_None ) {
+      address = (void*)0;
+      return kTRUE;
+   }
+
+// (2): allow integer zero to act as a null pointer, no deriveds
+   if ( PyInt_CheckExact( pyobject ) || PyLong_CheckExact( pyobject ) ) {
+      long val = PyLong_AsLong( pyobject );
+      if ( val == 0l ) {
+         address = (void*)val;
+         return kTRUE;
+      }
+
+      return kFALSE;
+   }
+
+// (3): opaque CObject from somewhere
+   if ( PyCObject_Check( pyobject ) ) {
+      address = (void*)PyCObject_AsVoidPtr( pyobject );
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TVoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
 // just convert pointer if it is a ROOT object
@@ -502,7 +500,6 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
    *((strtype*)address) = buf;                                                \
    return kTRUE;                                                              \
 }
-
 
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
@@ -746,8 +743,10 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
-      else if ( cpd == "*" || cpd == "&" )
+      else if ( cpd == "*" )
          result = new TRootObjectConverter( klass, control );
+      else if ( cpd == "&" )
+         result = new TRefRootObjectConverter( klass, control );
       else if ( cpd == "" )               // by value
          result = new TRootObjectConverter( klass, kTRUE );
 

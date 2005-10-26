@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.12 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.13 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -107,6 +107,9 @@ namespace PyROOT {
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
    protected:
+      virtual Bool_t GetAddressSpecialCase( PyObject* pyobject, void*& address );
+
+   protected:
       Bool_t KeepControl() { return fKeepControl; }
 
    private:
@@ -141,12 +144,12 @@ namespace PyROOT {
    PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
    PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
 
-   class TRootObjectConverter: public TVoidArrayConverter {
+   class TRootObjectConverter : public TVoidArrayConverter {
    public:
       TRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
          TVoidArrayConverter( keepControl ), fClass( klass ) {}
-      TRootObjectConverter( TClass* klass, Bool_t keepControl = kFALSE ) :
-         TVoidArrayConverter( keepControl ), fClass( klass ) {}
+
+   public:
       virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
@@ -155,12 +158,21 @@ namespace PyROOT {
       TClassRef fClass;
    };
 
+   class TRefRootObjectConverter : public TRootObjectConverter {
+   public:
+      TRefRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
+         TRootObjectConverter( klass, keepControl ) {}
+
+   protected:
+      virtual Bool_t GetAddressSpecialCase( PyObject*, void*& ) { return kFALSE; }
+   };
+
    class TRootObjectPtrConverter : public TRootObjectConverter {
    public:
       TRootObjectPtrConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
          TRootObjectConverter( klass, keepControl ) {}
-      TRootObjectPtrConverter( TClass* klass, Bool_t keepControl = kFALSE ) :
-         TRootObjectConverter( klass, keepControl ) {}
+
+   public:
       virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
