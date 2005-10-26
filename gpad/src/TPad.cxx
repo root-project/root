@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.203 2005/10/11 13:15:22 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.204 2005/10/11 13:34:40 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5396,10 +5396,10 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
    // c.f. ReleaseViewer3D
-   //"Workaround" for gl-in-pad :(
-   TVirtualViewer3D *tmp = fViewer3D;
+   delete fViewer3D;
+
+   // Set and return new viewer
    fViewer3D = newViewer;
-   delete tmp;
 
    // Ensure any new external viewer is painted
    // For internal TViewer3DPad type we assume this is being
