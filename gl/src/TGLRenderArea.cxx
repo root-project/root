@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.cxx,v 1.2 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.cxx,v 1.3 2005/05/25 14:25:17 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -46,6 +46,8 @@ Bool_t TGLWindow::HandleConfigureNotify(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLWindow::HandleButton(Event_t *event)
 {
+   // Ensure we take focus so keyboard events are captured
+   RequestFocus();
    Emit("HandleButton(Event_t*)", (Long_t)event);
    return kTRUE;
 }
