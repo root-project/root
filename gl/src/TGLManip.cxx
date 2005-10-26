@@ -78,6 +78,7 @@ void TGLManip::Select(const TGLCamera & camera)
          }
          if (selectBuffer[i * 4 + 1] < minDepth) {
             fSelectedWidget = selectBuffer[i * 4 + 3];
+            minDepth = selectBuffer[i * 4 + 1];
          }
       }
    } else {
