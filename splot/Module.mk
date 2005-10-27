@@ -3,13 +3,13 @@
 #
 # Author: Rene Brun, 27/8/2003
 
-MODDIR       := splot
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODDIR      := splot
+MODDIRS     := $(MODDIR)/src
+MODDIRI     := $(MODDIR)/inc
 
-SPLOTDIR       := $(MODDIR)
-SPLOTDIRS      := $(SPLOTDIR)/src
-SPLOTDIRI      := $(SPLOTDIR)/inc
+SPLOTDIR    := $(MODDIR)
+SPLOTDIRS   := $(SPLOTDIR)/src
+SPLOTDIRI   := $(SPLOTDIR)/inc
 
 ##### libSPlot #####
 SPLOTL      := $(MODDIRI)/LinkDef.h
