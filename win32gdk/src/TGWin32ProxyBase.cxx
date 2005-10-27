@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.17 2005/10/03 17:31:20 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.18 2005/10/10 11:07:57 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -87,7 +87,7 @@
 #include "TRefCnt.h"
 #include "TList.h"
 #include "TGWin32.h"
-
+#include "TRoot.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32CallBackObject : public TObject {
@@ -268,6 +268,8 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 
    while (IsGloballyLocked()) {
       Ping();
+      if (GetCurrentThreadId() == fgMainThreadId)
+         break;
       ::SleepEx(10, 1); // take a rest
       if (!fgMainThreadId) return kFALSE; // server thread terminated 
    }
@@ -286,8 +288,18 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    }
 
    // limiting wait time
-   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, INFINITE);//fMaxResponseTime);
+   DWORD res = WAIT_TIMEOUT;
+   while (res ==  WAIT_TIMEOUT) {
+      res = ::WaitForSingleObject(fPimpl->fEvent, 100);
+      if ((GetCurrentThreadId() == fgMainThreadId) || 
+         (!gROOT->IsLineProcessing() && IsGloballyLocked())) {
+         break;
+      }
+   }
    ::ResetEvent(fPimpl->fEvent);
+
+//   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, INFINITE);
+//   ::ResetEvent(fPimpl->fEvent);
 
    if (res == WAIT_TIMEOUT) { // server thread is blocked
       GlobalLock();
