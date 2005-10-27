@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.59 2005/07/11 15:50:42 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.60 2005/07/24 09:58:18 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -581,7 +581,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 {
    // Create test main frame. A TGMainFrame is a top level window.
 
-   fMain   = new TGMainFrame(p, w, h);
+   fMain = new TGMainFrame(p, w, h);
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1161,7 +1161,7 @@ TestDialog::~TestDialog()
 {
    // Delete test dialog widgets.
 
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void TestDialog::FillHistos()
@@ -1239,6 +1239,7 @@ void TestDialog::DoOK()
 
    // The same effect can be obtained by using a singleshot timer:
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
+
    // Close the Ged editor if it was activated.
    if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
       TVirtualPadEditor::Terminate();
@@ -1370,7 +1371,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h, options);
    fMain->Connect("CloseWindow()", "TestMsgBox", this, "CloseWindow()");
-   fMain->DontCallClose();
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1507,7 +1508,7 @@ TestMsgBox::~TestMsgBox()
 {
    // Delete widgets created by dialog.
 
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void TestMsgBox::CloseWindow()
@@ -1521,7 +1522,7 @@ void TestMsgBox::DoClose()
 {
    // Handle Close button.
 
-   fMain->SendCloseMessage();
+   CloseWindow();
 }
 
 void TestMsgBox::DoTest()
@@ -1584,6 +1585,7 @@ TestSliders::TestSliders(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestSliders", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1673,7 +1675,7 @@ TestSliders::~TestSliders()
 {
    // Delete dialog.
 
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void TestSliders::CloseWindow()
@@ -1770,6 +1772,7 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestShutter", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1832,8 +1835,9 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 TestShutter::~TestShutter()
 {
    // dtor
+
    gClient->FreePicture(fDefaultPic);
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void TestShutter::CloseWindow()
@@ -1855,6 +1859,8 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestDirList", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
+
    fIcon = gClient->GetPicture("rootdb_t.xpm");
    TGLayoutHints *lo;
 
@@ -1890,7 +1896,7 @@ TestDirList::~TestDirList()
 
    gClient->FreePicture(fIcon);
    delete fContents;
-   delete fMain;
+   fMain->DeleteWindow();  // delete fMain
 }
 
 void TestDirList::CloseWindow()
@@ -1954,6 +1960,7 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
 
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestDirList", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -2001,7 +2008,7 @@ TestFileList::~TestFileList()
 
    delete fContents;
    delete fMenu;
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void TestFileList::DoMenu(Int_t mode)
@@ -2177,7 +2184,7 @@ TestProgress::~TestProgress()
 {
    // Delete dialog.
 
-   delete fMain;
+   fMain->DeleteWindow();   // deletes fMain
 }
 
 void TestProgress::CloseWindow()
@@ -2202,7 +2209,7 @@ void TestProgress::DoClose()
       CloseWindow();
    else {
       fClose = kTRUE;
-      TTimer::SingleShot(50, "TestProgress", this, "CloseWindow()");
+      TTimer::SingleShot(150, "TestProgress", this, "CloseWindow()");
    }
 }
 
@@ -2275,6 +2282,7 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    // build widgets
    fMain = new TGTransientFrame(p, main, 10, 10, kHorizontalFrame);
    fMain->Connect("CloseWindow()", "EntryTestDlg", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -2346,7 +2354,7 @@ EntryTestDlg::~EntryTestDlg()
 {
    // dtor
 
-   delete fMain;
+   fMain->DeleteWindow();
 }
 
 void EntryTestDlg::CloseWindow()
@@ -2400,6 +2408,7 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
 
    fMain = new TGTransientFrame(gClient->GetRoot(), main, w, h);
    fMain->Connect("CloseWindow()", "Editor", this, "CloseWindow()");
+   fMain->DontCallClose(); // to avoid double deletions.
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -2430,7 +2439,7 @@ Editor::~Editor()
 {
    // Delete editor dialog.
 
-   delete fMain;
+   fMain->DeleteWindow();  // deletes fMain
 }
 
 void Editor::SetTitle()
@@ -2491,7 +2500,7 @@ void Editor::DoOK()
 {
    // Handle ok button.
 
-   fMain->SendCloseMessage();
+   CloseWindow();
 }
 
 void Editor::DoOpen()
@@ -2508,7 +2517,7 @@ void Editor::DoClose()
 {
    // Handle close button.
 
-   fMain->SendCloseMessage();
+   CloseWindow();
 }
 
 
