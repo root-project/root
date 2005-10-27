@@ -3213,7 +3213,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
-    -e "s|@buildminuit2t@|$enable_minuit2|"     \
+    -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
