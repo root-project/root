@@ -179,7 +179,7 @@ MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby \
                 qt qtroot xrootd netx clarens peac oracle xmlparser \
-                mathcore mathmore reflex cintex roofit
+                mathcore mathmore reflex cintex roofit minuit2
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
