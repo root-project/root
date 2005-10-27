@@ -77,6 +77,8 @@ MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
+SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB)
+SPLOTLIBEXTRA       = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib 
 QUADPLIBDEP         = $(MATRIXLIB)
 QUADPLIBEXTRA       = lib/libMatrix.lib
 GLLIBDEP            = $(G3DLIB) $(GUILIB)
@@ -185,6 +187,8 @@ ASIMAGEGSLIBEXTRA   = -Llib -lGraf -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
+SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB)
+SPLOTLIBEXTRA       = -Llib -lMatrix -lHist -lTree
 QTROOTLIBDEP        = $(GUILIB) $(GQTLIB)
 QTROOTLIBEXTRA      = -Llib -lGui -lGQt
 GQTLIBDEP           = $(GPADLIB) $(RINTLIB)
