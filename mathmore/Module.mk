@@ -32,9 +32,9 @@ GSLLIB       := $(LPATH)/libgsl.a
 endif
 GSLDEP       := $(GSLLIB)
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-GSLDBG      = "--enable-gdb"
+GSLDBG        = "--enable-gdb"
 else
-GSLDBG      =
+GSLDBG        =
 endif
 
 ##### libMathMore #####
@@ -42,7 +42,7 @@ MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
 MATHMORELINC := $(MODDIRI)/Math/LinkDef_SpecFunc.h \
 		$(MODDIRI)/Math/LinkDef_StatFunc.h \
 		$(MODDIRI)/Math/LinkDef_RootFinding.h \
-		$(MODDIRI)/Math/LinkDef_Func.h 
+		$(MODDIRI)/Math/LinkDef_Func.h
 MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx
 MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
 MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
@@ -106,12 +106,6 @@ ifeq ($(PLATFORM),win32)
 		cp ./*/*.h ./gsl; \
 		unset MAKEFLAGS; \
 		nmake -f Makefile.msc CFG=$(GSLBLD))
-#		GNUMAKE=$(MAKE) ./configure $(GSLDBG) CC=cl LD=cl CFLAGS="$(CFLAGS)" ;  \
-#		cd gsl; sed -e 's/ln -s/cp -p/' Makefile > MakefileNew; mv MakefileNew Makefile; cd ../; \
-#		$(MAKE)) \
-# 		unset MAKEFLAGS; \
-# 		nmake -nologo -f gsl.mak \
-# 		CFG=$(GSLBLD))
 else
 		@(if [ -d $(GSLDIRS) ]; then \
 			rm -rf $(GSLDIRS); \
@@ -139,7 +133,7 @@ else
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACC="gcc -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure $(GSLDBG);  \
+		GNUMAKE=$(MAKE) ./configure $(GSLDBG); \
 		$(MAKE))
 endif
 
