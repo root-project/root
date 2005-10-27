@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: Quaternion.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -222,7 +222,7 @@ public:
   template <class CoordSystem>
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vec());
+    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
     xyz = operator()(xyz);
     LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
     return LorentzVector<CoordSystem> ( xyzt );

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Point3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Point3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -87,17 +87,17 @@
 
 // operator P = V + P returning point
 // these will not wok since CINT will instantiate those like V = V + P  
-// #pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > & , ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >  );
-// #pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &, ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> > );
-// #pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &, ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double> > );
+#pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > & , ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >  );
+#pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &, ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> > );
+#pragma link C++ function ROOT::Math::operator+( const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &, ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double> > );
 
 
 
 
 // operator V = P-P (cannot work in CINT if I can have V = V-V
-// #pragma link C++ function ROOT::Math::operator-( const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > &, const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > &);
-// #pragma link C++ function ROOT::Math::operator-( ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > , const ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-// #pragma link C++ function ROOT::Math::operator-( ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > , const ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function ROOT::Math::operator-( const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > &, const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function ROOT::Math::operator-( ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > , const ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function ROOT::Math::operator-( ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> > , const ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double> > &);
 
 
 

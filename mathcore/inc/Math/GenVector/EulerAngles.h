@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.3 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -215,7 +215,7 @@ public:
   template <class CoordSystem>
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vec());
+    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
     xyz = operator()(xyz);
     LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
     return LorentzVector<CoordSystem> ( xyzt );

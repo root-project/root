@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Vector3D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Vector3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -68,32 +68,32 @@
 
 // operator + 
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >  &, ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator+(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator+(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
 
 
 // operator -
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
 
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
-#pragma link C++ function  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >::operator-(const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
+#pragma link C++ function  ROOT::Math::operator-(const ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> > &,  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
 
 // operator * 
 

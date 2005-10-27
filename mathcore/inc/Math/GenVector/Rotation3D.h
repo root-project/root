@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: Rotation3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -317,7 +317,7 @@ public:
   template <class CoordSystem>
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vec());
+    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
     xyz = operator()(xyz);
     LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
     return LorentzVector<CoordSystem> ( xyzt );

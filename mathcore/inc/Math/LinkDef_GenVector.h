@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -44,6 +44,8 @@
 #pragma link C++ class ROOT::Math::RotationY+;
 #pragma link C++ class ROOT::Math::RotationZ+;
 #pragma link C++ class ROOT::Math::LorentzRotation+;
+
+#pragma link C++ class ROOT::Math::Transform3D+;
 
 
 
@@ -117,5 +119,14 @@
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiVector >+;
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiPoint >+;
 #endif
+
+
+// dictionary fo rextra types 
+#pragma extra_include "Rtypes.h";
+#pragma link C++ class ROOT::Math::Cartesian3D<Double32_t>+;
+#pragma link C++ class ROOT::Math::PxPyPzE4D<Double32_t>+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >+;
+
 
 #endif

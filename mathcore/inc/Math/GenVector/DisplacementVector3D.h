@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.3 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.4 2005/09/23 14:00:54 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.3 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.4 2005/09/23 14:00:54 moneta Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
@@ -361,7 +361,7 @@ namespace ROOT {
       }
 
 
-#ifndef __CINT__
+      //#ifndef __CINT__
 
       /**
           Self Addition with a displacement vector.
@@ -383,8 +383,8 @@ namespace ROOT {
         return *this;
       }
 
-#endif //not CINT
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+      //#endif //not CINT
+#ifdef OLDCINT
 
       /**
           Self Addition with a displacement vector.
@@ -409,6 +409,8 @@ namespace ROOT {
         SetXYZ(  x() - v.x(), y() - v.y(), z() - v.z() );
         return *this;
       }
+      //#endif
+      //#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 
       /**
           Addition of DisplacementVector3D vectors.
@@ -518,7 +520,8 @@ namespace ROOT {
 // ---------- DisplacementVector3D class template ends here ------------
 // ---------------------------------------------------------------------
 
-#ifndef __CINT__
+//#ifndef __CINT__
+
 
    /**
         Addition of DisplacementVector3D vectors.
@@ -546,7 +549,7 @@ namespace ROOT {
       return v1 -= v2;
     }
 
-#endif // not __CINT__
+    //#endif // not __CINT__
 
     /**
        Multiplication of a displacement vector by real number  a*v

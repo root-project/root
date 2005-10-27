@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Vector4Dfwd.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Vector4Dfwd.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -44,6 +44,7 @@ namespace ROOT {
      LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+) 
     */
     typedef LorentzVector< PxPyPzE4D <float> > XYZTVectorF;
+
     
 
     /**

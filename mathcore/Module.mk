@@ -33,6 +33,7 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/EulerAngles.h \
                  $(MODDIRI)/Math/AxisAngle.h \
                  $(MODDIRI)/Math/Quaternion.h \
+                 $(MODDIRI)/Math/Transform3D.h \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/ProbFuncMathCore.h \
                  $(MODDIRI)/Math/DistFunc.h \

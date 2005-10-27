@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: LorentzVector.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -313,7 +313,7 @@ namespace ROOT {
           get the spatial components of the Vector in a
           DisplacementVector based on Cartesian Coordinates
       */
-      ::ROOT::Math::DisplacementVector3D<Cartesian3D<Scalar> > Vec() const {
+      ::ROOT::Math::DisplacementVector3D<Cartesian3D<Scalar> > Vect() const {
         return ::ROOT::Math::DisplacementVector3D<Cartesian3D<Scalar> >( X(), Y(), Z() );
       }
 
@@ -502,14 +502,14 @@ namespace ROOT {
           } else {
           // TODO - should attempt to Throw with msg about
           // boostVector computed for LorentzVector with t=0
-            return -Vec()/E();
+            return -Vect()/E();
           }
         }
         if (M2() <= 0) {
           // TODO - should attempt to Throw with msg about
           // boostVector computed for a non-timelike LorentzVector
         }
-        return -Vec()/E();
+        return -Vect()/E();
       }
 
       /**
@@ -519,7 +519,7 @@ namespace ROOT {
       template <class Other4Vector>
       BetaVector BoostToCM(const Other4Vector& v ) const {
         Scalar eSum = E() + v.E();
-        DisplacementVector3D< Cartesian3D<Scalar> > vecSum = Vec() + v.Vec();
+        DisplacementVector3D< Cartesian3D<Scalar> > vecSum = Vect() + v.Vect();
         if (eSum == 0) {
           if (vecSum.Mag2() == 0) {
             return BetaVector();
