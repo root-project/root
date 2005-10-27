@@ -3,40 +3,19 @@
 #
 # Author: Rene Brun, 07/05/2003
 
-#MINUIT2INCDIR := $(ROOTSYS)/include
-#MINUIT2LIBDIR := $(ROOTSYS)/lib
-# MINUITINCDIR := /Users/moneta/mathlibs/Minuit-1_7_1/include
-# MINUITLIBDIR := /Users/moneta/mathlibs/Minuit-1_7_1/lib
-
-MODDIR       := minuit2
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODDIR        := minuit2
+MODDIRS       := $(MODDIR)/src
+MODDIRI       := $(MODDIR)/inc
 
 MINUIT2DIR    := $(MODDIR)
 MINUIT2DIRS   := $(MINUIT2DIR)/src
 MINUIT2DIRI   := $(MINUIT2DIR)/inc
 
-##### libMinuit2 #####
-MINUIT2L      := $(MODDIRI)/LinkDef.h
-MINUIT2DS     := $(MODDIRS)/G__Minuit2.cxx
-MINUIT2DO     := $(MINUIT2DS:.cxx=.o)
-MINUIT2DH     := $(MINUIT2DS:.cxx=.h)
-
-MINUIT2H      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-MINUIT2S      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MINUIT2O      := $(MINUIT2S:.cxx=.o)
-
-MINUIT2DEP    := $(MINUIT2O:.o=.d) $(MINUIT2DO:.o=.d)
-
-MINUIT2LIB    := $(LPATH)/libMinuit2.$(SOEXT)
-
-
-MINUITBASEVERS     := Minuit-1_7_6
-MINUITBASESRCS     := $(MODDIRS)/$(MINUITBASEVERS).tar.gz
-MINUITBASEDIRS     := $(MODDIRS)/$(MINUITBASEVERS)
-MINUITBASEDIRI     := -I$(MODDIRS)/$(MINUITBASEVERS)
-MINUITBASEETAG     := $(MODDIRS)/headers.d
-
+MINUITBASEVERS := Minuit-1_7_6
+MINUITBASESRCS := $(MODDIRS)/$(MINUITBASEVERS).tar.gz
+MINUITBASEDIRS := $(MODDIRS)/$(MINUITBASEVERS)
+MINUITBASEDIRI := -I$(MODDIRS)/$(MINUITBASEVERS)
+MINUITBASEETAG := $(MODDIRS)/headers.d
 
 ##### liblcg_Minuit #####
 ifeq ($(PLATFORM),win32)
@@ -53,15 +32,28 @@ MINUITBASELIB       := $(LPATH)/libminuitbase.a
 endif
 MINUITBASEDEP       := $(MINUITBASELIB)
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-MINUITBASEDBG      = "--enable-gdb"
+MINUITBASEDBG        = "--enable-gdb"
 else
-MINUITBASEDBG      =
+MINUITBASEDBG        =
 endif
 
+##### libMinuit2 #####
+MINUIT2L     := $(MODDIRI)/LinkDef.h
+MINUIT2DS    := $(MODDIRS)/G__Minuit2.cxx
+MINUIT2DO    := $(MINUIT2DS:.cxx=.o)
+MINUIT2DH    := $(MINUIT2DS:.cxx=.h)
+
+MINUIT2H     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MINUIT2S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+MINUIT2O     := $(MINUIT2S:.cxx=.o)
+
+MINUIT2DEP   := $(MINUIT2O:.o=.d) $(MINUIT2DO:.o=.d)
+
+MINUIT2LIB   := $(LPATH)/libMinuit2.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
-ALLLIBS     += $(MINUIT2LIB)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
+ALLLIBS      += $(MINUIT2LIB)
 
 # include all dependency files
 INCLUDEFILES += $(MINUIT2LIBDEP)
@@ -70,18 +62,16 @@ INCLUDEFILES += $(MINUIT2LIBDEP)
 include/%.h:    $(MINUIT2DIRI)/%.h
 		cp $< $@
 
-
-$(MINUITBASELIB):   $(MINUITBASELIBA)
+$(MINUITBASELIB): $(MINUITBASELIBA)
 		cp $< $@
 ifeq ($(PLATFORM),macosx)
 		ranlib $@
 endif
-ifeq ($(PLATFORM), win32)
-		cp $(MINUITBASEDIRS)/lcg_Minuit.dll $(LPATH)/../bin/libbaseminuit.dll
+ifeq ($(PLATFORM),win32)
+		cp $(MINUITBASEDIRS)/lcg_Minuit.dll bin/libbaseminuit.dll
 endif
 
 $(MINUITBASELIBA):  $(MINUITBASESRCS)
-		echo "building Minuit library first"
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(MINUITBASEDIRS) ]; then \
 			rm -rf $(MINUITBASEDIRS); \
@@ -94,12 +84,6 @@ ifeq ($(PLATFORM),win32)
 		cd $(MINUITBASEVERS); \
 		unset MAKEFLAGS; \
 		nmake -f makefile.msc $(MINUITBASEBLD))
-#		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CC=cl LD=cl CFLAGS="$(CFLAGS)" ;  \
-#		cd minuit; sed -e 's/ln -s/cp -p/' Makefile > MakefileNew; mv MakefileNew Makefile; cd ../; \
-#		$(MAKE)) \
-# 		unset MAKEFLAGS; \
-# 		nmake -nologo -f minuit.mak \
-# 		CFG=$(MINUITBASEBLD))
 else
 		@(if [ -d $(MINUITBASEDIRS) ]; then \
 			rm -rf $(MINUITBASEDIRS); \
@@ -127,28 +111,30 @@ else
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACC="gcc -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CXXFLAGS="$(OPTFLAGS) $(CXXFLAGS)";  \
+		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CXXFLAGS="$(OPT) $(CXXFLAGS)"; \
 		$(MAKE))
 endif
 
-$(MINUIT2LIB):  $(MINUITBASEDEP) $(MINUIT2O) $(MINUIT2DO) $(MAINLIBS) $(MINUITBASELIBDEP)
-		@echo "Doing Minuit lib for platform "$(PLATFORM)
+$(MINUIT2LIB):  $(MINUITBASEDEP) $(MINUIT2O) $(MINUIT2DO) $(MAINLIBS) $(MINUIT2LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libMinuit2.$(SOEXT) $@ "$(MINUIT2O) $(MINUIT2DO)" \
-		   "$(MINUITLIBEXTRA) $(MINUITBASELIB)" 
+		   "$(SOFLAGS)" libMinuit2.$(SOEXT) $@ \
+		   "$(MINUIT2O) $(MINUIT2DO)" \
+		   "$(MINUIT2LIBEXTRA) $(MINUITBASELIB)"
 
-$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMP)
+$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMP) $(MINUITBASELIBA)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUITBASEDIRI) $(MINUIT2H) $(MINUIT2L)
 
 $(MINUIT2DO):   $(MINUIT2DS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(MINUITBASEDIRI) -I. -o $@ -c $< 
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(MINUITBASEDIRI) -I. -o $@ -c $<
 
+all-minuit2:    $(MINUIT2LIB)
 
-all-minuit2:    $(MINUIT2LIB) 
+map-minuit2:    $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MINUIT2LIB) \
+		   -d $(MINUIT2LIBDEP) -c $(MINUIT2L)
 
-# all-minuit2:    untar-minuit
-# 		echo "make all" $(MINUIT2LIB)
+map::           map-minuit2
 
 test-minuit2: 	$(MINUIT2LIB)
 		cd $(MINUIT2DIR)/test; make
@@ -173,9 +159,10 @@ clean::         clean-minuit2
 
 distclean-minuit2: clean-minuit2
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB)
+		@rm -f $(MINUITBASELIB) bin/libbaseminuit.dll
 
 distclean::     distclean-minuit2
-##### extra rules ######
 
+##### extra rules ######
 $(MINUIT2O): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(MINUITBASEDIRI) -o $@ -c $< 
+	$(CXX) $(OPT) $(CXXFLAGS) $(MINUITBASEDIRI) -o $@ -c $<
