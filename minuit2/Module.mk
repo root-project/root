@@ -43,7 +43,7 @@ ifeq ($(PLATFORM),win32)
 MINUITBASELIBA      := $(MINUITBASEDIRS)/lcg_Minuit.lib
 MINUITBASELIB       := $(LPATH)/libminuitbase.lib
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-MINUITBASEBLD        = "DEBUG"
+MINUITBASEBLD        = "DEBUG=1"
 else
 MINUITBASEBLD        = ""
 endif
