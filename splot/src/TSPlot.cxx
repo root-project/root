@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.2 2005/10/27 17:06:29 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.1 2005/10/27 19:33:41 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -970,7 +970,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    Double_t *xvars = new Double_t[ncols];
 
    fMinmax.ResizeTo(2, ncols);
-   for (Int_t i=0; i<ncols; i++){
+   for (i=0; i<ncols; i++){
       fMinmax(0, i)=1e30; 
       fMinmax(1, i)=-1e30;
    }
