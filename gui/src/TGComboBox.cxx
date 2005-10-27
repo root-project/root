@@ -121,7 +121,8 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
-   EndPopup();
+   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+   // EndPopup();
 }
 
 
@@ -170,7 +171,6 @@ TGComboBox::~TGComboBox()
    // Delete a combo box widget.
 
    fClient->FreePicture(fBpic);
-
    if (!MustCleanup()) {
       delete fDDButton;  fDDButton = 0;
       delete fSelEntry;  fSelEntry = 0;
@@ -181,7 +181,11 @@ TGComboBox::~TGComboBox()
 
    delete fLhdd;       fLhdd       = 0;
    delete fListBox;    fListBox    = 0;
-   delete fComboFrame; fComboFrame = 0;
+   if (fComboFrame) {
+      fComboFrame->EndPopup(); 
+      delete fComboFrame; 
+      fComboFrame = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -288,7 +292,6 @@ void TGComboBox::Select(Int_t id)
 Bool_t TGComboBox::HandleButton(Event_t *event)
 {
    // Handle mouse button events in the combo box.
-
    if (!fDDButton) return kTRUE;
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
@@ -306,7 +309,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
                                          0, fHeight, ax, ay, wdummy);
 
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
-         fDDButton->SetState(kButtonUp);
+         if (fDDButton) fDDButton->SetState(kButtonUp);
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
