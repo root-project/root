@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.113 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.114 2005/10/07 13:00:30 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -226,11 +226,11 @@ TGFrame::~TGFrame()
 void TGFrame::DeleteWindow()
 {
    // Delete window. Use single shot timer to call final delete method.
-   // We use this inderect way since deleting the window in its own
+   // We use this indirect way since deleting the window in its own
    // execution "thread" can cause side effects because frame methods
    // can still be called while the window object has already been deleted.
 
-   TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
+   TTimer::SingleShot(150, IsA()->GetName(), this, "ReallyDelete()");
 }
 
 //______________________________________________________________________________
