@@ -1904,6 +1904,9 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 
         if(initary && strchr(new_name,'[') &&
            (G__struct.funcs[G__tagnum]&G__HAS_CONSTRUCTOR)) {
+
+          store_prerun = G__prerun;
+          if(G__NOLINK==G__globalcomp && G__func_now==-1) G__prerun = 0; // Do run constructors
           G__initstructary(new_name,G__tagnum);
           G__decl=store_decl;
           G__constvar=0;
@@ -1913,6 +1916,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           G__static_alloc=store_static_alloc2;
           G__dynconst=0;
           G__globalvarpointer = G__PVOID;
+          G__prerun = store_prerun;
           return;
         }
 
