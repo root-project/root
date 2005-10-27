@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -18,6 +18,7 @@
 #include "Minuit/FumiliMinimizer.h"
 #include "Minuit/FunctionMinimum.h"
 #include "Minuit/MnStrategy.h"
+#include "Minuit/MnPrint.h"
 
 
 //#define DEBUG 1

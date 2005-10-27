@@ -111,7 +111,7 @@ else
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACC="gcc -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CXXFLAGS="$(OPT) $(CXXFLAGS)"; \
+		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CXX=$$ACC CXXFLAGS="$(OPT) $(CXXFLAGS)"; \
 		$(MAKE))
 endif
 

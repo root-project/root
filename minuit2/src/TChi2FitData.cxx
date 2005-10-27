@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -12,6 +12,10 @@
 #include "TChi2FitData.h"
 
 #include "TVirtualFitter.h" 
+
+#if defined(__alpha) 
+#define __USE_STD_IOSTREAM
+#endif
 
 #include <iostream>
 
