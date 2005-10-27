@@ -200,7 +200,7 @@ BUILDREFLEX    := @buildreflex@
 
 BUILDROOFIT    := @buildroofit@
 
-BUILDMinuit2   := @buildminuit2@
+BUILDMINUIT2   := @buildminuit2@
 
 BUILDTABLE     := @buildtable@
 
