@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -7,6 +7,7 @@
  *                                                                    *
  **********************************************************************/
 
+#include "TApplication.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TRandom3.h"
@@ -112,6 +113,17 @@ void fitGraph(int n = 500) {
 
 }
 
+#ifndef __CINT__
+int main(int argc, char **argv)
+{
+   TApplication theApp("App", &argc, argv);
+   fitGraph(500);
+   theApp.Run();
+   return 0;
+}
+#endif
+/*
 int main() { 
   fitGraph(500); 
 }
+*/

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testUserFunc.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testUserFunc.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -8,6 +8,7 @@
  **********************************************************************/
 
 
+#include "TApplication.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TRandom3.h"
@@ -57,7 +58,17 @@ void testUserFunc(std::string type="Minuit2", int n = 1000) {
 }
 
 #ifndef __CINT__
-int main() { 
-  testUserFunc( );
+int main(int argc, char **argv)
+{
+   TApplication theApp("App", &argc, argv);
+   testUserFunc( );
+   theApp.Run();
+   return 0;
 }
 #endif
+
+//#ifndef __CINT__
+//int main() { 
+//  testUserFunc( );
+//}
+//#endif
