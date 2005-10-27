@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.118 2005/10/11 12:32:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.119 2005/10/12 09:53:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2891,11 +2891,12 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile)
+Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *wrk)
 {
    // Send a file to master or slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
    // file system image, -1 in case of error.
+   // If defined, send to worker 'wrk' only.
    // If defined, the full path of the remote path will be rfile.
    // The mask 'opt' is an or of ESendFileOpt:
    //
@@ -2912,7 +2913,13 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile)
 
    if (!IsValid()) return -1;
 
+   // Use the active slaves list ...
    TList *slaves = fActiveSlaves;
+   // ... or the specified slave, if any
+   if (wrk) {
+      slaves = new TList();
+      slaves->Add(wrk);
+   }
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -3007,6 +3014,10 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile)
    }
 
    close(fd);
+
+   // Cleanup temporary list, if any
+   if (slaves != fActiveSlaves)
+      SafeDelete(slaves);
 
    return nsl;
 }
@@ -3592,7 +3603,7 @@ Int_t TProof::UploadPackage(const char *tpar)
             // remote directory is locked, upload file over the open channel
             if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
                          sl->GetProofWorkDir(), kPROOF_PackDir,
-                         gSystem->BaseName(par))) < 0)
+                         gSystem->BaseName(par)), sl) < 0)
                Warning("UploadPackage", "problems uploading file %s", par.Data());
          } else {
             // old servers receive it via TFTP

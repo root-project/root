@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.69 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.70 2005/10/11 12:32:21 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -312,7 +312,7 @@ private:
    Int_t    SendCurrentState(ESlaves list = kActive);
    Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime);
    Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward),
-                     const char *rfile = 0);
+                     const char *rfile = 0, TSlave *sl = 0);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
    Int_t    SendInitialState();
