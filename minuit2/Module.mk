@@ -56,7 +56,7 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
 ALLLIBS      += $(MINUIT2LIB)
 
 # include all dependency files
-INCLUDEFILES += $(MINUIT2LIBDEP)
+INCLUDEFILES += $(MINUIT2DEP)
 
 ##### local rules #####
 include/%.h:    $(MINUIT2DIRI)/%.h
