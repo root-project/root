@@ -50,6 +50,7 @@ options="                    \
    enable_qt                 \
    enable_reflex             \
    enable_roofit             \
+   enable_minuit2            \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
@@ -81,6 +82,7 @@ enable_pythia=no
 enable_qt=no
 enable_reflex=no
 enable_roofit=no
+enable_minuit2=no
 enable_rpath=no
 enable_ruby=no
 enable_shadowpw=
@@ -120,6 +122,7 @@ AFS              \
 CINTEX           \
 REFLEX           \
 ROOFIT           \
+MINUIT2          \
 TABLE            \
 XMLDIR           \
 "
@@ -682,6 +685,7 @@ enable/disable options, prefix with either --enable- or --disable-
   ldap               LDAP support, requires (Open)LDAP libs
   mathcore           Build the new libMathCore math library
   mathmore           Build the new libMathMore extended math library
+  minuit2            Build the new libMinuit2 minimizer library
   mysql              MySQL support, requires libmysqlclient
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
@@ -2848,6 +2852,19 @@ fi
 
 ######################################################################
 #
+### echo %%% Minuit2 Library - Contributed library
+#
+message "Checking whether to build libMinuit2"
+if test "x$enable_minuit2" = "xyes" || test ! "x$MINUIT2" = "x"; then
+    enable_minuit2="yes"
+    echo "yes"
+else
+    enable_minuit2=""
+    echo "no"
+fi
+
+######################################################################
+#
 ### echo %%% Table Library - Contributed library
 #
 message "Checking whether to build libTable"
@@ -3196,6 +3213,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
+    -e "s|@buildminuit2t@|$enable_minuit2|"     \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
