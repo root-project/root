@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.32 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.34 2005/10/27 06:48:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -121,8 +121,7 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
-   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
-   // EndPopup();
+   EndPopup();
 }
 
 
@@ -171,20 +170,20 @@ TGComboBox::~TGComboBox()
    // Delete a combo box widget.
 
    fClient->FreePicture(fBpic);
+
    if (!MustCleanup()) {
-      delete fDDButton;  fDDButton = 0;
-      delete fSelEntry;  fSelEntry = 0;
-      delete fTextEntry; fTextEntry= 0;
-      delete fLhs;       fLhs      = 0;
-      delete fLhb;       fLhb      = 0;
+      SafeDelete(fDDButton);
+      SafeDelete(fSelEntry);
+      SafeDelete(fTextEntry);
+      SafeDelete(fLhs);
+      SafeDelete(fLhb);
    }
 
-   delete fLhdd;       fLhdd       = 0;
-   delete fListBox;    fListBox    = 0;
+   SafeDelete(fLhdd);
+   SafeDelete(fListBox);
    if (fComboFrame) {
-      fComboFrame->EndPopup(); 
-      delete fComboFrame; 
-      fComboFrame = 0;
+      fComboFrame->EndPopup();  // force popdown in case of Qt interface
+      SafeDelete(fComboFrame);
    }
 }
 
@@ -304,12 +303,12 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
          }
          int      ax, ay;
          Window_t wdummy;
-
          gVirtualX->TranslateCoordinates(fId, fComboFrame->GetParent()->GetId(),
                                          0, fHeight, ax, ay, wdummy);
 
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
-         if (fDDButton) fDDButton->SetState(kButtonUp);
+
+         fDDButton->SetState(kButtonUp);
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
