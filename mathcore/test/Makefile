@@ -28,15 +28,12 @@ ROTATIONOBJ     = rotationApplication.$(ObjSuf)
 ROTATIONSRC     = rotationApplication.$(SrcSuf)
 ROTATION        = rotationApplication$(ExeSuf)
 
-TESTIOOBJ     = testIO.$(ObjSuf)
-TESTIOSRC     = testIO.$(SrcSuf)
-TESTIO        = testIO$(ExeSuf)
+
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ)
 
 
-OBJS          = $(TESTIOOBJ) $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) 
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION)
 
-
-PROGRAMS      = $(TESTIO) $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -53,11 +50,6 @@ $(COORDINATES4D):   $(COORDINATES4DOBJ)
 		    @echo "$@ done"
 
 $(ROTATION):        $(ROTATIONOBJ)
-		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
-		    @echo "$@ done"
-
-
-$(TESTIO):          $(TESTIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
