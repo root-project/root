@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.7 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.8 2005/09/25 23:01:27 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -60,10 +60,10 @@ void TAlienResult::DumpResult()
 const char *TAlienResult::GetFileName(UInt_t i) const
 {
    if (At(i)) {
-     TObjString* entry;
-     if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
-        return entry->GetName();
-     }
+      TObjString* entry;
+      if ((entry=(TObjString*)((TMap*)At(i))->GetValue("name"))) {
+         return entry->GetName();
+      }
    }
    return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.7 2003/08/06 23:44:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.8 2003/09/04 23:19:31 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -58,7 +58,7 @@ istream& TString::ReadLine(istream& strm, Bool_t skipWhite)
    if (skipWhite)
       strm >> ws;
 
-    return ReadToDelim(strm, '\n');
+   return ReadToDelim(strm, '\n');
 }
 
 //______________________________________________________________________________
@@ -153,7 +153,7 @@ ostream& operator<<(ostream& os, const TString& s)
    // Write string to stream.
 
    if (os.good()) {
-     if (os.tie()) os.tie()->flush(); // instead of opfx
+      if (os.tie()) os.tie()->flush(); // instead of opfx
       UInt_t len = s.Length();
       UInt_t wid = os.width();
       wid = (len < wid) ? wid - len : 0;

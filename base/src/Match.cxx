@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.3 2004/01/29 18:31:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.4 2005/09/02 07:51:51 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -332,7 +332,7 @@ static const char *patcmp(const char*      str,
          const char* end;
          while ((end = patcmp(str, slen, pat, start)) == 0) {
             ++slen, --str;
-           if (str < bocl) break;
+            if (str < bocl) break;
          }
          return end;
 

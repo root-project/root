@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.164 2005/10/17 14:21:26 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.165 2005/10/25 19:30:30 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1773,9 +1773,8 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
 
       // start the PROOF session
       TVirtualProof *proof = 0;
-      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(4, cluster,
-                                                             conffile, confdir,
-                                                             loglevel));
+      proof = (TVirtualProof*) h->ExecPlugin(4, cluster, conffile, confdir,
+                                             loglevel);
       if (!proof || !proof->IsValid()) {
          Error("Proof", "plugin for TVirtualProof could not be executed");
          delete proof;

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.11 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.12 2005/09/25 23:01:26 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -86,8 +86,8 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    fSubFile = TFile::Open(nUrl.GetUrl(), fOption, ftitle, compress);
 
    if ((!fSubFile) || (fSubFile->IsZombie())) {
-       Error("TAlienFile", "cannot open %s!", url);
-       goto zombie;
+      Error("TAlienFile", "cannot open %s!", url);
+      goto zombie;
    }
 
    // gFile would point now to fSubFile, but we don't want that

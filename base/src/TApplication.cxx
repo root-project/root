@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.67 2005/07/22 16:52:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.68 2005/08/29 08:24:08 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -600,12 +600,12 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 
    if (!line || !*line) return 0;
 
-    if (!strncasecmp(line, ".qqqqqqq", 7)) {
-       gSystem->Abort();
-    } else if (!strncasecmp(line, ".qqqqq", 5)) {
-       Info("ProcessLine", "Bye... (try '.qqqqqqq' if still running)");
-       gSystem->Exit(1);
-    } else if (!strncasecmp(line, ".exit", 4) || !strncasecmp(line, ".quit", 2)) {
+   if (!strncasecmp(line, ".qqqqqqq", 7)) {
+      gSystem->Abort();
+   } else if (!strncasecmp(line, ".qqqqq", 5)) {
+      Info("ProcessLine", "Bye... (try '.qqqqqqq' if still running)");
+      gSystem->Exit(1);
+   } else if (!strncasecmp(line, ".exit", 4) || !strncasecmp(line, ".quit", 2)) {
       gInterpreter->ResetGlobals();
       Terminate(0);
       return 0;
