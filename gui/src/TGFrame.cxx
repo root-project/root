@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.114 2005/10/07 13:00:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.115 2005/10/27 09:57:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1492,13 +1492,14 @@ void TGMainFrame::SendCloseMessage()
 //______________________________________________________________________________
 void TGMainFrame::CloseWindow()
 {
-   // Close main frame. We get here in response to ALT+F4 or a window
-   // manager close command. To terminate the application when this
+   // Close and delete main frame. We get here in response to ALT+F4 or
+   // a window manager close command. To terminate the application when this
    // happens override this method and call gApplication->Terminate(0) or
-   // make a connection to this signal. If not the window will be just
-   // destroyed and can not be used anymore.
+   // make a connection to this signal (if after the slot this method
+   // should not be called call DontCallClose() in the slot).
+   // By default the window will be deleted.
 
-   DestroyWindow();
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
