@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.5 2005/08/17 20:08:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.6 2005/10/18 18:53:42 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -42,7 +42,7 @@ void TQtClientGuard::Delete(QWidget *w)
    {
       w->hide();
       Disconnect(w);
-      ((TQtClientWidget *)w)->SetClosing();
+      //((TQtClientWidget *)w)->SetClosing();
       //w->close(true);
       delete w;
       assert( w != QWidget::mouseGrabber() );

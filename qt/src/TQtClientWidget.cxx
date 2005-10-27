@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.7 2005/07/08 06:43:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.8 2005/08/17 20:08:37 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TQtClientWidget::~TQtClientWidget()
    UnSetButtonMask(true);
    UnSetKeyMask();
    UnSetPointerMask(true);
-   if (DeleteNotify())
+   if (!IsClosing())
       gQt->SendDestroyEvent(this);  // notify TGClient we have been destroyed
 }
 

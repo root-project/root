@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.11 2005/10/18 20:32:53 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.12 2005/10/19 05:07:23 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -337,6 +337,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    QWheelEvent *wheelEvent = 0; //    
    QKeyEvent   *keyEvent   = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    QFocusEvent *focusEvent = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
+   Bool_t destroyNotify = kFALSE; // by default we have to ignore all Qt::Close events
    switch ( e->type() ) {
       case QEvent::Wheel:                // mouse wheel event
          event.fType = kButtonPress;
@@ -384,7 +385,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          } else if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
          {
             ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
+             grabEvent = kTRUE;
          } else {
             //delete &event;
             //return kTRUE;  // We do not need the standard Qt processing
@@ -511,8 +512,16 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          break;
       case QEvent::Close:
          event.fType   = kDestroyNotify;
-         ((QCloseEvent *)e)->accept();
-         // ((QCloseEvent *)e)->ignore();
+//        ((QCloseEvent *)e)->accept();
+          ((QCloseEvent *)e)->ignore();
+#ifndef QTCLOSE_DESTROY_RESPOND
+         if ( e->spontaneous() && frame->DeleteNotify() )
+         {
+            frame->SetDeleteNotify(kFALSE);
+            destroyNotify = kTRUE;
+            ((QCloseEvent *)e)->accept();
+         }
+#endif
          // fprintf(stderr, " QEvent::Close spontaneous %d: for %p \n",e->spontaneous(),frame);
          if (fIsGrabbing && (fPointerGrabber == frame))
          {
@@ -520,12 +529,18 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
             gVirtualX->GrabPointer(0, 0, 0, 0,kFALSE);
          }
 #ifdef QTCLOSE_DESTROY_RESPOND
-         // ROOT GUI does not expect this messages to be dispatched.
-         if (frame->DeleteNotify() ) {
-            frame->SetDeleteNotify(kFALSE);
-            SendCloseMessage(event);
+         frame->SetClosing(); // to avoid the double notification
+ // ROOT GUI does not expect this messages to be dispatched.
+         if (!e->spontaneous() ) 
+         {
+            // Ignore this Qt event, ROOT is willing to close the widget
+            ((QCloseEvent *)e)->accept();
+            if (frame->DeleteNotify() ) {
+               frame->SetDeleteNotify(kFALSE);
+               SendCloseMessage(event);
+            }
          }
-#endif         
+#endif
          selectEventMask |=  kStructureNotifyMask;
          break;
       case QEvent::Destroy:              //  during object destruction
@@ -593,7 +608,6 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          } else {
             delete &event;
             if (filterTime) filterTime->Stop();
-            qApp->unlock();
             return kFALSE;  // We need the standard Qt processing
          }
 
@@ -615,7 +629,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
       justInit = true;
    }
 
-   if ( grabEvent || ((TQtClientWidget*)(TGQt::wid(event.fWindow)))->IsEventSelected(selectEventMask) )
+   if ( grabEvent || destroyNotify || ((TQtClientWidget*)(TGQt::wid(event.fWindow)))->IsEventSelected(selectEventMask) )
    {
 //---------------------------------------------------------------------------
 //    QT message has been mapped to ROOT one and ready to be shipped out

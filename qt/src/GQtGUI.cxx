@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.20 2005/10/18 18:53:42 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.21 2005/10/19 05:07:23 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -808,7 +808,7 @@ void TGQt::NextEvent(Event_t &event)
          // For example the mouse pointer had left some screen area but
          // event keeps reporting it is still there
          event = *ev; delete ev;
-         if (gDebug > 3) fprintf(stderr," TGQt::NextEvent event type=%d win=%p\n", event.fType,(void *)event.fWindow);
+         if (gDebug > 3) fprintf(stderr," TGQt::NextEvent event type=%d win=%p, WM handle=%lx\n", event.fType,(void *)event.fWindow,wid(event.fWindow)->handle());
       }
    }
 }
@@ -2855,15 +2855,12 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
       // Send the ROOT kDestroyEvent via Qt event loop
    Event_t destroyEvent;
    memset(&destroyEvent,0,sizeof(Event_t));
-   destroyEvent.fType      = kClientMessage;
-   destroyEvent.fFormat    = 32;
-   destroyEvent.fHandle    = gWM_DELETE_WINDOW;        // general resource handle (used for atoms or windows)
+   destroyEvent.fType      = kDestroyNotify;
    destroyEvent.fWindow    = rootwid(widget);
-   destroyEvent.fUser[0]   = (Long_t) gWM_DELETE_WINDOW;
    destroyEvent.fSendEvent = kTRUE;
    destroyEvent.fTime      = QTime::currentTime().msec();
 
-   //  fprintf(stderr,"---- - - > TGQt::SendDestroyEvent %p  %ld \n", widget, pwid(widget) );
+   // fprintf(stderr,"---- - - > TGQt::SendDestroyEvent %p  %ld \n", widget, wid(widget) );
    ((TGQt *)this)->SendEvent(TGQt::kDefault,&destroyEvent);
 }
 
