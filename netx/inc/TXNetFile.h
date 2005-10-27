@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.3 2005/05/01 10:00:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.4 2005/07/20 15:13:51 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -50,10 +50,16 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TUrl
+#include "TUrl.h"
+#endif
 
+class TSocket;
 class XrdClient;
 
 class TXNetFile : public TNetFile {
+
+friend class TXNetSystem;
 
 private:
 
@@ -67,13 +73,16 @@ private:
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility 
 
    // Methods
-   void    FormUrl(char *uut, TString &uu);
    void    CreateXClient(const char *url, Option_t *option, Int_t netopt);
    void    Open(Option_t *option);
    Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
                    Long_t* modtime);
    Int_t   SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t   SysClose(Int_t fd);
+
+   // Static methods
+   static void FormUrl(TUrl uut, TString &uu);
+   static Int_t GetRootdProtocol(TSocket *s);
 
 public:
    TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0; }

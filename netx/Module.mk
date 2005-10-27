@@ -33,9 +33,16 @@ ALLLIBS      += $(NETXLIB)
 INCLUDEFILES += $(NETXDEP)
 
 # These are undefined if using an external XROOTD distribution
+# The new XROOTD build system based on autotools installs the headers
+# under <dir>/include/xrootd, while the old system under <dir>/src 
+ifneq ($(XROOTDDIR),)
 ifeq ($(XROOTDDIRI),)
+XROOTDDIRI   := $(XROOTDDIR)/include/xrootd
+ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
 XROOTDDIRI   := $(XROOTDDIR)/src
+endif
 XROOTDDIRL   := $(XROOTDDIR)/lib
+endif
 endif
 
 # Xrootd includes
@@ -49,7 +56,7 @@ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XRDPLUGINS)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(NETXLIBEXTRA) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"

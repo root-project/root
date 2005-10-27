@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.15 2005/09/25 19:48:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.16 2005/10/06 09:38:48 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // Authors: Alvise Dorigo, Fabrizio Furano                              //
 //          INFN Padova, 2003                                           //
-// Interfaced to the posix client: G. Ganis, CERN                       //
+// Interfaced to the standalone client (XrdClient): G. Ganis, CERN                       //
 //                                                                      //
 // TXNetFile is an extension of TNetFile able to deal with new xrootd   //
 // server. Its new features are:                                        //
@@ -156,8 +156,8 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
       EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxRetries);
 
       // Whether to activate automatic rootd backward-compatibility
-      Bool_t fgRootdBC = gEnv->GetValue("XNet.RootdFallback",
-                                         NAME_KEEPSOCKOPENIFNOTXRD);
+      // (We override XrdClient default)
+      fgRootdBC = gEnv->GetValue("XNet.RootdFallback", 1);
       EnvPutInt(NAME_KEEPSOCKOPENIFNOTXRD, fgRootdBC);
 
       // For password-based authentication
@@ -248,18 +248,9 @@ TXNetFile::~TXNetFile()
 }
 
 //_____________________________________________________________________________
-void TXNetFile::FormUrl(char *uut, TString &uus)
+void TXNetFile::FormUrl(TUrl uu, TString &uus)
 {
    // Form url for rootd socket.
-
-   // We need something to work on
-   if (!uut) return;
-
-   // raw url
-   TUrl uu(uut);
-
-   // Clean up
-   free(uut);
 
    // Protocol
    uus = "root://";
@@ -293,7 +284,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
    // Init members
    fSize = 0;
    fIsRootd = kFALSE;
-
+   Bool_t isRootd = kFALSE;
    //
    // Setup a client instance
    fClient = new XrdClient(url);
@@ -312,15 +303,17 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
 
    //
    // Open file
-   if (!fClient->IsOpen()) {
+   if (!fClient->IsOpen() && !fClient->IsOpen_wait()) {
       if (gDebug > 1)
          Info("CreateXClient", "remote file could not be open");
 
-      if (fgRootdBC) {
-         Bool_t isRootd =
-            (fClient->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
+      // If the server is a rootd we need to create a TNetFile
+      isRootd = (fClient->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
+
+      if (isRootd && fgRootdBC) {
+
          Int_t sd = fClient->GetClientConn()->GetOpenSockFD();
-         if (isRootd && sd > -1) {
+         if (sd > -1) {
             //
             // Create a TSocket on the open connection
             TSocket *s = new TSocket(sd);
@@ -328,54 +321,19 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
             s->SetOption(kNoBlock, 0);
 
             // Find out the remote protocol (send the client protocol first)
-            UInt_t cproto = 0;
-            Int_t len = sizeof(cproto);
-            memcpy((char *)&cproto,
-               Form(" %d", TSocket::GetClientProtocol()),len);
-            Int_t ns = s->SendRaw(&cproto, len);
-            if (ns != len) {
-               Error("CreateXClient", "sending %d bytes to rootd server [%s:%d]",
-                     len, fUrl.GetHost(), fUrl.GetPort());
+            Int_t rproto = GetRootdProtocol(s);
+            if (rproto < 0) {
+               Error("CreateXClient", "getting rootd server protocol");
                goto zombie;
             }
 
-            // Get the remote protocol
-            Int_t ibuf[2] = {0};
-            len = sizeof(ibuf);
-            Int_t nr = s->RecvRaw(ibuf, len);
-            if (nr != len) {
-               Error("CreateXClient", "reading %d bytes from rootd server [%s:%d]",
-                     len, fUrl.GetHost(), fUrl.GetPort());
-               goto zombie;
-            }
-            Int_t kind = net2host(ibuf[0]);
-            Int_t rproto = 0;
-            if (kind == kROOTD_PROTOCOL) {
-               rproto = net2host(ibuf[1]);
-            } else {
-               kind = net2host(ibuf[1]);
-               if (kind == kROOTD_PROTOCOL) {
-                  len = sizeof(rproto);
-                  nr = s->RecvRaw(&rproto, len);
-                  if (nr != len) {
-                     Error("CreateXClient",
-                           "reading %d bytes from rootd server [%s:%d]",
-                           len, fUrl.GetHost(), fUrl.GetPort());
-                     goto zombie;
-                  }
-                  rproto = net2host(rproto);
-               }
-            }
-            if (gDebug > 2)
-               Info("CreateXClient",
-                    "remote rootd: buf1: %d, buf2: %d rproto: %d",
-                    net2host(ibuf[0]),net2host(ibuf[1]),rproto);
             // Finalize TSocket initialization
             s->SetRemoteProtocol(rproto);
-            char *uut = StrDup((fClient->GetClientConn()
-                                       ->GetCurrentUrl()).GetUrl().c_str());
+            TUrl uut((fClient->GetClientConn()
+                             ->GetCurrentUrl()).GetUrl().c_str());
             TString uu;
             FormUrl(uut,uu);
+
             if (gDebug > 2)
                Info("CreateXClient"," url: %s",uu.Data());
             s->SetUrl(uu.Data());
@@ -397,14 +355,16 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
                // not be reused; TNetFile will open a new connection
                TNetFile::Create(uu.Data(), option, netopt);
             }
+
+            return;
          } else {
-            Error("CreateXClient", "some severe error occurred while opening"
-                  " the remote file at %s - exit",url);
+            Error("CreateXClient", "rootd: underlying socket undefined");
             goto zombie;
          }
       } else {
-         Error("CreateXClient",
-               "while opening the remote file at %s - exit",url);
+         if (isRootd)
+            if (gDebug > 0)
+               Info("CreateXClient", "rootd: fall back not enabled - closing");
          goto zombie;
       }
    }
@@ -416,8 +376,64 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
 
 zombie:
    // error in file opening occured, make this object a zombie
+   SafeDelete(fClient);
    MakeZombie();
    gDirectory = gROOT;
+}
+
+//_____________________________________________________________________________
+Int_t TXNetFile::GetRootdProtocol(TSocket *s)
+{
+   // Find out the remote rootd protocol version.
+   // Returns -1 in case of error
+   Int_t rproto = -1;
+
+   UInt_t cproto = 0;
+   Int_t len = sizeof(cproto);
+   memcpy((char *)&cproto,
+      Form(" %d", TSocket::GetClientProtocol()),len);
+   Int_t ns = s->SendRaw(&cproto, len);
+   if (ns != len) {
+      ::Error("TXNetFile::GetRootdProtocol",
+              "sending %d bytes to rootd server [%s:%d]",
+              len, (s->GetInetAddress()).GetHostName(), s->GetPort());
+      return -1;
+   }
+
+   // Get the remote protocol
+   Int_t ibuf[2] = {0};
+   len = sizeof(ibuf);
+   Int_t nr = s->RecvRaw(ibuf, len);
+   if (nr != len) {
+      ::Error("TXNetFile::GetRootdProtocol",
+              "reading %d bytes from rootd server [%s:%d]",
+              len, (s->GetInetAddress()).GetHostName(), s->GetPort());
+      return -1;
+   }
+   Int_t kind = net2host(ibuf[0]);
+   if (kind == kROOTD_PROTOCOL) {
+      rproto = net2host(ibuf[1]);
+   } else {
+      kind = net2host(ibuf[1]);
+      if (kind == kROOTD_PROTOCOL) {
+         len = sizeof(rproto);
+         nr = s->RecvRaw(&rproto, len);
+         if (nr != len) {
+            ::Error("TXNetFile::GetRootdProtocol",
+                    "reading %d bytes from rootd server [%s:%d]",
+                    len, (s->GetInetAddress()).GetHostName(), s->GetPort());
+            return -1;
+         }
+         rproto = net2host(rproto);
+      }
+   }
+   if (gDebug > 2)
+      ::Info("TXNetFile::GetRootdProtocol",
+             "remote rootd: buf1: %d, buf2: %d rproto: %d",
+             net2host(ibuf[0]),net2host(ibuf[1]),rproto);
+
+   // We are done
+   return rproto;
 }
 
 //_____________________________________________________________________________
@@ -478,8 +494,8 @@ void TXNetFile::Open(Option_t *option)
    kXR_unt16 openMode = kXR_or | kXR_gr | kXR_ur | kXR_uw;
 
    //
-   // Open file
-   if (!fClient->Open(openMode, openOpt)) {
+   // Open file (FileOpenerThread disabled for the time being)
+   if (!fClient->Open(openMode, openOpt, false)) {
       if (gDebug > 1)
          Info("Open", "remote file could not be open");
    } else {
@@ -798,3 +814,4 @@ Long64_t TXNetFile::Size(void)
    memcpy((void *)&fSize, (const void*)&size, sizeof(size));
    return fSize;
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.18 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.19 2005/09/05 10:28:08 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -96,6 +96,9 @@ private:
    TString     fUser;        // Remote user
 
    void       *GetDirPtr() const { return fDirp; }
+
+protected:
+   void        Create(const char *url, TSocket *sock = 0);
 
 public:
    TNetSystem();

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.61 2005/05/31 13:29:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.62 2005/09/05 10:28:08 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -656,6 +656,14 @@ TNetSystem::TNetSystem(const char *url) : TSystem("-root", "Net file Helper Syst
    // name must start with '-' to bypass the TSystem singleton check
    SetName("root");
 
+   Create(url);
+}
+
+//______________________________________________________________________________
+void TNetSystem::Create(const char *url, TSocket *sock)
+{
+   // Create a TNetSystem object.
+
    // If we got here protocol must be at least its short form "^root.*:" :
    // make sure that it is in the full form to avoid problems in TFTP
    TString surl(url);
@@ -706,7 +714,7 @@ TNetSystem::TNetSystem(const char *url) : TSystem("-root", "Net file Helper Syst
       eurl += ":";
       eurl += turl.GetPort();
 
-      fFTP  = new TFTP(eurl);
+      fFTP  = new TFTP(eurl, 1, TFTP::kDfltWindowSize, sock);
       if (fFTP && fFTP->IsOpen()) {
          if (fFTP->GetSocket()->GetRemoteProtocol() < 12) {
             Error("TNetSystem",
@@ -790,7 +798,7 @@ void TNetSystem::FreeDirectory(void *dirp)
    // Free directory via rootd.
 
    if (dirp != fDirp) {
-      Error("GetDirEntry", "invalid directory pointer (should never happen)");
+      Error("FreeDirectory", "invalid directory pointer (should never happen)");
       return;
    }
 

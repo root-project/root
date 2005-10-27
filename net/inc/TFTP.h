@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.10 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.11 2005/05/20 10:04:05 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -77,7 +77,8 @@ public:
       kAscii          = 1          // ascii data transfer
    };
 
-   TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize);
+   TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize,
+        TSocket *sock = 0);
    virtual ~TFTP();
 
    void     SetBlockSize(Int_t blockSize);

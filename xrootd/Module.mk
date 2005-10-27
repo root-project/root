@@ -6,7 +6,7 @@
 MODDIR     := xrootd
 MODDIRS    := $(MODDIR)/src
 
-XROOTDVERS := xrootd-20050623-0016-root
+XROOTDVERS := xrootd-20051026-1709
 XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
@@ -28,7 +28,7 @@ XRDSOEXT    = $(SOEXT)
 endif
 
 ##### Xrootd executables #####
-XRDEXEC     = xrootd olbd xrdpwdadmin xrdgsiproxy
+XRDEXEC     = xrootd olbd xrdcp xrdpwdadmin xrdgsiproxy
 XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
@@ -117,7 +117,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		xopt="$$xopt --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
 		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \
-		GNUMAKE=$(MAKE) ./configure $$xopt $(XRDDBG); \
+		GNUMAKE=$(MAKE) ./configure.classic $$xopt $(XRDDBG); \
 		rc=$$? ; \
 		if [ $$rc = "0" ] ; then \
 		   echo "*** Building xrootd ..." ; \

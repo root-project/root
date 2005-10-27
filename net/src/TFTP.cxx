@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.32 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.33 2005/06/23 10:51:57 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -64,15 +64,17 @@ Long64_t TFTP::fgBytesRead  = 0;
 ClassImp(TFTP)
 
 //______________________________________________________________________________
-TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
+TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
 {
    // Open connection to host specified by the url using par parallel sockets.
    // The url has the form: [root[s,k]://]host[:port].
    // If port is not specified the default rootd port (1094) will be used.
    // Using wsize one can specify the tcp window size. Normally this is not
    // needed when using parallel sockets.
+   // An existing connection (TSocket *sock) can also be used to establish
+   // the FTP session. 
 
-   fSocket = 0;
+   fSocket = sock;
 
    TString s = url;
    if (s.Contains("://")) {
@@ -102,7 +104,7 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    }
    hurl += TString(Form("://%s@%s:%d",
                         url.GetUser(), url.GetHost(), url.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(hurl, par, wsize);
+   fSocket = TSocket::CreateAuthSocket(hurl, par, wsize, fSocket);
    if (!fSocket || !fSocket->IsAuthenticated()) {
       if (par > 1)
          Error("TFTP", "can't open %d-stream connection to rootd on "
