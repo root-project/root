@@ -19,7 +19,7 @@ MINUITBASEETAG := $(MODDIRS)/headers.d
 
 ##### liblcg_Minuit #####
 ifeq ($(PLATFORM),win32)
-MINUITBASELIBA      := $(MINUITBASEDIRS)/lcg_Minuit.lib
+MINUITBASELIBA      := $(MINUITBASEDIRS)/libminuitbase.lib
 MINUITBASELIB       := $(LPATH)/libminuitbase.lib
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 MINUITBASEBLD        = "DEBUG=1"
@@ -68,7 +68,7 @@ ifeq ($(PLATFORM),macosx)
 		ranlib $@
 endif
 ifeq ($(PLATFORM),win32)
-		cp $(MINUITBASEDIRS)/lcg_Minuit.dll bin/libbaseminuit.dll
+		cp $(MINUITBASEDIRS)/libminuitbase.dll bin/libminuitbase.dll
 endif
 
 $(MINUITBASELIBA):  $(MINUITBASESRCS)
@@ -159,7 +159,7 @@ clean::         clean-minuit2
 
 distclean-minuit2: clean-minuit2
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB)
-		@rm -f $(MINUITBASELIB) bin/libbaseminuit.dll
+		@rm -f $(MINUITBASELIB) bin/libminuitbase.dll
 
 distclean::     distclean-minuit2
 

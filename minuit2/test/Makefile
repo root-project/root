@@ -11,9 +11,9 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = $(ROOTSYS)/lib/libGMinuit.lib $(ROOTSYS)/lib/libMathCore.lib
+EXTRALIBS        = $(ROOTSYS)/lib/libMinuit2.lib
 else
-EXTRALIBS        = -lGMinuit 
+EXTRALIBS        = -lMinuit2 
 endif
 
 USERFUNCOBJ      = testUserFunc.$(ObjSuf)
