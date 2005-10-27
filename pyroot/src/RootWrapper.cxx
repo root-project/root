@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.36 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.37 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -145,7 +145,7 @@ void PyROOT::InitRoot()
    if ( !gStyle ) gStyle = new TStyle();
    if ( !gApplication ) {
    // retrieve arg list from python, translate to raw C, pass on
-      PyObject* argl = PySys_GetObject( "argv" );
+      PyObject* argl = PySys_GetObject( const_cast< char* >( "argv" ) );
 
       int argc = argl ? PyList_Size( argl ) : 1;
       char** argv = new char*[ argc ];
@@ -284,7 +284,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
    // special case for operator[] that returns by ref, use for getitem and setitem
       if ( setupSetItem ) {
          Callables_t& setitem = (*(cache.insert(
-            std::make_pair( "__setitem__", Callables_t() ) ).first)).second;
+            std::make_pair( std::string( "__setitem__" ), Callables_t() ) ).first)).second;
          setitem.push_back( new TSetItemHolder( klass, method ) );
       }
    }
@@ -431,7 +431,8 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
    // in case a "naked" templated class is requested, return callable proxy for instantiations
       if ( G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
          PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
-         PyObject* pytemplate = PyObject_CallFunction( pytcl, "s", lookup.c_str() );
+         PyObject* pytemplate = PyObject_CallFunction(
+            pytcl, const_cast< char* >( "s" ), const_cast< char* >( lookup.c_str() ) );
          Py_DECREF( pytcl );
          return pytemplate;
       }
