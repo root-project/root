@@ -31,11 +31,6 @@ MINUITBASELIBA      := $(MINUITBASEDIRS)/src/.libs/liblcg_Minuit.a
 MINUITBASELIB       := $(LPATH)/libminuitbase.a
 endif
 MINUITBASEDEP       := $(MINUITBASELIB)
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-MINUITBASEDBG        = "--enable-gdb"
-else
-MINUITBASEDBG        =
-endif
 
 ##### libMinuit2 #####
 MINUIT2L     := $(MODDIRI)/LinkDef.h
@@ -94,24 +89,25 @@ else
 			gunzip -c $(MINUITBASEVERS).tar.gz | tar xf -; \
 		fi; \
 		cd $(MINUITBASEVERS); \
-		ACC=$(CC); \
-		ACFLAGS="-O"; \
-		if [ "$(CC)" = "icc" ]; then \
-			ACC="icc"; \
+		ACXX=$(CXX); \
+		ACXXFLAGS=$(OPT); \
+		if [ "$(CXX)" = "icc" ]; then \
+			ACXX="icc"; \
 		fi; \
 		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACC="gcc -mabi=64"; \
+			ACXX="g++ -mabi=64"; \
 		fi; \
 		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
-			ACC="cc +DD64 -Ae"; \
+			ACXX="aCC +DD64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACXX="g++ -m64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACXX="g++ -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure $(MINUITBASEDBG) CXX=$$CXX CXXFLAGS="$(OPT) $(CXXFLAGS)"; \
+		GNUMAKE=$(MAKE) CXX=$$ACXX CXXFLAGS=$$ACXXFLAGS \
+		./configure --with-pic; \
 		$(MAKE))
 endif
 
