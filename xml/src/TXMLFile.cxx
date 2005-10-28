@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.11 2005/05/06 14:25:34 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.12 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -717,6 +717,7 @@ void TXMLFile::WriteStreamerInfo()
 
       fXML->NewIntAttr(infonode, "v", info->IsA()->GetClassVersion());
       fXML->NewIntAttr(infonode, "classversion", info->GetClassVersion());
+      fXML->NewAttr(infonode, 0, "canoptimize", (info->TestBit(TStreamerInfo::kCannotOptimize) ? xmlNames_false : xmlNames_true));
       fXML->NewIntAttr(infonode, "checksum", info->GetCheckSum());
 
       TIter iter(info->GetElements());
@@ -753,6 +754,12 @@ TList* TXMLFile::GetStreamerInfoList()
         info->SetClassVersion(clversion);
         Int_t checksum = AtoI(fXML->GetAttr(sinfonode,"checksum"));
         info->SetCheckSum(checksum);
+
+        const char* canoptimize = fXML->GetAttr(sinfonode,"canoptimize");
+        if ((canoptimize==0) || (strcmp(canoptimize,xmlNames_false)==0))
+          info->SetBit(TStreamerInfo::kCannotOptimize);
+        else
+          info->ResetBit(TStreamerInfo::kCannotOptimize);
 
         XMLNodePointer_t node = fXML->GetChild(sinfonode);
         fXML->SkipEmpty(node);
