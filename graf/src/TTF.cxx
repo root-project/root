@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.6 2003/07/23 19:24:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.7 2005/06/22 08:57:27 brun Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -323,6 +323,8 @@ Int_t TTF::SetTextFont(const char *fontname)
    for (i = 0; i < fgFontCount; i++) {
       if (!strcmp(fgFontName[i], basename)) {
          fgCurFontIdx = i;
+         if (basename)
+            delete [] basename;
          return 0;
       }
    }
@@ -333,6 +335,8 @@ Int_t TTF::SetTextFont(const char *fontname)
             kTTMaxFonts);
       Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
       fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
+      if (basename)
+         delete [] basename;
       return 0;
    }
 
@@ -348,6 +352,8 @@ Int_t TTF::SetTextFont(const char *fontname)
 
    if (!ttfont) {
       Error("TTF::SetTextFont", "font file %s not found in path", fontname);
+      if (basename)
+         delete [] basename;
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
          fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
@@ -362,6 +368,8 @@ Int_t TTF::SetTextFont(const char *fontname)
    if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
       Error("TTF::SetTextFont", "error loading font %s", ttfont);
       delete [] ttfont;
+      if (basename)
+         delete [] basename;
       if (tface) FT_Done_Face(tface);
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
@@ -379,6 +387,8 @@ Int_t TTF::SetTextFont(const char *fontname)
    fgFace[fgCurFontIdx]    = tface;
    fgCharMap[fgCurFontIdx] = 0;
    fgFontCount++;
+   if (basename)
+      delete [] basename;
 
    return 0;
 }
