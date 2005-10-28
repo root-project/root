@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -37,137 +37,24 @@ namespace ROOT {
     XYZVector operator * (double a, XYZVector v) { 
       return v *= a;
     }
+
+    XYZTVector operator * (double a, XYZTVector v) { 
+      return v *= a;
+    }
+
+    std::ostream & operator<< (std::ostream & os, const XYZVector & v) { 
+      return operator<< <char,char_traits<char> > (os,v); 
+    }
+
+    std::ostream & operator<< (std::ostream & os, const XYZPoint & p) { 
+      return operator<< <char,char_traits<char> > (os,p); 
+    }
+    
+    std::ostream & operator<< (std::ostream & os, const XYZTVector & q) { 
+      return operator<< <char,char_traits<char> > (os,q); 
+    }
     
 
-      // operation which CINT dictionary generation does not recognize
-#ifdef WHEN_CINT_FIXED
-      // V = P1-P2
-      XYZVector operator-( const XYZPoint & p1, const XYZPoint & p2) { 
-	XYZVector v = p1-p2; 
-	return v;
-      }
-      XYZVector operator-( const XYZPoint & p1, const RhoEtaPhiPoint & p2) { 
-	return p1-p2;
-      }
-      XYZVector operator-( const XYZPoint & p1, const Polar3DPoint & p2) { 
-	return p1-p2;
-      }
-
-      RhoEtaPhiVector operator-( const RhoEtaPhiPoint & p1, const XYZPoint & p2) { 
-	return p1-p2;
-      }
-      RhoEtaPhiVector operator-( const RhoEtaPhiPoint & p1, const RhoEtaPhiPoint & p2) { 
-	return p1-p2;
-      }
-      RhoEtaPhiVector operator-( const RhoEtaPhiPoint & p1, const Polar3DPoint & p2) { 
-	return p1-p2;
-      }
-
-      Polar3DVector operator-( const Polar3DPoint & p1, const XYZPoint & p2) { 
-	return p1-p2;
-      }
-      Polar3DVector operator-( const Polar3DPoint & p1, const RhoEtaPhiPoint & p2) { 
-	return p1-p2;
-      }
-      Polar3DVector operator-( const Polar3DPoint & p1, const Polar3DPoint & p2) { 
-	return p1-p2;
-      }
-
-      // P = P1 + V2
-
-      XYZPoint operator+( XYZPoint p1, const XYZVector & v2) { 
-	return p1+v2; 
-      }
-      XYZPoint operator+( XYZPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1+v2; 
-      }
-      XYZPoint operator+( XYZPoint p1, const Polar3DVector & v2) { 
-	return p1+v2; 
-      }
-
-      RhoEtaPhiPoint operator+( RhoEtaPhiPoint p1, const XYZVector & v2) { 
-	return p1+v2; 
-      }
-      RhoEtaPhiPoint operator+( RhoEtaPhiPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1+v2; 
-      }
-      RhoEtaPhiPoint operator+( RhoEtaPhiPoint p1, const Polar3DVector & v2) { 
-	return p1+v2; 
-      }
-
-      Polar3DPoint operator+( Polar3DPoint p1, const XYZVector & v2) { 
-	return p1+v2; 
-      }
-      Polar3DPoint operator+( Polar3DPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1+v2; 
-      }
-      Polar3DPoint operator+( Polar3DPoint p1, const Polar3DVector & v2) { 
-	return p1+v2; 
-      }
-      
-      //--- P = v1 + p2
-
-      XYZPoint operator+( const XYZVector & v1, XYZPoint p2 ) { 
-	return v1+p2; 
-      }
-      XYZPoint operator+( const XYZVector & v1, RhoEtaPhiPoint p2 ) { 
-	return v1+p2; 
-      }
-      XYZPoint operator+( const XYZVector & v1, Polar3DPoint p2 ) { 
-	return v1+p2; 
-      }
-
-      RhoEtaPhiPoint operator+( const RhoEtaPhiVector & v1, XYZPoint p2 ) { 
-	return v1+p2; 
-      }
-      RhoEtaPhiPoint operator+( const RhoEtaPhiVector & v1, RhoEtaPhiPoint p2 ) { 
-	return v1+p2; 
-      }
-      RhoEtaPhiPoint operator+( const RhoEtaPhiVector & v1, Polar3DPoint p2 ) { 
-	return v1+p2; 
-      }
-      
-      Polar3DPoint operator+( const Polar3DVector & v1, XYZPoint p2 ) { 
-	return v1+p2; 
-      }
-      Polar3DPoint operator+( const Polar3DVector & v1, RhoEtaPhiPoint p2 ) { 
-	return v1+p2; 
-      }
-      Polar3DPoint operator+( const Polar3DVector & v1, Polar3DPoint p2 ) { 
-	return v1+p2; 
-      }
-
-      // P = p1-v2
-      XYZPoint operator-( XYZPoint p1, const XYZVector & v2) { 
-	return p1-v2; 
-      }
-      XYZPoint operator-( XYZPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1-v2; 
-      }
-      XYZPoint operator-( XYZPoint p1, const Polar3DVector & v2) { 
-	return p1-v2; 
-      }
-
-      RhoEtaPhiPoint operator-( RhoEtaPhiPoint p1, const XYZVector & v2) { 
-	return p1-v2; 
-      }
-      RhoEtaPhiPoint operator-( RhoEtaPhiPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1-v2; 
-      }
-      RhoEtaPhiPoint operator-( RhoEtaPhiPoint p1, const Polar3DVector & v2) { 
-	return p1-v2; 
-      }
-
-      Polar3DPoint operator-( Polar3DPoint p1, const XYZVector & v2) { 
-	return p1-v2; 
-      }
-      Polar3DPoint operator-( Polar3DPoint p1, const RhoEtaPhiVector & v2) { 
-	return p1-v2; 
-      }
-      Polar3DPoint operator-( Polar3DPoint p1, const Polar3DVector & v2) { 
-	return p1-v2; 
-      }
-#endif
 
         
     namespace VectorUtil { 

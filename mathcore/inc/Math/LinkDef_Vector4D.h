@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Vector4D.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Vector4D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -51,7 +51,7 @@
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >::operator-(const  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > &);
 
 // operator * 
-
+// (these still don't work) (are defined in VectorUtil_Cint)
 //#pragma link C++ function ROOT::Math::operator*( const double & , ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > );
 //#pragma link C++ function ROOT::Math::operator*( const double & , ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > );
 
