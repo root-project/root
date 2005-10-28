@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.123 2005/09/21 06:54:53 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.124 2005/09/24 11:57:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -636,6 +636,11 @@ const char *TWinNTSystem::BaseName(const char *name)
    //                      'c:\' is 'c:\'
    // The calling routine should use free() to free memory BaseName allocated
    // for the base name
+   // BB 28/10/05 : Removed (commented out) StrDup() :
+   // - To get same behaviour on Windows and on Linux 
+   // - To avoid the need to use #ifdefs
+   // - Solve memory leaks (mainly in TTF::SetTextFont())
+   // No need for the calling routine to use free() anymore.
 
    if (name) {
       int idx = 0;
@@ -647,7 +652,8 @@ const char *TWinNTSystem::BaseName(const char *name)
       if (*symbol) {
          if (isalpha(symbol[idx]) && symbol[idx+1] == ':') idx = 2;
          if ( (symbol[idx] == '/'  ||  symbol[idx] == '\\')  &&  symbol[idx+1] == '\0') {
-            return StrDup(symbol);
+            //return StrDup(symbol);
+            return symbol;
          }
       } else {
          Error("BaseName", "name = 0");
@@ -657,9 +663,11 @@ const char *TWinNTSystem::BaseName(const char *name)
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
       char *rslash = (char *)strrchr(&symbol[idx],'/');
       if (cp = max(rslash, bslash)) {
-         return StrDup(++cp);
+         //return StrDup(++cp);
+         return ++cp;
       }
-      return StrDup(&symbol[idx]);
+      //return StrDup(&symbol[idx]);
+      return &symbol[idx];
    }
    Error("BaseName", "name = 0");
    return 0;
