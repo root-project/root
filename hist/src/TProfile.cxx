@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.68 2005/09/22 08:55:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.69 2005/09/27 15:06:29 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -969,8 +969,8 @@ void TProfile::GetStats(Stat_t *stats) const
    if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
    // Loop on bins
+   Int_t bin, binx;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
-      Int_t bin, binx;
       Stat_t w;
       Axis_t x;
       for (bin=0;bin<6;bin++) stats[bin] = 0;
@@ -986,6 +986,14 @@ void TProfile::GetStats(Stat_t *stats) const
          stats[5] += fSumw2.fArray[binx];
       }
    } else {
+      if (fTsumwy == 0 && fTsumwy2 == 0) {
+         //this case may happen when processing TProfiles with version <=3
+        TProfile *p = (TProfile*)this; // chheting with const
+        for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+           p->fTsumwy  += fArray[binx];
+           p->fTsumwy2 += fSumw2.fArray[binx];
+        }
+     }
       stats[0] = fTsumw;
       stats[1] = fTsumw2;
       stats[2] = fTsumwx;
