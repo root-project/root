@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.58 2005/08/30 10:51:15 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.59 2005/10/14 16:45:44 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1650,6 +1650,7 @@ void TPostScript::Initialize()
 
    PrintStr("%%EndProlog@");
    PrintStr("%%BeginSetup@");
+   PrintStr("%%EndSetup@");
    PrintFast(8,"newpath ");
    SaveRestore(1);
    if (fMode == 1 || fMode == 4)  {
@@ -1668,7 +1669,6 @@ void TPostScript::Initialize()
 
    PrintFast(15," .25 .25 scale ");
    if (fMode != 3) SaveRestore(1);
-   PrintStr("%%EndSetup@");
 
    if (fMode != 3) PrintStr("%%Page: number 1@");
    if (fMode != 3) SaveRestore(1);  //required
