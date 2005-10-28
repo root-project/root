@@ -361,7 +361,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
          "TSessionViewer", fViewer, "StartupMessage(char *,Bool_t,Int_t,Int_t)");
    // collect and set-up configuration
    sprintf(url, "%s@%s:%d", fTxtUsrName->GetText(), fTxtAddress->GetText(),
-           fNumPort->GetIntNumber());
+           (Int_t)(fNumPort->GetIntNumber()));
    fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
    if (strlen(fTxtConfig->GetText()) > 1)
       fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
