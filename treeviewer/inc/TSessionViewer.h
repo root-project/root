@@ -162,6 +162,19 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
+// TSessionDescription class : Descrition of Session
+//////////////////////////////////////////////////////////////////////////
+
+class TPackageDescription : public TObject {
+
+public:
+   TString                    fName;         // package name
+   Int_t                      fId;           // package id
+
+   ClassDef(TPackageDescription,1)
+};
+
+//////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSessionServerFrame                                                  //
 // A composite Frame used in the right part of the Session Viewer GUI   //
@@ -234,7 +247,7 @@ class TSessionFrame : public TGCompositeFrame {
 private:
 
    TGTab             *fTab;                  // main tab frame
-   TGCompositeFrame  *fFA, *fFC;             // three tabs element
+   TGCompositeFrame  *fFA, *fFB, *fFC, *fFD; // four tabs element
    TGTextEntry       *fCommandTxt;           // Command line text entry
    TGTextBuffer      *fCommandBuf;           // Command line text buffer
    TGTextView        *fInfoTextView;         // summary on current query
@@ -243,6 +256,27 @@ private:
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnNewQuery;          // new query button
    TGTextButton      *fBtnGetQueries;        // get entries button
+   // Packages tab related items
+   TList             *fPackages;             // list of packages
+   TGListBox         *fLBPackages;           // packages listbox
+   TGTextButton      *fBtnAdd;               // add package button
+   TGTextButton      *fBtnRemove;            // remove package button
+   TGTextButton      *fBtnUp;                // move package up button
+   TGTextButton      *fBtnDown;              // move package down button
+   TGTextButton      *fBtnShow;              // show packages button
+   TGTextButton      *fBtnShowEnabled;       // show enabled packages button
+   TGCheckButton     *fChkMulti;             // multiple selection check
+   TGCheckButton     *fChkEnable;            // enable at session startup check
+   TGTextButton      *fBtnUpload;            // upload packages button
+   TGTextButton      *fBtnEnable;            // enable packages button
+   TGTextButton      *fBtnClear;             // clear all packages button
+   TGTextButton      *fBtnDisable;           // disable packages button
+   // Options tab related items
+   TGTextEntry       *fTxtParallel;          // parallel nodes text entry
+   TGNumberEntry     *fLogLevel;             // log level number entry
+   TGTextButton      *fApplyLogLevel;        // apply log level button
+   TGTextButton      *fApplyParallel;        // apply parallel nodes button
+
    TSessionViewer    *fViewer;               // pointer on main viewer
    TGLabel           *fInfoLine[13];         // infos on session
 
@@ -251,13 +285,25 @@ public:
    virtual ~TSessionFrame();
 
    void     Build(TSessionViewer *gui);
+   TGTab   *GetTab() const { return fTab; }
 
    //Function that handle input from user:
+   void     OnApplyLogLevel();
+   void     OnApplyParallel();
+   void     OnBtnAddClicked();
+   void     OnBtnRemoveClicked();
+   void     OnBtnUpClicked();
+   void     OnBtnDownClicked();
    void     OnBtnShowLogClicked();
    void     OnBtnNewQueryClicked();
    void     OnBtnGetQueriesClicked();
    void     OnBtnDisconnectClicked();
    void     OnCommandLine();
+   void     OnUploadPackages();
+   void     OnEnablePackages();
+   void     OnDisablePackages();
+   void     OnClearPackages();
+   void     OnMultipleSelection(Bool_t on);
    void     ProofInfos();
 
    ClassDef(TSessionFrame,0)
@@ -500,6 +546,8 @@ public:
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }
+   void     ShowEnabledPackages();
+   void     ShowPackages();
    void     ShowInfo(const char *txt);
    void     ShowLog(const char *queryref);
    void     ShowStatus();
