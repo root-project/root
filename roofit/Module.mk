@@ -84,11 +84,7 @@ $(ROOFITETAG): $(ROOFITSRCS)
 		@(if [ ! -d src ]; then \
 		   echo "*** Extracting roofit source ..."; \
 		   cd roofit ; \
-		   if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-		      gtar xzf $(ROOFITVERS).src.tgz; \
-		   else \
-		      gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
-		   fi; \
+		   gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
 		   etag=`basename $(ROOFITETAG)` ; \
 		   touch $$etag ; \
 		fi)
