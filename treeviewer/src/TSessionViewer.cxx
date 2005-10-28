@@ -337,7 +337,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
 {
    // Connect to selected server
 
-   char url[128];
+   char url[256];
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -360,7 +360,8 @@ void TSessionServerFrame::OnBtnConnectClicked()
    TQObject::Connect("TProof", "StartupMessage(char *,Bool_t,Int_t,Int_t)",
          "TSessionViewer", fViewer, "StartupMessage(char *,Bool_t,Int_t,Int_t)");
    // collect and set-up configuration
-   sprintf(url, "%s@%s", fTxtUsrName->GetText(), fTxtAddress->GetText());
+   sprintf(url, "%s@%s:%d", fTxtUsrName->GetText(), fTxtAddress->GetText(),
+           fNumPort->GetIntNumber());
    fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
    if (strlen(fTxtConfig->GetText()) > 1)
       fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
