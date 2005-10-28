@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.11 2005/09/03 07:54:00 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.12 2005/10/18 13:32:59 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -111,6 +111,8 @@ namespace ROOT {
 
    TGenericClassInfo::~TGenericClassInfo()
    {
+      if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
+      fIsA = 0;
       if (!gROOT) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
