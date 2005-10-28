@@ -27,6 +27,7 @@ void mathcoreGenVector() {
   testPoint3D();
   testLorentzVector();
   testVectorUtil();
+  testRotation();
 
   std::cout << "\n\nNumber of tests " << ntest << " failed = " << nfail << std::endl;
 }
@@ -441,5 +442,179 @@ int testVectorUtil() {
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
 
+
+}
+
+
+
+int testRotation() { 
+
+ 
+  std::cout << "\n************************************************************************\n " 
+	    << " Rotation Test" 
+	    << "\n************************************************************************\n";
+
+  std::cout << "Test Vector Rotations :         ";
+
+
+  XYZPoint v(1.,2,3.); 
+
+  double pi = TMath::Pi();
+  EulerAngles r1( pi/2.,pi/4., pi );
+  //  AxisAngle   r2(r1); (this not yet implemented)
+  Rotation3D  r2(r1);
+  AxisAngle   r3(r2);
+  Quaternion  r4(r3);
+
+  XYZPoint v1 = r1(v);
+  XYZPoint v2 = r2(v);
+  XYZPoint v3 = r3(v);
+  XYZPoint v4 = r4(v);
+  
+  ok+= compare(v1.X(), v2.X(), "x"); 
+  ok+= compare(v1.Y(), v2.Y(), "y"); 
+  ok+= compare(v1.Z(), v2.Z(), "z"); 
+
+  ok+= compare(v1.X(), v3.X(), "x"); 
+  ok+= compare(v1.Y(), v3.Y(), "y"); 
+  ok+= compare(v1.Z(), v3.Z(), "z"); 
+
+  ok+= compare(v1.X(), v4.X(), "x"); 
+  ok+= compare(v1.Y(), v4.Y(), "y"); 
+  ok+= compare(v1.Z(), v4.Z(), "z"); 
+
+  // test with matrix
+  double rdata[9]; 
+  r2.GetComponents(rdata, rdata+9);
+  TMatrixD m(3,3,rdata);
+  double vdata[3];
+  v.GetCoordinates(vdata);
+  TVectorD q(3,vdata);
+  TVectorD q2 = m*q; 
+  
+  XYZPoint v5; 
+  v5.SetCoordinates( q2.GetMatrixArray() );
+
+  ok+= compare(v1.X(), v5.X(), "x"); 
+  ok+= compare(v1.Y(), v5.Y(), "y"); 
+  ok+= compare(v1.Z(), v5.Z(), "z"); 
+
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+  std::cout << "Test Inversions :               "; 
+
+  EulerAngles s1 = r1.Inverse();
+  Rotation3D  s2 = r2.Inverse();
+  AxisAngle   s3 = r3.Inverse();
+  Quaternion  s4 = r4.Inverse();
+  
+  // euler angles not yet impl.
+  XYZPoint p = s2 * r2 * v; 
+  
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
+  XYZPoint p = s3 * r3 * v; 
+  // axis angle inversion not very precise
+  ok+= compare(p.X(), v.X(), "x",1E9); 
+  ok+= compare(p.Y(), v.Y(), "y",1E9); 
+  ok+= compare(p.Z(), v.Z(), "z",1E9); 
+
+  XYZPoint p = s4 * r4 * v; 
+  
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+  
+  std::cout << "Test Transform3D :              "; 
+
+  XYZVector d(1.,-2.,3.);
+  Transform3D t(r2,d);
+  
+  XYZPoint pd = t * v;
+  // apply directly rotation
+  XYZPoint vd = r2 * v + d; 
+
+  ok+= compare(pd.X(), vd.X(), "x"); 
+  ok+= compare(pd.Y(), vd.Y(), "y"); 
+  ok+= compare(pd.Z(), vd.Z(), "z"); 
+
+  // test with matrix 
+  double tdata[12]; 
+  t.GetComponents(tdata, tdata+12);
+  TMatrixD mt(3,4,tdata);
+  double vData[4]; // needs a vector of dim 4 
+  v.GetCoordinates(vData);
+  vData[3] = 1;
+  TVectorD q0(4,vData);
+  
+  TVectorD qt = mt*q0; 
+
+  ok+= compare(pd.X(), qt(0), "x"); 
+  ok+= compare(pd.Y(), qt(1), "y"); 
+  ok+= compare(pd.Z(), qt(2), "z"); 
+
+
+  // test inverse 
+
+  Transform3D tinv = t.Inverse();
+  
+  p = tinv * t * v; 
+
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+
+  std::cout << "Test LorentzRotation :          "; 
+
+  XYZTVector lv(1.,2.,3.,4.);
+  
+  // test from rotx (using boosts and 3D rotations not yet impl.)
+  RotationX rx(pi/4);
+  LorentzRotation rl(rx);
+  //  cout << Rotation3D(rx) << endl;
+
+  XYZTVector lv1 = rl * lv; 
+
+  XYZTVector lv2 = rx * lv; 
+    
+  ok+= compare(lv1.X(), lv2.X(), "x"); 
+  ok+= compare(lv1.Y(), lv2.Y(), "y"); 
+  ok+= compare(lv1.Z(), lv2.Z(), "z"); 
+  ok+= compare(lv1.E(), lv2.E(), "t"); 
+
+  double rlData[16];
+  rl.GetComponents(rlData, rlData+16);
+  TMatrixD ml(4,4,rlData); 
+  //  ml.Print();
+  double lvData[4];
+  lv.GetCoordinates(lvData);
+  TVectorD ql(4,lvData); 
+
+  qlr = ml*ql; 
+
+  ok+= compare(lv1.X(), qlr(0), "x"); 
+  ok+= compare(lv1.Y(), qlr(1), "y"); 
+  ok+= compare(lv1.Z(), qlr(2), "z"); 
+  ok+= compare(lv1.E(), qlr(3), "t"); 
+
+  // test inverse 
+
+  XYZTVector lv0 = rl * rl.Inverse() * lv; 
+
+  ok+= compare(lv0.X(), lv.X(), "x"); 
+  ok+= compare(lv0.Y(), lv.Y(), "y"); 
+  ok+= compare(lv0.Z(), lv.Z(), "z"); 
+  ok+= compare(lv0.E(), lv.E(), "t"); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
 
 }
