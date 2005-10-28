@@ -111,6 +111,7 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"fEvtHdr.fEvtNum*6+mult", "hAlias", 1);
    tree->SetAlias("track","event.fTracks");
    DrawSkippable(tree,"track.fPx+track.fPy", "hAliasSymbol", 1);
+   DrawSkippable(tree,"track.GetPx()+track.GetPy()","hAliasSymbolFunc", gBranchStyle!=0 && gHasLibrary);
 
    DrawSkippable(tree,"fIsValid","hBool");
 

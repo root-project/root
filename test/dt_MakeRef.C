@@ -72,6 +72,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refPointValue  = RefClone(where,"hPointValue");
    TH1F *refAlias  = RefClone(where,"hAlias");
    TH1F *refAliasSymbol  = RefClone(where,"hAliasSymbol");
+   TH1F *refAliasSymbolFunc  = RefClone(where,"hAliasSymbolFunc");
    TH1F *refBool   = RefClone(where,"hBool");
 
    TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
@@ -282,6 +283,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
          refAlias->Fill(head->GetEvtNum()*6+t->GetPx()*t->GetPy());
          refAliasSymbol->Fill(t->GetPx()+t->GetPy());
+         refAliasSymbolFunc->Fill(t->GetPx()+t->GetPy());
       }
       refSumPx->Fill(sumPx);
    }

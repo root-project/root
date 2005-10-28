@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.186 2005/10/16 20:31:22 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.187 2005/10/16 20:34:18 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1865,6 +1865,34 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
             }
          }
          if (!leaf) {
+            // Check for an alias.
+            if (left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
+            const char *aliasValue = fTree->GetAlias(left);
+            if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
+               // First check whether we are using this alias recursively (this would
+               // lead to an infinite recursion.
+               if (find(aliasUsed.begin(),
+                  aliasUsed.end(),
+                  left) != aliasUsed.end()) {
+                     Error("DefinedVariable",
+                        "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
+                        "\tbecause \"%s\" is used [recursively] in its own definition!",
+                        left,aliasValue,fullExpression,left);
+                     return -3;
+                  }
+                  aliasUsed.push_back(left);
+                  TString newExpression = aliasValue;
+                  newExpression += (cname+strlen(left));
+                  Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level, 
+                     castqueue, aliasUsed, useLeafCollectionObject, fullExpression);
+                  if (res<0) {
+                     Error("DefinedVariable",
+                        "The substitution of the alias \"%s\" by \"%s\" failed.",left,aliasValue);
+                     return -3;
+                  }
+                  return res;
+            }
+
             // This is actually not really any error, we probably received something
             // like "abs(some_val)", let TFormula decompose it first.
             return -1;
