@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.2 2005/10/28 10:34:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -42,6 +42,8 @@ namespace ROOT {
       return v *= a;
     }
 
+#if defined (linux) || defined (_WIN32) || defined (__APPLE__)
+ 
     std::ostream & operator<< (std::ostream & os, const XYZVector & v) { 
       return operator<< <char,char_traits<char> > (os,v); 
     }
@@ -54,7 +56,7 @@ namespace ROOT {
       return operator<< <char,char_traits<char> > (os,q); 
     }
     
-
+#endif
 
         
     namespace VectorUtil { 
