@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.3 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.3 2005/10/28 16:05:35 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.3 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: LorentzRotation.h,v 1.3 2005/10/28 16:05:35 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -109,7 +109,7 @@ public:
   explicit LorentzRotation(const ForeignMatrix & m) { SetComponents(m); }
 
   /**
-     Construct from three orthosymplectic vectors (which must have methods
+     Construct from four orthosymplectic vectors (which must have methods
      x(), y(), z() and t()) which will be used as the columns of the Lorentz
      rotation matrix.  The orthosymplectic conditions will be checked, and 
      values adjusted so that the result will always be a good Lorentz rotation 
@@ -198,7 +198,7 @@ public:
                  const Foreign4Vector& v3,
                  const Foreign4Vector& v4 ) {
     fM[XX]=v1.x();  fM[XY]=v2.x();  fM[XZ]=v3.x();  fM[XT]=v4.x();
-    fM[YX]=v1.y();  fM[YY]=v2.y();  fM[YZ]=v3.y();  fM[YT]=v4.Y();
+    fM[YX]=v1.y();  fM[YY]=v2.y();  fM[YZ]=v3.y();  fM[YT]=v4.y();
     fM[ZX]=v1.z();  fM[ZY]=v2.z();  fM[ZZ]=v3.z();  fM[ZT]=v4.z();
     fM[TX]=v1.t();  fM[TY]=v2.t();  fM[TZ]=v3.t();  fM[TT]=v4.t();
     Rectify();
@@ -214,7 +214,7 @@ public:
   GetComponents ( Foreign4Vector& v1,
                   Foreign4Vector& v2,
                   Foreign4Vector& v3,
-                  Foreign4Vector& v4 ) {
+                  Foreign4Vector& v4 ) const {
     v1 = Foreign4Vector ( fM[XX], fM[YX], fM[ZX], fM[TX] );
     v2 = Foreign4Vector ( fM[XY], fM[YY], fM[ZY], fM[TY] );
     v3 = Foreign4Vector ( fM[XZ], fM[YZ], fM[ZZ], fM[TZ] );
@@ -329,7 +329,7 @@ public:
   operator() (const Foreign4Vector & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
     LorentzVector< PxPyPzE4D<double> > Rxyzt = operator()(xyzt);
-    return ForeignVector ( Rxyzt.X(), Rxyzt.Y(), Rxyzt.Z(), Rxyzt.T() );
+    return Foreign4Vector ( Rxyzt.X(), Rxyzt.Y(), Rxyzt.Z(), Rxyzt.T() );
   }
 
   /**
@@ -419,8 +419,6 @@ inline
 typename Rotation3D::Scalar
 Distance ( const Rotation3D& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 #endif
-
-
 
 } //namespace Math
 } //namespace ROOT
