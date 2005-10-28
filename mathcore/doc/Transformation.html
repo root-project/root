@@ -1,9 +1,123 @@
 // Rotation and transformation doxygen page
 
 /**
-
    \page TransformPage Vector Transformations
 
-In the current version, we have implemented only the 3D Rotation based on 3x3 matrix. For the usage, see the documentation of the ROOT::Math::Rotation3D class. 
+We have classes for describing 3D Rotation, LorentzRotations and Transformations which are the combinations of a Rotation and a Translation. For all the classes, the scalar type is based on double precision/ 
+
+The following types of transformation classes  are defined: 
+<ul>
+<li>3D Rotations: 
+<ul>
+<li>ROOT::Math::Rotation3D, rotation described by a 3x3 matrix of doubles
+<li>ROOT::Math::EulerRotation rotation described by the three Euler angles (phi, theta and psi) following the GoldStein 
+<A HREF="http://mathworld.wolfram.com/EulerAngles.html">definition</A>. </li>
+<li>ROOT::Math::AxisAngle, rotation described by a vector (axis) and an angle 
+<li>ROOT::Math::RotationX, specialized rotation along the X axis
+<li>ROOT::Math::RotationY, specialized rotation along the X axis
+<li>ROOT::Math::RotationZ,  default rotation described by a 3x3 matrix of doubles
+</ul>
+<li>3D Transformations (Rotations + Translations)
+<ul>
+<li>ROOT::Math::Transform3D for transformation (rotations + translation) described by a 3x4 matrix (a rotations described by a 3x3 matrix and a translations by a cartesian vector. 
+</ul>
+
+<li>Lorentz Rotations
+<ul>
+<li>ROOT::Math::LorentzRotation , 4D rotation (3D rotation plus boost) described by a 4x4 matrix 
+</li>
+</ul>
+
+</ul>
+
+<h3>3D Rotations</h3>
+
+<h4>Constructors</h4>
+
+It is possible to construct all types of rotation, specyfing the three Euler angles, an axis and an angle or a 3x3 matrix. 
+Rotations based on a type can be constructed and assigned from a rotation based on another type. In addition it is possible to create directly rotations along the three X,Y and Z axes. 
+The following constructors are available: 
+<pre>
+Rotation3D    rI;                                // create a summy rotation (Identity matrix) 
+Rotation3D    rX(ROOT::Math::RotationX(PI));       // create a rotation along X axis of angle PI
+Rotation3D    rY(ROOT::Math::RotationY(PI));       // create a rotation along Y axis of angle PI
+Rotation3D    rZ(ROOT::Math::RotationZ(PI));       // create a rotation along Z axis of angle PI
+EulerRotation rE(phi, theta, psi);                // create a Euler rotation with phi,theta,psi angles
+
+XYZVector  u(ux,uy,uz);
+AxisAngle  rA(u, delta);                        // create a rotation based on direction u with delta angle
+
+double          data[9];
+Rotation3D      r(data, data+9);               // create a rotation from a rotation matrix
+
+EulerRotation r2(r);                             // construct an Euler Rotation from A Rotation3D
+AxisAngle     r3(r2);                            // construct an Axis Rotation from an Euler Rotation 
+</pre>
+
+
+<h4>Rotation Operations</h4>
+
+Rotations can be applied to vector and points using the operator * or directly using the rotation class 
+<pre>
+XYZVector  v1(...); 
+Rotation3D r(...);
+XYZVector v2 = r*v1;       // rotate vector v1 using r
+v2 = r(v1)                 // equivalent 
+</pre>
+Or they can be combined using the operator *  
+<pre>
+Rotation3D r1(...);
+Rotation3D r2(...);
+Rotation3D r3 = r1*r2;
+</pre>
+It is also possible to invert a rotation or return the inverse of a rotation. 
+See the API for the class ROOT::Math::Basic3DRotation for all the available methods. 
+
+<h3>3D Transfomations</h3>
+
+The 3D transfromations are composed from a rotation and a translation. They can be constructed from any type of rotation and any type of vectors. Constructors are:  
+<pre>
+Transform3D  t;      // default constructors (identy rotation and null translation)
+
+Rotation3D r(...);
+XYZVector  v(...);
+Transform3D t(r,v)  // construct from rotation and vector 
+</pre>
+A Transformation can be seen as a 3x4 matrix with the translation values present in the 4-th column
+<pre>
+double d[12]; 
+t.GetComponents(d, d+12); 
+</pre>
+It is possible to return the rotation (3x3) or the vector for the translation. 
+<pre>
+Rotation3D r;
+XYZVector  v;
+t.GetDecomposition(r,v);
+</pre>
+As for the rotation, 3DTransformations are applied to vectors and points using the * operator and two transformations can be combined using the * operator. We can also invert or get the inverse of a 3DTransformation. 
+See the API for the class ROOT::Math::Basic3DTransformation for all the available methods. 
+
+
+It is important to note that a full 3DTransformation can be applied only to Points, since the translations have no effect to Vectors.
+
+<h3>LorentzRotation</h3>
+
+A LorentzRotation represents generic rotation in the 4D space-time or pure boosts. The data are stored as a 4x4 matrix 
+The available constructors are: 
+<pre>
+LorentzRotation      lr0;                       // construct identy LR
+
+
+Rotation3D           r; 
+LorentzRotation      lr1(r);                    // construct a LR from a 3D Rotation
+Boost                b2;
+LorentzRotation      lr2(b2);                   // construct a LR from a Boost
+
+double  m1[16]; 
+LorentzRotation      lr3(m1,m1+16);              // construct from a C array of 16 elements
+
+</pre>
+LorentzRotation can be applied to LorentzVectors using the * operator and, as in the case for the other transfromations, they can be combined using the * operator. We can also invert or get the inverse of a LorentzRotation. 
+See the API for the class ROOT::Math::LorentzRotation for all the available methods. 
 
 */

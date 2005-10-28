@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/DistFunc.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(MathCore, 5_0_4)
+AM_INIT_AUTOMAKE(MathCore, 5_0_6)
 
 dnl Checks for programs.
 AC_PROG_CXX

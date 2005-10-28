@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.1 2005/09/20 13:52:26 brun Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -26,7 +26,8 @@ libMathCore_la_SOURCES =		\
          QuaternionXaxial.cxx           \
          Rotation3D.cxx                 \
          Rotation3DxAxial.cxx           \
-         SpecFuncMathCore.cxx           
+         SpecFuncMathCore.cxx           \
+         Transform3D.cxx        
 
 
 INCLUDES =			        \

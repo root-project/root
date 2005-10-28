@@ -53,14 +53,14 @@ Rotations can be expressed in various ways according to their representations. F
 
 <ul>
   <li>Rotation described by a 3x3 matrix (ROOT::Math::Rotation3D)
-  <li>Rotation described by Euler angles
-  <li>Rotation described by a direction axis and an angle 
-<li>Rotation described by a quaternion
-<li>Optimized rotation around the x, y and z axis and described by just one angle.
+  <li>Rotation described by Euler angles (ROOT::Math::EulerAngles)
+  <li>Rotation described by a direction axis and an angle  (ROOT::Math::AxisAngle)
+<li>Rotation described by a quaternion (ROOT::Math::Quaternion)
+<li>Optimized rotation around the x (ROOT::Math::RotationX), y (ROOT::Math::RotationY) and z (ROOT::Math::RotationZ) axis and described by just one angle.
 </ul> 
  </li>
 <li><h4>3D Transformation</h4> 
-A 3D transformation is composed of a rotation and a translation. We describe transformations using a class which is template on the 3D rotation types and the vector type. 
+We describe the geometrical transformations defined as a composition between a rotation and a translation  using the class ROOT::Math::Transform3D. 
 It is important to note that transformations act differently on  Vectors and Points. The Vectors only rotate, therefore when applying a transfomation (rotation + translation) on a Vector, only the rotation operates while the translation has no effect. The interface for Transformations is similar to the one used in the CLHEP Geometry package 
 (class <A href="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/classHepGeom_1_1Transform3D.html">Transform3D</A>). 
 </li>
