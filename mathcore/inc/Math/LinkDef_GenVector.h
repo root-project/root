@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.2 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -66,14 +66,16 @@
 #include "LinkDef_Vector3D.h"
 #include "LinkDef_Point3D.h"
 #include "LinkDef_Vector4D.h"
+#include "LinkDef_Rotation.h"
 
 
 
-// rotation func
+// rotation functions
 //#pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D> &);
 #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (double *, double*);
 #pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::Rotation3D::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZTVector &);
 
 // #include "TMatrix.h"
 // #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (const TMatrixD &m);
@@ -121,12 +123,12 @@
 #endif
 
 
-// dictionary fo rextra types 
-#pragma extra_include "Rtypes.h";
-#pragma link C++ class ROOT::Math::Cartesian3D<Double32_t>+;
-#pragma link C++ class ROOT::Math::PxPyPzE4D<Double32_t>+;
-#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
-#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >+;
+// // dictionary fo rextra types 
+// #pragma extra_include "Rtypes.h";
+// #pragma link C++ class ROOT::Math::Cartesian3D<Double32_t>+;
+// #pragma link C++ class ROOT::Math::PxPyPzE4D<Double32_t>+;
+// #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
+// #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >+;
 
 
 #endif

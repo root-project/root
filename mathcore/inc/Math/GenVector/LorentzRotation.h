@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.3 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// Last update: $Id: LorentzRotation.h,v 1.3 2005/09/19 16:43:07 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -58,7 +58,7 @@ public:
 
   enum LorentzRotationMatrixIndex {
       XX =  0, XY =  1, XZ =  2, XT =  3
-    , YX =  4, YY =  4, YZ =  6, YT =  7
+    , YX =  4, YY =  5, YZ =  6, YT =  7
     , ZX =  8, ZY =  9, ZZ = 10, ZT = 11
     , TX = 12, TY = 13, TZ = 14, TT = 15
   };
@@ -419,6 +419,8 @@ inline
 typename Rotation3D::Scalar
 Distance ( const Rotation3D& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 #endif
+
+
 
 } //namespace Math
 } //namespace ROOT

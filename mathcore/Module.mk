@@ -17,7 +17,8 @@ MATHCORELINC := $(MODDIRI)/Math/LinkDef_Func.h \
                 $(MODDIRI)/Math/LinkDef_GenVector.h \
                 $(MODDIRI)/Math/LinkDef_Point3D.h \
                 $(MODDIRI)/Math/LinkDef_Vector3D.h \
-                $(MODDIRI)/Math/LinkDef_Vector4D.h 
+                $(MODDIRI)/Math/LinkDef_Vector4D.h \
+                $(MODDIRI)/Math/LinkDef_Rotation.h 
 MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)

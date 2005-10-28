@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.1 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -66,6 +66,16 @@ namespace ROOT {
     */ 
     Transform3D();
     
+    /**
+       Construct given a pair of pointers or iterators defining the
+       beginning and end of an array of 12 Scalars
+    */
+    template<class IT>
+    Transform3D(IT begin, IT end) 
+    { 
+      SetComponents(begin,end); 
+    }
+
     /**
        Construct from a rotation and then a translation described by a XYZVector 
     */
@@ -257,11 +267,11 @@ namespace ROOT {
     /**
        Transformation operation for a Lorentz Vector in any  coordinate system 
     */
-//     template <class CoordSystem > 
-//     LorentzVector3D<CoordSystem> operator() (const LorentzVector3D<CoordSystem> & q) const { 
-//       XYZVector xyzNew = operator() ( XYZVector(q.Vect() ) );
-//       return  LorentzVector3D<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), xyzNew.E() );
-//     }
+    template <class CoordSystem > 
+    LorentzVector<CoordSystem> operator() (const LorentzVector<CoordSystem> & q) const { 
+      XYZVector xyzNew = operator() ( XYZVector(q.Vect() ) );
+      return  LorentzVector<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
+    }
 
     // skip transformation for arbitrary vectors - not really defined if point or displacement vectors
 
