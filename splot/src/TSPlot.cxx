@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.1 2005/10/27 19:33:41 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.2 2005/10/27 19:47:41 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -62,7 +62,7 @@ TSPlot is optimal if the control variable is uncorrelated with the discriminatin
 A detail description of the formalism itself, called <!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
-<img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">, is given in&nbsp;[<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
+<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">, is given in&nbsp;[<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
 
 </p><p>
 <b><font size="+2">The method</font></b> 
@@ -71,28 +71,28 @@ A detail description of the formalism itself, called <!-- MATH
 The <!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
-<img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is developped in the above context of a maximum Likelihood method making use of discriminating variables.
+<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is developped in the above context of a maximum Likelihood method making use of discriminating variables.
 
 </p><p>One considers a data sample in which are merged several species
 of events. These species represent various signal components and
 background components which all together account for the data sample.
 The different terms of the log-Likelihood are:
 </p><ul>
-<li><img src="sPlot_ROOT_files/img6.png" alt="$N$" align="bottom" border="0" height="17" width="22">: the total number of events in the data sample,
+<li><img src="gif/sPlot_img6.png" alt="$N$" align="bottom" border="0" height="17" width="22">: the total number of events in the data sample,
 </li>
 <li><!-- MATH
  ${\rm N}_{\rm s}$
  -->
-<img src="sPlot_ROOT_files/img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25">: the number of species of events populating the data sample,
+<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25">: the number of species of events populating the data sample,
 </li>
-<li><img src="sPlot_ROOT_files/img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25">: the number of events expected on the average for the <img src="sPlot_ROOT_files/img9.png" alt="$i^{\rm th}$" align="bottom" border="0" height="20" width="25"> species,
+<li><img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25">: the number of events expected on the average for the <img src="gif/sPlot_img9.png" alt="$i^{\rm th}$" align="bottom" border="0" height="20" width="25"> species,
 </li>
 <li><!-- MATH
  ${\rm f}_i(y_e)$
  -->
-<img src="sPlot_ROOT_files/img10.png" alt="${\rm f}_i(y_e)$" align="middle" border="0" height="37" width="47">: the value of the PDFs of the discriminating variables <img src="sPlot_ROOT_files/img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> for the <img src="sPlot_ROOT_files/img12.png" alt="$i^{th}$" align="bottom" border="0" height="20" width="25"> species and for event <img src="sPlot_ROOT_files/img13.png" alt="$e$" align="bottom" border="0" height="17" width="13">, 
+<img src="gif/sPlot_img10.png" alt="${\rm f}_i(y_e)$" align="middle" border="0" height="37" width="47">: the value of the PDFs of the discriminating variables <img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> for the <img src="gif/sPlot_img12.png" alt="$i^{th}$" align="bottom" border="0" height="20" width="25"> species and for event <img src="gif/sPlot_img13.png" alt="$e$" align="bottom" border="0" height="17" width="13">, 
 </li>
-<li><img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">: the set of control variables which, by definition, do not appear in the expression of the Likelihood function <img src="sPlot_ROOT_files/img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18">.
+<li><img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">: the set of control variables which, by definition, do not appear in the expression of the Likelihood function <img src="gif/sPlot_img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18">.
 </li>
 </ul>
 The extended log-Likelihood reads:
@@ -105,20 +105,20 @@ The extended log-Likelihood reads:
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:eLik"></a><img src="sPlot_ROOT_files/img16.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:eLik"></a><img src="gif/sPlot_img16.png" alt="\begin{displaymath}
 {\cal L}=\sum_{e=1}^{N}\ln \Big\{ \sum_{i=1}^{{\rm N}_{\rm s}}N_i{\rm f}_i(y_e) \Big\} -\sum_{i=1}^{{\rm N}_{\rm s}}N_i ~.
 \end{displaymath}" border="0" height="59" width="276"></td>
 <td align="right" width="10">
 (1)</td></tr>
 </tbody></table>
 <br clear="all"></div><p></p>
-From this expression, after maximization of <img src="sPlot_ROOT_files/img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18"> with respect to the <img src="sPlot_ROOT_files/img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> parameters, a weight can be computed for every event and each species, in order to obtain later the true distribution <!-- MATH
+From this expression, after maximization of <img src="gif/sPlot_img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18"> with respect to the <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> parameters, a weight can be computed for every event and each species, in order to obtain later the true distribution <!-- MATH
  ${\hbox{\bf {M}}}_i(x)$
  -->
-<img src="sPlot_ROOT_files/img17.png" alt="${\hbox{\bf {M}}}_i(x)$" align="middle" border="0" height="37" width="56"> of variable <img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. If <img src="sPlot_ROOT_files/img18.png" alt="${\rm n}$" align="bottom" border="0" height="17" width="15"> is one of the <!-- MATH
+<img src="gif/sPlot_img17.png" alt="${\hbox{\bf {M}}}_i(x)$" align="middle" border="0" height="37" width="56"> of variable <img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. If <img src="gif/sPlot_img18.png" alt="${\rm n}$" align="bottom" border="0" height="17" width="15"> is one of the <!-- MATH
  ${\rm N}_{\rm s}$
  -->
-<img src="sPlot_ROOT_files/img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species present in the data sample, the weight for this species is defined by:
+<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species present in the data sample, the weight for this species is defined by:
 <br>
 <div align="right">
 
@@ -129,7 +129,7 @@ From this expression, after maximization of <img src="sPlot_ROOT_files/img15.png
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:weightxnotiny"></a><img src="sPlot_ROOT_files/img19.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:weightxnotiny"></a><img src="gif/sPlot_img19.png" alt="\begin{displaymath}
 \begin{Large}
 \fbox{$
 {_s{\cal P}}_{\rm n}(y_e)={\sum_{j=1}^...
@@ -142,7 +142,7 @@ From this expression, after maximization of <img src="sPlot_ROOT_files/img15.png
 where <!-- MATH
  $\hbox{\bf V}_{{\rm n}j}$
  -->
-<img src="sPlot_ROOT_files/img20.png" alt="$\hbox{\bf V}_{{\rm n}j}$" align="middle" border="0" height="34" width="35">
+<img src="gif/sPlot_img20.png" alt="$\hbox{\bf V}_{{\rm n}j}$" align="middle" border="0" height="34" width="35">
 is the covariance matrix resulting from the Likelihood maximization.
 This matrix can be used directly from the fit, but this is numerically
 less accurate than the direct computation:
@@ -157,7 +157,7 @@ less accurate than the direct computation:
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:VarianceMatrixDirect"></a><img src="sPlot_ROOT_files/img21.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:VarianceMatrixDirect"></a><img src="gif/sPlot_img21.png" alt="\begin{displaymath}
 \hbox{\bf V}^{-1}_{{\rm n}j}~=~
 {\partial^2(-{\cal L})\over\...
 ...y_e)\over(\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e))^2} ~.
@@ -166,22 +166,22 @@ less accurate than the direct computation:
 (3)</td></tr>
 </tbody></table>
 <br clear="all"></div><p></p>
-The distribution of the control variable&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> obtained by histogramming the weighted events reproduces, on average, the true distribution <!-- MATH
+The distribution of the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> obtained by histogramming the weighted events reproduces, on average, the true distribution <!-- MATH
  ${\hbox{\bf {M}}}_{\rm n}(x)$
  -->
-<img src="sPlot_ROOT_files/img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59">.
+<img src="gif/sPlot_img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59">.
 
 <p>
 The class TSPlot allows to reconstruct the true distribution <!-- MATH
  ${\hbox{\bf {M}}}_{\rm n}(x)$
  -->
-<img src="sPlot_ROOT_files/img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59"> of a control variable&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> for each of the <!-- MATH
+<img src="gif/sPlot_img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59"> of a control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> for each of the <!-- MATH
  ${\rm N}_{\rm s}$
  -->
-<img src="sPlot_ROOT_files/img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species from the sole knowledge of the PDFs of the discriminating variables <img src="sPlot_ROOT_files/img23.png" alt="${\rm f}_i(y)$" align="middle" border="0" height="37" width="40">. The plots obtained thanks to the TSPlot class are called <!-- MATH
+<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species from the sole knowledge of the PDFs of the discriminating variables <img src="gif/sPlot_img23.png" alt="${\rm f}_i(y)$" align="middle" border="0" height="37" width="40">. The plots obtained thanks to the TSPlot class are called <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">.
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">.
 
 </p><p>
 <b><font size="+2">Some properties and checks</font></b>
@@ -190,11 +190,11 @@ The class TSPlot allows to reconstruct the true distribution <!-- MATH
 Beside reproducing the true distribution, <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> bear remarkable properties:
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> bear remarkable properties:
 
 </p><ul>
 <li>
-Each <img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">-distribution is properly normalized:
+Each <img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">-distribution is properly normalized:
 <br>
 <div align="right">
 
@@ -204,7 +204,7 @@ Each <img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" h
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:NormalizationOK"></a><img src="sPlot_ROOT_files/img24.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:NormalizationOK"></a><img src="gif/sPlot_img24.png" alt="\begin{displaymath}
 \sum_{e=1}^{N} {_s{\cal P}}_{\rm n}(y_e)~=~N_{\rm n}~.
 \end{displaymath}" border="0" height="58" width="158"></td>
 <td align="right" width="10">
@@ -223,7 +223,7 @@ For any event:
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:numberconservation"></a><img src="sPlot_ROOT_files/img25.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:numberconservation"></a><img src="gif/sPlot_img25.png" alt="\begin{displaymath}
 \sum_{l=1}^{{\rm N}_{\rm s}} {_s{\cal P}}_l(y_e) ~=~1 ~.
 \end{displaymath}" border="0" height="59" width="140"></td>
 <td align="right" width="10">
@@ -233,13 +233,13 @@ For any event:
 That is to say that, summing up the <!-- MATH
  ${\rm N}_{\rm s}$
  -->
-<img src="sPlot_ROOT_files/img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> <!-- MATH
+<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">, one recovers the data sample distribution in&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, and summing up the number of events entering in a <!-- MATH
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">, one recovers the data sample distribution in&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, and summing up the number of events entering in a <!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
-<img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for a given species, one recovers the yield of the species, as provided by the fit. The property&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:NormalizationOK">4</a> is implemented in the TSPlot class as a check.
+<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for a given species, one recovers the yield of the species, as provided by the fit. The property&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:NormalizationOK">4</a> is implemented in the TSPlot class as a check.
 </li>
 <li>the sum of the statistical uncertainties per bin
 <br>
@@ -251,22 +251,22 @@ That is to say that, summing up the <!-- MATH
 \end{equation}
  -->
 <table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:ErrorPerBin"></a><img src="sPlot_ROOT_files/img26.png" alt="\begin{displaymath}
+<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:ErrorPerBin"></a><img src="gif/sPlot_img26.png" alt="\begin{displaymath}
 \sigma[N_{\rm n}\ _s\tilde{\rm M}_{\rm n}(x) {\delta x}]~=~\sqrt{\sum_{e \subset {\delta x}} ({_s{\cal P}}_{\rm n})^2} ~.
 \end{displaymath}" border="0" height="55" width="276"></td>
 <td align="right" width="10">
 (6)</td></tr>
 </tbody></table>
 <br clear="all"></div><p></p>
-reproduces the statistical uncertainty on the yield <img src="sPlot_ROOT_files/img27.png" alt="$N_{\rm n}$" align="middle" border="0" height="34" width="28">, as provided by the fit: <!-- MATH
+reproduces the statistical uncertainty on the yield <img src="gif/sPlot_img27.png" alt="$N_{\rm n}$" align="middle" border="0" height="34" width="28">, as provided by the fit: <!-- MATH
  $\sigma[N_{\rm n}]\equiv\sqrt{\hbox{\bf V}_{{\rm n}{\rm n}}}$
  -->
-<img src="sPlot_ROOT_files/img28.png" alt="$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{\bf V}_{{\rm n}{\rm n}}}$" align="middle" border="0" height="40" width="123">.
+<img src="gif/sPlot_img28.png" alt="$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{\bf V}_{{\rm n}{\rm n}}}$" align="middle" border="0" height="40" width="123">.
 Because of that and since the determination of the yields is optimal
 when obtained using a Likelihood fit, one can conclude that the<!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
- <img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is itself an optimal method to reconstruct distributions of control variables.
+ <img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is itself an optimal method to reconstruct distributions of control variables.
 </li>
 </ul>
 
@@ -276,13 +276,13 @@ when obtained using a Likelihood fit, one can conclude that the<!-- MATH
 </p><p>
 
 </p><ol>
-<li>A maximum Likelihood fit is performed to obtain the yields <img src="sPlot_ROOT_files/img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> of the various species. 
-The fit relies on discriminating variables&nbsp;<img src="sPlot_ROOT_files/img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> uncorrelated with a control variable&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">:
+<li>A maximum Likelihood fit is performed to obtain the yields <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> of the various species. 
+The fit relies on discriminating variables&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> uncorrelated with a control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">:
 the later is therefore totally absent from the fit. 
 </li>
-<li>The weights <img src="sPlot_ROOT_files/img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27"> are calculated using Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>) where the covariance matrix is taken from Minuit.
+<li>The weights <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27"> are calculated using Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>) where the covariance matrix is taken from Minuit.
 </li>
-<li>Histograms of&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> are filled by weighting the events with <img src="sPlot_ROOT_files/img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27">. 
+<li>Histograms of&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> are filled by weighting the events with <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27">. 
 </li>
 <li>Error bars per bin are given by Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>). 
 </li>
@@ -290,7 +290,7 @@ the later is therefore totally absent from the fit.
 The <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> reproduce the true distributions of the species in the control variable&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, within the above defined statistical uncertainties.
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> reproduce the true distributions of the species in the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, within the above defined statistical uncertainties.
 
 <p>
 <b><font size="+2">Illustrations</font></b>
@@ -299,12 +299,12 @@ The <!-- MATH
 To illustrate the technique, one considers an example derived from the analysis where <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">
 have been first used (charmless B decays). One is dealing with a data
 sample in which two species are present: the first is termed signal and
 the second background. A maximum Likelihood fit is performed to obtain
-the two yields <img src="sPlot_ROOT_files/img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="sPlot_ROOT_files/img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27">. The fit relies on two discriminating variables collectively denoted&nbsp;<img src="sPlot_ROOT_files/img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> which are chosen within three possible variables denoted <img src="sPlot_ROOT_files/img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
-The variable which is not incorporated in&nbsp;<img src="sPlot_ROOT_files/img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> is used as the control variable&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. The six distributions of the three variables are assumed to be the ones depicted in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
+the two yields <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27">. The fit relies on two discriminating variables collectively denoted&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> which are chosen within three possible variables denoted <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
+The variable which is not incorporated in&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> is used as the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. The six distributions of the three variables are assumed to be the ones depicted in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
 
 </p><p>
 
@@ -312,14 +312,14 @@ The variable which is not incorporated in&nbsp;<img src="sPlot_ROOT_files/img11.
 <table>
 <caption align="bottom"><strong>Figure 1:</strong>
 Distributions of the three discriminating variables available to perform the Likelihood fit: 
-<img src="sPlot_ROOT_files/img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">, <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
+<img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">, <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
 Among the three variables, two are used to perform the fit while one is
 kept out of the fit to serve the purpose of a control variable. The
 three distributions on the top (resp. bottom) of the figure correspond
 to the signal (resp. background). The unit of the vertical axis is
 chosen such that it indicates the number of entries per bin, if one
 slices the histograms in 25 bins.</caption>
-<tbody><tr><td><img src="sPlot_ROOT_files/img33.png" alt="\begin{figure}\begin{center}
+<tbody><tr><td><img src="gif/sPlot_img33.png" alt="\begin{figure}\begin{center}
 \mbox{{\psfig{file=pdfmesNIM.eps,width=0.33\linewi...
 ...th}}
 {\psfig{file=pdffiNIM.eps,width=0.33\linewidth}}}
@@ -328,7 +328,7 @@ slices the histograms in 25 bins.</caption>
 </div>
 
 <p>
-A data sample being built through a Monte Carlo simulation based on the distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>, one obtains the three distributions of Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfstot">2</a>. Whereas the distribution of&nbsp;<img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> clearly indicates the presence of the signal, the distribution of <img src="sPlot_ROOT_files/img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are less obviously populated by signal.
+A data sample being built through a Monte Carlo simulation based on the distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>, one obtains the three distributions of Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfstot">2</a>. Whereas the distribution of&nbsp;<img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> clearly indicates the presence of the signal, the distribution of <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are less obviously populated by signal.
 
 </p><p>
 
@@ -339,7 +339,7 @@ Distributions of the three discriminating variables for signal plus
 background. The three distributions are the ones obtained from a data
 sample obtained through a Monte Carlo simulation based on the
 distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.  The data sample consists of 500 signal events and 5000 background events.</caption>
-<tbody><tr><td><img src="sPlot_ROOT_files/img34.png" alt="\begin{figure}\begin{center}
+<tbody><tr><td><img src="gif/sPlot_img34.png" alt="\begin{figure}\begin{center}
 \mbox{{\psfig{file=genmesTOTNIM.eps,width=0.33\lin...
 ...}
 {\psfig{file=genfiTOTNIM.eps,width=0.33\linewidth}}}
@@ -348,13 +348,13 @@ distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/s
 </div>
 
 <p>
-Chosing <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> as discriminating variables to determine <img src="sPlot_ROOT_files/img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="sPlot_ROOT_files/img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="sPlot_ROOT_files/img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> which is unknown to the fit, the two <!-- MATH
+Chosing <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> as discriminating variables to determine <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> which is unknown to the fit, the two <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:messPlots">3</a>. One observes that the <!-- MATH
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:messPlots">3</a>. One observes that the <!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
-<img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">
+<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">
 for signal reproduces correctly the PDF even where the latter vanishes,
 although the error bars remain sizeable. This results from the almost
 complete cancellation between positive and negative weights: the sum of
@@ -375,7 +375,7 @@ particular data sample at hand, no event is observed in this bin. The
 latter limitation is not specific to<!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
- <img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">,
+ <img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">,
 rather it is always present when one is willing to infer the PDF at the
 origin of an histogram, when, for some bins, the number of entries does
 not guaranty the applicability of the Gaussian regime. In such
@@ -391,8 +391,8 @@ level.
 The <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="sPlot_ROOT_files/img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.</caption>
-<tbody><tr><td><img src="sPlot_ROOT_files/img35.png" alt="\begin{figure}\begin{center}
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.</caption>
+<tbody><tr><td><img src="gif/sPlot_img35.png" alt="\begin{figure}\begin{center}
 \mbox{\psfig{file=mass-sig-sPlot.eps,width=0.48\li...
 ... \psfig{file=mass-bkg-sPlot.eps,width=0.48\linewidth}}
 \end{center}\end{figure}" border="0" height="181" width="539"></td></tr>
@@ -400,13 +400,13 @@ The <!-- MATH
 </div>
 
 <p>
-Chosing <img src="sPlot_ROOT_files/img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> as discriminating variables to determine <img src="sPlot_ROOT_files/img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="sPlot_ROOT_files/img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> which is unknown to the fit, the two <!-- MATH
+Chosing <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> as discriminating variables to determine <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> which is unknown to the fit, the two <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:FisPlots">4</a>. In the <!-- MATH
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:FisPlots">4</a>. In the <!-- MATH
  $\hbox{$_s$}{\cal P}lot$
  -->
-<img src="sPlot_ROOT_files/img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for signal one observes that error bars are the largest in the&nbsp;<img src="sPlot_ROOT_files/img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> regions where the background is the largest.
+<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for signal one observes that error bars are the largest in the&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> regions where the background is the largest.
 
 </p><p>
 
@@ -416,8 +416,8 @@ Chosing <img src="sPlot_ROOT_files/img1.png" alt="${m_{\rm ES}}$" align="middle"
 The <!-- MATH
  $\hbox{$_s$}{\cal P}lots$
  -->
-<img src="sPlot_ROOT_files/img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="sPlot_ROOT_files/img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="sPlot_ROOT_files/img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="sPlot_ROOT_files/img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">.</caption>
-<tbody><tr><td><img src="sPlot_ROOT_files/img36.png" alt="\begin{figure}\begin{center}
+<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">.</caption>
+<tbody><tr><td><img src="gif/sPlot_img36.png" alt="\begin{figure}\begin{center}
 \mbox{\psfig{file=fisher-sig-sPlot.eps,width=0.48\...
 ...psfig{file=fisher-bkg-sPlot.eps,width=0.48\linewidth}}
 \end{center}\end{figure}" border="0" height="180" width="539"></td></tr>
