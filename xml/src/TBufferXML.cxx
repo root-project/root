@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.2 2005/09/06 09:34:48 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.3 2005/10/26 12:49:24 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1274,26 +1274,20 @@ void TBufferXML::WriteObject(const void *actualObjStart, const TClass *actualCla
 }
 
 //______________________________________________________________________________
-void TBufferXML::ReadDouble32 (Double_t * /*d*/, TStreamerElement * /*ele*/)
+void TBufferXML::ReadDouble32 (Double_t *d, TStreamerElement * /*ele*/)
 {
    // read a Double32_t from the buffer
-   //if (factor != 0) {
-   //   UInt_t aint; b >> aint; d[0] = (Double_t)(aint/factor + xmin);
-   //} else {
-   //   Float_t afloat; b >> afloat; d[0] = (Double_t)afloat;
-   //}
+   BeforeIOoperation();
+   XmlReadBasic(*d);
 }
 
 
 //______________________________________________________________________________
-void TBufferXML::WriteDouble32 (Double_t * /*d*/, TStreamerElement * /*ele*/)
+void TBufferXML::WriteDouble32 (Double_t *d, TStreamerElement * /*ele*/)
 {
    // write a Double32_t to the buffer
-   //if (factor != 0) {
-   //   UInt_t aint = UInt_t(0.5+factor*(d[0]-xmin)); b << aint;
-   //} else {
-   //   Float_t afloat = (Float_t)d[0]; b << afloat;
-   //}
+   BeforeIOoperation();
+   XmlWriteBasic(*d);
 }
 
 //______________________________________________________________________________
