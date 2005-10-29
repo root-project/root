@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFCN.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFCN.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -52,6 +52,7 @@ double TChi2ExtendedFCN::operator()(const std::vector<double>& par) const {
   double chi2 = 0;
   for (unsigned int i = 0; i < n; ++ i) { 
     const std::vector<double> & x = fData->Coords(i); 
+    fFunc->InitArgs( &x.front(), &par.front() ); 
     double y = fData->Value(i);
     //std::cout << x[0] << "  " << y << "  " << 1./invError << " params " << par[0] << std::endl;
     double functionValue = fFunc->EvalPar( &x.front(), &par.front() ); 

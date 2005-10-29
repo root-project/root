@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -111,17 +111,18 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
   for (unsigned int i = 0; i < nMeasurements; ++i) {
     
     const std::vector<double> & x =  points.Coords(i); 
+    fFunc->InitArgs( &x.front(), &fParamCache.front() ); 
 
     // one should implement integral option (in TFumili is not correct)
     double fval; 
     if ( fData->UseIntegral()) {
       const std::vector<double> & x2 = fData->Coords(i+1); 
       // need to implement derivatives of integral
-      fval = FitterUtil::EvalIntegral(fFunc,x,x2,p);     
+      fval = FitterUtil::EvalIntegral(fFunc,x,x2,fParamCache);     
       Calculate_numerical_gradient_of_integral( x, x2, fval); 	
     }
     else { 
-      fval = fFunc->EvalPar(&x.front(), &p.front() ); 
+      fval = fFunc->EvalPar(&x.front(), &fParamCache.front() ); 
       Calculate_numerical_gradient( x, fval); 
     }
     
