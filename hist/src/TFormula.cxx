@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.104 2005/09/29 13:01:15 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.105 2005/10/11 22:48:33 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 
 static Int_t gMAXOP,gMAXPAR,gMAXCONST;
 const Int_t  gMAXSTRINGFOUND = 10;
+const UInt_t kProblemWithOldTF1 = BIT(19);
 
 ClassImp(TFormula)
 
@@ -2737,7 +2738,11 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
            continue;
         };
      }
-     Assert(0);
+     //Assert(0);
+     if (!TestBit(kProblemWithOldTF1)) {
+        SetBit(kProblemWithOldTF1);
+        Warning("EvalParold","Found an illegal case due to an old TF1");
+     }
   }
   Double_t result0 = tab[0];
   return result0;
@@ -4083,7 +4088,11 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
            continue;
                             };
       }
-      Assert(0);
+      //Assert(0);
+     if (!TestBit(kProblemWithOldTF1)) {
+        SetBit(kProblemWithOldTF1);
+        Warning("EvalParFast","Found an illegal case due to an old TF1");
+     }
    }
    Double_t result0 = tab[0];
    return result0;
