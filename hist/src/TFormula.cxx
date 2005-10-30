@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.105 2005/10/11 22:48:33 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.106 2005/10/29 06:22:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 
 static Int_t gMAXOP,gMAXPAR,gMAXCONST;
 const Int_t  gMAXSTRINGFOUND = 10;
-const UInt_t kProblemWithOldTF1 = BIT(19);
+const UInt_t kOptimizationError = BIT(19);
 
 ClassImp(TFormula)
 
@@ -2463,8 +2463,9 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
    for (i=0; i<fNoper; ++i) {
 
      const int oper = fOper[i];
+     const int opcode = oper >> kTFOperShift;
 
-     switch((oper >> kTFOperShift)) {
+     switch(opcode) {
 
         case kParameter  : { pos++; tab[pos-1] = fParams[ oper & kTFOperMask ]; continue; }
         case kConstant   : { pos++; tab[pos-1] = fConst[ oper & kTFOperMask ]; continue; }
@@ -2607,7 +2608,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
 
      }
 
-     switch((oper >> kTFOperShift)) {
+     switch(opcode) {
 
         #define R__EXPO(var)                                                 \
         {                                                                    \
@@ -2738,10 +2739,9 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
            continue;
         };
      }
-     //Assert(0);
-     if (!TestBit(kProblemWithOldTF1)) {
-        SetBit(kProblemWithOldTF1);
-        Warning("EvalParold","Found an illegal case due to an old TF1");
+     if (!TestBit(kOptimizationError)) {
+        SetBit(kOptimizationError);
+        Warning("EvalParOld","Found an unsupported opcode (%d)",oper >> kTFOperShift);
      }
   }
   Double_t result0 = tab[0];
@@ -3228,6 +3228,12 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          Assert((aresult+1)<0.001);
 
          ++i; // skip the implied multiplication.
+         
+         // For consistency and for Optimize to work correctly
+         // we need to remove the "-1" string in fExpr
+         for (int z=i; z<fNoper; ++z) {
+            fExpr[z-1] = fExpr[z];
+         }
 
       } else  if ( action < 100 ) {
          // basic operators and mathematical library
@@ -3839,8 +3845,9 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
    for (i=0; i<fNOperOptimized; ++i) {
       //
       const int oper = fOperOptimized[i];
+      const int opcode = oper >> kTFOperShift;
 
-      switch((oper >> kTFOperShift)) {  // FREQUENTLY USED OPERATION
+      switch(opcode) {  // FREQUENTLY USED OPERATION
          case kData       : tab[pos] = pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; pos++;continue;
          case kPlusD      : tab[pos-1]+= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;
          case kMultD      : tab[pos-1]*= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;       
@@ -3864,7 +3871,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kFD3       :    pos-=2; tab[pos-1]   = (fPredefined[i]->fFunc1110)(tab[pos-2],tab[pos-1],tab[pos]); continue;
       }       
       //
-      switch((oper >> kTFOperShift)) {
+      switch(opcode) {
          case kBoolOptimizeAnd:{
             if (!tab[pos-1]) i=fOperOffset[i].fToJump; continue;
                                }
@@ -3874,7 +3881,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kAnd  : pos--; tab[pos-1] = tab[pos];  continue;  // use the fact that other were check before - see bool optimize
          case kOr   : pos--; tab[pos-1] = tab[pos];  continue;
       }
-      switch((oper >> kTFOperShift)) { 
+      switch(opcode) { 
          //    case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
          case kabs  : if (tab[pos-1]<0) tab[pos-1]=-tab[pos-1]; continue;
          case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
@@ -3954,7 +3961,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          }
 
       }
-      switch((oper >> kTFOperShift)) {
+      switch(opcode) {
 
 #define R__EXPO(var)                                                         \
          {                                                                   \
@@ -4086,13 +4093,12 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
            tab[pos-1] = ret; // check for the correct conversion!
 
            continue;
-                            };
+        };
       }
-      //Assert(0);
-     if (!TestBit(kProblemWithOldTF1)) {
-        SetBit(kProblemWithOldTF1);
-        Warning("EvalParFast","Found an illegal case due to an old TF1");
-     }
+      if (!TestBit(kOptimizationError)) {
+        SetBit(kOptimizationError);
+        Warning("EvalParFast","Found an unsupported optmized opcode (%d)",oper >> kTFOperShift);
+      }
    }
    Double_t result0 = tab[0];
    return result0;
