@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.257 2005/10/22 07:33:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.258 2005/10/25 13:49:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3894,7 +3894,7 @@ Long64_t TH1::Merge(TCollection *li)
                if (!label) label="";
                ix = fXaxis.FindBin(label);
             }
-            AddBinContent(ix,cu);
+            if (ix >= 0) AddBinContent(ix,cu);
             if (fSumw2.fN) {
                Double_t error1 = h->GetBinError(binx);
                fSumw2.fArray[ix] += error1*error1;
