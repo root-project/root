@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.5 2005/09/18 11:51:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.6 2005/10/10 11:07:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -83,6 +83,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 
    TList validSubmasters;
    TList validPairs;
+   validPairs.SetOwner();
    UInt_t nSubmasters = 0;
    UInt_t nSubmastersDone = 0;
 
@@ -346,10 +347,6 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
             m << TString("Setting up submasters") << nSubmasters
               << nSubmastersDone << submasterOk;
             gProofServ->GetSocket()->Send(m);
-
-            // Drop the temporary pairs
-            validPairs.Remove(sc);
-            delete sc;
          }
       }
    }
