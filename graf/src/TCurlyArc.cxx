@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.7 2005/04/20 14:59:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.8 2005/08/29 14:43:30 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 Double_t TCurlyArc::fgDefaultWaveLength = 0.02;
 Double_t TCurlyArc::fgDefaultAmplitude  = 0.01; 
-Bool_t   TCurlyArc::fgDefaultIsCurly    = kFALSE;   
+Bool_t   TCurlyArc::fgDefaultIsCurly    = kTRUE;   
 
 ClassImp(TCurlyArc)
 

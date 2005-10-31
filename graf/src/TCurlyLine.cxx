@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.8 2005/04/20 14:59:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.9 2005/08/29 14:43:30 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 Double_t TCurlyLine::fgDefaultWaveLength = 0.02;
 Double_t TCurlyLine::fgDefaultAmplitude  = 0.01; 
-Bool_t   TCurlyLine::fgDefaultIsCurly    = kFALSE;   
+Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;   
 
 ClassImp(TCurlyLine)
 

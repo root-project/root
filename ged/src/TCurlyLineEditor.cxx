@@ -220,9 +220,9 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fEndYEntry->SetNumber(val);  
 
    if (fCurlyLine->GetCurly()) 
-      fIsWavy->SetState(kButtonUp);
-   else
       fIsWavy->SetState(kButtonDown);
+   else
+      fIsWavy->SetState(kButtonUp);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
@@ -273,8 +273,8 @@ void TCurlyLineEditor::DoWavy()
 {
    // Slot connected to the wavy / curly setting.
 
-   if (fIsWavy->GetState() == kButtonUp) fCurlyLine->SetCurly();
-   else                                  fCurlyLine->SetWavy();
+   if (fIsWavy->GetState() == kButtonDown) fCurlyLine->SetCurly();
+   else                                    fCurlyLine->SetWavy();
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
    Update();
 }
