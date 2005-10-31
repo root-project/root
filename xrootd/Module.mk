@@ -121,7 +121,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		rc=$$? ; \
 		if [ $$rc = "0" ] ; then \
 		   echo "*** Building xrootd ..." ; \
-		   $(MAKE) -j1; \
+		   $(MAKE); \
 		else \
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
 			" building only the client ... " ; \

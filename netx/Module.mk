@@ -34,7 +34,7 @@ INCLUDEFILES += $(NETXDEP)
 
 # These are undefined if using an external XROOTD distribution
 # The new XROOTD build system based on autotools installs the headers
-# under <dir>/include/xrootd, while the old system under <dir>/src 
+# under <dir>/include/xrootd, while the old system under <dir>/src
 ifneq ($(XROOTDDIR),)
 ifeq ($(XROOTDDIRI),)
 XROOTDDIRI   := $(XROOTDDIR)/include/xrootd
@@ -56,12 +56,12 @@ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(NETXLIBEXTRA) $(XRDPLUGINS)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTDETAG) 
+$(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTDETAG)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 

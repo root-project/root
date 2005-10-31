@@ -603,7 +603,7 @@ endif
 	-@mv -f tutorials/mlpHiggs.roott tutorials/mlpHiggs.root
 	-@mv -f tutorials/stock.roott tutorials/stock.root
 	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
-	@rm -f bin/roota lib/libRoot.a
+	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@$(MAKECINTDLLS) clean
