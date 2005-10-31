@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.66 2005/07/30 09:37:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.67 2005/08/29 10:45:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1166,10 +1166,12 @@ void TAxis::UnZoom()
    SetRange(0,0);
    if (!strstr(GetName(),"xaxis")) {
       TH1 *hobj = (TH1*)GetParent();
-      if (hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) {
-         hobj->SetMinimum();
-         hobj->SetMaximum();
-         hobj->ResetBit(TH1::kIsZoomed);
+      if (hobj->GetDimension() == 2) {
+         if (strstr(GetName(),"zaxis")) {
+            hobj->SetMinimum();
+            hobj->SetMaximum();
+            hobj->ResetBit(TH1::kIsZoomed);
+	 }
          return;
       }
       if (strcmp(hobj->GetName(),"hframe") == 0 ) {
