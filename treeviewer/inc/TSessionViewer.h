@@ -168,8 +168,10 @@ public:
 class TPackageDescription : public TObject {
 
 public:
-   TString                    fName;         // package name
-   Int_t                      fId;           // package id
+   TString        fName;         // package name
+   Int_t          fId;           // package id
+   Bool_t         fUploaded;     // package has been uploaded
+   Bool_t         fEnabled;      // package has been enabled
 
    ClassDef(TPackageDescription,1)
 };

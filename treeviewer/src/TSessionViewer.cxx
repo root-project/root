@@ -229,6 +229,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    tmp->AddFrame(btnTmp = new TGTextButton(tmp, "     Add     "),
                  new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    tmp->Resize(155, btnTmp->GetDefaultHeight());
+   btnTmp->SetToolTipText("Add server to the list");
    btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnAddClicked()");
    tmp->AddFrame(btnTmp = new TGTextButton(tmp, "   Connect   "),
@@ -236,6 +237,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    tmp->Resize(155, btnTmp->GetDefaultHeight());
    btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnConnectClicked()");
+   btnTmp->SetToolTipText("Connect to the selected server");
 
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
                        new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
@@ -245,11 +247,13 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
                  kLHintsExpandX, 3, 3, 15, 3));
    btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnNewServerClicked()");
+   btnTmp->SetToolTipText("Create new session (reset all fields)");
    tmp->AddFrame(btnTmp = new TGTextButton(tmp, "    Delete    "),
                  new TGLayoutHints(kLHintsLeft | kLHintsBottom |
                  kLHintsExpandX, 3, 3, 15, 3));
    btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnDeleteClicked()");
+   btnTmp->SetToolTipText("Remove server from the list");
    fTxtConfig->Connect("DoubleClicked()", "TSessionServerFrame", this,
                        "OnConfigFileClicked()");
 }
@@ -744,8 +748,10 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmBut1->SetCleanup(kDeepCleanup);
    frmBut1->AddFrame(fBtnNewQuery = new TGTextButton(frmBut1, "New Query..."),
       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fBtnNewQuery->SetToolTipText("Open New Query Dialog");
    frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries  "),
        new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fBtnGetQueries->SetToolTipText("Get List of Queries from the server");
    fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
 
    // add "disconnect" and "show log" buttons
@@ -753,7 +759,9 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmBut0->SetCleanup(kDeepCleanup);
    frmBut0->AddFrame(fBtnDisconnect = new TGTextButton(frmBut0,
       " Disconnect "),new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fBtnDisconnect->SetToolTipText("Disconnect from the server");
    fBtnShowLog = new TGTextButton(frmBut0, "Show log...");
+   fBtnShowLog->SetToolTipText("Show Session log (opens log window)");
    frmBut0->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
    fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
 
@@ -804,24 +812,29 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fLBPackages->Resize(80,150);
    fLBPackages->SetMultipleSelections(kFALSE);
    frmcanvas->AddFrame(fLBPackages, new TGLayoutHints(kLHintsExpandX |
-            kLHintsExpandY, 4, 4, 4, 4));
+            kLHintsExpandY, 5, 5, 5, 5));
    // control buttons frame
    TGCompositeFrame* frmBut2 = new TGVerticalFrame(frmcanvas, 150, 100);
 
    fChkMulti = new TGCheckButton(frmBut2, "Multiple Selection");
+   fChkMulti->SetToolTipText("Enable multiple selection in the package list");
    frmBut2->AddFrame(fChkMulti, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
-   fBtnAdd = new TGTextButton(frmBut2, "        Add...         ");
-   frmBut2->AddFrame(fBtnAdd,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
+   fBtnAdd = new TGTextButton(frmBut2, "     Add...     ");
+   fBtnAdd->SetToolTipText("Add a package to the list");
+   frmBut2->AddFrame(fBtnAdd,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnRemove = new TGTextButton(frmBut2, "Remove");
-   frmBut2->AddFrame(fBtnRemove,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
+   fBtnRemove->SetToolTipText("Remove package from the list");
+   frmBut2->AddFrame(fBtnRemove,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnUp = new TGTextButton(frmBut2, "Move Up");
-   frmBut2->AddFrame(fBtnUp,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
+   fBtnUp->SetToolTipText("Move package one step upward in the list");
+   frmBut2->AddFrame(fBtnUp,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnDown = new TGTextButton(frmBut2, "Move Down");
-   frmBut2->AddFrame(fBtnDown,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
+   fBtnDown->SetToolTipText("Move package one step downward in the list");
+   frmBut2->AddFrame(fBtnDown,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    frmcanvas->AddFrame(frmBut2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
             kLHintsExpandY));
@@ -831,30 +844,40 @@ void TSessionFrame::Build(TSessionViewer *gui)
    TGCompositeFrame* frmBtn = new TGHorizontalFrame(fFB, 300, 100);
    frmBtn->SetCleanup(kDeepCleanup);
    frmBtn->AddFrame(fBtnUpload = new TGTextButton(frmBtn,
-      "     Upload      "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+      " Upload "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
       kLHintsCenterY, 5, 5, 5, 5));
+   fBtnUpload->SetToolTipText("Upload selected package(s) to the server");
    frmBtn->AddFrame(fBtnEnable = new TGTextButton(frmBtn,
-      "     Enable      "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+      " Enable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
       kLHintsCenterY, 5, 5, 5, 5));
+   fBtnEnable->SetToolTipText("Enable selected package(s) on the server");
    frmBtn->AddFrame(fBtnDisable = new TGTextButton(frmBtn,
-      "     Disable     "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+      " Disable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
       kLHintsCenterY, 5, 5, 5, 5));
+   fBtnDisable->SetToolTipText("Disable selected package(s) on the server");
    frmBtn->AddFrame(fBtnClear = new TGTextButton(frmBtn,
-      "      Clear      "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+      " Clear "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
       kLHintsCenterY, 5, 5, 5, 5));
+   fBtnClear->SetToolTipText("Clear all packages on the server");
    fFB->AddFrame(frmBtn, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
+
+   fBtnDisable->SetEnabled(kFALSE);
+   fBtnClear->SetEnabled(kFALSE);
 
    TGCompositeFrame* frmBtn3 = new TGHorizontalFrame(fFB, 300, 100);
    frmBtn3->SetCleanup(kDeepCleanup);
    fBtnShow = new TGTextButton(frmBtn3, "Show packages");
+   fBtnShow->SetToolTipText("Show (list) available packages on the server");
    frmBtn3->AddFrame(fBtnShow,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnShowEnabled = new TGTextButton(frmBtn3, "Show Enabled");
+   fBtnShowEnabled->SetToolTipText("Show (list) enabled packages on the server");
    frmBtn3->AddFrame(fBtnShowEnabled,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fFB->AddFrame(frmBtn3, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
    fChkEnable = new TGCheckButton(fFB, "Enable at session startup");
+   fChkEnable->SetToolTipText("Enable packages on the server at startup time");
    fFB->AddFrame(fChkEnable, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
    // Disable it for now (until implemented)
    fChkEnable->SetEnabled(kFALSE);
@@ -866,11 +889,12 @@ void TSessionFrame::Build(TSessionViewer *gui)
                 kLHintsExpandX | kLHintsExpandY));
 
    // add Log Level label and text entry
-   TGCompositeFrame* frmLog = new TGHorizontalFrame(fFD, 300, 100, kFixedWidth);
+   TGCompositeFrame* frmLog = new TGHorizontalFrame(fFD, 310, 100, kFixedWidth);
    frmLog->SetCleanup(kDeepCleanup);
    frmLog->AddFrame(fApplyLogLevel = new TGTextButton(frmLog,
       "        Apply        "), new TGLayoutHints(kLHintsRight |
       kLHintsCenterY, 10, 5, 5, 5));
+   fApplyLogLevel->SetToolTipText("Apply currently selected log level");
    fLogLevel = new TGNumberEntry(frmLog, 0, 5, 5, TGNumberFormat::kNESInteger,
       TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 5);
    frmLog->AddFrame(fLogLevel, new TGLayoutHints(kLHintsRight |
@@ -880,11 +904,12 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fFD->AddFrame(frmLog, new TGLayoutHints(kLHintsLeft, 5, 5, 15, 5));
 
    // add Parallel Nodes label and text entry
-   TGCompositeFrame* frmPar = new TGHorizontalFrame(fFD, 300, 100, kFixedWidth);
+   TGCompositeFrame* frmPar = new TGHorizontalFrame(fFD, 310, 100, kFixedWidth);
    frmPar->SetCleanup(kDeepCleanup);
    frmPar->AddFrame(fApplyParallel = new TGTextButton(frmPar,
       "        Apply        "), new TGLayoutHints(kLHintsRight |
       kLHintsCenterY, 10, 5, 5, 5));
+   fApplyParallel->SetToolTipText("Apply currently selected parallel nodes");
    fTxtParallel = new TGTextEntry(frmPar);
    fTxtParallel->SetAlignment(kTextRight);
    fTxtParallel->SetText("99999");
@@ -1078,6 +1103,14 @@ void TSessionFrame::OnUploadPackages()
          TString name = obj->GetTitle();
          if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
             Error("Submit", "Upload package failed");
+         else {
+            TObject *o = fPackages->FindObject(name);
+            if (!o) continue;
+            TPackageDescription *package = 
+               dynamic_cast<TPackageDescription *>(o);
+            if (package)
+               package->fUploaded = kTRUE;
+         }
       }
    }
 }
@@ -1098,6 +1131,14 @@ void TSessionFrame::OnEnablePackages()
          TString name = obj->GetTitle();
          if (fViewer->GetActDesc()->fProof->EnablePackage(name) != 0)
             Error("Submit", "Enable package failed");
+         else {
+            TObject *o = fPackages->FindObject(name);
+            if (!o) continue;
+            TPackageDescription *package = 
+               dynamic_cast<TPackageDescription *>(o);
+            if (package)
+               package->fEnabled = kTRUE;
+         }
       }
    }
 }
@@ -1118,6 +1159,14 @@ void TSessionFrame::OnDisablePackages()
          TString name = obj->GetTitle();
          if (fViewer->GetActDesc()->fProof->ClearPackage(name) != 0)
             Error("Submit", "Clear package failed");
+         else {
+            TObject *o = fPackages->FindObject(name);
+            if (!o) continue;
+            TPackageDescription *package = 
+               dynamic_cast<TPackageDescription *>(o);
+            if (package)
+               package->fEnabled = kFALSE;
+         }
       }
    }
 }
@@ -1125,6 +1174,7 @@ void TSessionFrame::OnDisablePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnClearPackages()
 {
+   TPackageDescription *package;
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, clear packages
@@ -1132,6 +1182,12 @@ void TSessionFrame::OnClearPackages()
       fViewer->GetActDesc()->fProof->IsValid()) {
       if (fViewer->GetActDesc()->fProof->ClearPackages() != 0)
          Error("Submit", "Clear packages failed");
+      else {
+         TIter next(fPackages);
+         while ((package = (TPackageDescription *)next())) {
+            package->fEnabled = kFALSE;
+         }
+      }
    }
 }
 
@@ -1150,6 +1206,8 @@ void TSessionFrame::OnBtnAddClicked()
    TPackageDescription *package = new TPackageDescription;
    package->fName = fi.fFilename;
    package->fId   = fPackages->GetEntries();
+   package->fUploaded = kFALSE;
+   package->fEnabled = kFALSE;
    fPackages->Add((TObject *)package);
    fLBPackages->AddEntry(package->fName, package->fId);
    fLBPackages->Layout();
@@ -1442,12 +1500,15 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    // control buttons frame
    TGCompositeFrame* frmBut2 = new TGVerticalFrame(frmcanvas, 150, 100);
    fBtnSubmit = new TGTextButton(frmBut2, "        Submit        ");
+   fBtnSubmit->SetToolTipText("Submit (process) selected query");
    frmBut2->AddFrame(fBtnSubmit,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnStop = new TGTextButton(frmBut2, "Stop");
+   fBtnStop->SetToolTipText("Stop processing query");
    frmBut2->AddFrame(fBtnStop,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    fBtnAbort = new TGTextButton(frmBut2, "Abort");
+   fBtnAbort->SetToolTipText("Abort processing query");
    frmBut2->AddFrame(fBtnAbort,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
             kLHintsExpandX, 5, 5, 5, 5));
    frmcanvas->AddFrame(frmBut2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
@@ -1497,12 +1558,15 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    // add "Retrieve", "Finalize" and "Show Log" buttons
    TGCompositeFrame* frmBut3 = new TGHorizontalFrame(fFC, 350, 100);
    fBtnRetrieve = new TGTextButton(frmBut3, "Retrieve");
+   fBtnRetrieve->SetToolTipText("Retrieve query results");
    frmBut3->AddFrame(fBtnRetrieve,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 10, 10));
    fBtnFinalize = new TGTextButton(frmBut3, "Finalize");
+   fBtnFinalize->SetToolTipText("Finalize query");
    frmBut3->AddFrame(fBtnFinalize,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 10, 10));
    fBtnShowLog = new TGTextButton(frmBut3, "Show Log");
+   fBtnShowLog->SetToolTipText("Show query log (open log window)");
    frmBut3->AddFrame(fBtnShowLog,new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 5, 5, 10, 10));
    fFC->AddFrame(frmBut3, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX));
