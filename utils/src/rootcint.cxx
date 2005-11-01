@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.219 2005/10/05 16:39:03 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.220 2005/10/20 19:24:04 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1176,7 +1176,7 @@ bool NeedShadowClass(G__ClassInfo& cl)
    if (strcmp(cl.Name(),"string") == 0 ) return false;
 
    if (cl.HasMethod("ShowMembers")) return cl.IsTmplt();
-   else return ((cl.RootFlag() & G__USEBYTECOUNT) && strncmp(cl.FileName(),"prec_stl",8)!=0);
+   else return ((cl.RootFlag() & G__USEBYTECOUNT) && (cl.FileName()==0 || strncmp(cl.FileName(),"prec_stl",8)!=0));
 }
 
 //______________________________________________________________________________
@@ -1733,7 +1733,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          case kMultiMap: {
             string keyName( TemplateArg(m).Name() );
             fprintf(fp, "            typedef %s Value_t;\n",keyName.c_str());
-            fprintf(fp, "            std::pair<Value_t const, %s> R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
+            fprintf(fp, "            std::pair<Value_t const, %s > R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
             fprintf(fp, "            R__stl.insert(R__t3);\n");
           //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
             break;
@@ -2795,9 +2795,18 @@ void WriteStreamer(G__ClassInfo &cl)
                      if (strstr(m.Type()->Name(), "TClonesArray")) {
                         fprintf(fp, "      %s->Streamer(R__b);\n", m.Name());
                      } else {
-                        if (i == 0)
+                        if (i == 0) {
+                           // The following:
+                           //    if (strncmp(m.Title(),"->",2) != 0) fprintf(fp, "      delete %s;\n", GetNonConstMemberName(m).c_str());
+                           // could be used to prevent a memory leak since the next statement could possibly create a new object.
+                           // In the TStreamerInfo based I/O we made the previous statement conditional on TStreamerInfo::CanDelete
+                           // to allow the user to prevent some intempestive deletion.  So we should be offering this flexibility
+                           // here to and should not (technically) really on TStreamerInfo for it .... so for now we leave it
+                           // as is.
+                           // Note that the leak should happen from here only if the object is stored in an unsplit object
+                           // and either the user request an old branch or the streamer has been customized.
                            fprintf(fp, "      R__b >> %s;\n", GetNonConstMemberName(m).c_str());
-                        else {
+                        } else {
                            if (m.Type()->IsBase("TObject") && m.Type()->IsBase("TArray"))
                               fprintf(fp, "      R__b << (TObject*)%s;\n", m.Name());
                            else
