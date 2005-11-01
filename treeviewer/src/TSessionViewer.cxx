@@ -360,8 +360,10 @@ void TSessionServerFrame::OnBtnConnectClicked()
    // collect and set-up configuration
    TString url = fTxtUsrName->GetText();
    url += "@"; url += fTxtAddress->GetText();
-   if (fNumPort->GetIntNumber() > 0)
+   if (fNumPort->GetIntNumber() > 0) {
+      url += ":"; 
       url += fNumPort->GetIntNumber();
+   }
    fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
    if (strlen(fTxtConfig->GetText()) > 1)
       fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
