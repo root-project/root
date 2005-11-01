@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.19 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.20 2005/08/25 16:38:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -79,7 +79,7 @@ private:
    TGLayoutHints       *fVertical1Layout;    // layout hints for separator
    TGLayoutHints       *fVertical2Layout;    // layout hints for separator
    TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
-   TGDockableFrame     *fToolDock;
+   TGDockableFrame     *fToolDock;           // dockable frame holding the toolbar
    const TGPicture     *fIconPic;            // icon picture
    
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
@@ -129,7 +129,8 @@ public:
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }
    TGStatusBar   *GetStatusBar() const { return fStatusBar; }
-
+   TGDockableFrame *GetToolDock() const { return fToolDock; }
+   
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
