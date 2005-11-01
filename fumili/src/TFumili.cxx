@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.25 2005/09/02 09:52:54 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.26 2005/09/03 12:50:40 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1924,15 +1924,25 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 //
 //                     (y - f(x))**2
 //         -----------------------------------
-//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
+//         ey**2 + (0.5*(exl + exh)*f'(x))**2
 //
-// where x and y are the point coordinates.
+// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
+// This method to approximate the uncertainty in y because of the errors in x, is called
+// "effective variance" method.
+// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
+// is of (error of x)**2 order. 
+//  NOTE:
+//  1) By using the "effective variance" method a simple linear regression
+//      becomes a non-linear case , which takes several iterations
+//      instead of 0 as in the linear case .
+//
+//  2) The effective variance technique assumes that there is no correlation 
+//      between the x and y coordinate .
 //
 // In case the function lies below (above) the data point, ey is ey_low (ey_high).
 
-   Double_t cu,eu,exl,exh,ey,eux,fu,fsum,fm,fp;
-   Double_t x[1], xx[1];
-   Double_t xm,xp;
+   Double_t cu,eu,exl,exh,ey,eux,fu,fsum;
+   Double_t x[1];
    Int_t i, bin, npfits=0;
 
    TFumili *grFitter = (TFumili*)TVirtualFitter::GetFitter();
@@ -1943,8 +1953,6 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
-   Double_t fxmin = f1->GetXmin();
-   Double_t fxmax = f1->GetXmax();
    npar           = f1->GetNpar();
 
    grFitter->SetParNumber(npar);
@@ -1964,12 +1972,9 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       TF1::RejectPoint(kFALSE);
       fu   = f1->EvalPar(x,u);
       if (TF1::RejectedPoint()) continue;
-      //      fsum = (cu-fu);
       npfits++;
       Double_t eusq=1.;
       if (fitOption.W1) {
-        //         f += fsum*fsum;
-        //         continue;
         eu = 1.;
       } else {
         exh  = gr->GetErrorXhigh(bin);
@@ -1979,11 +1984,8 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
         if (exh < 0) exh = 0;
         if (ey < 0)  ey  = 0;
         if (exh > 0 && exl > 0) {
-          xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
-          xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
-          xx[0] = xm; fm = f1->EvalPar(xx,u);
-          xx[0] = xp; fp = f1->EvalPar(xx,u);
-          eux = 0.5*(fp-fm);
+//        "Effective variance" method for projecting errors
+          eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
         } else
           eux = 0.;
         eu = ey*ey+eux*eux;

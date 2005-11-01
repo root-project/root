@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.169 2005/10/20 05:25:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.170 2005/10/24 15:10:56 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1081,20 +1081,28 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //
 //                     (y - f(x))**2
 //         -----------------------------------
-//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
+//         ey**2 + (0.5*(exl + exh)*f'(x))**2
 //
-// where x and y are the point coordinates.
+// where x and y are the point coordinates, and f'(x) is the derivative of function f(x).
 //
 // In case the function lies below (above) the data point, ey is ey_low (ey_high).
 //
 //  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
 //            University of Washington
 //
-// a little different approach to approximating the uncertainty in y because of the
+// The approach used to approximate the uncertainty in y because of the
 // errors in x, is to make it equal the error in x times the slope of the line.
 // The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
 // is of (error of x)**2 order. This approach is called "effective variance method".
 // This improvement has been made in version 4.00/08 by Anna Kreshuk.
+//
+//  NOTE:
+//  1) By using the "effective variance" method a simple linear regression
+//      becomes a non-linear case, which takes several iterations
+//      instead of 0 as in the linear case .
+//
+//  2) The effective variance technique assumes that there is no correlation 
+//      between the x and y coordinate .
 //
 // Note, that the linear fitter doesn't take into account the errors in x. If errors
 // in x are important, go through minuit (use option "F" for polynomial fitting).

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.31 2005/06/27 12:17:11 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.32 2005/09/04 10:27:14 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -505,9 +505,13 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //
 //                     (y - f(x))**2
 //         -----------------------------------
-//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
+//         ey**2 + (0.5*(exl + exh)*f'(x))**2
 //
-// where x and y are the point coordinates.
+// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
+// This method to approximate the uncertainty in y because of the errors in x, is called
+// "effective variance" method.
+// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
+// is of (error of x)**2 order.
 //
 // In case the function lies below (above) the data point, ey is ey_low (ey_high).
 //
@@ -517,10 +521,10 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //
 //  NOTE:
 //  1) By using the "effective variance" method a simple linear regression
-//      becomes suddenly a non-linear case , which takes several iterations
+//      becomes a non-linear case , which takes several iterations
 //      instead of 0 as in the linear case .
 //
-//  2) The effective variance technique assumes that there is no correlation 
+//  2) The effective variance technique assumes that there is no correlation
 //      between the x and y coordinate .
 //
 //    The book by Sigmund Brandt (Data  Analysis) contains an interesting
