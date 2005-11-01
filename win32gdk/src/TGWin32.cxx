@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.99 2005/10/03 17:31:20 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.100 2005/10/10 16:10:42 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1107,6 +1107,7 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
    if (fRedDiv == -1) {
       GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), cmap);
       gdk_color_context_query_colors(cc, color, ncolors);
+      gdk_color_context_free(cc);
    } else {
       for (Int_t i = 0; i < ncolors; i++) {
          r = (color[i].pixel & fVisual->red_mask) >> fRedShift;
@@ -3650,6 +3651,7 @@ void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    GdkColorContext *cc;
    cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
    gdk_color_context_query_colors(cc, xcol, ncolors);
+   gdk_color_context_free(cc);
 
    UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
 
@@ -3957,6 +3959,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    GdkColorContext *cc;
    cc =  gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
    gdk_color_context_query_colors(cc, xcol, ncolors);
+   gdk_color_context_free(cc);
 
    // create RGB arrays and store RGB's for each color and set number of colors
    // (space must be delete by caller)
@@ -5345,6 +5348,7 @@ void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
 
    GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), fColormap);
    gdk_color_context_query_color(cc, &xc);
+   gdk_color_context_free(cc);
 
    color.fPixel = xc.pixel;
    color.fRed = xc.red;

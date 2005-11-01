@@ -698,12 +698,14 @@ void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window)
    
       GDK_WINDOW_WIN32DATA(window)->grab_keys = 
          g_list_remove(GDK_WINDOW_WIN32DATA(window)->grab_keys, key_mod);
+      g_free(key_mod);
    } else {
       while (1) {
          key_mod = find_key_mod(GDK_WINDOW_WIN32DATA(window)->grab_keys, 0, mod);
          if (key_mod) {
             GDK_WINDOW_WIN32DATA(window)->grab_keys = 
                g_list_remove(GDK_WINDOW_WIN32DATA(window)->grab_keys, key_mod);
+            g_free(key_mod);
          } else {
             break;
          }
