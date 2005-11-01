@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.15 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.16 2004/12/06 10:46:48 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -53,6 +53,8 @@
 
 #include "TList.h"
 
+#include <string>
+namespace std {} using namespace std;
 
 ClassImp(TList)
 
@@ -838,6 +840,7 @@ void TList::Streamer(TBuffer &b)
 
    Int_t nobjects;
    UChar_t nch;
+   Int_t nbig;
    TObject *obj;
    UInt_t R__s, R__c;
 
@@ -847,14 +850,19 @@ void TList::Streamer(TBuffer &b)
          TObject::Streamer(b);
          fName.Streamer(b);
          b >> nobjects;
-         char readOption[256];
+         string readOption;
          for (Int_t i = 0; i < nobjects; i++) {
             b >> obj;
             b >> nch;
+            if (v > 4 && nch == 255)  {
+               b >> nbig;
+            } else {
+               nbig = nch;
+            }
+            readOption.resize(nbig,'\0');
+            b.ReadFastArray((char*) readOption.data(),nbig);
             if (nch) {
-               b.ReadFastArray(readOption,nch);
-               readOption[nch] = 0;
-               Add(obj,readOption);
+               Add(obj,readOption.c_str());
             } else {
                Add(obj);
             }
@@ -886,9 +894,18 @@ void TList::Streamer(TBuffer &b)
       while (lnk) {
          obj = lnk->GetObject();
          b << obj;
-         nch = strlen(lnk->GetAddOption());
-         b << nch;
-         b.WriteFastArray(lnk->GetAddOption(),nch);
+
+         nbig = strlen(lnk->GetAddOption());
+         if (nbig > 254) {
+            nch = 255;
+            b << nch;
+            b << nbig;
+         } else {
+            nch = UChar_t(nbig);
+            b << nch;
+         }
+         b.WriteFastArray(lnk->GetAddOption(),nbig);
+
          lnk = lnk->Next();
       }
       b.SetByteCount(R__c, kTRUE);

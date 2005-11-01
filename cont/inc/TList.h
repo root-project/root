@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.10 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    virtual void      Sort(Bool_t order = kSortAscending);
    Bool_t            IsAscending() { return fAscending; }
 
-   ClassDef(TList,4)  //Doubly linked list
+   ClassDef(TList,5)  //Doubly linked list
 };
 
 
