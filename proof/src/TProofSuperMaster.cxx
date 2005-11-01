@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.6 2005/10/10 11:07:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.7 2005/10/30 09:53:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -175,15 +175,6 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                if (!strncmp(word[i], "msd=", 4))
                   msd = word[i]+4;
 
-            }
-
-            // Get slave FQDN ...
-            TString slaveFqdn;
-            TInetAddress slaveAddr = gSystem->GetHostByName(word[1]);
-            if (slaveAddr.IsValid()) {
-               slaveFqdn = slaveAddr.GetHostName();
-               if (slaveFqdn == "UnNamedHost")
-               slaveFqdn = slaveAddr.GetHostAddress();
             }
 
             TString fullord =

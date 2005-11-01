@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.44 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.45 2005/09/17 13:52:55 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -84,11 +84,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
    TString hurl(fProof->GetUrlProtocol());
    hurl.Insert(5, 'd');
    // Add host, port (and user) information
-   if (fProof->GetUser() && strlen(fProof->GetUser())) {
-      hurl += TString(Form("://%s@%s:%d", fProof->GetUser(), host, port));
-   } else {
-      hurl += TString(Form("://%s:%d", host, port));
-   }
+   hurl += TString(Form("://%s:%d", host, port));
 
    // Add information about our status (Client or Master)
    TString iam;
@@ -131,7 +127,6 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
 
    // Fill some useful info
    fUser              = fSocket->GetSecContext()->GetUser();
-   fProof->fUser      = fUser;
    PDB(kGlobal,3) {
       Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
    }
@@ -191,7 +186,6 @@ void TSlave::SetupServ(ESlaveType stype, const char *conffile)
    }
 
    fProof->fProtocol   = fProtocol;   // protocol of last slave on master
-   fProof->fUser       = fUser;
 
    if (fProtocol < 5) {
       //
@@ -304,7 +298,8 @@ void TSlave::Print(Option_t *) const
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());
-      Printf("    Security context:        %s", fSocket->GetSecContext()->AsString(sc));
+      if (fSocket->GetSecContext())
+         Printf("    Security context:        %s", fSocket->GetSecContext()->AsString(sc));
       Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
       Printf("    Image name:              %s", GetImage());
       Printf("    Working directory:       %s", GetWorkDir());

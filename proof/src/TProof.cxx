@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.119 2005/10/12 09:53:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.120 2005/10/27 23:28:33 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -307,6 +307,14 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       u = new TUrl(Form("proof://%s", masterurl));
 
    fUser           = u->GetUser();
+   if (!(fUser.Length())) {
+      // Get user logon name
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         fUser = TString(pw->fUser);
+         delete pw;
+      }
+   }
    fMaster         = u->GetHost();
    fPort           = u->GetPort();
    fConfDir        = confdir;
@@ -563,15 +571,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                   if (!strncmp(word[i], "workdir=", 8))
                      workdir = word[i]+8;
 
-               }
-
-               // Get slave FQDN ...
-               TString slaveFqdn;
-               TInetAddress slaveAddr = gSystem->GetHostByName(word[1]);
-               if (slaveAddr.IsValid()) {
-                  slaveFqdn = slaveAddr.GetHostName();
-                  if (slaveFqdn == "UnNamedHost")
-                  slaveFqdn = slaveAddr.GetHostAddress();
                }
 
                // create slave server
