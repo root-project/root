@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.204 2005/10/11 13:34:40 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.205 2005/10/26 15:34:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5325,8 +5325,16 @@ void TPad::x3d(Option_t *type)
 //______________________________________________________________________________
 TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 {
-   // No type specified?
-   if (!type || !type[0]) {
+   // Create/obtain handle to 3D viewer. Valid types are:
+   //    'pad' - pad drawing via TViewer3DPad
+   //    'x3d' - X3D viewer (not supported on Windows)
+   //    'ogl' - OpenGL
+   //
+   // If type passed is null or unrecognised type then we return the current 
+   // viewer object (if one) and revert to pad by default if none.
+   // Valid type specified?
+   if (!type || !type[0] ||
+       (!strstr(type,"pad") && !strstr(type,"x3d") && !strstr(type,"ogl"))) {
       // Return current viewer if there is one
       if (fViewer3D) {
          return fViewer3D;
