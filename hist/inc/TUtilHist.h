@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.2 2002/09/15 19:48:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.3 2004/01/25 20:33:32 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -24,11 +24,18 @@
 #ifndef ROOT_TVirtualUtilHist
 #include "TVirtualUtilHist.h"
 #endif
-
-class TMatrixFBase;
-class TMatrixDBase;
-class TVectorF;
-class TVectorD;
+#ifndef ROOT_TMatrixFBasefwd
+#include "TMatrixFBasefwd.h"
+#endif
+#ifndef ROOT_TMatrixDBasefwd
+#include "TMatrixDBasefwd.h"
+#endif
+#ifndef ROOT_TVectorFfwd
+#include "TVectorFfwd.h"
+#endif
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
+#endif
 
 class TUtilHist : public TVirtualUtilHist {
 

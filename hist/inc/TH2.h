@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.33 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.34 2005/08/11 09:38:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -24,10 +24,14 @@
 #ifndef ROOT_TH1
 #include "TH1.h"
 #endif
+#ifndef ROOT_TMatrixFBasefwd
+#include "TMatrixFBasefwd.h"
+#endif
+#ifndef ROOT_TMatrixDBasefwd
+#include "TMatrixDBasefwd.h"
+#endif
 
 class TProfile;
-class TMatrixFBase;
-class TMatrixDBase;
 
 class TH2 : public TH1 {
    

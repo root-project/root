@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.10 2005/06/21 17:09:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.11 2005/06/22 21:15:37 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -34,11 +34,12 @@
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
-
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
+#endif
 
 class TVirtualPad;
 class TArrayD;
-class TVectorD;
 class TArrayL;
 class TH2D;
 class TPoint;

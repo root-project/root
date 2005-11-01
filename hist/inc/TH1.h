@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.68 2005/08/11 09:38:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.69 2005/10/25 13:49:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -61,12 +61,17 @@
 #endif
 #include "Foption.h"
 
+#ifndef ROOT_TVectorFfwd
+#include "TVectorFfwd.h"
+#endif
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
+#endif
+
 class TF1;
 class TH1D;
 class TBrowser;
 class TDirectory;
-class TVectorF;
-class TVectorD;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
