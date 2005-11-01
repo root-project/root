@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.81 2005/09/03 13:17:38 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.82 2005/09/13 13:08:24 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -244,6 +244,7 @@ static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;
 static int gMaster               =-1;
+static int gRequireAuth          = 1;
 
 using namespace ROOT;
 
@@ -492,7 +493,7 @@ void ProofdExec()
 
    // Receive buffer for final setup of authentication related stuff
    // This is base 64 string to decoded by proofserv, if needed
-   if (RpdGetClientProtocol() > 12) {
+   if (RpdGetClientProtocol() > 12 && gRequireAuth == 1) {
       char *authbuff = 0;
       int lab = 0;
       if ((lab = RpdProofGetAuthSetup(&authbuff)) > 0) {
@@ -702,7 +703,6 @@ int main(int argc, char **argv)
 {
    char *s;
    int checkhostsequiv = 1;
-   int requireauth    = 1;
    int tcpwindowsize  = 65535;
    int sshdport       = 22;
    int port1          = 0;
@@ -838,7 +838,7 @@ int main(int argc, char **argv)
 
             case 'n':
                if (!strncmp(argv[0]+1,"noauth",6)) {
-                  requireauth = 0;
+                  gRequireAuth = 0;
                   s += 5;
                }
                break;
@@ -997,7 +997,7 @@ int main(int argc, char **argv)
    // default job options
    unsigned int options = kDMN_RQAUTH | kDMN_HOSTEQ | kDMN_SYSLOG ;
    // modify them if required
-   if (!requireauth)
+   if (!gRequireAuth)
       options &= ~kDMN_RQAUTH;
    if (!checkhostsequiv)
       options &= ~kDMN_HOSTEQ;
