@@ -272,7 +272,7 @@ TVirtualViewer3D* TVirtualViewer3D::Viewer3D(TVirtualPad *pad, Option_t *type)
       if (!pad) {
          viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad); 
       } else {
-         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad); 
+         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, pad); 
       }
    }
    return viewer;
