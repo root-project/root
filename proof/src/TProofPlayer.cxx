@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.69 2005/09/24 11:33:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.70 2005/10/11 12:32:20 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -52,7 +52,9 @@
 #include "Api.h"
 #include "TQueryResult.h"
 #include "TMD5.h"
-
+#ifndef R__TH1MERGEFIXED
+#include "TH1.h"
+#endif
 
 class TAutoBinVal : public TNamed {
 private:
@@ -1135,13 +1137,34 @@ TList *TProofPlayerRemote::MergeFeedback()
       TList *list = new TList;
       TIter keys(map);
 
+#ifndef R__TH1MERGEFIXED
+      Int_t nbmx = -1;
+      TObject *oref = 0;
+#endif
       while ( TObject *key = keys() ) {
          list->Add(map->GetValue(key));
+#ifndef R__TH1MERGEFIXED
+         // Temporary fix for to cope with the problem in TH1::Merge.
+         // We need to use a reference histo the one with the largest number
+         // of bins so that the histos from all submasters can be correctly
+         // fit in 
+         TObject *o = map->GetValue(key);
+         if (o->InheritsFrom("TH1") && !strncmp(o->GetName(),"PROOF_",6)) {
+            if (((TH1 *)o)->GetNbinsX() > nbmx) {
+               nbmx=  ((TH1 *)o)->GetNbinsX();
+               oref = o;
+            }
+         }
+#endif
       }
 
       // clone first object, remove from list
 
+#ifdef R__TH1MERGEFIXED
       TObject *obj = list->First();
+#else
+      TObject *obj = (oref) ? oref : list->First();
+#endif
       list->Remove(obj);
       obj = obj->Clone();
       fb->Add(obj);
@@ -1217,10 +1240,12 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
          map = new TMap;
          map->SetName(obj->GetName());
          fFeedbackLists->Add(map);
+      } else {
+         PDB(kFeedback,2) Info("StoreFeedback","removing previous value");
+         if (map->GetValue(slave))
+            delete map->GetValue(slave);
+         map->Remove(slave);
       }
-
-      delete map->GetValue(slave);
-      map->Remove(slave);
       map->Add(slave, obj);
    }
 
