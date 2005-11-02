@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.142 2005/09/13 10:20:30 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.143 2005/09/24 11:57:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "TUrl.h"
 
 //#define G__OLDEXPAND
 
@@ -1205,7 +1206,7 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
    if (helper)
       return helper->AccessPathName(path, mode);
 
-   if (::access(path, mode) == 0)
+   if (::access(TUrl(path, kTRUE).GetFile(), mode) == 0)
       return kFALSE;
    fLastErrorString = GetError();
    return kTRUE;
@@ -3318,7 +3319,7 @@ int TUnixSystem::UnixMakedir(const char *dir)
    // -1 if the directory could not be created (either already exists or
    // illegal path name).
 
-   return ::mkdir(dir, 0755);
+   return ::mkdir(TUrl(dir, kTRUE).GetFile(), 0755);
 }
 
 //______________________________________________________________________________
@@ -3328,13 +3329,15 @@ void *TUnixSystem::UnixOpendir(const char *dir)
 
    struct stat finfo;
 
-   if (stat(dir, &finfo) < 0)
+   TString edir = TUrl(dir, kTRUE).GetFile();
+
+   if (stat(edir, &finfo) < 0)
       return 0;
 
    if (!S_ISDIR(finfo.st_mode))
       return 0;
 
-   return (void*) opendir(dir);
+   return (void*) opendir(edir);
 }
 
 #if defined(_POSIX_SOURCE)
@@ -3372,12 +3375,14 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 //---- files -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixFilestat(const char *path, FileStat_t &buf)
+int TUnixSystem::UnixFilestat(const char *fpath, FileStat_t &buf)
 {
    // Get info about a file. Info is returned in the form of a FileStat_t
    // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
+
+   TString path = TUrl(fpath, kTRUE).GetFile();
 
 #if defined(R__SEEK64)
    struct stat64 sbuf;

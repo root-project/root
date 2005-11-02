@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.124 2005/09/24 11:57:36 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.125 2005/10/28 20:36:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TGWin32Command.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
+#include "TUrl.h"
 
 #include <sys/utime.h>
 #include <process.h>
@@ -637,7 +638,7 @@ const char *TWinNTSystem::BaseName(const char *name)
    // The calling routine should use free() to free memory BaseName allocated
    // for the base name
    // BB 28/10/05 : Removed (commented out) StrDup() :
-   // - To get same behaviour on Windows and on Linux 
+   // - To get same behaviour on Windows and on Linux
    // - To avoid the need to use #ifdefs
    // - Solve memory leaks (mainly in TTF::SetTextFont())
    // No need for the calling routine to use free() anymore.
@@ -1272,11 +1273,11 @@ int  TWinNTSystem::MakeDirectory(const char *name)
 #ifdef WATCOM
    // It must be as follows
    if (!name) return 0;
-   return ::mkdir(name);
+   return ::mkdir(TUrl(name, kTRUE).GetFile());
 #else
    // but to be in line with TUnixSystem I did like this
    if (!name) return 0;
-   return ::_mkdir(name);
+   return ::_mkdir(TUrl(name, kTRUE).GetFile());
 #endif
 }
 
@@ -1391,14 +1392,16 @@ BOOL PathIsRoot(LPCTSTR pPath)
 }
 
 //______________________________________________________________________________
-void *TWinNTSystem::OpenDirectory(const char *dir)
+void *TWinNTSystem::OpenDirectory(const char *fdir)
 {
    // Open a directory. Returns 0 if directory does not exist.
 
-   TSystem *helper = FindHelper(dir);
+   TSystem *helper = FindHelper(fdir);
    if (helper) {
-      return helper->OpenDirectory(dir);
+      return helper->OpenDirectory(fdir);
    }
+
+   TString dir = TUrl(fdir, kTRUE).GetFile();
 
    char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
@@ -1687,12 +1690,11 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    // Attention, bizarre convention of return value!!
 
    TSystem *helper = FindHelper(path);
-   if (helper) {
+   if (helper)
       return helper->AccessPathName(path, mode);
-   }
-   if (::_access(path, mode) == 0) {
+
+   if (::_access(TUrl(path, kTRUE).GetFile(), mode) == 0)
       return kFALSE;
-   }
    fLastErrorString = GetError();
    return kTRUE;
 }
@@ -1765,7 +1767,7 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
    struct _stati64 sbuf;
 
    // Remove trailing backslashes
-   char *newpath = StrDup(path);
+   char *newpath = StrDup(TUrl(path, kTRUE).GetFile());
    int l = strlen(newpath);
    while (l > 1) {
       if (newpath[--l] != '\\' || newpath[--l] != '/') {
