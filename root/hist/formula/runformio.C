@@ -34,7 +34,7 @@ void read() {
 
 void readV3file() {
    new TCanvas();
-   TFile *_file0 = TFile::Open("~/Transfer/result_30gev_sep05.root");
+   TFile *_file0 = TFile::Open("result_30gev_sep05.root");
    for(int i=0;i<ptspec_chisq_deut->GetEntries();++i) {
       TH1D *h = (TH1D*)ptspec_chisq_deut->At(105);
       TF1 *f = (TF1*)h->GetListOfFunctions()->At(0);
