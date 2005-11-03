@@ -16,6 +16,9 @@ check("event.fH.GetXaxis().IsA()");
 //check("event.GetHeader()");
 check("event.GetTrackCopy()");
 check("event.GetTrackCopy(2)");
+
+new TFile("mcpool.root");
+Events->Draw("HepMCProduct_PythiaInput__HepMC.obj.evt_.m_signal_process_vertex.@m_particles_out.size()");
 }
 
 /*
