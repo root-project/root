@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.3 2003/06/23 06:11:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.4 2003/06/23 20:37:56 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@
 
 #include "TConfidenceLevel.h"
 #include "TH1F.h"
+#include "Riostream.h"
 
 ClassImp(TConfidenceLevel)
 
@@ -177,7 +178,10 @@ Double_t TConfidenceLevel::CLs(bool use_sMC) const
 {
    // Get the Confidence Level defined by CLs = CLsb/CLb.
    // This quantity is stable w.r.t. background fluctuations.
-   return CLsb(use_sMC) / CLb(kFALSE);
+   Double_t clb = CLb(kFALSE);
+   Double_t clsb = CLsb(use_sMC);
+   if(clb==0) { cout << "Warning: clb = 0 !" << endl; return 0;}
+   else return clsb/clb;
 }
 
 Double_t TConfidenceLevel::GetExpectedCLsb_b(Int_t sigma) const
