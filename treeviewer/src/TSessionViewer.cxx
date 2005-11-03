@@ -1596,6 +1596,11 @@ void TSessionQueryFrame::Feedback(TList *objs)
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
       return;
+   if ((fViewer->GetActDesc()->fActQuery->fStatus != 
+        TQueryDescription::kSessionQuerySubmitted) &&
+       (fViewer->GetActDesc()->fActQuery->fStatus != 
+        TQueryDescription::kSessionQueryRunning) ) 
+      return;
    TVirtualProof *sender = dynamic_cast<TVirtualProof*>((TQObject*)gTQSender);
    // if Proof sender match actual session one, update feedback histos
    if (sender && (sender == fViewer->GetActDesc()->fProof))
@@ -3416,6 +3421,8 @@ void TSessionViewer::OnCascadeMenu()
    // divide stats canvas by number of selected feedback histos
    fQueryFrame->GetStatsCanvas()->cd();
    fQueryFrame->GetStatsCanvas()->Clear();
+   fQueryFrame->GetStatsCanvas()->Modified();
+   fQueryFrame->GetStatsCanvas()->Update();
    if (fActDesc->fNbHistos == 4)
       fQueryFrame->GetStatsCanvas()->Divide(2, 2);
    else if (fActDesc->fNbHistos > 4)
