@@ -23,7 +23,7 @@ FILEDIR := $(VERSION)
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP) result.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += emptyCollection stlIoTest emulatedWrite
+TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -166,4 +166,7 @@ emulatedWrite.log: $(ROOT_LOC)/bin/hadd$(ExeSuf)
 	$(CMDECHO) hadd -f result.root cmsJets_?.root > emulatedWrite.log 2>&1
 
 emulatedWrite: emulatedWrite.log
+	$(TestDiff)
+
+base: base.clog
 	$(TestDiff)
