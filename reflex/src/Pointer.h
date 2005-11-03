@@ -32,7 +32,7 @@ namespace ROOT {
 
       /** default constructor */
       Pointer( const Type & pointerType, 
-               const std::type_info & TypeInfo );
+               const std::type_info & ti );
 
       /** destructor */
       virtual ~Pointer() {}
@@ -53,7 +53,7 @@ namespace ROOT {
       Type ToType() const;
 
 
-      /** static funtion that composes the TypeNth Name */
+      /** static funtion that composes the typename */
       static std::string BuildTypeName( const Type & pointerType,
                                         unsigned int mod = SCOPED | QUALIFIED );
 

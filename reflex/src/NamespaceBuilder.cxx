@@ -18,14 +18,14 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::NamespaceBuilder::NamespaceBuilder( const char * Name ) {
+ROOT::Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
 //-------------------------------------------------------------------------------
-  Scope ScopeNth = Scope::ByName( Name );
-  if ( ScopeNth && ScopeNth.IsNamespace() ) {
-    fNamespace       = ScopeNth;
+  Scope sc = Scope::ByName( nam );
+  if ( sc && sc.IsNamespace() ) {
+    fNamespace       = sc;
   }
   else {
-    fNamespace       = (new Namespace( Name ))->ScopeGet();
+    fNamespace       = (new Namespace( nam ))->ScopeGet();
   }
 }
 

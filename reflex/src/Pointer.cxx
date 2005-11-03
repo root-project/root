@@ -13,9 +13,9 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Pointer::Pointer( const Type &           pointerType,
-                                const std::type_info & TypeInfo )
+                                const std::type_info & ti )
 //-------------------------------------------------------------------------------
-  : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, TypeInfo ), 
+  : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
     fPointerType( pointerType ) { }
 
 

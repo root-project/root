@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.1 2005/06/23 10:21:06 brun Exp $
+// @(#)root/reflex:$Name:$:$Id:$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,14 +27,14 @@
 #endif
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Class::Class(  const char *           TypeNth, 
+ROOT::Reflex::Class::Class(  const char *           typ, 
                              size_t                 size,
-                             const std::type_info & TypeInfo,
+                             const std::type_info & ti,
                              unsigned int           modifiers,
                              TYPE                   classType )
 //-------------------------------------------------------------------------------
-  : TypeBase( TypeNth, size, classType, TypeInfo ),
-    ScopeBase( TypeNth, classType ),
+  : TypeBase( typ, size, classType, ti ),
+    ScopeBase( typ, classType ),
     fModifiers( modifiers ),
     fAllBases( 0 ),
     fCompleteType( false ),
@@ -44,11 +44,11 @@ ROOT::Reflex::Class::Class(  const char *           TypeNth,
     
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Class::AddBase( const Type &   btype,
-                                   OffsetFunction OffsetFP,
+void ROOT::Reflex::Class::AddBase( const Type &   bas,
+                                   OffsetFunction offsFP,
                                    unsigned int   modifiers ) const {
 //-------------------------------------------------------------------------------
-  Base b( btype, OffsetFP, modifiers );
+  Base b( bas, offsFP, modifiers );
   fBases.push_back( b );
 }
 
@@ -155,7 +155,7 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
     constructor.Invoke( obj, args );
     return obj;
   }
-	
+        
   throw RuntimeError("No suitable constructor found");
 }
 
@@ -179,14 +179,13 @@ void ROOT::Reflex::Class::Destruct( void * instance,
     // we found a destructor -> Invoke it
     Object dummy = Object(Type(), instance);
     fDestructor.Invoke( dummy );
-    // deallocation of memory wanted 
+    // if deallocation of memory wanted 
     if ( dealloc ) { Deallocate( instance ); }
   }
   else {
-    // this class has no destructor defined (????)
-    std::cerr << Reflex::Argv0() << ": ERROR: No destructor defined for class "
-              << Name() << std::endl;
-  }
+    // this class has no destructor defined we call the operator delete on it
+    ::operator delete(instance);
+   }
 }
 
 
@@ -311,17 +310,17 @@ void ROOT::Reflex::Class::UpdateMembers() const {
     
 //-------------------------------------------------------------------------------
 const std::vector < ROOT::Reflex::OffsetFunction > & 
-ROOT::Reflex::Class::PathToBase( const Scope & BaseNth ) const {
+ROOT::Reflex::Class::PathToBase( const Scope & bas ) const {
 //-------------------------------------------------------------------------------
-  std::vector < OffsetFunction > * PathToBase = fPathsToBase[ BaseNth.Id() ];
+  std::vector < OffsetFunction > * PathToBase = fPathsToBase[ bas.Id() ];
   if ( ! PathToBase ) {
     UpdateMembers();
-    PathToBase = fPathsToBase[ BaseNth.Id() ];
+    PathToBase = fPathsToBase[ bas.Id() ];
     /* fixme can Get rid of UpdateMembers() ?
     std::cerr << Reflex::Argv0() << ": WARNING: No path found from " 
-              << this->Name() << " to " << BaseNth.Name() << std::endl;
+              << this->Name() << " to " << bas.Name() << std::endl;
     if ( NewBases()) {
-      std::cerr << Reflex::Argv0() << ": INFO: Not all BaseNth classes have resolved, "
+      std::cerr << Reflex::Argv0() << ": INFO: Not all base classes have resolved, "
                 << "do Class::UpdateMembers() and try again " << std::endl; 
     }
     */
@@ -347,8 +346,8 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
       for ( i = 0; i < bType.DataMemberCount(); ++i ) {
         Member dm = bType.DataMemberNth(i);
         if ( std::find( dataMembers.begin(),
-			dataMembers.end(),
-			dm ) == dataMembers.end()) {
+                        dataMembers.end(),
+                        dm ) == dataMembers.end()) {
           members.push_back( dm );
           dataMembers.push_back( dm );
         }
@@ -356,19 +355,17 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
       for ( i = 0; i < bType.FunctionMemberCount(); ++i ) {
         Member fm = bType.FunctionMemberNth( i );
         if ( std::find( functionMembers.begin(), 
-			functionMembers.end(),
-			fm ) == functionMembers.end()) {
+                        functionMembers.end(),
+                        fm ) == functionMembers.end()) {
           members.push_back( fm );
           functionMembers.push_back( fm );
         }
       }
-      if ( bType )
-        (dynamic_cast<const Class*>(bType.TypeBaseNth()))->UpdateMembers2(
-                                    members,
-                                    dataMembers, 
-                                    functionMembers,
-                                    pathsToBase,
-                                    basePath);
+      if ( bType ) (dynamic_cast<const Class*>(bType.TypeBaseNth()))->UpdateMembers2( members,
+                                                                                   dataMembers, 
+                                                                                   functionMembers,
+                                                                                   pathsToBase,
+                                                                                   basePath );
     }
     basePath.pop_back();
   }
@@ -395,12 +392,12 @@ void ROOT::Reflex::Class::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Class::AddDataMember( const char * Name,
-                                         const Type & TypeNth,
-                                         size_t Offset,
+void ROOT::Reflex::Class::AddDataMember( const char * nam,
+                                         const Type & typ,
+                                         size_t offs,
                                          unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  ScopeBase::AddDataMember( Name, TypeNth, Offset, modifiers );
+  ScopeBase::AddDataMember( nam, typ, offs, modifiers );
 }
 
     
@@ -421,14 +418,14 @@ void ROOT::Reflex::Class::AddFunctionMember( const Member & fm ) const {
 
     
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Class::AddFunctionMember( const char * Name,
+void ROOT::Reflex::Class::AddFunctionMember( const char * nam,
                                              const Type & typ,
                                              StubFunction stubFP,
                                              void * stubCtx,
                                              const char * params,
                                              unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  ScopeBase::AddFunctionMember(Name,typ,stubFP,stubCtx,params,modifiers);
+  ScopeBase::AddFunctionMember(nam,typ,stubFP,stubCtx,params,modifiers);
   if ( 0 !=  (modifiers & CONSTRUCTOR )) fConstructors.push_back(fFunctionMembers[fFunctionMembers.size()-1]);
   // setting the destructor is not needed because it is always provided when building the class
 }

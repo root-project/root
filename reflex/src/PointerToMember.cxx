@@ -13,9 +13,9 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
-                                                const std::type_info& TypeInfo ) 
+                                                const std::type_info & ti ) 
 //------------------------------------------------------------------------------- 
-  : TypeBase( BuildTypeName( pointerToMemberType ).c_str(), sizeof(void*), POINTERTOMEMBER, TypeInfo ),
+  : TypeBase( BuildTypeName( pointerToMemberType ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
     fPointerToMemberType( pointerToMemberType ) {}
 
 

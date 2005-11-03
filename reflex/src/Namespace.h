@@ -33,7 +33,7 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      Namespace( const char * ScopeNth );
+      Namespace( const char * scop );
 
 
       /** destructor */

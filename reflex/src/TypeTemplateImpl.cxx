@@ -15,12 +15,12 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const std::string & templateName,
-                                                  const Scope & ScopeNth,
+                                                  const Scope & scop,
                                                   std::vector < std::string > parameterNames,
                                                   std::vector < std::string > parameterDefaults )
 //------------------------------------------------------------------------------- 
   : fTemplateName( templateName ),
-    fScope( ScopeNth ),
+    fScope( scop ),
     fTemplateInstances( std::vector < Type >() ),
     fParameterNames( parameterNames ),
     fParameterDefaults( parameterDefaults ),

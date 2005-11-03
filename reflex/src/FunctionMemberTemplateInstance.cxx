@@ -18,32 +18,32 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::FunctionMemberTemplateInstance::
-FunctionMemberTemplateInstance( const char * Name,
-                                const Type & TypeNth,
+FunctionMemberTemplateInstance( const char * nam,
+                                const Type & typ,
                                 StubFunction stubFP,
                                 void * stubCtx,
                                 const char * params,
                                 unsigned int modifiers,
-                                const Scope & ScopeNth )
+                                const Scope & scop )
 //-------------------------------------------------------------------------------
-  : FunctionMember( Name,
-                    TypeNth,
+  : FunctionMember( nam,
+                    typ,
                     stubFP,
                     stubCtx,
                     params,
                     modifiers,
                     MEMBERTEMPLATEINSTANCE ),
-    TemplateInstance( Tools::GetTemplateArguments( Name )),
+    TemplateInstance( Tools::GetTemplateArguments( nam )),
     fTemplateFamily( MemberTemplate()) {
   
-  std::string templateName = Tools::GetTemplateName( Name );
-  std::string scopeName = ScopeNth.Name(SCOPED);
+  std::string templateName = Tools::GetTemplateName( nam );
+  std::string scopeName = scop.Name(SCOPED);
   std::string scopedTemplateName = "";
   if ( scopeName != "" ) scopedTemplateName = scopeName + "::" + templateName;
   else                   scopedTemplateName = templateName;
 
-  for ( size_t i = 0; i < ScopeNth.MemberTemplateCount(); ++i ) {
-    MemberTemplate mtl = ScopeNth.MemberTemplateNth( i );
+  for ( size_t i = 0; i < scop.MemberTemplateCount(); ++i ) {
+    MemberTemplate mtl = scop.MemberTemplateNth( i );
     if ( mtl.Name(SCOPED) == scopedTemplateName && 
          mtl.ParameterCount() == TemplateArgumentCount()) {
       fTemplateFamily = mtl;
@@ -56,10 +56,10 @@ FunctionMemberTemplateInstance( const char * Name,
     for ( size_t i = 65; i < 65 + TemplateArgumentCount(); ++i ) 
       parameterNames.push_back("typename " + std::string(new char(i)));
     MemberTemplateImpl * mti = new MemberTemplateImpl( Tools::GetBaseName(templateName),
-                                                       ScopeNth,
+                                                       scop,
                                                        parameterNames );
     fTemplateFamily = MemberTemplate( mti );
-    ScopeNth.AddMemberTemplate( fTemplateFamily );
+    scop.AddMemberTemplate( fTemplateFamily );
   }
   
   fTemplateFamily.AddTemplateInstance((Member)(*this));

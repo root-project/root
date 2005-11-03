@@ -23,7 +23,7 @@
 #include "FunctionMemberTemplateInstance.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * Name, 
+ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam, 
                                                   const std::type_info & ti, 
                                                   size_t size, 
                                                   unsigned int modifiers )
@@ -31,20 +31,20 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * Name,
   : fClass( 0 ),
     fLastMember( 0 )
 {
-  Type c = Type::ByName(Name);
+  Type c = Type::ByName(nam);
   if ( c ) { 
     // Class already exists. Check if it was a class.
     if (! c.IsClass() ) throw RuntimeError("Attempt to replace a non-Class TypeNth with a Class TypeNth"); 
   }
 
-  if ( Tools::IsTemplated(Name) )  fClass = new ClassTemplateInstance( Name,
-                                                                        size,
-                                                                        ti,
-                                                                        modifiers );                    
-  else                             fClass = new Class( Name, 
-                                                        size, 
-                                                        ti, 
-                                                        modifiers );
+  if ( Tools::IsTemplated( nam))  fClass = new ClassTemplateInstance( nam,
+                                                                       size,
+                                                                       ti,
+                                                                       modifiers );                    
+  else                             fClass = new Class( nam, 
+                                                       size, 
+                                                       ti, 
+                                                       modifiers );
 }
 
     
@@ -56,78 +56,78 @@ ROOT::Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
 
     
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddBase( const Type & BaseNth,
-                                              OffsetFunction OffsetFP,
+void ROOT::Reflex::ClassBuilderImpl::AddBase( const Type & bas,
+                                              OffsetFunction offsFP,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
-  fClass->AddBase( BaseNth, OffsetFP, modifiers );
+  fClass->AddBase( bas, offsFP, modifiers );
 }
     
     
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * Name,
-                                                    const Type & TypeNth,
-                                                    size_t Offset,
+void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
+                                                    const Type & typ,
+                                                    size_t offs,
                                                     unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
-  fLastMember = Member(new DataMember( Name, TypeNth, Offset, modifiers ));
+  fLastMember = Member(new DataMember( nam, typ, offs, modifiers ));
   fClass->AddDataMember( fLastMember );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * Name,
-                                                        const Type & TypeNth,
+void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
+                                                        const Type & typ,
                                                         StubFunction stubFP,
                                                         void*        stubCtx,
                                                         const char * params,
                                                         unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
-  if ( Tools::IsTemplated(Name) ) 
-    fLastMember = Member(new FunctionMemberTemplateInstance( Name, 
-                                                              TypeNth, 
-                                                              stubFP, 
-                                                              stubCtx, 
-                                                              params, 
-                                                              modifiers,
-                                                              (Scope)(*fClass)));
+  if ( Tools::IsTemplated( nam )) 
+    fLastMember = Member(new FunctionMemberTemplateInstance( nam, 
+                                                             typ, 
+                                                             stubFP, 
+                                                             stubCtx, 
+                                                             params, 
+                                                             modifiers,
+                                                             (Scope)(*fClass)));
   else                            
-    fLastMember = Member(new FunctionMember( Name, 
-                                              TypeNth, 
-                                              stubFP, 
-                                              stubCtx, 
-                                              params, 
-                                              modifiers ));
+    fLastMember = Member(new FunctionMember( nam, 
+                                             typ, 
+                                             stubFP, 
+                                             stubCtx, 
+                                             params, 
+                                             modifiers ));
   fClass->AddFunctionMember( fLastMember );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & TypeNth,
+void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
-  new Typedef( def, TypeNth );
+  new Typedef( def, typ );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * Name,
+void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
                                               const char * values,
-                                              const std::type_info * typeinfo ) {
+                                              const std::type_info * ti ) {
 //-------------------------------------------------------------------------------
   
-  Enum * e = new Enum(Name, *typeinfo);
+  Enum * e = new Enum(nam, *ti);
 
   std::vector<std::string> valVec = std::vector<std::string>();
   Tools::StringSplit(valVec, values, ";");
 
   for (std::vector<std::string>::const_iterator it = valVec.begin(); 
        it != valVec.end(); ++it ) {
-    std::string Name = "";
+    std::string name = "";
     std::string value = "";
-    Tools::StringSplitPair(Name, value, *it, "=");
+    Tools::StringSplitPair(name, value, *it, "=");
     unsigned long valInt = atol(value.c_str());
-    e->AddDataMember( Member( new DataMember( Name.c_str(),
+    e->AddDataMember( Member( new DataMember( name.c_str(),
                                               Type::ByName("int"),
                                               valInt,
                                               0 )));

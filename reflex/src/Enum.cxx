@@ -18,9 +18,9 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Enum::Enum( const char * enumType,
-                          const std::type_info & TypeInfo )
+                          const std::type_info & ti )
 //-------------------------------------------------------------------------------
-  : TypeBase( enumType, sizeof(int), ENUM, TypeInfo ),
+  : TypeBase( enumType, sizeof(int), ENUM, ti ),
     ScopeBase( enumType, ENUM ) {}
 
 

@@ -33,7 +33,7 @@ namespace ROOT {
 
       /** default constructor */
       Array( const Type & arrayType,
-             size_t Length,
+             size_t len,
              const std::type_info & typeinfo );
 
 
@@ -64,14 +64,14 @@ namespace ROOT {
 
 
       /** static funtion that composes the TypeNth Name */
-      static std::string BuildTypeName( const Type & TypeNth, 
-                                        size_t Length,
+      static std::string BuildTypeName( const Type & typ, 
+                                        size_t len,
                                         unsigned int mod = SCOPED | QUALIFIED );
 
     private:
 
       /**
-       * TypeNth of the array
+       * Type of the array
        * @label array TypeNth
        * @link aggregationByValue
        * @supplierCardinality 1

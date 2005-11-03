@@ -13,9 +13,9 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Fundamental::Fundamental( const char * TypeNth,
+ROOT::Reflex::Fundamental::Fundamental( const char * typ,
                                         size_t size,
-                                        const std::type_info & TypeInfo ) 
+                                        const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
-  : TypeBase( TypeNth, size, FUNDAMENTAL, TypeInfo ) {}
+  : TypeBase( typ, size, FUNDAMENTAL, ti ) {}
 

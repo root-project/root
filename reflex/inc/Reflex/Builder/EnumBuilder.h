@@ -33,7 +33,7 @@ namespace ROOT{
     public:
       
       /** constructor */
-      EnumBuilderImpl( const char * Name,
+      EnumBuilderImpl( const char * nam,
                        const std::type_info & ti );
 
 
@@ -48,7 +48,7 @@ namespace ROOT{
        * @param  value the value of the PropertyNth
        * @return a reference to the building class
        */
-      void AddItem ( const char * Name,
+      void AddItem ( const char * nam,
                      long value );
 
 
@@ -96,10 +96,10 @@ namespace ROOT{
 
 
       /** constructor */
-      EnumBuilder( const char * Name );
+      EnumBuilder( const char * nam );
 
 
-			/** destructor */
+                        /** destructor */
       virtual ~EnumBuilder() {}
 
 
@@ -109,7 +109,7 @@ namespace ROOT{
        * @param  value the value of the item
        * @return a reference to the building class
        */
-      EnumBuilder & AddItem( const char * Name, 
+      EnumBuilder & AddItem( const char * nam, 
                              long value );
 
 
@@ -145,19 +145,19 @@ inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder()
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder( const char * Name )
+inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder( const char * nam )
 //-------------------------------------------------------------------------------
-  : fEnumBuilderImpl( Name, 
-                       typeid(UnknownType) ) {}
+  : fEnumBuilderImpl( nam, 
+                      typeid(UnknownType) ) {}
 
 
 //-------------------------------------------------------------------------------
 template < typename T >
 inline ROOT::Reflex::EnumBuilder<T> & 
-ROOT::Reflex::EnumBuilder<T>::AddItem( const char * Name, 
+ROOT::Reflex::EnumBuilder<T>::AddItem( const char * nam, 
                                        long value ) {
 //-------------------------------------------------------------------------------
-  fEnumBuilderImpl.AddItem( Name, value );
+  fEnumBuilderImpl.AddItem( nam, value );
   return * this;
 }
 

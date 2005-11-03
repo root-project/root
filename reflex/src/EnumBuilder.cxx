@@ -17,21 +17,21 @@
 #include "Enum.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilderImpl::EnumBuilderImpl( const char * Name,
+ROOT::Reflex::EnumBuilderImpl::EnumBuilderImpl( const char * nam,
                                                 const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
-  fEnum = new Enum( Name, ti );
+  fEnum = new Enum( nam, ti );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::EnumBuilderImpl::AddItem( const char * Name,
+void ROOT::Reflex::EnumBuilderImpl::AddItem( const char * nam,
                                              long value ) {  
 //-------------------------------------------------------------------------------
-  fEnum->AddDataMember( Member(new DataMember( Name, 
-                                                Type::ByName("int"), 
-                                                value, 
-                                                0 )));
+  fEnum->AddDataMember( Member(new DataMember( nam, 
+                                               Type::ByName("int"), 
+                                               value, 
+                                               0 )));
 }
 
 

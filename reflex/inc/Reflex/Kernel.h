@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.1 2005/06/23 10:21:06 brun Exp $
+// @(#)root/reflex:$Name:$:$Id:$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -44,7 +44,7 @@
 #ifdef _WIN32
   typedef __int64 longlong;
   typedef unsigned __int64 ulonglong;
-#elif defined(__linux) || defined(sun) || defined(__sgi) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux))
+#elif defined(__linux) || defined(sun) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux)) || defined(__sgi)
   typedef long long int longlong;
   typedef unsigned long long int ulonglong;
 #endif
@@ -70,18 +70,58 @@
 namespace ROOT {
   namespace Reflex {
 
+    // forward declarations
+    class Type;
+    class Base;
+    class Scope;
+    class Object;
+    class Member;
+    class PropertyList;
+    class TypeTemplate;
+    class MemberTemplate;
+
+    typedef std::vector< Type > Type_Cont_Type;
+    typedef Type_Cont_Type::const_iterator Type_Iterator;
+    typedef Type_Cont_Type::const_reverse_iterator Reverse_Type_Iterator;
+
+    typedef std::vector< Base > Base_Cont_Type;
+    typedef Base_Cont_Type::const_iterator Base_Iterator;
+    typedef Base_Cont_Type::const_reverse_iterator Reverse_Base_Iterator;
+
+    typedef std::vector< Scope > Scope_Cont_Type;
+    typedef Scope_Cont_Type::const_iterator Scope_Iterator;
+    typedef Scope_Cont_Type::const_reverse_iterator Reverse_Scope_Iterator;
+
+    typedef std::vector< Object > Object_Cont_Type;
+    typedef Object_Cont_Type::const_iterator Object_Iterator;
+    typedef Object_Cont_Type::const_reverse_iterator Reverse_Object_Iterator;
+
+    typedef std::vector< Member > Member_Cont_Type;
+    typedef Member_Cont_Type::const_iterator Member_Iterator;
+    typedef Member_Cont_Type::const_reverse_iterator Reverse_Member_Iterator;
+
+    typedef std::vector< TypeTemplate > TypeTemplate_Cont_Type;
+    typedef TypeTemplate_Cont_Type::const_iterator TypeTemplate_Iterator;
+    typedef TypeTemplate_Cont_Type::const_reverse_iterator Reverse_TypeTemplate_Iterator;
+
+    typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type;
+    typedef MemberTemplate_Cont_Type::const_iterator MemberTemplate_Iterator;
+    typedef MemberTemplate_Cont_Type::const_reverse_iterator Reverse_MemberTemplate_Iterator;
+
+
     /** some general information about the Reflex package */
     struct Reflex {
+    public:
       
       /** default constructor */
       Reflex();
       
       /** the Name of the package - used for messages */
       static const std::string & Argv0(); // returns "Seal Reflex";
-      
+
     }; // struct Reflex
 
-
+    
     // these defines are used for the modifiers they are used in the following 
     // classes
     // BA = BASE
@@ -91,29 +131,46 @@ namespace ROOT {
     // FM = FUNCTIONMEMBER 
     // TY = TYPE
     // ME = MEMBER
-    //                              BA  CL  FU  DM  FM  TY  ME 
+    //                              BA  CL  DM  FM  TY  ME 
     enum {
-      PUBLIC          = (1<<0),  //  X           X   X       X
-      PROTECTED       = (1<<1),  //  X           X   X       X
-      PRIVATE         = (1<<2),  //  X           X   X       X
-      REGISTER        = (1<<3),  //              X   X       X
-      STATIC          = (1<<4),  //              X   X       X
-      CONSTRUCTOR     = (1<<5),  //                  X       X
-      DESTRUCTOR      = (1<<6) , //                  X       X
-      EXPLICIT        = (1<<7),  //                  X       X
-      EXTERN          = (1<<8) , //              X   X       X
-      COPYCONSTRUCTOR = (1<<9) , //                  X       X
-      OPERATOR        = (1<<10), //                  X       X
-      INLINE          = (1<<11), //                  X       X
-      CONVERTER       = (1<<12), //                  X       X
-      AUTO            = (1<<13), //              X           X
-      MUTABLE         = (1<<14), //              X           X
-      CONST           = (1<<15), //              X       X   X
-      VOLATILE        = (1<<16), //              X       X   X
-      REFERENCE       = (1<<17), //              X           X
-      ABSTRACT        = (1<<18), //      X               X
-      VIRTUAL         = (1<<19), //  X   X               X
-      TRANSIENT       = (1<<20)  //              X           X
+      PUBLIC          = (1<<0),  //  X       X   X       X
+      PROTECTED       = (1<<1),  //  X       X   X       X
+      PRIVATE         = (1<<2),  //  X       X   X       X
+      REGISTER        = (1<<3),  //          X   X       X
+      STATIC          = (1<<4),  //          X   X       X
+      CONSTRUCTOR     = (1<<5),  //              X       X
+      DESTRUCTOR      = (1<<6) , //              X       X
+      EXPLICIT        = (1<<7),  //              X       X
+      EXTERN          = (1<<8) , //          X   X       X
+      COPYCONSTRUCTOR = (1<<9) , //              X       X
+      OPERATOR        = (1<<10), //              X       X
+      INLINE          = (1<<11), //              X       X
+      CONVERTER       = (1<<12), //              X       X
+      AUTO            = (1<<13), //          X           X
+      MUTABLE         = (1<<14), //          X           X
+      CONST           = (1<<15), //          X       X   X
+      VOLATILE        = (1<<16), //          X       X   X
+      REFERENCE       = (1<<17), //          X           X
+      ABSTRACT        = (1<<18), //      X           X
+      VIRTUAL         = (1<<19), //  X   X           X
+      TRANSIENT       = (1<<20), //          X           X
+      ARTIFICIAL      = (1<<21), //  X   X   X   X   X   X
+      // the bits 31 - 28 are reserved for template default arguments 
+      TEMPLATEDEFAULTS1  = (0<<31)&(0<<30)&(0<<29)&(1<<28),
+      TEMPLATEDEFAULTS2  = (0<<31)&(0<<30)&(1<<29)&(0<<28),
+      TEMPLATEDEFAULTS3  = (0<<31)&(0<<30)&(1<<29)&(1<<28),
+      TEMPLATEDEFAULTS4  = (0<<31)&(1<<30)&(0<<29)&(0<<28),
+      TEMPLATEDEFAULTS5  = (0<<31)&(1<<30)&(0<<29)&(1<<28),
+      TEMPLATEDEFAULTS6  = (0<<31)&(1<<30)&(1<<29)&(0<<28),
+      TEMPLATEDEFAULTS7  = (0<<31)&(1<<30)&(1<<29)&(1<<28),
+      TEMPLATEDEFAULTS8  = (1<<31)&(0<<30)&(0<<29)&(0<<28),
+      TEMPLATEDEFAULTS9  = (1<<31)&(0<<30)&(0<<29)&(1<<28),
+      TEMPLATEDEFAULTS10 = (1<<31)&(0<<30)&(1<<29)&(0<<28),
+      TEMPLATEDEFAULTS11 = (1<<31)&(0<<30)&(1<<29)&(1<<28),
+      TEMPLATEDEFAULTS12 = (1<<31)&(1<<30)&(0<<29)&(0<<28),
+      TEMPLATEDEFAULTS13 = (1<<31)&(1<<30)&(0<<29)&(1<<28),
+      TEMPLATEDEFAULTS14 = (1<<31)&(1<<30)&(1<<29)&(0<<28),
+      TEMPLATEDEFAULTS15 = (1<<31)&(1<<30)&(1<<29)&(1<<28)
     };
 
 

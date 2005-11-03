@@ -35,21 +35,21 @@
 #include <iostream>
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeBase::TypeBase( const char * Name, 
+ROOT::Reflex::TypeBase::TypeBase( const char * nam, 
                                   size_t size,
-                                  TYPE TypeType, 
+                                  TYPE typeTyp, 
                                   const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
   : fScope( Scope::__NIRVANA__ ),
     fSize( size ),
     fTypeInfo( ti ), 
-    fTypeType( TypeType ),
+    fTypeType( typeTyp ),
     fPropertyList( PropertyList(new PropertyListImpl())),
-    fBasePosition(Tools::GetBasePosition( Name)) {
+    fBasePosition(Tools::GetBasePosition( nam)) {
 
-  Type t = TypeName::ByName( Name );
+  Type t = TypeName::ByName( nam );
   if ( t.Id() == 0 ) { 
-    fTypeName = new TypeName( Name, this, &ti ); 
+    fTypeName = new TypeName( nam, this, &ti ); 
   }
   else {
     fTypeName = (TypeName*)t.Id();
@@ -58,10 +58,10 @@ ROOT::Reflex::TypeBase::TypeBase( const char * Name,
     fTypeName->fTypeBase = this;
   }
 
-  if ( TypeType != FUNDAMENTAL && 
-       TypeType != FUNCTION &&
-       TypeType != POINTER  ) {
-    std::string sname = Tools::GetScopeName(Name);
+  if ( typeTyp != FUNDAMENTAL && 
+       typeTyp != FUNCTION &&
+       typeTyp != POINTER  ) {
+    std::string sname = Tools::GetScopeName(nam);
     fScope = Scope::ByName(sname);
     if ( fScope.Id() == 0 ) fScope = (new ScopeName(sname.c_str(), 0))->ScopeGet();
     
@@ -89,7 +89,7 @@ ROOT::Reflex::TypeBase::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
 void * ROOT::Reflex::TypeBase::Allocate() const {
 //-------------------------------------------------------------------------------
-  return operator new( fSize );
+  return malloc( fSize );
 }
 
 
@@ -112,7 +112,14 @@ size_t ROOT::Reflex::TypeBase::BaseCount() const {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeBase::Deallocate( void * instance ) const {
 //-------------------------------------------------------------------------------
-  operator delete( instance );
+  free( instance );
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::TypeBase::DeclaringScope() const {
+//-------------------------------------------------------------------------------
+  return fScope;
 }
 
 
@@ -153,6 +160,13 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberNth( size_t /* nth */ ) c
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberNth( const std::string & /* nam */ ) const {
+//-------------------------------------------------------------------------------
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeBase::Destruct( void * instance, 
                                        bool dealloc ) const {
 //-------------------------------------------------------------------------------
@@ -176,6 +190,14 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberNth( size_t /* nth */
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberNth( const std::string & /* nam */,
+                                                                const Type & /* signature */ ) const {
+//-------------------------------------------------------------------------------
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
 size_t ROOT::Reflex::TypeBase::Length() const {
 //-------------------------------------------------------------------------------
   return 0;
@@ -183,8 +205,9 @@ size_t ROOT::Reflex::TypeBase::Length() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberNth( const std::string & /* Name */ ) const {
-//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberNth( const std::string & /* nam */,
+                                                        const Type & /* signature */) const {
+  //-------------------------------------------------------------------------------
   return Member();
 }
 

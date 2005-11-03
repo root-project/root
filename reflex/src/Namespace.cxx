@@ -12,9 +12,9 @@
 #include "Namespace.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Namespace::Namespace( const char * ScopeNth ) 
+ROOT::Reflex::Namespace::Namespace( const char * scop ) 
 //-------------------------------------------------------------------------------
-  : ScopeBase( ScopeNth, NAMESPACE ) {}
+  : ScopeBase( scop, NAMESPACE ) {}
 
 
 //-------------------------------------------------------------------------------

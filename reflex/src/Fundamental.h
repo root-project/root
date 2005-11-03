@@ -28,9 +28,9 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      Fundamental( const char * TypeNth,
+      Fundamental( const char * typ,
                    size_t size,
-                   const std::type_info & TypeInfo ) ;
+                   const std::type_info & ti ) ;
 
 
       /** destructor */

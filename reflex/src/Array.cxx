@@ -15,13 +15,13 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Array::Array( const Type & arrayType,
-                            size_t Length,
+                            size_t len,
                             const std::type_info & typeinfo ) 
 //-------------------------------------------------------------------------------
-: TypeBase( BuildTypeName(arrayType, Length ).c_str(), 
-            Length*(arrayType.SizeOf()), ARRAY, typeinfo ), 
+: TypeBase( BuildTypeName(arrayType, len ).c_str(), 
+            len*(arrayType.SizeOf()), ARRAY, typeinfo ), 
   fArrayType( arrayType ), 
-  fLength( Length ) { }
+  fLength( len ) { }
 
 
 //-------------------------------------------------------------------------------
@@ -32,11 +32,11 @@ std::string ROOT::Reflex::Array::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Array::BuildTypeName( const Type & TypeNth, 
-                                                size_t Length,
+std::string ROOT::Reflex::Array::BuildTypeName( const Type & typ, 
+                                                size_t len,
                                                 unsigned int mod ) {
 //-------------------------------------------------------------------------------
   std::ostringstream ost;
-  ost << TypeNth.Name( mod ) << "[" << Length << "]";
+  ost << typ.Name( mod ) << "[" << len << "]";
   return ost.str();
 }

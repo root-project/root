@@ -33,7 +33,7 @@ namespace ROOT {
 
       /** default constructor */
       PointerToMember( const Type &           pointerToMemberType,
-                       const std::type_info & TypeInfo );
+                       const std::type_info & ti );
 
 
       /** destructor */

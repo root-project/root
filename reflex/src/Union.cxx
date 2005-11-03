@@ -16,9 +16,9 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Union::Union( const char * unionType,
                             size_t size,
-                            const std::type_info & TypeInfo ) 
+                            const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
-  : TypeBase( unionType, size, UNION, TypeInfo ),
+  : TypeBase( unionType, size, UNION, ti ),
     ScopeBase( unionType, UNION) {}
 
 

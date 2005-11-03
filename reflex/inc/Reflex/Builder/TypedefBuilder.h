@@ -32,7 +32,7 @@ namespace ROOT{
     public:
       
       /** constructor */
-      TypedefBuilderImpl( const char * TypeNth,
+      TypedefBuilderImpl( const char * typ,
                           const Type & typedefType );
 
 
@@ -77,7 +77,7 @@ namespace ROOT{
     public:            
 
       /** constructor */
-      TypedefBuilder(const char * Name);
+      TypedefBuilder(const char * nam);
 
 
       /** destructor */
@@ -106,9 +106,9 @@ namespace ROOT{
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::TypedefBuilder<T>::TypedefBuilder( const char * Name ) 
+inline ROOT::Reflex::TypedefBuilder<T>::TypedefBuilder( const char * nam ) 
 //-------------------------------------------------------------------------------
-  : fTypedefBuilderImpl( Name, TypeDistiller<T>::Get()) {}
+  : fTypedefBuilderImpl( nam, TypeDistiller<T>::Get()) {}
 
 
 //-------------------------------------------------------------------------------

@@ -43,8 +43,8 @@ namespace ROOT {
     public:
 
       /** constructor within a ScopeNth*/
-      ScopeBase( const char * ScopeNth, 
-                 TYPE ScopeType );
+      ScopeBase( const char * scope, 
+                 TYPE scopeType );
 
 
       /** destructor */
@@ -58,19 +58,61 @@ namespace ROOT {
       operator Scope () const;
 
 
+      /** 
+       * the operator Type will return a corresponding Type object to the ScopeNth if
+       * applicable (i.e. if the Scope is also a Type e.g. Class, Union, Enum)
+       */
+      operator Type () const;
+
+
+      /**
+       * nthBase will return the nth BaseNth class information
+       * @param  nth nth BaseNth class
+       * @return pointer to BaseNth class information
+       */
+      virtual Base BaseNth( size_t nth ) const;
+
+
+      /**
+       * BaseCount will return the number of BaseNth classes
+       * @return number of BaseNth classes
+       */
+      virtual size_t BaseCount() const;
+
+
+      virtual Base_Iterator Base_Begin() const;
+      virtual Base_Iterator Base_End() const;
+      virtual Reverse_Base_Iterator Base_Rbegin() const;
+      virtual Reverse_Base_Iterator Base_Rend() const;
+
+
       /**
        * nthDataMember will return the nth data MemberNth of the ScopeNth
        * @param  nth data MemberNth
        * @return pointer to data MemberNth
        */
-      virtual Member DataMemberNth( size_t nth ) const;
+      Member DataMemberNth( size_t nth ) const;
+
+
+      /**
+       * DataMemberNth will return the MemberNth with Name
+       * @param  Name of data MemberNth
+       * @return data MemberNth
+       */
+      Member DataMemberNth( const std::string & nam ) const;
 
 
       /**
        * DataMemberCount will return the number of data members of this ScopeNth
        * @return number of data members
        */
-      virtual size_t DataMemberCount() const;
+      size_t DataMemberCount() const;
+
+      
+      Member_Iterator DataMember_Begin() const;
+      Member_Iterator DataMember_End() const;
+      Reverse_Member_Iterator DataMember_Rbegin() const;
+      Reverse_Member_Iterator DataMember_Rend() const;
 
 
       /**
@@ -85,15 +127,32 @@ namespace ROOT {
        * @param  nth function MemberNth
        * @return pointer to function MemberNth
        */
-      virtual Member FunctionMemberNth( size_t nth ) const;
+      Member FunctionMemberNth( size_t nth ) const;
 
  
+      /**
+       * FunctionMemberNth will return the MemberNth with the Name, 
+       * optionally the signature of the function may be given
+       * @param  Name of function MemberNth
+       * @param  signature of the MemberNth function 
+       * @return function MemberNth
+       */
+      Member FunctionMemberNth( const std::string & name,
+                                const Type & signature ) const;
+
+
       /**
        * FunctionMemberCount will return the number of function members of
        * this ScopeNth
        * @return number of function members
        */
-      virtual size_t FunctionMemberCount() const;
+      size_t FunctionMemberCount() const;
+
+
+      Member_Iterator FunctionMember_Begin() const;
+      Member_Iterator FunctionMember_End() const;
+      Reverse_Member_Iterator FunctionMember_Rbegin() const;
+      Reverse_Member_Iterator FunctionMember_Rend() const;
 
 
       /** 
@@ -145,7 +204,8 @@ namespace ROOT {
        * @param Name  MemberNth Name
        * @return pointer to MemberNth
        */
-      virtual Member MemberNth( const std::string & Name ) const;
+      Member MemberNth( const std::string & name,
+                        const Type & signature ) const;
 
 
       /**
@@ -153,14 +213,20 @@ namespace ROOT {
        * @param  nth MemberNth
        * @return pointer to nth MemberNth
        */
-      virtual Member MemberNth( size_t nth ) const;
+      Member MemberNth( size_t nth ) const;
+
+
+      Member_Iterator Member_Begin() const;
+      Member_Iterator Member_End() const;
+      Reverse_Member_Iterator Member_Rbegin() const;
+      Reverse_Member_Iterator Member_Rend() const;
 
 
       /**
        * MemberCount will return the number of members
        * @return number of members
        */
-      virtual size_t MemberCount() const;
+      size_t MemberCount() const;
 
 
       /** 
@@ -176,6 +242,12 @@ namespace ROOT {
        * @return number of defined MemberNth templates
        */
       size_t MemberTemplateCount() const;
+
+
+      MemberTemplate_Iterator MemberTemplate_Begin() const;
+      MemberTemplate_Iterator MemberTemplate_End() const;
+      Reverse_MemberTemplate_Iterator MemberTemplate_Rbegin() const;
+      Reverse_MemberTemplate_Iterator MemberTemplate_Rend() const;
 
 
       /**
@@ -220,14 +292,20 @@ namespace ROOT {
        * @param  nth sub-ScopeNth
        * @return pointer to nth sub-ScopeNth
        */
-      virtual Scope SubScopeNth( size_t nth ) const;
+      Scope SubScopeNth( size_t nth ) const;
 
 
       /**
        * ScopeCount will return the number of sub-scopes
        * @return number of sub-scopes
        */
-      virtual size_t SubScopeCount() const;
+      size_t SubScopeCount() const;
+
+
+      Scope_Iterator SubScope_Begin() const;
+      Scope_Iterator SubScope_End() const;
+      Reverse_Scope_Iterator SubScope_Rbegin() const;
+      Reverse_Scope_Iterator SubScope_Rend() const;
 
 
       /**
@@ -235,14 +313,20 @@ namespace ROOT {
        * @param  nth sub-TypeNth
        * @return pointer to nth sub-TypeNth
        */
-      virtual Type SubTypeNth( size_t nth ) const;
+      Type SubTypeNth( size_t nth ) const;
 
 
       /**
        * TypeCount will returnt he number of sub-types
        * @return number of sub-types
        */
-      virtual size_t SubTypeCount() const;
+      size_t SubTypeCount() const;
+
+
+      Type_Iterator SubType_Begin() const;
+      Type_Iterator SubType_End() const;
+      Reverse_Type_Iterator SubType_Rbegin() const;
+      Reverse_Type_Iterator SubType_Rend() const;
 
 
       /**
@@ -258,6 +342,12 @@ namespace ROOT {
        * @return number of template arguments
        */
       virtual size_t TemplateArgumentCount() const;
+
+
+      virtual Type_Iterator TemplateArgument_Begin() const;
+      virtual Type_Iterator TemplateArgument_End() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rbegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rend() const;
 
 
       /**
@@ -281,6 +371,12 @@ namespace ROOT {
        */
       size_t TypeTemplateCount() const;
 
+
+      TypeTemplate_Iterator TypeTemplate_Begin() const;
+      TypeTemplate_Iterator TypeTemplate_End() const;
+      Reverse_TypeTemplate_Iterator TypeTemplate_Rbegin() const;
+      Reverse_TypeTemplate_Iterator TypeTemplate_Rend() const;
+
     protected:
 
       /** protected constructor for initialisation of the global namespace */
@@ -293,9 +389,9 @@ namespace ROOT {
        * @param dm pointer to data MemberNth
        */
       virtual void AddDataMember( const Member & dm ) const;
-      virtual void AddDataMember( const char * Name,
-                                  const Type & TypeNth,
-                                  size_t Offset,
+      virtual void AddDataMember( const char * name,
+                                  const Type & type,
+                                  size_t offset,
                                   unsigned int modifiers = 0 ) const;
 
 
@@ -304,8 +400,8 @@ namespace ROOT {
        * @param fm pointer to function MemberNth
        */
       virtual void AddFunctionMember( const Member & fm ) const;
-      virtual void AddFunctionMember( const char * Name,
-                                      const Type & TypeNth,
+      virtual void AddFunctionMember( const char * name,
+                                      const Type & type,
                                       StubFunction stubFP,
                                       void * stubCtx = 0,
                                       const char * params = 0,
@@ -320,8 +416,8 @@ namespace ROOT {
        * @param sc pointer to Scope
        */
       virtual void AddSubScope( const Scope & sc ) const;
-      virtual void AddSubScope( const char * ScopeNth,
-                                TYPE ScopeType ) const;
+      virtual void AddSubScope( const char * scope,
+                                TYPE scopeType ) const;
 
 
       /**
@@ -329,9 +425,9 @@ namespace ROOT {
        * @param sc pointer to Type
        */
       virtual void AddSubType( const Type & ty ) const;
-      virtual void AddSubType( const char * TypeNth,
+      virtual void AddSubType( const char * type,
                                size_t size,
-                               TYPE TypeType,
+                               TYPE typeType,
                                const std::type_info & ti,
                                unsigned int modifiers = 0 ) const;
 
@@ -458,7 +554,7 @@ namespace ROOT {
        * @clientCardinality 1
        */
       mutable
-      std::vector < Type > fTypes;
+      std::vector < Type > fSubTypes;
 
 
       /**
@@ -504,9 +600,268 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::ScopeBase::BaseCount() const {
+//-------------------------------------------------------------------------------
+  return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_Begin() const {
+//-------------------------------------------------------------------------------
+  return Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::ScopeBase::Base_End() const {
+//-------------------------------------------------------------------------------
+  return Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
   return fDeclaringScope;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::DataMember_Begin() const {
+//-------------------------------------------------------------------------------
+  return fDataMembers.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::DataMember_End() const {
+//-------------------------------------------------------------------------------
+  return fDataMembers.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::DataMember_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fDataMembers.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::DataMember_Rend() const {
+//-------------------------------------------------------------------------------
+  return fDataMembers.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_Begin() const {
+//-------------------------------------------------------------------------------
+  return fFunctionMembers.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_End() const {
+//-------------------------------------------------------------------------------
+  return fFunctionMembers.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fFunctionMembers.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::FunctionMember_Rend() const {
+//-------------------------------------------------------------------------------
+  return fFunctionMembers.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
+//-------------------------------------------------------------------------------
+  return fMembers.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
+//-------------------------------------------------------------------------------
+  return fMembers.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fMembers.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_Rend() const {
+//-------------------------------------------------------------------------------
+  return fMembers.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Begin() const {
+//-------------------------------------------------------------------------------
+  return fMemberTemplates.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_End() const {
+//-------------------------------------------------------------------------------
+  return fMemberTemplates.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fMemberTemplates.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Rend() const {
+//-------------------------------------------------------------------------------
+  return fMemberTemplates.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_Begin() const {
+//-------------------------------------------------------------------------------
+  return fSubScopes.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_End() const {
+//-------------------------------------------------------------------------------
+  return fSubScopes.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fSubScopes.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeBase::SubScope_Rend() const {
+//-------------------------------------------------------------------------------
+  return fSubScopes.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::SubType_Begin() const {
+//-------------------------------------------------------------------------------
+  return fSubTypes.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::SubType_End() const {
+//-------------------------------------------------------------------------------
+  return fSubTypes.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fSubTypes.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::SubType_Rend() const {
+//-------------------------------------------------------------------------------
+  return fSubTypes.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Begin() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgument_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::ScopeBase::TypeTemplate_Begin() const {
+//-------------------------------------------------------------------------------
+  return fTypeTemplates.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::ScopeBase::TypeTemplate_End() const {
+//-------------------------------------------------------------------------------
+  return fTypeTemplates.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::ScopeBase::TypeTemplate_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fTypeTemplates.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::ScopeBase::TypeTemplate_Rend() const {
+//-------------------------------------------------------------------------------
+  return fTypeTemplates.rend();
 }
 
 
@@ -574,5 +929,3 @@ inline size_t ROOT::Reflex::ScopeBase::TemplateArgumentCount() const {
 }
 
 #endif // ROOT_Reflex_ScopeBase
-
-

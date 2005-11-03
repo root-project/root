@@ -92,6 +92,22 @@ ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberNth( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberNth( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fTypeName->fTypeBase->DataMemberNth( nam );
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::Type::DynamicType( const Object & obj ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fTypeName->fTypeBase->DynamicType( obj );
+  return Type();
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberNth( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( * this ) return fTypeName->fTypeBase->FunctionMemberNth( nth );
@@ -100,10 +116,20 @@ ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberNth( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::Type::IsEquivalentTo( const Type & TypeNth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberNth( const std::string & nam,
+                                                            const Type & signature ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fTypeName->fTypeBase->FunctionMemberNth( nam, signature );
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
 //-------------------------------------------------------------------------------
   Type t1 = *this;
-  Type t2 = TypeNth;
+  Type t2 = typ;
+  if (!t1.Id() & !t2.Id()) return true;
   while (t1.IsTypedef()) t1 = t1.ToType();
   while (t2.IsTypedef()) t2 = t2.ToType();
   switch ( t1.TypeType() ) {
@@ -130,9 +156,10 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & TypeNth ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::MemberNth( const std::string & Name ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::MemberNth( const std::string & nam,
+                                                    const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->MemberNth( Name );
+  if ( * this ) return fTypeName->fTypeBase->MemberNth( nam, signature );
   return Member();
 }
 

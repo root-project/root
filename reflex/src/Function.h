@@ -34,9 +34,9 @@ namespace ROOT {
 
 
       /** default constructor */
-      Function( const Type & ReturnType,
+      Function( const Type & retType,
                 std::vector< Type > parameters,
-                const std::type_info & TypeInfo,
+                const std::type_info & ti,
                 TYPE functionType = FUNCTION );
 
 
@@ -48,7 +48,7 @@ namespace ROOT {
        * IsVirtual will return true if the class contains a virtual table
        * @return true if the class contains a virtual table
        */
-      bool IsVirtual() const;
+      virtual bool IsVirtual() const;
 
 
       /**
@@ -56,7 +56,7 @@ namespace ROOT {
        * @param  mod modifiers to be applied when generating the Name
        * @return Name of function
        */
-      std::string Name( unsigned int mod = 0 ) const;
+      virtual std::string Name( unsigned int mod = 0 ) const;
 
 
       /**
@@ -64,21 +64,27 @@ namespace ROOT {
        * @param  nth nth ParameterNth
        * @return pointer to nth ParameterNth TypeNth
        */
-      Type ParameterNth( size_t nth ) const;
+      virtual Type ParameterNth( size_t nth ) const;
 
 
       /**
        * ParameterCount will return the number of parameters of this function
        * @return number of parameters
        */
-      size_t ParameterCount() const;
+      virtual size_t ParameterCount() const;
+
+
+      virtual Type_Iterator Parameter_Begin() const;
+      virtual Type_Iterator Parameter_End() const;
+      virtual Reverse_Type_Iterator Parameter_Rbegin() const;
+      virtual Reverse_Type_Iterator Parameter_Rend() const;
 
 
       /**
        * ReturnType will return a pointer to the TypeNth of the return TypeNth.
        * @return pointer to Type of return TypeNth
        */
-      Type ReturnType() const;
+      virtual Type ReturnType() const;
 
 
       /** static funtion that composes the TypeNth Name */
@@ -127,6 +133,34 @@ inline bool ROOT::Reflex::Function::IsVirtual() const {
 inline size_t ROOT::Reflex::Function::ParameterCount() const {
 //-------------------------------------------------------------------------------
   return fParameters.size();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Function::Parameter_Begin() const {
+//-------------------------------------------------------------------------------
+  return fParameters.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::Function::Parameter_End() const {
+//-------------------------------------------------------------------------------
+  return fParameters.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Function::Parameter_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return fParameters.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Function::Parameter_Rend() const {
+//-------------------------------------------------------------------------------
+  return fParameters.rend();
 }
 
 

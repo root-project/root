@@ -14,39 +14,39 @@
 #include "Namespace.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * Name,
-                                                        const Type & TypeNth,
-                                                        size_t Offset,
+ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
+                                                        const Type & typ,
+                                                        size_t offs,
                                                         unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
   : fDataMember(Member()) {
 
   std::string declScope = "";
-  std::string memName = std::string(Name);
+  std::string memName = std::string( nam );
   size_t pos = memName.rfind( "::" );
   if ( pos != std::string::npos ) {
     declScope = memName.substr( 0, pos );
     memName = memName.substr( pos + 2 );
   }
 
-  Scope ScopeNth = Scope::ByName(declScope);
+  Scope sc = Scope::ByName(declScope);
   
-  if ( ! ScopeNth ) {
-    ScopeNth = (new Namespace(declScope.c_str()))->ScopeGet();
+  if ( ! sc ) {
+    sc = (new Namespace(declScope.c_str()))->ScopeGet();
   }
   
-  if ( ! ScopeNth.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
+  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
 
-  ScopeNth.AddDataMember( memName.c_str(),
-                       TypeNth,
-                       Offset,
-                       modifiers );
+  sc.AddDataMember( memName.c_str(),
+                    typ,
+                    offs,
+                    modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
-  //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
   FireFunctionCallback( fDataMember );
 }
 
@@ -68,30 +68,30 @@ void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilder::VariableBuilder( const char * Name, 
-                                                const Type & TypeNth,
-                                                size_t Offset,
+ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam, 
+                                                const Type & typ,
+                                                size_t offs,
                                                 unsigned int modifiers) 
 //-------------------------------------------------------------------------------
   : fDataMember( Member()) {
 
-  std::string sname = std::string( Name );
+  std::string sname = std::string( nam );
   size_t pos = sname.rfind( "::" );
   std::string declScope = sname.substr( pos + 2 );
   std::string memName = sname.substr( 0, pos );
   
-  Scope ScopeNth = Scope::ByName(declScope);
+  Scope sc = Scope::ByName(declScope);
   
-  if ( ! ScopeNth ) {
-    ScopeNth = (new Namespace(declScope.c_str()))->ScopeGet();
+  if ( ! sc ) {
+    sc = (new Namespace(declScope.c_str()))->ScopeGet();
   }
   
-  if ( ! ScopeNth.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
+  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
 
-  ScopeNth.AddDataMember( memName.c_str(),
-                       TypeNth,
-                       Offset,
-                       modifiers );
+  sc.AddDataMember( memName.c_str(),
+                    typ,
+                    offs,
+                    modifiers );
 }
 
 

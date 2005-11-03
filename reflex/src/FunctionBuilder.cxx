@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.1 2005/06/23 10:21:06 brun Exp $
+// @(#)root/reflex:$Name:$:$Id:$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -23,8 +23,8 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * Name, 
-                                                        const Type & TypeNth,
+ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam, 
+                                                        const Type & typ,
                                                         StubFunction stubFP,
                                                         void * stubCtx,
                                                         const char * params, 
@@ -32,35 +32,41 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * Name,
 //-------------------------------------------------------------------------------
   : fFunction( Member(0)) {
 
-  std::string fullname(Name);
+  std::string fullname( nam );
   std::string declScope;
   std::string funcName;
-  size_t pos = Tools::GetTemplateName(Name).rfind( "::" );
+  size_t pos = Tools::GetTemplateName(nam).rfind( "::" );
   // Name contains declaring ScopeNth
   if ( pos != std::string::npos ) {   
     funcName  = fullname.substr( pos + 2 );
     declScope = fullname.substr( 0, pos ); 
   }
   else {
-    funcName  = Name;
+    funcName  = nam;
     declScope = "";
   }
 
-  Scope ScopeNth = Scope::ByName(declScope);
-  if ( ! ScopeNth ) {
+  Scope sc = Scope::ByName(declScope);
+  if ( ! sc ) {
     // Let's create the namespace here
-    ScopeNth = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ScopeGet();
   }
 
-  if ( ! ScopeNth.IsNamespace() ) throw RuntimeError("Declaring ScopeNth is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str()))
-    fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
-                        TypeNth, stubFP, stubCtx, params, modifiers | STATIC,
-                        ScopeNth ));
-  else
-    fFunction = Member(new FunctionMember(funcName.c_str(), 
-                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC));
-  ScopeNth.AddFunctionMember(fFunction);
+  if ( ! sc.IsNamespace() ) throw RuntimeError("Declaring scope is not a namespace");
+  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
+                                                                                                      typ,
+                                                                                                      stubFP,
+                                                                                                      stubCtx,
+                                                                                                      params,
+                                                                                                      modifiers | STATIC,
+                                                                                                      sc ));
+  else                                        fFunction = Member(new FunctionMember(funcName.c_str(), 
+                                                                                    typ, 
+                                                                                    stubFP, 
+                                                                                    stubCtx, 
+                                                                                    params, 
+                                                                                    modifiers  | STATIC));
+  sc.AddFunctionMember(fFunction);
 }
 
 
@@ -88,8 +94,8 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & TypeNth,
-                                                const char * Name, 
+ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
+                                                const char * nam, 
                                                 StubFunction stubFP,
                                                 void * stubCtx,
                                                 const char * params, 
@@ -97,32 +103,38 @@ ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & TypeNth,
 //-------------------------------------------------------------------------------
   : fFunction(Member(0)) {
 
-  std::string fullname(Name);
+  std::string fullname( nam );
   std::string declScope;
   std::string funcName;
-  size_t pos = Tools::GetTemplateName(Name).rfind( "::" );
-  // Name contains declaring ScopeNth
+  size_t pos = Tools::GetTemplateName( nam ).rfind( "::" );
+  // Name contains declaring scope
   if ( pos != std::string::npos ) {   
     funcName  = fullname.substr( pos + 2 );
     declScope = fullname.substr( 0, pos ); 
   }
   else {
-    funcName  = Name;
+    funcName  = nam;
     declScope = "";
   }
-  Scope ScopeNth = Scope::ByName(declScope);
-  if ( ! ScopeNth ) {
+  Scope sc = Scope::ByName(declScope);
+  if ( ! sc ) {
     // Let's create the namespace here
-    ScopeNth = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ScopeGet();
   }
-  if ( ! ScopeNth.IsNamespace() ) throw RuntimeError("2Declaring ScopeNth is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str()))
-    fFunction = Member(new FunctionMemberTemplateInstance(funcName.c_str(),
-                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC,
-                       ScopeNth ));
-  else
-    fFunction = Member(new FunctionMember(funcName.c_str(), 
-                       TypeNth, stubFP, stubCtx, params, modifiers | STATIC));
-  ScopeNth.AddFunctionMember(fFunction);
+  if ( ! sc.IsNamespace() ) throw RuntimeError("2Declaring ScopeNth is not a namespace");
+  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
+                                                                                                      typ,
+                                                                                                      stubFP,
+                                                                                                      stubCtx,
+                                                                                                      params,
+                                                                                                      modifiers | STATIC,
+                                                                                                      sc ));
+  else                                 fFunction = Member(new FunctionMember( funcName.c_str(), 
+                                                                              typ, 
+                                                                              stubFP, 
+                                                                              stubCtx, 
+                                                                              params, 
+                                                                              modifiers  | STATIC));
+  sc.AddFunctionMember(fFunction);
 }
 

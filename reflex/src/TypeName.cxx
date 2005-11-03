@@ -20,7 +20,7 @@
 //-------------------------------------------------------------------------------
 typedef __gnu_cxx::hash_map<const char *, ROOT::Reflex::TypeName * > Name2Type;
 typedef __gnu_cxx::hash_map<const char *, ROOT::Reflex::TypeName * > TypeId2Type;
-typedef std::vector< ROOT::Reflex::TypeName * > TypeVec;
+typedef std::vector< ROOT::Reflex::Type > TypeVec;
 
 
 //-------------------------------------------------------------------------------
@@ -48,14 +48,14 @@ TypeVec & sTypeVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeName::TypeName( const char * Name,
-                                  TypeBase * TypeBaseNth,
+ROOT::Reflex::TypeName::TypeName( const char * nam,
+                                  TypeBase * typeBas,
                                   const std::type_info * ti )
 //-------------------------------------------------------------------------------
-  : fName( Name ),
-    fTypeBase( TypeBaseNth ) {
+  : fName( nam ),
+    fTypeBase( typeBas ) {
       sTypes() [ fName.c_str() ] = this;
-      sTypeVec().push_back(this);
+      sTypeVec().push_back(Type(this));
       if ( ti ) sTypeInfos() [ ti->name() ] = this;
 }
 
@@ -103,7 +103,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeGet() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeNth( size_t nth ) {
 //-------------------------------------------------------------------------------
-  if ( nth < sTypeVec().size()) return Type(sTypeVec()[nth]);
+  if ( nth < sTypeVec().size()) return sTypeVec()[nth];
   return Type();
 }
 
@@ -113,4 +113,33 @@ size_t ROOT::Reflex::TypeName::TypeCount() {
 //-------------------------------------------------------------------------------
   return sTypeVec().size();
 }
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_Begin() {
+//-------------------------------------------------------------------------------
+  return sTypeVec().begin();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_End() {
+//-------------------------------------------------------------------------------
+  return sTypeVec().end();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_Rbegin() {
+//-------------------------------------------------------------------------------
+  return sTypeVec().rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_Rend() {
+//-------------------------------------------------------------------------------
+  return sTypeVec().rend();
+}
+
 

@@ -33,9 +33,9 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      DataMember( const char *   Name,
-                  const Type &   TypeNth, 
-                  size_t         Offset,
+      DataMember( const char *   nam,
+                  const Type &   typ, 
+                  size_t         offs,
                   unsigned int   modifiers = 0 );
 
 

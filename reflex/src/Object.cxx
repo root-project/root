@@ -17,6 +17,21 @@
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Object ROOT::Reflex::Object::Field( const std::string & data ) const {
+//-------------------------------------------------------------------------------
+  Type t = TypeGet();
+  if ( ! t.IsClass() ) throw RuntimeError("Object is not a composite");
+  for ( size_t i = 0; i < t.DataMemberCount(); ++i ) {
+    Member dm = t.DataMemberNth( i );
+    if ( dm.Name() == data ) {
+      return Object(dm.TypeGet(), (void*)((char*)AddressGet() + dm.Offset()));
+    }
+  }
+  throw RuntimeError("Data MemberNth not found in class");
+}
+ 
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Object 
 ROOT::Reflex::Object::Get( const std::string & dm ) const {
 //-------------------------------------------------------------------------------
@@ -27,43 +42,12 @@ ROOT::Reflex::Object::Get( const std::string & dm ) const {
 }
 
 
-//-------------------------------------------------------------------------------
-template < class T > 
-T ROOT::Reflex::Object::GetT( const std::string & dm ) const {
-//-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( dm );
-  if ( m ) return object_cast< T > ( m.Get( * this ));
-  else throw RuntimeError("No such MemberNth " + dm );
-  return object_cast < T > ( Object() );
-}
-
-
-//-------------------------------------------------------------------------------
-//void ROOT::Reflex::Object::Set( const std::string & dm,
-//                                const Object & value ) const {
-//-------------------------------------------------------------------------------
-//  Member m = TypeGet().MemberNth( dm );
-//  if ( m ) m.Set( * this, value );
-//  else throw RuntimeError("No such MemberNth " + dm );
-//}
-
-
-//-------------------------------------------------------------------------------
-void ROOT::Reflex::Object::Set( const std::string & dm,
-                                const void * value ) const {
-//-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( dm );
-  if ( m ) m.Set( * this, value );
-  else throw RuntimeError("No such MemberNth " + dm );
-}
-
-
 /*/-------------------------------------------------------------------------------
 ROOT::Reflex::Object
 ROOT::Reflex::Object::Invoke( const std::string & fm,
                               std::vector< Object > args ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( fm );
+  Member m = TypeGet().FunctionMemberNth( fm );
   if ( m ) {
     if ( args.size() ) return m.Invoke( * this, args );
     else               return m.Invoke( * this );
@@ -79,7 +63,26 @@ ROOT::Reflex::Object
 ROOT::Reflex::Object::Invoke( const std::string & fm,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( fm );
+  return Invoke(fm,Type(),args);
+  /*
+  m = TypeGet().FunctionMemberNth( fm );
+  if ( m ) {
+    if ( args.size() ) return m.Invoke( * this, args );
+    else               return m.Invoke( * this );
+  }
+  else throw RuntimeError("No such MemberNth " + fm );
+  return Object();
+  */
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Object
+ROOT::Reflex::Object::Invoke( const std::string & fm,
+                              const Type & sign,
+                              std::vector < void * > args ) const {
+//-------------------------------------------------------------------------------
+  Member m = TypeGet().FunctionMemberNth( fm, sign );
   if ( m ) {
     if ( args.size() ) return m.Invoke( * this, args );
     else               return m.Invoke( * this );
@@ -90,50 +93,20 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 
 
 //-------------------------------------------------------------------------------
-template < class T0 > ROOT::Reflex::Object
-ROOT::Reflex::Object::Invoke( const std::string & fm,
-                              const T0 & p0 ) const {
+//void ROOT::Reflex::Object::Set( const std::string & dm,
+//                                const Object & value ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( fm );
-  if ( m ) {
-    std::vector< Object > argList;
-    argList.push_back( Object( Type::ByTypeInfo( typeid(T0) ), & p0 ));
-    return m.Invoke( * this, argList );
-  }
-  else throw RuntimeError("No such MemberNth " + fm );
-  return Object();
+//  Member m = TypeGet().MemberNth( dm );
+//  if ( m ) m.Set( * this, value );
+//  else throw RuntimeError("No such MemberNth " + dm );
+//}
+
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::Object::Set2( const std::string & dm,
+                                 const void * value ) const {
+//-------------------------------------------------------------------------------
+  Member m = TypeGet().MemberNth( dm );
+  if ( m ) m.Set( * this, value );
+  else throw RuntimeError("No such MemberNth " + dm );
 }
-
-
-//-------------------------------------------------------------------------------
-template < class T0, class T1 > ROOT::Reflex::Object
-ROOT::Reflex::Object::Invoke( const std::string & fm,
-                              const T0 & p0,
-                              const T1 & p1 ) const {
-//-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( fm );
-  if ( m ) {
-    std::vector< Object > argList;
-    argList.push_back( Object( Type::ByTypeInfo( typeid(T0) ), & p0 ));
-    argList.push_back( Object( Type::ByTypeInfo( typeid(T1) ), & p1 ));
-    return m.Invoke( * this, argList );
-  }
-  else throw RuntimeError("No such MemberNth " + fm );
-  return Object();
-}
-
-
-//-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::Object::Field( const std::string & data ) const {
-//-------------------------------------------------------------------------------
-  Type t = TypeGet();
-  if ( ! t.IsClass() ) throw RuntimeError("Object is not a composite");
-  for ( size_t i = 0; i < t.DataMemberCount(); ++i ) {
-    Member dm = t.DataMemberNth( i );
-    if ( dm.Name() == data ) {
-      return Object(dm.TypeGet(), (void*)((char*)AddressGet() + dm.Offset()));
-    }
-  }
-  throw RuntimeError("Data MemberNth not found in class");
-}
- 

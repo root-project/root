@@ -35,7 +35,7 @@ namespace ROOT {
 
       /** default constructor */
       TypeTemplateImpl( const std::string & templateName,
-                        const Scope & ScopeNth,
+                        const Scope & scop,
                         std::vector < std::string > parameterNames, 
                         std::vector < std::string > parameterDefaults = std::vector<std::string>());
 

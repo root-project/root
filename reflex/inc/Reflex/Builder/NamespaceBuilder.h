@@ -29,7 +29,7 @@ namespace ROOT{
     public:            
 
       /** constructor */
-      NamespaceBuilder( const char * Name );
+      NamespaceBuilder( const char * nam );
 
 
       /** destructor */

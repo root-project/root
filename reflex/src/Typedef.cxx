@@ -14,11 +14,11 @@
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Typedef::Typedef( const char * TypeNth,
+ROOT::Reflex::Typedef::Typedef( const char * typ,
                                 const Type & typedefType,
-                                TYPE TypeType )
+                                TYPE typeTyp )
 //-------------------------------------------------------------------------------
-  : TypeBase(TypeNth, typedefType.SizeOf() , TypeType, typeid(UnknownType)),
+  : TypeBase(typ, typedefType.SizeOf() , typeTyp, typeid(UnknownType)),
     fTypedefType(typedefType)  { }
 
 

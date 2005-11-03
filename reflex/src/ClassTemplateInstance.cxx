@@ -23,22 +23,22 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ClassTemplateInstance::
-ClassTemplateInstance( const char * TypeNth, 
+ClassTemplateInstance( const char * typ, 
                        size_t size, 
-                       const std::type_info & TypeInfo, 
+                       const std::type_info & ti, 
                        unsigned int modifiers )
 //-------------------------------------------------------------------------------
-  : Class( TypeNth, 
+  : Class( typ, 
            size, 
-           TypeInfo, 
+           ti, 
            modifiers,
            TYPETEMPLATEINSTANCE ),
-    TemplateInstance( Tools::GetTemplateArguments( TypeNth )),
+    TemplateInstance( Tools::GetTemplateArguments( typ )),
     fTemplateFamily( TypeTemplate()) {
 
   Scope s = DeclaringScope();
 
-  std::string templateName = Tools::GetTemplateName( TypeNth );
+  std::string templateName = Tools::GetTemplateName( typ );
 
   for ( size_t i = 0; i < s.TypeTemplateCount(); ++i ) {
     TypeTemplate ttl = s.TypeTemplateNth( i );

@@ -15,7 +15,7 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Base::Base( const Type &    baseType,
                           OffsetFunction  OffsetFP,
-			                    unsigned int    modifiers )
+                          unsigned int    modifiers )
 //-------------------------------------------------------------------------------
   : fOffsetFP( OffsetFP ),
     fModifiers( modifiers ),
@@ -42,10 +42,12 @@ const ROOT::Reflex::Class * ROOT::Reflex::Base::BaseClass() const {
 std::string ROOT::Reflex::Base::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
   std::string s = "";
-  if ( IsPublic())    { s += "public "; }
-  if ( IsProtected()) { s += "protected "; }
-  if ( IsPrivate())   { s += "private "; }
-  if ( IsVirtual())   { s += "virtual "; }
+  if ( 0 != ( mod & ( QUALIFIED | Q ))) {
+    if ( IsPublic())    { s += "public "; }
+    if ( IsProtected()) { s += "protected "; }
+    if ( IsPrivate())   { s += "private "; }
+    if ( IsVirtual())   { s += "virtual "; }
+  }
   s += fBaseType.Name( mod );
   return s;
 }

@@ -54,11 +54,10 @@ std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
 std::string 
 ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) const {
 //-------------------------------------------------------------------------------
-  if ( fProperties ) {
+  if ( fProperties && HasKey(key) ) {
     std::ostringstream o;
-    o << (*fProperties)[ key ];
-    std::string s = o.str();
-    return s;
+    o << PropertyValue(key);
+    return o.str();
   }
   return "";
 }

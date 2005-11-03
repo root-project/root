@@ -33,13 +33,13 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      FunctionMemberTemplateInstance( const char * Name,
-                                      const Type & TypeNth,
+      FunctionMemberTemplateInstance( const char * nam,
+                                      const Type & typ,
                                       StubFunction stubFP,
                                       void * stubCtx = 0,
                                       const char * params = 0, 
                                       unsigned int modifiers = 0,
-                                      const Scope & ScopeNth = Scope());
+                                      const Scope & scop = Scope());
 
 
       /** destructor */

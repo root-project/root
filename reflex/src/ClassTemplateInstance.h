@@ -33,9 +33,9 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      ClassTemplateInstance( const char * TypeNth, 
+      ClassTemplateInstance( const char * typ, 
                              size_t size, 
-                             const std::type_info & TypeInfo, 
+                             const std::type_info & ti, 
                              unsigned int modifiers );
       
 
@@ -64,6 +64,12 @@ namespace ROOT {
        * @return number of template arguments
        */
       size_t TemplateArgumentCount() const;
+
+
+      virtual Type_Iterator TemplateArgument_Begin() const;
+      virtual Type_Iterator TemplateArgument_End() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rbegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rend() const;
 
 
       /**
@@ -97,6 +103,34 @@ inline ROOT::Reflex::ClassTemplateInstance::~ClassTemplateInstance() {}
 inline size_t ROOT::Reflex::ClassTemplateInstance::TemplateArgumentCount() const {
 //-------------------------------------------------------------------------------
   return TemplateInstance::TemplateArgumentCount();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Begin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::TemplateArgument_Begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::TemplateArgument_End();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::TemplateArgument_Rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Rend() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::TemplateArgument_Rend();
 }
 
 

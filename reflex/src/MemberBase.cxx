@@ -22,16 +22,16 @@
 #include "Class.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberBase::MemberBase( const char *  Name,
-                                      const Type &  TypeNth,
-                                      TYPE          MemberType,
+ROOT::Reflex::MemberBase::MemberBase( const char *  name,
+                                      const Type &  type,
+                                      TYPE          memberType,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
-  : fType( TypeNth, modifiers & ( CONST | VOLATILE | REFERENCE )),
+  : fType( type, modifiers & ( CONST | VOLATILE | REFERENCE )),
     fModifiers( modifiers ),
-    fName( Name ),
+    fName( name ),
     fScope( Scope() ),
-    fMemberType( MemberType ),
+    fMemberType( memberType ),
     fPropertyList( PropertyList( new PropertyListImpl())) {}
 
 
@@ -70,7 +70,7 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
       }
       else {
         throw RuntimeError(std::string(": ERROR: There is no path available from class ")
-			   + cl.Name(SCOPED) + " to " + Name(SCOPED));
+                           + cl.Name(SCOPED) + " to " + Name(SCOPED));
       }
     }
   }
@@ -78,6 +78,21 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
     throw RuntimeError(std::string("Object ") + cl.Name(SCOPED) + " does not represent a class");
   }
   return (void*)mem;
+}
+
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
+//-------------------------------------------------------------------------------
+  return fScope;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
+//-------------------------------------------------------------------------------
+  return DeclaringScope();
 }
 
 

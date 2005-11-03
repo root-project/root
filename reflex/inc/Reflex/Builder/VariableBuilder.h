@@ -31,9 +31,9 @@ namespace ROOT {
     public:
 
       /** constructor */
-      VariableBuilder( const char * Name,
-                       const Type & TypeNth,
-                       size_t Offset,
+      VariableBuilder( const char * nam,
+                       const Type & typ,
+                       size_t offs,
                        unsigned int modifiers = 0 );
 
 
@@ -71,9 +71,9 @@ namespace ROOT {
     public:
 
       /** constructor */
-      VariableBuilderImpl( const char * Name,
-                           const Type & TypeNth,
-                           size_t Offset,
+      VariableBuilderImpl( const char * nam,
+                           const Type & typ,
+                           size_t offs,
                            unsigned int modifiers = 0 );
 
 
@@ -109,8 +109,8 @@ namespace ROOT {
     public:
 
       /** constructor */
-      VariableBuilderT( const char * Name,
-                        size_t Offset,
+      VariableBuilderT( const char * nam,
+                        size_t offs,
                         unsigned int modifiers = 0 );
 
 
@@ -141,14 +141,14 @@ namespace ROOT {
 
 //-------------------------------------------------------------------------------
 template < typename D > 
-inline ROOT::Reflex::VariableBuilderT<D>::VariableBuilderT( const char * Name,
-                                                            size_t Offset,
+inline ROOT::Reflex::VariableBuilderT<D>::VariableBuilderT( const char * nam,
+                                                            size_t offs,
                                                             unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
-  : fDataMemberBuilderImpl( Name,
-                             TypeDistiller<D>::Get(),
-                             Offset,
-                             modifiers ) {}
+  : fDataMemberBuilderImpl( nam,
+                            TypeDistiller<D>::Get(),
+                            offs,
+                            modifiers ) {}
 
 
 //-------------------------------------------------------------------------------

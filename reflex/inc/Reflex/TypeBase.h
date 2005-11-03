@@ -51,9 +51,9 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      TypeBase( const char *           TypeNth, 
+      TypeBase( const char *           nam, 
                 size_t                 size, 
-                TYPE                   TypeType,
+                TYPE                   typeTyp,
                 const std::type_info & ti);
 
 
@@ -90,6 +90,12 @@ namespace ROOT {
       virtual size_t BaseCount() const;
 
 
+      virtual Base_Iterator Base_Begin() const;
+      virtual Base_Iterator Base_End() const;
+      virtual Reverse_Base_Iterator Base_Rbegin() const;
+      virtual Reverse_Base_Iterator Base_Rend() const;
+
+
       /**
        * CastObject an object from this class TypeNth to another one
        * @param  to is the class TypeNth to cast into
@@ -124,10 +130,24 @@ namespace ROOT {
 
 
       /**
+       * DataMemberNth will return the MemberNth with Name
+       * @param  Name of data MemberNth
+       * @return data MemberNth
+       */
+      virtual Member DataMemberNth( const std::string & nam ) const;
+
+
+      /**
        * DataMemberCount will return the number of data members of this ScopeNth
        * @return number of data members
        */
       virtual size_t DataMemberCount() const;
+
+
+      virtual Member_Iterator DataMember_Begin() const;
+      virtual Member_Iterator DataMember_End() const;
+      virtual Reverse_Member_Iterator DataMember_Rbegin() const;
+      virtual Reverse_Member_Iterator DataMember_Rend() const;
 
 
       /**
@@ -148,6 +168,13 @@ namespace ROOT {
 
 
       /**
+       * DeclaringScope will return a pointer to the ScopeNth of this one
+       * @return pointer to declaring ScopeNth
+       */
+      virtual Scope DeclaringScope() const;
+
+
+      /**
        * DynamicType is used to discover whether an object represents the
        * current class TypeNth or not
        * @param  mem is the memory AddressGet of the object to checked
@@ -165,11 +192,28 @@ namespace ROOT {
 
 
       /**
+       * FunctionMemberNth will return the MemberNth with the Name, 
+       * optionally the signature of the function may be given
+       * @param  Name of function MemberNth
+       * @param  signature of the MemberNth function 
+       * @return function MemberNth
+       */
+      virtual Member FunctionMemberNth( const std::string & nam,
+                                        const Type & signature ) const;
+
+
+      /**
        * FunctionMemberCount will return the number of function members of
        * this ScopeNth
        * @return number of function members
        */
       virtual size_t FunctionMemberCount() const;
+
+
+      virtual Member_Iterator FunctionMember_Begin() const;
+      virtual Member_Iterator FunctionMember_End() const;
+      virtual Reverse_Member_Iterator FunctionMember_Rbegin() const;
+      virtual Reverse_Member_Iterator FunctionMember_Rend() const;
 
 
       /**
@@ -291,7 +335,8 @@ namespace ROOT {
        * @param  MemberNth Name
        * @return pointer to MemberNth
        */
-      virtual Member MemberNth( const std::string & Name ) const;
+      virtual Member MemberNth( const std::string & nam,
+                                const Type & signature ) const;
 
 
       /**
@@ -309,6 +354,12 @@ namespace ROOT {
       virtual size_t MemberCount() const;
 
 
+      virtual Member_Iterator Member_Begin() const;
+      virtual Member_Iterator Member_End() const;
+      virtual Reverse_Member_Iterator Member_Rbegin() const;
+      virtual Reverse_Member_Iterator Member_Rend() const;
+
+
       /** 
        * MemberTemplateNth will return the nth MemberNth template of this ScopeNth
        * @param nth MemberNth template
@@ -322,6 +373,12 @@ namespace ROOT {
        * @return number of defined MemberNth templates
        */
       virtual size_t MemberTemplateCount() const;
+
+
+      virtual MemberTemplate_Iterator MemberTemplate_Begin() const;
+      virtual MemberTemplate_Iterator MemberTemplate_End() const;
+      virtual Reverse_MemberTemplate_Iterator MemberTemplate_Rbegin() const;
+      virtual Reverse_MemberTemplate_Iterator MemberTemplate_Rend() const;
 
 
       /**
@@ -344,6 +401,12 @@ namespace ROOT {
        * @return number of parameters
        */
       virtual size_t ParameterCount() const;
+
+
+      virtual Type_Iterator Parameter_Begin() const;
+      virtual Type_Iterator Parameter_End() const;
+      virtual Reverse_Type_Iterator Parameter_Rbegin() const;
+      virtual Reverse_Type_Iterator Parameter_Rend() const;
 
 
       /**
@@ -390,6 +453,12 @@ namespace ROOT {
       virtual size_t SubScopeCount() const;
 
 
+      virtual Scope_Iterator SubScope_Begin() const;
+      virtual Scope_Iterator SubScope_End() const;
+      virtual Reverse_Scope_Iterator SubScope_Rbegin() const;
+      virtual Reverse_Scope_Iterator SubScope_Rend() const;
+
+
       /**
        * nthType will return a pointer to the nth sub-TypeNth
        * @param  nth sub-TypeNth
@@ -405,6 +474,12 @@ namespace ROOT {
       virtual size_t SubTypeCount() const;
 
 
+      virtual Type_Iterator SubType_Begin() const;
+      virtual Type_Iterator SubType_End() const;
+      virtual Reverse_Type_Iterator SubType_Rbegin() const;
+      virtual Reverse_Type_Iterator SubType_Rend() const;
+
+
       /**
        * TemplateArgumentNth will return a pointer to the nth template argument
        * @param  nth nth template argument
@@ -418,6 +493,12 @@ namespace ROOT {
        * @return number of template arguments
        */
       virtual size_t TemplateArgumentCount() const;
+
+
+      virtual Type_Iterator TemplateArgument_Begin() const;
+      virtual Type_Iterator TemplateArgument_End() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rbegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_Rend() const;
 
 
       /**
@@ -456,6 +537,12 @@ namespace ROOT {
       virtual size_t TypeTemplateCount() const;
 
 
+      virtual TypeTemplate_Iterator TypeTemplate_Begin() const;
+      virtual TypeTemplate_Iterator TypeTemplate_End() const;
+      virtual Reverse_TypeTemplate_Iterator TypeTemplate_Rbegin() const;
+      virtual Reverse_TypeTemplate_Iterator TypeTemplate_Rend() const;
+
+
       /**
        * TypeInfo will return the c++ type_info object of the TypeNth
        * @return type_info object of TypeNth
@@ -490,9 +577,9 @@ namespace ROOT {
        * @param dm pointer to data MemberNth
        */
       virtual void AddDataMember( const Member & dm ) const;
-      virtual void AddDataMember( const char * Name,
-                                  const Type & TypeNth,
-                                  size_t Offset,
+      virtual void AddDataMember( const char * nam,
+                                  const Type & typ,
+                                  size_t offs,
                                   unsigned int modifiers = 0 ) const;
 
 
@@ -501,8 +588,8 @@ namespace ROOT {
        * @param fm pointer to function MemberNth
        */
       virtual void AddFunctionMember( const Member & fm ) const;
-      virtual void AddFunctionMember( const char * Name,
-                                      const Type & TypeNth,
+      virtual void AddFunctionMember( const char * nam,
+                                      const Type & typ,
                                       StubFunction stubFP,
                                       void * stubCtx = 0,
                                       const char * params = 0,
@@ -514,8 +601,8 @@ namespace ROOT {
        * @param sc pointer to Scope
        */
       virtual void AddSubScope( const Scope & sc ) const;
-      virtual void AddSubScope( const char * ScopeNth,
-                                TYPE ScopeType ) const;
+      virtual void AddSubScope( const char * scop,
+                                TYPE scopeTyp ) const;
 
 
       /**
@@ -523,10 +610,10 @@ namespace ROOT {
        * @param sc pointer to Type
        */
       virtual void AddSubType( const Type & ty ) const;
-      virtual void AddSubType( const char * TypeNth,
+      virtual void AddSubType( const char * typ,
                                size_t size,
-                               TYPE TypeType,
-                               const std::type_info & TypeInfo,
+                               TYPE typeTyp,
+                               const std::type_info & ti,
                                unsigned int modifiers ) const;
 
 
@@ -620,6 +707,35 @@ namespace ROOT {
 
 #include "Reflex/TypeTemplate.h"
 
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_Begin() const {
+//-------------------------------------------------------------------------------
+  return Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_End() const {
+//-------------------------------------------------------------------------------
+  return Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Base_Iterator();
+}
+
+
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeBase::DataMemberCount() const {
 //-------------------------------------------------------------------------------
@@ -628,9 +744,65 @@ inline size_t ROOT::Reflex::TypeBase::DataMemberCount() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_Begin() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_End() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeBase::FunctionMemberCount() const {
 //-------------------------------------------------------------------------------
   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_Begin() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_End() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();
 }
 
 
@@ -750,9 +922,93 @@ inline size_t ROOT::Reflex::TypeBase::MemberCount() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_Begin() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_End() const {
+//-------------------------------------------------------------------------------
+  return Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Member_Iterator();  
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeBase::MemberTemplateCount() const {
 //-------------------------------------------------------------------------------
   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_Begin() const {
+//-------------------------------------------------------------------------------
+  return MemberTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_End() const {
+//-------------------------------------------------------------------------------
+  return MemberTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_MemberTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_MemberTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::Parameter_Begin() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::Parameter_End() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::Parameter_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::Parameter_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
 }
 
 
@@ -771,9 +1027,65 @@ inline size_t ROOT::Reflex::TypeBase::SubScopeCount() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_Begin() const {
+//-------------------------------------------------------------------------------
+  return Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_End() const {
+//-------------------------------------------------------------------------------
+  return Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Scope_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeBase::SubTypeCount() const {
 //-------------------------------------------------------------------------------
   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_Begin() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_End() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
 }
 
 
@@ -785,9 +1097,30 @@ inline size_t ROOT::Reflex::TypeBase::TemplateArgumentCount() const {
 
 
 //-------------------------------------------------------------------------------
-inline const std::type_info & ROOT::Reflex::TypeBase::TypeInfo() const {
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-  return fTypeInfo;
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
 }
 
 
@@ -799,6 +1132,13 @@ inline ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::TemplateFamily() const
 
 
 //-------------------------------------------------------------------------------
+inline const std::type_info & ROOT::Reflex::TypeBase::TypeInfo() const {
+//-------------------------------------------------------------------------------
+  return fTypeInfo;
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TypeBase::TypeTemplateCount() const {
 //-------------------------------------------------------------------------------
   return 0;
@@ -806,9 +1146,37 @@ inline size_t ROOT::Reflex::TypeBase::TypeTemplateCount() const {
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::TypeTemplate_Begin() const {
+//-------------------------------------------------------------------------------
+  return TypeTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::TypeTemplate_End() const {
+//-------------------------------------------------------------------------------
+  return TypeTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::TypeTemplate_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_TypeTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::TypeTemplate_Rend() const {
+//-------------------------------------------------------------------------------
+  return Reverse_TypeTemplate_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
 inline void ROOT::Reflex::TypeBase::UpdateMembers() const {
 //-------------------------------------------------------------------------------
-  throw RuntimeError("This function can only be called on Class/Struct");
+  throw RuntimeError("Function UpdateMembers can only be called on Class/Struct");
 }
 
 
@@ -820,9 +1188,9 @@ inline void ROOT::Reflex::TypeBase::AddDataMember( const Member & /* dm */ ) con
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddDataMember( const char * /* Name */,
-                                                   const Type & /* TypeNth */,
-                                                   size_t /* Offset */,
+inline void ROOT::Reflex::TypeBase::AddDataMember( const char * /* nam */,
+                                                   const Type & /* typ */,
+                                                   size_t /* offs */,
                                                    unsigned int /* modifiers */ ) const {
 //-------------------------------------------------------------------------------
   throw RuntimeError("Function AddDataMember  not callable on this object");
@@ -837,8 +1205,8 @@ inline void ROOT::Reflex::TypeBase::AddFunctionMember( const Member & /* fm */ )
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddFunctionMember( const char * /* Name */,
-                                                       const Type & /* TypeNth */,
+inline void ROOT::Reflex::TypeBase::AddFunctionMember( const char * /* nam */,
+                                                       const Type & /* typ */,
                                                        StubFunction /* stubFP */,
                                                        void * /* stubCtx */,
                                                        const char * /* params */,
@@ -856,8 +1224,8 @@ inline void ROOT::Reflex::TypeBase::AddSubScope( const Scope & /* sc */ ) const 
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubScope( const char * /* ScopeNth */,
-                                                 TYPE /* ScopeType */ ) const {
+inline void ROOT::Reflex::TypeBase::AddSubScope( const char * /* scop */,
+                                                 TYPE /* scopeTyp */ ) const {
 //-------------------------------------------------------------------------------
   throw RuntimeError("Function AddSubScope not callable on this object");
 }
@@ -871,10 +1239,10 @@ inline void ROOT::Reflex::TypeBase::AddSubType( const Type & /* ty */ ) const {
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubType( const char * /* TypeNth */,
+inline void ROOT::Reflex::TypeBase::AddSubType( const char * /* typ */,
                                                 size_t /* size */,
-                                                TYPE /* TypeType */,
-                                                const std::type_info & /* TypeInfo */,
+                                                TYPE /* typeTyp */,
+                                                const std::type_info & /* ti */,
                                                 unsigned int /* modifiers */ ) const {
 //-------------------------------------------------------------------------------
   throw RuntimeError("Function AddSubType not callable on this object");

@@ -34,7 +34,7 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      TypeTemplate( TypeTemplateImpl * = 0 );
+      TypeTemplate( TypeTemplateImpl * tti = 0 );
 
 
       /** destructor */
@@ -128,9 +128,9 @@ namespace ROOT {
 #include "Reflex/TypeTemplateImpl.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate::TypeTemplate( TypeTemplateImpl * typeTemplateImpl )
+inline ROOT::Reflex::TypeTemplate::TypeTemplate( TypeTemplateImpl * tti )
 //------------------------------------------------------------------------------- 
-  : fTypeTemplateImpl( typeTemplateImpl ) {}
+  : fTypeTemplateImpl( tti ) {}
 
 
 //-------------------------------------------------------------------------------

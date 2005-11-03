@@ -33,8 +33,8 @@ namespace ROOT {
     public:    
 
       /** constructor */
-      FunctionBuilder( const Type & TypeNth,
-                       const char * Name,
+      FunctionBuilder( const Type & typ,
+                       const char * nam,
                        StubFunction stubFP,
                        void * stubCtx,
                        const char * params, 
@@ -74,8 +74,8 @@ namespace ROOT {
     public:
       
       /** constructor */
-      FunctionBuilderImpl( const char * Name, 
-                           const Type & TypeNth,
+      FunctionBuilderImpl( const char * nam, 
+                           const Type & typ,
                            StubFunction stubFP,
                            void * stubCtx,
                            const char * params, 
@@ -113,7 +113,7 @@ namespace ROOT {
     public:    
 
       /** constructor */
-      FunctionBuilderT( const char * Name,
+      FunctionBuilderT( const char * nam,
                         StubFunction stubFP,
                         void * stubCtx,
                         const char * params, 
@@ -173,18 +173,18 @@ ROOT::Reflex::FunctionBuilder::AddProperty( const char * key,
 
 //-------------------------------------------------------------------------------
 template < typename  F > 
-inline ROOT::Reflex::FunctionBuilderT<F>::FunctionBuilderT( const char * Name, 
+inline ROOT::Reflex::FunctionBuilderT<F>::FunctionBuilderT( const char * nam, 
                                                             StubFunction stubFP,
                                                             void * stubCtx,
                                                             const char * params, 
                                                             unsigned char modifiers )
 //-------------------------------------------------------------------------------
-  : fFunctionBuilderImpl( Name,
-                           FunctionDistiller<F>::Get(),
-                           stubFP,
-                           stubCtx,
-                           params,
-                           modifiers ) { }
+  : fFunctionBuilderImpl( nam,
+                          FunctionDistiller<F>::Get(),
+                          stubFP,
+                          stubCtx,
+                          params,
+                          modifiers ) { }
       
 
 //-------------------------------------------------------------------------------

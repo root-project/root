@@ -19,13 +19,13 @@
 #include "Class.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::DataMember::DataMember( const char *  Name,
-                                      const Type &  TypeNth,
-                                      size_t        Offset,
+ROOT::Reflex::DataMember::DataMember( const char *  nam,
+                                      const Type &  typ,
+                                      size_t        offs,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
-  : MemberBase ( Name, TypeNth, DATAMEMBER, modifiers ),
-    fOffset( Offset) { }
+  : MemberBase ( nam, typ, DATAMEMBER, modifiers ),
+    fOffset( offs ) { }
 
 
 //-------------------------------------------------------------------------------

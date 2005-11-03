@@ -31,7 +31,7 @@ namespace ROOT {
 
       /** default constructor */
       Enum( const char * enumType,
-            const std::type_info & TypeInfo );
+            const std::type_info & ti );
 
 
       /** destructor */
@@ -43,9 +43,9 @@ namespace ROOT {
        * @param dm pointer to data MemberNth
        */
       virtual void AddDataMember( const Member & dm ) const;
-      virtual void AddDataMember( const char * Name,
-                                  const Type & TypeNth,
-                                  size_t Offset,
+      virtual void AddDataMember( const char * nam,
+                                  const Type & typ,
+                                  size_t offs,
                                   unsigned int modifiers = 0 ) const;
 
 
@@ -54,14 +54,35 @@ namespace ROOT {
        * @param  nth data MemberNth
        * @return pointer to data MemberNth
        */
-      Member DataMemberNth( size_t nth ) const;
+      virtual Member DataMemberNth( size_t nth ) const;
+
+
+      /**
+       * DataMemberNth will return the MemberNth with Name
+       * @param  Name of data MemberNth
+       * @return data MemberNth
+       */
+      virtual Member DataMemberNth( const std::string & nam ) const;
 
 
       /**
        * DataMemberCount will return the number of data members of this ScopeNth
        * @return number of data members
        */
-      size_t DataMemberCount() const;
+      virtual size_t DataMemberCount() const;
+
+
+      virtual Member_Iterator DataMember_Begin() const;
+      virtual Member_Iterator DataMember_End() const;
+      virtual Reverse_Member_Iterator DataMember_Rbegin() const;
+      virtual Reverse_Member_Iterator DataMember_Rend() const;
+
+
+      /**
+       * DeclaringScope will return a pointer to the ScopeNth of this one
+       * @return pointer to declaring ScopeNth
+       */
+      virtual Scope DeclaringScope() const;
 
 
       /**
@@ -69,7 +90,8 @@ namespace ROOT {
        * @param  MemberNth Name
        * @return pointer to MemberNth
        */
-      Member MemberNth( const std::string & Name ) const;
+      virtual Member MemberNth( const std::string & nam,
+                             const Type & signature ) const;
 
 
       /**
@@ -77,14 +99,20 @@ namespace ROOT {
        * @param  nth MemberNth
        * @return pointer to nth MemberNth
        */
-      Member MemberNth( size_t nth ) const;
+      virtual Member MemberNth( size_t nth ) const;
 
 
       /**
        * MemberCount will return the number of members
        * @return number of members
        */
-      size_t MemberCount() const;
+      virtual size_t MemberCount() const;
+
+
+      virtual Member_Iterator Member_Begin() const;
+      virtual Member_Iterator Member_End() const;
+      virtual Reverse_Member_Iterator Member_Rbegin() const;
+      virtual Reverse_Member_Iterator Member_Rend() const;
 
 
       /**
@@ -92,13 +120,69 @@ namespace ROOT {
        * to this item
        * @return pointer to PropertyNth list
        */
-      PropertyList PropertyListGet() const;
+      virtual PropertyList PropertyListGet() const;
 
     }; // class Enum
   } //namespace Reflex
 } //namespace ROOT
 
 #include "Reflex/Member.h"
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Enum::DataMember_Begin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::DataMember_Begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Enum::DataMember_End() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::DataMember_End();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::DataMember_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::DataMember_Rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::DataMember_Rend() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::DataMember_Rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Enum::Member_Begin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::Member_Begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Enum::Member_End() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::Member_End();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::Member_Rbegin() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::Member_Rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Enum::Member_Rend() const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::Member_Rend();  
+}
+
 
 //-------------------------------------------------------------------------------
 inline void ROOT::Reflex::Enum::AddDataMember( const Member & dm ) const {
@@ -108,12 +192,12 @@ inline void ROOT::Reflex::Enum::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Enum::AddDataMember( const char * Name,
-                                               const Type & TypeNth,
-                                               size_t Offset,
+inline void ROOT::Reflex::Enum::AddDataMember( const char * nam,
+                                               const Type & typ,
+                                               size_t offs,
                                                unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  ScopeBase::AddDataMember(Name, TypeNth, Offset, modifiers);
+  ScopeBase::AddDataMember(nam, typ, offs, modifiers);
 }
 
 
@@ -125,6 +209,13 @@ inline ROOT::Reflex::Member ROOT::Reflex::Enum::DataMemberNth( size_t nth ) cons
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::DataMemberNth( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::DataMemberNth( nam );
+}
+
+
+//-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::Enum::DataMemberCount() const {
 //-------------------------------------------------------------------------------
   return ScopeBase::DataMemberCount();
@@ -132,9 +223,17 @@ inline size_t ROOT::Reflex::Enum::DataMemberCount() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Enum::MemberNth( const std::string & Name ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Enum::DeclaringScope() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::MemberNth( Name );
+  return ScopeBase::DeclaringScope();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::MemberNth( const std::string & nam,
+                                                           const Type & signature ) const {
+//-------------------------------------------------------------------------------
+  return ScopeBase::MemberNth( nam, signature );
 }
 
 

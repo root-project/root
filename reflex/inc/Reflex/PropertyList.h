@@ -140,7 +140,7 @@ namespace ROOT {
      * @return the stream
      */
     std::ostream & operator << ( std::ostream & s,
-				 const PropertyList & p );
+                                 const PropertyList & p );
 
   } //namespace Reflex
 } //namespace ROOT

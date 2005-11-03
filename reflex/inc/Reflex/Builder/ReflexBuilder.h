@@ -23,5 +23,6 @@
 #include "Reflex/Builder/FunctionBuilder.h"
 #include "Reflex/Builder/VariableBuilder.h"
 #include "Reflex/Builder/CollectionProxy.h"
+#include "Reflex/Builder/DictSelection.h"
 
 #endif // ROOT_Reflex_ReflexBuilder

@@ -47,25 +47,25 @@ namespace ROOT {
       /**
        * lesser than operator 
        */
-      bool operator < ( const Member & MemberNth ) const;
+      bool operator < ( const Member & rh ) const;
       
 
       /** 
        * equal operator 
        */
-      bool operator == ( const Member & MemberNth ) const;
+      bool operator == ( const Member & rh ) const;
 
 
       /**
        * inequal operator 
        */
-      bool operator != ( const Member & MemberNth ) const;
+      bool operator != ( const Member & rh ) const;
 
 
       /** 
        * assignment operator 
        */
-      Member & operator = ( const Member & MemberNth );
+      Member & operator = ( const Member & rh );
       
 
       /** 
@@ -79,8 +79,28 @@ namespace ROOT {
       ~Member();
 
 
-      /** Get the MemberNth value (as void*) */
-      Object Get( const Object & obj ) const;
+      /** 
+       * DeclaringScope will return the Scope which the MemberNth lives in
+       * (i.e. the same as the Type)
+       * @return the declaring Scope of the MemberNth
+       */
+      Scope DeclaringScope() const;
+
+
+      /** 
+       * DeclaringType will return the Type which the MemberNth lives in
+       * (i.e. the same as the Scope)
+       * @return the declaring Type of the MemberNth
+       */
+      Type DeclaringType() const;
+
+
+      /** Get a static MemberNth value */
+      Object Get() const;
+
+
+      /** Get the MemberNth value */
+      Object Get( const Object & obj) const;
 
 
       /** Invoke the function (if return TypeNth as void*) */
@@ -217,6 +237,7 @@ namespace ROOT {
       PropertyList PropertyListGet() const;
 
 
+      /** this function will be deprecated, use DeclaringScope instead */
       /** return the ScopeNth of the MemberNth */
       Scope ScopeGet() const;
 
@@ -229,7 +250,7 @@ namespace ROOT {
 
 
       /** Set the ScopeNth of the MemberNth */
-      void SetScope( const Scope & ScopeNth ) const;
+      void SetScope( const Scope & sc ) const;
 
 
       /** return a pointer to the context of the MemberNth */
@@ -284,37 +305,36 @@ namespace ROOT {
 #include "Reflex/PropertyList.h"
 #include "Reflex/Type.h"
 #include "Reflex/MemberTemplate.h"
-#include "Reflex/Object.h"
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Member::operator < ( const Member & MemberNth ) const {
+inline bool ROOT::Reflex::Member::operator < ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
-  if ( (*this) && MemberNth ) 
-    return ( TypeGet() < MemberNth.TypeGet() && Name() < MemberNth.Name());
+  if ( (*this) && rh ) 
+    return ( TypeGet() < rh.TypeGet() && Name() < rh.Name());
   return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Member::operator == ( const Member & MemberNth ) const {
+inline bool ROOT::Reflex::Member::operator == ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
-  if ( (*this) && MemberNth ) 
-    return ( TypeGet() == MemberNth.TypeGet() && Name() == MemberNth.Name() );
+  if ( (*this) && rh ) 
+    return ( TypeGet() == rh.TypeGet() && Name() == rh.Name() );
   return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Member::operator != ( const Member & MemberNth ) const {
+inline bool ROOT::Reflex::Member::operator != ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
-  return ! ( *this == MemberNth );
+  return ! ( *this == rh );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member & ROOT::Reflex::Member::operator = ( const Member & MemberNth ) {
+inline ROOT::Reflex::Member & ROOT::Reflex::Member::operator = ( const Member & rh ) {
 //-------------------------------------------------------------------------------
-  fMemberBase = MemberNth.fMemberBase;
+  fMemberBase = rh.fMemberBase;
   return * this;
 }
 
@@ -327,50 +347,18 @@ inline ROOT::Reflex::Member::operator bool () const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Object ROOT::Reflex::Member::Get( const Object & obj = Object()) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Member::DeclaringScope() const {
 //-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Get( obj );
-  return Object();
+  if ( fMemberBase ) return fMemberBase->DeclaringScope();
+  return Scope();
 }
 
 
-/*//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const Object & obj,
-                              const std::vector < Object > & paramList ) const {
 //-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
-  return Object();
-}
-*/
-
-
+inline ROOT::Reflex::Type ROOT::Reflex::Member::DeclaringType() const {
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const Object & obj,
-                              const std::vector < void * > & paramList ) const {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
-  return Object();
-}
-
-
-/*/-------------------------------------------------------------------------------
-inline ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const std::vector < Object > & paramList ) const {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( paramList );
-  return Object();
-}
-*/
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( paramList );
-  return Object();
+  if ( fMemberBase ) return fMemberBase->DeclaringScope();
+  return Type();
 }
 
 
@@ -606,27 +594,10 @@ inline ROOT::Reflex::Scope ROOT::Reflex::Member::ScopeGet() const {
 }
 
 
-/*/-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Member::Set( const Object & instance,
-                                       const Object & value ) const {
 //-------------------------------------------------------------------------------
-  if (fMemberBase ) fMemberBase->Set( instance, value );
-}
-*/
-
-
+inline void ROOT::Reflex::Member::SetScope( const Scope & sc ) const  {
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Member::Set( const Object & instance,
-                                       const void * value ) const {
-//-------------------------------------------------------------------------------
-  if (fMemberBase ) fMemberBase->Set( instance, value );
-}
-
-
-//-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Member::SetScope( const Scope & ScopeNth ) const  {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) fMemberBase->SetScope( ScopeNth );
+  if ( fMemberBase ) fMemberBase->SetScope( sc );
 }
 
 

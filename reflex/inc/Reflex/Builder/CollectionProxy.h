@@ -46,12 +46,12 @@ namespace stdext {     // Visual C++
 
 #if defined(_WIN32) 
   #if _MSC_VER<1300
-    #define TYPENAME
+    #define RFLX_TYPENAME
   #else
-    #define TYPENAME typename
+    #define RFLX_TYPENAME typename
   #endif
 #else
-  #define TYPENAME typename
+  #define RFLX_TYPENAME typename
 #endif
 
 namespace ROOT {
@@ -83,9 +83,9 @@ namespace ROOT {
 
     template <class T> struct CollType 
 #ifdef _KCC  // KAI compiler
-    : public Address<TYPENAME T::value_type&> 
+    : public Address<RFLX_TYPENAME T::value_type&> 
 #else 
-    : public Address<TYPENAME T::const_reference> 
+    : public Address<RFLX_TYPENAME T::const_reference> 
 #endif 
     {
       typedef T                               Cont_t;
@@ -116,9 +116,9 @@ namespace ROOT {
         e->Size  = c->Size();
         if ( 0 == e->Size ) return e->start = 0;
 #ifdef _KCC  // KAI compiler
-        TYPENAME T::value_type& ref = *(e->iter());
+        RFLX_TYPENAME T::value_type& ref = *(e->iter());
 #else
-        TYPENAME T::const_reference ref = *(e->iter());
+        RFLX_TYPENAME T::const_reference ref = *(e->iter());
 #endif
         return e->start = AddressGet(ref);
       }
@@ -129,9 +129,9 @@ namespace ROOT {
         // TODO: Need to find something for going backwards....
         if ( e->iter() == c->end() ) return 0;
 #ifdef _KCC  // KAI compiler
-        TYPENAME T::value_type& ref = *(e->iter());
+        RFLX_TYPENAME T::value_type& ref = *(e->iter());
 #else
-        TYPENAME T::const_reference ref = *(e->iter());
+        RFLX_TYPENAME T::const_reference ref = *(e->iter());
 #endif
         return AddressGet(ref);
       }
@@ -158,7 +158,7 @@ namespace ROOT {
           m->~Value_t();
 #else
         PCont_t  c = PCont_t(e->object);
-        TYPENAME T::allocator_type a = c->get_allocator();
+        RFLX_TYPENAME T::allocator_type a = c->get_allocator();
         for (size_t i=0; i < e->Size; ++i, ++m )
           a.destroy(m);
 #endif

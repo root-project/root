@@ -29,23 +29,23 @@
 #include "Enum.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::ScopeBase( const char * ScopeNth, 
-                                    TYPE ScopeType )
+ROOT::Reflex::ScopeBase::ScopeBase( const char * scope, 
+                                    TYPE scopeType )
 //-------------------------------------------------------------------------------
   : fMembers( Members() ),
     fDataMembers( Members() ),
     fFunctionMembers( Members() ),
     fScopeName( 0 ),
-    fScopeType( ScopeType ),
+    fScopeType( scopeType ),
     fDeclaringScope( Scope() ),
     fSubScopes( std::vector<Scope>() ),
-    fTypes( std::vector<Type>() ),
+    fSubTypes( std::vector<Type>() ),
     fTypeTemplates( std::vector<TypeTemplate>() ),
     fMemberTemplates( std::vector<MemberTemplate>() ),
     fPropertyList( PropertyList( new PropertyListImpl())),
-    fBasePosition( Tools::GetBasePosition( ScopeNth )) {
+    fBasePosition( Tools::GetBasePosition( scope )) {
 
-  std::string sname(ScopeNth);
+  std::string sname(scope);
 
   std::string declScope = "";
   std::string currScope = sname;
@@ -58,8 +58,8 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * ScopeNth,
   // Construct Scope
   Scope scopePtr = Scope::ByName(sname);
   if ( scopePtr.Id() == 0 ) { 
-    // create a new ScopeNth
-    fScopeName = new ScopeName(ScopeNth, this); 
+    // create a new Scope
+    fScopeName = new ScopeName(scope, this); 
   }
   else {
     fScopeName = (ScopeName*)scopePtr.Id();
@@ -68,11 +68,11 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * ScopeNth,
 
   Scope declScopePtr = Scope::ByName(declScope);
   if ( declScopePtr.Id() == 0 ) {
-    if ( ScopeType == NAMESPACE ) declScopePtr = (new Namespace( declScope.c_str() ))->ScopeGet();
+    if ( scopeType == NAMESPACE ) declScopePtr = (new Namespace( declScope.c_str() ))->ScopeGet();
     else                          declScopePtr = (new ScopeName( declScope.c_str(), 0 ))->ScopeGet();
   }
 
-  // Set declaring ScopeNth and sub-scopes
+  // Set declaring Scope and sub-scopes
   fDeclaringScope = declScopePtr; 
   if ( fDeclaringScope )  fDeclaringScope.AddSubScope( this->ScopeGet() );
 }
@@ -88,7 +88,7 @@ ROOT::Reflex::ScopeBase::ScopeBase()
     fScopeType( NAMESPACE ),
     fDeclaringScope( Scope::__NIRVANA__ ),
     fSubScopes( std::vector<Scope>()),
-    fTypes( std::vector<Type>()),
+    fSubTypes( std::vector<Type>()),
     fPropertyList( PropertyList() ),
     fBasePosition( 0 ) {
   fScopeName = new ScopeName("", this);
@@ -102,7 +102,7 @@ ROOT::Reflex::ScopeBase::~ScopeBase( ) {
   // Informing Scope that I am going away
   if ( fScopeName->fScopeBase == this ) fScopeName->fScopeBase = 0;
 
-  // Informing declaring ScopeNth that I am going to do away
+  // Informing declaring Scope that I am going to do away
   if ( fDeclaringScope ) {
     fDeclaringScope.RemoveSubScope(this->ScopeGet());
   }
@@ -119,10 +119,43 @@ ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Scope () const {
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Type() const {
+//-------------------------------------------------------------------------------
+  switch ( fScopeType ) {
+  case CLASS:
+  case TYPETEMPLATEINSTANCE:
+  case UNION:
+  case ENUM:
+    return *(dynamic_cast<const TypeBase*>(this));
+  default:
+    return Type();
+  }
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Base ROOT::Reflex::ScopeBase::BaseNth( size_t /* nth */ ) const {
+//-------------------------------------------------------------------------------
+  return Base();
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Member
 ROOT::Reflex::ScopeBase::DataMemberNth( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fDataMembers.size() ) return fDataMembers[ nth ];
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member
+ROOT::Reflex::ScopeBase::DataMemberNth( const std::string & nam ) const {
+//-------------------------------------------------------------------------------
+  for ( Members::const_iterator it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
+    if (it->Name() == nam) return (*it);
+  }
   return Member();
 }
 
@@ -139,6 +172,25 @@ ROOT::Reflex::Member
 ROOT::Reflex::ScopeBase::FunctionMemberNth( size_t nth ) const { 
 //-------------------------------------------------------------------------------
   if ( nth < fFunctionMembers.size() ) return fFunctionMembers[ nth ];
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member
+ROOT::Reflex::ScopeBase::FunctionMemberNth( const std::string & name,
+                                            const Type & signature ) const {
+//-------------------------------------------------------------------------------
+  for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
+    if (it->Name() == name) {
+      if (signature) {
+        if (signature == it->TypeGet()) return (*it);
+      }
+      else {
+        return (*it);
+      }
+    }
+  }
   return Member();
 }
 
@@ -173,10 +225,12 @@ size_t ROOT::Reflex::ScopeBase::MemberCount() const {
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member 
-ROOT::Reflex::ScopeBase::MemberNth( const std::string & Name ) const {
+ROOT::Reflex::ScopeBase::MemberNth( const std::string & name,
+                                    const Type & signature ) const {
 //-------------------------------------------------------------------------------
+  if (signature) return FunctionMemberNth(name, signature);
   for ( size_t i = 0; i < fMembers.size() ; i++ ) {
-    if ( fMembers[i].Name() == Name ) return fMembers[i];
+    if ( fMembers[i].Name() == name ) return fMembers[i];
   }
   return Member();
 }
@@ -244,7 +298,7 @@ std::string ROOT::Reflex::ScopeBase::ScopeTypeAsString() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeNth( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( nth < fTypes.size() ) { return fTypes[ nth ]; }
+  if ( nth < fSubTypes.size() ) { return fSubTypes[ nth ]; }
   return Type();
 }
 
@@ -252,7 +306,7 @@ ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeNth( size_t nth ) const {
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::ScopeBase::SubTypeCount() const {
 //-------------------------------------------------------------------------------
-  return fTypes.size();
+  return fSubTypes.size();
 }
 
 
@@ -295,12 +349,12 @@ void ROOT::Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddDataMember( const char * Name,
-                                             const Type & TypeNth,
-                                             size_t Offset,
+void ROOT::Reflex::ScopeBase::AddDataMember( const char * name,
+                                             const Type & type,
+                                             size_t offset,
                                              unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  AddDataMember(Member(new DataMember(Name, TypeNth, Offset, modifiers)));
+  AddDataMember(Member(new DataMember(name, type, offset, modifiers)));
 }
 
 
@@ -328,14 +382,14 @@ void ROOT::Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddFunctionMember( const char * Name,
-                                                 const Type & TypeNth,
+void ROOT::Reflex::ScopeBase::AddFunctionMember( const char * name,
+                                                 const Type & type,
                                                  StubFunction stubFP,
                                                  void * stubCtx,
                                                  const char * params,
                                                  unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  AddFunctionMember(Member(new FunctionMember(Name, TypeNth, stubFP, stubCtx, params, modifiers)));
+  AddFunctionMember(Member(new FunctionMember(name, type, stubFP, stubCtx, params, modifiers)));
 }
 
 
@@ -379,10 +433,10 @@ void ROOT::Reflex::ScopeBase::AddSubScope( const Scope & subscope ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubScope( const char * ScopeNth,
-                                           TYPE ScopeType ) const {
+void ROOT::Reflex::ScopeBase::AddSubScope( const char * scope,
+                                           TYPE scopeType ) const {
 //-------------------------------------------------------------------------------
-  AddSubScope(*(new ScopeBase( ScopeNth, ScopeType )));
+  AddSubScope(*(new ScopeBase( scope, scopeType )));
 }
 
 
@@ -402,27 +456,27 @@ void ROOT::Reflex::ScopeBase::RemoveSubScope( const Scope & subscope ) const {
 void ROOT::Reflex::ScopeBase::AddSubType( const Type & TypeNth ) const {
 //-------------------------------------------------------------------------------
   RemoveSubType(TypeNth);
-  fTypes.push_back(TypeNth);
+  fSubTypes.push_back(TypeNth);
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubType( const char * TypeNth,
+void ROOT::Reflex::ScopeBase::AddSubType( const char * type,
                                           size_t size,
-                                          TYPE TypeType,
+                                          TYPE typeType,
                                           const std::type_info & ti,
                                           unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
   TypeBase * tb = 0;
-  switch ( TypeType ) {
+  switch ( typeType ) {
   case CLASS:
-    tb = new Class(TypeNth,size,ti,modifiers,STRUCT);
+    tb = new Class(type,size,ti,modifiers,STRUCT);
     break;
   case STRUCT:
-    tb = new Class(TypeNth,size,ti,modifiers);
+    tb = new Class(type,size,ti,modifiers);
     break;
   case ENUM:
-    tb = new Enum(TypeNth,ti);
+    tb = new Enum(type,ti);
     break;
   case FUNCTION:
     break;
@@ -437,10 +491,10 @@ void ROOT::Reflex::ScopeBase::AddSubType( const char * TypeNth,
   case TYPEDEF:
     break;
   case UNION:
-    tb = new Union(TypeNth,size,ti); 
+    tb = new Union(type,size,ti); 
     break;
   default:
-    tb = new TypeBase( TypeNth, size, TypeType, ti );
+    tb = new TypeBase( type, size, typeType, ti );
   }
   if ( tb ) AddSubType( * tb );
 }
@@ -450,9 +504,9 @@ void ROOT::Reflex::ScopeBase::AddSubType( const char * TypeNth,
 void ROOT::Reflex::ScopeBase::RemoveSubType( const Type & TypeNth ) const {
 //-------------------------------------------------------------------------------
   std::vector< Type >::iterator it;
-  for ( it = fTypes.begin(); it != fTypes.end(); ++it) {
+  for ( it = fSubTypes.begin(); it != fSubTypes.end(); ++it) {
     if ( *it == TypeNth ) {
-      fTypes.erase(it); break;
+      fSubTypes.erase(it); break;
     }
   }
 }

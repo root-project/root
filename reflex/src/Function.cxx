@@ -14,14 +14,14 @@
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Function::Function( const Type & ReturnType,
+ROOT::Reflex::Function::Function( const Type & retType,
                                   std::vector< Type > parameters,
-                                  const std::type_info & TypeInfo,
+                                  const std::type_info & ti,
                                   TYPE functionType) 
 //-------------------------------------------------------------------------------
-  : TypeBase( BuildTypeName(ReturnType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, TypeInfo ),
+  : TypeBase( BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti ),
     fParameters(parameters),
-    fReturnType(ReturnType),
+    fReturnType(retType),
     fModifiers(0) { }
 
 

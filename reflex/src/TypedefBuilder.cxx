@@ -15,10 +15,10 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * TypeNth,
+ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
                                                       const Type & typedefType ) {
 //-------------------------------------------------------------------------------
-  fTypedef = new Typedef( TypeNth, typedefType );
+  fTypedef = new Typedef( typ, typedefType );
 }
 
 

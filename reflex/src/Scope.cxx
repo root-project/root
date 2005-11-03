@@ -16,6 +16,7 @@
 #include "Reflex/Type.h"
 #include "Reflex/TypeTemplate.h"
 #include "Reflex/MemberTemplate.h"
+#include "Reflex/Base.h"
 
 #include "Reflex/Tools.h"
 #include "Reflex/Tools.h"
@@ -23,9 +24,34 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & Name ) {
+ROOT::Reflex::Scope::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
-  return ScopeName::ByName( Name );
+  if ( * this ) return *(fScopeName->fScopeBase);
+  return Type();
+}
+
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Base ROOT::Reflex::Scope::BaseNth( size_t nth ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fScopeName->fScopeBase->BaseNth( nth );
+  return Base();
+}
+
+
+//-------------------------------------------------------------------------------
+size_t ROOT::Reflex::Scope::BaseCount() const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fScopeName->fScopeBase->BaseCount();
+  return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & name ) {
+//-------------------------------------------------------------------------------
+  return ScopeName::ByName( name );
 }
 
 
@@ -33,6 +59,14 @@ ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & Name ) {
 ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberNth( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( * this ) return fScopeName->fScopeBase->DataMemberNth( nth ); 
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberNth( const std::string & name ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fScopeName->fScopeBase->DataMemberNth( name ); 
   return Member();
 }
 
@@ -54,6 +88,23 @@ ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( size_t nth ) const 
 
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( const std::string & name ) const {
+//------------------------------------------------------------------------------- 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberNth( name, Type() ); 
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( const std::string & name,
+                                                             const Type & signature ) const {
+//------------------------------------------------------------------------------- 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberNth( name, signature ); 
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::FunctionMemberCount() const {
 //-------------------------------------------------------------------------------
   if ( * this ) return fScopeName->fScopeBase->FunctionMemberCount(); 
@@ -63,9 +114,19 @@ size_t ROOT::Reflex::Scope::FunctionMemberCount() const {
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member 
-ROOT::Reflex::Scope::MemberNth( const std::string & Name ) const {
+ROOT::Reflex::Scope::MemberNth( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberNth(Name); 
+  if ( * this ) return fScopeName->fScopeBase->MemberNth(name, Type()); 
+  return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member 
+ROOT::Reflex::Scope::MemberNth( const std::string & name,
+                                const Type & signature ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fScopeName->fScopeBase->MemberNth(name, signature); 
   return Member();
 }
 
@@ -178,15 +239,15 @@ void ROOT::Reflex::Scope::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Scope::AddDataMember( const char * Name,
-                                         const Type & TypeNth,
-                                         size_t Offset,
+void ROOT::Reflex::Scope::AddDataMember( const char * name,
+                                         const Type & type,
+                                         size_t offset,
                                          unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddDataMember( Name, 
-                                                         TypeNth, 
-                                                         Offset, 
-                                                         modifiers );
+  if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
+                                                       type, 
+                                                       offset, 
+                                                       modifiers );
 }
 
 
@@ -205,19 +266,19 @@ void ROOT::Reflex::Scope::AddFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Scope::AddFunctionMember( const char * Name,
-                                             const Type & TypeNth,
+void ROOT::Reflex::Scope::AddFunctionMember( const char * nam,
+                                             const Type & typ,
                                              StubFunction stubFP,
                                              void * stubCtx,
                                              const char * params,
                                              unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddFunctionMember( Name, 
-                                                             TypeNth, 
-                                                             stubFP, 
-                                                             stubCtx, 
-                                                             params, 
-                                                             modifiers );
+  if ( * this ) fScopeName->fScopeBase->AddFunctionMember( nam, 
+                                                           typ, 
+                                                           stubFP, 
+                                                           stubCtx, 
+                                                           params, 
+                                                           modifiers );
 }
 
 
@@ -236,17 +297,17 @@ void ROOT::Reflex::Scope::AddSubType( const Type & ty ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Scope::AddSubType( const char * TypeNth,
+void ROOT::Reflex::Scope::AddSubType( const char * type,
                                       size_t size,
-                                      TYPE TypeType,
-                                      const std::type_info & TypeInfo,
+                                      TYPE typeType,
+                                      const std::type_info & typeInfo,
                                       unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddSubType( TypeNth, 
-                                                      size, 
-                                                      TypeType, 
-                                                      TypeInfo, 
-                                                      modifiers );
+  if ( * this ) fScopeName->fScopeBase->AddSubType( type, 
+                                                    size, 
+                                                    typeType, 
+                                                    typeInfo, 
+                                                    modifiers );
 }
 
 

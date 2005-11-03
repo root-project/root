@@ -19,15 +19,15 @@
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionMember::FunctionMember( const char *  Name,
-                                              const Type &  TypeNth,
+ROOT::Reflex::FunctionMember::FunctionMember( const char *  nam,
+                                              const Type &  typ,
                                               StubFunction  stubFP,
                                               void*         stubCtx,
                                               const char *  parameters,
                                               unsigned int  modifiers,
-                                              TYPE MemberType )
+                                              TYPE          memType )
 //-------------------------------------------------------------------------------
-  : MemberBase( Name, TypeNth, MemberType, modifiers ),
+  : MemberBase( nam, typ, memType, modifiers ),
     fStubFP( stubFP ), 
     fStubCtx( stubCtx ),
     fParameterNames( std::vector<std::string>()),
@@ -37,7 +37,7 @@ ROOT::Reflex::FunctionMember::FunctionMember( const char *  Name,
   // Obtain the names and default values of the function parameters
   // The "real" number of parameters is obtained from the function TypeNth
   size_t numDefaultParams = 0;
-  size_t type_npar = TypeNth.ParameterCount();
+  size_t type_npar = typ.ParameterCount();
   std::vector<std::string> params;
   if ( parameters ) Tools::StringSplit(params, parameters, ";");
   size_t npar = std::min(type_npar,params.size());

@@ -37,8 +37,8 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      ScopeName( const char * Name, 
-                 ScopeBase * ScopeBaseNth );
+      ScopeName( const char * name, 
+                 ScopeBase * scopeBase );
 
 
       /**
@@ -47,7 +47,7 @@ namespace ROOT {
        * @param  Name fully qualified Name of ScopeNth
        * @return pointer to ScopeNth or 0 if none is found
        */
-      static Scope ByName( const std::string & Name );
+      static Scope ByName( const std::string & name );
 
 
       /**
@@ -87,6 +87,12 @@ namespace ROOT {
        */
       static size_t ScopeCount();
 
+
+      static Scope_Iterator Scope_Begin();
+      static Scope_Iterator Scope_End();
+      static Reverse_Scope_Iterator Scope_Rbegin();
+      static Reverse_Scope_Iterator Scope_Rend();
+
     private:
 
       /** destructor */
@@ -124,4 +130,4 @@ inline const char * ROOT::Reflex::ScopeName::Name_c_str() const {
   return fName.c_str();
 }
 
-#endif // ROOT_Reflex_ScopeName
+#endif //ROOT_Reflex_ScopeName

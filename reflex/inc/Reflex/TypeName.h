@@ -38,8 +38,8 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      TypeName( const char * Name,
-                TypeBase * TypeBaseNth,
+      TypeName( const char * nnam,
+                TypeBase * typeBas,
                 const std::type_info * ti = 0 );
 
       
@@ -96,6 +96,12 @@ namespace ROOT {
        * @return number of currently defined types
        */
       static size_t TypeCount();
+
+
+      static Type_Iterator Type_Begin();
+      static Type_Iterator Type_End();
+      static Reverse_Type_Iterator Type_Rbegin();
+      static Reverse_Type_Iterator Type_Rend();
 
     private:
 

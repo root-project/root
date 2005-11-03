@@ -36,7 +36,7 @@ namespace ROOT {
 
       /** default constructor */
       MemberTemplateImpl( const std::string & templateName,
-                          const Scope & ScopeNth,
+                          const Scope & scope,
                           std::vector < std::string > parameterNames, 
                           std::vector < std::string > parameterDefaults = std::vector<std::string>());
 
@@ -158,12 +158,12 @@ namespace ROOT {
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templateName,
-                                                             const Scope & ScopeNth,
+                                                             const Scope & scope,
                                                              std::vector < std::string > parameterNames,
                                                              std::vector < std::string > parameterDefaults )
 //------------------------------------------------------------------------------- 
   : fTemplateName( templateName ),
-    fScope( ScopeNth ),
+    fScope( scope ),
     fTemplateInstances( std::vector < Member >() ),
     fParameterNames( parameterNames ),
     fParameterDefaults( parameterDefaults ),

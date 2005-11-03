@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.1 2005/06/23 10:21:06 brun Exp $
+// @(#)root/reflex:$Name:$:$Id:$
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -36,7 +36,7 @@ namespace ROOT {
     class Any {
 
       friend std::ostream& operator << ( std::ostream&, 
-					 const Any& );
+                                         const Any& );
 
     public: 
       
@@ -180,9 +180,9 @@ namespace ROOT {
 
     /** stream operator */
     std::ostream& operator << ( std::ostream&, 
-				const Any& );
+                                const Any& );
 
   } // namespace Reflex
 } // namespace ROOT
 
-#endif // ROOT_Reflex_Boostany
+#endif // ROOT_Reflex_Any

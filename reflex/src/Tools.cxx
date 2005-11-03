@@ -96,51 +96,51 @@ std::vector<std::string> ROOT::Reflex::Tools::GenTemplateArgVec( const std::stri
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & Name ) {
+size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
 //-------------------------------------------------------------------------------
-  // remove the template part of the Name <...>
+  // remove the template part of the name <...>
   int bc = 0;
   int i = 0;
-  for ( i = Name.size()-1; i >= 0; --i) {
-    switch (Name[i]) {
+  for ( i = name.size()-1; i >= 0; --i) {
+    switch (name[i]) {
       case '>' : bc++; break;
       case '<' : bc--; break;
     }
     if ( bc == 0 ) break;
   }
-  size_t pos = Name.rfind("::", i );
+  size_t pos = name.rfind("::", i );
   if ( pos != std::string::npos ) return pos+2;
   else                            return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetScopeName( const std::string& Name ){
+std::string ROOT::Reflex::Tools::GetScopeName( const std::string & name ){
 //-------------------------------------------------------------------------------
-  return splitScopedName( Name, true );
+  return splitScopedName( name, true );
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetBaseName( const std::string & Name ) {
+std::string ROOT::Reflex::Tools::GetBaseName( const std::string & name ) {
 //-------------------------------------------------------------------------------
-  return splitScopedName( Name, false );
+  return splitScopedName( name, false );
 }
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::Tools::IsTemplated(const char * Name ) {
+bool ROOT::Reflex::Tools::IsTemplated(const char * name ) {
 //-------------------------------------------------------------------------------
-  for (size_t i = strlen(Name)-1; i > 0; --i) {
-    if (( Name[i] == '>' ) && ( strchr(Name,'<') != 0 )) return true;
-    else if ( Name[i] == ' ') break;
+  for (size_t i = strlen(name)-1; i > 0; --i) {
+    if (( name[i] == '>' ) && ( strchr(name,'<') != 0 )) return true;
+    else if ( name[i] == ' ') break;
     else return false;
   }
   return false;
   /* alpha 
-  size_t i = strlen(Name)-1;
-  while (Name[i] == ' ') --i;
-  if (( Name[i] == '>' ) && ( strchr(Name,'<') != 0 )) return true;
+  size_t i = strlen(name)-1;
+  while (name[i] == ' ') --i;
+  if (( name[i] == '>' ) && ( strchr(name,'<') != 0 )) return true;
   return false;
   */
 }
@@ -200,12 +200,45 @@ std::string ROOT::Reflex::Tools::Demangle( const std::type_info & ti ) {
   // abi::Demangle would return "std::string" instead
   if ( mangled == "Ss" ) return "std::basic_string<char>";
 
-#if __GNUC__ <= 3 && __GNUC_MINOR__ <= 2 || defined(__APPLE__)
+#if __GNUC__ <= 3 && __GNUC_MINOR__ <= 3
   // Function types are not decoded at all. We are an extra 'P' to convert it to a pointer
   // and remove it at the end.
   if ( mangled[0] == 'F' ) {
     mangled.insert(0,"P");
     remove_additional_pointer = true;
+  }
+#elif __GNUC__ >= 4
+  // From gcc 4.0 on the fundamental types are not demangled anymore by the dynamic demangler
+  if (mangled.length() == 1) {
+    switch ( mangled[0] ) {
+    case 'a': return "signed char";        break;
+    case 'b': return "bool";               break;
+    case 'c': return "char";               break;
+    case 'd': return "double";             break;
+    case 'e': return "long double";        break;
+    case 'f': return "float";              break;
+    case 'g': return "__float128";         break;
+    case 'h': return "unsigned char";      break;
+    case 'i': return "int";                break;
+    case 'j': return "unsigned int";       break;
+  //case 'k': return "";                   break;
+    case 'l': return "long";               break;
+    case 'm': return "unsigned long";      break;
+    case 'n': return "__int128";           break;
+    case 'o': return "unsigned __int128";  break;
+  //case 'p': return "";                   break;
+  //case 'q': return "";                   break;
+  //case 'r': return "";                   break;
+    case 's': return "short";              break;
+    case 't': return "unsigned short";     break;
+  //case 'u': return "";                   break;
+    case 'v': return "void";               break;
+    case 'w': return "wchar_t";            break;
+    case 'x': return "long long";          break;
+    case 'y': return "unsigned long long"; break;
+    case 'z': return "...";                break;
+    default:                               break;
+    }
   }
 #endif
   char * c_demangled = abi::__cxa_demangle( mangled.c_str(), 0, 0, & status );
@@ -289,18 +322,18 @@ void ROOT::Reflex::Tools::StringStrip( std::string & str ) {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetTemplateArguments( const char * Name ) {
+std::string ROOT::Reflex::Tools::GetTemplateArguments( const char * name ) {
 //-------------------------------------------------------------------------------
-  std::string baseName = GetBaseName(Name);
+  std::string baseName = GetBaseName(name);
   return baseName.substr(baseName.find('<'));
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Tools::GetTemplateName( const char * Name ) {
+std::string ROOT::Reflex::Tools::GetTemplateName( const char * name ) {
 //-------------------------------------------------------------------------------
-  std::string scopeName = GetScopeName( Name );
-  std::string baseName = GetBaseName( Name );
+  std::string scopeName = GetScopeName( name );
+  std::string baseName = GetBaseName( name );
   std::string templateName = baseName.substr(0, baseName.find('<'));
   if ( scopeName.length()) return scopeName + "::" + templateName;
   

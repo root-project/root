@@ -35,9 +35,9 @@ namespace ROOT {
     public:
 
       /** default constructor */
-      MemberBase( const char *   Name,
-                  const Type &   TypeNth,
-                  TYPE           MemberType,
+      MemberBase( const char *   name,
+                  const Type &   type,
+                  TYPE           memberType,
                   unsigned int   modifiers );
 
 
@@ -49,6 +49,22 @@ namespace ROOT {
        * operator Member will return the MemberNth object of this MemberNth BaseNth
        */
       operator Member () const;
+
+
+      /** 
+       * DeclaringScope will return the Scope which the MemberNth lives in
+       * (i.e. the same as the Type)
+       * @return the declaring Scope of the MemberNth
+       */
+      Scope DeclaringScope() const;
+
+
+      /** 
+       * DeclaringType will return the Type which the MemberNth lives in
+       * (i.e. the same as the Scope)
+       * @return the declaring Type of the MemberNth
+       */
+      Type DeclaringType() const;
 
 
       /** Get the MemberNth value (as void*) */
@@ -189,6 +205,7 @@ namespace ROOT {
       PropertyList PropertyListGet() const;
 
 
+      /** this function will be deprecated, use DeclaringScope instead */
       /** return the ScopeNth of the MemberNth */
       Scope ScopeGet() const;
 
@@ -201,7 +218,7 @@ namespace ROOT {
 
 
       /** Set the ScopeNth of the MemberNth */
-      void SetScope( const Scope & ScopeNth ) const;
+      void SetScope( const Scope & scope ) const;
 
 
       /** return the context of the MemberNth */
@@ -305,6 +322,7 @@ namespace ROOT {
 
 #include "Reflex/Object.h"
 #include "Reflex/MemberTemplate.h"
+
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Object ROOT::Reflex::MemberBase::Get( const Object & /* obj */ ) const {
@@ -549,9 +567,9 @@ inline void ROOT::Reflex::MemberBase::Set( const Object & /* instance */,
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::MemberBase::SetScope( const Scope & ScopeNth ) const {
+inline void ROOT::Reflex::MemberBase::SetScope( const Scope & scope ) const {
 //-------------------------------------------------------------------------------
-  fScope = ScopeNth;
+  fScope = scope;
 }
 
 

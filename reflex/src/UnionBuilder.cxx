@@ -18,22 +18,22 @@
 #include "Union.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * Name,
+ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
                                                   size_t size,
                                                   const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
-  fUnion = new Union( Name, size, ti );
+  fUnion = new Union( nam, size, ti );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * Name,
-                                              const Type & TypeNth ) {
+void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
+                                              const Type & typ ) {
 //-------------------------------------------------------------------------------
-  fLastMember = Member(new DataMember( Name,
-                                        TypeNth,
-                                        0,
-                                        0 ));
+  fLastMember = Member(new DataMember( nam,
+                                       typ,
+                                       0,
+                                       0 ));
   fUnion->AddDataMember( fLastMember );
 }
 

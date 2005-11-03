@@ -22,7 +22,7 @@
 
 //-------------------------------------------------------------------------------
 typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::ScopeName * > Name2Scope;
-typedef std::vector< ROOT::Reflex::ScopeName * > ScopeVec;
+typedef std::vector< ROOT::Reflex::Scope > ScopeVec;
 
 //-------------------------------------------------------------------------------
 Name2Scope & sScopes() {
@@ -41,13 +41,13 @@ ScopeVec & sScopeVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeName::ScopeName( const char * Name,
-                                    ScopeBase * ScopeBaseNth ) 
+ROOT::Reflex::ScopeName::ScopeName( const char * name,
+                                    ScopeBase * scopeBase ) 
 //-------------------------------------------------------------------------------
-  : fName(Name),
-    fScopeBase(ScopeBaseNth) {
+  : fName(name),
+    fScopeBase(scopeBase) {
       sScopes() [ fName.c_str() ] = this;
-      sScopeVec().push_back( this );
+      sScopeVec().push_back(Scope(this));
       //---Build recursively the declaring scopeNames
       if( fName != "" ) {
         std::string decl_name = Tools::GetScopeName(fName);
@@ -63,9 +63,9 @@ ROOT::Reflex::ScopeName::~ScopeName() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & Name ) {
+ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
-  Name2Scope::iterator it = sScopes().find(Name.c_str());
+  Name2Scope::iterator it = sScopes().find(name.c_str());
   if (it != sScopes().end() ) return Scope( it->second );
   else                        return Scope();
 }
@@ -81,7 +81,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeGet() const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeNth( size_t nth ) {
 //-------------------------------------------------------------------------------
-  if ( nth < sScopeVec().size()) return Scope(sScopeVec()[nth]);
+  if ( nth < sScopeVec().size()) return sScopeVec()[nth];
   return Scope();
 }
 
@@ -91,3 +91,33 @@ size_t ROOT::Reflex::ScopeName::ScopeCount() {
 //-------------------------------------------------------------------------------
   return sScopeVec().size();
 }
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_Begin() {
+//-------------------------------------------------------------------------------
+  return sScopeVec().begin();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_End() {
+//-------------------------------------------------------------------------------
+  return sScopeVec().end();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_Rbegin() {
+//-------------------------------------------------------------------------------
+  return sScopeVec().rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_Rend() {
+//-------------------------------------------------------------------------------
+  return sScopeVec().rend();
+}
+
+

@@ -34,7 +34,7 @@ namespace ROOT{
     public:
 
       /** constructor */
-      UnionBuilderImpl( const char * Name,
+      UnionBuilderImpl( const char * nam,
                         size_t size,
                         const std::type_info & ti );
 
@@ -47,8 +47,8 @@ namespace ROOT{
        * @param Name the Name of the union item
        * @param TypeNth the TypeNth of the union item
        */
-      void AddItem( const char * Name,
-                    const Type & TypeNth );
+      void AddItem( const char * nam,
+                    const Type & typ );
 
 
       /** 
@@ -101,7 +101,7 @@ namespace ROOT{
 
 
       /** constructor */
-      UnionBuilder(const char * Name );
+      UnionBuilder(const char * nam );
 
       
       /** destructor */
@@ -115,7 +115,7 @@ namespace ROOT{
        * @return a reference to the UnionBuilder
        */
       template < typename U > 
-        UnionBuilder & AddItem( const char * Name );
+        UnionBuilder & AddItem( const char * nam );
  
 
       /**
@@ -124,8 +124,8 @@ namespace ROOT{
        * @param TypeNth the TypeNth of the union item
        * @return a reference to the UnionBuilder
        */
-      UnionBuilder & AddItem( const char * Name,
-                              const char * TypeNth );
+      UnionBuilder & AddItem( const char * nam,
+                              const char * typ );
 
       
       /** 
@@ -161,19 +161,19 @@ inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder()
 
 //-------------------------------------------------------------------------------
 template < typename T > 
-inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( const char * Name )
+inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( const char * nam )
 //-------------------------------------------------------------------------------
-  : fUnionBuilderImpl( Name,
-                        sizeof(T),
-                        typeid(T)) {}
+  : fUnionBuilderImpl( nam,
+                       sizeof(T),
+                       typeid(T)) {}
 
 
 //-------------------------------------------------------------------------------
 template < typename T > template < typename U > 
 inline ROOT::Reflex::UnionBuilder<T> &
-ROOT::Reflex::UnionBuilder<T>::AddItem( const char * Name ) {
+ROOT::Reflex::UnionBuilder<T>::AddItem( const char * nam ) {
 //-------------------------------------------------------------------------------
-  fUnionBuilderImpl.AddItem( Name, TypeDistiller<U>::Get() );
+  fUnionBuilderImpl.AddItem( nam, TypeDistiller<U>::Get() );
   return * this;
 }
                                  
@@ -181,10 +181,10 @@ ROOT::Reflex::UnionBuilder<T>::AddItem( const char * Name ) {
 //-------------------------------------------------------------------------------
 template < typename T > 
 inline ROOT::Reflex::UnionBuilder<T> &
-ROOT::Reflex::UnionBuilder<T>::AddItem( const char * Name,
-                                        const char * TypeNth ) {
+ROOT::Reflex::UnionBuilder<T>::AddItem( const char * nam,
+                                        const char * typ ) {
 //-------------------------------------------------------------------------------
-  fUnionBuilderImpl.AddItem( Name, TypeBuilder(TypeNth));
+  fUnionBuilderImpl.AddItem( nam, TypeBuilder( typ ));
   return * this;
 }
 

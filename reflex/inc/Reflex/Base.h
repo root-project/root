@@ -28,18 +28,18 @@ namespace ROOT {
      * @ingroup Ref
      */
     class Base {
-
+  
       friend class Class;
 
     public:
-
+      
       /** default constructor */
       Base();
 
 
       /** constructor */
       Base( const Type &   baseType,
-            OffsetFunction OffsetFP,
+            OffsetFunction offsetFP,
             unsigned int   modifiers = 0 );
 
 
