@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.220 2005/10/20 19:24:04 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.221 2005/11/01 21:10:23 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2922,10 +2922,18 @@ void WritePointersSTL(G__ClassInfo &cl)
    if (version == 0) return;
    if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) return;
 
+
+   // We also need to look at the base classes.
+   G__BaseClassInfo base(cl);
+   while (base.Next()) {
+      int k = IsSTLContainer(base);
+      if (k!=0) {
+         RStl::inst().GenerateTClassFor( base.Name() );
+      }
+   }
+
+   // Look at the data members
    G__DataMemberInfo m(cl);
-
-
-
    while (m.Next()) {
 
       if ((m.Property() & G__BIT_ISSTATIC)) continue;
