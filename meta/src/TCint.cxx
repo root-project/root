@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.108 2005/09/29 15:43:46 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.109 2005/11/03 15:37:41 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -988,6 +988,22 @@ Int_t TCint::LoadLibraryMap()
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
 
+      // load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.)
+      TString ldpath = gSystem->GetDynamicPath();
+      TObjArray *a = ldpath.Tokenize(":");
+      a->Sort();
+      TString p;
+      for (Int_t i = 0; i < a->GetEntries(); i++) {
+         if (p == ((TObjString*)a->At(i))->GetString() + "/rootmap")
+            continue;  // skip already seen directories
+         p = ((TObjString*)a->At(i))->GetString() + "/rootmap";
+         if (!gSystem->AccessPathName(p, kReadPermission)) {
+            if (gDebug > 1)
+               Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
+            fMapfile->ReadFile(p, kEnvGlobal);
+         }
+      }
+
       if (!fMapfile->GetTable()->GetEntries()) {
          Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
                "found. ROOT not properly installed.");
@@ -1039,8 +1055,7 @@ Int_t TCint::LoadLibraryMap()
          }
          G__set_class_autoloading_table((char*)cls.Data(), lib);
          if (gDebug > 0)
-            printf("<TCint::LoadLibraryMap>: adding class %s in lib %s\n",
-                   cls.Data(), lib);
+            Info("LoadLibraryMap", "adding class %s in lib %s", cls.Data(), lib);
          delete tokens;
       }
    }
