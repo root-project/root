@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.205 2005/10/26 15:34:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.206 2005/11/01 11:31:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
+#include "TObjString.h"
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 
@@ -5327,14 +5328,30 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 {
    // Create/obtain handle to 3D viewer. Valid types are:
    //    'pad' - pad drawing via TViewer3DPad
-   //    'x3d' - X3D viewer (not supported on Windows)
-   //    'ogl' - OpenGL
-   //
-   // If type passed is null or unrecognised type then we return the current 
-   // viewer object (if one) and revert to pad by default if none.
-   // Valid type specified?
-   if (!type || !type[0] ||
-       (!strstr(type,"pad") && !strstr(type,"x3d") && !strstr(type,"ogl"))) {
+   //    any others registered with plugin manager supporting TVirtualViewer3D
+   // If an invalid/null type is requested then the current viewer is returned
+   // (if any), otherwise a default 'pad' type is returned
+   Bool_t validType = kFALSE;
+   if (type && type[0]) {
+      // Extract plugins types supporting TVirtualViewer3D - cannot be done
+      // directly with plugin manager at present
+      TString pluginStr = gEnv->GetValue("Plugin.TVirtualViewer3D","");
+      TObjArray *pluginTypes = pluginStr.Tokenize(" ");
+      
+      // Each plugin has 4 entries, 'type' (URI in plugin manager terminology) is zeroth
+      Int_t i = 0;
+      while (i < pluginTypes->GetSize() && !validType) {
+         TObjString * entry = dynamic_cast<TObjString *>(pluginTypes->At(i));
+         if (entry && entry->String().CompareTo(type) == 0) {
+            validType = kTRUE;
+         }
+         i += 4;
+      }
+      delete pluginTypes;
+   }
+
+   // Invalid/null type requested?
+   if (!validType) {
       // Return current viewer if there is one
       if (fViewer3D) {
          return fViewer3D;
@@ -5355,7 +5372,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
       newViewer = TVirtualViewer3D::Viewer3D(this,type);
 
       if (!newViewer) {
-         Error("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
+         Warning("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
 
          // Return the existing viewer
          return fViewer3D;
