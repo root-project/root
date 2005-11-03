@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.2 2003/03/21 14:53:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.3 2005/09/05 10:02:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimitDataSource
@@ -8,7 +8,8 @@
 #include "TObjArray.h"
 #endif
 
-class TH1D;
+class TH1;
+class TVectorD;
 
 //_______________________________________________________________________
 //
@@ -25,9 +26,10 @@ class TLimitDataSource {
 public:
         TLimitDataSource();
         virtual ~TLimitDataSource() {}
-        TLimitDataSource(TH1D* s,TH1D* b,TH1D* d);
-        virtual void AddChannel(TH1D*,TH1D*,TH1D*);
-        virtual void AddChannel(TH1D*,TH1D*,TH1D*,TH1D*, TH1D*, TObjArray*);
+        TLimitDataSource(TH1* s,TH1* b,TH1* d);
+        TLimitDataSource(TH1* s,TH1* b,TH1* d, TVectorD* es,TVectorD* eb,TObjArray* names);
+        virtual void AddChannel(TH1*,TH1*,TH1*);
+        virtual void AddChannel(TH1*,TH1*,TH1*,TVectorD*, TVectorD*, TObjArray*);
         inline virtual TObjArray* GetSignal() { return &fSignal;}
         inline virtual TObjArray* GetBackground() { return &fBackground;}
         inline virtual TObjArray* GetCandidates() { return &fCandidates;}
@@ -44,7 +46,7 @@ private:
         TObjArray fErrorOnBackground; //packed error sources for background
         TObjArray fIds;               //packed IDs for the different error sources
         // some dummy objects that the class will use and delete
-        TObjArray fDummyTH1D;         //array of dummy object (used for bookeeping)
+        TObjArray fDummyTA;         //array of dummy object (used for bookeeping)
         TObjArray fDummyIds;          //array of dummy object (used for bookeeping)
 
   ClassDef(TLimitDataSource, 2 ) // input for TLimit routines

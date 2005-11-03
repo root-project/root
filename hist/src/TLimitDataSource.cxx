@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.3 2003/03/21 14:53:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.4 2004/01/27 13:41:53 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -11,6 +11,7 @@
 
 #include "TLimitDataSource.h"
 #include "TH1.h"
+#include "TVectorD.h"
 #include "TObjString.h"
 #include "TRandom3.h"
 
@@ -19,50 +20,58 @@ ClassImp(TLimitDataSource)
 TLimitDataSource::TLimitDataSource() 
 {
    // Default constructor
-   fDummyTH1D.SetOwner();
+   fDummyTA.SetOwner();
    fDummyIds.SetOwner();
 }
 
-TLimitDataSource::TLimitDataSource(TH1D * s, TH1D * b, TH1D * d) 
+TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d) 
 {
    // Another constructor, directly adds one channel
    // with signal, background and data given as input.
-   fDummyTH1D.SetOwner();
+   fDummyTA.SetOwner();
    fDummyIds.SetOwner();
    AddChannel(s, b, d);
 }
 
-void TLimitDataSource::AddChannel(TH1D * s, TH1D * b, TH1D * d)
+TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d,
+                                   TVectorD * es, TVectorD * eb, TObjArray * names)
+{
+   // Another constructor, directly adds one channel
+   // with signal, background and data given as input.
+   fDummyTA.SetOwner();
+   fDummyIds.SetOwner();
+   AddChannel(s, b, d, es, eb, names);
+}
+
+void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d)
 {
    // Adds a channel with signal, background and data given as input.
    
-   TH1D *empty;
+   TVectorD *empty;
    TRandom3 generator;
    fSignal.AddLast(s);
    fBackground.AddLast(b);
    fCandidates.AddLast(d);
    char rndname[20];
    sprintf(rndname, "rndname%f", generator.Rndm());
-   empty = new TH1D(rndname, "", 1, 0, 1);
-   empty->SetDirectory(0);
+   empty = new TVectorD(1);
    fErrorOnSignal.AddLast(empty);
-   fDummyTH1D.AddLast(empty);
+   fDummyTA.AddLast(empty);
    sprintf(rndname, "rndname%f", generator.Rndm());
-   empty = new TH1D(rndname, "", 1, 0, 1);
-   empty->SetDirectory(0);
+   empty = new TVectorD(1);
    fErrorOnBackground.AddLast(empty);
-   fDummyTH1D.AddLast(empty);
+   fDummyTA.AddLast(empty);
    TObjArray *dummy = new TObjArray(0);
    fIds.AddLast(dummy);
    fDummyIds.AddLast(dummy);
 }
 
-void TLimitDataSource::AddChannel(TH1D * s, TH1D * b, TH1D * d, TH1D * es,
-                                  TH1D * eb, TObjArray * names)
+void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d, TVectorD * es,
+                                  TVectorD * eb, TObjArray * names)
 {
    // Adds a channel with signal, background and data given as input.
    // In addition, error sources are defined.
-   // TH1D are here used for convenience: each bin has to be seen as 
+   // TH1 are here used for convenience: each bin has to be seen as 
    // an error source (relative).
    // names is an array of strings containing the names of the sources.
    // Sources with the same name are correlated.
@@ -87,7 +96,7 @@ void TLimitDataSource::SetOwner(bool swtch)
    fErrorOnSignal.SetOwner(swtch);
    fErrorOnBackground.SetOwner(swtch);
    fIds.SetOwner(swtch);
-   fDummyTH1D.SetOwner(!swtch);
+   fDummyTA.SetOwner(!swtch);
    fDummyIds.SetOwner(!swtch);
 }
 

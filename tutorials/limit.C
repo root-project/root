@@ -49,7 +49,7 @@ void limit() {
   c1->Modified();
   c1->Update();
   gSystem->ProcessEvents();
-  
+
 // Compute the limits
   cout << "Computing limits... " << endl;
   TLimitDataSource* mydatasource = new TLimitDataSource(signal,background,data);
@@ -73,19 +73,19 @@ void limit() {
 
 // Add some systematics
   cout << endl << "Computing limits with systematics... " << endl;
-  TH1D* errorb = new TH1D("errorb","errors on background",1,0,1);
-  TH1D* errors = new TH1D("errors","errors on signal",1,0,1);
+  TVectorD errorb(2);
+  TVectorD errors(2);
   TObjArray* names = new TObjArray();
   TObjString name1("bg uncertainty");
   TObjString name2("sig uncertainty");
   names->AddLast(&name1);
   names->AddLast(&name2);
-  errorb->SetBinContent(0,0.05); // error source 1: 5%
-  errorb->SetBinContent(1,0);    // error source 2: 0%
-  errors->SetBinContent(0,0);    // error source 1: 0%
-  errors->SetBinContent(1,0.01); // error source 2: 1%
+  errorb[0]=0.05; // error source 1: 5%
+  errorb[1]=0;    // error source 2: 0%
+  errors[0]=0;    // error source 1: 0%
+  errors[1]=0.01; // error source 2: 1%
   TLimitDataSource* mynewdatasource  = new TLimitDataSource();
-  mynewdatasource->AddChannel(signal,background,data,errors,errorb,names);
+  mynewdatasource->AddChannel(signal,background,data,&errors,&errorb,names);
   TConfidenceLevel *mynewconfidence = TLimit::ComputeLimit(mynewdatasource,50000,true);
   cout << "CLs    : " << mynewconfidence->CLs()  << endl;
   cout << "CLsb   : " << mynewconfidence->CLsb() << endl;

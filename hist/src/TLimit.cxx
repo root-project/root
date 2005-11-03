@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.13 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.14 2005/09/06 16:46:06 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -30,6 +30,7 @@
 
 #include "TLimit.h"
 #include "TArrayD.h"
+#include "TVectorD.h"
 #include "TOrdCollection.h"
 #include "TConfidenceLevel.h"
 #include "TLimitDataSource.h"
@@ -91,9 +92,9 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    <BLOCKQUOTE><PRE>
     TFile* infile=new TFile("plotfile.root","READ");
     infile->cd();
-    TH1D* sh=(TH1D*)infile->Get("signal");
-    TH1D* bh=(TH1D*)infile->Get("background");
-    TH1D* dh=(TH1D*)infile->Get("data");
+    TH1* sh=(TH1*)infile->Get("signal");
+    TH1* bh=(TH1*)infile->Get("background");
+    TH1* dh=(TH1*)infile->Get("data");
     TLimitDataSource* mydatasource = new TLimitDataSource(sh,bh,dh);
     TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
     cout &lt&lt "  CLs    : " &lt&lt myconfidence->CLs()  &lt&lt endl;
@@ -124,11 +125,11 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Int_t ncand   = 0;
    Int_t i;
    for (i = 0; i <= data->GetSignal()->GetLast(); i++) {
-      maxbins = (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) > maxbins ?
-                 (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) : maxbins;
-      nsig   +=  ((TH1D *) (data->GetSignal()->At(i)))->Integral();
-      nbg    +=  ((TH1D *) (data->GetBackground()->At(i)))->Integral();
-      ncand  +=  (Int_t) ((TH1D *) (data->GetCandidates()->At(i)))->Integral();
+      maxbins = (((TH1 *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) > maxbins ?
+                 (((TH1 *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) : maxbins;
+      nsig   +=  ((TH1 *) (data->GetSignal()->At(i)))->Integral();
+      nbg    +=  ((TH1 *) (data->GetBackground()->At(i)))->Integral();
+      ncand  +=  (Int_t) ((TH1 *) (data->GetCandidates()->At(i)))->Integral();
    }
    result->SetBtot(nbg);
    result->SetStot(nsig);
@@ -137,11 +138,11 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    fgTable->Set(maxbins * (data->GetSignal()->GetLast() + 1));
    for (Int_t channel = 0; channel <= data->GetSignal()->GetLast(); channel++)
       for (Int_t bin = 0;
-           bin <= ((TH1D *) (data->GetSignal()->At(channel)))->GetNbinsX()+1;
+           bin <= ((TH1 *) (data->GetSignal()->At(channel)))->GetNbinsX()+1;
            bin++) {
-         Double_t s = (Double_t) ((TH1D *) (data->GetSignal()->At(channel)))->GetBinContent(bin);
-         Double_t b = (Double_t) ((TH1D *) (data->GetBackground()->At(channel)))->GetBinContent(bin);
-         Double_t d = (Double_t) ((TH1D *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
+         Double_t s = (Double_t) ((TH1 *) (data->GetSignal()->At(channel)))->GetBinContent(bin);
+         Double_t b = (Double_t) ((TH1 *) (data->GetBackground()->At(channel)))->GetBinContent(bin);
+         Double_t d = (Double_t) ((TH1 *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
          // Compute the value of the "-2lnQ" for the actual data
          if ((b == 0) && (s > 0)) {
             cout << "WARNING: Ignoring bin " << bin << " of channel "
@@ -179,22 +180,22 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
-              bin <=((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX()+1;
+              bin <=((TH1 *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX()+1;
               bin++) {
-            if ((Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
+            if ((Double_t) ((TH1 *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
                // s+b hypothesis
-               Double_t rate = (Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) +
-                               (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               Double_t rate = (Double_t) ((TH1 *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) +
+                               (Double_t) ((TH1 *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                Double_t rand = myrandom->Poisson(rate);
                tss[i] += rand * fgTable->At((channel * maxbins) + bin);
-               Double_t s = (Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin);
-               Double_t b = (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               Double_t s = (Double_t) ((TH1 *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin);
+               Double_t b = (Double_t) ((TH1 *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                if ((s > 0) && (b > 0))
                   lrs[i] += statistic(s, b, rand) - s;
                else if ((s > 0) && (b == 0))
                   lrs[i] += 20 * rand - s;
                // b hypothesis
-               rate = (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               rate = (Double_t) ((TH1 *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                rand = myrandom->Poisson(rate);
                tsb[i] += rand * fgTable->At((channel * maxbins) + bin);
                if ((s > 0) && (b > 0))
@@ -252,18 +253,18 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
      TLimitDataSource *result = new TLimitDataSource();
      result->SetOwner();
      for (Int_t channel = 0; channel <= input->GetSignal()->GetLast(); channel++) {
-        TH1D *newsignal = new TH1D(*(TH1D *) (input->GetSignal()->At(channel)));
+        TH1 *newsignal = (TH1*)(input->GetSignal()->At(channel)->Clone());
         if(stat)
            for(int i=1; i<=newsignal->GetNbinsX(); i++) {
               newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
            }
         newsignal->SetDirectory(0);
-        TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));
+        TH1 *newbackground = (TH1*)(input->GetBackground()->At(channel)->Clone());
         if(stat)
            for(int i=1; i<=newbackground->GetNbinsX(); i++)
               newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
         newbackground->SetDirectory(0);
-        TH1D *newcandidates = new TH1D(*(TH1D *) (input->GetCandidates()));
+        TH1 *newcandidates = (TH1*)(input->GetCandidates()->At(channel)->Clone());
         newcandidates->SetDirectory(0);
         result->AddChannel(newsignal, newbackground, newcandidates);
      }
@@ -289,11 +290,11 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
          serrf[channel] = 0;
          berrf[channel] = 0;
          for (Int_t bin = 0;
-              bin <=((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX();
+              bin <((TVectorD *) (input->GetErrorOnSignal()->At(channel)))->GetNrows();
               bin++) {
-            serrf[channel] += ((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetBinContent(bin) *
+            serrf[channel] += ((TVectorD *) (input->GetErrorOnSignal()->At(channel)))->operator[](bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
-            berrf[channel] += ((TH1D *) (input->GetErrorOnBackground()->At(channel)))->GetBinContent(bin) *
+            berrf[channel] += ((TVectorD *) (input->GetErrorOnBackground()->At(channel)))->operator[](bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
          }
          if ((serrf[channel] < -1.0) || (berrf[channel] < -0.9)) {
@@ -309,25 +310,99 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
    result->SetOwner();
    for (Int_t channel = 0; channel <= input->GetSignal()->GetLast();
         channel++) {
-      TH1D *newsignal = new TH1D(*(TH1D *) (input->GetSignal()->At(channel)));
+      TH1 *newsignal = (TH1*)(input->GetSignal()->At(channel)->Clone());
       if(stat)
          for(int i=1; i<=newsignal->GetNbinsX(); i++) {
             newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
          }
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
-      TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));
+      TH1 *newbackground = (TH1*)(input->GetBackground()->At(channel)->Clone());
       if(stat)
          for(int i=1; i<=newbackground->GetNbinsX(); i++)
             newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
       newbackground->Scale(1 + berrf[channel]);
       newbackground->SetDirectory(0);
-      TH1D *newcandidates = new TH1D(*(TH1D *) (input->GetCandidates()));
+      TH1 *newcandidates = (TH1*)(input->GetCandidates()->At(channel)->Clone());
       newcandidates->SetDirectory(0);
       result->AddChannel(newsignal, newbackground, newcandidates);
    }
    delete[] serrf;
    delete[] berrf;
    return result;
+}
+
+TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
+                                       Int_t nmc, bool stat,
+                                       TRandom * generator,
+                                       Double_t(*statistic) (Double_t,
+                                                             Double_t,
+                                                             Double_t))
+{
+   TLimitDataSource* lds = new TLimitDataSource(s,b,d);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   delete lds;
+   return out;
+}
+
+TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
+                                       TVectorD* se, TVectorD* be, TObjArray* l,
+                                       Int_t nmc, bool stat,
+                                       TRandom * generator,
+                                       Double_t(*statistic) (Double_t,
+                                                             Double_t,
+                                                             Double_t))
+{
+   TLimitDataSource* lds = new TLimitDataSource(s,b,d,se,be,l);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   delete lds;
+   return out;
+}
+
+TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
+                                       Int_t nmc,
+                                       bool stat,
+                                       TRandom * generator,
+                                       Double_t(*statistic) (Double_t,
+                                                             Double_t,
+                                                             Double_t))
+{
+   TH1D* sh = new TH1D("__sh","__sh",1,0,2);
+   sh->Fill(1,s);
+   TH1D* bh = new TH1D("__bh","__bh",1,0,2);
+   bh->Fill(1,b);
+   TH1D* dh = new TH1D("__dh","__dh",1,0,2);
+   dh->Fill(1,d);
+   TLimitDataSource* lds = new TLimitDataSource(sh,bh,dh);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   delete lds;
+   delete sh;
+   delete bh;
+   delete dh;
+   return out;
+}
+
+TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
+                                       TVectorD* se, TVectorD* be, TObjArray* l,
+                                       Int_t nmc,
+                                       bool stat,
+                                       TRandom * generator,
+                                       Double_t(*statistic) (Double_t,
+                                                             Double_t,
+                                                             Double_t))
+{
+   TH1D* sh = new TH1D("__sh","__sh",1,0,2);
+   sh->Fill(1,s);
+   TH1D* bh = new TH1D("__bh","__bh",1,0,2);
+   bh->Fill(1,b);
+   TH1D* dh = new TH1D("__dh","__dh",1,0,2);
+   dh->Fill(1,d);
+   TLimitDataSource* lds = new TLimitDataSource(sh,bh,dh,se,be,l);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   delete lds;
+   delete sh;
+   delete bh;
+   delete dh;
+   return out;
 }
 
