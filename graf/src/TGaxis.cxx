@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.80 2005/08/30 16:03:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.81 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1029,20 +1029,20 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                textaxis->PaintLatex(fAxis->GetBinCenter(i),
                                     gPad->GetUymin() - 3*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
                                     angle,
-                                    charheight,
+                                    textaxis->GetTextSize(),
                                     fAxis->GetBinLabel(i));
             } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
                     || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
                textaxis->PaintLatex(gPad->GetUxmin() - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
                                     0,
-                                    charheight,
+                                    textaxis->GetTextSize(),
                                     fAxis->GetBinLabel(i));
             } else {
                textaxis->PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     ymin +(i-0.5)*(ymax-ymin)/nl,
                                     0,
-                                    charheight,
+                                    textaxis->GetTextSize(),
                                     fAxis->GetBinLabel(i));
             }
          }
