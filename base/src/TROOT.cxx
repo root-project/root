@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.165 2005/10/25 19:30:30 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.166 2005/10/27 10:00:41 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -975,8 +975,8 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   
-   // CheckClassInfo might modify the content of its parameter if it is 
+
+   // CheckClassInfo might modify the content of its parameter if it is
    // a template and has extra or missing space (eg. one<two<tree>> becomes
    // one<two<three> >
    char *modifiable_name = new char[strlen(name)*2];
@@ -1444,8 +1444,8 @@ TClass *TROOT::LoadClass(const char *classname) const
    }
    if (!dict) {
       // Try with Long64_t instead of long long
-      string long64name = TClassEdit::GetLong64_Name( classname );
-      if ( long64name != classname ) {
+      string long64name = TClassEdit::GetLong64_Name(classname);
+      if (long64name != classname) {
         TClass *res = LoadClass(long64name.c_str());
         if (res) return res;
       }
@@ -1455,13 +1455,13 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      return GetClass(clname.Data(),kFALSE);
+      return GetClass(clname, kFALSE);
    }
 
    TIter next(fClassGenerators);
    TClassGenerator *gen;
-   while( (gen = (TClassGenerator*) next()) ) {
-      TClass *cl = gen->GetClass(classname,kTRUE);
+   while ((gen = (TClassGenerator*) next())) {
+      TClass *cl = gen->GetClass(classname, kTRUE);
       if (cl) return cl;
    }
    return 0;

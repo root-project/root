@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.3 2001/12/07 21:58:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.4 2003/02/10 10:57:40 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -38,18 +38,18 @@ public:
    TObjString(const char *s = "") : fString(s) { }
    TObjString(const TObjString &s) : TObject(), fString(s.fString) { }
    ~TObjString() { }
-   Int_t     Compare(const TObject *obj) const;
-   const char *GetName() const { return fString.Data(); }
-   ULong_t   Hash() const { return fString.Hash(); }
-   void      FillBuffer(char *&buffer) { fString.FillBuffer(buffer); }
-   void      Print(Option_t *) const { Printf("TObjString = %s", (const char*)fString); }
-   Bool_t    IsSortable() const { return kTRUE; }
-   Bool_t    IsEqual(const TObject *obj) const;
-   void      ReadBuffer(char *&buffer) { fString.ReadBuffer(buffer); }
-   void      SetString(const char *s) { fString = s; }
-   TString   GetString() const { return fString; }
-   Int_t     Sizeof() const { return fString.Sizeof(); }
-   TString  &String() { return fString; }
+   Int_t       Compare(const TObject *obj) const;
+   const char *GetName() const { return fString; }
+   ULong_t     Hash() const { return fString.Hash(); }
+   void        FillBuffer(char *&buffer) { fString.FillBuffer(buffer); }
+   void        Print(Option_t *) const { Printf("TObjString = %s", (const char*)fString); }
+   Bool_t      IsSortable() const { return kTRUE; }
+   Bool_t      IsEqual(const TObject *obj) const;
+   void        ReadBuffer(char *&buffer) { fString.ReadBuffer(buffer); }
+   void        SetString(const char *s) { fString = s; }
+   TString     GetString() const { return fString; }
+   Int_t       Sizeof() const { return fString.Sizeof(); }
+   TString    &String() { return fString; }
 
    ClassDef(TObjString,1)  //Collectable string class
 };
