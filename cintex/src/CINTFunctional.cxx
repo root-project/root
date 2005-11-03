@@ -68,6 +68,7 @@ void StubContext::Initialize() {
     else if ( pt.IsReference() )
       if( pt.IsPointer() ) fTreat[i] = '*';
       else                 fTreat[i] = '&';
+      //fTreat[i] = '&';
     else fTreat[i] = 'u';
   }
 
@@ -76,6 +77,8 @@ void StubContext::Initialize() {
   while ( rt.IsTypedef() ) rt = rt.ToType();
   fRet_desc = CintType( rt );
   fRet_tag  = CintTag( fRet_desc.second );
+  fRet_byvalue = !rt.IsFundamental() && !rt.IsPointer() &&
+                  !rt.IsArray() && !rt.IsEnum() && !rt.IsReference(); 
   if ( rt.IsPointer() ) fRet_desc.first = (fRet_desc.first - ('a'-'A'));
 
   // for constructor the result block is the class itself
@@ -157,6 +160,7 @@ int Method_stub(G__value* result,
   context->ProcessParam(libp);
   void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
   context->ProcessResult(result, r);
+  if ( context->fRet_byvalue )  G__store_tempobject(*result);
   return(1);
 }
 //------------------Stub adpater functions--------------------------------------------------------
@@ -170,6 +174,7 @@ int Method_stub_with_context(StubContext* context,
   context->ProcessParam(libp);
   void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
   context->ProcessResult(result, r);
+  if ( context->fRet_byvalue )  G__store_tempobject(*result);
   return(1);
 }
 

@@ -42,6 +42,7 @@ namespace ROOT {
       std::vector<char> fTreat;         ///< Coded treatment of parameters
       CintTypeDesc   fRet_desc;         ///< Coded treatment of parameters
       int            fRet_tag;          ///< Return TypeNth tag number
+      bool           fRet_byvalue;      ///< Return by value flag
       int            fClass_tag;        ///< Class TypeNth tag number
       ROOT::Reflex::Member fMember;     ///< Reflex FunctionMember 
       ROOT::Reflex::Type   fClass;      ///< Declaring Reflex class

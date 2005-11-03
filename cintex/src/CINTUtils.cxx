@@ -108,25 +108,29 @@ namespace ROOT { namespace Cintex {
     else if ( nam == "long unsigned int" )
       return CintTypeDesc('k', "-");
     else if ( nam == "longlong" )
-      return CintTypeDesc('u', "'G__longlong' 'Long64_t'");
+      return CintTypeDesc('n', "-");
+    else if ( nam == "long long" )
+      return CintTypeDesc('n', "-");
     else if ( nam == "long long int" )
-      return CintTypeDesc('u', "'G__longlong' 'Long64_t'");
+      return CintTypeDesc('n', "-");
     else if ( nam == "long long signed int" )
-      return CintTypeDesc('u', "'G__longlong' 'Long64_t'");
+      return CintTypeDesc('n', "-");
     else if ( nam == "long long signed" )
-      return CintTypeDesc('u', "'G__longlong' 'Long64_t'");
+      return CintTypeDesc('n', "-");
     else if ( nam == "signed long long int" )
-      return CintTypeDesc('u', "'G__longlong' 'Long64_t'");
+      return CintTypeDesc('n', "-");
     else if ( nam == "ulonglong" )
-      return CintTypeDesc('u', "'G__ulonglong' 'ULong64_t'");
+      return CintTypeDesc('m', "-");
+    else if ( nam == "unsigned long long" )
+      return CintTypeDesc('m', "-");
     else if ( nam == "long long unsigned" )
-      return CintTypeDesc('u', "'G__ulonglong' 'ULong64_t'");
+      return CintTypeDesc('m', "-");
     else if ( nam == "long long unsigned int" )
-      return CintTypeDesc('u', "'G__ulonglong' 'ULong64_t'");
+      return CintTypeDesc('m', "-");
     else if ( nam == "unsigned long long int" )
-      return CintTypeDesc('u', "'G__ulonglong' 'ULong64_t'");
+      return CintTypeDesc('m', "-");
     else if ( nam == "long double" )
-      return CintTypeDesc('u', "'G__longdouble' 'long double'");
+      return CintTypeDesc('m', "-");
     else if ( nam == "double" )
       return CintTypeDesc('d', "-");
     else if ( nam == "double32" )

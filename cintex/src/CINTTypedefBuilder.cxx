@@ -28,11 +28,6 @@ namespace ROOT { namespace Cintex {
     if ( t.IsTypedef() )  {
 
       std::string nam = CintName(t.Name(SCOPED));
-      if( -1 != G__defined_typename(nam.c_str()) ) return;
-
-      if ( Cintex::Debug() )  {
-        std::cout << "Building typedef " << nam << std::endl;
-      }
 
       Type rt(t);
       Scope ScopeNth = rt.ScopeGet();
@@ -49,6 +44,13 @@ namespace ROOT { namespace Cintex {
           CINTScopeBuilder::Setup(rscope);
         }
       }
+
+      if( -1 != G__defined_typename(nam.c_str()) ) return;
+
+      if ( Cintex::Debug() )  {
+        std::cout << "Building typedef " << nam << std::endl;
+      }
+
       int typenum;
       int tagnum;
       CintType(rt, typenum, tagnum );

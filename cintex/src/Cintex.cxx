@@ -35,7 +35,7 @@ namespace {
         //NamespaceBuilder( "ROOT::Cintex" );
         Type t_void = TypeBuilder("void");
         Type t_int  = TypeBuilder("int");
-        ClassBuilder< Cintex >("Cintex", PUBLIC)
+        ClassBuilderT< Cintex >("Cintex", PUBLIC)
          .AddFunctionMember(FunctionTypeBuilder(t_void), "enable", Enable, 0, 0, PUBLIC | STATIC)
          .AddFunctionMember(FunctionTypeBuilder(t_void, t_int), "setDebug", SetDebug, 0, 0, PUBLIC | STATIC)
          .AddFunctionMember(FunctionTypeBuilder(t_int), "debug", Debug, 0, 0, PUBLIC | STATIC);
@@ -87,6 +87,13 @@ namespace ROOT {
     for( size_t i = 0; i < Type::TypeCount(); i++ ) {
 
       ( * Instance().fCallback)( Type::TypeNth(i) );
+    }
+    //--- Convert to CINT all existing free functions and variables ---//
+    Scope gbl = Scope::ByName("");
+    if (gbl) {
+      for ( size_t j = 0; j < gbl.MemberCount(); ++j) {
+	( * Instance().fCallback ) ( gbl.MemberNth(j) );
+      }
     }
   } 
 
