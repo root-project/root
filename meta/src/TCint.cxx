@@ -1,5 +1,5 @@
 
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.107 2005/09/07 15:58:46 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.108 2005/09/29 15:43:46 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1261,7 +1261,7 @@ const char* TCint::GetSharedLibs()
          const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
             "string.dll","vector.dll","list.dll","deque.dll","map.dll",
-            "map2.dll","set.dll multimap.dll multimap2.dll multiset.dll",
+            "map2.dll","set.dll","multimap.dll","multimap2.dll","multiset.dll",
             "stack.dll","queue.dll","valarray.dll","exception.dll","complex.dll"};
          for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
             if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
