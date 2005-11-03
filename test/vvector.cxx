@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.18 2004/01/26 22:29:25 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.19 2004/03/22 16:13:24 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -313,7 +313,7 @@ void stress_element_op(Int_t vsize)
     v.Sqr();
     v1.Sqr();
     v += v1;
-    ok &= VerifyVectorValue(v,1,gVerbose,EPSILON);
+    ok &= VerifyVectorValue(v,1.,gVerbose,EPSILON);
   }
 
   if (gVerbose)
@@ -373,7 +373,7 @@ void stress_binary_op(Int_t vsize)
   if (gVerbose)
     cout << "  subtracting the vector from itself" << endl;
   v1 -= v1;
-  ok &= VerifyVectorValue(v1,0,gVerbose,EPSILON);
+  ok &= VerifyVectorValue(v1,0.,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  adding two vectors together" << endl;
   v1 += v;
@@ -397,13 +397,13 @@ void stress_binary_op(Int_t vsize)
   v1 = v;
   if (gVerbose)
     cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << endl;
-  Add(v,2,vp);
+  Add(v,2.,vp);
   v1 += v1; v1 += vp;
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
     cout << "   clear both v and v1, by subtracting from itself and via add()" << endl;
   v1 -= v1;
-  Add(v,-3,vp);
+  Add(v,-3.,vp);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
 
   if (gVerbose) {

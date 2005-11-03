@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.4 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.5 2005/11/03 16:31:26 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -63,7 +63,7 @@ class TLimit {
                                          TRandom * generator = NULL,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
  protected:
-   static TLimitDataSource *Fluctuate(TLimitDataSource * input, bool init,TRandom *, bool stat=false);
+   static bool Fluctuate(TLimitDataSource * input, TLimitDataSource * output, bool init,TRandom *, bool stat=false);
    inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
  private:
    static TArrayD *fgTable;              // a log table... just to speed up calculation

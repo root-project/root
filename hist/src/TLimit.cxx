@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.14 2005/09/06 16:46:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.15 2005/11/03 16:31:26 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -170,13 +170,14 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Double_t *tsb = new Double_t[nmc];
    Double_t *lrs = new Double_t[nmc];
    Double_t *lrb = new Double_t[nmc];
+   TLimitDataSource* tmp_src = (TLimitDataSource*)(data->Clone());
    for (i = 0; i < nmc; i++) {
       tss[i] = 0;
       tsb[i] = 0;
       lrs[i] = 0;
       lrb[i] = 0;
       // fluctuate signal and background
-      TLimitDataSource *fluctuated = Fluctuate(data, !i, myrandom, stat);
+      TLimitDataSource*  fluctuated = Fluctuate(data, tmp_src, !i, myrandom, stat) ? tmp_src : data;
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
@@ -207,9 +208,8 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       }
       lrs[i] = TMath::Exp(lrs[i]);
       lrb[i] = TMath::Exp(lrb[i]);
-      if (data != fluctuated)
-         delete fluctuated;
    }
+   delete tmp_src;
    // lrs and lrb are the LR's (no logs) = prob(s+b)/prob(b) for
    // that choice of s and b within syst. errors in the ensemble.  These are
    // the MC experiment weights for relating the s+b and b PDF's of the unsmeared
@@ -226,8 +226,8 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    return result;
 }
 
-TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
-                                    TRandom * generator, bool stat)
+bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
+                       bool init, TRandom * generator, bool stat)
 {
    // initialisation: create a sorted list of all the names of systematics
    if (init) {
@@ -245,30 +245,32 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
       }
       fgSystNames->Sort();
    }
+   // if the output is not given, create it from the input
+   if (!output)
+	output = (TLimitDataSource*)(input->Clone());
    // if there are no systematics, just returns the input as "fluctuated" output
-   if ((fgSystNames->GetSize() <= 0)&&(!stat))
-      return input;
+   if ((fgSystNames->GetSize() <= 0)&&(!stat)) {
+      return 0;
+   }
    // if there are only stat, just fluctuate stats.
    if (fgSystNames->GetSize() <= 0) {
-     TLimitDataSource *result = new TLimitDataSource();
-     result->SetOwner();
+     output->SetOwner();
      for (Int_t channel = 0; channel <= input->GetSignal()->GetLast(); channel++) {
-        TH1 *newsignal = (TH1*)(input->GetSignal()->At(channel)->Clone());
+        TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
+        TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
         if(stat)
            for(int i=1; i<=newsignal->GetNbinsX(); i++) {
-              newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
+              newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
            }
         newsignal->SetDirectory(0);
-        TH1 *newbackground = (TH1*)(input->GetBackground()->At(channel)->Clone());
+        TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
+        TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
         if(stat)
            for(int i=1; i<=newbackground->GetNbinsX(); i++)
-              newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
+              newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
         newbackground->SetDirectory(0);
-        TH1 *newcandidates = (TH1*)(input->GetCandidates()->At(channel)->Clone());
-        newcandidates->SetDirectory(0);
-        result->AddChannel(newsignal, newbackground, newcandidates);
      }
-        return result;
+        return 1;
    }
    // Find a choice for the random variation and
    // re-toss all random numbers if any background or signal
@@ -306,30 +308,28 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
    } while (retoss);
    // adjust the fluctuated signal and background counts with a legal set
    // of random fluctuations above.
-   TLimitDataSource *result = new TLimitDataSource();
-   result->SetOwner();
+   output->SetOwner();
    for (Int_t channel = 0; channel <= input->GetSignal()->GetLast();
         channel++) {
-      TH1 *newsignal = (TH1*)(input->GetSignal()->At(channel)->Clone());
+      TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
+      TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
       if(stat)
          for(int i=1; i<=newsignal->GetNbinsX(); i++) {
-            newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
+            newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
          }
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
-      TH1 *newbackground = (TH1*)(input->GetBackground()->At(channel)->Clone());
+      TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
+      TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
       if(stat)
          for(int i=1; i<=newbackground->GetNbinsX(); i++)
-            newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
+            newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
       newbackground->Scale(1 + berrf[channel]);
       newbackground->SetDirectory(0);
-      TH1 *newcandidates = (TH1*)(input->GetCandidates()->At(channel)->Clone());
-      newcandidates->SetDirectory(0);
-      result->AddChannel(newsignal, newbackground, newcandidates);
    }
    delete[] serrf;
    delete[] berrf;
-   return result;
+   return 1;
 }
 
 TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,

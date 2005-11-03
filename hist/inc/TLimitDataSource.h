@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.3 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.4 2005/11/03 16:31:26 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimitDataSource
@@ -22,7 +22,7 @@ class TVectorD;
 //_______________________________________________________________________
 
 
-class TLimitDataSource {
+class TLimitDataSource : public TObject{
 public:
         TLimitDataSource();
         virtual ~TLimitDataSource() {}
