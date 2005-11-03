@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.21 2005/05/18 21:04:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.22 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1631,6 +1631,7 @@ Double_t  TFormLeafInfoPointer::GetValue(TLeaf *leaf, Int_t instance)
 
    if (!fNext) return 0;
    char * where = (char*)GetLocalValuePointer(leaf,instance);
+   if (where==0) return 0;
    return fNext->ReadValue(where,instance);
 }
 
