@@ -96,19 +96,12 @@
 #include <TF1.h>
 #include <TGraph.h>
 
-#include "TMatrixF.h"
-#include "TMatrixFSym.h"
-#include "TMatrixFSparse.h"
-#include "TMatrixFLazy.h"
-#include "TVectorF.h"
-
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 #include "TMatrixDSparse.h"
 #include "TMatrixDLazy.h"
 #include "TMatrixDUtils.h"
 #include "TVectorD.h"
-
 #include "TDecompLU.h"
 #include "TDecompChol.h"
 #include "TDecompQRH.h"
@@ -160,8 +153,6 @@ void   astress_lineqn              ();
 void   astress_pseudo              ();
 void   astress_eigen               (Int_t msize);
 void   astress_decomp_io           (Int_t msize);
-
-void   stress_backward_io          ();
 
 void   cleanup                     ();
 
@@ -272,15 +263,6 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     astress_pseudo();
     astress_eigen(5);
     astress_decomp_io(10);
-    cout << "******************************************************************" <<endl;
-  }
-
-  //Backward Compatibilty of Streamers
-  if (gROOT->GetVersionInt() > 40800)
-  {
-    cout << "*  Starting  Backward IO compatibility - S T R E S S             *" <<endl;
-    cout << "******************************************************************" <<endl;
-    stress_backward_io();
     cout << "******************************************************************" <<endl;
   }
 
@@ -616,13 +598,13 @@ void mstress_element_op(Int_t rsize,Int_t csize)
     for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
       for(Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
         m(i,j) = 0;
-    ok &= VerifyMatrixValue(m,0.,gVerbose,EPSILON);
+    ok &= VerifyMatrixValue(m,0,gVerbose,EPSILON);
   }
 
   if (gVerbose)
     cout << "Creating zero m1 ..." << endl;
-  TMatrixD m1(TMatrixD::kZero, m);
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  TMatrixD m1(TMatrixDBase::kZero, m);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "Comparing m1 with 0 ..." << endl;
@@ -653,7 +635,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "Clearing m1 ..." << endl;
   m1.Zero();
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nClear m and add the pattern" << endl;
@@ -747,7 +729,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   m.Sqr();
   m1.Sqr();
   m += m1;
-  ok &= VerifyMatrixValue(m,1.,gVerbose,EPSILON);
+  ok &= VerifyMatrixValue(m,1,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nDone\n" << endl;
@@ -768,8 +750,8 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   const Double_t pattern = 4.25;
 
   TMatrixD m(2,rsize+1,0,csize-1);
-  TMatrixD m1(TMatrixD::kZero,m);
-  TMatrixD mp(TMatrixD::kZero,m);
+  TMatrixD m1(TMatrixDBase::kZero,m);
+  TMatrixD mp(TMatrixDBase::kZero,m);
 
   {
     for (Int_t i = mp.GetRowLwb(); i <= mp.GetRowUpb(); i++)
@@ -797,7 +779,7 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   if (gVerbose)
     cout << "  subtracting the matrix from itself" << endl;
   m1 -= m1;
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  adding two matrices together" << endl;
   m1 += m;
@@ -812,13 +794,13 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   m1 = m;
   if (gVerbose)
     cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
-  Add(m,2.,mp);
+  Add(m,2,mp);
   m1 += m1; m1 += mp;
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
     cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
   m1 -= m1;
-  Add(m,-3.,mp);
+  Add(m,-3,mp);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
   if (gVerbose) {
@@ -861,7 +843,7 @@ void mstress_transposition(Int_t msize)
       cout << "\nCheck to see that a square UnitMatrix stays the same";
     TMatrixD m(msize,msize);
     m.UnitMatrix();
-    TMatrixD mt(TMatrixD::kTransposed,m);
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
   }
 
@@ -870,7 +852,7 @@ void mstress_transposition(Int_t msize)
       cout << "\nTest a non-square UnitMatrix";
     TMatrixD m(msize,msize+1);
     m.UnitMatrix();
-    TMatrixD mt(TMatrixD::kTransposed,m);
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
     Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
     for (Int_t i = m.GetRowLwb(); i <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); i++)
       for (Int_t j = m.GetColLwb(); j <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); j++)
@@ -881,7 +863,7 @@ void mstress_transposition(Int_t msize)
     if (gVerbose)
       cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
     TMatrixD m = THilbertMatrixD(msize,msize);
-    TMatrixD mt(TMatrixD::kTransposed,m);
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
   }
 
@@ -890,14 +872,14 @@ void mstress_transposition(Int_t msize)
       cout << "\nCheck transposing a non-symmetric matrix";
     TMatrixD m = THilbertMatrixD(msize+1,msize);
     m(1,2) = TMath::Pi();
-    TMatrixD mt(TMatrixD::kTransposed,m);
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
     Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
     Assert(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
     Assert(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
-    TMatrixD mtt(TMatrixD::kTransposed,mt);
+    TMatrixD mtt(TMatrixDBase::kTransposed,mt);
     ok &= ( m == mtt ) ? kTRUE : kFALSE;
   }
 
@@ -949,7 +931,7 @@ void mstress_special_creation(Int_t dim)
     if (gVerbose)
       cout << "\ntest creating Hilbert matrices" << endl;
     TMatrixD m = THilbertMatrixD(dim+1,dim);
-    TMatrixD m1(TMatrixD::kZero,m);
+    TMatrixD m1(TMatrixDBase::kZero,m);
     ok &= ( !(m == m1) ) ? kTRUE : kFALSE;
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
 #ifndef __CINT__
@@ -971,7 +953,7 @@ void mstress_special_creation(Int_t dim)
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
     TMatrixD m1(m);               // Applying the copy constructor
     ok &= ( m1 == m ) ? kTRUE : kFALSE;
-    TMatrixD m2(TMatrixD::kZero,m);
+    TMatrixD m2(TMatrixDBase::kZero,m);
     ok &= ( m2 == 0 ) ? kTRUE : kFALSE;
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
   }
@@ -1000,7 +982,7 @@ void mstress_special_creation(Int_t dim)
     ok &= ( is_indeed_unit(m) ) ? kTRUE : kFALSE;
 #endif
     m.ResizeTo(dim-1,dim);
-    TMatrixD m2(TMatrixD::kUnit,m);
+    TMatrixD m2(TMatrixDBase::kUnit,m);
 #ifndef __CINT__
     {
       TestUnit test_unit;
@@ -1147,7 +1129,7 @@ void mstress_norms(Int_t rsize_req,Int_t csize_req)
   if (gVerbose)
     cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
   ok &= ( m.E2Norm() == (pattern*pattern)*m.GetNoElements() ) ? kTRUE : kFALSE;
-  TMatrixD m1(TMatrixD::kZero,m);
+  TMatrixD m1(TMatrixDBase::kZero,m);
   ok &= ( m.E2Norm() == E2Norm(m,m1) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
@@ -1427,7 +1409,7 @@ void mstress_mm_multiplications()
       if (verbose)
         cout << "\nTest inline multiplications of the UnitMatrix" << endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
-      TMatrixD u(TMatrixD::kUnit,m);
+      TMatrixD u(TMatrixDBase::kUnit,m);
       m(3,1) = TMath::Pi();
       u *= m;
       ok &= VerifyMatrixIdentity(u,m,verbose,epsilon);
@@ -1474,17 +1456,17 @@ void mstress_mm_multiplications()
         cout << "Test general matrix multiplication through inline mult" << endl;
       TMatrixD m = THilbertMatrixD(msize-2,msize);
       m(3,3) = TMath::Pi();
-      TMatrixD mt(TMatrixD::kTransposed,m);
+      TMatrixD mt(TMatrixDBase::kTransposed,m);
       TMatrixD p = THilbertMatrixD(msize,msize);
       TMatrixDDiag(p) += 1;
-      TMatrixD mp(m,TMatrixD::kMult,p);
+      TMatrixD mp(m,TMatrixDBase::kMult,p);
       TMatrixD m1 = m;
       m *= p;
       ok &= VerifyMatrixIdentity(m,mp,verbose,epsilon);
-      TMatrixD mp1(mt,TMatrixD::kTransposeMult,p);
+      TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
       VerifyMatrixIdentity(m,mp1,verbose,epsilon);
       ok &= ( !(m1 == m) );
-      TMatrixD mp2(TMatrixD::kZero,m1);
+      TMatrixD mp2(TMatrixDBase::kZero,m1);
       ok &= ( mp2 == 0 );
       mp2.Mult(m1,p);
       ok &= VerifyMatrixIdentity(m,mp2,verbose,epsilon);
@@ -1540,20 +1522,20 @@ void mstress_mm_multiplications()
     const Int_t order = 5;
     const Int_t no_sub_cols = (1<<order)-5;
     TMatrixD haar_sub = THaarMatrixD(5,no_sub_cols);
-    TMatrixD haar_sub_t(TMatrixD::kTransposed,haar_sub);
-    TMatrixD hsths(haar_sub_t,TMatrixD::kMult,haar_sub);
-    TMatrixD hsths1(TMatrixD::kZero,hsths); hsths1.Mult(haar_sub_t,haar_sub);
-    TMatrixD hsths_eth(TMatrixD::kUnit,hsths);
+    TMatrixD haar_sub_t(TMatrixDBase::kTransposed,haar_sub);
+    TMatrixD hsths(haar_sub_t,TMatrixDBase::kMult,haar_sub);
+    TMatrixD hsths1(TMatrixDBase::kZero,hsths); hsths1.Mult(haar_sub_t,haar_sub);
+    TMatrixD hsths_eth(TMatrixDBase::kUnit,hsths);
     ok &= ( hsths.GetNrows() == no_sub_cols && hsths.GetNcols() == no_sub_cols );
     ok &= VerifyMatrixIdentity(hsths,hsths_eth,gVerbose,EPSILON);
     ok &= VerifyMatrixIdentity(hsths1,hsths_eth,gVerbose,EPSILON);
     TMatrixD haar = THaarMatrixD(order);
-    TMatrixD unit(TMatrixD::kUnit,haar);
-    TMatrixD haar_t(TMatrixD::kTransposed,haar);
-    TMatrixD hth(haar,TMatrixD::kTransposeMult,haar);
-    TMatrixD hht(haar,TMatrixD::kMult,haar_t);
+    TMatrixD unit(TMatrixDBase::kUnit,haar);
+    TMatrixD haar_t(TMatrixDBase::kTransposed,haar);
+    TMatrixD hth(haar,TMatrixDBase::kTransposeMult,haar);
+    TMatrixD hht(haar,TMatrixDBase::kMult,haar_t);
     TMatrixD hht1 = haar; hht1 *= haar_t;
-    TMatrixD hht2(TMatrixD::kZero,haar); hht2.Mult(haar,haar_t);
+    TMatrixD hht2(TMatrixDBase::kZero,haar); hht2.Mult(haar,haar_t);
     ok &= VerifyMatrixIdentity(unit,hth,gVerbose,EPSILON);
     ok &= VerifyMatrixIdentity(unit,hht,gVerbose,EPSILON);
     ok &= VerifyMatrixIdentity(unit,hht1,gVerbose,EPSILON);
@@ -1586,7 +1568,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
       cout << "\nTest inline multiplications of the UnitMatrix" << endl;
     TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
     TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
-    TMatrixDSym u(TMatrixDSym::kUnit,m_sym);
+    TMatrixDSym u(TMatrixDBase::kUnit,m_sym);
     TMatrixD u2 = u * m_sym;
     ok &= VerifyMatrixIdentity(u2,m_sym,gVerbose,epsilon);
   }
@@ -1694,18 +1676,18 @@ void mstress_sym_mm_multiplications(Int_t msize)
     TMatrixDSym ms = THilbertMatrixDSym(msize);
     ms(2,3) = TMath::Pi();
     ms(3,2) = TMath::Pi();
-    TMatrixDSym mt(TMatrixDSym::kTransposed,ms);
+    TMatrixDSym mt(TMatrixDBase::kTransposed,ms);
     TMatrixDSym p = THilbertMatrixDSym(msize);
     TMatrixDDiag(p) += 1;
-    TMatrixD mp(ms,TMatrixD::kMult,p);
+    TMatrixD mp(ms,TMatrixDBase::kMult,p);
     TMatrixDSym m1 = ms;
-    TMatrixD m3(ms,TMatrixD::kMult,p);
+    TMatrixD m3(ms,TMatrixDBase::kMult,p);
     memcpy(ms.GetMatrixArray(),m3.GetMatrixArray(),msize*msize*sizeof(Double_t));
     ok &= VerifyMatrixIdentity(ms,mp,gVerbose,epsilon);
-    TMatrixD mp1(mt,TMatrixD::kTransposeMult,p);
+    TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
     ok &= VerifyMatrixIdentity(ms,mp1,gVerbose,epsilon);
     ok &= ( !(m1 == ms) ) ? kTRUE : kFALSE;
-    TMatrixDSym mp2(TMatrixDSym::kZero,ms);
+    TMatrixDSym mp2(TMatrixDBase::kZero,ms);
     ok &= ( mp2 == 0 ) ? kTRUE : kFALSE;
 
     if (gVerbose)
@@ -1722,18 +1704,18 @@ void mstress_sym_mm_multiplications(Int_t msize)
       const Int_t order = 5;
       const Int_t no_sub_cols = (1<<order)-5;
       TMatrixD haarb = THaarMatrixD(5,no_sub_cols);
-      TMatrixD haarb_t(TMatrixD::kTransposed,haarb);
-      TMatrixD hth(haarb_t,TMatrixD::kMult,haarb);
-      TMatrixDSym  hth1(TMatrixDSym::kAtA,haarb);
+      TMatrixD haarb_t(TMatrixDBase::kTransposed,haarb);
+      TMatrixD hth(haarb_t,TMatrixDBase::kMult,haarb);
+      TMatrixDSym  hth1(TMatrixDBase::kAtA,haarb);
       ok &= VerifyMatrixIdentity(hth,hth1,gVerbose,epsilon);
     }
 
     {
       TMatrixD haar = THaarMatrixD(5);
-      TMatrixD unit(TMatrixD::kUnit,haar);
-      TMatrixD haar_t(TMatrixD::kTransposed,haar);
-      TMatrixDSym hths(TMatrixDSym::kAtA,haar);
-      TMatrixD hht(haar,TMatrixD::kMult,haar_t);
+      TMatrixD unit(TMatrixDBase::kUnit,haar);
+      TMatrixD haar_t(TMatrixDBase::kTransposed,haar);
+      TMatrixDSym hths(TMatrixDBase::kAtA,haar);
+      TMatrixD hht(haar,TMatrixDBase::kMult,haar_t);
       TMatrixD hht1 = haar; hht1 *= haar_t;
       ok &= VerifyMatrixIdentity(unit,hths,gVerbose,epsilon);
       ok &= VerifyMatrixIdentity(unit,hht,gVerbose,epsilon);
@@ -1836,7 +1818,7 @@ void mstress_vm_multiplications()
       TMatrixD m = THilbertMatrixD(0,msize,0,msize-1);
       vb *= m;
       ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
-      TMatrixD mvm(m,TMatrixD::kMult,vm);
+      TMatrixD mvm(m,TMatrixDBase::kMult,vm);
       TMatrixD mvb(msize+1,1);
       TMatrixDColumn(mvb,0) = vb;
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
@@ -1851,10 +1833,10 @@ void mstress_vm_multiplications()
         vb(i) = TMath::Pi()+i;
       TMatrixD vm(msize,1);
       TMatrixDColumn(vm,0) = vb;
-      TMatrixDSym ms = THilbertMatrixDSym(0,msize-1);
-      vb *= ms;
+      TMatrixDSym m = THilbertMatrixDSym(0,msize-1);
+      vb *= m;
       ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
-      TMatrixD mvm(ms,TMatrixD::kMult,vm);
+      TMatrixD mvm(m,TMatrixDBase::kMult,vm);
       TMatrixD mvb(msize,1);
       TMatrixDColumn(mvb,0) = vb;
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
@@ -1922,12 +1904,12 @@ void mstress_inversion()
       if (verbose)
         cout << "Test inversion of an orthonormal (Haar) matrix" << endl;
       const Int_t order = Int_t(TMath::Log(msize)/TMath::Log(2));
-      TMatrixD mr = THaarMatrixD(order);
-      TMatrixD morig = mr;
-      TMatrixD mt(TMatrixD::kTransposed,mr);
+      TMatrixD m = THaarMatrixD(order);
+      TMatrixD morig = m;
+      TMatrixD mt(TMatrixD::kTransposed,m);
       Double_t det = -1;         // init to a wrong val to see if it's changed
-      mr.Invert(&det);
-      ok &= VerifyMatrixIdentity(mr,mt,verbose,epsilon);
+      m.Invert(&det);
+      ok &= VerifyMatrixIdentity(m,mt,verbose,epsilon);
       ok &= ( TMath::Abs(det-1) <= msize*epsilon ) ? kTRUE : kFALSE;
       if (verbose) {
         cout << "det = " << det << " deviation= " << TMath::Abs(det-1);
@@ -1941,12 +1923,12 @@ void mstress_inversion()
     {
       if (verbose)
         cout << "Test inversion of a good matrix with diagonal dominance" << endl;
-      TMatrixD mh = THilbertMatrixD(msize,msize);
-      TMatrixDDiag(mh) += 1;
-      TMatrixD morig = mh;
+      TMatrixD m = THilbertMatrixD(msize,msize);
+      TMatrixDDiag(m) += 1;
+      TMatrixD morig = m;
       Double_t det_inv = 0;
-      const Double_t det_comp = mh.Determinant();
-      mh.Invert(&det_inv);
+      const Double_t det_comp = m.Determinant();
+      m.Invert(&det_inv);
       if (verbose) {
         cout << "\tcomputed determinant             " << det_comp << endl;
         cout << "\tdeterminant returned by Invert() " << det_inv << endl;
@@ -1954,8 +1936,8 @@ void mstress_inversion()
 
       if (verbose)
         cout << "\tcheck to see M^(-1) * M is E" << endl;
-      TMatrixD mim(mh,TMatrixD::kMult,morig);
-      TMatrixD unit(TMatrixD::kUnit,mh);
+      TMatrixD mim(m,TMatrixD::kMult,morig);
+      TMatrixD unit(TMatrixD::kUnit,m);
       ok &= VerifyMatrixIdentity(mim,unit,verbose,epsilon);
 
       if (verbose)
@@ -1966,27 +1948,27 @@ void mstress_inversion()
       if (verbose)
         cout << "Test inversion through SVD" << endl;
       TMatrixD inv_svd (msize,msize); TDecompSVD  svd (ms); svd.Invert(inv_svd);
-      ok &= VerifyMatrixIdentity(inv_svd,mh,verbose,epsilon);
+      ok &= VerifyMatrixIdentity(inv_svd,m,verbose,epsilon);
       if (verbose)
         cout << "Test inversion through LU" << endl;
       TMatrixD inv_lu  (msize,msize); TDecompLU   lu  (ms); lu.Invert(inv_lu);
-      ok &= VerifyMatrixIdentity(inv_lu,mh,verbose,epsilon);
+      ok &= VerifyMatrixIdentity(inv_lu,m,verbose,epsilon);
       if (verbose)
         cout << "Test inversion through Cholesky" << endl;
       TMatrixDSym inv_chol(msize); TDecompChol chol(ms); chol.Invert(inv_chol);
-      ok &= VerifyMatrixIdentity(inv_chol,mh,verbose,epsilon);
+      ok &= VerifyMatrixIdentity(inv_chol,m,verbose,epsilon);
       if (verbose)
         cout << "Test inversion through QRH" << endl;
       TMatrixD inv_qrh (msize,msize); TDecompQRH  qrh (ms); qrh.Invert(inv_qrh);
-      ok &= VerifyMatrixIdentity(inv_qrh,mh,verbose,epsilon);
+      ok &= VerifyMatrixIdentity(inv_qrh,m,verbose,epsilon);
       if (verbose)
         cout << "Test inversion through Bunch-Kaufman" << endl;
       TMatrixDSym inv_bk(msize); TDecompBK bk(ms); chol.Invert(inv_bk);
-      ok &= VerifyMatrixIdentity(inv_bk,mh,verbose,epsilon);
+      ok &= VerifyMatrixIdentity(inv_bk,m,verbose,epsilon);
 
       if (verbose)
         cout << "\tcheck to see M * M^(-1) is E" << endl;
-      TMatrixD mmi = morig; mmi *= mh;
+      TMatrixD mmi = morig; mmi *= m;
       ok &= VerifyMatrixIdentity(mmi,unit,verbose,epsilon);
     }
 
@@ -2031,14 +2013,14 @@ void mstress_inversion()
       }
     }
     for (size = 2; size < 7; size++) {
-      TMatrixDSym ms1 = THilbertMatrixDSym(size);
-      TMatrixDDiag(ms1) += 1;
-      TMatrixDSym ms2 = ms1;
+      TMatrixDSym m1 = THilbertMatrixDSym(size);
+      TMatrixDDiag(m1) += 1;
+      TMatrixDSym m2 = m1;
       Double_t det1 = 0.0;
       Double_t det2 = 0.0;
-      ms1.Invert(&det1);
-      ms2.InvertFast(&det2);
-      ok &= VerifyMatrixIdentity(ms1,ms2,gVerbose,EPSILON);
+      m1.Invert(&det1);
+      m2.InvertFast(&det2);
+      ok &= VerifyMatrixIdentity(m1,m2,gVerbose,EPSILON);
       ok &= (TMath::Abs(det1-det2) < EPSILON);
       if (gVerbose) {
         cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<endl;
@@ -2373,8 +2355,8 @@ void spstress_element_op(Int_t rsize,Int_t csize)
 
   if (gVerbose)
     cout << "Creating zero m1 ..." << endl;
-  TMatrixDSparse m1(TMatrixDSparse::kZero, m);
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  TMatrixDSparse m1(TMatrixDBase::kZero, m);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "Comparing m1 with 0 ..." << endl;
@@ -2421,7 +2403,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "Clearing m1 ..." << endl;
   m1.Zero();
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nSet m = pattern" << endl;
@@ -2524,10 +2506,10 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   const Double_t pattern = 4.25;
 
   TMatrixD m_d(2,rsize+1,0,csize-1); m_d = 1;
-  TMatrixDSparse m (TMatrixDSparse::kZero,m_d); m.SetSparseIndex (m_d);
-  TMatrixDSparse m1(TMatrixDSparse::kZero,m);   m1.SetSparseIndex(m_d);
+  TMatrixDSparse m (TMatrixDBase::kZero,m_d); m.SetSparseIndex (m_d);
+  TMatrixDSparse m1(TMatrixDBase::kZero,m);   m1.SetSparseIndex(m_d);
 
-  TMatrixDSparse mp(TMatrixDSparse::kZero,m1);  mp.SetSparseIndex(m_d);
+  TMatrixDSparse mp(TMatrixDBase::kZero,m1);  mp.SetSparseIndex(m_d);
   {
     for (Int_t i = mp.GetRowLwb(); i <= mp.GetRowUpb(); i++)
       for (Int_t j = mp.GetColLwb(); j <= mp.GetColUpb(); j++)
@@ -2554,7 +2536,7 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   if (gVerbose)
     cout << "  subtracting the matrix from itself" << endl;
   m1 -= m1;
-  ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
   m1.SetSparseIndex(m_d);
 
   if (gVerbose) {
@@ -2566,13 +2548,13 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   if (gVerbose)
     cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
   m1 = m;
-  Add(m,2.,mp);
+  Add(m,2,mp);
   m1 += m1; m1 += mp;
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
     cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
   m1 -= m1;
-  Add(m,-3.,mp);
+  Add(m,-3,mp);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
   if (gVerbose) {
@@ -2616,7 +2598,7 @@ void spstress_transposition(Int_t msize)
       cout << "\nCheck to see that a square UnitMatrix stays the same";
     TMatrixDSparse m(msize,msize);
     m.UnitMatrix();
-    TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
+    TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
   }
 
@@ -2625,7 +2607,7 @@ void spstress_transposition(Int_t msize)
       cout << "\nTest a non-square UnitMatrix";
     TMatrixDSparse m(msize,msize+1);
     m.UnitMatrix();
-    TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
+    TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
     const Int_t rowlwb = m.GetRowLwb();
     const Int_t collwb = m.GetColLwb();
@@ -2639,7 +2621,7 @@ void spstress_transposition(Int_t msize)
     if (gVerbose)
       cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
     TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize,msize));
-    TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
+    TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
   }
 
@@ -2648,14 +2630,14 @@ void spstress_transposition(Int_t msize)
       cout << "\nCheck transposing a non-symmetric matrix";
     TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize+1,msize));
     m(1,2) = TMath::Pi();
-    TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
+    TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
     Assert(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
     Assert(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
-    TMatrixDSparse mtt(TMatrixDSparse::kTransposed,mt);
+    TMatrixDSparse mtt(TMatrixDBase::kTransposed,mt);
     ok &= ( m == mtt ) ? kTRUE : kFALSE;
   }
 
@@ -2705,7 +2687,7 @@ void spstress_norms(Int_t rsize_req,Int_t csize_req)
     cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
   ok &= ( m.E2Norm() == (pattern*pattern)*m.GetNoElements() ) ? kTRUE : kFALSE;
   TMatrixDSparse m1(m); m1 = 1;
-  ok &= ( m.E2Norm() == E2Norm(m+1.,m1) ) ? kTRUE : kFALSE;
+  ok &= ( m.E2Norm() == E2Norm(m+1,m1) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
     cout << "\nDone\n" << endl;
@@ -2745,8 +2727,8 @@ void spstress_mm_multiplications()
       if (ok)
       {
         TMatrixDSparse m = TMatrixD(THilbertMatrixD(-1,msize,-1,msize));
-        TMatrixDSparse ur(TMatrixDSparse::kUnit,m);
-        TMatrixDSparse ul(TMatrixDSparse::kUnit,m);
+        TMatrixDSparse ur(TMatrixDBase::kUnit,m);
+        TMatrixDSparse ul(TMatrixDBase::kUnit,m);
         m(3,1) = TMath::Pi();
         ul *= m;
         m  *= ur;
@@ -2756,8 +2738,8 @@ void spstress_mm_multiplications()
       if (ok)
       {
         TMatrixD m_d = THilbertMatrixD(-1,msize,-1,msize);
-        TMatrixDSparse ur(TMatrixDSparse::kUnit,m_d);
-        TMatrixDSparse ul(TMatrixDSparse::kUnit,m_d);
+        TMatrixDSparse ur(TMatrixDBase::kUnit,m_d);
+        TMatrixDSparse ul(TMatrixDBase::kUnit,m_d);
         m_d(3,1) = TMath::Pi();
         ul *= m_d;
         m_d  *= TMatrixD(ur);
@@ -2803,16 +2785,16 @@ void spstress_mm_multiplications()
       m(3,3) = TMath::Pi();
       TMatrixD p_d = THilbertMatrixD(msize,msize);
       TMatrixDDiag(p_d) += 1;
-      TMatrixDSparse mp(m,TMatrixDSparse::kMult,p_d);
+      TMatrixDSparse mp(m,TMatrixDBase::kMult,p_d);
       TMatrixDSparse m1 = m;
       m *= p_d;
       ok &= VerifyMatrixIdentity(m,mp,verbose,epsilon);
-      TMatrixDSparse pt_d(TMatrixDSparse::kTransposed,p_d);
-      TMatrixDSparse mp1(m1,TMatrixDSparse::kMultTranspose,pt_d);
+      TMatrixDSparse pt_d(TMatrixDBase::kTransposed,p_d);
+      TMatrixDSparse mp1(m1,TMatrixDBase::kMultTranspose,pt_d);
       VerifyMatrixIdentity(m,mp1,verbose,epsilon);
 
       ok &= ( !(m1 == m) );
-      TMatrixDSparse mp2(TMatrixDSparse::kZero,m1);
+      TMatrixDSparse mp2(TMatrixDBase::kZero,m1);
       ok &= ( mp2 == 0 );
       mp2.SetSparseIndex(m1);
       mp2.Mult(m1,p_d);
@@ -2848,8 +2830,8 @@ void spstress_mm_multiplications()
     const Int_t order = 5;
     const Int_t no_sub_cols = (1<<order)-order;
     TMatrixDSparse haar_sub = TMatrixD(THaarMatrixD(order,no_sub_cols));
-    TMatrixDSparse haar_sub_t(TMatrixDSparse::kTransposed,haar_sub);
-    TMatrixDSparse hsths(haar_sub_t,TMatrixDSparse::kMult,haar_sub);
+    TMatrixDSparse haar_sub_t(TMatrixDBase::kTransposed,haar_sub);
+    TMatrixDSparse hsths(haar_sub_t,TMatrixDBase::kMult,haar_sub);
     for (i = hsths.GetRowLwb(); i <= hsths.GetRowLwb()+hsths.GetNrows()-1; i++)
       for (j = hsths.GetColLwb(); j <= hsths.GetColLwb()+hsths.GetNcols()-1; j++)
         if (i == j) hsths(i,i) -= 1;
@@ -2857,15 +2839,15 @@ void spstress_mm_multiplications()
     ok &= (hsths.Abs() < EPSILON);
 
     TMatrixDSparse haar = TMatrixD(THaarMatrixD(order));
-    TMatrixDSparse haar_t(TMatrixDSparse::kTransposed,haar);
+    TMatrixDSparse haar_t(TMatrixDBase::kTransposed,haar);
 
-    TMatrixDSparse hth(haar_t,TMatrixDSparse::kMult,haar);
+    TMatrixDSparse hth(haar_t,TMatrixDBase::kMult,haar);
     for (i = hth.GetRowLwb(); i <= hth.GetRowLwb()+hth.GetNrows()-1; i++)
       for (j = hth.GetColLwb(); j <= hth.GetColLwb()+hth.GetNcols()-1; j++)
         if (i == j) hth(i,i) -= 1;
     ok &= (hth.Abs() < EPSILON);
 
-    TMatrixDSparse hht(haar,TMatrixDSparse::kMultTranspose,haar);
+    TMatrixDSparse hht(haar,TMatrixDBase::kMultTranspose,haar);
     for (i = hht.GetRowLwb(); i <= hht.GetRowLwb()+hht.GetNrows()-1; i++)
       for (j = hht.GetColLwb(); j <= hht.GetColLwb()+hht.GetNcols()-1; j++)
         if (i == j) hht(i,i) -= 1;
@@ -2877,7 +2859,7 @@ void spstress_mm_multiplications()
         if (i == j) hht1(i,i) -= 1;
     ok &= (hht1.Abs() < EPSILON);
 
-    TMatrixDSparse hht2(TMatrixDSparse::kZero,haar);
+    TMatrixDSparse hht2(TMatrixDBase::kZero,haar);
     hht2.SetSparseIndex(hht1);
     hht2.Mult(haar,haar_t);
     for (i = hht2.GetRowLwb(); i <= hht2.GetRowLwb()+hht2.GetNrows()-1; i++)
@@ -2958,7 +2940,7 @@ void spstress_vm_multiplications()
       TMatrixDSparse m = TMatrixD(THilbertMatrixD(0,msize,0,msize-1));
       vb *= m;
       ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
-      TMatrixDSparse mvm(m,TMatrixDSparse::kMult,vm);
+      TMatrixDSparse mvm(m,TMatrixDBase::kMult,vm);
       TMatrixD mvb(msize+1,1);
       TMatrixDColumn(mvb,0) = vb;
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
@@ -3357,7 +3339,7 @@ void vstress_element_op(Int_t vsize)
     v.Sqr();
     v1.Sqr();
     v += v1;
-    ok &= VerifyVectorValue(v,1.,gVerbose,EPSILON);
+    ok &= VerifyVectorValue(v,1,gVerbose,EPSILON);
   }
 
   if (gVerbose)
@@ -3417,7 +3399,7 @@ void vstress_binary_op(Int_t vsize)
   if (gVerbose)
     cout << "  subtracting the vector from itself" << endl;
   v1 -= v1;
-  ok &= VerifyVectorValue(v1,0.,gVerbose,EPSILON);
+  ok &= VerifyVectorValue(v1,0,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  adding two vectors together" << endl;
   v1 += v;
@@ -3440,13 +3422,13 @@ void vstress_binary_op(Int_t vsize)
   v1 = v;
   if (gVerbose)
     cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << endl;
-  Add(v,2.,vp);
+  Add(v,2,vp);
   v1 += v1; v1 += vp;
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
     cout << "   clear both v and v1, by subtracting from itself and via add()" << endl;
   v1 -= v1;
-  Add(v,-3.,vp);
+  Add(v,-3,vp);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
 
   if (gVerbose) {
@@ -3811,7 +3793,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     const Int_t nCols = svd.GetU().GetNcols();
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
     TMatrixD E2(nCols,nCols); E2.UnitMatrix();
-    TMatrixD ut(TMatrixD::kTransposed,svd.GetU());
+    TMatrixD ut(TMatrixDBase::kTransposed,svd.GetU());
     ok &= VerifyMatrixIdentity(ut * svd.GetU(),E2,gVerbose,100*EPSILON);
     ok &= VerifyMatrixIdentity(svd.GetU() * ut,E1,gVerbose,100*EPSILON);
   }
@@ -3823,7 +3805,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     const Int_t nCols = svd.GetV().GetNcols();
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
     TMatrixD E2(nCols,nCols); E2.UnitMatrix();
-    TMatrixD vt(TMatrixD::kTransposed,svd.GetV());
+    TMatrixD vt(TMatrixDBase::kTransposed,svd.GetV());
     ok &= VerifyMatrixIdentity(vt * svd.GetV(),E2,gVerbose,100*EPSILON);
     ok &= VerifyMatrixIdentity(svd.GetV() * vt,E1,gVerbose,100*EPSILON);
   }
@@ -3835,7 +3817,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     const Int_t nCols = svd.GetV().GetNcols();
     TMatrixD s(nRows,nCols);
     TMatrixDDiag diag(s); diag = svd.GetSig();
-    TMatrixD vt(TMatrixD::kTransposed,svd.GetV());
+    TMatrixD vt(TMatrixDBase::kTransposed,svd.GetV());
     TMatrixD tmp = s * vt;
     ok &= VerifyMatrixIdentity(A,svd.GetU() * tmp,gVerbose,100*EPSILON);
     if (gVerbose) {
@@ -3958,7 +3940,7 @@ void astress_decomp()
 
   {
     const TMatrixD m2 = THilbertMatrixD(5,5);
-    const TMatrixDSym mtm(TMatrixDSym::kAtA,m2);
+    const TMatrixDSym mtm(TMatrixDBase::kAtA,m2);
     TDecompChol chol(mtm);
     ok &= VerifyMatrixIdentity(chol.GetMatrix(),mtm,gVerbose,100*EPSILON);
   }
@@ -4185,7 +4167,7 @@ void astress_eigen(Int_t msize)
   TVectorD sig = svd.GetSig(); sig.Sqr();
 
   // Symmetric matrix EigenVector algorithm
-  TMatrixDSym mtm1(TMatrixDSym::kAtA,m);
+  TMatrixDSym mtm1(TMatrixDBase::kAtA,m);
   const TMatrixDSymEigen eigen1(mtm1);
   const TVectorD eigenVal1 = eigen1.GetEigenValues();
 
@@ -4199,7 +4181,7 @@ void astress_eigen(Int_t msize)
   ok &= VerifyMatrixIdentity(mtm1x,lam_x1,gVerbose,EPSILON);
 
   // General matrix EigenVector algorithm tested on symmetric matrix
-  TMatrixD mtm2(m,TMatrixD::kTransposeMult,m);
+  TMatrixD mtm2(m,TMatrixDBase::kTransposeMult,m);
   const TMatrixDEigen eigen2(mtm2);
   const TVectorD eigenVal2 = eigen2.GetEigenValuesRe();
 
@@ -4345,44 +4327,6 @@ void astress_decomp_io(Int_t msize)
     cout << "\nDone\n" << endl;
 
   StatusPrint(5,"Decomposition Persistence",ok);
-}
-
-void stress_backward_io()
-{
-  TFile *f = new TFile("linearIO.root");
-
-  TMatrixF mf1 = THilbertMatrixF(-5,5,-5,5);
-  mf1[1][2] = TMath::Pi();
-  TMatrixFSym mf2 = THilbertMatrixFSym(-5,5);
-  TVectorF vf_row(mf1.GetRowLwb(),mf1.GetRowUpb()); vf_row = TMatrixFRow(mf1,3);
-
-  TMatrixF    *mf1_r    = (TMatrixF*)    f->Get("mf1");
-  TMatrixFSym *mf2_r    = (TMatrixFSym*) f->Get("mf2");
-  TVectorF    *vf_row_r = (TVectorF*)    f->Get("vf_row");
-
-  Bool_t ok = kTRUE;
-
-  ok &= ((*mf1_r) == mf1) ? kTRUE : kFALSE;
-  ok &= ((*mf2_r) == mf2) ? kTRUE : kFALSE;
-  ok &= ((*vf_row_r) == vf_row) ? kTRUE : kFALSE;
-
-  TMatrixD md1 = THilbertMatrixD(-5,5,-5,5);
-  md1[1][2] = TMath::Pi();
-  TMatrixDSym md2 = THilbertMatrixDSym(-5,5);
-  TMatrixDSparse md3 = md1;
-  TVectorD vd_row(md1.GetRowLwb(),md1.GetRowUpb()); vd_row = TMatrixDRow(md1,3);
-
-  TMatrixD       *md1_r    = (TMatrixD*)       f->Get("md1");
-  TMatrixDSym    *md2_r    = (TMatrixDSym*)    f->Get("md2");
-  TMatrixDSparse *md3_r    = (TMatrixDSparse*) f->Get("md3");
-  TVectorD       *vd_row_r = (TVectorD*)       f->Get("vd_row");
-
-  ok &= ((*md1_r) == md1) ? kTRUE : kFALSE;
-  ok &= ((*md2_r) == md2) ? kTRUE : kFALSE;
-  ok &= ((*md3_r) == md3) ? kTRUE : kFALSE;
-  ok &= ((*vd_row_r) == vd_row) ? kTRUE : kFALSE;
-
-  StatusPrint(1,"Streamers",ok);
 }
 
 void cleanup()
