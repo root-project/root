@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.59 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.60 2005/09/27 16:09:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -703,6 +703,11 @@ void TGPictureButton::SetPicture(const TGPicture *new_pic)
    }
 
    fPic = new_pic;
+
+   if (fState == kButtonDisabled) {
+      fClient->FreePicture(fPicD);
+      fPicD = 0;
+   }
 
    fTWidth  = fPic->GetWidth();
    fTHeight = fPic->GetHeight();
