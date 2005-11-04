@@ -20,7 +20,7 @@ FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP) result.root
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog $(LIBDIRTOP) result.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite
@@ -133,6 +133,9 @@ $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
+
+$(LIBDIR)runbase_C.$(DllSuf) : runbase.C directories
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1
 
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
