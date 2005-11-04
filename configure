@@ -187,6 +187,36 @@ checking_msg() {
 }
 
 #_____________________________________________________________________
+check_lib64() {
+    # This function will try to find out if a library [$1] contains 64 bit
+    # or 32 bit code. Currently works only for linux.
+    # The result of the check is stored in is_lib64, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    is_lib64=0
+
+    # Assert that we got enough arguments
+    if test $# -ne 1 ; then
+	echo "check_lib64: not 1 argument"
+	return 1
+    fi
+
+    # Save arguments in logical names
+    chklib64=$1
+
+    if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
+        # we have an archive .a file
+        objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1
+    else
+        file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1
+    fi
+    if test $? -eq 0 ; then
+        is_lib64=1
+    fi
+}
+
+#_____________________________________________________________________
 check_library() {
     # This function will try to locate a library [$1] in the specific
     # directory [$3] or in a default path [$*].  If the second argument
@@ -251,13 +281,16 @@ check_library() {
         # look first in the lib64 directories
         if test "x$checklib64" = "xyes" ; then
             i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
-            #i="$i64 $i"
+            i="$i64 $i"
+        fi
+        # look only in the lib64 directories
+        if test "x$checkonlylib64" = "xyes" ; then
+            i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
             i="$i64"
         fi
-        # look first in the hpux64 directories
+        # look only in the hpux64 directories
         if test "x$checkhpux64" = "xyes" ; then
             i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
-            #i="$i64 $i"
             i="$i64"
         fi
         for l in $i ; do
@@ -267,9 +300,18 @@ check_library() {
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
                 for n in ${liblist} ; do
                     if test -f $n ; then
-                        found_dir=$l
-                        found_lib=$j
-                        break 4
+                        if test "x$checklib64" = "xyes" ; then
+                            check_lib64 $n
+                            if test $is_lib64 -eq 1 ; then
+                                found_dir=$l
+                                found_lib=$j
+                                break 4
+                            fi
+                        else
+                            found_dir=$l
+                            found_lib=$j
+                            break 4
+                        fi
                     fi
                 done
             done
@@ -467,9 +509,13 @@ check_symbol() {
     if test "x$checklib64" = "xyes" ; then
         usrlib="/usr/lib64 $usrlib"
     fi
-    # look first in the hpux64 directories
+    # look only in the lib64 directories
+    if test "x$checkonlylib64" = "xyes" ; then
+        usrlib="/usr/lib64"
+    fi
+    # look only in the hpux64 directories
     if test "x$checkhpux64" = "xyes" ; then
-        usrlib="/usr/lib/hpux64 $usrlib"
+        usrlib="/usr/lib/hpux64"
     fi
 
     for d in "$symboldir" $usrlib ; do
@@ -489,7 +535,7 @@ check_symbol() {
     fi
 
     checking_msg "$symbol in $symbolfile"
-    symbol_in_lib=`nm $symbolfile 2> /dev/stdout | grep $symbol > /dev/null 2>&1`
+    nm $symbolfile 2> /dev/stdout | grep $symbol > /dev/null 2>&1
     if test $? -eq 0 ; then
         found_symbol=1
     else
@@ -816,7 +862,9 @@ platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
 case $arch in
 sgicc)
    checklib32="yes" ;;
-linuxx8664*|linuxppc64*|sgicc64)
+linuxppc64*|sgicc64)
+   checkonlylib64="yes" ;;
+linuxx8664*)
    checklib64="yes" ;;
 hpuxia64acc)
    checkhpux64="yes" ;;
