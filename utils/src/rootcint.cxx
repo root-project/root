@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.221 2005/11/01 21:10:23 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.222 2005/11/03 20:29:38 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -281,6 +281,7 @@ const char *help =
 #undef system
 #endif
 #include <process.h>
+#include <errno.h>
 #endif
 
 #ifdef __MWERKS__

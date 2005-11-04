@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.15 2004/07/16 00:00:10 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.16 2005/03/01 14:53:12 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -76,6 +76,7 @@ using namespace std;
 
 #ifdef WIN32
 #include <windows.h>
+#include <errno.h>
 
 #define ftruncate(fd, size)  win32_ftruncate(fd, size)
 

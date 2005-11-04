@@ -127,13 +127,17 @@ CINTS2       += $(MODDIRS)/v6_winnt.cxx
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/longif3.cxx
 ifeq ($(VC_MAJOR),13)
-ifeq ($(VC_MINOR),10)
-CINTS2       += $(MODDIRS)/vc7strm.cxx
+ ifeq ($(VC_MINOR),10)
+  CINTS2       += $(MODDIRS)/vc7strm.cxx
+ else
+  CINTS2       += $(MODDIRS)/iccstrm.cxx
+ endif
 else
-CINTS2       += $(MODDIRS)/iccstrm.cxx
-endif
-else
-CINTS2       += $(MODDIRS)/iccstrm.cxx
+ ifeq ($(VC_MAJOR),14)
+  CINTS2       += $(MODDIRS)/vc7strm.cxx
+ else
+  CINTS2       += $(MODDIRS)/iccstrm.cxx
+ endif
 endif
 endif
 ifeq ($(PLATFORM),vms)
