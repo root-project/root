@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.3 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -81,32 +81,32 @@ namespace ROOT {
     class MemberTemplate;
 
     typedef std::vector< Type > Type_Cont_Type;
-    typedef Type_Cont_Type::const_iterator Type_Iterator;
-    typedef Type_Cont_Type::const_reverse_iterator Reverse_Type_Iterator;
+    typedef Type_Cont_Type::iterator Type_Iterator;
+    typedef Type_Cont_Type::reverse_iterator Reverse_Type_Iterator;
 
     typedef std::vector< Base > Base_Cont_Type;
-    typedef Base_Cont_Type::const_iterator Base_Iterator;
-    typedef Base_Cont_Type::const_reverse_iterator Reverse_Base_Iterator;
+    typedef Base_Cont_Type::iterator Base_Iterator;
+    typedef Base_Cont_Type::reverse_iterator Reverse_Base_Iterator;
 
     typedef std::vector< Scope > Scope_Cont_Type;
-    typedef Scope_Cont_Type::const_iterator Scope_Iterator;
-    typedef Scope_Cont_Type::const_reverse_iterator Reverse_Scope_Iterator;
+    typedef Scope_Cont_Type::iterator Scope_Iterator;
+    typedef Scope_Cont_Type::reverse_iterator Reverse_Scope_Iterator;
 
     typedef std::vector< Object > Object_Cont_Type;
-    typedef Object_Cont_Type::const_iterator Object_Iterator;
-    typedef Object_Cont_Type::const_reverse_iterator Reverse_Object_Iterator;
+    typedef Object_Cont_Type::iterator Object_Iterator;
+    typedef Object_Cont_Type::reverse_iterator Reverse_Object_Iterator;
 
     typedef std::vector< Member > Member_Cont_Type;
-    typedef Member_Cont_Type::const_iterator Member_Iterator;
-    typedef Member_Cont_Type::const_reverse_iterator Reverse_Member_Iterator;
+    typedef Member_Cont_Type::iterator Member_Iterator;
+    typedef Member_Cont_Type::reverse_iterator Reverse_Member_Iterator;
 
     typedef std::vector< TypeTemplate > TypeTemplate_Cont_Type;
-    typedef TypeTemplate_Cont_Type::const_iterator TypeTemplate_Iterator;
-    typedef TypeTemplate_Cont_Type::const_reverse_iterator Reverse_TypeTemplate_Iterator;
+    typedef TypeTemplate_Cont_Type::iterator TypeTemplate_Iterator;
+    typedef TypeTemplate_Cont_Type::reverse_iterator Reverse_TypeTemplate_Iterator;
 
     typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type;
-    typedef MemberTemplate_Cont_Type::const_iterator MemberTemplate_Iterator;
-    typedef MemberTemplate_Cont_Type::const_reverse_iterator Reverse_MemberTemplate_Iterator;
+    typedef MemberTemplate_Cont_Type::iterator MemberTemplate_Iterator;
+    typedef MemberTemplate_Cont_Type::reverse_iterator Reverse_MemberTemplate_Iterator;
 
 
     /** some general information about the Reflex package */
