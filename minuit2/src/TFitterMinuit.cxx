@@ -52,6 +52,7 @@ TFitterMinuit::TFitterMinuit() : fErrorDef(0.) , fEDMVal(0.), fGradient(false),
 
 // needed this additional contructor ? 
 TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(0.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), theMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
+  std::cout << "creating FitterMinuit " << std::endl;
   Initialize();
 }
 
@@ -95,12 +96,13 @@ void TFitterMinuit::CreateMinimizer(EMinimizerType type) {
 
 
  // destructor - deletes the minimizer and minuit fcn
+// if using TVirtualFitter one should use Clear() and not delete() 
 TFitterMinuit::~TFitterMinuit() { 
   //std::cout << "delete minimizer and FCN" << std::endl;
   if (fMinuitFCN) delete fMinuitFCN; 
   if (fMinimizer) delete fMinimizer; 
+ 
 }
-
 
 Double_t TFitterMinuit::Chisquare(Int_t npar, Double_t *params) const {
   // do chisquare calculations in case of likelihood fits 
@@ -114,13 +116,24 @@ Double_t TFitterMinuit::Chisquare(Int_t npar, Double_t *params) const {
 void TFitterMinuit::Clear(Option_t*) {
   //std::cout<<"clear "<<std::endl;
   
-//   fErrorDef = 0.;
-//   theNFcn = 0;
-//   fEDMVal = 0.;
-//   fGradient = false;
-
+  fErrorDef = 0; 
+  fEDMVal = 0; 
+  fGradient = false; 
   State() = MnUserParameterState();
   theMinosErrors.clear();
+  fDebug = 1;  
+  fStrategy = 1;  
+  fMinTolerance = 0;
+
+  if (fMinuitFCN) { 
+    delete fMinuitFCN;
+    fMinuitFCN = 0; 
+  }
+  if (fMinimizer) { 
+    delete fMinimizer; 
+    fMinimizer = 0; 
+  }
+ 
 }
 
 
