@@ -377,8 +377,6 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    //
    //  Click left button to indicate a new point
    //  Click left button at same place or double click to close the polyline
-   //  mode = 0 normal polyline
-   //  mode = 0 smooth polyline
    //
 
    static Int_t pxold, pyold, px1old, py1old;
