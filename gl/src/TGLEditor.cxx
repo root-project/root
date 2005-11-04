@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.17 2005/10/04 20:33:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.18 2005/10/24 14:49:33 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -581,7 +581,8 @@ void TGLSceneEditor::CreateControls()
    AddFrame(fPlanePropFrame, fL1);
    TGLabel * label;
    std::string planeStr[4] = { "aX + ", "bY +", "cZ + ", "d = 0" };
-   for (UInt_t i=0; i<4; i++) {
+   UInt_t i;
+   for (i=0; i<4; i++) {
       label = new TGLabel(fPlanePropFrame, planeStr[i].c_str());
       fTrash.AddLast(label);
       fPlanePropFrame->AddFrame(label, fL2);
@@ -598,7 +599,7 @@ void TGLSceneEditor::CreateControls()
    AddFrame(fBoxPropFrame, fL1);
 
    std::string boxStr[6] = { "Center X", "Center Y", "Center Y", "Length X", "Length Y", "Length Z" };
-   for (UInt_t i=0; i<6; i++) {
+   for (i=0; i<6; i++) {
       label = new TGLabel(fBoxPropFrame, boxStr[i].c_str());
       fTrash.AddLast(label);
       fBoxPropFrame->AddFrame(label, fL2);

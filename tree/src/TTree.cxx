@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.265 2005/10/13 10:26:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.266 2005/10/14 10:50:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1156,14 +1156,14 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
          if (clobj && clobj->InheritsFrom("TClonesArray")) {
             char *cpointer  =(char*)pointer;
             char **ppointer =(char**)cpointer;
-            TClonesArray *list = (TClonesArray*)(*ppointer);
+            TClonesArray *li = (TClonesArray*)(*ppointer);
             if (splitlevel != 2) {
                if (isDot) branch1 = new TBranchClones(&branchname[0],pointer,bufsize);
                else       branch1 = new TBranchClones(&branchname[1],pointer,bufsize);
                blist->Add(branch1);
             } else {
-               if (isDot) branch1 = new TBranchObject(&branchname[0],list->ClassName(),pointer,bufsize);
-               else       branch1 = new TBranchObject(&branchname[1],list->ClassName(),pointer,bufsize);
+               if (isDot) branch1 = new TBranchObject(&branchname[0],li->ClassName(),pointer,bufsize);
+               else       branch1 = new TBranchObject(&branchname[1],li->ClassName(),pointer,bufsize);
                blist->Add(branch1);
             }
          } else {

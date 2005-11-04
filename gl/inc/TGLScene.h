@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.14 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.15 2005/10/11 10:25:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -77,7 +77,7 @@ private:
    TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
 
    // Draw stats
-   struct {
+   struct DrawStats_t {
       UInt_t fOpaque;
       UInt_t fTrans;
       std::map<std::string, UInt_t> fByShape;

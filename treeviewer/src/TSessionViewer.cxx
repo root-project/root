@@ -2582,8 +2582,8 @@ void TSessionViewer::Build()
    fStatusBar = new TGStatusBar(this, 10, 10);
    fStatusBar->SetCleanup(kDeepCleanup);
    fStatusBar->SetParts(parts, 3);
-   for (int i = 0; i < 3; i++)
-      fStatusBar->GetBarPart(i)->SetCleanup(kDeepCleanup);
+   for (int p = 0; p < 3; ++p)
+      fStatusBar->GetBarPart(p)->SetCleanup(kDeepCleanup);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
             kLHintsExpandX, 0, 0, 1, 1));
 

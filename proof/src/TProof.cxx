@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.120 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.121 2005/11/01 18:32:04 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4162,8 +4162,11 @@ void TProof::ShowLog(const char *queryref)
                if (strstr(queryref, qr->GetTitle()) &&
                    strstr(queryref, qr->GetName()))
                   break;
-            if (qr)
-               return PutLog(qr);
+            if (qr) {
+               PutLog(qr);
+               return;
+            }
+
          }
       }
    }

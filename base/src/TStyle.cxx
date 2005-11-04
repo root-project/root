@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.58 2005/09/13 07:54:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.59 2005/09/16 17:19:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1705,10 +1705,10 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
 
 // fPalette
    out<<"   "<<"Int_t fPaletteColor["       <<GetNumberOfColors() <<"] = {";
-   for (Int_t i=0; i<GetNumberOfColors()-1; i++) {
-      if (i % 10 == 9)
+   for (Int_t ci=0; ci<GetNumberOfColors()-1; ++ci) {
+      if (ci % 10 == 9)
          out<<endl<<"                             ";
-      out<<GetColorPalette(i)<<", ";
+      out<<GetColorPalette(ci)<<", ";
    }
    out<<GetColorPalette(GetNumberOfColors() - 1)                <<"};"<<endl;
    out<<"   "<<"tmpStyle->SetPalette("        << GetNumberOfColors()
@@ -1717,10 +1717,10 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
 
 // fLineStyle
    out<<"   "<<"TString fLineStyleArrayTmp[30] = {";
-   for (Int_t i=0; i<29; i++) {
-      if (i % 5 == 4)
+   for (Int_t li=0; li<29; ++li) {
+      if (li % 5 == 4)
          out<<endl<<"                             ";
-      out<<quote << fLineStyle[i].Data() << quote << ", ";
+      out<<quote << fLineStyle[li].Data() << quote << ", ";
    }
    out<<quote<<fLineStyle[29].Data()<<quote<<"};"<<endl;
    out<<"   "<<"for (Int_t i=0; i<30; i++)"<<endl;

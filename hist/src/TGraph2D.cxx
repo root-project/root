@@ -176,10 +176,10 @@ TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t n=0; n<fNpoints; n++) {
-      fX[n] = (Double_t)x[n];
-      fY[n] = (Double_t)y[n];
-      fZ[n] = (Double_t)z[n];
+   for (Int_t i=0; i<fNpoints; ++i) {
+      fX[i] = (Double_t)x[i];
+      fY[i] = (Double_t)y[i];
+      fZ[i] = (Double_t)z[i];
    }
 }
 
@@ -194,10 +194,10 @@ TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t n=0; n<fNpoints; n++) {
-      fX[n] = x[n];
-      fY[n] = y[n];
-      fZ[n] = z[n];
+   for (Int_t i=0; i<fNpoints; ++i) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+      fZ[i] = z[i];
    }
 }
 
@@ -212,10 +212,10 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t n=0; n<fNpoints; n++) {
-      fX[n] = x[n];
-      fY[n] = y[n];
-      fZ[n] = z[n];
+   for (Int_t i=0; i<fNpoints; ++i) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+      fZ[i] = z[i];
    }
 }
 
@@ -276,10 +276,10 @@ TGraph2D::TGraph2D(const char *name,const char *title,
    Build(n);
 
    // Copy the input vectors into local arrays
-   for (Int_t n=0; n<fNpoints; n++) {
-      fX[n] = x[n];
-      fY[n] = y[n];
-      fZ[n] = z[n];
+   for (Int_t i=0; i<fNpoints; ++i) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+      fZ[i] = z[i];
    }
 }
 

@@ -43,8 +43,7 @@ class vector {
  public:
   typedef T value_type;
 
-#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX) || defined(_MSC_VER)
-  typedef value_type* pointer;
+#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX)
   typedef const value_type* const_pointer;
   typedef value_type& reference;
   typedef const value_type& const_reference;
@@ -237,6 +236,13 @@ class vector {
   typedef __gnu_cxx::__normal_iterator<const_pointer, vector_type>
                                                         const_iterator;
 #endif /* 1703 */
+
+#elif defined(G__VISUAL) && (G__MSC_VER<1300)
+  typedef T* iterator;
+  typedef const T* const_iterator;
+  //typedef Allocator				               allocator_type;
+  //typedef reverse_iterator<iterator>	      reverse_iterator;
+  //typedef reverse_iterator<const_iterator>   const_reverse_iterator;
 
 #elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>=3001))
 

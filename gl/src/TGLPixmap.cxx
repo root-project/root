@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.5 2005/08/25 08:04:56 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.6 2005/09/07 11:43:36 rdm Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -324,10 +324,10 @@ GLFaceSet::GLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname
 
    Int_t descSize = 0;
 
-   for (UInt_t i = 0, j = 1; i < fNbPols; ++i, ++j)
+   for (UInt_t i = 0, k = 1; i < fNbPols; ++i, ++k)
    {
-      descSize += pols[j] + 1;
-      j += pols[j] + 1;
+      descSize += pols[k] + 1;
+      k += pols[k] + 1;
    }
 
    fPolyDesc.resize(descSize);

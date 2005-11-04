@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.11 2005/10/12 16:09:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.12 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -99,8 +99,8 @@ TGLLine3::TGLLine3(const TGLVertex3 & vert1, const TGLVertex3 & vert2) :
 }
 
 //______________________________________________________________________________
-TGLLine3::TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vector) :
-   fVertex(vert), fVector(vector)
+TGLLine3::TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vect) :
+   fVertex(vert), fVector(vect)
 {
 }
 
@@ -117,10 +117,10 @@ void TGLLine3::Set(const TGLVertex3 & vert, const TGLVertex3 & end)
 }
 
 //______________________________________________________________________________
-void TGLLine3::Set(const TGLVertex3 & vert, const TGLVector3 & vector)
+void TGLLine3::Set(const TGLVertex3 & vert, const TGLVector3 & vect)
 {
    fVertex = vert;
-   fVector = vector;
+   fVector = vect;
 }
 
 //______________________________________________________________________________
