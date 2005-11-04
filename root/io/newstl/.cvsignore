@@ -1,5 +1,5 @@
 *.d
- *.log  
+ *.log *.clog  
  .def 
  4-* 3-* 5-*
 *.root
