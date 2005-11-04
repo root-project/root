@@ -168,5 +168,7 @@ emulatedWrite.log: $(ROOT_LOC)/bin/hadd$(ExeSuf)
 emulatedWrite: emulatedWrite.log
 	$(TestDiff)
 
+base.clog: runbase_C.$(DllSuf)
+
 base: base.clog
 	$(TestDiff)
