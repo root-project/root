@@ -107,7 +107,7 @@ else
 			ACXX="g++ -m64"; \
 		fi; \
 		GNUMAKE=$(MAKE) CXX=$$ACXX CXXFLAGS=$$ACXXFLAGS \
-		./configure --with-pic; \
+		./configure --with-pic --enable-shared=false; \
 		$(MAKE))
 endif
 
