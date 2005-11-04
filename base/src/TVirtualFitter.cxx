@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.7 2004/01/20 17:59:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.8 2005/06/14 13:28:41 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,6 +48,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 {
    // Static function returning a pointer to the current fitter.
    // If the fitter does not exist, the default TFitter is created.
+   // Don't delete the returned fitter object, it will be re-used.
 
    if (fgFitter && maxpar > fgMaxpar) {
       delete fgFitter;
