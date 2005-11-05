@@ -44,6 +44,7 @@ class vector {
   typedef T value_type;
 
 #if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX)
+  typedef value_type* pointer;
   typedef const value_type* const_pointer;
   typedef value_type& reference;
   typedef const value_type& const_reference;
