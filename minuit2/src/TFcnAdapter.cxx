@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -15,7 +15,7 @@
 double TFcnAdapter::operator()(const std::vector<double>& par) const {
 //   assert(par.size() == theNPar);
 //   std::cout<<"TFcnAdapter::operator()"<<std::endl;
-  assert(fFCN);
+  assert(fFCN != 0);
   double fs = 0.;
 //   double* theCache = new double[par.size()];
 //   copy(par.begin(), par.end(), theCache);
@@ -32,7 +32,7 @@ double TFcnAdapter::operator()(const std::vector<double>& par) const {
 std::vector<double> TFcnAdapter::gradient(const std::vector<double>& par) const {
 //     std::cout<<"TFcnAdapter::gradient "<<std::endl;
 //   assert(par.size() == theNPar);
-  assert(fFCN);
+  assert(fFCN != 0);
   double fs = 0.;
   int npar = par.size();
   double* theCache = new double[par.size()];
@@ -48,7 +48,7 @@ std::vector<double> TFcnAdapter::gradient(const std::vector<double>& par) const 
 double TFcnAdapter::operator()(int npar, double* params) const {
 //   std::cout<<"TFcnAdapter::operator()(int npar,"<<std::endl;
 //   assert(npar == int(theNPar));
-  assert(fFCN);
+  assert(fFCN != 0);
   double fs = 0.;
   (*fFCN)(npar, 0, fs, params, 4);
   return fs;

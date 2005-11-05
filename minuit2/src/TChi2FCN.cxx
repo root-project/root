@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.cxx,v 1.2 2005/10/29 09:31:47 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -27,7 +27,7 @@ TChi2FCN::TChi2FCN( const TVirtualFitter & fitter) :
   fUp(1), fOwner(true) 
 { 
   fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
-  assert(fFunc);
+  assert(fFunc != 0);
   // default skip empty bins
   fData = new TChi2FitData(fitter, true); 
 #ifdef DEBUG
@@ -53,8 +53,8 @@ TChi2FCN::~TChi2FCN() {
   // implement chi2 function 
 double TChi2FCN::operator()(const std::vector<double>& par) const {
 
-  assert(fData); 
-  assert(fFunc); 
+  assert(fData != 0); 
+  assert(fFunc != 0); 
 
 
   //  std::cout << "number of params " << par.size() << " in TF1 " << fFunc->GetNpar() << "  " << fFunc->GetNumberFreeParameters() << std::endl;

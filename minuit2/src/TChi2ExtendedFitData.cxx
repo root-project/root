@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -9,13 +9,11 @@
 
 #include <cassert>
 
+#include "RConfig.h"
 #include "TChi2ExtendedFitData.h"
 
 #include "TVirtualFitter.h" 
 
-#if defined(__alpha) 
-#define __USE_STD_IOSTREAM
-#endif
 
 #include <iostream>
 
@@ -36,7 +34,7 @@ TChi2ExtendedFitData::TChi2ExtendedFitData(const TVirtualFitter & fitter )  {
   } 
   else { 
     std::cout << "other fit on different object than TGraf not yet supported- assert" << std::endl;
-    assert(graph); 
+    assert(graph != 0); 
   }
 }
 

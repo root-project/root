@@ -139,8 +139,8 @@ void TFitterMinuit::Clear(Option_t*) {
 
 
 FunctionMinimum TFitterMinuit::DoMinimization( int nfcn, double edmval)  { 
-  assert(GetMinuitFCN() );
-  assert(GetMinimizer() );
+  assert(GetMinuitFCN() != 0 );
+  assert(GetMinimizer() != 0 );
   // use always strategy 1 (2 is not yet fully tested)
   return GetMinimizer()->minimize(*GetMinuitFCN(), State(), MnStrategy(1), nfcn, edmval);
 }
@@ -246,7 +246,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
     MnHesse hesse( GetStrategy() ); 
     // update the state
     const FCNBase * fcn = GetMinuitFCN();
-    assert(fcn);
+    assert(fcn != 0);
     fState = hesse(*fcn, State(),100000 );
     if (!fState.isValid() ) {
       std::cout << "TFitterMinuit::Hesse calculation failed " << std::endl;
@@ -527,7 +527,7 @@ void TFitterMinuit::SetFitMethod(const char *name) {
 
   std::cout << "TFitterMinuit::fit method " << name << " is not  supported !" << std::endl; 
   
-  assert(fMinuitFCN);
+  assert(fMinuitFCN != 0);
   
 
 

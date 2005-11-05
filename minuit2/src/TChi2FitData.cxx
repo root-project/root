@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -7,15 +7,12 @@
  *                                                                    *
  **********************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
+#include "RConfig.h"
 #include "TChi2FitData.h"
 
 #include "TVirtualFitter.h" 
-
-#if defined(__alpha) 
-#define __USE_STD_IOSTREAM
-#endif
 
 #include <iostream>
 
@@ -60,15 +57,15 @@ TChi2FitData::TChi2FitData( const TVirtualFitter & fitter, bool skipEmptyBins) :
   } 
   // else 
   std::cout << "other fit type are not yet supported- assert" << std::endl;
-  assert(hfit); 
+  assert(hfit != 0); 
 
 }
 
 // get Histogram Data
 void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) {
 
-  assert(hfit); 
-  assert(hFitter);
+  assert(hfit != 0); 
+  assert(hFitter != 0);
   //std::cout << "creating Fit Data from histogram " << hfit->GetName() << std::endl; 
 
 //  use TVirtual fitter to get fit range (should have a FitRange class ) 

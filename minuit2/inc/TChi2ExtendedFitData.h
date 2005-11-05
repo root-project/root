@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -10,6 +10,7 @@
 #ifndef ROOT_TChi2ExtendedFitData_H_
 #define ROOT_TChi2ExtendedFitData_H_
 
+#include "RConfig.h"
 #include <vector>
 #include "TChi2FitData.h"
 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -28,7 +28,7 @@ TBinLikelihoodFCN::TBinLikelihoodFCN( const TVirtualFitter & fitter) :
   fUp(0.5), fOwner(true)
 { 
   fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
-  assert(fFunc);
+  assert(fFunc != 0);
   // to do: use class for likelihood data (errors are not necessary)
   // in likelihood fit need to keep empty bins
   fData = new TChi2FitData(fitter, false); 
@@ -55,8 +55,8 @@ TBinLikelihoodFCN::~TBinLikelihoodFCN() {
   // implement chi2 function 
 double TBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
 
-  assert(fData); 
-  assert(fFunc); 
+  assert(fData != 0); 
+  assert(fFunc != 0); 
 
   // safety measure against negative logs
   static const double epsilon = 1e-300;

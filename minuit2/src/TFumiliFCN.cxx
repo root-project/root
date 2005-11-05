@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.3 2005/10/29 09:31:47 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -357,8 +357,8 @@ void TFumiliUnbinLikelihoodFCN::Calculate_element(int , const FumiliFitData &, d
 //   // implement chi2 function (should not be needed) 
 double TFumiliChi2FCN::operator()(const std::vector<double>& par) const {
 
-  assert(fData); 
-  assert(fFunc); 
+  assert(fData != 0); 
+  assert(fFunc != 0); 
 
   TChi2FCN  fcn(fData,fFunc); 
   return fcn(par); 
@@ -367,8 +367,8 @@ double TFumiliChi2FCN::operator()(const std::vector<double>& par) const {
 
 double TFumiliBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
 
-  assert(fData); 
-  assert(fFunc); 
+  assert(fData != 0); 
+  assert(fFunc != 0); 
 
   TBinLikelihoodFCN  fcn(fData,fFunc); 
   return fcn(par); 
@@ -377,8 +377,8 @@ double TFumiliBinLikelihoodFCN::operator()(const std::vector<double>& par) const
 
 double TFumiliUnbinLikelihoodFCN::operator()(const std::vector<double>& /*par */) const {
 
-  assert(fData); 
-  assert(fFunc); 
+  assert(fData != 0); 
+  assert(fFunc != 0); 
 
   //TUnbinLikelihoodFCN  fcn(*fData,*fFunc); 
   //return fcn(par);
