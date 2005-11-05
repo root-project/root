@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.1 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.2 2005/10/28 15:58:38 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -84,18 +84,19 @@ namespace ROOT {
       AssignFrom( r, v ); 
     }
 
-    
+
+#ifndef __CINT__  // this is ambigous with double * , double *   
     /**
        Construct from a rotation (any rotation object)  and then a translation (using any vector type)
        The requirements on the rotation and vector objects are that they can be transformed in a 
        Rotation3D class and in a XYZVector
     */
     template <class ARotation, class AVector>
-    Transform3D( const Rotation3D & r, const AVector & v) 
+    Transform3D( const ARotation & r, const AVector & v) 
     {
       AssignFrom( Rotation3D(r), XYZVector (v) ); 
     }
-
+#endif
 
     /**
        Construct transformation from one coordinate system defined by three points (orgin + two axis) to 
