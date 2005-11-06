@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.125 2005/10/28 20:36:02 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.126 2005/11/02 14:34:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1693,6 +1693,9 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    if (helper)
       return helper->AccessPathName(path, mode);
 
+   if (mode==kExecutePermission)
+      // cannot test on exe - use read instead
+      mode=kReadPermission;
    if (::_access(TUrl(path, kTRUE).GetFile(), mode) == 0)
       return kFALSE;
    fLastErrorString = GetError();
