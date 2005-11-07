@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.121 2005/11/01 18:32:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.122 2005/11/04 20:13:09 pcanal Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -498,10 +498,10 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
             if (nword >= 2 &&
                 (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
                 !fImage.Length()) {
-               TInetAddress a = gSystem->GetHostByName(word[1]);
-               if (!host.CompareTo(a.GetHostName()) ||
-                   !strcmp(word[1], "localhost")) {
-                  const char *image = word[1];
+               TString node = TUrl(word[1]).GetHost();
+               TInetAddress a = gSystem->GetHostByName(node);
+               if (!host.CompareTo(a.GetHostName()) || node == "localhost") {
+                  const char *image = strstr(word[1], node.Data());
                   const char *workdir = kPROOF_WorkDir;
                   for (int i = 2; i < nword; i++) {
 

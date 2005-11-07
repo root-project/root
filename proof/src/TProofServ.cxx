@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.108 2005/09/27 17:07:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.109 2005/09/28 15:32:24 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2229,9 +2229,9 @@ void TProofServ::Setup()
                // and new "master" lines
                if (nword >= 2 &&
                    (!strcmp(word[0], "node") || !strcmp(word[0], "master"))) {
-                  TInetAddress a = gSystem->GetHostByName(word[1]);
-                  if (!host.CompareTo(a.GetHostName()) ||
-                      !strcmp(word[1], "localhost")) {
+                  TString node = TUrl(word[1]).GetHost();
+                  TInetAddress a = gSystem->GetHostByName(node);
+                  if (!host.CompareTo(a.GetHostName()) || node == "localhost") {
                      for (Int_t i = 2; i < nword; i++) {
 
                         if (!strncmp(word[i], "workdir=", 8))

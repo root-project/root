@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.7 2005/10/30 09:53:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.8 2005/11/01 18:32:04 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TPluginManager.h"
 #include "TProofPlayer.h"
 #include "TMessage.h"
+#include "TUrl.h"
 
 
 ClassImp(TProofSuperMaster)
@@ -112,10 +113,10 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
          if (nword >= 2 &&
              (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
              !fImage.Length()) {
-            TInetAddress a = gSystem->GetHostByName(word[1]);
-            if (!host.CompareTo(a.GetHostName()) ||
-                !strcmp(word[1], "localhost")) {
-               const char *image = word[1];
+            TString node = TUrl(word[1]).GetHost();
+            TInetAddress a = gSystem->GetHostByName(node);
+            if (!host.CompareTo(a.GetHostName()) || node == "localhost") {
+               const char *image = strstr(word[1], node.Data());
                for (int i = 2; i < nword; i++) {
 
                   if (!strncmp(word[i], "image=", 6))
@@ -162,7 +163,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
             int sport    = fPort;
 
             const char *conffile = 0;
-            const char *image = word[1];
+            const char *image = strstr(word[1], TUrl(word[1]).GetHost());
             const char *msd = 0;
             for (int i = 2; i < nword; i++) {
 
