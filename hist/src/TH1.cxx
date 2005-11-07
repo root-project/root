@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.258 2005/10/25 13:49:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.259 2005/10/30 14:11:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2352,14 +2352,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       isSet=kTRUE;
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
-   if (linear){
+   if (linear) {
       //
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
       }
-      if (!isSet) {
+      if (!isSet && cl) {
          TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
