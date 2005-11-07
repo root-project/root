@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.126 2005/11/02 14:34:15 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.127 2005/11/06 20:23:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TUrl.h"
 
 #include <sys/utime.h>
+#include <sys/timeb.h>
 #include <process.h>
 #include <io.h>
 #include <direct.h>
@@ -3260,10 +3261,7 @@ Double_t TWinNTSystem::GetRealTime()
       __int64  ftInt64;
    } ftRealTime; // time the process has spent in kernel mode
 
-   SYSTEMTIME st;
-   ::GetSystemTime(&st);
-   ::SystemTimeToFileTime(&st, &ftRealTime.ftFileTime);
-
+   ::GetSystemTimeAsFileTime(&ftRealTime.ftFileTime);
    return (Double_t)ftRealTime.ftInt64 * gTicks;
 }
 
@@ -3323,7 +3321,9 @@ TTime TWinNTSystem::Now()
 {
    // Return current time.
 
-   return Long_t(GetRealTime()*1000.0);
+   _timeb now;
+   _ftime(&now);
+   return (TTime)(now.time*1000+now.millitm);
 }
 
 //______________________________________________________________________________
