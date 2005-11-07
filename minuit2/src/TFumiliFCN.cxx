@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.3 2005/10/29 09:31:47 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.4 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -32,7 +32,7 @@ TFumiliFCN::TFumiliFCN( const TVirtualFitter & fitter, double up, int strategy, 
 {
   fUp = up;
   fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
-  assert(fFunc);
+  assert(fFunc != 0);
   // default skip empty bins
   fData = new TChi2FitData(fitter, skipEmptyBins); 
   //std::cout << "Created FitData with size = " << fData->Size() << std::endl;
