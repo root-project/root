@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.2 2005/10/28 15:58:38 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.3 2005/11/05 15:19:38 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -85,7 +85,7 @@ namespace ROOT {
     }
 
 
-#ifndef __CINT__  // this is ambigous with double * , double *   
+#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambigous with double * , double *   
     /**
        Construct from a rotation (any rotation object)  and then a translation (using any vector type)
        The requirements on the rotation and vector objects are that they can be transformed in a 
