@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.18 2005/08/29 10:57:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.19 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -34,10 +34,10 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TTree.h"
-#include "TList.h"
 #include "TError.h"
 #include "TSelectorCint.h"
 #include "Api.h"
+
 
 ClassImp(TSelector)
 
@@ -49,7 +49,7 @@ TSelector::TSelector() : TObject()
    fStatus = 0;
    fObject = 0;
    fInput  = 0;
-   fOutput = new TList;
+   fOutput = new TSelectorList;
    fOutput->SetOwner();
 }
 
@@ -64,7 +64,7 @@ TSelector::~TSelector()
 //______________________________________________________________________________
 TSelector *TSelector::GetSelector(const char *filename)
 {
-//   The code in filename is loaded (interpreted or compiled , see below)
+//   The code in filename is loaded (interpreted or compiled, see below)
 //   filename must contain a valid class implementation derived from TSelector,
 //   where TSelector has the following member functions:
 //
@@ -114,7 +114,7 @@ TSelector *TSelector::GetSelector(const char *filename)
 //   The static function returns a pointer to a TSelector object
 
    // If the filename does not contain "." assume class is compiled in
-   char localname[256];
+   char localname[4096];
    Bool_t fromFile = kFALSE;
    if ( strchr(filename, '.') != 0 ) {
 

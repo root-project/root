@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.19 2005/02/21 09:41:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.20 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -28,18 +28,22 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TSelectorList
+#include "TSelectorList.h"
+#endif
 
 
 class TTree;
 
 
 class TSelector : public TObject {
+
 protected:
-   Int_t     fStatus;  //selector status
-   TString   fOption;  //option given to TTree::Process
-   TObject  *fObject;  //current object if processing object (vs. TTree)
-   TList    *fInput;   //list of objects available during processing (on PROOF)
-   TList    *fOutput;  //list of objects created during processing (on PROOF)
+   Int_t          fStatus;  //selector status
+   TString        fOption;  //option given to TTree::Process
+   TObject       *fObject;  //current object if processing object (vs. TTree)
+   TList         *fInput;   //list of objects available during processing (on PROOF)
+   TSelectorList *fOutput;  //list of objects created during processing (on PROOF)
 
 public:
    TSelector();
