@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.46 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.47 2005/11/08 17:06:52 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -354,7 +354,7 @@ void TGLineLBEntry::DoRedraw()
 //______________________________________________________________________________
 TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
                              const TGPicture *pic,
-                             UInt_t w, Style_t style, UInt_t options, ULong_t back) :
+                             UInt_t /*w*/, Style_t /*style*/, UInt_t options, ULong_t back) :
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
