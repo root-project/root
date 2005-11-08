@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.3 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -323,7 +323,6 @@ namespace ROOT { namespace Cintex {
     if ( 0 != root_class )   {
       root_class->Size();
       if ( ! typ.IsVirtual() ) root_class->SetGlobalIsA(accessType);
-      std::auto_ptr<TClassStreamer> str;
       switch(kind)  {
         case TClassEdit::kVector:
         case TClassEdit::kList:
@@ -362,7 +361,7 @@ namespace ROOT { namespace Cintex {
               m->feed_func,
               m->collect_func
               ));
-            str = std::auto_ptr<TClassStreamer>(
+              std::auto_ptr<TClassStreamer> str(
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
               TCollectionProxy::GenExplicitClassStreamer(tid,
 #else
@@ -383,15 +382,15 @@ namespace ROOT { namespace Cintex {
               ));
             root_class->CopyCollectionProxy(*(proxy.get()));
             root_class->SetBit(TClass::kIsForeign);
+            if ( str.get() )  {
+              root_class->AdoptStreamer(str.release());
+            }
           }
           break;
         case TClassEdit::kNotSTL:
         case TClassEdit::kEnd:
         default:
           root_class->SetBit(TClass::kIsForeign);
-      }
-      if ( str.get() )  {
-        root_class->AdoptStreamer(str.release());
       }
     }
     return root_class;
