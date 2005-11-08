@@ -2448,7 +2448,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                proofDesc->fName = name;
                proofDesc->fAddress = address;
                proofDesc->fPort = atoi(port);
-               proofDesc->fConfigFile = configfile.Length() > 2 ? configfile : "";
+               proofDesc->fConfigFile = configfile.Length() > 2 ? configfile.Data() : "";
                proofDesc->fLogLevel = atoi(loglevel);
                proofDesc->fConnected = kFALSE;
                proofDesc->fLocal = kFALSE;
@@ -2498,13 +2498,13 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TQueryDescription *newquery = new TQueryDescription();
                newquery->fStatus = 
                   (TQueryDescription::ESessionQueryStatus)(atoi(status));
-               newquery->fSelectorString  = selector.Length() > 2 ? selector : "";
-               newquery->fReference       = reference.Length() > 2 ? reference : "";
-               newquery->fTDSetString     = dset.Length() > 2 ? dset : "";
-               newquery->fQueryName       = queryname.Length() > 2 ? queryname : "";
-               newquery->fOptions         = options.Length() > 2 ? options : "";
-               newquery->fEventList       = eventlist.Length() > 2 ? eventlist : "";
-               newquery->fParFile         = parfile.Length() > 2 ? parfile : "";
+               newquery->fSelectorString  = selector.Length() > 2 ? selector.Data() : "";
+               newquery->fReference       = reference.Length() > 2 ? reference.Data() : "";
+               newquery->fTDSetString     = dset.Length() > 2 ? dset.Data() : "";
+               newquery->fQueryName       = queryname.Length() > 2 ? queryname.Data() : "";
+               newquery->fOptions         = options.Length() > 2 ? options.Data() : "";
+               newquery->fEventList       = eventlist.Length() > 2 ? eventlist.Data() : "";
+               newquery->fParFile         = parfile.Length() > 2 ? parfile.Data() : "";
                newquery->fNbFiles         = atoi(nbfiles);
                newquery->fNoEntries       = atoi(nbentries);
                newquery->fFirstEntry      = atoi(firstentry);
