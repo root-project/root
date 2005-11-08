@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.23 2004/12/10 17:35:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.24 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -166,6 +166,40 @@ public:
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
 
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGIconLBEntry                                                        //
+//                                                                      //
+// Icon + text listbox entry.                                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGIconLBEntry : public TGTextLBEntry {
+
+protected:
+   const TGPicture *fPicture;    // icon
+
+   virtual void DoRedraw();
+
+public:
+   TGIconLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
+                 const TGPicture *pic = 0,
+                 UInt_t w = 0, Style_t s = 0,
+                 UInt_t options = kHorizontalFrame,
+                 Pixel_t back = GetWhitePixel());
+   virtual ~TGIconLBEntry();
+
+   virtual TGDimension GetDefaultSize() const
+      { return TGDimension(fTWidth, fTHeight+1); }
+   const TGPicture *GetPicture() const { return fPicture; }
+   virtual void  SetPicture(const TGPicture *pic = 0);
+
+   virtual void  Update(TGLBEntry *e);
+   virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
+
+   ClassDef(TGIconLBEntry, 0)  // Icon + text listbox entry
 };
 
 //////////////////////////////////////////////////////////////////////////

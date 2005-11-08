@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.45 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.46 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TGPicture.h"
 #include "TGListBox.h"
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
@@ -340,6 +341,91 @@ void TGLineLBEntry::DoRedraw()
    // Redraw line style listbox entry.
 
    DrawCopy(fId, 0, 0);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGIconLBEntry                                                        //
+//                                                                      //
+// Icon + text listbox entry.                                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
+                             const TGPicture *pic,
+                             UInt_t w, Style_t style, UInt_t options, ULong_t back) :
+   TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
+                 GetDefaultFontStruct(), options, back)
+{
+   // Create the Icon & text listbox entry
+
+   int max_ascent, max_descent;
+
+   fPicture = pic;
+   if (fPicture) {
+      fTWidth += fPicture->GetWidth() + 4;
+      ((TGPicture *)pic)->AddReference();
+   }
+   else 
+      fTWidth += 20;
+   gVirtualX->GetFontProperties(GetDefaultFontStruct(),
+                                max_ascent, max_descent);
+   fTHeight = max_ascent + max_descent;
+   if (fPicture->GetHeight() > fTHeight)
+      fTHeight = fPicture->GetHeight();
+
+   Resize(fTWidth, fTHeight + 1);
+   SetWindowName();
+}
+
+//______________________________________________________________________________
+TGIconLBEntry::~TGIconLBEntry()
+{
+   // Delete icon & text listbox entry.
+   fClient->FreePicture(fPicture);
+
+}
+
+//______________________________________________________________________________
+void  TGIconLBEntry::Update(TGLBEntry *e)
+{
+   // Update icon & text listbox entry.
+
+   TGTextLBEntry::Update(e);
+
+}
+
+//______________________________________________________________________________
+void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
+{
+   // draw copy on window/pixmap
+   Int_t off_x = 0;
+   if (fPicture) {
+      fPicture->Draw(id, fNormGC, x + 2, y);
+      off_x = fPicture->GetWidth() + 4;
+   }
+   TGTextLBEntry::DrawCopy(id, x + off_x, y);
+
+}
+
+//______________________________________________________________________________
+void TGIconLBEntry::DoRedraw()
+{
+   // Redraw line style listbox entry.
+
+   DrawCopy(fId, 0, 0);
+}
+//___________________________________________________________________________
+void TGIconLBEntry::SetPicture(const TGPicture *pic)
+{
+   // Change list tree item icons.
+
+   fClient->FreePicture(fPicture);
+
+   ((TGPicture *)pic)->AddReference();
+
+   fPicture   = pic;
 }
 
 //////////////////////////////////////////////////////////////////////////
