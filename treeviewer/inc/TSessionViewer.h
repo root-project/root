@@ -81,6 +81,7 @@ class TGTab;
 class TRootEmbeddedCanvas;
 class TGListBox;
 class TCanvas;
+class TEnv;
 struct UserGroup_t;
 
 class TVirtualProof;
@@ -154,6 +155,7 @@ public:
    Bool_t                     fLocal;        // kTRUE if session is local
    Bool_t                     fSync;         // kTRUE if in sync mode
    TList                     *fQueries;      // list of queries in this session
+   TList                     *fPackages;     // list of packages
    TQueryDescription         *fActQuery;     // current (actual) query
    TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
    Int_t                      fNbHistos;     // number of feedback histos
@@ -172,6 +174,8 @@ public:
    Int_t          fId;           // package id
    Bool_t         fUploaded;     // package has been uploaded
    Bool_t         fEnabled;      // package has been enabled
+
+   const char    *GetName() const { return fName; }
 
    ClassDef(TPackageDescription,1)
 };
@@ -196,6 +200,10 @@ private:
    TGTextEntry       *fTxtUsrName;     // user name text entry
    TGCheckButton     *fSync;           // sync / async flag selector
    TSessionViewer    *fViewer;         // pointer on the main viewer
+   TGTextButton      *fBtnAdd;         // "Add" button
+   TGTextButton      *fBtnNew;         // "New" button
+   TGTextButton      *fBtnDelete;      // "Delete" button
+   TGTextButton      *fBtnConnect;     // "Connect" button
 
 public:
    TSessionServerFrame(TGWindow *parent, Int_t w, Int_t h);
@@ -210,6 +218,10 @@ public:
    const char *GetConfigText() const { return fTxtConfig->GetText(); }
    const char *GetUserName() const { return fTxtUsrName->GetText(); }
    Bool_t      IsSync() const { return (Bool_t)(fSync->GetState() == kButtonDown); }
+   void        SetAddEnabled(Bool_t on = kTRUE) { fBtnAdd->SetEnabled(on); }
+   void        SetConnectEnabled(Bool_t on = kTRUE) { fBtnConnect->SetEnabled(on); }
+   void        SetNewEnabled(Bool_t on = kTRUE) { fBtnNew->SetEnabled(on); }
+   void        SetDeleteEnabled(Bool_t on = kTRUE) { fBtnDelete->SetEnabled(on); }
 
    void        SetName(const char *str) { fTxtName->SetText(str); }
    void        SetAddress(const char *str) { fTxtAddress->SetText(str); }
@@ -227,9 +239,6 @@ public:
    void        Update(TSessionDescription* desc);
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-
-   Bool_t      WriteConfigFile(const TString &filePath, TList *vec);
-   TList      *ReadConfigFile(const TString &filePath);
 
    ClassDef(TSessionServerFrame,0)
 };
@@ -259,7 +268,6 @@ private:
    TGTextButton      *fBtnNewQuery;          // new query button
    TGTextButton      *fBtnGetQueries;        // get entries button
    // Packages tab related items
-   TList             *fPackages;             // list of packages
    TGListBox         *fLBPackages;           // packages listbox
    TGTextButton      *fBtnAdd;               // add package button
    TGTextButton      *fBtnRemove;            // remove package button
@@ -307,6 +315,7 @@ public:
    void     OnClearPackages();
    void     OnMultipleSelection(Bool_t on);
    void     ProofInfos();
+   void     UpdatePackages();
 
    ClassDef(TSessionFrame,0)
 };
@@ -498,6 +507,8 @@ private:
    TGIcon                 *fRightIcon;          // associated picture
    TTimer                 *fTimer;              // timer used to change icon picture
    UserGroup_t            *fUserGroup;          // user connected to session
+   TString                fConfigFile;
+   TEnv                   *fViewerEnv;
 
 public:
 
@@ -505,7 +516,6 @@ public:
    TSessionViewer(const char *title, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual ~TSessionViewer();
    virtual void Build();
-   virtual void BuildSessionHierarchy(TList *vec);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
 
    TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
@@ -545,6 +555,8 @@ public:
    void     OnListTreeClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);
    void     QueryResultReady(char *query);
    void     DeleteQuery();
+   void     ReadConfiguration(const char *filename = 0);
+   void     WriteConfiguration(const char *filename = 0);
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }

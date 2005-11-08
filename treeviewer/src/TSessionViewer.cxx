@@ -59,6 +59,7 @@
 #include "TEnv.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TEnv.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -84,13 +85,13 @@ const char *xpm_names[] = {
 
 const char *conftypes[] = {
    "Config files",  "*.conf",
-   "All files",     "*",
+   "All files",     "*.*",
     0,               0
 };
 
 const char *pkgtypes[] = {
    "Package files", "*.par",
-   "All files",     "*",
+   "All files",     "*.*",
     0,               0
 };
 
@@ -111,7 +112,8 @@ char const kPROOF_GuiConfFileSeparator = '\t';
 
 // Menu command id's
 enum ESessionViewerCommands {
-   kFileLoadLibrary,
+   kFileLoadConfig,
+   kFileSaveConfig,
    kFileCloseViewer,
    kFileQuit,
 
@@ -161,7 +163,6 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
 
    SetLayoutManager(new TGVerticalLayout(this));
    TGCompositeFrame *tmp;
-   TGButton* btnTmp;
 
    SetCleanup(kDeepCleanup);
 
@@ -226,34 +227,34 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    AddFrame(tmp = new TGCompositeFrame(this, 140, 10, kHorizontalFrame),
                        new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
-   tmp->AddFrame(btnTmp = new TGTextButton(tmp, "     Add     "),
+   tmp->AddFrame(fBtnAdd = new TGTextButton(tmp, "     Add     "),
                  new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
-   tmp->Resize(155, btnTmp->GetDefaultHeight());
-   btnTmp->SetToolTipText("Add server to the list");
-   btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
+   tmp->Resize(155, fBtnAdd->GetDefaultHeight());
+   fBtnAdd->SetToolTipText("Add server to the list");
+   fBtnAdd->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnAddClicked()");
-   tmp->AddFrame(btnTmp = new TGTextButton(tmp, "   Connect   "),
+   tmp->AddFrame(fBtnConnect = new TGTextButton(tmp, "   Connect   "),
                  new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
-   tmp->Resize(155, btnTmp->GetDefaultHeight());
-   btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
+   tmp->Resize(155, fBtnConnect->GetDefaultHeight());
+   fBtnConnect->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnConnectClicked()");
-   btnTmp->SetToolTipText("Connect to the selected server");
+   fBtnConnect->SetToolTipText("Connect to the selected server");
 
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
                        new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
-   tmp->AddFrame(btnTmp = new TGTextButton(tmp, "  New server  "),
+   tmp->AddFrame(fBtnNew = new TGTextButton(tmp, "  New server  "),
                  new TGLayoutHints(kLHintsLeft | kLHintsBottom |
                  kLHintsExpandX, 3, 3, 15, 3));
-   btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
+   fBtnNew->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnNewServerClicked()");
-   btnTmp->SetToolTipText("Create new session (reset all fields)");
-   tmp->AddFrame(btnTmp = new TGTextButton(tmp, "    Delete    "),
+   fBtnNew->SetToolTipText("Create new session (reset all fields)");
+   tmp->AddFrame(fBtnDelete = new TGTextButton(tmp, "    Delete    "),
                  new TGLayoutHints(kLHintsLeft | kLHintsBottom |
                  kLHintsExpandX, 3, 3, 15, 3));
-   btnTmp->Connect("Clicked()", "TSessionServerFrame", this,
+   fBtnDelete->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnDeleteClicked()");
-   btnTmp->SetToolTipText("Remove server from the list");
+   fBtnDelete->SetToolTipText("Remove server from the list");
    fTxtConfig->Connect("DoubleClicked()", "TSessionServerFrame", this,
                        "OnConfigFileClicked()");
 }
@@ -292,47 +293,36 @@ void TSessionServerFrame::OnBtnDeleteClicked()
       return;
    TString name(fTxtName->GetText());
    TIter next(fViewer->GetSessions());
-   TSessionDescription *desc = 0;
-   // browse list of session descriptions
-   while ((desc = (TSessionDescription *)next())) {
-      // name match
-      if (desc->fName == name) {
-         // if local session, just display message
-         if ((name.CompareTo("Local", TString::kIgnoreCase) == 0) &&
-             (desc->fLocal)) {
-            Int_t retval;
-            new TGMsgBox(fClient->GetRoot(), this, "Error Deleting Session",
-                         "Deleting Local Sessions is not allowed !",
-                         kMBIconExclamation,kMBOk,&retval);
-            break;
-         }
-         // if connected, first disconnect
-         if (desc->fConnected)
-            desc->fProof->Close();
-         // ask for confirmation
-         TString m;
-         m.Form("Are you sure to delete the server \"%s\"",
-                desc->fName.Data());
-         Int_t result;
-         new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
-                      kMBOk | kMBCancel, &result);
-         // if confirmed, delete it
-         if (result == kMBOk) {
-            // remove the Proof session from gROOT list of Proofs
-            if (desc->fProof)
-               gROOT->GetListOfProofs()->Remove(desc->fProof);
-            // remove it from our sessions list
-            fViewer->GetSessions()->Remove((TObject *)desc);
-            // update configuration file
-            WriteConfigFile(kPROOF_GuiConfFile, fViewer->GetSessions());
-            // rebuilds tree viewer with updated list
-            fViewer->BuildSessionHierarchy(fViewer->GetSessions());
-            // update viewer with new selected session
-            TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
-            fViewer->OnListTreeClicked(item, 1, 0, 0);
-         }
-         break;
-      }
+   TSessionDescription *desc = fViewer->GetActDesc();
+
+   if (desc->fLocal) {
+      Int_t retval;
+      new TGMsgBox(fClient->GetRoot(), this, "Error Deleting Session",
+                   "Deleting Local Sessions is not allowed !",
+                    kMBIconExclamation,kMBOk,&retval);
+      return;
+   }
+   if (desc->fConnected)
+      desc->fProof->Close();
+   // ask for confirmation
+   TString m;
+   m.Form("Are you sure to delete the server \"%s\"",
+          desc->fName.Data());
+   Int_t result;
+   new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
+                kMBOk | kMBCancel, &result);
+   // if confirmed, delete it
+   if (result == kMBOk) {
+      // remove the Proof session from gROOT list of Proofs
+      if (desc->fProof)
+         gROOT->GetListOfProofs()->Remove(desc->fProof);
+      // remove it from our sessions list
+      fViewer->GetSessions()->Remove((TObject *)desc);
+      // update configuration file
+      fViewer->WriteConfiguration();
+      fViewer->ReadConfiguration();
+      TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
+      fViewer->OnListTreeClicked(item, 1, 0, 0);
    }
 }
 
@@ -463,6 +453,7 @@ void TSessionServerFrame::OnBtnAddClicked()
    desc->fConnected = kFALSE;
    desc->fLocal = kFALSE;
    desc->fQueries = new TList();
+   desc->fPackages = new TList();
    desc->fActQuery = 0;
    if (strlen(fTxtConfig->GetText()) > 1)
       desc->fConfigFile = TString(fTxtConfig->GetText());
@@ -475,9 +466,8 @@ void TSessionServerFrame::OnBtnAddClicked()
    // add newly created session config to our session list
    fViewer->GetSessions()->Add((TObject *)desc);
    // save into configuration file
-   WriteConfigFile(kPROOF_GuiConfFile, fViewer->GetSessions());
-   // update list tree with updated session list
-   fViewer->BuildSessionHierarchy(fViewer->GetSessions());
+   fViewer->WriteConfiguration();
+   fViewer->ReadConfiguration();
 }
 
 //______________________________________________________________________________
@@ -497,139 +487,6 @@ void TSessionServerFrame::Update(TSessionDescription* desc)
       fTxtConfig->SetText("");
    }
    fTxtUsrName->SetText(desc->fUserName);
-}
-
-//______________________________________________________________________________
-Bool_t TSessionServerFrame::WriteConfigFile(const TString &filePath, TList *vec)
-{
-   // write proof sessions configuration file ($(HOME)/.proofservers.conf)
-
-   char line[2048];
-   char c = kPROOF_GuiConfFileSeparator;
-   // set full path to $(HOME)/.proofservers.conf
-   TString homefilePath(gSystem->UnixPathName(gSystem->HomeDirectory()));
-   homefilePath.Append('/');
-   homefilePath.Append(filePath);
-   FILE* f = fopen(homefilePath.Data(), "w");
-   if (!f) {
-      Error("WriteConfigFile", "Cannot open the config file %s for writing",
-            filePath.Data());
-      return kFALSE;
-   }
-   // iterator on list of sessions config
-   TIter next(vec);
-   TSessionDescription *desc = 0;
-   while ((desc = (TSessionDescription *)next())) {
-      sprintf(line, "%s%c%s%c%d%c%s%c", desc->fName.Data(), c,
-              desc->fAddress.Data(), c, desc->fPort, c,
-              desc->fConfigFile.Data(), c);
-      sprintf(line, "%s%s%c%d%c%s%c%s%c%s%c%d",line, "loglevel", c,
-              desc->fLogLevel, c, "user", c, desc->fUserName.Data(),
-              c, "sync", c, desc->fSync);
-      sprintf(line,"%s\n", line);
-      // write in file
-      if (fprintf(f, line) == 0) {
-         Error("WriteConfigFile", "Error writing to the config file");
-         fclose(f);
-         return kFALSE;
-      }
-   }
-   fclose(f);
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-TList *TSessionServerFrame::ReadConfigFile(const TString &filePath)
-{
-   // read proof sessions configuration file ($(HOME)/.proofservers.conf)
-
-   TList *vec = new TList;
-   TString homefilePath(gSystem->UnixPathName(gSystem->HomeDirectory()));
-   homefilePath.Append('/');
-   homefilePath.Append(filePath);
-   FILE* f = fopen(homefilePath.Data(), "r");
-   if (!f) {
-      if (gDebug > 0)
-         Info("ReadConfigFile", "Cannot open the config file %s", filePath.Data());
-      return vec;
-   }
-   char line[2048];
-   while (fgets(line, sizeof(line), f)) {
-      Int_t len = strlen(line);
-      if (len > 0 && line[len-1] == '\n')
-         line[len-- -1] = '\0';
-      if (line[0] == '#' || line[0] == '\0')
-         continue;         // skip comment and empty lines
-      char* parts[10];
-      Int_t noParts = 0;
-      parts[noParts++] = line;
-      // count number of parts (fields)
-      for (int i = 0; i < len && noParts < 10; i++) {
-         if (line[i] == kPROOF_GuiConfFileSeparator) {
-            parts[noParts++] = &line[i + 1];
-            line[i] = '\0';
-         }
-      }
-      if (noParts < 8) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (1)");
-         continue;
-      }
-      Int_t port, loglevel, sync;
-      // read port number
-      if (sscanf(parts[2], "%d", &port) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (2)");
-         continue;
-      }
-      // read log level
-      if (strcmp(parts[4], "loglevel") != 0) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (3)");
-         continue;
-      }
-      if (sscanf(parts[5], "%d", &loglevel) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (4)");
-         continue;
-      }
-      // build session description
-      TSessionDescription *proofDesc = new TSessionDescription();
-      proofDesc->fName = TString(parts[0]);
-      proofDesc->fAddress = TString(parts[1]);
-      proofDesc->fPort = port;
-      proofDesc->fConfigFile = TString(parts[3]);
-      proofDesc->fLogLevel = loglevel;
-      proofDesc->fConnected = kFALSE;
-      proofDesc->fLocal = kFALSE;
-      proofDesc->fQueries = new TList();
-      proofDesc->fActQuery = 0;
-      proofDesc->fProof = 0;
-      // read synch flag
-      if (strcmp(parts[8], "sync") != 0) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (5)");
-         continue;
-      }
-      if (sscanf(parts[9], "%d", &sync) != 1) {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (6)");
-         continue;
-      }
-      proofDesc->fSync = (Bool_t)sync;
-      // read user name
-      if (strcmp(parts[6], "user") == 0) {
-         if (noParts != 10) {
-            Error("ReadConfigFile",  "PROOF Servers config file corrupted; skipping (7)");
-            delete proofDesc;
-            continue;
-         }
-         proofDesc->fUserName = TString(parts[7]);
-      }
-      else {
-         Error("ReadConfigFile", "PROOF Servers config file corrupted; skipping (8)");
-         delete proofDesc;
-         continue;
-      }
-      // add session description to our session list
-      vec->Add((TObject *)proofDesc);
-   }
-   fclose(f);
-   return vec;
 }
 
 //______________________________________________________________________________
@@ -690,7 +547,6 @@ TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h)
 {
    // Constructor
-   fPackages = 0;
 }
 
 //______________________________________________________________________________
@@ -841,6 +697,31 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fFB->AddFrame(frmcanvas, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                  kLHintsExpandX | kLHintsExpandY));
 
+   TGCompositeFrame* frmLeg = new TGHorizontalFrame(fFB, 300, 100);
+   frmLeg->SetCleanup(kDeepCleanup);
+   TGPicture *pic1 = (TGPicture *)fClient->GetPicture("package.xpm");
+   TGIcon *icn1 = new TGIcon(frmLeg, pic1, pic1->GetWidth(), pic1->GetHeight());
+   frmLeg->AddFrame(icn1, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+      5, 5, 0, 5));
+   frmLeg->AddFrame(new TGLabel(frmLeg, ": Local"),
+      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+
+   TGPicture *pic2 = (TGPicture *)fClient->GetPicture("package_delete.xpm");
+   TGIcon *icn2 = new TGIcon(frmLeg, pic2, pic2->GetWidth(), pic2->GetHeight());
+   frmLeg->AddFrame(icn2, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+      5, 5, 0, 5));
+   frmLeg->AddFrame(new TGLabel(frmLeg, ": Uploaded"),
+      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+
+   TGPicture *pic3 = (TGPicture *)fClient->GetPicture("package_add.xpm");
+   TGIcon *icn3 = new TGIcon(frmLeg, pic3, pic3->GetWidth(), pic3->GetHeight());
+   frmLeg->AddFrame(icn3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+      5, 5, 0, 5));
+   frmLeg->AddFrame(new TGLabel(frmLeg, ": Enabled"),
+      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+   fFB->AddFrame(frmLeg, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+      kLHintsExpandX, 0, 0, 0, 0));
+
    TGCompositeFrame* frmBtn = new TGHorizontalFrame(fFB, 300, 100);
    frmBtn->SetCleanup(kDeepCleanup);
    frmBtn->AddFrame(fBtnUpload = new TGTextButton(frmBtn,
@@ -861,7 +742,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnClear->SetToolTipText("Clear all packages on the server");
    fFB->AddFrame(frmBtn, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
-   fBtnDisable->SetEnabled(kFALSE);
+//   fBtnDisable->SetEnabled(kFALSE);
    fBtnClear->SetEnabled(kFALSE);
 
    TGCompositeFrame* frmBtn3 = new TGHorizontalFrame(fFB, 300, 100);
@@ -1088,6 +969,29 @@ void TSessionFrame::OnMultipleSelection(Bool_t on)
 }
 
 //______________________________________________________________________________
+void TSessionFrame::UpdatePackages()
+{
+   TPackageDescription *package;
+   const TGPicture *pict;
+   fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
+   TIter next(fViewer->GetActDesc()->fPackages);
+   while ((package = (TPackageDescription *)next())) {
+      if (package->fEnabled)
+         pict = fClient->GetPicture("package_add.xpm");
+      else if (package->fUploaded)
+         pict = fClient->GetPicture("package_delete.xpm");
+      else
+         pict = fClient->GetPicture("package.xpm");
+      TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                              package->fId, package->fName,
+                              pict);
+      fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
+   }
+   fLBPackages->Layout();
+   fClient->NeedRedraw(fLBPackages);
+}
+
+//______________________________________________________________________________
 void TSessionFrame::OnUploadPackages()
 {
    // if local session, do nothing
@@ -1104,14 +1008,18 @@ void TSessionFrame::OnUploadPackages()
          if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
             Error("Submit", "Upload package failed");
          else {
-            TObject *o = fPackages->FindObject(name);
+            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
             if (!o) continue;
             TPackageDescription *package = 
                dynamic_cast<TPackageDescription *>(o);
-            if (package)
+            if (package) {
                package->fUploaded = kTRUE;
+               ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_delete.xpm"));
+            }
          }
       }
+      fLBPackages->Layout();
+      fClient->NeedRedraw(fLBPackages);
    }
 }
 
@@ -1129,17 +1037,27 @@ void TSessionFrame::OnEnablePackages()
       TIter next(&selected);
       while ((obj = next())) {
          TString name = obj->GetTitle();
+         TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
+         if (!o) continue;
+         TPackageDescription *package = 
+            dynamic_cast<TPackageDescription *>(o);
+         if (package) {
+            if (!package->fUploaded) {
+               if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
+                  Error("Submit", "Upload package failed");
+               else
+                  package->fUploaded = kTRUE;
+            }
+         }
          if (fViewer->GetActDesc()->fProof->EnablePackage(name) != 0)
             Error("Submit", "Enable package failed");
          else {
-            TObject *o = fPackages->FindObject(name);
-            if (!o) continue;
-            TPackageDescription *package = 
-               dynamic_cast<TPackageDescription *>(o);
-            if (package)
-               package->fEnabled = kTRUE;
+            package->fEnabled = kTRUE;
+            ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_add.xpm"));
          }
       }
+      fLBPackages->Layout();
+      fClient->NeedRedraw(fLBPackages);
    }
 }
 
@@ -1160,14 +1078,18 @@ void TSessionFrame::OnDisablePackages()
          if (fViewer->GetActDesc()->fProof->ClearPackage(name) != 0)
             Error("Submit", "Clear package failed");
          else {
-            TObject *o = fPackages->FindObject(name);
+            TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
             if (!o) continue;
             TPackageDescription *package = 
                dynamic_cast<TPackageDescription *>(o);
-            if (package)
+            if (package) {
                package->fEnabled = kFALSE;
+               ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_delete.xpm"));
+            }
          }
       }
+      fLBPackages->Layout();
+      fClient->NeedRedraw(fLBPackages);
    }
 }
 
@@ -1183,11 +1105,13 @@ void TSessionFrame::OnClearPackages()
       if (fViewer->GetActDesc()->fProof->ClearPackages() != 0)
          Error("Submit", "Clear packages failed");
       else {
-         TIter next(fPackages);
+         TIter next(fViewer->GetActDesc()->fPackages);
          while ((package = (TPackageDescription *)next())) {
             package->fEnabled = kFALSE;
          }
       }
+      fLBPackages->Layout();
+      fClient->NeedRedraw(fLBPackages);
    }
 }
 
@@ -1196,20 +1120,20 @@ void TSessionFrame::OnBtnAddClicked()
 {
    if (fViewer->IsBusy())
       return;
-   if (fPackages == 0) {
-      fPackages = new TList();
-   }
    TGFileInfo fi;
    fi.fFileTypes = pkgtypes;
    new TGFileDialog(fClient->GetRoot(), fViewer, kFDOpen, &fi);
    if (!fi.fFilename) return;
    TPackageDescription *package = new TPackageDescription;
    package->fName = fi.fFilename;
-   package->fId   = fPackages->GetEntries();
+   package->fId   = fViewer->GetActDesc()->fPackages->GetEntries();
    package->fUploaded = kFALSE;
    package->fEnabled = kFALSE;
-   fPackages->Add((TObject *)package);
-   fLBPackages->AddEntry(package->fName, package->fId);
+   fViewer->GetActDesc()->fPackages->Add((TObject *)package);
+   TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                              package->fId, package->fName,
+                              fClient->GetPicture("package.xpm"));
+   fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
 }
@@ -1218,15 +1142,26 @@ void TSessionFrame::OnBtnAddClicked()
 void TSessionFrame::OnBtnRemoveClicked()
 {
    TPackageDescription *package;
+   const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
-   fPackages->Remove(fPackages->At(pos));
+   fViewer->GetActDesc()->fPackages->Remove(
+         fViewer->GetActDesc()->fPackages->At(pos));
    Int_t id = 0;
-   TIter next(fPackages);
+   TIter next(fViewer->GetActDesc()->fPackages);
    while ((package = (TPackageDescription *)next())) {
       package->fId = id;
       id++;
-      fLBPackages->AddEntry(package->fName, package->fId);
+      if (package->fEnabled)
+         pict = fClient->GetPicture("package_add.xpm");
+      else if (package->fUploaded)
+         pict = fClient->GetPicture("package_delete.xpm");
+      else
+         pict = fClient->GetPicture("package.xpm");
+      TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                              package->fId, package->fName,
+                              pict);
+      fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
@@ -1236,19 +1171,30 @@ void TSessionFrame::OnBtnRemoveClicked()
 void TSessionFrame::OnBtnUpClicked()
 {
    TPackageDescription *package;
+   const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
    if (pos <= 0) return;
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
-   package = (TPackageDescription *)fPackages->At(pos);
-   fPackages->Remove(fPackages->At(pos));
+   package = (TPackageDescription *)fViewer->GetActDesc()->fPackages->At(pos);
+   fViewer->GetActDesc()->fPackages->Remove(
+      fViewer->GetActDesc()->fPackages->At(pos));
    package->fId -= 1;
-   fPackages->AddAt(package, package->fId);
+   fViewer->GetActDesc()->fPackages->AddAt(package, package->fId);
    Int_t id = 0;
-   TIter next(fPackages);
+   TIter next(fViewer->GetActDesc()->fPackages);
    while ((package = (TPackageDescription *)next())) {
       package->fId = id;
       id++;
-      fLBPackages->AddEntry(package->fName, package->fId);
+      if (package->fEnabled)
+         pict = fClient->GetPicture("package_add.xpm");
+      else if (package->fUploaded)
+         pict = fClient->GetPicture("package_delete.xpm");
+      else
+         pict = fClient->GetPicture("package.xpm");
+      TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                              package->fId, package->fName,
+                              pict);
+      fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos-1);
    fLBPackages->Layout();
@@ -1259,19 +1205,31 @@ void TSessionFrame::OnBtnUpClicked()
 void TSessionFrame::OnBtnDownClicked()
 {
    TPackageDescription *package;
+   const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
-   if (pos == -1 || pos == fPackages->GetEntries()-1) return;
+   if (pos == -1 || pos == fViewer->GetActDesc()->fPackages->GetEntries()-1) 
+      return;
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
-   package = (TPackageDescription *)fPackages->At(pos);
-   fPackages->Remove(fPackages->At(pos));
+   package = (TPackageDescription *)fViewer->GetActDesc()->fPackages->At(pos);
+   fViewer->GetActDesc()->fPackages->Remove(
+      fViewer->GetActDesc()->fPackages->At(pos));
    package->fId += 1;
-   fPackages->AddAt(package, package->fId);
+   fViewer->GetActDesc()->fPackages->AddAt(package, package->fId);
    Int_t id = 0;
-   TIter next(fPackages);
+   TIter next(fViewer->GetActDesc()->fPackages);
    while ((package = (TPackageDescription *)next())) {
       package->fId = id;
       id++;
-      fLBPackages->AddEntry(package->fName, package->fId);
+      if (package->fEnabled)
+         pict = fClient->GetPicture("package_add.xpm");
+      else if (package->fUploaded)
+         pict = fClient->GetPicture("package_delete.xpm");
+      else
+         pict = fClient->GetPicture("package.xpm");
+      TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
+                              package->fId, package->fName,
+                              pict);
+      fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos+1);
    fLBPackages->Layout();
@@ -1299,7 +1257,8 @@ void TSessionFrame::OnBtnDisconnectClicked()
    item->SetPictures(fViewer->GetProofDisconPict(),
                      fViewer->GetProofDisconPict());
    // update viewer
-   fViewer->OnListTreeClicked(fViewer->GetSessionItem(), 1, 0, 0);
+   fViewer->OnListTreeClicked(fViewer->GetSessionHierarchy()->GetSelected(), 
+      1, 0, 0);
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fViewer->GetStatusBar()->SetText("", 1);
 }
@@ -1373,6 +1332,7 @@ void TSessionFrame::OnBtnGetQueriesClicked()
          newquery->fNoEntries       = query->GetEntries();
          newquery->fFirstEntry      = query->GetFirst();
          newquery->fResult          = query;
+         newquery->fChain           = 0;
          fViewer->GetActDesc()->fQueries->Add((TObject *)newquery);
          TGListTreeItem *item2 = fViewer->GetSessionHierarchy()->AddItem(item,
                   newquery->fQueryName, fViewer->GetQueryConPict(),
@@ -1595,6 +1555,11 @@ void TSessionQueryFrame::Feedback(TList *objs)
 
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
+      return;
+   if ((fViewer->GetActDesc()->fActQuery->fStatus != 
+        TQueryDescription::kSessionQuerySubmitted) &&
+       (fViewer->GetActDesc()->fActQuery->fStatus != 
+        TQueryDescription::kSessionQueryRunning) ) 
       return;
    if ((fViewer->GetActDesc()->fActQuery->fStatus != 
         TQueryDescription::kSessionQuerySubmitted) &&
@@ -1965,6 +1930,10 @@ void TSessionQueryFrame::OnBtnSubmit()
                     newquery->fFirstEntry);
          }
       }
+      else {
+         Error("Submit", "No TChain defined; skipping");
+         return;
+      }
       // set query reference id to unique identifier
       newquery->fReference= Form("session-%s:q%d",
             fViewer->GetActDesc()->fProof->GetSessionTag(), id);
@@ -2022,7 +1991,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
 
    switch (desc->fStatus) {
       case TQueryDescription::kSessionQueryFromProof:
-         fBtnSubmit->SetEnabled(kFALSE);
+         fBtnSubmit->SetEnabled(kTRUE);
          fBtnFinalize->SetEnabled(kTRUE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2031,7 +2000,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryCompleted:
-         fBtnSubmit->SetEnabled(kFALSE);
+         fBtnSubmit->SetEnabled(kTRUE);
          fBtnFinalize->SetEnabled(kTRUE);
          if (desc->fResult && desc->fResult->IsFinalized())
             fBtnFinalize->SetEnabled(kFALSE);
@@ -2069,7 +2038,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryStopped:
-         fBtnSubmit->SetEnabled(kFALSE);
+         fBtnSubmit->SetEnabled(kTRUE);
          fBtnFinalize->SetEnabled(kTRUE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2087,7 +2056,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryFinalized:
-         fBtnSubmit->SetEnabled(kFALSE);
+         fBtnSubmit->SetEnabled(kTRUE);
          fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2375,6 +2344,390 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
 }
 
 //______________________________________________________________________________
+void TSessionViewer::ReadConfiguration(const char *filename)
+{
+
+   if (fViewerEnv)
+      fViewerEnv->Delete();
+   if (filename)
+      fViewerEnv = new TEnv(filename);
+   else 
+      fViewerEnv = new TEnv(fConfigFile);
+
+
+   Bool_t bval = (Bool_t)fViewerEnv->GetValue("Option.Feedback", 1);
+   if (bval)
+      fOptionsMenu->CheckEntry(kOptionsFeedback);
+   else
+      fOptionsMenu->UnCheckEntry(kOptionsFeedback);
+
+   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterHistos", 0); 
+   if (bval) {
+      fOptionsMenu->CheckEntry(kOptionsStatsHist);
+      gEnv->SetValue("Proof.StatsHist", 1);
+   }
+   else {
+      fOptionsMenu->UnCheckEntry(kOptionsStatsHist);
+      gEnv->SetValue("Proof.StatsHist", 0);
+   }
+   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterEvents", 0);
+   if (bval)
+      fOptionsMenu->CheckEntry(kOptionsStatsTrace);
+   else
+      fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
+   bval = (Bool_t)fViewerEnv->GetValue("Option.WorkerEvents", 0);
+   if (bval)
+      fOptionsMenu->CheckEntry(kOptionsStatsTrace);
+   else
+      fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
+
+   Int_t i = 0;
+   while (kFeedbackHistos[i]) {
+      bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]), 0);
+      if (bval)
+         fCascadeMenu->CheckEntry(41+i);
+      else
+         fCascadeMenu->UnCheckEntry(41+i);
+      i++;
+   }
+   TSessionDescription *proofDesc;
+   fSessions->Delete();
+   if (fSessionItem)
+      fSessionHierarchy->DeleteChildren(fSessionItem);
+   else
+      fSessionItem = fSessionHierarchy->AddItem(0, "Sessions", fBaseIcon,
+            fBaseIcon);
+   // add local session description
+   TGListTreeItem *item = fSessionHierarchy->AddItem(fSessionItem, "Local",
+            fLocal, fLocal);
+   fSessionHierarchy->SetToolTipItem(item, "Local Session");
+   TSessionDescription *localdesc = new TSessionDescription();
+   localdesc->fName = "Local";
+   localdesc->fAddress = "Local";
+   localdesc->fPort = 0;
+   localdesc->fConfigFile = "";
+   localdesc->fLogLevel = 0;
+   localdesc->fUserName = "";
+   localdesc->fQueries = new TList();
+   localdesc->fPackages = new TList();
+   localdesc->fActQuery = 0;
+   localdesc->fProof = 0;
+   localdesc->fLocal = kTRUE;
+   localdesc->fSync = kTRUE;
+   localdesc->fNbHistos = 0;
+   item->SetUserData(localdesc);
+   fSessions->Add((TObject *)localdesc);
+   fActDesc = localdesc;
+
+   TIter next(fViewerEnv->GetTable());
+   TEnvRec *er;
+   while ((er = (TEnvRec*) next())) {
+      const char *s;
+      if ((s = strstr(er->GetName(), "SessionDescription."))) {
+         const char *val = fViewerEnv->GetValue(s, (const char*)0);
+         if (val) {
+            Int_t cnt = 0;
+            char *v = StrDup(val);
+            s += 7;
+            while (1) {
+               TString name = strtok(!cnt ? v : 0, ";");
+               if (name.IsNull()) break;
+               TString address = strtok(0, ";");
+               if (address.IsNull()) break;
+               TString port = strtok(0, ";");
+               if (port.IsNull()) break;
+               TString loglevel = strtok(0, ";");
+               if (loglevel.IsNull()) break;
+               TString configfile = strtok(0, ";");
+               TString user = strtok(0, ";");
+               if (user.IsNull()) break;
+               TString sync = strtok(0, ";");
+
+               // build session description
+               proofDesc = new TSessionDescription();
+               proofDesc->fName = name;
+               proofDesc->fAddress = address;
+               proofDesc->fPort = atoi(port);
+               proofDesc->fConfigFile = configfile.Length() > 2 ? configfile : "";
+               proofDesc->fLogLevel = atoi(loglevel);
+               proofDesc->fConnected = kFALSE;
+               proofDesc->fLocal = kFALSE;
+               proofDesc->fQueries = new TList();
+               proofDesc->fPackages = new TList();
+               proofDesc->fActQuery = 0;
+               proofDesc->fProof = 0;
+               proofDesc->fSync = (Bool_t)(atoi(sync));
+               proofDesc->fUserName = user;
+               fSessions->Add((TObject *)proofDesc);
+               item = fSessionHierarchy->AddItem(
+                     fSessionItem, proofDesc->fName.Data(),
+                     fProofDiscon, fProofDiscon);
+               fSessionHierarchy->SetToolTipItem(item, "Proof Session");
+               item->SetUserData(proofDesc);
+               fActDesc = proofDesc;
+               cnt++;
+            }
+            delete [] v;
+         }
+      }
+      if ((s = strstr(er->GetName(), "QueryDescription."))) {
+         const char *val = fViewerEnv->GetValue(s, (const char*)0);
+         if (val) {
+            Int_t cnt = 0;
+            char *v = StrDup(val);
+            s += 7;
+            while (1) {
+
+               TString status = strtok(!cnt ? v : 0, ";");
+               if (status.IsNull()) break;
+
+               TString reference = strtok(0, ";");
+               if (reference.IsNull()) break;
+               TString queryname = strtok(0, ";");
+               if (queryname.IsNull()) break;
+               TString selector = strtok(0, ";");
+               if (selector.IsNull()) break;
+               TString dset = strtok(0, ";");
+               TString options = strtok(0, ";");
+               TString eventlist = strtok(0, ";");
+               TString parfile = strtok(0, ";");
+               TString nbfiles = strtok(0, ";");
+               TString nbentries = strtok(0, ";");
+               TString firstentry = strtok(0, ";");
+
+               TQueryDescription *newquery = new TQueryDescription();
+               newquery->fStatus = 
+                  (TQueryDescription::ESessionQueryStatus)(atoi(status));
+               newquery->fSelectorString  = selector.Length() > 2 ? selector : "";
+               newquery->fReference       = reference.Length() > 2 ? reference : "";
+               newquery->fTDSetString     = dset.Length() > 2 ? dset : "";
+               newquery->fQueryName       = queryname.Length() > 2 ? queryname : "";
+               newquery->fOptions         = options.Length() > 2 ? options : "";
+               newquery->fEventList       = eventlist.Length() > 2 ? eventlist : "";
+               newquery->fParFile         = parfile.Length() > 2 ? parfile : "";
+               newquery->fNbFiles         = atoi(nbfiles);
+               newquery->fNoEntries       = atoi(nbentries);
+               newquery->fFirstEntry      = atoi(firstentry);
+               newquery->fResult          = 0;
+               newquery->fChain           = 0;
+               fActDesc->fQueries->Add((TObject *)newquery);
+               cnt++;
+               TGListTreeItem *item1 = fSessionHierarchy->FindChildByData(
+                     fSessionItem, fActDesc);
+               TGListTreeItem *item2 = fSessionHierarchy->AddItem(
+                  item1, newquery->fQueryName, fQueryCon, fQueryCon);
+               item2->SetUserData(newquery);
+            }
+            delete [] v;
+         }
+      }
+      if ((s = strstr(er->GetName(), "PackageDescription."))) {
+         const char *val = fViewerEnv->GetValue(s, (const char*)0);
+         if (val) {
+            Int_t cnt = 0;
+            char *v = StrDup(val);
+            s += 7;
+            while (1) {
+
+               TString name = strtok(!cnt ? v : 0, ";");
+               if (name.IsNull()) break;
+               TString ident = strtok(0, ";");
+               if (ident.IsNull()) break;
+               TString uploaded = strtok(0, ";");
+               if (uploaded.IsNull()) break;
+               TString enabled = strtok(0, ";");
+               if (enabled.IsNull()) break;
+
+               TPackageDescription *package = new TPackageDescription;
+               package->fName = name;
+               package->fId   = atoi(ident);
+               package->fUploaded = (Bool_t)atoi(uploaded);
+               package->fEnabled = (Bool_t)atoi(enabled);
+               fActDesc->fPackages->Add((TObject *)package);
+               cnt++;
+            }
+            delete [] v;
+         }
+      }
+   }
+   // get list of proof sessions
+   TSeqCollection *proofs = gROOT->GetListOfProofs();
+   if (proofs) {
+      TIter nextp(proofs);
+      TVirtualProof *proof;
+      TQueryResult *query;
+      TQueryDescription *newquery;
+      TSessionDescription *newdesc;
+      // loop over existing Proof sessions
+      while ((proof = (TVirtualProof *)nextp())) {
+         TIter nexts(fSessions);
+         TSessionDescription *desc = 0;
+         Bool_t found = kFALSE;
+         // check if session is already in the list
+         while ((desc = (TSessionDescription *)nexts())) {
+            if (desc->fProof == proof) {
+               desc->fConnected = kTRUE;
+               found = kTRUE;
+               break;
+            }
+         }
+         if (found) continue;
+         // create new session description
+         newdesc = new TSessionDescription();
+         // and fill informations from Proof session
+         newdesc->fName       = proof->GetMaster();
+         newdesc->fConfigFile = proof->GetConfFile();
+         newdesc->fUserName   = proof->GetUser();
+         newdesc->fPort       = proof->GetPort();
+         newdesc->fLogLevel   = proof->GetLogLevel();
+         newdesc->fAddress    = proof->GetMaster();
+         newdesc->fQueries    = new TList();
+         newdesc->fPackages   = new TList();
+         newdesc->fActQuery   = 0;
+         newdesc->fConnected = kTRUE;
+         newdesc->fLocal = kFALSE;
+         newdesc->fSync = kFALSE;
+         newdesc->fNbHistos = 0;
+
+         // get list of queries and fill list tree
+         TIter nextq(proof->GetListOfQueries());
+         while ((query = (TQueryResult *)nextp())) {
+            newquery = new TQueryDescription();
+            newquery->fStatus = query->IsFinalized() ?
+                 TQueryDescription::kSessionQueryFinalized :
+               (TQueryDescription::ESessionQueryStatus)query->GetStatus();
+            newquery->fSelectorString  = query->GetSelecImp()->GetName();
+            newquery->fQueryName       = query->GetName();
+            newquery->fOptions         = query->GetOptions();
+            newquery->fEventList       = "";
+            newquery->fParFile         = "";
+            newquery->fNbFiles         = 0;
+            newquery->fNoEntries       = query->GetEntries();
+            newquery->fFirstEntry      = query->GetFirst();
+            newquery->fResult          = query;
+            newquery->fChain           = 0;
+            newdesc->fQueries->Add((TObject *)newquery);
+         }
+         // add new session description in list tree
+         item = fSessionHierarchy->AddItem(fSessionItem, newdesc->fName.Data(),
+                  fProofCon, fProofCon);
+         fSessionHierarchy->SetToolTipItem(item, "Proof Session");
+         item ->SetUserData(newdesc);
+         // and in our session description list
+         fSessions->Add(newdesc);
+         // set actual description to the last one
+         fActDesc = newdesc;
+      }
+   }
+
+   fSessionHierarchy->ClearHighlighted();
+   fSessionHierarchy->OpenItem(fSessionItem);
+   fSessionHierarchy->OpenItem(item);
+   fSessionHierarchy->HighlightItem(item);
+   fSessionHierarchy->SetSelected(item);
+   fClient->NeedRedraw(fSessionHierarchy);
+}
+
+//______________________________________________________________________________
+void TSessionViewer::WriteConfiguration(const char *filename)
+{
+   TSessionDescription *session;
+   TQueryDescription *query;
+   TPackageDescription *package;
+   Int_t scnt = 0, qcnt = 1, pcnt = 1;
+   const char *fname = filename ? filename : fConfigFile.Data();
+
+   fViewerEnv->Delete();
+   gSystem->Unlink(fname);
+   fViewerEnv = new TEnv(fname);
+
+   fViewerEnv->SetValue("Option.Feedback", 
+      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsFeedback));
+   fViewerEnv->SetValue("Option.MasterHistos", 
+      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsHist));
+   fViewerEnv->SetValue("Option.MasterEvents", 
+      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsTrace));
+   fViewerEnv->SetValue("Option.WorkerEvents", 
+      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace));
+
+   Int_t i = 0;
+   // browse list of feedback histos and check user's selected ones
+   while (kFeedbackHistos[i]) {
+      fViewerEnv->SetValue(Form("Option.%s",kFeedbackHistos[i]), 
+         (Int_t)fCascadeMenu->IsEntryChecked(41+i));
+      i++;
+   }
+
+   TIter snext(fSessions);
+   while ((session = (TSessionDescription *) snext())) {
+      TString sessionstring;
+      sessionstring += session->fName;
+      sessionstring += ";";
+      sessionstring += session->fAddress;
+      sessionstring += ";";
+      sessionstring += Form("%d", session->fPort);
+      sessionstring += ";";
+      sessionstring += Form("%d", session->fLogLevel);
+      sessionstring += ";";
+      sessionstring += session->fConfigFile.Length() > 1 ? session->fConfigFile : " ";
+      sessionstring += ";";
+      sessionstring += session->fUserName;
+      sessionstring += ";";
+      sessionstring += Form("%d", session->fSync);
+      if (scnt > 0) // skip local session
+         fViewerEnv->SetValue(Form("SessionDescription.%d",scnt), sessionstring);
+      scnt++;
+
+      TIter qnext(session->fQueries);
+      while ((query = (TQueryDescription *) qnext())) {
+         TString querystring;
+         querystring += Form("%d", query->fStatus);
+         querystring += ";";
+         querystring += query->fReference.Length() > 1 ? query->fReference : " ";
+         querystring += ";";
+         querystring += query->fQueryName;
+         querystring += ";";
+         querystring += query->fSelectorString.Length() > 1 ? query->fSelectorString : " ";
+         querystring += ";";
+         querystring += query->fTDSetString.Length() > 1 ? query->fTDSetString : " ";
+         querystring += ";";
+         querystring += query->fOptions.Length() > 1 ? query->fOptions : " ";
+         querystring += ";";
+         querystring += query->fEventList.Length() > 1 ? query->fEventList : " ";
+         querystring += ";";
+         querystring += query->fParFile.Length() > 1 ? query->fParFile : " ";
+         querystring += ";";
+         querystring += Form("%d",query->fNbFiles);
+         querystring += ";";
+         querystring += Form("%d",query->fNoEntries);
+         querystring += ";";
+         querystring += Form("%d",query->fFirstEntry);
+         fViewerEnv->SetValue(Form("QueryDescription.%d",qcnt), querystring);
+         qcnt++;
+      }
+      TIter pnext(session->fPackages);
+      while ((package = (TPackageDescription *) pnext())) {
+         TString packagestring;
+         packagestring += package->fName;
+         packagestring += ";";
+         packagestring += Form("%d", package->fId);
+         packagestring += ";";
+         packagestring += Form("%d", package->fUploaded);
+         packagestring += ";";
+         packagestring += Form("%d", package->fEnabled);
+         fViewerEnv->SetValue(Form("PackageDescription.%d",pcnt), packagestring);
+         pcnt++;
+      }
+   }
+   fViewerEnv->Save();
+#ifdef R__WIN32
+   TString fnamenew = Form("%s.new", fname);
+   gSystem->Exec(Form("del %s", fname));
+   gSystem->Exec(Form("rename %s %s", fnamenew.Data(), gSystem->BaseName(fname)));
+#endif
+}
+
+//______________________________________________________________________________
 void TSessionViewer::Build()
 {
    // build main session viewer frame and subframes
@@ -2397,7 +2750,9 @@ void TSessionViewer::Build()
 
    //--- File menu
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
-   fFileMenu->AddEntry("&Load Library...", kFileLoadLibrary);
+   fFileMenu->AddEntry("&Load Config...", kFileLoadConfig);
+   fFileMenu->AddEntry("&Save Config...", kFileSaveConfig);
+   fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Close Viewer",    kFileCloseViewer);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);
@@ -2420,6 +2775,13 @@ void TSessionViewer::Build()
    fQueryMenu->AddSeparator();
    fQueryMenu->AddEntry("&Delete", kQueryDelete);
 
+   fViewerEnv = 0;
+#ifdef WIN32
+   fConfigFile = Form("%s\\.sessionviewer.conf", gSystem->HomeDirectory());
+#else
+   fConfigFile = Form("%s/.sessionviewer.conf", gSystem->HomeDirectory());
+#endif
+
    fCascadeMenu = new TGPopupMenu(fClient->GetRoot());
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
@@ -2441,10 +2803,6 @@ void TSessionViewer::Build()
    fOptionsMenu->AddEntry("Feedback &Active", kOptionsFeedback);
    fOptionsMenu->AddSeparator();
    fOptionsMenu->AddPopup("&Feedback Histos", fCascadeMenu);
-   fOptionsMenu->CheckEntry(kOptionsStatsHist);
-   fOptionsMenu->CheckEntry(kOptionsFeedback);
-   fCascadeMenu->CheckEntry(42);
-   gEnv->SetValue("Proof.StatsHist", 1);
 
    //--- Help menu
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
@@ -2528,11 +2886,14 @@ void TSessionViewer::Build()
 
    //--- Server Frame ----------------------------------------------------------
    fServerFrame = new TSessionServerFrame(fV2, 350, 310);
-   fSessions = fServerFrame->ReadConfigFile(kPROOF_GuiConfFile);
-   BuildSessionHierarchy(fSessions);
+   fSessions = new TList;
+   ReadConfiguration();
    fServerFrame->Build(this);
    fV2->AddFrame(fServerFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
                  kLHintsExpandY, 2, 0, 1, 2));
+   fServerFrame->SetNewEnabled(kFALSE);
+   fServerFrame->SetAddEnabled(kFALSE);
+   fServerFrame->SetConnectEnabled();
 
    //--- Session Frame ---------------------------------------------------------
    fSessionFrame = new TSessionFrame(fV2, 350, 310);
@@ -2656,8 +3017,16 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fV2->ShowFrame(fServerFrame);
          fActFrame = fServerFrame;
       }
+      fServerFrame->SetNewEnabled();
+      fServerFrame->SetAddEnabled();
+      fServerFrame->SetConnectEnabled(kFALSE);
+      fPopupSrv->DisableEntry(kSessionConnect);
+      fSessionMenu->DisableEntry(kSessionConnect);
    }
    else if (entry->GetParent()->GetParent() == 0) { // Server
+      fServerFrame->SetAddEnabled(kFALSE);
+      fServerFrame->SetNewEnabled(kFALSE);
+      fServerFrame->SetConnectEnabled();
       if (entry->GetUserData()) {
          obj = (TObject *)entry->GetUserData();
          if (obj->IsA() != TSessionDescription::Class())
@@ -2674,6 +3043,14 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             msg.Form("PROOF Cluster %s not connected", fActDesc->fName.Data());
          }
          fStatusBar->SetText(msg.Data(), 1);
+      }
+      if (fActDesc->fConnected) {
+         fPopupSrv->DisableEntry(kSessionConnect);
+         fSessionMenu->DisableEntry(kSessionConnect);
+      }
+      else {
+         fPopupSrv->EnableEntry(kSessionConnect);
+         fSessionMenu->EnableEntry(kSessionConnect);
       }
       // local session
       if (fActDesc->fLocal) {
@@ -2709,6 +3086,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       }
       // update session information frame
       fSessionFrame->ProofInfos();
+      fSessionFrame->UpdatePackages();
    }
    else if (entry->GetParent()->GetParent()->GetParent() == 0) { // query
       obj = (TObject *)entry->GetParent()->GetUserData();
@@ -2795,20 +3173,18 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    }
    // enable / disable menu entries
    if (fActDesc->fConnected) {
-      fPopupSrv->DisableEntry(kSessionConnect);
+      fServerFrame->SetDeleteEnabled(kFALSE);
       fPopupSrv->EnableEntry(kSessionDisconnect);
       fPopupSrv->EnableEntry(kSessionCleanup);
-      fSessionMenu->DisableEntry(kSessionConnect);
       fSessionMenu->EnableEntry(kSessionDisconnect);
       fSessionMenu->EnableEntry(kSessionCleanup);
    }
    else {
+      fServerFrame->SetDeleteEnabled();
       fPopupSrv->DisableEntry(kSessionDisconnect);
       fPopupSrv->DisableEntry(kSessionCleanup);
-      fPopupSrv->EnableEntry(kSessionConnect);
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionCleanup);
-      fSessionMenu->EnableEntry(kSessionConnect);
    }
    if (fActDesc->fLocal) {
       fSessionMenu->DisableEntry(kSessionConnect);
@@ -2818,136 +3194,11 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
 }
 
 //______________________________________________________________________________
-void TSessionViewer::BuildSessionHierarchy(TList *list)
-{
-   // Read the list of proof servers from the configuration file.
-   // Get the list of proof servers and running queries from gROOT.
-   // Build the hierarchy.
-
-   // remove list tree entries
-   if (fSessionItem)
-      fSessionHierarchy->DeleteChildren(fSessionItem);
-   else
-      fSessionItem = fSessionHierarchy->AddItem(0, "Sessions", fBaseIcon,
-            fBaseIcon);
-   // add local session description
-   TGListTreeItem *item = fSessionHierarchy->AddItem(fSessionItem, "Local",
-            fLocal, fLocal);
-   fSessionHierarchy->SetToolTipItem(item, "Local Session");
-   TSessionDescription *localdesc = new TSessionDescription();
-   localdesc->fName = "Local";
-   localdesc->fAddress = "Local";
-   localdesc->fPort = 0;
-   localdesc->fConfigFile = "";
-   localdesc->fLogLevel = 0;
-   localdesc->fUserName = "";
-   localdesc->fQueries = new TList();
-   localdesc->fActQuery = 0;
-   localdesc->fProof = 0;
-   localdesc->fLocal = kTRUE;
-   localdesc->fSync = kTRUE;
-   localdesc->fNbHistos = 0;
-   item->SetUserData(localdesc);
-
-   // get list of proof sessions
-   TSeqCollection *proofs = gROOT->GetListOfProofs();
-   if (proofs) {
-      TIter nextp(proofs);
-      TVirtualProof *proof;
-      TQueryResult *query;
-      TQueryDescription *newquery;
-      TSessionDescription *newdesc;
-      // loop over existing Proof sessions
-      while ((proof = (TVirtualProof *)nextp())) {
-         TIter nexts(fSessions);
-         TSessionDescription *desc = 0;
-         Bool_t found = kFALSE;
-         // check if session is already in the list
-         while ((desc = (TSessionDescription *)nexts())) {
-            if (desc->fProof == proof) {
-               desc->fConnected = kTRUE;
-               found = kTRUE;
-               break;
-            }
-         }
-         if (found) continue;
-         // create new session description
-         newdesc = new TSessionDescription();
-         // and fill informations from Proof session
-         newdesc->fName       = proof->GetMaster();
-         newdesc->fConfigFile = proof->GetConfFile();
-         newdesc->fUserName   = proof->GetUser();
-         newdesc->fPort       = proof->GetPort();
-         newdesc->fLogLevel   = proof->GetLogLevel();
-         newdesc->fAddress    = proof->GetMaster();
-         newdesc->fQueries    = new TList();
-         newdesc->fActQuery   = 0;
-         newdesc->fConnected = kTRUE;
-         newdesc->fLocal = kFALSE;
-         newdesc->fSync = kFALSE;
-         newdesc->fNbHistos = 0;
-
-         // get list of queries and fill list tree
-         TIter nextq(proof->GetListOfQueries());
-         while ((query = (TQueryResult *)nextp())) {
-            newquery = new TQueryDescription();
-            newquery->fStatus = query->IsFinalized() ?
-                 TQueryDescription::kSessionQueryFinalized :
-               (TQueryDescription::ESessionQueryStatus)query->GetStatus();
-            newquery->fSelectorString  = query->GetSelecImp()->GetName();
-            newquery->fQueryName       = query->GetName();
-            newquery->fOptions         = query->GetOptions();
-            newquery->fEventList       = "";
-            newquery->fParFile         = "";
-            newquery->fNbFiles         = 0;
-            newquery->fNoEntries       = query->GetEntries();
-            newquery->fFirstEntry      = query->GetFirst();
-            newquery->fResult          = query;
-            newdesc->fQueries->Add((TObject *)newquery);
-         }
-         // add new session description in list tree
-         item = fSessionHierarchy->AddItem(fSessionItem, newdesc->fName.Data(),
-                  fProofCon, fProofCon);
-         fSessionHierarchy->SetToolTipItem(item, "Proof Session");
-         item ->SetUserData(newdesc);
-         // and in our session description list
-         list->Add(newdesc);
-         // set actual description to the last one
-         fActDesc = newdesc;
-      }
-   }
-
-   // loop over session description list and set correct icon
-   // ( connected or disconnected )
-   TIter next(list);
-   TSessionDescription *desc = 0;
-   while ((desc = (TSessionDescription *)next())) {
-      if (desc->fConnected) {
-         item = fSessionHierarchy->AddItem(fSessionItem, desc->fName.Data(),
-                  fProofCon, fProofCon);
-      }
-      else {
-         item = fSessionHierarchy->AddItem(fSessionItem, desc->fName.Data(),
-                  fProofDiscon, fProofDiscon);
-      }
-      fSessionHierarchy->SetToolTipItem(item, "Proof Session");
-      item->SetUserData(desc);
-      fActDesc = desc;
-   }
-   // update list tree
-   fSessionHierarchy->ClearHighlighted();
-   fSessionHierarchy->OpenItem(fSessionItem);
-   fSessionHierarchy->OpenItem(item);
-   fSessionHierarchy->HighlightItem(item);
-   fSessionHierarchy->SetSelected(item);
-   fClient->NeedRedraw(fSessionHierarchy);
-}
-
-//______________________________________________________________________________
 void TSessionViewer::CloseWindow()
 {
    // close main Session Viewer window
 
+   WriteConfiguration();
    // clean-up temporary files
    TString pathtmp;
    pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
@@ -3453,7 +3704,32 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      CloseWindow();
                      break;
 
-                  case kFileLoadLibrary:
+                  case kFileLoadConfig:
+                     {
+                        TGFileInfo fi;
+                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
+                        fi.fIniDir = (char *)gSystem->HomeDirectory();
+                        fi.fFileTypes = conftypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+                        if (fi.fFilename) {
+                           fConfigFile = fi.fFilename;
+                           ReadConfiguration(fConfigFile);
+                        }
+                     }
+                     break;
+
+                  case kFileSaveConfig:
+                     {
+                        TGFileInfo fi;
+                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
+                        fi.fIniDir = (char *)gSystem->HomeDirectory();
+                        fi.fFileTypes = conftypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
+                        if (fi.fFilename) {
+                           fConfigFile = fi.fFilename;
+                           WriteConfiguration(fConfigFile);
+                        }
+                     }
                      break;
 
                   case kFileQuit:
