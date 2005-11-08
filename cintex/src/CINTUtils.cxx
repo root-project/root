@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTUtils.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -312,7 +312,7 @@ namespace ROOT { namespace Cintex {
       } 
       arg_sig += " ";
       // Default value
-      if ( func.ParameterDefault(p) != "" ) arg_sig += func.ParameterDefault(p);
+      if ( func.ParameterDefault(p) != "" ) arg_sig += "'" + func.ParameterDefault(p) + "'";
       else                                  arg_sig += "-";
       arg_sig += " ";
       // Parameter Name
