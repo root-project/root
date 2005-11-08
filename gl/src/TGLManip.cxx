@@ -167,11 +167,7 @@ void TGLManip::DrawAxisWidget(EHeadShape head, Double_t scale, const TGLVertex3 
 //______________________________________________________________________________
 void TGLManip::DrawOrigin(const TGLVertex3 & origin, Double_t scale, Float_t rgba[4]) const
 {
-   SetDrawColors(rgba);
-   glPushMatrix();
-   glTranslated(origin.X(), origin.Y(), origin.Z());
-   gluSphere(fgQuad.Get(), scale*2.0, fgQuality, fgQuality);
-   glPopMatrix();
+   TGLUtil::DrawSphere(origin, scale*2.0, rgba);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.11 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.12 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -36,19 +36,6 @@ class TGLCamera
 {
 private:
    // Fields
-   enum
-   {
-      kNEAR    = 0,
-      kLEFT    = 1,
-      kRIGHT   = 2,
-      kTOP     = 3,
-      kBOTTOM  = 4,
-      kFAR     = 5,
-      kPlanesPerFrustum
-   };
-
-   // Frustum planes (cached)
-   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //!
 
    // Debuging visual aids
    TGLBoundingBox   fPreviousInterestBox;  //! previous interest box (DEBUG)
@@ -67,6 +54,20 @@ private:
 
 protected:
    // Fields
+   enum
+   {
+      kNear    = 0,
+      kLeft    = 1,
+      kRight   = 2,
+      kTop     = 3,
+      kBottom  = 4,
+      kFar     = 5,
+      kPlanesPerFrustum
+   };
+
+   // Frustum planes (cached)
+   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //!
+
    TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
    TGLMatrix fProjM;       //! projection matrix        (cached)
    TGLMatrix fModVM;       //! modelView matrix         (cached)
@@ -101,7 +102,8 @@ public:
 
    // Current orientation 
    TGLVertex3 EyePoint() const;
-   TGLVector3 EyeDirection() const;
+   TGLVector3 EyeDirection(Bool_t nearClip) const; // Camera dir. vector (to near or far plane)
+   TGLVertex3 FrustumCenter() const;
 
    // Overlap / projection / intersection tests
    // Viewport is GL coorinate system - origin bottom/left

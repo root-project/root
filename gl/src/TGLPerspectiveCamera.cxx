@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.7 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -66,8 +66,8 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
    fDollyDefault = longest/(2.0*tan(fFOV*PI/360.0));
    fDollyDefault += nextLongest/2.0;
    fDollyMin = -fDollyDefault;
-   fDollyDefault *= 1.5;
-   fDollyMax = fDollyDefault * 3.0;
+   fDollyDefault *= 1.1;
+   fDollyMax = fDollyDefault * 7.0;
 
    Reset();
 }
@@ -172,7 +172,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
    }
 
    // iv) Create a clip plane, using the eye direction as normal, passing through eye point
-   TGLPlane clipPlane(EyeDirection(),EyePoint());
+   TGLPlane clipPlane(EyeDirection(kFALSE),EyePoint());
    fCacheDirty = modifiedCache;
 
    // v) find the near/far distance which just encapsulate the passed bounding box vertexes
@@ -201,8 +201,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
    if (nearClipDist < farClipDist/1000.0) {
       nearClipDist = farClipDist/1000.0;
    }
-   // vi) reset the perspective using the correct near/far clips distances
-   // and restore modelview mode
+
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 
@@ -214,6 +213,8 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
                     pickRect->Width(), pickRect->Height(),
                     viewport);
    }
+   // vi) reset the perspective using the correct near/far clips distances
+   // and restore modelview mode
    gluPerspective(fFOV, fViewport.Aspect(), nearClipDist, farClipDist);
    glMatrixMode(GL_MODELVIEW);
 
@@ -227,4 +228,3 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
       Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClipDist, farClipDist);
    }
 }
-

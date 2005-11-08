@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.5 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.6 2005/07/08 15:39:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -25,21 +25,19 @@
  *************************************************************************/
 class TGLOrthoCamera : public TGLCamera {
 public:
-   enum EType { kXOY, kYOZ, kXOZ };
+   enum EType { kXOY, kXOZ, kZOY  };
 private:
    // Fields
    EType          fType;      //!
 
-   // Set in Setup()
-   Double_t       fZoomMin;    //!
-   Double_t       fZoomDefault;//!
-   Double_t       fZoomMax;    //!
-   Double_t       fVolumeDiag; //!
+   // Limits - set in Setup()
+   Double_t       fZoomMin;      //!
+   Double_t       fZoomDefault;  //!
+   Double_t       fZoomMax;      //!
+   TGLBoundingBox fVolume;       //!
 
-   Double_t       fWidth;     //!
-   Double_t       fHeight;    //!
+	// Current interaction
    Double_t       fZoom;      //!
-   TGLVertex3     fCenter;    //!
    TGLVector3     fTruck;     //!
    TGLMatrix      fMatrix;    //!
 

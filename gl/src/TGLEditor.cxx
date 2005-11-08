@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.18 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.19 2005/11/04 20:13:08 pcanal Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -183,7 +183,7 @@ void TGLColorEditor::DoSlider(Int_t val)
          fRGBA[fLMode * 4 + 2] = val / 100.f;
          break;
       case kHSa:
-         if (!fIsLight) fRGBA[3] = val / 100.f;
+         if (!fIsLight) fRGBA[fLMode * 4 + 3] = val / 100.f;
          break;
       case kHSs:
          if (!fIsLight) fRGBA[16] = val;

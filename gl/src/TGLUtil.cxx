@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.12 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.13 2005/11/04 20:13:08 pcanal Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+#include "TGLQuadric.h"
 #include "TError.h"
 #include "TMath.h"
 #include "Riostream.h"
@@ -507,3 +508,19 @@ void TGLUtil::CheckError()
       Error("TGLUtil::CheckError", (const char *)errString);
    }
 }
+
+//______________________________________________________________________________
+void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4])
+{
+   static TGLQuadric quad;
+   glPushMatrix();
+   glTranslated(position.X(), position.Y(), position.Z());
+
+   // Set diffuse material and default color - cover cases lighting on/off
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
+   glColor3d(rgba[0], rgba[1], rgba[2]);
+   gluSphere(quad.Get(), radius, 40, 40);
+   glPopMatrix();
+}
+
+

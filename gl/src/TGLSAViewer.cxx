@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.6 2005/10/05 12:35:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.7 2005/10/24 14:49:33 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -144,7 +144,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fViewMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
    fViewMenu->AddEntry("&XOY plane", kGLXOY);
    fViewMenu->AddEntry("XO&Z plane", kGLXOZ);
-   fViewMenu->AddEntry("&YOZ plane", kGLYOZ);
+   fViewMenu->AddEntry("&ZOY plane", kGLZOY);
    fViewMenu->AddEntry("&Perspective view", kGLPersp);
    fViewMenu->Associate(fFrame);
 
@@ -337,8 +337,8 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLXOZ:
             SetCurrentCamera(TGLViewer::kCameraXOZ);
             break;
-         case kGLYOZ:
-            SetCurrentCamera(TGLViewer::kCameraYOZ);
+         case kGLZOY:
+            SetCurrentCamera(TGLViewer::kCameraZOY);
             break;
         case kGLPersp:
            SetCurrentCamera(TGLViewer::kCameraPerspective);

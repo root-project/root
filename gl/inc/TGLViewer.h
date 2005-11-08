@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.13 2005/10/11 10:25:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.14 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -65,7 +65,7 @@ class TGLViewer : public TVirtualViewer3D
    friend class TGLOutput;
 public:
 
-   enum ECameraType { kCameraPerspective, kCameraXOY, kCameraYOZ, kCameraXOZ };
+   enum ECameraType { kCameraPerspective, kCameraXOY, kCameraXOZ, kCameraZOY };
    enum ELight      { kLightFront =  0x00000001, 
                       kLightTop   =  0x00000002, 
                       kLightBottom = 0x00000004,
@@ -90,12 +90,13 @@ private:
    // TODO: Put in vector and allow external creation
    TGLPerspectiveCamera fPerspectiveCamera;  //!
    TGLOrthoCamera       fOrthoXOYCamera;     //!
-   TGLOrthoCamera       fOrthoYOZCamera;     //!
    TGLOrthoCamera       fOrthoXOZCamera;     //!
+   TGLOrthoCamera       fOrthoZOYCamera;     //!
    TGLCamera          * fCurrentCamera;      //!
 
    // Scene management - to TGLScene or helper object?
-   Bool_t            fInternalRebuild;       //! internal scene rebuild in progress?
+   Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?
+   Bool_t            fSetupRequired;         //! setup of camera and clip required
    Bool_t            fAcceptedAllPhysicals;  //! did we take all physicals offered in AddObject()
    Bool_t            fInternalPIDs;          //! using internal physical IDs
    UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
@@ -170,6 +171,7 @@ private:
    // Lights
    void        SetupLights();
 
+   // Clipping
    void ClearClips();
 
    // Non-copyable class

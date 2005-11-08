@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.19 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.20 2005/10/26 12:00:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -54,10 +54,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fContextMenu(0),
    fPerspectiveCamera(),
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
-   fOrthoYOZCamera(TGLOrthoCamera::kYOZ),
    fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
+   fOrthoZOYCamera(TGLOrthoCamera::kZOY),
    fCurrentCamera(&fPerspectiveCamera),
    fInternalRebuild(kFALSE), 
+   fSetupRequired(kTRUE),
    fAcceptedAllPhysicals(kTRUE),
    fInternalPIDs(kFALSE), 
    fNextInternalPID(1), // 0 reserved
@@ -134,6 +135,9 @@ void TGLViewer::BeginScene()
       // new scene range
       CurrentCamera().ResetInterest();
 
+      // Camera and clip setup required
+      fSetupRequired = kTRUE;
+
       // External rebuilds could potentially invalidate all logical and
       // physical shapes - including any modified physicals
       // Physicals must be removed first
@@ -170,13 +174,25 @@ void TGLViewer::EndScene()
 {
    fScene.ReleaseLock(TGLScene::kModifyLock);
 
-   // External scene build
-   if (!fInternalRebuild) {
+   if (fSetupRequired) {
       SetupCameras();
       SetupClips();
+      fSetupRequired = kFALSE;
+   }
+
+   // Externally triggered scene rebuild (frist part) completed
+   if (!fInternalRebuild) {
+      // Request intial draw
       RequestDraw();
-   } else if (fInternalRebuild) {
+
+      // After draw RebuildScene will be called to test if a second internal 
+      // rebuild is to properly establish scene limits and camera interest (it will be).
+      // We want to (re)setup camera limits and clips again once this is done
+      fSetupRequired = kTRUE;
+   } else {
       fInternalRebuild = kFALSE;
+
+      // Internal rebuilds retain current camera/clip setup
    }      
 
    if (gDebug>2 || fDebugMode) {
@@ -219,6 +235,7 @@ Bool_t TGLViewer::RebuildScene()
       Info("TGLViewer::RebuildScene", "required");
    }
 
+   // Internally triggered scene rebuild
    fInternalRebuild = kTRUE;
    
    TGLStopwatch timer;
@@ -686,8 +703,8 @@ void TGLViewer::SetupCameras()
    if (!box.IsEmpty()) {
       fPerspectiveCamera.Setup(box);
       fOrthoXOYCamera.Setup(box);
-      fOrthoYOZCamera.Setup(box);
       fOrthoXOZCamera.Setup(box);
+      fOrthoZOYCamera.Setup(box);
    }
 }
 
@@ -696,38 +713,47 @@ void TGLViewer::SetupLights()
 {
    // Setup lights
 
-   // Locate static light source positions - this is done once only
-   // after the scene has been populated 
+   // Locate static light source positions
    const TGLBoundingBox & box = fScene.BoundingBox();
    if (!box.IsEmpty()) {
-      // Find camera offset to scene bounding box so lights can be
-      // arranged round it
+      // Calculate a sphere radius to arrange lights round
+      Double_t lightRadius = box.Extents().Mag() * 2.5;
+      Double_t sideLightsZ, frontLightZ;
+      
+      // Find Z depth (in eye coords) for front and side lights
+      // Has to be handlded differently due to ortho camera infinite
+      // viewpoint. TODO: Move into camera classes?
+      TGLOrthoCamera * orthoCamera = dynamic_cast<TGLOrthoCamera *>(fCurrentCamera);
+      if (orthoCamera) {
+         sideLightsZ = lightRadius / 4.0;
+         frontLightZ = sideLightsZ / 2.0;
+      } else {
+         // Perspective camera
 
-      // Apply camera so can extract the eye point
-      fCurrentCamera->Apply(box);
-      TGLVector3 lightVector = fCurrentCamera->EyePoint() - box.Center();
+         // Extract vector from camera eye point to center
+         // Camera must have been applied already
+         TGLVector3 eyeVector = fCurrentCamera->EyePoint() - fCurrentCamera->FrustumCenter();
 
-      // Reset the modelview to lights are placed in fixed eye space
+         // Pull forward slightly (0.85) to avoid to sharp a cutoff
+         sideLightsZ = eyeVector.Mag() * -0.85;
+         frontLightZ = 0.0;
+      }
+
+      // Reset the modelview so static lights are placed in fixed eye space
+      // This will destroy camera application - so we re-apply it below
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
-
-      // Calculate a light Z distance - to center of box in eye coords
-      // Pull forward slightly (0.85) to avoid to sharp a cutoff
-      Double_t lightZ = lightVector.Mag() * 0.85;
-
-      // Calculate a sphere radius to arrange lights round
-      Double_t lightRadius = box.Extents().Mag() * 3.0;
 
       // 0: Front
       // 1: Top   
       // 2: Bottom
       // 3: Left
       // 4: Right
-      Float_t pos0[] = {     0.0,              0.0,     0.0, 1.0};
-      Float_t pos1[] = {     0.0,      lightRadius, -lightZ, 1.0};
-      Float_t pos2[] = {     0.0,     -lightRadius, -lightZ, 1.0};
-      Float_t pos3[] = {-lightRadius,          0.0, -lightZ, 1.0};
-      Float_t pos4[] = { lightRadius,          0.0, -lightZ, 1.0};
+      Float_t pos0[] = {     0.0,              0.0, frontLightZ, 1.0};
+      Float_t pos1[] = {     0.0,      lightRadius, sideLightsZ, 1.0};
+      Float_t pos2[] = {     0.0,     -lightRadius, sideLightsZ, 1.0};
+      Float_t pos3[] = {-lightRadius,          0.0, sideLightsZ, 1.0};
+      Float_t pos4[] = { lightRadius,          0.0, sideLightsZ, 1.0};
 
       Float_t frontLightColor[] = {0.35, 0.35, 0.35, 1.0};
       Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};
@@ -749,10 +775,28 @@ void TGLViewer::SetupLights()
    for (UInt_t light = 0; (1<<light) < kLightMask; light++) {
       if ((1<<light) & fLightState) {
          glEnable(GLenum(GL_LIGHT0 + light));
+
+         // Debug mode - show active lights in yellow
+         if (fDebugMode) {
+
+            // Lighting itself needs to be disable so a single one can show...!
+            glDisable(GL_LIGHTING);
+            Float_t yellow[4] = { 1.0, 1.0, 0.0, 1.0 };
+            Float_t position[4]; // Only float parameters for lights (no double)....
+            glGetLightfv(GLenum(GL_LIGHT0 + light), GL_POSITION, position);
+            Double_t size = fScene.BoundingBox().Extents().Mag() / 10.0;
+            TGLVertex3 dPosition(position[0], position[1], position[2]);
+            TGLUtil::DrawSphere(dPosition, size, yellow);
+            glEnable(GL_LIGHTING);
+         }
       } else {
          glDisable(GLenum(GL_LIGHT0 + light));
       }
    }
+
+   // Restore camera which was applied before we were called, and is disturbed 
+   // by static light positioning above. 
+   fCurrentCamera->Apply(fScene.BoundingBox());
 }
 
 //______________________________________________________________________________
@@ -800,8 +844,6 @@ void TGLViewer::DoDraw()
    // GL pre draw setup
    if (!fIsPrinting) PreDraw();
 
-   SetupLights();
-
    // Apply current camera projection - always do this even if scene is empty and we don't draw, 
    // as scene will likely be rebuilt, requiring camera interest and caching needs to be established
    fCurrentCamera->Apply(fScene.BoundingBox());
@@ -811,6 +853,9 @@ void TGLViewer::DoDraw()
       // Setup total scene draw time 
       // Unlimted for high quality draws, 100 msec otherwise
       Double_t sceneDrawTime = fNextSceneLOD == kHigh ? 0.0 : 100.0;
+
+      // Setup lighting
+      SetupLights();
 
       // Draw the scene with clip object
       fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime, fCurrentClip);
@@ -829,16 +874,29 @@ void TGLViewer::DoDraw()
       // Draw current manipulator - move to scene - only if selection?
       fCurrentManip->Draw(*fCurrentCamera);
 
-      // Debug mode - draw some extra boxes (unclipped)
+      // Debug mode - draw some extra details
       if (fDebugMode) {
          glDisable(GL_LIGHTING);
          CurrentCamera().DrawDebugAids();
 
+         // TODO: Scene + origin should probably be availible through GUI
+         // along with axes - look when reworking
          // Green scene bounding box
          glColor3d(0.0, 1.0, 0.0);
          fScene.BoundingBox().Draw();
+
+         // Scene bounding box center sphere (green) and 
+         glDisable(GL_DEPTH_TEST);
+         Double_t size = fScene.BoundingBox().Extents().Mag() / 200.0;
+         static Float_t white[4] = {1.0, 1.0, 1.0, 1.0};
+         TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), size, white);
+         static Float_t green[4] = {0.0, 1.0, 0.0, 1.0};
+         const TGLVertex3 & center = fScene.BoundingBox().Center();
+         TGLUtil::DrawSphere(center, size, green);
+         glEnable(GL_DEPTH_TEST);
+
          glEnable(GL_LIGHTING);
-       }
+         }
    }
 
    PostDraw();
@@ -952,6 +1010,9 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
    fCurrentCamera->WindowToViewport(glRect);
    fCurrentCamera->Apply(fScene.BoundingBox(), &glRect);
 
+   // Ask scene to do selection - this will result in a draw pass
+   // Note we do not call DoDraw() here as there is lighting setup which 
+   // will distrurb the camera picking rect - and are not needed for selection
    Bool_t changed = fScene.Select(*fCurrentCamera, fDrawStyle, fCurrentClip);
 
    // Release select lock on scene before invalidation
@@ -994,7 +1055,9 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
    fCurrentCamera->SetViewport(fViewport);
 
    // Can't do this until gVirtualGL has been setup - change with TGLManager
-   //RequestDraw();
+   if (gVirtualGL) {
+      RequestDraw();
+   }
 }
 
 //______________________________________________________________________________
@@ -1014,12 +1077,12 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
          fCurrentCamera = &fOrthoXOYCamera;
          break;
       }
-      case(kCameraYOZ): {
-         fCurrentCamera = &fOrthoYOZCamera;
-         break;
-      }
       case(kCameraXOZ): {
          fCurrentCamera = &fOrthoXOZCamera;
+         break;
+      }
+      case(kCameraZOY): {
+         fCurrentCamera = &fOrthoZOYCamera;
          break;
       }
       default: {
@@ -1416,18 +1479,18 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
       // for mouse wheel
       switch(event->fCode) {
          // Buttons 4/5 are mouse wheel
+         // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
+         // have correct modifier flags with mouse wheel under Windows..
          case(kButton4): {
             // Zoom out (adjust camera FOV)
-            if (CurrentCamera().Zoom(-30, event->fState & kKeyControlMask, 
-                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
+            if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
             break;
          }
          case(kButton5): {
             // Zoom in (adjust camera FOV)
-            if (CurrentCamera().Zoom(+30, event->fState & kKeyControlMask, 
-                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
+            if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
             break;

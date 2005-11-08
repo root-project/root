@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.13 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.14 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -181,6 +181,9 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    //
 
    TGLVector3 diff = highVertex - lowVertex;
+   if (diff.X() < 0.0 || diff.Y() < 0.0 || diff.Z() < 0.0) {
+      Error("TGLBoundingBox::SetAligned", "low/high vertex range error");
+   }
    fVertex[0] = lowVertex;
    fVertex[1] = lowVertex; fVertex[1].X() += diff.X();
    fVertex[2] = lowVertex; fVertex[2].X() += diff.X(); fVertex[2].Y() += diff.Y();

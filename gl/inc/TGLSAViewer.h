@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.4 2005/10/04 20:33:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.5 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -36,7 +36,7 @@ class TGLSAViewer : public TGLViewer
 {
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
-      kGLXOZ, kGLYOZ, kGLPersp, kGLPrintEPS_SIMPLE,
+      kGLXOZ, kGLZOY, kGLPersp, kGLPrintEPS_SIMPLE,
       kGLPrintEPS_BSP, kGLPrintPDF_SIMPLE, kGLPrintPDF_BSP,
       kGLExit };
 

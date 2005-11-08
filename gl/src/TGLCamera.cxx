@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.17 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.18 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -77,38 +77,38 @@ void TGLCamera::UpdateCache()
    fClipM[15] = fModVM[12] * fProjM[ 3] + fModVM[13] * fProjM[ 7] + fModVM[14] * fProjM[11] + fModVM[15] * fProjM[15];
 
    // RIGHT clipping plane
-   fFrustumPlanes[kRIGHT].Set(fClipM[ 3] - fClipM[ 0],
+   fFrustumPlanes[kRight].Set(fClipM[ 3] - fClipM[ 0],
                               fClipM[ 7] - fClipM[ 4],
                               fClipM[11] - fClipM[ 8],
                               fClipM[15] - fClipM[12]);
 
    // LEFT clipping plane
-   fFrustumPlanes[kLEFT].Set(fClipM[ 3] + fClipM[ 0],
+   fFrustumPlanes[kLeft].Set(fClipM[ 3] + fClipM[ 0],
                              fClipM[ 7] + fClipM[ 4],
                              fClipM[11] + fClipM[ 8],
                              fClipM[15] + fClipM[12]);
 
    // BOTTOM clipping plane
-   fFrustumPlanes[kBOTTOM].Set(fClipM[ 3] + fClipM[ 1],
+   fFrustumPlanes[kBottom].Set(fClipM[ 3] + fClipM[ 1],
                                fClipM[ 7] + fClipM[ 5],
                                fClipM[11] + fClipM[ 9],
                                fClipM[15] + fClipM[13]);
 
 
    // TOP clipping plane
-   fFrustumPlanes[kTOP].Set(fClipM[ 3] - fClipM[ 1],
+   fFrustumPlanes[kTop].Set(fClipM[ 3] - fClipM[ 1],
                             fClipM[ 7] - fClipM[ 5],
                             fClipM[11] - fClipM[ 9],
                             fClipM[15] - fClipM[13]);
 
    // FAR clipping plane
-   fFrustumPlanes[kFAR].Set(fClipM[ 3] - fClipM[ 2],
+   fFrustumPlanes[kFar].Set(fClipM[ 3] - fClipM[ 2],
                             fClipM[ 7] - fClipM[ 6],
                             fClipM[11] - fClipM[10],
                             fClipM[15] - fClipM[14]);
 
    // NEAR clipping plane
-   fFrustumPlanes[kNEAR].Set(fClipM[ 3] + fClipM[ 2],
+   fFrustumPlanes[kNear].Set(fClipM[ 3] + fClipM[ 2],
                              fClipM[ 7] + fClipM[ 6],
                              fClipM[11] + fClipM[10],
                              fClipM[15] + fClipM[14]);
@@ -141,24 +141,24 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    //  0-------1
 
    // Get four vertices of frustum on the far clipping plane
-   vertex[4] = Intersection(fFrustumPlanes[kFAR], fFrustumPlanes[kBOTTOM], fFrustumPlanes[kLEFT]);
-   vertex[5] = Intersection(fFrustumPlanes[kFAR], fFrustumPlanes[kBOTTOM], fFrustumPlanes[kRIGHT]);
-   vertex[6] = Intersection(fFrustumPlanes[kFAR], fFrustumPlanes[kTOP],    fFrustumPlanes[kRIGHT]);
-   vertex[7] = Intersection(fFrustumPlanes[kFAR], fFrustumPlanes[kTOP],    fFrustumPlanes[kLEFT]);
+   vertex[4] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
+   vertex[5] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]);
+   vertex[6] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]);
+   vertex[7] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]);
 
    if (asBox) {
       // Now find the matching four verticies for above, projected onto near clip plane
       // As near and far clip planes are parallel this forms a orientated box encompassing the frustum
-      vertex[0] = fFrustumPlanes[kNEAR].NearestOn(vertex[4]);
-      vertex[1] = fFrustumPlanes[kNEAR].NearestOn(vertex[5]);
-      vertex[2] = fFrustumPlanes[kNEAR].NearestOn(vertex[6]);
-      vertex[3] = fFrustumPlanes[kNEAR].NearestOn(vertex[7]);
+      vertex[0] = fFrustumPlanes[kNear].NearestOn(vertex[4]);
+      vertex[1] = fFrustumPlanes[kNear].NearestOn(vertex[5]);
+      vertex[2] = fFrustumPlanes[kNear].NearestOn(vertex[6]);
+      vertex[3] = fFrustumPlanes[kNear].NearestOn(vertex[7]);
    } else {
       // returing true frustum - find verticies at near clipping plane
-      vertex[0] = Intersection(fFrustumPlanes[kNEAR], fFrustumPlanes[kBOTTOM], fFrustumPlanes[kLEFT]);
-      vertex[1] = Intersection(fFrustumPlanes[kNEAR], fFrustumPlanes[kBOTTOM], fFrustumPlanes[kRIGHT]);
-      vertex[2] = Intersection(fFrustumPlanes[kNEAR], fFrustumPlanes[kTOP],    fFrustumPlanes[kRIGHT]);
-      vertex[3] = Intersection(fFrustumPlanes[kNEAR], fFrustumPlanes[kTOP],    fFrustumPlanes[kLEFT]);
+      vertex[0] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
+      vertex[1] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]);
+      vertex[2] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]);
+      vertex[3] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]);
    }
 
    return TGLBoundingBox(vertex);
@@ -167,22 +167,44 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
 //______________________________________________________________________________
 TGLVertex3 TGLCamera::EyePoint() const
 {
-  // Extract the camera eye point using the current frustum planes
-  if (fCacheDirty) {
-      Error("TGLCamera::FrustumBox()", "cache dirty");
+   // Return the camera eye point
+   if (fCacheDirty) {
+      Error("TGLPerspectiveCamera::FrustumBox()", "cache dirty");
    }
-   return Intersection(fFrustumPlanes[kRIGHT], fFrustumPlanes[kLEFT], fFrustumPlanes[kTOP]);
+
+   // Use intersection of right/left/top frustum planes - can be done in 
+   // other ways from camera values but this is easiest.
+   // Note for an ortho camera this will result in an infinite z distance
+   // which is theorectically correct although of limited use
+   return Intersection(fFrustumPlanes[kRight], fFrustumPlanes[kLeft], fFrustumPlanes[kTop]);
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::EyeDirection() const
+TGLVector3 TGLCamera::EyeDirection(Bool_t nearClip) const
 {
-   // Extract the camera eye direction using the current frustum planes
+   // Extract the camera eye direction vector. Magnitude
+   // if from EyePoint() to near or far clip plane depending
+   // on passed flag
    if (fCacheDirty) {
       Error("TGLCamera::FrustumBox()", "cache dirty");
    }
-   // Direction is just normal of near clipping plane
-   return fFrustumPlanes[kNEAR].Norm();
+   TGLVertex3 eyePoint = EyePoint();
+   if (nearClip) {
+      return fFrustumPlanes[kNear].NearestOn(eyePoint) - eyePoint;
+   } else {
+      return fFrustumPlanes[kFar].NearestOn(eyePoint) - eyePoint;
+   }
+}
+
+//______________________________________________________________________________
+TGLVertex3 TGLCamera::FrustumCenter() const
+{
+   // Find the center of the camera frustum from intersection of planes
+   // This method will work even with parallel left/right & top/bottom and
+   // infinite eye point of ortho cameras
+   TGLVertex3 nearBottomLeft = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
+   TGLVertex3 farTopRight    = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop], fFrustumPlanes[kRight]);
+   return nearBottomLeft + (farTopRight - nearBottomLeft)/2.0;
 }
 
 //______________________________________________________________________________
@@ -206,7 +228,7 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
      // plane is completely removed - disabled at present
      // TODO: In future may want to fade object (opacity) as they approach
       // near clip - how will this be returned? template pair?
-      /*if (planeIndex == kNEAR && planeOverlap == kPartial) {
+      /*if (planeIndex == kNear && planeOverlap == kPartial) {
          return kOutside;
       }*/
       // Once we find a single plane which shape is outside, we are outside the frustum
@@ -510,7 +532,7 @@ void TGLCamera::DrawDebugAids() const
    // Also draw line from current eye point out in eye direction - should not
    // appear if calculated correctly
    TGLVertex3 start = EyePoint();
-   TGLVertex3 end = start + EyeDirection();
+   TGLVertex3 end = start + EyeDirection(kFALSE); // To far clip plane
    glColor3d(1.0,1.0,1.0);
    glBegin(GL_LINES);
    glVertex3dv(start.CArr());

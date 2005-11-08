@@ -1,6 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.5 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
-// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,19 +16,20 @@
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
+#include "TGLQuadric.h" // REmove
+
 #include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TGLOrthoCamera)
 
-UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 1000;
+UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 
 //______________________________________________________________________________
 TGLOrthoCamera::TGLOrthoCamera(EType type) :
-   fType(type), 
-   fZoomMin(0.01), fZoomDefault(1.0), fZoomMax(100.0),
-   fVolumeDiag(100.0), fWidth(100), fHeight(100), fZoom(1.0),
-   fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0), fMatrix()
+   fType(type), fZoomMin(0.01), fZoomDefault(0.9), fZoomMax(1000.0), 
+	fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
+	fZoom(1.0), fTruck(0.0, 0.0, 0.0), fMatrix()
 {
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
@@ -42,52 +42,59 @@ TGLOrthoCamera::~TGLOrthoCamera()
 //______________________________________________________________________________
 void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
 {
-   fCenter = box.Center();
+   static const Double_t rotMatrixXOY[] = { 1.,  0.,  0.,  0.,
+                                            0., -1.,  0.,  0.,
+                                            0.,  0., -1.,  0.,
+                                            0.,  0.,  0.,  1. };
 
-   static const Double_t rotMatrixXOY[] = {1., 0.,  0., 0.,
-                                           0., 1.,  0., 0.,
-                                           0., 0.,  1., 0.,
-                                           0., 0.,  0., 1.};
-   static const Double_t rotMatrixYOZ[] = {1.,  0.,  0.,  0.,
-                                           0.,  0., -1.,  0.,
-                                           0.,  1.,  0.,  0.,
-                                           0.,  0.,  0.,  1.};
-   static const Double_t rotMatrixXOZ[] = { 0.,  0.,  1.,  0.,
+   static const Double_t rotMatrixXOZ[] = { 1.,  0.,  0.,  0.,
+                                            0.,  0., -1.,  0.,
                                             0.,  1.,  0.,  0.,
-                                           -1.,  0.,  0.,  0.,
-                                            0.,  0.,  0.,  1.};
+                                            0.,  0.,  0.,  1. };
 
+   static const Double_t rotMatrixZOY[] = { 0.,  0.,  -1.,  0.,
+                                            0.,  1.,  0.,  0.,
+                                            1.,  0.,  0.,  0.,
+                                            0.,  0.,  0.,  1. };
+	
    switch (fType) {
+		// Looking down Z axis, X horz, Y vert
       case (kXOY): {
-         fWidth = box.XMax() - box.XMin();
-         fHeight = box.YMax() - box.YMin();
+         // X -> X
+         // Y -> Y
+         // Z -> Z
+         fVolume = box;
          fMatrix.Set(rotMatrixXOY);
          break;
       }
-      case (kYOZ): {
-         fWidth = box.YMax() - box.YMin();
-         fHeight = box.ZMax() - box.ZMin();
-         fMatrix.Set(rotMatrixYOZ);
-         break;
-      }
+		// Looking down Y axis, X horz, Z vert
       case (kXOZ): {
-         fWidth = box.XMax() - box.XMin();
-         fHeight = box.ZMax() - box.ZMin();
+         // X -> X
+         // Z -> Y
+         // Y -> Z
+         fVolume.SetAligned(TGLVertex3(box.XMin(), box.ZMin(), box.YMin()), 
+                            TGLVertex3(box.XMax(), box.ZMax(), box.YMax()));
          fMatrix.Set(rotMatrixXOZ);
          break;
       }
+		// Looking down X axis, Z horz, Y vert
+      case (kZOY): {
+         // Z -> X
+         // Y -> Y
+         // X -> Z
+         fVolume.SetAligned(TGLVertex3(box.ZMin(), box.YMin(), box.XMin()), 
+                            TGLVertex3(box.ZMax(), box.YMax(), box.XMax()));
+         fMatrix.Set(rotMatrixZOY);
+         break;
+      }
    }
-   fVolumeDiag = box.Extents().Mag();
-   fZoomMin = 0.5;
-   fZoomDefault = 0.95;
-   fZoomMax = 30.0;
    Reset();
 }
 
 //______________________________________________________________________________
 void TGLOrthoCamera::Reset()
 {
-   fTruck.Set(-fCenter.X(), -fCenter.Y(), -fCenter.Z());
+   fTruck.Set(0.0, 0.0, 0.0);
    fZoom   = fZoomDefault;
    fCacheDirty = kTRUE;
 }
@@ -101,7 +108,7 @@ Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 //______________________________________________________________________________
 Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta, fgZoomDeltaSens, mod1, mod2))
+   if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta*2, fgZoomDeltaSens, mod1, mod2))
    {
       fCacheDirty = kTRUE;
       return kTRUE;
@@ -153,21 +160,48 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickR
    if(fViewport.Width() == 0 || fViewport.Height() == 0) {
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
-   } else {
-      Double_t biggest = fWidth > fHeight ? fWidth:fHeight;
-      glOrtho(-biggest/2.0, biggest/2.0, -biggest/2.0, biggest/2.0, fVolumeDiag, 3.0*fVolumeDiag);
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glTranslated(0.0, 0.0, -2.0*fVolumeDiag);
-      glScaled(fZoom, fZoom*fViewport.Aspect(), 1.0);
-      glMultMatrixd(fMatrix.CArr());
-      glTranslated(fTruck.X(), fTruck.Y(), fTruck.Z());
+      return;
    }
+   
+   TGLVector3 extents = fVolume.Extents();
+   Double_t width = extents.X();
+   Double_t height = extents.Y();
+   Double_t halfRange;
+   if (width > height) {
+      halfRange = width / 2.0;
+   } else {
+      halfRange = height / 2.0;
+   }
+   halfRange /= fZoom;
+
+   // For near/far clipping half depth give extra slack so clip objects/manips 
+   // are visible 
+   Double_t halfDepth = extents.Z();
+   const TGLVertex3 & center = fVolume.Center();
+
+   glOrtho(center.X() - halfRange, 
+           center.X() + halfRange, 
+           center.Y() - halfRange, 
+           center.Y() + halfRange, 
+           center.Z() - halfDepth, 
+           center.Z() + halfDepth);
+
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+
+	glScaled(1.0 / fViewport.Aspect(), 1.0, 1.0); 	
+
+   // Debug aid - show current volume
+   /*glDisable(GL_LIGHTING);
+   glColor3d(0.0, 0.0, 1.0);
+   fVolume.Draw();
+   glEnable(GL_LIGHTING);*/
+
+   glMultMatrixd(fMatrix.CArr());
+   glTranslated(fTruck.X(), fTruck.Y(), fTruck.Z());
 
    if (fCacheDirty) {
       UpdateCache();
    }
 }
-
-
-

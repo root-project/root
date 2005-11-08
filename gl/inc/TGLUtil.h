@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.12 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.13 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -576,7 +576,7 @@ inline void TGLPlane::Normalise()
    Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
 
    if ( mag == 0.0 ) {
-      assert( kFALSE );
+      Error("TGLPlane::Normalise", "trying to normalise plane with zero magnitude normal");
       return;
    }
 
@@ -749,7 +749,12 @@ class TGLUtil
 public:
    virtual ~TGLUtil() { }
 
+   // Error checking
    static void   CheckError();
+
+   // Some simple shape drawing utils
+   static void   DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
+
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
 
