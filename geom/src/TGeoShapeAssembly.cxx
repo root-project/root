@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.1 2005/06/13 12:17:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.2 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -116,7 +116,6 @@ Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
 // Test if point is inside the assembly
    if (!TGeoBBox::Contains(point)) return kFALSE;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
-   if (!voxels) printf("WOOPS: volume %s no vox\n", fVolume->GetName());
    TGeoNode *node;
    TGeoShape *shape;
    Int_t *check_list = 0;
