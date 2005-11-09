@@ -387,7 +387,7 @@ enum EStyleManagerWid {
    kPSPDFPaperSizeY
 };
 
-const Char_t *kFiletypes[] = { "ROOT macros", "Style_*.C",
+const char *kFiletypes[] = { "ROOT macros", "Style_*.C",
                                0,             0 };
 
 //______________________________________________________________________________
@@ -898,14 +898,13 @@ void TStyleManager::DoExport()
 
    // Create an associated macro and propose a pertinent name to the user.
    CreateMacro();
-   Char_t* newName = (Char_t*)
-                malloc((10 + strlen(fCurSelStyle->GetName())) * sizeof(Char_t));
+   char* newName = new char[(10 + strlen(fCurSelStyle->GetName())) * sizeof(char)];
    sprintf(newName, "Style_%s.C", fCurSelStyle->GetName());
 
    //  Protection: The user isn't allowed to export a style if the output
    // file name isn't based on the "Style_*.C" mask, without spaces.
-   Char_t* tmpFileName;
-   const Char_t* tmpBaseName;
+   char* tmpFileName;
+   const char* tmpBaseName;
    do {
       fCurMacro->fFilename = StrDup(newName);
 
@@ -917,7 +916,7 @@ void TStyleManager::DoExport()
    } while (tmpBaseName && (strstr(tmpBaseName, "Style_") != tmpBaseName)
                         && (strstr(tmpBaseName, " ") != 0));
 
-   free(newName);
+   delete [] newName;
 
    if (tmpBaseName != 0) {
       // Export the style.
@@ -1002,11 +1001,10 @@ void TStyleManager::DoImportCanvas()
 
       // Auto export of the canvas' style.
       CreateMacro();
-      Char_t* newName = (Char_t*)
-                malloc((10 + strlen(fCurSelStyle->GetName())) * sizeof(Char_t));
+      char* newName = new char[(10 + strlen(fCurSelStyle->GetName())) * sizeof(char)];
       sprintf(newName, "Style_%s.C", fCurSelStyle->GetName());
       fCurMacro->fFilename = StrDup(newName);
-      free(newName);
+      delete [] newName;
       fCurSelStyle->SaveSource(gSystem->UnixPathName(fCurMacro->fFilename));
    } else {
       BuildList(fCurSelStyle);
@@ -3907,7 +3905,7 @@ void TStyleManager::AddPsPdfLineScale(TGCompositeFrame *f)
 }
 
 //______________________________________________________________________________
-void TStyleManager::AddTitle(TGCompositeFrame *f, Char_t *s)
+void TStyleManager::AddTitle(TGCompositeFrame *f, const char *s)
 {
    // Add a title to the frame f.
 
@@ -3979,14 +3977,14 @@ TGComboBox *TStyleManager::AddMarkerSizeEntry(TGCompositeFrame *f, Int_t id)
 {
    // Add a marker size entry to the frame f.
 
-   Char_t *a = (Char_t *) malloc(10 * sizeof(Char_t));
+   char *a = new char[10 * sizeof(char)];
    TGComboBox *cb = new TGComboBox(f, id);
    cb->Associate(this);
    for (Int_t i = 1; i <= 15; i++) {
       sprintf(a, "%.1f", 0.2 * i);
       cb->AddEntry(a, i);
    }
-   free(a);
+   delete [] a;
    cb->Resize(1, 22);
    f->AddFrame(cb, fLayoutExpandXCenterYMargin);
    return cb;
@@ -3994,7 +3992,7 @@ TGComboBox *TStyleManager::AddMarkerSizeEntry(TGCompositeFrame *f, Int_t id)
 
 //______________________________________________________________________________
 TGNumberEntry *TStyleManager::AddNumberEntry(TGCompositeFrame *f, Int_t e1,
-         Int_t e2, Int_t e3, Int_t id, Char_t * s, Double_t init, Int_t digits,
+         Int_t e2, Int_t e3, Int_t id, const char *s, Double_t init, Int_t digits,
          TGNumberFormat::EStyle nfS, TGNumberFormat::EAttribute nfA,
          TGNumberFormat::ELimit nfL, Double_t min, Double_t max)
 {
@@ -4069,7 +4067,7 @@ TGLineStyleComboBox *TStyleManager::AddLineStyleEntry(TGCompositeFrame *f,
 
 //______________________________________________________________________________
 TGTextButton *TStyleManager::AddTextButton(TGCompositeFrame *f,
-                                           Char_t *s, Int_t id)
+                                           const char *s, Int_t id)
 {
    // Add a text button to the frame f.
 
@@ -4154,7 +4152,7 @@ TGComboBox *TStyleManager::AddDateFormatEntry(TGCompositeFrame *f, Int_t id)
 }
 
 //______________________________________________________________________________
-TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, Char_t *s,
+TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, const char *s,
                                              Int_t id, Int_t e1, Int_t e2)
 {
    // Add a check button to the frame f.
@@ -4173,7 +4171,7 @@ TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, Char_t *s,
 
 //______________________________________________________________________________
 TGTextEntry *TStyleManager::AddTextEntry(TGCompositeFrame *f,
-                                         Char_t *s, Int_t id)
+                                         const char *s, Int_t id)
 {
    // Add a text entry to the frame f. A caption can be added.
 
@@ -4296,11 +4294,10 @@ void TStyleManager::DoImportMacro(Bool_t create)
    } else {
       CreateMacro();
       if (!create) {
-         Char_t* newName = (Char_t*)
-                malloc((10 + strlen(fCurSelStyle->GetName())) * sizeof(Char_t));
+         char* newName = new char[(10 + strlen(fCurSelStyle->GetName())) * sizeof(char)];
          sprintf(newName, "Style_%s.C", fCurSelStyle->GetName());
          fCurMacro->fFilename = StrDup(newName);
-         free(newName);
+         delete [] newName;
       }
       new TGFileDialog(gClient->GetRoot(), this, kFDOpen, fCurMacro);
       if (fCurMacro->fFilename != 0) {
@@ -4341,11 +4338,11 @@ void TStyleManager::DoListSelect()
 
    // Refresh the tooltip of the fMakeDefault's button.
    Int_t length = strlen(fCurSelStyle->GetName());
-   Char_t *newTip = (Char_t *) malloc((25 + length) * sizeof(Char_t));
+   char *newTip = new char[(25 + length) * sizeof(char)];
    sprintf(newTip, "'%s'", fCurSelStyle->GetName());
    sprintf(newTip + length + 2, " become current style");
    fMakeDefault->SetToolTipText(newTip);
-   free(newTip);
+   delete [] newTip;
 
    // Refresh.
    fListComboBox->MapSubwindows();

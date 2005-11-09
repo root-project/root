@@ -435,24 +435,24 @@ private:
    void AddPsPdfPaperSize(TGCompositeFrame *f);
    void AddPsPdfLineScale(TGCompositeFrame *f);
 
-   void                 AddTitle(TGCompositeFrame *f, Char_t *s);
+   void                 AddTitle(TGCompositeFrame *f, const char *s);
    TGColorSelect       *AddColorEntry(TGCompositeFrame *f, Int_t id);
    TGedPatternSelect   *AddFillStyleEntry(TGCompositeFrame *f, Int_t id);
    TGedMarkerSelect    *AddMarkerStyleEntry(TGCompositeFrame *f, Int_t id);
    TGComboBox          *AddMarkerSizeEntry(TGCompositeFrame *f, Int_t id);
    TGNumberEntry       *AddNumberEntry(TGCompositeFrame *f, Int_t e1, Int_t e2,
-                           Int_t e3, Int_t id, Char_t *s, Double_t init, Int_t digits,
+                           Int_t e3, Int_t id, const char *s, Double_t init, Int_t digits,
                            TGNumberFormat::EStyle nfS, TGNumberFormat::EAttribute nfA,
                            TGNumberFormat::ELimit nfL, Double_t min, Double_t max);
    TGLineWidthComboBox *AddLineWidthEntry(TGCompositeFrame *f, Int_t id);
    TGLineStyleComboBox *AddLineStyleEntry(TGCompositeFrame *f, Int_t id);
-   TGTextButton        *AddTextButton(TGCompositeFrame *f, Char_t *s, Int_t id);
+   TGTextButton        *AddTextButton(TGCompositeFrame *f, const char *s, Int_t id);
    TGFontTypeComboBox  *AddFontTypeEntry(TGCompositeFrame *f, Int_t id);
    TGComboBox          *AddTextAlignEntry(TGCompositeFrame *f, Int_t id);
    TGButtonGroup       *AddBorderModeEntry(TGCompositeFrame *f, Int_t id1, Int_t id2, Int_t id3);
    TGComboBox          *AddDateFormatEntry(TGCompositeFrame *f, Int_t id);
-   TGCheckButton       *AddCheckButton(TGCompositeFrame *f, Char_t *s, Int_t id, Int_t e1 = 0, Int_t e2 = 2);
-   TGTextEntry         *AddTextEntry(TGCompositeFrame *f, Char_t *s, Int_t id);
+   TGCheckButton       *AddCheckButton(TGCompositeFrame *f, const char *s, Int_t id, Int_t e1 = 0, Int_t e2 = 2);
+   TGTextEntry         *AddTextEntry(TGCompositeFrame *f, const char *s, Int_t id);
    TGComboBox          *AddPaperSizeEntry(TGCompositeFrame *f, Int_t id);
 
 public:
