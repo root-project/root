@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.55 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.56 2005/10/06 21:40:03 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -459,6 +459,7 @@ void TSelectorDraw::Begin(TTree *tree)
          hist->SetMarkerSize(fTree->GetMarkerSize());
          if (canRebin)hist->SetBit(TH1::kCanRebin);
          if (!hkeep) {
+            hist->GetXaxis()->SetTitle(fVar1->GetTitle());
             hist->SetBit(kCanDelete);
             if (!opt.Contains("goff")) hist->SetDirectory(0);
          }
@@ -562,6 +563,8 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
+               h2->GetXaxis()->SetTitle(fVar2->GetTitle());
+               h2->GetYaxis()->SetTitle(fVar1->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
@@ -686,6 +689,8 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
+               h2->GetXaxis()->SetTitle(fVar2->GetTitle());
+               h2->GetZaxis()->SetTitle(fVar1->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
@@ -709,6 +714,11 @@ void TSelectorDraw::Begin(TTree *tree)
             h3->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h3->SetBit(TH1::kCanRebin);
             if (!hkeep) {
+               h3->GetXaxis()->SetTitleOffset(1.5);
+               h3->GetYaxis()->SetTitleOffset(1.5);
+               h3->GetXaxis()->SetTitle(fVar3->GetTitle());
+               h3->GetYaxis()->SetTitle(fVar2->GetTitle());
+               h3->GetZaxis()->SetTitle(fVar1->GetTitle());
                h3->SetBit(kCanDelete);
                h3->SetBit(TH1::kNoStats);
                if (!opt.Contains("goff")) h3->SetDirectory(0);
