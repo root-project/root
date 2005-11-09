@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.225 2005/10/20 21:07:52 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.226 2005/11/09 17:24:52 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -892,7 +892,7 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The following options are supported for 1-D types:
 //    "AH"     : Draw histogram without axis. "A" can be combined with any drawing option.
-               : For instance, "AC" draws the histogram as a smooth Curve without axis.
+//             : For instance, "AC" draws the histogram as a smooth Curve without axis.
 //    "]["     : When this option is selected the first and last vertical lines
 //             : of the histogram are not drawn.
 //    "B"      : Bar chart option
