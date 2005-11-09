@@ -117,7 +117,7 @@ else
 		fi; \
 		cd $(GSLVERS); \
 		ACC=$(CC); \
-		ACFLAGS="-O"; \
+		ACFLAGS=$(OPT); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
@@ -133,7 +133,7 @@ else
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACC="gcc -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure $(GSLDBG); \
+		GNUMAKE=$(MAKE) ./configure CC=$$ACC CFLAGS=$$ACFLAGS $(GSLDBG); \
 		$(MAKE))
 endif
 
