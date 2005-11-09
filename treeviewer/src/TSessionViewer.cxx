@@ -355,7 +355,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
    TString url = fTxtUsrName->GetText();
    url += "@"; url += fTxtAddress->GetText();
    if (fNumPort->GetIntNumber() > 0) {
-      url += ":"; 
+      url += ":";
       url += fNumPort->GetIntNumber();
    }
    fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
@@ -701,25 +701,25 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmLeg->SetCleanup(kDeepCleanup);
    TGPicture *pic1 = (TGPicture *)fClient->GetPicture("package.xpm");
    TGIcon *icn1 = new TGIcon(frmLeg, pic1, pic1->GetWidth(), pic1->GetHeight());
-   frmLeg->AddFrame(icn1, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+   frmLeg->AddFrame(icn1, new TGLayoutHints(kLHintsLeft | kLHintsTop,
       5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Local"),
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
 
    TGPicture *pic2 = (TGPicture *)fClient->GetPicture("package_delete.xpm");
    TGIcon *icn2 = new TGIcon(frmLeg, pic2, pic2->GetWidth(), pic2->GetHeight());
-   frmLeg->AddFrame(icn2, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+   frmLeg->AddFrame(icn2, new TGLayoutHints(kLHintsLeft | kLHintsTop,
       5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Uploaded"),
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
 
    TGPicture *pic3 = (TGPicture *)fClient->GetPicture("package_add.xpm");
    TGIcon *icn3 = new TGIcon(frmLeg, pic3, pic3->GetWidth(), pic3->GetHeight());
-   frmLeg->AddFrame(icn3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 
+   frmLeg->AddFrame(icn3, new TGLayoutHints(kLHintsLeft | kLHintsTop,
       5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Enabled"),
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
-   fFB->AddFrame(frmLeg, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   fFB->AddFrame(frmLeg, new TGLayoutHints(kLHintsLeft | kLHintsTop |
       kLHintsExpandX, 0, 0, 0, 0));
 
    TGCompositeFrame* frmBtn = new TGHorizontalFrame(fFB, 300, 100);
@@ -1010,7 +1010,7 @@ void TSessionFrame::OnUploadPackages()
          else {
             TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
             if (!o) continue;
-            TPackageDescription *package = 
+            TPackageDescription *package =
                dynamic_cast<TPackageDescription *>(o);
             if (package) {
                package->fUploaded = kTRUE;
@@ -1039,7 +1039,7 @@ void TSessionFrame::OnEnablePackages()
          TString name = obj->GetTitle();
          TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
          if (!o) continue;
-         TPackageDescription *package = 
+         TPackageDescription *package =
             dynamic_cast<TPackageDescription *>(o);
          if (package) {
             if (!package->fUploaded) {
@@ -1080,7 +1080,7 @@ void TSessionFrame::OnDisablePackages()
          else {
             TObject *o = fViewer->GetActDesc()->fPackages->FindObject(name);
             if (!o) continue;
-            TPackageDescription *package = 
+            TPackageDescription *package =
                dynamic_cast<TPackageDescription *>(o);
             if (package) {
                package->fEnabled = kFALSE;
@@ -1207,7 +1207,7 @@ void TSessionFrame::OnBtnDownClicked()
    TPackageDescription *package;
    const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
-   if (pos == -1 || pos == fViewer->GetActDesc()->fPackages->GetEntries()-1) 
+   if (pos == -1 || pos == fViewer->GetActDesc()->fPackages->GetEntries()-1)
       return;
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
    package = (TPackageDescription *)fViewer->GetActDesc()->fPackages->At(pos);
@@ -1257,7 +1257,7 @@ void TSessionFrame::OnBtnDisconnectClicked()
    item->SetPictures(fViewer->GetProofDisconPict(),
                      fViewer->GetProofDisconPict());
    // update viewer
-   fViewer->OnListTreeClicked(fViewer->GetSessionHierarchy()->GetSelected(), 
+   fViewer->OnListTreeClicked(fViewer->GetSessionHierarchy()->GetSelected(),
       1, 0, 0);
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fViewer->GetStatusBar()->SetText("", 1);
@@ -1556,15 +1556,15 @@ void TSessionQueryFrame::Feedback(TList *objs)
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
       return;
-   if ((fViewer->GetActDesc()->fActQuery->fStatus != 
+   if ((fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQuerySubmitted) &&
-       (fViewer->GetActDesc()->fActQuery->fStatus != 
-        TQueryDescription::kSessionQueryRunning) ) 
+       (fViewer->GetActDesc()->fActQuery->fStatus !=
+        TQueryDescription::kSessionQueryRunning) )
       return;
-   if ((fViewer->GetActDesc()->fActQuery->fStatus != 
+   if ((fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQuerySubmitted) &&
-       (fViewer->GetActDesc()->fActQuery->fStatus != 
-        TQueryDescription::kSessionQueryRunning) ) 
+       (fViewer->GetActDesc()->fActQuery->fStatus !=
+        TQueryDescription::kSessionQueryRunning) )
       return;
    TVirtualProof *sender = dynamic_cast<TVirtualProof*>((TQObject*)gTQSender);
    // if Proof sender match actual session one, update feedback histos
@@ -2351,7 +2351,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       fViewerEnv->Delete();
    if (filename)
       fViewerEnv = new TEnv(filename);
-   else 
+   else
       fViewerEnv = new TEnv(fConfigFile);
 
 
@@ -2361,7 +2361,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    else
       fOptionsMenu->UnCheckEntry(kOptionsFeedback);
 
-   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterHistos", 0); 
+   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterHistos", 0);
    if (bval) {
       fOptionsMenu->CheckEntry(kOptionsStatsHist);
       gEnv->SetValue("Proof.StatsHist", 1);
@@ -2496,7 +2496,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TString firstentry = strtok(0, ";");
 
                TQueryDescription *newquery = new TQueryDescription();
-               newquery->fStatus = 
+               newquery->fStatus =
                   (TQueryDescription::ESessionQueryStatus)(atoi(status));
                newquery->fSelectorString  = selector.Length() > 2 ? selector.Data() : "";
                newquery->fReference       = reference.Length() > 2 ? reference.Data() : "";
@@ -2641,19 +2641,19 @@ void TSessionViewer::WriteConfiguration(const char *filename)
    gSystem->Unlink(fname);
    fViewerEnv = new TEnv(fname);
 
-   fViewerEnv->SetValue("Option.Feedback", 
+   fViewerEnv->SetValue("Option.Feedback",
       (Int_t)fOptionsMenu->IsEntryChecked(kOptionsFeedback));
-   fViewerEnv->SetValue("Option.MasterHistos", 
+   fViewerEnv->SetValue("Option.MasterHistos",
       (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsHist));
-   fViewerEnv->SetValue("Option.MasterEvents", 
+   fViewerEnv->SetValue("Option.MasterEvents",
       (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsTrace));
-   fViewerEnv->SetValue("Option.WorkerEvents", 
+   fViewerEnv->SetValue("Option.WorkerEvents",
       (Int_t)fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace));
 
    Int_t i = 0;
    // browse list of feedback histos and check user's selected ones
    while (kFeedbackHistos[i]) {
-      fViewerEnv->SetValue(Form("Option.%s",kFeedbackHistos[i]), 
+      fViewerEnv->SetValue(Form("Option.%s",kFeedbackHistos[i]),
          (Int_t)fCascadeMenu->IsEntryChecked(41+i));
       i++;
    }
@@ -2669,7 +2669,7 @@ void TSessionViewer::WriteConfiguration(const char *filename)
       sessionstring += ";";
       sessionstring += Form("%d", session->fLogLevel);
       sessionstring += ";";
-      sessionstring += session->fConfigFile.Length() > 1 ? session->fConfigFile : " ";
+      sessionstring += session->fConfigFile.Length() > 1 ? session->fConfigFile.Data() : " ";
       sessionstring += ";";
       sessionstring += session->fUserName;
       sessionstring += ";";
@@ -2683,19 +2683,19 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          TString querystring;
          querystring += Form("%d", query->fStatus);
          querystring += ";";
-         querystring += query->fReference.Length() > 1 ? query->fReference : " ";
+         querystring += query->fReference.Length() > 1 ? query->fReference.Data() : " ";
          querystring += ";";
          querystring += query->fQueryName;
          querystring += ";";
-         querystring += query->fSelectorString.Length() > 1 ? query->fSelectorString : " ";
+         querystring += query->fSelectorString.Length() > 1 ? query->fSelectorString.Data() : " ";
          querystring += ";";
-         querystring += query->fTDSetString.Length() > 1 ? query->fTDSetString : " ";
+         querystring += query->fTDSetString.Length() > 1 ? query->fTDSetString.Data() : " ";
          querystring += ";";
-         querystring += query->fOptions.Length() > 1 ? query->fOptions : " ";
+         querystring += query->fOptions.Length() > 1 ? query->fOptions.Data() : " ";
          querystring += ";";
-         querystring += query->fEventList.Length() > 1 ? query->fEventList : " ";
+         querystring += query->fEventList.Length() > 1 ? query->fEventList.Data() : " ";
          querystring += ";";
-         querystring += query->fParFile.Length() > 1 ? query->fParFile : " ";
+         querystring += query->fParFile.Length() > 1 ? query->fParFile.Data() : " ";
          querystring += ";";
          querystring += Form("%d",query->fNbFiles);
          querystring += ";";
