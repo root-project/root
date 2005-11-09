@@ -460,7 +460,8 @@ int testRotation() {
   XYZPoint v(1.,2,3.); 
 
   double pi = TMath::Pi();
-  EulerAngles r1( pi/2.,pi/4., pi );
+  // initiate rotation with some non -trivial angles to test all matrix
+  EulerAngles r1( pi/2.,pi/4., pi/3 );
   //  AxisAngle   r2(r1); (this not yet implemented)
   Rotation3D  r2(r1);
   AxisAngle   r3(r2);
@@ -471,17 +472,17 @@ int testRotation() {
   XYZPoint v3 = r3(v);
   XYZPoint v4 = r4(v);
   
-  ok+= compare(v1.X(), v2.X(), "x"); 
-  ok+= compare(v1.Y(), v2.Y(), "y"); 
-  ok+= compare(v1.Z(), v2.Z(), "z"); 
+  ok+= compare(v1.X(), v2.X(), "x",2); 
+  ok+= compare(v1.Y(), v2.Y(), "y",2); 
+  ok+= compare(v1.Z(), v2.Z(), "z",2); 
 
-  ok+= compare(v1.X(), v3.X(), "x"); 
-  ok+= compare(v1.Y(), v3.Y(), "y"); 
-  ok+= compare(v1.Z(), v3.Z(), "z"); 
+  ok+= compare(v1.X(), v3.X(), "x",5); 
+  ok+= compare(v1.Y(), v3.Y(), "y",5); 
+  ok+= compare(v1.Z(), v3.Z(), "z",5); 
 
-  ok+= compare(v1.X(), v4.X(), "x"); 
-  ok+= compare(v1.Y(), v4.Y(), "y"); 
-  ok+= compare(v1.Z(), v4.Z(), "z"); 
+  ok+= compare(v1.X(), v4.X(), "x",2); 
+  ok+= compare(v1.Y(), v4.Y(), "y",2); 
+  ok+= compare(v1.Z(), v4.Z(), "z",2); 
 
   // test with matrix
   double rdata[9]; 
@@ -508,6 +509,9 @@ int testRotation() {
   Rotation3D  s2 = r2.Inverse();
   AxisAngle   s3 = r3.Inverse();
   Quaternion  s4 = r4.Inverse();
+
+//   cout << r2 << endl;
+//   cout << s2 << endl;
   
   // euler angles not yet impl.
   XYZPoint p = s2 * r2 * v; 
