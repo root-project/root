@@ -3,10 +3,24 @@
   This program will add histograms from a list of root files and write them
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
-
+         
   Syntax:
 
        hadd targetfile source1 source2 ...
+    or
+       hadd -f targetfile source1 source2 ...
+         (targetfile is overwritten if it exists)
+    
+  For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
+    f1 with h1 h2 h3 T1
+    f2 with h1 h4 T1 T2
+    f3 with h5
+   the result of
+     hadd -f x.root f1.root f2.root f3.root
+   will be a file x.root with
+     x with h1 h2 h3 h4 h5 T1 T2
+   where h1 will be the sum of the 2 histograms in f1 and f2
+         T1 will be the merge of the Trees in f1 and f2
 
   if the source files contains histograms and Trees, one can skip 
   the Trees with
@@ -22,6 +36,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TKey.h"
+#include "TObjString.h"
 #include "Riostream.h"
 
 TList *FileList;
@@ -84,113 +99,124 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   path.Remove( 0, 2 );
 
   TFile *first_source = (TFile*)sourcelist->First();
-  first_source->cd( path );
-  TDirectory *current_sourcedir = gDirectory;
+  THashList allNames;
+  while(first_source) {
+     first_source->cd( path );
+     TDirectory *current_sourcedir = gDirectory;
 
-  // loop over all keys in this directory
-  TChain *globChain = 0;
-  TIter nextkey( current_sourcedir->GetListOfKeys() );
-  TKey *key, *oldkey=0;
-  //gain time, do not add the objects in the list in memory
-  TH1::AddDirectory(kFALSE);
+     // loop over all keys in this directory
+     TChain *globChain = 0;
+     TIter nextkey( current_sourcedir->GetListOfKeys() );
+     TKey *key, *oldkey=0;
+     //gain time, do not add the objects in the list in memory
+     TH1::AddDirectory(kFALSE);
   
-  while ( (key = (TKey*)nextkey())) {
+     while ( (key = (TKey*)nextkey())) {
 
-    //keep only the highest cycle number for each key
-    if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
-     
-    // read object from first source file
-    first_source->cd( path );
-    TObject *obj = key->ReadObj();
+       //keep only the highest cycle number for each key
+       if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
+       if (allNames.FindObject(key->GetName())) continue;
+       allNames.Add(new TObjString(key->GetName()));
+            
+       // read object from first source file
+       first_source->cd( path );
+       TObject *obj = key->ReadObj();
 
-    if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
-      // descendant of TH1 -> merge it
+       if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
+         // descendant of TH1 -> merge it
 
-      //      cout << "Merging histogram " << obj->GetName() << endl;
-      TH1 *h1 = (TH1*)obj;
-      TList listH;
+            //cout << "Merging histogram " << obj->GetName() << endl;
+         TH1 *h1 = (TH1*)obj;
+         TList listH;
 
-      // loop over all source files and add the content of the
-      // correspondant histogram to the one pointed to by "h1"
-      TFile *nextsource = (TFile*)sourcelist->After( first_source );
-      while ( nextsource ) {
-        
-        // make sure we are at the correct directory level by cd'ing to path
-        nextsource->cd( path );
-        TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
-        if (key2) {
-           listH.Add(key2->ReadObj());
-           h1->Merge(&listH);
-           listH.Delete();
-        }
-
-        nextsource = (TFile*)sourcelist->After( nextsource );
-      }
-    }
-    else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
-      
-      // loop over all source files create a chain of Trees "globChain"
-      if (!noTrees) {
-         TString obj_name;
-         if (path.Length()) {
-            obj_name = path + "/" + obj->GetName();
-         } else {
-            obj_name = obj->GetName();
-         }
-
-         globChain = new TChain(obj_name);
-         globChain->Add(first_source->GetName());
+         // loop over all source files and add the content of the
+         // correspondant histogram to the one pointed to by "h1"
          TFile *nextsource = (TFile*)sourcelist->After( first_source );
-         //      const char* file_name = nextsource->GetName();
-         // cout << "file name  " << file_name << endl;
-         while ( nextsource ) {     	  
-            globChain->Add(nextsource->GetName());
-            nextsource = (TFile*)sourcelist->After( nextsource );
+         while ( nextsource ) {
+        
+           // make sure we are at the correct directory level by cd'ing to path
+           nextsource->cd( path );
+           TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
+           if (key2) {
+              listH.Add(key2->ReadObj());
+              h1->Merge(&listH);
+              listH.Delete();
+           }
+
+           nextsource = (TFile*)sourcelist->After( nextsource );
          }
-      }
-
-    } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
-      // it's a subdirectory
-
-      cout << "Found subdirectory " << obj->GetName() << endl;
-
-      // create a new subdir of same name and title in the target file
-      target->cd();
-      TDirectory *newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
-
-      // newdir is now the starting point of another round of merging
-      // newdir still knows its depth within the target file via
-      // GetPath(), so we can still figure out where we are in the recursion
-      MergeRootfile( newdir, sourcelist );
-
-    } else {
-
-      // object is of no type that we know or can handle
-      cout << "Unknown object type, name: " 
-           << obj->GetName() << " title: " << obj->GetTitle() << endl;
-    }
-
-    // now write the merged histogram (which is "in" obj) to the target file
-    // note that this will just store obj in the current directory level,
-    // which is not persistent until the complete directory itself is stored
-    // by "target->Write()" below
-    if ( obj ) {
-       target->cd();
-       
-       //!!if the object is a tree, it is stored in globChain...
-       if(obj->IsA()->InheritsFrom( "TTree" )) {
-          if (!noTrees) {
-             globChain->Merge(target->GetFile(),0,"keep");
-             delete globChain;
-          }
-       } else {
-          obj->Write( key->GetName() );
        }
-    }
-    oldkey = key;
+       else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
+      
+         // loop over all source files create a chain of Trees "globChain"
+         if (!noTrees) {
+            TString obj_name;
+            if (path.Length()) {
+               obj_name = path + "/" + obj->GetName();
+            } else {
+               obj_name = obj->GetName();
+            }
 
-  } // while ( ( TKey *key = (TKey*)nextkey() ) )
+            globChain = new TChain(obj_name);
+            globChain->Add(first_source->GetName());
+            TFile *nextsource = (TFile*)sourcelist->After( first_source );
+            //      const char* file_name = nextsource->GetName();
+            // cout << "file name  " << file_name << endl;
+            while ( nextsource ) {     	  
+               //do not add to the list a file that does not contain this Tree
+               TFile *curf = TFile::Open(nextsource->GetName());
+               if (curf && curf->FindObject(obj_name)) {
+                  globChain->Add(nextsource->GetName());
+               }
+               delete curf;
+               nextsource = (TFile*)sourcelist->After( nextsource );
+            }
+         }
 
+       } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
+         // it's a subdirectory
+
+         cout << "Found subdirectory " << obj->GetName() << endl;
+  
+         // create a new subdir of same name and title in the target file
+         target->cd();
+         TDirectory *newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+
+         // newdir is now the starting point of another round of merging
+         // newdir still knows its depth within the target file via
+         // GetPath(), so we can still figure out where we are in the recursion
+         MergeRootfile( newdir, sourcelist );
+
+       } else {
+
+         // object is of no type that we know or can handle
+         cout << "Unknown object type, name: " 
+              << obj->GetName() << " title: " << obj->GetTitle() << endl;
+       }
+
+       // now write the merged histogram (which is "in" obj) to the target file
+       // note that this will just store obj in the current directory level,
+       // which is not persistent until the complete directory itself is stored
+       // by "target->Write()" below
+       if ( obj ) {
+          target->cd();
+       
+          //!!if the object is a tree, it is stored in globChain...
+          if(obj->IsA()->InheritsFrom( "TTree" )) {
+             if (!noTrees) {
+                globChain->Merge(target->GetFile(),0,"keep");
+                delete globChain;
+             }
+          } else {
+             obj->Write( key->GetName() );
+          }
+       }
+       oldkey = key;
+
+     } // while ( ( TKey *key = (TKey*)nextkey() ) )
+     sourcelist->Remove(first_source);
+     first_source = (TFile*)sourcelist->First();
+  }
   // save modifications to target file
   target->SaveSelf(kTRUE);
 
