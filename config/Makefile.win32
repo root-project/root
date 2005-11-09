@@ -69,7 +69,7 @@ endif
 
 # Linker:
 LD            = build/win/ld.sh
-LDFLAGS       = -nologo -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
+LDFLAGS       = -nologo -ignore:4049 -ignore:4217 -ignore:4221 -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
 LDNODEF       = -nodefaultlib:libc.lib -nodefaultlib:dfor.lib
 SOFLAGS       = -DLL
 SOEXT         = dll
