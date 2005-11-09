@@ -89,6 +89,7 @@ else
 			gunzip -c $(MINUITBASEVERS).tar.gz | tar xf -; \
 		fi; \
 		cd $(MINUITBASEVERS); \
+		ACC=$(CC); \
 		ACXX=$(CXX); \
 		ACXXFLAGS=$(OPT); \
 		if [ "$(CXX)" = "icc" ]; then \
@@ -106,7 +107,7 @@ else
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACXX="g++ -m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) CXX=$$ACXX CXXFLAGS=$$ACXXFLAGS \
+		GNUMAKE=$(MAKE) CC=$$ACC CXX=$$ACXX CXXFLAGS=$$ACXXFLAGS  \
 		./configure --with-pic --enable-shared=false; \
 		$(MAKE))
 endif
