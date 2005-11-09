@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.18 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.19 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -180,20 +180,14 @@ TGLVertex3 TGLCamera::EyePoint() const
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::EyeDirection(Bool_t nearClip) const
+TGLVector3 TGLCamera::EyeDirection() const
 {
-   // Extract the camera eye direction vector. Magnitude
-   // if from EyePoint() to near or far clip plane depending
-   // on passed flag
+   // Extract the camera eye direction using the current frustum planes
    if (fCacheDirty) {
       Error("TGLCamera::FrustumBox()", "cache dirty");
    }
-   TGLVertex3 eyePoint = EyePoint();
-   if (nearClip) {
-      return fFrustumPlanes[kNear].NearestOn(eyePoint) - eyePoint;
-   } else {
-      return fFrustumPlanes[kFar].NearestOn(eyePoint) - eyePoint;
-   }
+   // Direction is just normal of near clipping plane
+   return fFrustumPlanes[kNear].Norm();
 }
 
 //______________________________________________________________________________
@@ -532,7 +526,7 @@ void TGLCamera::DrawDebugAids() const
    // Also draw line from current eye point out in eye direction - should not
    // appear if calculated correctly
    TGLVertex3 start = EyePoint();
-   TGLVertex3 end = start + EyeDirection(kFALSE); // To far clip plane
+   TGLVertex3 end = start + EyeDirection();
    glColor3d(1.0,1.0,1.0);
    glBegin(GL_LINES);
    glVertex3dv(start.CArr());

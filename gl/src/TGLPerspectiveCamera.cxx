@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.7 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.8 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -172,7 +172,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
    }
 
    // iv) Create a clip plane, using the eye direction as normal, passing through eye point
-   TGLPlane clipPlane(EyeDirection(kFALSE),EyePoint());
+   TGLPlane clipPlane(EyeDirection(), EyePoint());
    fCacheDirty = modifiedCache;
 
    // v) find the near/far distance which just encapsulate the passed bounding box vertexes

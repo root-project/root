@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.20 2005/10/26 12:00:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.21 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -717,7 +717,7 @@ void TGLViewer::SetupLights()
    const TGLBoundingBox & box = fScene.BoundingBox();
    if (!box.IsEmpty()) {
       // Calculate a sphere radius to arrange lights round
-      Double_t lightRadius = box.Extents().Mag() * 2.5;
+      Double_t lightRadius = box.Extents().Mag() * 2.9;
       Double_t sideLightsZ, frontLightZ;
       
       // Find Z depth (in eye coords) for front and side lights
@@ -725,8 +725,10 @@ void TGLViewer::SetupLights()
       // viewpoint. TODO: Move into camera classes?
       TGLOrthoCamera * orthoCamera = dynamic_cast<TGLOrthoCamera *>(fCurrentCamera);
       if (orthoCamera) {
-         sideLightsZ = lightRadius / 4.0;
-         frontLightZ = sideLightsZ / 2.0;
+         // Find distance from near clip plane to furstum center - i.e. vector of half
+         // clip depth. Ortho lights placed this distance from eye point
+         sideLightsZ = fCurrentCamera->FrustumPlane(TGLCamera::kNear).DistanceTo(fCurrentCamera->FrustumCenter());
+         frontLightZ = sideLightsZ;
       } else {
          // Perspective camera
 

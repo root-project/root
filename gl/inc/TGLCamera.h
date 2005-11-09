@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.12 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.13 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -34,6 +34,18 @@
  *************************************************************************/
 class TGLCamera
 {
+public:
+   enum EFrustumPlane
+   {
+      kNear             = 0,
+      kLeft             = 1,
+      kRight            = 2,
+      kTop              = 3,
+      kBottom           = 4,
+      kFar              = 5,
+      kPlanesPerFrustum = 6
+   };
+
 private:
    // Fields
 
@@ -41,7 +53,6 @@ private:
    TGLBoundingBox   fPreviousInterestBox;  //! previous interest box (DEBUG)
    TGLBoundingBox   fInterestFrustum;      //! frustum basis of current interest box - NOT a true BB! (DEBUG)
    TGLBoundingBox   fInterestFrustumAsBox; //! frustum basis (as box) of current interest box (DEBUG)
-
    
    static const Double_t fgInterestBoxExpansion; //! expansion c.f. aligned current frustum box
 
@@ -54,19 +65,7 @@ private:
 
 protected:
    // Fields
-   enum
-   {
-      kNear    = 0,
-      kLeft    = 1,
-      kRight   = 2,
-      kTop     = 3,
-      kBottom  = 4,
-      kFar     = 5,
-      kPlanesPerFrustum
-   };
-
-   // Frustum planes (cached)
-   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //!
+   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //! frustum planes (cached)
 
    TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
    TGLMatrix fProjM;       //! projection matrix        (cached)
@@ -100,10 +99,11 @@ public:
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) = 0;
 
-   // Current orientation 
-   TGLVertex3 EyePoint() const;
-   TGLVector3 EyeDirection(Bool_t nearClip) const; // Camera dir. vector (to near or far plane)
-   TGLVertex3 FrustumCenter() const;
+   // Current orientation and frustum
+         TGLVertex3 EyePoint() const;
+         TGLVector3 EyeDirection() const;
+         TGLVertex3 FrustumCenter() const;
+   const TGLPlane & FrustumPlane(EFrustumPlane plane) const;
 
    // Overlap / projection / intersection tests
    // Viewport is GL coorinate system - origin bottom/left
@@ -134,5 +134,14 @@ public:
 
    ClassDef(TGLCamera,0); // abstract camera base class
 };
+
+inline const TGLPlane & TGLCamera::FrustumPlane(EFrustumPlane plane) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::FrustumBox()", "cache dirty");
+   }
+   return fFrustumPlanes[plane];
+}
+
 
 #endif // ROOT_TGLCamera

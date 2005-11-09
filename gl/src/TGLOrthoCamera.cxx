@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.5 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.6 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -43,8 +43,8 @@ TGLOrthoCamera::~TGLOrthoCamera()
 void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
 {
    static const Double_t rotMatrixXOY[] = { 1.,  0.,  0.,  0.,
-                                            0., -1.,  0.,  0.,
-                                            0.,  0., -1.,  0.,
+                                            0.,  1.,  0.,  0.,
+                                            0.,  0.,  1.,  0.,
                                             0.,  0.,  0.,  1. };
 
    static const Double_t rotMatrixXOZ[] = { 1.,  0.,  0.,  0.,
