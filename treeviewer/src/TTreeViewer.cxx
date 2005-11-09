@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.48 2005/08/30 11:13:22 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.49 2005/09/02 10:06:51 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1799,7 +1799,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         dir = info.fIniDir;
                         char command[1024];
                         command[0] = 0;
-                        sprintf(command, "tv__tree_file = new TFile(\"%s\");", info.fFilename);
+                        sprintf(command, "tv__tree_file = new TFile(\"%s\");", 
+                           gSystem->UnixPathName(info.fFilename));
                         ExecuteCommand(command);
                         ExecuteCommand("tv__tree_file->ls();");
                         cout << "Use SetTreeName() from context menu and supply a tree name" << endl;
