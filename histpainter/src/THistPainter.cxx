@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.224 2005/10/13 16:37:20 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.225 2005/10/20 21:07:52 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -130,7 +130,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    TString doption = gPad->GetPadPointer()->GetDrawOption();
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
-           factor = fH->GetNormFactor()/fH->GetSumOfWeights();
+      factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
 //     return if point is not in the histogram area
 
@@ -169,8 +169,8 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
          else                    gPad->SetSelected(fYaxis);
          return 0;
-       }
-    }
+      }
+   }
 
 //     if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
@@ -259,10 +259,9 @@ void THistPainter::DrawPanel()
    if (!util) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-          if (h->LoadPlugin() == -1)
-            return;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         if (h->LoadPlugin() == -1) return;
+         h->ExecPlugin(0);
+         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
    util->DrawPanel(gPad,fH);
@@ -378,10 +377,9 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void THistPainter::FitPanel()
 {
-//    *-*-*-*-*Display a panel with all histogram fit options*-*-*-*-*-*
-//             ==============================================
-//
-//      See class TFitPanel for example
+   // Display a panel with all histogram fit options
+   //
+   //      See class TFitPanel for example
 
    gCurrentHist = fH;
    if (!gPad) {
@@ -394,10 +392,9 @@ void THistPainter::FitPanel()
    if (!util) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-          if (h->LoadPlugin() == -1)
-            return;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         if (h->LoadPlugin() == -1) return;
+         h->ExecPlugin(0);
+         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
    util->FitPanel(gPad,fH);
@@ -871,6 +868,7 @@ void THistPainter::Paint(Option_t *option)
 //  The following options are supported on all types:
 //  =================================================
 //    "AXIS"   : Draw only axis
+//    "AXIG"   : Draw only grid (if the grid is requested)
 //    "HIST"   : When an histogram has errors it is visualized by default with
 //               error bars. To visualize it without errors use the option HIST
 //               together with the required option (eg "hist same c")
@@ -893,7 +891,8 @@ void THistPainter::Paint(Option_t *option)
 //               or polar coordinates, option SURF3 is used.
 //
 //  The following options are supported for 1-D types:
-//    "AH"     : Draw histogram, but not the axis labels and tick marks
+//    "AH"     : Draw histogram without axis. "A" can be combined with any drawing option.
+               : For instance, "AC" draws the histogram as a smooth Curve without axis.
 //    "]["     : When this option is selected the first and last vertical lines
 //             : of the histogram are not drawn.
 //    "B"      : Bar chart option
@@ -1453,9 +1452,9 @@ void THistPainter::Paint(Option_t *option)
          PaintAxis(kFALSE);
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
-       }
-          if (Hoption.Same ==1) Hoption.Same = 2;
-          goto paintstat;
+      }
+      if (Hoption.Same ==1) Hoption.Same = 2;
+      goto paintstat;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
@@ -1495,10 +1494,11 @@ void THistPainter::Paint(Option_t *option)
    if (gridx) gPad->SetGridx(1);
    if (gridy) gPad->SetGridy(1);
 
-   PaintTitle();    //    Draw histogram title
-     //    Draw box with histogram statistics and/or fit parameters
+   PaintTitle();  // Draw histogram title
+
+   // Draw box with histogram statistics and/or fit parameters
 paintstat:
-if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -1609,17 +1609,22 @@ void THistPainter::PaintArrows(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintAxis(Bool_t drawGridOnly)
 {
-//    *-*-*-*-*-*-*-*-*-*Draw axis of an histogram*-*-*-*-*-*-*-*-*-*-*-*-*
-//                       =========================
-//
-//   Assume tx = gPad->GetTickx() and ty = gPad->GetTicky()
-//   by default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
-//    tx = 1;   tick marks on top side are drawn (inside)
-//    tx = 2;   tick marks and labels on top side are drawn
-//    ty = 1;   tick marks on right side are drawn (inside)
-//    ty = 2;   tick marks and labels on right side are drawn
-//       Use TPad::SetTicks(tx,ty) to set these options
+   //  Draw axis (2D case) of an histogram
+   //
+   //   Assume tx = gPad->GetTickx() and ty = gPad->GetTicky()
+   //   by default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
+   //    tx = 1;   tick marks on top side are drawn (inside)
+   //    tx = 2;   tick marks and labels on top side are drawn
+   //    ty = 1;   tick marks on right side are drawn (inside)
+   //    ty = 2;   tick marks and labels on right side are drawn
+   //   Use TPad::SetTicks(tx,ty) to set these options
+   //
+   //   If drawGridOnly is TRUE, only the grid is painted (if needed). This 
+   //   allows to draw the grid and the axis separately. In THistPainter::Paint
+   //   this feature is used to make sure that the grid is drawn in the background
+   //   and the axis tick marks in the foreground of the pad.
 
+   if (Hoption.Axis == -1) return;
    if (Hoption.Same && Hoption.Axis <= 0) return;
 
    static char chopt[10] = "";
@@ -1632,16 +1637,15 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    Double_t aymin = gPad->GetUymin();
    Double_t aymax = gPad->GetUymax();
    char *cw = 0;
+   TGaxis axis;
 
-//     X axis
+   // Paint X axis
    ndivx = fXaxis->GetNdivisions();
-   ndivy = fYaxis->GetNdivisions();
    if (ndivx > 1000) {
       nx2   = ndivx/100;
       nx1   = TMath::Max(1, ndivx%100);
       ndivx = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsWNDC());
    }
-   TGaxis axis;
    axis.SetTextAngle(0);
    axis.ImportAxisAttributes(fXaxis);
 
@@ -1653,31 +1657,36 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       strcat(chopt, "W");
    }
 
+   // Option LogX
    if (Hoption.Logx) {
       strcat(chopt, "G");
-      ndiv =TMath::Abs(ndivx);
+      ndiv = TMath::Abs(ndivx);
       umin = TMath::Power(10,Hparam.xmin);
       umax = TMath::Power(10,Hparam.xmax);
    } else {
-      ndiv =TMath::Abs(ndivx);
+      ndiv = TMath::Abs(ndivx);
       umin = Hparam.xmin;
       umax = Hparam.xmax;
    }
 
-//   Display axis as time
+   // Display axis as time
    if (fXaxis->GetTimeDisplay()) {
       strcat(chopt,"t");
       if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fXaxis->ChooseTimeFormat(Hparam.xmax-Hparam.xmin));
       }
    }
+
+   // Paint the bottom X axis (always)
    uminsave = umin;
    umaxsave = umax;
    ndivsave = ndiv;
    axis.SetOption(chopt);
    axis.PaintAxis(axmin, aymin,
                   axmax, aymin,
-                  umin, umax,  ndiv, chopt, gridl);
+                  umin, umax,  ndiv, chopt, gridl, drawGridOnly);
+
+   // Paint the top X axis (if needed)
    if (gPad->GetTickx()) {
       strcat(chopt, "-");
       if (gPad->GetTickx() < 2) strcat(chopt, "U");
@@ -1687,39 +1696,40 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
                      axmax, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
    }
-//     Y axis
+
+   // Paint Y axis
+   ndivy = fYaxis->GetNdivisions();
    axis.ImportAxisAttributes(fYaxis);
 
    chopt[0] = 0;
    strcat(chopt, "SDH");
-   if (ndivy < 0) {
-      nx2   = ndivy/100;
-      nx1   = TMath::Max(1, ndivy%100);
- //     ndivy = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsHNDC());
-      strcat(chopt, "N");
-   }
+   if (ndivy < 0) strcat(chopt, "N");
    if (gPad->GetGridy()) {
       gridl = (axmax-axmin)/(gPad->GetX2() - gPad->GetX1());
       strcat(chopt, "W");
    }
+
+   // Option LogY
    if (Hoption.Logy) {
       strcat(chopt, "G");
-      ndiv =TMath::Abs(ndivy);
+      ndiv = TMath::Abs(ndivy);
       umin = TMath::Power(10,Hparam.ymin);
       umax = TMath::Power(10,Hparam.ymax);
    } else {
-      ndiv =TMath::Abs(ndivy);
+      ndiv = TMath::Abs(ndivy);
       umin = Hparam.ymin;
       umax = Hparam.ymax;
    }
 
-//   Display axis as time
+   // Display axis as time
    if (fYaxis->GetTimeDisplay()) {
       strcat(chopt,"t");
       if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fYaxis->ChooseTimeFormat(Hparam.ymax-Hparam.ymin));
       }
    }
+
+   // Paint the left Y axis (always)
    uminsave = umin;
    umaxsave = umax;
    ndivsave = ndiv;
@@ -1727,6 +1737,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    axis.PaintAxis(axmin, aymin,
                   axmin, aymax,
                   umin, umax,  ndiv, chopt, gridl, drawGridOnly);
+
+   // Paint the right Y axis (if needed)
    if (gPad->GetTicky()) {
       if (gPad->GetTicky() < 2) {
          strcat(chopt, "U");
@@ -2139,8 +2151,8 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    if (dz <= 0) return;
    if (fH->GetMinimumStored() == -1111) {
-       Double_t yMARGIN = 0.05;
-       if (gStyle->GetHistMinimumZero()) {
+      Double_t yMARGIN = 0.05;
+      if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {
@@ -2433,7 +2445,7 @@ void THistPainter::PaintContour(Option_t *option)
             else             zc[2] = Hparam.zmin;
             if (zc[3] > 0)   zc[3] = TMath::Log10(zc[3]);
             else             zc[3] = Hparam.zmin;
-        }
+         }
          for (k=0;k<4;k++) {
             ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
          }
@@ -2496,12 +2508,12 @@ void THistPainter::PaintContour(Option_t *option)
                theColor = Int_t((itarr[ix-1]+0.99)*Float_t(ncolors)/Float_t(ndivz));
                icol = gStyle->GetColorPalette(theColor);
                if (Hoption.Contour == 11) {
-                   fH->SetLineColor(icol);
+                  fH->SetLineColor(icol);
                }
                if (Hoption.Contour == 12) {
-                   mode = icol%5;
-                   if (mode == 0) mode = 5;
-                   fH->SetLineStyle(mode);
+                  mode = icol%5;
+                  if (mode == 0) mode = 5;
+                  fH->SetLineStyle(mode);
                }
                if (Hoption.Contour != 1) {
                   fH->TAttLine::Modify();
@@ -2661,22 +2673,22 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
       xlen = tlen*pdif;
       if (vert) {
          if (Hoption.Logx)
-           xarr[i] = TMath::Log10(x1);
+            xarr[i] = TMath::Log10(x1);
          else
-           xarr[i] = x1;
+            xarr[i] = x1;
          if (Hoption.Logy)
-           yarr[i] = TMath::Log10(y1 + xlen);
+            yarr[i] = TMath::Log10(y1 + xlen);
          else
-           yarr[i] = y1 + xlen;
+            yarr[i] = y1 + xlen;
       } else {
          if (Hoption.Logx)
-           xarr[i] = TMath::Log10(x1 + xlen);
+            xarr[i] = TMath::Log10(x1 + xlen);
          else
-           xarr[i] = x1 + xlen;
+            xarr[i] = x1 + xlen;
          if (Hoption.Logy)
-           yarr[i] = TMath::Log10(y1);
+            yarr[i] = TMath::Log10(y1);
          else
-           yarr[i] = y1;
+            yarr[i] = y1;
       }
       itarr[i] = n;
       icount++;
@@ -2896,8 +2908,8 @@ void THistPainter::PaintErrors(Option_t *)
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
          if (yi1 + s2y < yi4) gPad->PaintLine(xi3,yi1 + s2y,xi4,yi4);
-           //don't duplicate the horizontal line
-          if (Hoption.Hist != 2){
+         // don't duplicate the horizontal line
+         if (Hoption.Hist != 2){
             if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
             if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
          }
@@ -2905,8 +2917,8 @@ void THistPainter::PaintErrors(Option_t *)
       if (optionE && !drawmarker && ey1 != 0) {
          if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
          if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
-          //don't duplicate the horizontal line
-          if (Hoption.Hist != 2){
+         // don't duplicate the horizontal line
+         if (Hoption.Hist != 2){
             if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
             if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
          }
@@ -3245,12 +3257,12 @@ void THistPainter::PaintHist(Option_t *)
             }
             else { ypc = ypre = 0;}
             if (Hoption.Plus == 1) {
-                ym1 = TMath::Max(TMath::Min(ycur+yadd,ypre),ycur);
-                ym2 = TMath::Max(TMath::Min(ycur+yadd,ynext+ync),ycur);
+               ym1 = TMath::Max(TMath::Min(ycur+yadd,ypre),ycur);
+               ym2 = TMath::Max(TMath::Min(ycur+yadd,ynext+ync),ycur);
             }
             else if(Hoption.Plus == -1) {
-                ym1 = TMath::Max(TMath::Min(ycur-yadd,ypre),ycur);
-                ym2 = TMath::Max(TMath::Min(ycur-yadd,ynext-ync),ycur);
+               ym1 = TMath::Max(TMath::Min(ycur-yadd,ypre),ycur);
+               ym2 = TMath::Max(TMath::Min(ycur-yadd,ynext-ync),ycur);
             }
             else {
                if (ycur > yadd) { ym1 = TMath::Max(yadd,ypc); ym2 = TMath::Max(yadd,ync); }
@@ -4116,196 +4128,181 @@ void THistPainter::PaintLego(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
-//    *-*-*-*-*Draw the axis for legos and surface plots*-*-*-*-*-*-*-*-*-*
-//             =========================================
-//
+   // Draw the axis for legos and surface plots
 
-    static Double_t epsil = 0.001;
+   static Double_t epsil = 0.001;
 
-    Double_t cosa, sina;
-    Double_t bmin, bmax;
-    Double_t r[24]        /* was [3][8] */;
-    Int_t ndivx, ndivy, ndivz, i;
-    Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
-    static char chopax[8], chopay[8], chopaz[8];
-    Int_t ix1, ix2, iy1, iy2, iz1, iz2;
-    Double_t rad;
+   Double_t cosa, sina;
+   Double_t bmin, bmax;
+   Double_t r[24]        /* was [3][8] */;
+   Int_t ndivx, ndivy, ndivz, i;
+   Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
+   static char chopax[8], chopay[8], chopaz[8];
+   Int_t ix1, ix2, iy1, iy2, iz1, iz2;
+   Double_t rad;
 
-//    ----------------------------------------------------------------------
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintLegoAxis", "no TView in current pad");
+      return;
+   }
 
+   // In polar coordinates, draw a short line going from the external circle
+   // corresponding to r = 1 up to r = 1.1
+   if (Hoption.System == kPOLAR) {
+      r[0] = 1;
+      r[1] = 0;
+      r[2] = 0;
+      view->WCtoNDC(r, x1);
+      r[0] = 1.1;
+      r[1] = 0;
+      r[2] = 0;
+      view->WCtoNDC(r, x2);
+      gPad->PaintLine(x1[0],x1[1],x2[0],x2[1]);
+      return ;
+   }
 
-    TView *view = gPad->GetView();
-    if (!view) {
-       Error("PaintLegoAxis", "no TView in current pad");
-       return;
-    }
+   if (Hoption.System != kCARTESIAN) return ;
 
-    // in polar coordinates, draw a short line going from the external circle
-    // corresponding to r = 1 up to r = 1.1
-    if (Hoption.System == kPOLAR) {
-       r[0] = 1;
-       r[1] = 0;
-       r[2] = 0;
-       view->WCtoNDC(r, x1);
-       r[0] = 1.1;
-       r[1] = 0;
-       r[2] = 0;
-       view->WCtoNDC(r, x2);
-       gPad->PaintLine(x1[0],x1[1],x2[0],x2[1]);
-       return ;
-    }
+   rad = TMath::ATan(1.) * 4. /180.;
+   cosa = TMath::Cos(ang*rad);
+   sina = TMath::Sin(ang*rad);
 
-    if (Hoption.System != kCARTESIAN) return ;
+   view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
+   for (i = 1; i <= 8; ++i) {
+      r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
+      r[i*3 - 2] = av[i*3 - 2]*sina;
+      r[i*3 - 1] = av[i*3 - 1];
+   }
 
-    rad = TMath::ATan(1.) * 4. /180.;
-    cosa = TMath::Cos(ang*rad);
-    sina = TMath::Sin(ang*rad);
+   view->WCtoNDC(&r[ix1*3 - 3], x1);
+   view->WCtoNDC(&r[ix2*3 - 3], x2);
+   view->WCtoNDC(&r[iy1*3 - 3], y1);
+   view->WCtoNDC(&r[iy2*3 - 3], y2);
+   view->WCtoNDC(&r[iz1*3 - 3], z1);
+   view->WCtoNDC(&r[iz2*3 - 3], z2);
 
-    view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
-    for (i = 1; i <= 8; ++i) {
-        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
-        r[i*3 - 2] = av[i*3 - 2]*sina;
-        r[i*3 - 1] = av[i*3 - 1];
-    }
+   view->SetAxisNDC(x1, x2, y1, y2, z1, z2);
 
+   Double_t *rmin = view->GetRmin();
+   Double_t *rmax = view->GetRmax();
 
-    view->WCtoNDC(&r[ix1*3 - 3], x1);
-    view->WCtoNDC(&r[ix2*3 - 3], x2);
-    view->WCtoNDC(&r[iy1*3 - 3], y1);
-    view->WCtoNDC(&r[iy2*3 - 3], y2);
-    view->WCtoNDC(&r[iz1*3 - 3], z1);
-    view->WCtoNDC(&r[iz2*3 - 3], z2);
+   // Initialize the axis options
+   if (x1[0] > x2[0]) strcpy(chopax, "SDH=+");
+   else               strcpy(chopax, "SDH=-");
+   if (y1[0] > y2[0]) strcpy(chopay, "SDH=+");
+   else               strcpy(chopay, "SDH=-");
+   strcpy(chopaz, "SDH+=");
 
-    view->SetAxisNDC(x1, x2, y1, y2, z1, z2);
+   // Option LOG is required ?
+   if (Hoption.Logx) strcat(chopax,"G");
+   if (Hoption.Logy) strcat(chopay,"G");
+   if (Hoption.Logz) strcat(chopaz,"G");
 
-    Double_t *rmin = view->GetRmin();
-    Double_t *rmax = view->GetRmax();
+   // Initialize the number of divisions. If the
+   // number of divisions is negative, option 'N' is required.
+   ndivx = fXaxis->GetNdivisions();
+   ndivy = fYaxis->GetNdivisions();
+   ndivz = fZaxis->GetNdivisions();
+   if (ndivx < 0) {
+      ndivx = TMath::Abs(ndivx);
+      strcat(chopax, "N");
+   }
+   if (ndivy < 0) {
+      ndivy = TMath::Abs(ndivy);
+      strcat(chopay, "N");
+   }
+   if (ndivz < 0) {
+      ndivz = TMath::Abs(ndivz);
+      strcat(chopaz, "N");
+   }
 
-//                 Initialize the axis options
+   // Set Axis attributes.
+   // The variable SCALE  rescales the VSIZ
+   // in order to have the same label size for all angles.
 
-    if (x1[0] > x2[0]) strcpy(chopax, "SDH=+");
-    else               strcpy(chopax, "SDH=-");
-    if (y1[0] > y2[0]) strcpy(chopay, "SDH=+");
-    else               strcpy(chopay, "SDH=-");
-    strcpy(chopaz, "SDH+=");
+   axis->SetLineWidth(1);
 
-//                 Option LOG is required ?
+   // X axis drawing
+   if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
+      axis->ImportAxisAttributes(fXaxis);
+      axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
+      if (Hoption.Logx) {
+         bmin = TMath::Power(10, rmin[0]);
+         bmax = TMath::Power(10, rmax[0]);
+      } else {
+         bmin = rmin[0];
+         bmax = rmax[0];
+      }
+      // Option time display is required ?
+      if (fXaxis->GetTimeDisplay()) {
+         strcat(chopax,"t");
+         if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
+            axis->SetTimeFormat(fXaxis->ChooseTimeFormat(bmax-bmin));
+         } else {
+            axis->SetTimeFormat(fXaxis->GetTimeFormat());
+         }
+      }
+      axis->SetOption(chopax);
+      axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
+   }
 
-    if (Hoption.Logx) strcat(chopax,"G");
-    if (Hoption.Logy) strcat(chopay,"G");
-    if (Hoption.Logz) strcat(chopaz,"G");
+   // Y axis drawing
+   if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
+      axis->ImportAxisAttributes(fYaxis);
+      axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
 
-//              Initialize the number of divisions. If the
-//              number of divisions is negative, option 'N' is required.
+      if (fH->GetDimension() < 2) {
+         strcpy(chopay, "V=+UN");
+         ndivy = 0;
+      }
+      if (TMath::Abs(y1[0] - y2[0]) < epsil) {
+         y2[0] = y1[0];
+      }
+      if (Hoption.Logy) {
+         bmin = TMath::Power(10, rmin[1]);
+         bmax = TMath::Power(10, rmax[1]);
+      } else {
+         bmin = rmin[1];
+         bmax = rmax[1];
+      }
+      // Option time display is required ?
+      if (fYaxis->GetTimeDisplay()) {
+         strcat(chopay,"t");
+         if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
+            axis->SetTimeFormat(fYaxis->ChooseTimeFormat(bmax-bmin));
+         } else {
+            axis->SetTimeFormat(fYaxis->GetTimeFormat());
+         }
+      }
+      axis->SetOption(chopay);
+      axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
+   }
 
-    ndivx = fXaxis->GetNdivisions();
-    ndivy = fYaxis->GetNdivisions();
-    ndivz = fZaxis->GetNdivisions();
-    if (ndivx < 0) {
-        ndivx = TMath::Abs(ndivx);
-        strcat(chopax, "N");
-    }
-    if (ndivy < 0) {
-        ndivy = TMath::Abs(ndivy);
-        strcat(chopay, "N");
-    }
-    if (ndivz < 0) {
-        ndivz = TMath::Abs(ndivz);
-        strcat(chopaz, "N");
-    }
+   // Z axis drawing
+   if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
+      axis->ImportAxisAttributes(fZaxis);
+      if (Hoption.Logz) {
+         bmin = TMath::Power(10, rmin[2]);
+         bmax = TMath::Power(10, rmax[2]);
+      } else {
+         bmin = rmin[2];
+         bmax = rmax[2];
+      }
+      // Option time display is required ?
+      if (fZaxis->GetTimeDisplay()) {
+         strcat(chopaz,"t");
+         if (strlen(fZaxis->GetTimeFormatOnly()) == 0) {
+            axis->SetTimeFormat(fZaxis->ChooseTimeFormat(bmax-bmin));
+         } else {
+            axis->SetTimeFormat(fZaxis->GetTimeFormat());
+         }
+      }
+      axis->SetOption(chopaz);
+      axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
+   }
 
-//              Set Axis attributes.
-//              The variable SCALE  rescales the VSIZ
-//              in order to have the same label size for all angles.
-
-    axis->SetLineWidth(1);
-
-//              X axis drawing
-
-    if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
-        axis->ImportAxisAttributes(fXaxis);
-        axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
-        if (Hoption.Logx) {
-            bmin = TMath::Power(10, rmin[0]);
-            bmax = TMath::Power(10, rmax[0]);
-        } else {
-            bmin = rmin[0];
-            bmax = rmax[0];
-        }
-//                 Option time display is required ?
-        if (fXaxis->GetTimeDisplay()) {
-           strcat(chopax,"t");
-           if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
-              axis->SetTimeFormat(fXaxis->ChooseTimeFormat(bmax-bmin));
-           } else {
-              axis->SetTimeFormat(fXaxis->GetTimeFormat());
-           }
-        }
-        axis->SetOption(chopax);
-        axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
-    }
-
-//              Y axis drawing
-
-    if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
-        axis->ImportAxisAttributes(fYaxis);
-        axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
-
-        //if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
-        //    strcpy(chopay, "SDH+=N");
-        //}
-        if (fH->GetDimension() < 2) {
-            strcpy(chopay, "V=+UN");
-            ndivy = 0;
-        }
-        if (TMath::Abs(y1[0] - y2[0]) < epsil) {
-            y2[0] = y1[0];
-        }
-        if (Hoption.Logy) {
-            bmin = TMath::Power(10, rmin[1]);
-            bmax = TMath::Power(10, rmax[1]);
-        } else {
-            bmin = rmin[1];
-            bmax = rmax[1];
-        }
-//                 Option time display is required ?
-        if (fYaxis->GetTimeDisplay()) {
-           strcat(chopay,"t");
-           if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
-              axis->SetTimeFormat(fYaxis->ChooseTimeFormat(bmax-bmin));
-           } else {
-              axis->SetTimeFormat(fYaxis->GetTimeFormat());
-           }
-        }
-        axis->SetOption(chopay);
-        axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
-    }
-
-//              Z axis drawing
-
-    if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
-        axis->ImportAxisAttributes(fZaxis);
-        if (Hoption.Logz) {
-            bmin = TMath::Power(10, rmin[2]);
-            bmax = TMath::Power(10, rmax[2]);
-        } else {
-            bmin = rmin[2];
-            bmax = rmax[2];
-        }
-//                 Option time display is required ?
-        if (fZaxis->GetTimeDisplay()) {
-           strcat(chopaz,"t");
-           if (strlen(fZaxis->GetTimeFormatOnly()) == 0) {
-              axis->SetTimeFormat(fZaxis->ChooseTimeFormat(bmax-bmin));
-           } else {
-              axis->SetTimeFormat(fZaxis->GetTimeFormat());
-           }
-        }
-        axis->SetOption(chopaz);
-        axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
-    }
-
-    fH->SetLineStyle(1);
+   fH->SetLineStyle(1);
 }
 
 //______________________________________________________________________________
@@ -4396,8 +4393,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       }
    }
    if (fH->GetMinimumStored() == -1111) {
-       Double_t yMARGIN = 0.05;
-       if (gStyle->GetHistMinimumZero()) {
+      Double_t yMARGIN = 0.05;
+      if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {
@@ -5297,9 +5294,11 @@ void THistPainter::PaintTriangles(Option_t *option)
 //______________________________________________________________________________
 void THistPainter::DefineColorLevels(Int_t ndivz)
 {
+   // Define the color levels used to paint legos, surfaces etc..
+
    Int_t i, irep;
 
-   // Initialize the colour levels
+   // Initialize the color levels
    if (ndivz >= 100) {
       Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
       ndivz = 8;
@@ -5637,73 +5636,71 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 //______________________________________________________________________________
 Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-  // static function
-  // Convert Right Ascension, Declination to X,Y using an AITOFF projection.
-  // This procedure can be used to create an all-sky map in Galactic
-  // coordinates with an equal-area Aitoff projection.  Output map
-  // coordinates are zero longitude centered.
-  // Also called Hammer-Aitoff projection (first presented by Ernst von Hammer in 1892)
-  // source: GMT
-  // code from  Ernst-Jan Buis
+   // static function
+   // Convert Right Ascension, Declination to X,Y using an AITOFF projection.
+   // This procedure can be used to create an all-sky map in Galactic
+   // coordinates with an equal-area Aitoff projection.  Output map
+   // coordinates are zero longitude centered.
+   // Also called Hammer-Aitoff projection (first presented by Ernst von Hammer in 1892)
+   // source: GMT
+   // code from  Ernst-Jan Buis
 
-  Double_t x, y;
+   Double_t x, y;
 
-//   while (l < -180.0) l += 360.0;
-//   while (l >  180.0) l -= 360.0;
-  Double_t alpha2 = (l/2)*TMath::DegToRad();
-  Double_t delta  = b*TMath::DegToRad();
-  Double_t r2     = TMath::Sqrt(2.);
-  Double_t f      = 2*r2/TMath::Pi();
-  Double_t cdec   = TMath::Cos(delta);
-  Double_t denom  = TMath::Sqrt(1. + cdec*TMath::Cos(alpha2));
-  x      = cdec*TMath::Sin(alpha2)*2.*r2/denom;
-  y      = TMath::Sin(delta)*r2/denom;
-  x     *= TMath::RadToDeg()/f;
-  y     *= TMath::RadToDeg()/f;
-  //  x *= -1.; // for a skymap swap left<->right
-  Al = x;
-  Ab = y;
+   Double_t alpha2 = (l/2)*TMath::DegToRad();
+   Double_t delta  = b*TMath::DegToRad();
+   Double_t r2     = TMath::Sqrt(2.);
+   Double_t f      = 2*r2/TMath::Pi();
+   Double_t cdec   = TMath::Cos(delta);
+   Double_t denom  = TMath::Sqrt(1. + cdec*TMath::Cos(alpha2));
+   x      = cdec*TMath::Sin(alpha2)*2.*r2/denom;
+   y      = TMath::Sin(delta)*r2/denom;
+   x     *= TMath::RadToDeg()/f;
+   y     *= TMath::RadToDeg()/f;
+   //  x *= -1.; // for a skymap swap left<->right
+   Al = x;
+   Ab = y;
 
-  return 0;
+   return 0;
 }
 
 //______________________________________________________________________________
 Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-  // static function
-  // Probably the most famous of the various map projections, the Mercator projection
-  // takes its name from Mercator who presented it in 1569. It is a cylindrical, conformal projection
-  // with no distortion along the equator.
-  // The Mercator projection has been used extensively for world maps in which the distortion towards
-  // the polar regions grows rather large, thus incorrectly giving the impression that, for example,
-  // Greenland is larger than South America. In reality, the latter is about eight times the size of
-  // Greenland. Also, the Former Soviet Union looks much bigger than Africa or South America. One may wonder
-  // whether this illusion has had any influence on U.S. foreign policy.' (Source: GMT)
-  // code from  Ernst-Jan Buis
-  Al = l;
-  Double_t aid = TMath::Tan((TMath::PiOver2() + b*TMath::DegToRad())/2);
-  Ab = TMath::Log(aid);
-  return 0;
+   // static function
+   // Probably the most famous of the various map projections, the Mercator projection
+   // takes its name from Mercator who presented it in 1569. It is a cylindrical, conformal projection
+   // with no distortion along the equator.
+   // The Mercator projection has been used extensively for world maps in which the distortion towards
+   // the polar regions grows rather large, thus incorrectly giving the impression that, for example,
+   // Greenland is larger than South America. In reality, the latter is about eight times the size of
+   // Greenland. Also, the Former Soviet Union looks much bigger than Africa or South America. One may wonder
+   // whether this illusion has had any influence on U.S. foreign policy.' (Source: GMT)
+   // code from  Ernst-Jan Buis
+   Al = l;
+   Double_t aid = TMath::Tan((TMath::PiOver2() + b*TMath::DegToRad())/2);
+   Ab = TMath::Log(aid);
+   return 0;
 }
 
 //______________________________________________________________________________
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-  // static function
-  // code from  Ernst-Jan Buis
-  Al = l*cos(b*TMath::DegToRad());
-  Ab = b;
-  return 0;
+   // static function
+   // code from  Ernst-Jan Buis
+   Al = l*cos(b*TMath::DegToRad());
+   Ab = b;
+   return 0;
 }
 
 //______________________________________________________________________________
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-  // static function
-  // code from  Ernst-Jan Buis
-  Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
-  Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
-  return 0;
+   // static function
+   // code from  Ernst-Jan Buis
+   Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
+   Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -5721,87 +5718,86 @@ void THistPainter::RecalculateRange()
    // added EJB -->
    Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
    if (Hoption.Proj ==1) {
-       // TODO : check x range not lower than -180 and not higher than 180
-       THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-       THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-       THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-       THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+      // TODO : check x range not lower than -180 and not higher than 180
+      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
 
-       if (xmin > xmin_aid) xmin = xmin_aid;
-       if (ymin > ymin_aid) ymin = ymin_aid;
-       if (xmax < xmax_aid) xmax = xmax_aid;
-       if (ymax < ymax_aid) ymax = ymax_aid;
-       if (Hparam.ymin<0 && Hparam.ymax>0) {
-           // there is an  'equator', check its range in the plot..
-           THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
-           THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
-           if (xmin >xmin_aid) xmin = xmin_aid;
-           if (xmax <xmax_aid) xmax = xmax_aid;
-       }
-       if (Hparam.xmin<0 && Hparam.xmax>0) {
-           THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-           THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
-           if (ymin >ymin_aid) ymin = ymin_aid;
-           if (ymax <ymax_aid) ymax = ymax_aid;
-       }
-  } else if ( Hoption.Proj ==2) {
-       if (Hparam.ymin <= -90 | Hparam.ymax >=90) {
-           Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
-           Hoption.Proj = 0;
-       } else {
-           THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
-           THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
-       }
-  } else if (Hoption.Proj == 3) {
-       THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-       THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-       THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-       THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+      if (xmin > xmin_aid) xmin = xmin_aid;
+      if (ymin > ymin_aid) ymin = ymin_aid;
+      if (xmax < xmax_aid) xmax = xmax_aid;
+      if (ymax < ymax_aid) ymax = ymax_aid;
+      if (Hparam.ymin<0 && Hparam.ymax>0) {
+         // there is an  'equator', check its range in the plot..
+         THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
+         if (xmin >xmin_aid) xmin = xmin_aid;
+         if (xmax <xmax_aid) xmax = xmax_aid;
+      }
+      if (Hparam.xmin<0 && Hparam.xmax>0) {
+         THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
+         if (ymin >ymin_aid) ymin = ymin_aid;
+         if (ymax <ymax_aid) ymax = ymax_aid;
+      }
+   } else if ( Hoption.Proj ==2) {
+      if (Hparam.ymin <= -90 | Hparam.ymax >=90) {
+         Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
+         Hoption.Proj = 0;
+      } else {
+         THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
+         THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
+      }
+   } else if (Hoption.Proj == 3) {
+      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
 
-       if (xmin > xmin_aid) xmin = xmin_aid;
-       if (ymin > ymin_aid) ymin = ymin_aid;
-       if (xmax < xmax_aid) xmax = xmax_aid;
-       if (ymax < ymax_aid) ymax = ymax_aid;
-       if (Hparam.ymin<0 && Hparam.ymax>0) {
-           THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-           THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-           if (xmin >xmin_aid) xmin = xmin_aid;
-           if (xmax <xmax_aid) xmax = xmax_aid;
-       }
-       if (Hparam.xmin<0 && Hparam.xmax>0) {
-           THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
-           THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-           if (ymin >ymin_aid) ymin = ymin_aid;
-           if (ymax <ymax_aid) ymax = ymax_aid;
-       }
-  } else if (Hoption.Proj == 4) {
-       THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-       THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-       THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-       THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+      if (xmin > xmin_aid) xmin = xmin_aid;
+      if (ymin > ymin_aid) ymin = ymin_aid;
+      if (xmax < xmax_aid) xmax = xmax_aid;
+      if (ymax < ymax_aid) ymax = ymax_aid;
+      if (Hparam.ymin<0 && Hparam.ymax>0) {
+         THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+         if (xmin >xmin_aid) xmin = xmin_aid;
+         if (xmax <xmax_aid) xmax = xmax_aid;
+      }
+      if (Hparam.xmin<0 && Hparam.xmax>0) {
+         THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+         if (ymin >ymin_aid) ymin = ymin_aid;
+         if (ymax <ymax_aid) ymax = ymax_aid;
+      }
+   } else if (Hoption.Proj == 4) {
+      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
 
-       if (xmin > xmin_aid) xmin = xmin_aid;
-       if (ymin > ymin_aid) ymin = ymin_aid;
-       if (xmax < xmax_aid) xmax = xmax_aid;
-       if (ymax < ymax_aid) ymax = ymax_aid;
-       if (Hparam.ymin<0 && Hparam.ymax>0) {
-           THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-           THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-           if (xmin >xmin_aid) xmin = xmin_aid;
-           if (xmax <xmax_aid) xmax = xmax_aid;
-       }
-       if (Hparam.xmin<0 && Hparam.xmax>0) {
-           THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-           THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-           if (ymin >ymin_aid) ymin = ymin_aid;
-           if (ymax <ymax_aid) ymax = ymax_aid;
-       }
-     }
+      if (xmin > xmin_aid) xmin = xmin_aid;
+      if (ymin > ymin_aid) ymin = ymin_aid;
+      if (xmax < xmax_aid) xmax = xmax_aid;
+      if (ymax < ymax_aid) ymax = ymax_aid;
+      if (Hparam.ymin<0 && Hparam.ymax>0) {
+         THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+         if (xmin >xmin_aid) xmin = xmin_aid;
+         if (xmax <xmax_aid) xmax = xmax_aid;
+      }
+      if (Hparam.xmin<0 && Hparam.xmax>0) {
+         THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+         if (ymin >ymin_aid) ymin = ymin_aid;
+         if (ymax <ymax_aid) ymax = ymax_aid;
+      }
+   }
    Hparam.xmin= xmin;
    Hparam.xmax= xmax;
    Hparam.ymin= ymin;
    Hparam.ymax= ymax;
-
 
    // <-- added EJB
 
