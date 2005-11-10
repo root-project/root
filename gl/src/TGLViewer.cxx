@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.21 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.22 2005/11/09 10:13:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -807,7 +807,13 @@ void TGLViewer::RequestDraw(UInt_t LOD)
    fNextSceneLOD = LOD;
    fRedrawTimer->Stop();
    
-   // Take scene lock - to be revisited
+   // Ignore request if GL window or context not yet availible - we
+   // will get redraw later
+   if (!fGLWindow || !gVirtualGL) {
+      return;
+   }
+
+   // Take scene draw lock - to be revisited
    if (!fScene.TakeLock(TGLScene::kDrawLock)) {
       // If taking drawlock fails the previous draw is still in progress
       // set timer to do this one later
@@ -1055,11 +1061,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
    }
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
-
-   // Can't do this until gVirtualGL has been setup - change with TGLManager
-   if (gVirtualGL) {
-      RequestDraw();
-   }
+   RequestDraw();
 }
 
 //______________________________________________________________________________

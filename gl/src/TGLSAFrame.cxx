@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -35,5 +35,9 @@ Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 //______________________________________________________________________________
 void TGLSAFrame::CloseWindow()
 {
-   fViewer.Close();
+   // Ask our owning viewer to close
+   // Has to be defered so that our GUI event thread can process this event
+   // and emit signals - otherwise deleted object is called to emit events
+   // Not very nice but seems to be only reliable way to close down
+   TTimer::SingleShot(50, "TGLSAViewer", &fViewer, "Close()");
 }
