@@ -107,6 +107,7 @@ TPDF::~TPDF()
 void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
                           Double_t)
 {
+   // Begin the Cell Array painting
    Warning("TPDF::CellArrayBegin", "not yet implemented");
 }
 
@@ -114,6 +115,7 @@ void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
 //______________________________________________________________________________
 void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
 {
+   // Paint the Cell Array
    Warning("TPDF::CellArrayFill", "not yet implemented");
 }
 
@@ -121,6 +123,7 @@ void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 void TPDF::CellArrayEnd()
 {
+   // End the Cell Array painting
    Warning("TPDF::CellArrayEnd", "not yet implemented");
 }
 
@@ -1955,11 +1958,11 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Int_t txalv = fTextAlign%10;
    if (txalv < 1) txalv = 1; if (txalv > 3) txalv = 3;
    if( txalv == 3) {
-     y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
-     x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
+      y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
+      x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    } else if( txalv == 2) {
-     y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
-     x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
+      y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
+      x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
    if (txalh > 1) {
       TText t;

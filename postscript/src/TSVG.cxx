@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.14 2005/10/25 15:49:35 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.15 2005/10/28 16:24:43 couet Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -583,6 +583,8 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 //______________________________________________________________________________
 void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
+   // Paint PolyMarker
+
    Int_t ms = abs(fMarkerStyle);
 
    if (ms >= 6 && ms <= 19) ms = 20;
@@ -806,6 +808,8 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 //______________________________________________________________________________
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
+   // Paint PolyMarker
+
    Int_t ms = abs(fMarkerStyle);
 
    if (ms >= 6 && ms <= 19) ms = 20;
@@ -1537,23 +1541,27 @@ Int_t TSVG::YtoSVG(Double_t y)
 void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
                           Double_t)
 {
+   // Begin the Cell Array painting
    Warning("TSVG::CellArrayBegin", "not yet implemented");
 }
 
 //______________________________________________________________________________
 void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
 {
+   // Paint the Cell Array
    Warning("TSVG::CellArrayFill", "not yet implemented");
 }
 
 //______________________________________________________________________________
 void TSVG::CellArrayEnd()
 {
+   // End the Cell Array painting
    Warning("TSVG::CellArrayEnd", "not yet implemented");
 }
 
 //______________________________________________________________________________
 void TSVG::DrawPS(Int_t, Float_t *, Float_t *)
 {
+   // Not needed in SVG case
    Warning("TSVG::DrawPS", "not yet implemented");
 }

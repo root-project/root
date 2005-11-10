@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.59 2005/10/14 16:45:44 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.60 2005/10/28 13:50:24 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -517,6 +517,8 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
 //______________________________________________________________________________
 void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
+   // Paint the Cell Array 
+
    if (fLastCellRed == r && fLastCellGreen == g && fLastCellBlue == b) {
       fNBSameColorCell++;
    } else {
@@ -553,6 +555,8 @@ void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
 //______________________________________________________________________________
 void TPostScript::CellArrayEnd()
 {
+   // End the Cell Array painting
+
    if (fNBSameColorCell != 0 ) WriteInteger(fNBSameColorCell+300);
    PrintStr("] def /NY");
    WriteInteger(fNbCellLine);
@@ -1535,20 +1539,20 @@ void TPostScript::Initialize()
       rpymin = TMath::Sqrt(2.)*rpxmin;
       switch (format) {
          case 100 :
-              width  = (8.5*2.54)-2.*rpxmin;
-              heigth = (11.*2.54)-2.*rpymin;
-              break;
+            width  = (8.5*2.54)-2.*rpxmin;
+            heigth = (11.*2.54)-2.*rpymin;
+            break;
          case 200 :
-              width  = (8.5*2.54)-2.*rpxmin;
-              heigth = (14.*2.54)-2.*rpymin;
-              break;
+            width  = (8.5*2.54)-2.*rpxmin;
+            heigth = (14.*2.54)-2.*rpymin;
+            break;
          case 300 :
-              width  = (11.*2.54)-2.*rpxmin;
-              heigth = (17.*2.54)-2.*rpymin;
-              break;
+            width  = (11.*2.54)-2.*rpxmin;
+            heigth = (17.*2.54)-2.*rpymin;
+            break;
          default  :
-              width  = 21.0-2.*rpxmin;
-              heigth = 29.7-2.*rpymin;
+            width  = 21.0-2.*rpxmin;
+            heigth = 29.7-2.*rpymin;
       };
    }
 
@@ -1558,17 +1562,17 @@ void TPostScript::Initialize()
       rpxmin = TMath::Sqrt(2.)*rpymin;
       switch (format) {
          case 100 :
-              width  = (11.*2.54)-2.*rpxmin;
-              heigth = (8.5*2.54)-2.*rpymin;
+            width  = (11.*2.54)-2.*rpxmin;
+            heigth = (8.5*2.54)-2.*rpymin;
          case 200 :
-              width  = (14.*2.54)-2.*rpxmin;
-              heigth = (8.5*2.54)-2.*rpymin;
+            width  = (14.*2.54)-2.*rpxmin;
+            heigth = (8.5*2.54)-2.*rpymin;
          case 300 :
-              width  = (17.*2.54)-2.*rpxmin;
-              heigth = (11.*2.54)-2.*rpymin;
+            width  = (17.*2.54)-2.*rpxmin;
+            heigth = (11.*2.54)-2.*rpymin;
          default  :
-              width  = 29.7-2.*rpxmin;
-              heigth = 21-2.*rpymin;
+            width  = 29.7-2.*rpxmin;
+            heigth = 21-2.*rpymin;
       };
    }
 
@@ -1587,17 +1591,17 @@ void TPostScript::Initialize()
       rpymin = 3.4;
       switch (format) {
          case 100 :
-              width  = (8.5*2.54)-2.*rpxmin;
-              heigth = (11.*2.54)-2.*rpymin;
+            width  = (8.5*2.54)-2.*rpxmin;
+            heigth = (11.*2.54)-2.*rpymin;
          case 200 :
-              width  = (8.5*2.54)-2.*rpxmin;
-              heigth = (14.*2.54)-2.*rpymin;
+            width  = (8.5*2.54)-2.*rpxmin;
+            heigth = (14.*2.54)-2.*rpymin;
          case 300 :
-              width  = (11.*2.54)-2.*rpxmin;
-              heigth = (17.*2.54)-2.*rpymin;
+            width  = (11.*2.54)-2.*rpxmin;
+            heigth = (17.*2.54)-2.*rpymin;
          default  :
-              width  = (21.0-2*rpxmin);
-              heigth = (29.7-2.*rpymin);
+            width  = (21.0-2*rpxmin);
+            heigth = (29.7-2.*rpymin);
       };
    }
 
@@ -1607,17 +1611,17 @@ void TPostScript::Initialize()
       rpymin = 0.7;
       switch (format) {
          case 100 :
-              width  = (11.*2.54)-2.*rpxmin;
-              heigth = (8.5*2.54)-2.*rpymin;
+            width  = (11.*2.54)-2.*rpxmin;
+            heigth = (8.5*2.54)-2.*rpymin;
          case 200 :
-              width  = (14.*2.54)-2.*rpxmin;
-              heigth = (8.5*2.54)-2.*rpymin;
+            width  = (14.*2.54)-2.*rpxmin;
+            heigth = (8.5*2.54)-2.*rpymin;
          case 300 :
-              width  = (17.*2.54)-2.*rpxmin;
-              heigth = (11.*2.54)-2.*rpymin;
+            width  = (17.*2.54)-2.*rpxmin;
+            heigth = (11.*2.54)-2.*rpymin;
          default  :
-              width  = (29.7-2*rpxmin);
-              heigth = (21-2.*rpymin);
+            width  = (29.7-2*rpxmin);
+            heigth = (21-2.*rpymin);
       };
    }
 
@@ -2296,15 +2300,15 @@ void TPostScript::SetMarkerColor( Color_t cindex )
 //______________________________________________________________________________
 void TPostScript::SetColor(Int_t color)
 {
-    // Set the current color.
+   // Set the current color.
 
-    if (color < 0) color = 0;
-    fCurrentColor = color;
-    TColor *col = gROOT->GetColor(color);
-    if (col)
-       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
-    else
-       SetColor(1., 1., 1.);
+   if (color < 0) color = 0;
+   fCurrentColor = color;
+   TColor *col = gROOT->GetColor(color);
+   if (col)
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+   else
+      SetColor(1., 1., 1.);
 }
 
 //______________________________________________________________________________
@@ -2563,12 +2567,12 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    //      \t    horizontal tab
    //      \f    form feed
          if (newtext[iold] == 'n'  ||
-             newtext[iold] == 'r'  ||
-             newtext[iold] == 't'  ||
-             newtext[iold] == 'f')  {
-             iold++;      // copy nothing and go to the following character
-             goto LOOPEND;
-          }
+            newtext[iold] == 'r'  ||
+            newtext[iold] == 't'  ||
+            newtext[iold] == 'f')  {
+            iold++;      // copy nothing and go to the following character
+            goto LOOPEND;
+         }
 
    //  1.4  the character following this backslash is the special PostScript character:
    //      \b    back space
@@ -2696,18 +2700,18 @@ LOOPEND:
       else                 scape  = (char*)strchr(cflip, char2[ich-1]);
       if( scape )  {
          if ( *scape == cflip[0] ) {
-                greek = kTRUE;          //- find ` : go to Greek
+            greek = kTRUE;          //- find ` : go to Greek
          }
          else  if( *scape == cflip[1] ) {
-                special = kTRUE;        //- find ' : go to special
+            special = kTRUE;        //- find ' : go to special
          }
          else  if( *scape == cflip[2] ) {
-                subscript   = kTRUE;      //- find ? : go to subscript
-                superscript = kFALSE;
+            subscript   = kTRUE;      //- find ? : go to subscript
+            superscript = kFALSE;
          }
          else  if( *scape == cflip[3] ) {
-                superscript = kTRUE;     //- find ^ : go to superscript
-                subscript   = kFALSE;
+            superscript = kTRUE;     //- find ^ : go to superscript
+            subscript   = kFALSE;
          }
          else  if( *scape == cflip[5] )  {
             roman   = kTRUE;       //- find # : end of special, Greek or of Zapf => go to roman
@@ -2720,7 +2724,7 @@ LOOPEND:
             subscript   = kFALSE;
          }
          else  if( *scape == cflip[7] ) {
-                zapf = kTRUE;    //- find ~ : go to ZapfDingbats
+            zapf = kTRUE;    //- find ~ : go to ZapfDingbats
          }
          else  if( *scape == cflip[8] )  {
             nbas = 1;                                // find & : backspace is required
@@ -2948,7 +2952,7 @@ L170:
             sprintf(lunps," (%s) sw pop s2 add /s2 exch def", piece[j]);
             PrintStr(lunps);
             nnew = j+1;
-          }
+         }
 
    //- between subscript and superscript, which one is the longest?
          PrintStr(" s1 s2 ge { xs s1 add /xs exch def} { xs s2 add /xs exch def} ifelse ");
@@ -3079,7 +3083,7 @@ L260:                       //-   now output the pieces
          if( show) PrintStr(" dup oshow  true charpath currentpoint pop /s1 exch def");
          else      PrintStr(" show currentpoint pop /s1 exch def");
          knew = j + 1;
-       }
+      }
       SaveRestore(-1);
 
    //   b) then superscript or subscript
@@ -3098,7 +3102,7 @@ L260:                       //-   now output the pieces
          if( show) PrintStr(" dup oshow  true charpath currentpoint pop /s2 exch def");
          else      PrintStr(" show currentpoint pop /s2 exch def");
          nnew = j + 1;
-       }
+      }
 
       SaveRestore(-1);
 

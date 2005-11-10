@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.11 2005/09/02 10:16:13 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.12 2005/10/03 10:06:34 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -482,50 +482,50 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
 
    switch (TMath::Abs(fTextFont/10)) {
       case 1:
-          fontname = "timesi.ttf";
-          break;
+         fontname = "timesi.ttf";
+         break;
       case 2:
-          fontname = "timesbd.ttf";
-          break;
+         fontname = "timesbd.ttf";
+         break;
       case 3:
-          fontname = "timesbi.ttf";
-          break;
+         fontname = "timesbi.ttf";
+         break;
       case 4:
-          fontname = "arial.ttf";
-          break;
+         fontname = "arial.ttf";
+         break;
       case 5:
-          fontname = "ariali.ttf";
-          break;
+         fontname = "ariali.ttf";
+         break;
       case 6:
-          fontname = "arialbd.ttf";
-          break;
+         fontname = "arialbd.ttf";
+         break;
       case 7:
-          fontname = "arialbi.ttf";
-          break;
+         fontname = "arialbi.ttf";
+         break;
       case 8:
-          fontname = "cour.ttf";
-          break;
+         fontname = "cour.ttf";
+         break;
       case 9:
-          fontname = "couri.ttf";
-          break;
+         fontname = "couri.ttf";
+         break;
       case 10:
-          fontname = "courbd.ttf";
-          break;
+         fontname = "courbd.ttf";
+         break;
       case 11:
-          fontname = "courbi.ttf";
-          break;
+         fontname = "courbi.ttf";
+         break;
       case 12:
-          fontname = "symbol.ttf";
-          break;
+         fontname = "symbol.ttf";
+         break;
       case 13:
-          fontname = "times.ttf";
-          break;
+         fontname = "times.ttf";
+         break;
       case 14:
-          fontname = "wingding.ttf";
-          break;
+         fontname = "wingding.ttf";
+         break;
       default:
-          fontname = "arialbd.ttf";
-          break;
+         fontname = "arialbd.ttf";
+         break;
    }
 
    // try to load font (font must be in Root.TTFontPath resource)
@@ -574,10 +574,10 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t angle = kDEGRAD*fTextAngle;
 
    if (txalv == 3) {
-     y += (fTextAngle != 0. ? h * TMath::Cos(angle) : h);
+      y += (fTextAngle != 0. ? h * TMath::Cos(angle) : h);
    } 
    if (txalv == 2) {
-     y += (fTextAngle != 0. ? (h>>1) * TMath::Cos(angle) : h>>1);
+      y += (fTextAngle != 0. ? (h>>1) * TMath::Cos(angle) : h>>1);
    } 
 
    TColor *col = gROOT->GetColor(fTextColor);
