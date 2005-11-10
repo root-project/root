@@ -494,7 +494,7 @@ void TGraphPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
                   xp[3] = x1;
                   yp[3] = y1;
                   npf   = 4;
-                } else {
+               } else {
                   rs    = (zi-z0)/(z1-z0);
                   xp[2] = rs*(x1-x0)+x0;
                   yp[2] = rs*(y1-y0)+y0;

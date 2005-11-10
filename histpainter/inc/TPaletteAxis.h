@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.1 2005/05/24 09:27:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.5 2005/05/24 09:41:18 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -39,18 +39,18 @@ protected:
    TString      fName;          //Pave name
 
 public:
-        // TPaletteAxis status bits
-        enum { kHasView   = BIT(11)};
+   // TPaletteAxis status bits
+   enum { kHasView   = BIT(11)};
 
    TPaletteAxis();
    TPaletteAxis(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, TH1 *h);
    TPaletteAxis(const TPaletteAxis &palette);
    virtual ~TPaletteAxis();
-           void  Copy(TObject &palette) const;
+   void  Copy(TObject &palette) const;
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-         TGaxis *GetAxis() {return &fAxis;}
-     Option_t   *GetName() const {return fName.Data();}
+   TGaxis *GetAxis() {return &fAxis;}
+   Option_t   *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
@@ -63,7 +63,7 @@ public:
    virtual void  SetTitleSize(Float_t titlesize) {fAxis.SetTitleSize(titlesize);} // *MENU*
    virtual void  UnZoom();  // *MENU*
 
-        ClassDef(TPaletteAxis,2)  //class used to display a color palette axis for 2-d plots
+   ClassDef(TPaletteAxis,2)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif

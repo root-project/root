@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.25 2005/10/11 08:54:19 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.26 2005/10/13 14:02:37 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -177,53 +177,53 @@ void TPainter3dAlgorithms::BackBox(Double_t ang)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Int_t iface1[4] = { 1,4,8,5 };
-    static Int_t iface2[4] = { 4,3,7,8 };
-    TView *view = 0;
+   static Int_t iface1[4] = { 1,4,8,5 };
+   static Int_t iface2[4] = { 4,3,7,8 };
+   TView *view = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-               Error("BackBox", "no TView in current pad");
-                    return;
-            }
-    }
+   if(gPad) {
+      view = gPad->GetView();
+      if(!view) {
+         Error("BackBox", "no TView in current pad");
+         return;
+      }
+   }
 
 
-    /* Local variables */
-    Double_t cosa, sina;
-    Int_t i;
-    Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
-    Int_t icodes[3];
-    Double_t tt[4];
-    Int_t ix1, ix2, iy1, iy2, iz1, iz2;
+   /* Local variables */
+   Double_t cosa, sina;
+   Int_t i;
+   Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
+   Int_t icodes[3];
+   Double_t tt[4];
+   Int_t ix1, ix2, iy1, iy2, iz1, iz2;
 
-    cosa = TMath::Cos(kRad*ang);
-    sina = TMath::Sin(kRad*ang);
-        view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
-    for (i = 1; i <= 8; ++i) {
-        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
-        r[i*3 - 2] = av[i*3 - 2]*sina;
-        r[i*3 - 1] = av[i*3 - 1];
-    }
+   cosa = TMath::Cos(kRad*ang);
+   sina = TMath::Sin(kRad*ang);
+   view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
+   for (i = 1; i <= 8; ++i) {
+      r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
+      r[i*3 - 2] = av[i*3 - 2]*sina;
+      r[i*3 - 1] = av[i*3 - 1];
+   }
 
 //*-*-          D R A W   F O R W A R D   F A C E S */
 
-    icodes[0] = 0;
-    icodes[1] = 0;
-    icodes[2] = 0;
-    tt[0] = r[iface1[0]*3 - 1];
-    tt[1] = r[iface1[1]*3 - 1];
-    tt[2] = r[iface1[2]*3 - 1];
-    tt[3] = r[iface1[3]*3 - 1];
-    (this->*fDrawFace)(icodes, r, 4, iface1, tt);
-    tt[0] = r[iface2[0]*3 - 1];
-    tt[1] = r[iface2[1]*3 - 1];
-    tt[2] = r[iface2[2]*3 - 1];
-    tt[3] = r[iface2[3]*3 - 1];
-    (this->*fDrawFace)(icodes, r, 4, iface2, tt);
+   icodes[0] = 0;
+   icodes[1] = 0;
+   icodes[2] = 0;
+   tt[0] = r[iface1[0]*3 - 1];
+   tt[1] = r[iface1[1]*3 - 1];
+   tt[2] = r[iface1[2]*3 - 1];
+   tt[3] = r[iface1[3]*3 - 1];
+   (this->*fDrawFace)(icodes, r, 4, iface1, tt);
+   tt[0] = r[iface2[0]*3 - 1];
+   tt[1] = r[iface2[1]*3 - 1];
+   tt[2] = r[iface2[2]*3 - 1];
+   tt[3] = r[iface2[3]*3 - 1];
+   (this->*fDrawFace)(icodes, r, 4, iface2, tt);
 }
 
 
@@ -232,9 +232,9 @@ void TPainter3dAlgorithms::ClearRaster()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Clear screen*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        ============
-    Int_t nw = (fNxrast*fNyrast + 29) / 30;
-    for (Int_t i = 0; i < nw; ++i) fRaster[i] = 0;
-    fIfrast = 0;
+   Int_t nw = (fNxrast*fNyrast + 29) / 30;
+   for (Int_t i = 0; i < nw; ++i) fRaster[i] = 0;
+   fIfrast = 0;
 }
 
 //______________________________________________________________________________
@@ -255,41 +255,41 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    static const char *where = "ColorFunction";
+   static const char *where = "ColorFunction";
 
-    /* Local variables */
-    Int_t i;
+   /* Local variables */
+   Int_t i;
 
-    irep = 0;
-    if (nl == 0) {fNlevel = 0;        return; }
+   irep = 0;
+   if (nl == 0) {fNlevel = 0;        return; }
 
 //*-*-          C H E C K   P A R A M E T E R S
 
-    if (nl < 0 || nl > 256) {
-       Error(where, "illegal number of levels (%d)", nl);
-       irep = -1;
-       return;
-    }
-    for (i = 1; i < nl; ++i) {
-        if (fl[i] <= fl[i - 1]) {
+   if (nl < 0 || nl > 256) {
+      Error(where, "illegal number of levels (%d)", nl);
+      irep = -1;
+      return;
+   }
+   for (i = 1; i < nl; ++i) {
+      if (fl[i] <= fl[i - 1]) {
 //         Error(where, "function levels must be in increasing order");
-           irep = -1;
-           return;
-        }
-    }
-    for (i = 0; i < nl; ++i) {
-        if (icl[i] < 0) {
+         irep = -1;
+         return;
+      }
+   }
+   for (i = 0; i < nl; ++i) {
+      if (icl[i] < 0) {
 //         Error(where, "negative color index (%d)", icl[i]);
-           irep = -1;
-           return;
-        }
-    }
+         irep = -1;
+         return;
+      }
+   }
 
 //*-*-          S E T   L E V E L S
 
-    fNlevel = nl;
-    for (i = 0; i < fNlevel; ++i) fFunLevel[i]   = Hparam.factor*fl[i];
-    for (i = 0; i < fNlevel+1; ++i) fColorLevel[i] = icl[i];
+   fNlevel = nl;
+   for (i = 0; i < fNlevel; ++i) fFunLevel[i]   = Hparam.factor*fl[i];
+   for (i = 0; i < fNlevel+1; ++i) fColorLevel[i] = icl[i];
 }
 
 
@@ -2366,155 +2366,155 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    // Local variables
-    Double_t cosa, sina;
-    Int_t ivis[4], iface[4];
-    Double_t tface[4];
-    Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
-    Int_t icodes[4];
-    Double_t zn, xy[8]; // was [2][4]
-    Double_t xyz[24];   // was [3][8]
-    Double_t *tn = 0;
-    TView *view = 0;
+   // Local variables
+   Double_t cosa, sina;
+   Int_t ivis[4], iface[4];
+   Double_t tface[4];
+   Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
+   Int_t icodes[4];
+   Double_t zn, xy[8]; // was [2][4]
+   Double_t xyz[24];   // was [3][8]
+   Double_t *tn = 0;
+   TView *view = 0;
 
-    sina = TMath::Sin(ang*kRad);
-    cosa = TMath::Cos(ang*kRad);
+   sina = TMath::Sin(ang*kRad);
+   cosa = TMath::Cos(ang*kRad);
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-    if(gPad) {
-       view = gPad->GetView();
-       if(!view) {
-          Error("LegoCartesian", "no TView in current pad");
-          return;
-       }
-       tn = gPad->GetView()->GetTN();
-    }
+   if(gPad) {
+      view = gPad->GetView();
+      if(!view) {
+         Error("LegoCartesian", "no TView in current pad");
+         return;
+      }
+      tn = gPad->GetView()->GetTN();
+   }
 
-    i1 = 1;
-    if (tn[0] < 0) i1 = 2;
-    if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   i1 = 1;
+   if (tn[0] < 0) i1 = 2;
+   if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
 
-    // Allocate v and tt arrays
-    Double_t *v, *tt;
-    Int_t vSize = fNStack+2;
-    if (vSize > kVSizeMax) {
-       v  = new Double_t[vSize];
-       tt = new Double_t[4*vSize];
-    } else {
-       vSize = kVSizeMax;
-       v  = &gV[0];
-       tt = &gTT[0];
-    }
+   // Allocate v and tt arrays
+   Double_t *v, *tt;
+   Int_t vSize = fNStack+2;
+   if (vSize > kVSizeMax) {
+      v  = new Double_t[vSize];
+      tt = new Double_t[4*vSize];
+   } else {
+      vSize = kVSizeMax;
+      v  = &gV[0];
+      tt = &gTT[0];
+   }
 
 //*-*-          D E F I N E   O R D E R   O F   D R A W I N G
 
-    if (*chopt == 'B' || *chopt == 'b') {
-        incrx = -1;
-        incry = -1;
-    } else {
-        incrx = 1;
-        incry = 1;
-    }
-    if (i1 == 1 || i1 == 2) incrx = -incrx;
-    if (i1 == 2 || i1 == 3) incry = -incry;
-    ix1 = 1;
-    iy1 = 1;
-    if (incrx < 0) ix1 = nx;
-    if (incry < 0) iy1 = ny;
-    ix2 = nx - ix1 + 1;
-    iy2 = ny - iy1 + 1;
+   if (*chopt == 'B' || *chopt == 'b') {
+      incrx = -1;
+      incry = -1;
+   } else {
+      incrx = 1;
+      incry = 1;
+   }
+   if (i1 == 1 || i1 == 2) incrx = -incrx;
+   if (i1 == 2 || i1 == 3) incry = -incry;
+   ix1 = 1;
+   iy1 = 1;
+   if (incrx < 0) ix1 = nx;
+   if (incry < 0) iy1 = ny;
+   ix2 = nx - ix1 + 1;
+   iy2 = ny - iy1 + 1;
 
 //*-*-          F I N D   V I S I B I L I T Y   O F   S I D E S
 
-    ivis[0] = 0;
-    ivis[1] = 0;
-    ivis[2] = 0;
-    ivis[3] = 0;
-    nv      = 0;
-    view->FindNormal(0, 1, 0, zn);
-    if (zn < 0) ivis[0] = 1;
-    if (zn > 0) ivis[2] = 1;
-    view->FindNormal(sina, cosa, 0, zn);
-    if (zn > 0) ivis[1] = 1;
-    if (zn < 0) ivis[3] = 1;
+   ivis[0] = 0;
+   ivis[1] = 0;
+   ivis[2] = 0;
+   ivis[3] = 0;
+   nv      = 0;
+   view->FindNormal(0, 1, 0, zn);
+   if (zn < 0) ivis[0] = 1;
+   if (zn > 0) ivis[2] = 1;
+   view->FindNormal(sina, cosa, 0, zn);
+   if (zn > 0) ivis[1] = 1;
+   if (zn < 0) ivis[3] = 1;
 
 //*-*-          D R A W   S T A C K   O F   L E G O - P L O T S
 
-    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
-    for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-        for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-            if (!painter->IsInside(ix,iy)) continue;
-            (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
-            if (nv < 2 || nv > vSize) continue;
-            icodes[0] = ix;
-            icodes[1] = iy;
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = xy[2*i - 2] + xy[2*i - 1]*cosa;
-                xyz[i*3 - 2] = xy[2*i - 1]*sina;
-                xyz[(i + 4)*3 - 3] = xyz[i*3 - 3];
-                xyz[(i + 4)*3 - 2] = xyz[i*3 - 2];
-            }
+   THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
+   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
+      for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+         if (!painter->IsInside(ix,iy)) continue;
+         (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+         if (nv < 2 || nv > vSize) continue;
+         icodes[0] = ix;
+         icodes[1] = iy;
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = xy[2*i - 2] + xy[2*i - 1]*cosa;
+            xyz[i*3 - 2] = xy[2*i - 1]*sina;
+            xyz[(i + 4)*3 - 3] = xyz[i*3 - 3];
+            xyz[(i + 4)*3 - 2] = xyz[i*3 - 2];
+         }
 //*-*-         D R A W   S T A C K
-            for (iv = 1; iv < nv; ++iv) {
-                for (i = 1; i <= 4; ++i) {
-                    xyz[i*3 - 1] = v[iv - 1];
-                    xyz[(i + 4)*3 - 1] = v[iv];
-                }
-                if (v[iv - 1] == v[iv]) continue;
-                icodes[2] = iv;
-                for (i = 1; i <= 4; ++i) {
-                    if (ivis[i - 1] == 0) continue;
-                    k1 = i;
-                    k2 = i + 1;
-                    if (i == 4) k2 = 1;
-                    icodes[3] = k1;
-                    iface[0] = k1;
-                    iface[1] = k2;
-                    iface[2] = k2 + 4;
-                    iface[3] = k1 + 4;
-                    tface[0] = tt[k1 + (iv << 2) - 5];
-                    tface[1] = tt[k2 + (iv << 2) - 5];
-                    tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-                    tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-                    (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-                }
+         for (iv = 1; iv < nv; ++iv) {
+            for (i = 1; i <= 4; ++i) {
+               xyz[i*3 - 1] = v[iv - 1];
+               xyz[(i + 4)*3 - 1] = v[iv];
             }
+            if (v[iv - 1] == v[iv]) continue;
+            icodes[2] = iv;
+            for (i = 1; i <= 4; ++i) {
+               if (ivis[i - 1] == 0) continue;
+               k1 = i;
+               k2 = i + 1;
+               if (i == 4) k2 = 1;
+               icodes[3] = k1;
+               iface[0] = k1;
+               iface[1] = k2;
+               iface[2] = k2 + 4;
+               iface[3] = k1 + 4;
+               tface[0] = tt[k1 + (iv << 2) - 5];
+               tface[1] = tt[k2 + (iv << 2) - 5];
+               tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+               tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+               (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+            }
+         }
 //*-*-         D R A W   B O T T O M   F A C E
-            view->FindNormal(0, 0, 1, zn);
-            if (zn < 0) {
-                icodes[2] = 1;
-                icodes[3] = 5;
-                for (i = 1; i <= 4; ++i) {
-                    xyz[i*3 - 1] = v[0];
-                    iface[i - 1] = 5 - i;
-                    tface[i - 1] = tt[5 - i - 1];
-                }
-                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         view->FindNormal(0, 0, 1, zn);
+         if (zn < 0) {
+            icodes[2] = 1;
+            icodes[3] = 5;
+            for (i = 1; i <= 4; ++i) {
+               xyz[i*3 - 1] = v[0];
+               iface[i - 1] = 5 - i;
+               tface[i - 1] = tt[5 - i - 1];
             }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         }
 //*-*-         D R A W   T O P   F A C E
-            if (zn > 0) {
-                icodes[2] = nv - 1;
-                icodes[3] = 6;
-                for (i = 1; i <= 4; ++i) {
-                    iface[i - 1] = i + 4;
-                    tface[i - 1] = tt[i + (nv << 2) - 5];
-                }
-                Int_t cs = fColorTop;
-                if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-                    for (Int_t iv = nv-1; iv>2; iv--) {
-                        if (v[iv] == v[iv-1]) fColorTop = fColorMain[iv-2];
-                    }
-                }
-                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-                fColorTop = cs;
+         if (zn > 0) {
+            icodes[2] = nv - 1;
+            icodes[3] = 6;
+            for (i = 1; i <= 4; ++i) {
+               iface[i - 1] = i + 4;
+               tface[i - 1] = tt[i + (nv << 2) - 5];
             }
-        }
-    }
-    if (vSize > kVSizeMax) {
-       delete [] v;
-       delete [] tt;
-    }
+            Int_t cs = fColorTop;
+            if ( nv > 2 && (v[nv-1] == v[nv-2])) {
+               for (Int_t iv = nv-1; iv>2; iv--) {
+                  if (v[iv] == v[iv-1]) fColorTop = fColorMain[iv-2];
+               }
+            }
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+            fColorTop = cs;
+         }
+      }
+   }
+   if (vSize > kVSizeMax) {
+      delete [] v;
+      delete [] tt;
+   }
 }
 
 //______________________________________________________________________________
@@ -2557,177 +2557,177 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4];
-    Int_t incrr, k1, k2, ia, ib, ir1, ir2;
-    Double_t ab[8];       // was [2][4]
-    Int_t ir, jr, iv, nr, nv, icodes[4];
-    Double_t xyz[24];     // was [3][8]
-    TView *view = 0;
-    ia = ib = 0;
-    if(gPad) {
-        view = gPad->GetView();
-        if(!view) {
-            Error("LegoPolar", "no TView in current pad");
-            return;
-        }
-    }
+   Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
+   Double_t tface[4];
+   Int_t incrr, k1, k2, ia, ib, ir1, ir2;
+   Double_t ab[8];       // was [2][4]
+   Int_t ir, jr, iv, nr, nv, icodes[4];
+   Double_t xyz[24];     // was [3][8]
+   TView *view = 0;
+   ia = ib = 0;
+   if(gPad) {
+      view = gPad->GetView();
+      if(!view) {
+         Error("LegoPolar", "no TView in current pad");
+         return;
+      }
+   }
 
-    if (iordr == 0) {
-        jr   = 1;
-        jphi = 2;
-        nr   = na;
-        nphi = nb;
-    } else {
-        jr   = 2;
-        jphi = 1;
-        nr   = nb;
-        nphi = na;
-    }
-    if (nphi > 180) {
-       Error("LegoPolar", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if (iordr == 0) {
+      jr   = 1;
+      jphi = 2;
+      nr   = na;
+      nphi = nb;
+   } else {
+      jr   = 2;
+      jphi = 1;
+      nr   = nb;
+      nphi = na;
+   }
+   if (nphi > 180) {
+      Error("LegoPolar", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-    Double_t *v, *tt;
-    Int_t vSize = fNStack+2;
-    if (vSize > kVSizeMax) {
-       v  = new Double_t[vSize];
-       tt = new Double_t[4*vSize];
-    } else {
-       vSize = kVSizeMax;
-       v  = &gV[0];
-       tt = &gTT[0];
-    }
+   Double_t *v, *tt;
+   Int_t vSize = fNStack+2;
+   if (vSize > kVSizeMax) {
+      v  = new Double_t[vSize];
+      tt = new Double_t[4*vSize];
+   } else {
+      vSize = kVSizeMax;
+      v  = &gV[0];
+      tt = &gTT[0];
+   }
 
 //*-*-     P R E P A R E   P H I   A R R A Y
 //*-*-     F I N D    C R I T I C A L   S E C T O R S
 
-    nv   = 0;
-    kphi = nphi;
-    if (iordr == 0) ia = nr;
-    if (iordr != 0) ib = nr;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (i == 1) fAphi[0] = ab[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-        fAphi[i] = ab[jphi + 3];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   nv   = 0;
+   kphi = nphi;
+   if (iordr == 0) ia = nr;
+   if (iordr != 0) ib = nr;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (i == 1) fAphi[0] = ab[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+      fAphi[i] = ab[jphi + 3];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-      E N C O D E   V I S I B I L I T Y   O F   S I D E S
 //*-*-      A N D   O R D E R   A L O N G   R
 
-    for (i = 1; i <= nphi; ++i) {
-        if (!iordr) ib = i;
-        if (iordr)  ia = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
-    }
+   for (i = 1; i <= nphi; ++i) {
+      if (!iordr) ib = i;
+      if (iordr)  ia = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
+   }
 
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
 
-    incr = 1;
-    iphi = iphi1;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L300;
+   if (iphi > nphi) goto L300;
 
 //*-*-     D E C O D E   V I S I B I L I T Y   O F   S I D E S
-    SideVisibilityDecode(fAphi[iphi - 1], ivis[0], ivis[1], ivis[2], ivis[3], ivis[4], ivis[5], incrr);
-    ir1 = 1;
-    if (incrr < 0) ir1 = nr;
-    ir2 = nr - ir1 + 1;
+   SideVisibilityDecode(fAphi[iphi - 1], ivis[0], ivis[1], ivis[2], ivis[3], ivis[4], ivis[5], incrr);
+   ir1 = 1;
+   if (incrr < 0) ir1 = nr;
+   ir2 = nr - ir1 + 1;
 //*-*-      D R A W   L E G O S   F O R   S E C T O R
-    for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
-        if (iordr == 0) { ia = ir;   ib = iphi; }
-        else            { ia = iphi; ib = ir; }
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (nv < 2 || nv > vSize) continue;
-        icodes[0] = ia;
-        icodes[1] = ib;
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr != 0 && i == 2) j = 4;
-            if (iordr != 0 && i == 4) j = 2;
-            xyz[j*3 - 3] = ab[jr + 2*i - 3]*TMath::Cos(ab[jphi + 2*i - 3]*kRad);
-            xyz[j*3 - 2] = ab[jr + 2*i - 3]*TMath::Sin(ab[jphi + 2*i - 3]*kRad);
-            xyz[(j + 4)*3 - 3] = xyz[j*3 - 3];
-            xyz[(j + 4)*3 - 2] = xyz[j*3 - 2];
-        }
+   for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
+      if (iordr == 0) { ia = ir;   ib = iphi; }
+      else            { ia = iphi; ib = ir; }
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (nv < 2 || nv > vSize) continue;
+      icodes[0] = ia;
+      icodes[1] = ib;
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr != 0 && i == 2) j = 4;
+         if (iordr != 0 && i == 4) j = 2;
+         xyz[j*3 - 3] = ab[jr + 2*i - 3]*TMath::Cos(ab[jphi + 2*i - 3]*kRad);
+         xyz[j*3 - 2] = ab[jr + 2*i - 3]*TMath::Sin(ab[jphi + 2*i - 3]*kRad);
+         xyz[(j + 4)*3 - 3] = xyz[j*3 - 3];
+         xyz[(j + 4)*3 - 2] = xyz[j*3 - 2];
+      }
 //*-*-      D R A W   S T A C K
-        for (iv = 1; iv < nv; ++iv) {
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 1] = v[iv - 1];
-                xyz[(i + 4)*3 - 1] = v[iv];
-            }
-            if (v[iv - 1] >= v[iv]) continue;
-            icodes[2] = iv;
-            for (i = 1; i <= 4; ++i) {
-                if (ivis[i - 1] == 0) continue;
-                k1 = i - 1;
-                if (i == 1) k1 = 4;
-                k2 = i;
-                if (xyz[k1*3 - 3] == xyz[k2*3 - 3] && xyz[k1*3 - 2] ==
-                        xyz[k2*3 - 2]) continue;
-                iface[0] = k1;
-                iface[1] = k2;
-                iface[2] = k2 + 4;
-                iface[3] = k1 + 4;
-                tface[0] = tt[k1 + (iv << 2) - 5];
-                tface[1] = tt[k2 + (iv << 2) - 5];
-                tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-                tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-                icodes[3] = i;
-                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-            }
-        }
+      for (iv = 1; iv < nv; ++iv) {
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 1] = v[iv - 1];
+            xyz[(i + 4)*3 - 1] = v[iv];
+         }
+         if (v[iv - 1] >= v[iv]) continue;
+         icodes[2] = iv;
+         for (i = 1; i <= 4; ++i) {
+            if (ivis[i - 1] == 0) continue;
+            k1 = i - 1;
+            if (i == 1) k1 = 4;
+            k2 = i;
+            if (xyz[k1*3 - 3] == xyz[k2*3 - 3] && xyz[k1*3 - 2] ==
+                xyz[k2*3 - 2]) continue;
+            iface[0] = k1;
+            iface[1] = k2;
+            iface[2] = k2 + 4;
+            iface[3] = k1 + 4;
+            tface[0] = tt[k1 + (iv << 2) - 5];
+            tface[1] = tt[k2 + (iv << 2) - 5];
+            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+            icodes[3] = i;
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         }
+      }
 //*-*-         D R A W   B O T T O M   F A C E
-        if (ivis[4] != 0) {
-            icodes[2] = 1;
-            icodes[3] = 5;
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 1] = v[0];
-                iface[i - 1] = 5 - i;
-                tface[i - 1] = tt[5 - i - 1];
-            }
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-        }
+      if (ivis[4] != 0) {
+         icodes[2] = 1;
+         icodes[3] = 5;
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 1] = v[0];
+            iface[i - 1] = 5 - i;
+            tface[i - 1] = tt[5 - i - 1];
+         }
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      }
 //*-*-         D R A W   T O P   F A C E
-        if (ivis[5] != 0) {
-            icodes[2] = nv - 1;
-            icodes[3] = 6;
-            for (i = 1; i <= 4; ++i) {
-                iface[i - 1] = i + 4;
-                tface[i - 1] = tt[i + (nv << 2) - 5];
-            }
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-        }
-    }
+      if (ivis[5] != 0) {
+         icodes[2] = nv - 1;
+         icodes[3] = 6;
+         for (i = 1; i <= 4; ++i) {
+            iface[i - 1] = i + 4;
+            tface[i - 1] = tt[i + (nv << 2) - 5];
+         }
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      }
+   }
 //*-*-      N E X T   P H I
 L300:
-    iphi += incr;
-    if (iphi == 0)      iphi = kphi;
-    if (iphi > kphi)    iphi = 1;
-    if (iphi != iphi2)  goto L100;
-    if (incr == 0) {
-       if (vSize > kVSizeMax) {
-          delete [] v;
-          delete [] tt;
-       }
-       return;
-    }
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L300;
+   iphi += incr;
+   if (iphi == 0)      iphi = kphi;
+   if (iphi > kphi)    iphi = 1;
+   if (iphi != iphi2)  goto L100;
+   if (incr == 0) {
+      if (vSize > kVSizeMax) {
+         delete [] v;
+         delete [] tt;
+      }
+      return;
+   }
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L300;
 }
 
 //______________________________________________________________________________
@@ -2770,187 +2770,187 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4], z;
-    Double_t ab[8];       // was [2][4]
-    Int_t ia, ib, idummy, iz1, iz2, nz, incrz, k1, k2, nv;
-    Int_t iv, iz, jz, icodes[4];
-    Double_t cosphi[4];
-    Double_t sinphi[4];
-    Double_t xyz[24];     // was [3][8]
-    TView *view = 0;
-    ia = ib = 0;
+   Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
+   Double_t tface[4], z;
+   Double_t ab[8];       // was [2][4]
+   Int_t ia, ib, idummy, iz1, iz2, nz, incrz, k1, k2, nv;
+   Int_t iv, iz, jz, icodes[4];
+   Double_t cosphi[4];
+   Double_t sinphi[4];
+   Double_t xyz[24];     // was [3][8]
+   TView *view = 0;
+   ia = ib = 0;
 
-    if(gPad) {
-        view = gPad->GetView();
-        if(!view) {
-            Error("LegoCylindrical", "no TView in current pad");
-            return;
-        }
-    }
-    if (iordr == 0) {
-        jz   = 1;
-        jphi = 2;
-        nz   = na;
-        nphi = nb;
-    } else {
-        jz   = 2;
-        jphi = 1;
-        nz   = nb;
-        nphi = na;
-    }
-    if (nphi > 180) {
-       Error("LegoCylindrical", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if(gPad) {
+      view = gPad->GetView();
+      if(!view) {
+         Error("LegoCylindrical", "no TView in current pad");
+         return;
+      }
+   }
+   if (iordr == 0) {
+      jz   = 1;
+      jphi = 2;
+      nz   = na;
+      nphi = nb;
+   } else {
+      jz   = 2;
+      jphi = 1;
+      nz   = nb;
+      nphi = na;
+   }
+   if (nphi > 180) {
+      Error("LegoCylindrical", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-    Double_t *v, *tt;
-    Int_t vSize = fNStack+2;
-    if (vSize > kVSizeMax) {
-       v  = new Double_t[vSize];
-       tt = new Double_t[4*vSize];
-    } else {
-       vSize = kVSizeMax;
-       v  = &gV[0];
-       tt = &gTT[0];
-    }
+   Double_t *v, *tt;
+   Int_t vSize = fNStack+2;
+   if (vSize > kVSizeMax) {
+      v  = new Double_t[vSize];
+      tt = new Double_t[4*vSize];
+   } else {
+      vSize = kVSizeMax;
+      v  = &gV[0];
+      tt = &gTT[0];
+   }
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   S E C T O R S
 
-    nv   = 0;
-    kphi = nphi;
-    if (iordr == 0) ia = nz;
-    if (iordr != 0) ib = nz;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (i == 1)  fAphi[0] = ab[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-        fAphi[i] = ab[jphi + 3];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   nv   = 0;
+   kphi = nphi;
+   if (iordr == 0) ia = nz;
+   if (iordr != 0) ib = nz;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (i == 1)  fAphi[0] = ab[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+      fAphi[i] = ab[jphi + 3];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-      E N C O D E   V I S I B I L I T Y   O F   S I D E S
 //*-*-      A N D   O R D E R   A L O N G   R
 
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
-    }
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
+   }
 
 //*-*-       F I N D   O R D E R   A L O N G   Z
 
-    incrz = 1;
-    iz1 = 1;
-    view->FindNormal(0, 0, 1, z);
-    if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-        incrz = -1;
-        iz1 = nz;
-    }
-    iz2 = nz - iz1 + 1;
+   incrz = 1;
+   iz1 = 1;
+   view->FindNormal(0, 0, 1, z);
+   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+      incrz = -1;
+      iz1 = nz;
+   }
+   iz2 = nz - iz1 + 1;
 
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
 
-    incr = 1;
-    iphi = iphi1;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L400;
+   if (iphi > nphi) goto L400;
 //*-*-     D E C O D E   V I S I B I L I T Y   O F   S I D E S
-    idummy = 0;
-    SideVisibilityDecode(fAphi[iphi - 1], ivis[4], ivis[1], ivis[5], ivis[3], ivis[0], ivis[2], idummy);
-    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
-        if (iordr == 0) {ia = iz;   ib = iphi;}
-        else            {ia = iphi; ib = iz;}
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (nv < 2 || nv > vSize) continue;
-        icodes[0] = ia;
-        icodes[1] = ib;
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr != 0 && i == 2) j = 4;
-            if (iordr != 0 && i == 4) j = 2;
-            cosphi[j - 1] = TMath::Cos(ab[jphi + 2*i - 3]*kRad);
-            sinphi[j - 1] = TMath::Sin(ab[jphi + 2*i - 3]*kRad);
-            xyz[j*3 - 1] = ab[jz + 2*i - 3];
-            xyz[(j + 4)*3 - 1] = ab[jz + 2*i - 3];
-        }
+   idummy = 0;
+   SideVisibilityDecode(fAphi[iphi - 1], ivis[4], ivis[1], ivis[5], ivis[3], ivis[0], ivis[2], idummy);
+   for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
+      if (iordr == 0) {ia = iz;   ib = iphi;}
+      else            {ia = iphi; ib = iz;}
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (nv < 2 || nv > vSize) continue;
+      icodes[0] = ia;
+      icodes[1] = ib;
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr != 0 && i == 2) j = 4;
+         if (iordr != 0 && i == 4) j = 2;
+         cosphi[j - 1] = TMath::Cos(ab[jphi + 2*i - 3]*kRad);
+         sinphi[j - 1] = TMath::Sin(ab[jphi + 2*i - 3]*kRad);
+         xyz[j*3 - 1] = ab[jz + 2*i - 3];
+         xyz[(j + 4)*3 - 1] = ab[jz + 2*i - 3];
+      }
 //*-*-      D R A W   S T A C K
-        for (iv = 1; iv < nv; ++iv) {
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
-                xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
-                xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
-            }
-            if (v[iv - 1] >= v[iv]) continue;
-            icodes[2] = iv;
-            for (i = 1; i <= 4; ++i) {
-                if (ivis[i - 1] == 0) continue;
-                k1 = i;
-                k2 = i - 1;
-                if (i == 1) k2 = 4;
-                iface[0] = k1;
-                iface[1] = k2;
-                iface[2] = k2 + 4;
-                iface[3] = k1 + 4;
-                tface[0] = tt[k1 + (iv << 2) - 5];
-                tface[1] = tt[k2 + (iv << 2) - 5];
-                tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-                tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-                icodes[3] = i;
-                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-            }
-        }
+      for (iv = 1; iv < nv; ++iv) {
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
+            xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
+            xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
+         }
+         if (v[iv - 1] >= v[iv]) continue;
+         icodes[2] = iv;
+         for (i = 1; i <= 4; ++i) {
+            if (ivis[i - 1] == 0) continue;
+            k1 = i;
+            k2 = i - 1;
+            if (i == 1) k2 = 4;
+            iface[0] = k1;
+            iface[1] = k2;
+            iface[2] = k2 + 4;
+            iface[3] = k1 + 4;
+            tface[0] = tt[k1 + (iv << 2) - 5];
+            tface[1] = tt[k2 + (iv << 2) - 5];
+            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+            icodes[3] = i;
+            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         }
+      }
 //*-*-       D R A W   B O T T O M   F A C E
-        if (ivis[4] != 0 && v[0] > 0) {
-            icodes[2] = 1;
-            icodes[3] = 5;
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = v[0]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[0]*sinphi[i - 1];
-                iface[i - 1] = i;
-                tface[i - 1] = tt[i - 1];
-            }
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-        }
+      if (ivis[4] != 0 && v[0] > 0) {
+         icodes[2] = 1;
+         icodes[3] = 5;
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = v[0]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[0]*sinphi[i - 1];
+            iface[i - 1] = i;
+            tface[i - 1] = tt[i - 1];
+         }
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      }
 //*-*-      D R A W   T O P   F A C E
-        if (ivis[5] != 0 && v[nv - 1] > 0) {
-            icodes[2] = nv - 1;
-            icodes[3] = 6;
-            for (i = 1; i <= 4; ++i) {
-                iface[i - 1] = 5 - i + 4;
-                tface[i - 1] = tt[5 - i + (nv << 2) - 5];
-            }
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-        }
-    }
+      if (ivis[5] != 0 && v[nv - 1] > 0) {
+         icodes[2] = nv - 1;
+         icodes[3] = 6;
+         for (i = 1; i <= 4; ++i) {
+            iface[i - 1] = 5 - i + 4;
+            tface[i - 1] = tt[5 - i + (nv << 2) - 5];
+         }
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      }
+   }
 //*-*-      N E X T   P H I
 L400:
-    iphi += incr;
-    if (iphi == 0)     iphi = kphi;
-    if (iphi > kphi)   iphi = 1;
-    if (iphi != iphi2) goto L100;
-    if (incr == 0) {
-       if (vSize > kVSizeMax) {
-          delete [] v;
-          delete [] tt;
-       }
-       return;
-    }
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L400;
+   iphi += incr;
+   if (iphi == 0)     iphi = kphi;
+   if (iphi > kphi)   iphi = 1;
+   if (iphi != iphi2) goto L100;
+   if (incr == 0) {
+      if (vSize > kVSizeMax) {
+         delete [] v;
+         delete [] tt;
+      }
+      return;
+   }
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L400;
 }
 
 //______________________________________________________________________________
@@ -2989,254 +2989,254 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Double_t tface[4], costh[4];
-    Double_t sinth[4];
-    Int_t k1, k2, ia, ib, incrth, ith, jth, kth, nth, mth, ith1, ith2, nv;
-    Double_t ab[8];       // was [2][4]
-    Double_t th;
-    Int_t iv, icodes[4];
-    Double_t zn, cosphi[4];
-    Double_t sinphi[4], th1, th2, phi;
-    Double_t xyz[24];     // was [3][8]
-    Double_t phi1, phi2;
-    TView *view = 0;
-    ia = ib = 0;
+   Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
+   Double_t tface[4], costh[4];
+   Double_t sinth[4];
+   Int_t k1, k2, ia, ib, incrth, ith, jth, kth, nth, mth, ith1, ith2, nv;
+   Double_t ab[8];       // was [2][4]
+   Double_t th;
+   Int_t iv, icodes[4];
+   Double_t zn, cosphi[4];
+   Double_t sinphi[4], th1, th2, phi;
+   Double_t xyz[24];     // was [3][8]
+   Double_t phi1, phi2;
+   TView *view = 0;
+   ia = ib = 0;
 
-    if(gPad) {
-        view = gPad->GetView();
-        if(!view) {
-            Error("LegoSpherical", "no TView in current pad");
-            return;
-        }
-    }
+   if(gPad) {
+      view = gPad->GetView();
+      if(!view) {
+         Error("LegoSpherical", "no TView in current pad");
+         return;
+      }
+   }
 
-    if (iordr == 0) {
-        jth  = 1;
-        jphi = 2;
-        nth  = na;
-        nphi = nb;
-    } else {
-        jth  = 2;
-        jphi = 1;
-        nth  = nb;
-        nphi = na;
-    }
-    if (nth > 180) {
-       Error("LegoSpherical", "too many THETA sectors (%d)", nth);
-       return;
-    }
-    if (nphi > 180) {
-       Error("LegoSpherical", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if (iordr == 0) {
+      jth  = 1;
+      jphi = 2;
+      nth  = na;
+      nphi = nb;
+   } else {
+      jth  = 2;
+      jphi = 1;
+      nth  = nb;
+      nphi = na;
+   }
+   if (nth > 180) {
+      Error("LegoSpherical", "too many THETA sectors (%d)", nth);
+      return;
+   }
+   if (nphi > 180) {
+      Error("LegoSpherical", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
-    // Allocate v and tt arrays
-    Double_t *v, *tt;
-    Int_t vSize = fNStack+2;
-    if (vSize > kVSizeMax) {
-       v  = new Double_t[vSize];
-       tt = new Double_t[4*vSize];
-    } else {
-       vSize = kVSizeMax;
-       v  = &gV[0];
-       tt = &gTT[0];
-    }
+   // Allocate v and tt arrays
+   Double_t *v, *tt;
+   Int_t vSize = fNStack+2;
+   if (vSize > kVSizeMax) {
+      v  = new Double_t[vSize];
+      tt = new Double_t[4*vSize];
+   } else {
+      vSize = kVSizeMax;
+      v  = &gV[0];
+      tt = &gTT[0];
+   }
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   P H I   S E C T O R S
 
-    nv  = 0;
-    kphi = nphi;
-    mth = nth / 2;
-    if (mth == 0)    mth = 1;
-    if (iordr == 0) ia = mth;
-    if (iordr != 0) ib = mth;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (i == 1)  fAphi[0] = ab[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
-        fAphi[i] = ab[jphi + 3];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   nv  = 0;
+   kphi = nphi;
+   mth = nth / 2;
+   if (mth == 0)    mth = 1;
+   if (iordr == 0) ia = mth;
+   if (iordr != 0) ib = mth;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (i == 1)  fAphi[0] = ab[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
+      fAphi[i] = ab[jphi + 3];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-       P R E P A R E   T H E T A   A R R A Y
 
-    if (iordr == 0) ib = 1;
-    if (iordr != 0) ia = 1;
-    for (i = 1; i <= nth; ++i) {
-        if (iordr == 0) ia = i;
-        if (iordr != 0) ib = i;
-        (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-        if (i == 1) fAphi[0] = ab[jth - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
-        fAphi[i] = ab[jth + 3];
-    }
+   if (iordr == 0) ib = 1;
+   if (iordr != 0) ia = 1;
+   for (i = 1; i <= nth; ++i) {
+      if (iordr == 0) ia = i;
+      if (iordr != 0) ib = i;
+      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      if (i == 1) fAphi[0] = ab[jth - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
+      fAphi[i] = ab[jth + 3];
+   }
 
 //*-*-       D R A W   S T A C K   O F   L E G O - P L O T S
 
-    kth = nth;
+   kth = nth;
 
-    incr = 1;
-    iphi = iphi1;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L500;
+   if (iphi > nphi) goto L500;
 
 //*-*-      F I N D    C R I T I C A L   T H E T A   S E C T O R S
-    if (!iordr) {ia = mth;        ib = iphi; }
-    else        {ia = iphi;ib = mth;  }
-    (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-    phi = (ab[jphi - 1] + ab[jphi + 3]) / (float)2.;
-    view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
-    incrth = 1;
-    ith = ith1;
+   if (!iordr) {ia = mth;        ib = iphi; }
+   else        {ia = iphi;ib = mth;  }
+   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   phi = (ab[jphi - 1] + ab[jphi + 3]) / (float)2.;
+   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   incrth = 1;
+   ith = ith1;
 L200:
-    if (ith > nth)   goto L400;
-    if (iordr == 0) ia = ith;
-    if (iordr != 0) ib = ith;
-    (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
-    if (nv < 2 || nv > vSize) goto L400;
+   if (ith > nth)   goto L400;
+   if (iordr == 0) ia = ith;
+   if (iordr != 0) ib = ith;
+   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   if (nv < 2 || nv > vSize) goto L400;
 
 //*-*-      D E F I N E   V I S I B I L I T Y   O F   S I D E S
-    for (i = 1; i <= 6; ++i) ivis[i - 1] = 0;
+   for (i = 1; i <= 6; ++i) ivis[i - 1] = 0;
 
-    phi1 = kRad*ab[jphi - 1];
-    phi2 = kRad*ab[jphi + 3];
-    th1  = kRad*ab[jth - 1];
-    th2  = kRad*ab[jth + 3];
-    view->FindNormal(TMath::Sin(phi1), -TMath::Cos(phi1), 0, zn);
-    if (zn > 0) ivis[1] = 1;
-    view->FindNormal(-TMath::Sin(phi2), TMath::Cos(phi2), 0, zn);
-    if (zn > 0) ivis[3] = 1;
-    phi = (phi1 + phi2) / (float)2.;
-    view->FindNormal(-TMath::Cos(phi)*TMath::Cos(th1), -TMath::Sin(phi)*TMath::Cos(th1), TMath::Sin(th1), zn);
-    if (zn > 0) ivis[0] = 1;
-    view->FindNormal(TMath::Cos(phi)*TMath::Cos(th2), TMath::Sin(phi)*TMath::Cos(th2), -TMath::Sin(th2), zn);
-    if (zn > 0) ivis[2] = 1;
-    th = (th1 + th2) / (float)2.;
-    if (ipsdr == 1) th = kRad*90;
-    view->FindNormal(TMath::Cos(phi)*TMath::Sin(th), TMath::Sin(phi)*TMath::Sin(th), TMath::Cos(th), zn);
-    if (zn < 0) ivis[4] = 1;
-    if (zn > 0) ivis[5] = 1;
+   phi1 = kRad*ab[jphi - 1];
+   phi2 = kRad*ab[jphi + 3];
+   th1  = kRad*ab[jth - 1];
+   th2  = kRad*ab[jth + 3];
+   view->FindNormal(TMath::Sin(phi1), -TMath::Cos(phi1), 0, zn);
+   if (zn > 0) ivis[1] = 1;
+   view->FindNormal(-TMath::Sin(phi2), TMath::Cos(phi2), 0, zn);
+   if (zn > 0) ivis[3] = 1;
+   phi = (phi1 + phi2) / (float)2.;
+   view->FindNormal(-TMath::Cos(phi)*TMath::Cos(th1), -TMath::Sin(phi)*TMath::Cos(th1), TMath::Sin(th1), zn);
+   if (zn > 0) ivis[0] = 1;
+   view->FindNormal(TMath::Cos(phi)*TMath::Cos(th2), TMath::Sin(phi)*TMath::Cos(th2), -TMath::Sin(th2), zn);
+   if (zn > 0) ivis[2] = 1;
+   th = (th1 + th2) / (float)2.;
+   if (ipsdr == 1) th = kRad*90;
+   view->FindNormal(TMath::Cos(phi)*TMath::Sin(th), TMath::Sin(phi)*TMath::Sin(th), TMath::Cos(th), zn);
+   if (zn < 0) ivis[4] = 1;
+   if (zn > 0) ivis[5] = 1;
 
 //*-*-      D R A W   S T A C K
-    icodes[0] = ia;
-    icodes[1] = ib;
-    for (i = 1; i <= 4; ++i) {
-        j = i;
-        if (iordr != 0 && i == 2) j = 4;
-        if (iordr != 0 && i == 4) j = 2;
-        costh[j - 1]  = TMath::Cos(kRad*ab[jth + 2*i - 3]);
-        sinth[j - 1]  = TMath::Sin(kRad*ab[jth + 2*i - 3]);
-        cosphi[j - 1] = TMath::Cos(kRad*ab[jphi + 2*i - 3]);
-        sinphi[j - 1] = TMath::Sin(kRad*ab[jphi + 2*i - 3]);
-    }
-    for (iv = 1; iv < nv; ++iv) {
-        if (ipsdr == 1) {
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
-                xyz[i*3 - 1] = v[iv - 1]*costh[i - 1] / sinth[i - 1];
-                xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
-                xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
-                xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1] / sinth[i - 1];
-            }
-        } else {
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = v[iv - 1]*sinth[i - 1]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[iv - 1]*sinth[i - 1]*sinphi[i - 1];
-                xyz[i*3 - 1] = v[iv - 1]*costh[i - 1];
-                xyz[(i + 4)*3 - 3] = v[iv]*sinth[i - 1]*cosphi[i - 1];
-                xyz[(i + 4)*3 - 2] = v[iv]*sinth[i - 1]*sinphi[i - 1];
-                xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1];
-            }
-        }
-        if (v[iv - 1] >= v[iv]) continue;
-        icodes[2] = iv;
-        for (i = 1; i <= 4; ++i) {
-            if (ivis[i - 1] == 0) continue;
-            k1 = i - 1;
-            if (i == 1) k1 = 4;
-            k2 = i;
-            iface[0] = k1;
-            iface[1] = k2;
-            iface[2] = k2 + 4;
-            iface[3] = k1 + 4;
-            tface[0] = tt[k1 + (iv << 2) - 5];
-            tface[1] = tt[k2 + (iv << 2) - 5];
-            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
-            icodes[3] = i;
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-        }
-    }
+   icodes[0] = ia;
+   icodes[1] = ib;
+   for (i = 1; i <= 4; ++i) {
+      j = i;
+      if (iordr != 0 && i == 2) j = 4;
+      if (iordr != 0 && i == 4) j = 2;
+      costh[j - 1]  = TMath::Cos(kRad*ab[jth + 2*i - 3]);
+      sinth[j - 1]  = TMath::Sin(kRad*ab[jth + 2*i - 3]);
+      cosphi[j - 1] = TMath::Cos(kRad*ab[jphi + 2*i - 3]);
+      sinphi[j - 1] = TMath::Sin(kRad*ab[jphi + 2*i - 3]);
+   }
+   for (iv = 1; iv < nv; ++iv) {
+      if (ipsdr == 1) {
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = v[iv - 1]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[iv - 1]*sinphi[i - 1];
+            xyz[i*3 - 1] = v[iv - 1]*costh[i - 1] / sinth[i - 1];
+            xyz[(i + 4)*3 - 3] = v[iv]*cosphi[i - 1];
+            xyz[(i + 4)*3 - 2] = v[iv]*sinphi[i - 1];
+            xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1] / sinth[i - 1];
+         }
+      } else {
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = v[iv - 1]*sinth[i - 1]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[iv - 1]*sinth[i - 1]*sinphi[i - 1];
+            xyz[i*3 - 1] = v[iv - 1]*costh[i - 1];
+            xyz[(i + 4)*3 - 3] = v[iv]*sinth[i - 1]*cosphi[i - 1];
+            xyz[(i + 4)*3 - 2] = v[iv]*sinth[i - 1]*sinphi[i - 1];
+            xyz[(i + 4)*3 - 1] = v[iv]*costh[i - 1];
+         }
+      }
+      if (v[iv - 1] >= v[iv]) continue;
+      icodes[2] = iv;
+      for (i = 1; i <= 4; ++i) {
+         if (ivis[i - 1] == 0) continue;
+         k1 = i - 1;
+         if (i == 1) k1 = 4;
+         k2 = i;
+         iface[0] = k1;
+         iface[1] = k2;
+         iface[2] = k2 + 4;
+         iface[3] = k1 + 4;
+         tface[0] = tt[k1 + (iv << 2) - 5];
+         tface[1] = tt[k2 + (iv << 2) - 5];
+         tface[2] = tt[k2 + (iv + 1 << 2) - 5];
+         tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+         icodes[3] = i;
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      }
+   }
 //*-*-      D R A W   B O T T O M   F A C E
-    if (ivis[4] != 0 && v[0] > 0) {
-        icodes[2] = 1;
-        icodes[3] = 5;
-        for (i = 1; i <= 4; ++i) {
-            if (ipsdr == 1) {
-                xyz[i*3 - 3] = v[0]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[0]*sinphi[i - 1];
-                xyz[i*3 - 1] = v[0]*costh[i - 1] / sinth[i - 1];
-            } else {
-                xyz[i*3 - 3] = v[0]*sinth[i - 1]*cosphi[i - 1];
-                xyz[i*3 - 2] = v[0]*sinth[i - 1]*sinphi[i - 1];
-                xyz[i*3 - 1] = v[0]*costh[i - 1];
-            }
-            iface[i - 1] = 5 - i;
-            tface[i - 1] = tt[5 - i - 1];
-        }
-        (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-    }
+   if (ivis[4] != 0 && v[0] > 0) {
+      icodes[2] = 1;
+      icodes[3] = 5;
+      for (i = 1; i <= 4; ++i) {
+         if (ipsdr == 1) {
+            xyz[i*3 - 3] = v[0]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[0]*sinphi[i - 1];
+            xyz[i*3 - 1] = v[0]*costh[i - 1] / sinth[i - 1];
+         } else {
+            xyz[i*3 - 3] = v[0]*sinth[i - 1]*cosphi[i - 1];
+            xyz[i*3 - 2] = v[0]*sinth[i - 1]*sinphi[i - 1];
+            xyz[i*3 - 1] = v[0]*costh[i - 1];
+         }
+         iface[i - 1] = 5 - i;
+         tface[i - 1] = tt[5 - i - 1];
+      }
+      (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+   }
 //*-*-      D R A W   T O P   F A C E
-    if (ivis[5] != 0 && v[nv - 1] > 0) {
-        icodes[2] = nv - 1;
-        icodes[3] = 6;
-        for (i = 1; i <= 4; ++i) {
-            iface[i - 1] = i + 4;
-            tface[i - 1] = tt[i + 4 + 2*nv - 5];
-        }
-        (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
-    }
+   if (ivis[5] != 0 && v[nv - 1] > 0) {
+      icodes[2] = nv - 1;
+      icodes[3] = 6;
+      for (i = 1; i <= 4; ++i) {
+         iface[i - 1] = i + 4;
+         tface[i - 1] = tt[i + 4 + 2*nv - 5];
+      }
+      (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+   }
 //*-*-      N E X T   T H E T A
 L400:
-    ith += incrth;
-    if (ith == 0)    ith = kth;
-    if (ith > kth)   ith = 1;
-    if (ith != ith2) goto L200;
-    if (incrth == 0) goto L500;
-    if (incrth < 0) {
-       incrth = 0;
-       goto L200;
-    }
-    incrth = -1;
-    ith = ith1;
-    goto L400;
+   ith += incrth;
+   if (ith == 0)    ith = kth;
+   if (ith > kth)   ith = 1;
+   if (ith != ith2) goto L200;
+   if (incrth == 0) goto L500;
+   if (incrth < 0) {
+      incrth = 0;
+      goto L200;
+   }
+   incrth = -1;
+   ith = ith1;
+   goto L400;
 //*-*-      N E X T   P H I
 L500:
-    iphi += incr;
-    if (iphi == 0)     iphi = kphi;
-    if (iphi > kphi)   iphi = 1;
-    if (iphi != iphi2) goto L100;
-    if (incr == 0) {
-       if (vSize > kVSizeMax) {
-          delete [] v;
-          delete [] tt;
-       }
-       return;
-    }
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L500;
+   iphi += incr;
+   if (iphi == 0)     iphi = kphi;
+   if (iphi > kphi)   iphi = 1;
+   if (iphi != iphi2) goto L100;
+   if (incr == 0) {
+      if (vSize > kVSizeMax) {
+         delete [] v;
+         delete [] tt;
+      }
+      return;
+   }
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L500;
 }
 
 //______________________________________________________________________________
@@ -3798,118 +3798,118 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
     /* Initialized data */
 
-    static Int_t ixadd[4] = { 0,1,1,0 };
-    static Int_t iyadd[4] = { 0,0,1,1 };
+   static Int_t ixadd[4] = { 0,1,1,0 };
+   static Int_t iyadd[4] = { 0,0,1,1 };
 
-    Double_t rinrad = gStyle->GetLegoInnerR();
-    Double_t dangle = 10; //Delta angle for Rapidity option
-    Double_t xval1l, xval2l, yval1l, yval2l;
-    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
-    Int_t i, ixa, iya, icx, ixt, iyt;
+   Double_t rinrad = gStyle->GetLegoInnerR();
+   Double_t dangle = 10; //Delta angle for Rapidity option
+   Double_t xval1l, xval2l, yval1l, yval2l;
+   Double_t xlab1l, xlab2l, ylab1l, ylab2l;
+   Int_t i, ixa, iya, icx, ixt, iyt;
 
     /* Parameter adjustments */
-    --t;
-    f -= 4;
+   --t;
+   f -= 4;
 
-    ixt = ia + Hparam.xfirst - 1;
-    iyt = ib + Hparam.yfirst - 1;
+   ixt = ia + Hparam.xfirst - 1;
+   iyt = ib + Hparam.yfirst - 1;
 
-    xval1l = Hparam.xmin;
-    xval2l = Hparam.xmax;
-    yval1l = Hparam.ymin;
-    yval2l = Hparam.ymax;
+   xval1l = Hparam.xmin;
+   xval2l = Hparam.xmax;
+   yval1l = Hparam.ymin;
+   yval2l = Hparam.ymax;
 
-    xlab1l = gCurrentHist->GetXaxis()->GetXmin();
-    xlab2l = gCurrentHist->GetXaxis()->GetXmax();
-    if (Hoption.Logx) {
-       if (xlab2l>0) {
-          if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
-          else          xlab1l = TMath::Log10(0.001*xlab2l);
-          xlab2l = TMath::Log10(xlab2l);
-       }
-    }
-    ylab1l = gCurrentHist->GetYaxis()->GetXmin();
-    ylab2l = gCurrentHist->GetYaxis()->GetXmax();
-    if (Hoption.Logy) {
-       if (ylab2l>0) {
-          if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
-          else          ylab1l = TMath::Log10(0.001*ylab2l);
-          ylab2l = TMath::Log10(ylab2l);
-       }
-    }
+   xlab1l = gCurrentHist->GetXaxis()->GetXmin();
+   xlab2l = gCurrentHist->GetXaxis()->GetXmax();
+   if (Hoption.Logx) {
+      if (xlab2l>0) {
+         if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
+         else          xlab1l = TMath::Log10(0.001*xlab2l);
+         xlab2l = TMath::Log10(xlab2l);
+      }
+   }
+   ylab1l = gCurrentHist->GetYaxis()->GetXmin();
+   ylab2l = gCurrentHist->GetYaxis()->GetXmax();
+   if (Hoption.Logy) {
+      if (ylab2l>0) {
+         if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
+         else          ylab1l = TMath::Log10(0.001*ylab2l);
+         ylab2l = TMath::Log10(ylab2l);
+      }
+   }
 
-    for (i = 1; i <= 4; ++i) {
-        ixa = ixadd[i - 1];
-        iya = iyadd[i - 1];
-        Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt+ixa);
-        Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt+iya);
+   for (i = 1; i <= 4; ++i) {
+      ixa = ixadd[i - 1];
+      iya = iyadd[i - 1];
+      Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt+ixa);
+      Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt+iya);
 
 //*-*-          Compute the cell position in cartesian coordinates
 //*-*-          and compute the LOG if necessary
 
-        f[i*3 + 1] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt+ixa) + 0.5*xwid;
-        f[i*3 + 2] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt+iya) + 0.5*ywid;
-        if (Hoption.Logx) {
-            if (f[i*3 + 1] > 0) f[i*3 + 1] = TMath::Log10(f[i*3 + 1]);
-            else                f[i*3 + 1] = Hparam.xmin;
-        }
-        if (Hoption.Logy) {
-            if (f[i*3 + 2] > 0) f[i*3 + 2] = TMath::Log10(f[i*3 + 2]);
-            else                f[i*3 + 2] = Hparam.ymin;
-        }
+      f[i*3 + 1] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt+ixa) + 0.5*xwid;
+      f[i*3 + 2] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt+iya) + 0.5*ywid;
+      if (Hoption.Logx) {
+         if (f[i*3 + 1] > 0) f[i*3 + 1] = TMath::Log10(f[i*3 + 1]);
+         else                f[i*3 + 1] = Hparam.xmin;
+      }
+      if (Hoption.Logy) {
+         if (f[i*3 + 2] > 0) f[i*3 + 2] = TMath::Log10(f[i*3 + 2]);
+         else                f[i*3 + 2] = Hparam.ymin;
+      }
 
 //*-*-     Transform the cell position in the required coordinate system
 
-        if (Hoption.System == kPOLAR) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
-            f[i*3 + 2] = (f[i*3 + 2] - yval1l) / (yval2l - yval1l);
-        } else if (Hoption.System == kCYLINDRICAL) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
-        } else if (Hoption.System == kSPHERICAL) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
-            f[i*3 + 2] = 360*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l);
-        } else if (Hoption.System == kRAPIDITY) {
-            f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
-            f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l) + dangle;
-        }
+      if (Hoption.System == kPOLAR) {
+         f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+         f[i*3 + 2] = (f[i*3 + 2] - yval1l) / (yval2l - yval1l);
+      } else if (Hoption.System == kCYLINDRICAL) {
+         f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+      } else if (Hoption.System == kSPHERICAL) {
+         f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+         f[i*3 + 2] = 360*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l);
+      } else if (Hoption.System == kRAPIDITY) {
+         f[i*3 + 1] = 360*(f[i*3 + 1] - xlab1l) / (xlab2l - xlab1l);
+         f[i*3 + 2] = (180 - dangle*2)*(f[i*3 + 2] - ylab1l) / (ylab2l - ylab1l) + dangle;
+      }
 
 //*-*-          Get the content of the table. If the X index (ICX) is
 //*-*-          greater than the X size of the table (NCX), that's mean
 //*-*-          IGTABL tried to close the surface and in this case the
 //*-*-          first channel should be used. */
 
-        icx = ixt + ixa;
-        if (icx > Hparam.xlast) icx = 1;
-        f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
-        if (Hoption.Logz) {
-           if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
-           else              f[i*3+3] = Hparam.zmin;
-           if (f[i*3+3] < Hparam.zmin) f[i*3+3] = Hparam.zmin;
-           if (f[i*3+3] > Hparam.zmax) f[i*3+3] = Hparam.zmax;
-        } else {
-           f[i*3+3] = TMath::Max(Hparam.zmin, f[i*3+3]);
-           f[i*3+3] = TMath::Min(Hparam.zmax, f[i*3+3]);
-        }
+      icx = ixt + ixa;
+      if (icx > Hparam.xlast) icx = 1;
+      f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
+      if (Hoption.Logz) {
+         if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
+         else              f[i*3+3] = Hparam.zmin;
+         if (f[i*3+3] < Hparam.zmin) f[i*3+3] = Hparam.zmin;
+         if (f[i*3+3] > Hparam.zmax) f[i*3+3] = Hparam.zmax;
+      } else {
+         f[i*3+3] = TMath::Max(Hparam.zmin, f[i*3+3]);
+         f[i*3+3] = TMath::Min(Hparam.zmax, f[i*3+3]);
+      }
 
 //*-*-          The colors on the surface can represent the content or the errors.
 
 //        if (fSumw2.fN) t[i] = gCurrentHist->GetCellError(icx, iyt + iya);
 //        else           t[i] = f[i * 3 + 3];
-        t[i] = f[i * 3 + 3];
-    }
+      t[i] = f[i * 3 + 3];
+   }
 
 //*-*-          Define the position of the colored contours for SURF3
 
-    if (Hoption.Surf == 23) {
-       for (i = 1; i <= 4; ++i) f[i * 3 + 3] = fRmax[2];
-    }
+   if (Hoption.Surf == 23) {
+      for (i = 1; i <= 4; ++i) f[i * 3 + 3] = fRmax[2];
+   }
 
-    if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
-        for (i = 1; i <= 4; ++i) {
-            f[i*3 + 3] = (1 - rinrad)*((f[i*3 + 3] - Hparam.zmin) /
-                    (Hparam.zmax - Hparam.zmin)) + rinrad;
-        }
-    }
+   if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
+      for (i = 1; i <= 4; ++i) {
+         f[i*3 + 3] = (1 - rinrad)*((f[i*3 + 3] - Hparam.zmin) /
+         (Hparam.zmax - Hparam.zmin)) + rinrad;
+      }
+   }
 }
 
 //______________________________________________________________________________

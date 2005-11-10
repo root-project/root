@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.6 2004/03/19 14:45:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.7 2005/09/12 13:04:39 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -113,9 +113,9 @@ private:
    SurfaceFunc_t   fSurfaceFunction; //pointer to surface function
    
 public:
-           TPainter3dAlgorithms();
-           TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system=1);
- virtual   ~TPainter3dAlgorithms();
+   TPainter3dAlgorithms();
+   TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system=1);
+   virtual ~TPainter3dAlgorithms();
    void    BackBox(Double_t ang);
    void    ClearRaster();
    void    ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep);

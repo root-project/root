@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.1 2005/05/24 09:27:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.12 2005/05/24 09:41:18 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -67,12 +67,14 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, T
 //______________________________________________________________________________
 TPaletteAxis::~TPaletteAxis()
 {
+// palette destructor
    if (fH) fH->GetListOfFunctions()->Remove(this);
 }
 
 //______________________________________________________________________________
 TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 {
+// palette copy constructor
    ((TPaletteAxis&)palette).Copy(*this);
 }
 
@@ -222,6 +224,7 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 //______________________________________________________________________________
 void TPaletteAxis::Paint(Option_t *)
 {
+// Paint the palette
 
    ConvertNDCtoPad();
    
@@ -301,9 +304,9 @@ void TPaletteAxis::SavePrimitive(ofstream &out, Option_t *)
    //char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPaletteAxis::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   "<<ClassName()<<" *";
+      out<<"   "<<ClassName()<<" *";
    }
    if (fOption.Contains("NDC")) {
       out<<"palette = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
@@ -325,6 +328,8 @@ void TPaletteAxis::SavePrimitive(ofstream &out, Option_t *)
 //______________________________________________________________________________
 void TPaletteAxis::UnZoom()
 {
+   // Unzoom the palette
+
    TView *view = gPad->GetView();
    if (view) {
       delete view;
