@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.51 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.52 2005/10/03 15:00:26 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -206,26 +206,27 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
 
    CtorAllocate();
    Double_t x,y,ex,ey;
-   FILE *fp = fopen(filename,"r");
-   if (!fp) {
+   ifstream infile(filename);
+   if(!infile.good()){
       MakeZombie();
       Error("TGrapherrors", "Cannot open file: %s, TGraphErrors is Zombie",filename);
+      fNpoints = 0;
       return;
    }
    // count number of columns in format
    Int_t ncol = CalculateScanfFields(format);
-   char line[80];
    Int_t np = 0;
    
-   while (fgets(line,80,fp)) {
+   std::string line;
+   while(std::getline(infile,line,'\n')){
       ex=ey=0;
       Int_t res;
       if (ncol < 3) {
-         res = sscanf(&line[0],format,&x, &y);
+         res = sscanf(line.c_str(),format,&x, &y);
       } else if(ncol <4) {
-         res = sscanf(&line[0],format,&x, &y, &ey);
+         res = sscanf(line.c_str(),format,&x, &y, &ey);
       } else {
-         res = sscanf(&line[0],format,&x, &y, &ex, &ey);
+         res = sscanf(line.c_str(),format,&x, &y, &ex, &ey);
       }
       if (res < 2) {
          // not a data line
@@ -236,8 +237,6 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
       np++;
    }
    Set(np);
-
-   fclose(fp);
 }
 
 //______________________________________________________________________________
