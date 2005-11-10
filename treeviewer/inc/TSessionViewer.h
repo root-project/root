@@ -96,7 +96,7 @@ class TQueryResult;
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
-// TQueryDescription class : Descrition of queries
+// TQueryDescription class : Description of queries
 //////////////////////////////////////////////////////////////////////////
 
 class TQueryDescription : public TObject {
@@ -139,7 +139,7 @@ enum EMenuIdentification {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// TSessionDescription class : Descrition of Session
+// TSessionDescription class : Description of Session
 //////////////////////////////////////////////////////////////////////////
 
 class TSessionDescription : public TObject {
@@ -160,11 +160,13 @@ public:
    TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
    Int_t                      fNbHistos;     // number of feedback histos
 
+   const char *GetName() const { return fName; }
+
    ClassDef(TSessionDescription,1)
 };
 
 //////////////////////////////////////////////////////////////////////////
-// TSessionDescription class : Descrition of Session
+// TPackageDescription class : Description of Package
 //////////////////////////////////////////////////////////////////////////
 
 class TPackageDescription : public TObject {
@@ -201,8 +203,6 @@ private:
    TGCheckButton     *fSync;           // sync / async flag selector
    TSessionViewer    *fViewer;         // pointer on the main viewer
    TGTextButton      *fBtnAdd;         // "Add" button
-   TGTextButton      *fBtnNew;         // "New" button
-   TGTextButton      *fBtnDelete;      // "Delete" button
    TGTextButton      *fBtnConnect;     // "Connect" button
 
 public:
@@ -218,18 +218,19 @@ public:
    const char *GetConfigText() const { return fTxtConfig->GetText(); }
    const char *GetUserName() const { return fTxtUsrName->GetText(); }
    Bool_t      IsSync() const { return (Bool_t)(fSync->GetState() == kButtonDown); }
-   void        SetAddEnabled(Bool_t on = kTRUE) { fBtnAdd->SetEnabled(on); }
-   void        SetConnectEnabled(Bool_t on = kTRUE) { fBtnConnect->SetEnabled(on); }
-   void        SetNewEnabled(Bool_t on = kTRUE) { fBtnNew->SetEnabled(on); }
-   void        SetDeleteEnabled(Bool_t on = kTRUE) { fBtnDelete->SetEnabled(on); }
 
+   void        SetAddEnabled(Bool_t on = kTRUE) {
+               on == kTRUE ? ShowFrame(fBtnAdd) : HideFrame(fBtnAdd); }
+   void        SetConnectEnabled(Bool_t on = kTRUE) {
+               on == kTRUE ? ShowFrame(fBtnConnect) : HideFrame(fBtnConnect); }
    void        SetName(const char *str) { fTxtName->SetText(str); }
    void        SetAddress(const char *str) { fTxtAddress->SetText(str); }
    void        SetPortNumber(Int_t port) { fNumPort->SetIntNumber(port); }
    void        SetLogLevel(Int_t log) { fLogLevel->SetIntNumber(log); }
    void        SetConfigText(const char *str) { fTxtConfig->SetText(str); }
    void        SetUserName(const char *str) { fTxtUsrName->SetText(str); }
-   void        SetSync(Bool_t sync) { fSync->SetState(sync ? kButtonDown : kButtonUp); }
+   void        SetSync(Bool_t sync) {
+               fSync->SetState(sync ? kButtonDown : kButtonUp); }
 
    void        OnBtnConnectClicked();
    void        OnBtnNewServerClicked();
@@ -263,7 +264,6 @@ private:
    TGTextBuffer      *fCommandBuf;           // Command line text buffer
    TGTextView        *fInfoTextView;         // summary on current query
    TGCheckButton     *fClearCheck;           // clear text view after each command
-   TGTextButton      *fBtnDisconnect;        // disconnect button
    TGTextButton      *fBtnShowLog;           // show log button
    TGTextButton      *fBtnNewQuery;          // new query button
    TGTextButton      *fBtnGetQueries;        // get entries button
@@ -507,8 +507,9 @@ private:
    TGIcon                 *fRightIcon;          // associated picture
    TTimer                 *fTimer;              // timer used to change icon picture
    UserGroup_t            *fUserGroup;          // user connected to session
-   TString                fConfigFile;
-   TEnv                   *fViewerEnv;
+   Bool_t                 fAutoSave;            // kTRUE if config is to be saved on exit
+   TString                fConfigFile;          // configuration file name
+   TEnv                   *fViewerEnv;          // viewer's configuration
 
 public:
 
@@ -556,6 +557,7 @@ public:
    void     QueryResultReady(char *query);
    void     DeleteQuery();
    void     ReadConfiguration(const char *filename = 0);
+   void     UpdateListOfProofs();
    void     WriteConfiguration(const char *filename = 0);
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}

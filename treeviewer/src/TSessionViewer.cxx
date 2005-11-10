@@ -105,10 +105,8 @@ const char *kFeedbackHistos[] = {
    0
 };
 
-const char* const kPROOF_GuiConfFile = ".proofservers.conf";
 const char* const kSession_RedirectFile = ".templog";
 const char* const kSession_RedirectCmd = ".tempcmd";
-char const kPROOF_GuiConfFileSeparator = '\t';
 
 // Menu command id's
 enum ESessionViewerCommands {
@@ -116,6 +114,11 @@ enum ESessionViewerCommands {
    kFileSaveConfig,
    kFileCloseViewer,
    kFileQuit,
+
+   kSessionNew,
+   kSessionAdd,
+   kSessionDelete,
+   kSessionGetQueries,
 
    kSessionConnect,
    kSessionDisconnect,
@@ -129,12 +132,45 @@ enum ESessionViewerCommands {
    kQuerySubmit,
    kQueryStartViewer,
 
+   kOptionsAutoSave,
    kOptionsStatsHist,
    kOptionsStatsTrace,
    kOptionsSlaveStatsTrace,
    kOptionsFeedback,
 
    kHelpAbout
+};
+
+const char *xpm_toolbar[] = {
+    "fileopen.xpm",
+    "filesaveas.xpm",
+    "",
+    "connect.xpm",
+    "disconnect.xpm",
+    "",
+    "query_new.xpm",
+    "query_submit.xpm",
+    "",
+    "about.xpm",
+    "",
+    "quit.xpm",
+    0
+};
+
+ToolBarData_t tb_data[] = {
+  { "", "Open Config File",     kFALSE, kFileLoadConfig,    NULL },
+  { "", "Save Config File",     kFALSE, kFileSaveConfig,    NULL },
+  { "", 0,                      0,      -1,                 NULL },
+  { "", "Connect",              kFALSE, kSessionConnect,    NULL },
+  { "", "Disconnect",           kFALSE, kSessionDisconnect, NULL },
+  { "", 0,                      0,      -1,                 NULL },
+  { "", "New Query",            kFALSE, kQueryNew,          NULL },
+  { "", "Submit Query",         kFALSE, kQuerySubmit,       NULL },
+  { "", 0,                      0,      -1,                 NULL },
+  { "", "About Root",           kFALSE, kHelpAbout,         NULL },
+  { "", 0,                      0,      -1,                 NULL },
+  { "", "Exit Root",            kFALSE, kFileQuit,          NULL },
+  { 0,  0,                      0,      0,                  NULL }
 };
 
 
@@ -162,7 +198,6 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    // Build server configuration frame
 
    SetLayoutManager(new TGVerticalLayout(this));
-   TGCompositeFrame *tmp;
 
    SetCleanup(kDeepCleanup);
 
@@ -224,39 +259,20 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fSync->SetToolTipText("Default Process Mode");
    fSync->SetState(kButtonDown);
 
-   AddFrame(tmp = new TGCompositeFrame(this, 140, 10, kHorizontalFrame),
-                       new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
-   tmp->SetCleanup(kDeepCleanup);
-   tmp->AddFrame(fBtnAdd = new TGTextButton(tmp, "     Add     "),
-                 new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
-   tmp->Resize(155, fBtnAdd->GetDefaultHeight());
+   AddFrame(fBtnAdd = new TGTextButton(this, "              Add              "),
+            new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 15, 5));
    fBtnAdd->SetToolTipText("Add server to the list");
    fBtnAdd->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnAddClicked()");
-   tmp->AddFrame(fBtnConnect = new TGTextButton(tmp, "   Connect   "),
-                 new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
-   tmp->Resize(155, fBtnConnect->GetDefaultHeight());
+   AddFrame(fBtnConnect = new TGTextButton(this, "          Connect          "),
+                 new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 15, 5));
    fBtnConnect->Connect("Clicked()", "TSessionServerFrame", this,
                    "OnBtnConnectClicked()");
    fBtnConnect->SetToolTipText("Connect to the selected server");
 
-   AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
-                       new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
-   tmp->SetCleanup(kDeepCleanup);
-   tmp->AddFrame(fBtnNew = new TGTextButton(tmp, "  New server  "),
-                 new TGLayoutHints(kLHintsLeft | kLHintsBottom |
-                 kLHintsExpandX, 3, 3, 15, 3));
-   fBtnNew->Connect("Clicked()", "TSessionServerFrame", this,
-                   "OnBtnNewServerClicked()");
-   fBtnNew->SetToolTipText("Create new session (reset all fields)");
-   tmp->AddFrame(fBtnDelete = new TGTextButton(tmp, "    Delete    "),
-                 new TGLayoutHints(kLHintsLeft | kLHintsBottom |
-                 kLHintsExpandX, 3, 3, 15, 3));
-   fBtnDelete->Connect("Clicked()", "TSessionServerFrame", this,
-                   "OnBtnDeleteClicked()");
-   fBtnDelete->SetToolTipText("Remove server from the list");
    fTxtConfig->Connect("DoubleClicked()", "TSessionServerFrame", this,
                        "OnConfigFileClicked()");
+
 }
 
 //______________________________________________________________________________
@@ -319,10 +335,20 @@ void TSessionServerFrame::OnBtnDeleteClicked()
       // remove it from our sessions list
       fViewer->GetSessions()->Remove((TObject *)desc);
       // update configuration file
-      fViewer->WriteConfiguration();
-      fViewer->ReadConfiguration();
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
-      fViewer->OnListTreeClicked(item, 1, 0, 0);
+      fViewer->GetSessionHierarchy()->DeleteItem(item);
+
+      TObject *obj = fViewer->GetSessions()->Last();
+      item = fViewer->GetSessionHierarchy()->FindChildByData(
+             fViewer->GetSessionItem(), (void *)obj);
+      if (item) {
+         fViewer->GetSessionHierarchy()->ClearHighlighted();
+         fViewer->GetSessionHierarchy()->OpenItem(item);
+         fViewer->GetSessionHierarchy()->HighlightItem(item);
+         fViewer->GetSessionHierarchy()->SetSelected(item);
+         fClient->NeedRedraw(fViewer->GetSessionHierarchy());
+         fViewer->OnListTreeClicked(item, 1, 0, 0);
+      }
    }
 }
 
@@ -431,8 +457,15 @@ void TSessionServerFrame::OnBtnNewServerClicked()
    // do nothing if connection in progress
    if (fViewer->IsBusy())
       return;
+   fViewer->GetSessionHierarchy()->ClearHighlighted();
+   fViewer->GetSessionHierarchy()->OpenItem(fViewer->GetSessionItem());
+   fViewer->GetSessionHierarchy()->HighlightItem(fViewer->GetSessionItem());
+   fViewer->GetSessionHierarchy()->SetSelected(fViewer->GetSessionItem());
+   fViewer->OnListTreeClicked(fViewer->GetSessionItem(), 1, 0, 0);
+   fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fTxtName->SetText("");
    fTxtAddress->SetText("");
+   fTxtConfig->SetText("");
    fNumPort->SetIntNumber(1093);
    fLogLevel->SetIntNumber(0);
    fTxtUsrName->SetText("");
@@ -443,12 +476,28 @@ void TSessionServerFrame::OnBtnAddClicked()
 {
    // Add new session configuration
 
+   Int_t retval;
    // do nothing if connection in progress
    if (fViewer->IsBusy())
       return;
+
+   if ((!fTxtName->GetBuffer()->GetTextLength()) ||
+       (!fTxtAddress->GetBuffer()->GetTextLength()) ||
+       (!fTxtUsrName->GetBuffer()->GetTextLength())) {
+      new TGMsgBox(fClient->GetRoot(), fViewer, "Error Adding Session",
+                   "At least one required field is empty !",
+                    kMBIconExclamation, kMBOk, &retval);
+      return;
+   }
+   if (fViewer->GetSessions()->FindObject(fTxtName->GetText())) {
+      new TGMsgBox(fClient->GetRoot(), fViewer, "Error Adding Session",
+          Form("The session name \"%s\" already exists !", fTxtName->GetText()),
+          kMBIconExclamation, kMBOk, &retval);
+      return;
+   }
    TSessionDescription* desc = new TSessionDescription();
-   desc->fName = TString(fTxtName->GetText());
-   desc->fAddress = TString(fTxtAddress->GetText());
+   desc->fName = fTxtName->GetText();
+   desc->fAddress = fTxtAddress->GetText();
    desc->fPort = fNumPort->GetIntNumber();
    desc->fConnected = kFALSE;
    desc->fLocal = kFALSE;
@@ -460,14 +509,25 @@ void TSessionServerFrame::OnBtnAddClicked()
    else
       desc->fConfigFile = "";
    desc->fLogLevel = fLogLevel->GetIntNumber();
-   desc->fUserName = TString(fTxtUsrName->GetText());
+   desc->fUserName = fTxtUsrName->GetText();
    desc->fSync = (fSync->GetState() == kButtonDown);
    desc->fProof = 0;
    // add newly created session config to our session list
    fViewer->GetSessions()->Add((TObject *)desc);
    // save into configuration file
-   fViewer->WriteConfiguration();
-   fViewer->ReadConfiguration();
+   TGListTreeItem *item = fViewer->GetSessionHierarchy()->AddItem(
+         fViewer->GetSessionItem(), desc->fName.Data(),
+         fViewer->GetProofDisconPict(), fViewer->GetProofDisconPict());
+   fViewer->GetSessionHierarchy()->SetToolTipItem(item, "Proof Session");
+   item->SetUserData(desc);
+   fViewer->GetSessionHierarchy()->ClearHighlighted();
+   fViewer->GetSessionHierarchy()->OpenItem(fViewer->GetSessionItem());
+   fViewer->GetSessionHierarchy()->OpenItem(item);
+   fViewer->GetSessionHierarchy()->HighlightItem(item);
+   fViewer->GetSessionHierarchy()->SetSelected(item);
+   fClient->NeedRedraw(fViewer->GetSessionHierarchy());
+   fViewer->OnListTreeClicked(item, 1, 0, 0);
+   HideFrame(fBtnAdd);
 }
 
 //______________________________________________________________________________
@@ -608,18 +668,10 @@ void TSessionFrame::Build(TSessionViewer *gui)
    frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries  "),
        new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
    fBtnGetQueries->SetToolTipText("Get List of Queries from the server");
-   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
-
-   // add "disconnect" and "show log" buttons
-   TGCompositeFrame* frmBut0 = new TGHorizontalFrame(fFA, 350, 100);
-   frmBut0->SetCleanup(kDeepCleanup);
-   frmBut0->AddFrame(fBtnDisconnect = new TGTextButton(frmBut0,
-      " Disconnect "),new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fBtnDisconnect->SetToolTipText("Disconnect from the server");
-   fBtnShowLog = new TGTextButton(frmBut0, "Show log...");
+   fBtnShowLog = new TGTextButton(frmBut1, "Show log...");
    fBtnShowLog->SetToolTipText("Show Session log (opens log window)");
-   frmBut0->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut0, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
+   frmBut1->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
 
    // add "Commands" tab element
    tf = fTab->AddTab("Commands");
@@ -742,7 +794,6 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnClear->SetToolTipText("Clear all packages on the server");
    fFB->AddFrame(frmBtn, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
-//   fBtnDisable->SetEnabled(kFALSE);
    fBtnClear->SetEnabled(kFALSE);
 
    TGCompositeFrame* frmBtn3 = new TGHorizontalFrame(fFB, 300, 100);
@@ -802,8 +853,6 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fFD->AddFrame(frmPar, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    // connect button actions to functions
-   fBtnDisconnect->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnDisconnectClicked()");
    fBtnShowLog->Connect("Clicked()", "TSessionFrame", this,
                         "OnBtnShowLogClicked()");
    fBtnNewQuery->Connect("Clicked()", "TSessionFrame", this,
@@ -1014,7 +1063,8 @@ void TSessionFrame::OnUploadPackages()
                dynamic_cast<TPackageDescription *>(o);
             if (package) {
                package->fUploaded = kTRUE;
-               ((TGIconLBEntry *)obj)->SetPicture(fClient->GetPicture("package_delete.xpm"));
+               ((TGIconLBEntry *)obj)->SetPicture(
+                  fClient->GetPicture("package_delete.xpm"));
             }
          }
       }
@@ -1045,8 +1095,11 @@ void TSessionFrame::OnEnablePackages()
             if (!package->fUploaded) {
                if (fViewer->GetActDesc()->fProof->UploadPackage(name) != 0)
                   Error("Submit", "Upload package failed");
-               else
+               else {
                   package->fUploaded = kTRUE;
+                  ((TGIconLBEntry *)obj)->SetPicture(
+                     fClient->GetPicture("package_delete.xpm"));
+               }
             }
          }
          if (fViewer->GetActDesc()->fProof->EnablePackage(name) != 0)
@@ -2550,7 +2603,19 @@ void TSessionViewer::ReadConfiguration(const char *filename)
          }
       }
    }
+   fSessionHierarchy->ClearHighlighted();
+   fSessionHierarchy->OpenItem(fSessionItem);
+   fSessionHierarchy->OpenItem(item);
+   fSessionHierarchy->HighlightItem(item);
+   fSessionHierarchy->SetSelected(item);
+   fClient->NeedRedraw(fSessionHierarchy);
+}
+
+//______________________________________________________________________________
+void TSessionViewer::UpdateListOfProofs()
+{
    // get list of proof sessions
+   TGListTreeItem *item;
    TSeqCollection *proofs = gROOT->GetListOfProofs();
    if (proofs) {
       TIter nextp(proofs);
@@ -2619,13 +2684,6 @@ void TSessionViewer::ReadConfiguration(const char *filename)
          fActDesc = newdesc;
       }
    }
-
-   fSessionHierarchy->ClearHighlighted();
-   fSessionHierarchy->OpenItem(fSessionItem);
-   fSessionHierarchy->OpenItem(item);
-   fSessionHierarchy->HighlightItem(item);
-   fSessionHierarchy->SetSelected(item);
-   fClient->NeedRedraw(fSessionHierarchy);
 }
 
 //______________________________________________________________________________
@@ -2660,6 +2718,10 @@ void TSessionViewer::WriteConfiguration(const char *filename)
 
    TIter snext(fSessions);
    while ((session = (TSessionDescription *) snext())) {
+      if ((scnt > 0) && (session->fName == session->fAddress)) {
+         // skip gROOT's list of proofs
+         continue;
+      }
       TString sessionstring;
       sessionstring += session->fName;
       sessionstring += ";";
@@ -2736,9 +2798,10 @@ void TSessionViewer::Build()
    fActDesc = 0;
    fLogWindow = 0;
    fBusy = kFALSE;
+   fAutoSave = kTRUE;
    SetCleanup(kDeepCleanup);
    // set minimun size
-   SetWMSizeHints(400 + 200, 310+50, 2000, 1000, 1, 1);
+   SetWMSizeHints(400 + 200, 350+50, 2000, 1000, 1, 1);
 
    // collect icons
    fLocal = fClient->GetPicture("local_session.xpm");
@@ -2759,14 +2822,24 @@ void TSessionViewer::Build()
 
    //--- Session menu
    fSessionMenu = new TGPopupMenu(gClient->GetRoot());
+   fSessionMenu->AddLabel("Session Management");
+   fSessionMenu->AddSeparator();
+   fSessionMenu->AddEntry("&New Session", kSessionNew);
+   fSessionMenu->AddEntry("&Add to the list", kSessionAdd);
+   fSessionMenu->AddEntry("&Delete", kSessionDelete);
+   fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&Connect...", kSessionConnect);
    fSessionMenu->AddEntry("&Disconnect", kSessionDisconnect);
    fSessionMenu->AddEntry("&Show status",kSessionShowStatus);
+   fSessionMenu->AddEntry("&Get Queries",kSessionGetQueries);
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&Cleanup", kSessionCleanup);
+   fSessionMenu->DisableEntry(kSessionAdd);
 
    //--- Query menu
    fQueryMenu = new TGPopupMenu(gClient->GetRoot());
+   fQueryMenu->AddLabel("Query Management");
+   fQueryMenu->AddSeparator();
    fQueryMenu->AddEntry("&New...", kQueryNew);
    fQueryMenu->AddEntry("&Edit", kQueryEdit);
    fQueryMenu->AddEntry("&Submit", kQuerySubmit);
@@ -2794,7 +2867,9 @@ void TSessionViewer::Build()
 
    //--- Options menu
    fOptionsMenu = new TGPopupMenu(fClient->GetRoot());
-   fOptionsMenu->AddLabel("Performance Monitoring");
+   fOptionsMenu->AddLabel("Global Options");
+   fOptionsMenu->AddSeparator();
+   fOptionsMenu->AddEntry("&Autosave Config", kOptionsAutoSave);
    fOptionsMenu->AddSeparator();
    fOptionsMenu->AddEntry("Master &Histos", kOptionsStatsHist);
    fOptionsMenu->AddEntry("&Master Events", kOptionsStatsTrace);
@@ -2803,6 +2878,7 @@ void TSessionViewer::Build()
    fOptionsMenu->AddEntry("Feedback &Active", kOptionsFeedback);
    fOptionsMenu->AddSeparator();
    fOptionsMenu->AddPopup("&Feedback Histos", fCascadeMenu);
+   fOptionsMenu->CheckEntry(kOptionsAutoSave);
 
    //--- Help menu
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
@@ -2838,11 +2914,31 @@ void TSessionViewer::Build()
    toolBarSep = new TGHorizontal3DLine(this);
    AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
+   //---- toolbar
+
+   int spacing = 8;
+   fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
+   for (int i = 0; xpm_toolbar[i]; i++) {
+      tb_data[i].fPixmap = xpm_toolbar[i];
+      if (strlen(xpm_toolbar[i]) == 0) {
+          spacing = 8;
+          continue;
+      }
+      fToolBar->AddButton(this, &tb_data[i], spacing);
+      spacing = 0;
+   }
+   AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
+   toolBarSep = new TGHorizontal3DLine(this);
+   AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
+
    fPopupSrv = new TGPopupMenu(fClient->GetRoot());
    fPopupSrv->AddEntry("Connect",kSessionConnect);
    fPopupSrv->AddEntry("Disconnect",kSessionDisconnect);
    fPopupSrv->AddEntry("Browse",kSessionBrowse);
    fPopupSrv->AddEntry("&Show status",kSessionShowStatus);
+   fPopupSrv->AddEntry("&Delete", kSessionDelete);
+   fPopupSrv->AddEntry("&Get Queries",kSessionGetQueries);
    fPopupSrv->AddSeparator();
    fPopupSrv->AddEntry("&Cleanup", kSessionCleanup);
    fPopupSrv->Connect("Activated(Int_t)","TSessionViewer", this,
@@ -2858,10 +2954,16 @@ void TSessionViewer::Build()
    fPopupQry->Connect("Activated(Int_t)","TSessionViewer", this,
             "MyHandleMenu(Int_t)");
 
+
+   fSessionMenu->DisableEntry(kSessionGetQueries);
+   fSessionMenu->DisableEntry(kSessionShowStatus);
+   fPopupSrv->DisableEntry(kSessionGetQueries);
+   fPopupSrv->DisableEntry(kSessionShowStatus);
    fPopupSrv->DisableEntry(kSessionDisconnect);
    fPopupSrv->DisableEntry(kSessionCleanup);
    fSessionMenu->DisableEntry(kSessionDisconnect);
    fSessionMenu->DisableEntry(kSessionCleanup);
+   fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
 
    //--- Horizontal mother frame -----------------------------------------------
    fHf = new TGHorizontalFrame(this, 10, 10);
@@ -2888,12 +2990,10 @@ void TSessionViewer::Build()
    fServerFrame = new TSessionServerFrame(fV2, 350, 310);
    fSessions = new TList;
    ReadConfiguration();
+   UpdateListOfProofs();
    fServerFrame->Build(this);
    fV2->AddFrame(fServerFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
                  kLHintsExpandY, 2, 0, 1, 2));
-   fServerFrame->SetNewEnabled(kFALSE);
-   fServerFrame->SetAddEnabled(kFALSE);
-   fServerFrame->SetConnectEnabled();
 
    //--- Session Frame ---------------------------------------------------------
    fSessionFrame = new TSessionFrame(fV2, 350, 310);
@@ -2980,6 +3080,7 @@ void TSessionViewer::Build()
    MapWindow();
 
    // hide frames
+   fServerFrame->SetAddEnabled(kFALSE);
    fStatusBar->GetBarPart(0)->HideFrame(fConnectProg);
    fV2->HideFrame(fSessionFrame);
    fV2->HideFrame(fQueryFrame);
@@ -3010,6 +3111,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    TObject *obj;
    TString msg;
 
+   fSessionMenu->DisableEntry(kSessionAdd);
+   fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
    if (entry->GetParent() == 0) {  // PROOF
       // switch frames only if actual one doesn't match
       if (fActFrame != fServerFrame) {
@@ -3017,15 +3120,16 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fV2->ShowFrame(fServerFrame);
          fActFrame = fServerFrame;
       }
-      fServerFrame->SetNewEnabled();
+      fSessionMenu->DisableEntry(kSessionDelete);
+      fSessionMenu->EnableEntry(kSessionAdd);
       fServerFrame->SetAddEnabled();
       fServerFrame->SetConnectEnabled(kFALSE);
       fPopupSrv->DisableEntry(kSessionConnect);
       fSessionMenu->DisableEntry(kSessionConnect);
+      fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
    }
    else if (entry->GetParent()->GetParent() == 0) { // Server
       fServerFrame->SetAddEnabled(kFALSE);
-      fServerFrame->SetNewEnabled(kFALSE);
       fServerFrame->SetConnectEnabled();
       if (entry->GetUserData()) {
          obj = (TObject *)entry->GetUserData();
@@ -3047,10 +3151,12 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       if (fActDesc->fConnected) {
          fPopupSrv->DisableEntry(kSessionConnect);
          fSessionMenu->DisableEntry(kSessionConnect);
+         fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
       }
       else {
          fPopupSrv->EnableEntry(kSessionConnect);
          fSessionMenu->EnableEntry(kSessionConnect);
+         fToolBar->GetButton(kSessionConnect)->SetState(kButtonUp);
       }
       // local session
       if (fActDesc->fLocal) {
@@ -3059,11 +3165,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
             fV2->ShowFrame(fSessionFrame);
             fActFrame = fSessionFrame;
          }
-         fSessionFrame->GetTab()->SetTab("Status");
          fSessionFrame->GetTab()->HideFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
-         fSessionFrame->GetTab()->HideFrame(
-               fSessionFrame->GetTab()->GetTabTab("Packages"));
       }
       // proof session not connected
       if ((!fActDesc->fLocal) && (!fActDesc->fConnected) &&
@@ -3081,8 +3184,6 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          }
          fSessionFrame->GetTab()->ShowFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
-         fSessionFrame->GetTab()->ShowFrame(
-               fSessionFrame->GetTab()->GetTabTab("Packages"));
       }
       // update session information frame
       fSessionFrame->ProofInfos();
@@ -3105,6 +3206,10 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fV2->ShowFrame(fQueryFrame);
          fActFrame = fQueryFrame;
       }
+      if ((fActDesc->fConnected) &&
+          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQueryRunning) && 
+          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQuerySubmitted) )
+         fToolBar->GetButton(kQuerySubmit)->SetState(kButtonUp);
       // trick to update feedback histos
       OnCascadeMenu();
    }
@@ -3173,23 +3278,39 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    }
    // enable / disable menu entries
    if (fActDesc->fConnected) {
-      fServerFrame->SetDeleteEnabled(kFALSE);
+      fSessionMenu->EnableEntry(kSessionGetQueries);
+      fSessionMenu->EnableEntry(kSessionShowStatus);
+      fPopupSrv->EnableEntry(kSessionGetQueries);
+      fPopupSrv->EnableEntry(kSessionShowStatus);
+      fSessionMenu->DisableEntry(kSessionDelete);
+      fPopupSrv->DisableEntry(kSessionDelete);
       fPopupSrv->EnableEntry(kSessionDisconnect);
       fPopupSrv->EnableEntry(kSessionCleanup);
       fSessionMenu->EnableEntry(kSessionDisconnect);
       fSessionMenu->EnableEntry(kSessionCleanup);
+      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
    }
    else {
-      fServerFrame->SetDeleteEnabled();
+      fSessionMenu->DisableEntry(kSessionGetQueries);
+      fSessionMenu->DisableEntry(kSessionShowStatus);
+      fPopupSrv->DisableEntry(kSessionGetQueries);
+      fPopupSrv->DisableEntry(kSessionShowStatus);
+      if (entry->GetParent() != 0)
+         fSessionMenu->EnableEntry(kSessionDelete);
+      fPopupSrv->EnableEntry(kSessionDelete);
       fPopupSrv->DisableEntry(kSessionDisconnect);
       fPopupSrv->DisableEntry(kSessionCleanup);
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionCleanup);
+      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
    }
    if (fActDesc->fLocal) {
+      fSessionMenu->DisableEntry(kSessionDelete);
       fSessionMenu->DisableEntry(kSessionConnect);
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionCleanup);
+      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
+      fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
    }
 }
 
@@ -3198,7 +3319,8 @@ void TSessionViewer::CloseWindow()
 {
    // close main Session Viewer window
 
-   WriteConfiguration();
+   if (fAutoSave)
+      WriteConfiguration();
    // clean-up temporary files
    TString pathtmp;
    pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
@@ -3613,6 +3735,10 @@ void TSessionViewer::MyHandleMenu(Int_t id)
 
    switch (id) {
 
+      case kSessionDelete:
+         fServerFrame->OnBtnDeleteClicked();
+         break;
+
       case kSessionConnect:
          fServerFrame->OnBtnConnectClicked();
          break;
@@ -3634,6 +3760,10 @@ void TSessionViewer::MyHandleMenu(Int_t id)
 
       case kSessionShowStatus:
          ShowStatus();
+         break;
+
+      case kSessionGetQueries:
+         fSessionFrame->OnBtnGetQueriesClicked();
          break;
 
       case kQueryEdit:
@@ -3697,6 +3827,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
+            case kCM_BUTTON:
             case kCM_MENU:
                switch (parm1) {
 
@@ -3708,7 +3839,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      {
                         TGFileInfo fi;
                         fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
-                        fi.fIniDir = (char *)gSystem->HomeDirectory();
+                        fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
                         if (fi.fFilename) {
@@ -3722,7 +3853,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      {
                         TGFileInfo fi;
                         fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
-                        fi.fIniDir = (char *)gSystem->HomeDirectory();
+                        fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
                         if (fi.fFilename) {
@@ -3735,6 +3866,18 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileQuit:
                      CloseWindow();
                      gApplication->Terminate(0);
+                     break;
+
+                  case kSessionNew:
+                     fServerFrame->OnBtnNewServerClicked();
+                     break;
+
+                  case kSessionAdd:
+                     fServerFrame->OnBtnAddClicked();
+                     break;
+
+                  case kSessionDelete:
+                     fServerFrame->OnBtnDeleteClicked();
                      break;
 
                   case kSessionCleanup:
@@ -3751,6 +3894,10 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kSessionShowStatus:
                      ShowStatus();
+                     break;
+
+                  case kSessionGetQueries:
+                     fSessionFrame->OnBtnGetQueriesClicked();
                      break;
 
                   case kQueryNew:
@@ -3772,6 +3919,17 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kQuerySubmit:
                      fQueryFrame->OnBtnSubmit();
+                     break;
+
+                  case kOptionsAutoSave:
+                     if(fOptionsMenu->IsEntryChecked(kOptionsAutoSave)) {
+                        fOptionsMenu->UnCheckEntry(kOptionsAutoSave);
+                        fAutoSave = kFALSE;
+                     }
+                     else {
+                        fOptionsMenu->CheckEntry(kOptionsAutoSave);
+                        fAutoSave = kTRUE;
+                     }
                      break;
 
                   case kOptionsStatsHist:
