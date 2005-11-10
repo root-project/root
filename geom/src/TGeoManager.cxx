@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.129 2005/10/14 14:55:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.130 2005/10/21 13:01:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1908,7 +1908,10 @@ void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bom
 //_____________________________________________________________________________
 TGeoHMatrix *TGeoManager::GetHMatrix()
 {
-   if (!fCurrentMatrix) fCurrentMatrix = new TGeoHMatrix();
+   if (!fCurrentMatrix) {
+      fCurrentMatrix = new TGeoHMatrix();
+      fCurrentMatrix->RegisterYourself();
+   }   
    return fCurrentMatrix;
 }
 //_____________________________________________________________________________
