@@ -619,12 +619,12 @@ void TNewQueryDlg::OnBtnSaveClicked()
       TQueryDescription *fquery;
       fquery = (TQueryDescription *)fViewer->GetActDesc()->fQueries->FindObject(newquery->fQueryName);
       while (fquery) {
-         int e, j = 0, idx = 0;
+         int e = 1, j = 0, idx = 0;
          const char *name = fquery->fQueryName;
          for (int i=strlen(name)-1;i>0;i--) {
             if (isdigit(name[i])) {
-               e = pow(10, j);
                idx += (name[i]-'0') * e;
+               e *= 10;
                j++;
             }
             else
