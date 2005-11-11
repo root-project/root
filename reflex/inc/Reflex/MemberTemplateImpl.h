@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -168,33 +168,10 @@ namespace ROOT {
   } // namespace ROOT
 } // namespace Reflex
 
-#include "Reflex/Member.h"
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templateName,
-                                                             const Scope & scope,
-                                                             std::vector < std::string > parameterNames,
-                                                             std::vector < std::string > parameterDefaults )
-//------------------------------------------------------------------------------- 
-  : fTemplateName( templateName ),
-    fScope( scope ),
-    fTemplateInstances( std::vector < Member >() ),
-    fParameterNames( parameterNames ),
-    fParameterDefaults( parameterDefaults ),
-    fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
-
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {}
 //-------------------------------------------------------------------------------
-
-
-//-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & mt ) const {
-//-------------------------------------------------------------------------------
-  return ( ( fTemplateName == mt.fTemplateName ) && 
-           ( fParameterNames.size() == mt.fParameterNames.size() ) );
-}
 
 
 //-------------------------------------------------------------------------------
@@ -293,13 +270,6 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_REnd() const {
 //-------------------------------------------------------------------------------
   return fParameterNames.rend();
-}
-
-
-//-------------------------------------------------------------------------------
-inline void ROOT::Reflex::MemberTemplateImpl::AddTemplateInstance( const Member & templateInstance ) const {
-//-------------------------------------------------------------------------------
-  fTemplateInstances.push_back( templateInstance );
 }
 
 #endif // ROOT_Reflex_MemberTemplateImpl

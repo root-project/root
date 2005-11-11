@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -13,10 +13,38 @@
 #include "Reflex/Member.h"
 
 //-------------------------------------------------------------------------------
+ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templateName,
+                                                      const Scope & scope,
+                                                      std::vector < std::string > parameterNames,
+                                                      std::vector < std::string > parameterDefaults )
+//------------------------------------------------------------------------------- 
+  : fTemplateName( templateName ),
+    fScope( scope ),
+    fTemplateInstances( std::vector < Member >() ),
+    fParameterNames( parameterNames ),
+    fParameterDefaults( parameterDefaults ),
+    fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
+
+
+//-------------------------------------------------------------------------------
+bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & mt ) const {
+//-------------------------------------------------------------------------------
+  return ( ( fTemplateName == mt.fTemplateName ) && 
+           ( fParameterNames.size() == mt.fParameterNames.size() ) );
+}
+
+
+//-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
   return Member();
 }
 
+
+//-------------------------------------------------------------------------------
+void ROOT::Reflex::MemberTemplateImpl::AddTemplateInstance( const Member & templateInstance ) const {
+//-------------------------------------------------------------------------------
+  fTemplateInstances.push_back( templateInstance );
+}
 
