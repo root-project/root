@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -30,7 +30,7 @@ namespace ROOT { namespace Cintex {
 
   void CINTFunctionBuilder::Setup() {
 
-    Scope ScopeNth = fFunction.ScopeGet();
+    Scope ScopeNth = fFunction.DeclaringScope();
     bool global = ScopeNth.IsTopScope();
 
     if ( global ) {
@@ -56,13 +56,13 @@ namespace ROOT { namespace Cintex {
   }
 
   void CINTFunctionBuilder::Setup(const Member& function) {
-    Type cl = Type::ByName(function.ScopeGet().Name(SCOPED));
+    Type cl = Type::ByName(function.DeclaringScope().Name(SCOPED));
     int access        = G__PUBLIC;
     int const_ness    = 0;
     int virtuality    = 0;
     int reference     = 0;
     int memory_type   = 1; // G__LOCAL;  // G__AUTO=-1
-    int tagnum        = CintTag(function.ScopeGet().Name(SCOPED));
+    int tagnum        = CintTag(function.DeclaringScope().Name(SCOPED));
 
     //---Alocate a context
     StubContext* stub_context = new StubContext(function, cl);
@@ -72,7 +72,7 @@ namespace ROOT { namespace Cintex {
     int hash, tmp;
 
     //---Return TypeNth----------------
-    Type rt = function.TypeGet().ReturnType();
+    Type rt = function.TypeOf().ReturnType();
     reference = rt.IsReference() ? 1 : 0;
     while ( rt.IsTypedef() ) rt = rt.ToType();
     //CINTScopeBuilder::Setup( rt );
@@ -117,7 +117,7 @@ namespace ROOT { namespace Cintex {
       memory_type += G__CLASSSCOPE;
 
     string signature = CintSignature(function);
-    int nparam = function.TypeGet().ParameterCount();
+    int nparam = function.TypeOf().FunctionParameterSize();
     //---Cint function hash
     G__hash(funcname, hash, tmp);
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -30,12 +30,12 @@ namespace ROOT { namespace Cintex {
       std::string nam = CintName(t.Name(SCOPED));
 
       Type rt(t);
-      Scope ScopeNth = rt.ScopeGet();
+      Scope ScopeNth = rt.DeclaringScope();
       CINTScopeBuilder::Setup( ScopeNth );
       while ( rt.IsTypedef() ) rt = rt.ToType();
 
       Indirection indir = IndirectionGet(rt);
-      Scope rscope = indir.second.ScopeGet();
+      Scope rscope = indir.second.DeclaringScope();
 
       if ( ScopeNth != rscope ) {
         if ( rscope ) CINTScopeBuilder::Setup(rscope);

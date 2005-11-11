@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Cintex.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -84,15 +84,15 @@ namespace ROOT {
     //---Install the callback to fothcoming classes ----//
     InstallClassCallback( Instance().fCallback );        
     //---Convert to CINT all existing classes ---//
-    for( size_t i = 0; i < Type::TypeCount(); i++ ) {
+    for( size_t i = 0; i < Type::TypeSize(); i++ ) {
 
-      ( * Instance().fCallback)( Type::TypeNth(i) );
+      ( * Instance().fCallback)( Type::TypeAt(i) );
     }
     //--- Convert to CINT all existing free functions and variables ---//
     Scope gbl = Scope::ByName("");
     if (gbl) {
-      for ( size_t j = 0; j < gbl.MemberCount(); ++j) {
-	( * Instance().fCallback ) ( gbl.MemberNth(j) );
+      for ( size_t j = 0; j < gbl.MemberSize(); ++j) {
+	( * Instance().fCallback ) ( gbl.MemberAt(j) );
       }
     }
   } 

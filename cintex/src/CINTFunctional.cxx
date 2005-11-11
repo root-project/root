@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTFunctional.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -50,8 +50,8 @@ StubContext::~StubContext() {
 }
 
 void StubContext::Initialize() {
-  fFunction = fMember.TypeGet();
-  fNpar    = fFunction.ParameterCount();
+  fFunction = fMember.TypeOf();
+  fNpar    = fFunction.FunctionParameterSize();
   fStub    = fMember.Stubfunction();
   fStubctx = fMember.Stubcontext();
   fParam.resize(fNpar);
@@ -59,7 +59,7 @@ void StubContext::Initialize() {
   fTreat.resize(fNpar);
   // pre-process paramters and remember the treatment that is needed to be done
   for (int i = 0; i < fNpar; i++ ) {
-    Type pt = fFunction.ParameterNth(i);
+    Type pt = fFunction.FunctionParameterAt(i);
     while ( pt.IsTypedef() ) pt = pt.ToType();
     if ( pt.IsFundamental() || pt.IsEnum() )
       if      ( pt.TypeInfo() == typeid(float) )  fTreat[i] = 'f';

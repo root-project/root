@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.3 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.4 2005/11/08 07:14:31 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -150,7 +150,11 @@ namespace ROOT { namespace Cintex {
   ROOTClassEnhancerInfo::~ROOTClassEnhancerInfo() {
     fSub_types.clear();
     if ( fClassInfo ) delete fClassInfo;
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
+    // fIsa_func is deleted by ROOT
+#else
     if ( fIsa_func ) Free_function((void*)fIsa_func);
+#endif
     if ( fDictionary_func ) Free_function((void*)fDictionary_func);
   }
 
@@ -332,7 +336,7 @@ namespace ROOT { namespace Cintex {
         case TClassEdit::kSet:
         case TClassEdit::kMultiSet:
           {
-            Member method = typ.MemberNth("createCollFuncTable");
+            Member method = typ.MemberByName("createCollFuncTable");
             if ( !method )   {
               if ( Cintex::Debug() )  {
                 cout << Name << "' Setup failed to create this class! "
@@ -341,7 +345,7 @@ namespace ROOT { namespace Cintex {
               }
               return 0;
             }
-            std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().AddressGet());
+            std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().Address());
             std::auto_ptr<TCollectionProxy::Proxy_t> proxy(
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
               TCollectionProxy::GenExplicitProxy(tid,
@@ -457,10 +461,10 @@ namespace ROOT { namespace Cintex {
     int ncp = ::strlen(par);
     // Loop over data members
     if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
-    for ( size_t m = 0; m < cl.DataMemberCount(); m++) {
-      Member mem = cl.DataMemberNth(m);
+    for ( size_t m = 0; m < cl.DataMemberSize(); m++) {
+      Member mem = cl.DataMemberAt(m);
       if ( ! mem.IsTransient() ) {
-        Type typ = mem.TypeGet();
+        Type typ = mem.TypeOf();
         string nam = mem.Name();
         if( typ.IsPointer() ) nam = "*" + nam;
         char*  add = (char*)obj + mem.Offset();
@@ -482,8 +486,8 @@ namespace ROOT { namespace Cintex {
       }
     }
     // Loop over bases
-    for ( size_t b = 0; b < cl.BaseCount(); b++ ) {
-      Base BaseNth = cl.BaseNth(b);
+    for ( size_t b = 0; b < cl.BaseSize(); b++ ) {
+      Base BaseNth = cl.BaseAt(b);
       string bname = CintName(BaseNth.ToType());
       char* ptr = (char*)obj + BaseNth.Offset(obj);
       TClass* bcl = ROOT::GetROOT()->GetClass(bname.c_str());

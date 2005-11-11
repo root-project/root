@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -34,7 +34,7 @@ namespace ROOT { namespace Cintex {
         std::cout << "Building enum " << Name << std::endl;
       }
 
-      Scope ScopeNth = t.ScopeGet();
+      Scope ScopeNth = t.DeclaringScope();
       CINTScopeBuilder::Setup( ScopeNth );
 
       G__linked_taginfo taginfo;

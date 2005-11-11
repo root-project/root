@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTUtils.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CINTUtils.cxx,v 1.3 2005/11/08 07:16:37 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -283,9 +283,9 @@ namespace ROOT { namespace Cintex {
     // <TypeNth-char> <'object TypeNth Name'> <typedef-Name> <indirection> <default-value> <argument-Name>
     // i - 'Int_t' 0 0 option
     string signature;
-    Type ft = func.TypeGet();
-    for ( size_t p = 0 ; p < ft.ParameterCount(); p++ ) {
-      Type pt = ft.ParameterNth(p);
+    Type ft = func.TypeOf();
+    for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
+      Type pt = ft.FunctionParameterAt(p);
       string arg_sig;
       Indirection  indir = IndirectionGet(pt);
       CintTypeDesc ctype = CintType(indir.second);
@@ -312,15 +312,15 @@ namespace ROOT { namespace Cintex {
       } 
       arg_sig += " ";
       // Default value
-      if ( func.ParameterDefault(p) != "" ) arg_sig += "'" + func.ParameterDefault(p) + "'";
+      if ( func.FunctionParameterDefaultAt(p) != "" ) arg_sig += "'" + func.FunctionParameterDefaultAt(p) + "'";
       else                                  arg_sig += "-";
       arg_sig += " ";
       // Parameter Name
-      if ( func.ParameterName(p) != "" ) arg_sig += func.ParameterName(p);
+      if ( func.FunctionParameterNameAt(p) != "" ) arg_sig += func.FunctionParameterNameAt(p);
       else                               arg_sig += "-";
   
       signature += arg_sig;
-      if ( p < ft.ParameterCount() -1 ) signature += " ";
+      if ( p < ft.FunctionParameterSize() -1 ) signature += " ";
     }
     return signature;
   }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -70,7 +70,7 @@ namespace ROOT { namespace Cintex {
   void CINTScopeBuilder::Setup(const Type& TypeNth) {
     if ( TypeNth.IsFunction() ) {
       Setup(TypeNth.ReturnType());
-      for ( size_t i = 0; i < TypeNth.ParameterCount(); i++ ) Setup(TypeNth.ParameterNth(i));
+      for ( size_t i = 0; i < TypeNth.FunctionParameterSize(); i++ ) Setup(TypeNth.FunctionParameterAt(i));
     }
     else if ( TypeNth.IsTypedef() ) {
       CINTTypedefBuilder::Setup(TypeNth);
@@ -78,10 +78,10 @@ namespace ROOT { namespace Cintex {
     }
     else if ( TypeNth.IsEnum() ) {
       CINTEnumBuilder::Setup(TypeNth);
-      Setup(TypeNth.ScopeGet());
+      Setup(TypeNth.DeclaringScope());
     }
     else {
-      Scope ScopeNth = TypeNth.ScopeGet();
+      Scope ScopeNth = TypeNth.DeclaringScope();
       if ( ScopeNth ) Setup(ScopeNth);
       else {
         // Type not yet defined. Get the ScopeNth anyway...

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -117,7 +117,7 @@ namespace ROOT { namespace Cintex {
   void CINTClassBuilder::Setup_tagtable() {
 
     // Setup ScopeNth
-    Scope ScopeNth = fClass.ScopeGet();
+    Scope ScopeNth = fClass.DeclaringScope();
     if ( ScopeNth ) CINTScopeBuilder::Setup(ScopeNth);
     else {
       ScopeNth = Scope::ByName(Tools::GetScopeName(fClass.Name(SCOPED)));
@@ -126,8 +126,8 @@ namespace ROOT { namespace Cintex {
 
     // Setup tag number
     fTaginfo->tagnum = G__get_linked_tagnum(fTaginfo);
-    std::string comment = fClass.PropertyListGet().HasKey("comment") ? 
-                          fClass.PropertyListGet().PropertyAsString("comment").c_str() :
+    std::string comment = fClass.Properties().HasKey("comment") ? 
+                          fClass.Properties().PropertyAsString("comment").c_str() :
                           "";
     // Assume some minimal class functionality; see below for explanation
     int rootFlag = 0;
@@ -176,12 +176,12 @@ namespace ROOT { namespace Cintex {
 
   void CINTClassBuilder::Setup_memfunc() {
 
-    for ( size_t i = 0; i < fClass.FunctionMemberCount(); i++ ) 
-      CINTScopeBuilder::Setup(fClass.FunctionMemberNth(i).TypeGet());
+    for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) 
+      CINTScopeBuilder::Setup(fClass.FunctionMemberAt(i).TypeOf());
 
     G__tag_memfunc_setup(fTaginfo->tagnum);
-    for ( size_t i = 0; i < fClass.FunctionMemberCount(); i++ ) {
-      Member method = fClass.FunctionMemberNth(i); 
+    for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
+      Member method = fClass.FunctionMemberAt(i); 
       std::string n = method.Name();
       CINTFunctionBuilder::Setup(method);
     }
@@ -190,8 +190,8 @@ namespace ROOT { namespace Cintex {
 
   void CINTClassBuilder::Setup_memvar() {
 
-    for ( size_t i = 0; i < fClass.DataMemberCount(); i++ ) 
-      CINTScopeBuilder::Setup(fClass.DataMemberNth(i).TypeGet());
+    for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) 
+      CINTScopeBuilder::Setup(fClass.DataMemberAt(i).TypeOf());
 
     const char* ref_t = "pool::Reference";
     const char* tok_t = "pool::Token";
@@ -202,13 +202,13 @@ namespace ROOT { namespace Cintex {
     }
 
     if ( ! IsSTL(fClass.Name(SCOPED)) )  {
-      for ( size_t i = 0; i < fClass.DataMemberCount(); i++ ) {
-        Member dm = fClass.DataMemberNth(i);
+      for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
+        Member dm = fClass.DataMemberAt(i);
         char* comment = NULL;
-        std::string cm = dm.PropertyListGet().HasKey("comment") ? 
-          dm.PropertyListGet().PropertyAsString("comment") : std::string("");
+        std::string cm = dm.Properties().HasKey("comment") ? 
+          dm.Properties().PropertyAsString("comment") : std::string("");
 
-        Type t = dm.TypeGet();
+        Type t = dm.TypeOf();
         while ( t.IsTypedef() ) t = t.ToType();
         if ( !t && dm.IsTransient() )  {
           if( Cintex::Debug() ) std::cout << "Ignore transient MemberNth: " << fName << "::" 
@@ -241,10 +241,10 @@ namespace ROOT { namespace Cintex {
           comment = com;
           CommentBuffer::Instance().add(comment);
         }
-        Indirection  indir = IndirectionGet(dm.TypeGet());
+        Indirection  indir = IndirectionGet(dm.TypeOf());
         CintTypeDesc TypeNth = CintType(indir.second);
         ostringstream ost;
-        if ( t.IsArray() ) ost << dm.Name() << "[" << t.Length() << "]=";
+        if ( t.IsArray() ) ost << dm.Name() << "[" << t.ArrayLength() << "]=";
         else               ost << dm.Name() << "=";
         string expr = ost.str();
         int member_type     = TypeNth.first;
@@ -288,7 +288,7 @@ namespace ROOT { namespace Cintex {
           << "," << std::right << std::setw(2) << member_indir 
           << "," << std::right << std::setw(3) << member_tagnum
           << "] " 
-          << (dm.TypeGet().IsConst() ? "const " : "")
+          << (dm.TypeOf().IsConst() ? "const " : "")
           << std::left << std::setw(7)
           << (G__AUTO==member_isstatic ? "auto " : "static ")
           << std::left << std::setw(24) << dm.Name()
@@ -303,7 +303,7 @@ namespace ROOT { namespace Cintex {
         ::G__memvar_setup((void*)dm.Offset(),                         // p
                           member_type,                                // TypeNth
                           member_indir,                               // indirection
-                          dm.TypeGet().IsConst(),                        // const
+                          dm.TypeOf().IsConst(),                        // const
                           member_tagnum,                              // tagnum
                           member_typnum,                              // typenum
                           member_isstatic,                            // statictype
@@ -319,9 +319,9 @@ namespace ROOT { namespace Cintex {
 
   CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
     if ( fBases ) return fBases;
-    Member getbases = fClass.MemberNth("getBasesTable");
+    Member getbases = fClass.MemberByName("getBasesTable");
     if( getbases ) {
-      fBases = (Bases*)( getbases.Invoke().AddressGet() );
+      fBases = (Bases*)( getbases.Invoke().Address() );
     }
     else {
       static Bases s_bases;
@@ -339,24 +339,24 @@ namespace ROOT { namespace Cintex {
       if ( IsVirtual ) {
         if ( !fClass.IsAbstract() )  {
           Member ctor, dtor;
-          for ( size_t i = 0; i < fClass.FunctionMemberCount(); i++ ) {
-            Member method = fClass.FunctionMemberNth(i); 
-            if( method.IsConstructor() && method.ParameterCount() == 0 )  ctor = method;
+          for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
+            Member method = fClass.FunctionMemberAt(i); 
+            if( method.IsConstructor() && method.FunctionParameterSize() == 0 )  ctor = method;
             else if ( method.IsDestructor() )  dtor = method;
           }
           if ( ctor )  {
             Object obj = fClass.Construct();
             Setup_inheritance_simple(obj);
-            //for ( size_t i = 0; i < fClass.DataMemberCount(); i++ ) {
-            //  Member dm = fClass.DataMemberNth(i);
-            //  Type t = dm.TypeGet();
+            //for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
+            //  Member dm = fClass.DataMemberAt(i);
+            //  Type t = dm.TypeOf();
             //  while ( t.IsTypedef() ) t = t.ToType();
             //  if ( t && !t.IsPointer() && (t.IsClass() || t.IsStruct()) )  {
-            //    Object dobj(t,(char*)obj.AddressGet()+dm.Offset());
+            //    Object dobj(t,(char*)obj.Address()+dm.Offset());
             //    CINTClassBuilder::Get(t).Setup_inheritance_simple(dobj);
             //  }
             //}
-            if ( dtor ) fClass.Destruct(obj.AddressGet());
+            if ( dtor ) fClass.Destruct(obj.Address());
           }
         }
       }
@@ -380,7 +380,7 @@ namespace ROOT { namespace Cintex {
           size_t Offset;
           long  TypeNth = (level == 0) ?  G__ISDIRECTINHERIT : 0;
           if ( BaseNth.IsVirtual() ) {
-            Offset = ( * BaseNth.OffsetFP())(obj.AddressGet());
+            Offset = ( * BaseNth.OffsetFP())(obj.Address());
             // TypeNth = TypeNth | G__ISVIRTUALBASE;
           }
           else {
@@ -391,7 +391,7 @@ namespace ROOT { namespace Cintex {
           }
           int mod = BaseNth.IsPublic() ? G__PUBLIC : ( BaseNth.IsPrivate() ? G__PRIVATE : G__PROTECTED );
           ::G__inheritance_setup(fTaginfo->tagnum, b_tagnum, Offset, mod, TypeNth );
-          Object bobj(btype,(char*)obj.AddressGet() + Offset);
+          Object bobj(btype,(char*)obj.Address() + Offset);
           //CINTClassBuilder::Get(btype).Setup_inheritance_simple(bobj);
         }
       }
@@ -399,10 +399,10 @@ namespace ROOT { namespace Cintex {
   }
   
   void CINTClassBuilder::Setup_inheritance() {
-    Member GetBases = fClass.MemberNth("getBasesTable");
+    Member GetBases = fClass.MemberByName("getBasesTable");
     if( GetBases ) {
       typedef vector<pair<Base,int> > Bases;
-      Bases* bases = (Bases*)(GetBases.Invoke().AddressGet());
+      Bases* bases = (Bases*)(GetBases.Invoke().Address());
       for ( Bases::iterator it = bases->begin(); it != bases->end(); it++ ) {
         Base BaseNth  = it->first;
         int  level = it->second;
@@ -438,8 +438,8 @@ namespace ROOT { namespace Cintex {
   }  
   
   void CINTClassBuilder::Setup_inheritance(int tagnum, size_t /* off */, const Type& cl, int ind) {
-    for ( size_t i = 0; i < cl.BaseCount(); i++ ) {
-      Base BaseNth = cl.BaseNth(i);
+    for ( size_t i = 0; i < cl.BaseSize(); i++ ) {
+      Base BaseNth = cl.BaseAt(i);
       int b_tagnum = CintTag(BaseNth.ToType().Name(SCOPED));
       // Get the Offset. Treat differently virtual and non-virtual inheritance
       size_t Offset;
