@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.70 2005/10/11 12:32:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.71 2005/11/02 15:35:23 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -49,9 +49,9 @@
 #include "TCanvas.h"
 #include "TNamed.h"
 #include "TObjString.h"
-#include "Api.h"
 #include "TQueryResult.h"
 #include "TMD5.h"
+#include "TMethodCall.h"
 #ifndef R__TH1MERGEFIXED
 #include "TH1.h"
 #endif
@@ -400,8 +400,8 @@ void TProofPlayer::Feedback(TList *)
 
 //______________________________________________________________________________
 Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
-                            Option_t *option, Long64_t nentries, Long64_t first,
-                            TEventList * /*evl*/)
+                               Option_t *option, Long64_t nentries,
+                               Long64_t first, TEventList * /*evl*/)
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
@@ -851,7 +851,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // (list contents is duplicated inside)
          fQuery->SetOutputList(fOutput);
 
-         // Set in finlaized state (cannot be done twice)
+         // Set in finalized state (cannot be done twice)
          fQuery->SetFinalized();
 
          // FIXME
@@ -959,6 +959,8 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
 {
+   // Merge objects in output the lists.
+
    PDB(kOutput,1) Info("MergeOutput","Enter");
 
    if (fOutputLists == 0) {
@@ -970,7 +972,6 @@ void TProofPlayerRemote::MergeOutput()
 
    TList *list;
    while ( (list = (TList *) next()) ) {
-      Long_t offset = 0;
 
       TObject *obj = fOutput->FindObject(list->GetName());
 
@@ -982,16 +983,12 @@ void TProofPlayerRemote::MergeOutput()
 
       if ( list->IsEmpty() ) continue;
 
-      // direct CINT, also possible via TInterpreter?
-      G__ClassInfo ci(obj->ClassName());
-      G__CallFunc cf;
-
-      if (ci.IsValid())
-         cf.SetFuncProto( &ci, "Merge", "TCollection*", &offset);
-
-      if (cf.IsValid()) {
-         cf.SetArg((Long_t)list);
-         cf.Exec(obj);
+      TMethodCall callEnv;
+      if (obj->IsA())
+         callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
+      if (callEnv.IsValid()) {
+         callEnv.SetParam((Long_t) list);
+         callEnv.Execute(obj);
       } else {
          // No Merge interface, return individual objects
          while ( (obj = list->First()) ) {
@@ -1116,6 +1113,8 @@ void TProofPlayerRemote::StoreOutput(TList *out)
 //______________________________________________________________________________
 TList *TProofPlayerRemote::MergeFeedback()
 {
+   // Merge feedback lists.
+
    PDB(kFeedback,1) Info("MergeFeedback","Enter");
 
    if ( fFeedbackLists == 0 ) {
@@ -1130,7 +1129,6 @@ TList *TProofPlayerRemote::MergeFeedback()
 
    TMap *map;
    while ( (map = (TMap*) next()) ) {
-      Long_t offset = 0;
 
       // turn map into list ...
 
@@ -1147,7 +1145,7 @@ TList *TProofPlayerRemote::MergeFeedback()
          // Temporary fix for to cope with the problem in TH1::Merge.
          // We need to use a reference histo the one with the largest number
          // of bins so that the histos from all submasters can be correctly
-         // fit in 
+         // fit in
          TObject *o = map->GetValue(key);
          if (o->InheritsFrom("TH1") && !strncmp(o->GetName(),"PROOF_",6)) {
             if (((TH1 *)o)->GetNbinsX() > nbmx) {
@@ -1159,7 +1157,6 @@ TList *TProofPlayerRemote::MergeFeedback()
       }
 
       // clone first object, remove from list
-
 #ifdef R__TH1MERGEFIXED
       TObject *obj = list->First();
 #else
@@ -1175,16 +1172,12 @@ TList *TProofPlayerRemote::MergeFeedback()
       }
 
       // merge list with clone
-      // direct CINT, also possible via TInterpreter?
-      G__ClassInfo ci(obj->ClassName());
-      G__CallFunc cf;
-
-      if ( ci.IsValid() )
-         cf.SetFuncProto( &ci, "Merge", "TCollection*", &offset);
-
-      if ( cf.IsValid() ) {
-         cf.SetArg((Long_t)list);
-         cf.Exec(obj);
+      TMethodCall callEnv;
+      if (obj->IsA())
+         callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
+      if (callEnv.IsValid()) {
+         callEnv.SetParam((Long_t) list);
+         callEnv.Execute(obj);
       } else {
          // No Merge interface, return copy of individual objects
          while ( (obj = list->First()) ) {
