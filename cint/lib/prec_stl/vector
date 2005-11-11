@@ -43,7 +43,7 @@ class vector {
  public:
   typedef T value_type;
 
-#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX)
+#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX) 
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
   typedef value_type& reference;

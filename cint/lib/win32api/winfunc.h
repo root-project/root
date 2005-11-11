@@ -706,8 +706,7 @@ DWORD GetFileSize(HANDLE hFile,LPDWORD lpFleSizeHigh);
 DWORD GetFileType(HANDLE hFile);
 #pragma link C func GetFileType;
 
-DWORD GetFullPathName(LPCTSTR lpFileName,DWORD nBufferLength,LPTSTR lpBuffer
-		      ,LPTSTR *lpFilePart);
+DWORD GetFullPathName(LPCTSTR lpFileName,DWORD nBufferLength,LPTSTR lpBuffer,char **lpFilePart);
 #pragma link C func GetFullPathName;
 
 BOOL LockFile(HANDLE hFile,DWORD dwFileOffsetLow,DWORD dwFileOffsetHigh
@@ -1089,10 +1088,17 @@ BOOL DrawState(HDC, HBRUSH, DRAWSTATEPROC, LPARAM, WPARAM, int, int, int, int, U
 #pragma link C func DeleteObject;
 #pragma link C func GetStockObject;
 
+#if G__MSC_VER>1310
+char* _strupr(char*);
+#pragma link C func _strupr;
+char* _strlwr(char*);
+#pragma link C func _strlwr;
+#else
 char* strupr(char*);
 #pragma link C func strupr;
 char* strlwr(char*);
 #pragma link C func strlwr;
+#endif
 
 COLORREF RGB(char a,char b,char c);
 #pragma link C MACRO RGB;

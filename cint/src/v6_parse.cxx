@@ -1343,8 +1343,14 @@ int G__pp_ifdefextern(char* temp)
         goto goback;
       }
       cin = G__fgetstream(temp,"#\n\r");
+      if ( (cin=='\n'||cin=='\r') && temp[0]==0) {
+         cin = G__fgetstream(temp,"#\n\r");
+      }
       if('#'!=cin) goto goback;
       cin = G__fgetstream(temp,"\n\r");
+      if ( (cin=='\n'||cin=='\r') && temp[0]==0) {
+         cin = G__fgetstream(temp,"#\n\r");
+      }
       if(strcmp(temp,"endif")!=0) goto goback;
 
       if(0==strcmp(fname,"C")) {

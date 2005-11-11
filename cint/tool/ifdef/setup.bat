@@ -1,4 +1,8 @@
 
-nmake -f ifdef.mak
+
+nmake -nologo -f ifdef.mak
+
 move ifdef.exe %CINTSYSDIR%\ifdef.exe
-nmake -f ifdef.mak clean
+
+nmake -nologo -f ifdef.mak clean
+

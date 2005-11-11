@@ -8,22 +8,22 @@
 ##########################################################################
 CPP = cl
 CC  = cl
-
+#-GX because of exception handling!
+OPTIONS = -GX /nologo
 OPTIMIZE = 
 
-ifdef.exe : ifdef.obj get.obj winnt.obj
-	$(CPP) $(OPTIMIZE) -o ifdef.exe ifdef.obj get.obj winnt.obj
+ifdef.exe: ifdef.obj get.obj winnt.obj
+	$(CPP) $(OPTIMIZE) $(OPTIONS) -Foifdef.exe ifdef.obj get.obj winnt.obj
 
 ifdef.obj: ifdef.cxx
-	$(CPP) $(OPTIMIZE) -DG__GET -c -o ifdef.obj ifdef.cxx
+	   $(CPP) $(OPTIMIZE) $(OPTIONS) -D_CRT_SECURE_NO_DEPRECATE -D_SECURE_SCL -DG__GET -c -Foifdef.obj ifdef.cxx
 
 get.obj: get.c
-	$(CC) $(OPTIMIZE) -DG__IFDEF -c -o get.obj get.c
+	$(CC) $(OPTIMIZE) $(OPTIONS) -D_CRT_SECURE_NO_DEPRECATE -D_SECURE_SCL -DG__IFDEF -c -Foget.obj get.c
 
-winnt.obj: ../../src/winnt.c
-	$(CC) $(OPTIMIZE) -c -o winnt.obj ../../src/winnt.c
+winnt.obj: ../../src/v6_winnt.cxx
+	$(CPP) $(OPTIMIZE) $(OPTIONS) -c -D_CRT_SECURE_NO_DEPRECATE -D_SECURE_SCL -Fowinnt.obj ../../src/v6_winnt.cxx
 
-
-clean:
+clean:	
 	del *.obj
-	del ifdef.exe
+#is moved !	del ifdef.exe

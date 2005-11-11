@@ -26,17 +26,30 @@ struct IRpcStubBuffer;
 struct IRpcChannelBuffer;
 
 /* added */
-typedef double __int64;
+typedef long long __int64;
 typedef double DWORDLONG;
+#ifndef NTAPI
 #define NTAPI
+#endif
+#ifndef WINAPI
 #define WINAPI
+#endif
+#ifndef WINGDIAPI
 #define WINGDIAPI
+#endif
+#ifndef APIENTRY
 #define APIENTRY
+#endif 
+
+/* VC++8.0 */
+typedef unsigned int *PUINT_PTR;
+typedef unsigned long long ULONG64;
 
 /* VC++7.0 */
 #if defined(_MSC_VER) && (_MSC_VER>=1300) /* block for VC7, more refinment? */
 typedef DWORDLONG __w64;
 typedef unsigned int UINT_PTR;
+typedef void** HANDLE_PTR;
 #endif
 
 /* VC++5.0 */
@@ -148,12 +161,15 @@ typedef short __wchar_t;
 ***************************************************************************/
 #define __const__
 
-#define __inline__
-#define __inline
+#define __inline__ inline
+#define __inline inline
+#define __forceinline inline
+
 
 typedef long __kernel_loff_t;  /* must be long long */
 typedef unsigned long __u64;
 typedef long __s64;
+#define __ptr64
 
 //#if defined(G__APPLE) && !defined(G__64BIT)
 typedef	int int32_t;

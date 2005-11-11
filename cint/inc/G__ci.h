@@ -26,9 +26,9 @@
 #endif
 
 #define G__CINTVERSION_V6      6001002
-#define G__CINTVERSIONSTR_V6  "6.1.2, July 14 2005"
+#define G__CINTVERSIONSTR_V6  "6.1.3, November 11 2005"
 #define G__CINTVERSION_V5      50160002
-#define G__CINTVERSIONSTR_V5  "5.16.2, July 14 2005"
+#define G__CINTVERSIONSTR_V5  "5.16.3, November 11 2005"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -106,8 +106,11 @@
 #define G__OLDIMPLEMENTATION1073
 #endif
 
+#ifdef G__ROOT
+/* Disable the new stack variable manager */
 #define G__OLDIMPLEMENTATION1073
- 
+#endif
+
 /* Native long long, unsigned long long, long double implementation */
 #ifndef G__NATIVELONGLONG
 #define G__OLDIMPLEMENTATION2189
@@ -119,7 +122,7 @@
 #define G__OLDIMPLEMENTATION2015 
 
 
-/* If you have problem compiling dictionary with static member function, 
+/* If you have problem compiling dictionary with static member function,
  * define following macro. */
 /* #define G__OLDIMPLEMENTATION1993 */
 

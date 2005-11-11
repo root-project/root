@@ -807,7 +807,12 @@ void G__redecl(G__var_array *var,int ig15)
 * G__asm_gen_stvar()
 *
 **************************************************************************/
-int G__asm_gen_stvar(long G__struct_offset,int ig15,int paran,G__var_array *var,char * /* item */
+int G__asm_gen_stvar(long G__struct_offset,int ig15,int paran,G__var_array *var,
+#ifdef G__ASM_DBG
+					 char * item
+#else
+					 char * /* item */
+#endif
                      ,long store_struct_offset,int var_type
                      ,G__value *presult
                      )

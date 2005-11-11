@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <climits>
+#include <limits>
 #ifndef __hpux
 using namespace std;
 #endif
