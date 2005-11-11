@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.21 2005/09/04 09:26:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.22 2005/09/07 15:57:36 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -714,5 +714,5 @@ void TEnv::SetValue(const char *name, double value)
 {
    // Set or create a double resource value.
 
-   SetValue(name, Form("%f", value));
+   SetValue(name, Form("%g", value));
 }
