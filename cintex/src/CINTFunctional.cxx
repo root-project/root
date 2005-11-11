@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTFunctional.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CINTFunctional.cxx,v 1.3 2005/11/11 07:18:52 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -380,7 +380,7 @@ G__InterfaceMethod Allocate_stub_function( StubContext* obj,
   char* code = Allocate_code(s_code_int_staticfunc_4arg,sizeof(s_code_int_staticfunc_4arg));
   *(void**)&code[20] = (void*)obj;
   *(void**)&code[25] = (void*)fun;
-  obj->fMethodCode = (G__InterfaceMethod)code;
+  obj->fMethodCode = *(G__InterfaceMethod*)&code;
   return obj->fMethodCode;
 }
 
@@ -390,7 +390,7 @@ FuncVoidPtr Allocate_void_function( void* obj, void (*fun)(void*) )
   char* code = Allocate_code(s_code_void_staticfunc_0arg,sizeof(s_code_void_staticfunc_0arg));
   *(void**)&code[4] = (void*)obj;
   *(void**)&code[9] = (void*)fun;
-  return (FuncVoidPtr)code;
+  return *(FuncVoidPtr*)&code;
 }
 
 FuncArg1Ptr Allocate_1arg_function( void* obj, void* (*fun)(void*, void*) )
@@ -398,7 +398,7 @@ FuncArg1Ptr Allocate_1arg_function( void* obj, void* (*fun)(void*, void*) )
   char* code = Allocate_code(s_code_int_staticfunc_1arg,sizeof(s_code_int_staticfunc_1arg));
   *(void**)&code[8]  = (void*)obj;
   *(void**)&code[13] = (void*)fun;
-  return (FuncArg1Ptr)code;
+  return *(FuncArg1Ptr*)&code;
 }
 
 void Free_function( void* code )
