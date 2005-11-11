@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.4 2005/11/11 14:55:03 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.5 2005/11/11 15:58:03 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -44,6 +44,13 @@ ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_
 //-------------------------------------------------------------------------------
   if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
   return Member();
+}
+
+
+//-------------------------------------------------------------------------------
+size_t ROOT::Reflex::MemberTemplateImpl::TemplateInstanceSize() const {
+//-------------------------------------------------------------------------------
+  return fTemplateInstances.size();
 }
 
 
