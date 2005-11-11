@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.201 2005/10/10 16:41:52 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.202 2005/11/11 09:29:39 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -312,6 +312,8 @@ TTreePlayer::~TTreePlayer()
 //______________________________________________________________________________
 TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
 {
+   // Build the index for the tree (see TTree::BuildIndex)
+
    TVirtualIndex *index;
    if (dynamic_cast<const TChain*>(T)) {
       index = new TChainIndex(T, majorname, minorname);
@@ -937,9 +939,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    if (fDimension <= 0) {
       fTree->SetEstimate(oldEstimate);
       if (fSelector->GetCleanElist()) {
-        // We are in the case where the input list was reset!
-        fTree->SetEventList(elist);
-        delete fSelector->GetObject();
+         // We are in the case where the input list was reset!
+         fTree->SetEventList(elist);
+         delete fSelector->GetObject();
       }
       return nrows;
    }
@@ -1077,14 +1079,14 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 //   index is an array with pointers to the start of name[i] in varexp
 //
 
-  Int_t i1,n;
-  static TString column;
-  if (colindex<0 ) return "";
-  i1 = index[colindex] + 1;
-  n  = index[colindex+1] - i1;
-  column = varexp(i1,n);
-//  return (const char*)Form((const char*)column);
-  return column.Data();
+   Int_t i1,n;
+   static TString column;
+   if (colindex<0 ) return "";
+   i1 = index[colindex] + 1;
+   n  = index[colindex+1] - i1;
+   column = varexp(i1,n);
+   //  return (const char*)Form((const char*)column);
+   return column.Data();
 }
 
 //______________________________________________________________________________
@@ -1144,9 +1146,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       return 3;
    }
    char *treefile = new char[1000];
-   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
-                strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
-   else         strcpy(treefile,"Memory Directory");
+   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile()) {
+      strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
+   } else {
+      strcpy(treefile,"Memory Directory");
+   }
    // In the case of a chain, the GetDirectory information usually does
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.
@@ -1276,8 +1280,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
-           // remove any dimension in title
-           char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
+            // remove any dimension in title
+            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
          strcpy(branchname,branch->GetName());
@@ -1371,8 +1375,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             }
             continue;
          }
-       }
-     if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
+      }
+      if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
       if (leafcount) {
          //len = leafcount->GetMaximum();
          //strcpy(blen,leafcount->GetName());
@@ -1435,7 +1439,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             else        fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
          }
       }
-  }
+   }
 
 // generate list of branches
    fprintf(fp,"\n");
@@ -1528,9 +1532,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"// used to generate this class and read the Tree.\n");
       fprintf(fp,"   if (tree == 0) {\n");
       if (ischain) {
-        fprintf(fp,"\n#ifdef SINGLE_TREE\n");
-        fprintf(fp,"      // The following code should be used if you want this class to access\n");
-        fprintf(fp,"      // a single tree instead of a chain\n");
+         fprintf(fp,"\n#ifdef SINGLE_TREE\n");
+         fprintf(fp,"      // The following code should be used if you want this class to access\n");
+         fprintf(fp,"      // a single tree instead of a chain\n");
       }
       if (isHbook) {
          fprintf(fp,"      THbookFile *f = (THbookFile*)gROOT->GetListOfBrowsables()->FindObject(\"%s\");\n",treefile);
@@ -1545,7 +1549,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"      if (!f) {\n");
          fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
          if (gDirectory != gFile) {
-           fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
+            fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
          }
          fprintf(fp,"      }\n");
          fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
@@ -1661,14 +1665,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
-           // remove any dimension in title
-           char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
+            // remove any dimension in title
+            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
          strcpy(branchname,branch->GetName());
          if (branch->IsA() == TBranchElement::Class()) {
             bre = (TBranchElement*)branch;
-               if (bre->GetType() == 3 || bre->GetType()==4) strcat(branchname,"_");
+            if (bre->GetType() == 3 || bre->GetType()==4) strcat(branchname,"_");
          }
       }
       bname = branchname;
@@ -2056,9 +2060,9 @@ Int_t TTreePlayer::MakeCode(const char *filename)
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
-           // remove any dimension in title
-           char *dim =  (char*)strstr(branchname,"[");
-           dim[0] = 0;
+            // remove any dimension in title
+            char *dim =  (char*)strstr(branchname,"[");
+            dim[0] = 0;
          }
       } else {
          if (leafcount) strcpy(branchname,branch->GetName());
@@ -2124,9 +2128,9 @@ Int_t TTreePlayer::MakeCode(const char *filename)
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
-           // remove any dimension in title
-           char *dim =  (char*)strstr(branchname,"[");
-           dim[0] = 0;
+            // remove any dimension in title
+            char *dim =  (char*)strstr(branchname,"[");
+            dim[0] = 0;
          }
       } else {
          if (leafcount) strcpy(branchname,branch->GetName());
@@ -2421,12 +2425,12 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       }
    }
 
-//*-* some actions with principal ?
+   //*-* some actions with principal ?
    if (opt.Contains("p")) {
-        principal->MakePrincipals(); // Do the actual analysis
-        if (opt.Contains("d")) principal->Print();
-        if (opt.Contains("h")) principal->MakeHistograms();
-        if (opt.Contains("c")) principal->MakeCode();
+      principal->MakePrincipals(); // Do the actual analysis
+      if (opt.Contains("d")) principal->Print();
+      if (opt.Contains("h")) principal->MakeHistograms();
+      if (opt.Contains("c")) principal->MakeCode();
    }
 
 //*-*- delete temporary objects
@@ -2573,7 +2577,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       TProcessEventTimer *timer = 0;
       Int_t interval = fTree->GetTimerInterval();
       if (!gROOT->IsBatch() && interval)
-        timer = new TProcessEventTimer(interval);
+         timer = new TProcessEventTimer(interval);
 
       //loop on entries (elist or all entries)
       Long_t entry, entryNumber, localEntry;
@@ -2819,8 +2823,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       onerow = varexp;
       for (i=0;i<onerow.Length();i++) {
          if (onerow[i] == ':') {
-           if (onerow[i+1] == ':') ++i;
-           else ncols++;
+            if (onerow[i+1] == ':') ++i;
+            else ncols++;
          }
       }
       cnames = new TString[ncols];
@@ -3174,33 +3178,33 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
                                Double_t &r, Double_t *par, Int_t /*flag*/)
 {
-// The fit function used by the unbinned likelihood fit.
+   // The fit function used by the unbinned likelihood fit.
 
-  Double_t x[3];
-  TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
-  fitfunc->InitArgs(x,par);
+   Double_t x[3];
+   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
+   fitfunc->InitArgs(x,par);
 
-  Long64_t n = gTree->GetSelectedRows();
-  Double_t  *data1 = gTree->GetV1();
-  Double_t  *data2 = gTree->GetV2();
-  Double_t  *data3 = gTree->GetV3();
-  Double_t *weight = gTree->GetW();
-  Double_t logEpsilon = -230;   // protect against negative probabilities
-  Double_t logL = 0.0, prob;
-//printf("n=%lld, data1=%x, weight=%x\n",n,data1,weight);
+   Long64_t n = gTree->GetSelectedRows();
+   Double_t  *data1 = gTree->GetV1();
+   Double_t  *data2 = gTree->GetV2();
+   Double_t  *data3 = gTree->GetV3();
+   Double_t *weight = gTree->GetW();
+   Double_t logEpsilon = -230;   // protect against negative probabilities
+   Double_t logL = 0.0, prob;
+   //printf("n=%lld, data1=%x, weight=%x\n",n,data1,weight);
 
-  for(Long64_t i = 0; i < n; i++) {
-    if (weight[i] <= 0) continue;
-    x[0] = data1[i];
-    if (data2) x[1] = data2[i];
-    if (data3) x[2] = data3[i];
-    prob = fitfunc->EvalPar(x,par);
-//printf("i=%lld, x=%g, w=%g, prob=%g, logL=%g\n",i,x[0],weight[i],prob,logL);
-    if(prob > 0) logL += TMath::Log(prob) * weight[i];
-    else         logL += logEpsilon * weight[i];
-  }
+   for(Long64_t i = 0; i < n; i++) {
+      if (weight[i] <= 0) continue;
+      x[0] = data1[i];
+      if (data2) x[1] = data2[i];
+      if (data3) x[2] = data3[i];
+      prob = fitfunc->EvalPar(x,par);
+      //printf("i=%lld, x=%g, w=%g, prob=%g, logL=%g\n",i,x[0],weight[i],prob,logL);
+      if(prob > 0) logL += TMath::Log(prob) * weight[i];
+      else         logL += logEpsilon * weight[i];
+   }
 
-  r = -2*logL;
+   r = -2*logL;
 }
 
 
@@ -3256,109 +3260,109 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 //   1, 2 and 3 Dimensional fits are supported.
 //   See also TTree::Fit
 
-  Int_t npar,nvpar,nparx;
-  Int_t i;
-  Double_t par, we, al, bl;
-  Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
-  Double_t arglist[10];
-
-  // Set the global fit function so that TreeUnbinnedFitLikelihood can find it.
-  TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
-  if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }
-  npar = fitfunc->GetNpar();
-  if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
-
-  // Spin through the data to select out the events of interest
-  // Make sure that the arrays V1,etc are created large enough to accomodate
-  // all entries
-  Long64_t oldEstimate = fTree->GetEstimate();
-  Long64_t nent = fTree->GetEntriesFriend();
-  fTree->SetEstimate(TMath::Min(nent,nentries));
-
-  Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
-//printf("fTree=%x, v1=%x,w=%x\n",fTree,GetV1(),GetW());
-
-  //if no selected entries return
-  Long64_t nrows = GetSelectedRows();
-  if (nrows <= 0) {
-     Error("UnbinnedFit", "Cannot fit: no entries selected");
-     return 0;
-  }
-
-  // Check that function has same dimension as number of variables
-  Int_t ndim = GetDimension();
-  if (ndim != fitfunc->GetNdim()) {
-     Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
-     return 0;
-  }
-
-  // Create and set up the fitter
-  gTree = fTree;
-//printf("nsel=%lld, data1=%x, weight=%x\n",nsel,GetV1(),GetW());
-  tFitter = TVirtualFitter::Fitter(fTree);
-  tFitter->Clear();
-  tFitter->SetFCN(TreeUnbinnedFitLikelihood);
-
-  tFitter->SetObjectFit(fitfunc);
-
-  TString opt = option;
-  opt.ToLower();
-  // Some initialisations
+   Int_t npar,nvpar,nparx;
+   Int_t i;
+   Double_t par, we, al, bl;
+   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
+   Double_t arglist[10];
+   
+   // Set the global fit function so that TreeUnbinnedFitLikelihood can find it.
+   TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
+   if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }
+   npar = fitfunc->GetNpar();
+   if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
+   
+   // Spin through the data to select out the events of interest
+   // Make sure that the arrays V1,etc are created large enough to accomodate
+   // all entries
+   Long64_t oldEstimate = fTree->GetEstimate();
+   Long64_t nent = fTree->GetEntriesFriend();
+   fTree->SetEstimate(TMath::Min(nent,nentries));
+   
+   Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
+   //printf("fTree=%x, v1=%x,w=%x\n",fTree,GetV1(),GetW());
+   
+   //if no selected entries return
+   Long64_t nrows = GetSelectedRows();
+   if (nrows <= 0) {
+      Error("UnbinnedFit", "Cannot fit: no entries selected");
+      return 0;
+   }
+   
+   // Check that function has same dimension as number of variables
+   Int_t ndim = GetDimension();
+   if (ndim != fitfunc->GetNdim()) {
+      Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
+      return 0;
+   }
+   
+   // Create and set up the fitter
+   gTree = fTree;
+   //printf("nsel=%lld, data1=%x, weight=%x\n",nsel,GetV1(),GetW());
+   tFitter = TVirtualFitter::Fitter(fTree);
+   tFitter->Clear();
+   tFitter->SetFCN(TreeUnbinnedFitLikelihood);
+   
+   tFitter->SetObjectFit(fitfunc);
+   
+   TString opt = option;
+   opt.ToLower();
+   // Some initialisations
    if (!opt.Contains("v")) {
       arglist[0] = -1;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
       arglist[0] = 0;
       tFitter->ExecuteCommand("SET NOW",   arglist,0);
    }
-
-  // Setup the parameters (#, name, start, step, min, max)
-  Double_t min, max;
-  for(i = 0; i < npar; i++) {
-    fitfunc->GetParLimits(i, min, max);
-    Double_t we = 0.1*TMath::Abs(max-min);
-    if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
-    if (we == 0) we = 1;
-    if(min < max) {
-      tFitter->SetParameter(i, fitfunc->GetParName(i),
+   
+   // Setup the parameters (#, name, start, step, min, max)
+   Double_t min, max;
+   for(i = 0; i < npar; i++) {
+      fitfunc->GetParLimits(i, min, max);
+      Double_t we = 0.1*TMath::Abs(max-min);
+      if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
+      if (we == 0) we = 1;
+      if(min < max) {
+         tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
                                we, min, max);
-    } else {
-      tFitter->SetParameter(i, fitfunc->GetParName(i),
+      } else {
+         tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
                                we, 0, 0);
-    }
-
-
-    // Check for a fixed parameter
-    if(max <= min && min > 0.0) {
-       tFitter->FixParameter(i);
-    }
-  }  // end for loop through parameters
-
+      }
+      
+      
+      // Check for a fixed parameter
+      if(max <= min && min > 0.0) {
+         tFitter->FixParameter(i);
+      }
+   }  // end for loop through parameters
+   
    // Reset Print level
    if (opt.Contains("v")) {
       arglist[0] = 0;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
    }
-
-  // Set error criterion
-  //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
-  arglist[0] = 1;
-  tFitter->ExecuteCommand("SET ERR",arglist,1);
-
-  // Now ready for minimization step
-  arglist[0] = TVirtualFitter::GetMaxIterations();
-  arglist[1] = 1;
-  tFitter->ExecuteCommand("MIGRAD", arglist, 2);
-  if (opt.Contains("m")) {
-     tFitter->ExecuteCommand("IMPROVE",arglist,0);
-  }
-  if (opt.Contains("e")) {
-     tFitter->ExecuteCommand("HESSE",arglist,0);
-     tFitter->ExecuteCommand("MINOS",arglist,0);
-  }
-  fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
-
+   
+   // Set error criterion
+   //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
+   arglist[0] = 1;
+   tFitter->ExecuteCommand("SET ERR",arglist,1);
+   
+   // Now ready for minimization step
+   arglist[0] = TVirtualFitter::GetMaxIterations();
+   arglist[1] = 1;
+   tFitter->ExecuteCommand("MIGRAD", arglist, 2);
+   if (opt.Contains("m")) {
+      tFitter->ExecuteCommand("IMPROVE",arglist,0);
+   }
+   if (opt.Contains("e")) {
+      tFitter->ExecuteCommand("HESSE",arglist,0);
+      tFitter->ExecuteCommand("MINOS",arglist,0);
+   }
+   fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
+   
    // Get return status into function
    char parName[50];
    for (i=0;i<npar;i++) {
@@ -3401,7 +3405,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
       }
       fHistogram->Draw();
    }
-
+   
    return nsel;
 }
 

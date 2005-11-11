@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.22 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.23 2005/10/17 21:34:07 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -75,7 +75,7 @@ class TStreamerElement;
 void Debug(Int_t level, const char *va_(fmt), ...)
 {
    // Use this function in case an error occured.
-   
+
    if (gDebug>=level) {
       va_list ap;
       va_start(ap,va_(fmt));
@@ -202,7 +202,7 @@ namespace ROOT {
 
    TTreeProxyGenerator::TTreeProxyGenerator(TTree* tree,
                                             const char *script,
-                                            const char *fileprefix, 
+                                            const char *fileprefix,
                                             const char *option, UInt_t maxUnrolling) :
       fMaxDatamemberType(2),
       fScript(script),
@@ -215,8 +215,10 @@ namespace ROOT {
       fTree(tree),
       fCurrentListOfTopProxies(&fListOfTopProxies)
    {
-      ParseOptions(); 
-     
+      // Constructor.
+
+      ParseOptions();
+
       AnalyzeTree(fTree);
 
       WriteProxy();
@@ -224,7 +226,7 @@ namespace ROOT {
 
    TTreeProxyGenerator::TTreeProxyGenerator(TTree* tree,
                                             const char *script, const char *cutscript,
-                                            const char *fileprefix, 
+                                            const char *fileprefix,
                                             const char *option, UInt_t maxUnrolling) :
       fMaxDatamemberType(2),
       fScript(script),
@@ -237,6 +239,8 @@ namespace ROOT {
       fTree(tree),
       fCurrentListOfTopProxies(&fListOfTopProxies)
    {
+      // Constructo.
+
       ParseOptions();
 
       AnalyzeTree(fTree);
@@ -254,6 +258,8 @@ namespace ROOT {
    TBranchProxyClassDescriptor*
    TTreeProxyGenerator::AddClass( TBranchProxyClassDescriptor* desc )
    {
+      // Add a Class Descriptor.
+
       if (desc==0) return 0;
 
       TBranchProxyClassDescriptor *existing =
@@ -281,6 +287,8 @@ namespace ROOT {
 
    void TTreeProxyGenerator::AddFriend( TFriendProxyDescriptor* desc )
    {
+      // Add Friend descriptor.
+
       if (desc==0) return;
 
       TFriendProxyDescriptor *existing =
@@ -303,7 +311,7 @@ namespace ROOT {
             break;
          }
       }
-      
+
       // Insure uniqueness of the title also.
       TString basetitle = desc->GetTitle();
       TIter next( &fListOfFriends );
@@ -321,12 +329,14 @@ namespace ROOT {
             next = &fListOfFriends;
          }
       }
-            
+
       fListOfFriends.Add(desc);
-   }   
+   }
 
    void TTreeProxyGenerator::AddForward( const char *classname )
    {
+      // Add a forward declaration request.
+
       TObject *obj = fListOfForwards.FindObject(classname);
       if (obj) return;
 
@@ -343,11 +353,15 @@ namespace ROOT {
 
    void TTreeProxyGenerator::AddForward(TClass *cl)
    {
+      // Add a forward declaration request.
+
       if (cl) AddForward(cl->GetName());
    }
 
    void TTreeProxyGenerator::AddHeader(TClass *cl)
    {
+      // Add a header inclusion request.
+
       if (cl==0) return;
 
       TObject *obj = fListOfHeaders.FindObject(cl->GetName());
@@ -363,13 +377,17 @@ namespace ROOT {
 
    void TTreeProxyGenerator::AddHeader(const char *classname)
    {
+      // Add a header inclusion request.
+
       AddHeader(gROOT->GetClass(classname));
    }
 
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
    {
+      // Add a branch descriptor.
+
       if (desc) {
-         TBranchProxyDescriptor *existing = 
+         TBranchProxyDescriptor *existing =
             (TBranchProxyDescriptor*)((*fCurrentListOfTopProxies)(desc->GetName()));
          if (existing) {
             Warning("TTreeProxyGenerator","The branch name \"%s\" is duplicated. Only the first instance \n"
@@ -413,7 +431,7 @@ namespace ROOT {
          container = kClones;
          middle = "Cla";
          isclones = true;
-      } else if (!topdesc && branch && 
+      } else if (!topdesc && branch &&
                  branch->GetBranchCount() == branch->GetMother()) {
          container = kClones;
          middle = "Cla";
@@ -423,7 +441,7 @@ namespace ROOT {
 
       TStreamerElement *element = 0;
       TStreamerInfo *info = branch->GetInfo();
-      
+
       if (bid==-2) {
          Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
                bid);
@@ -431,14 +449,14 @@ namespace ROOT {
          Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
                bid);
       } else if (bid>=0) {
-         
+
          element = (TStreamerElement *)info->GetElements()->At(bid);
-         
+
       } else {
          Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
                bid);
       }
-      
+
       if (element) {
          Bool_t ispointer = false;
          switch(element->GetType()) {
@@ -458,9 +476,9 @@ namespace ROOT {
             case TStreamerInfo::kULong:   { proxyTypeName = "T" + middle + "ULongProxy"; break; }
             case TStreamerInfo::kULong64: { proxyTypeName = "T" + middle + "ULong64Proxy"; break; }
             case TStreamerInfo::kBits:    { proxyTypeName = "T" + middle + "UIntProxy"; break; }
-               
+
             case TStreamerInfo::kCharStar: { proxyTypeName = GetArrayType(element,"Char",container); break; }
-               
+
                // array of basic types  array[8]
             case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:    { proxyTypeName = GetArrayType(element,"Bool",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
@@ -477,7 +495,7 @@ namespace ROOT {
             case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-               
+
                // pointer to an array of basic types  array[n]
             case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    { proxyTypeName = GetArrayType(element,"Bool",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
@@ -494,11 +512,11 @@ namespace ROOT {
             case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-               
+
                // array counter //[n]
             case TStreamerInfo::kCounter: { proxyTypeName = "T" + middle + "IntProxy"; break; }
-               
-               
+
+
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
             case TStreamerInfo::kObjectp:
@@ -512,7 +530,7 @@ namespace ROOT {
             case TStreamerInfo::kTString:
             case TStreamerInfo::kTNamed:
             case TStreamerInfo::kTObject:
-            case TStreamerInfo::kAny: 
+            case TStreamerInfo::kAny:
             case TStreamerInfo::kBase: {
                TClass *cl = element->GetClassPointer();
                if (cl) {
@@ -527,19 +545,19 @@ namespace ROOT {
                         if (i<0) i = 0;
                         branch->GetEntry(i);
                         char *obj = branch->GetObject();
-                        
+
                         const char *ename = 0;
                         ename = element->GetName();
-                        
+
                         TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
                         const char *pclname = parent->GetClassName();
-                        
+
                         TClass *clparent = gROOT->GetClass(pclname);
                         // TClass *clm = gROOT->GetClass(GetClassName());
                         Int_t lOffset = 0; // offset in the local streamerInfo.
                         if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
                         else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
-                        
+
                         TClonesArray *arr;
                         if (ispointer) {
                            arr = (TClonesArray*)*(void**)(obj+lOffset);
@@ -547,7 +565,7 @@ namespace ROOT {
                            arr = (TClonesArray*)(obj+lOffset);
                         }
                         cname = arr->GetClass()->GetName();
-                        
+
                      }
                      if (cname.Length()==0) {
                         Error("AnalyzeBranch",
@@ -566,14 +584,14 @@ namespace ROOT {
                AddHeader(cl);
                break;
             }
-               
+
             default:
                Error("AnalyzeBranch",
                      "Unsupported type for %s (%d).",
                      branch->GetName(),element->GetType());
-               
+
          }
-         
+
       }
 
       if ( branch->GetListOfBranches()->GetEntries() > 0 ) {
@@ -617,7 +635,7 @@ namespace ROOT {
             if (strcmp(cl->GetName(),info->GetName())!=0) {
                info = cl->GetStreamerInfo(); // might be the wrong version
             }
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info, 
+            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
                                                      branch->GetName(),
                                                      isclones, 0 /* unsplit object */);
          }
@@ -637,7 +655,7 @@ namespace ROOT {
             // if (added!=cldesc) cldesc = 0;
          }
 
-      } 
+      }
 
       TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
 
@@ -659,17 +677,17 @@ namespace ROOT {
       Int_t pos;
       pos = dataMemberName.Index(".");
       if (pos != -1) {
-         
-         if (pos!=-1 && topdesc && 
+
+         if (pos!=-1 && topdesc &&
              dataMemberName.BeginsWith( topdesc->GetSubBranchPrefix() ) ) {
             brprefix += topdesc->GetSubBranchPrefix();
             dataMemberName.Remove(0,strlen( topdesc->GetSubBranchPrefix() )+1);
          }
          pos = dataMemberName.Index(".");
-         if (pos != -1) {        
-            if (strncmp( mom->GetName(), 
-                         dataMemberName.Data(), 
-                         strlen(mom->GetName()) ) ==0 ) 
+         if (pos != -1) {
+            if (strncmp( mom->GetName(),
+                         dataMemberName.Data(),
+                         strlen(mom->GetName()) ) ==0 )
             {
                brprefix += dataMemberName(0,pos+1);
                dataMemberName.Remove(0,strlen(mom->GetName())+1);
@@ -683,25 +701,25 @@ namespace ROOT {
                   Int_t classlen = strlen(momElement->GetClass()->GetName());
                   if (   momPrefix.Length() >= (classlen+1)
                       && momPrefix[momPrefix.Length()-classlen-1]=='.'
-                      && 0==strcmp((momPrefix.Data()+(momPrefix.Length()-classlen)),momElement->GetClass()->GetName()) 
-                      ) 
+                      && 0==strcmp((momPrefix.Data()+(momPrefix.Length()-classlen)),momElement->GetClass()->GetName())
+                      )
                   {
                      momPrefix.Remove((momPrefix.Length()-classlen-1));
-                     if (strncmp( momPrefix.Data(), 
-                           dataMemberName.Data(), 
-                           momPrefix.Length() ) ==0 ) 
+                     if (strncmp( momPrefix.Data(),
+                           dataMemberName.Data(),
+                           momPrefix.Length() ) ==0 )
                      {
                         brprefix += dataMemberName(0,pos+1);
                         dataMemberName.Remove(0,momPrefix.Length()+1);
                         break;
-                     } 
+                     }
                   }
                   TBranchElement *momSmom = (TBranchElement*)current->GetMother()->GetSubBranch(current);
-                  
+
                   if (momSmom != mom && momSmom != branch->GetMother() &&
-                     strncmp( momSmom->GetName(), 
-                     dataMemberName.Data(), 
-                     strlen(momSmom->GetName()) ) ==0 ) 
+                     strncmp( momSmom->GetName(),
+                     dataMemberName.Data(),
+                     strlen(momSmom->GetName()) ) ==0 )
                   {
                      brprefix += dataMemberName(0,pos+1);
                      dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
@@ -716,15 +734,15 @@ namespace ROOT {
             }
          }
          TBranch *topmother = branch->GetMother();
-         if ( strncmp( topmother->GetName(), 
-                       dataMemberName.Data(), 
-                       strlen(topmother->GetName()) ) ==0 ) 
+         if ( strncmp( topmother->GetName(),
+                       dataMemberName.Data(),
+                       strlen(topmother->GetName()) ) ==0 )
          {
             // This test will get it wrong if the element has the same
             // name as the main branch
             brprefix = dataMemberName(0,pos+1);
             dataMemberName.Remove(0,strlen(topmother->GetName())+1);
-         } 
+         }
          pos = dataMemberName.Index(".");
       }
       pos = dataMemberName.Index("[");
@@ -744,11 +762,11 @@ namespace ROOT {
          // Discover the type of this object.
          TString name = dataMemberName(0,pos);
 
-         TString cname; 
+         TString cname;
 
          TBranchProxyClassDescriptor::EInClones loc = TBranchProxyClassDescriptor::kOut;
          if (container!=kClones) {
-            cname = topdesc->GetTitle(); 
+            cname = topdesc->GetTitle();
          } else {
             loc = TBranchProxyClassDescriptor::kInsideClones;
             cname = mom->GetClonesName();
@@ -819,7 +837,7 @@ namespace ROOT {
                }
 
             } else {
- 
+
                branchStreamerElem = (TStreamerElement*)
                   momInfo->GetElements()->FindObject(name.Data());
 
@@ -859,7 +877,7 @@ namespace ROOT {
 
             Assert( subbranch == branch );
             extraLookedAt -= 1; // Avoid counting the branch itself twice
-            
+
             do {
                TString subname = subbranch->GetName();
                if ( subname.BeginsWith( brprefix ) ) {
@@ -893,47 +911,47 @@ namespace ROOT {
          }
       }
 
-      if ( extraLookedAt==0 && topdesc 
+      if ( extraLookedAt==0 && topdesc
            && ((container!=kClones && strcmp(topdesc->GetTitle(),branch->GetClassName())!=0)
                || (container==kClones && strcmp(topdesc->GetTitle(),branch->GetInfo()->GetName())!=0 ) ) ) {
-         
+
          Debug(4,"Handling base class for br==%s %d %d %d %s\n",
                branch->GetName(),extraLookedAt,container,isclones,cname.Data());
          TBranchProxyClassDescriptor *cldesc;
          TIter nextel( topdesc->GetInfo()->GetElements() );
          TStreamerElement *elem;
-         
+
          TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
          TIter next(mom->GetListOfBranches());
          TBranch *subbranch;
          while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
-         
+
          while ( (elem = (TStreamerElement*)nextel()) ) {
             if (elem->IsBase()) {
-               
+
 
                TClass *clb = elem->GetClassPointer();
                cldesc = new TBranchProxyClassDescriptor(clb->GetName(), clb->GetStreamerInfo(),
                                                         branch->GetName(), brprefix.Data(),
                                                         isclones, branch->GetSplitLevel());
-               
+
                Int_t skipped = 0;
                do {
                   skipped = AnalyzeBranch( subbranch, level, cldesc);
                   Int_t s = 0;
                   while( s<skipped && next() ) { s++; };
-                  
+
                   extraLookedAt += 1 + skipped;
-                  
+
                   subbranch = (TBranch*)next();
                   if (subbranch) {
-                     // Find the TStreamerInfo 
+                     // Find the TStreamerInfo
                      TString subname = subbranch->GetName();
                      if ( brprefix.Length() != 0 ) {
                         Debug(6,"Base class check %s %s\n",subname.Data(),brprefix.Data());
-                        
+
                         if (! subname.BeginsWith( brprefix ) ) break;
-                        
+
                         subname.Remove(0,brprefix.Length()+1);
                         Int_t pos = subname.Index('.');
                         if (pos != -1) subname.Remove(pos);
@@ -949,18 +967,18 @@ namespace ROOT {
                            subbranch->GetName(),((TBranchElement*)subbranch)->GetID(),brprefix.Data());
                      if ( ((TBranchElement*)subbranch)->GetID() == 0 ) break;
                   }
-               } while ( subbranch ); 
-               
+               } while ( subbranch );
+
                Debug(4,"Base class done with %s (%s)\n",clb->GetName(),brprefix.Data());
 
                TBranchProxyClassDescriptor *added = AddClass(cldesc);
                if (added) proxyTypeName = added->GetName();
-             
-               topdesc->AddDescriptor( new TBranchProxyDescriptor( element->GetName(), 
+
+               topdesc->AddDescriptor( new TBranchProxyDescriptor( element->GetName(),
                                                                    proxyTypeName, branch->GetName() ),
                                        kTRUE );
                return extraLookedAt - 1;
-  
+
             }
          }
       }
@@ -1164,8 +1182,8 @@ namespace ROOT {
 
    }
 
-   void TTreeProxyGenerator::AnalyzeTree(TTree *tree) {
-
+   void TTreeProxyGenerator::AnalyzeTree(TTree *tree) 
+   {
       // Analyze a TTree and its (potential) friends.
 
       TIter next( tree->GetListOfBranches() );
@@ -1236,13 +1254,13 @@ namespace ROOT {
                   while( (elem = (TStreamerElement*)next()) ) {
                      AnalyzeElement(branch,elem,1,desc,"");
                   }
-                  
+
                   desc = AddClass(desc);
                   if (desc) {
                      type = desc->GetName();
-                     
+
                      TString dataMemberName = branchname;
-                     
+
                      AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
                   }
                }
@@ -1298,7 +1316,7 @@ namespace ROOT {
             desc = new TFriendProxyDescriptor(t->GetName(), fe->GetName(), count);
 
             AddFriend( desc );
-         
+
             fCurrentListOfTopProxies = desc->GetListOfTopProxies();
             AnalyzeTree(t);
 
@@ -1463,7 +1481,7 @@ namespace ROOT {
             AddHeader(cl);
             break;
          }
-         
+
          default:
             Error("AnalyzeTree",
                   "Unsupported type for %s %s %d",
@@ -1514,18 +1532,18 @@ namespace ROOT {
    }
 
    //----------------------------------------------------------------------------------------------
-   void TTreeProxyGenerator::ParseOptions() 
+   void TTreeProxyGenerator::ParseOptions()
    {
       // Parse the options string.
-     
+
       TString opt = fOptionStr;
 
       fOptions = 0;
       if ( opt.Contains("nohist") ) {
-        opt.ReplaceAll("nohist","");
-        fOptions |= kNoHist;
+         opt.ReplaceAll("nohist","");
+         fOptions |= kNoHist;
       }
-   }        
+   }
 
    //----------------------------------------------------------------------------------------------
    void TTreeProxyGenerator::WriteProxy()
@@ -1748,7 +1766,7 @@ namespace ROOT {
          next = &fListOfFriends;
          TFriendProxyDescriptor *clp;
          while ( (clp = (TFriendProxyDescriptor*)next()) ) {
-           clp->OutputDecl(hf, 3, fMaxDatamemberType);
+            clp->OutputDecl(hf, 3, fMaxDatamemberType);
          }
       }
       fprintf(hf,"\n\n");
@@ -1814,11 +1832,11 @@ namespace ROOT {
 
       fprintf(hf,"#ifdef __MAKECINT__\n");
       if (fListOfClasses.LastIndex()>=0) {
-          TBranchProxyClassDescriptor *clp;
-          next = &fListOfClasses;
-          while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
-             fprintf(hf,"#pragma link C++ class %s::%s-;\n",classname.Data(),clp->GetName());
-          }
+         TBranchProxyClassDescriptor *clp;
+         next = &fListOfClasses;
+         while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
+            fprintf(hf,"#pragma link C++ class %s::%s-;\n",classname.Data(),clp->GetName());
+         }
       }
       fprintf(hf,"#pragma link C++ class %s;\n",classname.Data());
       fprintf(hf,"#endif\n");

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.1 2004/07/20 09:40:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.2 2005/02/07 18:02:37 rdm Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -43,6 +43,8 @@ namespace ROOT {
    //------------------------------------------------------------------------------------
    Long64_t TFriendProxy::GetReadEntry() const
    {
+      // Return the entry number currently being looked at.
+
       return fDirector.GetReadEntry();
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.46 2005/06/13 19:18:11 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.47 2005/08/09 20:11:53 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -63,15 +63,18 @@ class TTreeFormulaManager;
 class TTreeFormula : public TFormula {
 
 protected:
-   enum { kIsCharacter = BIT(12),
-          kMissingLeaf = BIT(15) // true if some of the needed leaves are missing in the current TTree
-        };
-   enum { kDirect, kDataMember, kMethod, 
-          kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum };
-   enum { kAlias           = 200,
-          kAliasString     = 201,
-          kAlternate       = 202,
-          kAlternateString = 203
+   enum { 
+      kIsCharacter = BIT(12),
+      kMissingLeaf = BIT(15) // true if some of the needed leaves are missing in the current TTree
+   };
+   enum { 
+      kDirect, kDataMember, kMethod, 
+      kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum };
+   enum { 
+      kAlias           = 200,
+      kAliasString     = 201,
+      kAlternate       = 202,
+      kAlternateString = 203
    };
 
    TTree       *fTree;            //! pointer to Tree
@@ -151,6 +154,7 @@ public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
+
    virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
    virtual TClass*     EvalClass() const;
    virtual Double_t    EvalInstance(Int_t i=0, const char *stringStack[]=0);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.11 2005/05/24 20:52:33 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.12 2005/06/13 19:19:07 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -23,7 +23,7 @@ ClassImp(TTreeIndex)
 //______________________________________________________________________________
 TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
-// Default constructor for TTreeIndex
+   // Default constructor for TTreeIndex
 
    fTree               = 0;
    fN                  = 0;
@@ -166,6 +166,8 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 //______________________________________________________________________________
 TTreeIndex::~TTreeIndex()
 {
+   // Destructor.
+
    if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(0);
    delete [] fIndexValues;      fIndexValues = 0;
    delete [] fIndex;            fIndex = 0;

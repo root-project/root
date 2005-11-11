@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.5 2004/07/19 19:48:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.6 2004/08/12 04:33:45 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -76,20 +76,20 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
   // The manager of the formula will be changed and the old one will be deleted
   // if it is empty.
 
-  TTreeFormulaManager * old = adding->fManager;
+   TTreeFormulaManager * old = adding->fManager;
 
-  if (old) {
-     if (old==this) {
-        if (fFormulas.FindObject(adding)) return;
-     } else {
-        old->fFormulas.Remove(adding);
-        if (old->fFormulas.GetLast()==-1) delete adding->fManager;
-     }
-  }
+   if (old) {
+      if (old==this) {
+         if (fFormulas.FindObject(adding)) return;
+      } else {
+         old->fFormulas.Remove(adding);
+         if (old->fFormulas.GetLast()==-1) delete adding->fManager;
+      }
+   }
 
-  fFormulas.Add(adding);
-  adding->fManager = this;
-  fNeedSync = kTRUE;
+   fFormulas.Add(adding);
+   adding->fManager = this;
+   fNeedSync = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -113,6 +113,7 @@ void TTreeFormulaManager::CancelDimension(Int_t virt_dim)
 //______________________________________________________________________________
 void TTreeFormulaManager::EnableMultiVarDims()
 {
+   // Set the manager as handling a formula with multiple variable dimensions
 
    fMultiVarDim = kTRUE;
    if (!fCumulUsedVarDims) fCumulUsedVarDims = new TArrayI;
@@ -177,12 +178,12 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
    Int_t overall = 1;
    if (!fMultiVarDim) {
       for (k = kMAXFORMDIM; (k >= 0) ; k--) {
-        if (fUsedSizes[k]>=0) {
-           overall *= fUsedSizes[k];
-           fCumulUsedSizes[k] = overall;
-        } else {
-           Error("GetNdata","a dimension is still negative!");
-        }
+         if (fUsedSizes[k]>=0) {
+            overall *= fUsedSizes[k];
+            fCumulUsedSizes[k] = overall;
+         } else {
+            Error("GetNdata","a dimension is still negative!");
+         }
       }
    } else {
       overall = 0; // Since we work with additions in this section
@@ -194,7 +195,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
                Int_t index = fVarDims[k]->At(i);
                if (fCumulUsedVarDims->At(i)==1 && index) index = 1;
                if (fUsedSizes[k]==1 || (index!=1 && index<fUsedSizes[k]))
-                 local_overall *= index;
+                  local_overall *= index;
                else local_overall *= fUsedSizes[k];
             } else {
                local_overall *= fUsedSizes[k];
@@ -215,7 +216,9 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 }
 
 //______________________________________________________________________________
-Bool_t TTreeFormulaManager::Sync() {
+Bool_t TTreeFormulaManager::Sync()
+{
+   // Synchronize all the formulae.
 
    if (!fNeedSync) return true;
 
@@ -308,7 +311,9 @@ void TTreeFormulaManager::UpdateFormulaLeaves()
 }
 
 //______________________________________________________________________________
-void TTreeFormulaManager::UpdateUsedSize(Int_t &virt_dim, Int_t vsize) {
+void TTreeFormulaManager::UpdateUsedSize(Int_t &virt_dim, Int_t vsize)
+{
+   // Reload the array sizes
 
    if (vsize<0)
       fVirtUsedSizes[virt_dim] = -1 * TMath::Abs(fVirtUsedSizes[virt_dim]);

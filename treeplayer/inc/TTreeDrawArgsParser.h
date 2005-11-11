@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.1 2005/03/21 15:14:39 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.2 2005/03/21 16:14:32 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    void           SetOriginal(TObject *o) { fOriginal = o; }
    static Int_t   GetMaxDimension();
 
-   ClassDef(TTreeDrawArgsParser,0)
+   ClassDef(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.4 2004/06/28 16:38:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.5 2004/07/27 12:21:31 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -75,7 +75,7 @@ namespace ROOT {
 
       void OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */);
 
-      ClassDef(TBranchProxyClassDescriptor,0);
+      ClassDef(TBranchProxyClassDescriptor,0); // Class to cache the information we gathered about the branch and its content
    };
 
 }

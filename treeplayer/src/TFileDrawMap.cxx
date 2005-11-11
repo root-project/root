@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.4 2003/01/20 12:57:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.5 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -98,13 +98,13 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
 {
 // TFileDrawMap normal constructor
 // see descriptions of arguments above
-   
+
    fFile     = (TFile*)file;
    fKeys     = keys;
    fOption   = option;
    fOption.ToLower();
    SetBit(kCanDelete);
-   
+
    //create histogram used to draw the map frame
 
    if (file->GetEND() > 1000000) {
@@ -126,7 +126,7 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    fYsize = 1 + Int_t(file->GetEND()/fXsize);
    fFrame->SetMaximum(fYsize);
    fFrame->GetYaxis()->SetLimits(0,fYsize);
-   
+
    //Bool_t show = kFALSE;
    if (gPad) {
       gPad->Clear();
@@ -151,13 +151,13 @@ TFileDrawMap::~TFileDrawMap()
 //______________________________________________________________________________
 void  TFileDrawMap::AnimateTree(const char *branches)
 {
-// Show sequence of baskets reads for the list of baskets involved 
+// Show sequence of baskets reads for the list of baskets involved
 // in the list of branches (separated by ",")
 // if branches="", the branch pointed by the mouse is taken.
 // if branches="*", all branches are taken
 // Example:
 //  AnimateTree("x,y,u");
-   
+
    char info[512];
    strcpy(info,GetName());
    char *cbasket = strstr(info,", basket=");
@@ -171,8 +171,8 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    if (!tree) return;
    if (strlen(branches) > 0) strcpy(info,branches);
    else                      strcpy(info,cbranch);
-   printf("Animating tree, branches=%s\n",info);      
-   
+   printf("Animating tree, branches=%s\n",info);
+
    // create list of branches
    Int_t nzip = 0;
    TBranch *branch;
@@ -184,7 +184,7 @@ void  TFileDrawMap::AnimateTree(const char *branches)
       while (*comma == ' ') comma++;
       branch = tree->GetBranch(comma);
       if (branch) {
-         nzip += (Int_t)branch->GetZipBytes(); 
+         nzip += (Int_t)branch->GetZipBytes();
          branch->SetUniqueID(0);
          list.Add(branch);
       }
@@ -193,13 +193,13 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    while (*comma == ' ') comma++;
    branch = tree->GetBranch(comma);
    if (branch) {
-      nzip += (Int_t)branch->GetZipBytes(); 
+      nzip += (Int_t)branch->GetZipBytes();
       branch->SetUniqueID(0);
       list.Add(branch);
    }
    Double_t fractionRead = Double_t(nzip)/Double_t(fFile->GetEND());
    Int_t nbranches = list.GetEntries();
-   
+
    // loop on all tree entries
    Int_t nentries = (Int_t)tree->GetEntries();
    Int_t sleep = 1;
@@ -231,7 +231,7 @@ Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // Compute distance from point px,py to this TreeFileMap
 // Find the closest object to the mouse, save its path in the TFileDrawMap name.
-   
+
    Int_t pxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t pxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t pymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -247,7 +247,7 @@ Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
 void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
 {
 // Draw marker
-   
+
    Int_t iy = gPad->YtoAbsPixel(eseek/fXsize);
    Int_t ix = gPad->XtoAbsPixel(eseek%fXsize);
    Int_t d;
@@ -276,7 +276,7 @@ void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
               break;
    }
 }
- 
+
 //______________________________________________________________________________
 void TFileDrawMap::DrawObject()
 {
@@ -290,7 +290,7 @@ void TFileDrawMap::DrawObject()
    } else {
       padsave->cd();
    }
-   
+
    // case of a TTree
    char info[512];
    strcpy(info,GetName());
@@ -305,7 +305,7 @@ void TFileDrawMap::DrawObject()
       if (tree) tree->Draw(cbranch);
       return;
    }
-   
+
    // other objects
    TObject *obj = GetObject();
    if (obj) obj->Draw();
@@ -333,14 +333,14 @@ void TFileDrawMap::DumpObject()
    colon--;
    *colon = 0;
    TTree *tree = (TTree*)fFile->Get(info);
-   if (tree) tree->Show(entry);   
+   if (tree) tree->Show(entry);
 }
 
 //______________________________________________________________________________
 void TFileDrawMap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
 // Execute action corresponding to one event
-   
+
    fFrame->ExecuteEvent(event,px,py);
 }
 
@@ -365,7 +365,7 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 //   Redefines TObject::GetObjectInfo.
 //   Displays the keys info in the file corresponding to cursor position px,py
 //   in the canvas status bar info panel
-      
+
    static char info[512];
    GetObjectInfoDir(fFile, px, py, info);
    return info;
@@ -386,7 +386,7 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
    Long64_t bseek;
    TDirectory *dirsav = gDirectory;
    dir->cd();
-   
+
    TIter next(dir->GetListOfKeys());
    TKey *key;
    while ((key = (TKey*)next())) {
@@ -440,27 +440,27 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
             sprintf(info,"%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          }
          dirsav->cd();
-         return kTRUE;            
+         return kTRUE;
       }
    }
    // Are we in the Keys list
    if (pbyte >= dir->GetSeekKeys() && pbyte < dir->GetSeekKeys()+dir->GetNbytesKeys()) {
       sprintf(info,"%sKeys List, nbytes=%d",dir->GetPath(),dir->GetNbytesKeys());
       dirsav->cd();
-      return kTRUE;            
+      return kTRUE;
    }
    if (dir == (TDirectory*)fFile) {
       // Are we in the TStreamerInfo
       if (pbyte >= fFile->GetSeekInfo() && pbyte < fFile->GetSeekInfo()+fFile->GetNbytesInfo()) {
          sprintf(info,"%sStreamerInfo List, nbytes=%d",dir->GetPath(),fFile->GetNbytesInfo());
          dirsav->cd();
-         return kTRUE;            
+         return kTRUE;
       }
       // Are we in the Free Segments
       if (pbyte >= fFile->GetSeekFree() && pbyte < fFile->GetSeekFree()+fFile->GetNbytesFree()) {
          sprintf(info,"%sFree List, nbytes=%d",dir->GetPath(),fFile->GetNbytesFree());
          dirsav->cd();
-         return kTRUE;            
+         return kTRUE;
       }
    }
    sprintf(info,"(byte=%lld)",pbyte);
@@ -491,12 +491,12 @@ void TFileDrawMap::Paint(Option_t *)
          fFrame->SetMinimum(0);
          fFrame->GetYaxis()->SetLimits(0,fYsize+1);
       }
-      fFrame->Paint("a"); 
+      fFrame->Paint("a");
    }
-   
+
    //draw keys
    PaintDir(fFile, fKeys.Data());
-   
+
    fFrame->Draw("sameaxis");
 }
 
@@ -534,7 +534,7 @@ void TFileDrawMap::PaintBox(TBox &box, Long64_t bseek, Int_t nbytes)
 void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
 {
 // Paint keys in a directory
-   
+
    TDirectory *dirsav = gDirectory;
    TIter next(dir->GetListOfKeys());
    TKey *key;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.4 2005/04/22 19:04:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.5 2005/05/18 21:04:54 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -308,43 +308,43 @@ public:
 
 class TFormLeafInfoMultiVarDim : public TFormLeafInfo {
 public:
-  Int_t fNsize;
-  TArrayI fSizes;           // Array of sizes of the variable dimension
-  TFormLeafInfo *fCounter2; // Information on how to read the secondary dimensions
-  Int_t fSumOfSizes;        // Sum of the content of fSizes
-  Int_t fDim;               // physical number of the dimension that is variable
-  Int_t fVirtDim;           // number of the virtual dimension to which this object correspond.
-  Int_t fPrimaryIndex;      // Index of the dimensions that is indexing the second dimension's size
-
+   Int_t fNsize;
+   TArrayI fSizes;           // Array of sizes of the variable dimension
+   TFormLeafInfo *fCounter2; // Information on how to read the secondary dimensions
+   Int_t fSumOfSizes;        // Sum of the content of fSizes
+   Int_t fDim;               // physical number of the dimension that is variable
+   Int_t fVirtDim;           // number of the virtual dimension to which this object correspond.
+   Int_t fPrimaryIndex;      // Index of the dimensions that is indexing the second dimension's size
+   
 protected:
-  TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
-     TStreamerElement* element) : TFormLeafInfo(classptr,offset,element) {}
-public:
-  TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
-                           TStreamerElement* element, TFormLeafInfo* parent);
-  TFormLeafInfoMultiVarDim();
-  TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig);
-  ~TFormLeafInfoMultiVarDim();
+   TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
+                            TStreamerElement* element) : TFormLeafInfo(classptr,offset,element) {}
+ public:
+   TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
+                            TStreamerElement* element, TFormLeafInfo* parent);
+   TFormLeafInfoMultiVarDim();
+   TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig);
+   ~TFormLeafInfoMultiVarDim();
+   
+   virtual TFormLeafInfo* DeepCopy() const;
+   
 
-  virtual TFormLeafInfo* DeepCopy() const;
-
-
-  /* The proper indexing and unwinding of index is done by prior leafinfo in the chain. */
-  //virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
-  //   return TFormLeafInfo::ReadValue(where,instance);
-  //}
-
-  virtual void     LoadSizes(TBranch* branch);
-  virtual Int_t    GetPrimaryIndex();
-  virtual void     SetPrimaryIndex(Int_t index);
-  virtual void     SetSize(Int_t index, Int_t val);
-  virtual Int_t    GetSize(Int_t index);
-  virtual Int_t    GetSumOfSizes();
-  virtual Double_t GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0);
-  virtual Int_t    GetVarDim();
-  virtual Int_t    GetVirtVarDim();
-  virtual Bool_t   Update();
-  virtual void     UpdateSizes(TArrayI *garr);
+   /* The proper indexing and unwinding of index is done by prior leafinfo in the chain. */
+   //virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
+   //   return TFormLeafInfo::ReadValue(where,instance);
+   //}
+   
+   virtual void     LoadSizes(TBranch* branch);
+   virtual Int_t    GetPrimaryIndex();
+   virtual void     SetPrimaryIndex(Int_t index);
+   virtual void     SetSize(Int_t index, Int_t val);
+   virtual Int_t    GetSize(Int_t index);
+   virtual Int_t    GetSumOfSizes();
+   virtual Double_t GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0);
+   virtual Int_t    GetVarDim();
+   virtual Int_t    GetVirtVarDim();
+   virtual Bool_t   Update();
+   virtual void     UpdateSizes(TArrayI *garr);
 };
 
 //______________________________________________________________________________

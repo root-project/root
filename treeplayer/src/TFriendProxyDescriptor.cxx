@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxyDescriptor.cxx,v 1.1 2004/07/20 09:40:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxyDescriptor.cxx,v 1.2 2004/08/25 15:37:10 rdm Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -32,6 +32,9 @@ namespace ROOT {
 
    Bool_t TFriendProxyDescriptor::IsEquivalent(const TFriendProxyDescriptor *other)
    {
+      // Return true if this descriptor and the other are equivalent (describe the
+      // same entity).
+
       if ( !other ) return kFALSE;
       if ( strcmp(GetName(),other->GetName()) ) return kFALSE;
 
@@ -50,6 +53,8 @@ namespace ROOT {
 
    void TFriendProxyDescriptor::OutputClassDecl(FILE *hf, int offset, UInt_t maxVarname)
    {
+      // Print the declaration needed for this descriptor.
+
       fprintf(hf,"%-*sstruct TFriendPx_%s : public TFriendProxy {\n", offset," ", GetName() );
       fprintf(hf,"%-*s   TFriendPx_%s(TBranchProxyDirector *director,TTree *tree,Int_t index) :\n",
               offset," ", GetName() );
@@ -72,10 +77,12 @@ namespace ROOT {
 
    void TFriendProxyDescriptor::OutputDecl(FILE *hf, int offset, UInt_t maxVarname)
    {
-     TString typeName = "TFriendPx_";
-     typeName += GetName();
-     fprintf(hf,"%-*s%-*s %s;\n",
-             offset," ",maxVarname,typeName.Data(),GetTitle());
+      // Print the declaration needed for this descriptor.
+
+      TString typeName = "TFriendPx_";
+      typeName += GetName();
+      fprintf(hf,"%-*s%-*s %s;\n",
+              offset," ",maxVarname,typeName.Data(),GetTitle());
    }
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.6 2005/03/04 20:11:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.7 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -27,6 +27,8 @@ namespace ROOT {
                                                   Bool_t split) :
       TNamed(dataname,type),fBranchName(branchname),fIsSplit(split) 
    {
+      // Constructor.
+
       fDataName = GetName();
       fDataName.ReplaceAll("<","_");
       fDataName.ReplaceAll(">","_");
@@ -40,16 +42,19 @@ namespace ROOT {
    
    const char *TBranchProxyDescriptor::GetDataName() 
    { 
+      // Get the name of the data member.
       return fDataName; 
    }
 
    const char *TBranchProxyDescriptor::GetTypeName() 
    { 
+      // Get the name of the type of the data member
       return GetTitle(); 
    }
    
    const char *TBranchProxyDescriptor::GetBranchName() 
    { 
+      // Get the branch name.
       return fBranchName.Data(); 
    }
 
@@ -75,11 +80,13 @@ namespace ROOT {
 
    Bool_t TBranchProxyDescriptor::IsSplit() const 
    { 
+      // Return true if the branch is split
       return fIsSplit; 
    }
 
    void TBranchProxyDescriptor::OutputDecl(FILE *hf, int offset, UInt_t maxVarname)
    {
+      // Output the declaration corresponding to this proxy
       fprintf(hf,"%-*s%-*s %s;\n",  offset," ",  maxVarname, GetTypeName(), GetDataName()); // might want to add a comment
    }
 
@@ -87,6 +94,7 @@ namespace ROOT {
                                            UInt_t maxVarname,
                                            const char *prefix) 
    {
+      // Output the initialization corresponding to this proxy
       if (fIsSplit) {
          const char *subbranchname = GetBranchName();
          const char *above = "";
