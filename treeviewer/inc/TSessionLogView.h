@@ -50,7 +50,7 @@ public:
    void   Popup();
    void   SetTitle();
 
-   ClassDef(TSessionLogView,0)  //PROOF progress dialog
+   ClassDef(TSessionLogView, 0)  // PROOF progress dialog
 };
 
 #endif

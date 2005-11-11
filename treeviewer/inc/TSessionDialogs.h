@@ -68,7 +68,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void CloseWindow();
 
-   ClassDef(TNewChainDlg, 0)
+   ClassDef(TNewChainDlg, 0) // New chain dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ public:
    void     UpdateFields(TQueryDescription *desc);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TNewQueryDlg,0)
+   ClassDef(TNewQueryDlg, 0) // New query dialog
 };
 
 #endif

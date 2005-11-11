@@ -279,6 +279,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
 Bool_t TSessionServerFrame::HandleExpose(Event_t * /*event*/)
 {
    // Handle expose event
+
    fTxtName->SelectAll();
    fTxtName->SetFocus();
    return kTRUE;
@@ -340,7 +341,7 @@ void TSessionServerFrame::OnBtnDeleteClicked()
 
       TObject *obj = fViewer->GetSessions()->Last();
       item = fViewer->GetSessionHierarchy()->FindChildByData(
-             fViewer->GetSessionItem(), (void *)obj);
+               fViewer->GetSessionItem(), (void *)obj);
       if (item) {
          fViewer->GetSessionHierarchy()->ClearHighlighted();
          fViewer->GetSessionHierarchy()->OpenItem(item);
@@ -405,7 +406,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->GetActDesc()->fConnected = kTRUE;
       // change list tree item picture to connected pixmap
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->FindChildByData(
-                             fViewer->GetSessionItem(),fViewer->GetActDesc());
+                              fViewer->GetSessionItem(),fViewer->GetActDesc());
       item->SetPictures(fViewer->GetProofConPict(), fViewer->GetProofConPict());
       // update viewer
       fViewer->OnListTreeClicked(item, 1, 0, 0);
@@ -613,6 +614,7 @@ TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
 TSessionFrame::~TSessionFrame()
 {
    // Destructor
+
    Cleanup();
 }
 
@@ -629,18 +631,18 @@ void TSessionFrame::Build(TSessionViewer *gui)
    // main session tab
    fTab = new TGTab(this, 200, 200);
    AddFrame(fTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-            kLHintsExpandY, 2, 2, 2, 2));
+         kLHintsExpandY, 2, 2, 2, 2));
 
    // add "Status" tab element
    TGCompositeFrame *tf = fTab->AddTab("Status");
    fFA = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFA, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // add first session information line
    fInfoLine[0] = new TGLabel(fFA, " ");
    fFA->AddFrame(fInfoLine[0], new TGLayoutHints(kLHintsCenterX |
-                 kLHintsExpandX, 5, 5, 15, 5));
+         kLHintsExpandX, 5, 5, 15, 5));
 
    TGCompositeFrame* frmInfos = new TGHorizontalFrame(fFA, 350, 100);
    frmInfos->SetLayoutManager(new TGTableLayout(frmInfos, 6, 2));
@@ -650,67 +652,69 @@ void TSessionFrame::Build(TSessionViewer *gui)
    for (i=0;i<11;i+=2) {
       fInfoLine[i+1] = new TGLabel(frmInfos, " ");
       frmInfos->AddFrame(fInfoLine[i+1], new TGTableLayoutHints(0, 1, j, j+1,
-         kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
+            kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
       fInfoLine[i+2] = new TGLabel(frmInfos, " ");
       frmInfos->AddFrame(fInfoLine[i+2], new TGTableLayoutHints(1, 2, j, j+1,
-         kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
+            kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
       j++;
    }
    fFA->AddFrame(frmInfos, new TGLayoutHints(kLHintsLeft | kLHintsTop |
-               kLHintsExpandX  | kLHintsExpandY, 5, 5, 5, 5));
+         kLHintsExpandX  | kLHintsExpandY, 5, 5, 5, 5));
 
    // add "new query" and "get queries" buttons
    TGCompositeFrame* frmBut1 = new TGHorizontalFrame(fFA, 350, 100);
    frmBut1->SetCleanup(kDeepCleanup);
    frmBut1->AddFrame(fBtnNewQuery = new TGTextButton(frmBut1, "New Query..."),
-      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+         new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
    fBtnNewQuery->SetToolTipText("Open New Query Dialog");
-   frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries  "),
-       new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   frmBut1->AddFrame(fBtnGetQueries = new TGTextButton(frmBut1, " Get Queries "),
+         new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
    fBtnGetQueries->SetToolTipText("Get List of Queries from the server");
    fBtnShowLog = new TGTextButton(frmBut1, "Show log...");
    fBtnShowLog->SetToolTipText("Show Session log (opens log window)");
-   frmBut1->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | kLHintsExpandX));
+   frmBut1->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | 
+         kLHintsExpandX, 5, 5, 5, 5));
+   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | 
+         kLHintsExpandX));
 
    // add "Commands" tab element
    tf = fTab->AddTab("Commands");
    fFC = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFC, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // add comand line label and text entry
    TGCompositeFrame* frmCmd = new TGHorizontalFrame(fFC, 350, 100);
    frmCmd->SetCleanup(kDeepCleanup);
    frmCmd->AddFrame(new TGLabel(frmCmd, "Command Line :"),
-      new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 15, 5));
+         new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 15, 5));
    fCommandBuf = new TGTextBuffer(120);
    frmCmd->AddFrame(fCommandTxt = new TGTextEntry(frmCmd,
-      fCommandBuf ),new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
-      kLHintsExpandX, 5, 5, 15, 5));
+         fCommandBuf ),new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
+         kLHintsExpandX, 5, 5, 15, 5));
    fFC->AddFrame(frmCmd, new TGLayoutHints(kLHintsExpandX, 5, 5, 10, 5));
    // connect command line text entry to "return pressed" signal
-   fCommandTxt->Connect("ReturnPressed()", "TSessionFrame", this,
-                           "OnCommandLine()");
+   fCommandTxt->Connect("ReturnPressed()", "TSessionFrame", this, 
+         "OnCommandLine()");
 
    // check box for option "clear view"
    fClearCheck = new TGCheckButton(fFC, "Clear view after each command");
    fFC->AddFrame(fClearCheck,new TGLayoutHints(kLHintsLeft | kLHintsTop,
-                 10, 5, 5, 5));
+         10, 5, 5, 5));
    fClearCheck->SetState(kButtonUp);
    // add text view for redirected output
    fFC->AddFrame(new TGLabel(fFC, "Output :"),
       new TGLayoutHints(kLHintsLeft | kLHintsTop, 10, 5, 5, 5));
    fInfoTextView = new TGTextView(fFC, 330, 150, "", kSunkenFrame |
-                                  kDoubleBorder);
+         kDoubleBorder);
    fFC->AddFrame(fInfoTextView, new TGLayoutHints(kLHintsLeft |
-      kLHintsTop | kLHintsExpandX | kLHintsExpandY, 10, 10, 5, 5));
+         kLHintsTop | kLHintsExpandX | kLHintsExpandY, 10, 10, 5, 5));
 
    // add "Packages" tab element
    tf = fTab->AddTab("Packages");
    fFB = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFB, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // new frame containing packages listbox and control buttons
    TGCompositeFrame* frmcanvas = new TGHorizontalFrame(fFB, 350, 100);
@@ -720,7 +724,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fLBPackages->Resize(80,150);
    fLBPackages->SetMultipleSelections(kFALSE);
    frmcanvas->AddFrame(fLBPackages, new TGLayoutHints(kLHintsExpandX |
-            kLHintsExpandY, 5, 5, 5, 5));
+         kLHintsExpandY, 5, 5, 5, 5));
    // control buttons frame
    TGCompositeFrame* frmBut2 = new TGVerticalFrame(frmcanvas, 150, 100);
 
@@ -731,66 +735,66 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnAdd = new TGTextButton(frmBut2, "     Add...     ");
    fBtnAdd->SetToolTipText("Add a package to the list");
    frmBut2->AddFrame(fBtnAdd,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnRemove = new TGTextButton(frmBut2, "Remove");
    fBtnRemove->SetToolTipText("Remove package from the list");
    frmBut2->AddFrame(fBtnRemove,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnUp = new TGTextButton(frmBut2, "Move Up");
    fBtnUp->SetToolTipText("Move package one step upward in the list");
    frmBut2->AddFrame(fBtnUp,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnDown = new TGTextButton(frmBut2, "Move Down");
    fBtnDown->SetToolTipText("Move package one step downward in the list");
    frmBut2->AddFrame(fBtnDown,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    frmcanvas->AddFrame(frmBut2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
-            kLHintsExpandY));
+         kLHintsExpandY));
    fFB->AddFrame(frmcanvas, new TGLayoutHints(kLHintsLeft | kLHintsTop |
-                 kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    TGCompositeFrame* frmLeg = new TGHorizontalFrame(fFB, 300, 100);
    frmLeg->SetCleanup(kDeepCleanup);
    TGPicture *pic1 = (TGPicture *)fClient->GetPicture("package.xpm");
    TGIcon *icn1 = new TGIcon(frmLeg, pic1, pic1->GetWidth(), pic1->GetHeight());
    frmLeg->AddFrame(icn1, new TGLayoutHints(kLHintsLeft | kLHintsTop,
-      5, 5, 0, 5));
+         5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Local"),
-      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+         new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
 
    TGPicture *pic2 = (TGPicture *)fClient->GetPicture("package_delete.xpm");
    TGIcon *icn2 = new TGIcon(frmLeg, pic2, pic2->GetWidth(), pic2->GetHeight());
    frmLeg->AddFrame(icn2, new TGLayoutHints(kLHintsLeft | kLHintsTop,
-      5, 5, 0, 5));
+         5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Uploaded"),
-      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+         new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
 
    TGPicture *pic3 = (TGPicture *)fClient->GetPicture("package_add.xpm");
    TGIcon *icn3 = new TGIcon(frmLeg, pic3, pic3->GetWidth(), pic3->GetHeight());
    frmLeg->AddFrame(icn3, new TGLayoutHints(kLHintsLeft | kLHintsTop,
-      5, 5, 0, 5));
+         5, 5, 0, 5));
    frmLeg->AddFrame(new TGLabel(frmLeg, ": Enabled"),
-      new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
+         new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 10, 0, 5));
    fFB->AddFrame(frmLeg, new TGLayoutHints(kLHintsLeft | kLHintsTop |
-      kLHintsExpandX, 0, 0, 0, 0));
+         kLHintsExpandX, 0, 0, 0, 0));
 
    TGCompositeFrame* frmBtn = new TGHorizontalFrame(fFB, 300, 100);
    frmBtn->SetCleanup(kDeepCleanup);
    frmBtn->AddFrame(fBtnUpload = new TGTextButton(frmBtn,
-      " Upload "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-      kLHintsCenterY, 5, 5, 5, 5));
+         " Upload "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+         kLHintsCenterY, 5, 5, 5, 5));
    fBtnUpload->SetToolTipText("Upload selected package(s) to the server");
    frmBtn->AddFrame(fBtnEnable = new TGTextButton(frmBtn,
-      " Enable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-      kLHintsCenterY, 5, 5, 5, 5));
+         " Enable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+         kLHintsCenterY, 5, 5, 5, 5));
    fBtnEnable->SetToolTipText("Enable selected package(s) on the server");
    frmBtn->AddFrame(fBtnDisable = new TGTextButton(frmBtn,
-      " Disable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-      kLHintsCenterY, 5, 5, 5, 5));
+         " Disable "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+         kLHintsCenterY, 5, 5, 5, 5));
    fBtnDisable->SetToolTipText("Disable selected package(s) on the server");
    frmBtn->AddFrame(fBtnClear = new TGTextButton(frmBtn,
-      " Clear "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-      kLHintsCenterY, 5, 5, 5, 5));
+         " Clear "), new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
+         kLHintsCenterY, 5, 5, 5, 5));
    fBtnClear->SetToolTipText("Clear all packages on the server");
    fFB->AddFrame(frmBtn, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
@@ -801,11 +805,11 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnShow = new TGTextButton(frmBtn3, "Show packages");
    fBtnShow->SetToolTipText("Show (list) available packages on the server");
    frmBtn3->AddFrame(fBtnShow,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnShowEnabled = new TGTextButton(frmBtn3, "Show Enabled");
    fBtnShowEnabled->SetToolTipText("Show (list) enabled packages on the server");
    frmBtn3->AddFrame(fBtnShowEnabled,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fFB->AddFrame(frmBtn3, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
    fChkEnable = new TGCheckButton(fFB, "Enable at session startup");
@@ -818,74 +822,74 @@ void TSessionFrame::Build(TSessionViewer *gui)
    tf = fTab->AddTab("Options");
    fFD = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFD, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // add Log Level label and text entry
    TGCompositeFrame* frmLog = new TGHorizontalFrame(fFD, 310, 100, kFixedWidth);
    frmLog->SetCleanup(kDeepCleanup);
    frmLog->AddFrame(fApplyLogLevel = new TGTextButton(frmLog,
-      "        Apply        "), new TGLayoutHints(kLHintsRight |
-      kLHintsCenterY, 10, 5, 5, 5));
+         "        Apply        "), new TGLayoutHints(kLHintsRight |
+         kLHintsCenterY, 10, 5, 5, 5));
    fApplyLogLevel->SetToolTipText("Apply currently selected log level");
    fLogLevel = new TGNumberEntry(frmLog, 0, 5, 5, TGNumberFormat::kNESInteger,
-      TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 5);
+         TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 5);
    frmLog->AddFrame(fLogLevel, new TGLayoutHints(kLHintsRight |
-      kLHintsCenterY, 5, 5, 5, 5));
+         kLHintsCenterY, 5, 5, 5, 5));
    frmLog->AddFrame(new TGLabel(frmLog, "Log Level :"),
-      new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
+         new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
    fFD->AddFrame(frmLog, new TGLayoutHints(kLHintsLeft, 5, 5, 15, 5));
 
    // add Parallel Nodes label and text entry
    TGCompositeFrame* frmPar = new TGHorizontalFrame(fFD, 310, 100, kFixedWidth);
    frmPar->SetCleanup(kDeepCleanup);
    frmPar->AddFrame(fApplyParallel = new TGTextButton(frmPar,
-      "        Apply        "), new TGLayoutHints(kLHintsRight |
-      kLHintsCenterY, 10, 5, 5, 5));
+         "        Apply        "), new TGLayoutHints(kLHintsRight |
+         kLHintsCenterY, 10, 5, 5, 5));
    fApplyParallel->SetToolTipText("Apply currently selected parallel nodes");
    fTxtParallel = new TGTextEntry(frmPar);
    fTxtParallel->SetAlignment(kTextRight);
    fTxtParallel->SetText("99999");
    fTxtParallel->Resize(fLogLevel->GetDefaultWidth(), fTxtParallel->GetDefaultHeight());
    frmPar->AddFrame(fTxtParallel, new TGLayoutHints(kLHintsRight |
-      kLHintsCenterY, 5, 5, 5, 5));
+         kLHintsCenterY, 5, 5, 5, 5));
    frmPar->AddFrame(new TGLabel(frmPar, "Set Parallel Nodes :"),
-      new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
+         new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
    fFD->AddFrame(frmPar, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    // connect button actions to functions
-   fBtnShowLog->Connect("Clicked()", "TSessionFrame", this,
-                        "OnBtnShowLogClicked()");
+   fBtnShowLog->Connect("Clicked()", "TSessionFrame", this, 
+         "OnBtnShowLogClicked()");
    fBtnNewQuery->Connect("Clicked()", "TSessionFrame", this,
-                         "OnBtnNewQueryClicked()");
+         "OnBtnNewQueryClicked()");
    fBtnGetQueries->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnGetQueriesClicked()");
+         "OnBtnGetQueriesClicked()");
 
    fChkMulti->Connect("Toggled(Bool_t)", "TSessionFrame", this,
-                           "OnMultipleSelection(Bool_t)");
+         "OnMultipleSelection(Bool_t)");
    fBtnAdd->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnAddClicked()");
+         "OnBtnAddClicked()");
    fBtnRemove->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnRemoveClicked()");
+         "OnBtnRemoveClicked()");
    fBtnUp->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnUpClicked()");
+         "OnBtnUpClicked()");
    fBtnDown->Connect("Clicked()", "TSessionFrame", this,
-                           "OnBtnDownClicked()");
+         "OnBtnDownClicked()");
    fApplyLogLevel->Connect("Clicked()", "TSessionFrame", this,
-                           "OnApplyLogLevel()");
+         "OnApplyLogLevel()");
    fApplyParallel->Connect("Clicked()", "TSessionFrame", this,
-                           "OnApplyParallel()");
+         "OnApplyParallel()");
    fBtnUpload->Connect("Clicked()", "TSessionFrame", this,
-                           "OnUploadPackages()");
+         "OnUploadPackages()");
    fBtnEnable->Connect("Clicked()", "TSessionFrame", this,
-                           "OnEnablePackages()");
+         "OnEnablePackages()");
    fBtnDisable->Connect("Clicked()", "TSessionFrame", this,
-                           "OnDisablePackages()");
+         "OnDisablePackages()");
    fBtnClear->Connect("Clicked()", "TSessionFrame", this,
-                           "OnClearPackages()");
+         "OnClearPackages()");
    fBtnShowEnabled->Connect("Clicked()", "TSessionViewer", fViewer,
-                           "ShowEnabledPackages()");
+         "ShowEnabledPackages()");
    fBtnShow->Connect("Clicked()", "TSessionViewer", fViewer,
-                           "ShowPackages()");
+         "ShowPackages()");
 }
 
 //______________________________________________________________________________
@@ -922,16 +926,16 @@ void TSessionFrame::ProofInfos()
    // return if not a valid Proof session
    if (!fViewer->GetActDesc()->fProof ||
        !fViewer->GetActDesc()->fProof->IsValid())
-       return;
+      return;
 
    if (!fViewer->GetActDesc()->fProof->IsMaster()) {
       if (fViewer->GetActDesc()->fProof->IsParallel())
          sprintf(buf,"*** Connected to %s (parallel mode, %d workers) ***",
-                fViewer->GetActDesc()->fProof->GetMaster(),
-                fViewer->GetActDesc()->fProof->GetParallel());
+               fViewer->GetActDesc()->fProof->GetMaster(),
+               fViewer->GetActDesc()->fProof->GetParallel());
       else
          sprintf(buf, "*** Connected to %s (sequential mode) ***",
-                fViewer->GetActDesc()->fProof->GetMaster());
+               fViewer->GetActDesc()->fProof->GetMaster());
       fInfoLine[0]->SetText(buf);
       fInfoLine[1]->SetText("Port number : ");
       sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetPort());
@@ -950,17 +954,17 @@ void TSessionFrame::ProofInfos()
       fInfoLine[10]->SetText(buf);
       fInfoLine[11]->SetText("Session unique tag : ");
       sprintf(buf, "%s", fViewer->GetActDesc()->fProof->IsValid() ?
-         fViewer->GetActDesc()->fProof->GetSessionTag() : " ");
+            fViewer->GetActDesc()->fProof->GetSessionTag() : " ");
       fInfoLine[12]->SetText(buf);
    }
    else {
       if (fViewer->GetActDesc()->fProof->IsParallel())
          sprintf(buf,"*** Master server %s (parallel mode, %d workers) ***",
-                fViewer->GetActDesc()->fProof->GetMaster(),
-                fViewer->GetActDesc()->fProof->GetParallel());
+               fViewer->GetActDesc()->fProof->GetMaster(),
+               fViewer->GetActDesc()->fProof->GetParallel());
       else
          sprintf(buf, "*** Master server %s (sequential mode) ***",
-                fViewer->GetActDesc()->fProof->GetMaster());
+               fViewer->GetActDesc()->fProof->GetMaster());
       fInfoLine[0]->SetText(buf);
       fInfoLine[1]->SetText("Port number : ");
       sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetPort());
@@ -988,6 +992,8 @@ void TSessionFrame::ProofInfos()
 //______________________________________________________________________________
 void TSessionFrame::OnApplyLogLevel()
 {
+   // apply selected log level
+
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, set log level
@@ -1001,6 +1007,8 @@ void TSessionFrame::OnApplyLogLevel()
 //______________________________________________________________________________
 void TSessionFrame::OnApplyParallel()
 {
+   // apply selected number of workers
+
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, set parallel slaves
@@ -1014,12 +1022,16 @@ void TSessionFrame::OnApplyParallel()
 //______________________________________________________________________________
 void TSessionFrame::OnMultipleSelection(Bool_t on)
 {
+   // handle multiple selection check button
+
    fLBPackages->SetMultipleSelections(on);
 }
 
 //______________________________________________________________________________
 void TSessionFrame::UpdatePackages()
 {
+   // update list of packages
+
    TPackageDescription *package;
    const TGPicture *pict;
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
@@ -1032,8 +1044,7 @@ void TSessionFrame::UpdatePackages()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                              package->fId, package->fName,
-                              pict);
+                                    package->fId, package->fName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
@@ -1043,6 +1054,8 @@ void TSessionFrame::UpdatePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnUploadPackages()
 {
+   // upload selected package(s) to the current proof session
+
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, upload packages
@@ -1064,7 +1077,7 @@ void TSessionFrame::OnUploadPackages()
             if (package) {
                package->fUploaded = kTRUE;
                ((TGIconLBEntry *)obj)->SetPicture(
-                  fClient->GetPicture("package_delete.xpm"));
+                     fClient->GetPicture("package_delete.xpm"));
             }
          }
       }
@@ -1076,6 +1089,8 @@ void TSessionFrame::OnUploadPackages()
 //______________________________________________________________________________
 void TSessionFrame::OnEnablePackages()
 {
+   // enable selected package(s) in the current proof session
+
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, enable packages
@@ -1098,7 +1113,7 @@ void TSessionFrame::OnEnablePackages()
                else {
                   package->fUploaded = kTRUE;
                   ((TGIconLBEntry *)obj)->SetPicture(
-                     fClient->GetPicture("package_delete.xpm"));
+                        fClient->GetPicture("package_delete.xpm"));
                }
             }
          }
@@ -1117,6 +1132,8 @@ void TSessionFrame::OnEnablePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnDisablePackages()
 {
+   // disable selected package(s) in the current proof session
+
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
    // if valid Proof session, disable (clear) packages
@@ -1149,6 +1166,8 @@ void TSessionFrame::OnDisablePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnClearPackages()
 {
+   // clear (disable) all packages in the current proof session
+
    TPackageDescription *package;
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1171,6 +1190,8 @@ void TSessionFrame::OnClearPackages()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnAddClicked()
 {
+   // open file dialog and add selected package file to the list
+
    if (fViewer->IsBusy())
       return;
    TGFileInfo fi;
@@ -1194,6 +1215,8 @@ void TSessionFrame::OnBtnAddClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnRemoveClicked()
 {
+   // remove selected package from the list
+
    TPackageDescription *package;
    const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
@@ -1212,8 +1235,7 @@ void TSessionFrame::OnBtnRemoveClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                              package->fId, package->fName,
-                              pict);
+                                    package->fId, package->fName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Layout();
@@ -1223,6 +1245,8 @@ void TSessionFrame::OnBtnRemoveClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnUpClicked()
 {
+   // move selected package entry one position up in the list
+
    TPackageDescription *package;
    const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
@@ -1230,7 +1254,7 @@ void TSessionFrame::OnBtnUpClicked()
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
    package = (TPackageDescription *)fViewer->GetActDesc()->fPackages->At(pos);
    fViewer->GetActDesc()->fPackages->Remove(
-      fViewer->GetActDesc()->fPackages->At(pos));
+         fViewer->GetActDesc()->fPackages->At(pos));
    package->fId -= 1;
    fViewer->GetActDesc()->fPackages->AddAt(package, package->fId);
    Int_t id = 0;
@@ -1245,8 +1269,7 @@ void TSessionFrame::OnBtnUpClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                              package->fId, package->fName,
-                              pict);
+                                    package->fId, package->fName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos-1);
@@ -1257,6 +1280,8 @@ void TSessionFrame::OnBtnUpClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnDownClicked()
 {
+   // move selected package entry one position down in the list
+
    TPackageDescription *package;
    const TGPicture *pict;
    Int_t pos = fLBPackages->GetSelected();
@@ -1265,7 +1290,7 @@ void TSessionFrame::OnBtnDownClicked()
    fLBPackages->RemoveEntries(0, fLBPackages->GetNumberOfEntries());
    package = (TPackageDescription *)fViewer->GetActDesc()->fPackages->At(pos);
    fViewer->GetActDesc()->fPackages->Remove(
-      fViewer->GetActDesc()->fPackages->At(pos));
+         fViewer->GetActDesc()->fPackages->At(pos));
    package->fId += 1;
    fViewer->GetActDesc()->fPackages->AddAt(package, package->fId);
    Int_t id = 0;
@@ -1280,8 +1305,7 @@ void TSessionFrame::OnBtnDownClicked()
       else
          pict = fClient->GetPicture("package.xpm");
       TGIconLBEntry *entry = new TGIconLBEntry(fLBPackages->GetContainer(),
-                              package->fId, package->fName,
-                              pict);
+                                    package->fId, package->fName, pict);
       fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    }
    fLBPackages->Select(pos+1);
@@ -1306,12 +1330,12 @@ void TSessionFrame::OnBtnDisconnectClicked()
    fViewer->DisableTimer();
    // change list tree item picture to disconnected pixmap
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->FindChildByData(
-                          fViewer->GetSessionItem(), fViewer->GetActDesc());
+                           fViewer->GetSessionItem(), fViewer->GetActDesc());
    item->SetPictures(fViewer->GetProofDisconPict(),
                      fViewer->GetProofDisconPict());
    // update viewer
    fViewer->OnListTreeClicked(fViewer->GetSessionHierarchy()->GetSelected(),
-      1, 0, 0);
+         1, 0, 0);
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fViewer->GetStatusBar()->SetText("", 1);
 }
@@ -1336,7 +1360,7 @@ void TSessionFrame::OnBtnNewQueryClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnGetQueriesClicked()
 {
-   // Get list of queries from current Proof server
+   // Get list of queries from current Proof server and populate the list tree
 
    TList *lqueries = 0;
    TQueryResult *query = 0;
@@ -1351,15 +1375,15 @@ void TSessionFrame::OnBtnGetQueriesClicked()
       while ((query = (TQueryResult *)nextp())) {
          // create new query description
          newquery = new TQueryDescription();
-         newquery->fReference       = Form("%s:%s", query->GetTitle(),
-                                      query->GetName());
+         newquery->fReference = Form("%s:%s", query->GetTitle(),
+                                    query->GetName());
          // check in our tree if it is already there
          TGListTreeItem *item =
             fViewer->GetSessionHierarchy()->FindChildByData(
-                     fViewer->GetSessionItem(), fViewer->GetActDesc());
+                  fViewer->GetSessionItem(), fViewer->GetActDesc());
          // if already there, skip
          if (fViewer->GetSessionHierarchy()->FindChildByName(item,
-            newquery->fReference.Data()))
+             newquery->fReference.Data()))
             continue;
          // check also in our query description list
          Bool_t found = kFALSE;
@@ -1377,7 +1401,7 @@ void TSessionFrame::OnBtnGetQueriesClicked()
                (TQueryDescription::ESessionQueryStatus)query->GetStatus();
          newquery->fSelectorString  = query->GetSelecImp()->GetName();
          newquery->fQueryName       = Form("%s:%s", query->GetTitle(),
-                                           query->GetName());
+                                          query->GetName());
          newquery->fOptions         = query->GetOptions();
          newquery->fEventList       = "";
          newquery->fParFile         = "";
@@ -1410,8 +1434,8 @@ void TSessionFrame::OnCommandLine()
    const char *cmd = fCommandTxt->GetText();
    char opt[2];
    // form temporary file path
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
-                          kSession_RedirectCmd);
+   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(), 
+         kSession_RedirectCmd);
    // if check box "clear view" is checked, open temp file in write mode
    // (overwrite), in append mode otherwise.
    if (fClearCheck->IsOn())
@@ -1482,6 +1506,7 @@ TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
 TSessionQueryFrame::~TSessionQueryFrame()
 {
    // Destructor
+   
    Cleanup();
 }
 
@@ -1494,19 +1519,19 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    SetCleanup(kDeepCleanup);
    fFirst = fEntries = fPrevTotal = 0;
    fPrevProcessed = 0;
-   fStatus    = kRunning;
-   fViewer  = gui;
+   fStatus = kRunning;
+   fViewer = gui;
 
    // main query tab
    fTab = new TGTab(this, 200, 200);
    AddFrame(fTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-            kLHintsExpandY, 2, 2, 2, 2));
+         kLHintsExpandY, 2, 2, 2, 2));
 
    // add "Status" tab element
    TGCompositeFrame *tf = fTab->AddTab("Status");
    fFB = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFB, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // new frame containing control buttons and feedback histos canvas
    TGCompositeFrame* frmcanvas = new TGHorizontalFrame(fFB, 350, 100);
@@ -1515,17 +1540,17 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fBtnSubmit = new TGTextButton(frmBut2, "        Submit        ");
    fBtnSubmit->SetToolTipText("Submit (process) selected query");
    frmBut2->AddFrame(fBtnSubmit,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnStop = new TGTextButton(frmBut2, "Stop");
    fBtnStop->SetToolTipText("Stop processing query");
    frmBut2->AddFrame(fBtnStop,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    fBtnAbort = new TGTextButton(frmBut2, "Abort");
    fBtnAbort->SetToolTipText("Abort processing query");
    frmBut2->AddFrame(fBtnAbort,new TGLayoutHints(kLHintsCenterY | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 5, 5));
+         kLHintsExpandX, 5, 5, 5, 5));
    frmcanvas->AddFrame(frmBut2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
-            kLHintsExpandY));
+         kLHintsExpandY));
    // feedback histos embedded canvas
    fECanvas = new TRootEmbeddedCanvas("fECanvas", frmcanvas, 400, 150);
    fStatsCanvas = fECanvas->GetCanvas();
@@ -1534,7 +1559,7 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    frmcanvas->AddFrame(fECanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
             4, 4, 4, 4));
    fFB->AddFrame(frmcanvas, new TGLayoutHints(kLHintsLeft | kLHintsTop |
-                 kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
 
    // progress infos label
    fLabInfos = new TGLabel(fFB, "                                  ");
@@ -1550,53 +1575,53 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFB->AddFrame(frmProg, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
    // total progress infos
    fFB->AddFrame(fTotal = new TGLabel(fFB,
-      " Estimated time left : 00:00:00 (--- events of --- processed) "),
-             new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+         " Estimated time left : 00:00:00 (--- events of --- processed) "),
+         new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
    // progress rate infos
    fFB->AddFrame(fRate = new TGLabel(fFB,
-      " Processing Rate : -- events/sec    "),
-            new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+         " Processing Rate : -- events/sec    "),
+         new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    // add "Results" tab element
    tf = fTab->AddTab("Results");
    fFC = new TGCompositeFrame(tf, 100, 100, kVerticalFrame);
    tf->AddFrame(fFC, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
    // query result (header) information text view
    fInfoTextView = new TGTextView(fFC, 330, 185, "", kSunkenFrame |
-                                  kDoubleBorder);
+         kDoubleBorder);
    fFC->AddFrame(fInfoTextView, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandY | kLHintsExpandX, 5, 5, 10, 10));
+         kLHintsExpandY | kLHintsExpandX, 5, 5, 10, 10));
 
    // add "Retrieve", "Finalize" and "Show Log" buttons
    TGCompositeFrame* frmBut3 = new TGHorizontalFrame(fFC, 350, 100);
    fBtnRetrieve = new TGTextButton(frmBut3, "Retrieve");
    fBtnRetrieve->SetToolTipText("Retrieve query results");
    frmBut3->AddFrame(fBtnRetrieve,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 10, 10));
+         kLHintsExpandX, 5, 5, 10, 10));
    fBtnFinalize = new TGTextButton(frmBut3, "Finalize");
    fBtnFinalize->SetToolTipText("Finalize query");
    frmBut3->AddFrame(fBtnFinalize,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 10, 10));
+         kLHintsExpandX, 5, 5, 10, 10));
    fBtnShowLog = new TGTextButton(frmBut3, "Show Log");
    fBtnShowLog->SetToolTipText("Show query log (open log window)");
    frmBut3->AddFrame(fBtnShowLog,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 5, 5, 10, 10));
+         kLHintsExpandX, 5, 5, 10, 10));
    fFC->AddFrame(frmBut3, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX));
 
    // connect button actions to functions
    fBtnSubmit->Connect("Clicked()", "TSessionQueryFrame", this,
-                       "OnBtnSubmit()");
+         "OnBtnSubmit()");
    fBtnFinalize->Connect("Clicked()", "TSessionQueryFrame", this,
-                         "OnBtnFinalize()");
+         "OnBtnFinalize()");
    fBtnStop->Connect("Clicked()", "TSessionQueryFrame", this,
-                     "OnBtnStop()");
+         "OnBtnStop()");
    fBtnAbort->Connect("Clicked()", "TSessionQueryFrame", this,
-                      "OnBtnAbort()");
+         "OnBtnAbort()");
    fBtnShowLog->Connect("Clicked()", "TSessionQueryFrame", this,
-                        "OnBtnShowLog()");
+         "OnBtnShowLog()");
    fBtnRetrieve->Connect("Clicked()", "TSessionQueryFrame", this,
-                         "OnBtnRetrieve()");
+         "OnBtnRetrieve()");
    Resize(350, 310);
 }
 
@@ -1629,6 +1654,7 @@ void TSessionQueryFrame::Feedback(TList *objs)
 void TSessionQueryFrame::UpdateHistos(TList *objs)
 {
    // Update feedback histograms
+
    TVirtualPad *save = gPad;
    TObject *o;
    Int_t pos = 1;
@@ -1642,7 +1668,7 @@ void TSessionQueryFrame::UpdateHistos(TList *objs)
       while (kFeedbackHistos[i]) {
          // check if user has selected this histogram in the option menu
          if (fViewer->GetCascadeMenu()->IsEntryChecked(41+i) &&
-               name.Contains(kFeedbackHistos[i])) {
+             name.Contains(kFeedbackHistos[i])) {
             // cd to correct pad and draw histo
             fStatsCanvas->cd(pos);
             if (TH1 *h = dynamic_cast<TH1*>(o)) {
@@ -1697,8 +1723,8 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    // Update informations at first call
    if (fEntries != total) {
       sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
-           fViewer->GetActDesc()->fProof->GetMaster(),
-           fViewer->GetActDesc()->fProof->GetParallel());
+            fViewer->GetActDesc()->fProof->GetMaster(),
+            fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
 
       fEntries = total;
@@ -1732,10 +1758,10 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       // update status infos
       if (fStatus > kDone) {
          sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
-                      eta, processed, total, cproc[fStatus]);
+                 eta, processed, total, cproc[fStatus]);
       } else {
          sprintf(buf, " Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                      eta, processed, total);
+                 eta, processed, total);
       }
       fTotal->SetText(buf);
       sprintf(buf, " Processing Rate : %.1f events/sec   ",
@@ -1766,9 +1792,9 @@ void TSessionQueryFrame::IndicateStop(Bool_t aborted)
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->Disconnect("Progress(Long64_t,Long64_t)",
-                                          this, "Progress(Long64_t,Long64_t)");
+               this, "Progress(Long64_t,Long64_t)");
       fViewer->GetActDesc()->fProof->Disconnect("StopProcess(Bool_t)", this,
-                                                "IndicateStop(Bool_t)");
+               "IndicateStop(Bool_t)");
    }
 }
 
@@ -1797,12 +1823,12 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t)",
-                     "TSessionQueryFrame", this, "Progress(Long64_t,Long64_t)");
+               "TSessionQueryFrame", this, "Progress(Long64_t,Long64_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
-                     "TSessionQueryFrame", this, "IndicateStop(Bool_t)");
+               "TSessionQueryFrame", this, "IndicateStop(Bool_t)");
       sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
-              fViewer->GetActDesc()->fProof->GetMaster(),
-              fViewer->GetActDesc()->fProof->GetParallel());
+               fViewer->GetActDesc()->fProof->GetMaster(),
+               fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
    }
    else {
@@ -1966,9 +1992,9 @@ void TSessionQueryFrame::OnBtnSubmit()
             TDSet* s = ((TChain *)newquery->fChain)->MakeTDSet();
             gProof = fViewer->GetActDesc()->fProof;
             id = s->Process(newquery->fSelectorString,
-                    newquery->fOptions,
-                    newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
-                    newquery->fFirstEntry);
+                  newquery->fOptions,
+                  newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
+                  newquery->fFirstEntry);
 //            ((TChain *)newquery->fChain)->SetProof(fViewer->GetActDesc()->fProof);
 //            id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
 //                    newquery->fOptions,
@@ -1978,9 +2004,9 @@ void TSessionQueryFrame::OnBtnSubmit()
          else if (newquery->fChain->IsA() == TDSet::Class()) {
             // TDSet case
             id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
-                    newquery->fOptions,
-                    newquery->fNoEntries,
-                    newquery->fFirstEntry);
+                  newquery->fOptions,
+                  newquery->fNoEntries,
+                  newquery->fFirstEntry);
          }
       }
       else {
@@ -2009,16 +2035,14 @@ void TSessionQueryFrame::OnBtnSubmit()
          if (newquery->fChain->IsA() == TChain::Class()) {
             // TChain case
             id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
-                            newquery->fOptions,
-                            newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
-                            newquery->fFirstEntry);
+                  newquery->fOptions,
+                  newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
+                  newquery->fFirstEntry);
          }
          else if (newquery->fChain->IsA() == TDSet::Class()) {
             // TDSet case
             id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
-                                                      newquery->fOptions,
-                                                      newquery->fNoEntries,
-                                                      newquery->fFirstEntry);
+               newquery->fOptions, newquery->fNoEntries, newquery->fFirstEntry);
          }
       }
       // set query reference id to unique identifier
@@ -2231,6 +2255,7 @@ TSessionOutputFrame::TSessionOutputFrame(TGWindow* p, Int_t w, Int_t h) :
 TSessionOutputFrame::~TSessionOutputFrame()
 {
    // destructor
+   
    delete fLVContainer; // this container is inside the TGListView and is not
                         // deleted automatically
    Cleanup();
@@ -2247,19 +2272,18 @@ void TSessionOutputFrame::Build(TSessionViewer *gui)
 
    // Container of object TGListView
    TGListView *frmListView = new TGListView(this, 340, 190);
-   fLVContainer = new TGLVContainer(frmListView, kSunkenFrame,
-                  GetWhitePixel());
+   fLVContainer = new TGLVContainer(frmListView, kSunkenFrame, GetWhitePixel());
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
    AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-            4, 4, 4, 4));
+         4, 4, 4, 4));
 
    frmListView->Connect("Clicked(TGLVEntry*, Int_t, Int_t, Int_t)",
-      "TSessionOutputFrame", this,
-      "OnElementClicked(TGLVEntry* ,Int_t, Int_t, Int_t)");
+         "TSessionOutputFrame", this,
+         "OnElementClicked(TGLVEntry* ,Int_t, Int_t, Int_t)");
    frmListView->Connect("DoubleClicked(TGLVEntry*, Int_t, Int_t, Int_t)",
-      "TSessionOutputFrame", this,
-      "OnElementDblClicked(TGLVEntry* ,Int_t, Int_t, Int_t)");
+         "TSessionOutputFrame", this,
+         "OnElementDblClicked(TGLVEntry* ,Int_t, Int_t, Int_t)");
 }
 
 //______________________________________________________________________________
@@ -2325,6 +2349,8 @@ TSessionInputFrame::TSessionInputFrame(TGWindow* p, Int_t w, Int_t h) :
 //______________________________________________________________________________
 TSessionInputFrame::~TSessionInputFrame()
 {
+   // destructor
+
    delete fLVContainer; // this container is inside the TGListView and is not
                         // deleted automatically
    Cleanup();
@@ -2345,7 +2371,7 @@ void TSessionInputFrame::Build(TSessionViewer *gui)
    fLVContainer->Associate(frmListView);
    fLVContainer->SetCleanup(kDeepCleanup);
    AddFrame(frmListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-            4, 4, 4, 4));
+         4, 4, 4, 4));
 }
 
 //______________________________________________________________________________
@@ -2399,6 +2425,9 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
 //______________________________________________________________________________
 void TSessionViewer::ReadConfiguration(const char *filename)
 {
+   // read configuration file and populate list of sessions
+   // list of queries and list of packages
+   // read and set also global options as feedback histos
 
    if (fViewerEnv)
       fViewerEnv->Delete();
@@ -2437,7 +2466,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
       bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]), 
-            i == 1 ? 1 : 0);
+                                          i == 1 ? 1 : 0);
       if (bval)
          fCascadeMenu->CheckEntry(41+i);
       else
@@ -2569,7 +2598,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TGListTreeItem *item1 = fSessionHierarchy->FindChildByData(
                      fSessionItem, fActDesc);
                TGListTreeItem *item2 = fSessionHierarchy->AddItem(
-                  item1, newquery->fQueryName, fQueryCon, fQueryCon);
+                     item1, newquery->fQueryName, fQueryCon, fQueryCon);
                item2->SetUserData(newquery);
             }
             delete [] v;
@@ -2615,6 +2644,8 @@ void TSessionViewer::ReadConfiguration(const char *filename)
 //______________________________________________________________________________
 void TSessionViewer::UpdateListOfProofs()
 {
+   // update list of existing Proof sessions
+
    // get list of proof sessions
    TGListTreeItem *item;
    TSeqCollection *proofs = gROOT->GetListOfProofs();
@@ -2661,8 +2692,8 @@ void TSessionViewer::UpdateListOfProofs()
          while ((query = (TQueryResult *)nextp())) {
             newquery = new TQueryDescription();
             newquery->fStatus = query->IsFinalized() ?
-                 TQueryDescription::kSessionQueryFinalized :
-               (TQueryDescription::ESessionQueryStatus)query->GetStatus();
+                  TQueryDescription::kSessionQueryFinalized :
+                  (TQueryDescription::ESessionQueryStatus)query->GetStatus();
             newquery->fSelectorString  = query->GetSelecImp()->GetName();
             newquery->fQueryName       = query->GetName();
             newquery->fOptions         = query->GetOptions();
@@ -2691,6 +2722,8 @@ void TSessionViewer::UpdateListOfProofs()
 //______________________________________________________________________________
 void TSessionViewer::WriteConfiguration(const char *filename)
 {
+   // save actual configuration in config file "filename"
+
    TSessionDescription *session;
    TQueryDescription *query;
    TPackageDescription *package;
@@ -2702,13 +2735,13 @@ void TSessionViewer::WriteConfiguration(const char *filename)
    fViewerEnv = new TEnv(fname);
 
    fViewerEnv->SetValue("Option.Feedback",
-      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsFeedback));
+         (Int_t)fOptionsMenu->IsEntryChecked(kOptionsFeedback));
    fViewerEnv->SetValue("Option.MasterHistos",
-      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsHist));
+         (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsHist));
    fViewerEnv->SetValue("Option.MasterEvents",
-      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsTrace));
+         (Int_t)fOptionsMenu->IsEntryChecked(kOptionsStatsTrace));
    fViewerEnv->SetValue("Option.WorkerEvents",
-      (Int_t)fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace));
+         (Int_t)fOptionsMenu->IsEntryChecked(kOptionsSlaveStatsTrace));
 
    Int_t i = 0;
    // browse list of feedback histos and check user's selected ones
@@ -2897,21 +2930,21 @@ void TSessionViewer::Build()
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
 
    fMenuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop |
-                      kLHintsLeft, 0, 4, 0, 0));
+         kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Session", fSessionMenu, new TGLayoutHints(kLHintsTop |
-                      kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup("&Query",  fQueryMenu,  new TGLayoutHints(kLHintsTop |
-            kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup("&Options",  fOptionsMenu,  new TGLayoutHints(kLHintsTop |
-            kLHintsLeft, 0, 4, 0, 0));
+         kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Query",  fQueryMenu, new TGLayoutHints(kLHintsTop |
+         kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Options",  fOptionsMenu, new TGLayoutHints(kLHintsTop |
+         kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Help", fHelpMenu, new TGLayoutHints(kLHintsTop |
-            kLHintsRight));
+         kLHintsRight));
 
    TGHorizontal3DLine *toolBarSep = new TGHorizontal3DLine(this);
    AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
    AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 0, 0, 1, 1));
+         kLHintsExpandX, 0, 0, 1, 1));
 
    toolBarSep = new TGHorizontal3DLine(this);
    AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -2923,8 +2956,8 @@ void TSessionViewer::Build()
    for (int i = 0; xpm_toolbar[i]; i++) {
       tb_data[i].fPixmap = xpm_toolbar[i];
       if (strlen(xpm_toolbar[i]) == 0) {
-          spacing = 8;
-          continue;
+         spacing = 8;
+         continue;
       }
       fToolBar->AddButton(this, &tb_data[i], spacing);
       spacing = 0;
@@ -2944,7 +2977,7 @@ void TSessionViewer::Build()
    fPopupSrv->AddSeparator();
    fPopupSrv->AddEntry("&Cleanup", kSessionCleanup);
    fPopupSrv->Connect("Activated(Int_t)","TSessionViewer", this,
-            "MyHandleMenu(Int_t)");
+         "MyHandleMenu(Int_t)");
 
    fPopupQry = new TGPopupMenu(fClient->GetRoot());
    fPopupQry->AddEntry("Edit",kQueryEdit);
@@ -2954,7 +2987,7 @@ void TSessionViewer::Build()
    fPopupQry->AddSeparator();
    fPopupQry->AddEntry("Delete",kQueryDelete);
    fPopupQry->Connect("Activated(Int_t)","TSessionViewer", this,
-            "MyHandleMenu(Int_t)");
+         "MyHandleMenu(Int_t)");
 
 
    fSessionMenu->DisableEntry(kSessionGetQueries);
@@ -2977,11 +3010,11 @@ void TSessionViewer::Build()
 
    fTreeView = new TGCanvas(fV1, 100, 200, kSunkenFrame | kDoubleBorder);
    fV1->AddFrame(fTreeView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-                 2, 0, 0, 0));
+         2, 0, 0, 0));
    fSessionHierarchy = new TGListTree(fTreeView, kHorizontalFrame);
    fSessionHierarchy->Connect("Clicked(TGListTreeItem*,Int_t,Int_t,Int_t)",
-            "TSessionViewer", this,
-            "OnListTreeClicked(TGListTreeItem*, Int_t, Int_t, Int_t)");
+         "TSessionViewer", this,
+         "OnListTreeClicked(TGListTreeItem*, Int_t, Int_t, Int_t)");
    fV1->Resize(fTreeView->GetDefaultWidth()+100, fV1->GetDefaultHeight());
 
    //--- fV2 -------------------------------------------------------------------
@@ -2995,31 +3028,31 @@ void TSessionViewer::Build()
    UpdateListOfProofs();
    fServerFrame->Build(this);
    fV2->AddFrame(fServerFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
+         kLHintsExpandY, 2, 0, 1, 2));
 
    //--- Session Frame ---------------------------------------------------------
    fSessionFrame = new TSessionFrame(fV2, 350, 310);
    fSessionFrame->Build(this);
    fV2->AddFrame(fSessionFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
+         kLHintsExpandY, 2, 0, 1, 2));
 
    //--- Query Frame -----------------------------------------------------------
    fQueryFrame = new TSessionQueryFrame(fV2, 350, 310);
    fQueryFrame->Build(this);
    fV2->AddFrame(fQueryFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
+         kLHintsExpandY, 2, 0, 1, 2));
 
    //--- Output Frame ----------------------------------------------------------
    fOutputFrame = new TSessionOutputFrame(fV2, 350, 310);
    fOutputFrame->Build(this);
    fV2->AddFrame(fOutputFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
+         kLHintsExpandY, 2, 0, 1, 2));
 
    //--- Input Frame -----------------------------------------------------------
    fInputFrame = new TSessionInputFrame(fV2, 350, 310);
    fInputFrame->Build(this);
    fV2->AddFrame(fInputFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-                 kLHintsExpandY, 2, 0, 1, 2));
+         kLHintsExpandY, 2, 0, 1, 2));
 
    fHf->AddFrame(fV1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
@@ -3028,13 +3061,13 @@ void TSessionViewer::Build()
    splitter->SetFrame(fV1, kTRUE);
    fHf->AddFrame(splitter,new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
    fHf->AddFrame(new TGVertical3DLine(fHf), new TGLayoutHints(kLHintsLeft |
-                 kLHintsExpandY));
+         kLHintsExpandY));
 
    fHf->AddFrame(fV2, new TGLayoutHints(kLHintsRight | kLHintsExpandX |
-                 kLHintsExpandY));
+         kLHintsExpandY));
 
    AddFrame(fHf, new TGLayoutHints(kLHintsRight | kLHintsExpandX |
-            kLHintsExpandY));
+         kLHintsExpandY));
 
    // if description available, update server infos frame
    if (fActDesc)
@@ -3048,15 +3081,14 @@ void TSessionViewer::Build()
    for (int p = 0; p < 3; ++p)
       fStatusBar->GetBarPart(p)->SetCleanup(kDeepCleanup);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-            kLHintsExpandX, 0, 0, 1, 1));
+         kLHintsExpandX, 0, 0, 1, 1));
 
    // connection icon (animation) and time info
    fStatusBar->SetText("      00:00:00", 2);
    TGCompositeFrame *leftpart = fStatusBar->GetBarPart(2);
    fRightIconPicture = (TGPicture *)fClient->GetPicture("proof_disconnected.xpm");
    fRightIcon = new TGIcon(leftpart, fRightIconPicture,
-                    fRightIconPicture->GetWidth(),
-                    fRightIconPicture->GetHeight());
+         fRightIconPicture->GetWidth(),fRightIconPicture->GetHeight());
    leftpart->AddFrame(fRightIcon, new TGLayoutHints(kLHintsLeft, 2, 0, 0, 0));
 
    // connection progress bar
@@ -3069,7 +3101,7 @@ void TSessionViewer::Build()
    // add user info
    fUserGroup = gSystem->GetUserInfo();
    sprintf(line,"User : %s - %s", fUserGroup->fRealName.Data(),
-           fUserGroup->fGroup.Data());
+         fUserGroup->fGroup.Data());
    fStatusBar->SetText(line, 1);
 
    fTimer = 0;
@@ -3095,7 +3127,7 @@ void TSessionViewer::Build()
 //______________________________________________________________________________
 TSessionViewer::~TSessionViewer()
 {
-   // dtor
+   // destructor
 
    Cleanup();
    delete fUserGroup;
@@ -3356,15 +3388,17 @@ void TSessionViewer::CloseWindow()
 void TSessionViewer::ChangeRightLogo(const char *name)
 {
     // Change the right logo ( used for animation )
-    fClient->FreePicture(fRightIconPicture);
-    fRightIconPicture = (TGPicture *)fClient->GetPicture(name);
-    fRightIcon->SetPicture(fRightIconPicture);
+
+   fClient->FreePicture(fRightIconPicture);
+   fRightIconPicture = (TGPicture *)fClient->GetPicture(name);
+   fRightIcon->SetPicture(fRightIconPicture);
 }
 
 //______________________________________________________________________________
 void TSessionViewer::EnableTimer()
 {
    // enable animation timer
+   
    if (!fTimer) fTimer = new TTimer(this, 500);
    fTimer->Reset();
    fTimer->TurnOn();
@@ -3375,6 +3409,7 @@ void TSessionViewer::EnableTimer()
 void TSessionViewer::DisableTimer()
 {
    // disable animation timer
+   
    if (fTimer)
       fTimer->TurnOff();
    ChangeRightLogo("proof_disconnected.xpm");
@@ -3384,6 +3419,7 @@ void TSessionViewer::DisableTimer()
 Bool_t TSessionViewer::HandleTimer(TTimer *)
 {
    // handle animation timer
+
    char line[120];
    struct tm *connected;
    Int_t count = gRandom->Integer(4);
@@ -3440,8 +3476,8 @@ void TSessionViewer::QueryResultReady(char *query)
             break;
          // get query status
          lquery->fStatus = lquery->fResult->IsFinalized() ?
-           TQueryDescription::kSessionQueryFinalized :
-           (TQueryDescription::ESessionQueryStatus)lquery->fResult->GetStatus();
+            TQueryDescription::kSessionQueryFinalized :
+            (TQueryDescription::ESessionQueryStatus)lquery->fResult->GetStatus();
          // get data set
          if (lquery->fResult->GetDSet())
             lquery->fChain = lquery->fResult->GetDSet();
@@ -3480,10 +3516,10 @@ void TSessionViewer::CleanupSession()
    TQueryDescription *query = (TQueryDescription *)obj;
    TString m;
    m.Form("Are you sure to cleanup the session \"%s::%s\"",
-           fActDesc->fAddress.Data(), fActDesc->fName.Data());
+         fActDesc->fAddress.Data(), fActDesc->fName.Data());
    Int_t result;
    new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), 0,
-                kMBYes | kMBNo | kMBCancel, &result);
+         kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
       // send cleanup request for the session specified by the query reference
       fActDesc->fProof->CleanupSession(query->fReference.Data());
@@ -3510,15 +3546,15 @@ void TSessionViewer::DeleteQuery()
 
    if (fActDesc->fProof && fActDesc->fProof->IsValid()) {
       m.Form("Do you want to delete query \"%s\" from server too ?",
-               query->fQueryName.Data());
+            query->fQueryName.Data());
       new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), kMBIconQuestion,
-                   kMBYes | kMBNo | kMBCancel, &result);
+            kMBYes | kMBNo | kMBCancel, &result);
    }
    else {
       m.Form("Dou you really want to delete query \"%s\" ?",
-               query->fQueryName.Data());
+            query->fQueryName.Data());
       new TGMsgBox(fClient->GetRoot(), this, "", m.Data(), kMBIconQuestion,
-                   kMBOk | kMBCancel, &result);
+            kMBOk | kMBCancel, &result);
    }
    if (result == kMBYes) {
       fActDesc->fProof->Remove(query->fReference.Data());
@@ -3570,6 +3606,9 @@ void TSessionViewer::StartViewer()
 //______________________________________________________________________________
 void TSessionViewer::ShowPackages()
 {
+   // query the list of uploaded packages from proof and display it
+   // into a new text window
+
    Window_t wdummy;
    Int_t  ax, ay;
 
@@ -3577,7 +3616,7 @@ void TSessionViewer::ShowPackages()
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
    TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
-                          kSession_RedirectFile);
+            kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
       Error("ShowStatus", "stdout/stderr redirection failed; skipping");
@@ -3596,9 +3635,8 @@ void TSessionViewer::ShowPackages()
       fLogWindow->Clear();
    }
    fLogWindow->LoadFile(pathtmp.Data());
-   gVirtualX->TranslateCoordinates(GetId(),
-              fClient->GetDefaultRoot()->GetId(),
-              0, 0, ax, ay, wdummy);
+   gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(),
+                                    0, 0, ax, ay, wdummy);
    fLogWindow->Move(ax, ay + GetHeight() + 35);
    fLogWindow->Popup();
 }
@@ -3606,6 +3644,9 @@ void TSessionViewer::ShowPackages()
 //______________________________________________________________________________
 void TSessionViewer::ShowEnabledPackages()
 {
+   // query list of enabled packages from proof and display it
+   // into a new text window
+
    Window_t wdummy;
    Int_t  ax, ay;
 
@@ -3613,7 +3654,7 @@ void TSessionViewer::ShowEnabledPackages()
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
    TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
-                          kSession_RedirectFile);
+         kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
       Error("ShowStatus", "stdout/stderr redirection failed; skipping");
@@ -3632,9 +3673,8 @@ void TSessionViewer::ShowEnabledPackages()
       fLogWindow->Clear();
    }
    fLogWindow->LoadFile(pathtmp.Data());
-   gVirtualX->TranslateCoordinates(GetId(),
-              fClient->GetDefaultRoot()->GetId(),
-              0, 0, ax, ay, wdummy);
+   gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(),
+                                    0, 0, ax, ay, wdummy);
    fLogWindow->Move(ax, ay + GetHeight() + 35);
    fLogWindow->Popup();
 }
@@ -3643,6 +3683,7 @@ void TSessionViewer::ShowEnabledPackages()
 void TSessionViewer::ShowLog(const char *queryref)
 {
    // Display the content of the temporary log file for queryref
+   // into a new text window
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -3666,7 +3707,7 @@ void TSessionViewer::ShowLog(const char *queryref)
       fActDesc->fProof->SendLogToWindow(logonly);
       // set log window position at the bottom of Session Viewer
       gVirtualX->TranslateCoordinates(GetId(),
-         fClient->GetDefaultRoot()->GetId(), 0, 0, ax, ay, wdummy);
+            fClient->GetDefaultRoot()->GetId(), 0, 0, ax, ay, wdummy);
       fLogWindow->Move(ax, ay + GetHeight() + 35);
       fLogWindow->Popup();
       gVirtualX->SetCursor(GetId(), 0);
@@ -3694,7 +3735,7 @@ void TSessionViewer::ShowStatus()
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
    TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
-                          kSession_RedirectFile);
+            kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
       Error("ShowStatus", "stdout/stderr redirection failed; skipping");
@@ -3713,9 +3754,8 @@ void TSessionViewer::ShowStatus()
       fLogWindow->Clear();
    }
    fLogWindow->LoadFile(pathtmp.Data());
-   gVirtualX->TranslateCoordinates(GetId(),
-              fClient->GetDefaultRoot()->GetId(),
-              0, 0, ax, ay, wdummy);
+   gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(),
+                                    0, 0, ax, ay, wdummy);
    fLogWindow->Move(ax, ay + GetHeight() + 35);
    fLogWindow->Popup();
 }
@@ -3824,6 +3864,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Handle messages send to the TSessionViewer object. E.g. all menu entries
    // messages.
+
    TNewQueryDlg *dlg;
 
    switch (GET_MSG(msg)) {

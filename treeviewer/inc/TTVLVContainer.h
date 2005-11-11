@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.7 2002/12/03 11:20:10 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.8 2005/08/30 11:13:22 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -123,7 +123,7 @@ public:
    TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options=kSunkenFrame);
    virtual ~TTVLVContainer();
    virtual void AddThisItem(TTVLVEntry *item)
-                { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode);}
+                  { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
    const char    *Cut();
    void           EmptyAll();     // empty all items of expression type
    TTVLVEntry    *ExpressionItem(Int_t index);

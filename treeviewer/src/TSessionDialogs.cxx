@@ -82,7 +82,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    AddFrame(fListView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 4, 4, 4, 4));
 
    fListView->Connect("Clicked(TGLVEntry*, Int_t)", "TNewChainDlg",
-                      this, "OnElementClicked(TGLVEntry* ,Int_t)");
+            this, "OnElementClicked(TGLVEntry* ,Int_t)");
 
    // Add text entry showing type and name of user's selection
    TGCompositeFrame* frmSel = new TGHorizontalFrame(this, 300, 100);
@@ -124,7 +124,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
 
    TGCompositeFrame *tmp;
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
-                       new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+            new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
    // Apply and Close buttons
    tmp->AddFrame(fOkButton = new TGTextButton(tmp, "&Ok", 0),
@@ -156,6 +156,7 @@ TNewChainDlg::~TNewChainDlg()
 void TNewChainDlg::OnElementSelected(TObject *obj)
 {
    // Emits OnElementSelected signal if dset is not zero
+
    if (obj) {
       Emit("OnElementSelected(TObject *)", (Long_t)obj);
    }
@@ -166,6 +167,7 @@ void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 {
    // Handle click in the Memory list view and put the type
    // and name of selected object in the text entry
+
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
       TString s = Form("%s : %s" , ((TChain *)fChain)->GetTitle(),
@@ -296,6 +298,7 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 void TNewChainDlg::CloseWindow()
 {
    // Close file dialog.
+
    DeleteWindow();
 }
 
@@ -360,7 +363,7 @@ TNewQueryDlg::~TNewQueryDlg()
 //______________________________________________________________________________
 void TNewQueryDlg::Build(TSessionViewer *gui)
 {
-   // builds the dialog
+   // build the "new query" dialog
 
    TGButton*   btnTmp;
    fViewer = gui;
@@ -422,7 +425,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fFrmMore->SetCleanup(kDeepCleanup);
 
    fFrmNewQuery->AddFrame(fFrmMore, new TGTableLayoutHints(0, 3, 5, 6,
-                          kLHintsExpandX | kLHintsExpandY));
+         kLHintsExpandX | kLHintsExpandY));
    fFrmMore->SetLayoutManager(new TGTableLayout(fFrmMore, 4, 3));
 
    // add "Nb Entries" label and number entry
@@ -474,7 +477,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 
    TGCompositeFrame *tmp;
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
-                       new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+         new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
    tmp->SetCleanup(kDeepCleanup);
    // Add "Save" and "Save & Submit" buttons if we are in edition mode
    // or "Add" and "Add & Submit" if we are not in edition mode.
@@ -487,13 +490,13 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
       fBtnSubmit = new TGTextButton(tmp, "Add && Submit");
    }
    tmp->AddFrame(fBtnSave, new TGLayoutHints(kLHintsLeft | kLHintsExpandX,
-                 3, 3, 3, 3));
+         3, 3, 3, 3));
    tmp->AddFrame(fBtnSubmit, new TGLayoutHints(kLHintsLeft | kLHintsExpandX,
-                 3, 3, 3, 3));
+         3, 3, 3, 3));
    fBtnSave->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSaveClicked()");
    fBtnSubmit->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnSubmitClicked()");
    tmp->AddFrame(fBtnClose = new TGTextButton(tmp, "Close"),
-      new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
+         new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    fBtnClose->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnCloseClicked()");
 }
 
@@ -501,6 +504,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
 void TNewQueryDlg::CloseWindow()
 {
    // Called when window is closed via the window manager.
+
    DeleteWindow();
 }
 
@@ -526,13 +530,14 @@ void TNewQueryDlg::OnBrowseChain()
 
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
    dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg",
-                this, "OnElementSelected(TObject *)");
+         this, "OnElementSelected(TObject *)");
 }
 
 //____________________________________________________________________________
 void TNewQueryDlg::OnElementSelected(TObject *obj)
 {
    // handle OnElementSelected signal coming from new chain dialog
+
    if (obj) {
       fChain = obj;
       if (obj->IsA() == TChain::Class())

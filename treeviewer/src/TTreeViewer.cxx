@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.49 2005/09/02 10:06:51 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.50 2005/11/09 16:56:27 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1181,18 +1181,24 @@ void TTreeViewer::ActivateButtons(Bool_t first, Bool_t previous,
 //______________________________________________________________________________
 const char* TTreeViewer::Cut()
 {
+   // Cut
+
    return fLVContainer->Cut();
 }
 
 //______________________________________________________________________________
 const char* TTreeViewer::ScanList()
 {
+   // returns scanlist
+
    return fLVContainer->ScanList();
 }
 
 //______________________________________________________________________________
 void TTreeViewer::SetSession(TTVSession *session)
 {
+   // Set current session
+
    if (session) {
       delete fSession;
       fSession = session;
@@ -1537,18 +1543,24 @@ Long64_t TTreeViewer::Process(const char* filename, Option_t *option, Long64_t n
 //______________________________________________________________________________
 const char *TTreeViewer::GetGrOpt()
 {
+   // Get graph option
+
    return fBarOption->GetText();
 }
 
 //______________________________________________________________________________
 void TTreeViewer::SetGrOpt(const char *option)
 {
+   // Set graph option
+
    fBarOption->SetText(option);
 }
 
 //______________________________________________________________________________
 Bool_t TTreeViewer::IsScanRedirected()
 {
+   // Return kTRUE if scan is redirected
+
    return (fBarScan->GetState()==kButtonDown);
 }
 
@@ -2290,7 +2302,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                   spic = gClient->GetPicture("leaf_t.xpm");
                   fLt->AddItem(branchItem, leafName.Data(), itemType, pic, spic);
                }
-           } else {
+            } else {
                itemType = new ULong_t(kLTLeafType);
                pic = gClient->GetPicture("leaf_t.xpm");
                spic = gClient->GetPicture("leaf_t.xpm");
@@ -2392,6 +2404,8 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
 //______________________________________________________________________________
 void TTreeViewer::NewExpression()
 {
+   // Create new expression
+
    fLVContainer->RemoveNonStatic();
    const TGPicture  *pic = gClient->GetPicture("expression_t.xpm");
    const TGPicture *spic = gClient->GetPicture("expression_t.xpm");
@@ -2627,18 +2641,24 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
 //______________________________________________________________________________
 void TTreeViewer::SetRecordName(const char *name)
 {
+   // Set record name
+
    fSession->SetRecordName(name);
 }
 
 //______________________________________________________________________________
 void TTreeViewer::SetCurrentRecord(Long64_t entry)
 {
+   // Set current record
+
    fCombo->Select(entry);
 }
 
 //______________________________________________________________________________
 void TTreeViewer::SetHistogramTitle(const char *title)
 {
+   // Set title of Histogram
+
    if (!gPad) return;
    TH1 *hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
    if (hist) {
@@ -2649,7 +2669,8 @@ void TTreeViewer::SetHistogramTitle(const char *title)
 //______________________________________________________________________________
 void TTreeViewer::SetUserCode(const char *code, Bool_t autoexec)
 {
-// user defined command for current record
+   // user defined command for current record
+
    TTVRecord *rec = fSession->GetCurrent();
    if (rec) rec->SetUserCode(code, autoexec);
 }

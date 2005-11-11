@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.11 2005/07/24 09:55:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.12 2005/08/30 11:13:22 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -29,37 +29,51 @@ ClassImp(TGItemContext)
 //______________________________________________________________________________
 TGItemContext::TGItemContext()
 {
+   // Constructor
+
    fItem = 0;
 }
 //______________________________________________________________________________
 void TGItemContext::Draw(Option_t *)
 {
+   // Draw item
+
    fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
 }
 //______________________________________________________________________________
 void TGItemContext::EditExpression()
 {
+   // Edit expression
+
    fItem->GetContainer()->GetViewer()->EditExpression();
 }
 //______________________________________________________________________________
 void TGItemContext::Empty()
 {
+   // Empty item
+
    fItem->Empty();
 }
 //______________________________________________________________________________
 void TGItemContext::RemoveItem()
 {
+   // Remove item
+
    fItem->GetContainer()->GetViewer()->RemoveItem();
 }
 //______________________________________________________________________________
 void TGItemContext::Scan()
 {
+   // Scan item
+
    fItem->GetContainer()->GetViewer()->SetScanMode();
    fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
 }
 //______________________________________________________________________________
 void TGItemContext::SetExpression(const char *name, const char *alias, Bool_t cut)
 {
+   // Set item expression
+
    fItem->SetExpression(name, alias, cut);
 }
 
@@ -97,14 +111,16 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
 //______________________________________________________________________________
 TTVLVEntry::~TTVLVEntry()
 {
-// TGTreeLVEntry destructor
+   // TGTreeLVEntry destructor
+
    if (fTip) delete fTip;
    delete fContext;
 }
 //______________________________________________________________________________
 const char *TTVLVEntry::ConvertAliases()
 {
-// Convert all aliases into true names
+   // Convert all aliases into true names
+
    TList *list = GetContainer()->GetViewer()->ExpressionList();
    fConvName = fTrueName;
    TString start(fConvName);
@@ -127,7 +143,8 @@ const char *TTVLVEntry::ConvertAliases()
 //______________________________________________________________________________
 Bool_t TTVLVEntry::FullConverted()
 {
-// Return true if converted name is alias free
+   // Return true if converted name is alias free
+
    TList *list = GetContainer()->GetViewer()->ExpressionList();
    TIter next(list);
    TTVLVEntry* item;
@@ -142,6 +159,7 @@ Bool_t TTVLVEntry::FullConverted()
 void TTVLVEntry::CopyItem(TTVLVEntry *dest)
 {
    // Copy this item's name and alias to an other.
+
    if (!dest) return;
    dest->SetExpression(fTrueName.Data(), fAlias.Data(), fIsCut);
    TString alias = dest->GetAlias();
@@ -150,7 +168,8 @@ void TTVLVEntry::CopyItem(TTVLVEntry *dest)
 //______________________________________________________________________________
 Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
 {
-// Handle mouse crossing event.
+   // Handle mouse crossing event.
+
    if (fTip) {
       if (event->fType == kEnterNotify)
          fTip->Reset();
@@ -170,14 +189,16 @@ Bool_t TTVLVEntry::HasAlias()
 //______________________________________________________________________________
 void TTVLVEntry::PrependTilde()
 {
-// Prepend a ~ to item alias
+   // Prepend a ~ to item alias
+
    fAlias = "~" + fAlias;
    SetItemName(fAlias.Data());
 }
 //______________________________________________________________________________
 void TTVLVEntry::SetItemName(const char* name)
 {
-// redraw this entry with new name
+   // redraw this entry with new name
+
    if (fItemName) delete fItemName;
    fItemName = new TGString(name);
    Int_t max_ascent, max_descent;
@@ -191,19 +212,22 @@ void TTVLVEntry::SetItemName(const char* name)
 //______________________________________________________________________________
 void TTVLVEntry::SetCutType(Bool_t type)
 {
-      if (fIsCut && type) return;
-      if (!fIsCut && !type) return;
-      if (type) {
-         SetSmallPic(fClient->GetPicture("selection_t.xpm"));
-         SetToolTipText("Selection expression. Drag to scissors to activate");
-      } else
-         SetSmallPic(fClient->GetPicture("expression_t.xpm"));
-      fIsCut = type;
+   // Set cut type
+
+   if (fIsCut && type) return;
+   if (!fIsCut && !type) return;
+   if (type) {
+      SetSmallPic(fClient->GetPicture("selection_t.xpm"));
+      SetToolTipText("Selection expression. Drag to scissors to activate");
+   } else
+      SetSmallPic(fClient->GetPicture("expression_t.xpm"));
+   fIsCut = type;
 }
 //______________________________________________________________________________
 void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutType)
 {
    // Set the true name, alias and type of the expression, then refresh it
+
    SetItemName(alias);
    SetAlias(alias);
    SetTrueName(name);
@@ -222,6 +246,7 @@ void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutTy
 void TTVLVEntry::Empty()
 {
    // clear all names and alias
+
    SetExpression("","-empty-");
    ULong_t *itemType = (ULong_t *) GetUserData();
    if (itemType && (*itemType & TTreeViewer::kLTDragType))
@@ -232,6 +257,7 @@ void TTVLVEntry::SetToolTipText(const char *text, Long_t delayms)
 {
    // Set tool tip text associated with this item. The delay is in
    // milliseconds (minimum 250). To remove tool tip call method with text = 0
+
    if (fTip) {
       delete fTip;
       fTip = 0;
@@ -243,6 +269,8 @@ void TTVLVEntry::SetToolTipText(const char *text, Long_t delayms)
 //______________________________________________________________________________
 void TTVLVEntry::SetSmallPic(const TGPicture *spic)
 {
+   // Set small picture
+
    const TGPicture *cspic = fSmallPic;
    fSmallPic = spic;
    fCurrent = fSmallPic;
@@ -445,53 +473,53 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
    if (event->fType == kButtonRelease) {
       if (fDragging) {
          fDragging = kFALSE;
-           gVirtualX->SetCursor(fId,fDefaultCursor);
-           fLastActive->Move(fX0,fY0);
-           TGFrameElement *el;
-           TIter next(fList);
-           while ((el = (TGFrameElement *) next())) {
-              TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
-              if ((f == fLastActive) || !f->IsActive()) continue;
-              ULong_t *itemType = (ULong_t *) f->GetUserData();
-              fLastActive->Activate(kFALSE);
-              if (!(*itemType & TTreeViewer::kLTPackType)) {
-                 // dragging items to expressions
-                 ((TTVLVEntry *) fLastActive)->CopyItem(f);
-                 if (*itemType & TTreeViewer::kLTDragType)
-                    f->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
-              } else {
-                 if (strlen(((TTVLVEntry *) fLastActive)->GetTrueName())) {
-                    // dragging to scan box
-                    if (!strlen(f->GetTrueName())) {
-                       f->SetTrueName(((TTVLVEntry *)fLastActive)->GetTrueName());
-                       f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
-                    } else {
-                       TString name(2000);
-                       TString dragged = ((TTVLVEntry *)fLastActive)->ConvertAliases();
-                       name  = f->GetTrueName();
-                       if ((name.Length()+dragged.Length()) < 228) {
-                          name += ":";
-                          name += dragged;
-                          f->SetTrueName(name.Data());
-                       } else {
-                          Warning("HandleButton",
-                                  "Name too long. Can not add any more items to scan box.");
-                       }
-                    }
-                 }
-              }
-              fLastActive = f;
-              if (fViewer) {
-                  char msg[2000];
-                  msg[0] = 0;
-                  sprintf(msg, "Content : %s", f->GetTrueName());
-                  fViewer->Message(msg);
-              }
-           }
-           if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
-              SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
-                          event->fCode, (event->fYRoot << 16) | event->fXRoot);
-           }
+         gVirtualX->SetCursor(fId,fDefaultCursor);
+         fLastActive->Move(fX0,fY0);
+         TGFrameElement *el;
+         TIter next(fList);
+         while ((el = (TGFrameElement *) next())) {
+            TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+            if ((f == fLastActive) || !f->IsActive()) continue;
+            ULong_t *itemType = (ULong_t *) f->GetUserData();
+            fLastActive->Activate(kFALSE);
+            if (!(*itemType & TTreeViewer::kLTPackType)) {
+               // dragging items to expressions
+               ((TTVLVEntry *) fLastActive)->CopyItem(f);
+               if (*itemType & TTreeViewer::kLTDragType)
+                  f->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
+            } else {
+               if (strlen(((TTVLVEntry *) fLastActive)->GetTrueName())) {
+                  // dragging to scan box
+                  if (!strlen(f->GetTrueName())) {
+                     f->SetTrueName(((TTVLVEntry *)fLastActive)->GetTrueName());
+                     f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
+                  } else {
+                     TString name(2000);
+                     TString dragged = ((TTVLVEntry *)fLastActive)->ConvertAliases();
+                     name  = f->GetTrueName();
+                     if ((name.Length()+dragged.Length()) < 228) {
+                        name += ":";
+                        name += dragged;
+                        f->SetTrueName(name.Data());
+                     } else {
+                        Warning("HandleButton",
+                                "Name too long. Can not add any more items to scan box.");
+                     }
+                  }
+               }
+            }
+            fLastActive = f;
+            if (fViewer) {
+               char msg[2000];
+               msg[0] = 0;
+               sprintf(msg, "Content : %s", f->GetTrueName());
+               fViewer->Message(msg);
+            }
+         }
+         if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
+            SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
+                        event->fCode, (event->fYRoot << 16) | event->fXRoot);
+         }
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
@@ -731,6 +759,8 @@ void TGSelectBox::GrabPointer()
 //______________________________________________________________________________
 void TGSelectBox::SetLabel(const char* title)
 {
+   // Set label of selection box
+
    fLabel->SetText(new TGString(title));
 }
 
@@ -785,6 +815,8 @@ void TGSelectBox::SetEntry(TTVLVEntry *entry)
 //______________________________________________________________________________
 void TGSelectBox::InsertText(const char* text)
 {
+   // Insert text in text entry
+
    Int_t start = fTe->GetCursorPosition();
    fTe->InsertText(text, fTe->GetCursorPosition());
    fTe->SetCursorPosition(start+strlen(text));

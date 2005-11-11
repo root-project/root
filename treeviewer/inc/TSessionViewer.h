@@ -129,7 +129,7 @@ public:
 
    const char *GetName() const { return fQueryName; }
 
-   ClassDef(TQueryDescription,1)
+   ClassDef(TQueryDescription, 1)  // Query description
 };
 
 
@@ -146,24 +146,24 @@ enum EMenuIdentification {
 class TSessionDescription : public TObject {
 
 public:
-   TString                    fName;         // session name
-   TString                    fAddress;      // server address
-   Int_t                      fPort;         // communication port
-   TString                    fConfigFile;   // configuration file name
-   Int_t                      fLogLevel;     // log (debug) level
-   TString                    fUserName;     // user name (on server)
-   Bool_t                     fConnected;    // kTRUE if connected
-   Bool_t                     fLocal;        // kTRUE if session is local
-   Bool_t                     fSync;         // kTRUE if in sync mode
-   TList                     *fQueries;      // list of queries in this session
-   TList                     *fPackages;     // list of packages
-   TQueryDescription         *fActQuery;     // current (actual) query
-   TVirtualProof             *fProof;        // pointer on TVirtualProof used by this session
-   Int_t                      fNbHistos;     // number of feedback histos
+   TString           fName;         // session name
+   TString           fAddress;      // server address
+   Int_t             fPort;         // communication port
+   TString           fConfigFile;   // configuration file name
+   Int_t             fLogLevel;     // log (debug) level
+   TString           fUserName;     // user name (on server)
+   Bool_t            fConnected;    // kTRUE if connected
+   Bool_t            fLocal;        // kTRUE if session is local
+   Bool_t            fSync;         // kTRUE if in sync mode
+   TList             *fQueries;     // list of queries in this session
+   TList             *fPackages;    // list of packages
+   TQueryDescription *fActQuery;    // current (actual) query
+   TVirtualProof     *fProof;       // pointer on TVirtualProof used by this session
+   Int_t             fNbHistos;     // number of feedback histos
 
    const char *GetName() const { return fName; }
 
-   ClassDef(TSessionDescription,1)
+   ClassDef(TSessionDescription, 1)  // Session description
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ public:
 
    const char    *GetName() const { return fName; }
 
-   ClassDef(TPackageDescription,1)
+   ClassDef(TPackageDescription, 1) // Package description
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ public:
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TSessionServerFrame,0)
+   ClassDef(TSessionServerFrame, 0) // Server frame
 };
 
 
@@ -318,7 +318,7 @@ public:
    void     ProofInfos();
    void     UpdatePackages();
 
-   ClassDef(TSessionFrame,0)
+   ClassDef(TSessionFrame, 0) // Session frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -394,7 +394,7 @@ public:
    void     UpdateButtons(TQueryDescription *desc);
    void     UpdateHistos(TList *objs);
 
-   ClassDef(TSessionQueryFrame,0)
+   ClassDef(TSessionQueryFrame, 0) // Query frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -423,7 +423,7 @@ public:
    void           OnElementDblClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
    void           RemoveAll() { fLVContainer->RemoveAll(); }
 
-   ClassDef(TSessionOutputFrame,0)
+   ClassDef(TSessionOutputFrame, 0) // Output frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -449,7 +449,7 @@ public:
    void           RemoveAll() { fLVContainer->RemoveAll(); }
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
 
-   ClassDef(TSessionInputFrame,0)
+   ClassDef(TSessionInputFrame, 0) // Input frame
 };
 
 
@@ -571,7 +571,7 @@ public:
    void     StartupMessage(char *msg, Bool_t stat, Int_t curr, Int_t total);
    void     StartViewer();
 
-   ClassDef(TSessionViewer,0)
+   ClassDef(TSessionViewer, 0) // Session Viewer
 };
 
 R__EXTERN TSessionViewer *gSessionViewer;
