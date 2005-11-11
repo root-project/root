@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: DataMember.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -49,9 +49,9 @@ std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
     if ( IsMutable())         { s += "mutable ";   }
   }
 
-  if ( ScopeGet().IsEnum()) {
-    if (ScopeGet().DeclaringScope()) {
-      std::string sc = ScopeGet().DeclaringScope().Name(SCOPED);
+  if ( DeclaringScope().IsEnum()) {
+    if ( DeclaringScope().DeclaringScope()) {
+      std::string sc = DeclaringScope().DeclaringScope().Name(SCOPED);
       if ( sc != "::" ) s += sc + "::";
     }
     s += MemberBase::Name( mod & FINAL & QUALIFIED );
@@ -67,13 +67,13 @@ std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
 //-------------------------------------------------------------------------------
-  if (ScopeGet().ScopeType() == ENUM ) {
+  if (DeclaringScope().ScopeType() == ENUM ) {
     return Object(Type::ByName("int"), (void*)&fOffset);
   }
   else {
     void * mem = CalculateBaseObject( obj );
     mem = (char*)mem + Offset();
-    return Object(TypeGet(),mem);
+    return Object(TypeOf(),mem);
   }
 }
 
@@ -84,12 +84,12 @@ void ROOT::Reflex::DataMember::Set( const Object & instance,
 //-------------------------------------------------------------------------------
   void * mem = CalculateBaseObject( instance );
   mem = (char*)mem + Offset();
-  if (TypeGet().IsClass() ) {
+  if (TypeOf().IsClass() ) {
     // Should use the asigment operator if exists (FIX-ME)
-    memcpy( mem, value.AddressGet(), TypeGet().SizeOf());
+    memcpy( mem, value.Address(), TypeOf().SizeOf());
   }
   else {
-    memcpy( mem, value.AddressGet(), TypeGet().SizeOf() );
+    memcpy( mem, value.Address(), TypeOf().SizeOf() );
   }
 }
 */
@@ -101,11 +101,11 @@ void ROOT::Reflex::DataMember::Set( const Object & instance,
 //-------------------------------------------------------------------------------
   void * mem = CalculateBaseObject( instance );
   mem = (char*)mem + Offset();
-  if (TypeGet().IsClass() ) {
+  if (TypeOf().IsClass() ) {
     // Should use the asigment operator if exists (FIX-ME)
-    memcpy( mem, value, TypeGet().SizeOf());
+    memcpy( mem, value, TypeOf().SizeOf());
   }
   else {
-    memcpy( mem, value, TypeGet().SizeOf() );
+    memcpy( mem, value, TypeOf().SizeOf() );
   }
 }

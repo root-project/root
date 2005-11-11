@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Any.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,14 +19,14 @@ using namespace ROOT::Reflex;
 std::ostream & ROOT::Reflex::operator << ( std::ostream& o, 
                                            const Any& any) {
 //-------------------------------------------------------------------------------
-  if      ( any.TypeGet() == typeid(char) )   o << any_cast<char>(any);
-  else if ( any.TypeGet() == typeid(int) )    o << any_cast<int>(any);
-  else if ( any.TypeGet() == typeid(short) )  o << any_cast<short>(any);
-  else if ( any.TypeGet() == typeid(long) )   o << any_cast<long>(any);
-  else if ( any.TypeGet() == typeid(float) )  o << any_cast<float>(any);
-  else if ( any.TypeGet() == typeid(double) ) o << any_cast<double>(any);
-  else if ( any.TypeGet() == typeid(const char*) ) o << any_cast<const char*>(any);
-  else if ( any.TypeGet() == typeid(std::string) ) o << any_cast<std::string>(any); 
+  if      ( any.TypeInfo() == typeid(char) )   o << any_cast<char>(any);
+  else if ( any.TypeInfo() == typeid(int) )    o << any_cast<int>(any);
+  else if ( any.TypeInfo() == typeid(short) )  o << any_cast<short>(any);
+  else if ( any.TypeInfo() == typeid(long) )   o << any_cast<long>(any);
+  else if ( any.TypeInfo() == typeid(float) )  o << any_cast<float>(any);
+  else if ( any.TypeInfo() == typeid(double) ) o << any_cast<double>(any);
+  else if ( any.TypeInfo() == typeid(const char*) ) o << any_cast<const char*>(any);
+  else if ( any.TypeInfo() == typeid(std::string) ) o << any_cast<std::string>(any); 
   else o << "Any object at " << std::hex << &static_cast<Any::holder<int>*>(any.content)->held;
   return o;
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: DataMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -43,19 +43,19 @@ namespace ROOT {
       virtual ~DataMember();
 
 
-      /** return Name of data MemberNth */
+      /** return Name of data MemberAt */
       std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** Get the MemberNth value (as void*) */
+      /** Get the MemberAt value (as void*) */
       Object Get( const Object & obj ) const;
 
 
-      /** return the Offset of the MemberNth */
+      /** return the Offset of the MemberAt */
       size_t Offset() const;
 
 
-      /** Set the MemberNth value */
+      /** Set the MemberAt value */
       /*void Set( const Object & instance,
         const Object & value ) const;*/
       void Set( const Object & instance,
@@ -63,7 +63,7 @@ namespace ROOT {
 
     private:
 
-      /** Offset of the MemberNth */
+      /** Offset of the MemberAt */
       size_t fOffset;
 
     }; // class DataMember

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.1 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #ifndef ROOT_Reflex_DictSelection
@@ -155,7 +155,7 @@
  *
  * @ROOT::Reflex::selection::TRANSIENT
  *
- *   This declaration marks the corresponding MemberNth in @c C with
+ *   This declaration marks the corresponding MemberAt in @c C with
  *   the same Name as transient.  This allows the transient flag
  *   to be listed once in the class header, rather than having
  *   to list it in selection.xml (in possibly many places if @c C
@@ -185,7 +185,7 @@
  *
  * @ROOT::Reflex::selection::TEMPLATE_DEFAULTS<T1, T2, ...>
  *
- *   (The Name of the MemberNth used does not matter.)
+ *   (The Name of the MemberAt used does not matter.)
  *   Declares default template arguments for @c C.  Up to 15 arguments
  *   may be listed.  If a given position cannot be defaulted, then
  *   use @c ROOT::Reflex::selection::NODEFAULT.
@@ -236,19 +236,19 @@ namespace ROOT {
     namespace Selection {
     
       /*
-       * @brief Mark a MemberNth as being transient.
+       * @brief Mark a MemberAt as being transient.
        *
        * This should be used in a selection class.  This marks the corresponding
-       * MemberNth as being transient.  See the header comments for examples.
+       * MemberAt as being transient.  See the header comments for examples.
        */
       class TRANSIENT {};
       
       
       /*
-       * @brief Mark the TypeNth of a (data)MemberNth as autoselected.
+       * @brief Mark the At of a (data)MemberAt as autoselected.
        *
-       * This should be used in a selection class. The Name of the MemberNth shall be the same
-       * as the MemberNth in the original class and will be automatically
+       * This should be used in a selection class. The Name of the MemberAt shall be the same
+       * as the MemberAt in the original class and will be automatically
        * selected to have dictionary information generated wherever it's
        * needed.  See the header comments for examples.
        */

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Object.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,27 +17,12 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::Object::Field( const std::string & data ) const {
-//-------------------------------------------------------------------------------
-  Type t = TypeGet();
-  if ( ! t.IsClass() ) throw RuntimeError("Object is not a composite");
-  for ( size_t i = 0; i < t.DataMemberCount(); ++i ) {
-    Member dm = t.DataMemberNth( i );
-    if ( dm.Name() == data ) {
-      return Object(dm.TypeGet(), (void*)((char*)AddressGet() + dm.Offset()));
-    }
-  }
-  throw RuntimeError("Data MemberNth not found in class");
-}
- 
-
-//-------------------------------------------------------------------------------
 ROOT::Reflex::Object 
 ROOT::Reflex::Object::Get( const std::string & dm ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( dm );
+  Member m = TypeOf().MemberByName( dm );
   if ( m ) return m.Get( * this );
-  else throw RuntimeError("No such MemberNth " + dm );
+  else throw RuntimeError("No such MemberAt " + dm );
   return Object();
 }
 
@@ -47,12 +32,12 @@ ROOT::Reflex::Object
 ROOT::Reflex::Object::Invoke( const std::string & fm,
                               std::vector< Object > args ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().FunctionMemberNth( fm );
+  Member m = TypeOf().FunctionMemberAt( fm );
   if ( m ) {
     if ( args.size() ) return m.Invoke( * this, args );
     else               return m.Invoke( * this );
   }
-  else throw RuntimeError("No such MemberNth " + fm );
+  else throw RuntimeError("No such MemberAt " + fm );
   return Object();
 }
 */
@@ -65,12 +50,12 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 //-------------------------------------------------------------------------------
   return Invoke(fm,Type(),args);
   /*
-  m = TypeGet().FunctionMemberNth( fm );
+  m = TypeOf().FunctionMemberAt( fm );
   if ( m ) {
     if ( args.size() ) return m.Invoke( * this, args );
     else               return m.Invoke( * this );
   }
-  else throw RuntimeError("No such MemberNth " + fm );
+  else throw RuntimeError("No such MemberAt " + fm );
   return Object();
   */
 }
@@ -82,12 +67,12 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const Type & sign,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().FunctionMemberNth( fm, sign );
+  Member m = TypeOf().FunctionMemberByName( fm, sign );
   if ( m ) {
     if ( args.size() ) return m.Invoke( * this, args );
     else               return m.Invoke( * this );
   }
-  else throw RuntimeError("No such MemberNth " + fm );
+  else throw RuntimeError("No such MemberAt " + fm );
   return Object();
 }
 
@@ -96,9 +81,9 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 //void ROOT::Reflex::Object::Set( const std::string & dm,
 //                                const Object & value ) const {
 //-------------------------------------------------------------------------------
-//  Member m = TypeGet().MemberNth( dm );
+//  Member m = TypeOf().MemberAt( dm );
 //  if ( m ) m.Set( * this, value );
-//  else throw RuntimeError("No such MemberNth " + dm );
+//  else throw RuntimeError("No such MemberAt " + dm );
 //}
 
 
@@ -106,7 +91,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 void ROOT::Reflex::Object::Set2( const std::string & dm,
                                  const void * value ) const {
 //-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( dm );
+  Member m = TypeOf().MemberByName( dm );
   if ( m ) m.Set( * this, value );
-  else throw RuntimeError("No such MemberNth " + dm );
+  else throw RuntimeError("No such MemberAt " + dm );
 }

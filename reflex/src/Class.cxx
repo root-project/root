@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.3 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -60,7 +60,7 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
   std::vector< Base > path = std::vector< Base >();
   if ( HasBase( to, path )) { // up cast 
     // in case of up cast the Offset has to be calculated by Reflex
-    size_t obj2 = (size_t)obj.AddressGet();
+    size_t obj2 = (size_t)obj.Address();
     for( std::vector< Base >::reverse_iterator bIter = path.rbegin();
          bIter != path.rend(); ++bIter ) {
       obj2 += bIter->Offset((void*)obj2);
@@ -73,12 +73,12 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
   // use the internal dynamic casting of the compiler (e.g. libstdc++.so)
     void * obj3 = 0;
 #if defined (__linux) || defined (__APPLE__)
-    obj3 = abi::__dynamic_cast(obj.AddressGet(),
+    obj3 = abi::__dynamic_cast(obj.Address(),
                                (const abi::__class_type_info*)&this->TypeInfo(),
                                (const abi::__class_type_info*)&to.TypeInfo(),
                                -1); 
 #elif defined (_WIN32)
-    obj3 = __RTDynamicCast(obj.AddressGet(),
+    obj3 = __RTDynamicCast(obj.Address(),
                            0,
                            (void*)&this->TypeInfo(),
                            (void*)&to.TypeInfo(),
@@ -88,7 +88,7 @@ ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to,
   }
   // fixme cross cast missing ?? internal cast possible ??
 
-  // if the same TypeNth was passed return the object
+  // if the same At was passed return the object
   if ((Type)(*this) == to) return obj;
 
   // if everything fails return the dummy object
@@ -109,16 +109,16 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
     signature2 = defSignature; 
   
   for (size_t i = 0; i < fConstructors.size(); ++ i) {
-    if ( !signature2 || fConstructors[i].TypeGet().Id() == signature2.Id()) {
+    if ( !signature2 || fConstructors[i].TypeOf().Id() == signature2.Id()) {
       constructor = fConstructors[i];
       break;
     }
   }
   
-  if ( constructor.TypeGet() ) {
-    // no memory AddressGet passed -> Allocate memory for class
+  if ( constructor.TypeOf() ) {
+    // no memory Address passed -> Allocate memory for class
     if ( mem == 0 ) mem = Allocate();
-    Object obj = Object( TypeGet(), mem );
+    Object obj = Object( TypeOf(), mem );
     constructor.Invoke( obj, args );
     return obj;
   }
@@ -142,16 +142,16 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
     signature2 = defSignature; 
   
   for (size_t i = 0; i < fConstructors.size(); ++ i) {
-    if ( !signature2 || fConstructors[i].TypeGet().Id() == signature2.Id()) {
+    if ( !signature2 || fConstructors[i].TypeOf().Id() == signature2.Id()) {
       constructor = fConstructors[i];
       break;
     }
   }
   
-  if ( constructor.TypeGet() ) {
-    // no memory AddressGet passed -> Allocate memory for class
+  if ( constructor.TypeOf() ) {
+    // no memory Address passed -> Allocate memory for class
     if ( mem == 0 ) mem = Allocate();
-    Object obj = Object( TypeGet(), mem );
+    Object obj = Object( ThisType(), mem );
     constructor.Invoke( obj, args );
     return obj;
   }
@@ -164,10 +164,10 @@ ROOT::Reflex::Object ROOT::Reflex::Class::Construct( const Type & signature,
 void ROOT::Reflex::Class::Destruct( void * instance, 
                                     bool dealloc ) const {
 //-------------------------------------------------------------------------------
-  if ( ! fDestructor.TypeGet() ) {
+  if ( ! fDestructor.TypeOf() ) {
     // destructor for this class not yet revealed
-    for ( size_t i = 0; i < ScopeBase::FunctionMemberCount(); ++i ) {
-      Member fm = ScopeBase::FunctionMemberNth( i );
+    for ( size_t i = 0; i < ScopeBase::FunctionMemberSize(); ++i ) {
+      Member fm = ScopeBase::FunctionMemberAt( i );
       // constructor found Set the cache pointer
       if ( fm.IsDestructor() ) {
         fDestructor = fm; 
@@ -175,7 +175,7 @@ void ROOT::Reflex::Class::Destruct( void * instance,
       }
     }
   }
-  if ( fDestructor.TypeGet()) {
+  if ( fDestructor.TypeOf()) {
     // we found a destructor -> Invoke it
     Object dummy = Object(Type(), instance);
     fDestructor.Invoke( dummy );
@@ -203,10 +203,10 @@ ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const 
   if ( IsVirtual() ) {
     // Avoid the case that the first word is a virtual_base_offset_table instead of
     // a virtual_function_table  
-    long Offset = **(long**)obj.AddressGet();
+    long Offset = **(long**)obj.Address();
     if ( Offset == 0 ) return * this;
     else {
-      Type dytype = Type::ByTypeInfo(typeid(*(DynType*)obj.AddressGet()));
+      Type dytype = Type::ByTypeInfo(typeid(*(DynType*)obj.Address()));
       if ( dytype && dytype.IsClass() ) return dytype;
       else                              return * this;
     }
@@ -229,17 +229,17 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl ) const {
 bool ROOT::Reflex::Class::HasBase( const Type & cl,  
                                    std::vector< Base > & path ) const {
 //-------------------------------------------------------------------------------
-  for ( size_t i = 0; i < BaseCount(); ++i ) {
-    // is the final BaseNth class one of the current class ?
-    if ( BaseNth( i ).ToType().Id() == cl.Id() ) { 
+  for ( size_t i = 0; i < BaseSize(); ++i ) {
+    // is the final BaseAt class one of the current class ?
+    if ( BaseAt( i ).ToType().Id() == cl.Id() ) { 
       // remember the path to this class
-      path.push_back( BaseNth( i )); 
+      path.push_back( BaseAt( i )); 
       return true; 
     }
-    // if searched BaseNth class is not direct BaseNth look in the bases of this one
-    else if ( BaseNth( i ) && BaseNth( i ).BaseClass()->HasBase( cl, path )) {
+    // if searched BaseAt class is not direct BaseAt look in the bases of this one
+    else if ( BaseAt( i ) && BaseAt( i ).BaseClass()->HasBase( cl, path )) {
       // if successfull remember path
-      path.push_back( BaseNth( i )); 
+      path.push_back( BaseAt( i )); 
       return true; 
     }
   }
@@ -258,8 +258,8 @@ bool ROOT::Reflex::Class::IsComplete() const {
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Class::IsComplete2() const {
 //-------------------------------------------------------------------------------
-  for (size_t i = 0; i < BaseCount(); ++i) {
-    Type baseType = BaseNth( i ).ToType();
+  for (size_t i = 0; i < BaseSize(); ++i) {
+    Type baseType = BaseAt( i ).ToType();
     if ( ! baseType )  return false;
     if ( ! baseType.IsComplete()) return false;
   }
@@ -271,10 +271,10 @@ bool ROOT::Reflex::Class::IsComplete2() const {
 size_t ROOT::Reflex::Class::AllBases() const {
 //-------------------------------------------------------------------------------
   size_t aBases = 0;
-  for ( size_t i = 0; i < BaseCount(); ++i ) {
+  for ( size_t i = 0; i < BaseSize(); ++i ) {
     ++aBases;
-    if ( BaseNth( i )) { 
-      aBases += BaseNth( i ).BaseClass()->AllBases();
+    if ( BaseAt( i )) { 
+      aBases += BaseAt( i ).BaseClass()->AllBases();
     }
   }
   return aBases;
@@ -341,10 +341,10 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
     Type bType = bIter->ToType();
     basePath.push_back( bIter->OffsetFP());
     if ( bType ) {
-    pathsToBase[ (dynamic_cast<const Class*>(bType.TypeBaseNth()))->ScopeGet().Id() ] = new std::vector < OffsetFunction >( basePath );
+    pathsToBase[ (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id() ] = new std::vector < OffsetFunction >( basePath );
       size_t i = 0;
-      for ( i = 0; i < bType.DataMemberCount(); ++i ) {
-        Member dm = bType.DataMemberNth(i);
+      for ( i = 0; i < bType.DataMemberSize(); ++i ) {
+        Member dm = bType.DataMemberAt(i);
         if ( std::find( dataMembers.begin(),
                         dataMembers.end(),
                         dm ) == dataMembers.end()) {
@@ -352,8 +352,8 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
           dataMembers.push_back( dm );
         }
       }
-      for ( i = 0; i < bType.FunctionMemberCount(); ++i ) {
-        Member fm = bType.FunctionMemberNth( i );
+      for ( i = 0; i < bType.FunctionMemberSize(); ++i ) {
+        Member fm = bType.FunctionMemberAt( i );
         if ( std::find( functionMembers.begin(), 
                         functionMembers.end(),
                         fm ) == functionMembers.end()) {
@@ -361,7 +361,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
           functionMembers.push_back( fm );
         }
       }
-      if ( bType ) (dynamic_cast<const Class*>(bType.TypeBaseNth()))->UpdateMembers2( members,
+      if ( bType ) (dynamic_cast<const Class*>(bType.ToTypeBase()))->UpdateMembers2( members,
                                                                                    dataMembers, 
                                                                                    functionMembers,
                                                                                    pathsToBase,

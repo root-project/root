@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -45,8 +45,8 @@ namespace ROOT {
 
       
       /** 
-       * AddBase will add the information about one BaseNth class
-       * @param  Name of the BaseNth class
+       * AddBase will add the information about one BaseAt class
+       * @param  Name of the BaseAt class
        * @param  OffsetFP function pointer for Offset calculation
        * @param  modifiers the modifiers of the class
        */
@@ -56,12 +56,12 @@ namespace ROOT {
 
 
       /** AddDataMember will add the information about one data
-       * MemberNth of the class
+       * MemberAt of the class
        *
-       * @param  Name of the data MemberNth
-       * @param  TypeNth of the data MemberNth
-       * @param  Offset of the data MemberNth
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  Name of the data MemberAt
+       * @param  At of the data MemberAt
+       * @param  Offset of the data MemberAt
+       * @param  modifiers the modifiers of the data MemberAt
        */ 
       void  AddDataMember( const char * nam,
                            const Type & typ,
@@ -70,14 +70,14 @@ namespace ROOT {
 
 
       /** AddFunctionMember will add the information about one
-       * function MemberNth of the class
+       * function MemberAt of the class
        *
-       * @param  Name of the function MemberNth
-       * @param  TypeNth of the function MemberNth
+       * @param  Name of the function MemberAt
+       * @param  At of the function MemberAt
        * @param  stubFP Stub function pointer for the function
        * @param  stubCxt Stub user context for the stub function
        * @param  params pamater names and default values (semi-colon separated)
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  modifiers the modifiers of the data MemberAt
        */
       void AddFunctionMember( const char * nam,
                               const Type & typ,
@@ -118,7 +118,7 @@ namespace ROOT {
       /** current class being built */
       Class * fClass;
 
-      /** last added MemberNth */
+      /** last added MemberAt */
       Member fLastMember;    
 
     }; // class ClassBuilderImpl
@@ -145,8 +145,8 @@ namespace ROOT {
 
 
       /** 
-       * AddBase will add the information about one BaseNth class
-       * @param  Name of the BaseNth class
+       * AddBase will add the information about one BaseAt class
+       * @param  Name of the BaseAt class
        * @param  OffsetFP function pointer for Offset calculation
        * @param  modifiers the modifiers of the class
        */
@@ -157,11 +157,11 @@ namespace ROOT {
                               unsigned int modifiers = 0 );
 
       /** AddDataMember will add the information about one data
-       * MemberNth of the class
+       * MemberAt of the class
        *
-       * @param  Name of the data MemberNth
-       * @param  Offset of data MemberNth
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  Name of the data MemberAt
+       * @param  Offset of data MemberAt
+       * @param  modifiers the modifiers of the data MemberAt
        * @return a reference to the ClassBuilder
        */
       template < class T > 
@@ -175,14 +175,14 @@ namespace ROOT {
 
 
       /** AddFunctionMember will add the information about one
-       * function MemberNth of the class
+       * function MemberAt of the class
        *
-       * @param  Name of the function MemberNth
-       * @param  function templated function MemberNth to extract TypeNth information
+       * @param  Name of the function MemberAt
+       * @param  function templated function MemberAt to extract At information
        * @param  stubFP Stub function pointer for the function
        * @param  stubCxt Stub user context for the stub function
        * @param  params pamater names and default values (semi-colon separated)
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  modifiers the modifiers of the data MemberAt
        * @return a reference to the ClassBuilder
        */
       template < class F > 
@@ -216,7 +216,7 @@ namespace ROOT {
 
 
       /** AddProperty will add a PropertyNth to the last defined
-       * data MemberNth, method or class.
+       * data MemberAt, method or class.
        * @param  key the PropertyNth key
        * @param  value the value of the PropertyNth
        * @return a reference to the building class
@@ -253,8 +253,8 @@ namespace ROOT {
 
 
       /** 
-       * AddBase will add the information about one BaseNth class
-       * @param  Name of the BaseNth class
+       * AddBase will add the information about one BaseAt class
+       * @param  Name of the BaseAt class
        * @param  OffsetFP function pointer for Offset calculation
        * @param  modifiers the modifiers of the class
        */
@@ -266,11 +266,11 @@ namespace ROOT {
 
 
       /** AddDataMember will add the information about one data
-       * MemberNth of the class
+       * MemberAt of the class
        *
-       * @param  Name of the data MemberNth
-       * @param  Offset of data MemberNth
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  Name of the data MemberAt
+       * @param  Offset of data MemberAt
+       * @param  modifiers the modifiers of the data MemberAt
        * @return a reference to the ClassBuilderT
        */
       template < class T > 
@@ -284,14 +284,14 @@ namespace ROOT {
 
 
       /** AddFunctionMember will add the information about one
-       * function MemberNth of the class
+       * function MemberAt of the class
        *
-       * @param  Name of the function MemberNth
-       * @param  function templated function MemberNth to extract TypeNth information
+       * @param  Name of the function MemberAt
+       * @param  function templated function MemberAt to extract At information
        * @param  stubFP Stub function pointer for the function
        * @param  stubCxt Stub user context for the stub function
        * @param  params pamater names and default values (semi-colon separated)
-       * @param  modifiers the modifiers of the data MemberNth
+       * @param  modifiers the modifiers of the data MemberAt
        * @return a reference to the ClassBuilder
        */
       template < class F > 
@@ -325,7 +325,7 @@ namespace ROOT {
 
 
       /** AddProperty will add a PropertyNth to the last defined
-       * data MemberNth, method or class.
+       * data MemberAt, method or class.
        * @param  key the PropertyNth key
        * @param  value the value of the PropertyNth
        * @return a reference to the building class

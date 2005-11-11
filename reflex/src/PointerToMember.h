@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -41,21 +41,21 @@ namespace ROOT {
 
 
       /**
-       * Name will return the fully qualified Name of the pointer TypeNth
+       * Name will return the fully qualified Name of the pointer At
        * @param  typedefexp expand typedefs or not
-       * @return fully qualified Name of pointer TypeNth
+       * @return fully qualified Name of pointer At
        */
       std::string Name( unsigned int mod = 0 ) const;
 
 
       /** pointerToMemberType will return a pointer to the Type the pointer to
-       * MemberNth points to
-       * @return pointer to Type of pointer to MemberNth
+       * MemberAt points to
+       * @return pointer to Type of pointer to MemberAt
        */
       Type ToType() const;
 
 
-      /** static funtion that composes the TypeNth Name */
+      /** static funtion that composes the At Name */
       static std::string BuildTypeName( const Type & pointerToMemberType,
                                         unsigned int mod = SCOPED | QUALIFIED );
 
@@ -63,7 +63,7 @@ namespace ROOT {
 
       /**
        * @link aggregationByValue
-       * @label pointer to MemberNth TypeNth
+       * @label pointer to MemberAt At
        * @supplierCardinality 1
        * @clientCardinality 1
        */

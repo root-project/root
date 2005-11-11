@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Union.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -41,8 +41,8 @@ namespace ROOT {
 
 
       /**
-       * AddDataMember will add the information about a data MemberNth
-       * @param dm pointer to data MemberNth
+       * AddDataMember will add the information about a data MemberAt
+       * @param dm pointer to data MemberAt
        */
       virtual void AddDataMember( const Member & dm ) const;
       virtual void AddDataMember( const char * nam,
@@ -52,76 +52,76 @@ namespace ROOT {
 
 
       /**
-       * DataMemberNth will return the nth data MemberNth of the ScopeNth
-       * @param  nth data MemberNth
-       * @return pointer to data MemberNth
+       * DataMemberAt will return the nth data MemberAt of the At
+       * @param  nth data MemberAt
+       * @return pointer to data MemberAt
        */
-      virtual Member DataMemberNth( size_t nth ) const;
+      virtual Member DataMemberAt( size_t nth ) const;
 
 
       /**
-       * DataMemberNth will return the MemberNth with Name
-       * @param  Name of data MemberNth
-       * @return data MemberNth
+       * DataMemberByName will return the MemberAt with Name
+       * @param  Name of data MemberAt
+       * @return data MemberAt
        */
-      virtual Member DataMemberNth( const std::string & nam ) const;
+      virtual Member DataMemberByName( const std::string & nam ) const;
 
 
       /**
-       * DataMemberCount will return the number of data members of this ScopeNth
+       * DataMemberSize will return the number of data members of this At
        * @return number of data members
        */
-      virtual size_t DataMemberCount() const;
+      virtual size_t DataMemberSize() const;
 
 
       virtual Member_Iterator DataMember_Begin() const;
       virtual Member_Iterator DataMember_End() const;
-      virtual Reverse_Member_Iterator DataMember_Rbegin() const;
-      virtual Reverse_Member_Iterator DataMember_Rend() const;
+      virtual Reverse_Member_Iterator DataMember_RBegin() const;
+      virtual Reverse_Member_Iterator DataMember_REnd() const;
 
 
       /**
-       * DeclaringScope will return a pointer to the ScopeNth of this one
-       * @return pointer to declaring ScopeNth
+       * DeclaringScope will return a pointer to the At of this one
+       * @return pointer to declaring At
        */
       virtual Scope DeclaringScope() const;
 
 
       /**
-       * MemberNth will return the nth MemberNth of the ScopeNth
-       * @param  nth MemberNth
-       * @return pointer to nth MemberNth
+       * MemberAt will return the nth MemberAt of the At
+       * @param  nth MemberAt
+       * @return pointer to nth MemberAt
        */
-      virtual Member MemberNth( size_t nth ) const;
+      virtual Member MemberAt( size_t nth ) const;
 
 
       /**
-       * MemberNth will return the first MemberNth with a given Name
-       * @param  MemberNth Name
-       * @return pointer to MemberNth
+       * MemberByName will return the first MemberAt with a given Name
+       * @param  MemberAt Name
+       * @return pointer to MemberAt
        */
-      virtual Member MemberNth( const std::string & nam,
+      virtual Member MemberByName( const std::string & nam,
                                 const Type & signature ) const;
 
       /**
-       * MemberCount will return the number of members
+       * MemberSize will return the number of members
        * @return number of members
        */
-      virtual size_t MemberCount() const;
+      virtual size_t MemberSize() const;
 
 
       virtual Member_Iterator Member_Begin() const;
       virtual Member_Iterator Member_End() const;
-      virtual Reverse_Member_Iterator Member_Rbegin() const;
-      virtual Reverse_Member_Iterator Member_Rend() const;
+      virtual Reverse_Member_Iterator Member_RBegin() const;
+      virtual Reverse_Member_Iterator Member_REnd() const;
 
 
       /**
-       * PropertyListGet will return a pointer to the PropertyNth list attached
+       * Properties will return a pointer to the PropertyNth list attached
        * to this item
        * @return pointer to PropertyNth list
        */
-      virtual PropertyList PropertyListGet() const;
+      virtual PropertyList Properties() const;
 
     }; // class Union
 
@@ -145,16 +145,16 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::DataMember_End() const
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_Rbegin() const {
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::DataMember_Rbegin();
+  return ScopeBase::DataMember_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_Rend() const {
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::DataMember_Rend();
+  return ScopeBase::DataMember_REnd();
 }
 
 
@@ -173,16 +173,16 @@ inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::Member_End() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_Rbegin() const {
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::Member_Rbegin();
+  return ScopeBase::Member_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_Rend() const {
+inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_REnd() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::Member_Rend();  
+  return ScopeBase::Member_REnd();  
 }
 
 
@@ -204,23 +204,23 @@ inline void ROOT::Reflex::Union::AddDataMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberNth( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::DataMemberNth( nth );
+  return ScopeBase::DataMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberNth( const std::string & nam ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::DataMemberNth( nam );
+  return ScopeBase::DataMemberByName( nam );
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Union::DataMemberCount() const {
+inline size_t ROOT::Reflex::Union::DataMemberSize() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::DataMemberCount();
+  return ScopeBase::DataMemberSize();
 }
 
 
@@ -232,24 +232,24 @@ inline ROOT::Reflex::Scope ROOT::Reflex::Union::DeclaringScope() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberNth( const std::string & nam,
-                                                            const Type & signature ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberByName( const std::string & nam,
+                                                               const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::MemberNth( nam, signature );
+  return ScopeBase::MemberByName( nam, signature );
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Union::MemberCount() const {
+inline size_t ROOT::Reflex::Union::MemberSize() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::MemberCount();
+  return ScopeBase::MemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Union::PropertyListGet() const {
+inline ROOT::Reflex::PropertyList ROOT::Reflex::Union::Properties() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::PropertyListGet();
+  return ScopeBase::Properties();
 }
 
 #endif // ROOT_Reflex_Union

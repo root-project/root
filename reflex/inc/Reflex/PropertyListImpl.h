@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -86,11 +86,11 @@ namespace ROOT {
 
 
       /**
-       * PropertyCount will return the number of properties attached
+       * PropertySize will return the number of properties attached
        * to this item
        * @return number of properties
        */
-      size_t PropertyCount() const;
+      size_t PropertySize() const;
 
 
       /**
@@ -117,7 +117,7 @@ namespace ROOT {
 
     private:
 
-      /** the TypeNth of properties */
+      /** the At of properties */
       typedef std::map< std::string, Any > Properties;
 
       
@@ -192,7 +192,7 @@ inline bool ROOT::Reflex::PropertyListImpl::HasKey( const std::string & key ) co
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::PropertyListImpl::PropertyCount() const {
+inline size_t ROOT::Reflex::PropertyListImpl::PropertySize() const {
 //-------------------------------------------------------------------------------
   if ( fProperties ) return fProperties->size();
   return 0;

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,9 +42,9 @@ namespace ROOT {
 
 
       /**
-       * Name will return the string representation of the array TypeNth
+       * Name will return the string representation of the array At
        * @param  typedefexp expand typedefs or not
-       * @return string representation of TypeNth
+       * @return string representation of At
        */
       std::string Name( unsigned int mod = 0 ) const;
 
@@ -53,17 +53,17 @@ namespace ROOT {
        * size returns the size of the array
        * @return size of array
        */
-      size_t Length() const;
+      size_t ArrayLength() const;
 
 
       /**
-       * arrayType will return a pointer to the TypeNth of the array.
-       * @return pointer to Type of MemberNth et. al.
+       * arrayType will return a pointer to the At of the array.
+       * @return pointer to Type of MemberAt et. al.
        */
       Type ToType() const;
 
 
-      /** static funtion that composes the TypeNth Name */
+      /** static funtion that composes the At Name */
       static std::string BuildTypeName( const Type & typ, 
                                         size_t len,
                                         unsigned int mod = SCOPED | QUALIFIED );
@@ -72,7 +72,7 @@ namespace ROOT {
 
       /**
        * Type of the array
-       * @label array TypeNth
+       * @label array At
        * @link aggregationByValue
        * @supplierCardinality 1
        * @clientCardinality 1
@@ -89,7 +89,7 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Array::Length() const { 
+inline size_t ROOT::Reflex::Array::ArrayLength() const { 
 //-------------------------------------------------------------------------------
   return fLength; 
 }

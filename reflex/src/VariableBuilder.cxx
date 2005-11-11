@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -32,10 +32,10 @@ ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
   Scope sc = Scope::ByName(declScope);
   
   if ( ! sc ) {
-    sc = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ThisScope();
   }
   
-  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
+  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring At is not a namespace");
 
   sc.AddDataMember( memName.c_str(),
                     typ,
@@ -55,7 +55,7 @@ ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
   //-------------------------------------------------------------------------------
-  fDataMember.PropertyListGet().AddProperty( key , value );
+  fDataMember.Properties().AddProperty( key , value );
 }
 
 
@@ -63,7 +63,7 @@ void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
   //-------------------------------------------------------------------------------
-  fDataMember.PropertyListGet().AddProperty( key , value );
+  fDataMember.Properties().AddProperty( key , value );
 }
 
 
@@ -83,10 +83,10 @@ ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam,
   Scope sc = Scope::ByName(declScope);
   
   if ( ! sc ) {
-    sc = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ThisScope();
   }
   
-  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring ScopeNth is not a namespace");
+  if ( ! sc.IsNamespace()) throw RuntimeError("Declaring At is not a namespace");
 
   sc.AddDataMember( memName.c_str(),
                     typ,
@@ -107,7 +107,7 @@ ROOT::Reflex::VariableBuilder &
 ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
                                             const char * value ) {
   //-------------------------------------------------------------------------------
-  fDataMember.PropertyListGet().AddProperty( key , value );
+  fDataMember.Properties().AddProperty( key , value );
   return * this;
 }
 
@@ -117,7 +117,7 @@ ROOT::Reflex::VariableBuilder &
 ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
                                             Any value ) {
   //-------------------------------------------------------------------------------
-  fDataMember.PropertyListGet().AddProperty( key , value );
+  fDataMember.Properties().AddProperty( key , value );
   return * this;
 }
 

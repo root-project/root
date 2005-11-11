@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -52,17 +52,17 @@ ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
 //-------------------------------------------------------------------------------
 void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const {
 //-------------------------------------------------------------------------------
-  char * mem = (char*)obj.AddressGet();
+  char * mem = (char*)obj.Address();
   // check if its a dummy object 
-  Type cl = obj.TypeGet();
-  // if the object TypeNth is not implemented return the AddressGet of the object
+  Type cl = obj.TypeOf();
+  // if the object At is not implemented return the Address of the object
   if ( ! cl ) return mem; 
   if ( cl.IsClass() ) {
-    if ( ScopeGet() && ( cl.Id() != (dynamic_cast<const Class*>(ScopeGet().ScopeBaseNth()))->TypeGet().Id())) {
-      // now we know that the MemberNth is an inherited one
-      std::vector < OffsetFunction > basePath = (dynamic_cast<const Class*>(cl.TypeBaseNth()))->PathToBase( ScopeGet());
+    if ( DeclaringScope() && ( cl.Id() != (dynamic_cast<const Class*>(DeclaringScope().ToScopeBase()))->ThisType().Id())) {
+      // now we know that the MemberAt is an inherited one
+      std::vector < OffsetFunction > basePath = (dynamic_cast<const Class*>(cl.ToTypeBase()))->PathToBase( DeclaringScope());
       if ( basePath.size() ) {
-        // there is a path described from the object to the class containing the MemberNth
+        // there is a path described from the object to the class containing the MemberAt
         std::vector < OffsetFunction >::iterator pIter;
         for ( pIter = basePath.begin(); pIter != basePath.end(); ++pIter ) {
           mem += (*pIter)(mem);
@@ -97,13 +97,6 @@ ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::MemberBase::ScopeGet() const {
-//-------------------------------------------------------------------------------
-  return fScope;
-}
-
-
-//-------------------------------------------------------------------------------
 std::string ROOT::Reflex::MemberBase::MemberTypeAsString() const {
 //-------------------------------------------------------------------------------
   switch ( fMemberType ) {
@@ -120,14 +113,14 @@ std::string ROOT::Reflex::MemberBase::MemberTypeAsString() const {
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::PropertyListGet() const {
+ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::Properties() const {
 //-------------------------------------------------------------------------------
   return fPropertyList;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::MemberBase::TemplateArgumentNth( size_t /* nth */ ) const {
+ROOT::Reflex::Type ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
   return Type();
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.3 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -14,7 +14,7 @@
 #ifndef ROOT_Reflex_Any
 #define ROOT_Reflex_Any
 
-// What:  variant TypeNth boost::any
+// What:  variant At boost::any
 // who:   contributed by Kevlin Henney,
 //        with features contributed and bugs found by
 //        Ed Brey, Mark Rodgers, Peter Dimov, and James Curran
@@ -80,8 +80,8 @@ namespace ROOT {
       }
       
       /** Query */
-      const std::type_info & TypeGet() const {
-        return content ? content->TypeGet() : typeid( void );
+      const std::type_info & TypeInfo() const {
+        return content ? content->TypeInfo() : typeid( void );
       }
 
     private:  // or public: ?
@@ -97,7 +97,7 @@ namespace ROOT {
         virtual ~placeholder() {}
         
         /** Query */
-        virtual const std::type_info & TypeGet() const = 0;
+        virtual const std::type_info & TypeInfo() const = 0;
         
         /** Query */
         virtual placeholder * Clone() const = 0;
@@ -116,7 +116,7 @@ namespace ROOT {
           : held( value ) {}
         
         /** Query */
-        virtual const std::type_info & TypeGet() const {
+        virtual const std::type_info & TypeInfo() const {
           return typeid( ValueType );
         }
           
@@ -162,7 +162,7 @@ namespace ROOT {
     
     /** value */
     template< typename ValueType > ValueType * any_cast( Any * operand ) {
-      return operand && operand->TypeGet() == typeid( ValueType ) 
+      return operand && operand->TypeInfo() == typeid( ValueType ) 
         ? & static_cast< Any::holder< ValueType > * >( operand->content )->held : 0;
     }
     

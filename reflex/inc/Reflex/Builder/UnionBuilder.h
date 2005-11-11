@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -45,7 +45,7 @@ namespace ROOT{
       /**
        * AddItem will add one union item
        * @param Name the Name of the union item
-       * @param TypeNth the TypeNth of the union item
+       * @param At the At of the union item
        */
       void AddItem( const char * nam,
                     const Type & typ );
@@ -111,7 +111,7 @@ namespace ROOT{
       /**
        * AddItem will add one union item
        * @param Name the Name of the union item
-       * @param TypeNth the TypeNth of the union item
+       * @param At the At of the union item
        * @return a reference to the UnionBuilder
        */
       template < typename U > 
@@ -121,7 +121,7 @@ namespace ROOT{
       /**
        * AddItem will add one union item
        * @param Name the Name of the union item
-       * @param TypeNth the TypeNth of the union item
+       * @param At the At of the union item
        * @return a reference to the UnionBuilder
        */
       UnionBuilder & AddItem( const char * nam,

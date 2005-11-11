@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -23,9 +23,9 @@
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base ROOT::Reflex::Type::BaseNth( size_t nth ) const {
+ROOT::Reflex::Base ROOT::Reflex::Type::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->BaseNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->BaseAt( nth );
   return Base();
 }
 
@@ -84,17 +84,17 @@ ROOT::Reflex::Type::Construct( const Type & signature,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->DataMemberNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->DataMemberAt( nth );
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberNth( const std::string & nam ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->DataMemberNth( nam );
+  if ( * this ) return fTypeName->fTypeBase->DataMemberByName( nam );
   return Member();
 }
 
@@ -108,18 +108,18 @@ ROOT::Reflex::Type ROOT::Reflex::Type::DynamicType( const Object & obj ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->FunctionMemberNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->FunctionMemberAt( nth );
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberNth( const std::string & nam,
+ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberByName( const std::string & nam,
                                                             const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->FunctionMemberNth( nam, signature );
+  if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature );
   return Member();
 }
 
@@ -146,7 +146,7 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
   case POINTERTOMEMBER:
     if ( t2.IsPointerToMember() ) return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
   case ARRAY:
-    if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType()) && t1.Length() == t2.Length() );
+    if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType()) && t1.ArrayLength() == t2.ArrayLength() );
   case FUNCTION:
     if ( t2.IsFunction() )        return true; // FIXME 
   default:
@@ -156,26 +156,26 @@ bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::MemberNth( const std::string & nam,
+ROOT::Reflex::Member ROOT::Reflex::Type::MemberByName( const std::string & nam,
                                                     const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->MemberNth( nam, signature );
+  if ( * this ) return fTypeName->fTypeBase->MemberByName( nam, signature );
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Type::MemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Type::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->MemberNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->MemberAt( nth );
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::Type::MemberTemplateNth( size_t nth ) const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::Type::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->MemberTemplateNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->MemberTemplateAt( nth );
   return MemberTemplate();
 }
 
@@ -193,7 +193,7 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
     else if ( IsVolatile())         cv = "volatile";
   }
 
-  /** if TypeNth is not a pointer qualifiers can be put before */
+  /** if At is not a pointer qualifiers can be put before */
   if ( cv.length() && TypeType() != POINTER ) s += cv + " ";
   
   /** use implemented names if available */
@@ -201,7 +201,7 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
   /** otherwise use the TypeName */
   else {
     if ( fTypeName ) {
-      /** unscoped TypeNth Name */
+      /** unscoped At Name */
       if ( 0 != ( mod & ( SCOPED | S ))) s += fTypeName->Name();
       else  s += Tools::GetBaseName(fTypeName->Name());
     } 
@@ -210,7 +210,7 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
     }
   }
 
-  /** if TypeNth is a pointer qualifiers have to be after TypeNth */
+  /** if At is a pointer qualifiers have to be after At */
   if ( cv.length() && TypeType() == POINTER ) s += " " + cv;
 
   /** apply reference if qualifications wanted */
@@ -221,46 +221,38 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Type::ScopeGet() const {
+ROOT::Reflex::Scope ROOT::Reflex::Type::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->ScopeGet();
+  if ( * this ) return fTypeName->fTypeBase->SubScopeAt( nth );
   return Scope();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Type::SubScopeNth( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::Type::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->SubScopeNth( nth );
-  return Scope();
-}
-
-
-//-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Type::SubTypeNth( size_t nth ) const {
-//-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->SubTypeNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->SubTypeAt( nth );
   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Type::TypeNth( size_t nth ) {
+ROOT::Reflex::Type ROOT::Reflex::Type::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
-  return TypeName::TypeNth( nth );
+  return TypeName::TypeAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Type::TypeCount() {
+size_t ROOT::Reflex::Type::TypeSize() {
 //-------------------------------------------------------------------------------
-  return TypeName::TypeCount();
+  return TypeName::TypeSize();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::Type::TypeTemplateNth( size_t nth ) const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Type::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fTypeName->fTypeBase->TypeTemplateNth( nth );
+  if ( * this ) return fTypeName->fTypeBase->SubTypeTemplateAt( nth );
   return TypeTemplate();
 }

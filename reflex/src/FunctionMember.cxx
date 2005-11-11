@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -35,9 +35,9 @@ ROOT::Reflex::FunctionMember::FunctionMember( const char *  nam,
     fReqParameters( 0 )
 {
   // Obtain the names and default values of the function parameters
-  // The "real" number of parameters is obtained from the function TypeNth
+  // The "real" number of parameters is obtained from the function At
   size_t numDefaultParams = 0;
-  size_t type_npar = typ.ParameterCount();
+  size_t type_npar = typ.FunctionParameterSize();
   std::vector<std::string> params;
   if ( parameters ) Tools::StringSplit(params, parameters, ";");
   size_t npar = std::min(type_npar,params.size());
@@ -88,7 +88,7 @@ ROOT::Reflex::Object
 ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
                                       const std::vector < Object > & paramList ) const {
 //-----------------------------------------------------------------------------
-  if ( paramList.size() < ParameterCount(true)) {
+  if ( paramList.size() < FunctionParameterSize(true)) {
     throw RuntimeError("Not enough parameters given to function ");
     return Object();
   }
@@ -96,8 +96,8 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
   std::vector < void * > paramValues;
   // needs more checking FIXME
   for (std::vector<Object>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(it->AddressGet());
-  return Object(TypeGet().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
+       it != paramList.end(); ++it ) paramValues.push_back(it->Address());
+  return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
 }
 */
 
@@ -107,7 +107,7 @@ ROOT::Reflex::Object
 ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
                                       const std::vector < void * > & paramList ) const {
 //-----------------------------------------------------------------------------
-  if ( paramList.size() < ParameterCount(true)) {
+  if ( paramList.size() < FunctionParameterSize(true)) {
     throw RuntimeError("Not enough parameters given to function ");
     return Object();
   }
@@ -116,7 +116,7 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
   // needs more checking FIXME
   for (std::vector<void*>::const_iterator it = paramList.begin();
        it != paramList.end(); ++it ) paramValues.push_back(*it);
-  return Object(TypeGet().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
+  return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
 }
 
 
@@ -127,8 +127,8 @@ ROOT::Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList )
   std::vector < void * > paramValues;
   // needs more checking FIXME
   for (std::vector<Object>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(it->AddressGet());
-  return Object(TypeGet().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
+       it != paramList.end(); ++it ) paramValues.push_back(it->Address());
+  return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
 }
 */
 
@@ -141,13 +141,13 @@ ROOT::Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList )
   // needs more checking FIXME
   for (std::vector<void*>::const_iterator it = paramList.begin();
        it != paramList.end(); ++it ) paramValues.push_back(*it);
-  return Object(TypeGet().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
+  return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::FunctionMember::ParameterCount( bool required ) const {
+size_t ROOT::Reflex::FunctionMember::FunctionParameterSize( bool required ) const {
 //-------------------------------------------------------------------------------
   if ( required ) return fReqParameters;
-  else            return TypeGet().ParameterCount();
+  else            return TypeOf().FunctionParameterSize();
 }

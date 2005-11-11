@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -34,7 +34,7 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
   Type c = Type::ByName(nam);
   if ( c ) { 
     // Class already exists. Check if it was a class.
-    if (! c.IsClass() ) throw RuntimeError("Attempt to replace a non-Class TypeNth with a Class TypeNth"); 
+    if (! c.IsClass() ) throw RuntimeError("Attempt to replace a non-Class At with a Class At"); 
   }
 
   if ( Tools::IsTemplated( nam))  fClass = new ClassTemplateInstance( nam,
@@ -51,7 +51,7 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
 //-------------------------------------------------------------------------------
-  FireClassCallback( fClass->TypeGet() );
+  FireClassCallback( fClass->ThisType() );
 }
 
     
@@ -147,7 +147,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key, 
                                                   Any value ) {
 //-------------------------------------------------------------------------------
-  if ( fLastMember ) fLastMember.PropertyListGet().AddProperty( key, value );
-  else                fClass->PropertyListGet().AddProperty(key, value); 
+  if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
+  else                fClass->Properties().AddProperty(key, value); 
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -40,8 +40,8 @@ ClassTemplateInstance( const char * typ,
 
   std::string templateName = Tools::GetTemplateName( typ );
 
-  for ( size_t i = 0; i < s.TypeTemplateCount(); ++i ) {
-    TypeTemplate ttl = s.TypeTemplateNth( i );
+  for ( size_t i = 0; i < s.SubTypeTemplateSize(); ++i ) {
+    TypeTemplate ttl = s.SubTypeTemplateAt( i );
     if ( ttl.Name(SCOPED) == templateName ) {
       fTemplateFamily = ttl;
       break;
@@ -50,7 +50,7 @@ ClassTemplateInstance( const char * typ,
   
   if ( ! fTemplateFamily ) {
     std::vector < std::string > parameterNames = std::vector < std::string > ();
-    for ( size_t i = 65; i < 65 + TemplateArgumentCount(); ++i ) {
+    for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) {
       std::ostringstream o; 
       o << char(i); 
       parameterNames.push_back("typename " + o.str());      
@@ -59,7 +59,7 @@ ClassTemplateInstance( const char * typ,
                                                    s,
                                                    parameterNames );
     fTemplateFamily = TypeTemplate(tti);
-    s.AddTypeTemplate( fTemplateFamily );
+    s.AddSubTypeTemplate( fTemplateFamily );
   }
   
   fTemplateFamily.AddTemplateInstance((Type)(*this));
@@ -74,7 +74,7 @@ std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ClassTemplateInstance::TemplateArgumentNth( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgumentNth( nth );
+  return TemplateInstance::TemplateArgumentAt( nth );
 }

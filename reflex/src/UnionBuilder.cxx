@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,8 +42,8 @@ void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
 void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   Any value ) {
 //-------------------------------------------------------------------------------
-  if ( fLastMember ) fLastMember.PropertyListGet().AddProperty( key, value );
-  else                fUnion->PropertyListGet().AddProperty(key, value );
+  if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
+  else                fUnion->Properties().AddProperty(key, value );
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -33,17 +33,17 @@ ROOT::Reflex::Scope::operator ROOT::Reflex::Type () const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base ROOT::Reflex::Scope::BaseNth( size_t nth ) const {
+ROOT::Reflex::Base ROOT::Reflex::Scope::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->BaseNth( nth );
+  if ( * this ) return fScopeName->fScopeBase->BaseAt( nth );
   return Base();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::BaseCount() const {
+size_t ROOT::Reflex::Scope::BaseSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->BaseCount();
+  if ( * this ) return fScopeName->fScopeBase->BaseSize();
   return 0;
 }
 
@@ -56,101 +56,101 @@ ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & name ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberNth( nth ); 
+  if ( * this ) return fScopeName->fScopeBase->DataMemberAt( nth ); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberNth( const std::string & name ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberNth( name ); 
+  if ( * this ) return fScopeName->fScopeBase->DataMemberByName( name ); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::DataMemberCount() const {
+size_t ROOT::Reflex::Scope::DataMemberSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberCount(); 
+  if ( * this ) return fScopeName->fScopeBase->DataMemberSize(); 
   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberAt( size_t nth ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberNth(nth); 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberAt(nth); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( const std::string & name ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberNth( name, Type() ); 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, Type() ); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberNth( const std::string & name,
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name,
                                                              const Type & signature ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberNth( name, signature ); 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, signature ); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::FunctionMemberCount() const {
+size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberCount(); 
+  if ( * this ) return fScopeName->fScopeBase->FunctionMemberSize(); 
   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member 
-ROOT::Reflex::Scope::MemberNth( const std::string & name ) const {
+ROOT::Reflex::Scope::MemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberNth(name, Type()); 
+  if ( * this ) return fScopeName->fScopeBase->MemberByName(name, Type()); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member 
-ROOT::Reflex::Scope::MemberNth( const std::string & name,
+ROOT::Reflex::Scope::MemberByName( const std::string & name,
                                 const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberNth(name, signature); 
+  if ( * this ) return fScopeName->fScopeBase->MemberByName(name, signature); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::Scope::MemberNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberNth(nth); 
+  if ( * this ) return fScopeName->fScopeBase->MemberAt(nth); 
   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateNth( size_t nth ) const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberTemplateNth( nth );
+  if ( * this ) return fScopeName->fScopeBase->MemberTemplateAt( nth );
   return MemberTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::MemberTemplateCount() const {
+size_t ROOT::Reflex::Scope::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberTemplateCount();
+  if ( * this ) return fScopeName->fScopeBase->MemberTemplateSize();
   return 0;
 }
 
@@ -170,39 +170,39 @@ std::string ROOT::Reflex::Scope::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::Scope::ScopeNth( size_t nth ) {
+ROOT::Reflex::Scope ROOT::Reflex::Scope::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
-  return ScopeName::ScopeNth( nth );
+  return ScopeName::ScopeAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::ScopeCount() {
+size_t ROOT::Reflex::Scope::ScopeSize() {
 //-------------------------------------------------------------------------------
-  return ScopeName::ScopeCount();
+  return ScopeName::ScopeSize();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeNth( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeNth( nth ); 
+  if ( * this ) return fScopeName->fScopeBase->SubTypeAt( nth ); 
   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::SubTypeCount() const {
+size_t ROOT::Reflex::Scope::SubTypeSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeCount(); 
+  if ( * this ) return fScopeName->fScopeBase->SubTypeSize(); 
   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::Scope::TemplateArgumentNth( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->TemplateArgumentNth( nth );
+  if ( * this ) return fScopeName->fScopeBase->TemplateArgumentAt( nth );
   return Type();
 }
 
@@ -216,17 +216,17 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::TemplateFamily() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::TypeTemplateNth( size_t nth ) const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->TypeTemplateNth( nth ); 
+  if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateAt( nth ); 
   return TypeTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::Scope::TypeTemplateCount() const {
+size_t ROOT::Reflex::Scope::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->TypeTemplateCount();
+  if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateSize();
   return 0;
 }
 
@@ -333,14 +333,14 @@ void ROOT::Reflex::Scope::RemoveMemberTemplate( const MemberTemplate & mt ) cons
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Scope::AddTypeTemplate( const TypeTemplate & tt ) const {
+void ROOT::Reflex::Scope::AddSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddTypeTemplate( tt );
+  if ( * this ) fScopeName->fScopeBase->AddSubTypeTemplate( tt );
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Scope::RemoveTypeTemplate( const TypeTemplate & tt ) const {
+void ROOT::Reflex::Scope::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->RemoveTypeTemplate( tt );
+  if ( * this ) fScopeName->fScopeBase->RemoveSubTypeTemplate( tt );
 }

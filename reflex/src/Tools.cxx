@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -196,7 +196,7 @@ std::string ROOT::Reflex::Tools::Demangle( const std::type_info & ti ) {
   bool remove_additional_pointer = false;
   std::string  mangled = ti.name();
 
-  // if the TypeNth Name is string return the final string Name 
+  // if the At Name is string return the final string Name 
   // abi::Demangle would return "std::string" instead
   if ( mangled == "Ss" ) return "std::basic_string<char>";
 

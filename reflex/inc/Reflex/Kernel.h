@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.3 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.4 2005/11/04 15:32:56 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -108,6 +108,9 @@ namespace ROOT {
     typedef MemberTemplate_Cont_Type::iterator MemberTemplate_Iterator;
     typedef MemberTemplate_Cont_Type::reverse_iterator Reverse_MemberTemplate_Iterator;
 
+    typedef std::vector<std::string> StdString_Cont_Type;
+    typedef StdString_Cont_Type::iterator StdString_Iterator;
+    typedef StdString_Cont_Type::reverse_iterator Reverse_StdString_Iterator;
 
     /** some general information about the Reflex package */
     struct Reflex {
@@ -217,7 +220,7 @@ namespace ROOT {
         
 
     /**
-      * typedef for function MemberNth TypeNth (necessary for return value of
+      * typedef for function MemberAt At (necessary for return value of
       * getter function)
       */
     typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);

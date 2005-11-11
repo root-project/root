@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -46,11 +46,11 @@ namespace ROOT {
       virtual ~FunctionMember() {}
 
 
-      /** return full Name of function MemberNth */
+      /** return full Name of function MemberAt */
       std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** Invoke the function (if return TypeNth as void*) */
+      /** Invoke the function (if return At as void*) */
       /*Object Invoke( const Object & obj, 
         const std::vector < Object > & paramList ) const;*/
       Object Invoke( const Object & obj, 
@@ -65,15 +65,27 @@ namespace ROOT {
 
 
       /** number of parameters */
-      size_t ParameterCount( bool required = false ) const;
+      size_t FunctionParameterSize( bool required = false ) const;
 
 
-      /** ParameterNth nth default value if declared*/
-      std::string ParameterDefault( size_t nth ) const;
+      /** FunctionParameterAt nth default value if declared*/
+      std::string FunctionParameterDefaultAt( size_t nth ) const;
 
 
-      /** ParameterNth nth Name if declared*/
-      std::string ParameterName( size_t nth ) const;
+      virtual StdString_Iterator FunctionParameterDefault_Begin() const;
+      virtual StdString_Iterator FunctionParameterDefault_End() const;
+      virtual Reverse_StdString_Iterator FunctionParameterDefault_RBegin() const;
+      virtual Reverse_StdString_Iterator FunctionParameterDefault_REnd() const;
+
+
+      /** FunctionParameterAt nth Name if declared*/
+      std::string FunctionParameterNameAt( size_t nth ) const;
+
+
+      virtual StdString_Iterator FunctionParameterName_Begin() const;
+      virtual StdString_Iterator FunctionParameterName_End() const;
+      virtual Reverse_StdString_Iterator FunctionParameterName_RBegin() const;
+      virtual Reverse_StdString_Iterator FunctionParameterName_REnd() const;
 
 
       /** return a pointer to the context */
@@ -93,11 +105,13 @@ namespace ROOT {
       void*  fStubCtx;
 
 
-      /** ParameterNth names */
+      /** FunctionParameterAt names */
+      mutable
       std::vector < std::string > fParameterNames;
 
 
-      /** ParameterNth names */
+      /** FunctionParameterAt names */
+      mutable
       std::vector < std::string > fParameterDefaults;
 
 
@@ -112,15 +126,71 @@ namespace ROOT {
 
 //-------------------------------------------------------------------------------
 inline std::string 
-ROOT::Reflex::FunctionMember::ParameterDefault( size_t nth ) const {
+ROOT::Reflex::FunctionMember::FunctionParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   return fParameterDefaults[nth];
 }
 
 
 //-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_Begin() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_End() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_RBegin() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_REnd() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_Begin() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_End() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_RBegin() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_REnd() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.rend();
+}
+
+
+//-------------------------------------------------------------------------------
 inline std::string 
-ROOT::Reflex::FunctionMember::ParameterName( size_t nth ) const {
+ROOT::Reflex::FunctionMember::FunctionParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   return fParameterNames[nth];
 }

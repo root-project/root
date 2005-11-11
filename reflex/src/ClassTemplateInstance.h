@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -52,24 +52,24 @@ namespace ROOT {
 
 
       /**
-       * TemplateArgumentNth will return a pointer to the nth template argument
+       * TemplateArgumentAt will return a pointer to the nth template argument
        * @param  nth nth template argument
        * @return pointer to nth template argument
        */
-      Type TemplateArgumentNth( size_t nth ) const;
+      Type TemplateArgumentAt( size_t nth ) const;
 
 
       /**
-       * templateArgCount will return the number of template arguments
+       * templateArgSize will return the number of template arguments
        * @return number of template arguments
        */
-      size_t TemplateArgumentCount() const;
+      size_t TemplateArgumentSize() const;
 
 
       virtual Type_Iterator TemplateArgument_Begin() const;
       virtual Type_Iterator TemplateArgument_End() const;
-      virtual Reverse_Type_Iterator TemplateArgument_Rbegin() const;
-      virtual Reverse_Type_Iterator TemplateArgument_Rend() const;
+      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
 
       /**
@@ -81,7 +81,7 @@ namespace ROOT {
     private:
 
       /** 
-       * The template TypeNth (family)
+       * The template At (family)
        * @label template family
        * @link aggregationByValue
        * @clientCardinality 1
@@ -100,37 +100,37 @@ inline ROOT::Reflex::ClassTemplateInstance::~ClassTemplateInstance() {}
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::ClassTemplateInstance::TemplateArgumentCount() const {
+inline size_t ROOT::Reflex::ClassTemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgumentCount();
+  return TemplateInstance::TemplateArgumentSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::TemplateArgument_Begin();
+  return TemplateInstance::TemplateArgument_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::TemplateArgument_End();
+  return TemplateInstance::TemplateArgument_End();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Rbegin() const {
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::TemplateArgument_Rbegin();
+  return TemplateInstance::TemplateArgument_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Rend() const {
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::TemplateArgument_Rend();
+  return TemplateInstance::TemplateArgument_REnd();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -13,7 +13,7 @@
 #include "Reflex/Member.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::InstantiationNth( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
   return Member();

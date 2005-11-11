@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -94,14 +94,14 @@ ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeGet() const {
+ROOT::Reflex::Type ROOT::Reflex::TypeName::ThisType() const {
 //-------------------------------------------------------------------------------
   return Type( this );
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeNth( size_t nth ) {
+ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
   if ( nth < sTypeVec().size()) return sTypeVec()[nth];
   return Type();
@@ -109,7 +109,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeNth( size_t nth ) {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeName::TypeCount() {
+size_t ROOT::Reflex::TypeName::TypeSize() {
 //-------------------------------------------------------------------------------
   return sTypeVec().size();
 }
@@ -130,14 +130,14 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_End() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_Rbegin() {
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_RBegin() {
 //-------------------------------------------------------------------------------
   return sTypeVec().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_Rend() {
+ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_REnd() {
 //-------------------------------------------------------------------------------
   return sTypeVec().rend();
 }

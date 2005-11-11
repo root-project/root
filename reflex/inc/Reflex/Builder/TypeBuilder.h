@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -279,10 +279,10 @@ namespace ROOT{
   
 
     /**
-     * offsetOf will calculate the Offset of a data MemberNth relative
+     * offsetOf will calculate the Offset of a data MemberAt relative
      * to the start of the class
-     * @param MemberNth the pointer to the data MemberNth
-     * @return the Offset of the data MemberNth
+     * @param MemberAt the pointer to the data MemberAt
+     * @return the Offset of the data MemberAt
      */
     template < typename C, typename M >
       size_t offsetOf( M C::* member )  {
@@ -292,7 +292,7 @@ namespace ROOT{
 
     /**
      * @struct BaseOffset TypeBuilder.h Reflex/Builder/TypeBuilder.h
-     * provide the static function that calculates the Offset between  BaseNth classes
+     * provide the static function that calculates the Offset between  BaseAt classes
      */
     template < typename C, typename B >
       struct BaseOffset {
@@ -409,7 +409,7 @@ namespace ROOT{
 
     /**
      * getType will return a pointer to a Type (create it if necessery) 
-     * representating the TypeNth of the template ParameterNth
+     * representating the At of the template FunctionParameterAt
      * @return pointer to Type
      */
     template < typename T > 
@@ -452,7 +452,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(), 
-                                             Tools::makeVector( TypeDistiller<T0>::Get() ), 
+                                             Tools::MakeVector( TypeDistiller<T0>::Get() ), 
                                              typeid(R(T0))); 
       }
     };
@@ -464,7 +464,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1)));
         if ( t ) return t;
         else return FunctionTypeBuilder( TypeDistiller<R>::Get(), 
-                                         Tools::makeVector( TypeDistiller<T0>::Get(), 
+                                         Tools::MakeVector( TypeDistiller<T0>::Get(), 
                                                             TypeDistiller<T1>::Get()),
                                          typeid(R(T0, T1))); 
       }
@@ -477,7 +477,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get()), 
                                              typeid(R(T0, T1, T2))); 
@@ -492,7 +492,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get()), 
@@ -509,7 +509,7 @@ namespace ROOT{
           Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4)));
           if ( t ) return t;
           else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                               Tools::makeVector( TypeDistiller<T0>::Get(),
+                                               Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                   TypeDistiller<T1>::Get(),
                                                                   TypeDistiller<T2>::Get(), 
                                                                   TypeDistiller<T3>::Get(), 
@@ -527,7 +527,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -547,7 +547,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -568,7 +568,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -591,7 +591,7 @@ namespace ROOT{
           Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8)));
           if ( t ) return t;
           else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                               Tools::makeVector( TypeDistiller<T0>::Get(),
+                                               Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                   TypeDistiller<T1>::Get(),
                                                                   TypeDistiller<T2>::Get(), 
                                                                   TypeDistiller<T3>::Get(), 
@@ -616,7 +616,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -642,7 +642,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -669,7 +669,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -699,7 +699,7 @@ namespace ROOT{
           Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)));
           if ( t ) return t;
           else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                               Tools::makeVector( TypeDistiller<T0>::Get(),
+                                               Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                   TypeDistiller<T1>::Get(),
                                                                   TypeDistiller<T2>::Get(), 
                                                                   TypeDistiller<T3>::Get(), 
@@ -730,7 +730,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -762,7 +762,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 
@@ -796,7 +796,7 @@ namespace ROOT{
         Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)));
         if ( t ) return t;
         else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
-                                             Tools::makeVector( TypeDistiller<T0>::Get(),
+                                             Tools::MakeVector( TypeDistiller<T0>::Get(),
                                                                 TypeDistiller<T1>::Get(),
                                                                 TypeDistiller<T2>::Get(), 
                                                                 TypeDistiller<T3>::Get(), 

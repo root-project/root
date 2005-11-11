@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -67,7 +67,7 @@ namespace ROOT {
     void*               start;
     void*               temp;
     bool                delete_temp;
-    int                 refCount;
+    int                 refSize;
     size_t              space;
     T& iter() { return *(T*)buff; }
   };

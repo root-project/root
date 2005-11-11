@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -49,25 +49,25 @@ namespace ROOT {
 
 
       /**
-       * operator bool will return true if the PropertyNth list is implemented
-       * @return true if PropertyNth list is not a fake one
+       * operator bool will return true if the property list is implemented
+       * @return true if property list is not a fake one
        */
       operator bool () const;
        
 
       /**
-       * AddProperty will add a key value pair to the PropertyNth lsit
-       * @param key the key of the PropertyNth
-       * @param value the value of the PropertyNth (as any object)
+       * AddProperty will add a key value pair to the property lsit
+       * @param key the key of the property
+       * @param value the value of the property (as any object)
        */
       void AddProperty( const std::string & key,
                         const Any & value );
 
 
       /**
-       * AddProperty will add a key value pair to the PropertyNth lsit
-       * @param key the key of the PropertyNth
-       * @param value the value of the PropertyNth (as any object)
+       * AddProperty will add a key value pair to the property lsit
+       * @param key the key of the property
+       * @param value the value of the property (as any object)
        */
       void AddProperty( const std::string & key,
                         const char * value );
@@ -80,47 +80,47 @@ namespace ROOT {
 
       
       /**
-       * RemoveProperty will remove a key value pair to the PropertyNth lsit
-       * @param key the key of the PropertyNth
+       * RemoveProperty will remove a key value pair to the property lsit
+       * @param key the key of the property
        */
       void RemoveProperty( const std::string & key );
 
 
       /**
-       * HasKey will return true if the PropertyNth list contains the key
-       * @param  key the PropertyNth key
-       * @return nth PropertyNth key
+       * HasKey will return true if the property list contains the key
+       * @param  key the property key
+       * @return nth property key
        */
       bool HasKey( const std::string & key ) const;
 
 
       /**
-       * PropertyCount will return the number of properties attached
+       * PropertySize will return the number of properties attached
        * to this item
        * @return number of properties
        */
-      size_t PropertyCount() const;
+      size_t PropertySize() const;
 
 
       /**
-       * PropertyKeys will return all keys of this PropertyNth list
-       * @return all PropertyNth keys
+       * PropertyKeys will return all keys of this property list
+       * @return all property keys
        */
       std::string PropertyKeys() const;
 
 
       /**
-       * propertyNumString will return the nth PropertyNth as a string if printable
-       * @param  key the PropertyNth key
-       * @return nth PropertyNth value as string
+       * propertyNumString will return the nth property as a string if printable
+       * @param  key the property key
+       * @return nth property value as string
        */
       std::string PropertyAsString(const std::string & key) const;
 
 
       /**
-       * propertyNumValue will return the nth PropertyNth value 
-       * @param  key the PropertyNth key
-       * @return nth PropertyNth value
+       * PropertyValue will return the nth property value 
+       * @param  key the property key
+       * @return nth property value
        */
       Any PropertyValue(const std::string & key) const;
 
@@ -135,7 +135,7 @@ namespace ROOT {
     }; // class Propertylist
 
     /** 
-     * will put the PropertyNth (key and value) on the ostream if printable
+     * will put the property (key and value) on the ostream if printable
      * @param s the reference to the stream
      * @return the stream
      */
@@ -213,9 +213,9 @@ ROOT::Reflex::PropertyList::PropertyAsString( const std::string & key ) const {
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::PropertyList::PropertyCount() const {
+inline size_t ROOT::Reflex::PropertyList::PropertySize() const {
 //-------------------------------------------------------------------------------
-  if ( fPropertyListImpl ) return fPropertyListImpl->PropertyCount();
+  if ( fPropertyListImpl ) return fPropertyListImpl->PropertySize();
   return 0;
 }
 

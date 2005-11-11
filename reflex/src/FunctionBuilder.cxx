@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.3 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -36,7 +36,7 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
   std::string declScope;
   std::string funcName;
   size_t pos = Tools::GetTemplateName(nam).rfind( "::" );
-  // Name contains declaring ScopeNth
+  // Name contains declaring At
   if ( pos != std::string::npos ) {   
     funcName  = fullname.substr( pos + 2 );
     declScope = fullname.substr( 0, pos ); 
@@ -49,7 +49,7 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
   Scope sc = Scope::ByName(declScope);
   if ( ! sc ) {
     // Let's create the namespace here
-    sc = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ThisScope();
   }
 
   if ( ! sc.IsNamespace() ) throw RuntimeError("Declaring scope is not a namespace");
@@ -81,7 +81,7 @@ ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
 void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
 //-------------------------------------------------------------------------------
-   fFunction.PropertyListGet().AddProperty( key , value );
+   fFunction.Properties().AddProperty( key , value );
 }
 
 
@@ -89,7 +89,7 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
-  fFunction.PropertyListGet().AddProperty( key , value );
+  fFunction.Properties().AddProperty( key , value );
 }
 
 
@@ -119,9 +119,9 @@ ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
   Scope sc = Scope::ByName(declScope);
   if ( ! sc ) {
     // Let's create the namespace here
-    sc = (new Namespace(declScope.c_str()))->ScopeGet();
+    sc = (new Namespace(declScope.c_str()))->ThisScope();
   }
-  if ( ! sc.IsNamespace() ) throw RuntimeError("2Declaring ScopeNth is not a namespace");
+  if ( ! sc.IsNamespace() ) throw RuntimeError("2Declaring At is not a namespace");
   if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
                                                                                                       typ,
                                                                                                       stubFP,

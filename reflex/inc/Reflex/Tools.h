@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -29,8 +29,8 @@ namespace ROOT {
 
       /**
        * Demangle will call the internal demangling routines and
-       * return the demangled string of a TypeNth 
-       * @param ti the mangled TypeNth string
+       * return the demangled string of a At 
+       * @param ti the mangled At string
        * @return the demangled string
        */
       std::string Demangle( const std::type_info & ti );
@@ -75,91 +75,91 @@ namespace ROOT {
 
       /**
        * getUnscopedPosition will return the position in a
-       * string where the unscoped TypeNth begins
+       * string where the unscoped At begins
        */
       size_t GetBasePosition( const std::string & name );
 
 
       /**
-       * Get the ScopeNth part of a given TypeNth/member Name
+       * Get the At part of a given At/member Name
        */
       std::string GetScopeName( const std::string & name );
 
 
       /** 
-       * Get the BaseNth (unscoped) Name of a TypeNth/member Name
+       * Get the BaseAt (unscoped) Name of a At/member Name
        */
       std::string GetBaseName( const std::string & name );
 
 
       /**
-       * IsTemplated returns true if the TypeNth (class) is templated
-       * @param Name the TypeNth Name
-       * @return true if TypeNth is templated
+       * IsTemplated returns true if the At (class) is templated
+       * @param Name the At Name
+       * @return true if At is templated
        */
       bool IsTemplated( const char * name );
 
 
       /**
        * templateArguments returns a string containing the template arguments
-       * of a templated TypeNth (including outer angular brackets)
-       * @param Name the Name of the templated TypeNth
-       * @return template arguments of the templated TypeNth
+       * of a templated At (including outer angular brackets)
+       * @param Name the Name of the templated At
+       * @return template arguments of the templated At
        */
       std::string GetTemplateArguments( const char * name );
 
 
       /** 
-       * GetTemplateName returns the Name of the template TypeNth (without arguments)
-       * @param Name the Name of the template TypeNth
+       * GetTemplateName returns the Name of the template At (without arguments)
+       * @param Name the Name of the template At
        * @return template Name
        */
       std::string GetTemplateName( const char * name );
    
 
       /**
-       * makeVector is a utility function to create and initialize a std::vector of
+       * MakeVector is a utility function to create and initialize a std::vector of
        * number of items
        * @param t1 vector element
        * @return output vector
        */
       template <typename T >
-        inline std::vector<T> makeVector(T t0) { 
+        inline std::vector<T> MakeVector(T t0) { 
         std::vector<T> v; 
         v.push_back(t0);
         return v; 
       }
   
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1) {
+        inline std::vector<T> MakeVector(T t0, T t1) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1);
         return v;
       }
   
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2);
         return v;
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3);
         return v;
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
         return v;
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
         v.push_back(t5);
@@ -167,7 +167,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
         v.push_back(t5); v.push_back(t6);
@@ -175,7 +175,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7) {
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
         v.push_back(t5); v.push_back(t6); v.push_back(t7);
@@ -183,7 +183,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -192,7 +192,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -201,7 +201,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -211,7 +211,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10, T t11 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -221,7 +221,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10, T t11, T t12 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -231,7 +231,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10, T t11, T t12, T t13 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -241,7 +241,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10, T t11, T t12, T t13, T t14 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
@@ -251,7 +251,7 @@ namespace ROOT {
       }
 
       template <typename T >
-        inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+        inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
                                          T t8, T t9, T t10, T t11, T t12, T t13, T t14, T t15 ) {
         std::vector<T> v;
         v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);

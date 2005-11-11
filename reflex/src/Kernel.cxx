@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -46,18 +46,18 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "char", 
                         sizeof( char ), 
                         typeid( char ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   // signed integer types [3.9.1.2]
   tb = new Fundamental( "signed char", 
                         sizeof( signed char ), 
                         typeid( signed char ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   tb = new Fundamental( "short int", 
                         sizeof( short int ), 
                         typeid( short int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = (*tb);
   new Typedef( "short", t, FUNDAMENTAL );
   new Typedef( "signed short", t, FUNDAMENTAL );
@@ -68,7 +68,7 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "int", 
                         sizeof( int ), 
                         typeid( int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "signed", t, FUNDAMENTAL );
   new Typedef( "signed int", t, FUNDAMENTAL );
@@ -76,7 +76,7 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "long int", 
                         sizeof( long int ), 
                         typeid( long int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "long", t, FUNDAMENTAL );
   new Typedef( "signed long", t, FUNDAMENTAL );
@@ -88,12 +88,12 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "unsigned char", 
                         sizeof( unsigned char ), 
                         typeid( unsigned char ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   tb = new Fundamental( "unsigned short int", 
                         sizeof( unsigned short int ), 
                         typeid( unsigned short int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "unsigned short", t, FUNDAMENTAL );
   new Typedef( "short unsigned int", t, FUNDAMENTAL );
@@ -101,14 +101,14 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "unsigned int", 
                         sizeof( unsigned int ), 
                         typeid( unsigned int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "unsigned", t, FUNDAMENTAL );
 
   tb = new Fundamental( "unsigned long int", 
                         sizeof( unsigned long int ), 
                         typeid( unsigned long int ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "unsigned long", t, FUNDAMENTAL );
   new Typedef( "long unsigned", t, FUNDAMENTAL );
@@ -118,42 +118,42 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "w_chart", 
                         sizeof( w_chart ), 
                         & typeid( w_chart ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   */
 
   // bool [3.9.1.6]
   tb = new Fundamental( "bool", 
                         sizeof( bool ), 
                         typeid( bool ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   // floating point types [3.9.1.8]
   tb = new Fundamental( "float", 
                         sizeof( float ), 
                         typeid( float ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   tb = new Fundamental( "double", 
                         sizeof( double ), 
                         typeid( double ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   tb = new Fundamental( "long double", 
                         sizeof( long double ), 
                         typeid( long double ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   // void [3.9.1.9]
   tb = new Fundamental( "void", 
                         0, 
                         typeid( void ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
 
   // non fundamental types but also supported at initialisation
   tb = new Fundamental( "longlong", 
                         sizeof( longlong ), 
                         typeid( longlong ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "long long", t, FUNDAMENTAL );
   new Typedef( "long long int", t, FUNDAMENTAL );
@@ -161,7 +161,7 @@ ROOT::Reflex::Reflex::Reflex() {
   tb = new Fundamental( "ulonglong", 
                         sizeof( ulonglong ), 
                         typeid( ulonglong ));
-  tb->PropertyListGet().AddProperty( "desc", "fundamental TypeNth" );
+  tb->Properties().AddProperty( "desc", "fundamental At" );
   t = *tb;
   new Typedef( "long long unsigned", t, FUNDAMENTAL );
   new Typedef( "unsigned long long", t, FUNDAMENTAL );

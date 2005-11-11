@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.3 2005/11/07 09:22:20 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -48,16 +48,16 @@ namespace ROOT {
 
 
       /**
-       * the bool operator returns true if the TypeNth of the BaseNth is resolved (implemented)
-       * @return true if BaseNth TypeNth is implemented 
+       * the bool operator returns true if the type of the base is resolved (implemented)
+       * @return true if base type is implemented 
        */
       operator bool () const;
 
 
       /**
-       * Name will return the string represenation of the BaseNth class
+       * Name will return the string represenation of the base class
        * @param  typedefexp expand typedefs or not
-       * @return string represenation of BaseNth class
+       * @return string represenation of base class
        */
       std::string Name( unsigned int mod = 0 ) const;
 
@@ -91,8 +91,8 @@ namespace ROOT {
 
 
       /**
-       * Offset will return the Offset to the BaseNth class as int
-       * @return Offset to BaseNth class
+       * Offset will return the Offset to the base class as int
+       * @return Offset to base class
        */
       size_t Offset(void * mem = 0) const;
 
@@ -106,8 +106,8 @@ namespace ROOT {
 
 
       /**
-       * baseType will return a pointer to the TypeNth of the BaseNth class
-       * @return pointer to TypeNth of BaseNth class
+       * baseType will return the type of the base class
+       * @return type of base class
        */
       Type ToType() const;
 
@@ -126,8 +126,8 @@ namespace ROOT {
 
 
       /**
-       * pointer to BaseNth class
-       * @label BaseNth bype
+       * pointer to base class
+       * @label base bype
        * @link aggregationByValue
        * @supplierCardinality 1
        * @clientCardinality 0..*
@@ -136,8 +136,8 @@ namespace ROOT {
 
       
       /** 
-       * back link to the class corresponding to the BaseNth
-       * @label BaseNth class
+       * back link to the class corresponding to the base
+       * @label base class
        * @link aggregation
        * @supplierCardinality 1
        * @clientCardinality 0..1

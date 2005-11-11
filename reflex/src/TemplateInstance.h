@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -52,22 +52,29 @@ namespace ROOT {
 
 
       /**
-       * TemplateArgumentNth will return a pointer to the nth template argument
+       * TemplateArgumentAt will return a pointer to the nth template argument
        * @param  nth nth template argument
        * @return pointer to nth template argument
        */
-      Type TemplateArgumentNth( size_t nth ) const;
+      Type TemplateArgumentAt( size_t nth ) const;
 
 
       /**
-       * templateArgCount will return the number of template arguments
+       * templateArgSize will return the number of template arguments
        * @return number of template arguments
        */
-      size_t TemplateArgumentCount() const;
+      size_t TemplateArgumentSize() const;
+
+
+      Type_Iterator TemplateArgument_Begin() const;
+      Type_Iterator TemplateArgument_End() const;
+      Reverse_Type_Iterator TemplateArgument_RBegin() const;
+      Reverse_Type_Iterator TemplateArgument_REnd() const;
 
     private:
 
       /** vector of template arguments */
+      mutable
       std::vector < Type > fTemplateArguments;
 
     }; // class TemplateInstance
@@ -84,7 +91,7 @@ inline ROOT::Reflex::TemplateInstance::TemplateInstance()
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type
-ROOT::Reflex::TemplateInstance::TemplateArgumentNth( size_t nth ) const {
+ROOT::Reflex::TemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fTemplateArguments.size() ) { return fTemplateArguments[ nth ]; }
   return Type();
@@ -92,9 +99,40 @@ ROOT::Reflex::TemplateInstance::TemplateArgumentNth( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TemplateInstance::TemplateArgumentCount() const {
+inline size_t ROOT::Reflex::TemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
   return fTemplateArguments.size();
 }
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_Begin() const {
+//-------------------------------------------------------------------------------
+  return fTemplateArguments.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+  return fTemplateArguments.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_RBegin() const {
+//-------------------------------------------------------------------------------
+  return fTemplateArguments.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_REnd() const {
+//-------------------------------------------------------------------------------
+  return fTemplateArguments.rend();
+}
+
+
+
 
 #endif // ROOT_Reflex_TemplateInstance

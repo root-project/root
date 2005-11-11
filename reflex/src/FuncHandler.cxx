@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FuncHandler.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -20,7 +20,7 @@
 template < class R, class C >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)()) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -28,7 +28,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)()) {
 template < class R, class C, class T0>
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -36,7 +36,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0)) {
 template < class R, class C, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -44,7 +44,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1)) 
 template < class R, class C, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -52,7 +52,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1,T2
 template < class R, class C, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -60,7 +60,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1,T2
 template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(C::*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -76,7 +76,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)()) {
 template < class R, class C, class T0>
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(T0).name());
+  return Tools::Demangle(typeid(T0));
 }
 
 
@@ -85,8 +85,8 @@ template < class R, class C, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0,T1)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1));
   return s;
 }
 
@@ -96,9 +96,9 @@ template < class R, class C, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
   std::string s =
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2));
   return s;
 }
 
@@ -108,10 +108,10 @@ template < class R, class C, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name()) + ";" +
-    Tools::Demangle(typeid(T3).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2)) + ";" +
+    Tools::Demangle(typeid(T3));
   return s;
 }
 
@@ -121,11 +121,11 @@ template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name()) + ";" +
-    Tools::Demangle(typeid(T3).name()) + ";" +
-    Tools::Demangle(typeid(T4).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2)) + ";" +
+    Tools::Demangle(typeid(T3)) + ";" +
+    Tools::Demangle(typeid(T4));
   return s;
 }
 
@@ -134,7 +134,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(C::*)(T0,T1,T
 template < class R >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)()) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -142,7 +142,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)()) {
 template < class R, class T0>
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -150,7 +150,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0)) {
 template < class R, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -158,7 +158,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1)) {
 template < class R, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -166,7 +166,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1,T2)) 
 template < class R, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -174,7 +174,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1,T2,T3
 template < class R, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunRetType(R(*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(R).name());
+  return Tools::Demangle(typeid(R));
 }
 
 
@@ -190,7 +190,7 @@ const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)()) {
 template < class R, class T0>
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)(T0)) {
 //-------------------------------------------------------------------------------
-  return Tools::Demangle(typeid(T0).name());
+  return Tools::Demangle(typeid(T0));
 }
 
 
@@ -199,8 +199,8 @@ template < class R, class T0, class T1 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)(T0,T1)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1));
   return s;
 }
 
@@ -210,9 +210,9 @@ template < class R, class T0, class T1, class T2 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)(T0,T1,T2)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2));
   return s;
 }
 
@@ -222,10 +222,10 @@ template < class R, class T0, class T1, class T2, class T3 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)(T0,T1,T2,T3)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name()) + ";" +
-    Tools::Demangle(typeid(T3).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2)) + ";" +
+    Tools::Demangle(typeid(T3));
   return s;
 }
 
@@ -235,10 +235,10 @@ template < class R, class T0, class T1, class T2, class T3, class T4 >
 const std::string ROOT::Reflex::FuncHandler::demangleFunParTypes(R(*)(T0,T1,T2,T3,T4)) {
 //-------------------------------------------------------------------------------
   std::string s = 
-    Tools::Demangle(typeid(T0).name()) + ";" +
-    Tools::Demangle(typeid(T1).name()) + ";" +
-    Tools::Demangle(typeid(T2).name()) + ";" +
-    Tools::Demangle(typeid(T3).name()) + ";" +
-    Tools::Demangle(typeid(T4).name());
+    Tools::Demangle(typeid(T0)) + ";" +
+    Tools::Demangle(typeid(T1)) + ";" +
+    Tools::Demangle(typeid(T2)) + ";" +
+    Tools::Demangle(typeid(T3)) + ";" +
+    Tools::Demangle(typeid(T4));
   return s;
 }

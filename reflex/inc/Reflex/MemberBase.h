@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -46,32 +46,32 @@ namespace ROOT {
 
 
       /**
-       * operator Member will return the MemberNth object of this MemberNth BaseNth
+       * operator Member will return the MemberAt object of this MemberAt BaseAt
        */
       operator Member () const;
 
 
       /** 
-       * DeclaringScope will return the Scope which the MemberNth lives in
+       * DeclaringScope will return the Scope which the MemberAt lives in
        * (i.e. the same as the Type)
-       * @return the declaring Scope of the MemberNth
+       * @return the declaring Scope of the MemberAt
        */
       Scope DeclaringScope() const;
 
 
       /** 
-       * DeclaringType will return the Type which the MemberNth lives in
+       * DeclaringType will return the Type which the MemberAt lives in
        * (i.e. the same as the Scope)
-       * @return the declaring Type of the MemberNth
+       * @return the declaring Type of the MemberAt
        */
       Type DeclaringType() const;
 
 
-      /** Get the MemberNth value (as void*) */
+      /** Get the MemberAt value (as void*) */
       virtual Object Get( const Object & obj ) const;
 
 
-      /** Invoke the function (if return TypeNth as void*) */
+      /** Invoke the function (if return At as void*) */
       /*virtual Object Invoke( const Object & obj, 
         const std::vector < Object > & paramList ) const;*/
       virtual Object Invoke( const Object & obj, 
@@ -85,143 +85,150 @@ namespace ROOT {
                              std::vector<void*>()) const;
 
 
-      /** check whether auto is Set for the data MemberNth */
+      /** check whether auto is Set for the data MemberAt */
       bool IsAuto() const;
 
 
-      /** check whether the function MemberNth is a constructor */
+      /** check whether the function MemberAt is a constructor */
       bool IsConstructor() const;
 
 
-      /** check whether the function MemberNth is a user defined conversion function */
+      /** check whether the function MemberAt is a user defined conversion function */
       bool IsConverter() const;
 
 
-      /** check whether the function MemberNth is a copy constructor */
+      /** check whether the function MemberAt is a copy constructor */
       bool IsCopyConstructor() const;
 
 
-      /** return true if this is a data MemberNth */
+      /** return true if this is a data MemberAt */
       bool IsDataMember() const;
 
 
-      /** check whether the function MemberNth is a destructor */
+      /** check whether the function MemberAt is a destructor */
       bool IsDestructor() const;
 
 
-      /** check whether explicit is Set for the function MemberNth */
+      /** check whether explicit is Set for the function MemberAt */
       bool IsExplicit() const;
 
 
-      /** check whether extern is Set for the data MemberNth */
+      /** check whether extern is Set for the data MemberAt */
       bool IsExtern() const;
 
 
-      /** return true if this is a function MemberNth */
+      /** return true if this is a function MemberAt */
       bool IsFunctionMember() const;
 
 
-      /** check whether inline is Set for the function MemberNth */
+      /** check whether inline is Set for the function MemberAt */
       bool IsInline() const;
 
       
-      /** check whether Mutable is Set for the data MemberNth */
+      /** check whether Mutable is Set for the data MemberAt */
       bool IsMutable() const;
 
 
-      /** check whether the function MemberNth is an operator */
+      /** check whether the function MemberAt is an operator */
       bool IsOperator() const;
 
 
-      /** check whether the function MemberNth is private */
+      /** check whether the function MemberAt is private */
       bool IsPrivate() const;
 
 
-      /** check whether the function MemberNth is protected */
+      /** check whether the function MemberAt is protected */
       bool IsProtected() const;
 
 
-      /** check whether the function MemberNth is public */
+      /** check whether the function MemberAt is public */
       bool IsPublic() const;
 
 
-      /** check whether register is Set for the data MemberNth */
+      /** check whether register is Set for the data MemberAt */
       bool IsRegister() const;
 
 
-      /** check whether static is Set for the data MemberNth */
+      /** check whether static is Set for the data MemberAt */
       bool IsStatic() const;
 
 
       /** 
-       * IsTemplateInstance returns true if the ScopeNth represents a 
+       * IsTemplateInstance returns true if the At represents a 
        * ClassTemplateInstance
-       * @return true if ScopeNth represents a InstantiatedTemplateClass
+       * @return true if At represents a InstantiatedTemplateClass
        */
       bool IsTemplateInstance() const;
 
 
-      /** check whether transient is Set for the data MemberNth */
+      /** check whether transient is Set for the data MemberAt */
       bool IsTransient() const;
 
 
-      /** check whether virtual is Set for the function MemberNth */
+      /** check whether virtual is Set for the function MemberAt */
       bool IsVirtual() const;
 
 
-      /** return the TypeNth of the MemberNth (function or data MemberNth) */
+      /** return the At of the MemberAt (function or data MemberAt) */
       TYPE MemberType() const;
 
 
-      /** returns the string representation of the MemberNth species */
+      /** returns the string representation of the MemberAt species */
       std::string MemberTypeAsString() const;
 
 
-      /** return the Name of the MemberNth */
+      /** return the Name of the MemberAt */
       virtual std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** return the Offset of the MemberNth */
+      /** return the Offset of the MemberAt */
       virtual size_t Offset() const;
 
 
       /** number of parameters */
-      virtual size_t ParameterCount( bool required = false ) const;
+      virtual size_t FunctionParameterSize( bool required = false ) const;
 
 
-      /** ParameterNth nth default value if declared*/
-      virtual std::string ParameterDefault( size_t nth ) const;
+      /** FunctionParameterAt nth default value if declared*/
+      virtual std::string FunctionParameterDefaultAt( size_t nth ) const;
 
 
-      /** ParameterNth nth Name if declared*/
-      virtual std::string ParameterName( size_t nth ) const;
+      virtual StdString_Iterator FunctionParameterDefault_Begin() const;
+      virtual StdString_Iterator FunctionParameterDefault_End() const;
+      virtual Reverse_StdString_Iterator FunctionParameterDefault_RBegin() const;
+      virtual Reverse_StdString_Iterator FunctionParameterDefault_REnd() const;
+
+
+      /** FunctionParameterAt nth Name if declared*/
+      virtual std::string FunctionParameterNameAt( size_t nth ) const;
+
+
+      virtual StdString_Iterator FunctionParameterName_Begin() const;
+      virtual StdString_Iterator FunctionParameterName_End() const;
+      virtual Reverse_StdString_Iterator FunctionParameterName_RBegin() const;
+      virtual Reverse_StdString_Iterator FunctionParameterName_REnd() const;
 
 
       /**
-       * PropertyListGet will return a pointer to the PropertyNth list attached
+       * Properties will return a pointer to the PropertyNth list attached
        * to this item
        * @return pointer to PropertyNth list
        */
-      PropertyList PropertyListGet() const;
+      PropertyList Properties() const;
 
 
-      /** this function will be deprecated, use DeclaringScope instead */
-      /** return the ScopeNth of the MemberNth */
-      Scope ScopeGet() const;
-
-
-      /** Set the MemberNth value */
+      /** Set the MemberAt value */
       /*virtual void Set( const Object & instance,
         const Object & value ) const;*/
       virtual void Set( const Object & instance,
                         const void * value ) const;
 
 
-      /** Set the ScopeNth of the MemberNth */
+      /** Set the At of the MemberAt */
       void SetScope( const Scope & scope ) const;
 
 
-      /** return the context of the MemberNth */
+      /** return the context of the MemberAt */
       virtual void * Stubcontext() const;
 
 
@@ -230,18 +237,24 @@ namespace ROOT {
 
 
       /**
-       * TemplateArgumentNth will return a pointer to the nth template argument
+       * TemplateArgumentAt will return a pointer to the nth template argument
        * @param  nth nth template argument
        * @return pointer to nth template argument
        */
-      virtual Type TemplateArgumentNth( size_t nth ) const;
+      virtual Type TemplateArgumentAt( size_t nth ) const;
 
 
       /**
-       * templateArgCount will return the number of template arguments
+       * templateArgSize will return the number of template arguments
        * @return number of template arguments
        */
-      virtual size_t TemplateArgumentCount() const;
+      virtual size_t TemplateArgumentSize() const;
+
+
+      virtual Type_Iterator TemplateArgument_Begin() const;
+      virtual Type_Iterator TemplateArgument_End() const;
+      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
 
       /**
@@ -251,14 +264,14 @@ namespace ROOT {
       virtual MemberTemplate TemplateFamily() const;
 
 
-      /** return pointer to MemberNth TypeNth */
-      Type TypeGet() const;
+      /** return pointer to MemberAt At */
+      Type TypeOf() const;
 
     protected:
 
       /** 
        * CalculateBaseObject will calculate the inheritance between an object
-       * and the local TypeNth if necessary
+       * and the local At if necessary
        * @param obj the object from which the calculation should start
        * @return memory AddressGet of new local object relative to obj
        */
@@ -267,8 +280,8 @@ namespace ROOT {
     protected:
 
       /**
-       * characteristics of the MemberNth TypeNth
-       * @label MemberNth TypeNth
+       * characteristics of the MemberAt At
+       * @label MemberAt At
        * @supplierCardinality 1
        * @link aggregationByValue
        * @clientCardinality 1
@@ -276,18 +289,18 @@ namespace ROOT {
       Type fType;
 
       
-      /** all modifiers of the MemberNth */
+      /** all modifiers of the MemberAt */
       unsigned int fModifiers;
 
     private:
 
-      /** Name of MemberNth */
+      /** Name of MemberAt */
       std::string fName;
 
 
       /**
-       * ScopeNth of the MemberNth
-       * @label MemberNth ScopeNth
+       * At of the MemberAt
+       * @label MemberAt At
        * @link aggregationByValue
        * @supplierCardinality 1
        * @clientCardinality 1
@@ -297,7 +310,7 @@ namespace ROOT {
 
 
       /** 
-       * MemberNth TypeNth (data or function MemberNth) 
+       * MemberAt At (data or function MemberAt) 
        * @label MemberType
        * @link aggregationByValue
        * @clientCardinality 1
@@ -517,8 +530,8 @@ inline std::string ROOT::Reflex::MemberBase::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
   std::string s = "";
   if ( 0 != ( mod & ( SCOPED | S ))) {
-    s += ScopeGet().Name( mod );
-    if ( ! ScopeGet().IsTopScope()) s += "::";
+    s += DeclaringScope().Name( mod );
+    if ( ! DeclaringScope().IsTopScope()) s += "::";
   }
   s += fName;
   return s;
@@ -533,23 +546,79 @@ inline size_t ROOT::Reflex::MemberBase::Offset() const {
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::MemberBase::ParameterCount( bool /* required */ ) const {
+inline size_t ROOT::Reflex::MemberBase::FunctionParameterSize( bool /* required */ ) const {
 //-------------------------------------------------------------------------------
   return 0; 
 }
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberBase::ParameterDefault( size_t /* nth */ ) const {
+inline std::string ROOT::Reflex::MemberBase::FunctionParameterDefaultAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
   return "";
 }
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberBase::ParameterName( size_t /* nth */ ) const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_Begin() const {
+//-------------------------------------------------------------------------------
+  return StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_End() const {
+//-------------------------------------------------------------------------------
+  return StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_RBegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterDefault_REnd() const {
+//-------------------------------------------------------------------------------
+  return Reverse_StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline std::string ROOT::Reflex::MemberBase::FunctionParameterNameAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
   return "";
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_Begin() const {
+//-------------------------------------------------------------------------------
+  return StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_End() const {
+//-------------------------------------------------------------------------------
+  return StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_RBegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_StdString_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberBase::FunctionParameterName_REnd() const {
+//-------------------------------------------------------------------------------
+  return Reverse_StdString_Iterator();
 }
 
 
@@ -588,9 +657,37 @@ inline ROOT::Reflex::StubFunction ROOT::Reflex::MemberBase::Stubfunction() const
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::MemberBase::TemplateArgumentCount() const {
+inline size_t ROOT::Reflex::MemberBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_Begin() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_End() const {
+//-------------------------------------------------------------------------------
+  return Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_RBegin() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArgument_REnd() const {
+//-------------------------------------------------------------------------------
+  return Reverse_Type_Iterator();
 }
 
 
@@ -602,7 +699,7 @@ inline ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberBase::TemplateFamily() c
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::MemberBase::TypeGet() const {
+inline ROOT::Reflex::Type ROOT::Reflex::MemberBase::TypeOf() const {
 //-------------------------------------------------------------------------------
   return fType;
 }

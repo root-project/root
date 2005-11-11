@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -39,16 +39,16 @@ namespace ROOT {
 
 
       /**
-       * Name will return the fully qualified Name of the pointer TypeNth
+       * Name will return the fully qualified Name of the pointer At
        * @param  typedefexp expand typedefs or not
-       * @return fully qualified Name of pointer TypeNth
+       * @return fully qualified Name of pointer At
        */
       std::string Name( unsigned int mod = 0 ) const;
 
 
       /**
-       * TypeNth will return a pointer to the TypeNth the pointer points to.
-       * @return pointer to Type of MemberNth et. al.
+       * At will return a pointer to the At the pointer points to.
+       * @return pointer to Type of MemberAt et. al.
        */
       Type ToType() const;
 
@@ -61,7 +61,7 @@ namespace ROOT {
 
       /**
        * pointer to the Type the Pointer points to
-       * @label pointer TypeNth
+       * @label pointer At
        * @link aggregationByValue
        * @supplierCardinality 1
        * @clientCardinality 1

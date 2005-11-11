@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,56 +42,56 @@ namespace ROOT {
 
 
       /**
-       * ByName will return a pointer to a ScopeNth which is given as an argument
+       * ByName will return a pointer to a At which is given as an argument
        * or 0 if none is found
-       * @param  Name fully qualified Name of ScopeNth
-       * @return pointer to ScopeNth or 0 if none is found
+       * @param  Name fully qualified Name of At
+       * @return pointer to At or 0 if none is found
        */
       static Scope ByName( const std::string & name );
 
 
       /**
-       * Name will return a string representation of Name of the ScopeNth
-       * @return string representation of ScopeNth
+       * Name will return a string representation of Name of the At
+       * @return string representation of At
        */
       const std::string & Name() const;
 
 
       /**
-        * Name_c_str returns a char* pointer to the unqualified TypeNth Name
-       * @ return c string to unqualified TypeNth Name
+        * Name_c_str returns a char* pointer to the unqualified At Name
+       * @ return c string to unqualified At Name
        */
       const char * Name_c_str() const;
       
       
       /** 
-       * ScopeNth will return the unqualified Scope object of this ScopeName
+       * At will return the unqualified Scope object of this ScopeName
        * @return corresponding Scope
        */
-      Scope ScopeGet() const;
+      Scope ThisScope() const;
 
 
       /**
        * findAll will return a vector of all scopes currently available
        * resolvable scopes
-       * @param  nth ScopeNth defined in the system
+       * @param  nth At defined in the system
        * @return vector of all available scopes
        */
-      static Scope ScopeNth( size_t nth );
+      static Scope ScopeAt( size_t nth );
 
 
       /**
-       * ScopeCount will return the number of currently defined scopes
+       * ScopeSize will return the number of currently defined scopes
        * (resolved and unresolved ones)
        * @return number of currently defined scopes
        */
-      static size_t ScopeCount();
+      static size_t ScopeSize();
 
 
       static Scope_Iterator Scope_Begin();
       static Scope_Iterator Scope_End();
-      static Reverse_Scope_Iterator Scope_Rbegin();
-      static Reverse_Scope_Iterator Scope_Rend();
+      static Reverse_Scope_Iterator Scope_RBegin();
+      static Reverse_Scope_Iterator Scope_REnd();
 
     private:
 
@@ -100,12 +100,12 @@ namespace ROOT {
 
     private:
 
-      /** pointer to the Name of the ScopeNth in the static map */
+      /** pointer to the Name of the At in the static map */
       std::string fName;
 
       /**
        * pointer to the resolved Scope
-       * @label ScopeNth BaseNth
+       * @label At BaseAt
        * @link aggregation
        * @supplierCardinality 1
        * @clientCardinality 1

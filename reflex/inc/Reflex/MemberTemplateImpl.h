@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -46,8 +46,8 @@ namespace ROOT {
 
 
       /** 
-       * operator == will return true if two TypeNth templates are the same
-       * @return true if TypeNth templates match
+       * operator == will return true if two At templates are the same
+       * @return true if At templates match
        */
       bool operator == ( const MemberTemplateImpl & rh ) const;
 
@@ -57,15 +57,15 @@ namespace ROOT {
        * @param  nth template instantion
        * @return pointer to nth template instantion
        */
-      Member InstantiationNth( size_t nth ) const;
+      Member TemplateInstanceAt( size_t nth ) const;
 
 
       /**
-       * instantionCount will return the number of template instantions for
+       * instantionSize will return the number of template instantions for
        * this template family
        * @return number of template instantions
        */
-      size_t InstantiationCount() const;
+      size_t TemplateInstanceSize() const;
 
 
       /**
@@ -77,32 +77,44 @@ namespace ROOT {
 
 
       /**
-       * ParameterCount will return the number of template parameters
+       * TemplateParameterSize will return the number of template parameters
        * @return number of template parameters
        */
-      size_t ParameterCount() const;
+      size_t TemplateParameterSize() const;
 
 
       /**
-       * ParameterDefault will return the nth ParameterNth default value as string
-       * @param nth template ParameterNth
-       * @return default value of nth template ParameterNth
+       * TemplateParameterDefaultAt will return the nth FunctionParameterAt default value as string
+       * @param nth template FunctionParameterAt
+       * @return default value of nth template FunctionParameterAt
        */
-      std::string ParameterDefault( size_t nth ) const;
+      std::string TemplateParameterDefaultAt( size_t nth ) const;
 
 
-      /**
-       * ParameterName will the Name of the nth ParameterNth
-       * @param  nth template ParameterNth
-       * @return Name of nth template ParameterNth
+      StdString_Iterator TemplateParameterDefault_Begin() const;
+      StdString_Iterator TemplateParameterDefault_End() const;
+      Reverse_StdString_Iterator TemplateParameterDefault_RBegin() const;
+      Reverse_StdString_Iterator TemplateParameterDefault_REnd() const;
+
+
+     /**
+       * TemplateParameterNameAt will the Name of the nth FunctionParameterAt
+       * @param  nth template FunctionParameterAt
+       * @return Name of nth template FunctionParameterAt
        */
-      std::string ParameterName( size_t nth ) const;
+      std::string TemplateParameterNameAt( size_t nth ) const;
+
+
+      StdString_Iterator TemplateParameterName_Begin() const;
+      StdString_Iterator TemplateParameterName_End() const;
+      Reverse_StdString_Iterator TemplateParameterName_RBegin() const;
+      Reverse_StdString_Iterator TemplateParameterName_REnd() const;
 
     public:
 
       /** 
-       * AddTemplateInstance adds one InstantiationNth of the template to the local container
-       * @param templateInstance the template InstantiationNth
+       * AddTemplateInstance adds one TemplateInstanceAt of the template to the local container
+       * @param templateInstance the template TemplateInstanceAt
        */
       void AddTemplateInstance( const Member & templateInstance ) const;
 
@@ -115,8 +127,8 @@ namespace ROOT {
 
 
       /**
-       * pointer back to the corresponding ScopeNth
-       * @label MemberNth template ScopeNth
+       * pointer back to the corresponding At
+       * @label MemberAt template At
        * @clientCardinality 0..*
        * @supplierCardinality 1
        */
@@ -133,14 +145,16 @@ namespace ROOT {
 
 
       /**
-       * container of ParameterNth names
+       * container of FunctionParameterAt names
        */
+      mutable
       std::vector < std::string > fParameterNames;
 
 
       /**
-       * ParameterNth default values
+       * FunctionParameterAt default values
        */
+      mutable
       std::vector < std::string > fParameterDefaults;
 
       
@@ -184,7 +198,7 @@ inline bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplate
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::MemberTemplateImpl::InstantiationCount() const {
+inline size_t ROOT::Reflex::MemberTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
   return fTemplateInstances.size();
 }
@@ -204,14 +218,14 @@ inline std::string ROOT::Reflex::MemberTemplateImpl::Name( unsigned int mod ) co
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::MemberTemplateImpl::ParameterCount() const {
+inline size_t ROOT::Reflex::MemberTemplateImpl::TemplateParameterSize() const {
 //-------------------------------------------------------------------------------
   return fParameterNames.size();
 }
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::ParameterDefault( size_t nth ) const {
+inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fParameterDefaults.size() ) return fParameterDefaults[ nth ];
   return "";
@@ -219,10 +233,66 @@ inline std::string ROOT::Reflex::MemberTemplateImpl::ParameterDefault( size_t nt
 
 
 //-------------------------------------------------------------------------------
-inline std::string ROOT::Reflex::MemberTemplateImpl::ParameterName( size_t nth ) const {
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_Begin() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_End() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_RBegin() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterDefault_REnd() const {
+//-------------------------------------------------------------------------------
+  return fParameterDefaults.rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline std::string ROOT::Reflex::MemberTemplateImpl::TemplateParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
   if ( nth < fParameterNames.size() ) return fParameterNames[ nth ];
   return "";
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_Begin() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_End() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_RBegin() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::MemberTemplateImpl::TemplateParameterName_REnd() const {
+//-------------------------------------------------------------------------------
+  return fParameterNames.rend();
 }
 
 

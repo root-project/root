@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Object.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -70,47 +70,60 @@ namespace ROOT {
 
 
       /** 
-       * AddressGet will return the memory AddressGet of the object
-       * @return memory AddressGet of object
+       * Address will return the memory address of the object
+       * @return memory address of object
        */
-      void * AddressGet() const;
+      void * Address() const;
 
 
       /**
-       * CastObject an object from this class TypeNth to another one
-       * @param  to is the class TypeNth to cast into
-       * @return new Object casted to Type
+       * CastObject an object from this class type to another one
+       * @param  to is the class type to cast into
+       * @param  obj the memory address of the object to be casted
        */
       Object CastObject( const Type & to ) const;
 
 
       /**
-       * Destruct will call the destructor of the object and remove it 
-       * from the heap if possible
+       * Destruct will call the destructor of a type and remove its memory
+       * allocation if desired
        */
       void Destruct() const;
 
       
       /**
-       * DynamicType is used to discover runtime TypeNth of the object
+       * DynamicType is used to discover the dynamic type (useful in 
+       * case of polymorphism)
        * @return the actual class of the object
        */
       Type DynamicType() const;
 
 
-      /**
-       * Get will look for a data MemberNth with Name dm and return the value
-       * and TypeNth of this data MemberNth as an object
-       * @param  dm Name of the data MemberNth
-       * @return data MemberNth as object 
+      /** 
+       * Get the data member value 
+       * @param dm name of the data member to get
+       * @return member value as object
        */
       Object Get( const std::string & dm ) const ;
 
 
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param args a vector of memory addresses to parameter values
+       * @return the return value of the function as object
+       */
       Object Invoke( const std::string & fm, 
                      std::vector< void * > args = std::vector<void*>()) const;
       
       
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param sign the signature of the member function (for overloads)
+       * @param args a vector of memory addresses to parameter values
+       * @return the return value of the function as object
+       */
       Object Invoke( const std::string & fm, 
                      const Type & sign,
                      std::vector< void * > args = std::vector<void*>()) const;
@@ -125,23 +138,51 @@ namespace ROOT {
       */
 
 
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param p0 the first argument of the function 
+       * @return the return value of the function as object
+       */
       template < class T0 >
         Object Invoke( const std::string & fm,
                        const T0 & p0 ) const ;
       
       
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param sign the signature of the member function (for overloads)
+       * @param p0 the first argument of the function 
+       * @return the return value of the function as object
+       */
       template < class T0 >
         Object Invoke( const std::string & fm,
                        const Type & sign,
                        const T0 & p0 ) const ;
       
       
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param p0 the first argument of the function 
+       * @param p1 the second argument of the function 
+       * @return the return value of the function as object
+       */
       template < class T0, class T1 >
         Object Invoke( const std::string & fm,
                        const T0 & p0,
                        const T1 & p1 ) const ;
       
 
+      /**
+       * Invoke a member function of the object
+       * @param fm name of the member function
+       * @param sign the signature of the member function (for overloads)
+       * @param p0 the first argument of the function 
+       * @param p1 the second argument of the function 
+       * @return the return value of the function as object
+       */
       template < class T0, class T1 >
         Object Invoke( const std::string & fm,
                        const Type & sign,
@@ -149,6 +190,11 @@ namespace ROOT {
                        const T1 & p1 ) const ;
       
 
+      /**
+       * Set will set a data member value of this object
+       * @param dm the name of the data member
+       * @param value the memory address of the value to set
+       */
       void Set(const std::string & dm,
                const void * value ) const;
 
@@ -159,109 +205,37 @@ namespace ROOT {
       */
 
 
+      /**
+       * Set will set a data member value of this object
+       * @param dm the name of the data member
+       * @param value the memory address of the value to set
+       */
       template < class T >
         void Set(const std::string & dm,
                  const T & value ) const;
       
 
       /**
-       * TypeNth will return the pointer to the TypeNth of the object
-       * @return pointer to object TypeNth
+       * TypeOf will return the type of the object
+       * @return type of the object
        */
-      Type TypeGet() const;
-
-
-      //
-      //  D E P R E C A T E D   M E M B E R   F U N C T I O N S   -   B E G I N
-      //
-
-      /** 
-       * Trying to consolidate the different versions of Object::Invoke and Object::InvokeT
-       * The InvokeT functions are deprecated and will be removed in a future release.
-       * As a replacement for a cast on the return TypeNth please use Object_Cast<T>(obj.Invoke(....))
-       */
-
-      template < class R >
-        R InvokeT( const std::string & fm, 
-                   const std::vector< void * > args = std::vector<void*>()) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
-      
-      
-      template < class R, class T0 >
-        R InvokeT( const std::string & fm,
-                   const T0 & p0 ) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
-      
-      
-      template < class R, class T0, class T1 >
-        R InvokeT( const std::string & fm,
-                   const T0 & p0,
-                   const T1 & p1 ) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
- 
-
-      /**
-       * GetT is deprecated and will be removed in a future release. 
-       * As replacement please use Object_Cast<T>(Get(....))
-       */
-      template < class T >
-        T GetT(const std::string & dm) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
-
-
-      /**
-       * Field is deprecated and will be removed in a future release
-       * please use "Object Get(const std::string&) const" instead
-       */
-      Object Field( const std::string & data ) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
-
-
-      /** 
-       * SetT will be depricated in a future release, please use the templated Set function instead
-       * (this is done in order to unify all Get/set/invoke functions)
-       */
-      template < class T >
-        void SetT(const std::string & dm,
-                  const T & value ) const
-#if defined (__GNUC__)
-        __attribute__((deprecated))
-#endif
-        ;
-
-      //
-      //  D E P R E C A T E D   M E M B E R   F U N C T I O N S   -   E N D
-      //
+      Type TypeOf() const;
 
     private:
 
+      /** */
       void Set2( const std::string & dm,
                  const void * value ) const;
 
-      /** the TypeNth of the object 
+      /** the At of the object 
        * @link aggregationByValue
        * @clientCardinality 0..*
        * @supplierCardinality 1
-       * @label object TypeNth*/
+       * @label object At*/
       Type fType;
 
 
-      /** the AddressGet of the object */
+      /** the Address of the object */
       mutable
       void * fAddress;
 
@@ -269,10 +243,10 @@ namespace ROOT {
 
 
     /** 
-     * Object_Cast can be used to cast an object into a given TypeNth
+     * Object_Cast can be used to cast an object into a given type
      * (no additional checks are performed for the time being)
      * @param o the object to be casted 
-     * @return the AddressGet of the object casted into TypeNth T
+     * @return the address of the object casted into type T
      */
     template < class T > T Object_Cast( const Object & o );
 
@@ -287,7 +261,7 @@ namespace ROOT {
 template < class T >
 inline T ROOT::Reflex::Object_Cast( const Object & o ) {
 //-------------------------------------------------------------------------------
-  return *(T*)o.AddressGet();
+  return *(T*)o.Address();
 }
 
 
@@ -338,7 +312,7 @@ inline ROOT::Reflex::Object::operator bool () const {
 
 
 //-------------------------------------------------------------------------------
-inline void * ROOT::Reflex::Object::AddressGet() const {
+inline void * ROOT::Reflex::Object::Address() const {
 //-------------------------------------------------------------------------------
   return fAddress;
 }
@@ -375,15 +349,15 @@ inline ROOT::Reflex::Object
 ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const T0 & p0 ) const {
 //-------------------------------------------------------------------------------
-  return Invoke(fm,Tools::makeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
+  return Invoke(fm,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
 /*
-  m = TypeGet().FunctionMemberNth( fm );
+  m = TypeOf().FunctionMemberAt( fm );
   if ( m ) {
     std::vector< void* > argList;
     argList.push_back( (void*)&p0 );
     return m.Invoke( * this, argList );
   }
-  else throw RuntimeError("No such MemberNth " + fm );
+  else throw RuntimeError("No such MemberAt " + fm );
   return Object();
 */
 }
@@ -396,7 +370,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const Type & sign,
                               const T0 & p0 ) const {
 //-------------------------------------------------------------------------------
-  return Invoke(fm,sign,Tools::makeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
+  return Invoke(fm,sign,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
 }
 
 
@@ -407,17 +381,17 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const T0 & p0,
                               const T1 & p1 ) const {
 //-------------------------------------------------------------------------------
-  return Invoke(fm,Tools::makeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
+  return Invoke(fm,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
                                             Tools::CheckPointer<T1>::Get(p1)));
 /*
-  m = TypeGet().FunctionMemberNth( fm );
+  m = TypeOf().FunctionMemberAt( fm );
   if ( m ) {
     std::vector< void* > argList;
     argList.push_back( (void*)&p0 );
     argList.push_back( (void*)&p1 );
     return m.Invoke( * this, argList );
   }
-  else throw RuntimeError("No such MemberNth " + fm );
+  else throw RuntimeError("No such MemberAt " + fm );
   return Object();
 */
 }
@@ -431,7 +405,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
                               const T0 & p0,
                               const T1 & p1 ) const {
 //-------------------------------------------------------------------------------
-  return Invoke(fm,sign,Tools::makeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
+  return Invoke(fm,sign,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
                                                  Tools::CheckPointer<T1>::Get(p1)));
 }
 
@@ -454,62 +428,9 @@ inline void ROOT::Reflex::Object::Set( const std::string & dm,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Object::TypeGet() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Object::TypeOf() const {
 //-------------------------------------------------------------------------------
   return fType;
-}
-
-
-//
-// DEPRICATED INLINE FUNCTION DEFINITIONS START HERE
-//
-
-//-------------------------------------------------------------------------------
-template < class R > 
-inline R ROOT::Reflex::Object::InvokeT( const std::string & fm,
-                                        const std::vector< void * > args ) const {
-//-------------------------------------------------------------------------------
-  if (args.size()) return Object_Cast < R > ( Invoke( fm ));
-  else             return Object_Cast < R > ( Invoke( fm, args ) );
-}
-
-
-//-------------------------------------------------------------------------------
-template < class R, class T0 >
-inline R ROOT::Reflex::Object::InvokeT( const std::string & fm,
-                                        const T0 & p0 ) const {
-//-------------------------------------------------------------------------------
-  return Object_Cast < R > ( Invoke( fm, p0 ) );
-}
-
-
-//-------------------------------------------------------------------------------
-template < class R, class T0, class T1 >
-inline R ROOT::Reflex::Object::InvokeT( const std::string & fm,
-                                        const T0 & p0,
-                                        const T1 & p1 ) const {
-//-------------------------------------------------------------------------------
-  return Object_Cast< R > ( Invoke( fm, p0, p1 ) );
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T > 
-inline T ROOT::Reflex::Object::GetT( const std::string & dm ) const {
-//-------------------------------------------------------------------------------
-  Member m = TypeGet().MemberNth( dm );
-  if ( m ) return Object_Cast< T > ( m.Get( * this ));
-  else throw RuntimeError("No such MemberNth " + dm );
-  return Object_Cast < T > ( Object() );
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T >
-inline void ROOT::Reflex::Object::SetT( const std::string & dm,
-                                        const T & value ) const {
-//-------------------------------------------------------------------------------
-  Set2( dm, & value );
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,10 +42,10 @@ FunctionMemberTemplateInstance( const char * nam,
   if ( scopeName != "" ) scopedTemplateName = scopeName + "::" + templateName;
   else                   scopedTemplateName = templateName;
 
-  for ( size_t i = 0; i < scop.MemberTemplateCount(); ++i ) {
-    MemberTemplate mtl = scop.MemberTemplateNth( i );
+  for ( size_t i = 0; i < scop.MemberTemplateSize(); ++i ) {
+    MemberTemplate mtl = scop.MemberTemplateAt( i );
     if ( mtl.Name(SCOPED) == scopedTemplateName && 
-         mtl.ParameterCount() == TemplateArgumentCount()) {
+         mtl.TemplateParameterSize() == TemplateArgumentSize()) {
       fTemplateFamily = mtl;
       break;
     }
@@ -53,7 +53,7 @@ FunctionMemberTemplateInstance( const char * nam,
 
   if ( ! fTemplateFamily ) {
     std::vector < std::string > parameterNames = std::vector < std::string > ();
-    for ( size_t i = 65; i < 65 + TemplateArgumentCount(); ++i ) 
+    for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) 
       parameterNames.push_back("typename " + std::string(new char(i)));
     MemberTemplateImpl * mti = new MemberTemplateImpl( Tools::GetBaseName(templateName),
                                                        scop,
@@ -76,7 +76,7 @@ ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentNth( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgumentNth( nth );
+  return TemplateInstance::TemplateArgumentAt( nth );
 }

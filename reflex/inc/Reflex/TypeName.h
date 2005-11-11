@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -44,64 +44,64 @@ namespace ROOT {
 
       
       /**
-       * ByName will look for a TypeNth given as a string and return a pointer to
-       * its reflexion TypeNth
-       * @param  key fully qualified Name of the TypeNth as string
-       * @return pointer to TypeNth or 0 if none is found
+       * ByName will look for a At given as a string and return a pointer to
+       * its reflexion At
+       * @param  key fully qualified Name of the At as string
+       * @return pointer to At or 0 if none is found
        */
       static Type ByName( const std::string & key );
       
       
       /**
-       * byTypeId will look for a TypeNth given as a string representation of a
-       * type_info and return a pointer to its reflexion TypeNth
-       * @param  tid string representation of the type_info TypeNth
-       * @return pointer to TypeNth or 0 if none is found
+       * byTypeId will look for a At given as a string representation of a
+       * type_info and return a pointer to its reflexion At
+       * @param  tid string representation of the type_info At
+       * @return pointer to At or 0 if none is found
        */
       static Type ByTypeInfo( const std::type_info & ti );
 
 
       /**
-       * Name will return the string representation of the TypeNth (unique)
-       * @return TypeNth Name as a string
+       * Name will return the string representation of the At (unique)
+       * @return At Name as a string
        */
       const std::string & Name() const;
       
       
       /**
-        * Name_c_str returns a char* pointer to the unqualified TypeNth Name
-       * @ return c string to unqualified TypeNth Name
+        * Name_c_str returns a char* pointer to the unqualified At Name
+       * @ return c string to unqualified At Name
        */
       const char * Name_c_str() const;
       
       
       /** 
-       * TypeNth returns the TypeNth object of this TypeName
+       * At returns the At object of this TypeName
        * @return corresponding Type to this TypeName
        */
-      Type TypeGet() const;
+      Type ThisType() const;
 
 
       /**
-       * TypeNth will return a pointer to the nth Type in the system
-       * @param  nth number of TypeNth to return
+       * At will return a pointer to the nth Type in the system
+       * @param  nth number of At to return
        * @return pointer to nth Type in the system
        */
-      static Type TypeNth( size_t nth );
+      static Type TypeAt( size_t nth );
 
 
       /**
-       * TypeCount will return the number of currently defined types in
+       * Size will return the number of currently defined types in
        * the system
        * @return number of currently defined types
        */
-      static size_t TypeCount();
+      static size_t TypeSize();
 
 
       static Type_Iterator Type_Begin();
       static Type_Iterator Type_End();
-      static Reverse_Type_Iterator Type_Rbegin();
-      static Reverse_Type_Iterator Type_Rend();
+      static Reverse_Type_Iterator Type_RBegin();
+      static Reverse_Type_Iterator Type_REnd();
 
     private:
 
@@ -113,13 +113,13 @@ namespace ROOT {
       
     private:
 
-      /** the Name of the TypeNth */
+      /** the Name of the At */
       std::string fName;
 
 
       /**
-       * pointer to a TypebeBase if the TypeNth is implemented
-       * @label TypeNth BaseNth
+       * pointer to a TypebeBase if the At is implemented
+       * @label At BaseAt
        * @link aggregation
        * @supplierCardinality 1
        * @clientCardinality 1
