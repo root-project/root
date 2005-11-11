@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.16 2005/09/02 10:11:18 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.17 2005/09/04 09:16:25 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -66,14 +66,14 @@ const char gHelpX3DViewer[] = "\
 
 
 extern "C" {
-  Window_t x3d_main(Float_t *longitude, Float_t *latitude, Float_t *psi,
-                    Option_t *option, Window_t parent);
-  void     x3d_set_display(Display_t display);
-  int      x3d_dispatch_event(Handle_t event);
-  void     x3d_update();
-  void     x3d_get_position(Float_t *longitude, Float_t *latitude, Float_t *psi);
-  int      x3d_exec_command(int px, int py, char command);
-  void     x3d_terminate();
+   Window_t x3d_main(Float_t *longitude, Float_t *latitude, Float_t *psi,
+                     Option_t *option, Window_t parent);
+   void     x3d_set_display(Display_t display);
+   int      x3d_dispatch_event(Handle_t event);
+   void     x3d_update();
+   void     x3d_get_position(Float_t *longitude, Float_t *latitude, Float_t *psi);
+   int      x3d_exec_command(int px, int py, char command);
+   void     x3d_terminate();
 }
 
 
@@ -110,19 +110,19 @@ public:
    TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *parent);
 
    Bool_t  HandleButton(Event_t *ev)
-                { x3d_dispatch_event(gVirtualX->GetNativeEvent());
-                  return fViewer->HandleContainerButton(ev); }
+                  {  x3d_dispatch_event(gVirtualX->GetNativeEvent());
+                     return fViewer->HandleContainerButton(ev); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
-                { TGFrame::HandleConfigureNotify(ev);
-                  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
+                  {  TGFrame::HandleConfigureNotify(ev);
+                     return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
    Bool_t  HandleKey(Event_t *)
-                { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
+                  {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
    Bool_t  HandleMotion(Event_t *)
-                { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
+                  {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
    Bool_t  HandleExpose(Event_t *)
-                { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
+                  {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
    Bool_t  HandleColormapChange(Event_t *)
-                { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
+                  {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
 };
 
 
@@ -228,6 +228,7 @@ TViewerX3D::~TViewerX3D()
 //______________________________________________________________________________
 void TViewerX3D::Close()
 {
+   // Close X3D Viewer
    assert(!fBuildingScene);
    fPad->ReleaseViewer3D();      
    delete this;
@@ -460,6 +461,7 @@ Int_t TViewerX3D::AddObject(UInt_t /* placedID */, const TBuffer3D & buffer, Boo
 //______________________________________________________________________________
 void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
 {
+   // Paint 3D PolyMarker
    if (fgCreated) {
       return;
    }
@@ -566,6 +568,7 @@ Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
 //______________________________________________________________________________
 void TViewerX3D::GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi)
 {
+   // Get position
    x3d_get_position(&longitude, &latitude, &psi);
 }
 

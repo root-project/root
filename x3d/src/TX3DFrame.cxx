@@ -24,21 +24,25 @@ TX3DFrame::TX3DFrame(TViewerX3D & viewer, const TGWindow * win, UInt_t width, UI
    TGMainFrame(win, width, height),
    fViewer(viewer)
 {
+   // TX3DFrame constructor
 }
 
 //______________________________________________________________________________
 TX3DFrame::~TX3DFrame()
 {
+   // TX3DFrame destructor
 }
 
 //______________________________________________________________________________
 Bool_t TX3DFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process Message
    return fViewer.ProcessFrameMessage(msg, parm1, parm2);
 }
 
 //______________________________________________________________________________
 void TX3DFrame::CloseWindow()
 {
+   // Close window
    fViewer.Close();
 }
