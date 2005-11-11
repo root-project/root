@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.4 2005/11/11 14:55:03 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -167,11 +167,6 @@ namespace ROOT {
 
   } // namespace ROOT
 } // namespace Reflex
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {}
-//-------------------------------------------------------------------------------
 
 
 //-------------------------------------------------------------------------------
