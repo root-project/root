@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.50 2005/08/18 11:12:59 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.51 2005/09/05 12:24:28 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -89,8 +89,8 @@ static Pixmap gFillPattern = 0;    // Fill pattern
 //
 const Int_t kMAXFONT = 4;
 static struct {
-  XFontStruct *id;
-  char         name[80];                    // Font name
+   XFontStruct *id;
+   char         name[80];                    // Font name
 } gFont[kMAXFONT];                          // List of fonts loaded
 
 static XFontStruct *gTextFont;              // Current font
@@ -101,9 +101,9 @@ static Int_t        gCurrentFontNumber = 0; // Current font number in gFont[]
 //
 const Int_t kMAXMK = 100;
 static struct {
-  int    type;
-  int    n;
-  XPoint xy[kMAXMK];
+   int    type;
+   int    n;
+   XPoint xy[kMAXMK];
 } gMarker;                        // Point list to draw marker
 
 //
@@ -121,12 +121,12 @@ static int  gDashSize   = 0;
 //
 // Event masks
 //
-static ULong_t gMouseMask = ButtonPressMask   | ButtonReleaseMask |
-                            EnterWindowMask   | LeaveWindowMask   |
-                            PointerMotionMask | KeyPressMask      |
-                            KeyReleaseMask;
-static ULong_t gKeybdMask = ButtonPressMask | KeyPressMask |
-                            EnterWindowMask | LeaveWindowMask;
+static ULong_t gMouseMask =   ButtonPressMask   | ButtonReleaseMask |
+                              EnterWindowMask   | LeaveWindowMask   |
+                              PointerMotionMask | KeyPressMask      |
+                              KeyReleaseMask;
+static ULong_t gKeybdMask =   ButtonPressMask | KeyPressMask |
+                              EnterWindowMask | LeaveWindowMask;
 
 //
 // Data to create an invisible cursor
@@ -624,50 +624,50 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
          }
       }
    } else {
-     int r = gMarker.n / 2;
-     int m;
+      int r = gMarker.n / 2;
+      int m;
 
-     for (m = 0; m < n; m++) {
-        int hollow = 0;
+      for (m = 0; m < n; m++) {
+         int hollow = 0;
 
-        switch (gMarker.type) {
-           int i;
+         switch (gMarker.type) {
+            int i;
 
-           case 0:        // hollow circle
-              XDrawArc(fDisplay, gCws->fDrawing, *gGCmark,
-                       xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
-              break;
+            case 0:        // hollow circle
+               XDrawArc(fDisplay, gCws->fDrawing, *gGCmark,
+                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
+               break;
 
-           case 1:        // filled circle
-              XFillArc(fDisplay, gCws->fDrawing, *gGCmark,
-                       xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
-              break;
+            case 1:        // filled circle
+               XFillArc(fDisplay, gCws->fDrawing, *gGCmark,
+                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
+               break;
 
-           case 2:        // hollow polygon
-              hollow = 1;
-           case 3:        // filled polygon
-              for (i = 0; i < gMarker.n; i++) {
-                 gMarker.xy[i].x += xy[m].x;
-                 gMarker.xy[i].y += xy[m].y;
-              }
-              if (hollow)
-                 XDrawLines(fDisplay, gCws->fDrawing, *gGCmark,
-                            gMarker.xy, gMarker.n, CoordModeOrigin);
-              else
-                 XFillPolygon(fDisplay, gCws->fDrawing, *gGCmark,
-                              gMarker.xy, gMarker.n, Nonconvex, CoordModeOrigin);
-              for (i = 0; i < gMarker.n; i++) {
-                 gMarker.xy[i].x -= xy[m].x;
-                 gMarker.xy[i].y -= xy[m].y;
-              }
-              break;
+            case 2:        // hollow polygon
+               hollow = 1;
+            case 3:        // filled polygon
+               for (i = 0; i < gMarker.n; i++) {
+                  gMarker.xy[i].x += xy[m].x;
+                  gMarker.xy[i].y += xy[m].y;
+               }
+               if (hollow)
+                  XDrawLines(fDisplay, gCws->fDrawing, *gGCmark,
+                             gMarker.xy, gMarker.n, CoordModeOrigin);
+               else
+                  XFillPolygon(fDisplay, gCws->fDrawing, *gGCmark,
+                               gMarker.xy, gMarker.n, Nonconvex, CoordModeOrigin);
+               for (i = 0; i < gMarker.n; i++) {
+                  gMarker.xy[i].x -= xy[m].x;
+                  gMarker.xy[i].y -= xy[m].y;
+               }
+               break;
 
-           case 4:        // segmented line
-              for (i = 0; i < gMarker.n; i += 2)
-                 XDrawLine(fDisplay, gCws->fDrawing, *gGCmark,
-                           xy[m].x + gMarker.xy[i].x, xy[m].y + gMarker.xy[i].y,
-                           xy[m].x + gMarker.xy[i+1].x, xy[m].y + gMarker.xy[i+1].y);
-              break;
+            case 4:        // segmented line
+               for (i = 0; i < gMarker.n; i += 2)
+                  XDrawLine(fDisplay, gCws->fDrawing, *gGCmark,
+                            xy[m].x + gMarker.xy[i].x, xy[m].y + gMarker.xy[i].y,
+                            xy[m].x + gMarker.xy[i+1].x, xy[m].y + gMarker.xy[i+1].y);
+               break;
          }
       }
    }
@@ -1062,9 +1062,9 @@ Int_t TGX11::OpenDisplay(Display *disp)
    echov.foreground = fBlackPixel;
    echov.background = fWhitePixel;
    if (strstr(vendor,"Hewlett"))
-     echov.function   = GXxor;
+      echov.function   = GXxor;
    else
-     echov.function   = GXinvert;
+      echov.function   = GXinvert;
 
    gGCecho = XCreateGC(fDisplay, fVisRootWin,
                        GCForeground | GCBackground | GCFunction,
@@ -1457,36 +1457,36 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
       switch (ctyp) {
 
          case 1 :
-             break;
+            break;
 
          case 2 :
-             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
-                       xloc, 0, xloc, gCws->fHeight);
-             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
-                       0, yloc, gCws->fWidth, yloc);
-             break;
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                      xloc, 0, xloc, gCws->fHeight);
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                      0, yloc, gCws->fWidth, yloc);
+            break;
 
          case 3 :
-             radius = (int) TMath::Sqrt((double)((xloc-xlocp)*(xloc-xlocp) +
-                                        (yloc-ylocp)*(yloc-ylocp)));
-             XDrawArc(fDisplay, gCws->fWindow, gGCecho,
-                      xlocp-radius, ylocp-radius,
-                      2*radius, 2*radius, 0, 23040);
-             break;
+            radius = (int) TMath::Sqrt((double)((xloc-xlocp)*(xloc-xlocp) +
+                                       (yloc-ylocp)*(yloc-ylocp)));
+            XDrawArc(fDisplay, gCws->fWindow, gGCecho,
+                     xlocp-radius, ylocp-radius,
+                     2*radius, 2*radius, 0, 23040);
+            break;
 
          case 4 :
-             XDrawLine(fDisplay, gCws->fWindow, gGCecho,
-                       xlocp, ylocp, xloc, yloc);
-             break;
+            XDrawLine(fDisplay, gCws->fWindow, gGCecho,
+                      xlocp, ylocp, xloc, yloc);
+            break;
 
          case 5 :
-             XDrawRectangle(fDisplay, gCws->fWindow, gGCecho,
-                            TMath::Min(xlocp,xloc), TMath::Min(ylocp,yloc),
-                            TMath::Abs(xloc-xlocp), TMath::Abs(yloc-ylocp));
-             break;
+            XDrawRectangle(fDisplay, gCws->fWindow, gGCecho,
+                           TMath::Min(xlocp,xloc), TMath::Min(ylocp,yloc),
+                           TMath::Abs(xloc-xlocp), TMath::Abs(yloc-ylocp));
+            break;
 
          default:
-             break;
+            break;
       }
 
       while (XEventsQueued( fDisplay, QueuedAlready) > 1) {
@@ -1882,16 +1882,16 @@ void TGX11::SelectWindow(int wid)
 
    gCws = &fWindows[wid];
 
-  if (gCws->fClip && !gCws->fIsPixmap && !gCws->fDoubleBuffer) {
-     region.x      = gCws->fXclip;
-     region.y      = gCws->fYclip;
-     region.width  = gCws->fWclip;
-     region.height = gCws->fHclip;
-     for (i = 0; i < kMAXGC; i++)
-        XSetClipRectangles(fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
+   if (gCws->fClip && !gCws->fIsPixmap && !gCws->fDoubleBuffer) {
+      region.x      = gCws->fXclip;
+      region.y      = gCws->fYclip;
+      region.width  = gCws->fWclip;
+      region.height = gCws->fHclip;
+      for (i = 0; i < kMAXGC; i++)
+         XSetClipRectangles(fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
    } else {
-     for (i = 0; i < kMAXGC; i++)
-        XSetClipMask(fDisplay, gGClist[i], None);
+      for (i = 0; i < kMAXGC; i++)
+         XSetClipMask(fDisplay, gGClist[i], None);
    }
 }
 
@@ -2174,7 +2174,7 @@ void TGX11::SetInput(int inp)
       attributes.event_mask = gMouseMask | gKeybdMask;
       attr_mask = CWEventMask;
       XChangeWindowAttributes(fDisplay, gCws->fWindow, attr_mask, &attributes);
-  } else {
+   } else {
       attributes.event_mask = NoEventMask;
       attr_mask = CWEventMask;
       XChangeWindowAttributes(fDisplay, gCws->fWindow, attr_mask, &attributes);
@@ -2209,18 +2209,18 @@ void TGX11::SetLineType(int n, int *dash)
       XSetLineAttributes(fDisplay, *gGCline, gLineWidth,
                          gLineStyle, gCapStyle, gJoinStyle);
    } else {
-     gDashSize = TMath::Min((int)sizeof(gDashList),n);
-     gDashLength = 0;
-     for (int i = 0; i < gDashSize; i++ ) {
-        gDashList[i] = dash[i];
-        gDashLength += gDashList[i];
-     }
-     gDashOffset = 0;
-     gLineStyle = LineOnOffDash;
-     XSetLineAttributes(fDisplay, *gGCline, gLineWidth,
-                        gLineStyle, gCapStyle, gJoinStyle);
-     XSetLineAttributes(fDisplay, *gGCdash, gLineWidth,
-                        gLineStyle, gCapStyle, gJoinStyle);
+      gDashSize = TMath::Min((int)sizeof(gDashList),n);
+      gDashLength = 0;
+      for (int i = 0; i < gDashSize; i++ ) {
+         gDashList[i] = dash[i];
+         gDashLength += gDashList[i];
+      }
+      gDashOffset = 0;
+      gLineStyle = LineOnOffDash;
+      XSetLineAttributes(fDisplay, *gGCline, gLineWidth,
+                         gLineStyle, gCapStyle, gJoinStyle);
+      XSetLineAttributes(fDisplay, *gGCdash, gLineWidth,
+                         gLineStyle, gCapStyle, gJoinStyle);
    }
 }
 
@@ -2854,9 +2854,9 @@ void TGX11::UpdateWindow(int mode)
                 *gGCpxmp, 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
    }
    if (mode == 1) {
-     XFlush(fDisplay);
+      XFlush(fDisplay);
    } else {
-     XSync(fDisplay, False);
+      XSync(fDisplay, False);
    }
 }
 
@@ -3254,9 +3254,9 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
       if (wid == fMaxNumberOfWindows) {
          Int_t newsize = fMaxNumberOfWindows + 10;
          fWindows = (XWindow_t*) TStorage::ReAlloc(
-                                                   fWindows, newsize * sizeof(XWindow_t),
-                                                   fMaxNumberOfWindows*sizeof(XWindow_t)
-                                                  );
+            fWindows, newsize * sizeof(XWindow_t),
+            fMaxNumberOfWindows*sizeof(XWindow_t)
+            );
                                                   
          for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
             fWindows[i].fOpen = 0;

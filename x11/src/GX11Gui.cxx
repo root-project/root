@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.43 2005/08/19 09:34:36 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.44 2005/09/05 14:43:46 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1030,7 +1030,7 @@ void TGX11::SetCursor(Window_t id, Cursor_t curid)
 {
    // Set the specified cursor.
 
-  if (!id) return;
+   if (!id) return;
 
    XDefineCursor(fDisplay, (Window) id, (Cursor) curid);
 }
@@ -1912,9 +1912,7 @@ void TGX11::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t input)
    prop.fDecorations = value;
    prop.fFunctions   = funcs;
    prop.fInputMode   = input;
-   prop.fFlags       = kMWMHintsDecorations |
-                       kMWMHintsFunctions   |
-                       kMWMHintsInputMode;
+   prop.fFlags       = kMWMHintsDecorations | kMWMHintsFunctions | kMWMHintsInputMode;
 
    XChangeProperty(fDisplay, (Window) id, gMOTIF_WM_HINTS, gMOTIF_WM_HINTS, 32,
                    PropModeReplace, (UChar_t *)&prop, kPropMWMHintElements);
