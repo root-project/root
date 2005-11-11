@@ -78,7 +78,7 @@ public:
 class TNewQueryDlg : public TGTransientFrame {
 
 private:
-   Bool_t            fEditMode;        // kTRUE if used to edit existing query
+   Bool_t             fEditMode;        // kTRUE if used to edit existing query
    TGCompositeFrame  *fFrmNewQuery;    // top (main) frame
    TGCompositeFrame  *fFrmMore;        // options frame
    TGTextButton      *fBtnMore;        // "more >>" / "less <<" button

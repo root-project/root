@@ -127,7 +127,7 @@ public:
    TObject       *fChain;           // dataset on which to process selector
    TQueryResult  *fResult;          // query result received back
 
-   const char *GetName() const { return fQueryName; }
+   const char    *GetName() const { return fQueryName; }
 
    ClassDef(TQueryDescription, 1)  // Query description
 };
@@ -146,24 +146,24 @@ enum EMenuIdentification {
 class TSessionDescription : public TObject {
 
 public:
-   TString           fName;         // session name
-   TString           fAddress;      // server address
-   Int_t             fPort;         // communication port
-   TString           fConfigFile;   // configuration file name
-   Int_t             fLogLevel;     // log (debug) level
-   TString           fUserName;     // user name (on server)
-   Bool_t            fConnected;    // kTRUE if connected
-   Bool_t            fLocal;        // kTRUE if session is local
-   Bool_t            fSync;         // kTRUE if in sync mode
+   TString            fName;        // session name
+   TString            fAddress;     // server address
+   Int_t              fPort;        // communication port
+   TString            fConfigFile;  // configuration file name
+   Int_t              fLogLevel;    // log (debug) level
+   TString            fUserName;    // user name (on server)
+   Bool_t             fConnected;   // kTRUE if connected
+   Bool_t             fLocal;       // kTRUE if session is local
+   Bool_t             fSync;        // kTRUE if in sync mode
    TList             *fQueries;     // list of queries in this session
    TList             *fPackages;    // list of packages
    TQueryDescription *fActQuery;    // current (actual) query
    TVirtualProof     *fProof;       // pointer on TVirtualProof used by this session
-   Int_t             fNbHistos;     // number of feedback histos
+   Int_t              fNbHistos;    // number of feedback histos
 
-   const char *GetName() const { return fName; }
+   const char        *GetName() const { return fName; }
 
-   ClassDef(TSessionDescription, 1)  // Session description
+   ClassDef(TSessionDescription, 1) // Session description
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -343,27 +343,25 @@ private:
    TGTextButton         *fBtnRetrieve;       // retrieve query button
    TGTextView           *fInfoTextView;      // summary on current query
 
-   Int_t                fFiles;              // number of files processed
-   TTime                fStartTime;          // start time of the process
-   TTime                fEndTime;            // end time of the process
-   Long64_t             fFirst;              // first event/entry to process
-   Long64_t             fEntries;            // number of events/entries to process
-   Long64_t             fPrevTotal;          // used for progress bar
-   Long64_t             fPrevProcessed;      // used for progress bar
+   Int_t                 fFiles;             // number of files processed
+   TTime                 fStartTime;         // start time of the process
+   TTime                 fEndTime;           // end time of the process
+   Long64_t              fFirst;             // first event/entry to process
+   Long64_t              fEntries;           // number of events/entries to process
+   Long64_t              fPrevTotal;         // used for progress bar
+   Long64_t              fPrevProcessed;     // used for progress bar
    TGLabel              *fLabInfos;          // infos on current process
    TGLabel              *fLabStatus;         // actual process status
    TGLabel              *fTotal;             // total progress info
    TGLabel              *fRate;              // rate of process in events/sec
-   EQueryStatus         fStatus;             // status of actual query
+   EQueryStatus          fStatus;            // status of actual query
    TGTab                *fTab;               // main tab frame
    TGCompositeFrame     *fFA, *fFB, *fFC;    // three tabs element
    TGHProgressBar       *frmProg;            // current process progress bar
    TRootEmbeddedCanvas  *fECanvas;           // node statistics embeded canvas
    TCanvas              *fStatsCanvas;       // node statistics canvas
-
    TSessionViewer       *fViewer;            // pointer on main viewer
-
-   TQueryDescription    *fDesc;
+   TQueryDescription    *fDesc;              // query description
 
 public:
    TSessionQueryFrame(TGWindow* parent, Int_t w, Int_t h);
@@ -508,8 +506,8 @@ private:
    TGIcon                 *fRightIcon;          // associated picture
    TTimer                 *fTimer;              // timer used to change icon picture
    UserGroup_t            *fUserGroup;          // user connected to session
-   Bool_t                 fAutoSave;            // kTRUE if config is to be saved on exit
-   TString                fConfigFile;          // configuration file name
+   Bool_t                  fAutoSave;           // kTRUE if config is to be saved on exit
+   TString                 fConfigFile;         // configuration file name
    TEnv                   *fViewerEnv;          // viewer's configuration
 
 public:
