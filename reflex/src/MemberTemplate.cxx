@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -10,7 +10,16 @@
 // This software is provided "as is" without express or implied warranty.
 
 #include "Reflex/MemberTemplate.h"
+#include "Reflex/Member.h"
                                               
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
+//-------------------------------------------------------------------------------
+  if ( * this ) return fMemberTemplateImpl->TemplateInstanceAt( nth );
+  return Member();
+}
+
+
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::MemberTemplate::AddTemplateInstance( const Member & templateInstance ) const {
 //-------------------------------------------------------------------------------

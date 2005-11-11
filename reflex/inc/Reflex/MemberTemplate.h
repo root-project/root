@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -172,9 +172,7 @@ namespace ROOT {
   } // namespace ROOT
 } // namespace Reflex
 
-#include "Reflex/Member.h"
 #include "Reflex/MemberTemplateImpl.h"
-
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::MemberTemplate::MemberTemplate( MemberTemplateImpl * memberTemplateImpl )
@@ -192,14 +190,6 @@ inline ROOT::Reflex::MemberTemplate::operator bool () const {
 //-------------------------------------------------------------------------------
   if ( fMemberTemplateImpl ) return true;
   return false;
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
-//-------------------------------------------------------------------------------
-  if ( * this ) return fMemberTemplateImpl->TemplateInstanceAt( nth );
-  return Member();
 }
 
 
