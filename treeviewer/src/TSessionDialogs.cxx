@@ -324,8 +324,14 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
    // if in edit mode, update fields with query description data
    if (editmode && query)
       UpdateFields(query);
-   else if (!editmode)
-      fTxtQueryName->SetText("Query 1");
+   else if (!editmode) {
+      TQueryDescription *fquery;
+      fquery = (TQueryDescription *)fViewer->GetActDesc()->fQueries->Last();
+      if(fquery)
+         fTxtQueryName->SetText(fquery->fQueryName);
+      else
+         fTxtQueryName->SetText("Query 1");
+   }
    MapSubwindows();
    Resize(Width, Height);
    // hide options frame
@@ -596,6 +602,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
+   newquery->fResult         = 0;
 
    if (newquery->fChain) {
       if (newquery->fChain->IsA() == TChain::Class())
@@ -608,6 +615,31 @@ void TNewQueryDlg::OnBtnSaveClicked()
       // and set user data to the newly created query description
       newquery->fResult = 0;
       newquery->fStatus = TQueryDescription::kSessionQueryCreated;
+
+      TQueryDescription *fquery;
+      fquery = (TQueryDescription *)fViewer->GetActDesc()->fQueries->FindObject(newquery->fQueryName);
+      while (fquery) {
+         int e, j = 0, idx = 0;
+         const char *name = fquery->fQueryName;
+         for (int i=strlen(name)-1;i>0;i--) {
+            if (isdigit(name[i])) {
+               e = pow(10, j);
+               idx += (name[i]-'0') * e;
+               j++;
+            }
+            else
+               break;
+         }
+         if (idx > 0) {
+            idx++;
+            newquery->fQueryName.Remove(strlen(name)-j,j);
+            newquery->fQueryName.Append(Form("%d",idx));
+         }
+         else
+            newquery->fQueryName.Append(" 1");
+         fquery = (TQueryDescription *)fViewer->GetActDesc()->fQueries->FindObject(newquery->fQueryName);
+      }
+      fTxtQueryName->SetText(newquery->fQueryName);
       fViewer->GetActDesc()->fQueries->Add((TObject *)newquery);
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->FindChildByData(
          fViewer->GetSessionItem(), fViewer->GetActDesc());
@@ -621,9 +653,10 @@ void TNewQueryDlg::OnBtnSaveClicked()
       fViewer->OnListTreeClicked(item2, 1, 0, 0);
    }
    else {
-      // else if in editor mode, just update user data with modified 
+      // else if in editor mode, just update user data with modified
       // query description
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
+      fViewer->GetSessionHierarchy()->RenameItem(item, newquery->fQueryName);
       item->SetUserData(newquery);
    }
    // update list tree
@@ -646,7 +679,7 @@ void TNewQueryDlg::OnBtnCloseClicked()
 {
    // close dialog
 
-   CloseWindow();
+   DeleteWindow();
 }
 
 //______________________________________________________________________________

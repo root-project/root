@@ -2414,7 +2414,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    else
       fOptionsMenu->UnCheckEntry(kOptionsFeedback);
 
-   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterHistos", 0);
+   bval = (Bool_t)fViewerEnv->GetValue("Option.MasterHistos", 1);
    if (bval) {
       fOptionsMenu->CheckEntry(kOptionsStatsHist);
       gEnv->SetValue("Proof.StatsHist", 1);
@@ -2436,7 +2436,8 @@ void TSessionViewer::ReadConfiguration(const char *filename)
 
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
-      bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]), 0);
+      bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]), 
+            i == 1 ? 1 : 0);
       if (bval)
          fCascadeMenu->CheckEntry(41+i);
       else
@@ -2648,6 +2649,7 @@ void TSessionViewer::UpdateListOfProofs()
          newdesc->fAddress    = proof->GetMaster();
          newdesc->fQueries    = new TList();
          newdesc->fPackages   = new TList();
+         newdesc->fProof      = proof;
          newdesc->fActQuery   = 0;
          newdesc->fConnected = kTRUE;
          newdesc->fLocal = kFALSE;

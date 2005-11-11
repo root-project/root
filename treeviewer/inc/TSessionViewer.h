@@ -127,7 +127,8 @@ public:
    TObject       *fChain;           // dataset on which to process selector
    TQueryResult  *fResult;          // query result received back
 
-public:
+   const char *GetName() const { return fQueryName; }
+
    ClassDef(TQueryDescription,1)
 };
 
