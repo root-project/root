@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.5 2004/09/21 14:17:59 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.6 2005/05/10 15:11:25 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
- TGedFrame::~TGedFrame()
+TGedFrame::~TGedFrame()
 {
    // Destructor of the base GUI attribute frame.
 
@@ -103,7 +103,7 @@ void TGedFrame::SetActive(Bool_t active)
 }
 
 //______________________________________________________________________________
- void TGedFrame::RecursiveRemove(TObject* /*obj*/)
+void TGedFrame::RecursiveRemove(TObject* /*obj*/)
 {
    // Remove references to fModel in case the fModel is being deleted
    // Deactivate attribute frames if they point to obj
@@ -160,8 +160,7 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 {
    // Create the frame containing the selected object name.
 
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                               kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
@@ -173,7 +172,7 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
- TGedNameFrame::~TGedNameFrame()
+TGedNameFrame::~TGedNameFrame()
 {
    // Destructor of the name frame.
 

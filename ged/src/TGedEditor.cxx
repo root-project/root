@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.21 2005/05/20 16:22:37 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.22 2005/06/15 13:12:57 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -37,7 +37,8 @@ ClassImp(TGedEditor)
 TGedEditor::TGedEditor(TCanvas* canvas) :
    TGMainFrame(gClient->GetRoot(), 175, 20)
 {
-
+   // Constructor of graphics editor.
+   
    fCan = new TGCanvas(this, 170, 10, kFixedWidth); 
    fTab = new TGTab(fCan->GetViewPort(), 10, 10);
    fCan->SetContainer(fTab);
@@ -242,7 +243,8 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
 //______________________________________________________________________________
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
-
+   // Activate object editors according to the selected object.
+   
    if (!fGlobal && (event != kButton1Down)) return;
 
    TCanvas *c = (TCanvas *) gTQSender;
@@ -295,13 +297,14 @@ void TGedEditor::Show()
       UInt_t ch = fCanvas->GetWindowHeight();
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
       UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
-      if (!ch) cy = cy + 20;      // embedded canvas protection
+      if (!ch) 
+         cy = cy + 20;      // embedded canvas protection
 
       Int_t gedx = 0, gedy = 0;
 
       if (cw + GetWidth() > dw) {
-          gedx = cx + cw - GetWidth();
-          gedy = ch - GetHeight();
+         gedx = cx + cw - GetWidth();
+         gedy = ch - GetHeight();
       } else {
          if (cx > GetWidth())
             gedx = cx - GetWidth() - 20;
@@ -372,7 +375,7 @@ void TGedEditor::DeleteEditors()
          TGedElement *ge;
          while ((ge = (TGedElement *)next1())) {
             if (ge->fCanvas != 0) {
-                 del = kFALSE;
+               del = kFALSE;
             }
          }
       }
@@ -386,7 +389,7 @@ void TGedEditor::DeleteEditors()
             TIter next1(editors);
             TGedElement *ge;
             while ((ge = (TGedElement *)next1())) {
-                  editors->Remove(ge);
+               editors->Remove(ge);
             }
          }
       }
@@ -396,15 +399,15 @@ void TGedEditor::DeleteEditors()
 //______________________________________________________________________________
 TGedEditor::~TGedEditor()
 {
-  // Editor destructor.
+   // Editor destructor.
 
-  gROOT->GetListOfCleanups()->Remove(this);
-  fStyle->Cleanup();
-  Cleanup();
+   gROOT->GetListOfCleanups()->Remove(this);
+   fStyle->Cleanup();
+   Cleanup();
 }
 
 //______________________________________________________________________________
- void TGedEditor::RecursiveRemove(TObject* obj)
+void TGedEditor::RecursiveRemove(TObject* obj)
 {
    // Remove references to fModel in case the fModel is being deleted.
    // Deactivate attribute frames if they point to obj.

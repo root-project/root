@@ -120,6 +120,7 @@ void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
 void TStylePreview::MapTheWindow()
 {
    // Initialize the layout algorithm.
+   
    MapSubwindows();
    TCanvas *c = fPad->GetCanvas();
    UInt_t w = c->GetWindowWidth();
@@ -136,5 +137,7 @@ void TStylePreview::MapTheWindow()
 //______________________________________________________________________________
 TCanvas *TStylePreview::GetMainCanvas()
 {
+   // return pointer to the selected canvas.
+   
    return fEcan->GetCanvas();
 }

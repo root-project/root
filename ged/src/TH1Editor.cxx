@@ -452,8 +452,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    // calling the SetModel(initialization) of all editors in the BinTab
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
-       if ((el->fFrame)->InheritsFrom("TGedFrame"))
-          ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
+      if ((el->fFrame)->InheritsFrom("TGedFrame"))
+         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
    } 
 
    if (fBinHist && (obj != fHist)) {
@@ -1028,7 +1028,7 @@ void TH1Editor::DoHistComplex()
       } else {
          str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
       }
-     if (str.Contains("LEGO")) {
+      if (str.Contains("LEGO")) {
          ShowFrame(f10);
          ShowFrame(f11); 
          HideFrame(f12);
@@ -1485,9 +1485,10 @@ void TH1Editor::DoBinPressed()
 
    Int_t* d = Dividers(fHist->GetXaxis()->GetNbins());
    if (d[0]==2 && !fBinHist) {
-     new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(), \
-      "TH1 Editor", "It is not possible to rebin the histogram", kMBIconExclamation, kMBOk, 0, kVerticalFrame);
-     gVirtualX->GrabPointer(fBinSlider->GetId(),0,0,0); 
+      new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(),
+                   "TH1 Editor", "It is not possible to rebin the histogram", 
+                   kMBIconExclamation, kMBOk, 0, kVerticalFrame);
+      gVirtualX->GrabPointer(fBinSlider->GetId(),0,0,0); 
    }
    // calling the MessageBox again does NOT work!*/
 }
@@ -1798,8 +1799,8 @@ void TH1Editor::DoApply()
    "Replace origin histogram with rebinned one?", kMBIconQuestion, kMBYes | kMBNo, &ret, kVerticalFrame);
    if (ret==1) {
       if (fBinHist) {
-        delete fBinHist;
-        fBinHist = 0;
+         delete fBinHist;
+         fBinHist = 0;
       }
       Int_t nx = fHist->GetXaxis()->GetNbins();
       Int_t *div = Dividers(nx);
@@ -2056,8 +2057,8 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
             fErrorCombo->AddEntry("Contour", kERRORS_CONTOUR);
             TGListBox* lb = fErrorCombo->GetListBox();
             lb->Resize(lb->GetWidth(),100);	 
-        }
-        break;
+         }
+         break;
       }
    }
 }

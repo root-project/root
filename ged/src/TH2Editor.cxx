@@ -745,7 +745,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
       if ((el->fFrame)->InheritsFrom("TGedFrame")) 
-        ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
+         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
    } 
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
@@ -1639,8 +1639,8 @@ void TH2Editor::DoApply()
    new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(), "TH2 Editor", "Replace origin histogram with rebinned one?", kMBIconQuestion, kMBYes | kMBNo, &ret, kVerticalFrame);
    if (ret==1) {
       if (fBinHist) {
-        delete fBinHist;
-        fBinHist = 0;
+         delete fBinHist;
+         fBinHist = 0;
       }
       Int_t nx = fHist->GetXaxis()->GetNbins();
       Int_t ny = fHist->GetYaxis()->GetNbins();      

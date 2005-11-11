@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.4 2004/05/27 08:17:50 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.5 2004/06/16 08:58:34 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************
@@ -44,7 +44,7 @@
 class TGedMarkerPopup : public TGedPopup {
 
 protected:
-   Style_t  fCurrentStyle;
+   Style_t  fCurrentStyle;     //currently selected style
 
 public:
    TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t markerStyle);
@@ -59,8 +59,8 @@ public:
 class TGedMarkerSelect : public TGedSelect {
 
 protected:
-   Style_t          fMarkerStyle;
-   const TGPicture *fPicture;
+   Style_t          fMarkerStyle;   //marker style
+   const TGPicture *fPicture;       //image used for popup window
 
    virtual void     DoRedraw();
 
@@ -69,14 +69,11 @@ public:
    virtual ~TGedMarkerSelect() { if(fPicture) gClient->FreePicture(fPicture);}
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   void           SetMarkerStyle(Style_t pattern);
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
+   void           SetMarkerStyle(Style_t pattern);
+   virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
    virtual void   SavePrimitive(ofstream &out, Option_t *);
-
    virtual TGDimension GetDefaultSize() const { return TGDimension(38, 21); }
-
-   virtual void MarkerSelected(Style_t marker = 0) 
-                { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
 
    ClassDef(TGedMarkerSelect,0)  // Marker selection button
 };
