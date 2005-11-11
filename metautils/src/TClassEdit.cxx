@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.16 2005/03/20 18:20:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.17 2005/10/17 14:17:35 pcanal Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -287,15 +287,15 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
          // loop on all the keywords we want to remove
          for (int k=0; k<n && remove[k]; k++) {
-           int rlen = strlen(remove[k]);
+            int rlen = strlen(remove[k]);
 
-           // Do we have a match
-           if (strncmp(remove[k],c,rlen)) continue;
+            // Do we have a match
+            if (strncmp(remove[k],c,rlen)) continue;
 
-           // make sure that the 'keyword' is not part of a longer indentifier
-           if (isalnum(c[rlen]) || c[rlen]=='_' ||  c[rlen]=='$') continue;
+            // make sure that the 'keyword' is not part of a longer indentifier
+            if (isalnum(c[rlen]) || c[rlen]=='_' ||  c[rlen]=='$') continue;
 
-           c+=rlen-1; done = 1; break;
+            c+=rlen-1; done = 1; break;
          }
          if (done) continue;
       }
@@ -624,7 +624,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 
    int len = strlen(tname);
    string input(tname);
- #ifdef R__SSTREAM
+#ifdef R__SSTREAM
    // This is the modern implementation
    stringstream answ;
 #else
