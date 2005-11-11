@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.13 2005/01/28 13:53:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.14 2005/09/13 15:52:00 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -94,6 +94,8 @@ TLeaf::~TLeaf()
 //______________________________________________________________________________
 void TLeaf::Browse(TBrowser *b)
 {
+   // Browse the content of this leaf.
+
    char name[64];
    if (strchr(GetName(),'.')) {
       fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
@@ -145,50 +147,50 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    char *bleft2 = (char*)strchr(countname,'[');
    *bright = 0; nch = strlen(countname);
 
-   //*-* Now search a branch name with a leave name = countname
-   //    We search for the leaf in the ListOfLeaves from the TTree. We can in principle
-   //    access the TTree by calling fBranch()->GetTree(), but fBranch is not set if this
-   //    method is called from the TLeaf constructor. In that case, use global pointer
-   //    gTree.
-   //    Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
-  TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
-  if (!pTree) pTree = gTree;
-  TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
-  //if not found, make one more trial in case the leaf name has a "."
-  if (!leaf && strchr(GetName(),'.')) {
-     char *withdot = new char[1000];
-     strcpy(withdot,GetName());
-     char *lastdot = strrchr(withdot,'.');
-     strcpy(lastdot,countname);
-     leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
-     delete [] withdot;
-  }
-  Int_t i;
-  if (leaf) {
-     countval = 1;
-     leaf->SetRange();
-     if (bleft2) {
-        sscanf(bleft2,"[%d]",&i);
-        countval *= i;
-     }
-     bleft = bleft2;
-     while(bleft) {
-        bleft2++;
-        bleft = (char*)strchr(bleft2,'[');
-        if (!bleft) break;
-        sscanf(bleft,"[%d]",&i);
-        countval *= i;
-        bleft2 = bleft;
-     }
-     delete [] countname;
-     return leaf;
-  }
-//*-* not found in a branch/leaf. Is it a numerical value?
+   // Now search a branch name with a leave name = countname
+   // We search for the leaf in the ListOfLeaves from the TTree. We can in principle
+   // access the TTree by calling fBranch()->GetTree(), but fBranch is not set if this
+   // method is called from the TLeaf constructor. In that case, use global pointer
+   // gTree.
+   // Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
+   TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
+   if (!pTree) pTree = gTree;
+   TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+   //if not found, make one more trial in case the leaf name has a "."
+   if (!leaf && strchr(GetName(),'.')) {
+      char *withdot = new char[1000];
+      strcpy(withdot,GetName());
+      char *lastdot = strrchr(withdot,'.');
+      strcpy(lastdot,countname);
+      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+      delete [] withdot;
+   }
+   Int_t i;
+   if (leaf) {
+      countval = 1;
+      leaf->SetRange();
+      if (bleft2) {
+         sscanf(bleft2,"[%d]",&i);
+         countval *= i;
+      }
+      bleft = bleft2;
+      while(bleft) {
+         bleft2++;
+         bleft = (char*)strchr(bleft2,'[');
+         if (!bleft) break;
+         sscanf(bleft,"[%d]",&i);
+         countval *= i;
+         bleft2 = bleft;
+      }
+      delete [] countname;
+      return leaf;
+   }
+   // not found in a branch/leaf. Is it a numerical value?
    for (i=0;i<nch;i++) {
       if (!isdigit(countname[i])) {
-        delete [] countname;
-        countval = -1;
-        return 0;
+         delete [] countname;
+         countval = -1;
+         return 0;
       }
    }
    sscanf(countname,"%d",&countval);
@@ -205,7 +207,7 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
       countval *= i;
       bleft2 = bleft;
    }
-//*/
+
    delete [] countname;
    return 0;
 }
@@ -214,8 +216,7 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
 //______________________________________________________________________________
 Int_t TLeaf::GetLen() const
 {
-//*-*-*-*-*-*-*-*-*Return the number of effective elements of this leaf*-*-*-*
-//*-*              ====================================================
+   // Return the number of effective elements of this leaf
 
    Int_t len;
    if (fLeafCount) {
@@ -233,16 +234,14 @@ Int_t TLeaf::GetLen() const
 //______________________________________________________________________________
 Int_t TLeaf::ResetAddress(void *add, Bool_t destructor)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-//*-*                  ============================
-//
-//  This function is called by all TLeafX::SetAddress
-
+   // Set leaf buffer data address
+   //
+   //  This function is called by all TLeafX::SetAddress
 
    Int_t todelete = 0;
    if (TestBit(kNewValue)) todelete = 1;
    if (destructor) return todelete;
-
+   
    if (fLeafCount) fNdata = fLen*(fLeafCount->GetMaximum() + 1);
    else            fNdata = fLen;
 
@@ -255,6 +254,8 @@ Int_t TLeaf::ResetAddress(void *add, Bool_t destructor)
 //_______________________________________________________________________
 void TLeaf::SetLeafCount(TLeaf *leaf)
 { 
+   // Set the leaf count of this leaf
+
    if (IsZombie() && fLen==-1 && leaf) {
       // The constructor noted that it could not find the 
       // leafcount. Now that we did find it, let's remove

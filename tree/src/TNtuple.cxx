@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.9 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.10 2005/04/07 10:57:32 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -116,7 +116,9 @@ void TNtuple::ResetBranchAddresses()
 //______________________________________________________________________________
 void TNtuple::Browse(TBrowser *b)
 {
-    fLeaves.Browse( b );
+   // Browse content of the ntuple
+
+   fLeaves.Browse( b );
 }
 
 
@@ -128,7 +130,7 @@ Int_t TNtuple::Fill()
 // Note that this function is protected.
 // Currently called only by TChain::Merge
 
-  return TTree::Fill();
+   return TTree::Fill();
 }
 
 //______________________________________________________________________________
@@ -184,13 +186,13 @@ Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor
    ifstream in;
    in.open(filename);
    while (1) {
-     if ( in.peek() != '#' ) {
-       for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
-       if (!in.good()) break;
-       TTree::Fill();
-       nlines++;
-     }
-     in.ignore(8192,'\n');
+      if ( in.peek() != '#' ) {
+         for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
+         if (!in.good()) break;
+         TTree::Fill();
+         nlines++;
+      }
+      in.ignore(8192,'\n');
    }
    in.close();
    return nlines;

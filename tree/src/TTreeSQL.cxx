@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.3 2005/08/29 10:57:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -66,6 +66,8 @@ TBranch* TTreeSQL::BranchImp(const char *, const char *,
                              TClass *, void *, Int_t , 
                              Int_t )
 {
+   // Not implemented yet
+
    Fatal("BranchImp","Not implemented yet");
    return 0;
 }
@@ -74,6 +76,8 @@ TBranch* TTreeSQL::BranchImp(const char *, const char *,
 TBranch* TTreeSQL::BranchImp(const char *, TClass *, 
                              void *, Int_t , Int_t )
 {
+   // Not implemented yet
+
    Fatal("BranchImp","Not implemented yet");
    return 0;
 }
@@ -82,6 +86,8 @@ TBranch* TTreeSQL::BranchImp(const char *, TClass *,
 Int_t TTreeSQL::Branch(TCollection *, Int_t, 
                        Int_t, const char *)
 {
+   // Not implemented yet
+
    Fatal("Branch","Not implemented yet");
    return 0;
 }
@@ -89,6 +95,8 @@ Int_t TTreeSQL::Branch(TCollection *, Int_t,
 //______________________________________________________________________________
 Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
 {
+   // Not implemented yet
+
    Fatal("Branch","Not implemented yet");
    return 0;
 }
@@ -97,6 +105,8 @@ Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
 Int_t TTreeSQL::Branch(const char *, Int_t , 
                        Int_t)
 {
+   // Not implemented yet
+
    Fatal("Branch","Not implemented yet");
    return 0;
 }
@@ -105,6 +115,8 @@ Int_t TTreeSQL::Branch(const char *, Int_t ,
 TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
+   // Not implemented yet
+
    Fatal("Bronc","Not implemented yet");
    return 0;
 }
@@ -113,6 +125,8 @@ TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
 TBranch* TTreeSQL::BranchOld(const char *, const char *,
                              void *, Int_t, Int_t)
 {
+   // Not implemented yet
+
    Fatal("BranchOld","Not implemented yet");
    return 0;
 }
@@ -121,6 +135,8 @@ TBranch* TTreeSQL::BranchOld(const char *, const char *,
 TBranch *TTreeSQL::Branch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
+   // Not implemented yet
+
    Fatal("Branch","Not implemented yet");
    return 0;
 }
@@ -129,6 +145,8 @@ TBranch *TTreeSQL::Branch(const char *, const char *, void *,
 TBranch * TTreeSQL::Branch(const char *name, void *address, 
                            const char *leaflist, Int_t bufsize)
 {
+   // Create a branch
+
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
    TString brName;
@@ -157,6 +175,7 @@ TBranch * TTreeSQL::Branch(const char *name, void *address,
 //______________________________________________________________________________
 void TTreeSQL::CheckBasket(TBranch *branch)
 {
+   // Check if the basket is properly setup
 
    TBasketSQL * basket = (TBasketSQL *)branch->GetBasket(0);
    TBuffer * buffer = basket->GetBufferRef();
@@ -232,7 +251,7 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
    TSQLRow * row = 0;
    while( (row = tables->Next()) ) {
       if(strcmp(row->GetField(0),table.Data())==0){
-        return kTRUE;
+         return kTRUE;
       }
    }
 
@@ -296,7 +315,8 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
 //______________________________________________________________________________
 TBasket * TTreeSQL::CreateBasket(TBranch * tb)
 {
-  
+   // Create a TBasketSQL
+
    if (fServer==0) {
       Error("CreateBasket","No TSQLServer specified");
       return 0;
@@ -475,7 +495,7 @@ void TTreeSQL::CreateTable(const TString &table)
 
             TSQLResult *sres = fServer->Query(createSQL.Data());
             if (!sres) {
-              Error("CreateTable","May have failed");
+               Error("CreateTable","May have failed");
             }
          }
          else {
@@ -484,8 +504,8 @@ void TTreeSQL::CreateTable(const TString &table)
             str += "__";
             str += leafName;
             CreateBranch(str, typeName);
-       } //else
-     }  // inner for loop
+         } //else
+      }  // inner for loop
    } // outer for loop
    // retrieve table to initialize fResult
    fResult = fServer->Query(fQuery.Data());
@@ -509,6 +529,8 @@ void TTreeSQL::Init()
 //______________________________________________________________________________
 Int_t TTreeSQL::Fill()
 {
+   // Copy the information from the user object to the TTree
+
    Int_t nb = fBranches.GetEntriesFast();
    TString typeName;
    TBranch *branch;
@@ -580,21 +602,21 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
       if (rs==0) break;
       Int_t rows = rs->GetRowCount();
       for (Int_t i=0;i<rows;++i) {
-        TSQLRow *row = rs->Next();
-        if (str==row->GetField(0)) {
-          col = i;
-          break;
-        }
+         TSQLRow *row = rs->Next();
+         if (str==row->GetField(0)) {
+            col = i;
+            break;
+         }
       }
       
       if(col>=0){
-        columns->push_back(col);
+         columns->push_back(col);
       } else Error("GetColumnIndice","Error finding column %d %s",j,str.Data());
    }
    if (columns->empty()) {
-     delete columns; return 0;
+      delete columns; return 0;
    } else
-     return columns;
+      return columns;
 }
 
 //______________________________________________________________________________
@@ -627,6 +649,9 @@ Long64_t  TTreeSQL::GetEntries() const
 //______________________________________________________________________________
 Long64_t  TTreeSQL::GetEntriesFast()    const
 {
+   // Return the number of entries as of the last check.
+   // Use GetEntries for a more accurate count.
+
    return fEntries;
 }
 
@@ -642,6 +667,8 @@ Int_t TTreeSQL::GetEntry(Long64_t entry, Int_t getall)
 //______________________________________________________________________________
 Long64_t TTreeSQL::LoadTree(Long64_t entry)
 {
+   // Setup the tree to the load the specified entry.
+
    fReadEntry = entry;
    return PrepEntry(entry);
 }
@@ -707,6 +734,8 @@ void TTreeSQL::Refresh()
 //______________________________________________________________________________
 void TTreeSQL::ResetQuery()
 {
+   // Reset the internal query
+
    fInsertQuery = "INSERT INTO " + fTable + " VALUES (";
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.14 2001/07/19 16:42:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.15 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -42,10 +42,10 @@ TLeafObject::TLeafObject(const char *name, const char *type)
 //*-*                      ==================
 //*-*
 
-  SetTitle(type);
-  fClass      = gROOT->GetClass(type);
-  fObjAddress = 0;
-  fVirtual    = kTRUE;
+   SetTitle(type);
+   fClass      = gROOT->GetClass(type);
+   fObjAddress = 0;
+   fVirtual    = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -73,17 +73,17 @@ void TLeafObject::FillBasket(TBuffer &b)
       }
       object->Streamer(b);
    } else {
-     if (fClass) {
-        if (fClass->Property() & kIsAbstract) object = new TObject;
-        else                                  object = (TObject *)fClass->New();
-        object->SetBit(kInvalidObject);
-        object->SetUniqueID(123456789);
-        object->Streamer(b);
-        if (fClass->Property() & kIsAbstract) delete object;
-        else                                  fClass->Destructor(object);
-     } else {
-        Error("FillBasket","Attempt to write a NULL object in leaf:%s",GetName());
-     }
+      if (fClass) {
+         if (fClass->Property() & kIsAbstract) object = new TObject;
+         else                                  object = (TObject *)fClass->New();
+         object->SetBit(kInvalidObject);
+         object->SetUniqueID(123456789);
+         object->Streamer(b);
+         if (fClass->Property() & kIsAbstract) delete object;
+         else                                  fClass->Destructor(object);
+      } else {
+         Error("FillBasket","Attempt to write a NULL object in leaf:%s",GetName());
+      }
    }
 }
 

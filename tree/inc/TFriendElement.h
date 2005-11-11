@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.5 2004/09/24 18:22:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.6 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -35,11 +35,11 @@ class TClass;
 class TFriendElement : public TNamed {
 
 protected:
-    TTree        *fParentTree;  //!pointer to the parent TTree
-    TTree        *fTree;        //!pointer to the TTree described by this element
-    TFile        *fFile;        //!pointer to the file containing the friend TTree
-    TString       fTreeName;    // name of the friend TTree
-    Bool_t        fOwnFile;     // true if file is managed by this class
+   TTree        *fParentTree;  //!pointer to the parent TTree
+   TTree        *fTree;        //!pointer to the TTree described by this element
+   TFile        *fFile;        //!pointer to the file containing the friend TTree
+   TString       fTreeName;    // name of the friend TTree
+   Bool_t        fOwnFile;     // true if file is managed by this class
 
 public:
    enum { kFromChain = BIT(11) };

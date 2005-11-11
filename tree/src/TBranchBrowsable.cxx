@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.5 2005/05/18 21:04:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.6 2005/07/18 21:05:03 pcanal Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -381,8 +381,8 @@ TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
       plainReturnType.Remove(plainReturnType.Length()-1);
       plainReturnType.Strip();
       if(plainReturnType.BeginsWith("const")) {
-        plainReturnType.Remove(0,5);
-        plainReturnType.Strip();
+         plainReturnType.Remove(0,5);
+         plainReturnType.Strip();
       }   
    }
    SetType(gROOT->GetClass(plainReturnType));
@@ -422,7 +422,7 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li) {
       TIter iM(methods);
       while ((method=(TMethod*)iM()))
          if (method && !allMethods.FindObject(method->GetName()))
-             allMethods.Add(method);
+            allMethods.Add(method);
    }
 
    TIter iM(&allMethods);
@@ -492,22 +492,23 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m) {
        && strcmp(m->GetName(),"IsOnHeap")
        && strcmp(m->GetName(),"IsSortable")
        && strcmp(m->GetName(),"IsZombie")) {
-         // look for matching data member
-         TClass* cl=m->GetClass();
-         if (!cl) return kTRUE;
-         TList* members=cl->GetListOfDataMembers();
-         if (!members) return kTRUE;
-         const char* baseName=m->GetName();
-         if (!strncmp(m->GetName(), "Get", 3) ||
-             !strncmp(m->GetName(), "get", 3))
-            baseName+=3;
-         if (!baseName[0]) return kTRUE;
 
-         TObject* mem=0;
-         const char* arrMemberNames[3]={"f%s","_%s","m%s"};
-         for (Int_t i=0; !mem && i<3; i++)
-            mem=members->FindObject(Form(arrMemberNames[i],baseName));
-         return (!mem ||! ((TDataMember*)mem)->IsPersistent());
+      // look for matching data member
+      TClass* cl=m->GetClass();
+      if (!cl) return kTRUE;
+      TList* members=cl->GetListOfDataMembers();
+      if (!members) return kTRUE;
+      const char* baseName=m->GetName();
+      if (!strncmp(m->GetName(), "Get", 3) ||
+          !strncmp(m->GetName(), "get", 3))
+         baseName+=3;
+      if (!baseName[0]) return kTRUE;
+      
+      TObject* mem=0;
+      const char* arrMemberNames[3]={"f%s","_%s","m%s"};
+      for (Int_t i=0; !mem && i<3; i++)
+         mem=members->FindObject(Form(arrMemberNames[i],baseName));
+      return (!mem ||! ((TDataMember*)mem)->IsPersistent());
    };
    return kFALSE;
 }

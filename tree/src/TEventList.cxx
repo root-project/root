@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.12 2004/09/10 12:16:50 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.13 2005/06/03 07:37:06 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -156,7 +156,7 @@ void TEventList::Add(const TEventList *alist)
 //______________________________________________________________________________
 Bool_t TEventList::Contains(Long64_t entry)
 {
-//          Return TRUE if list contains entry.
+   // Return TRUE if list contains entry.
 
    if (GetIndex(entry) < 0) return kFALSE;
    return kTRUE;
@@ -165,39 +165,38 @@ Bool_t TEventList::Contains(Long64_t entry)
 //______________________________________________________________________________
 void TEventList::Enter(Long64_t entry)
 {
-//          Enter element entry into the list
+   // Enter element entry into the list.
 
-
-  if (!fList) {
-    fList = new Long64_t[fSize];
-    fList[0] = entry;
-    fN = 1;
-    return;
-  }
-  if (entry==fList[fN-1]) return;
-  if (fN >= fSize) {
-    Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
-    Resize(newsize-fSize);
-  }
-  if(entry>fList[fN-1]) {
-    fList[fN] = entry;
-    ++fN;
-  } else {
-    Int_t pos = TMath::BinarySearch(fN, fList, entry);
-    if(pos>=0 && entry==fList[pos])
+   if (!fList) {
+      fList = new Long64_t[fSize];
+      fList[0] = entry;
+      fN = 1;
       return;
-    ++pos;
-    memmove( &(fList[pos+1]), &(fList[pos]), 8*(fN-pos));
-    fList[pos] = entry;
-    ++fN;
-  }
+   }
+   if (entry==fList[fN-1]) return;
+   if (fN >= fSize) {
+      Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
+      Resize(newsize-fSize);
+   }
+   if(entry>fList[fN-1]) {
+      fList[fN] = entry;
+      ++fN;
+   } else {
+      Int_t pos = TMath::BinarySearch(fN, fList, entry);
+      if(pos>=0 && entry==fList[pos])
+         return;
+      ++pos;
+      memmove( &(fList[pos+1]), &(fList[pos]), 8*(fN-pos));
+      fList[pos] = entry;
+      ++fN;
+   }
 }
 
 //______________________________________________________________________________
 Long64_t TEventList::GetEntry(Int_t index) const
 {
-//       Return value of entry at index in the list.
-//       Return -1 if index is not in the list range
+   // Return value of entry at index in the list.
+   // Return -1 if index is not in the list range.
 
    if (!fList)   return -1;
    if (index < 0 || index >= fN)   return -1;
@@ -434,6 +433,8 @@ void TEventList::Subtract(const TEventList *alist)
 //______________________________________________________________________________
 TEventList& TEventList::operator=(const TEventList &list)
 {
+   // Assingment.
+
    if (this != &list) {
       TNamed::operator=(list);
       if (fSize < list.fSize) {
@@ -452,6 +453,8 @@ TEventList& TEventList::operator=(const TEventList &list)
 //______________________________________________________________________________
 TEventList operator+(const TEventList &list1, const TEventList &list2)
 {
+   // Addition.
+
    TEventList newlist = list1;
    newlist.Add(&list2);
    return newlist;
@@ -460,6 +463,8 @@ TEventList operator+(const TEventList &list1, const TEventList &list2)
 //______________________________________________________________________________
 TEventList operator-(const TEventList &list1, const TEventList &list2)
 {
+   // Substraction
+
    TEventList newlist = list1;
    newlist.Subtract(&list2);
    return newlist;
@@ -468,6 +473,8 @@ TEventList operator-(const TEventList &list1, const TEventList &list2)
 //______________________________________________________________________________
 TEventList operator*(const TEventList &list1, const TEventList &list2)
 {
+   // Intersection.
+
    TEventList newlist = list1;
    newlist.Intersect(&list2);
    return newlist;

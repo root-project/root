@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.10 2003/08/23 14:53:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.11 2004/09/24 18:22:46 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -103,20 +103,16 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
 
 //______________________________________________________________________________
 TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias)
-:TNamed(friendtree?friendtree->GetName():"",
-          friendtree
-        ? (   friendtree->GetDirectory()
-            ? (    friendtree->GetDirectory()->GetFile()
-                 ? friendtree->GetDirectory()->GetFile()->GetName()
-                 :  ""
-              )
-            : ""
-          )
-        :  "")
+   : TNamed(friendtree?friendtree->GetName():"",
+            friendtree
+            ? (   friendtree->GetDirectory()
+                  ? (    friendtree->GetDirectory()->GetFile()
+                         ? friendtree->GetDirectory()->GetFile()->GetName()
+                         :  "")
+                  : "")
+            :  "")
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ======================
-//
+   // Create a friend element.
 
    fTree       = friendtree;
    fTreeName   = "";
@@ -139,6 +135,7 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
 //______________________________________________________________________________
 TFriendElement::~TFriendElement()
 {
+   // Destructor.  Disconnect from the owning tree if needed.
 
    DisConnect();
 }
@@ -146,7 +143,7 @@ TFriendElement::~TFriendElement()
 //_______________________________________________________________________
 TTree *TFriendElement::Connect()
 {
-// Connect file and return TTree.
+   // Connect file and return TTree.
 
    GetFile();
    return GetTree();
@@ -155,7 +152,7 @@ TTree *TFriendElement::Connect()
 //_______________________________________________________________________
 TTree *TFriendElement::DisConnect()
 {
-// DisConnect file and TTree.
+   // DisConnect file and TTree.
 
    if (fOwnFile) delete fFile;
    fFile = 0;
@@ -166,7 +163,7 @@ TTree *TFriendElement::DisConnect()
 //_______________________________________________________________________
 TFile *TFriendElement::GetFile()
 {
-// Return pointer to TFile containing this friend TTree.
+   // Return pointer to TFile containing this friend TTree.
 
    if (fFile || IsZombie()) return fFile;
    if (strlen(GetTitle()))
@@ -189,7 +186,7 @@ TFile *TFriendElement::GetFile()
 //_______________________________________________________________________
 TTree *TFriendElement::GetTree()
 {
-// Return pointer to friend TTree.
+   // Return pointer to friend TTree.
 
    if (fTree) return fTree;
    if (!GetFile()) {
@@ -211,7 +208,7 @@ TTree *TFriendElement::GetTree()
 //_______________________________________________________________________
 void TFriendElement::ls(Option_t *) const
 {
-// List this friend element.
+   // List this friend element.
 
    printf(" Friend Tree: %s in file: %s\n",GetName(),GetTitle());
 }

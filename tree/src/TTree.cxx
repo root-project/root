@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.266 2005/10/14 10:50:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.267 2005/11/04 20:13:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -950,21 +950,21 @@ Int_t TTree::Branch(const char *foldername, Int_t bufsize, Int_t splitlevel)
    while ((obj=next())) {
       sprintf(curname,"%s/%s",foldername,obj->GetName());
       if (obj->IsA() == TFolder::Class()) {
-        Branch(curname, bufsize, splitlevel-1);
+         Branch(curname, bufsize, splitlevel-1);
       } else {
-        void *add = (void*)folder->GetListOfFolders()->GetObjectRef(obj);
-        for (Int_t i=0;i<1000;i++) {
-           if (curname[i] == 0) break;
-           if (curname[i] == '/') curname[i] = '.';
-        }
-        Int_t noccur = folder->Occurence(obj);
-        if (noccur > 0) {
-           sprintf(occur,"_%d",noccur);
-           strcat(curname,occur);
-        }
-        TBranchElement *br;
-        br = (TBranchElement*)Bronch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
-        br->SetBranchFolder();
+         void *add = (void*)folder->GetListOfFolders()->GetObjectRef(obj);
+         for (Int_t i=0;i<1000;i++) {
+            if (curname[i] == 0) break;
+            if (curname[i] == '/') curname[i] = '.';
+         }
+         Int_t noccur = folder->Occurence(obj);
+         if (noccur > 0) {
+            sprintf(occur,"_%d",noccur);
+            strcat(curname,occur);
+         }
+         TBranchElement *br;
+         br = (TBranchElement*)Bronch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
+         br->SetBranchFolder();
       }
    }
    delete [] curname;
@@ -1513,6 +1513,8 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //______________________________________________________________________________
 void TTree::Browse(TBrowser *b)
 {
+   // Browse content of the TTree.
+
    fBranches.Browse(b);
 }
 
@@ -2471,6 +2473,8 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //______________________________________________________________________________
 void TTree::DropBaskets()
 {
+   // Remove some basket from memory.
+
    TBranch *branch;
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nb; i++) {
@@ -2540,8 +2544,8 @@ Int_t TTree::Fill()
       if ( branch->TestBit(kDoNotProcess) ) continue;
       nbytes += (nwrite = branch->Fill());
       if ( nwrite < 0 )  {
-        Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
-        nerror++;
+         Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
+         nerror++;
       }
    }
    if (fBranchRef) fBranchRef->Fill();
@@ -2579,9 +2583,9 @@ TBranch *TTree::FindBranch(const char* branchname)
    char *subbranch = (char*)strstr(branchname,GetName());
    if (subbranch!=branchname) subbranch = 0;
    if (subbranch) {
-     subbranch += strlen(GetName());
-     if ( *subbranch != '.' ) subbranch = 0;
-     else subbranch ++;
+      subbranch += strlen(GetName());
+      if ( *subbranch != '.' ) subbranch = 0;
+      else subbranch ++;
    }
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
@@ -2644,11 +2648,11 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    char *subsearchname = (char*)strstr(searchname,GetName());
    if (subsearchname!=searchname) subsearchname = 0;
    if (subsearchname) {
-     subsearchname += strlen(GetName());
-     if ( *subsearchname != '.' ) subsearchname = 0;
-     else subsearchname ++;
+      subsearchname += strlen(GetName());
+      if ( *subsearchname != '.' ) subsearchname = 0;
+      else subsearchname ++;
    }
-
+   
    // For leaves we allow for one level up to be prefixed to the
    // name
 
@@ -5013,6 +5017,8 @@ TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &r
 //______________________________________________________________________________
 TObject *TTreeFriendLeafIter::Next()
 {
+   // Go the next friend element
+
    if (!fTree) return 0;
 
    TObject * next;

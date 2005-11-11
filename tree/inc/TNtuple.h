@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.7 2004/07/01 21:27:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.8 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -45,16 +45,16 @@ public:
            Int_t     Fill(Int_t x0) { return Fill((Float_t)x0); }
            Int_t     Fill(Double_t x0) { return Fill((Float_t)x0); }
    virtual Int_t     Fill(Float_t x0, Float_t x1=0, Float_t x2=0, Float_t x3=0,
-                        Float_t x4=0, Float_t x5=0, Float_t x6=0, Float_t x7=0,
-                        Float_t x8=0, Float_t x9=0, Float_t x10=0,
-                        Float_t x11=0, Float_t x12=0, Float_t x13=0,
-                        Float_t x14=0);
+                          Float_t x4=0, Float_t x5=0, Float_t x6=0, Float_t x7=0,
+                          Float_t x8=0, Float_t x9=0, Float_t x10=0,
+                          Float_t x11=0, Float_t x12=0, Float_t x13=0,
+                          Float_t x14=0);
    virtual Int_t     GetNvar() const { return fNvar; }
            Float_t  *GetArgs() const { return fArgs; }
    virtual Long64_t  ReadFile(const char *filename, const char *branchDescriptor="");
            void      ResetBranchAddresses();
 
-   ClassDef(TNtuple,2)  //A simple tree with branches of floats.
+   ClassDef(TNtuple,2);  //A simple tree with branches of floats.
 };
 
 #endif

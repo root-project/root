@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.32 2005/04/19 20:05:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.33 2005/05/19 11:54:55 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -293,9 +293,9 @@ AfterBuffer:
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != fBufferRef->BufferSize()) {
-     // There is more data in the buffer!  It is the displacement
-     // array.
-     fBufferRef->ReadArray(fDisplacement);
+      // There is more data in the buffer!  It is the displacement
+      // array.
+      fBufferRef->ReadArray(fDisplacement);
    }
    return badread;
 }
@@ -358,13 +358,13 @@ void TBasket::Streamer(TBuffer &b)
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
          if (20<flag && flag<40) {
-           for(int i=0; i<fNevBuf; i++){
-              fEntryOffset[i] &= ~kDisplacementMask;
-           }
+            for(int i=0; i<fNevBuf; i++){
+               fEntryOffset[i] &= ~kDisplacementMask;
+            }
          }
          if (flag>40) {
-           fDisplacement = new Int_t[fNevBufSize];
-           b.ReadArray(fDisplacement);
+            fDisplacement = new Int_t[fNevBufSize];
+            b.ReadArray(fDisplacement);
          }
       }
       if (flag == 1 || flag > 10) {
@@ -489,8 +489,8 @@ Int_t TBasket::WriteBuffer()
 
    fBranch->GetDirectory()->cd();
    if (!file->IsWritable()) { 
-     cursav->cd(); 
-     return -1;
+      cursav->cd(); 
+      return -1;
    }
 
    if (fBufferRef->TestBit(TBuffer::kNotDecompressed)) {
@@ -521,8 +521,8 @@ Int_t TBasket::WriteBuffer()
       fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
       delete [] fEntryOffset; fEntryOffset = 0;
       if (fDisplacement) {
-        fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
-        delete [] fDisplacement; fDisplacement = 0;
+         fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
+         delete [] fDisplacement; fDisplacement = 0;
       }
    }
 

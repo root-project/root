@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.93 2005/09/21 21:04:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.94 2005/10/13 10:26:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -422,13 +422,13 @@ Int_t TBranch::Fill()
          // The buffer given as input as not been decompressed.
 
          if (basket->GetNevBuf()) {
-             // If the basket already contains entry we need to close it
-             // out. (This is because we can only transfer full compressed
-             // buffer)
-             WriteBasket(basket);
-
-             // And restart from scratch
-             return Fill();
+            // If the basket already contains entry we need to close it
+            // out. (This is because we can only transfer full compressed
+            // buffer)
+            WriteBasket(basket);
+            
+            // And restart from scratch
+            return Fill();
          }
 
          Int_t startpos = fEntryBuffer->Length();
@@ -563,15 +563,20 @@ Int_t TBranch::Fill()
 //______________________________________________________________________________
 void TBranch::FillLeaves(TBuffer &b)
 {
-  for (Int_t i=0;i<fNleaves;i++) {
-    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-    leaf->FillBasket(b);
-  }
+   // Fill each of the leaf of the branch.
+
+   for (Int_t i=0;i<fNleaves;i++) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      leaf->FillBasket(b);
+   }
 }
 
 //______________________________________________________________________________
 TBranch *TBranch::FindBranch(const char* searchname)
 {
+   // Find the branch corresponding to the name 'searchname'.
+   // 
+
    char brname[kMaxLen];
    char longsearchname[kMaxLen];
    TIter next(GetListOfBranches());
@@ -595,13 +600,14 @@ TBranch *TBranch::FindBranch(const char* searchname)
       if (!strcmp(longsearchname,brname)) return branch;
    }
 
-   //search in list of friends
    return 0;
 }
 
 //______________________________________________________________________________
 TLeaf *TBranch::FindLeaf(const char* searchname)
 {
+   //  Find the leaf corresponding to the name 'searchname'.
+
    char leafname[kMaxLen];
    char leaftitle[kMaxLen];
    char longname[kMaxLen];
@@ -654,7 +660,6 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
       }
    }
 
-   //search in list of friends
    return 0;
 }
 
@@ -1066,102 +1071,102 @@ Int_t TBranch::LoadBaskets()
 //______________________________________________________________________________
 void TBranch::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
-
-  const int kLINEND = 77;
-  Float_t cx = 1;
-  int aLength = strlen (GetTitle());
-  if (strcmp(GetName(),GetTitle()) == 0) aLength = 0;
-  int len = aLength;
-  aLength += (aLength / 54 + 1) * 80 + 100;
-  if (aLength < 200) aLength = 200;
-  char *bline = new char[aLength];
-  Long64_t totBytes = GetTotalSize();
-  if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
-  if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
-  else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
-  if (strlen(bline) > UInt_t(kLINEND)) {
-     char *tmp = new char[strlen(bline)+1];
-     if (len) strcpy(tmp, GetTitle());
-     sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
-     int pos = strlen (bline);
-     int npos = pos;
-     int beg=0, end;
-     while (beg < len) {
-        for (end=beg+1; end < len-1; end ++)
-          if (tmp[end] == ':')  break;
-        if (npos + end-beg+1 >= 78) {
-           while (npos < kLINEND) {
-              bline[pos ++] = ' ';
-              npos ++;
-           }
-           bline[pos ++] = '*';
-           bline[pos ++] = '\n';
-           bline[pos ++] = '*';
-           npos = 1;
-           for (; npos < 12; npos ++)
+   // Print TBranch parameters
+   
+   const int kLINEND = 77;
+   Float_t cx = 1;
+   int aLength = strlen (GetTitle());
+   if (strcmp(GetName(),GetTitle()) == 0) aLength = 0;
+   int len = aLength;
+   aLength += (aLength / 54 + 1) * 80 + 100;
+   if (aLength < 200) aLength = 200;
+   char *bline = new char[aLength];
+   Long64_t totBytes = GetTotalSize();
+   if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
+   if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
+   else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
+   if (strlen(bline) > UInt_t(kLINEND)) {
+      char *tmp = new char[strlen(bline)+1];
+      if (len) strcpy(tmp, GetTitle());
+      sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
+      int pos = strlen (bline);
+      int npos = pos;
+      int beg=0, end;
+      while (beg < len) {
+         for (end=beg+1; end < len-1; end ++)
+            if (tmp[end] == ':')  break;
+         if (npos + end-beg+1 >= 78) {
+            while (npos < kLINEND) {
                bline[pos ++] = ' ';
-           bline[pos-2] = '|';
-        }
-        for (int n = beg; n <= end; n ++)
-           bline[pos+n-beg] = tmp[n];
-        pos += end-beg+1;
-        npos += end-beg+1;
-        beg = end+1;
-     }
-     while (npos < kLINEND) {
-        bline[pos ++] = ' ';
-        npos ++;
-     }
-     bline[pos ++] = '*';
-     bline[pos] = '\0';
-     delete[] tmp;
-  }
-  Printf(bline);
-  if (fTotBytes > 2000000000) {
-     Printf("*Entries :%lld : Total  Size=%11lld bytes  File Size  = %lld *",fEntries,totBytes,fZipBytes);
-  } else {
-     if (fZipBytes > 0) {
-        Printf("*Entries :%9lld : Total  Size=%11lld bytes  File Size  = %10lld *",fEntries,totBytes,fZipBytes);
-     } else {
-        if (fWriteBasket > 0) {
-           Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
-        } else {
-           Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
-        }
-     }
-  }
-  Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
-  Printf("*............................................................................*");
-  delete [] bline;
-  fgCount++;
+               npos ++;
+            }
+            bline[pos ++] = '*';
+            bline[pos ++] = '\n';
+            bline[pos ++] = '*';
+            npos = 1;
+            for (; npos < 12; npos ++)
+               bline[pos ++] = ' ';
+            bline[pos-2] = '|';
+         }
+         for (int n = beg; n <= end; n ++)
+            bline[pos+n-beg] = tmp[n];
+         pos += end-beg+1;
+         npos += end-beg+1;
+         beg = end+1;
+      }
+      while (npos < kLINEND) {
+         bline[pos ++] = ' ';
+         npos ++;
+      }
+      bline[pos ++] = '*';
+      bline[pos] = '\0';
+      delete[] tmp;
+   }
+   Printf(bline);
+   if (fTotBytes > 2000000000) {
+      Printf("*Entries :%lld : Total  Size=%11lld bytes  File Size  = %lld *",fEntries,totBytes,fZipBytes);
+   } else {
+      if (fZipBytes > 0) {
+         Printf("*Entries :%9lld : Total  Size=%11lld bytes  File Size  = %10lld *",fEntries,totBytes,fZipBytes);
+      } else {
+         if (fWriteBasket > 0) {
+            Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
+         } else {
+            Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
+         }
+      }
+   }
+   Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
+   Printf("*............................................................................*");
+   delete [] bline;
+   fgCount++;
 }
 
 
 //______________________________________________________________________________
 void TBranch::ReadBasket(TBuffer &)
 {
-//*-*-*-*-*-*-*-*Loop on all leaves of this branch to read Basket buffer*-*-*
-//*-*            =======================================================
+   // Loop on all leaves of this branch to read Basket buffer.
 
-//   fLeaves->ReadBasket(basket);
+   //   fLeaves->ReadBasket(basket);
 }
 
 //______________________________________________________________________________
 void TBranch::ReadLeaves(TBuffer &b)
 {
-  for (Int_t i=0;i<fNleaves;i++) {
-    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-    leaf->ReadBasket(b);
-  }
+   // Loop on all leaves of this branch to read Basket buffer.
+
+   for (Int_t i=0;i<fNleaves;i++) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      leaf->ReadBasket(b);
+   }
 }
 
 //______________________________________________________________________________
 void TBranch::Refresh(TBranch *b)
 {
-//  refresh this branch using new information in b
-//  This function is called by TTree::Refresh
+   //  refresh this branch using new information in b
+   //  This function is called by TTree::Refresh
 
    fEntryOffsetLen = b->fEntryOffsetLen;
    fWriteBasket    = b->fWriteBasket;
@@ -1325,6 +1330,8 @@ void TBranch::SetCompressionLevel(Int_t level)
 //______________________________________________________________________________
 void TBranch::SetEntries(Long64_t entries)
 {
+   // Set the number of entries in this branch.
+
    fEntries = entries;
    fEntryNumber = entries;
 }

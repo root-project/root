@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.17 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.18 2005/05/25 17:23:14 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -168,6 +168,8 @@ TBranchClones::~TBranchClones()
 //______________________________________________________________________________
 void TBranchClones::Browse(TBrowser *b)
 {
+   // Browse this branch. 
+
    fBranches.Browse( b );
 }
 
@@ -229,9 +231,9 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 
      // if fList exists, create clonesarray objects
    if (fList) {
-     fList->Clear();
-     fList->ExpandCreateFast(fN);
-     for (Int_t i=0;i<nbranches;i++)  {
+      fList->Clear();
+      fList->ExpandCreateFast(fN);
+      for (Int_t i=0;i<nbranches;i++)  {
          branch = (TBranch*)fBranches.UncheckedAt(i);
          if (((TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0))->GetOffset()<0) {
             continue;
@@ -244,7 +246,7 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
          nbytes += branch->GetEntry(entry, getall);
       }
    }
-  return nbytes;
+   return nbytes;
 }
 
 //______________________________________________________________________________
@@ -298,8 +300,8 @@ void TBranchClones::SetAddress(void *add)
    // test if the pointer is null
    // in this case create the correct TClonesArray
    if ( (*ppointer)==0 ) {
-     *ppointer = (char*) new TClonesArray(fClassName);
-     fAddress = (char*)ppointer;
+      *ppointer = (char*) new TClonesArray(fClassName);
+      fAddress = (char*)ppointer;
    }
 
    fList = (TClonesArray*)(*ppointer);

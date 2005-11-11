@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.h,v 1.5 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.h,v 1.6 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -28,29 +28,29 @@
 class TLeafS : public TLeaf {
 
 protected:
-    Short_t       fMinimum;         //Minimum value if leaf range is specified
-    Short_t       fMaximum;         //Maximum value if leaf range is specified
-    Short_t       *fValue;          //!Pointer to data buffer
-    Short_t       **fPointer;       //!Address of pointer to data buffer
+   Short_t       fMinimum;         //Minimum value if leaf range is specified
+   Short_t       fMaximum;         //Maximum value if leaf range is specified
+   Short_t       *fValue;          //!Pointer to data buffer
+   Short_t       **fPointer;       //!Address of pointer to data buffer
 
 public:
-    TLeafS();
-    TLeafS(const char *name, const char *type);
-    virtual ~TLeafS();
+   TLeafS();
+   TLeafS(const char *name, const char *type);
+   virtual ~TLeafS();
 
-    virtual void    Export(TClonesArray *list, Int_t n);
-    virtual void    FillBasket(TBuffer &b);
-    const char     *GetTypeName() const;
-    Double_t        GetValue(Int_t i=0) const;
-    virtual void   *GetValuePointer() const {return fValue;}
-    virtual void    Import(TClonesArray *list, Int_t n);
-    virtual void    PrintValue(Int_t i=0) const;
-    virtual void    ReadBasket(TBuffer &b);
-    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-    virtual void    ReadValue(ifstream & s);
-    virtual void    SetAddress(void *add=0);
+   virtual void    Export(TClonesArray *list, Int_t n);
+   virtual void    FillBasket(TBuffer &b);
+   const char     *GetTypeName() const;
+   Double_t        GetValue(Int_t i=0) const;
+   virtual void   *GetValuePointer() const {return fValue;}
+   virtual void    Import(TClonesArray *list, Int_t n);
+   virtual void    PrintValue(Int_t i=0) const;
+   virtual void    ReadBasket(TBuffer &b);
+   virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
+   virtual void    ReadValue(ifstream & s);
+   virtual void    SetAddress(void *add=0);
 
-    ClassDef(TLeafS,1)  //A TLeaf for a 16 bit Integer data type.
+   ClassDef(TLeafS,1);  //A TLeaf for a 16 bit Integer data type.
 };
 
 #endif

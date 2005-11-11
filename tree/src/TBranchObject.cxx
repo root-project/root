@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.31 2005/03/19 16:39:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.32 2005/09/03 02:21:32 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -128,6 +128,7 @@ TBranchObject::~TBranchObject()
 //______________________________________________________________________________
 void TBranchObject::Browse(TBrowser *b)
 {
+   // Browse the branch content
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 1) {

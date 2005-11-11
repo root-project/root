@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.82 2005/05/31 19:47:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.h,v 1.2 2005/08/16 13:51:48 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
    virtual Long64_t       PrepEntry(Long64_t entry);
            void           Refresh();
 
-   ClassDef(TTreeSQL,1)
+   ClassDef(TTreeSQL,1);  // TTree Implementation read and write to a SQL database.
 };
 
 

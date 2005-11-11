@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.2 2005/04/12 09:26:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.3 2005/06/13 19:19:07 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -31,22 +31,22 @@ class TTree;
 class TVirtualIndex : public TNamed {
 
 protected:
-  TTree         *fTree;          //! pointer to Tree
-
+   TTree         *fTree;          //! pointer to Tree
+  
 public:
-  TVirtualIndex();
-  virtual               ~TVirtualIndex();
-  virtual Int_t          GetEntryNumberFriend(const TTree * /*T*/) = 0;
-  virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const = 0;
-  virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const = 0;
-  virtual const char    *GetMajorName()    const = 0;
-  virtual const char    *GetMinorName()    const = 0;
-  virtual Long64_t       GetN()            const = 0;
-  virtual TTree         *GetTree()         const {return fTree;}
-  virtual void           UpdateFormulaLeaves() = 0;
-  virtual void           SetTree(const TTree *T) = 0;
-
-  ClassDef(TVirtualIndex,1)  //Abstract interface for Tree Index
+   TVirtualIndex();
+   virtual               ~TVirtualIndex();
+   virtual Int_t          GetEntryNumberFriend(const TTree * /*T*/) = 0;
+   virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const = 0;
+   virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const = 0;
+   virtual const char    *GetMajorName()    const = 0;
+   virtual const char    *GetMinorName()    const = 0;
+   virtual Long64_t       GetN()            const = 0;
+   virtual TTree         *GetTree()         const {return fTree;}
+   virtual void           UpdateFormulaLeaves() = 0;
+   virtual void           SetTree(const TTree *T) = 0;
+   
+   ClassDef(TVirtualIndex,1);  //Abstract interface for Tree Index
 };
 
 #endif

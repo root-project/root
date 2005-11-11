@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.4 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.5 2005/04/07 10:57:32 brun Exp $
 // Author: Rene Brun   12/08/2001
 
 /*************************************************************************
@@ -116,7 +116,9 @@ void TNtupleD::ResetBranchAddresses()
 //______________________________________________________________________________
 void TNtupleD::Browse(TBrowser *b)
 {
-    fLeaves.Browse( b );
+   // Browse content.
+
+   fLeaves.Browse( b );
 }
 
 
@@ -128,7 +130,7 @@ Int_t TNtupleD::Fill()
 // Note that this function is protected.
 // Currently called only by TChain::Merge
 
-  return TTree::Fill();
+   return TTree::Fill();
 }
 
 //______________________________________________________________________________
@@ -138,11 +140,11 @@ Int_t TNtupleD::Fill(const Double_t *x)
 //*-*              =====================================
 
 //*-*- Store array x into buffer
-  for (Int_t i=0;i<fNvar;i++)  {
-     fArgs[i] = x[i];
-  }
+   for (Int_t i=0;i<fNvar;i++)  {
+      fArgs[i] = x[i];
+   }
 
-  return TTree::Fill();
+   return TTree::Fill();
 }
 
 
@@ -185,14 +187,14 @@ Long64_t TNtupleD::ReadFile(const char *filename, const char * /*branchDescripto
    ifstream in;
    in.open(filename);
    while (1) {
-     if ( in.peek() != '#' ) {
-       for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
-       if (!in.good()) break;
-       TTree::Fill();
-       nlines++;
-     }
-     in.ignore(8192,'\n');
-
+      if ( in.peek() != '#' ) {
+         for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
+         if (!in.good()) break;
+         TTree::Fill();
+         nlines++;
+      }
+      in.ignore(8192,'\n');
+      
    }
    in.close();
    return nlines;

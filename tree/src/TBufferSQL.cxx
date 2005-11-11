@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: Exp $
+// @(#)root/tree:$Name:  $:$Id: TBufferSQL.cxx,v 1.2 2005/08/16 13:46:46 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -34,6 +34,8 @@ TBufferSQL::TBufferSQL(EMode mode, vector<Int_t> *vc,
    TBuffer(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
+   // Constructor.
+
    fIter = fColumnVec->begin();
 }
 
@@ -43,6 +45,8 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
    TBuffer(mode,bufsiz), 
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
+   // Constructor.
+
    fIter = fColumnVec->begin();
 }
 
@@ -53,23 +57,31 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
    TBuffer(mode,bufsiz,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
+   // Constructor.
+
    fIter = fColumnVec->begin();
 }
 
 //________________________________________________________________________
 TBufferSQL::TBufferSQL() : fColumnVec(0),fRowPtr(0)
 {
+   // Constructor.
+
 }
 
 //________________________________________________________________________
 TBufferSQL::~TBufferSQL() 
 {
+   // Destructo.
+
    delete fColumnVec;
 }
 
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Bool_t &b) 
 {
+   // Operator>>
+
    b = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -79,6 +91,8 @@ TBuffer& TBufferSQL::operator>>(Bool_t &b)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Char_t &c)
 {
+   // Operator>>
+
    c = (Char_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -88,6 +102,8 @@ TBuffer& TBufferSQL::operator>>(Char_t &c)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Short_t &h)
 {
+   // Operator>>
+
    h = (Short_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -97,6 +113,8 @@ TBuffer& TBufferSQL::operator>>(Short_t &h)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Int_t &i)
 {
+   // Operator>>
+
    i = atoi((*fRowPtr)->GetField(*fIter));
 
    if (fIter != fColumnVec->end()) ++fIter;
@@ -106,6 +124,8 @@ TBuffer& TBufferSQL::operator>>(Int_t &i)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Float_t &f)
 {
+   // Operator>>
+
    f = atof((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -115,6 +135,8 @@ TBuffer& TBufferSQL::operator>>(Float_t &f)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Long_t &l)
 {
+   // Operator>>
+
    l = atol((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -124,6 +146,8 @@ TBuffer& TBufferSQL::operator>>(Long_t &l)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Double_t &d)
 {
+   // Operator>>
+
    d = atof((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -134,6 +158,8 @@ TBuffer& TBufferSQL::operator>>(Double_t &d)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Bool_t    b)
 {
+   // Operator<<
+
    (*fInsertQuery) += b;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -143,6 +169,8 @@ TBuffer& TBufferSQL::operator<<(Bool_t    b)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Char_t    c)
 {
+   // Operator<<
+
    (*fInsertQuery) += c;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -152,6 +180,8 @@ TBuffer& TBufferSQL::operator<<(Char_t    c)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Short_t   h)
 {
+   // Operator<<
+
    (*fInsertQuery) += h;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -161,6 +191,8 @@ TBuffer& TBufferSQL::operator<<(Short_t   h)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Int_t     i)
 {
+   // Operator<<
+
    (*fInsertQuery) += i;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -170,6 +202,8 @@ TBuffer& TBufferSQL::operator<<(Int_t     i)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Long_t    l)
 {
+   // Operator<<
+
    (*fInsertQuery) += l;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -179,6 +213,8 @@ TBuffer& TBufferSQL::operator<<(Long_t    l)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Float_t   f)
 {
+   // Operator<<
+
    (*fInsertQuery) += f;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -188,6 +224,8 @@ TBuffer& TBufferSQL::operator<<(Float_t   f)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Double_t  d)
 {
+   // Operator<<
+
    (*fInsertQuery) += d;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
@@ -197,6 +235,8 @@ TBuffer& TBufferSQL::operator<<(Double_t  d)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(UChar_t& uc)
 {
+   // Operator>>
+
    uc = (UChar_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -206,6 +246,8 @@ TBuffer& TBufferSQL::operator>>(UChar_t& uc)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(UShort_t& us)
 {
+   // Operator>>
+
    us = (UShort_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
@@ -215,6 +257,8 @@ TBuffer& TBufferSQL::operator>>(UShort_t& us)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(UInt_t& ui)
 {
+   // Operator>>
+
    TString val = (*fRowPtr)->GetField(*fIter);
    Int_t code = sscanf(val.Data(), "%u",&ui);
    if(code == 0) Error("operator>>(UInt_t&)","Error reading UInt_t");
@@ -226,6 +270,8 @@ TBuffer& TBufferSQL::operator>>(UInt_t& ui)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(ULong_t& ul)
 {
+   // Operator>>
+
    TString val = (*fRowPtr)->GetField(*fIter);
    Int_t code = sscanf(val.Data(), "%lu",&ul);
    if(code == 0) Error("operator>>(ULong_t&)","Error reading ULong_t");
@@ -237,6 +283,8 @@ TBuffer& TBufferSQL::operator>>(ULong_t& ul)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Long64_t &ll)
 {
+   // Operator>>
+
    TString val = (*fRowPtr)->GetField(*fIter);
    Int_t code = sscanf(val.Data(), "%lld",&ll);
    if(code == 0) Error("operator>>(ULong_t&)","Error reading Long64_t");
@@ -248,6 +296,8 @@ TBuffer& TBufferSQL::operator>>(Long64_t &ll)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(ULong64_t &ull)
 {
+   // Operator>>
+
    TString val = (*fRowPtr)->GetField(*fIter);
    Int_t code = sscanf(val.Data(), "%llu",&ull);
    if(code == 0) Error("operator>>(ULong_t&)","Error reading ULong64_t");
@@ -259,6 +309,8 @@ TBuffer& TBufferSQL::operator>>(ULong64_t &ull)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator>>(Char_t *str)
 {
+   // Operator>>
+
    strcpy(str,(*fRowPtr)->GetField(*fIter));
    if (fIter != fColumnVec->end()) ++fIter;
    return *this;
@@ -269,6 +321,8 @@ TBuffer& TBufferSQL::operator>>(Char_t *str)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(UChar_t uc)
 {
+   // Operator<<
+
    (*fInsertQuery) += uc;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -278,6 +332,8 @@ TBuffer& TBufferSQL::operator<<(UChar_t uc)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(UShort_t us)
 {
+   // Operator<<
+
    (*fInsertQuery) += us;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -287,6 +343,8 @@ TBuffer& TBufferSQL::operator<<(UShort_t us)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(UInt_t ui)
 {
+   // Operator<<
+
    (*fInsertQuery) += ui;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -296,6 +354,8 @@ TBuffer& TBufferSQL::operator<<(UInt_t ui)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(ULong_t ul)
 {
+   // Operator<<
+
    (*fInsertQuery) += ul;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -305,6 +365,8 @@ TBuffer& TBufferSQL::operator<<(ULong_t ul)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(Long64_t ll)
 {
+   // Operator<<
+
    (*fInsertQuery) += ll;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -314,6 +376,8 @@ TBuffer& TBufferSQL::operator<<(Long64_t ll)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(ULong64_t ull)
 {
+   // Operator<<
+
    (*fInsertQuery) += ull;
    (*fInsertQuery) += ",";
    ++fIter;
@@ -323,6 +387,8 @@ TBuffer& TBufferSQL::operator<<(ULong64_t ull)
 //________________________________________________________________________
 TBuffer& TBufferSQL::operator<<(const Char_t *str)
 {
+   // Operator<<
+
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += str;
    (*fInsertQuery) += "\",";
@@ -333,6 +399,7 @@ TBuffer& TBufferSQL::operator<<(const Char_t *str)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Bool_t *b, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += b[i];
       (*fInsertQuery) += ",";
@@ -343,6 +410,8 @@ void TBufferSQL::WriteFastArray(const Bool_t *b, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += (Short_t)c[i];
       (*fInsertQuery) += ",";
@@ -353,6 +422,8 @@ void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
 {
+   // WriteFastArray SQL implementation.   
+
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += c;
    (*fInsertQuery) += "\",";
@@ -362,6 +433,8 @@ void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += uc[i];
       (*fInsertQuery) += ",";
@@ -372,6 +445,8 @@ void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += h[i];
       (*fInsertQuery) += ",";
@@ -382,6 +457,8 @@ void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += us[i];
       (*fInsertQuery) += ",";
@@ -392,6 +469,8 @@ void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
     //   cerr << "Column: " <<*fIter << "   i:" << *ii << endl;
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ii[i];
@@ -403,6 +482,8 @@ void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ui[i];
       (*fInsertQuery) += ",";
@@ -413,6 +494,8 @@ void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery)+= l[i];
       (*fInsertQuery)+= ",";
@@ -423,6 +506,8 @@ void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
       (*fInsertQuery) += ",";
@@ -433,6 +518,8 @@ void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += l[i];
       (*fInsertQuery) += ",";
@@ -443,6 +530,8 @@ void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
       (*fInsertQuery) += ",";
@@ -453,6 +542,8 @@ void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += f[i];
       (*fInsertQuery) += ",";
@@ -463,6 +554,8 @@ void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
 {
+   // WriteFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += d[i];
       (*fInsertQuery )+= ",";
@@ -473,12 +566,16 @@ void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
 {
+   // WriteFastArray SQL implementation.   
+
    Fatal("riteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
 }
 
 //________________________________________________________________________
 Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberStreamer*)
 {
+   // WriteFastArray SQL implementation.   
+
    Fatal("WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberStreamer*)","Not implemented yet");
    return 0;
 }
@@ -486,6 +583,8 @@ Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberS
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Bool_t *b, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
+
    for(int i=0; i<n; ++i) {  
       b[i] = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -495,6 +594,7 @@ void TBufferSQL::ReadFastArray(Bool_t *b, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Char_t *c, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       c[i] = (Char_t)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -504,6 +604,7 @@ void TBufferSQL::ReadFastArray(Char_t *c, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArrayString(Char_t *c, Int_t /* n */)
 {
+   // ReadFastArray SQL implementation.   
    strcpy(c,((*fRowPtr)->GetField(*fIter)));
    ++fIter;
 }
@@ -511,6 +612,7 @@ void TBufferSQL::ReadFastArrayString(Char_t *c, Int_t /* n */)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(UChar_t *uc, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       uc[i] = (UChar_t)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -520,6 +622,7 @@ void TBufferSQL::ReadFastArray(UChar_t *uc, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Short_t *s, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       s[i] = (Short_t)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -529,6 +632,7 @@ void TBufferSQL::ReadFastArray(Short_t *s, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(UShort_t *us, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       us[i] = (UShort_t)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -538,6 +642,7 @@ void TBufferSQL::ReadFastArray(UShort_t *us, Int_t n)
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       in[i] = atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -547,6 +652,7 @@ void     TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArray(UInt_t *ui, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       ui[i] = atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -556,6 +662,7 @@ void     TBufferSQL::ReadFastArray(UInt_t *ui, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Long_t *l, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       l[i] = atol((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -565,6 +672,7 @@ void TBufferSQL::ReadFastArray(Long_t *l, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(ULong_t   *ul, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       (*this) >> ul[i];
    }
@@ -573,6 +681,7 @@ void TBufferSQL::ReadFastArray(ULong_t   *ul, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Long64_t  *ll, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       (*this) >> ll[i];
    }
@@ -581,6 +690,7 @@ void TBufferSQL::ReadFastArray(Long64_t  *ll, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(ULong64_t *ull, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       (*this) >> ull[i];
    }
@@ -589,6 +699,7 @@ void TBufferSQL::ReadFastArray(ULong64_t *ull, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Float_t   *f, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       f[i] = atof((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -598,6 +709,7 @@ void TBufferSQL::ReadFastArray(Float_t   *f, Int_t n)
 //________________________________________________________________________
 void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
 {
+   // ReadFastArray SQL implementation.   
    for(int i=0; i<n; ++i) {  
       d[i] = atof((*fRowPtr)->GetField(*fIter));
       ++fIter;
@@ -607,24 +719,28 @@ void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)
 {
+   // ReadFastArray SQL implementation.   
    Fatal("ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)","Not implemented yet");
 }
 
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *)
 {
+   // ReadFastArray SQL implementation.   
    Fatal("ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *)","Not implemented yet");
 }
 
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *)
 {
+   // ReadFastArray SQL implementation.   
    Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *)","Not implemented yet");
 }
 
 //________________________________________________________________________
 void TBufferSQL::ResetOffset() 
 {
+   // Reset Offset.
    fIter = fColumnVec->begin();
 }
 
@@ -642,9 +758,9 @@ void TBufferSQL::insert_test(const Text_t* dsn, const Text_t* usr,
    con = gSQLDriverManager->GetConnection(dsn,usr,pwd);
    
    if(!con)
-     printf("\n\n\nConnection NOT Successful\n\n\n");
+      printf("\n\n\nConnection NOT Successful\n\n\n");
    else
-     printf("\n\n\nConnection Sucessful\n\n\n");
+      printf("\n\n\nConnection Sucessful\n\n\n");
    
    
    

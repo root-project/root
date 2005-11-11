@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.15 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.16 2005/08/29 18:10:54 pcanal Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -117,10 +117,9 @@ void TLeafC::PrintValue(Int_t) const
 //______________________________________________________________________________
 void TLeafC::ReadBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//*-*                  ===========================================
+   // Read leaf elements from Basket input buffer
 
-    b.ReadFastArrayString(fValue,fLen);
+   b.ReadFastArrayString(fValue,fLen);
 }
 
 //______________________________________________________________________________

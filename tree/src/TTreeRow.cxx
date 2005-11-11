@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.2 2001/12/08 15:21:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.3 2002/01/08 09:59:39 brun Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -154,6 +154,8 @@ const char *TTreeRow::GetField(Int_t field)
 //______________________________________________________________________________
 void TTreeRow::SetRow(const Int_t *fields, const char *row)
 {
+   // The field and row information.
+
    if (!fColumnCount) return;
    if (fFields) delete [] fFields;
    Int_t nch    = fields[fColumnCount-1];

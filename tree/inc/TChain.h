@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.46 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.47 2005/09/23 13:04:53 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    virtual TBranch  *GetBranch(const char *name);
    virtual Bool_t    GetBranchStatus(const char *branchname) const;
    virtual Long64_t  GetChainEntryNumber(Long64_t entry) const;
-           Int_t     GetNtrees() const {return fNtrees;}
+           Int_t     GetNtrees() const { return fNtrees; }
    virtual Long64_t  GetEntries() const;
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall=0);
    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
@@ -102,11 +102,11 @@ public:
    virtual Double_t  GetMinimum(const char *columname);
    virtual Int_t     GetNbranches();
    virtual Long64_t  GetReadEntry() const;
-   TList            *GetStatus() const {return fStatus;}
-   TTree            *GetTree() const {return fTree;}
-           Int_t     GetTreeNumber() const {return fTreeNumber;}
-           Long64_t *GetTreeOffset() const {return fTreeOffset;}
-           Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
+   TList            *GetStatus() const { return fStatus; }
+   TTree            *GetTree() const { return fTree; }
+           Int_t     GetTreeNumber() const { return fTreeNumber; }
+           Long64_t *GetTreeOffset() const { return fTreeOffset; }
+           Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
    virtual Double_t  GetWeight() const;
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
            Long64_t  LoadTree(Long64_t entry);

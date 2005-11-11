@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasketSQL.cxx,v 1.1 2005/08/15 21:29:58 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -124,7 +124,7 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
 //_________________________________________________________________________
 void TBasketSQL::PrepareBasket(Long64_t entry)
 {
-   // Prepare the basket for the next entry
+   // Prepare the basket for the next entry.
 
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    ((TTreeSQL*)fBranch->GetTree())->PrepEntry(entry);
@@ -134,6 +134,8 @@ void TBasketSQL::PrepareBasket(Long64_t entry)
 //_________________________________________________________________________
 Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
 {
+   // See TBasket::ReadBasketBytes.  This is not implemented in TBasketSQL.
+
    Error("ReadBasketBytes","This member function should not be called!");
    return 0;
 }
@@ -141,6 +143,8 @@ Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
 //_________________________________________________________________________
 Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
 {	 
+   // See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
+
    Error("ReadBasketBuffers","This member function should not be called!");
    return 0;
 }
@@ -148,6 +152,8 @@ Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
 //_________________________________________________________________________
 void TBasketSQL::Update(Int_t, Int_t) 
 {
+   // See TBasket::Update.
+
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    fNevBuf++;
 }

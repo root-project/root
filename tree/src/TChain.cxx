@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.117 2005/10/13 19:58:27 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.118 2005/10/14 10:50:22 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -476,6 +476,8 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
 //______________________________________________________________________________
 TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 {
+   // Add the whole chain or tree as a friend of this chain
+
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
 
@@ -498,6 +500,8 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
                                   Bool_t /*warn*/)
 {
+   // Add the whole chain or tree as a friend of this chain
+
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
    Assert(fe);
@@ -516,9 +520,11 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
 }
 
 //______________________________________________________________________________
-void TChain::Browse(TBrowser *)
+void TChain::Browse(TBrowser *b)
 {
-
+   // Browse contain of the chain
+   
+   TTree::Browse(b);
 }
 
 //_______________________________________________________________________
@@ -587,7 +593,7 @@ Long64_t TChain::Draw(const char *varexp, const char *selection, Option_t *optio
 //______________________________________________________________________________
 TBranch *TChain::GetBranch(const char *name)
 {
-// Return pointer to the branch name in the current tree
+   // Return pointer to the branch name in the current tree.
 
    if (fChainProof) return fChainProof->GetBranch(name);
    if (fTree) return fTree->GetBranch(name);
@@ -599,18 +605,18 @@ TBranch *TChain::GetBranch(const char *name)
 //______________________________________________________________________________
 Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
 {
-// return absolute entry number in the chain
-// the input parameter entry is the entry number in the current Tree of this chain
+   // Return absolute entry number in the chain the input parameter
+   // entry is the entry number in the current Tree of this chain.
 
-  return entry + fTreeOffset[fTreeNumber];
+   return entry + fTreeOffset[fTreeNumber];
 }
 
 //______________________________________________________________________________
 Long64_t TChain::GetEntries() const
 {
-// return the total number of entries in the chain.
-// In case the number of entries in each tree is not yet known,
-// the offset table is computed
+   // Return the total number of entries in the chain.  In case the
+   // number of entries in each tree is not yet known, the offset table
+   // is computed.
 
    if (fChainProof) return fChainProof->GetEntries();
    if (fEntries >= kBigNumber) {
@@ -622,13 +628,13 @@ Long64_t TChain::GetEntries() const
 //______________________________________________________________________________
 Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
 {
-// Get entry from the file to memory
-//
-//     getall = 0 : get only active branches
-//     getall = 1 : get all branches
-//
-// return the total number of bytes read
-// o bytes read indicates a failure.
+   // Get entry from the file to memory
+   //
+   //     getall = 0 : get only active branches
+   //     getall = 1 : get all branches
+   //
+   // return the total number of bytes read
+   // o bytes read indicates a failure.
 
    if (LoadTree(entry) < 0) return 0;
    if (fTree==0) return 0;
@@ -1043,6 +1049,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
 //______________________________________________________________________________
 void TChain::Lookup()
 {
+   // Check the files in the chain.
+
    TIter next(fFiles);
    TChainElement *element;
    Int_t nelements = fFiles->GetEntries();
@@ -1076,7 +1084,7 @@ void TChain::Lookup()
 //______________________________________________________________________________
 void TChain::Loop(Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-// Loop on nentries of this chain starting at firstentry
+   // Loop on nentries of this chain starting at firstentry
 
    Error("Loop","Function not yet implemented");
 
@@ -1352,15 +1360,15 @@ void TChain::SetAutoDelete(Bool_t autodelete)
 //_______________________________________________________________________
 void TChain::SetBranchAddress(const char *bname, void *add)
 {
-// Set branch address
-//
-//      bname is the name of a branch.
-//      add is the address of the branch.
-//
-// IMPORTANT REMARK:
-// In case TChain::SetBranchStatus is called, it must be called
-// BEFORE calling this function.
-
+   // Set branch address
+   //
+   //      bname is the name of a branch.
+   //      add is the address of the branch.
+   //
+   // IMPORTANT REMARK:
+   // In case TChain::SetBranchStatus is called, it must be called
+   // BEFORE calling this function.
+   
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1368,31 +1376,31 @@ void TChain::SetBranchAddress(const char *bname, void *add)
       element = new TChainElement(bname,"");
       fStatus->Add(element);
    }
-
+   
    element->SetBaddress(add);
-
+   
    // Set also address in current Tree
    if (fTreeNumber >= 0) {
-       TBranch *branch = fTree->GetBranch(bname);
-       if (branch) {
-          CheckBranchAddressType(branch,
-             gROOT->GetClass(element->GetBaddressClassName()),
-             (EDataType)element->GetBaddressType(),element->GetBaddressIsPtr());
-          if (fClones) {
-             void *oldAdd = branch->GetAddress();
-             TObjLink *lnk = fClones->FirstLink();
-             while (lnk) {
-                TTree *clone = (TTree*)lnk->GetObject();
-                TBranch *cloneBr = clone->GetBranch(bname);
-                if (cloneBr && cloneBr->GetAddress() == oldAdd ) {
-                   // the clone's branch is still pointing to us
-                   cloneBr->SetAddress(add);
-                }
-                lnk = lnk->Next();
-             } // while(lnk)
-          } // if (fClones)
-          branch->SetAddress(add);
-       }
+      TBranch *branch = fTree->GetBranch(bname);
+      if (branch) {
+         CheckBranchAddressType(branch,
+                                gROOT->GetClass(element->GetBaddressClassName()),
+                                (EDataType)element->GetBaddressType(),element->GetBaddressIsPtr());
+         if (fClones) {
+            void *oldAdd = branch->GetAddress();
+            TObjLink *lnk = fClones->FirstLink();
+            while (lnk) {
+               TTree *clone = (TTree*)lnk->GetObject();
+               TBranch *cloneBr = clone->GetBranch(bname);
+               if (cloneBr && cloneBr->GetAddress() == oldAdd ) {
+                  // the clone's branch is still pointing to us
+                  cloneBr->SetAddress(add);
+               }
+               lnk = lnk->Next();
+            } // while(lnk)
+         } // if (fClones)
+         branch->SetAddress(add);
+      }
    }
 }
 
@@ -1417,17 +1425,17 @@ void TChain::SetBranchAddress(const char *bname,void *add,
 //_______________________________________________________________________
 void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 {
-// Set branch status Process or DoNotProcess
-//
-//      bname is the name of a branch. if bname="*", apply to all branches.
-//      status = 1  branch will be processed
-//             = 0  branch will not be processed
-//  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
-//
-//  If found is not 0, the number of branch(es) found matching the regular
-//  expression is returned in *found AND the error message 'unknown branch'
-//  is suppressed.
-
+   // Set branch status Process or DoNotProcess
+   //
+   //      bname is the name of a branch. if bname="*", apply to all branches.
+   //      status = 1  branch will be processed
+   //             = 0  branch will not be processed
+   //  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
+   //
+   //  If found is not 0, the number of branch(es) found matching the regular
+   //  expression is returned in *found AND the error message 'unknown branch'
+   //  is suppressed.
+   
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1441,7 +1449,7 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 
    // Set also status in current Tree
    if (fTreeNumber >= 0) {
-       fTree->SetBranchStatus(bname,status,found);
+      fTree->SetBranchStatus(bname,status,found);
    } else if (found) {
       *found = 1;
    }
@@ -1468,8 +1476,8 @@ void TChain::SetDirectory(TDirectory *dir)
 //_______________________________________________________________________
 void TChain::SetPacketSize(Int_t size)
 {
-// Set number of entries per packet for parallel root
-
+   // Set number of entries per packet for parallel root
+   
    fPacketSize = size;
    TIter next(fFiles);
    TChainElement *element;
@@ -1481,19 +1489,19 @@ void TChain::SetPacketSize(Int_t size)
 //______________________________________________________________________________
 void TChain::SetWeight(Double_t w, Option_t *option)
 {
-//  Set chain weight.
-//  The weight is used by TTree::Draw to automatically weight each
-//  selected entry in the resulting histogram.
-//  For example the equivalent of
-//     chain.Draw("x","w")
-//  is
-//     chain.SetWeight(w,"global");
-//     chain.Draw("x");
-//
-//  By default the weight used will be the weight
-//  of each Tree in the TChain. However, one can force the individual
-//  weights to be ignored by specifying the option "global".
-//  In this case, the TChain global weight will be used for all Trees.
+   //  Set chain weight.
+   //  The weight is used by TTree::Draw to automatically weight each
+   //  selected entry in the resulting histogram.
+   //  For example the equivalent of
+   //     chain.Draw("x","w")
+   //  is
+   //     chain.SetWeight(w,"global");
+   //     chain.Draw("x");
+   //
+   //  By default the weight used will be the weight
+   //  of each Tree in the TChain. However, one can force the individual
+   //  weights to be ignored by specifying the option "global".
+   //  In this case, the TChain global weight will be used for all Trees.
 
    fWeight = w;
    TString opt = option;
@@ -1507,7 +1515,7 @@ void TChain::SetWeight(Double_t w, Option_t *option)
 //______________________________________________________________________________
 void TChain::Streamer(TBuffer &b)
 {
-// Stream a class object
+   // Stream a class object.
 
    if (b.IsReading()) {
       UInt_t R__s, R__c;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.12 2005/03/06 07:29:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.13 2005/05/31 19:47:41 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -38,46 +38,46 @@ class TBranch;
 class TBasket : public TKey {
 
 protected:
-    Int_t       fBufferSize;      //fBuffer length in bytes
-    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
-    Int_t       fNevBuf;          //Number of entries in basket
-    Int_t       fLast;            //Pointer to last used byte in basket
-    Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
-    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
-    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
-    TBranch    *fBranch;          //Pointer to the basket support branch
-
+   Int_t       fBufferSize;      //fBuffer length in bytes
+   Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
+   Int_t       fNevBuf;          //Number of entries in basket
+   Int_t       fLast;            //Pointer to last used byte in basket
+   Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
+   Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
+   Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
+   TBranch    *fBranch;          //Pointer to the basket support branch
+   
 public:
+   
+   TBasket();
+   TBasket(const char *name, const char *title, TBranch *branch);
+   virtual ~TBasket();
+   
+   virtual void    AdjustSize(Int_t newsize);
+   virtual void    DeleteEntryOffset();
+   virtual Int_t   DropBuffers();
+   TBranch        *GetBranch() const {return fBranch;}
+           Int_t   GetBufferSize() const {return fBufferSize;}
+           Int_t  *GetDisplacement() const {return fDisplacement;}
+           Int_t  *GetEntryOffset() const {return fEntryOffset;}
+           Int_t   GetEntryPointer(Int_t Entry);
+           Int_t   GetNevBuf() const {return fNevBuf;}
+           Int_t   GetNevBufSize() const {return fNevBufSize;}
+           Int_t   GetLast() const {return fLast;}
+   virtual void    MoveEntries(Int_t dentries);
+   virtual void    PrepareBasket(Long64_t /* entry */) {};
+           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+           Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
 
-    TBasket();
-    TBasket(const char *name, const char *title, TBranch *branch);
-    virtual ~TBasket();
+           void    SetBranch(TBranch *branch) {fBranch = branch;}
+           void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
+   virtual void    SetReadMode();
+   virtual void    SetWriteMode();
+   inline  void    Update(Int_t newlast) { Update(newlast,newlast); }; 
+   virtual void    Update(Int_t newlast, Int_t skipped);
+   virtual Int_t   WriteBuffer();
 
-    virtual void    AdjustSize(Int_t newsize);
-    virtual void    DeleteEntryOffset();
-    virtual Int_t   DropBuffers();
-    TBranch        *GetBranch() const {return fBranch;}
-            Int_t   GetBufferSize() const {return fBufferSize;}
-            Int_t  *GetDisplacement() const {return fDisplacement;}
-            Int_t  *GetEntryOffset() const {return fEntryOffset;}
-            Int_t   GetEntryPointer(Int_t Entry);
-            Int_t   GetNevBuf() const {return fNevBuf;}
-            Int_t   GetNevBufSize() const {return fNevBufSize;}
-            Int_t   GetLast() const {return fLast;}
-    virtual void    MoveEntries(Int_t dentries);
-    virtual void    PrepareBasket(Long64_t /* entry */) {};
-            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
-            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
-
-            void    SetBranch(TBranch *branch) {fBranch = branch;}
-            void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
-    virtual void    SetReadMode();
-    virtual void    SetWriteMode();
-    inline  void    Update(Int_t newlast) { Update(newlast,newlast); }; 
-    virtual void    Update(Int_t newlast, Int_t skipped);
-    virtual Int_t   WriteBuffer();
-
-    ClassDef(TBasket,2)  //the TBranch buffers
+   ClassDef(TBasket,2)  //the TBranch buffers
 };
 
 #endif

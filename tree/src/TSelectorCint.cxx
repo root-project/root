@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.17 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.18 2005/02/21 09:41:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -78,6 +78,8 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
                                  const char* fname, const char* argtype,
                                  Bool_t required)
 {
+   // Set the function prototype
+
    Long_t offset = 0;
 
    cf->SetFuncProto(cl,fname,argtype,&offset);

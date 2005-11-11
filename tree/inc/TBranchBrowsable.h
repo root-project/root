@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.1 2004/10/17 11:55:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.2 2005/04/22 19:04:43 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -32,7 +32,7 @@ public:
    // these methods are registered in RegisterGenerator, and 
    // called to create the list of browsables. See e.g. 
    // TMethodBrowsable::Register
-  typedef Int_t (*MethodCreateListOfBrowsables_t)
+   typedef Int_t (*MethodCreateListOfBrowsables_t)
       (TList&, const TBranch* branch, const TVirtualBranchBrowsable* parent); 
 
    ~TVirtualBranchBrowsable();
@@ -97,7 +97,7 @@ private:
 
 
 class TMethodBrowsable: public TVirtualBranchBrowsable {
- public:
+public:
    ~TMethodBrowsable() {};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
@@ -110,19 +110,19 @@ class TMethodBrowsable: public TVirtualBranchBrowsable {
    static void Register();
    static void Unregister();
 
- protected:
+protected:
    static void GetBrowsableMethodsForClass(TClass* cl, TList& list);
    TMethodBrowsable(const TBranch* branch, TMethod* m, 
       const TVirtualBranchBrowsable* parent=0);
 
- private:
+private:
    TMethod         *fMethod; // pointer to a method
    ClassDef(TMethodBrowsable,0); // Helper object to browse methods
 };
 
 
 class TNonSplitBrowsable: public TVirtualBranchBrowsable {
- public:
+public:
    ~TNonSplitBrowsable() {}
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch, 
@@ -130,17 +130,17 @@ class TNonSplitBrowsable: public TVirtualBranchBrowsable {
    static void Register();
    static void Unregister();
 
- protected:
+protected:
    TNonSplitBrowsable(const TStreamerElement* element, const TBranch* branch, 
       const TVirtualBranchBrowsable* parent=0);
 
- private:
+private:
    ClassDef(TNonSplitBrowsable, 0); // Helper object to browse unsplit objects
 };
 
 
 class TCollectionPropertyBrowsable: public TVirtualBranchBrowsable {
- public:
+public:
    ~TCollectionPropertyBrowsable() {}
 
    void Browse(TBrowser *b);
@@ -152,7 +152,7 @@ class TCollectionPropertyBrowsable: public TVirtualBranchBrowsable {
    static void Register();
    static void Unregister();
 
- protected:
+protected:
    TCollectionPropertyBrowsable(const char* name, const char* title, 
       const char* draw, const TBranch* branch, const TVirtualBranchBrowsable* parent=0): 
    TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fDraw(draw) {
@@ -161,13 +161,13 @@ class TCollectionPropertyBrowsable: public TVirtualBranchBrowsable {
       SetNameTitle(name, title);
    }
 
- private:
+private:
    TString fDraw; // string to send to TTree::Draw(), NOT by GetScope()!
    ClassDef(TCollectionPropertyBrowsable, 0); // Helper object to add browsable collection properties
 };
 
 class TCollectionMethodBrowsable: public TMethodBrowsable {
- public:
+public:
    ~TCollectionMethodBrowsable() {};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch, 
@@ -175,8 +175,8 @@ class TCollectionMethodBrowsable: public TMethodBrowsable {
    static void Register();
    static void Unregister();
 
- protected:
-   TCollectionMethodBrowsable(const TBranch* branch, TMethod* m, 
+protected:
+  TCollectionMethodBrowsable(const TBranch* branch, TMethod* m, 
       const TVirtualBranchBrowsable* parent=0);
 
    ClassDef(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods

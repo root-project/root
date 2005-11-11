@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.5 2004/12/13 12:12:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.6 2005/10/25 22:11:58 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -27,6 +27,7 @@ ClassImp(TBranchRef)
 //______________________________________________________________________________
 TBranchRef::TBranchRef(): TBranch()
 {
+   // Default constructor.
 
    fRefTable   = 0;
 }
@@ -36,7 +37,7 @@ TBranchRef::TBranchRef(): TBranch()
 TBranchRef::TBranchRef(TTree *tree)
     :TBranch()
 {
-   // main constructor called by TTree::BranchRef
+   // Main constructor called by TTree::BranchRef.
 
    if (!tree) return;
    SetName("TRefTable");
@@ -69,13 +70,15 @@ TBranchRef::TBranchRef(TTree *tree)
 //______________________________________________________________________________
 TBranchRef::~TBranchRef()
 {
+   // Typical destructor.
+
    delete fRefTable;
 }
 
 //______________________________________________________________________________
 void TBranchRef::Clear(Option_t *option)
 {
-  // clear entries in the TRefTable
+  // Clear entries in the TRefTable.
 
    fRefTable->Clear(option);
 }
@@ -83,7 +86,7 @@ void TBranchRef::Clear(Option_t *option)
 //______________________________________________________________________________
 Int_t TBranchRef::Fill()
 {
-  // fill the branch basket with the referenced objects parent numbers
+  // Fill the branch basket with the referenced objects parent numbers.
 
    Int_t nbytes = TBranch::Fill();
    return nbytes;
@@ -92,9 +95,9 @@ Int_t TBranchRef::Fill()
 //______________________________________________________________________________
 void TBranchRef::FillLeaves(TBuffer &b)
 {
-   // This function called by TBranch::Fill overloads TBranch::FillLeaves
+   // This function called by TBranch::Fill overloads TBranch::FillLeaves.
 
-    fRefTable->FillBuffer(b);
+   fRefTable->FillBuffer(b);
 }
 
 //______________________________________________________________________________
@@ -134,7 +137,7 @@ Bool_t TBranchRef::Notify()
 //______________________________________________________________________________
 void TBranchRef::Print(Option_t *option) const
 {
-  // Print the TRefTable branch
+  // Print the TRefTable branch.
 
    TBranch::Print(option);
 }
@@ -142,9 +145,9 @@ void TBranchRef::Print(Option_t *option) const
 //______________________________________________________________________________
 void TBranchRef::ReadLeaves(TBuffer &b)
 {
-   // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves
+   // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves.
 
-  fRefTable->ReadBuffer(b);
+   fRefTable->ReadBuffer(b);
 }
 
 //______________________________________________________________________________
@@ -152,7 +155,7 @@ void TBranchRef::Reset(Option_t *option)
 {
   //    Existing buffers are deleted
   //    Entries, max and min are reset
-  //    TRefTable is cleared
+  //    TRefTable is cleared.
 
    TBranch::Reset(option);
    fRefTable->Reset();
@@ -162,7 +165,7 @@ void TBranchRef::Reset(Option_t *option)
 void TBranchRef::SetParent(const TObject *object)
 {
    // this function is called by TBranchElement::Fill when filling
-   // branches that may contain referenced objects
+   // branches that may contain referenced objects.
 
    TRefTable::SetRefTable(fRefTable);
    fRefTable->SetParent(object);

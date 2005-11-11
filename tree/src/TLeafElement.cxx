@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.6 2001/04/09 08:11:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.7 2002/12/02 18:50:08 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -23,8 +23,8 @@ ClassImp(TLeafElement)
 //______________________________________________________________________________
 TLeafElement::TLeafElement(): TLeaf()
 {
-//*-*-*-*-*-*Default constructor for LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        =================================
+   // Default constructor for LeafObject.
+
    fAbsAddress = 0;
 }
 
@@ -32,32 +32,27 @@ TLeafElement::TLeafElement(): TLeaf()
 TLeafElement::TLeafElement(const char *name, Int_t id, Int_t type)
        :TLeaf(name,name)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==================
-//*-*
-
-  fAbsAddress = 0;
-  fID         = id;
-  fType       = type;
+   // Create a LeafObject.
+   
+   fAbsAddress = 0;
+   fID         = id;
+   fType       = type;
 }
 
 //______________________________________________________________________________
 TLeafElement::~TLeafElement()
 {
-//*-*-*-*-*-*Default destructor for a LeafObject*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==================================
+   // Default destructor for a LeafObject.
 
 }
 
 //______________________________________________________________________________
 TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
-//*-*-*-*-*-*-*-*Returns pointer to method corresponding to name*-*-*-*-*-*-*
-//*-*            ============================================
-//*-*
-//*-*    name is a string with the general form  "method(list of params)"
-//*-*   If list of params is omitted, () is assumed;
-//*-*
+   // Returns pointer to method corresponding to name name is a string
+   // with the general form "method(list of params)" If list of params is
+   // omitted, () is assumed;
+
    return 0;
 }
 
@@ -65,6 +60,8 @@ TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 //______________________________________________________________________________
 Bool_t TLeafElement::IsOnTerminalBranch() const
 {
+   // Return true if this leaf is does not have any sub-branch/leaf.
+
    if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
    return kTRUE;
 }
