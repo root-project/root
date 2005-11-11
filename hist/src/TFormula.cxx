@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.106 2005/10/29 06:22:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.107 2005/10/30 05:27:46 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1906,35 +1906,35 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
 //*-*- errors!
   if (err>1) {
-     cout<<endl<<"*ERROR "<<err<<" : "<<endl;
+     TString er = "";
      switch(err) {
-        case  2 : cout<<" Invalid Floating Point Operation"<<endl; break;
-        case  4 : cout<<" Empty String"<<endl; break;
-        case  5 : cout<<" Invalid Syntax \""<<(const char*)chaine_error<<"\""<<endl; break;
-        case  6 : cout<<" Too many operators !"<<endl; break;
-        case  7 : cout<<" Too many parameters !"<<endl; break;
-        case 10 : cout<<" z specified but not x and y"<<endl; break;
-        case 11 : cout<<" z and y specified but not x"<<endl; break;
-        case 12 : cout<<" y specified but not x"<<endl; break;
-        case 13 : cout<<" z and x specified but not y"<<endl; break;
-        case 20 : cout<<" Non integer value for parameter number : "<<(const char*)chaine_error<<endl; break;
-        case 21 : cout<<" ATAN2 requires two arguments"<<endl; break;
-        case 22 : cout<<" POW requires two arguments"<<endl; break;
-        case 23 : cout<<" Degree of polynomial not specified"<<endl; break;
-        case 24 : cout<<" Degree of polynomial must be positive"<<endl; break;
-        case 25 : cout<<" Degree of polynomial must be less than 20"<<endl; break;
-        case 26 : cout<<" Unknown name : \""<<(const char*)chaine_error<<"\""<<endl; break;
-        case 27 : cout<<" Too many constants in expression"<<endl; break;
-        case 28 : cout<<" strstr requires two arguments"<<endl; break;
-        case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
-                      <<chaine_error<<endl; break;
-        case 30 : cout<<" Bad numerical expression : \""<<(const char*)chaine_error<<"\""<<endl; break;
-        case 31 : cout<<" Part of the Variable :  \""<<(const char*)chaine_error<<"\" exists but some of it is not accessible or useable"<<endl; break;
-        case 40 : cout<<" '(' is expected"<<endl; break;
-        case 41 : cout<<" ')' is expected"<<endl; break;
-        case 42 : cout<<" '[' is expected"<<endl; break;
-        case 43 : cout<<" ']' is expected"<<endl; break;
+        case  2 : er = " Invalid Floating Point Operation"; break;
+        case  4 : er = " Empty String"; break;
+        case  5 : er = " Invalid Syntax " + chaine_error; break;
+        case  6 : er = " Too many operators !"; break;
+        case  7 : er = " Too many parameters !"; break;
+        case 10 : er = " z specified but not x and y"; break;
+        case 11 : er = " z and y specified but not x"; break;
+        case 12 : er = " y specified but not x"; break;
+        case 13 : er = " z and x specified but not y"; break;
+        case 20 : er = " Non integer value for parameter number : " + chaine_error; break;
+        case 21 : er = " ATAN2 requires two arguments"; break;
+        case 22 : er = " POW requires two arguments"; break;
+        case 23 : er = " Degree of polynomial not specified"; break;
+        case 24 : er = " Degree of polynomial must be positive"; break;
+        case 25 : er = " Degree of polynomial must be less than 20"; break;
+        case 26 : er = " Unknown name : " + chaine_error; break;
+        case 27 : er = " Too many constants in expression"; break;
+        case 28 : er = " strstr requires two arguments"; break;
+        case 29 : er = " TFormula can only call interpreted and compiled functions that return a numerical type: " + chaine_error; break;
+        case 30 : er = " Bad numerical expression : " + chaine_error; break;
+        case 31 : er = " Part of the Variable :  " + chaine_error; er += " exists but some of it is not accessible or useable"; break;
+        case 40 : er = " '(' is expected"; break;
+        case 41 : er = " ')' is expected"; break;
+        case 42 : er = " '[' is expected"; break;
+        case 43 : er = " ']' is expected"; break;
      }
+     Error("TFormula",er.Data());
      err=1;
   }
 
