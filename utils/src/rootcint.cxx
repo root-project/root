@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.222 2005/11/03 20:29:38 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.223 2005/11/04 09:17:05 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -711,46 +711,46 @@ string FixSTLName(const string& cintName) {
       const string toReplace = "__malloc_alloc_template<0>";
       const string replacement = "alloc";
       for(i=0; i<cintName.length(); i++) {
-        switch (cintName[i]) {
-        case '<':
-           if (nesting==0) {
-              start = next;
-              next = i+1;
-              end = i;
-              result += cintName.substr(start,end-start);
-              result += "< ";
-           }
-           nesting++;
-           break;
-        case '>':
-           nesting--;
-           if (nesting==0) {
-              start = next;
-              next = i+1;
-              end = i;
-              string param = cintName.substr(start,end-start-1); // the -1 removes the space we know is there
-              if (param==toReplace) {
-                 result += replacement;
-              } else {
-                 result += FixSTLName(param);
-              }
-              result += " >";
-           }
-           break;
-        case ',':
-           if (nesting==1) {
-              start = next;
-              next = i+1;
-              end = i;
-              string param = cintName.substr(start,end-start);
-              if (param==toReplace) {
-                 result += replacement;
-              } else {
-                 result += FixSTLName(param);
-              }
-              result += ',';
-           }
-        }
+         switch (cintName[i]) {
+         case '<':
+            if (nesting==0) {
+               start = next;
+               next = i+1;
+               end = i;
+               result += cintName.substr(start,end-start);
+               result += "< ";
+            }
+            nesting++;
+            break;
+         case '>':
+            nesting--;
+            if (nesting==0) {
+               start = next;
+               next = i+1;
+               end = i;
+               string param = cintName.substr(start,end-start-1); // the -1 removes the space we know is there
+               if (param==toReplace) {
+                  result += replacement;
+               } else {
+                  result += FixSTLName(param);
+               }
+               result += " >";
+            }
+            break;
+         case ',':
+            if (nesting==1) {
+               start = next;
+               next = i+1;
+               end = i;
+               string param = cintName.substr(start,end-start);
+               if (param==toReplace) {
+                  result += replacement;
+               } else {
+                  result += FixSTLName(param);
+               }
+               result += ',';
+            }
+         }
       }
       return result;
    }
@@ -901,7 +901,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 
       } else {
 
-        delete [] templatename;
+         delete [] templatename;
          // It might be a specialization without us seeing the template definition
          return 0;
       }
@@ -1386,9 +1386,9 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       fprintf(fp, "   static void *new_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      return  p ? ");
       if (HasCustomOperatorNewPlacement(cl)) {
-        fprintf(fp, "new(p) %s%s : ",classname.c_str(),args.c_str());
+         fprintf(fp, "new(p) %s%s : ",classname.c_str(),args.c_str());
       } else {
-        fprintf(fp, "::new((::ROOT::TOperatorNewHelper*)p) %s%s : ",classname.c_str(),args.c_str());
+         fprintf(fp, "::new((::ROOT::TOperatorNewHelper*)p) %s%s : ",classname.c_str(),args.c_str());
       }
       fprintf(fp, "new %s%s;\n",classname.c_str(),args.c_str());
       fprintf(fp, "   }\n");
@@ -1898,7 +1898,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                         fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
                         fprintf(fp, "            R__t2.Streamer(R__b);\n");
                      }
-                 }
+                  }
                } else if (stltype == kSet || stltype == kMultiSet) {
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
@@ -1910,14 +1910,14 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                      fprintf(fp, "            R__b >> R__t;\n");
                   }
                }
-             }
-          } else {
+            }
+         } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
                if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            R__t.Streamer(R__b);\n");
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                      (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                      (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
                      fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
                      fprintf(fp, "            R__b >> R__t2;\n");
                   } else {
@@ -1934,17 +1934,17 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                   fprintf(fp, "            R__t.Streamer(R__b);\n");
                }
             } else {
-              if (strcmp(s,"string") == 0) {
-                 fprintf(fp,"            TString R__str;\n");
-                 fprintf(fp,"            R__str.Streamer(R__b);\n");
-                 fprintf(fp,"            R__t = R__str.Data();\n");
-              } else {
-                 fprintf(fp, "R__b.StreamObject(&R__t,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
+               if (strcmp(s,"string") == 0) {
+                  fprintf(fp,"            TString R__str;\n");
+                  fprintf(fp,"            R__str.Streamer(R__b);\n");
+                  fprintf(fp,"            R__t = R__str.Data();\n");
+               } else {
+                  fprintf(fp, "R__b.StreamObject(&R__t,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
 //VP                 Error(0, "*** Baseclass %s: template arg %s has no Streamer()"
 //VP                          " method (need manual intervention)\n",
 //VP                          m.Name(), TemplateArg(m).Name());
 //VP                 fprintf(fp, "            //R__t.Streamer(R__b);\n");
-              }
+               }
             }
          }
          if (m.Property() & G__BIT_ISPOINTER) {
@@ -2012,14 +2012,14 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                      }
                   }
                }
-           }
+            }
          } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
                if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            ((%s&)((*R__k).first)).Streamer(R__b);\n",TemplateArg(m).Name());
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                      (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                      (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
                      fprintf(fp, "            R__b << (*R__k).second;\n");
                   } else {
                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
@@ -2040,15 +2040,15 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                   fprintf(fp,"            R__str.Streamer(R__b);\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                    Error(0, "cannot process template argument2 %s\n",tmparg);
-                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+                     Error(0, "cannot process template argument2 %s\n",tmparg);
+                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
                   } else {
-                    fprintf(fp, "R__b.StreamObject(R__k,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
-//VP                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+                     fprintf(fp, "R__b.StreamObject(R__k,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
+                     //VP                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
                   }
                }
             }
-        }
+         }
          fprintf(fp, "         }\n");
          fprintf(fp, "      }\n");
       }
@@ -2233,10 +2233,10 @@ void WriteClassInit(G__ClassInfo &cl)
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
    if ( cl.HasMethod("IsA") ) {
-     fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< %s >(0);\n", csymbol.c_str());
+      fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< %s >(0);\n", csymbol.c_str());
    }
    else {
-     fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(%s),0);\n", csymbol.c_str());
+      fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(%s),0);\n", csymbol.c_str());
    }
    fprintf(fp, "      static ::ROOT::TGenericClassInfo \n");
 
@@ -2277,7 +2277,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    char *filename = (char*)cl.FileName();
    for (unsigned int i=0; i<strlen(filename); i++) {
-     if (filename[i]=='\\') filename[i]='/';
+      if (filename[i]=='\\') filename[i]='/';
    }
    fprintf(fp, "\"%s\", %d,\n", filename,cl.LineNumber());
    fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",csymbol.c_str());
@@ -2302,30 +2302,30 @@ void WriteClassInit(G__ClassInfo &cl)
       if (args.size()==0) fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
-     fprintf(fp, "      instance.SetDelete(&delete_%s);\n",mappedname.c_str());
-     fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",mappedname.c_str());
-     fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
+      fprintf(fp, "      instance.SetDelete(&delete_%s);\n",mappedname.c_str());
+      fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",mappedname.c_str());
+      fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
    }
    if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       switch(stlType)  {
-        case TClassEdit::kVector:
-        case TClassEdit::kList:
-        case TClassEdit::kDeque:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
-          break;
-        case TClassEdit::kMap:
-        case TClassEdit::kMultiMap:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
-          break;
-        case TClassEdit::kSet:
-        case TClassEdit::kMultiSet:
-          fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
-          fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
-          break;
+         case TClassEdit::kVector:
+         case TClassEdit::kList:
+         case TClassEdit::kDeque:
+            fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
+            fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Pushback<%s >()));\n",classname.c_str());
+            break;
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap:
+            fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
+            fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::MapInsert<%s >()));\n",classname.c_str());
+            break;
+         case TClassEdit::kSet:
+         case TClassEdit::kMultiSet:
+            fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
+            fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::Insert<%s >()));\n",classname.c_str());
+            break;
       }
    }
    fprintf(fp, "      return &instance;\n");
@@ -2424,7 +2424,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    char *filename = (char*)cl.FileName();
    for (unsigned int i=0; i<strlen(filename); i++) {
-     if (filename[i]=='\\') filename[i]='/';
+      if (filename[i]=='\\') filename[i]='/';
    }
    fprintf(fp, "\"%s\", %d,\n", filename,cl.LineNumber());
    fprintf(fp, "                     ::ROOT::DefineBehavior((void*)0,(void*)0),\n");
@@ -2466,28 +2466,28 @@ const char *ShortTypeName(const char *typeDesc)
    // we remove * and const keywords. (we do not want to remove & ).
    // You need to use the result immediately before it is being overwritten.
 
-  static char t[1024];
-  static const char* constwd = "const ";
-  static const char* constwdend = "const";
-
-  const char *s;
-  char *p=t;
-  int lev=0;
-  for (s=typeDesc;*s;s++) {
-     if (*s=='<') lev++;
-     if (*s=='>') lev--;
-     if (lev==0 && *s=='*') continue;
-     if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0
-                    ||strcmp(constwdend,s)==0 ) ) {
-        s+=strlen(constwd)-1; // -1 because the loop adds 1
-        continue;
-     }
-     if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
-     *p++ = *s;
-  }
-  p[0]=0;
-
-  return t;
+   static char t[1024];
+   static const char* constwd = "const ";
+   static const char* constwdend = "const";
+   
+   const char *s;
+   char *p=t;
+   int lev=0;
+   for (s=typeDesc;*s;s++) {
+      if (*s=='<') lev++;
+      if (*s=='>') lev--;
+      if (lev==0 && *s=='*') continue;
+      if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0
+                     ||strcmp(constwdend,s)==0 ) ) {
+         s+=strlen(constwd)-1; // -1 because the loop adds 1
+         continue;
+      }
+      if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
+      *p++ = *s;
+   }
+   p[0]=0;
+   
+   return t;
 }
 
 //______________________________________________________________________________
@@ -2651,7 +2651,7 @@ void WriteStreamer(G__ClassInfo &cl)
                      decli = 1;
                   }
                   fprintf(fp, "      for (R__i = 0; R__i < %d; R__i++)\n", s);
-                 if (i == 0) {
+                  if (i == 0) {
                      Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
                      fprintf(fp, "         ;//R__b.ReadArray(%s);\n", m.Name());
                   } else {
@@ -2672,9 +2672,9 @@ void WriteStreamer(G__ClassInfo &cl)
                         fprintf(fp, "      %s = new %s[%s]; \n",
                                 GetNonConstMemberName(m).c_str(),ShortTypeName(m.Type()->Name()),indexvar);
                         if (isDouble32) {
-                               fprintf(fp, "      R__b.ReadFastArrayDouble32(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+                           fprintf(fp, "      R__b.ReadFastArrayDouble32(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
                         } else {
-                               fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+                           fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
                         }
                      } else {
                         if (isDouble32) {
@@ -2704,7 +2704,7 @@ void WriteStreamer(G__ClassInfo &cl)
                            } else {
                               fprintf(fp, "      R__b.ReadStaticArray((%s*)%s);\n", m.Type()->TrueName(), m.Name());
                            }
-                      }
+                     }
                   } else {
                      int s = 1;
                      for (int dim = 0; dim < m.ArrayDim(); dim++)
@@ -3048,7 +3048,7 @@ void WritePointersSTL(G__ClassInfo &cl)
                      fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
                   else
                      fprintf(fp, "      R__b >> *%s;\n",m.Name());
-              }
+               }
             } else {
                fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
             }

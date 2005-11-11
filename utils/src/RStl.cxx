@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.8 2004/07/15 23:08:23 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.9 2004/10/29 18:03:11 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -45,7 +45,9 @@ ROOT::RStl& ROOT::RStl::inst()
 
 }
 
-void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
+void ROOT::RStl::GenerateTClassFor(const string& stlclassname)
+{
+   // Force the generation of the TClass for the given class.
 
    G__ClassInfo cl(TClassEdit::ShortType(stlclassname.c_str(),
                                          TClassEdit::kDropTrailStar).c_str());
@@ -85,7 +87,9 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
 //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
 }
 
-void ROOT::RStl::Print() {
+void ROOT::RStl::Print()
+{
+   // Print the content of the object
    fprintf(stderr,"ROOT::RStl singleton\n");
    set<string>::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
@@ -93,7 +97,10 @@ void ROOT::RStl::Print() {
    }
 }
 
-string ROOT::RStl::DropDefaultArg(const string &classname) {
+string ROOT::RStl::DropDefaultArg(const string &classname)
+{
+   // Remove the default argument from the stl container.
+
    G__ClassInfo cl(classname.c_str());
 
    if ( cl.TmpltName() == 0 ) return classname;
@@ -105,8 +112,8 @@ string ROOT::RStl::DropDefaultArg(const string &classname) {
 
 }
 
-void ROOT::RStl::WriteClassInit(FILE* /*file*/) {
-
+void ROOT::RStl::WriteClassInit(FILE* /*file*/)
+{
    // This function writes the TGeneraticClassInfo initialiser
    // and the auxiliary functions (new and delete wrappers) for
    // each of the STL containers that have been registered
@@ -121,8 +128,8 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/) {
    }
 }
 
-void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
-
+void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) 
+{
    // Write the free standing streamer function for the given
    // STL container class.
 
@@ -276,8 +283,8 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
 
 }
 
-void ROOT::RStl::WriteStreamer(FILE *file) {
-
+void ROOT::RStl::WriteStreamer(FILE *file)
+{
    // Write the free standing streamer function for the registereed
    // STL container classes
 
