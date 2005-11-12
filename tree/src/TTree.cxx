@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.267 2005/11/04 20:13:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.268 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1780,6 +1780,8 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
 // By default copy all entries
 // option is reserved for future use
 // Note that only active branches are copied.
+// The compression level of the cloned Tree is set to the destination file
+// compression level.
 //
 // IMPORTANT: The cloned tree stays connected with this tree until this tree
 //            is deleted.  In particular, any changes in branch addresses
@@ -1813,6 +1815,12 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
    AddClone(newtree);
 
    newtree->Reset();
+   
+   TDirectory *ndir = newtree->GetDirectory();
+   TFile *nfile = 0;
+   if (ndir) nfile = ndir->GetFile();
+   Int_t newcomp = -1;
+   if (nfile) newcomp = nfile->GetCompressionLevel();
 
   // delete non active branches from the clone
    Int_t j,k,l,nb1,nb2;
@@ -1825,6 +1833,7 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       if (!leaf) continue;
       branch = leaf->GetBranch();
+      if (branch && newcomp >= 0) branch->SetCompressionLevel(newcomp);
       if (!branch || !branch->TestBit(kDoNotProcess)) continue;
       TObjArray *branches = newtree->GetListOfBranches();
       Int_t nb = branches->GetEntriesFast();
