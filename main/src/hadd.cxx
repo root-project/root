@@ -10,7 +10,12 @@
     or
        hadd -f targetfile source1 source2 ...
          (targetfile is overwritten if it exists)
-    
+
+  When -the -f option is specified, one can also specify the compression
+  level of the target file. By default the compression level is 1, but
+  if "-f0" is specified, the target file will not be compressed.
+  if "-f6" is specified, the compression level 6 will be used.
+      
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
     f1 with h1 h2 h3 T1
     f2 with h1 h4 T1 T2
@@ -54,13 +59,27 @@ int main( int argc, char **argv ) {
     cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
     cout << "Supply at least two source files for this to make sense... ;-)" << endl;
     cout << "If the first argument is -T, Trees are not merged" <<endl;
+    cout << "When -the -f option is specified, one can also specify the compression" <<endl;
+    cout << "level of the target file. By default the compression level is 1, but" <<endl;
+    cout << "if \"-f0\" is specified, the target file will not be compressed." <<endl;
+    cout << "if \"-f6\" is specified, the compression level 6 will be used." <<endl;
     return 1;
   }
   FileList = new TList();
 
   Bool_t force = (!strcmp(argv[1],"-f") || !strcmp(argv[2],"-f"));
   noTrees = (!strcmp(argv[1],"-T") || !strcmp(argv[2],"-T"));
-
+  Int_t newcomp = 1;
+  char ft[4];
+  for (int j=0;j<9;j++) {
+     sprintf(ft,"-f%d",j);
+     if (!strcmp(argv[1],ft) || !strcmp(argv[2],ft)) {
+        force = kTRUE;
+         newcomp = j;
+        break;
+     }
+  }
+  
   int ffirst = 2;
   if (force) ffirst++;
   if (noTrees) ffirst++;
@@ -72,7 +91,8 @@ int main( int argc, char **argv ) {
      cerr << "Pass \"-f\" argument to force re-creation of output file." << endl;
      exit(1);
   }
-
+  Target->SetCompressionLevel(newcomp);
+  
   // by default hadd can merge Trees in a file that can go up to 100 Gbytes
   Long64_t maxsize = 100000000; //100GB
   maxsize *= 100;  //to bypass some compiler limitations with big constants
