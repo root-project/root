@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.226 2005/11/09 17:24:52 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.227 2005/11/09 17:37:42 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1624,7 +1624,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    //   this feature is used to make sure that the grid is drawn in the background
    //   and the axis tick marks in the foreground of the pad.
 
-   if (Hoption.Axis == -1) return;
+   //if (Hoption.Axis == -1) return;
    if (Hoption.Same && Hoption.Axis <= 0) return;
 
    static char chopt[10] = "";
