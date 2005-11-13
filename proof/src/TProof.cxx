@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.122 2005/11/04 20:13:09 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.123 2005/11/07 12:20:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2635,7 +2635,7 @@ void TProof::LogMessage(const char *msg, Bool_t all)
       Info("LogMessage","Enter ... %s, 'all: %s", msg ? msg : "",
            all ? "true" : "false");
 
-   if (!fProgressDialogStarted) {
+   if (gROOT->IsBatch()) {
       PDB(kGlobal,1) Info("LogMessage","GUI not started - use TProof::ShowLog()");
       return;
    }
