@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.107 2005/10/30 05:27:46 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.108 2005/11/11 18:07:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1907,6 +1907,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*- errors!
   if (err>1) {
      TString er = "";
+     chaine_error = "\""+chaine_error+"\"";
      switch(err) {
         case  2 : er = " Invalid Floating Point Operation"; break;
         case  4 : er = " Empty String"; break;
@@ -1934,7 +1935,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 42 : er = " '[' is expected"; break;
         case 43 : er = " ']' is expected"; break;
      }
-     Error("TFormula",er.Data());
+     Error("Compile",er.Data());
      err=1;
   }
 
