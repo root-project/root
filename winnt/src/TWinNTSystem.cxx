@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.127 2005/11/06 20:23:45 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.128 2005/11/07 12:16:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2056,6 +2056,10 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
    static char name[kMAXPATHLEN];
    char *lpFilePart = 0;
    char *found = 0;
+
+   // Windows cannot check on execution mode - all we can do is kReadPermission
+   if (mode==kExecutePermission)
+      mode=kReadPermission;
 
    // Expand parameters
 
