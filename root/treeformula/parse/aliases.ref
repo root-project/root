@@ -1,5 +1,15 @@
 
 Processing runaliases.C...
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "twos"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "crap"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed
+	because "add" is recursively used in its own definition!
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "crap" by "add" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *  objs.one *
 ************************
@@ -15,10 +25,6 @@ Processing runaliases.C...
 ************************
 *        0 *         1 *
 ************************
-
-*ERROR 30 : 
- Bad numerical expression : "twos"
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *       add *
 ************************
@@ -29,16 +35,6 @@ Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by
 ************************
 *        0 *         3 *
 ************************
-
-*ERROR 30 : 
- Bad numerical expression : "crap"
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed
-	because "add" is recursively used in its own definition!
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "crap" by "add" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *       add *
 ************************
