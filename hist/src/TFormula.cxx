@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.108 2005/11/11 18:07:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.109 2005/11/13 02:24:14 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1929,7 +1929,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 28 : er = " strstr requires two arguments"; break;
         case 29 : er = " TFormula can only call interpreted and compiled functions that return a numerical type: " + chaine_error; break;
         case 30 : er = " Bad numerical expression : " + chaine_error; break;
-        case 31 : er = " Part of the Variable :  " + chaine_error; er += " exists but some of it is not accessible or useable"; break;
+        case 31 : er = " Part of the Variable " + chaine_error; er += " exists but some of it is not accessible or useable"; break;
         case 40 : er = " '(' is expected"; break;
         case 41 : er = " ')' is expected"; break;
         case 42 : er = " '[' is expected"; break;
