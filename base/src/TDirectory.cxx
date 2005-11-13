@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.72 2005/09/13 12:26:58 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.73 2005/09/30 08:56:03 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -809,7 +809,7 @@ TObject *TDirectory::Get(const char *namecycle)
          TDirectory* dirToSearch=GetDirectory(name);
          namobj = name + i + 1;
          name[i] = '/';
-         return dirToSearch->Get(namobj);
+         return dirToSearch?dirToSearch->Get(namobj):0;
       }
    }
 
