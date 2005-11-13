@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.73 2005/09/30 08:56:03 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.74 2005/11/13 17:57:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -909,7 +909,11 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
          TDirectory* dirToSearch=GetDirectory(name);
          namobj = name + i + 1;
          name[i] = '/';
-         return dirToSearch->GetObjectChecked(namobj, expectedClass);
+         if (dirToSearch) {
+            return dirToSearch->GetObjectChecked(namobj, expectedClass);
+         } else { 
+            return 0;
+         }
       }
    }
 
