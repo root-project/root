@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.207 2005/11/03 16:38:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.208 2005/11/04 20:13:08 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1384,7 +1384,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetMaximum(ymax);
    hframe->GetYaxis()->SetLimits(ymin,ymax);
    hframe->SetDirectory(0);
-   hframe->Draw("a");
+   hframe->Draw(" ");
    Update();
    return hframe;
 }

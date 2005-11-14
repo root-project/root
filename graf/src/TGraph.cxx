@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.170 2005/10/24 15:10:56 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.171 2005/11/01 19:48:09 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2223,14 +2223,14 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
         fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
         fHistogram->SetBit(TH1::kNoStats);
         fHistogram->SetDirectory(0);
-        fHistogram->Paint("a");
+        fHistogram->Paint(" "); // Draw histogram axis, title and grid
      } else {
         if (gPad->GetLogy()) {
            fHistogram->SetMinimum(rwymin);
            fHistogram->SetMaximum(rwymax);
            fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
         }
-        fHistogram->Paint("a");
+        fHistogram->Paint(" "); // Draw histogram axis, title and grid
      }
   }
 
