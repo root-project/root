@@ -1,0 +1,20 @@
+<lcgdict>
+  <class pattern="Bla*"/>
+  <class pattern="Class*"/>
+  <class pattern="Bla::*"/>
+  <function name="function1"/>
+  <function name="function2"/>
+  <function name="function3"/>
+  <function name="function5"/>
+  <function pattern="Functions::*"/>
+  <operator name="+"/>
+  <operator name="<<"/>
+
+  <function name="trigger"/>
+  
+  <class name="MemberPointerTest"/>
+  <class name="MyClass" id="1234" comment="This is a comment" >
+    <field name="data" comment="[this is an emulated comment]" />
+  </class> 
+  <class pattern="zot::*"/>
+</lcgdict>
