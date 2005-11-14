@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.123 2005/11/07 12:20:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.124 2005/11/13 18:32:52 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -716,7 +716,10 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
       // create master server
       fprintf(stderr,"Starting master: opening connection ... \n");
-      TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", 0);
+      TString url = fMaster;
+      if (fUser.Length() > 0)
+         url.Insert(0,Form("%s@",fUser.Data()));
+      TSlave *slave = CreateSubmaster(url, fPort, "0", "master", 0);
 
       if (slave->IsValid()) {
 
@@ -3000,7 +3003,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
             return -1;
          }
 
-         if (sl->GetSocket()->SendRaw(buf, len) == -1) {
+         if (len > 0 && sl->GetSocket()->SendRaw(buf, len) == -1) {
             SysError("SendFile", "error writing to slave %s:%s (now offline)",
                      sl->GetName(), sl->GetOrdinal());
             MarkBad(sl);
