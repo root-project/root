@@ -31,27 +31,27 @@ $(EVENT)$(ExeSuf) : $(EVENTDIR)/$(SUCCESS_FILE)
 drawtest : $(DATAFILES) $(REFFILE) dt_RunDrawTest_C.$(DllSuf)
 
 Event.new.split0.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) 0 $(action) $(tracks) Event.new.split0.root $(OUTPUT) && \
+	@./$(EVENT) $(size) $(comp) 0 $(action) $(tracks) Event.new.split0.root $(EVENTBUFSIZE) $(OUTPUT) && \
 	echo  "$@ made"
 
 Event.new.split1.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) 1 $(action) $(tracks) Event.new.split1.root $(OUTPUT)  && \
+	@./$(EVENT) $(size) $(comp) 1 $(action) $(tracks) Event.new.split1.root $(EVENTBUFSIZE) $(OUTPUT)  && \
 	echo  "$@ made"
 
 Event.new.split2.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) 2 $(action) $(tracks) Event.new.split2.root $(OUTPUT)  && \
+	@./$(EVENT) $(size) $(comp) 2 $(action) $(tracks) Event.new.split2.root $(EVENTBUFSIZE) $(OUTPUT)  && \
 	echo  "$@ made"
 
 Event.new.split9.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) 9 $(action) $(tracks) Event.new.split9.root $(OUTPUT) && \
+	./$(EVENT) $(size) $(comp) 9 $(action) $(tracks) Event.new.split9.root $(EVENTBUFSIZE) $(OUTPUT) && \
 	echo  "$@ made"
 
 Event.old.streamed.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) -1 $(action) $(tracks) Event.old.streamed.root $(OUTPUT) && \
+	@./$(EVENT) $(size) $(comp) -1 $(action) $(tracks) Event.old.streamed.root $(EVENTBUFSIZE) $(OUTPUT) && \
 	echo  "$@ made"
 
 Event.old.split.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
-	@./$(EVENT) $(size) $(comp) -2 $(action) $(tracks) Event.old.split.root $(OUTPUT) && \
+	@./$(EVENT) $(size) $(comp) -2 $(action) $(tracks) Event.old.split.root $(EVENTBUFSIZE) $(OUTPUT) && \
 	echo  "$@ made"
 
 $(REFFILE) : dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root

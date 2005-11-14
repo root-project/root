@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.1 2005/05/24 17:17:15 pcanal Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.2 2005/06/13 16:16:46 pcanal Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -95,6 +95,7 @@
 #include "Event.h"
 
 const char *gFilename = "Event.root";
+Int_t gBufSize = 64000;
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -109,6 +110,7 @@ int main(int argc, char **argv)
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t netf   = 0;
    const char *arg6 = 0;
+   const char *arg7 = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
@@ -116,6 +118,7 @@ int main(int argc, char **argv)
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
    if (argc > 6)  arg6   = argv[6];
+   if (argc > 7)  arg7   = argv[7];
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -128,6 +131,7 @@ int main(int argc, char **argv)
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    if (arg6) gFilename = arg6;
+   if (arg7) gBufSize = atoi(arg7);
    Int_t branchStyle = 1; //new style by default
    if (split < 0) {branchStyle = 0; split = -1-split;}
 
@@ -207,7 +211,7 @@ int main(int argc, char **argv)
      // Create a ROOT Tree and one superbranch
       TTree *tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
-      bufsize = 64000;
+      bufsize = gBufSize;
       if (split)  bufsize /= 4;
       event = new Event();
       TTree::SetBranchStyle(branchStyle);
