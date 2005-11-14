@@ -14,17 +14,16 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-
-$(ROOTTEST_HOME)/root/io/event/Event.new.split0.root: $(ROOTCORELIBS)
-	$(CMDECHO) (cd $(ROOTTEST_HOME)/root/io/event; $(MAKE) --no-print-directory -f dt_Makefile files)
+Event.new.split0.root: copiedEvent
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent Event.new.split0.root
 
 hsimple1.root: hsimple.C
 	$(CMDECHO) root.exe -q -l -b hsimple.C > hsimple.out
 	$(CMDECHO) mv hsimple.root hsimple1.root
 	$(CMDECHO) cp hsimple1.root hsimple2.root
 
-event1.root: $(ROOTTEST_HOME)/root/io/event/Event.new.split0.root
-	$(CMDECHO) cp $(ROOTTEST_HOME)/root/io/event/Event.new.split0.root event1.root
+event1.root: Event.new.split0.root
+	$(CMDECHO) cp Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
 
 treeCloneTest.log: hsimple1.root event1.root runEvent.C
