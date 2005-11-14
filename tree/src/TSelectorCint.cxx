@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.18 2005/02/21 09:41:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.19 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -72,13 +72,12 @@ TSelectorCint::~TSelectorCint()
    delete fClass;
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
                                  const char* fname, const char* argtype,
                                  Bool_t required)
 {
-   // Set the function prototype
+   // Set the function prototype.
 
    Long_t offset = 0;
 
@@ -91,11 +90,11 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
       Error("SetFuncProto","cannot set %s(%s)",fname,argtype);
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 {
-   // Initialize the CallFunc objects when selector is interpreted
+   // Initialize the CallFunc objects when selector is interpreted.
+
    Assert(cl);
 
    // The G__MethodInfo created by SetFuncProto will remember the address
@@ -134,13 +133,12 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    SetFuncProto(fFuncOut,fClass,"GetOutputList","");
 }
 
-
 //______________________________________________________________________________
 int TSelectorCint::Version() const
 {
-   // Invoke the Version function via the interpreter
+   // Invoke the Version function via the interpreter.
 
-   if ( gDebug > 2 )
+   if (gDebug > 2)
       Info("Version","Call Version");
 
    if (fFuncVersion->IsValid()) {
@@ -151,11 +149,10 @@ int TSelectorCint::Version() const
    }
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::Init(TTree *tree)
 {
-   // Invoke the Init function via the interpreter
+   // Invoke the Init function via the interpreter.
 
    if ( gDebug > 2 )
       Info("Init","Call Init tree = %p", tree);
@@ -165,11 +162,11 @@ void TSelectorCint::Init(TTree *tree)
    fFuncInit->Exec(fIntSelector);
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::Begin(TTree *tree)
 {
-   // Invoke the Begin function via the interpreter
+   // Invoke the Begin function via the interpreter.
+
    if ( gDebug > 2 )
       Info("Begin","Call Begin tree = %p", tree);
    fFuncBegin->ResetArg();
@@ -177,11 +174,10 @@ void TSelectorCint::Begin(TTree *tree)
    fFuncBegin->ExecInt(fIntSelector);
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SlaveBegin(TTree *tree)
 {
-   // Invoke the SlaveBegin function via the interpreter if available
+   // Invoke the SlaveBegin function via the interpreter if available.
 
    if (gDebug > 2)
       Info("SlaveBegin","Call SlaveBegin tree = %p", tree);
@@ -196,22 +192,22 @@ void TSelectorCint::SlaveBegin(TTree *tree)
    }
 }
 
-
 //______________________________________________________________________________
 Bool_t TSelectorCint::Notify()
 {
-   // Invoke the Notify function via the interpreter
+   // Invoke the Notify function via the interpreter.
+
    if ( gDebug > 2 )
       Info("Notify","Call Notify");
    Long64_t sel = fFuncNotif->ExecInt(fIntSelector);
    return (Bool_t)sel;
 }
 
-
 //______________________________________________________________________________
 Bool_t TSelectorCint::ProcessCut(Long64_t entry)
 {
-   // Invoke the ProcessCut function via the interpreter
+   // Invoke the ProcessCut function via the interpreter.
+
    if (gDebug > 3)
       Info("ProcessCut","Call ProcessCut entry = %d", entry);
 
@@ -226,11 +222,11 @@ Bool_t TSelectorCint::ProcessCut(Long64_t entry)
    }
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::ProcessFill(Long64_t entry)
 {
-   // Invoke the ProcessFill function via the interpreter
+   // Invoke the ProcessFill function via the interpreter.
+
    if (gDebug > 3)
       Info("ProcessFill","Call ProcessFill entry = %d", entry);
 
@@ -243,11 +239,11 @@ void TSelectorCint::ProcessFill(Long64_t entry)
    }
 }
 
-
 //______________________________________________________________________________
 Bool_t TSelectorCint::Process(Long64_t entry)
 {
-   // Invoke the ProcessCut function via the interpreter
+   // Invoke the ProcessCut function via the interpreter.
+
    if ( gDebug > 3 )
       Info("Process","Call Process entry = %d", entry);
 
@@ -262,11 +258,11 @@ Bool_t TSelectorCint::Process(Long64_t entry)
    }
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SetOption(const char *option)
 {
-   // Set the selector option
+   // Set the selector option.
+
    if ( gDebug > 2 )
       Info("SetOption","Option = %s", option);
    fFuncOption->ResetArg();
@@ -274,11 +270,11 @@ void TSelectorCint::SetOption(const char *option)
    fFuncOption->Exec(fIntSelector);
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SetObject(TObject *obj)
 {
-   // Set the current object
+   // Set the current object.
+
    if ( gDebug > 3 )
       Info("SetObject","Object = %p", obj);
    fFuncObj->ResetArg();
@@ -286,11 +282,11 @@ void TSelectorCint::SetObject(TObject *obj)
    fFuncObj->Exec(fIntSelector);
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SetInputList(TList *input)
 {
-   // Set the selector list of input objects
+   // Set the selector list of input objects.
+
    if ( gDebug > 2 )
       Info("SetInputList","Object = %p", input);
    fFuncInp->ResetArg();
@@ -298,11 +294,10 @@ void TSelectorCint::SetInputList(TList *input)
    fFuncInp->Exec(fIntSelector);
 }
 
-
 //______________________________________________________________________________
 TList *TSelectorCint::GetOutputList() const
 {
-   // Return the list of output object
+   // Return the list of output object.
 
    TList *out = (TList *) fFuncOut->ExecInt(fIntSelector);
 
@@ -312,11 +307,11 @@ TList *TSelectorCint::GetOutputList() const
    return out;
 }
 
-
 //______________________________________________________________________________
 void TSelectorCint::SlaveTerminate()
 {
-   // Invoke the SlaveTerminate function via the interpreter if available
+   // Invoke the SlaveTerminate function via the interpreter if available.
+
    if ( gDebug > 2 )
       Info("SlaveTerminate","Call SlaveTerminate");
 
@@ -325,15 +320,14 @@ void TSelectorCint::SlaveTerminate()
    } else {
       if (gDebug > 1)
          Info("SlaveTerminate","SlaveTerminate unavailable");
-
    }
 }
-
 
 //______________________________________________________________________________
 void TSelectorCint::Terminate()
 {
-   // Invoke the Terminate function via the interpreter
+   // Invoke the Terminate function via the interpreter.
+
    if ( gDebug > 2 )
       Info("Terminate","Call Terminate");
    fFuncTerm->Exec(fIntSelector);
