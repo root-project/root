@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.129 2005/09/24 11:57:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.130 2005/10/27 16:36:37 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -874,7 +874,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    // you can use on Unix directly $XXX. This is a protected function called
    // from the OS specific system classes, like TUnixSystem and TWinNTSystem.
 
-   const int   kBufSize = 4096;
+   const int   kBufSize = kMAXPATHLEN;
    int         n, ier, iter, lx, ncopy;
    char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*3];
    const char *p;
