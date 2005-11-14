@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.21 2005/09/22 09:42:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.22 2005/09/22 23:29:30 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -46,6 +46,10 @@ R__EXTERN TVirtualProof *gProof;
 class TVirtualProof : public TObject, public TQObject {
 
 public:
+   // PROOF status bits
+   enum EStatusBits {
+      kUsingSessionGui = BIT(14)
+   };
    enum EQueryMode { kSync = 0, kAsync = 1 };
 
 protected:

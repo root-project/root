@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.124 2005/11/13 18:32:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.125 2005/11/14 15:22:44 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1795,7 +1795,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             (*mess) >> selec >> dsz >> first >> nent;
 
             // Start or reset the progress dialog
-            if (fProgressDialog) {
+            if (fProgressDialog && !TestBit(kUsingSessionGui)) {
                if (!fProgressDialogStarted) {
                   fProgressDialog->ExecPlugin(5, this,
                                               selec.Data(), dsz, first, nent);
@@ -1804,6 +1804,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   ResetProgressDialog(selec, dsz, first, nent);
                }
             }
+            ResetBit(kUsingSessionGui);
          }
          break;
 

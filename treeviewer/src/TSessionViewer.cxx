@@ -672,9 +672,9 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnGetQueries->SetToolTipText("Get List of Queries from the server");
    fBtnShowLog = new TGTextButton(frmBut1, "Show log...");
    fBtnShowLog->SetToolTipText("Show Session log (opens log window)");
-   frmBut1->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft | 
+   frmBut1->AddFrame(fBtnShowLog, new TGLayoutHints(kLHintsLeft |
          kLHintsExpandX, 5, 5, 5, 5));
-   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom | 
+   fFA->AddFrame(frmBut1, new TGLayoutHints(kLHintsLeft | kLHintsBottom |
          kLHintsExpandX));
 
    // add "Commands" tab element
@@ -694,7 +694,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
          kLHintsExpandX, 5, 5, 15, 5));
    fFC->AddFrame(frmCmd, new TGLayoutHints(kLHintsExpandX, 5, 5, 10, 5));
    // connect command line text entry to "return pressed" signal
-   fCommandTxt->Connect("ReturnPressed()", "TSessionFrame", this, 
+   fCommandTxt->Connect("ReturnPressed()", "TSessionFrame", this,
          "OnCommandLine()");
 
    // check box for option "clear view"
@@ -857,7 +857,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fFD->AddFrame(frmPar, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
 
    // connect button actions to functions
-   fBtnShowLog->Connect("Clicked()", "TSessionFrame", this, 
+   fBtnShowLog->Connect("Clicked()", "TSessionFrame", this,
          "OnBtnShowLogClicked()");
    fBtnNewQuery->Connect("Clicked()", "TSessionFrame", this,
          "OnBtnNewQueryClicked()");
@@ -1434,7 +1434,7 @@ void TSessionFrame::OnCommandLine()
    const char *cmd = fCommandTxt->GetText();
    char opt[2];
    // form temporary file path
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(), 
+   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
          kSession_RedirectCmd);
    // if check box "clear view" is checked, open temp file in write mode
    // (overwrite), in append mode otherwise.
@@ -1506,7 +1506,7 @@ TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
 TSessionQueryFrame::~TSessionQueryFrame()
 {
    // Destructor.
-   
+
    Cleanup();
 }
 
@@ -1949,6 +1949,7 @@ void TSessionQueryFrame::OnBtnSubmit()
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
+      fViewer->GetActDesc()->fProof->SetBit(TVirtualProof::kUsingSessionGui);
       // set query description status to submitted
       newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
       // if feedback option selected
@@ -1976,7 +1977,7 @@ void TSessionQueryFrame::OnBtnSubmit()
       fViewer->GetActDesc()->fProof->cd();
       // check if parameter file has been specified
       if (newquery->fParFile.Length() > 1) {
-         const char *packname = newquery->fParFile.Data();
+         const char *packname = newquery->fParFile;
          // upload parameter file
          if (fViewer->GetActDesc()->fProof->UploadPackage(packname) != 0)
             Error("Submit", "Upload package failed");
@@ -2071,7 +2072,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
        fViewer->GetActDesc()->fProof->IsValid()) ||
        fViewer->GetActDesc()->fLocal)
       submit_en = kTRUE;
-   
+
    switch (desc->fStatus) {
       case TQueryDescription::kSessionQueryFromProof:
          fBtnSubmit->SetEnabled(submit_en);
@@ -2261,7 +2262,7 @@ TSessionOutputFrame::TSessionOutputFrame(TGWindow* p, Int_t w, Int_t h) :
 TSessionOutputFrame::~TSessionOutputFrame()
 {
    // Destructor.
-   
+
    delete fLVContainer; // this container is inside the TGListView and is not
                         // deleted automatically
    Cleanup();
@@ -2471,7 +2472,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
 
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
-      bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]), 
+      bval = (Bool_t)fViewerEnv->GetValue(Form("Option.%s",kFeedbackHistos[i]),
                                           i == 1 ? 1 : 0);
       if (bval)
          fCascadeMenu->CheckEntry(41+i);
@@ -3247,7 +3248,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fActFrame = fQueryFrame;
       }
       if ((fActDesc->fConnected) &&
-          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQueryRunning) && 
+          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQueryRunning) &&
           (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQuerySubmitted) )
          fToolBar->GetButton(kQuerySubmit)->SetState(kButtonUp);
       // trick to update feedback histos
@@ -3410,7 +3411,7 @@ void TSessionViewer::ChangeRightLogo(const char *name)
 void TSessionViewer::EnableTimer()
 {
    // Enable animation timer.
-   
+
    if (!fTimer) fTimer = new TTimer(this, 500);
    fTimer->Reset();
    fTimer->TurnOn();
@@ -3421,7 +3422,7 @@ void TSessionViewer::EnableTimer()
 void TSessionViewer::DisableTimer()
 {
    // Disable animation timer.
-   
+
    if (fTimer)
       fTimer->TurnOff();
    ChangeRightLogo("proof_disconnected.xpm");
