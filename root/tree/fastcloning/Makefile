@@ -1,5 +1,5 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
-TEST_TARGETS += single mytest
+TEST_TARGETS += single merge
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -17,8 +17,8 @@ DATAFILES = Event.new.split0.root Event.new.split1.root \
 
 REFFILE=dt_reference.root
 
-$(REFFILE) : Event.new.split9.root copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+$(REFFILE) : Event.new.split9.root copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("Event.new.split9.root")' && touch $@
 
 #dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
@@ -28,35 +28,35 @@ $(REFFILE) : Event.new.split9.root copiedEvent
 export EVENTBUFSIZE = 20
 export size = 200
 
-Event.new.split0.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.new.split0.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 
-Event.new.split1.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.new.split1.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 
-Event.new.split2.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.new.split2.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 
-Event.new.split9.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.new.split9.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 
-Event.old.split.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.old.split.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 
-Event.old.streamed.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@
+Event.old.streamed.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 
 single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS)
 	$(CMDECHO) ./dt_RunDrawTest.sh > single.raw.log
-	$(CMDECHO) grep -v 'ROOTMARKS' single.raw.log > single.log
+	$(CMDECHO) grep -v 'ROOTMARKS' single.raw.log  | grep '^..' > single.log
 
 FILEDIRS=one two
-EVENTDIRS=one/copiedEvent two/copiedEvent
+EVENTDIRS=one/copiedEvent$(ExeSuf) two/copiedEvent$(ExeSuf)
 
 MDATAFILES = Event.new.split0.root Event.new.split1.root \
         Event.new.split2.root  Event.new.split9.root \
@@ -68,36 +68,39 @@ ONEFILES=$(MDATAFILES:%=one/%)
 TWOFILES=$(MDATAFILES:%=two/%)
 MERGEFILES=$(MDATAFILES:%=merge/%)
 
-$(EVENTDIRS): %/copiedEvent: copiedEvent
+$(EVENTDIRS): %/copiedEvent$(ExeSuf): copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p $*
-	$(CMDECHO) cp copiedEvent libEvent.$(DllSuf) $*
+	$(CMDECHO) cp copiedEvent$(ExeSuf) libEvent.$(DllSuf) $*
 
-$(ONEFILES): %: one/copiedEvent one/libEvent.$(DllSuf)
-	$(CMDECHO) (cd one; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $(@F))
+$(ONEFILES): %: one/copiedEvent$(ExeSuf) one/libEvent.$(DllSuf)
+	$(CMDECHO) (cd one; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $(@F))
 
-$(TWOFILES): %: two/copiedEvent two/libEvent.$(DllSuf)
-	$(CMDECHO) (cd two; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $(@F))
+$(TWOFILES): %: two/copiedEvent$(ExeSuf) two/libEvent.$(DllSuf)
+	$(CMDECHO) (cd two; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $(@F))
 
-merge/$(REFFILE) : merge/Event.new.split9.root copiedEvent merge/libEvent.$(DllSuf)
+merge/$(REFFILE) : merge/Event.new.split9.root copiedEvent$(ExeSuf) merge/libEvent.$(DllSuf)
 	$(CMDECHO) (cd merge; root -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
 #	$(CMDECHO) root.exe -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
 
-merge:
-	mkdir -p merge
+merged:
+	mkdir -p merged
 
-merge/libEvent.$(DllSuf) : copiedEvent libEvent.$(DllSuf)
-	$(CMDECHO) mkdir -p merge; cp libEvent.$(DllSuf) merge	
+merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf) libEvent.$(DllSuf)
+	$(CMDECHO) mkdir -p merged; cp libEvent.$(DllSuf) merged	
 
-$(MERGEFILES): %: $(ONEFILES) $(TWOFILES)
-	$(CMDECHO) mkdir -p merge; root.exe -q -b -l 'mtrans.C("$(@F)")'
+$(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 
+	$(CMDECHO) mkdir -p merged; root.exe -q -b -l 'mtrans.C("$(@F)")'
 
-merged.log: merge/$(REFFILE) $(MERGEFILES) copiedEvent
-	$(CMDECHO) ./dt_RunDrawTest.sh 'merge/' > merged.raw.log
-	$(CMDECHO) grep -v 'ROOTMARKS' merged.raw.log > merged.log
+merged.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf)
+	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merge.raw.log
+	$(CMDECHO) grep -v 'ROOTMARKS' merge.raw.log | grep '^..' > merge.log
 
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 single: single.log
+	$(TestDiff)
+
+merge: merge.log
 	$(TestDiff)

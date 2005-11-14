@@ -43,9 +43,10 @@ private:
    Int_t        fNsp;          //Number of points for this track with a special value
    Double32_t*  fPointValue;   //[fNsp][0,3] a special quantity for some point.
    TBits        fTriggerBits;  //Bits triggered by this track.
+   Bool_t      *fTestBool;     //[fNsp]
 
 public:
-   Track() { fPointValue = 0; }
+   Track() { fPointValue = 0; fTestBool = 0; }
    Track(const Track& orig);
    Track(Float_t random);
    virtual ~Track() {Clear();}
@@ -118,6 +119,7 @@ private:
    TH1F          *fH;                 //->
    TBits          fTriggerBits;       //Bits triggered by this event.
    Bool_t         fIsValid;           //
+   Bool_t        *fTestBool;          //[fNvertex]
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;

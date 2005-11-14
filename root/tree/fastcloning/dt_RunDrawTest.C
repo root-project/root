@@ -138,6 +138,7 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    }
 
    gPath = gSystem->DirName(from);
+   if (gPath.Length()==0) gPath = ".";
 
    TFile *hfile = 0;
    TTree *tree = 0;
