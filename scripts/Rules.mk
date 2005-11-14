@@ -44,7 +44,11 @@ else
 	TESTGOAL = test
 endif
 
-$(TEST_TARGETS_DIR): %.test: 
+EVENTDIR = $(ROOTTEST_HOME)/root/io/event/
+$(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
+	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
+
+$(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE)
 	@(echo Running test in $(CALLDIR)/$*)
 	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL); \
      result=$$?; \
@@ -244,6 +248,10 @@ check: $(ROOT_LOC)/lib/libCore.$(DllSuf)
 UTILS_PREREQ =  $(UTILS_LIBS) $(ROOTMAP)
 
 utils:  $(UTILS_LIBS) $(ROOTMAP)
+
+copiedEvent$(ExeSuf): $(EVENTDIR)/$(SUCCESS_FILE)
+	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h .
+	$(CMDECHO) cp $(EVENTDIR)/Event$(ExeSuf) ./copiedEvent$(ExeSuf)
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
