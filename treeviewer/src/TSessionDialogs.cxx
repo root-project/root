@@ -668,6 +668,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
+   fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________

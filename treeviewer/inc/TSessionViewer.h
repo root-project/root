@@ -548,7 +548,8 @@ public:
    void     EditQuery();
    void     EnableTimer();
    Bool_t   HandleTimer(TTimer *);
-   Bool_t   IsBusy() const {return fBusy; }
+   Bool_t   IsBusy() const { return fBusy; }
+   Bool_t   IsAutoSave() const { return fAutoSave; }
    void     LogMessage(const char *msg, Bool_t all);
    void     MyHandleMenu(Int_t);
    void     OnCascadeMenu();

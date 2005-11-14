@@ -351,6 +351,8 @@ void TSessionServerFrame::OnBtnDeleteClicked()
          fViewer->OnListTreeClicked(item, 1, 0, 0);
       }
    }
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -529,6 +531,8 @@ void TSessionServerFrame::OnBtnAddClicked()
    fClient->NeedRedraw(fViewer->GetSessionHierarchy());
    fViewer->OnListTreeClicked(item, 1, 0, 0);
    HideFrame(fBtnAdd);
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -1083,6 +1087,8 @@ void TSessionFrame::OnUploadPackages()
       }
       fLBPackages->Layout();
       fClient->NeedRedraw(fLBPackages);
+      if (fViewer->IsAutoSave())
+         fViewer->WriteConfiguration();
    }
 }
 
@@ -1126,6 +1132,8 @@ void TSessionFrame::OnEnablePackages()
       }
       fLBPackages->Layout();
       fClient->NeedRedraw(fLBPackages);
+      if (fViewer->IsAutoSave())
+         fViewer->WriteConfiguration();
    }
 }
 
@@ -1160,6 +1168,8 @@ void TSessionFrame::OnDisablePackages()
       }
       fLBPackages->Layout();
       fClient->NeedRedraw(fLBPackages);
+      if (fViewer->IsAutoSave())
+         fViewer->WriteConfiguration();
    }
 }
 
@@ -1184,6 +1194,8 @@ void TSessionFrame::OnClearPackages()
       }
       fLBPackages->Layout();
       fClient->NeedRedraw(fLBPackages);
+      if (fViewer->IsAutoSave())
+         fViewer->WriteConfiguration();
    }
 }
 
@@ -1210,6 +1222,8 @@ void TSessionFrame::OnBtnAddClicked()
    fLBPackages->AddEntry(entry, new TGLayoutHints(kLHintsExpandX | kLHintsTop));
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -1240,6 +1254,8 @@ void TSessionFrame::OnBtnRemoveClicked()
    }
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -1275,6 +1291,8 @@ void TSessionFrame::OnBtnUpClicked()
    fLBPackages->Select(pos-1);
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -1311,6 +1329,8 @@ void TSessionFrame::OnBtnDownClicked()
    fLBPackages->Select(pos+1);
    fLBPackages->Layout();
    fClient->NeedRedraw(fLBPackages);
+   if (fViewer->IsAutoSave())
+      fViewer->WriteConfiguration();
 }
 
 //______________________________________________________________________________
@@ -1672,6 +1692,7 @@ void TSessionQueryFrame::UpdateHistos(TList *objs)
             // cd to correct pad and draw histo
             fStatsCanvas->cd(pos);
             if (TH1 *h = dynamic_cast<TH1*>(o)) {
+               h->SetMinimum(0);
                h->SetStats(0);
                h->SetBarWidth(0.75);
                h->SetBarOffset(0.125);
@@ -3581,6 +3602,8 @@ void TSessionViewer::DeleteQuery()
       delete query;
    }
    fClient->NeedRedraw(fSessionHierarchy);
+   if (fAutoSave)
+      WriteConfiguration();
 }
 
 //______________________________________________________________________________
