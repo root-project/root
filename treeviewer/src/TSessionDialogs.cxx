@@ -155,7 +155,7 @@ TNewChainDlg::~TNewChainDlg()
 //______________________________________________________________________________
 void TNewChainDlg::OnElementSelected(TObject *obj)
 {
-   // Emits OnElementSelected signal if dset is not zero
+   // Emits OnElementSelected signal if dset is not zero.
 
    if (obj) {
       Emit("OnElementSelected(TObject *)", (Long_t)obj);
@@ -166,7 +166,7 @@ void TNewChainDlg::OnElementSelected(TObject *obj)
 void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 {
    // Handle click in the Memory list view and put the type
-   // and name of selected object in the text entry
+   // and name of selected object in the text entry.
 
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
@@ -185,7 +185,7 @@ void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 //______________________________________________________________________________
 void TNewChainDlg::UpdateList()
 {
-   // Update Memory list view
+   // Update Memory list view.
 
    TGLVEntry *item=0;
    TObject *obj = 0;
@@ -216,7 +216,7 @@ void TNewChainDlg::UpdateList()
 
 void TNewChainDlg::DisplayDirectory(const TString &fname)
 {
-   // Display content of directory
+   // Display content of directory.
 
    fContents->SetDefaultHeaders();
    gSystem->ChangeDirectory(fname);
@@ -228,7 +228,7 @@ void TNewChainDlg::DisplayDirectory(const TString &fname)
 
 void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
 {
-   // Handle double click in the File container
+   // Handle double click in the File container.
 
    if (btn!=kButton1) return;
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kWatch));
@@ -254,7 +254,7 @@ void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
 //______________________________________________________________________________
 Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for new chain dialog
+   // Process messages for new chain dialog.
 
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -313,7 +313,7 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
          TGTransientFrame(gClient->GetRoot(), gui, Width, Height)
 {
    // Create a new Query dialog, used by the Session Viewer, to Edit a Query if
-   // the editmode flag is set, or to create a new one if not set
+   // the editmode flag is set, or to create a new one if not set.
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -363,7 +363,7 @@ TNewQueryDlg::~TNewQueryDlg()
 //______________________________________________________________________________
 void TNewQueryDlg::Build(TSessionViewer *gui)
 {
-   // build the "new query" dialog
+   // Build the "new query" dialog.
 
    TGButton*   btnTmp;
    fViewer = gui;
@@ -511,7 +511,7 @@ void TNewQueryDlg::CloseWindow()
 //______________________________________________________________________________
 void TNewQueryDlg::OnNewQueryMore()
 {
-   // show/hide options frame and update button text accordingly
+   // Show/hide options frame and update button text accordingly.
 
    if (fFrmNewQuery->IsVisible(fFrmMore)) {
       fFrmNewQuery->HideFrame(fFrmMore);
@@ -526,7 +526,7 @@ void TNewQueryDlg::OnNewQueryMore()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseChain()
 {
-   // call new chain dialog
+   // Call new chain dialog.
 
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
    dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg",
@@ -536,7 +536,7 @@ void TNewQueryDlg::OnBrowseChain()
 //____________________________________________________________________________
 void TNewQueryDlg::OnElementSelected(TObject *obj)
 {
-   // handle OnElementSelected signal coming from new chain dialog
+   // Handle OnElementSelected signal coming from new chain dialog.
 
    if (obj) {
       fChain = obj;
@@ -550,7 +550,7 @@ void TNewQueryDlg::OnElementSelected(TObject *obj)
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseSelector()
 {
-   // Open file browser to choose selector macro
+   // Open file browser to choose selector macro.
 
    TGFileInfo fi;
    fi.fFileTypes = filetypes;
@@ -562,7 +562,7 @@ void TNewQueryDlg::OnBrowseSelector()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBrowseParFile()
 {
-   // Open file browser to choose parameter file
+   // Open file browser to choose parameter file.
 
    TGFileInfo fi;
    fi.fFileTypes = partypes;
@@ -581,7 +581,7 @@ void TNewQueryDlg::OnBrowseEventList()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnSaveClicked()
 {
-   // Save current settings in main session viewer
+   // Save current settings in main session viewer.
 
    // if we are in edition mode and query description is valid,
    // use it, otherwise create a new one
@@ -673,7 +673,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnSubmitClicked()
 {
-   // Save and submit query description
+   // Save and submit query description.
 
    OnBtnSaveClicked();
    fViewer->GetQueryFrame()->OnBtnSubmit();
@@ -682,7 +682,7 @@ void TNewQueryDlg::OnBtnSubmitClicked()
 //______________________________________________________________________________
 void TNewQueryDlg::OnBtnCloseClicked()
 {
-   // close dialog
+   // Close dialog.
 
    DeleteWindow();
 }
@@ -690,7 +690,7 @@ void TNewQueryDlg::OnBtnCloseClicked()
 //______________________________________________________________________________
 void TNewQueryDlg::Popup()
 {
-   // display dialog and set focus to query name text entry
+   // Display dialog and set focus to query name text entry.
 
    MapWindow();
    fTxtQueryName->SetFocus();
@@ -699,7 +699,7 @@ void TNewQueryDlg::Popup()
 //______________________________________________________________________________
 void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 {
-   // update entry fields with query description values
+   // Update entry fields with query description values.
 
    fQuery = desc;
    fTxtQueryName->SetText(desc->fQueryName);
@@ -714,8 +714,8 @@ void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 //______________________________________________________________________________
 Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for new query dialog
-   // essentially used to navigate between text entry fields
+   // Process messages for new query dialog.
+   // Essentially used to navigate between text entry fields.
 
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:

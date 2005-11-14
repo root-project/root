@@ -182,20 +182,20 @@ TSessionServerFrame::TSessionServerFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h), fFrmNewServer(0), fTxtName(0), fTxtAddress(0),
       fTxtConfig(0), fTxtUsrName(0), fViewer(0)
 {
-   // Constructor
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TSessionServerFrame::~TSessionServerFrame()
 {
-   // Destructor
+   // Destructor.
    Cleanup();
 }
 
 //______________________________________________________________________________
 void TSessionServerFrame::Build(TSessionViewer *gui)
 {
-   // Build server configuration frame
+   // Build server configuration frame.
 
    SetLayoutManager(new TGVerticalLayout(this));
 
@@ -278,7 +278,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 Bool_t TSessionServerFrame::HandleExpose(Event_t * /*event*/)
 {
-   // Handle expose event
+   // Handle expose event in server frame.
 
    fTxtName->SelectAll();
    fTxtName->SetFocus();
@@ -288,7 +288,7 @@ Bool_t TSessionServerFrame::HandleExpose(Event_t * /*event*/)
 //______________________________________________________________________________
 void TSessionServerFrame::OnConfigFileClicked()
 {
-   // Browse for configuration files
+   // Browse configuration files.
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -303,7 +303,7 @@ void TSessionServerFrame::OnConfigFileClicked()
 //______________________________________________________________________________
 void TSessionServerFrame::OnBtnDeleteClicked()
 {
-   // Delete selected session configuration
+   // Delete selected session configuration (remove it from the list).
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -356,7 +356,7 @@ void TSessionServerFrame::OnBtnDeleteClicked()
 //______________________________________________________________________________
 void TSessionServerFrame::OnBtnConnectClicked()
 {
-   // Connect to selected server
+   // Connect to selected server.
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -453,7 +453,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
 //______________________________________________________________________________
 void TSessionServerFrame::OnBtnNewServerClicked()
 {
-   // reset server configuration fields
+   // Reset server configuration fields.
 
    // do nothing if connection in progress
    if (fViewer->IsBusy())
@@ -475,7 +475,7 @@ void TSessionServerFrame::OnBtnNewServerClicked()
 //______________________________________________________________________________
 void TSessionServerFrame::OnBtnAddClicked()
 {
-   // Add new session configuration
+   // Add newly created session configuration in the list of sessions.
 
    Int_t retval;
    // do nothing if connection in progress
@@ -534,7 +534,7 @@ void TSessionServerFrame::OnBtnAddClicked()
 //______________________________________________________________________________
 void TSessionServerFrame::Update(TSessionDescription* desc)
 {
-   // update session configuration fields
+   // Update fields with values from session description desc.
 
    fTxtName->SetText(desc->fName);
    fTxtAddress->SetText(desc->fAddress);
@@ -553,8 +553,8 @@ void TSessionServerFrame::Update(TSessionDescription* desc)
 //______________________________________________________________________________
 Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for session server frame
-   // used to navigate between text entry fields
+   // Process messages for session server frame.
+   // Used to navigate between text entry fields.
 
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
@@ -607,13 +607,13 @@ Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h)
 {
-   // Constructor
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TSessionFrame::~TSessionFrame()
 {
-   // Destructor
+   // Destructor.
 
    Cleanup();
 }
@@ -621,7 +621,7 @@ TSessionFrame::~TSessionFrame()
 //______________________________________________________________________________
 void TSessionFrame::Build(TSessionViewer *gui)
 {
-   // build session frame
+   // Build session frame.
 
    SetLayoutManager(new TGVerticalLayout(this));
    SetCleanup(kDeepCleanup);
@@ -895,7 +895,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 void TSessionFrame::ProofInfos()
 {
-   // Display informations on current session
+   // Display informations on current session.
 
    char buf[256];
 
@@ -992,7 +992,7 @@ void TSessionFrame::ProofInfos()
 //______________________________________________________________________________
 void TSessionFrame::OnApplyLogLevel()
 {
-   // apply selected log level
+   // Apply selected log level on current session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1007,7 +1007,7 @@ void TSessionFrame::OnApplyLogLevel()
 //______________________________________________________________________________
 void TSessionFrame::OnApplyParallel()
 {
-   // apply selected number of workers
+   // Apply selected number of workers on current Proof session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1022,7 +1022,7 @@ void TSessionFrame::OnApplyParallel()
 //______________________________________________________________________________
 void TSessionFrame::OnMultipleSelection(Bool_t on)
 {
-   // handle multiple selection check button
+   // Handle multiple selection check button.
 
    fLBPackages->SetMultipleSelections(on);
 }
@@ -1030,7 +1030,7 @@ void TSessionFrame::OnMultipleSelection(Bool_t on)
 //______________________________________________________________________________
 void TSessionFrame::UpdatePackages()
 {
-   // update list of packages
+   // Update list of packages.
 
    TPackageDescription *package;
    const TGPicture *pict;
@@ -1054,7 +1054,7 @@ void TSessionFrame::UpdatePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnUploadPackages()
 {
-   // upload selected package(s) to the current proof session
+   // Upload selected package(s) to the current session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1089,7 +1089,7 @@ void TSessionFrame::OnUploadPackages()
 //______________________________________________________________________________
 void TSessionFrame::OnEnablePackages()
 {
-   // enable selected package(s) in the current proof session
+   // Enable selected package(s) in the current session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1132,7 +1132,7 @@ void TSessionFrame::OnEnablePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnDisablePackages()
 {
-   // disable selected package(s) in the current proof session
+   // Disable selected package(s) in the current session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1166,7 +1166,7 @@ void TSessionFrame::OnDisablePackages()
 //______________________________________________________________________________
 void TSessionFrame::OnClearPackages()
 {
-   // clear (disable) all packages in the current proof session
+   // Clear (disable) all packages in the current session.
 
    TPackageDescription *package;
    // if local session, do nothing
@@ -1190,7 +1190,7 @@ void TSessionFrame::OnClearPackages()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnAddClicked()
 {
-   // open file dialog and add selected package file to the list
+   // Open file dialog and add selected package file to the list.
 
    if (fViewer->IsBusy())
       return;
@@ -1215,7 +1215,7 @@ void TSessionFrame::OnBtnAddClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnRemoveClicked()
 {
-   // remove selected package from the list
+   // Remove selected package from the list.
 
    TPackageDescription *package;
    const TGPicture *pict;
@@ -1245,7 +1245,7 @@ void TSessionFrame::OnBtnRemoveClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnUpClicked()
 {
-   // move selected package entry one position up in the list
+   // Move selected package entry one position up in the list.
 
    TPackageDescription *package;
    const TGPicture *pict;
@@ -1280,7 +1280,7 @@ void TSessionFrame::OnBtnUpClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnDownClicked()
 {
-   // move selected package entry one position down in the list
+   // Move selected package entry one position down in the list.
 
    TPackageDescription *package;
    const TGPicture *pict;
@@ -1316,7 +1316,7 @@ void TSessionFrame::OnBtnDownClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnDisconnectClicked()
 {
-   // Disconnect from current Proof session
+   // Disconnect from current Proof session.
 
    // if local session, do nothing
    if (fViewer->GetActDesc()->fLocal) return;
@@ -1343,7 +1343,7 @@ void TSessionFrame::OnBtnDisconnectClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnShowLogClicked()
 {
-   // Show session log
+   // Show session log.
 
    fViewer->ShowLog(0);
 }
@@ -1351,7 +1351,7 @@ void TSessionFrame::OnBtnShowLogClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnNewQueryClicked()
 {
-   // Just call "New Query" Dialog
+   // Call "New Query" Dialog.
 
    TNewQueryDlg *dlg = new TNewQueryDlg(fViewer, 350, 310);
    dlg->Popup();
@@ -1360,7 +1360,7 @@ void TSessionFrame::OnBtnNewQueryClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnBtnGetQueriesClicked()
 {
-   // Get list of queries from current Proof server and populate the list tree
+   // Get list of queries from current Proof server and populate the list tree.
 
    TList *lqueries = 0;
    TQueryResult *query = 0;
@@ -1428,7 +1428,7 @@ void TSessionFrame::OnBtnGetQueriesClicked()
 //______________________________________________________________________________
 void TSessionFrame::OnCommandLine()
 {
-   // command line handling
+   // Command line handling.
 
    // get command string
    const char *cmd = fCommandTxt->GetText();
@@ -1505,7 +1505,7 @@ TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
 //______________________________________________________________________________
 TSessionQueryFrame::~TSessionQueryFrame()
 {
-   // Destructor
+   // Destructor.
    
    Cleanup();
 }
@@ -1513,7 +1513,7 @@ TSessionQueryFrame::~TSessionQueryFrame()
 //______________________________________________________________________________
 void TSessionQueryFrame::Build(TSessionViewer *gui)
 {
-   // build query informations frame
+   // Build query informations frame.
 
    SetLayoutManager(new TGVerticalLayout(this));
    SetCleanup(kDeepCleanup);
@@ -1628,8 +1628,8 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 void TSessionQueryFrame::Feedback(TList *objs)
 {
-   // Feedback function connected to Feedback signal
-   // Used to update feedback histograms
+   // Feedback function connected to Feedback signal.
+   // Used to update feedback histograms.
 
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
@@ -1653,7 +1653,7 @@ void TSessionQueryFrame::Feedback(TList *objs)
 //______________________________________________________________________________
 void TSessionQueryFrame::UpdateHistos(TList *objs)
 {
-   // Update feedback histograms
+   // Update feedback histograms.
 
    TVirtualPad *save = gPad;
    TObject *o;
@@ -1802,7 +1802,7 @@ void TSessionQueryFrame::IndicateStop(Bool_t aborted)
 void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t files,
                                         Long64_t first, Long64_t entries)
 {
-   // Reset Progress frame information fields
+   // Reset progress frame information fields.
 
    char buf[256];
    fFiles         = files > 0 ? files : 0;
@@ -1840,7 +1840,7 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnFinalize()
 {
-   // Finalize query
+   // Finalize query.
 
    // check if Proof is valid
    if (fViewer->GetActDesc()->fProof &&
@@ -1864,7 +1864,7 @@ void TSessionQueryFrame::OnBtnFinalize()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnStop()
 {
-   // stop processing query
+   // Stop processing query.
 
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
@@ -1879,7 +1879,7 @@ void TSessionQueryFrame::OnBtnStop()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnShowLog()
 {
-   // Show query log
+   // Show query log.
 
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
@@ -1893,7 +1893,7 @@ void TSessionQueryFrame::OnBtnShowLog()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnRetrieve()
 {
-   // Retrieve query
+   // Retrieve query.
 
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
@@ -1915,7 +1915,7 @@ void TSessionQueryFrame::OnBtnRetrieve()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnAbort()
 {
-   // Abort processing query
+   // Abort processing query.
 
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
@@ -1930,7 +1930,7 @@ void TSessionQueryFrame::OnBtnAbort()
 //______________________________________________________________________________
 void TSessionQueryFrame::OnBtnSubmit()
 {
-   // Submit query
+   // Submit query.
 
    Long64_t id = 0;
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
@@ -2055,7 +2055,7 @@ void TSessionQueryFrame::OnBtnSubmit()
 //______________________________________________________________________________
 void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
 {
-   // Update buttons state for the current query status
+   // Update buttons state for the current query status.
 
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
@@ -2066,9 +2066,15 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
    TQueryDescription *query = (TQueryDescription *)obj;
    if (desc != query) return;
 
+   Bool_t submit_en = kFALSE;
+   if ((fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid()) ||
+       fViewer->GetActDesc()->fLocal)
+      submit_en = kTRUE;
+   
    switch (desc->fStatus) {
       case TQueryDescription::kSessionQueryFromProof:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2077,7 +2083,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryCompleted:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
          if (desc->fResult && desc->fResult->IsFinalized())
             fBtnFinalize->SetEnabled(kFALSE);
@@ -2088,7 +2094,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryCreated:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2115,7 +2121,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryStopped:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2124,7 +2130,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryAborted:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2133,7 +2139,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          break;
 
       case TQueryDescription::kSessionQueryFinalized:
-         fBtnSubmit->SetEnabled(kTRUE);
+         fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -2149,7 +2155,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
 //______________________________________________________________________________
 void TSessionQueryFrame::UpdateInfos()
 {
-   // Update Query information (header) text view
+   // Update query information (header) text view.
 
    char buffer[8192];
    const char *qst[] = {"aborted  ", "submitted", "running  ",
@@ -2248,13 +2254,13 @@ void TSessionQueryFrame::UpdateInfos()
 TSessionOutputFrame::TSessionOutputFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h), fLVContainer(0)
 {
-   // constructor
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TSessionOutputFrame::~TSessionOutputFrame()
 {
-   // destructor
+   // Destructor.
    
    delete fLVContainer; // this container is inside the TGListView and is not
                         // deleted automatically
@@ -2264,7 +2270,7 @@ TSessionOutputFrame::~TSessionOutputFrame()
 //______________________________________________________________________________
 void TSessionOutputFrame::Build(TSessionViewer *gui)
 {
-   // build query output informations frame
+   // Build query output information frame.
 
    fViewer = gui;
    SetLayoutManager(new TGVerticalLayout(this));
@@ -2290,7 +2296,7 @@ void TSessionOutputFrame::Build(TSessionViewer *gui)
 void TSessionOutputFrame::OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x,
                                            Int_t y)
 {
-   // handle mouse clicks on list view items
+   // Handle mouse clicks on list view items.
 
    TObject *obj = (TObject *)entry->GetUserData();
    if ((obj) && (btn ==3)) {
@@ -2302,7 +2308,7 @@ void TSessionOutputFrame::OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x,
 //______________________________________________________________________________
 void TSessionOutputFrame::OnElementDblClicked(TGLVEntry* entry, Int_t , Int_t, Int_t)
 {
-   // handle double-clicks on list view items
+   // Handle double-clicks on list view items.
 
    char action[512];
    TString act;
@@ -2326,7 +2332,7 @@ void TSessionOutputFrame::OnElementDblClicked(TGLVEntry* entry, Int_t , Int_t, I
 //______________________________________________________________________________
 void TSessionOutputFrame::AddObject(TObject *obj)
 {
-   // add object to output list view
+   // Add object to output list view.
 
    TGLVEntry *item;
    if (obj) {
@@ -2343,13 +2349,13 @@ void TSessionOutputFrame::AddObject(TObject *obj)
 TSessionInputFrame::TSessionInputFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h), fLVContainer(0)
 {
-   // constructor
+   // Constructor.
 }
 
 //______________________________________________________________________________
 TSessionInputFrame::~TSessionInputFrame()
 {
-   // destructor
+   // Destructor.
 
    delete fLVContainer; // this container is inside the TGListView and is not
                         // deleted automatically
@@ -2359,7 +2365,7 @@ TSessionInputFrame::~TSessionInputFrame()
 //______________________________________________________________________________
 void TSessionInputFrame::Build(TSessionViewer *gui)
 {
-   // build query input informations frame
+   // Build query input informations frame.
 
    fViewer = gui;
    SetLayoutManager(new TGVerticalLayout(this));
@@ -2377,7 +2383,7 @@ void TSessionInputFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 void TSessionInputFrame::AddObject(TObject *obj)
 {
-   // add object to input list view
+   // Add object to input list view.
 
    TGLVEntry *item;
    if (obj) {
@@ -2394,7 +2400,7 @@ void TSessionInputFrame::AddObject(TObject *obj)
 TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
    TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(0), fSessionItem(0)
 {
-   // Main Session viewer constructor
+   // Main Session viewer constructor.
 
    // only one session viewer allowed
    if (gSessionViewer)
@@ -2410,7 +2416,7 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
                               UInt_t h) : TGMainFrame(gClient->GetRoot(), w, h),
                               fSessionHierarchy(0), fSessionItem(0)
 {
-   // Main Session viewer constructor
+   // Main Session viewer constructor.
 
    // only one session viewer allowed
    if (gSessionViewer)
@@ -2425,9 +2431,9 @@ TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
 //______________________________________________________________________________
 void TSessionViewer::ReadConfiguration(const char *filename)
 {
-   // read configuration file and populate list of sessions
-   // list of queries and list of packages
-   // read and set also global options as feedback histos
+   // Read configuration file and populate list of sessions
+   // list of queries and list of packages.
+   // Read and set also global options as feedback histos.
 
    if (fViewerEnv)
       fViewerEnv->Delete();
@@ -2459,9 +2465,9 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
    bval = (Bool_t)fViewerEnv->GetValue("Option.WorkerEvents", 0);
    if (bval)
-      fOptionsMenu->CheckEntry(kOptionsStatsTrace);
+      fOptionsMenu->CheckEntry(kOptionsSlaveStatsTrace);
    else
-      fOptionsMenu->UnCheckEntry(kOptionsStatsTrace);
+      fOptionsMenu->UnCheckEntry(kOptionsSlaveStatsTrace);
 
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
@@ -2644,7 +2650,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
 //______________________________________________________________________________
 void TSessionViewer::UpdateListOfProofs()
 {
-   // update list of existing Proof sessions
+   // Update list of existing Proof sessions.
 
    // get list of proof sessions
    TGListTreeItem *item;
@@ -2722,7 +2728,7 @@ void TSessionViewer::UpdateListOfProofs()
 //______________________________________________________________________________
 void TSessionViewer::WriteConfiguration(const char *filename)
 {
-   // save actual configuration in config file "filename"
+   // Save actual configuration in config file "filename".
 
    TSessionDescription *session;
    TQueryDescription *query;
@@ -2827,7 +2833,7 @@ void TSessionViewer::WriteConfiguration(const char *filename)
 //______________________________________________________________________________
 void TSessionViewer::Build()
 {
-   // build main session viewer frame and subframes
+   // Build main session viewer frame and subframes.
 
    char line[120];
    fActDesc = 0;
@@ -3127,7 +3133,7 @@ void TSessionViewer::Build()
 //______________________________________________________________________________
 TSessionViewer::~TSessionViewer()
 {
-   // destructor
+   // Destructor.
 
    Cleanup();
    delete fUserGroup;
@@ -3139,7 +3145,7 @@ TSessionViewer::~TSessionViewer()
 void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
                                        Int_t x, Int_t y)
 {
-   // handle mouse clicks in list tree
+   // Handle mouse clicks in list tree.
 
    TList *objlist;
    TObject *obj;
@@ -3323,6 +3329,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->EnableEntry(kSessionDisconnect);
       fSessionMenu->EnableEntry(kSessionCleanup);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
+      fQueryMenu->EnableEntry(kQuerySubmit);
+      fPopupQry->EnableEntry(kQuerySubmit);
    }
    else {
       fSessionMenu->DisableEntry(kSessionGetQueries);
@@ -3337,6 +3345,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionDisconnect);
       fSessionMenu->DisableEntry(kSessionCleanup);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
+      fQueryMenu->DisableEntry(kQuerySubmit);
+      fPopupQry->DisableEntry(kQuerySubmit);
    }
    if (fActDesc->fLocal) {
       fSessionMenu->DisableEntry(kSessionDelete);
@@ -3345,13 +3355,15 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionCleanup);
       fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
       fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+      fQueryMenu->EnableEntry(kQuerySubmit);
+      fPopupQry->EnableEntry(kQuerySubmit);
    }
 }
 
 //______________________________________________________________________________
 void TSessionViewer::CloseWindow()
 {
-   // close main Session Viewer window
+   // Close main Session Viewer window.
 
    if (fAutoSave)
       WriteConfiguration();
@@ -3387,7 +3399,7 @@ void TSessionViewer::CloseWindow()
 //______________________________________________________________________________
 void TSessionViewer::ChangeRightLogo(const char *name)
 {
-    // Change the right logo ( used for animation )
+    // Change the right logo (used for animation).
 
    fClient->FreePicture(fRightIconPicture);
    fRightIconPicture = (TGPicture *)fClient->GetPicture(name);
@@ -3397,7 +3409,7 @@ void TSessionViewer::ChangeRightLogo(const char *name)
 //______________________________________________________________________________
 void TSessionViewer::EnableTimer()
 {
-   // enable animation timer
+   // Enable animation timer.
    
    if (!fTimer) fTimer = new TTimer(this, 500);
    fTimer->Reset();
@@ -3408,7 +3420,7 @@ void TSessionViewer::EnableTimer()
 //______________________________________________________________________________
 void TSessionViewer::DisableTimer()
 {
-   // disable animation timer
+   // Disable animation timer.
    
    if (fTimer)
       fTimer->TurnOff();
@@ -3418,7 +3430,7 @@ void TSessionViewer::DisableTimer()
 //______________________________________________________________________________
 Bool_t TSessionViewer::HandleTimer(TTimer *)
 {
-   // handle animation timer
+   // Handle animation timer.
 
    char line[120];
    struct tm *connected;
@@ -3441,7 +3453,7 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
 //______________________________________________________________________________
 void TSessionViewer::LogMessage(const char *msg, Bool_t all)
 {
-   // Load/append a log msg in the log frame, if open
+   // Load/append a log msg in the log frame.
 
    if (fLogWindow) {
       if (all) {
@@ -3457,7 +3469,7 @@ void TSessionViewer::LogMessage(const char *msg, Bool_t all)
 //______________________________________________________________________________
 void TSessionViewer::QueryResultReady(char *query)
 {
-   // handle signal "query result ready" coming from Proof session
+   // Handle signal "query result ready" coming from Proof session.
 
    char strtmp[256];
    sprintf(strtmp,"Query Result Ready for %s\n", query);
@@ -3506,7 +3518,7 @@ void TSessionViewer::QueryResultReady(char *query)
 //______________________________________________________________________________
 void TSessionViewer::CleanupSession()
 {
-   // clean-up Proof session
+   // Clean-up Proof session.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
@@ -3533,8 +3545,8 @@ void TSessionViewer::CleanupSession()
 //______________________________________________________________________________
 void TSessionViewer::DeleteQuery()
 {
-   // delete query from list tree and ask user if he wants do delete it also
-   // from server
+   // Delete query from list tree and ask user if he wants do delete it also
+   // from server.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
@@ -3573,7 +3585,7 @@ void TSessionViewer::DeleteQuery()
 //______________________________________________________________________________
 void TSessionViewer::EditQuery()
 {
-   // Edit currently selected query
+   // Edit currently selected query.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
@@ -3587,7 +3599,7 @@ void TSessionViewer::EditQuery()
 //______________________________________________________________________________
 void TSessionViewer::StartViewer()
 {
-   // Start TreeViewer from selected TChain
+   // Start TreeViewer from selected TChain.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();
    if (!item) return;
@@ -3606,8 +3618,8 @@ void TSessionViewer::StartViewer()
 //______________________________________________________________________________
 void TSessionViewer::ShowPackages()
 {
-   // query the list of uploaded packages from proof and display it
-   // into a new text window
+   // Query the list of uploaded packages from proof and display it
+   // into a new text window.
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -3644,8 +3656,8 @@ void TSessionViewer::ShowPackages()
 //______________________________________________________________________________
 void TSessionViewer::ShowEnabledPackages()
 {
-   // query list of enabled packages from proof and display it
-   // into a new text window
+   // Query list of enabled packages from proof and display it
+   // into a new text window.
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -3683,7 +3695,7 @@ void TSessionViewer::ShowEnabledPackages()
 void TSessionViewer::ShowLog(const char *queryref)
 {
    // Display the content of the temporary log file for queryref
-   // into a new text window
+   // into a new text window.
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -3717,7 +3729,7 @@ void TSessionViewer::ShowLog(const char *queryref)
 //______________________________________________________________________________
 void TSessionViewer::ShowInfo(const char *txt)
 {
-   // display text in status bar
+   // Display text in status bar.
 
    fStatusBar->SetText(txt,0);
    fClient->NeedRedraw(fStatusBar);
@@ -3727,7 +3739,7 @@ void TSessionViewer::ShowInfo(const char *txt)
 //______________________________________________________________________________
 void TSessionViewer::ShowStatus()
 {
-   // retrieve and display Proof status
+   // Retrieve and display Proof status.
 
    Window_t wdummy;
    Int_t  ax, ay;
@@ -3763,7 +3775,7 @@ void TSessionViewer::ShowStatus()
 //______________________________________________________________________________
 void TSessionViewer::StartupMessage(char *msg, Bool_t, Int_t done, Int_t total)
 {
-   // Handle startup message (connection progress) coming from Proof session
+   // Handle startup message (connection progress) coming from Proof session.
 
    Float_t pos = Float_t(Double_t(done * 100)/Double_t(total));
    fConnectProg->SetPosition(pos);
@@ -3773,7 +3785,7 @@ void TSessionViewer::StartupMessage(char *msg, Bool_t, Int_t done, Int_t total)
 //______________________________________________________________________________
 void TSessionViewer::MyHandleMenu(Int_t id)
 {
-   // Handle session viewer custom popup menus
+   // Handle session viewer custom popup menus.
 
    switch (id) {
 
@@ -3829,7 +3841,7 @@ void TSessionViewer::MyHandleMenu(Int_t id)
 //______________________________________________________________________________
 void TSessionViewer::OnCascadeMenu()
 {
-   // Handle feedback histograms configuration menu
+   // Handle feedback histograms configuration menu.
 
    if (!fActDesc || !fActDesc->fActQuery) return;
    fActDesc->fNbHistos = 0;
