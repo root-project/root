@@ -33,11 +33,14 @@ EventDict.d: EventDict.cxx Event.h
 	@touch EventDict.dd; rmkdepend -f EventDict.dd -I$(ROOTSYS)/include EventDict.cxx 2>/dev/null && \
 	cat EventDict.dd | sed -e s/EventDict\\\.o/EventDict\\\.$(ObjSuf)/g > EventDict.d; rm EventDict.dd EventDict.dd.bak
 
+Event.$(ObjSuf): $(ROOTCORELIBS)
+EventDict.$(ObjSuf): $(ROOTCORELIBS)
+MainEvent.$(ObjSuf): $(ROOTCORELIBS)
 $(EVENTO): Event.d EventDict.d
 
 $(MAINEVENTO): MainEvent.d
 
-$(EVENTSO):     $(EVENTO)
+$(EVENTSO):     $(EVENTO) $(ROOTCORELIBS)
 ifeq ($(ARCH),aix)
 		$(CMDECHO) /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
@@ -63,6 +66,6 @@ endif
 endif
 endif
 
-$(EVENT):       $(EVENTSO) $(MAINEVENTO)
+$(EVENT):       $(EVENTSO) $(MAINEVENTO) $(ROOTCORELIBS)
 		$(CMDECHO) $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
 		   $(OutPutOpt)$(EVENT)
