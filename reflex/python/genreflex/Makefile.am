@@ -28,8 +28,8 @@ SCRIPT_NAME   = "$(bindir)/genreflex"
 endif
 
 install-exec-am: 
-	echo $(PYTHON_PLATFORM)
-	rm -f $(SCRIPT_NAME)
+	if !(test -d $(bindir)); then mkdir $(bindir); fi
+	if (test -f $(SCRIPT_NAME)); then rm -f $(SCRIPT_NAME); fi
 	echo $(SCRIPT_TXT_L1) >  $(SCRIPT_NAME)
 	echo $(SCRIPT_TXT_L2) >> $(SCRIPT_NAME)
 	chmod a+x $(SCRIPT_NAME)
