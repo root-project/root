@@ -79,7 +79,6 @@ AC_CONFIG_FILES([ Makefile                    \
                   inc/Reflex/Builder/Makefile \
                   python/Makefile             \
                   python/genreflex/Makefile   \
-                  scripts/Makefile            \
                   src/Makefile                \
                   test/Makefile               \
                   test/testDict1/Makefile     \
