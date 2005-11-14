@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.5 2005/05/18 21:04:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.6 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -319,7 +319,8 @@ public:
 protected:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
                             TStreamerElement* element) : TFormLeafInfo(classptr,offset,element) {}
- public:
+
+public:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
                             TStreamerElement* element, TFormLeafInfo* parent);
    TFormLeafInfoMultiVarDim();

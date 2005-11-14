@@ -48,40 +48,40 @@ namespace ROOT {
 extern "C" void G__cpp_reset_tagtableManualTree2();
 
 extern "C" void G__set_cpp_environmentManualTree2() {
-  G__add_compiledheader("base/inc/TROOT.h");
-  G__add_compiledheader("base/inc/TMemberInspector.h");
-  G__add_compiledheader("TTree.h");
-  G__cpp_reset_tagtableManualTree2();
+   G__add_compiledheader("base/inc/TROOT.h");
+   G__add_compiledheader("base/inc/TMemberInspector.h");
+   G__add_compiledheader("TTree.h");
+   G__cpp_reset_tagtableManualTree2();
 }
 class G__treedIsrcdIManualTree2dOcxx_tag {};
 
 void* operator new(size_t size,G__treedIsrcdIManualTree2dOcxx_tag* p) {
-  if(p && G__PVOID!=G__getgvp()) return((void*)p);
+   if(p && G__PVOID!=G__getgvp()) return((void*)p);
 #ifndef G__ROOT
-  return(malloc(size));
+   return(malloc(size));
 #else
-  return(::operator new(size));
+   return(::operator new(size));
 #endif
 }
 
 /* dummy, for exception */
 #ifdef G__EH_DUMMY_DELETE
 void operator delete(void *p,G__treedIsrcdIManualTree2dOcxx_tag* x) {
-  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+   if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
 #ifndef G__ROOT
-  free(p);
+   free(p);
 #else
-  ::operator delete(p);
+   ::operator delete(p);
 #endif
 }
 #endif
 
 static void G__operator_delete(void *p) {
-  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+   if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
 #ifndef G__ROOT
-  free(p);
+   free(p);
 #else
-  ::operator delete(p);
+   ::operator delete(p);
 #endif
 }
 
@@ -110,18 +110,18 @@ extern "C" int G__cpp_dllrevManualTree2() { return(30051515); }
 * Get size of pointer to member function
 *********************************************************/
 class G__Sizep2memfuncManualTree2 {
- public:
-  G__Sizep2memfuncManualTree2() {p=&G__Sizep2memfuncManualTree2::sizep2memfunc;}
-    size_t sizep2memfunc() { return(sizeof(p)); }
-  private:
-    size_t (G__Sizep2memfuncManualTree2::*p)();
+public:
+   G__Sizep2memfuncManualTree2() {p=&G__Sizep2memfuncManualTree2::sizep2memfunc;}
+   size_t sizep2memfunc() { return(sizeof(p)); }
+private:
+   size_t (G__Sizep2memfuncManualTree2::*p)();
 };
 
 size_t G__get_sizep2memfuncManualTree2()
 {
-  G__Sizep2memfuncManualTree2 a;
-  G__setsizep2memfunc((int)a.sizep2memfunc());
-  return((size_t)a.sizep2memfunc());
+   G__Sizep2memfuncManualTree2 a;
+   G__setsizep2memfunc((int)a.sizep2memfunc());
+   return((size_t)a.sizep2memfunc());
 }
 
 
@@ -149,27 +149,27 @@ extern "C" void G__cpp_setup_typetableManualTree2() {
 -1);
    G__setnewtype(-1,"Signed integer 4 bytes (int)",0);
    G__search_typename2("vector<TStreamerInfo*>",117,G__get_linked_tagnum(&G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("_Ranit<TStreamerInfo*,difference_type,const_pointer,const_reference>",117,G__get_linked_tagnum(&G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,G__get_linked_tagnum(&G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("reverse_iterator<iterator>",117,G__get_linked_tagnum(&G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR),0,G__get_linked_tagnum(&G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::iterator_category,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::value_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::difference_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::pointer,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::reference>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type>TStreamerInfo**>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("reverse_iterator<const_iterator>",117,G__get_linked_tagnum(&G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR),0,G__get_linked_tagnum(&G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::iterator_category,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::value_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::difference_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::pointer,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::reference>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>long>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>long>TStreamerInfo**>",117,G__get_linked_tagnum(&G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualTree2.cxx,v 1.2 2005/01/12 17:59:53 brun Exp $",0);
 }
 
 /*********************************************************
@@ -260,10 +260,10 @@ static void G__cpp_setup_func3() {
 }
 
 extern "C" void G__cpp_setup_funcManualTree2() {
-  G__cpp_setup_func0();
-  G__cpp_setup_func1();
-  G__cpp_setup_func2();
-  G__cpp_setup_func3();
+   G__cpp_setup_func0();
+   G__cpp_setup_func1();
+   G__cpp_setup_func2();
+   G__cpp_setup_func3();
 }
 
 /*********************************************************
@@ -281,14 +281,14 @@ G__linked_taginfo G__ManualTree2LN_TBranch = { "TBranch" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableManualTree2() {
-  G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR.tagnum = -1 ;
-  G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR.tagnum = -1 ;
-  G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
-  G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR.tagnum = -1 ;
-  G__ManualTree2LN_TTree.tagnum = -1 ;
-  G__ManualTree2LN_TBranch.tagnum = -1 ;
+   G__ManualTree2LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR.tagnum = -1 ;
+   G__ManualTree2LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR.tagnum = -1 ;
+   G__ManualTree2LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR.tagnum = -1 ;
+   G__ManualTree2LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR.tagnum = -1 ;
+   G__ManualTree2LN_TTree.tagnum = -1 ;
+   G__ManualTree2LN_TBranch.tagnum = -1 ;
 }
 
 

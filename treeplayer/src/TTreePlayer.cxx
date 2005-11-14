@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.202 2005/11/11 09:29:39 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.203 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2032,7 +2032,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       TIter next(((TChain*)fTree)->GetListOfFiles());
       TChainElement *element;
       while ((element = (TChainElement*)next())) {
-        fprintf(fp,"   %s->Add(\"%s/%s\");\n",fTree->GetName(),element->GetTitle(),element->GetName());
+         fprintf(fp,"   %s->Add(\"%s/%s\");\n",fTree->GetName(),element->GetTitle(),element->GetName());
       }
       fprintf(fp,"#endif // SINGLE_TREE\n\n");
    }

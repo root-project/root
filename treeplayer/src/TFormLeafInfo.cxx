@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.23 2005/11/03 20:43:22 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.24 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -720,7 +720,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case kDouble32_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kchar:       return (Double_t)(*(char*)(thisobj+fOffset));
       case TStreamerInfo::kCounter:
-                      return (Double_t)(*(Int_t*)(thisobj+fOffset));
+         return (Double_t)(*(Int_t*)(thisobj+fOffset));
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + kBool_t :
