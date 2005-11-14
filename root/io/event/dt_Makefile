@@ -6,7 +6,13 @@ comp=0
 # For writing of the files
 action=1
 
-include ./Makefile
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+#include ./Makefile
 
 DATAFILES = Event.new.split0.root Event.new.split1.root \
 	Event.new.split2.root  Event.new.split9.root \
@@ -16,32 +22,36 @@ REFFILE=dt_reference.root
 
 OUTPUT=>/dev/null
 
+EVENT=Event
+
 files: $(DATAFILES)
+
+$(EVENT)$(ExeSuf) : $(EVENTDIR)/$(SUCCESS_FILE)
 
 drawtest : $(DATAFILES) $(REFFILE) dt_RunDrawTest_C.$(DllSuf)
 
-Event.new.split0.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 0 $(action) $(tracks) Event.new.split0.root $(OUTPUT) && \
+Event.new.split0.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 0 $(action) $(tracks) Event.new.split0.root $(OUTPUT) && \
 	echo  "$@ made"
 
-Event.new.split1.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 1 $(action) $(tracks) Event.new.split1.root $(OUTPUT)  && \
+Event.new.split1.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 1 $(action) $(tracks) Event.new.split1.root $(OUTPUT)  && \
 	echo  "$@ made"
 
-Event.new.split2.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 2 $(action) $(tracks) Event.new.split2.root $(OUTPUT)  && \
+Event.new.split2.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 2 $(action) $(tracks) Event.new.split2.root $(OUTPUT)  && \
 	echo  "$@ made"
 
-Event.new.split9.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 9 $(action) $(tracks) Event.new.split9.root $(OUTPUT) && \
+Event.new.split9.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 9 $(action) $(tracks) Event.new.split9.root $(OUTPUT) && \
 	echo  "$@ made"
 
-Event.old.streamed.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) -1 $(action) $(tracks) Event.old.streamed.root $(OUTPUT) && \
+Event.old.streamed.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) -1 $(action) $(tracks) Event.old.streamed.root $(OUTPUT) && \
 	echo  "$@ made"
 
-Event.old.split.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) -2 $(action) $(tracks) Event.old.split.root $(OUTPUT) && \
+Event.old.split.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) -2 $(action) $(tracks) Event.old.split.root $(OUTPUT) && \
 	echo  "$@ made"
 
 $(REFFILE) : dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
