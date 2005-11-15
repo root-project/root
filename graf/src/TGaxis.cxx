@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.81 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.82 2005/11/03 09:02:13 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -898,7 +898,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (optionPlus && optionMinus) {
       lside = -1;
       if (optionEqual) lside=1;
-  }
+   }
    xlside = lside;
 
 //*-*-              Tick marks size
@@ -955,8 +955,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             else                              textaxis->SetTextAlign(12);
             Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          } else {
-             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-           else                                textaxis->SetTextAlign(32);
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+         else                                 textaxis->SetTextAlign(32);
             Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          }
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
@@ -970,8 +970,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             else                              textaxis->SetTextAlign(32);
             Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          } else {
-             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-           else                                textaxis->SetTextAlign(12);
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+         else                                 textaxis->SetTextAlign(12);
             Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          }
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
@@ -1845,9 +1845,9 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
 
    char quote = '"';
    if (gROOT->ClassSaved(TGaxis::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TGaxis *";
+      out<<"   TGaxis *";
    }
    out<<"gaxis = new TGaxis("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<fWmin<<","<<fWmax<<","<<fNdiv<<","<<quote<<fChopt.Data()<<quote<<");"<<endl;

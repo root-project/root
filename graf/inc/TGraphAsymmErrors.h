@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.22 2005/03/07 09:15:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.23 2005/09/05 07:25:21 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -49,46 +49,47 @@ protected:
                                      Int_t ibegin, Int_t iend, Int_t obegin);
    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                  Int_t obegin);
-           Bool_t     CtorAllocate();
+   Bool_t             CtorAllocate();
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);
 
 public:
-        TGraphAsymmErrors();
-        TGraphAsymmErrors(Int_t n);
-        TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
-        TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
-        TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh);
-        TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh);
-        TGraphAsymmErrors(const TGraphAsymmErrors &gr);
-        TGraphAsymmErrors(const TH1 *h);
-        TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option="");
-        virtual ~TGraphAsymmErrors();
-        virtual void    Apply(TF1 *f);
-        virtual void    BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option="");
-        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
-        Double_t        GetErrorX(Int_t bin)   const;
-        Double_t        GetErrorY(Int_t bin)   const;
-        Double_t        GetErrorXlow(Int_t i)  const;
-        Double_t        GetErrorXhigh(Int_t i) const;
-        Double_t        GetErrorYlow(Int_t i)  const;
-        Double_t        GetErrorYhigh(Int_t i) const;
-        Double_t       *GetEXlow()  const {return fEXlow;}
-        Double_t       *GetEXhigh() const {return fEXhigh;}
-        Double_t       *GetEYlow()  const {return fEYlow;}
-        Double_t       *GetEYhigh() const {return fEYhigh;}
+   TGraphAsymmErrors();
+   TGraphAsymmErrors(Int_t n);
+   TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
+   TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
+   TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh);
+   TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh);
+   TGraphAsymmErrors(const TGraphAsymmErrors &gr);
+   TGraphAsymmErrors(const TH1 *h);
+   TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option="");
+   virtual ~TGraphAsymmErrors();
 
-        virtual void    Paint(Option_t *chopt="");
-        virtual void    Print(Option_t *chopt="") const;
-        virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
-        virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
-        virtual void    SetPointEXlow(Int_t i, Double_t exl);
-        virtual void    SetPointEXhigh(Int_t i, Double_t exh);
-        virtual void    SetPointEYlow(Int_t i, Double_t eyl);
-        virtual void    SetPointEYhigh(Int_t i, Double_t eyh);
+   virtual void    Apply(TF1 *f);
+   virtual void    BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option="");
+   virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
+   Double_t        GetErrorX(Int_t bin)   const;
+   Double_t        GetErrorY(Int_t bin)   const;
+   Double_t        GetErrorXlow(Int_t i)  const;
+   Double_t        GetErrorXhigh(Int_t i) const;
+   Double_t        GetErrorYlow(Int_t i)  const;
+   Double_t        GetErrorYhigh(Int_t i) const;
+   Double_t       *GetEXlow()  const {return fEXlow;}
+   Double_t       *GetEXhigh() const {return fEXhigh;}
+   Double_t       *GetEYlow()  const {return fEYlow;}
+   Double_t       *GetEYhigh() const {return fEYhigh;}
 
-        ClassDef(TGraphAsymmErrors,3)  //A graph with asymmetric error bars
+   virtual void    Paint(Option_t *chopt="");
+   virtual void    Print(Option_t *chopt="") const;
+   virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
+   virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
+   virtual void    SetPointEXlow(Int_t i, Double_t exl);
+   virtual void    SetPointEXhigh(Int_t i, Double_t exh);
+   virtual void    SetPointEYlow(Int_t i, Double_t eyl);
+   virtual void    SetPointEYhigh(Int_t i, Double_t eyh);
+
+   ClassDef(TGraphAsymmErrors,3)  //A graph with asymmetric error bars
 };
 
 inline Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
