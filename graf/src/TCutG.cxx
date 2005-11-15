@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.16 2004/06/26 13:38:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.17 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -73,6 +73,7 @@ ClassImp(TCutG)
 //______________________________________________________________________________
 TCutG::TCutG() : TGraph()
 {
+   // TCutG default constructor.
 
    fObjectX  = 0;
    fObjectY  = 0;
@@ -94,6 +95,8 @@ TCutG::TCutG(const TCutG &cutg)
 TCutG::TCutG(const char *name, Int_t n)
       :TGraph(n)
 {
+   // TCutG normal constructor.
+
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -133,6 +136,8 @@ TCutG::TCutG(const char *name, Int_t n)
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
+   // TCutG normal constructor.
+
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -172,6 +177,8 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
+   // TCutG normal constructor.
+
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -210,6 +217,7 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
 //______________________________________________________________________________
 TCutG::~TCutG()
 {
+   // TCutG destructor.
 
    delete fObjectX;
    delete fObjectY;
@@ -266,23 +274,22 @@ Double_t TCutG::Integral(TH2 *h, Option_t *option) const
 //______________________________________________________________________________
 Int_t TCutG::IsInside(Double_t x, Double_t y) const
 {
-//*.         Function which returns 1 if point x,y lies inside the
-//*.              polygon defined by the graph points
-//*.                                0 otherwise
-//*.
-//*.     The loop is executed with the end-point coordinates of a
-//*.     line segment (X1,Y1)-(X2,Y2) and the Y-coordinate of a
-//*.     horizontal line.
-//*.     The counter inter is incremented if the line (X1,Y1)-(X2,Y2)
-//*.     intersects the horizontal line.
-//*.     In this case XINT is set to the X-coordinate of the
-//*.     intersection point.
-//*.     If inter is an odd number, then the point x,y is within
-//*.     the polygon.
-//*.
-//*.         This routine is based on an original algorithm
-//*.         developed by R.Nierhaus.
-//*.
+   //         Function which returns 1 if point x,y lies inside the
+   //              polygon defined by the graph points
+   //                                0 otherwise
+   //
+   //     The loop is executed with the end-point coordinates of a
+   //     line segment (X1,Y1)-(X2,Y2) and the Y-coordinate of a
+   //     horizontal line.
+   //     The counter inter is incremented if the line (X1,Y1)-(X2,Y2)
+   //     intersects the horizontal line.
+   //     In this case XINT is set to the X-coordinate of the
+   //     intersection point.
+   //     If inter is an odd number, then the point x,y is within
+   //     the polygon.
+   //
+   //         This routine is based on an original algorithm
+   //         developed by R.Nierhaus.
 
    return (Int_t)TMath::IsInside(x,y,fNpoints,fX,fY);
 }
@@ -290,14 +297,14 @@ Int_t TCutG::IsInside(Double_t x, Double_t y) const
 //______________________________________________________________________________
 void TCutG::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TCutG::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TCutG *";
+      out<<"   TCutG *";
    }
    out<<"cutg = new TCutG("<<quote<<GetName()<<quote<<","<<fNpoints<<");"<<endl;
    out<<"   cutg->SetVarX("<<quote<<GetVarX()<<quote<<");"<<endl;
@@ -318,6 +325,8 @@ void TCutG::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TCutG::SetVarX(const char *varx)
 {
+   // Set X variable.
+
    fVarX = varx;
    delete fObjectX;
    fObjectX = 0;
@@ -326,6 +335,8 @@ void TCutG::SetVarX(const char *varx)
 //______________________________________________________________________________
 void TCutG::SetVarY(const char *vary)
 {
+   // Set Y variable.
+
    fVarY = vary;
    delete fObjectY;
    fObjectY = 0;

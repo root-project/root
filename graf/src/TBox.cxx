@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.17 2004/12/22 22:20:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.18 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -41,8 +41,7 @@ ClassImp(TBox)
 //______________________________________________________________________________
 TBox::TBox(): TObject(), TAttLine(), TAttFill()
 {
-//*-*-*-*-*-*-*-*-*-*-*Box default constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // Box default constructor.
 
    fTip = 0;
 }
@@ -51,8 +50,8 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
 TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
      : TObject(), TAttLine(), TAttFill()
 {
-//*-*-*-*-*-*-*-*-*-*-*Box standard constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Box standard constructor.
+
    if (x2 >= x1) {fX1  =x1; fX2 = x2;}
    else          {fX1 = x2; fX2 = x1;}
    if (y2 >= y1) {fY1  =y1; fY2 = y2;}
@@ -64,8 +63,7 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 //______________________________________________________________________________
 TBox::~TBox()
 {
-//*-*-*-*-*-*-*-*-*-*-*Box destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============
+   // Box destructor.
 
    if (gPad) {
       gPad->CloseToolTip(fTip);
@@ -76,14 +74,15 @@ TBox::~TBox()
 //______________________________________________________________________________
 TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
 {
+   // Box copy constructor.
+
    ((TBox&)box).TBox::Copy(*this);
 }
 
 //______________________________________________________________________________
 void TBox::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy a Box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========
+   // Copy a Box.
 
    TObject::Copy(obj);
    TAttLine::Copy(((TBox&)obj));
@@ -99,12 +98,11 @@ void TBox::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a box*-*-*-*-*-*
-//*-*                  ==========================================
-//  Compute the closest distance of approach from point px,py to the
-//  edges of this box.
-//  The distance is computed in pixels units.
-//
+   // Compute distance from point px,py to a box.
+   //
+   // Compute the closest distance of approach from point px,py to the
+   // edges of this box.
+   // The distance is computed in pixels units.
 
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
@@ -116,15 +114,13 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    if (py1 < py2) {pyl = py1; pyt = py2;}
    else           {pyl = py2; pyt = py1;}
 
-//*-*- Are we inside the box?
-//*-*  ======================
+   // Are we inside the box?
    if (GetFillStyle()) {
       if ( (px >= pxl && px <= pxt) && (py >= pyl && py <= pyt) ) return 0;
       else return 9999;
    }
 
-//*-*- Are we on the edges?
-//*-*  ====================
+   // Are we on the edges?
    Int_t dxl = TMath::Abs(px - pxl);
    if (py < pyl) dxl += pyl - py; if (py > pyt) dxl += py - pyt;
    Int_t dxt = TMath::Abs(px - pxt);
@@ -145,8 +141,7 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TBox::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this box with its current attributes*-*-*-*-*-*-*
-//*-*                  =========================================
+   // Draw this box with its current attributes.
 
    AppendPad(option);
 
@@ -155,8 +150,8 @@ void TBox::Draw(Option_t *option)
 //______________________________________________________________________________
 void TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this box with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
+   // Draw this box with new coordinates.
+
    TBox *newbox = new TBox(x1,y1,x2,y2);
    TAttLine::Copy(*newbox);
    TAttFill::Copy(*newbox);
@@ -167,34 +162,34 @@ void TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 //______________________________________________________________________________
 void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a BOX/WBOX/pAD object is clicked.
-//
-//  If the mouse is clicked in one of the 4 corners of the box (pA,pB,pC,pD)
-//  the box is resized with the rubber rectangle.
-//
-//  If the mouse is clicked inside the box, the box is moved.
-//
-//  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is rscaled
-//  parallel to this edge (same as Motif window manager).
-//
-//    pA                 pTop                       pB
-//     +--------------------------------------------+
-//     |                                            |
-//     |                                            |
-//     |                                            |
-//   pL|                  pINSIDE                   |pR
-//     |                                            |
-//     |                                            |
-//     |                                            |
-//     |                                            |
-//     +--------------------------------------------+
-//    pD                 pBot                      pC
-//
-//  Note that this function is duplicated on purpose by TPad::ExecuteEvent.
-//  If somebody modifies this function, may be similar changes should also
-//  be applied to TPad::ExecuteEvent.
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a BOX/WBOX/PAD object is clicked.
+   //
+   //  If the mouse is clicked in one of the 4 corners of the box (pA,pB,pC,pD)
+   //  the box is resized with the rubber rectangle.
+   //
+   //  If the mouse is clicked inside the box, the box is moved.
+   //
+   //  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is 
+   //  rescaled parallel to this edge (same as Motif window manager).
+   //
+   //    pA                 pTop                       pB
+   //     +--------------------------------------------+
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //   pL|                  pINSIDE                   |pR
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //     +--------------------------------------------+
+   //    pD                 pBot                      pC
+   //
+   //  Note that this function is duplicated on purpose by TPad::ExecuteEvent.
+   //  If somebody modifies this function, may be similar changes should also
+   //  be applied to TPad::ExecuteEvent.
 
    if (!gPad) return;
    if (!gPad->IsEditable() && event != kMouseEnter) return;
@@ -325,8 +320,8 @@ again:
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; pR = kTRUE;
-          gPad->SetCursor(kRightSide);
+         pxold = pxt; pyold = pyt; pR = kTRUE;
+         gPad->SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
@@ -521,8 +516,8 @@ void TBox::HideToolTip(Int_t event)
 //______________________________________________________________________________
 void TBox::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List this box with its attributes*-*-*-*-*-*-*-*-*
-//*-*                    =================================
+   // List this box with its attributes.
+
    TROOT::IndentLevel();
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
@@ -530,16 +525,15 @@ void TBox::ls(Option_t *) const
 //______________________________________________________________________________
 void TBox::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this box with its current attributes*-*-*-*-*-*-*
-//*-*                  ==========================================
+   // Paint this box with its current attributes.
+
    PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
 
 //______________________________________________________________________________
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this box with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
+   // Draw this box with new coordinates.
 
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
@@ -550,8 +544,7 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 //______________________________________________________________________________
 void TBox::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this box with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  =================================
+   // Dump this box with its attributes.
 
    printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
@@ -566,12 +559,12 @@ void TBox::Print(Option_t *) const
 //______________________________________________________________________________
 void TBox::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    if (gROOT->ClassSaved(TBox::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TBox *";
+      out<<"   TBox *";
    }
    out<<"box = new TBox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
 

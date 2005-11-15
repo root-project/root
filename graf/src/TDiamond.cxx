@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.7 2003/09/30 10:09:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.8 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -43,8 +43,7 @@ ClassImp(TDiamond)
 //______________________________________________________________________________
 TDiamond::TDiamond(): TPaveText()
 {
-//*-*-*-*-*-*-*-*-*-*-*Diamond default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===========================
+   // Diamond default constructor.
 
 }
 
@@ -52,21 +51,21 @@ TDiamond::TDiamond(): TPaveText()
 TDiamond::TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
      :TPaveText(x1,y1,x2,y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Diamond standard constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Diamond standard constructor.
 }
 
 //______________________________________________________________________________
 TDiamond::~TDiamond()
 {
-//*-*-*-*-*-*-*-*-*-*-*Diamond destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
+   // Diamond destructor.
 
 }
 
 //______________________________________________________________________________
 TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
 {
+   // Copy constructor.
+
    TBuffer b(TBuffer::kWrite);
    TDiamond *p = (TDiamond*)(&diamond);
    p->Streamer(b);
@@ -78,12 +77,11 @@ TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
 //______________________________________________________________________________
 Int_t TDiamond::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*Compute distance from point px,py to a diamond*-*-*-*-*-*
-//*-*              ==============================================
-//  Compute the closest distance of approach from point px,py to the
-//  edges of this diamond.
-//  The distance is computed in pixels units.
-//
+   // Compute distance from point px,py to a diamond.
+   //
+   //  Compute the closest distance of approach from point px,py to the
+   //  edges of this diamond.
+   //  The distance is computed in pixels units.
 
    return TPaveText::DistancetoPrimitive(px,py);
 }
@@ -91,8 +89,7 @@ Int_t TDiamond::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TDiamond::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this diamond with its current attributes*-*-*-*-*-*
-//*-*                  =============================================
+   // Draw this diamond with its current attributes.
 
    AppendPad(option);
 
@@ -101,28 +98,27 @@ void TDiamond::Draw(Option_t *option)
 //______________________________________________________________________________
 void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a Diamond object is clicked.
-//
-//  If the mouse is clicked inside the diamond, the diamond is moved.
-//
-//  If the mouse is clicked on the 4 tops (pL,pR,pTop,pBot), the diamond is rscaled.
-//
-//
-//                           pTop
-//                        +---------+
-//                        |   / \   |
-//                        |  /   \  |
-//                        | /     \ |
-//                      pL|/pinside\|pR
-//                        |\       /|
-//                        | \     / |
-//                        |  \   /  |
-//                        |   \ /   |
-//                        +---------+
-//                            pBot
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a Diamond object is clicked.
+   //
+   //  If the mouse is clicked inside the diamond, the diamond is moved.
+   //
+   //  If the mouse is clicked on the 4 tops (pL,pR,pTop,pBot), the diamond is rscaled.
+   //
+   //
+   //                           pTop
+   //                        +---------+
+   //                        |   / \   |
+   //                        |  /   \  |
+   //                        | /     \ |
+   //                      pL|/pinside\|pR
+   //                        |\       /|
+   //                        | \     / |
+   //                        |  \   /  |
+   //                        |   \ /   |
+   //                        +---------+
+   //                            pBot
 
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
@@ -215,8 +211,8 @@ again:
 
       if ((TMath::Abs(py-(pyl+pyt)/2) < kMaxDiff) &&
           (TMath::Abs(px - pxt) < kMaxDiff)) {             // right edge
-          pxold = pxt; pyold = pyt; pR = kTRUE;
-          gPad->SetCursor(kRightSide);
+         pxold = pxt; pyold = pyt; pR = kTRUE;
+         gPad->SetCursor(kRightSide);
       }
 
       x1c = (py-pTy)*(pTx-pLx)/(pTy-pLy)+pTx;
@@ -284,7 +280,7 @@ again:
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
          x[1] = px2;
-          x[0] = x[2] = x[4] = (px1+px2)/2;
+         x[0] = x[2] = x[4] = (px1+px2)/2;
          for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
       if (pINSIDE) {
@@ -367,8 +363,7 @@ again:
 //______________________________________________________________________________
 void TDiamond::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this diamond with its current attributes*-*-*-*-*
-//*-*                  ==============================================
+   // Paint this diamond with its current attributes.
 
    Double_t x[7],y[7],depx,depy;
    Double_t x1 = fX1;
@@ -379,32 +374,32 @@ void TDiamond::Paint(Option_t *)
    Int_t fillcolor = GetFillColor();
    Int_t linecolor = GetLineColor();
    if (fBorderSize) {
-     Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
-     Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
-     //*-*- Draw the frame top right
-     if (y2-y1>x2-x1) {
-        depx = wx;
-        depy = 0;
-        }
-     else if (y2-y1<x2-x1) {
-        depx = 0;
-        depy = -wy;
-        }
-     else {
-        depx = wx;
-        depy = -wy;
-     }
-     x[0] = x[2] = (x1+x2)/2+depx;
-     x[1] = x2+depx;
-     x[3] = x1+depx;
-     y[0] = y2+depy;
-     y[2] = y1+depy;
-     y[1] = y[3] =(y1+y2)/2+depy;
-     x[4] = x[0]; y[4] = y[0];
-     SetFillStyle(fillstyle);
-     SetFillColor(linecolor);
-     TAttFill::Modify();  //Change fill area attributes only if necessary
-     gPad->PaintFillArea(4,x,y);
+      Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
+      Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
+      // Draw the frame top right
+      if (y2-y1>x2-x1) {
+         depx = wx;
+         depy = 0;
+         }
+      else if (y2-y1<x2-x1) {
+         depx = 0;
+         depy = -wy;
+         }
+      else {
+         depx = wx;
+         depy = -wy;
+      }
+      x[0] = x[2] = (x1+x2)/2+depx;
+      x[1] = x2+depx;
+      x[3] = x1+depx;
+      y[0] = y2+depy;
+      y[2] = y1+depy;
+      y[1] = y[3] =(y1+y2)/2+depy;
+      x[4] = x[0]; y[4] = y[0];
+      SetFillStyle(fillstyle);
+      SetFillColor(linecolor);
+      TAttFill::Modify();  //Change fill area attributes only if necessary
+      gPad->PaintFillArea(4,x,y);
    }
    x[0] = x[2] = (x1+x2)/2;
    x[1] = x2;
@@ -420,19 +415,19 @@ void TDiamond::Paint(Option_t *)
    gPad->PaintFillArea(4,x,y);
    gPad->PaintPolyLine(5,x,y);
 
-//  Paint list of primitives (test,etc)
+   // Paint list of primitives (test,etc)
    PaintPrimitives(kDiamond);
 }
 
 //______________________________________________________________________________
 void TDiamond::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 
    if (gROOT->ClassSaved(TDiamond::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TDiamond *";
+      out<<"   TDiamond *";
    }
    out<<"diamond = new TDiamond("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
 

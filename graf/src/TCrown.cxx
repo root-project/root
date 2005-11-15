@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.3 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.4 2005/01/13 21:39:40 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -54,45 +54,45 @@ ClassImp(TCrown)
 //______________________________________________________________________________
 TCrown::TCrown(): TEllipse()
 {
-//*-*-*-*-*-*-*-*-*-*-*crown  default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Crown default constructor.
 
 }
 //______________________________________________________________________________
 TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,radin,radout,phimin,phimax,0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Crown  normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
-//  x1,y1  : coordinates of centre of crown
-//  radin  : inner crown radius
-//  radout : outer crown radius
-//  phimin : min and max angle in degrees (default is 0-->360)
-//  phimax :
-//
-//  When a crown sector only is drawn, the lines connecting the center
-//  of the crown to the edges are drawn by default. One can specify
-//  the drawing option "only" to not draw these lines.
-//
+   // Crown normal constructor.
+   //
+   //  x1,y1  : coordinates of centre of crown
+   //  radin  : inner crown radius
+   //  radout : outer crown radius
+   //  phimin : min and max angle in degrees (default is 0-->360)
+   //  phimax :
+   //
+   //  When a crown sector only is drawn, the lines connecting the center
+   //  of the crown to the edges are drawn by default. One can specify
+   //  the drawing option "only" to not draw these lines.
+
 }
 
 //______________________________________________________________________________
 TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
 {
+   // Crown copy constructor.
+
    ((TCrown&)crown).Copy(*this);
 }
 
 //______________________________________________________________________________
 TCrown::~TCrown()
 {
-// crown  default destructor
-
+   // Crown default destructor.
 }
 
 //______________________________________________________________________________
 void TCrown::Copy(TObject &crown) const
 {
-// Copy this crown to crown
+   // Copy this crown to crown.
 
    TEllipse::Copy(crown);
 }
@@ -100,38 +100,38 @@ void TCrown::Copy(TObject &crown) const
 //______________________________________________________________________________
 Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Compute distance from point px,py to a crown
-//
-// if crown is filled, return OK if we are inside
-// otherwise, crown is found if near the crown edges
+   // Compute distance from point px,py to a crown
+   //
+   // if crown is filled, return OK if we are inside
+   // otherwise, crown is found if near the crown edges
 
-    const Double_t kPI = TMath::Pi();
-    Double_t x = gPad->AbsPixeltoX(px) - GetX1();
-    Double_t y = gPad->AbsPixeltoY(py) - GetY1();
-    Double_t r = TMath::Sqrt(x*x+y*y);
+   const Double_t kPI = TMath::Pi();
+   Double_t x = gPad->AbsPixeltoX(px) - GetX1();
+   Double_t y = gPad->AbsPixeltoY(py) - GetY1();
+   Double_t r = TMath::Sqrt(x*x+y*y);
    
-    Int_t dist = 9999;
-    if (r > fR2) return dist;
-    if (r < fR1) return dist;
-    if (fPhimax-fPhimin < 360) {
-       Double_t phi = 180*TMath::ACos(x/r)/kPI;
-       if (phi < fPhimin) return dist;
-       if (phi > fPhimax) return dist;
-    }
+   Int_t dist = 9999;
+   if (r > fR2) return dist;
+   if (r < fR1) return dist;
+   if (fPhimax-fPhimin < 360) {
+      Double_t phi = 180*TMath::ACos(x/r)/kPI;
+      if (phi < fPhimin) return dist;
+      if (phi > fPhimax) return dist;
+   }
 
-    if (GetFillColor() && GetFillStyle()) {
-       return 0;
-    } else {
-       if (TMath::Abs(fR2-r)/fR2 < 0.02) return 0;
-       if (TMath::Abs(fR1-r)/fR1 < 0.02) return 0;
-    }
-    return dist;
+   if (GetFillColor() && GetFillStyle()) {
+      return 0;
+   } else {
+      if (TMath::Abs(fR2-r)/fR2 < 0.02) return 0;
+      if (TMath::Abs(fR1-r)/fR1 < 0.02) return 0;
+   }
+   return dist;
 }
 
 //______________________________________________________________________________
 void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
 {
-// Draw this crown with new coordinates
+   // Draw this crown with new coordinates
 
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
    TAttLine::Copy(*newcrown);
@@ -142,9 +142,9 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
 //______________________________________________________________________________
 void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Execute action corresponding to one event
-//
-//  For the time being TEllipse::ExecuteEvent is OK
+   // Execute action corresponding to one event
+   //
+   //  For the time being TEllipse::ExecuteEvent is OK
 
    TEllipse::ExecuteEvent(event,px,py);
 }
@@ -152,7 +152,7 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TCrown::Paint(Option_t *)
 {
-// Paint this crown with its current attributes
+   // Paint this crown with its current attributes
 
    const Double_t kPI = TMath::Pi();
    const Int_t np = 40;
@@ -193,9 +193,9 @@ void TCrown::Paint(Option_t *)
          gPad->PaintPolyLine(np+1,x,y);
          gPad->PaintPolyLine(np+1,&x[np+1],&y[np+1]);
       }
-  } else {
+   } else {
       //crown segment
-     if (GetFillColor()  && GetFillStyle()) gPad->PaintFillArea(2*np+2,x,y);
+      if (GetFillColor()  && GetFillStyle()) gPad->PaintFillArea(2*np+2,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(2*np+3,x,y);
    }
 }
@@ -207,9 +207,9 @@ void TCrown::SavePrimitive(ofstream &out, Option_t *)
 
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TCrown::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TCrown *";
+      out<<"   TCrown *";
    }
    out<<"crown = new TCrown("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
       <<","<<fPhimin<<","<<fPhimax<<");"<<endl;

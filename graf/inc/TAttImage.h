@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.7 2005/06/21 17:09:26 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -143,9 +143,9 @@ public:
    virtual void     SetConstRatio(Bool_t constRatio = kTRUE); // *TOGGLE*
    virtual void     SetPaletteEnabled(Bool_t on = kTRUE) {  fPaletteEnabled = on; }
    virtual void     SetImageCompression(UInt_t lcompression)
-                       { fImageCompression = (lcompression > 100) ? 100 : lcompression; } // *MENU*
+                     { fImageCompression = (lcompression > 100) ? 100 : lcompression; } // *MENU*
    virtual void     SetImageQuality(EImageQuality lquality)
-                       { fImageQuality = lquality;} // *SUBMENU*
+                     { fImageQuality = lquality;} // *SUBMENU*
    virtual void     SetPalette(const TImagePalette *palette);
    virtual void     StartPaletteEditor(); // *MENU*
    virtual void     EditorClosed() { fPaletteEditor = 0; }

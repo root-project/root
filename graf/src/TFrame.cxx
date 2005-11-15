@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.9 2005/02/21 12:04:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.10 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -24,8 +24,7 @@ ClassImp(TFrame)
 //______________________________________________________________________________
 TFrame::TFrame(): TWbox()
 {
-//*-*-*-*-*-*-*-*-*-*-*frame default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Frame default constructor.
 
 }
 
@@ -33,49 +32,47 @@ TFrame::TFrame(): TWbox()
 TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
        :TWbox(x1,y1,x2,y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*frame normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // Frame normal constructor.
+
 }
 
 //______________________________________________________________________________
 TFrame::TFrame(const TFrame &frame) : TWbox(frame)
 {
+   // Frame copy constructor.
+
    ((TFrame&)frame).Copy(*this);
 }
 
 //______________________________________________________________________________
 TFrame::~TFrame()
 {
-//*-*-*-*-*-*-*-*-*-*-*wbox default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // Frame default destructor.
 
 }
 
 //______________________________________________________________________________
 void TFrame::Copy(TObject &frame) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this frame to frame*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // Copy this frame to frame.
+
    TWbox::Copy(frame);
 }
 
 //______________________________________________________________________________
 void TFrame::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this wbox with its current attributes*-*-*-*-*-*-*
-//*-*                  ==========================================
+   // Draw this frame with its current attributes.
 
    AppendPad(option);
-
 }
 
 //______________________________________________________________________________
 void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a TFrame object is clicked.
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a TFrame object is clicked.
 
    if (!gPad->IsEditable()) return;
 
@@ -121,8 +118,7 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TFrame::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this wbox with its current attributes*-*-*-*-*-*-*
-//*-*                  ===========================================
+   // Paint this wbox with its current attributes.
 
    TWbox::Paint(option);
       

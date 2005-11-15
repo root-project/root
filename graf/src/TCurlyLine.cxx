@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.9 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.10 2005/10/31 21:49:23 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
+//______________________________________________________________________________
 //
 // This class implements curly or wavy polylines typically used to draw Feynman diagrams.
 // Amplitudes and wavelengths may be specified in the constructors,
@@ -22,7 +22,7 @@
 <img src="gif/feynman.gif">
 */
 //End_Html
-//________________________________________________________________________
+//______________________________________________________________________________
 
 #include "Riostream.h"
 #include "TCurlyLine.h"
@@ -37,11 +37,12 @@ Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;
 
 ClassImp(TCurlyLine)
 
+
 //______________________________________________________________________________
 TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t wl, Double_t amp)
 {
- // create a new TCurlyLine with starting point (x1, y1), end point (x2,y2)
- // The wavelength and amplitude are given in percent of the pad height
+   // Create a new TCurlyLine with starting point (x1, y1), end point (x2,y2).
+   // The wavelength and amplitude are given in percent of the pad height.
 
    fX1         = x1;
    fY1         = y1;
@@ -53,30 +54,26 @@ TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Doubl
    Build();
 }
 
+
 //______________________________________________________________________________
 void TCurlyLine::Build()
 {
-//*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) line*-*-*-*-*-*
-//*-*                  ===========================================
-//---
+   // Create a curly (Gluon) or wavy (Gamma) line.
+
    Double_t pixeltoX = 1;
    Double_t pixeltoY = 1;
-//---
+
    Double_t wavelengthPix,amplitudePix, lengthPix, hPix;
    Double_t px1, py1, px2, py2;
    if (gPad) {
-   	Double_t ww = (Double_t)gPad->GetWw();
-   	Double_t wh = (Double_t)gPad->GetWh();
-   	Double_t pxrange = gPad->GetAbsWNDC()*ww;
-   	Double_t pyrange = - gPad->GetAbsHNDC()*wh;
-   	Double_t xrange  = gPad->GetX2() - gPad->GetX1();
-   	Double_t yrange  = gPad->GetY2() - gPad->GetY1();
-
-//    pixeltoX  = gPad->GetPixeltoX(); 
-//    pixeltoY  = gPad->GetPixeltoY(); 
-
-   	pixeltoX  = xrange / pxrange;
-   	pixeltoY  = yrange/pyrange;
+      Double_t ww = (Double_t)gPad->GetWw();
+      Double_t wh = (Double_t)gPad->GetWh();
+      Double_t pxrange = gPad->GetAbsWNDC()*ww;
+      Double_t pyrange = - gPad->GetAbsHNDC()*wh;
+      Double_t xrange  = gPad->GetX2() - gPad->GetX1();
+      Double_t yrange  = gPad->GetY2() - gPad->GetY1();
+      pixeltoX  = xrange / pxrange;
+      pixeltoY  = yrange/pyrange;
       hPix  = TMath::Max(gPad->GetAbsHNDC() * gPad->GetWh(), gPad->GetAbsWNDC() * gPad->GetWw());
       px1      = gPad->XtoAbsPixel(fX1);
       py1      = gPad->YtoAbsPixel(fY1);
@@ -100,16 +97,16 @@ void TCurlyLine::Build()
       SetBit(kTooShort);
       return;
    }
-// construct the curly / wavy line in pixel coordinates at angle 0
+   // construct the curly / wavy line in pixel coordinates at angle 0
    Double_t anglestep = 40;
    Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
    Double_t dx        = wavelengthPix / 40;
    Double_t len2pi    = dx * anglestep;
 
-//  make sure there is a piece of straight line a both ends
+   // make sure there is a piece of straight line a both ends
 
    Double_t  lengthcycle = 0.5 * len2pi + 2 * amplitudePix;
-//   if (fIsCurly) lengthcycle +=  amplitudePix;
+   // if (fIsCurly) lengthcycle +=  amplitudePix;
    Int_t nperiods = (Int_t)((lengthPix - lengthcycle) / len2pi);
    Double_t restlength = 0.5 * (lengthPix - nperiods * len2pi - lengthcycle);
    fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 + 4);
@@ -122,7 +119,7 @@ void TCurlyLine::Build()
    Double_t x0 = amplitudePix + restlength;
    Int_t i;
    for(i = 2; i < fNsteps-1; i++){
-//  distinguish between curly and wavy
+   // distinguish between curly and wavy
       if(fIsCurly) xv[i] = x0 + amplitudePix * TMath::Sin(phase);
       else         xv[i] = x0;
       yv[i]  = amplitudePix*TMath::Cos(phase);
@@ -133,8 +130,8 @@ void TCurlyLine::Build()
    
    if (InheritsFrom("TCurlyArc")) return;  // called by TCurlyArc
 
-// rotate object and transform back to user coordinates 
-  Double_t angle = TMath::ATan2(py2-py1, px2-px1);
+   // rotate object and transform back to user coordinates 
+   Double_t angle = TMath::ATan2(py2-py1, px2-px1);
    if(angle < 0) angle += 2*TMath::Pi();
 
    Double_t cosang = TMath::Cos(angle);
@@ -145,8 +142,8 @@ void TCurlyLine::Build()
       xx = xv[i] * cosang - yv[i] * sinang;
       yy = xv[i] * sinang + yv[i] * cosang;
       if (gPad) {
-        xx *= pixeltoX;
-        yy *= pixeltoY;
+         xx *= pixeltoX;
+         yy *= pixeltoY;
       }
       xv[i] = xx + fX1;
       yv[i] = yy + fY1;
@@ -154,28 +151,29 @@ void TCurlyLine::Build()
    if (gPad) gPad->Modified();
 }
 
+
 //______________________________________________________________________________
- Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
+Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
-//*-*                  ===========================================
+   // Compute distance from point px,py to a line.
 
    return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
 }
 
+
 //______________________________________________________________________________
 void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a  TCurlyLine is clicked with the locator
-//
-//  If Left button clicked on one of the line end points, this point
-//     follows the cursor until button is released.
-//
-//  if Middle button clicked, the line is moved parallel to itself
-//     until the button is released.
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a  TCurlyLine is clicked with the locator
+   //
+   //  If Left button clicked on one of the line end points, this point
+   //     follows the cursor until button is released.
+   //
+   //  if Middle button clicked, the line is moved parallel to itself
+   //     until the button is released.
+   //
 
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
@@ -268,14 +266,16 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-//_____________________________________________________________________________________
-void TCurlyLine::SavePrimitive(ofstream &out, Option_t *){
-    // Save primitive as a C++ statement(s) on output stream out
+
+//______________________________________________________________________________
+void TCurlyLine::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save primitive as a C++ statement(s) on output stream out
 
    if (gROOT->ClassSaved(TCurlyLine::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TCurlyLine *";
+      out<<"   TCurlyLine *";
    }
    out<<"curlyline = new TCurlyLine("
      <<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<","
@@ -287,63 +287,118 @@ void TCurlyLine::SavePrimitive(ofstream &out, Option_t *){
    out<<"   curlyline->Draw();"<<endl;
 }
 
-//_____________________________________________________________________________________
+
+//______________________________________________________________________________
 void TCurlyLine::SetCurly()
 {
+   // Set curly.
+
    fIsCurly = kTRUE;
    Build();
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetWavy()
 {
+   // Set wavy.
+
    fIsCurly = kFALSE;
    Build();
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetWaveLength(Double_t x)
 {
+   // Set wave length.
+
    fWaveLength = x;
    Build();
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetAmplitude(Double_t x)
 {
+   // Set amplitude.
+
    fAmplitude = x;
    Build();
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetStartPoint(Double_t x, Double_t y)
 {
+   // Set start point.
+
    fX1 = x;
    fY1 = y;
    Build();
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetEndPoint(Double_t x, Double_t y)
 {
+   // Set edn point.
+
    fX2 = x;
    fY2 = y;
    Build();
 }
-//_____________________________________________________________________________________
 
+
+//______________________________________________________________________________
 void TCurlyLine::SetDefaultWaveLength(Double_t WaveLength)
 {
+   // Set default wave length.
+
    fgDefaultWaveLength = WaveLength;
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetDefaultAmplitude(Double_t Amplitude)
 {
+   // Set default amplitude.
+
    fgDefaultAmplitude  = Amplitude;
 }
+
+
+//______________________________________________________________________________
 void TCurlyLine::SetDefaultIsCurly(Bool_t IsCurly)
 {
+   // Set defaul "IsCurly".
+
    fgDefaultIsCurly    = IsCurly;
 }
+
+
+//______________________________________________________________________________
 Double_t TCurlyLine::GetDefaultWaveLength()
 {
+   // Get default wave length.
+
    return fgDefaultWaveLength;
 }
+
+
+//______________________________________________________________________________
 Double_t TCurlyLine::GetDefaultAmplitude()
 {
+   // Get default amplitude.
+
    return fgDefaultAmplitude;
 }
+
+
+//______________________________________________________________________________
 Bool_t TCurlyLine::GetDefaultIsCurly()
 {
+   // Get default "IsCurly".
+   
    return fgDefaultIsCurly;
 }
-     

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.2 2000/06/13 10:56:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.3 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -30,18 +30,18 @@ class TFrame : public TWbox {
 
 
 public:
-        TFrame();
-        TFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
-        TFrame(const TFrame &frame);
-        virtual ~TFrame();
-                void  Copy(TObject &frame) const;
-        virtual void  Draw(Option_t *option="");
-        virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual void  Paint(Option_t *option="");
-        virtual void  Pop();
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   TFrame();
+   TFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
+   TFrame(const TFrame &frame);
+   virtual ~TFrame();
+   void  Copy(TObject &frame) const;
+   virtual void  Draw(Option_t *option="");
+   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual void  Paint(Option_t *option="");
+   virtual void  Pop();
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
-        ClassDef(TFrame,1)  //Pad graphics frame
+   ClassDef(TFrame,1)  //Pad graphics frame
 };
 
 #endif

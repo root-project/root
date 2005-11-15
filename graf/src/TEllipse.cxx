@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.19 2005/01/13 21:39:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.20 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -22,8 +22,8 @@ const Double_t kPI = 3.14159265358979323846;
 ClassImp(TEllipse)
 
 //______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Ellipse class*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                          =============
+//  Ellipse class.
+//
 //  Ellipse is a general ellipse that can be truncated and rotated.
 //  An Ellipse is defined by its center (x1,y1) and two radius r1 and r2.
 //  A minimum and maximum angle may be specified (phimin, phimax).
@@ -47,8 +47,8 @@ ClassImp(TEllipse)
 //______________________________________________________________________________
 TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
 {
-//*-*-*-*-*-*-*-*-*-*-*Ellipse default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===========================
+   // Ellipse default constructor.
+
    fX1 = 0;
    fY1 = 0;
    fR1 = 1;
@@ -57,12 +57,13 @@ TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
    fPhimax = 360;
    fTheta  = 0;
 }
+
 //______________________________________________________________________________
 TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
       :TObject(), TAttLine(), TAttFill(0,1001)
 {
-//*-*-*-*-*-*-*-*-*-*-*Ellipse normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Ellipse normal constructor.
+
    fX1     = x1;
    fY1     = y1;
    fR1     = r1;
@@ -76,21 +77,22 @@ TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phi
 //______________________________________________________________________________
 TEllipse::~TEllipse()
 {
-//*-*-*-*-*-*-*-*-*-*-*Ellipse default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Ellipse default destructor.
+
 }
 
 //______________________________________________________________________________
 TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
 {
+   // Copy constructor.
+
    ((TEllipse&)ellipse).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TEllipse::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this ellipse to ellipse*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Copy this ellipse to ellipse.
 
    TObject::Copy(obj);
    TAttLine::Copy(((TEllipse&)obj));
@@ -107,47 +109,45 @@ void TEllipse::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to an ellipse*-*-*-*
-//*-*                  ===========================================
-//  Compute the closest distance of approach from point px,py to this ellipse.
-//  The distance is computed in pixels units.
-//
+   // Compute distance from point px,py to an ellipse.
+   //
+   //  Compute the closest distance of approach from point px,py to this ellipse.
+   //  The distance is computed in pixels units.
 
-    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
 
-    Double_t dxnr = x - fX1;
-    Double_t dynr = y - fY1;
+   Double_t dxnr = x - fX1;
+   Double_t dynr = y - fY1;
 
-    Double_t ct = TMath::Cos(kPI*GetTheta()/180.0);
-    Double_t st = TMath::Sin(kPI*GetTheta()/180.0);
+   Double_t ct = TMath::Cos(kPI*GetTheta()/180.0);
+   Double_t st = TMath::Sin(kPI*GetTheta()/180.0);
 
-    Double_t dx =  dxnr*ct + dynr*st;
-    Double_t dy = -dxnr*st + dynr*ct;
+   Double_t dx =  dxnr*ct + dynr*st;
+   Double_t dy = -dxnr*st + dynr*ct;
 
-    Double_t r1 = fR1;
-    Double_t r2 = fR2;
+   Double_t r1 = fR1;
+   Double_t r2 = fR2;
 
-    if (dx == 0 || r1 == 0 || r2 == 0) return 9999;
-    Double_t distp = TMath::Sqrt(dx*dx + dy*dy);
+   if (dx == 0 || r1 == 0 || r2 == 0) return 9999;
+   Double_t distp = TMath::Sqrt(dx*dx + dy*dy);
 
-    Double_t tana = dy/dx;
-    tana *= tana;
-    Double_t distr = TMath::Sqrt((1+tana)/(1.0/(r1*r1) + tana/(r2*r2)));
-    Int_t dist = 9999;
-    if (GetFillColor() && GetFillStyle()) {
-       if (distr > distp) dist = 0;
-    } else {
-       if (TMath::Abs(distr-distp)/(r1+r2) < 0.01) dist = 0;
-    }
-    return dist;
+   Double_t tana = dy/dx;
+   tana *= tana;
+   Double_t distr = TMath::Sqrt((1+tana)/(1.0/(r1*r1) + tana/(r2*r2)));
+   Int_t dist = 9999;
+   if (GetFillColor() && GetFillStyle()) {
+      if (distr > distp) dist = 0;
+   } else {
+      if (TMath::Abs(distr-distp)/(r1+r2) < 0.01) dist = 0;
+   }
+   return dist;
 }
 
 //______________________________________________________________________________
 void TEllipse::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with its current attributes*-*-*-*-*
-//*-*                  ==========================================
+   // Draw this ellipse with its current attributes.
 
    AppendPad(option);
 
@@ -156,8 +156,8 @@ void TEllipse::Draw(Option_t *option)
 //______________________________________________________________________________
 void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta,Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
-//*-*                  ======================================
+   // Draw this ellipse with new coordinates.
+
    TEllipse *newellipse = new TEllipse(x1, y1, r1, r2, phimin, phimax,theta);
    TAttLine::Copy(*newellipse);
    TAttFill::Copy(*newellipse);
@@ -169,17 +169,17 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
 //______________________________________________________________________________
 void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a line is clicked with the locator
-//
-//  If Left button clicked on one of the line end points, this point
-//     follows the cursor until button is released.
-//
-//  if Middle button clicked, the line is moved parallel to itself
-//     until the button is released.
-//
-//  NOTE that support for log scale is not implemented
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a line is clicked with the locator
+   //
+   //  If Left button clicked on one of the line end points, this point
+   //     follows the cursor until button is released.
+   //
+   //  if Middle button clicked, the line is moved parallel to itself
+   //     until the button is released.
+   //
+   //  NOTE that support for log scale is not implemented
 
    Int_t kMaxDiff = 10;
    const Int_t kMinSize = 25;
@@ -377,10 +377,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
       if (pINSIDE) {
-          dpx  = px-pxold;  dpy = py-pyold;
-          px1 += dpx; py1 += dpy;
-          for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
-          for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
+         dpx  = px-pxold;  dpy = py-pyold;
+         px1 += dpx; py1 += dpy;
+         for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
+         for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
       pTx = pBx = px1;
       pRx = px1+r1;
@@ -425,8 +425,8 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TEllipse::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List this ellipse with its attributes*-*-*-*-*-*-*-*
-//*-*                    =====================================
+   // List this ellipse with its attributes.
+
    TROOT::IndentLevel();
    printf("%s:  X1= %f Y1=%f R1=%f R2=%f\n",GetName(),fX1,fY1,fR1,fR2);
 }
@@ -434,16 +434,15 @@ void TEllipse::ls(Option_t *) const
 //______________________________________________________________________________
 void TEllipse::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this ellipse with its current attributes*-*-*-*-*
-//*-*                  ==============================================
+   // Paint this ellipse with its current attributes.
+
    PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta,option);
 }
 
 //______________________________________________________________________________
 void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phimin,Double_t phimax, Double_t theta,Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
-//*-*                  ======================================
+   // Draw this ellipse with new coordinates.
 
    const Int_t np = 200;
    static Double_t x[np+3], y[np+3];
@@ -488,8 +487,7 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
 //______________________________________________________________________________
 void TEllipse::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this ellipse with its attributes*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
+   // Dump this ellipse with its attributes.
 
    printf("Ellipse:  X1=%f Y1=%f R1=%f R2=%f",fX1,fY1,fR1,fR2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
@@ -501,13 +499,13 @@ void TEllipse::Print(Option_t *) const
 //______________________________________________________________________________
 void TEllipse::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TEllipse::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TEllipse *";
+      out<<"   TEllipse *";
    }
    out<<"ellipse = new TEllipse("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
       <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<endl;
@@ -531,9 +529,9 @@ Bool_t TEllipse::GetNoEdges() const
 //______________________________________________________________________________
 void TEllipse::SetNoEdges(Bool_t noEdges)
 {
-//   if  noEdges = kTRUE the lines connecting the center to the edges
-//   will not be drawn.
-//   default is to draw the edges.
+   // if  noEdges = kTRUE the lines connecting the center to the edges
+   // will not be drawn.
+   // default is to draw the edges.
 
    if (noEdges) SetBit(kNoEdges);
    else         ResetBit(kNoEdges);
