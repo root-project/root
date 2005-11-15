@@ -91,8 +91,8 @@ TStylePreview::~TStylePreview()
 //______________________________________________________________________________
 void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
 {
-   //  Update the preview, with possibly another style and another object
-   // than previously.
+   // Update the preview with possibly another style and 
+   // another object than previously.
 
    TCanvas *c;
    if (pad != fPad) {
@@ -123,8 +123,8 @@ void TStylePreview::MapTheWindow()
    
    MapSubwindows();
    TCanvas *c = fPad->GetCanvas();
-   UInt_t w = c->GetWindowWidth();
-   UInt_t h = c->GetWindowHeight() - 24;
+   UInt_t w = c->GetWw() + 4; //4 pixels of borders
+   UInt_t h = c->GetWh() + 4; //4 pixels of borders
    UInt_t x = (UInt_t) c->GetWindowTopX() + 60;
    UInt_t y = (UInt_t) c->GetWindowTopY() + 100;
 
@@ -137,7 +137,7 @@ void TStylePreview::MapTheWindow()
 //______________________________________________________________________________
 TCanvas *TStylePreview::GetMainCanvas()
 {
-   // return pointer to the selected canvas.
+   // Return pointer to the selected canvas.
    
    return fEcan->GetCanvas();
 }
