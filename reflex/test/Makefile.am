@@ -1,9 +1,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = $(REFLEXTESTDIRS)
-
-DIST_SUBDIRS = $(DIST_REFLEXTESTDIRS)
+SUBDIRS = testDict1 testDict2
 
 INCLUDES = -I$(top_srcdir)/inc -I$(top_srcdir) -I$(CPPUNITROOT)/include
 

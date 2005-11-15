@@ -1,6 +1,6 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = doc inc python src $(LIBLTDLDIR) test 
+SUBDIRS = doc inc python src $(LIBLTDLDIR) $(REFLEXTESTDIRS)
 
 EXTRA_DIST = ChangeLog

@@ -5,7 +5,7 @@
 #
 
 # general 
-AC_INIT(reflex, 5.06.00a, http://cern.ch/seal-reflex, Reflex)
+AC_INIT(reflex, 5.06.00.1, http://cern.ch/seal-reflex, reflex)
 AC_PREREQ(2.57) # Minimum version of autoconf which is required
 AC_COPYRIGHT(This package is part of the CERN/LCG project)
 AC_CONFIG_SRCDIR([src/Class.cxx]) # A unique file in the src dir
@@ -54,7 +54,7 @@ AM_PATH_PYTHON
 # configuration of tests
 AC_ARG_ENABLE([tests],AC_HELP_STRING([--enable-tests],[enable compilation of the test suite]))
 
-DIST_REFLEXTESTDIRS="testDict1 testDict2"
+DIST_REFLEXTESTDIRS="test"
 AC_SUBST([DIST_REFLEXTESTDIRS])
 
 LIBLTDLDIR=
@@ -90,7 +90,6 @@ case ${host} in
 *) pf=lin;;
 esac
 AM_CONDITIONAL(PLATFORM_IS_WINDOWS,test x$pf = xwin)
-AC_MSG_WARN([Host is $host])
 
 AC_OUTPUT
 
