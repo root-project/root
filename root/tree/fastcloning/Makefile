@@ -1,4 +1,4 @@
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* one two merge 
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged *.root
 TEST_TARGETS += single merge
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -55,7 +55,7 @@ ifneq ($(FAIL),)
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
 endif
 
-single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS)
+single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS) dt_RunDrawTest_C.$(DllSuf)
 	$(CMDECHO) ./dt_RunDrawTest.sh > single.raw.log
 	$(CMDECHO) grep -v 'ROOTMARKS' single.raw.log  | grep '^..' > single.log
 
@@ -101,9 +101,9 @@ merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf) libEvent.$(DllSuf)
 $(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 
 	$(CMDECHO) mkdir -p merged; root.exe -q -b -l 'mtrans.C("$(@F)")'
 
-merged.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf)
-	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merged.raw.log
-	$(CMDECHO) grep -v 'ROOTMARKS' merged.raw.log | grep '^..' > merged.log
+merge.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf) dt_RunDrawTest_C.$(DllSuf)
+	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merge.raw.log
+	$(CMDECHO) grep -v 'ROOTMARKS' merge.raw.log | grep '^..' > merge.log
 
 
 testWithDiff: testWithDiff.log testWithDiff.ref
@@ -112,5 +112,5 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 single: single.log
 	$(TestDiff)
 
-merge: merged.log
+merge: merge.log
 	$(TestDiff)
