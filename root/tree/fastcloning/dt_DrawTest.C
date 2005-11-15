@@ -120,15 +120,15 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"fMatrix[1][]","hRowMatrix");
    DrawSkippable(tree,"fMatrix[2][2]","hCellMatrix");
 
-   DrawSkippable(tree,"fMatrix - fVertex","hFullOper");
+   DrawSkippable(tree,"fMatrix - fVertex","hFullOper",gBranchStyle!=0);
    DrawSkippable(tree,"fMatrix[2][1] - fVertex[5][1]","hCellOper");
    DrawSkippable(tree,"fMatrix[][1]  - fVertex[5][1]","hColOper");
    DrawSkippable(tree,"fMatrix[2][]  - fVertex[5][2]","hRowOper");
    DrawSkippable(tree,"fMatrix[2][]  - fVertex[5][]","hMatchRowOper");
    DrawSkippable(tree,"fMatrix[][2]  - fVertex[][1]","hMatchColOper");
-   DrawSkippable(tree,"fMatrix[][2]  - fVertex[][]","hRowMatOper");
+   DrawSkippable(tree,"fMatrix[][2]  - fVertex[][]","hRowMatOper",gBranchStyle!=0);
    DrawSkippable(tree,"fMatrix[][2]  - fVertex[5][]","hMatchDiffOper");
-   DrawSkippable(tree,"fMatrix[][]   - fVertex[][]","hFullOper2");
+   DrawSkippable(tree,"fMatrix[][]   - fVertex[][]","hFullOper2",gBranchStyle!=0);
 
    // Test on variable arrays
    DrawSkippable(tree,"fClosestDistance","hClosestDistance");

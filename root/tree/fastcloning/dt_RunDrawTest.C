@@ -14,7 +14,7 @@
 
 Bool_t gInteractiveTest = kTRUE;
 Int_t gQuietLevel = 0;
-TString gPath;
+TString gPath(".");
 
 //_______________________________________________________________
 Int_t HistCompare(TH1 *ref, TH1 *comp)
