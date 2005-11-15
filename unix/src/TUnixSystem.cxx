@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.143 2005/09/24 11:57:36 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.144 2005/11/02 14:34:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -626,6 +626,14 @@ Int_t TUnixSystem::GetFPEMask()
 
 #if defined(R__LINUX) && !defined(__powerpc__)
 #if defined(__GLIBC__) && (__GLIBC__>2 || __GLIBC__==2 && __GLIBC_MINOR__>=1)
+
+#if __GLIBC_MINOR__>=3
+
+   // clear pending exceptions so feenableexcept does not trigger them
+   feclearexcept(FE_ALL_EXCEPT);
+   Int_t oldmask = feenableexcept(0);
+   
+#else
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
@@ -636,6 +644,7 @@ Int_t TUnixSystem::GetFPEMask()
  #else
    Int_t oldmask = ~oldenv.__control_word;
  #endif
+#endif
 
    if (oldmask & FE_INVALID  )   mask |= kInvalid;
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
@@ -678,6 +687,15 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    if (mask & kUnderflow)   newm |= FE_UNDERFLOW;
    if (mask & kInexact  )   newm |= FE_INEXACT;
 
+#if __GLIBC_MINOR__>=3
+
+   // clear pending exceptions so feenableexcept does not trigger them
+   feclearexcept(FE_ALL_EXCEPT);
+   fedisableexcept(FE_ALL_EXCEPT);
+   feenableexcept(newm);
+
+#else
+
    fenv_t cur;
    fegetenv(&cur);
  #if defined __ia64__ || defined __alpha__
@@ -686,6 +704,8 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    cur.__control_word &= ~newm;
  #endif
    fesetenv(&cur);
+   
+#endif
 #endif
 #endif
 
