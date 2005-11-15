@@ -45,11 +45,15 @@ Event.new.split9.root: copiedEvent$(ExeSuf)
 
 Event.old.split.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
+ifneq ($(FAIL),)
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
+endif
 
 Event.old.streamed.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@
+ifneq ($(FAIL),)
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'
+endif
 
 single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS)
 	$(CMDECHO) ./dt_RunDrawTest.sh > single.raw.log
@@ -58,15 +62,21 @@ single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS)
 FILEDIRS=one two
 EVENTDIRS=one/copiedEvent$(ExeSuf) two/copiedEvent$(ExeSuf)
 
+ifneq ($(FAIL),)
+MDATAFILES = Event.new.split0.root Event.new.split1.root \
+        Event.new.split2.root  Event.new.split9.root \
+        Event.old.streamed.root Event.old.split.root
+else
 MDATAFILES = Event.new.split0.root Event.new.split1.root \
         Event.new.split2.root  Event.new.split9.root \
         Event.old.streamed.root 
+endif
 # TChain::Merge does not currently work with old.split.root
 # Event.old.split.root
 
 ONEFILES=$(MDATAFILES:%=one/%)
 TWOFILES=$(MDATAFILES:%=two/%)
-MERGEFILES=$(MDATAFILES:%=merge/%)
+MERGEFILES=$(MDATAFILES:%=merged/%)
 
 $(EVENTDIRS): %/copiedEvent$(ExeSuf): copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p $*
@@ -78,8 +88,8 @@ $(ONEFILES): %: one/copiedEvent$(ExeSuf) one/libEvent.$(DllSuf)
 $(TWOFILES): %: two/copiedEvent$(ExeSuf) two/libEvent.$(DllSuf)
 	$(CMDECHO) (cd two; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $(@F))
 
-merge/$(REFFILE) : merge/Event.new.split9.root copiedEvent$(ExeSuf) merge/libEvent.$(DllSuf)
-	$(CMDECHO) (cd merge; root -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
+merged/$(REFFILE) : merged/Event.new.split9.root copiedEvent$(ExeSuf) merged/libEvent.$(DllSuf)
+	$(CMDECHO) (cd merged; root -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
 #	$(CMDECHO) root.exe -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
 
 merged:
@@ -92,8 +102,8 @@ $(MERGEFILES): %: $(ONEFILES) $(TWOFILES)
 	$(CMDECHO) mkdir -p merged; root.exe -q -b -l 'mtrans.C("$(@F)")'
 
 merged.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf)
-	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merge.raw.log
-	$(CMDECHO) grep -v 'ROOTMARKS' merge.raw.log | grep '^..' > merge.log
+	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merged.raw.log
+	$(CMDECHO) grep -v 'ROOTMARKS' merged.raw.log | grep '^..' > merged.log
 
 
 testWithDiff: testWithDiff.log testWithDiff.ref
@@ -102,5 +112,5 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 single: single.log
 	$(TestDiff)
 
-merge: merge.log
+merge: merged.log
 	$(TestDiff)
