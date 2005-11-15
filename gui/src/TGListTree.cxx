@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.41 2005/09/05 16:20:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.42 2005/10/03 08:09:59 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -400,12 +400,6 @@ Bool_t TGListTree::HandleButton(Event_t *event)
             if ((event->fX < maxx) && (event->fX > minx)) {
                ClearViewPort();
                item->fOpen = !item->fOpen;
-               if (item != fSelected) {
-                  if (fSelected) fSelected->fActive = kFALSE;
-                  UnselectAll(kTRUE);
-                  fSelected = item;
-                  HighlightItem(item, kTRUE, kTRUE);
-               }
                fClient->NeedRedraw(this);
                return kTRUE;
             }
