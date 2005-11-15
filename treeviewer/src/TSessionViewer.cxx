@@ -1692,7 +1692,6 @@ void TSessionQueryFrame::UpdateHistos(TList *objs)
             // cd to correct pad and draw histo
             fStatsCanvas->cd(pos);
             if (TH1 *h = dynamic_cast<TH1*>(o)) {
-               h->SetMinimum(0);
                h->SetStats(0);
                h->SetBarWidth(0.75);
                h->SetBarOffset(0.125);
@@ -2033,10 +2032,11 @@ void TSessionQueryFrame::OnBtnSubmit()
       }
       else {
          Error("Submit", "No TChain defined; skipping");
+         newquery->fStatus = TQueryDescription::kSessionQueryCreated;
          return;
       }
       // set query reference id to unique identifier
-      newquery->fReference= Form("session-%s:q%d",
+      newquery->fReference= Form("session-%s:q%lld",
             fViewer->GetActDesc()->fProof->GetSessionTag(), id);
       // start icon animation
       fViewer->SetChangePic(kTRUE);
@@ -2068,7 +2068,7 @@ void TSessionQueryFrame::OnBtnSubmit()
          }
       }
       // set query reference id to unique identifier
-      newquery->fReference = Form("local-session-%s:q%d", newquery->fQueryName.Data(), id);
+      newquery->fReference = Form("local-session-%s:q%lld", newquery->fQueryName.Data(), id);
    }
    // update buttons state
    UpdateButtons(newquery);
@@ -3494,7 +3494,7 @@ void TSessionViewer::QueryResultReady(char *query)
    // Handle signal "query result ready" coming from Proof session.
 
    char strtmp[256];
-   sprintf(strtmp,"Query Result Ready for %s\n", query);
+   sprintf(strtmp,"Query Result Ready for %s", query);
    // show information on status bar
    ShowInfo(strtmp);
    TGListTreeItem *item=0, *item2=0;
@@ -3924,6 +3924,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (fi.fFilename) {
                            fConfigFile = fi.fFilename;
                            ReadConfiguration(fConfigFile);
+                           OnListTreeClicked(fSessionHierarchy->GetSelected(), 1, 0, 0);
                         }
                      }
                      break;
