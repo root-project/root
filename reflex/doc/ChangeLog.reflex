@@ -1,3 +1,294 @@
+
+Changes to the Reflex API moving from SEAL to ROOT
+==================================================
+
+General remarks:
+----------------
+
+.) Namespace change:
+   The SEAL version lives in namespace "seal::reflex" the ROOT version in namespace "ROOT::Reflex"
+
+.) Function names:
+   The first letter of all function names is upper case. Further changes to function names are 
+   mentioned below.
+
+.) Iterating over containers:
+   Every container provides stl like iterators which are encouraged to use. The functions provided are
+   - _Begin()
+   - _End()
+   - _RBegin()
+   - _REnd()
+
+   for each possible container type a forward and reverse iterator type is provided. These types are:
+   - Type
+   - Base
+   - Scope
+   - Object
+   - Member
+   - TypeTemplate
+   - MemberTemplate
+   - StdString
+   e.g. "Type_Iterator" and "Reverse_Type_Iterator"
+
+   example: the container of sub types in class Scope provides
+   - Type_Iterator SubType_Begin() const;
+   - Type_Iterator SubType_End() const;
+   - Reverse_Type_Iterator SubType_RBegin() const;
+   - Reverse_Type_Iterator SubType_REnd() const;
+
+   in addition the "old" style iteration is provided
+   - the getter for a specific containee is appended with "At" (e.g. "SubTypeAt")
+   - the getter for the size changed from "Count" to "Size" (e.g. "SubTypeSize") 
+
+.) New iterator functions for parameter names and defaults for FunctionMembers, TypeTemplates and 
+   MemberTemplates
+
+.) Functions for lookup of data/function members by name have changed from "function/dataMember" 
+   to "Function/DataMemberByName" and "member" to "memberByName"
+
+.) The function to get the length of an array has changed from "length" to "ArrayLength"
+
+.) The following functions have been removed from Object
+   - invokeT - use "invoke" together with object cast instead
+   - setT    - use "set" instead
+   - getT    - use "get" together with "Object_Cast" instead
+   - field   - use "get" instead
+   
+.) The function "scope" was removed from the "Type" and "Member" classes. Use function
+   "DeclaringScope" instead which provides the same functionality
+
+Detailed list of changed/added/removed functions:
+-------------------------------------------------
+(except the changes where the first letter of the function name changed to upper case) 
+
+SEAL                    ->  ROOT
+
+class Type
+~~~~~~~~~~
+base                    ->  BaseAt
+baseCount               ->  BaseSize
+base_begin              ->  Base_Begin
+base_end                ->  Base_End
+base_rbegin             ->  Base_RBegin
+base_rend               ->  Base_REnd
+dataMember              ->  DataMemberByName
+dataMember              ->  DataMemberAt
+dataMemberCount         ->  DataMemberSize
+dataMember_begin        ->  DataMember_Begin
+dataMember_end          ->  DataMember_End
+dataMember_rbegin       ->  DataMember_RBegin
+dataMember_rend         ->  DataMember_REnd
+functionMember          ->  FunctionMemberByName
+functionMember          ->  FunctionMemberAt
+functionMemberCount     ->  FunctionMemberSize
+functionMember_begin    ->  FunctionMember_Begin
+functionMember_end      ->  FunctionMember_End
+functionMember_rbegin   ->  FunctionMember_RBegin
+functionMember_rend     ->  FunctionMember_REnd
+length                  ->  ArrayLength
+member                  ->  MemberByName
+member                  ->  MemberAt
+memberCount             ->  MemberSize
+member_begin            ->  Member_Begin
+member_end              ->  Member_End
+member_rbegin           ->  Member_RBegin
+member_rend             ->  Member_REnd
+memberTemplate          ->  MemberTemplateAt
+memberTemplateCount     ->  MemberTemplateSize
+memberTemplate_begin    ->  MemberTemplate_Begin
+memberTemplate_end      ->  MemberTemplate_End
+memberTemplate_rbegin   ->  MemberTemplate_RBegin
+memberTemplate_rend     ->  MemberTemplate_REnd
+parameter               ->  FunctionParameterAt
+parameterCount          ->  FunctionParameterSize
+parameter_begin         ->  FunctionParameter_Begin
+parameter_end           ->  FunctionParameter_End
+parameter_rbegin        ->  FunctionParameter_RBegin
+parameter_rend          ->  FunctionParameter_REnd
+propertyList            ->  Properties
+scope                   ->  "removed, use DeclaringScope instead"
+subScope                ->  SubScopeAt
+subScopeCount           ->  SubScopeSize
+subScope_begin          ->  SubScope_Begin
+subScope_end            ->  SubScope_End
+subScope_rbegin         ->  SubScope_RBegin
+subScope_rend           ->  SubScope_REnd
+subType                 ->  SubTypeAt
+subTypeCount            ->  SubTypeSize
+subType_begin           ->  SubType_Begin
+subType_end             ->  SubType_End
+subType_rbegin          ->  SubType_RBegin
+subType_rend            ->  SubType_REnd
+templateArgument        ->  TemplateArgumentAt
+templateArgumentCount   ->  TemplateArgumentSize
+templateArgument_begin  ->  TemplateArgument_Begin
+templateArgument_end    ->  TemplateArgument_End
+templateArgument_rbegin ->  TemplateArgument_RBegin
+templateArgument_rend   ->  TemplateArgument_REnd
+type                    ->  TypeAt
+typeCount               ->  TypeSize
+type_begin              ->  Type_Begin
+type_end                ->  Type_End
+type_rbegin             ->  Type_RBegin
+type_rend               ->  Type_REnd
+typeTemplate            ->  SubTypeTemplateAt
+typeTemplateCount       ->  SubTypeTemplateSize
+typeTemplate_begin      ->  SubTypeTemplate_Begin
+typeTemplate_end        ->  SubTypeTemplate_End
+typeTemplate_rbegin     ->  SubTypeTemplate_RBegin
+typeTemplate_rend       ->  SubTypeTemplate_REnd
+
+class Scope
+~~~~~~~~~~~
+base                    ->  BaseAt
+baseCount               ->  BaseSize
+base_begin              ->  Base_Begin
+base_end                ->  Base_End
+base_rbegin             ->  Base_RBegin
+base_rend               ->  Base_REnd
+dataMember              ->  DataMemberByName
+dataMember              ->  DataMemberAt
+dataMemberCount         ->  DataMemberSize
+dataMember_begin        ->  DataMember_Begin
+dataMember_end          ->  DataMember_End
+dataMember_rbegin       ->  DataMember_RBegin
+dataMember_rend         ->  DataMember_REnd
+functionMember          ->  FunctionMemberByName
+functionMember          ->  FunctionMemberAt
+functionMemberCount     ->  FunctionMemberSize
+functionMember_begin    ->  FunctionMember_Begin
+functionMember_end      ->  FunctionMember_End
+functionMember_rbegin   ->  FunctionMember_RBegin
+functionMember_rend     ->  FunctionMember_REnd
+member                  ->  MemberByName
+member                  ->  MemberAt
+memberCount             ->  MemberSize
+member_begin            ->  Member_Begin
+member_end              ->  Member_End
+member_rbegin           ->  Member_RBegin
+member_rend             ->  Member_REnd
+memberTemplate          ->  MemberTemplateAt
+memberTemplateCount     ->  MemberTemplateSize
+memberTemplate_begin    ->  MemberTemplate_Begin
+memberTemplate_end      ->  MemberTemplate_End
+memberTemplate_rbegin   ->  MemberTemplate_RBegin
+memberTemplate_rend     ->  MemberTemplate_REnd
+propertyList            ->  Properties
+scope                   ->  ScopeAt
+scopeCount              ->  ScopeSize
+scope_begin             ->  Scope_Begin
+scope_end               ->  Scope_End
+scope_rbegin            ->  Scope_RBegin
+scope_rend              ->  Scope_REnd
+subScope                ->  SubScopeAt
+subScopeCount           ->  SubScopeSize
+subScope_begin          ->  SubScope_Begin
+subScope_end            ->  SubScope_End
+subScope_rbegin         ->  SubScope_RBegin
+subScope_rend           ->  SubScope_REnd
+subType                 ->  SubTypeAt
+subTypeCount            ->  SubTypeSize
+subType_begin           ->  SubType_Begin
+subType_end             ->  SubType_End
+subType_rbegin          ->  SubType_RBegin
+subType_rend            ->  SubType_REnd
+templateArgument        ->  TemplateArgumentAt
+templateArgumentCount   ->  TemplatArgumentSize
+templateArgument_begin  ->  TemplateArgument_Begin
+templateArgument_end    ->  TemplateArgument_End
+templateArgument_rbegin ->  TemplateArgument_RBegin
+templateArgument_rend   ->  TemplateArgument_REnd
+typeTemplate            ->  SubTypeTemplateAt
+typeTemplateCount       ->  SubTypeTemplateSize
+typeTemplate_begin      ->  SubTypeTemplate_Begin
+typeTemplate_end        ->  SubTypeTemplate_End
+typeTemplate_rbegin     ->  SubTypeTemplate_RBegin
+typeTemplate_rend       ->  SubTypeTemplate_REnd
+
+class Member
+~~~~~~~~~~~~
+parameterCount          ->  FunctionParameterSize
+parameterDefault        ->  FunctionParameterDefaultAt
+                        ->  FunctionParameterDefault_Begin
+                        ->  FunctionParameterDefault_End
+                        ->  FunctionParameterDefault_RBegin
+                        ->  FunctionParameterDefault_REnd
+parameterName           ->  FunctionParameterNameAt
+                        ->  FunctionParameterName_Begin
+                        ->  FunctionParameterName_End
+                        ->  FunctionParameterName_RBegin
+                        ->  FunctionParameterName_REnd
+propertyList            ->  Properties
+scope                   ->  "removed, use DeclaringScope instead"
+templateArgument        ->  TemplateArgumentAt
+templateArgumentCount   ->  TemplateArgumentSize
+templateArgument_begin  ->  TemplateArgument_Begin
+templateArgument_end    ->  TemplateArgument_End
+templateArgument_rbegin ->  TemplateArgument_RBegin
+templateArgument_rend   ->  TemplateArgument_REnd
+type                    ->  TypeOf
+
+class Object
+~~~~~~~~~~~~
+type                    ->  TypeOf
+field                   -> "removed, use Get"
+getT                    -> "removed, use Get with Object_Cast"
+invokeT                 -> "removed, use Invoke with Object_Cast"
+setT                    -> "removed, use Set"
+
+class Base
+~~~~~~~~~~
+no changes
+
+class PropertyList
+~~~~~~~~~~~~~~~~~~
+propertyCount           ->  PropertySize
+
+class TypeTemplate
+~~~~~~~~~~~~~~~~~~
+instantiation           ->  TemplateInstanceAt
+instantiationCount      ->  TemplateInstanceSize
+instantiation_begin     ->  TemplateInstance_Begin
+instantiation_end       ->  TemplateInstance_End
+instantiation_rbegin    ->  TemplateInstance_RBegin
+instantiation_rend      ->  TemplateInstance_REnd
+parameterCount          ->  TemplateParameterSize
+parameterDefault        ->  TemplateParameterDefaultAt
+                        ->  TemplateParameterDefault_Begin
+                        ->  TemplateParameterDefault_End
+                        ->  TemplateParameterDefault_RBegin
+                        ->  TemplateParameterDefault_REnd
+parameterName           ->  TemplateParameterNameAt
+                        ->  TemplateParameterName_Begin
+                        ->  TemplateParameterName_End
+                        ->  TemplateParameterName_RBegin
+                        ->  TemplateParameterName_REnd
+
+class MemberTemplate
+~~~~~~~~~~~~~~~~~~~~
+instantiation           ->  TemplateInstanceAt
+instantiationCount      ->  TemplateInstanceSize
+instantiation_begin     ->  TemplateInstance_Begin
+instantiation_end       ->  TemplateInstance_End
+instantiation_rbegin    ->  TemplateInstance_RBegin
+instantiation_rend      ->  TemplateInstance_REnd
+parameterCount          ->  TemplateParameterSize
+parameterDefault        ->  TemplateParameterDefaultAt
+                        ->  TemplateParameterDefault_Begin
+                        ->  TemplateParameterDefault_End
+                        ->  TemplateParameterDefault_RBegin
+                        ->  TemplateParameterDefault_REnd
+parameterName           ->  TemplateParameterNameAt
+                        ->  TemplateParameterName_Begin
+                        ->  TemplateParameterName_End
+                        ->  TemplateParameterName_RBegin
+                        ->  TemplateParameterName_REnd
+
+class Any
+~~~~~~~~~
+type                    ->  TypeInfo
+
+
 2005-10-31 Stefan
 	* added stl like iterators for all containers of Types, Scopes, Members, etc. The following 
 	  iterators have been introduced: type_iterator, base_iterator, scope_iterator, object_iterator
