@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.223 2005/11/04 09:17:05 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.224 2005/11/11 23:58:34 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-v[0-4]][-l][-f] dict.C [-c]                              //
+//  rootcint [-v[0-4]][-l][-f] dict.C [-c] [-p]                         //
 //           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
@@ -41,7 +41,11 @@
 // By default the output file will not be overwritten if it exists.     //
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
-// .cc, .cp.  Use the -l (long) option to prepend the pathname of the   //
+// .cc, .cp.                                                            //
+// Use the -p option to request the use of the compiler's preprocessor  //
+// instead of CINT's preprocessor.  This is useful to handle header\n"  //
+// files with macro construct not handled by CINT.\n\n"                 //
+// Use the -l (long) option to prepend the pathname of the              //
 // dictionary source file to the include of the dictionary header.      //
 // This might be needed in case the dictionary file needs to be         //
 // compiled with the -I- option that inhibits the use of the directory  //
@@ -61,6 +65,7 @@
 //      -v2  Display error and warning messages.                        //
 //      -v3  Display error, warning and note messages.                  //
 //      -v4  Display all messages                                       //
+// rootcint also support the other CINT options (see 'cint -h)          //
 //                                                                      //
 // Before specifying the first header file one can also add include     //
 // file directories to be searched and preprocessor defines, like:      //
@@ -184,7 +189,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcint [-v[0-4]] [-l] [-f] dict.C [-c] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
+"  rootcint [-v[0-4]] [-l] [-f] dict.C [-c] [-p] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -193,13 +198,17 @@ const char *help =
 "output to be appended to an already existing file (using >>).\n"
 "The optional - behind the header file name tells rootcint\n"
 "to not generate the Streamer() method. A custom method must be\n"
-"provided by the user in that case. For the + and ! options see below.\n"
+"provided by the user in that case. For the + and ! options see below.\n\n"
 "When using option -c also the interpreter method interface stubs\n"
 "will be written to the output file (AxisDict.cxx in the above case).\n"
 "By default the output file will not be overwritten if it exists.\n"
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
-".cc, .cp.  Use the -l (long) option to prepend the pathname of the\n"
+".cc, .cp.\n\n"
+"Use the -p option to request the use of the compiler's preprocessor\n"
+"instead of CINT's preprocessor.  This is useful to handle header\n"
+"files with macro construct not handled by CINT.\n\n"
+"Use the -l (long) option to prepend the pathname of the\n"
 "dictionary source file to the include of the dictionary header.\n"
 "This might be needed in case the dictionary file needs to be\n"
 "compiled with the -I- option that inhibits the use of the directory\n"
@@ -219,6 +228,7 @@ const char *help =
 "      -v2  Display error and warning messages.\n"
 "      -v3  Display error, warning and note messages.\n"
 "      -v4  Display all messages\n"
+"rootcint also support the other CINT options (see 'cint -h)\n"
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
@@ -4475,6 +4485,17 @@ int main(int argc, char **argv)
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
       return 1;
+   } else {
+      if (ifl) {
+         FILE *fpd = fopen(argv[ifl], "r");
+         if (fpd==0) {
+            // The dictionary file was not created by CINT.
+            // There mush have been an error.
+            Error(0, "%s: error loading headers...\n", argv[0]);
+            return 1;
+         }
+         fclose(fpd);
+      }
    }
    G__setglobalcomp(0);  // G__NOLINK
 
