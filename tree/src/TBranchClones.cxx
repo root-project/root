@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.18 2005/05/25 17:23:14 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.19 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -11,8 +11,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// A Branch for the case of an array of clone objects                   //                                                                      //
-// See TTree.                                                           //                                                                     //
+// A Branch for the case of an array of clone objects                   //
+//                                                                      //
+// See TTree.                                                           //
+//                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
