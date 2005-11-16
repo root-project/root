@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.27 2005/05/31 19:47:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.28 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -61,7 +61,7 @@ class TBranch : public TNamed , public TAttFill {
 protected:
    // TBranch status bits
    enum { kAutoDelete = BIT(15) };
-   
+
    static Int_t fgCount;          //! branch counter
    Int_t       fCompress;        //  (=1 branch is compressed, 0 otherwise)
    Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
@@ -91,18 +91,19 @@ protected:
    TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
    TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
    TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
-   
+
    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
-   void     WriteBasket(TBasket* basket);
-   
+
 public:
    TBranch();
    TBranch(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
    virtual ~TBranch();
-   
+
+   virtual void      AddBasket(TBasket &b, Bool_t ondisk);
    virtual void      Browse(TBrowser *b);
    virtual void      DropBaskets(Option_t *option = "");
+           void      ExpandBasketArrays();
    virtual Int_t     Fill();
    virtual void      FillLeaves(TBuffer &b);
    virtual TBranch  *FindBranch(const char *name);
@@ -167,9 +168,10 @@ public:
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      UpdateAddress() {;}
-   
+           void      WriteBasket(TBasket* basket);
+
    static  void      ResetCount() {fgCount = 0;}
-   
+
    ClassDef(TBranch,10);  //Branch descriptor
 };
 

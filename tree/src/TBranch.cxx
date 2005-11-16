@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.94 2005/10/13 10:26:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.95 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -294,6 +294,49 @@ TBranch::~TBranch()
    gBranch      = 0;
 }
 
+//______________________________________________________________________________
+void TBranch::AddBasket(TBasket &b, Bool_t ondisk)
+{
+   // Add the basket to this branch.
+
+   // Warning: if the basket are not 'flushed/copied' in the same
+   // order as they were created, then they will be moved around in the tree
+   // (entry wise).  In other word, we assume here that the previous basket
+   // in the 'to' branch is the same as the previous basket in the 'from' 
+   // branch (if there is one!).
+   // Warning we also assume that the __current__ write basket is
+   // not present (aka has been removed).
+
+   TBasket *basket = &b;
+
+   basket->SetBranch(this);
+
+   if (fWriteBasket >= fMaxBaskets) {
+      ExpandBasketArrays();
+   }
+   fBasketEntry[fWriteBasket] = fEntryNumber;
+   if (ondisk) {
+      fBasketBytes[fWriteBasket] = basket->GetNbytes();  // not for in mem
+      fBasketSeek[fWriteBasket] = basket->GetSeekKey();  // not for in mem
+      ++fWriteBasket;
+   } else {
+      fBaskets.AddAtAndExpand(basket,fWriteBasket);
+      if (fWriteBasket >= fMaxBaskets) {
+         ExpandBasketArrays();
+      }
+      fTree->IncrementTotalBuffers(basket->GetBufferSize());
+   }
+
+   fEntries += basket->GetNevBuf();
+   fEntryNumber += basket->GetNevBuf();
+   if (ondisk) {
+      fTotBytes += basket->GetObjlen() + basket->GetKeylen() ;
+      fZipBytes += basket->GetNbytes();
+      fTree->AddTotBytes(basket->GetObjlen() + basket->GetKeylen());
+      fTree->AddZipBytes(basket->GetNbytes());
+   }
+
+}
 
 //______________________________________________________________________________
 void TBranch::Browse(TBrowser *b)
@@ -386,24 +429,44 @@ void TBranch::DropBaskets(Option_t* option)
 }
 
 //______________________________________________________________________________
+void TBranch::ExpandBasketArrays()
+{
+   // Increase BasketEntry buffer of a minimum of 10 locations
+   // and a maximum of 50 per cent of current size.
+ 
+   Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
+   fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
+   fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
+                                                newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
+   fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
+                                                newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
+   fMaxBaskets   = newsize;
+   
+   for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
+      fBasketBytes[i] = 0;
+      fBasketEntry[i] = 0;
+      fBasketSeek[i]  = 0;
+   }
+}
+
+//______________________________________________________________________________
 Int_t TBranch::Fill()
 {
-//*-*-*-*-*-*-*-*Loop on all leaves of this branch to fill Basket buffer*-*-*
-//*-*            =======================================================
-//
-// The function returns the number of bytes committed to the memory basket.
-// If a write error occurs, the number of bytes returned is -1.
-// If no data are written, because e.g. the branch is disabled,
-// the number of bytes returned is 0.
-//
+   // Loop on all leaves of this branch to fill Basket buffer.
+   //
+   // The function returns the number of bytes committed to the memory basket.
+   // If a write error occurs, the number of bytes returned is -1.
+   // If no data are written, because e.g. the branch is disabled,
+   // the number of bytes returned is 0.
+   //
 
    if (TestBit(kDoNotProcess)) return 0;
-
+   
    TBasket *basket = GetBasket(fWriteBasket);
    if (!basket) return 0;
    TBuffer *buf    = basket->GetBufferRef();
 
-//*-*- Fill basket buffer
+   // Fill basket buffer
    Int_t nsize  = 0;
    if (buf->IsReading()) {
       basket->SetWriteMode();
@@ -517,7 +580,7 @@ Int_t TBranch::Fill()
       if (!basket->GetNevBufSize()) basket->SetNevBufSize(nbytes);
    }
 
-//*-*- Should we create a new basket?
+   // Should we create a new basket?
    if ( (fSkipZip && (lnew>=TBuffer::kMinimalSize))  // fSkipZip force one entry per buffer
         || (buf->TestBit(TBuffer::kNotDecompressed)) // Transfer full compressed buffer only
         || (lnew +2*nsize +nbytes >= fBasketSize) ) {
@@ -538,21 +601,7 @@ Int_t TBranch::Fill()
       fWriteBasket++;
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
       if (fWriteBasket >= fMaxBaskets) {
-           //Increase BasketEntry buffer to a minimum of 10 locations
-           //and a maximum of 50 per cent of current size
-         Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-         fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-         fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
-                             newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-         fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
-                             newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-         fMaxBaskets   = newsize;
-      }
-
-      for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-         fBasketBytes[i] = 0;
-         fBasketEntry[i] = 0;
-         fBasketSeek[i]  = 0;
+         ExpandBasketArrays();
       }
       fBasketEntry[fWriteBasket] = fEntryNumber;
       return (nout >= 0) ? nbytes : -1;
@@ -1550,7 +1599,7 @@ void TBranch::Streamer(TBuffer &b)
 //_______________________________________________________________________
 void TBranch::WriteBasket(TBasket* basket)
 {
-// Write the current basket to disk
+   // Write the current basket to disk
 
    Int_t nout  = basket->WriteBuffer();    //  Write buffer
    fBasketBytes[fWriteBasket]  = basket->GetNbytes();
@@ -1564,25 +1613,12 @@ void TBranch::WriteBasket(TBasket* basket)
    fTotBytes += addbytes;
    fTree->AddTotBytes(addbytes);
    fTree->AddZipBytes(nout);
+
    basket = fTree->CreateBasket(this); //  create a new basket
    fWriteBasket++;
    fBaskets.AddAtAndExpand(basket,fWriteBasket);
    if (fWriteBasket >= fMaxBaskets) {
-      //Increase BasketEntry buffer to a minimum of 10 locations
-      //and a maximum of 50 per cent of current size
-      Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-      fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-      fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
-                          newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-      fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
-                          newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-      fMaxBaskets   = newsize;
-   }
-
-   for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
+      ExpandBasketArrays();
    }
    fBasketEntry[fWriteBasket] = fEntryNumber;
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.33 2005/05/19 11:54:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.34 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,9 +19,9 @@ R__EXTERN  TBranch *gBranch;
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 
-const Int_t  kMAXBUF = 0xffffff;
+const Int_t  kMAXBUF = 0xFFFFFF;
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
-                                             // the fEntryOffset are used to stored displacement.
+                                              // the fEntryOffset are used to stored displacement.
 
 ClassImp(TBasket)
 
@@ -34,7 +34,8 @@ ClassImp(TBasket)
 //_______________________________________________________________________
 TBasket::TBasket()
 {
-//               Default contructor
+   // Default contructor.
+
    fDisplacement  = 0;
    fEntryOffset   = 0;
    fBufferRef     = 0;
@@ -50,9 +51,8 @@ TBasket::TBasket()
 //_______________________________________________________________________
 TBasket::TBasket(const char *name, const char *title, TBranch *branch)
 {
-//            Basket normal constructor
-//
-//
+   // Basket normal constructor.
+
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasket";
@@ -87,13 +87,10 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
 //_______________________________________________________________________
 TBasket::~TBasket()
 {
-//          Basket destructor
-//
+   // Basket destructor.
 
    if (fDisplacement) delete [] fDisplacement;
    if (fEntryOffset)  delete [] fEntryOffset;
-//   if (fBufferRef)   delete fBufferRef; //this is done in the TKey destructor
-//   fBufferRef   = 0;
    fDisplacement= 0;
    fEntryOffset = 0;
 }
@@ -101,18 +98,36 @@ TBasket::~TBasket()
 //_______________________________________________________________________
 void TBasket::AdjustSize(Int_t newsize)
 {
-//      Increase the size of the current fBuffer up to newsize
+   // Increase the size of the current fBuffer up to newsize.
 
    char *newbuf = TStorage::ReAllocChar(fBuffer,newsize,fBufferSize);
    fBufferSize  = newsize;
    fBuffer      = newbuf;
 }
 
+//_______________________________________________________________________
+Long64_t TBasket::CopyTo(TFile *to) 
+{
+   // Copy the basket of this branch onto the file to.
+
+   TDirectory::TContext c(gDirectory,to);
+   fBufferRef->SetWriteMode();
+   Int_t nout = fNbytes - fKeylen;
+   fBuffer = fBufferRef->Buffer();
+   Create(nout);
+   fBufferRef->SetBufferOffset(0);
+   fHeaderOnly = kTRUE;
+   Streamer(*fBufferRef);
+   fHeaderOnly = kTRUE;
+   Int_t nBytes = WriteFile(0);
+
+   return nBytes>0 ? nBytes : -1;
+}
 
 //_______________________________________________________________________
 void TBasket::DeleteEntryOffset()
 {
-//  delete fEntryOffset array
+   //  Delete fEntryOffset array.
 
    if (fEntryOffset) delete [] fEntryOffset;
    fEntryOffset = 0;
@@ -123,10 +138,10 @@ void TBasket::DeleteEntryOffset()
 //_______________________________________________________________________
 Int_t TBasket::DropBuffers()
 {
-//      Drop buffers of this basket if it is not the current basket
+   // Drop buffers of this basket if it is not the current basket.
 
    if (!fBuffer && !fBufferRef) return 0;
-//   delete [] fBuffer;
+   //   delete [] fBuffer;
    if (fDisplacement) delete [] fDisplacement;
    if (fEntryOffset)  delete [] fEntryOffset;
    if (fBufferRef)    delete fBufferRef;
@@ -141,8 +156,7 @@ Int_t TBasket::DropBuffers()
 //_______________________________________________________________________
 Int_t TBasket::GetEntryPointer(Int_t entry)
 {
-//*-*-*-*-*-*-*Get pointer to buffer for internal entry*-*-*-*-*-*
-//*-*          ========================================
+   // Get pointer to buffer for internal entry.
 
    Int_t offset;
    if (fEntryOffset) offset = fEntryOffset[entry];
@@ -152,10 +166,28 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 }
 
 //_______________________________________________________________________
+Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
+{ 
+   //  Load basket buffers in memory without unziping.
+
+   fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef->SetParent(file);
+   char *buffer = fBufferRef->Buffer();
+   file->Seek(pos);
+   file->ReadBuffer(buffer,len);
+
+   fBufferRef->SetReadMode();
+   fBufferRef->SetBufferOffset(0);
+   Streamer(*fBufferRef);
+
+   return 0;
+}
+
+//_______________________________________________________________________
 void TBasket::MoveEntries(Int_t dentries)
 {
-   // remove the first dentries of this basket, moving entries at dentries
-   // to the start of the buffer
+   // Remove the first dentries of this basket, moving entries at
+   // dentries to the start of the buffer.
    
    Int_t i;
 
@@ -200,12 +232,11 @@ void TBasket::MoveEntries(Int_t dentries)
 //_______________________________________________________________________
 Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 {
-//*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
-//*-*              =========================================
-//
-//       Read a basket buffer. Check if buffers of previous ReadBasket
-//       should not be dropped. Remember, we keep buffers
-//       in memory up to fMaxVirtualSize.
+   // Read basket buffers in memory and cleanup.
+   //
+   // Read a basket buffer. Check if buffers of previous ReadBasket
+   // should not be dropped. Remember, we keep buffers in memory up to
+   // fMaxVirtualSize.
 
    Int_t badread= 0;
    TDirectory *cursav = gDirectory;
@@ -303,11 +334,10 @@ AfterBuffer:
 //_______________________________________________________________________
 Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 {
-//*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
-//*-*              =========================================
-//
-//       Read first bytes of a logical record starting at position pos
-//       return record length (first 4 bytes of record)
+   // Read basket buffers in memory and cleanup
+   //
+   // Read first bytes of a logical record starting at position pos
+   // return record length (first 4 bytes of record).
 
    const Int_t len = 128;
    char buffer[len];
@@ -338,8 +368,7 @@ void TBasket::SetWriteMode()
 //_______________________________________________________________________
 void TBasket::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object.
 
    char flag;
    if (b.IsReading()) {
@@ -439,7 +468,7 @@ void TBasket::Streamer(TBuffer &b)
 //_______________________________________________________________________
 void TBasket::Update(Int_t offset, Int_t skipped)
 {
-//    Update basket header and EntryOffset table
+   // Update basket header and EntryOffset table.
 
    if (fEntryOffset) {
       if (fNevBuf+1 >= fNevBufSize) {
@@ -475,12 +504,12 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 //_______________________________________________________________________
 Int_t TBasket::WriteBuffer()
 {
-// Write buffer of this basket on the current file
-//
-// The function returns the number of bytes committed to the memory.
-// If a write error occurs, the number of bytes returned is -1.
-// If no data are written, the number of bytes returned is 0.
-//
+   // Write buffer of this basket on the current file.
+   //
+   // The function returns the number of bytes committed to the memory.
+   // If a write error occurs, the number of bytes returned is -1.
+   // If no data are written, the number of bytes returned is 0.
+   //
 
    const Int_t kWrite = 1;
    TDirectory *cursav = gDirectory;
@@ -508,7 +537,7 @@ Int_t TBasket::WriteBuffer()
       fBufferRef->SetBufferOffset(0);
       fHeaderOnly = kTRUE;
       Streamer(*fBufferRef);         //write key itself again
-      int nBytes = TKey::WriteFile(0);
+      int nBytes = WriteFile(0);
       fHeaderOnly = kFALSE;
       cursav->cd();
       return nBytes>0 ? fKeylen+nout : -1;
@@ -574,10 +603,8 @@ Int_t TBasket::WriteBuffer()
       nout = fObjlen;
    }
 
-//  TKey::WriteFile calls FillBuffer. TBasket inherits from TKey, hence
-//  TBasket::FillBuffer is called.
 WriteFile:
-   int nBytes = TKey::WriteFile(0);
+   Int_t nBytes = WriteFile(0);
    fHeaderOnly = kFALSE;
    cursav->cd();
    return nBytes>0 ? fKeylen+nout : -1;
