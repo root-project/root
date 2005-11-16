@@ -80,7 +80,7 @@ MERGEFILES=$(MDATAFILES:%=merged/%)
 
 $(EVENTDIRS): %/copiedEvent$(ExeSuf): copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p $*
-	$(CMDECHO) cp copiedEvent$(ExeSuf) libEvent.$(DllSuf) $*
+	$(CMDECHO) cp copiedEvent$(ExeSuf) libEvent.* $*
 
 one/libEvent.$(DllSuf): one/copiedEvent$(ExeSuf)
 two/libEvent.$(DllSuf): two/copiedEvent$(ExeSuf)
@@ -99,7 +99,7 @@ merged:
 	mkdir -p merged
 
 merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf) libEvent.$(DllSuf)
-	$(CMDECHO) mkdir -p merged; cp libEvent.$(DllSuf) merged	
+	$(CMDECHO) mkdir -p merged; cp libEvent.* merged	
 
 $(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 
 	$(CMDECHO) mkdir -p merged; root.exe -q -b -l 'mtrans.C("$(@F)")' > $@.create.log 2>&1
