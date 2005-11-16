@@ -126,16 +126,18 @@ Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* thisVar,
                                        TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset, ULong_t *fMethod,Int_t *fLength,
-                                       TStreamerInfo::CompInfo * fComp,
+                                       TStreamerInfo::TCompInfo * fComp,
                                        Version_t &fOldVersion) 
 {
+   // Skip an element.
 #else
 template <class T>
 Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  TStreamerInfo* thisVar = this;  
+   // Skip an element.
+   TStreamerInfo* thisVar = this;  
 #endif
    //  Skip elements in a TClonesArray
    
@@ -199,9 +201,9 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          DOLOOP {
             Int_t nch; b >> nch;
             if (nch>0) {
-              char* readbuf = new char[nch];  
-              b.ReadFastArray(readbuf,nch);
-              delete[] readbuf;
+               char* readbuf = new char[nch];  
+               b.ReadFastArray(readbuf,nch);
+               delete[] readbuf;
             }
          }
          break;
@@ -437,7 +439,7 @@ Int_t TStreamerInfo__ReadBufferConvImp(TBuffer &b, const T &arr,  Int_t i, Int_t
                                        ULong_t *&fMethod, ULong_t *& /*fElem*/,Int_t *&fLength,
                                        TClass *& /*fClass*/, Int_t *&fOffset, Int_t *&fNewType,
                                        Int_t & /*fNdata*/, Int_t *& /*fType*/, TStreamerElement *& /*fgElement*/,
-                                       TStreamerInfo::CompInfo *& /*fComp*/,
+                                       TStreamerInfo::TCompInfo *& /*fComp*/,
                                        Version_t & /* fOldVersion */ )
 #else
 template <class T>
@@ -532,23 +534,30 @@ Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *thisVar,
                                    ULong_t *&fMethod, ULong_t *&fElem, Int_t *&fLength,
                                    TClass *&fClass, Int_t *&fOffset, Int_t *& /*fNewType*/,
                                    Int_t &fNdata, Int_t *&fType, TStreamerElement *&fgElement,
-                                   TStreamerInfo::CompInfo *&fComp,
+                                   TStreamerInfo::TCompInfo *&fComp,
                                    Version_t &fOldVersion)
 {
-#else
-template <class T>
-Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
-                                Int_t narr, Int_t eoffset, Int_t arrayMode)
-{
-  TStreamerInfo *thisVar = this;
-#endif
-
    //  Deserialize information from buffer b into object at pointer
    //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
    //  otherwise it is a pointer to a pointer to a single object.
    //  This also means that T is of a type such that arr[i] is a pointer to an
    //  object.  Currently the only anticipated instantiation are for T==char**
    //  and T==TVirtualCollectionProxy
+
+#else
+template <class T>
+Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
+                                Int_t narr, Int_t eoffset, Int_t arrayMode)
+{
+   //  Deserialize information from buffer b into object at pointer
+   //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
+   //  otherwise it is a pointer to a pointer to a single object.
+   //  This also means that T is of a type such that arr[i] is a pointer to an
+   //  object.  Currently the only anticipated instantiation are for T==char**
+   //  and T==TVirtualCollectionProxy
+
+   TStreamerInfo *thisVar = this;
+#endif
 
    b.IncrementLevel(thisVar);
 
@@ -699,7 +708,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                f[j] = 0; if (*l <=0) continue;
                f[j] = new Double_t[*l];
                b.ReadFastArrayDouble32(f[j],*l,aElement);
-           }
+            }
             continue;
          }
 
@@ -757,6 +766,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                if ((*x & kIsReferenced) != 0) {
                   UShort_t pidf;
                   b >> pidf;
+                  pidf += b.GetPidOffset();
                   TFile* file = (TFile*)b.GetParent();
                   TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
                   if (pid!=0) {
@@ -1158,7 +1168,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         cl->Streamer(r[v], b);
                      } // if
                   } // v
-              } // ndx
+               } // ndx
             } // k
             b.CheckByteCount(start, count, aElement->GetFullName());
          } // case
@@ -1178,10 +1188,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          }
          if (aElement)
             Error("ReadBuffer","The element %s::%s type %d (%s) is not supported yet\n",
-               thisVar->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
+                  thisVar->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
          else 
-           Error("ReadBuffer","The TStreamerElement for %s %d is missing!\n",
-               thisVar->GetName(),i);
+            Error("ReadBuffer","The TStreamerElement for %s %d is missing!\n",
+                  thisVar->GetName(),i);
 
          continue;
       }
@@ -1259,6 +1269,8 @@ Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
 Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones,
                                       Int_t nc, Int_t first, Int_t eoffset)
 {
+   // Read for TClonesArray.
+
    char **arr = (char **)clones->GetObjectRef(0);
    return ReadBuffer(b,arr,first,nc,eoffset,1);
 }

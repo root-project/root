@@ -82,21 +82,28 @@ Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *thisVar,
                                        ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
                                        TClass *fClass, Int_t *fOffset, Int_t * /*fNewType*/,
                                        Int_t fNdata, Int_t *fType, TStreamerElement *& /*fgElement*/,
-                                       TStreamerInfo::CompInfo *fComp)
+                                       TStreamerInfo::TCompInfo *fComp)
 {
-#else
-template <class T>
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
-                                    Int_t narr, Int_t eoffset, Int_t arrayMode)
-{
-   TStreamerInfo *thisVar = this;
-#endif
    //  The object at pointer is serialized to the buffer b
    //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
    //  otherwise it is a pointer to a pointer to a single object.
    //  This also means that T is of a type such that arr[i] is a pointer to an
    //  object.  Currently the only anticipated instantiation are for T==char**
    //  and T==TVirtualCollectionProxy
+#else
+template <class T>
+Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
+                                    Int_t narr, Int_t eoffset, Int_t arrayMode)
+{
+   //  The object at pointer is serialized to the buffer b
+   //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
+   //  otherwise it is a pointer to a pointer to a single object.
+   //  This also means that T is of a type such that arr[i] is a pointer to an
+   //  object.  Currently the only anticipated instantiation are for T==char**
+   //  and T==TVirtualCollectionProxy
+
+   TStreamerInfo *thisVar = this;
+#endif
 
    b.IncrementLevel(thisVar);
 
@@ -351,7 +358,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                           "The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
                           thisVar->GetName(),aElement->GetName(),cl->GetName());
                }
-             }
+            }
             continue;
          }
 
@@ -423,9 +430,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                         b << nobjects;
                         subinfo->WriteBufferAux(b,*(proxy),-1,nobjects,0,1);
                      }
-                   }
-                   b.SetByteCount(pos,kTRUE);
-                   continue;
+                  }
+                  b.SetByteCount(pos,kTRUE);
+                  continue;
                }
                UInt_t pos = b.WriteVersion(thisVar->IsA(),kTRUE);
                if (pstreamer == 0) {
@@ -556,8 +563,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                }
                b.SetByteCount(pos, kTRUE);
                continue;
-           }
-           DOLOOP  {
+            }
+            DOLOOP  {
                Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
                char **pp = (char**)(arr[k] + ioffset);
                for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
@@ -613,6 +620,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualCollectionProxy &a
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset)
 {
+   // Write for STL container.
 
    if (!nc) return 0;
    Assert((unsigned int)nc==cont->Size());
@@ -624,6 +632,8 @@ Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, I
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
 {
+   // General Write.
+
    return WriteBufferAux(b,&ipointer,first,1,0,0);
 }
 
@@ -631,6 +641,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
 Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones,
                                        Int_t nc, Int_t first, Int_t eoffset)
 {
+   // Write for ClonesArray.
+
    char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0));
    return WriteBufferAux(b,arr,first,nc,eoffset,1);
 }

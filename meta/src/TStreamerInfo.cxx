@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.227 2005/09/03 00:48:25 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.228 2005/10/20 19:24:04 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -915,7 +915,7 @@ void TStreamerInfo::BuildOld()
                                      GetName(),element->GetTypeName(), element->GetName(),
                                      newClass->GetName());
             } else {
-                element->SetNewType(-2);
+               element->SetNewType(-2);
             }
          } else {
             element->SetNewType(-2);
@@ -1128,7 +1128,7 @@ void TStreamerInfo::Compile()
    fOffset = new Int_t[ndata+1];
    fType   = new Int_t[ndata+1];
    if (ndata == 0) return;  //this may be the case for empty classes(eg TAtt3D)
-   fComp   = new CompInfo[ndata];
+   fComp   = new TCompInfo[ndata];
    fNewType= new Int_t[ndata];
    fLength = new Int_t[ndata];
    fElem   = new ULong_t[ndata];
@@ -1168,8 +1168,8 @@ void TStreamerInfo::Compile()
       } else {
          if (fNewType[fNdata] != fType[fNdata]) {
             if (fNewType[fNdata] > 0) {
-              if (fType[fNdata] != kCounter) 
-                 fType[fNdata] += kConv;
+               if (fType[fNdata] != kCounter) 
+                  fType[fNdata] += kConv;
             } else {
                if (fType[fNdata] == kCounter) 
                   Warning("Compile","Counter %s should not be skipped from class %s", element->GetName(), GetName());
@@ -1652,6 +1652,8 @@ Bool_t TStreamerInfo::GetStreamMemberWise()
 //______________________________________________________________________________
 Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
 {
+   // Get the value from inside a collection.
+
    switch (type) {
       // basic types
       case kBool:              {Bool_t *val   = (Bool_t*)ladd;   return Double_t(*val);}

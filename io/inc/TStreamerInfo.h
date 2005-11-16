@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.59 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.60 2005/01/19 18:30:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -50,14 +50,14 @@ private:
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 public:
 #endif
-   class CompInfo {
+   class TCompInfo {
    // Class used to cache information (see fComp)
    public:
       TClass          *fClass;
       TString          fClassName;
       TMemberStreamer *fStreamer;
-      CompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
-      ~CompInfo() {};
+      TCompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
+      ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl) {
          if (fClass==oldcl) fClass=newcl;
          else if (fClass==0) fClass =gROOT->GetClass(fClassName);
@@ -76,7 +76,7 @@ private:
    Int_t            *fLength;            //![fNdata]
    ULong_t          *fElem;              //![fNdata]
    ULong_t          *fMethod;            //![fNdata]
-   CompInfo         *fComp;              //![fNdata] additional info
+   TCompInfo        *fComp;              //![fNdata] additional info
    Bool_t            fOptimized;         //! true if has been optimized
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
