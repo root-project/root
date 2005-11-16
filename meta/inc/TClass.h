@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.55 2005/09/03 00:48:25 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.56 2005/10/10 11:31:43 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -161,6 +161,7 @@ public:
    void               Dump() const { TDictionary::Dump(); }
    void               Dump(void *obj) const;
    char              *EscapeChars(const char *text) const;
+   TStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
@@ -269,8 +270,8 @@ public:
 namespace ROOT {
 
    #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-      template <typename T> struct IsPointer { enum { val = 0 }; };
-      template <typename T> struct IsPointer<T*> { enum { val = 1 }; };
+      template <typename T> struct IsPointer { enum { kVal = 0 }; };
+      template <typename T> struct IsPointer<T*> { enum { kVal = 1 }; };
    #else
       template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
       template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.179 2005/09/03 00:48:25 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.180 2005/10/10 11:31:43 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ extern Long_t G__globalvarpointer;
 // Mutex to protect CINT operations
 // (exported to be used for similar cases in related classes)
 
-TVirtualMutex *gCINTMutex = 0; 
+TVirtualMutex *gCINTMutex = 0;
 
 Int_t  TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
@@ -148,15 +148,15 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
       }
    } else if (membertype)
-       if (isdate) {
-          cdatime = (UInt_t*)pointer;
-          TDatime::GetDateTime(cdatime[0],cdate,ctime);
-          sprintf(&line[kvalue],"%d/%d",cdate,ctime);
-       } else if (isbits) {
-          sprintf(&line[kvalue],"0x%08x", *(UInt_t*)pointer);
-       } else {
-          strcpy(&line[kvalue], membertype->AsString(pointer));
-       }
+      if (isdate) {
+         cdatime = (UInt_t*)pointer;
+         TDatime::GetDateTime(cdatime[0],cdate,ctime);
+         sprintf(&line[kvalue],"%d/%d",cdate,ctime);
+      } else if (isbits) {
+         sprintf(&line[kvalue],"0x%08x", *(UInt_t*)pointer);
+      } else {
+         strcpy(&line[kvalue], membertype->AsString(pointer));
+      }
    else
       sprintf(&line[kvalue],"->%lx ", (Long_t)pointer);
 
@@ -700,11 +700,11 @@ void TClass::Init(const char *name, Version_t cversion,
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-     fCollectionProxy = TCollectionProxy::GenEmulatedProxy( GetName() );
-     fSizeof = fCollectionProxy->Sizeof();
-     if (fStreamer==0) {
-       fStreamer =  TCollectionProxy::GenEmulatedClassStreamer( GetName() );
-     }
+      fCollectionProxy = TCollectionProxy::GenEmulatedProxy( GetName() );
+      fSizeof = fCollectionProxy->Sizeof();
+      if (fStreamer==0) {
+         fStreamer =  TCollectionProxy::GenEmulatedClassStreamer( GetName() );
+      }
    }
 
 }
@@ -780,7 +780,7 @@ void TClass::AddImplFile(const char* filename, int line) {
 }
 
 //______________________________________________________________________________
-void TClass::AddRef(TClassRef *ref) 
+void TClass::AddRef(TClassRef *ref)
 {
    // Register a TClassRef object which points to this TClass object.
    // When this TClass object is deleted, 'ref' will be 'Reset'.
@@ -813,6 +813,7 @@ Int_t TClass::AutoBrowse(TObject *obj, TBrowser *b)
 //______________________________________________________________________________
 Int_t TClass::Browse(void *obj, TBrowser *b) const
 {
+   // Browse objects of of the class described by this TClass object.
 
    if (!obj) return 0;
 
@@ -1054,7 +1055,7 @@ Bool_t TClass::CanSplit() const
          if (valueClass->GetCollectionProxy() != 0) return kFALSE;
 
          Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
-         if ((stl==TClassEdit::kMap || stl==TClassEdit::kMultiMap) 
+         if ((stl==TClassEdit::kMap || stl==TClassEdit::kMultiMap)
               && valueClass->GetClassInfo()==0)
          {
             return kFALSE;
@@ -1389,12 +1390,15 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 //______________________________________________________________________________
 TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
+   // Return the proxy describinb the collection (if any).
    return fCollectionProxy;
 }
 
 //______________________________________________________________________________
-TVirtualIsAProxy* TClass::GetIsAProxy() const 
+TVirtualIsAProxy* TClass::GetIsAProxy() const
 {
+   // Return the proxy implementing the IsA functionality.
+
    return fIsA;
 }
 
@@ -1691,14 +1695,16 @@ void TClass::GetMenuItems(TList *list)
 //______________________________________________________________________________
 Bool_t TClass::IsFolder(void *obj) const
 {
+   // Return kTRUE if the class has elements.
+
    return Browse(obj,(TBrowser*)0);
 }
 
 //______________________________________________________________________________
-void TClass::RemoveRef(TClassRef *ref) 
+void TClass::RemoveRef(TClassRef *ref)
 {
    // Unregister the TClassRef object.
- 
+
    if (ref==fRefStart) {
       fRefStart = ref->fNext;
       if (fRefStart) fRefStart->fPrevious = 0;
@@ -2204,12 +2210,12 @@ void *TClass::New(ENewType defConstructor)
    // using the rootcint pragma:
    //    #pragma link C++ ioctortype UserClass;
    // For example, with this pragma and a class named MyClass,
-   // this method will called the first of the following 3 
+   // this method will called the first of the following 3
    // constructors which exists and is public:
    //    MyClass(UserClass*);
    //    MyClass(TRootIOCtor*);
    //    MyClass(); // Or a constructor with all its arguments defaulted.
-   // 
+   //
    // When more than one pragma ioctortype is used, the first seen as priority
    // For example with:
    //    #pragma link C++ ioctortype UserClass1;
@@ -2471,6 +2477,8 @@ Bool_t  TClass::IsStartingWithTObject() const
 //______________________________________________________________________________
 Bool_t  TClass::IsTObject() const
 {
+   // Return kTRUE is the class inherits from TObject.
+
    if (fProperty==(-1)) Property();
    return TestBit(kIsTObject);
 }
@@ -2478,6 +2486,8 @@ Bool_t  TClass::IsTObject() const
 //______________________________________________________________________________
 Bool_t  TClass::IsForeign() const
 {
+   // Return kTRUE is the class is Foreign (the class does not have a Streamer method).
+
    if (fProperty==(-1)) Property();
    return TestBit(kIsForeign);
 }
@@ -2827,6 +2837,8 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 //______________________________________________________________________________
 void TClass::SetMemberStreamer(const char *name, MemberStreamerFunc_t p)
 {
+   // Install a new member streamer (p will be copied).
+
    AdoptMemberStreamer(name,new TMemberStreamer(p));
 }
 
@@ -3067,31 +3079,60 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 //______________________________________________________________________________
 void TClass::SetNew(ROOT::NewFunc_t newFunc)
 {
+   // Install a new wrapper around 'new'.
+
    fNew = newFunc;
 }
 
 //______________________________________________________________________________
 void TClass::SetNewArray(ROOT::NewArrFunc_t newArrayFunc)
 {
+   // Install a new wrapper around 'new []'.
+
    fNewArray = newArrayFunc;
 }
 
 //______________________________________________________________________________
 void TClass::SetDelete(ROOT::DelFunc_t deleteFunc)
 {
+   // Install a new wrapper around 'delete'.
+
    fDelete = deleteFunc;
 }
 
 //______________________________________________________________________________
 void TClass::SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc)
 {
+   // Install a new wrapper around 'delete []'.
+
    fDeleteArray = deleteArrayFunc;
 }
 
 //______________________________________________________________________________
 void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 {
+   // Install a new wrapper around the destructor.
+
    fDestructor = destructorFunc;
+}
+
+//______________________________________________________________________________
+TStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
+{
+   // Find the TStreamerInfo in the StreamerInfos corresponding to checksum
+
+   Int_t ninfos = GetStreamerInfos()->GetEntriesFast();
+   for (Int_t i=1;i<ninfos;i++) {
+      // TClass::fStreamerInfos has a lower bound not equal to 0,
+      // so we have to use At and should not use UncheckedAt
+      TStreamerInfo *info = (TStreamerInfo*)GetStreamerInfos()->At(i);
+      if (!info) continue;
+      if (info->GetCheckSum() == checksum) {
+         Assert(i==info->GetClassVersion());
+         return info;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3109,30 +3150,40 @@ Bool_t TClass::HasDefaultConstructor() const
 //______________________________________________________________________________
 ROOT::NewFunc_t TClass::GetNew() const
 {
+   // Return the wrapper around new ThisClass().
+
    return fNew;
 }
 
 //______________________________________________________________________________
 ROOT::NewArrFunc_t TClass::GetNewArray() const
 {
+   // Return the wrapper around new ThisClass[].
+
    return fNewArray;
 }
 
 //______________________________________________________________________________
 ROOT::DelFunc_t TClass::GetDelete() const
 {
+   // Return the wrapper around delete ThiObject.
+
    return fDelete;
 }
 
 //______________________________________________________________________________
 ROOT::DelArrFunc_t TClass::GetDeleteArray() const
 {
+   // Return the wrapper around delete [] ThiObject.
+
    return fDeleteArray;
 }
 
 //______________________________________________________________________________
 ROOT::DesFunc_t TClass::GetDestructor() const
 {
+   // Return the wrapper around the destructor
+
    return fDestructor;
 }
 
