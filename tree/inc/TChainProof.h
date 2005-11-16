@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.2 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -175,8 +175,8 @@ public:
                                   const char *option = 0, Int_t maxUnrolling = 3);
    virtual Int_t        MakeSelector(const char *selector=0);
    Bool_t               MemoryFull(Int_t nbytes);
-   virtual Long64_t     Merge(TCollection *list);
-   static  TTree       *MergeTrees(TList *list);
+   virtual Long64_t     Merge(TCollection *list,Option_t *option ="");
+   static  TTree       *MergeTrees(TList *list,Option_t *option ="");
    virtual Bool_t       Notify();
    TPrincipal          *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                                   ,Long64_t nentries=1000000000, Long64_t firstentry=0);

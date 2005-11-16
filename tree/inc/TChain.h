@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.47 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.48 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -114,8 +114,8 @@ public:
    virtual void      Loop(Option_t *option="",Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
    virtual TDSet    *MakeTDSet() const;
-   virtual Long64_t  Merge(const char *name);
-   virtual Long64_t  Merge(TCollection *list);
+   virtual Long64_t  Merge(const char *name, Option_t *option = "");
+   virtual Long64_t  Merge(TCollection *list, Option_t *option = "");
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual Long64_t  Process(const char *filename,Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.1 2005/03/21 16:20:56 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.2 2005/05/02 10:57:32 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -585,7 +585,7 @@ Bool_t TChainProof::MemoryFull(Int_t)
 }
 
 //______________________________________________________________________________
-TTree *TChainProof::MergeTrees(TList *)
+TTree *TChainProof::MergeTrees(TList *,Option_t *)
 {
    // Not implemented in TChainProof. Shouldn't be used.
 
@@ -593,7 +593,7 @@ TTree *TChainProof::MergeTrees(TList *)
 }
 
 //______________________________________________________________________________
-Long64_t TChainProof::Merge(TCollection *)
+Long64_t TChainProof::Merge(TCollection *,Option_t *)
 {
    // Not implemented in TChainProof. Shouldn't be used.
 

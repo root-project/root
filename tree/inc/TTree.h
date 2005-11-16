@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.84 2005/10/13 10:26:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -85,7 +85,6 @@ class TFriendElement;
 class TCut;
 class TVirtualIndex;
 class TBranchRef;
-
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -314,8 +313,8 @@ public:
                                   const char *option = 0, Int_t maxUnrolling = 3);
    virtual Int_t        MakeSelector(const char *selector=0);
    Bool_t               MemoryFull(Int_t nbytes);
-   virtual Long64_t     Merge(TCollection *list);
-   static  TTree       *MergeTrees(TList *list);
+   virtual Long64_t     Merge(TCollection *list, Option_t *option ="");
+   static  TTree       *MergeTrees(TList *list, Option_t *option ="");
    virtual Bool_t       Notify();
    TPrincipal          *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                                   ,Long64_t nentries=1000000000, Long64_t firstentry=0);
