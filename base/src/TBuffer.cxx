@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.84 2005/08/23 19:41:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.85 2005/09/02 07:51:51 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -67,7 +67,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 
 //______________________________________________________________________________
 TBuffer::TBuffer(EMode mode) :
-   fInfo(0), fInfos(10)
+   fInfo(0), fInfos(10), fPidOffset(0)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -93,7 +93,7 @@ TBuffer::TBuffer(EMode mode) :
 
 //______________________________________________________________________________
 TBuffer::TBuffer(EMode mode, Int_t bufsiz) :
-   fInfo(0), fInfos(10)
+   fInfo(0), fInfos(10), fPidOffset(0)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite.
@@ -119,7 +119,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz) :
 
 //______________________________________________________________________________
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) :
-   fInfo(0), fInfos(10)
+   fInfo(0), fInfos(10), fPidOffset(0)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -388,6 +388,19 @@ void TBuffer::SetParent(TObject *parent)
    // Set parent owning this buffer.
 
    fParent = parent;
+}
+
+//______________________________________________________________________________
+void TBuffer::SetPidOffset(UShort_t offset)
+{
+   // This offset is used when a key (or basket) is transfered from one
+   // file to the other.  In this case the TRef and TObject might have stored a
+   // pid index (to retrieve TProcessIDs) which refered to their order on the original
+   // file, the fPidOffset is to be added to those values to correctly find the
+   // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+   // and need to be zero for new key/basket.
+
+   fPidOffset = offset;
 }
 
 //______________________________________________________________________________
@@ -2461,27 +2474,6 @@ void TBuffer::WriteClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
-static Version_t R__FindStreamerInfoVersion(const TClass *cl, UInt_t checksum)
-{
-   //find the version number in the StreamerInfos corresponding to checksum
-
-   Version_t version = 0;
-   Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
-   for (Int_t i=1;i<ninfos;i++) {
-      // TClass::fStreamerInfos has a lower bound not equal to 0,
-      // so we should use At and not use UncheckedAt
-      TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
-      if (!info) continue;
-      if (info->GetCheckSum() == checksum) {
-         version = i;
-         //printf("ReadVersion, setting version=%d\n",version);
-         break;
-      }
-   }
-   return version;
-}
-
-//______________________________________________________________________________
 Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
    // Read class version from I/O buffer.
@@ -2531,7 +2523,8 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
       if (version <= 0)  {
          UInt_t checksum = 0;
          *this >> checksum;
-         version = R__FindStreamerInfoVersion(cl,checksum);
+         TStreamerInfo *vinfo = cl->FindStreamerInfo(checksum);
+         version = vinfo->GetClassVersion();
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
@@ -2542,7 +2535,8 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
             const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
-               version = R__FindStreamerInfoVersion(cl,checksum);
+               TStreamerInfo *vinfo = cl->FindStreamerInfo(checksum);
+               version = vinfo->GetClassVersion();
             }
             else  {
                Error("ReadVersion", "Class %s not known to file %s.", 

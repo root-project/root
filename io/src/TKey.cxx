@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.47 2005/04/07 13:28:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.48 2005/05/15 05:53:44 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -30,6 +30,10 @@
 //     fClassName = Object class name                                   //
 //     fName      = name of the object                                  //
 //     fTitle     = title of the object                                 //
+//                                                                      //
+//  In the 16 highest bit of fSeekPdir is encoded a pid offset.  This   //
+//  offset is to be added to the pid index stored in the TRef object    //
+//  and the referenced TObject.                                         //
 //                                                                      //
 //  The TKey class is used by ROOT to:                                  //
 //    - to write an object in the Current Directory                     //
@@ -63,12 +67,15 @@ const Int_t kTitleMax = 32000;
 const Int_t kMAXFILEBUFFER = 262144;
 #endif
 
+const ULong64_t kPidOffsetMask = 0xffffffffffffULL;
+const UChar_t kPidOffsetShift = 48;
+
 UInt_t keyAbsNumber = 0;
 
 ClassImp(TKey)
 
 //______________________________________________________________________________
-TKey::TKey() : TNamed(), fDatime((UInt_t)0)
+TKey::TKey() : TNamed(), fDatime((UInt_t)0), fPidOffset(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*TKey default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -85,7 +92,7 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 }
 
 //______________________________________________________________________________
-TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
+TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed(), fPidOffset(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a TKey object to read keys*-*-*-*-*-*-*-*
 //*-*                      =================================
@@ -107,7 +114,7 @@ TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
 
 //______________________________________________________________________________
 TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
-      : TNamed(name,title)
+      : TNamed(name,title), fPidOffset(0)
 {
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
@@ -124,7 +131,7 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
 
 //______________________________________________________________________________
 TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes)
-      : TNamed(name,title)
+      : TNamed(name,title), fPidOffset(0)
 {
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
@@ -141,7 +148,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
 
 //______________________________________________________________________________
 TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
-     : TNamed(name, obj->GetTitle())
+     : TNamed(name, obj->GetTitle()), fPidOffset(0)
 {
    // Create a TKey object for a TObject* and fill output buffer
 
@@ -218,7 +225,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
 
 //______________________________________________________________________________
 TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
-     : TNamed(name, "object title")
+     : TNamed(name, "object title"), fPidOffset(0)
 {
    // Create a TKey object for any object obj of class cl  and fill output buffer
 
@@ -455,31 +462,61 @@ void TKey::FillBuffer(char *&buffer)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Encode key header into output buffer-*-*-*-*-*-*-*
 //*-*                    ====================================
-  tobuf(buffer, fNbytes);
-  Version_t version = fVersion;
-  tobuf(buffer, version);
+   
+   tobuf(buffer, fNbytes);
+   Version_t version = fVersion;
+   tobuf(buffer, version);
 
-  tobuf(buffer, fObjlen);
-  fDatime.FillBuffer(buffer);
-  tobuf(buffer, fKeylen);
-  tobuf(buffer, fCycle);
-  if (fVersion > 1000) {
-     tobuf(buffer, fSeekKey);
-     tobuf(buffer, fSeekPdir);
-  } else {
-     tobuf(buffer, (Int_t)fSeekKey);
-     tobuf(buffer, (Int_t)fSeekPdir);
-  }
-  fClassName.FillBuffer(buffer);
-  fName.FillBuffer(buffer);
-  fTitle.FillBuffer(buffer);
+   tobuf(buffer, fObjlen);
+   fDatime.FillBuffer(buffer);
+   tobuf(buffer, fKeylen);
+   tobuf(buffer, fCycle);
+   if (fVersion > 1000) {
+      tobuf(buffer, fSeekKey);
+
+      // We currently store in the 16 highest bit of fSeekPdir the value of
+      // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+      // file to the other.  In this case the TRef and TObject might have stored a
+      // pid index (to retrieve TProcessIDs) which refered to their order on the original
+      // file, the fPidOffset is to be added to those values to correctly find the
+      // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+      // and need to be zero for new key/basket.
+      Long64_t pdir = (((Long64_t)fPidOffset)<<kPidOffsetShift) | (kPidOffsetMask & fSeekPdir);
+      tobuf(buffer, pdir);
+   } else {
+      tobuf(buffer, (Int_t)fSeekKey);
+      tobuf(buffer, (Int_t)fSeekPdir);
+   }
+   fClassName.FillBuffer(buffer);
+   fName.FillBuffer(buffer);
+   fTitle.FillBuffer(buffer);
 }
 
 //______________________________________________________________________________
 ULong_t TKey::Hash() const
 {
-// This Hash function should redefine the default from TNamed
+   // This Hash function should redefine the default from TNamed
    return TNamed::Hash();
+}
+
+//______________________________________________________________________________
+void TKey::IncrementPidOffset(UShort_t offset)
+{
+   // Increment fPidOffset by 'offset'.
+   // This offset is used when a key (or basket) is transfered from one file to 
+   // the other.  In this case the TRef and TObject might have stored a pid 
+   // index (to retrieve TProcessIDs) which refered to their order on the 
+   // original file, the fPidOffset is to be added to those values to correctly
+   // find the TProcessID.  This fPidOffset needs to be increment if the 
+   // key/basket is copied and need to be zero for new key/basket.
+
+   fPidOffset += offset;
+   if (fPidOffset) {
+      // We currently store fPidOffset in the 16 highest bit of fSeekPdir, which
+      // need to be store as a 64 bit integer.  So we require this key to be
+      // a 'large file' key.
+      if (fVersion<1000) fVersion += 1000;
+   }
 }
 
 //______________________________________________________________________________
@@ -577,6 +614,8 @@ TObject *TKey::ReadObj()
    }
    if (!gFile) return 0;
    fBufferRef->SetParent(gFile);
+   fBufferRef->SetPidOffset(fPidOffset);
+
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = new char[fNbytes];
       ReadFile();                    //Read object structure from file
@@ -692,6 +731,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
    if (!gFile) return 0;
    fBufferRef->SetParent(gFile);
+   fBufferRef->SetPidOffset(fPidOffset);
+
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = new char[fNbytes];
       ReadFile();                    //Read object structure from file
@@ -788,6 +829,7 @@ Int_t TKey::Read(TObject *obj)
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    fBufferRef->SetParent(gFile);
+   fBufferRef->SetPidOffset(fPidOffset);
 
    if (fVersion > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
@@ -844,7 +886,18 @@ void TKey::ReadBuffer(char *&buffer)
    frombuf(buffer, &fCycle);
    if (fVersion > 1000) {
       frombuf(buffer, &fSeekKey);
-      frombuf(buffer, &fSeekPdir);
+
+      // We currently store in the 16 highest bit of fSeekPdir the value of
+      // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+      // file to the other.  In this case the TRef and TObject might have stored a
+      // pid index (to retrieve TProcessIDs) which refered to their order on the original
+      // file, the fPidOffset is to be added to those values to correctly find the
+      // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+      // and need to be zero for new key/basket.
+      Long64_t pdir;
+      frombuf(buffer, &pdir);
+      fPidOffset = pdir >> kPidOffsetShift;
+      fSeekPdir = pdir & kPidOffsetMask;
    } else {
       Int_t seekkey,seekdir;
       frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
@@ -924,7 +977,18 @@ void TKey::Streamer(TBuffer &b)
       b >> fCycle;
       if (fVersion > 1000) {
          b >> fSeekKey;
-         b >> fSeekPdir;
+
+         // We currently store in the 16 highest bit of fSeekPdir the value of
+         // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+         // file to the other.  In this case the TRef and TObject might have stored a
+         // pid index (to retrieve TProcessIDs) which refered to their order on the original
+         // file, the fPidOffset is to be added to those values to correctly find the
+         // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+         // and need to be zero for new key/basket.
+         Long64_t pdir;
+         b >> pdir;
+         fPidOffset = pdir >> kPidOffsetShift;
+         fSeekPdir = pdir & kPidOffsetMask;
       } else {
          Int_t seekkey, seekdir;
          b >> seekkey; fSeekKey = (Long64_t)seekkey;
@@ -944,7 +1008,16 @@ void TKey::Streamer(TBuffer &b)
       b << fCycle;
       if (fVersion > 1000) {
          b << fSeekKey;
-         b << fSeekPdir;
+
+         // We currently store in the 16 highest bit of fSeekPdir the value of
+         // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+         // file to the other.  In this case the TRef and TObject might have stored a
+         // pid index (to retrieve TProcessIDs) which refered to their order on the original
+         // file, the fPidOffset is to be added to those values to correctly find the
+         // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+         // and need to be zero for new key/basket.
+         Long64_t pdir = (((Long64_t)fPidOffset)<<kPidOffsetShift) | (kPidOffsetMask & fSeekPdir);
+         b << pdir;
       } else {
          b << (Int_t)fSeekKey;
          b << (Int_t)fSeekPdir;
