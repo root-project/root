@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.17 2005/10/21 22:01:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.18 2005/10/25 14:27:31 pcanal Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -81,6 +81,8 @@ TBits::~TBits()
 //______________________________________________________________________________
 void TBits::Clear(Option_t * /*option*/)
 {
+   // Clear the value.
+
    delete [] fAllBits;
    fAllBits = 0;
    fNbits   = 0;
@@ -156,7 +158,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
 }
 
 //______________________________________________________________________________
-void TBits::DoAndEqual(const TBits& rhs) 
+void TBits::DoAndEqual(const TBits& rhs)
 {
    // Execute (*this) &= rhs;
    // Extra bits in rhs are ignored
@@ -172,7 +174,7 @@ void TBits::DoAndEqual(const TBits& rhs)
 }
 
 //______________________________________________________________________________
-void TBits::DoOrEqual(const TBits& rhs) 
+void TBits::DoOrEqual(const TBits& rhs)
 {
    // Execute (*this) &= rhs;
    // Extra bits in rhs are ignored
@@ -185,7 +187,7 @@ void TBits::DoOrEqual(const TBits& rhs)
 }
 
 //______________________________________________________________________________
-void TBits::DoXorEqual(const TBits& rhs) 
+void TBits::DoXorEqual(const TBits& rhs)
 {
    // Execute (*this) ^= rhs;
    // Extra bits in rhs are ignored
@@ -198,7 +200,7 @@ void TBits::DoXorEqual(const TBits& rhs)
 }
 
 //______________________________________________________________________________
-void TBits::DoFlip() 
+void TBits::DoFlip()
 {
    // Execute ~(*this)
 
@@ -209,8 +211,10 @@ void TBits::DoFlip()
 }
 
 //______________________________________________________________________________
-void TBits::DoLeftShift(UInt_t shift) 
+void TBits::DoLeftShift(UInt_t shift)
 {
+   // Execute the left shift operation.
+
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
@@ -230,8 +234,10 @@ void TBits::DoLeftShift(UInt_t shift)
 }
 
 //______________________________________________________________________________
-void TBits::DoRightShift(UInt_t shift) 
+void TBits::DoRightShift(UInt_t shift)
 {
+   // Execute the left shift operation.
+
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
@@ -345,6 +351,8 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
 //______________________________________________________________________________
 void TBits::Output(ostream &os) const
 {
+   // Print the value to the ostream
+
    for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[fNbytes - 1 - i];
       for (UInt_t j=0; j<8; ++j) {
@@ -386,34 +394,40 @@ void TBits::ResetAllBits(Bool_t)
    if (fAllBits) memset(fAllBits,0,fNbytes);
 }
 
- //______________________________________________________________________________
- void TBits::ReserveBytes(UInt_t nbytes)
- {
-     if (nbytes > fNbytes) {
-         // do it in this order to remain exception-safe.
-         UChar_t *newBits=new UChar_t[nbytes];
-         delete[] fAllBits;
-         fNbytes=nbytes;
-         fAllBits=newBits;
-     }
- }
+//______________________________________________________________________________
+void TBits::ReserveBytes(UInt_t nbytes)
+{
+   // Reverse each bytes.
 
- //______________________________________________________________________________
- void TBits::Set(UInt_t nbits, const Char_t *array)
- {
-     UInt_t nbytes=(nbits+7)>>3;
+   if (nbytes > fNbytes) {
+      // do it in this order to remain exception-safe.
+      UChar_t *newBits=new UChar_t[nbytes];
+      delete[] fAllBits;
+      fNbytes=nbytes;
+      fAllBits=newBits;
+   }
+}
 
-     ReserveBytes(nbytes);
+//______________________________________________________________________________
+void TBits::Set(UInt_t nbits, const Char_t *array)
+{
+   // Set all the bytes.
 
-     fNbits=nbits;
-     memcpy(fAllBits, array, nbytes);
- }
+   UInt_t nbytes=(nbits+7)>>3;
 
- //______________________________________________________________________________
- void TBits::Get(Char_t *array) const
- {
-     memcpy(array, fAllBits, (fNbits+7)>>3);
- }
+   ReserveBytes(nbytes);
+
+   fNbits=nbits;
+   memcpy(fAllBits, array, nbytes);
+}
+
+//______________________________________________________________________________
+void TBits::Get(Char_t *array) const
+{
+   // Copy all the byes.
+
+   memcpy(array, fAllBits, (fNbits+7)>>3);
+}
 
  #ifdef R__BYTESWAP  /* means we are on little endian */
 
@@ -423,164 +437,184 @@ void TBits::ResetAllBits(Bool_t)
  -- FP.
  */
 
- void TBits::Set(UInt_t nbits, const Short_t *array)
-  {
-     Set(nbits, (const Char_t*)array);
- }
+void TBits::Set(UInt_t nbits, const Short_t *array)
+{
+   // Set all the bytes.
 
- void TBits::Set(UInt_t nbits, const Int_t *array)
- {
-     Set(nbits, (const Char_t*)array);
- }
+   Set(nbits, (const Char_t*)array);
+}
 
- void TBits::Set(UInt_t nbits, const Long64_t *array)
- {
-     Set(nbits, (const Char_t*)array);
- }
+void TBits::Set(UInt_t nbits, const Int_t *array)
+{
+   // Set all the bytes.
 
- void TBits::Get(Short_t *array) const
- {
-     Get((Char_t*)array);
- }
+   Set(nbits, (const Char_t*)array);
+}
 
- void TBits::Get(Int_t *array) const
- {
-     Get((Char_t*)array);
- }
+void TBits::Set(UInt_t nbits, const Long64_t *array)
+{
+   // Set all the bytes.
 
- void TBits::Get(Long64_t *array) const
- {
-     Get((Char_t*)array);
- }
+   Set(nbits, (const Char_t*)array);
+}
 
- #else
+void TBits::Get(Short_t *array) const
+{
+   // Get all the bytes.
+
+   Get((Char_t*)array);
+}
+
+void TBits::Get(Int_t *array) const
+{
+   // Get all the bytes.
+
+   Get((Char_t*)array);
+}
+
+void TBits::Get(Long64_t *array) const
+{
+   // Get all the bytes.
+
+   Get((Char_t*)array);
+}
+
+#else
 
  /*
  If we are on a big endian machine, some swapping around is required.
  */
 
- void TBits::Set(UInt_t nbits, const Short_t *array)
- {
-     // make nbytes even so that the loop below is neat.
-     UInt_t nbytes = ((nbits+15)>>3)&~1;
+void TBits::Set(UInt_t nbits, const Short_t *array)
+{
+   // make nbytes even so that the loop below is neat.
+   UInt_t nbytes = ((nbits+15)>>3)&~1;
 
-     ReserveBytes(nbytes);
+   ReserveBytes(nbytes);
 
-     fNbits=nbits;
+   fNbits=nbits;
 
-     const UChar_t *cArray = (const UChar_t*)array;
-     for (UInt_t i=0; i<nbytes; i+=2) {
-         fAllBits[i] = cArray[i+1];
-         fAllBits[i+1] = cArray[i];
-     }
- }
+   const UChar_t *cArray = (const UChar_t*)array;
+   for (UInt_t i=0; i<nbytes; i+=2) {
+      fAllBits[i] = cArray[i+1];
+      fAllBits[i+1] = cArray[i];
+   }
+}
 
- void TBits::Set(UInt_t nbits, const Int_t *array)
- {
-     // make nbytes a multiple of 4 so that the loop below is neat.
-     UInt_t nbytes = ((nbits+31)>>3)&~3;
+void TBits::Set(UInt_t nbits, const Int_t *array)
+{
+   // make nbytes a multiple of 4 so that the loop below is neat.
+   UInt_t nbytes = ((nbits+31)>>3)&~3;
 
-     ReserveBytes(nbytes);
+   ReserveBytes(nbytes);
 
-     fNbits=nbits;
+   fNbits=nbits;
 
-     const UChar_t *cArray = (const UChar_t*)array;
-     for (UInt_t i=0; i<nbytes; i+=4) {
-         fAllBits[i] = cArray[i+3];
-         fAllBits[i+1] = cArray[i+2];
-         fAllBits[i+2] = cArray[i+1];
-         fAllBits[i+3] = cArray[i];
-     }
- }
+   const UChar_t *cArray = (const UChar_t*)array;
+   for (UInt_t i=0; i<nbytes; i+=4) {
+      fAllBits[i] = cArray[i+3];
+      fAllBits[i+1] = cArray[i+2];
+      fAllBits[i+2] = cArray[i+1];
+      fAllBits[i+3] = cArray[i];
+   }
+}
 
- void TBits::Set(UInt_t nbits, const Long64_t *array)
- {
-    // make nbytes a multiple of 8 so that the loop below is neat.
-    UInt_t nbytes = ((nbits+63)>>3)&~7;
+void TBits::Set(UInt_t nbits, const Long64_t *array)
+{
+   // make nbytes a multiple of 8 so that the loop below is neat.
+   UInt_t nbytes = ((nbits+63)>>3)&~7;
 
-    ReserveBytes(nbytes);
+   ReserveBytes(nbytes);
 
-    fNbits=nbits;
+   fNbits=nbits;
 
-    const UChar_t *cArray = (const UChar_t*)array;
-    for (UInt_t i=0; i<nbytes; i+=8) {
-        fAllBits[i] = cArray[i+7];
-        fAllBits[i+1] = cArray[i+6];
-        fAllBits[i+2] = cArray[i+5];
-        fAllBits[i+3] = cArray[i+4];
-        fAllBits[i+4] = cArray[i+3];
-        fAllBits[i+5] = cArray[i+2];
-        fAllBits[i+6] = cArray[i+1];
-        fAllBits[i+7] = cArray[i];
-    }
- }
+   const UChar_t *cArray = (const UChar_t*)array;
+   for (UInt_t i=0; i<nbytes; i+=8) {
+      fAllBits[i] = cArray[i+7];
+      fAllBits[i+1] = cArray[i+6];
+      fAllBits[i+2] = cArray[i+5];
+      fAllBits[i+3] = cArray[i+4];
+      fAllBits[i+4] = cArray[i+3];
+      fAllBits[i+5] = cArray[i+2];
+      fAllBits[i+6] = cArray[i+1];
+      fAllBits[i+7] = cArray[i];
+   }
+}
 
- void TBits::Get(Short_t *array) const
- {
-     UInt_t nBytes = (fNbits+7)>>3;
-     UInt_t nSafeBytes = nBytes&~1;
+void TBits::Get(Short_t *array) const
+{
+   // Get all the bytes.
 
-     UChar_t *cArray=(UChar_t*)array;
-     for (UInt_t i=0; i<nSafeBytes; i+=2) {
-         cArray[i] = fAllBits[i+1];
-         cArray[i+1] = fAllBits[i];
-     }
+   UInt_t nBytes = (fNbits+7)>>3;
+   UInt_t nSafeBytes = nBytes&~1;
 
-     if (nBytes>nSafeBytes) {
-         cArray[nSafeBytes+1] = fAllBits[nSafeBytes];
-     }
- }
+   UChar_t *cArray=(UChar_t*)array;
+   for (UInt_t i=0; i<nSafeBytes; i+=2) {
+      cArray[i] = fAllBits[i+1];
+      cArray[i+1] = fAllBits[i];
+   }
 
- void TBits::Get(Int_t *array) const
- {
-     UInt_t nBytes = (fNbits+7)>>3;
-     UInt_t nSafeBytes = nBytes&~3;
+   if (nBytes>nSafeBytes) {
+      cArray[nSafeBytes+1] = fAllBits[nSafeBytes];
+   }
+}
 
-     UChar_t *cArray=(UChar_t*)array;
-     UInt_t i;
-     for (i=0; i<nSafeBytes; i+=4) {
-         cArray[i] = fAllBits[i+3];
-         cArray[i+1] = fAllBits[i+2];
-         cArray[i+2] = fAllBits[i+1];
-         cArray[i+3] = fAllBits[i];
-     }
+void TBits::Get(Int_t *array) const
+{
+   // Get all the bytes.
 
-     for (i=0; i<nBytes-nSafeBytes; ++i) {
-         cArray[nSafeBytes + (3 - i)] = fAllBits[nSafeBytes + i];
-     }
- }
+   UInt_t nBytes = (fNbits+7)>>3;
+   UInt_t nSafeBytes = nBytes&~3;
 
- void TBits::Get(Long64_t *array) const
- {
-    UInt_t nBytes = (fNbits+7)>>3;
-    UInt_t nSafeBytes = nBytes&~7;
+   UChar_t *cArray=(UChar_t*)array;
+   UInt_t i;
+   for (i=0; i<nSafeBytes; i+=4) {
+      cArray[i] = fAllBits[i+3];
+      cArray[i+1] = fAllBits[i+2];
+      cArray[i+2] = fAllBits[i+1];
+      cArray[i+3] = fAllBits[i];
+   }
 
-    UChar_t *cArray=(UChar_t*)array;
-    UInt_t i;
-    for (i=0; i<nSafeBytes; i+=8) {
-        cArray[i] = fAllBits[i+7];
-        cArray[i+1] = fAllBits[i+6];
-        cArray[i+2] = fAllBits[i+5];
-        cArray[i+3] = fAllBits[i+4];
-        cArray[i+4] = fAllBits[i+3];
-        cArray[i+5] = fAllBits[i+2];
-        cArray[i+6] = fAllBits[i+1];
-        cArray[i+7] = fAllBits[i];
-    }
+   for (i=0; i<nBytes-nSafeBytes; ++i) {
+      cArray[nSafeBytes + (3 - i)] = fAllBits[nSafeBytes + i];
+   }
+}
 
-    for (i=0; i<nBytes-nSafeBytes; ++i) {
-        cArray[nSafeBytes + (7 - i)] = fAllBits[nSafeBytes + i];
-    }
- }
+void TBits::Get(Long64_t *array) const
+{
+   // Get all the bytes.
 
- #endif
+   UInt_t nBytes = (fNbits+7)>>3;
+   UInt_t nSafeBytes = nBytes&~7;
 
- Bool_t TBits::operator==(const TBits &other) const
- {
-     if (fNbits != other.fNbits) {
-         return kFALSE;
-     }
+   UChar_t *cArray=(UChar_t*)array;
+   UInt_t i;
+   for (i=0; i<nSafeBytes; i+=8) {
+      cArray[i] = fAllBits[i+7];
+      cArray[i+1] = fAllBits[i+6];
+      cArray[i+2] = fAllBits[i+5];
+      cArray[i+3] = fAllBits[i+4];
+      cArray[i+4] = fAllBits[i+3];
+      cArray[i+5] = fAllBits[i+2];
+      cArray[i+6] = fAllBits[i+1];
+      cArray[i+7] = fAllBits[i];
+   }
 
-     return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3);
- }
+   for (i=0; i<nBytes-nSafeBytes; ++i) {
+      cArray[nSafeBytes + (7 - i)] = fAllBits[nSafeBytes + i];
+   }
+}
+
+#endif
+
+Bool_t TBits::operator==(const TBits &other) const
+{
+   // Copy object.
+
+   if (fNbits != other.fNbits) {
+      return kFALSE;
+   }
+
+   return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3);
+}
 

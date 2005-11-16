@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.3 2004/08/24 10:41:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.4 2005/10/25 22:11:58 pcanal Exp $
 // Author: Rene Brun   17/08/2004
 
 /*************************************************************************
@@ -34,15 +34,15 @@
 class TRefTable : public TObject {
 
 protected:
-   Int_t            fSize;       //allocated size of array fParentIDs
-   Int_t            fN;          //current maximum number of IDs in array fParentIDs
-   Int_t           *fParentIDs;  //[fSize] array of Parent IDs
-   Int_t            fParentID;   //current parent ID in fParents (latest call to SetParent)
-   UInt_t           fUID;        //!Current uid (set by TRef::GetObject)
-   TObjArray       *fParents;    //array of Parent objects  (eg TTree branch) holding the referenced objects 
-   TObject         *fOwner;      //Object owning this TRefTable
- static TRefTable  *fgRefTable;  //Pointer to current TRefTable
-   
+   Int_t             fSize;       //allocated size of array fParentIDs
+   Int_t             fN;          //current maximum number of IDs in array fParentIDs
+   Int_t            *fParentIDs;  //[fSize] array of Parent IDs
+   Int_t             fParentID;   //current parent ID in fParents (latest call to SetParent)
+   UInt_t            fUID;        //!Current uid (set by TRef::GetObject)
+   TObjArray        *fParents;    //array of Parent objects  (eg TTree branch) holding the referenced objects
+   TObject          *fOwner;      //Object owning this TRefTable
+   static TRefTable *fgRefTable;  //Pointer to current TRefTable
+
 public:
 
    TRefTable();

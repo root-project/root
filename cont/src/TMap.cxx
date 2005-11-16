@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.12 2003/09/23 22:03:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.13 2004/10/13 15:30:22 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -363,6 +363,8 @@ void TMap::Streamer(TBuffer &b)
 //______________________________________________________________________________
 void TPair::Browse(TBrowser *b)
 {
+   // Browse the pair.
+
    if (b) {
       if (fKey)   b->Add(fKey);
       if (fValue) b->Add(fValue);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.45 2005/03/11 21:48:39 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.46 2005/06/09 18:20:02 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -68,6 +68,8 @@ ClassImp(TClonesArray)
 //______________________________________________________________________________
 TClonesArray::TClonesArray() : TObjArray()
 {
+   // Default Constructor.
+
    fClass      = 0;
    fKeep       = 0;
 }

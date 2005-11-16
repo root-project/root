@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.49 2005/09/03 02:26:31 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.50 2005/10/07 10:28:54 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -99,6 +99,8 @@ public:
 //______________________________________________________________________________
 Bool_t TTermInputHandler::Notify()
 {
+   // Notify implementation.  Call the application interupt handler.
+
    return gApplication->HandleTermInput();
 }
 
@@ -195,7 +197,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 //______________________________________________________________________________
 TRint::~TRint()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________

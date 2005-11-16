@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.8 2005/05/30 10:21:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.9 2005/10/10 11:31:43 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -91,21 +91,21 @@ void TContextMenu::Action(TObject *object, TMethod *method)
       SetCalledObject(object);
 
       if (method->GetListOfMethodArgs()->First())
-          fContextMenuImp->Dialog(object, method);
+         fContextMenuImp->Dialog(object, method);
       else {
 #ifndef WIN32
-          Execute(object, method, "");
+         Execute(object, method, "");
 #else
 #ifdef GDK_WIN32
-          Execute(object, method, "");
+         Execute(object, method, "");
 #else
-          // It is a workaround of the "Dead lock under Windows
-          char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                           "(TMethod *)0x%lx,(TObjArray *)0);",
-                           (Long_t)this,(Long_t)object,(Long_t)method);
-          //Printf("%s", cmd);
-          gROOT->ProcessLine(cmd);
-          //Execute( object, method, (TObjArray *)NULL );
+         // It is a workaround of the "Dead lock under Windows
+         char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
+                          "(TMethod *)0x%lx,(TObjArray *)0);",
+                          (Long_t)this,(Long_t)object,(Long_t)method);
+         //Printf("%s", cmd);
+         gROOT->ProcessLine(cmd);
+         //Execute( object, method, (TObjArray *)NULL );
 #endif
 #endif
       }
@@ -162,27 +162,27 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
 #ifndef WIN32
                Execute(object, method, "");
 #else
-                // It is a workaround of the "Dead lock under Windows
-                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                              "(TMethod *)0x%lx,(TObjArray *)0);",
-                              (Long_t)this,(Long_t)object,(Long_t)method);
-                //Printf("%s", cmd);
-                gROOT->ProcessLine(cmd);
-                //Execute( object, method, (TObjArray *)NULL );
+               // It is a workaround of the "Dead lock under Windows
+               char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
+                                "(TMethod *)0x%lx,(TObjArray *)0);",
+                                (Long_t)this,(Long_t)object,(Long_t)method);
+               //Printf("%s", cmd);
+               gROOT->ProcessLine(cmd);
+               //Execute( object, method, (TObjArray *)NULL );
 #endif
              } else {
 #ifndef WIN32
                Execute(object, method, Form("(TObject*)0x%lx",(Long_t)fSelectedObject));
 #else
-                // It is a workaround of the "Dead lock under Windows
-                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                              "(TMethod *)0x%lx,(TObjArray *)0);",
-                              (Long_t)this,(Long_t)object,(Long_t)method);
-                //Printf("%s", cmd);
-                gROOT->ProcessLine(cmd);
-                //Execute( object, method, (TObjArray *)NULL );
+               // It is a workaround of the "Dead lock under Windows
+               char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
+                                "(TMethod *)0x%lx,(TObjArray *)0);",
+                                (Long_t)this,(Long_t)object,(Long_t)method);
+               //Printf("%s", cmd);
+               gROOT->ProcessLine(cmd);
+               //Execute( object, method, (TObjArray *)NULL );
 #endif
-             }
+            }
          }
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.6 2002/05/18 08:43:29 brun Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -113,6 +113,7 @@ TExec::~TExec()
 //______________________________________________________________________________
 TExec::TExec(const TExec &e) : TNamed(e)
 {
+   // Copy constructor.
    TNamed::Copy(*this);
 }
 
@@ -160,9 +161,9 @@ void TExec::SavePrimitive(ofstream &out, Option_t *)
 
    char quote = '"';
    if (gROOT->ClassSaved(TExec::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TExec *";
+      out<<"   TExec *";
    }
    out<<"exec = new TExec("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<endl;
 

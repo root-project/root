@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.39 2005/08/23 19:41:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.40 2005/09/23 13:04:53 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -133,7 +133,7 @@ public:
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
    virtual TList      *GetStreamerInfoList();
-     const TList      *GetStreamerInfoCache();
+   const   TList      *GetStreamerInfoCache();
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
    virtual Bool_t      IsArchive() const { return fIsArchive; }
    virtual Bool_t      IsOpen() const;

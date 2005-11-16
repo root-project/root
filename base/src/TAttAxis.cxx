@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.8 2003/02/21 15:08:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.9 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -26,19 +26,20 @@ ClassImp(TAttAxis)
 
 TAttAxis::TAttAxis()
 {
-
+   // Constructor.
    ResetAttAxis();
 }
 
 //______________________________________________________________________________
 TAttAxis::~TAttAxis()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 void TAttAxis::Copy(TAttAxis &attaxis) const
 {
+   // Copy of the object.
    attaxis.fNdivisions  = fNdivisions;
    attaxis.fAxisColor   = fAxisColor;
    attaxis.fLabelColor  = fLabelColor;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.3 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.4 2005/08/17 09:10:44 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -66,6 +66,8 @@ TGLManager::TGLManager() : TNamed("gGLManager", "")
 //____________________________________________________________________________
 TGLManager *&TGLManager::Instance()
 {
+   // Return the global GL Manager.
+
    static TGLManager *instance = 0;
 
    if(gPtr2GLManager) {

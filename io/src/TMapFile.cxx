@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.16 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.17 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -128,6 +128,7 @@ void *gMmallocDesc = 0;
 //______________________________________________________________________________
 TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
 {
+   /// Constructor.
    fName      = StrDup(name);
    fClassName = 0;
    fObject    = (TObject*)obj;
@@ -139,6 +140,7 @@ TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
 //______________________________________________________________________________
 TMapRec::~TMapRec()
 {
+   // Destructor.
    delete [] fName;
    delete [] fClassName;
 }
@@ -209,7 +211,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
       if (!opt.CompareTo("NEW", TString::kIgnoreCase) ||
           !opt.CompareTo("CREATE", TString::kIgnoreCase))
-          create = kTRUE;
+         create = kTRUE;
       recreate = opt.CompareTo("RECREATE", TString::kIgnoreCase)
                  ? kFALSE : kTRUE;
       update   = opt.CompareTo("UPDATE", TString::kIgnoreCase)

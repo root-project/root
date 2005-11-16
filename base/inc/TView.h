@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.14 2005/04/25 21:12:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.15 2005/09/02 07:51:51 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -36,33 +36,33 @@ class TView : public TObject, public TAttLine {
 
 
 protected:
-        Double_t        fLatitude;         //View angle latitude
-        Double_t        fLongitude;        //View angle longitude
-        Double_t        fPsi;              //View angle psi
-        Double_t        fDview;            //Distance from COP to COV
-        Double_t        fDproj;            //Distance from COP to projection plane
-        Double_t        fUpix;             // pad X size in pixels
-        Double_t        fVpix;             // pad Y size in pixels
-        Double_t        fTN[16];           //
-        Double_t        fTB[16];           //
-        Double_t        fRmax[3];          //Upper limits of object
-        Double_t        fRmin[3];          //Lower limits of object
-        Double_t        fUVcoord[4];       //Viewing window limits
-        Double_t        fTnorm[16];        //Transformation matrix
-        Double_t        fTback[16];        //Back transformation matrix
-        Double_t        fX1[3];            //First coordinate of X axis
-        Double_t        fX2[3];            //Second coordinate of X axis
-        Double_t        fY1[3];            //First coordinate of Y axis
-        Double_t        fY2[3];            //Second coordinate of Y axis
-        Double_t        fZ1[3];            //First coordinate of Z axis
-        Double_t        fZ2[3];            //Second coordinate of Z axis
-        Int_t           fSystem;           //Coordinate system
-        TSeqCollection *fOutline;          //Collection of outline's objects
-        Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
-        Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
-        Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
-
-        void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
+   Double_t        fLatitude;         //View angle latitude
+   Double_t        fLongitude;        //View angle longitude
+   Double_t        fPsi;              //View angle psi
+   Double_t        fDview;            //Distance from COP to COV
+   Double_t        fDproj;            //Distance from COP to projection plane
+   Double_t        fUpix;             // pad X size in pixels
+   Double_t        fVpix;             // pad Y size in pixels
+   Double_t        fTN[16];           //
+   Double_t        fTB[16];           //
+   Double_t        fRmax[3];          //Upper limits of object
+   Double_t        fRmin[3];          //Lower limits of object
+   Double_t        fUVcoord[4];       //Viewing window limits
+   Double_t        fTnorm[16];        //Transformation matrix
+   Double_t        fTback[16];        //Back transformation matrix
+   Double_t        fX1[3];            //First coordinate of X axis
+   Double_t        fX2[3];            //Second coordinate of X axis
+   Double_t        fY1[3];            //First coordinate of Y axis
+   Double_t        fY2[3];            //Second coordinate of Y axis
+   Double_t        fZ1[3];            //First coordinate of Z axis
+   Double_t        fZ2[3];            //Second coordinate of Z axis
+   Int_t           fSystem;           //Coordinate system
+   TSeqCollection *fOutline;          //Collection of outline's objects
+   Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
+   Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
+   Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
+   
+   void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
 
 
 public:
@@ -138,37 +138,37 @@ public:
    virtual void  WCtoNDC(const Double_t *pw, Double_t *pn);
 
 //--
-    void         MoveFocus(Double_t *center, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps=10,
+   void         MoveFocus(Double_t *center, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps=10,
                             Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0);
-    virtual void MoveViewCommand(Char_t chCode, Int_t count=1);
-    void         MoveWindow(Char_t option);
+   virtual void MoveViewCommand(Char_t chCode, Int_t count=1);
+   void         MoveWindow(Char_t option);
 
-    static  void AdjustPad(TVirtualPad *pad=0);
-    virtual void AdjustScales(TVirtualPad *pad=0); // *MENU*
-    virtual void Centered3DImages(TVirtualPad *pad=0);
-    virtual void Centered();                       // *MENU*
-    virtual void FrontView(TVirtualPad *pad=0);
-    virtual void Front();                          // *MENU*
+   static  void AdjustPad(TVirtualPad *pad=0);
+   virtual void AdjustScales(TVirtualPad *pad=0); // *MENU*
+   virtual void Centered3DImages(TVirtualPad *pad=0);
+   virtual void Centered();                       // *MENU*
+   virtual void FrontView(TVirtualPad *pad=0);
+   virtual void Front();                          // *MENU*
+   
+   virtual void ZoomIn(); // *MENU*
+   virtual void ZoomOut(); // *MENU*
+   virtual void ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
+   virtual void UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
+   
+   virtual void RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0);
+   virtual void SideView(TVirtualPad *pad=0);
+   virtual void Side();                          // *MENU*
+   virtual void TopView(TVirtualPad *pad=0);
+   virtual void Top();                           // *MENU*
+   
+   virtual void ToggleRulers(TVirtualPad *pad=0);
+   virtual void ShowAxis();                      // *MENU*
+   virtual void ToggleZoom(TVirtualPad *pad=0);
+   virtual void ZoomMove();                      // *MENU*
+   virtual void Zoom();                          // *MENU*
+   virtual void UnZoom();                        // *MENU*
 
-    virtual void ZoomIn(); // *MENU*
-    virtual void ZoomOut(); // *MENU*
-    virtual void ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
-    virtual void UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
-
-    virtual void RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0);
-    virtual void SideView(TVirtualPad *pad=0);
-    virtual void Side();                          // *MENU*
-    virtual void TopView(TVirtualPad *pad=0);
-    virtual void Top();                           // *MENU*
-
-    virtual void ToggleRulers(TVirtualPad *pad=0);
-    virtual void ShowAxis();                      // *MENU*
-    virtual void ToggleZoom(TVirtualPad *pad=0);
-    virtual void ZoomMove();                      // *MENU*
-    virtual void Zoom();                          // *MENU*
-    virtual void UnZoom();                        // *MENU*
-
-   ClassDef(TView,2)  //3-D View
+   ClassDef(TView,2);  //3-D View
 };
 
 //      Shortcuts for menus

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.h,v 1.2 2001/11/23 18:01:18 brun Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -31,16 +31,16 @@ class TExec : public TNamed {
 
 public:
 
-        TExec();
-        TExec(const char *name, const char *command);
-        TExec(const TExec &text);
-        virtual ~TExec();
-        virtual void     Exec(const char *command="");
-        virtual void     Paint(Option_t *option="");
-        virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetAction(const char *action) {SetTitle(action);}
-
-        ClassDef(TExec,1)  //To execute a CINT command
+   TExec();
+   TExec(const char *name, const char *command);
+   TExec(const TExec &text);
+   virtual ~TExec();
+   virtual void     Exec(const char *command="");
+   virtual void     Paint(Option_t *option="");
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SetAction(const char *action) {SetTitle(action);}
+   
+   ClassDef(TExec,1);  //To execute a CINT command
 };
 
 #endif

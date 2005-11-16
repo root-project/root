@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.34 2005/06/21 17:09:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.35 2005/08/17 09:10:43 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -61,7 +61,7 @@ class TGWin32Command;
 
 extern "C" 
 {
-    struct GLUtesselator;
+   struct GLUtesselator;
 }
 
 class TVirtualX : public TNamed, public TAttLine, public TAttFill, public TAttText, public TAttMarker {

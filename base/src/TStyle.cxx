@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.59 2005/09/16 17:19:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.60 2005/11/04 20:13:08 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -220,7 +220,8 @@ TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(s
 //______________________________________________________________________________
 void TStyle::Browse(TBrowser *)
 {
-    cd();
+   // Browse the style object.
+   cd();
 }
 
 //______________________________________________________________________________
@@ -369,6 +370,7 @@ Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 //______________________________________________________________________________
 void TStyle::Reset(Option_t *opt)
 {
+   // Reset.
    fIsReading = kTRUE;
    TAttLine::ResetAttLine();
    TAttFill::ResetAttFill();
@@ -606,6 +608,7 @@ Int_t TStyle::GetNdivisions( Option_t *axis) const
 //______________________________________________________________________________
 Color_t TStyle::GetAxisColor( Option_t *axis) const
 {
+   // Return the axis color number in the axis.
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetAxisColor();
    if (ax == 2) return fYaxis.GetAxisColor();
@@ -615,8 +618,8 @@ Color_t TStyle::GetAxisColor( Option_t *axis) const
 
 //______________________________________________________________________________
 Int_t TStyle::GetColorPalette(Int_t i) const
-//   return color number i in current palette
 {
+   // Return color number i in current palette.
    Int_t ncolors = GetNumberOfColors();
    if (ncolors == 0) return 0;
    Int_t icol    = i%ncolors;
@@ -627,6 +630,7 @@ Int_t TStyle::GetColorPalette(Int_t i) const
 //______________________________________________________________________________
 Color_t TStyle::GetLabelColor( Option_t *axis) const
 {
+   // Return the label color number in the axis.
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelColor();
    if (ax == 2) return fYaxis.GetLabelColor();
@@ -1316,72 +1320,72 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   //
   //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
 
-  UInt_t g, c;
-  UInt_t nPalette = 0;
-  Int_t *palette = new Int_t[NColors+1];
-  UInt_t nColorsGradient;
-  TColor *color;
-  Int_t highestIndex = 0;
-
-  // Check if all RGB values are between 0.0 and 1.0 and
-  // Length goes from 0.0 to 1.0 in increasing order.
-  for (c = 0; c < Number; c++) {
-    if (Red[c] < 0 || Red[c] > 1.0 ||
-        Green[c] < 0 || Green[c] > 1.0 ||
-        Blue[c] < 0 || Blue[c] > 1.0 ||
-        Length[c] < 0 || Length[c] > 1.0) {
-      //Error("CreateGradientColorTable",
-      //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
-      delete [] palette;
-      return -1;
-    }
-    if (c >= 1) {
-      if (Length[c-1] > Length[c]) {
-        //Error("CreateGradientColorTable",
-        //      "The interval lengths have to be in increasing order");
-        delete [] palette;
-        return -1;
+   UInt_t g, c;
+   UInt_t nPalette = 0;
+   Int_t *palette = new Int_t[NColors+1];
+   UInt_t nColorsGradient;
+   TColor *color;
+   Int_t highestIndex = 0;
+   
+   // Check if all RGB values are between 0.0 and 1.0 and
+   // Length goes from 0.0 to 1.0 in increasing order.
+   for (c = 0; c < Number; c++) {
+      if (Red[c] < 0 || Red[c] > 1.0 ||
+          Green[c] < 0 || Green[c] > 1.0 ||
+          Blue[c] < 0 || Blue[c] > 1.0 ||
+          Length[c] < 0 || Length[c] > 1.0) {
+         //Error("CreateGradientColorTable",
+         //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
+         delete [] palette;
+         return -1;
       }
-    }
-  }
+      if (c >= 1) {
+         if (Length[c-1] > Length[c]) {
+            //Error("CreateGradientColorTable",
+            //      "The interval lengths have to be in increasing order");
+            delete [] palette;
+            return -1;
+         }
+      }
+   }
 
-  // Search for the highest color index not used in ROOT:
-  // We do not want to overwrite some colors...
-  TSeqCollection *colorTable = gROOT->GetListOfColors();
-  if ((color = (TColor *) colorTable->Last()) != 0) {
-    if (color->GetNumber() > highestIndex) {
-      highestIndex = color->GetNumber();
-    }
-    while ((color = (TColor *) (colorTable->Before(color))) != 0) {
+   // Search for the highest color index not used in ROOT:
+   // We do not want to overwrite some colors...
+   TSeqCollection *colorTable = gROOT->GetListOfColors();
+   if ((color = (TColor *) colorTable->Last()) != 0) {
       if (color->GetNumber() > highestIndex) {
-      highestIndex = color->GetNumber();
+         highestIndex = color->GetNumber();
       }
-    }
-  }
-  highestIndex++;
-
-  // Now create the colors and add them to the default palette:
-
-  // For each defined gradient...
-  for (g = 1; g < Number; g++) {
-    // create the colors...
-    nColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
-    for (c = 0; c < nColorsGradient; c++) {
-      color = new TColor(highestIndex,
-                         Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,
-                         Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
-                         Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
-                         "  ");
-      palette[nPalette] = highestIndex;
-      nPalette++;
-      highestIndex++;
-    }
-  }
-
-  gStyle->SetPalette(nPalette, palette);
-  delete [] palette;
-
-  return highestIndex - NColors;
+      while ((color = (TColor *) (colorTable->Before(color))) != 0) {
+         if (color->GetNumber() > highestIndex) {
+            highestIndex = color->GetNumber();
+         }
+      }
+   }
+   highestIndex++;
+   
+   // Now create the colors and add them to the default palette:
+   
+   // For each defined gradient...
+   for (g = 1; g < Number; g++) {
+      // create the colors...
+      nColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
+      for (c = 0; c < nColorsGradient; c++) {
+         color = new TColor(highestIndex,
+                            Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,
+                            Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
+                            Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
+                            "  ");
+         palette[nPalette] = highestIndex;
+         nPalette++;
+         highestIndex++;
+      }
+   }
+   
+   gStyle->SetPalette(nPalette, palette);
+   delete [] palette;
+   
+   return highestIndex - NColors;
 }
 
 //______________________________________________________________________________

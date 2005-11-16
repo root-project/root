@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPadView3D.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPadView3D.cxx,v 1.2 2004/08/03 16:01:17 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************
@@ -27,12 +27,12 @@
 //______________________________________________________________________________
 TPadView3D::~TPadView3D()
 {
-  // Delete 3D viewer.
+   // Delete 3D viewer.
 
-  if (fParent) {
-///  fParent->ResetView3D();
-     SetPad();
-  }
+   if (fParent) {
+      ///  fParent->ResetView3D();
+      SetPad();
+   }
 }
 
 
@@ -41,53 +41,53 @@ TPadView3D::~TPadView3D()
 //______________________________________________________________________________
 void  TPadView3D::GetRange(Double_t min[3], Double_t max[3]) const
 {
-  memcpy(min,fViewBoxMin,sizeof(fViewBoxMin));
-  memcpy(max,fViewBoxMax,sizeof(fViewBoxMax));
+   memcpy(min,fViewBoxMin,sizeof(fViewBoxMin));
+   memcpy(max,fViewBoxMax,sizeof(fViewBoxMax));
 }
 //______________________________________________________________________________
 void  TPadView3D::SetRange(Double_t min[3], Double_t max[3])
 {
-  memcpy(fViewBoxMin,min,sizeof(fViewBoxMin));
-  memcpy(fViewBoxMax,max,sizeof(fViewBoxMax));
+   memcpy(fViewBoxMin,min,sizeof(fViewBoxMin));
+   memcpy(fViewBoxMax,max,sizeof(fViewBoxMax));
 }
 
 //______________________________________________________________________________
 void  TPadView3D::GetShift(Double_t main_shift[3], Double_t extra_shift[3]) const
 {
-  memcpy(main_shift,fTranslate,sizeof(fTranslate));
-  memcpy(extra_shift,fExtraTranslate,sizeof(fExtraTranslate));
+   memcpy(main_shift,fTranslate,sizeof(fTranslate));
+   memcpy(extra_shift,fExtraTranslate,sizeof(fExtraTranslate));
 }
 
 //______________________________________________________________________________
 void  TPadView3D::SetShift(Double_t main_shift[3], Double_t extra_shift[3])
 {
-  memcpy(fTranslate,main_shift,sizeof(fTranslate));
-  memcpy(fExtraTranslate,extra_shift,sizeof(fExtraTranslate));
+   memcpy(fTranslate,main_shift,sizeof(fTranslate));
+   memcpy(fExtraTranslate,extra_shift,sizeof(fExtraTranslate));
 }
 
 //______________________________________________________________________________
 void  TPadView3D::GetAngles(Double_t main_angles[3], Double_t extra_angles[3]) const
 {
-  memcpy(main_angles,fAngles,sizeof(fAngles));
-  memcpy(extra_angles,fExtraAngles,sizeof(fExtraAngles));
+   memcpy(main_angles,fAngles,sizeof(fAngles));
+   memcpy(extra_angles,fExtraAngles,sizeof(fExtraAngles));
 }
 
 //______________________________________________________________________________
 void  TPadView3D::SetAngles(Double_t main_angles[3], Double_t extra_angles[3])
 {
-  memcpy(fAngles,main_angles,sizeof(fAngles));
-  memcpy(fExtraAngles,extra_angles,sizeof(fExtraAngles));
+   memcpy(fAngles,main_angles,sizeof(fAngles));
+   memcpy(fExtraAngles,extra_angles,sizeof(fExtraAngles));
 }
 
 //______________________________________________________________________________
 void  TPadView3D::GetAnglesFactors(Double_t factors[3]) const
 {
-  memcpy(factors,fAnglFactor,sizeof(fAnglFactor));
+   memcpy(factors,fAnglFactor,sizeof(fAnglFactor));
 }
 //______________________________________________________________________________
 void  TPadView3D::SetAnglesFactors(Double_t factors[3])
 {
-  memcpy(fAnglFactor,factors,sizeof(fAnglFactor));
+   memcpy(fAnglFactor,factors,sizeof(fAnglFactor));
 }
 
 //______________________________________________________________________________

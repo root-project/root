@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.4 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.5 2005/05/26 12:48:55 pcanal Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -78,6 +78,7 @@ void TRealData::AdoptStreamer(TMemberStreamer *str)
 //______________________________________________________________________________
 TMemberStreamer *TRealData::GetStreamer() const
 {
+   // Return the associate streamer object.
    return fStreamer; // return fDataMember->GetStreamer();
 }
 

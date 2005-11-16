@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.3 2004/08/24 10:41:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.4 2005/10/25 22:11:58 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -28,7 +28,7 @@ ClassImp(TRefTable)
 //______________________________________________________________________________
 TRefTable::TRefTable()
 {
-   // Default constructor for I/O
+   // Default constructor for I/O.
 
    fSize      = 0;
    fN         = 0;
@@ -42,7 +42,7 @@ TRefTable::TRefTable()
 //______________________________________________________________________________
 TRefTable::TRefTable(TObject *owner, Int_t size)
 {
-   // Create a TRefTable with initial size
+   // Create a TRefTable with initial size.
 
    if (size < 10) size = 10;
    fSize      = size;
@@ -60,6 +60,8 @@ TRefTable::TRefTable(TObject *owner, Int_t size)
 //______________________________________________________________________________
 TRefTable::~TRefTable()
 {
+   // Destructor.
+
    delete [] fParentIDs;
    delete fParents;
    if (fgRefTable == this) fgRefTable = 0;
@@ -68,10 +70,10 @@ TRefTable::~TRefTable()
 //______________________________________________________________________________
 Int_t TRefTable::Add(Int_t uid)
 {
-   // add a new uid to the table
+   // Add a new uid to the table.
    // we add a new pair (uid,fparent) to the map
    // This function is called by TObject::Streamer or TStreamerInfo::WriteBuffer
-   
+
    if (uid <= 0) {
       Error("Add","Attempt to add an invalid uid=%d",uid);
       return uid;
@@ -94,7 +96,7 @@ Int_t TRefTable::Add(Int_t uid)
 //______________________________________________________________________________
 void TRefTable::Clear(Option_t * /*option*/)
 {
-   // clear all entries in the table
+   // Clear all entries in the table.
    for (Int_t i=0;i<fN;i++) {
       fParentIDs[i] = 0;
    }
@@ -105,8 +107,8 @@ void TRefTable::Clear(Option_t * /*option*/)
 //______________________________________________________________________________
 Int_t TRefTable::Expand(Int_t newsize)
 {
-   // expand fParentID to newsize
-   
+   // Expand fParentID to newsize.
+
    if (newsize < 0) return newsize;
    if (newsize != fSize) {
       Int_t *temp = fParentIDs;
@@ -118,7 +120,7 @@ Int_t TRefTable::Expand(Int_t newsize)
             memset(&fParentIDs[fSize],0,(newsize-fSize)*sizeof(Int_t));
          }
       } else {
-        fParentIDs = 0;
+         fParentIDs = 0;
       }
       if (fSize) delete [] temp;
       fSize = newsize;
@@ -129,9 +131,9 @@ Int_t TRefTable::Expand(Int_t newsize)
 //______________________________________________________________________________
 void TRefTable::FillBuffer(TBuffer &b)
 {
-   // fill buffer b with the fN elements in fParentdIDs
-   // This function is called by TBranchRef::FillLeaves
-   
+   // Fill buffer b with the fN elements in fParentdIDs.
+   // This function is called by TBranchRef::FillLeaves.
+
    b << fN;
    b.WriteFastArray(fParentIDs,fN);
 }
@@ -139,7 +141,7 @@ void TRefTable::FillBuffer(TBuffer &b)
 //______________________________________________________________________________
 TObject *TRefTable::GetParent(Int_t uid) const
 {
-   // return object corresponding to uid
+   // Return object corresponding to uid.
    if (uid < 0 || uid >= fN) return 0;
    Int_t pnumber = fParentIDs[uid]-1;
    Int_t nparents = fParents->GetEntriesFast();
@@ -150,8 +152,8 @@ TObject *TRefTable::GetParent(Int_t uid) const
 //______________________________________________________________________________
 TRefTable *TRefTable::GetRefTable()
 {
-   // static function returning the current TRefTable
-   
+   // Static function returning the current TRefTable.
+
    return fgRefTable;
 }
 
@@ -163,25 +165,25 @@ Bool_t TRefTable::Notify()
    // This function, in turns, notifies the TRefTable owner for action.
    // eg, when the owner is a TBranchRef, TBranchRef::Notify is called
    // to read the branch containing the referenced object.
-   
+
    return fOwner->Notify();
 }
 
 //______________________________________________________________________________
 void TRefTable::ReadBuffer(TBuffer &b)
 {
-   // fill buffer b with the fN elements in fParentdIDs
+   // Fill buffer b with the fN elements in fParentdIDs.
    // This function is called by TBranchRef::ReadLeaves
-   
+
    b >> fN;
    if (fN > fSize) fSize = Expand(fN +fN/2);
    b.ReadFastArray(fParentIDs,fN);
 }
- 
+
 //______________________________________________________________________________
 void TRefTable::Reset(Option_t * /*option*/)
 {
-   // clear all entries in the table
+   // Clear all entries in the table.
    for (Int_t i=0;i<fN;i++) {
       fParentIDs[i] = 0;
    }
@@ -193,10 +195,10 @@ void TRefTable::Reset(Option_t * /*option*/)
 //______________________________________________________________________________
 Int_t TRefTable::SetParent(const TObject *parent)
 {
-   // Set Current parent object
+   // Set Current parent object.
    // The parent object is typically a branch of a Tree.
-   // This function is called by TBranchElement::Fill
-   
+   // This function is called by TBranchElement::Fill.
+
    Int_t nparents = fParents->GetEntriesFast();
    Int_t ind = fParents->IndexOf(parent);
    if (ind >= 0) {
@@ -211,7 +213,7 @@ Int_t TRefTable::SetParent(const TObject *parent)
 //______________________________________________________________________________
 void TRefTable::SetRefTable(TRefTable *table)
 {
-   // static function setting the current TRefTable
-   
+   // Static function setting the current TRefTable.
+
    fgRefTable = table;
 }

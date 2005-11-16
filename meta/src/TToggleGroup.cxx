@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TToggleGroup.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Piotr Golonka   31/07/97
 
 /*************************************************************************
@@ -26,8 +26,10 @@
 ClassImp(TToggleGroup)
 
 //______________________________________________________________________________
-TToggleGroup::TToggleGroup()
+   TToggleGroup::TToggleGroup()
 {
+   // Constructor.
+
    fSelected = 0;
    fToggles  = new TOrdCollection();
 }
@@ -37,24 +39,28 @@ TToggleGroup::~TToggleGroup()
 {
    // Deletes togglegroup but does not disposes toggled objects!
 
-      delete fToggles;
+   delete fToggles;
 }
 
 //______________________________________________________________________________
 Int_t TToggleGroup::Add(TToggle *t, Bool_t select)
 {
+   // Add a new toggle.
+
    if (t) {
       fToggles->AddLast(t);
       if (select)
          Select(t);
-       return IndexOf(t);
+      return IndexOf(t);
    } else
-       return (-1);
+      return (-1);
 }
 
 //______________________________________________________________________________
 Int_t TToggleGroup::InsertAt(TToggle *t, Int_t pos,Bool_t select)
 {
+   // Add a new toggle at a specific position.
+
    if (t) {
       fToggles->AddAt(t,pos);
       if (select)
@@ -67,6 +73,8 @@ Int_t TToggleGroup::InsertAt(TToggle *t, Int_t pos,Bool_t select)
 //______________________________________________________________________________
 void TToggleGroup::Select(Int_t idx)
 {
+   // Select a toggle.
+
    TToggle *sel = At(idx);
    if (sel)
       Select(sel);
@@ -75,6 +83,8 @@ void TToggleGroup::Select(Int_t idx)
 //______________________________________________________________________________
 void TToggleGroup::Select(TToggle *t)
 {
+   // Selector a toggle.
+
    TIter next(fToggles);
    TToggle *i = 0;
 
@@ -90,5 +100,5 @@ void TToggleGroup::DeleteAll()
 {
    // Disposes of all objects and clears array
 
-    fToggles->Delete();
+   fToggles->Delete();
 }

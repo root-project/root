@@ -1,5 +1,4 @@
-
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.110 2005/11/03 23:02:19 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.111 2005/11/07 12:17:53 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -77,7 +76,7 @@ extern "C" int IgnoreInclude(const char *fname, const char *expandedfname) {
 }
 
 extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
-  TCint::UpdateClassInfo(c, l);
+   TCint::UpdateClassInfo(c, l);
 }
 
 extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
@@ -89,7 +88,7 @@ extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
 }
 
 extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
-  return TCint::FindSpecialObject(c, ci, p1, p2);
+   return TCint::FindSpecialObject(c, ci, p1, p2);
 }
 
 // It is a "fantom" method to synchronize user keyboard input
@@ -131,14 +130,12 @@ TCint::~TCint()
    // Destroy the CINT interpreter interface.
 
    if (fMore != -1) {
-     // only close the opened files do not free memory:
-     // G__scratch_all();
-     G__close_inputfiles();
+      // only close the opened files do not free memory:
+      // G__scratch_all();
+      G__close_inputfiles();
    }
 
-   delete fMapfile;
-
-   //G__scratch_all();
+   delete fMapfile;   
 }
 
 //______________________________________________________________________________
@@ -185,7 +182,7 @@ void TCint::EndOfLineAction()
    // It calls a "fantom" method to synchronize user keyboard input
    // and ROOT prompt line.
 
-    ProcessLineSynch(fantomline);
+   ProcessLineSynch(fantomline);
 }
 
 //______________________________________________________________________________
@@ -353,8 +350,8 @@ Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
 
-  if (gApplication && gApplication->IsCmdThread())
-     return ProcessLine(line, error);
+   if (gApplication && gApplication->IsCmdThread())
+      return ProcessLine(line, error);
 #ifdef WIN32
 #ifndef GDK_WIN32
    if (error) *error = kProcessing;
@@ -909,29 +906,28 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
 
    if (params)
    {
-       // Create a character string of parameters from TObjArray
-       TIter next(params);
-       for (Int_t i = 0; i < argc; i ++)
-       {
-           TMethodArg *arg = (TMethodArg *) argList->At( i );
-           G__TypeInfo type( arg->GetFullTypeName() );
-           TObjString *nxtpar = (TObjString *)next();
-           if (i) complete += ',';
-           if (strstr( type.TrueName(), "char" ))
-           {
-               TString chpar('\"');
-               chpar += (nxtpar->String()).ReplaceAll("\"","\\\"");
-               // At this point we have to check if string contains \\"
-               // and apply some more sophisticated parser. Not implemented yet!
-               complete += chpar;
-               complete += '\"';
-           }
-           else
-               complete += nxtpar->String();
-       }
-       listpar = complete.Data();
+      // Create a character string of parameters from TObjArray
+      TIter next(params);
+      for (Int_t i = 0; i < argc; i ++)
+      {
+         TMethodArg *arg = (TMethodArg *) argList->At( i );
+         G__TypeInfo type( arg->GetFullTypeName() );
+         TObjString *nxtpar = (TObjString *)next();
+         if (i) complete += ',';
+         if (strstr( type.TrueName(), "char" )) {
+            TString chpar('\"');
+            chpar += (nxtpar->String()).ReplaceAll("\"","\\\"");
+            // At this point we have to check if string contains \\"
+            // and apply some more sophisticated parser. Not implemented yet!
+            complete += chpar;
+            complete += '\"';
+         }
+         else
+            complete += nxtpar->String();
+      }
+      listpar = complete.Data();
    }
-
+   
    Execute(obj, cl, (char *)method->GetName(), (char *)listpar, error);
 }
 

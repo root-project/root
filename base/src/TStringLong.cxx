@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStringLong.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   15/11/95
 
 /*************************************************************************
@@ -87,6 +87,7 @@ void TStringLong::FillBuffer(char *&buffer)
 //______________________________________________________________________________
 void TStringLong::ReadBuffer(char *&buffer)
 {
+   // Read this string from the buffer.
    Pref()->UnLink();
 
    Int_t nchars;
@@ -100,6 +101,7 @@ void TStringLong::ReadBuffer(char *&buffer)
 //______________________________________________________________________________
 Int_t TStringLong::Sizeof() const
 {
+   // Return the sizeof the string.
    return Length()+sizeof(Int_t);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.4 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.5 2005/09/29 15:44:09 rdm Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -295,9 +295,9 @@ void TMacro::SavePrimitive(ofstream &out, Option_t *option)
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TMacro::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   "<<ClassName()<<" *";
+      out<<"   "<<ClassName()<<" *";
    }
    out<<"macro = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<endl;
    if (!fLines) return;

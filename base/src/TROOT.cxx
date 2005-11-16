@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.166 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.167 2005/11/03 23:03:13 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -849,8 +849,8 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       if ( long64name != name ) return FindSTLClass( long64name.c_str(), load);
    }
    if (cl == 0) {
-       TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-       if (resolvedName != name) cl = GetClass(resolvedName,load);
+      TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
+      if (resolvedName != name) cl = GetClass(resolvedName,load);
    }
    if (cl == 0 && (strncmp(name,"std::",5)==0)) {
       // CINT sometime ignores the std namespace for stl containers,
@@ -1340,28 +1340,28 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 //______________________________________________________________________________
 Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
-  // Return true if the given include file correspond to a class that has
-  // been loaded through a compiled dictionnary.
+   // Return true if the given include file correspond to a class that has
+   // been loaded through a compiled dictionnary.
 
-  Int_t result = 0;
+   Int_t result = 0;
 
-  if ( fname == 0 ) return result;
-
-  TString className(fname);
-
-  // Remove extension if any.
-  Int_t where = className.Last('.');
-  if (where != kNPOS) className.Remove( where );
-  className = gSystem->BaseName(className);
-
-  TClass *cla = GetClass(className);
-  if ( cla ) {
-    if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
-    const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
-    if(!decfile) return 0;
-    result = strcmp( decfile,fname ) == 0;
-  }
-  return result;
+   if ( fname == 0 ) return result;
+   
+   TString className(fname);
+   
+   // Remove extension if any.
+   Int_t where = className.Last('.');
+   if (where != kNPOS) className.Remove( where );
+   className = gSystem->BaseName(className);
+   
+   TClass *cla = GetClass(className);
+   if ( cla ) {
+      if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
+      const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
+      if(!decfile) return 0;
+      result = strcmp( decfile,fname ) == 0;
+   }
+   return result;
 }
 
 //______________________________________________________________________________
@@ -1446,8 +1446,8 @@ TClass *TROOT::LoadClass(const char *classname) const
       // Try with Long64_t instead of long long
       string long64name = TClassEdit::GetLong64_Name(classname);
       if (long64name != classname) {
-        TClass *res = LoadClass(long64name.c_str());
-        if (res) return res;
+         TClass *res = LoadClass(long64name.c_str());
+         if (res) return res;
       }
    }
 
@@ -1914,6 +1914,7 @@ void TROOT::SetStyle(const char *stylename)
 //______________________________________________________________________________
 Int_t TROOT::DecreaseDirLevel()
 {
+   // Decrease the indentation level for ls().
    return --fgDirLevel;
 }
 
@@ -1970,6 +1971,7 @@ void TROOT::SetMacroPath(const char *newpath)
 //______________________________________________________________________________
 Int_t TROOT::IncreaseDirLevel()
 {
+   // Increase the indentation level for ls().
    return ++fgDirLevel;
 }
 
@@ -1984,18 +1986,21 @@ void TROOT::IndentLevel()
 //______________________________________________________________________________
 Bool_t TROOT::Initialized()
 {
+   // Return kTRUE if the TROOT object has been initialized.
    return fgRootInit;
 }
 
 //______________________________________________________________________________
 Bool_t TROOT::MemCheck()
 {
+   // Return kTRUE if the memory leak checke is on.
    return fgMemCheck;
 }
 
 //______________________________________________________________________________
 void TROOT::SetDirLevel(Int_t level)
 {
+   // Return Indentation level for ls().
    fgDirLevel = level;
 }
 

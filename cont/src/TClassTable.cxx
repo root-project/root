@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.35 2005/09/03 00:45:34 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.36 2005/09/03 07:54:00 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -393,11 +393,11 @@ char *TClassTable::Next()
 {
     // Returns next class from sorted class table.
 
-    if (fgCursor < fgTally) {
-       TClassRec *r = fgSortedTable[fgCursor++];
-       return r->fName;
-    } else
-       return 0;
+   if (fgCursor < fgTally) {
+      TClassRec *r = fgSortedTable[fgCursor++];
+      return r->fName;
+   } else
+      return 0;
 }
 
 //______________________________________________________________________________

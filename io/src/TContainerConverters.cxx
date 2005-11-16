@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.2 2004/11/17 19:48:19 brun Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.3 2005/08/30 02:45:05 pcanal Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -33,6 +33,8 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
       fIsPrealloc(isPrealloc),
       fProxy(proxy?proxy->Generate():0) 
 {
+   // Constructor.
+
    if (isPointer) fOffset = sizeof(TClonesArray*);
    else fOffset = sizeof(TClonesArray*);
 }
@@ -88,7 +90,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
             // got a reference to an already read object
             if (b.GetBufferVersion() > 0) {
                tag += b.GetBufferDisplacement();
-             } else {
+            } else {
                if (tag > (UInt_t)b.GetMapCount()) {
                   Error("TConvertClonesArrayToProxy", "object tag too large, I/O buffer corrupted");
                   return;

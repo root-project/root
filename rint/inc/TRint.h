@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.6 2004/05/10 08:05:33 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.7 2004/05/10 08:14:10 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    virtual void        Terminate(int status);
            void        Interrupt() { fInterrupt = kTRUE; }
 
-   ClassDef(TRint,0)  //ROOT Interactive Application Interface
+   ClassDef(TRint,0);  //ROOT Interactive Application Interface
 };
 
 #endif

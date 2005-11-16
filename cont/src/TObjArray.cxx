@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.23 2005/06/09 18:20:02 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.24 2005/06/13 16:48:01 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -179,14 +179,14 @@ Int_t  TObjArray::AddAtFree(TObject *obj)
    // Find the first empty cell or AddLast if there is no empty cell
 
    if (Last()) {    // <---------- This is to take in account "empty" TObjArray's
-       Int_t i;
-       for (i = 0; i < fSize; i++)
-          if (!fCont[i]) {         // Add object at position i
-             fCont[i] = obj;
-             fLast = TMath::Max(i, GetAbsLast());
-             Changed();
-             return i+fLowerBound;
-          }
+      Int_t i;
+      for (i = 0; i < fSize; i++)
+         if (!fCont[i]) {         // Add object at position i
+            fCont[i] = obj;
+            fLast = TMath::Max(i, GetAbsLast());
+            Changed();
+            return i+fLowerBound;
+         }
    }
    AddLast(obj);
    return GetLast();
@@ -453,15 +453,15 @@ Int_t TObjArray::IndexOf(const TObject *obj) const
 
    Int_t i;
    if (obj) {
-     for (i = 0; i < fSize; i++)
-        if (fCont[i] && fCont[i]->IsEqual(obj))
-           return i+fLowerBound;
+      for (i = 0; i < fSize; i++)
+         if (fCont[i] && fCont[i]->IsEqual(obj))
+            return i+fLowerBound;
    } else {    // Look for the first empty slot
-     for (i = 0; i < fSize; i++)
-        if (!fCont[i])
-           return i+fLowerBound;
+      for (i = 0; i < fSize; i++)
+         if (!fCont[i])
+            return i+fLowerBound;
    }
-
+   
    return fLowerBound-1;
 }
 

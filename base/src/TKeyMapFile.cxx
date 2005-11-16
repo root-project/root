@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TKeyMapFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   23/07/97
 
 /*************************************************************************
@@ -30,22 +30,25 @@ ClassImp(TKeyMapFile)
 //______________________________________________________________________________
 TKeyMapFile::TKeyMapFile() : TNamed()
 {
+   // Default constructor.
 }
 
 //______________________________________________________________________________
 TKeyMapFile::TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile)
       : TNamed(name,classname)
 {
+   // Constructor.
    fMapFile = mapfile;
 }
 
 //______________________________________________________________________________
 void TKeyMapFile::Browse(TBrowser *b)
 {
-    TObject *obj = gDirectory->Get((char*)GetName());
-    delete obj;
-    obj = fMapFile->Get(GetName(),0);
-
-    if( b && obj )
-        obj->Browse( b );
+   // Browse the contained objects
+   TObject *obj = gDirectory->Get((char*)GetName());
+   delete obj;
+   obj = fMapFile->Get(GetName(),0);
+   
+   if( b && obj )
+      obj->Browse( b );
 }

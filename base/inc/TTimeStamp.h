@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.15 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.16 2005/06/23 06:24:27 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -66,15 +66,15 @@ struct timespec
 #if defined(__CINT__)
 struct tm
 {
-  int tm_sec;                   // Seconds.     [0-60] (1 leap second)
-  int tm_min;                   // Minutes.     [0-59]
-  int tm_hour;                  // Hours.       [0-23]
-  int tm_mday;                  // Day.         [1-31]
-  int tm_mon;                   // Month.       [0-11]
-  int tm_year;                  // Year - 1900.
-  int tm_wday;                  // Day of week. [0-6]
-  int tm_yday;                  // Days in year.[0-365]
-  int tm_isdst;                 // DST.         [-1/0/1]
+   int tm_sec;                   // Seconds.     [0-60] (1 leap second)
+   int tm_min;                   // Minutes.     [0-59]
+   int tm_hour;                  // Hours.       [0-23]
+   int tm_mday;                  // Day.         [1-31]
+   int tm_mon;                   // Month.       [0-11]
+   int tm_year;                  // Year - 1900.
+   int tm_wday;                  // Day of week. [0-6]
+   int tm_yday;                  // Days in year.[0-365]
+   int tm_isdst;                 // DST.         [-1/0/1]
 };
 #endif
 

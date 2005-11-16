@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.3 2002/09/09 20:13:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.4 2002/09/15 19:45:59 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -122,10 +122,10 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
    if (!util) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-          if (h->LoadPlugin() == -1)
+         if (h->LoadPlugin() == -1)
             return 0;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         h->ExecPlugin(0);
+         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
    util->InspectCanvas(obj);

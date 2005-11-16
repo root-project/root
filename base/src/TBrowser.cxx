@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.13 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.14 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -64,7 +64,7 @@ class TBrowserObject : public TNamed
 public:
 
    TBrowserObject(void *obj, TClass *cl, const char *brname);
-  ~TBrowserObject(){;}
+   ~TBrowserObject(){;}
 
    void    Browse(TBrowser* b);
    Bool_t  IsFolder() const;
@@ -394,6 +394,7 @@ Bool_t TBrowserTimer::Notify()
 TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
    : TNamed(brname,cl->GetName()), fObj(obj), fClass(cl)
 {
+   // Constructor.
    if (cl==0) Fatal("Constructor","Class parameter should not be null");
    SetBit(kCanDelete);
 }
@@ -401,12 +402,14 @@ TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
 //______________________________________________________________________________
 Bool_t TBrowserObject::IsFolder() const
 {
+   // Return kTRUE if the object is a folder (contains browsable objects);
    return fClass->IsFolder(fObj);
 }
 
 //______________________________________________________________________________
 void TBrowserObject::Browse(TBrowser* b)
 {
+   // Browse the content of the underlying object.
    fClass->Browse(fObj, b);
 }
 

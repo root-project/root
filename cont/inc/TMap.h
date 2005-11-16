@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.15 2003/09/23 22:03:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.16 2004/10/13 15:30:22 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
 
-   ClassDef(TPair,0);
+   ClassDef(TPair,0); // Pair TObject*, TObject*
 };
 
 typedef TPair   TAssoc;     // for backward compatibility

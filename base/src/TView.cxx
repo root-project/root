@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.28 2005/08/29 08:24:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.29 2005/09/02 07:51:51 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -98,12 +98,12 @@ TView::TView(Int_t system)
    if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
-          if (h->LoadPlugin() == -1)
+         if (h->LoadPlugin() == -1)
             return;
-          h->ExecPlugin(0);
+         h->ExecPlugin(0);
       }
    }
-
+   
    SetBit(kMustCleanup);
 
    fSystem = system;
@@ -162,9 +162,9 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
    if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
-          if (h->LoadPlugin() == -1)
+         if (h->LoadPlugin() == -1)
             return;
-          h->ExecPlugin(0);
+         h->ExecPlugin(0);
       }
    }
 
@@ -188,12 +188,11 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
       fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
    }
 
-        fLongitude = -90 - gPad->GetPhi();
-        fLatitude  =  90 - gPad->GetTheta();
-        ResetView(fLongitude, fLatitude, fPsi, irep);
-
-   if (gPad)
-                gPad->SetView(this);
+   fLongitude = -90 - gPad->GetPhi();
+   fLatitude  =  90 - gPad->GetTheta();
+   ResetView(fLongitude, fLatitude, fPsi, irep);
+   
+   if (gPad) gPad->SetView(this);
    if (system == 11) SetPerspective();
 }
 
@@ -225,9 +224,9 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
    if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
-          if (h->LoadPlugin() == -1)
+         if (h->LoadPlugin() == -1)
             return;
-          h->ExecPlugin(0);
+         h->ExecPlugin(0);
       }
    }
 
@@ -250,13 +249,12 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
    for (i=0;i<3;i++) {
       fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
    }
-
-        fLongitude = -90 - gPad->GetPhi();
-        fLatitude  =  90 - gPad->GetTheta();
-        ResetView(fLongitude, fLatitude, fPsi, irep);
-
-   if (gPad)
-                gPad->SetView(this);
+   
+   fLongitude = -90 - gPad->GetPhi();
+   fLatitude  =  90 - gPad->GetTheta();
+   ResetView(fLongitude, fLatitude, fPsi, irep);
+   
+   if (gPad) gPad->SetView(this);
    if (system == 11) SetPerspective();
 }
 
@@ -289,110 +287,110 @@ void TView::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
     /* Local variables */
-    Double_t cosa, sina;
-    Int_t i, k;
-    Double_t p[8]        /* was [2][4] */;
-    Int_t i1, i2, i3, i4, ix, iy;
-    ix = 0;
+   Double_t cosa, sina;
+   Int_t i, k;
+   Double_t p[8]        /* was [2][4] */;
+   Int_t i1, i2, i3, i4, ix, iy;
+   ix = 0;
 
-    /* Parameter adjustments */
-    av -= 4;
+   /* Parameter adjustments */
+   av -= 4;
 
-    sina = TMath::Sin(ang*kRad);
-    cosa = TMath::Cos(ang*kRad);
-    p[0] = fRmin[0];
-    p[1] = fRmin[1];
-    p[2] = fRmax[0];
-    p[3] = fRmin[1];
-    p[4] = fRmax[0];
-    p[5] = fRmax[1];
-    p[6] = fRmin[0];
-    p[7] = fRmax[1];
+   sina = TMath::Sin(ang*kRad);
+   cosa = TMath::Cos(ang*kRad);
+   p[0] = fRmin[0];
+   p[1] = fRmin[1];
+   p[2] = fRmax[0];
+   p[3] = fRmin[1];
+   p[4] = fRmax[0];
+   p[5] = fRmax[1];
+   p[6] = fRmin[0];
+   p[7] = fRmax[1];
 //*-*-           F I N D   T H E   M O S T   L E F T   P O I N T */
-    i1 = 1;
-    if (fTN[0] < 0) i1 = 2;
-    if (fTN[0]*cosa + fTN[1]*sina < 0) i1 = 5 - i1;
+   i1 = 1;
+   if (fTN[0] < 0) i1 = 2;
+   if (fTN[0]*cosa + fTN[1]*sina < 0) i1 = 5 - i1;
 
 //*-*-          S E T   O T H E R   P O I N T S */
-    i2 = i1 % 4 + 1;
-    i3 = i2 % 4 + 1;
-    i4 = i3 % 4 + 1;
+   i2 = i1 % 4 + 1;
+   i3 = i2 % 4 + 1;
+   i4 = i3 % 4 + 1;
 
 //*-*-          S E T   A X I S   V E R T I X E S */
 
-    av[4] = p[(i1 << 1) - 2];
-    av[5] = p[(i1 << 1) - 1];
-    av[7] = p[(i2 << 1) - 2];
-    av[8] = p[(i2 << 1) - 1];
-    av[10] = p[(i3 << 1) - 2];
-    av[11] = p[(i3 << 1) - 1];
-    av[13] = p[(i4 << 1) - 2];
-    av[14] = p[(i4 << 1) - 1];
-    for (i = 1; i <= 4; ++i) {
-        av[i*3 +  3] = fRmin[2];
-        av[i*3 + 13] = av[i*3 + 1];
-        av[i*3 + 14] = av[i*3 + 2];
-        av[i*3 + 15] = fRmax[2];
-    }
+   av[4] = p[(i1 << 1) - 2];
+   av[5] = p[(i1 << 1) - 1];
+   av[7] = p[(i2 << 1) - 2];
+   av[8] = p[(i2 << 1) - 1];
+   av[10] = p[(i3 << 1) - 2];
+   av[11] = p[(i3 << 1) - 1];
+   av[13] = p[(i4 << 1) - 2];
+   av[14] = p[(i4 << 1) - 1];
+   for (i = 1; i <= 4; ++i) {
+      av[i*3 +  3] = fRmin[2];
+      av[i*3 + 13] = av[i*3 + 1];
+      av[i*3 + 14] = av[i*3 + 2];
+      av[i*3 + 15] = fRmax[2];
+   }
 
 //*-*-          S E T   A X I S
 
-    if (av[4] == av[7]) ix = 2;
-    if (av[5] == av[8]) ix = 1;
-    iy = 3 - ix;
+   if (av[4] == av[7]) ix = 2;
+   if (av[5] == av[8]) ix = 1;
+   iy = 3 - ix;
 //*-*-          X - A X I S
-    ix1 = ix;
-    if (av[ix*3 + 1] > av[(ix + 1)*3 + 1])      ix1 = ix + 1;
-    ix2 = (ix << 1) - ix1 + 1;
+   ix1 = ix;
+   if (av[ix*3 + 1] > av[(ix + 1)*3 + 1])      ix1 = ix + 1;
+   ix2 = (ix << 1) - ix1 + 1;
 //*-*-          Y - A X I S
-    iy1 = iy;
-    if (av[iy*3 + 2] > av[(iy + 1)*3 + 2])      iy1 = iy + 1;
-    iy2 = (iy << 1) - iy1 + 1;
+   iy1 = iy;
+   if (av[iy*3 + 2] > av[(iy + 1)*3 + 2])      iy1 = iy + 1;
+   iy2 = (iy << 1) - iy1 + 1;
 //*-*-          Z - A X I S
-    iz1 = 1;
-    iz2 = 5;
+   iz1 = 1;
+   iz2 = 5;
 
-    if (fTN[10] >= 0)   return;
-    k = (ix1 - 1)*3 + ix2;
-    if (k%2) return;
-    if (k == 2) {
-       ix1 = 4;
-       ix2 = 3;
-    }
-    if (k == 4) {
-       ix1 = 3;
-       ix2 = 4;
-    }
-    if (k == 6) {
-       ix1 = 1;
-       ix2 = 4;
-    }
-    if (k == 8) {
-       ix1 = 4;
-       ix2 = 1;
-    }
-
-    k = (iy1 - 1)*3 + iy2;
-    if (k%2) return;
-    if (k == 2) {
-       iy1 = 4;
-       iy2 = 3;
-       return;
-    }
-    if (k == 4) {
-       iy1 = 3;
-       iy2 = 4;
-       return;
-    }
-    if (k == 6) {
-       iy1 = 1;
-       iy2 = 4;
-       return;
-    }
-    if (k == 8) {
-       iy1 = 4;
-       iy2 = 1;
-    }
+   if (fTN[10] >= 0)   return;
+   k = (ix1 - 1)*3 + ix2;
+   if (k%2) return;
+   if (k == 2) {
+      ix1 = 4;
+      ix2 = 3;
+   }
+   if (k == 4) {
+      ix1 = 3;
+      ix2 = 4;
+   }
+   if (k == 6) {
+      ix1 = 1;
+      ix2 = 4;
+   }
+   if (k == 8) {
+      ix1 = 4;
+      ix2 = 1;
+   }
+   
+   k = (iy1 - 1)*3 + iy2;
+   if (k%2) return;
+   if (k == 2) {
+      iy1 = 4;
+      iy2 = 3;
+      return;
+   }
+   if (k == 4) {
+      iy1 = 3;
+      iy2 = 4;
+      return;
+   }
+   if (k == 6) {
+      iy1 = 1;
+      iy2 = 4;
+      return;
+   }
+   if (k == 8) {
+      iy1 = 4;
+      iy2 = 1;
+   }
 }
 
 //______________________________________________________________________________
@@ -553,107 +551,107 @@ void TView::DefineViewDirection(const Double_t *s, const Double_t *c,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    if (IsPerspective()) {
-       DefinePerspectiveView();
-       return;
-    }
-    Int_t i, k;
-    Double_t tran[16]   /* was [4][4] */, rota[16]      /* was [4][4] */;
-    Double_t c1, c2, c3, s1, s2, s3, scalex, scaley, scalez;
+   if (IsPerspective()) {
+      DefinePerspectiveView();
+      return;
+   }
+   Int_t i, k;
+   Double_t tran[16]   /* was [4][4] */, rota[16]      /* was [4][4] */;
+   Double_t c1, c2, c3, s1, s2, s3, scalex, scaley, scalez;
+   
+   /* Parameter adjustments */
+   tback -= 5;
+   tnorm -= 5;
 
-    /* Parameter adjustments */
-    tback -= 5;
-    tnorm -= 5;
-
-    scalex = s[0];
-    scaley = s[1];
-    scalez = s[2];
+   scalex = s[0];
+   scaley = s[1];
+   scalez = s[2];
 
 //*-*-        S E T   T R A N S L A T I O N   M A T R I X
 
-    tran[0] = 1 / scalex;
-    tran[1] = 0;
-    tran[2] = 0;
-    tran[3] = -c[0] / scalex;
-
-    tran[4] = 0;
-    tran[5] = 1 / scaley;
-    tran[6] = 0;
-    tran[7] = -c[1] / scaley;
-
-    tran[8] = 0;
-    tran[9] = 0;
-    tran[10] = 1 / scalez;
-    tran[11] = -c[2] / scalez;
-
-    tran[12] = 0;
-    tran[13] = 0;
-    tran[14] = 0;
-    tran[15] = 1;
-
+   tran[0] = 1 / scalex;
+   tran[1] = 0;
+   tran[2] = 0;
+   tran[3] = -c[0] / scalex;
+   
+   tran[4] = 0;
+   tran[5] = 1 / scaley;
+   tran[6] = 0;
+   tran[7] = -c[1] / scaley;
+   
+   tran[8] = 0;
+   tran[9] = 0;
+   tran[10] = 1 / scalez;
+   tran[11] = -c[2] / scalez;
+   
+   tran[12] = 0;
+   tran[13] = 0;
+   tran[14] = 0;
+   tran[15] = 1;
+   
 //*-*-        S E T    R O T A T I O N   M A T R I X
 
 //    ( C(PSI) S(PSI) 0)   (1      0          0 )   ( C(90+PHI) S(90+PHI) 0)
 //    (-S(PSI) C(PSI) 0) * (0  C(THETA) S(THETA)) * (-S(90+PHI) C(90+PHI) 0)
 //    (   0      0    1)   (0 -S(THETA) C(THETA))   (     0           0   1)
 
-    c1 = cospsi;
-    s1 = sinpsi;
-    c2 = costhe;
-    s2 = sinthe;
-    c3 = -sinphi;
-    s3 = cosphi;
-
-    rota[0] = c1*c3 - s1*c2*s3;
-    rota[1] = c1*s3 + s1*c2*c3;
-    rota[2] = s1*s2;
-    rota[3] = 0;
-
-    rota[4] = -s1*c3 - c1* c2*s3;
-    rota[5] = -s1*s3 + c1* c2*c3;
-    rota[6] = c1*s2;
-    rota[7] = 0;
-
-    rota[8] = s2*s3;
-    rota[9] = -s2*c3;
-    rota[10] = c2;
-    rota[11] = 0;
-
-    rota[12] = 0;
-    rota[13] = 0;
-    rota[14] = 0;
-    rota[15] = 1;
+   c1 = cospsi;
+   s1 = sinpsi;
+   c2 = costhe;
+   s2 = sinthe;
+   c3 = -sinphi;
+   s3 = cosphi;
+   
+   rota[0] = c1*c3 - s1*c2*s3;
+   rota[1] = c1*s3 + s1*c2*c3;
+   rota[2] = s1*s2;
+   rota[3] = 0;
+   
+   rota[4] = -s1*c3 - c1* c2*s3;
+   rota[5] = -s1*s3 + c1* c2*c3;
+   rota[6] = c1*s2;
+   rota[7] = 0;
+   
+   rota[8] = s2*s3;
+   rota[9] = -s2*c3;
+   rota[10] = c2;
+   rota[11] = 0;
+   
+   rota[12] = 0;
+   rota[13] = 0;
+   rota[14] = 0;
+   rota[15] = 1;
 
 //*-*-        F I N D   T R A N S F O R M A T I O N   M A T R I X
 
-    for (i = 1; i <= 3; ++i) {
-        for (k = 1; k <= 4; ++k) {
-            tnorm[k + (i << 2)] = rota[(i << 2) - 4]*tran[k - 1] + rota[(i
-                    << 2) - 3]*tran[k + 3] + rota[(i << 2) - 2]*tran[k +7]
-                    + rota[(i << 2) - 1]*tran[k + 11];
-        }
-    }
+   for (i = 1; i <= 3; ++i) {
+      for (k = 1; k <= 4; ++k) {
+         tnorm[k + (i << 2)] = rota[(i << 2) - 4]*tran[k - 1] + rota[(i
+                 << 2) - 3]*tran[k + 3] + rota[(i << 2) - 2]*tran[k +7]
+                 + rota[(i << 2) - 1]*tran[k + 11];
+      }
+   }
 
 //*-*-        S E T   B A C K   T R A N S L A T I O N   M A T R I X
 
-    tran[0] = scalex;
-    tran[3] = c[0];
-
-    tran[5] = scaley;
-    tran[7] = c[1];
-
-    tran[10] = scalez;
-    tran[11] = c[2];
-
+   tran[0] = scalex;
+   tran[3] = c[0];
+   
+   tran[5] = scaley;
+   tran[7] = c[1];
+   
+   tran[10] = scalez;
+   tran[11] = c[2];
+   
 //*-*-        F I N D   B A C K   T R A N S F O R M A T I O N
 
-    for (i = 1; i <= 3; ++i) {
-        for (k = 1; k <= 4; ++k) {
-            tback[k + (i << 2)] = tran[(i << 2) - 4]*rota[(k << 2) - 4] +
-                    tran[(i << 2) - 3]*rota[(k << 2) - 3] + tran[(i << 2) -2]
-                    *rota[(k << 2) - 2] + tran[(i << 2) - 1]*rota[(k <<2) - 1];
-        }
-    }
+   for (i = 1; i <= 3; ++i) {
+      for (k = 1; k <= 4; ++k) {
+         tback[k + (i << 2)] = tran[(i << 2) - 4]*rota[(k << 2) - 4] +
+            tran[(i << 2) - 3]*rota[(k << 2) - 3] + tran[(i << 2) -2]
+            *rota[(k << 2) - 2] + tran[(i << 2) - 1]*rota[(k <<2) - 1];
+      }
+   }
 }
 
 
@@ -1611,16 +1609,22 @@ void TView::RotateView(Double_t phi, Double_t theta, TVirtualPad *pad)
 }
 
 //_______________________________________________________________________________________
-void TView::SideView(TVirtualPad *pad){
-  RotateView(0,90.0,pad);
+void TView::SideView(TVirtualPad *pad)
+{
+   // Set to side view.
+   RotateView(0,90.0,pad);
 }
 //_______________________________________________________________________________________
-void TView::FrontView(TVirtualPad *pad){
-  RotateView(270.0,90.0,pad);
+void TView::FrontView(TVirtualPad *pad)
+{
+   // Set to front view.
+   RotateView(270.0,90.0,pad);
 }
 //_______________________________________________________________________________________
-void TView::TopView(TVirtualPad *pad){
-  RotateView(270.0,0.0,pad);
+void TView::TopView(TVirtualPad *pad)
+{
+   // Set to top view.
+   RotateView(270.0,0.0,pad);
 }
 //_______________________________________________________________________________________
 void TView::ToggleRulers(TVirtualPad *pad)
@@ -1842,6 +1846,7 @@ void TView::MoveWindow(Char_t option)
 //_______________________________________________________________________________________
 void TView::ZoomIn()
 {
+   // Zoom in.
    if (!IsPerspective()) return;
    Double_t extent = GetExtent();
    Double_t fc = 0.1;
@@ -1860,6 +1865,7 @@ void TView::ZoomIn()
 //_______________________________________________________________________________________
 void TView::ZoomOut()
 {
+   // Zoom out.
    if (!IsPerspective()) return;
    Double_t extent = GetExtent();
    Double_t fc = 0.1;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.8 2005/06/14 13:28:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.9 2005/11/04 15:07:16 rdm Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,6 +27,8 @@ ClassImp(TVirtualFitter)
 //______________________________________________________________________________
 TVirtualFitter::TVirtualFitter()
 {
+   // Default constructor.
+
    fMethodCall = 0;
    fFCN        = 0;
 }
@@ -171,7 +173,7 @@ void TVirtualFitter::SetFCN(void *fcn)
       delete fMethodCall;
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-    }
+   }
    fFCN = InteractiveFCN;
 }
 

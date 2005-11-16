@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TTime.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -26,5 +26,7 @@ ClassImp(TTime)
 //______________________________________________________________________________
 const char *TTime::AsString() const
 {
+   // Return the time as a string.
+
    return Form("%lu", (ULong_t)fMilliSec);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.1 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.2 2004/10/25 14:54:42 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -40,6 +40,7 @@ static const char *kEventTypeNames[] = {
 //______________________________________________________________________________
 const char *TVirtualPerfStats::EventType(EEventType type)
 {
+   // Return the name of the event type.
    if (type < kUnDefined || type >= kNumEventType) {
       return "Illegal EEventType";
    } else {

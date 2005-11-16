@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.9 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.10 2005/09/18 13:07:40 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
 };
 
 namespace ROOT {
-  class TMapTypeToClassRec;
+   class TMapTypeToClassRec;
 }
 
 class TClassTable : public TObject {

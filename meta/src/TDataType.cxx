@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.19 2005/01/25 07:24:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.20 2005/07/18 15:56:41 pcanal Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -69,21 +69,23 @@ TDataType::~TDataType()
 //______________________________________________________________________________
 const char *TDataType::GetTypeName(EDataType type)
 {
+   // Return the name of the type.
+
    switch (type) {
-      case  1: return "Char_t";   
-      case  2: return "Short_t";   
-      case  3: return "Int_t";   
-      case  4: return "Long_t";   
-      case  5: return "Float_t";   
-      case  6: return "Int_t";   
-      case  7: return "char*";   
+      case  1: return "Char_t";
+      case  2: return "Short_t";
+      case  3: return "Int_t";
+      case  4: return "Long_t";
+      case  5: return "Float_t";
+      case  6: return "Int_t";
+      case  7: return "char*";
       case  8: return "Double_t";
       case  9: return "Double32_t";
-      case 11: return "UChar_t";   
-      case 12: return "UShort_t";   
-      case 13: return "UInt_t";   
-      case 14: return "ULong_t"; 
-      case 15: return "UInt_t"; 
+      case 11: return "UChar_t";
+      case 12: return "UShort_t";
+      case 13: return "UInt_t";
+      case 14: return "ULong_t";
+      case 15: return "UInt_t";
       case 16: return "Long64_t";
       case 17: return "ULong64_t";
       case 18: return "Bool_t";
@@ -91,7 +93,7 @@ const char *TDataType::GetTypeName(EDataType type)
       case kNoType_t: return "";
       case kchar:     return "Char_t";
    }
-   return "";  
+   return "";
 }
 
 //______________________________________________________________________________
@@ -207,7 +209,7 @@ const char *TDataType::AsString(void *buf) const
       sprintf(line, "%g", *(float *)buf);
    else if (!strcmp("double", name))
       sprintf(line, "%g", *(double *)buf);
-   else if (!strcmp("char*", name)) 
+   else if (!strcmp("char*", name))
       sprintf(line, "%s", *(char**)buf);
 
    return line;

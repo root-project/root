@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.9 2004/11/15 16:21:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.10 2004/12/27 17:16:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -151,8 +151,8 @@ void TAttFill::ResetAttFill(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*Reset this fill attributes to default values*-*-*-*-*-*-*
 //*-*              ============================================
-  fFillColor = 1;
-  fFillStyle = 0;
+   fFillColor = 1;
+   fFillStyle = 0;
 }
 
 //______________________________________________________________________________

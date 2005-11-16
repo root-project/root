@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.20 2004/09/13 16:39:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.21 2004/12/07 15:34:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -586,7 +586,7 @@ void TColor::SaveColor(ofstream &out, Int_t ci)
    const char *cname = TColor::PixelAsHexString(pixel);
 
    if (gROOT->ClassSaved(TColor::Class())) {
-       out << endl;
+      out << endl;
    } else {
       out << endl;
       out << "   Int_t ci;   // for color index setting" << endl;

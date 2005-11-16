@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.74 2005/11/13 17:57:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.75 2005/11/13 21:05:24 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -130,6 +130,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
 //______________________________________________________________________________
 TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 {
+   // Copy constructor.
    ((TDirectory&)directory).Copy(*this);
 }
 
@@ -220,6 +221,8 @@ Int_t TDirectory::AppendKey(TKey *key)
 //______________________________________________________________________________
 void TDirectory::Browse(TBrowser *b)
 {
+   // Browse the content of the directory.
+
    Char_t name[kMaxLen];
 
    if (b) {
@@ -837,13 +840,13 @@ TObject *TDirectory::Get(const char *namecycle)
    TKey *key;
    TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
-     if (strcmp(namobj,key->GetName()) == 0) {
-        if ((cycle == 9999) || (cycle == key->GetCycle())) {
-           TDirectory::TContext ctxt(this);
-           idcur = key->ReadObj();
-           break;
-        }
-     }
+      if (strcmp(namobj,key->GetName()) == 0) {
+         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+            TDirectory::TContext ctxt(this);
+            idcur = key->ReadObj();
+            break;
+         }
+      }
    }
 
    return idcur;
@@ -946,13 +949,13 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
    TKey *key;
    TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
-     if (strcmp(namobj,key->GetName()) == 0) {
-        if ((cycle == 9999) || (cycle == key->GetCycle())) {
-           TDirectory::TContext ctxt(this);
-           idcur = key->ReadObjectAny(expectedClass);
-           break;
-        }
-     }
+      if (strcmp(namobj,key->GetName()) == 0) {
+         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+            TDirectory::TContext ctxt(this);
+            idcur = key->ReadObjectAny(expectedClass);
+            break;
+         }
+      }
    }
 
    return idcur;

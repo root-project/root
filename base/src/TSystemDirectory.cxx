@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.7 2005/06/02 16:28:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.8 2005/07/05 12:36:06 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -137,12 +137,12 @@ void TSystemDirectory::Browse(TBrowser *b)
    gSystem->ChangeDirectory(name);
 
    if (GetName()[0] == '.' && GetName()[1] == '.')
-     SetName(gSystem->BaseName(name));
+      SetName(gSystem->BaseName(name));
 
    void *dir = gSystem->OpenDirectory(name);
 
    if (!dir)
-     return;
+      return;
 
    while ((file = gSystem->GetDirEntry(dir))) {
       if (b->TestBit(TBrowser::kNoHidden) && file[0] == '.' && file[1] != '.' )

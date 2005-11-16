@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.9 2003/07/22 16:08:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.10 2005/01/28 05:45:41 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected:
    static TExMap     *fgObjPIDs;  //Table pointer to pids
    static UInt_t      fgNumber;   //Referenced objects count
   
-  public:
+public:
    TProcessID();
    TProcessID(const TProcessID &ref);
    virtual ~TProcessID();

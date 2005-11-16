@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.26 2005/06/22 20:18:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.27 2005/06/23 06:24:27 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -70,6 +70,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 //______________________________________________________________________________
 TProcessID::TProcessID()
 {
+   // Default constructor.
    fCount = 0;
    fObjects = 0;
 }
@@ -77,6 +78,7 @@ TProcessID::TProcessID()
 //______________________________________________________________________________
 TProcessID::~TProcessID()
 {
+   // Destructor.
    delete fObjects;
    fObjects = 0;
    R__LOCKGUARD2(gROOTMutex);
@@ -209,6 +211,7 @@ TProcessID *TProcessID::GetSessionProcessID()
 //______________________________________________________________________________
 Int_t TProcessID::IncrementCount()
 {
+   // Increase the reference count to this object.
 
    if (!fObjects) fObjects = new TObjArray(100);
    fCount++;

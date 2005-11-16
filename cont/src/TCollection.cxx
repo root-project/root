@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.28 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.29 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -184,7 +184,7 @@ TObject *TCollection::operator()(const char *name) const
 {
   // Find an object in this collection by name.
 
-  return FindObject(name);
+   return FindObject(name);
 }
 
 //______________________________________________________________________________
@@ -219,11 +219,11 @@ Int_t TCollection::GrowBy(Int_t delta) const
 {
   // Increase the collection's capacity by delta slots.
 
-  if (delta < 0) {
-     Error("GrowBy", "delta < 0");
-     delta = Capacity();
-  }
-  return Capacity() + TMath::Range(2, kMaxInt - Capacity(), delta);
+   if (delta < 0) {
+      Error("GrowBy", "delta < 0");
+      delta = Capacity();
+   }
+   return Capacity() + TMath::Range(2, kMaxInt - Capacity(), delta);
 }
 
 //______________________________________________________________________________
@@ -417,18 +417,24 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
 //______________________________________________________________________________
 TCollection *TCollection::GetCurrentCollection()
 {
+   // Return the globally accessible collection.
+
    return fgCurrentCollection;
 }
 
 //______________________________________________________________________________
 void TCollection::SetCurrentCollection()
 {
+   // Set this collection to be the globally accesible collection.
+
    fgCurrentCollection = this;
 }
 
 //______________________________________________________________________________
 void TCollection::StartGarbageCollection()
 {
+   // Set up for garbage collection.
+
    R__LOCKGUARD2(gCollectionMutex);
    if (!fgGarbageCollection) {
       fgGarbageCollection = new TObjectTable;
@@ -441,6 +447,8 @@ void TCollection::StartGarbageCollection()
 //______________________________________________________________________________
 void TCollection::EmptyGarbageCollection()
 {
+   // Do the garbage collection.
+
    R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageStack > 0) fgGarbageStack--;
    if (fgGarbageCollection && fgGarbageStack == 0 && fgEmptyingGarbage == kFALSE) {
@@ -454,6 +462,7 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
+   // Add to the list of things to be cleaned up.
    R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageCollection) {
       if (!fgEmptyingGarbage) {

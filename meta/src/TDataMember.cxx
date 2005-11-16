@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.25 2005/09/08 11:27:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.26 2005/09/18 13:07:40 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -293,8 +293,8 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
 
             if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
-                // FIXME: wrong in case called derives via multiple inheritance from this class
-                fValueGetter = new TMethodCall(GetClass(),ptr1,"");
+               // FIXME: wrong in case called derives via multiple inheritance from this class
+               fValueGetter = new TMethodCall(GetClass(),ptr1,"");
 
             continue; //next item!
          }
@@ -303,8 +303,8 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(tokens[i],"\"");
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (GetClass()->GetMethod(ptr1,"1"))
-                // FIXME: wrong in case called derives via multiple inheritance from this class
-                fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
+               // FIXME: wrong in case called derives via multiple inheritance from this class
+               fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
          }
       }
 
@@ -363,8 +363,8 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             Int_t  *value;
             TGlobal *enumval = gROOT->GetGlobal(ptr1,kTRUE);
             if (enumval){
-                value = (Int_t*)(enumval->GetAddress());
-                l     = (Long_t)(*value);
+               value = (Int_t*)(enumval->GetAddress());
+               l     = (Long_t)(*value);
             } else if (IsEnum()) {
                TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
                if (obj)
@@ -373,7 +373,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
                   l = gROOT->ProcessLineFast(Form("%s;",ptr1));
             } else
                l = atol(ptr1);
-
+            
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);
          }
@@ -455,12 +455,12 @@ Int_t TDataMember::GetArrayDim() const
 //______________________________________________________________________________
 const char *TDataMember::GetArrayIndex() const
 {
-  // If the data member is pointer and has a valid array size in its comments
-  // GetArrayIndex returns a string pointing to it;
-  // otherwise it returns an empty string.
+   // If the data member is pointer and has a valid array size in its comments
+   // GetArrayIndex returns a string pointing to it;
+   // otherwise it returns an empty string.
 
-  const char* val = fInfo->ValidArrayIndex();
-  return (val && IsaPointer() ) ? val : "";
+   const char* val = fInfo->ValidArrayIndex();
+   return (val && IsaPointer() ) ? val : "";
 }
 
 //______________________________________________________________________________
@@ -506,8 +506,8 @@ Int_t TDataMember::GetOffset() const
 
    //case of an interpreted or emulated class
    if (fClass->GetDeclFileLine() < 0) {
-     ((TDataMember*)this)->fOffset = fInfo->Offset();
-     return fOffset;
+      ((TDataMember*)this)->fOffset = fInfo->Offset();
+      return fOffset;
    }
    //case of a compiled class
    //Note that the offset cannot be computed in case of an abstract class
@@ -556,6 +556,9 @@ Int_t TDataMember::GetOffsetCint() const
 //______________________________________________________________________________
 Int_t TDataMember::GetUnitSize() const
 {
+   // Get the sizeof the underlying type of the data member
+   // (i.e. if the member is an array sizeof(member)/length)
+
    if (IsaPointer()) return sizeof(void*);
    if (IsEnum()    ) return sizeof(Int_t);
    if (IsBasic()   ) return GetDataType()->Size();
@@ -687,14 +690,14 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
       if (!cl) cl = fClass;
 
       if (fValueSetter) {
-      
+
          TString methodname = fValueSetter->GetMethodName();
          TString params = fValueSetter->GetParams();
          delete fValueSetter;
          fValueSetter = new TMethodCall(cl, methodname.Data(), params.Data());
-      
+
       } else {
-         
+
          // try to guess Setter function:
          // we strip the fist character of name of data field ('f') and then
          // try to find the name of Setter by applying "Set" as a prefix
@@ -719,6 +722,8 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
 TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
                  Long_t tglmask,const char *name, const char *label)
 {
+   // Constuctor.
+
    fDataMember    = d;
    fValue         = val;
    fValueMaskBit  = valmask;
@@ -741,6 +746,8 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
 //______________________________________________________________________________
 TOptionListItem::~TOptionListItem()
 {
+   // Destructor.
+
    if (fOptName)  delete [] fOptName;
    if (fOptLabel) delete [] fOptLabel;
 }

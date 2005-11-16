@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.1 2004/10/29 18:03:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.2 2005/02/25 17:06:34 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // TEmulatedMapProxy
 //
-// Streamer around an arbitrary STL like container, which implements basic 
+// Streamer around an arbitrary STL like container, which implements basic
 // container functionality.
 //
 //////////////////////////////////////////////////////////////////////////
@@ -25,38 +25,38 @@
 class TEmulatedMapProxy : public TEmulatedCollectionProxy  {
 
 protected:
-  /// Map input streamer
-  void ReadMap(int nElements, TBuffer &b);
+   // Map input streamer
+   void ReadMap(int nElements, TBuffer &b);
 
-  /// Map output streamer
-  void WriteMap(int nElements, TBuffer &b);
+   // Map output streamer
+   void WriteMap(int nElements, TBuffer &b);
 
 public:
-  /// Virtual copy constructor
-  virtual TVirtualCollectionProxy* Generate() const;
+   // Virtual copy constructor
+   virtual TVirtualCollectionProxy* Generate() const;
 
-  /// Copy constructor
-  TEmulatedMapProxy(const TEmulatedMapProxy& copy);
+   // Copy constructor
+   TEmulatedMapProxy(const TEmulatedMapProxy& copy);
 
-  /// Initializing constructor
-  TEmulatedMapProxy(const char* cl_name);
+   // Initializing constructor
+   TEmulatedMapProxy(const char* cl_name);
 
-  /// Standard destructor
-  virtual ~TEmulatedMapProxy();
+   // Standard destructor
+   virtual ~TEmulatedMapProxy();
 
-  /// Return the address of the value at index 'idx'
-  virtual void *At(UInt_t idx);
+   // Return the address of the value at index 'idx'
+   virtual void *At(UInt_t idx);
 
-  /// Return the current size of the container
-  virtual UInt_t Size() const;                        
+   // Return the current size of the container
+   virtual UInt_t Size() const;
 
-  /// Streamer for I/O handling
-  virtual void Streamer(TBuffer &refBuffer);
+   // Streamer for I/O handling
+   virtual void Streamer(TBuffer &refBuffer);
 
-  /// Streamer I/O overload
-  virtual void Streamer(TBuffer &buff, void *pObj, int siz) {
-    TEmulatedCollectionProxy::Streamer(buff,pObj,siz);
-  }
+   // Streamer I/O overload
+   virtual void Streamer(TBuffer &buff, void *pObj, int siz) {
+      TEmulatedCollectionProxy::Streamer(buff,pObj,siz);
+   }
 };
 
 #endif

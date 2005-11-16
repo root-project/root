@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.12 2003/11/18 10:28:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.13 2004/05/06 12:32:44 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -118,7 +118,7 @@ void TArrayS::Set(Int_t n)
             memset(&fArray[fN],0,(n-fN)*sizeof(Short_t));
          }
       } else {
-        fArray = 0;
+         fArray = 0;
       }
       if (fN) delete [] temp;
       fN = n;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.3 2002/11/17 17:04:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.4 2003/01/26 21:03:16 brun Exp $
 // Author: Rene Brun   04/03/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -68,9 +68,9 @@ Double_t TRandom2::Rndm(Int_t)
 //______________________________________________________________________________
 void TRandom2::RndmArray(Int_t n, Float_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
+   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-  for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
+   for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
 }
 
 //______________________________________________________________________________

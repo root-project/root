@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.cxx,v 1.1 2002/09/15 10:16:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -23,6 +23,7 @@ ClassImp(TVirtualUtilHist)
 //______________________________________________________________________________
 TVirtualUtilHist::TVirtualUtilHist()
 {
+   // Constructor.
    SetName("R__TVirtualUtilHist");
    TVirtualUtilHist *u = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
    if (!u) gROOT->GetListOfSpecials()->Add(this);
@@ -31,4 +32,5 @@ TVirtualUtilHist::TVirtualUtilHist()
 //______________________________________________________________________________
 TVirtualUtilHist::~TVirtualUtilHist()
 {
+   // Destructor.
 }

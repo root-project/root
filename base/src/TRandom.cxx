@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.21 2005/08/25 17:07:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.22 2005/09/02 07:51:51 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -451,25 +451,25 @@ Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
    Int_t i = Int_t(u);
    u -= i;
    if (i >= 70 && i < 800) {
-       ranlan = f[i-1] + u*(f[i] - f[i-1]);
+      ranlan = f[i-1] + u*(f[i] - f[i-1]);
    } else if (i >= 7 && i <= 980) {
-       ranlan =  f[i-1] + u*(f[i]-f[i-1]-0.25*(1-u)*(f[i+1]-f[i]-f[i-1]+f[i-2]));
+      ranlan =  f[i-1] + u*(f[i]-f[i-1]-0.25*(1-u)*(f[i+1]-f[i]-f[i-1]+f[i-2]));
    } else if (i < 7) {
-       v = TMath::Log(x);
-       u = 1/v;
-       ranlan = ((0.99858950+(3.45213058E1+1.70854528E1*u)*u)/
-                 (1         +(3.41760202E1+4.01244582  *u)*u))*
-                 (-TMath::Log(-0.91893853-v)-1);
+      v = TMath::Log(x);
+      u = 1/v;
+      ranlan = ((0.99858950+(3.45213058E1+1.70854528E1*u)*u)/
+                (1         +(3.41760202E1+4.01244582  *u)*u))*
+                (-TMath::Log(-0.91893853-v)-1);
    } else {
-       u = 1-x;
-       v = u*u;
-       if (x <= 0.999) {
-        ranlan = (1.00060006+2.63991156E2*u+4.37320068E3*v)/
-                ((1         +2.57368075E2*u+3.41448018E3*v)*u);
-       } else {
-        ranlan = (1.00001538+6.07514119E3*u+7.34266409E5*v)/
-                ((1         +6.06511919E3*u+6.94021044E5*v)*u);
-       }
+      u = 1-x;
+      v = u*u;
+      if (x <= 0.999) {
+         ranlan = (1.00060006+2.63991156E2*u+4.37320068E3*v)/
+                 ((1         +2.57368075E2*u+3.41448018E3*v)*u);
+      } else {
+         ranlan = (1.00001538+6.07514119E3*u+7.34266409E5*v)/
+                 ((1         +6.06511919E3*u+6.94021044E5*v)*u);
+      }
    }
    Double_t res = mpv + sigma*ranlan;
    return res;
@@ -560,15 +560,15 @@ void TRandom::Rannor(Double_t &a, Double_t &b)
 //_____________________________________________________________________________
 void TRandom::ReadRandom(const char *filename)
 {
-  //
-  // Reads saved random generator status from filename
-  //
-  char *fntmp = gSystem->ExpandPathName(filename);
-  TFile *file = new TFile(fntmp,"r");
-  delete [] fntmp;
-  if(!file->IsZombie()) Read(GetName());
-  
-  delete file;
+   //
+   // Reads saved random generator status from filename
+   //
+   char *fntmp = gSystem->ExpandPathName(filename);
+   TFile *file = new TFile(fntmp,"r");
+   delete [] fntmp;
+   if(!file->IsZombie()) Read(GetName());
+   
+   delete file;
 }
 
 //______________________________________________________________________________
@@ -639,13 +639,13 @@ void TRandom::SetSeed(UInt_t seed)
 //  If one calls SetSeed(0) within a loop and the loop time is less than 1s, 
 //  all generated numbers will be identical!
    
-  if( seed==0 ) {
-    time_t curtime;      // Set 'random' seed number  if seed=0
-    time(&curtime);      // Get current time in fSeed.
-    fSeed = (UInt_t)curtime;
-  } else {
-    fSeed = seed;
-  }
+   if( seed==0 ) {
+      time_t curtime;      // Set 'random' seed number  if seed=0
+      time(&curtime);      // Get current time in fSeed.
+      fSeed = (UInt_t)curtime;
+   } else {
+      fSeed = seed;
+   }
 }
    
 //______________________________________________________________________________
@@ -696,13 +696,13 @@ Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 //_____________________________________________________________________________
 void TRandom::WriteRandom(const char *filename)
 {
-  //
-  // Writes random generator status to filename
-  //
-  char *fntmp = gSystem->ExpandPathName(filename);
-  TFile *file = new TFile(fntmp,"new");
-  delete [] fntmp;
-  if(!file->IsZombie()) Write();
-  
-  delete file;
+   //
+   // Writes random generator status to filename
+   //
+   char *fntmp = gSystem->ExpandPathName(filename);
+   TFile *file = new TFile(fntmp,"new");
+   delete [] fntmp;
+   if(!file->IsZombie()) Write();
+   
+   delete file;
 }

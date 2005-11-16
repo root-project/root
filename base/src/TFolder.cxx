@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.22 2003/02/09 18:35:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.23 2005/09/03 09:56:13 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -118,6 +118,7 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
 //______________________________________________________________________________
 TFolder::TFolder(const TFolder &folder) : TNamed(folder)
 {
+   // Copy constructor.
    ((TFolder&)folder).Copy(*this);
 }
 
@@ -213,7 +214,7 @@ const char *TFolder::FindFullPathName(const char *name) const
       for (Int_t l=0;l<=gFolderLevel;l++) {
          strcat(gFolderPath,"/");
          strcat(gFolderPath,gFolderD[l]);
-     }
+      }
       strcat(gFolderPath,"/");
       strcat(gFolderPath,name);
       gFolderLevel = -1;

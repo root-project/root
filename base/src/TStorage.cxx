@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.17 2005/06/23 20:51:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.18 2005/09/18 13:00:04 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -240,7 +240,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
       Fatal(where, kSpaceErr);
 
    if (ovp == 0)
-     return vp;
+      return vp;
 
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
@@ -268,10 +268,10 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
 
    char *vp;
    if (ovp == 0) {
-     vp = new char[size];
-     if (vp == 0)
-        Fatal(where, kSpaceErr);
-     return vp;
+      vp = new char[size];
+      if (vp == 0)
+         Fatal(where, kSpaceErr);
+      return vp;
    }
    if (oldsize == size)
       return ovp;
@@ -301,10 +301,10 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 
    Int_t *vp;
    if (ovp == 0) {
-     vp = new Int_t[size];
-     if (vp == 0)
-        Fatal(where, kSpaceErr);
-     return vp;
+      vp = new Int_t[size];
+      if (vp == 0)
+         Fatal(where, kSpaceErr);
+      return vp;
    }
    if (oldsize == size)
       return ovp;

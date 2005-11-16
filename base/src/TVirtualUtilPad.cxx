@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilPad.cxx,v 1.1 2002/09/14 16:19:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilPad.cxx,v 1.1 2002/09/15 19:41:52 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -23,6 +23,7 @@ ClassImp(TVirtualUtilPad)
 //______________________________________________________________________________
 TVirtualUtilPad::TVirtualUtilPad()
 {
+   // Constructor.
    SetName("R__TVirtualUtilPad");
    TVirtualUtilPad *u = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
    if (!u) gROOT->GetListOfSpecials()->Add(this);
@@ -31,4 +32,5 @@ TVirtualUtilPad::TVirtualUtilPad()
 //______________________________________________________________________________
 TVirtualUtilPad::~TVirtualUtilPad()
 {
+   // Destructor.
 }

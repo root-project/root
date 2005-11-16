@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObjString.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -24,6 +24,7 @@ ClassImp(TObjString)
 //______________________________________________________________________________
 Int_t TObjString::Compare(const TObject *obj) const
 {
+   // string compare the argument with this object.
    if (this == obj) return 0;
    if (TObjString::Class() != obj->IsA()) return -1;
    return fString.CompareTo(((TObjString*)obj)->fString);
@@ -32,6 +33,8 @@ Int_t TObjString::Compare(const TObject *obj) const
 //______________________________________________________________________________
 Bool_t TObjString::IsEqual(const TObject *obj) const
 {
+   // return kTRUE if the argument has the same content as this object.
+
    if (this == obj) return kTRUE;
    if (TObjString::Class() != obj->IsA()) return kFALSE;
    return fString == ((TObjString*)obj)->fString;

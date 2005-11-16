@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.5 2004/03/12 00:25:59 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.6 2004/03/12 08:53:04 brun Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -122,9 +122,9 @@ TObject *TMethod::Clone(const char *newname) const
 //______________________________________________________________________________
 const char *TMethod::GetCommentString()
 {
-    // Returns a comment string from the class declaration.
+   // Returns a comment string from the class declaration.
 
-    return fInfo->Title();
+   return fInfo->Title();
 }
 
 
@@ -180,14 +180,14 @@ TDataMember *TMethod::FindDataMember()
       Int_t cnt       = 0;
       Int_t token_cnt = 0;
       do {
-          ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
+         ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
                                                         // separated by , or ;
-          if (ptr1) {
-             tok = new char[strlen(ptr1)+1];
-             strcpy(tok,ptr1);
-             tokens[token_cnt] = tok;            //store this token.
-             token_cnt++;
-          }
+         if (ptr1) {
+            tok = new char[strlen(ptr1)+1];
+            strcpy(tok,ptr1);
+            tokens[token_cnt] = tok;            //store this token.
+            token_cnt++;
+         }
       } while (ptr1);
 
       //now let's  parse all argument tokens...
@@ -208,7 +208,7 @@ TDataMember *TMethod::FindDataMember()
          TIter nextarg(fMethodArgs);     // iterate through all arguments.
          while ((ar = (TMethodArg*)nextarg())) {
             if (!strcmp(ptr1,ar->GetName())) {
-                a = ar;
+               a = ar;
                break;
             }
          }
@@ -228,8 +228,8 @@ TDataMember *TMethod::FindDataMember()
    // if not found in comment string - try to guess it from name!
    } else {
       if (fMethodArgs)
-        if (fMethodArgs->GetSize() != 1) return 0;
-
+         if (fMethodArgs->GetSize() != 1) return 0;
+      
       TMethodArg *a = 0;
       if (fMethodArgs) a = (TMethodArg*)(fMethodArgs->First());
 
@@ -257,9 +257,9 @@ TDataMember *TMethod::FindDataMember()
                                                         //and fIsEditable
          cl = GetClass()->GetBaseDataMember(dataname);
          if (cl) {
-           TDataMember *member = cl->GetDataMember(dataname);
-           if (a) a->fDataMember = member;
-           return member;
+            TDataMember *member = cl->GetDataMember(dataname);
+            if (a) a->fDataMember = member;
+            return member;
          }
       }
    }

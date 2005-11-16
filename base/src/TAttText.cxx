@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.16 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.17 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -197,19 +197,19 @@ again:
          if (ifpx11 <= 0 || ifpx11 > 13) ifpx11 = 6;
 //*-*-          Set Font name
          switch (ifpx11) {
-           case  1 : strcpy(fx11, "-*-times-medium-i-normal--");     break;
-           case  2 : strcpy(fx11, "-*-times-bold-r-normal--");       break;
-           case  3 : strcpy(fx11, "-*-times-bold-i-normal--");       break;
-           case  4 : strcpy(fx11, "-*-helvetica-medium-r-normal--"); break;
-           case  5 : strcpy(fx11, "-*-helvetica-medium-o-normal--"); break;
-           case  6 : strcpy(fx11, "-*-helvetica-bold-r-normal--");   break;
-           case  7 : strcpy(fx11, "-*-helvetica-bold-o-normal--");   break;
-           case  8 : strcpy(fx11, "-*-courier-medium-r-normal--");   break;
-           case  9 : strcpy(fx11, "-*-courier-medium-o-normal--");   break;
-           case 10 : strcpy(fx11, "-*-courier-bold-r-normal--");     break;
-           case 11 : strcpy(fx11, "-*-courier-bold-o-normal--");     break;
-           case 12 : strcpy(fx11, "-*-symbol-medium-r-normal--");    break;
-           case 13 : strcpy(fx11, "-*-times-medium-r-normal--");     break;
+            case  1 : strcpy(fx11, "-*-times-medium-i-normal--");     break;
+            case  2 : strcpy(fx11, "-*-times-bold-r-normal--");       break;
+            case  3 : strcpy(fx11, "-*-times-bold-i-normal--");       break;
+            case  4 : strcpy(fx11, "-*-helvetica-medium-r-normal--"); break;
+            case  5 : strcpy(fx11, "-*-helvetica-medium-o-normal--"); break;
+            case  6 : strcpy(fx11, "-*-helvetica-bold-r-normal--");   break;
+            case  7 : strcpy(fx11, "-*-helvetica-bold-o-normal--");   break;
+            case  8 : strcpy(fx11, "-*-courier-medium-r-normal--");   break;
+            case  9 : strcpy(fx11, "-*-courier-medium-o-normal--");   break;
+            case 10 : strcpy(fx11, "-*-courier-bold-r-normal--");     break;
+            case 11 : strcpy(fx11, "-*-courier-bold-o-normal--");     break;
+            case 12 : strcpy(fx11, "-*-symbol-medium-r-normal--");    break;
+            case 13 : strcpy(fx11, "-*-times-medium-r-normal--");     break;
          };
          char *buffer;
          Int_t il = strlen(fx11);

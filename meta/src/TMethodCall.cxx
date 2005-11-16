@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.22 2005/07/05 22:22:34 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.23 2005/09/03 00:48:25 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -136,6 +136,8 @@ TMethodCall::~TMethodCall()
 //______________________________________________________________________________
 TObject *TMethodCall::Clone(const char *) const
 {
+   // Return an exact copy of this object.
+
    TObject *newobj = new TMethodCall(*this);
    return newobj;
 }
@@ -173,7 +175,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
 }
 
 //______________________________________________________________________________
-static TClass *R__FindClass(const char *function, UInt_t &pos) 
+static TClass *R__FindClass(const char *function, UInt_t &pos)
 {
    // Helper function to find the TClass associated with a qualified
    // function name
@@ -184,7 +186,7 @@ static TClass *R__FindClass(const char *function, UInt_t &pos)
          switch(function[i]) {
             case '<': --nested; break;
             case '>': ++nested; break;
-            case ':': 
+            case ':':
                if (nested==0) {
                   if (i>2 && function[i-1]==':') {
                      TString classname(function);
@@ -192,7 +194,7 @@ static TClass *R__FindClass(const char *function, UInt_t &pos)
                      TClass *cl = gROOT->GetClass(classname);
                      if (cl) pos = i+1;
                      return cl;
-                  }               
+                  }
                }
                break;
          }

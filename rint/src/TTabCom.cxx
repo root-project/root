@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.33 2005/09/29 08:27:58 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.34 2005/09/29 09:15:53 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -183,6 +183,7 @@ extern "C" int gl_root_tab_hook(char *buf, int /*prompt_width */ ,
 //______________________________________________________________________________
 TTabCom::TTabCom()
 {
+   // Default constructor.
    fpDirectives = 0;
    fpPragmas = 0;
    fpGlobals = 0;
@@ -235,6 +236,8 @@ void TTabCom::ClearClasses()
 //______________________________________________________________________________
 void TTabCom::ClearCppDirectives()
 {
+   // Forget all Cpp directives seen so far.
+
    if (!fpDirectives)
       return;
    fpDirectives->Delete(0);
@@ -245,6 +248,7 @@ void TTabCom::ClearCppDirectives()
 //______________________________________________________________________________
 void TTabCom::ClearEnvVars()
 {
+   // Forget all environment variables seen so far.
    if (!fpEnvVars)
       return;
    fpEnvVars->Delete(0);
@@ -255,6 +259,7 @@ void TTabCom::ClearEnvVars()
 //______________________________________________________________________________
 void TTabCom::ClearFiles()
 {
+   // Close all files.
    if (!fpFiles)
       return;
    fpFiles->Delete(0);
@@ -265,6 +270,7 @@ void TTabCom::ClearFiles()
 //______________________________________________________________________________
 void TTabCom::ClearGlobalFunctions()
 {
+   // Forget all global functions seen so far.
    if (!fpGlobalFuncs)
       return;
    fpGlobalFuncs->Delete(0);
@@ -275,6 +281,7 @@ void TTabCom::ClearGlobalFunctions()
 //______________________________________________________________________________
 void TTabCom::ClearGlobals()
 {
+   // Forget all global variables seen so far.
    if (!fpGlobals)
       return;
    fpGlobals->Delete(0);
@@ -285,6 +292,7 @@ void TTabCom::ClearGlobals()
 //______________________________________________________________________________
 void TTabCom::ClearPragmas()
 {
+   // Forget all pragmas seen so far.
    if (!fpPragmas)
       return;
    fpPragmas->Delete(0);
@@ -295,6 +303,7 @@ void TTabCom::ClearPragmas()
 //______________________________________________________________________________
 void TTabCom::ClearSysIncFiles()
 {
+   // Close system files.
    if (!fpSysIncFiles)
       return;
    fpSysIncFiles->Delete(0);
@@ -305,6 +314,7 @@ void TTabCom::ClearSysIncFiles()
 //______________________________________________________________________________
 void TTabCom::ClearUsers()
 {
+   // Forget all user seen so far.
    if (!fpUsers)
       return;
    fpUsers->Delete(0);
@@ -332,6 +342,7 @@ void TTabCom::ClearAll()
 //______________________________________________________________________________
 void TTabCom::RehashClasses()
 {
+   // Do the class rehash.
    ClearClasses();
    GetListOfClasses();
 }
@@ -339,6 +350,7 @@ void TTabCom::RehashClasses()
 //______________________________________________________________________________
 void TTabCom::RehashCppDirectives()
 {
+   // Cpp rehashing.
    ClearCppDirectives();
    GetListOfCppDirectives();
 }
@@ -346,6 +358,7 @@ void TTabCom::RehashCppDirectives()
 //______________________________________________________________________________
 void TTabCom::RehashEnvVars()
 {
+   // Environemnt variables rehashing.
    ClearEnvVars();
    GetListOfEnvVars();
 }
@@ -353,12 +366,14 @@ void TTabCom::RehashEnvVars()
 //______________________________________________________________________________
 void TTabCom::RehashFiles()
 {
+   // Close files.
    ClearFiles();                /* path unknown */
 }                               // think about this
 
 //______________________________________________________________________________
 void TTabCom::RehashGlobalFunctions()
 {
+   // Reload global functions.
    ClearGlobalFunctions();
    GetListOfGlobalFunctions();
 }
@@ -366,6 +381,7 @@ void TTabCom::RehashGlobalFunctions()
 //______________________________________________________________________________
 void TTabCom::RehashGlobals()
 {
+   // Reload globals.
    ClearGlobals();
    GetListOfGlobals();
 }
@@ -373,6 +389,7 @@ void TTabCom::RehashGlobals()
 //______________________________________________________________________________
 void TTabCom::RehashPragmas()
 {
+   // Reload pragmas.
    ClearPragmas();
    GetListOfPragmas();
 }
@@ -380,6 +397,7 @@ void TTabCom::RehashPragmas()
 //______________________________________________________________________________
 void TTabCom::RehashSysIncFiles()
 {
+   // Reload system include files.
    ClearSysIncFiles();
    GetListOfSysIncFiles();
 }
@@ -387,6 +405,7 @@ void TTabCom::RehashSysIncFiles()
 //______________________________________________________________________________
 void TTabCom::RehashUsers()
 {
+   // Reload users.
    ClearUsers();
    GetListOfUsers();
 }
@@ -411,6 +430,7 @@ void TTabCom::RehashAll()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfClasses()
 {
+   // Return the list of classes.
    if (!fpClasses) {
       // generate a text list of classes on disk
       const char *tmpfilename = tmpnam(0);
@@ -487,6 +507,7 @@ const TSeqCol *TTabCom::GetListOfClasses()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfCppDirectives()
 {
+   // Return the list of CPP directives.
    if (!fpDirectives) {
       fpDirectives = new TContainer;
 
@@ -574,6 +595,7 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfGlobals()
 {
+   // Return the list of globals.
    if (!fpGlobals) {
 
       fpGlobals = new TContainer;
@@ -610,6 +632,7 @@ const TSeqCol *TTabCom::GetListOfGlobals()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfGlobalFunctions()
 {
+   // Return the list of global functions.
    if (!fpGlobalFuncs) {
 
       fpGlobalFuncs = new TContainer;
@@ -646,6 +669,7 @@ const TSeqCol *TTabCom::GetListOfGlobalFunctions()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfPragmas()
 {
+   // Return the list of pragmas
    if (!fpPragmas) {
       fpPragmas = new TContainer;
 
@@ -675,6 +699,7 @@ const TSeqCol *TTabCom::GetListOfPragmas()
 //______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfSysIncFiles()
 {
+   // Return the list of system include files.
    if (!fpSysIncFiles) {
       fpSysIncFiles = NewListOfFilesInPath(GetSysIncludePath());
    }
@@ -918,7 +943,7 @@ TString TTabCom::DetermineClass(const char varName[])
    if (type.EndsWith("const"))
       type.Remove(type.Length() - 5);
 
- cleanup:
+cleanup:
    // done reading from file
    file1.close();
    gSystem->Unlink(tmpfile);
@@ -1411,7 +1436,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
       *fpLoc = loc + l;         // new cursor position
    }
 
- done:                         // <----- goto label
+done:                         // <----- goto label
    // un-init
    fpLoc = 0;
    fBuf = 0;
@@ -2349,9 +2374,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          UInt_t level = 0;
          for(Int_t i = cut-1; i>=0; --i) {
             switch (parentName[i]) {
-               case '(': 
+               case '(':
                   if (level) --level;
-                  else {  
+                  else {
                      parentName = parentName(i+1,cut-i-1);
                      i = 0;
                   }
@@ -2603,10 +2628,10 @@ void TTabCom::SetPattern(EContext_t handle, const char regexp[])
 //______________________________________________________________________________
 int TTabCom::ParseReverse(const char *var_str, int start)
 {
-//
-// Returns the place in the string where to put the \0, starting the search
-// from "start"
-//
+   //
+   // Returns the place in the string where to put the \0, starting the search
+   // from "start"
+   //
     int end = 0;
     if (start > (int)strlen(var_str)) start = strlen(var_str);
 

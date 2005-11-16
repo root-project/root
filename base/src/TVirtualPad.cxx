@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.4 2003/04/03 13:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.5 2003/04/14 13:53:49 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -21,6 +21,8 @@ Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
 //______________________________________________________________________________
 TVirtualPad *&TVirtualPad::Pad()
 {
+   // Return the current pad for the current thread.
+
    static TVirtualPad *currentPad = 0;
    if (!gThreadTsd)
       return currentPad;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.130 2005/10/27 16:36:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.131 2005/11/14 09:46:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -222,7 +222,7 @@ Int_t TSystem::GetErrno()
    // Static function returning system error number.
 
 #ifdef _REENTRANT
-    return errno; // errno can be a macro if _REENTRANT is set
+   return errno; // errno can be a macro if _REENTRANT is set
 #else
 #ifdef R__SOLARIS_CC50
    return ::errno;
@@ -238,7 +238,7 @@ void TSystem::ResetErrno()
    // Static function resetting system error number.
 
 #ifdef _REENTRANT
-    errno = 0; // errno can be a macro if _REENTRANT is set
+   errno = 0; // errno can be a macro if _REENTRANT is set
 #else
 #ifdef R__SOLARIS_CC50
    ::errno = 0;
@@ -1477,6 +1477,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 //______________________________________________________________________________
 char *TSystem::DynamicPathName(const char *, Bool_t)
 {
+   // Need to return the equivalent of LD_LIBRARY_PATH.
    AbstractMethod("DynamicPathName");
    return 0;
 }
@@ -1504,8 +1505,8 @@ void TSystem::Unload(const char *module)
 #else
    char *path;
    if ((path = DynamicPathName(module))) {
-     G__unloadfile(path);
-     delete [] path;
+      G__unloadfile(path);
+      delete [] path;
    }
 #endif
 }
@@ -2665,18 +2666,21 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 //______________________________________________________________________________
 const char *TSystem::GetBuildArch() const
 {
+   // Return the build architecture.
    return fBuildArch;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetBuildNode() const
 {
+   // Return the build node name.
    return fBuildNode;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetBuildDir() const
 {
+   // Return the path of the build directory.
    if (fBuildDir.Length()==0) {
       if (!gEnv) return "";
       const_cast<TSystem*>(this)->fBuildDir = gEnv->GetValue("ACLiC.BuildDir","");
@@ -2687,12 +2691,14 @@ const char *TSystem::GetBuildDir() const
 //______________________________________________________________________________
 const char *TSystem::GetFlagsDebug() const
 {
+   // Return the debug flags.
    return fFlagsDebug;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetFlagsOpt() const
 {
+   // Return the optimization flags.
    return fFlagsOpt;
 }
 
@@ -2711,18 +2717,23 @@ TSystem::EAclicMode TSystem::GetAclicMode() const
 //______________________________________________________________________________
 const char *TSystem::GetMakeSharedLib() const
 {
+   // Return the command line use to make a shared library.
+   // See TSystem::CompileMacro for more details.
    return fMakeSharedLib;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetMakeExe() const
 {
+   // Return the command line use to make an executable.
+   // See TSystem::CompileMacro for more details.
    return fMakeExe;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetIncludePath()
 {
+   // Get the list of include path.
    fListPaths = fIncludePath;
    fListPaths.Append(" ").Append(gInterpreter->GetIncludePath());
    return fListPaths;
@@ -2731,12 +2742,16 @@ const char *TSystem::GetIncludePath()
 //______________________________________________________________________________
 const char *TSystem::GetLinkedLibs() const
 {
+   // Return the list of library linked to this executable.
+   // See TSystem::CompileMacro for more details.
    return fLinkedLibs;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetLinkdefSuffix() const
 {
+   // Return the linkdef suffix chosen by the user for ACLiC.
+   // See TSystem::CompileMacro for more details.
    if (fLinkdefSuffix.Length()==0) {
       if (!gEnv) return "_linkdef";
       const_cast<TSystem*>(this)->fLinkdefSuffix = gEnv->GetValue("ACLiC.Linkdef","_linkdef");
@@ -2747,12 +2762,14 @@ const char *TSystem::GetLinkdefSuffix() const
 //______________________________________________________________________________
 const char *TSystem::GetSoExt() const
 {
+   // Get the shared library extension.
    return fSoExt;
 }
 
 //______________________________________________________________________________
 const char *TSystem::GetObjExt() const
 {
+   // Get the object file extension.
    return fObjExt;
 }
 

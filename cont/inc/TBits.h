@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.10 2005/10/21 22:01:35 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.11 2005/10/22 00:39:58 rdm Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -70,8 +70,8 @@ public:
 
       TReference(); // left undefined
 
-    public:
-       TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) {}
+public:
+      TReference(TBits& bit, UInt_t pos) : fBits(bit),fPos(pos) {}
       ~TReference() { }
 
        // For b[i] = val;

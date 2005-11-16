@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TProcessUUID.cxx,v 1.8 2002/06/11 13:25:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TProcessUUID.cxx,v 1.1 2002/07/09 21:17:02 brun Exp $
 // Author: Rene Brun    06/07/2002
 
 /*************************************************************************
@@ -49,6 +49,7 @@ ClassImp(TProcessUUID)
 //______________________________________________________________________________
 TProcessUUID::TProcessUUID() : TProcessID()
 {
+   // Default constructor.
    fUUIDs   = new THashList(100,3);
    fActive  = new TBits(100);
    IncrementCount();
@@ -57,6 +58,7 @@ TProcessUUID::TProcessUUID() : TProcessID()
 //______________________________________________________________________________
 TProcessUUID::~TProcessUUID()
 {
+   // Destructor.
    fUUIDs->Delete();
    delete fUUIDs;  fUUIDs  = 0;
    delete fActive; fActive = 0;

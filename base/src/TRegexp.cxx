@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.10 2002/10/02 12:33:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.11 2003/07/18 13:21:05 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -70,6 +70,7 @@ TRegexp::TRegexp(const TRegexp& r)
 //______________________________________________________________________________
 TRegexp::~TRegexp()
 {
+   // Destructor.
    delete [] fPattern;
 }
 

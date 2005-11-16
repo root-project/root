@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.106 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.107 2005/09/03 07:09:59 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -202,11 +202,11 @@ Float_t *TMath::Cross(const Float_t v1[3],const Float_t v2[3],Float_t out[3])
    // Calculate the Cross Product of two vectors:
    //         out = [v1 x v2]
 
-    out[0] = v1[1] * v2[2] - v1[2] * v2[1];
-    out[1] = v1[2] * v2[0] - v1[0] * v2[2];
-    out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+   out[0] = v1[1] * v2[2] - v1[2] * v2[1];
+   out[1] = v1[2] * v2[0] - v1[0] * v2[2];
+   out[2] = v1[0] * v2[1] - v1[1] * v2[0];
 
-    return out;
+   return out;
 }
 
 //______________________________________________________________________________
@@ -215,10 +215,10 @@ Double_t *TMath::Cross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]
    // Calculate the Cross Product of two vectors:
    //   out = [v1 x v2]
 
-    out[0] = v1[1] * v2[2] - v1[2] * v2[1];
-    out[1] = v1[2] * v2[0] - v1[0] * v2[2];
-    out[2] = v1[0] * v2[1] - v1[1] * v2[0];
-    return out;
+   out[0] = v1[1] * v2[2] - v1[2] * v2[1];
+   out[1] = v1[2] * v2[0] - v1[0] * v2[2];
+   out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+   return out;
 }
 
 //______________________________________________________________________________
@@ -244,54 +244,54 @@ Double_t TMath::DiLog(Double_t x)
    Double_t t,h,y,s,a,alfa,b1,b2,b0;
    
    if (x == 1) {
-       h = pi6;
+      h = pi6;
    } else if (x == -1) {
-       h = -pi12;
+      h = -pi12;
    } else {
-       t = -x;
-       if (t <= -2) {
-           y = -1/(1+t);
-           s = 1;
-           b1= TMath::Log(-t);
-           b2= TMath::Log(1+1/t);
-           a = -pi3+hf*(b1*b1-b2*b2);
-       } else if (t < -1) {
-           y = -1-t;
-           s = -1;
-           a = TMath::Log(-t);
-           a = -pi6+a*(a+TMath::Log(1+1/t));
-       } else if (t <= -0.5) {
-           y = -(1+t)/t;
-           s = 1;
-           a = TMath::Log(-t);
-           a = -pi6+a*(-hf*a+TMath::Log(1+t));
-       } else if (t < 0) {
-           y = -t/(1+t);
-           s = -1;
-           b1= TMath::Log(1+t);
-           a = hf*b1*b1;
-       } else if (t <= 1) {
-           y = t;
-           s = 1;
-           a = 0;
-       } else {
-           y = 1/t;
-           s = -1;
-           b1= TMath::Log(t);
-           a = pi6+hf*b1*b1;
-       }
-       h    = y+y-1;
-       alfa = h+h;
-       b1   = 0;
-       b2   = 0;
-       for (Int_t i=19;i>=0;i--){
-          b0 = c[i] + alfa*b1-b2;
-          b2 = b1;
-          b1 = b0;
-       }
-       h = -(s*(b0-h*b2)+a);
-    }
-    return h;
+      t = -x;
+      if (t <= -2) {
+         y = -1/(1+t);
+         s = 1;
+         b1= TMath::Log(-t);
+         b2= TMath::Log(1+1/t);
+         a = -pi3+hf*(b1*b1-b2*b2);
+      } else if (t < -1) {
+         y = -1-t;
+         s = -1;
+         a = TMath::Log(-t);
+         a = -pi6+a*(a+TMath::Log(1+1/t));
+      } else if (t <= -0.5) {
+         y = -(1+t)/t;
+         s = 1;
+         a = TMath::Log(-t);
+         a = -pi6+a*(-hf*a+TMath::Log(1+t));
+      } else if (t < 0) {
+         y = -t/(1+t);
+         s = -1;
+         b1= TMath::Log(1+t);
+         a = hf*b1*b1;
+      } else if (t <= 1) {
+         y = t;
+         s = 1;
+         a = 0;
+      } else {
+         y = 1/t;
+         s = -1;
+         b1= TMath::Log(t);
+         a = pi6+hf*b1*b1;
+      }
+      h    = y+y-1;
+      alfa = h+h;
+      b1   = 0;
+      b2   = 0;
+      for (Int_t i=19;i>=0;i--){
+         b0 = c[i] + alfa*b1-b2;
+         b2 = b1;
+         b1 = b0;
+      }
+      h = -(s*(b0-h*b2)+a);
+   }
+   return h;
 }
 
 //______________________________________________________________________________
@@ -623,31 +623,31 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma, Bool_t norm)
       us  = TMath::Sqrt(u);
       den = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
    } else if(v < -1) {
-       u   = TMath::Exp(-v-1);
-       den = TMath::Exp(-u)*TMath::Sqrt(u)*
+      u   = TMath::Exp(-v-1);
+      den = TMath::Exp(-u)*TMath::Sqrt(u)*
              (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
              (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
    } else if(v < 1) {
-       den = (p2[0]+(p2[1]+(p2[2]+(p2[3]+p2[4]*v)*v)*v)*v)/
-             (q2[0]+(q2[1]+(q2[2]+(q2[3]+q2[4]*v)*v)*v)*v);
+      den = (p2[0]+(p2[1]+(p2[2]+(p2[3]+p2[4]*v)*v)*v)*v)/
+            (q2[0]+(q2[1]+(q2[2]+(q2[3]+q2[4]*v)*v)*v)*v);
    } else if(v < 5) {
-       den = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v)*v)*v)*v)/
-             (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v)*v)*v)*v);
+      den = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v)*v)*v)*v)/
+            (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v)*v)*v)*v);
    } else if(v < 12) {
-       u   = 1/v;
-       den = u*u*(p4[0]+(p4[1]+(p4[2]+(p4[3]+p4[4]*u)*u)*u)*u)/
-                 (q4[0]+(q4[1]+(q4[2]+(q4[3]+q4[4]*u)*u)*u)*u);
+      u   = 1/v;
+      den = u*u*(p4[0]+(p4[1]+(p4[2]+(p4[3]+p4[4]*u)*u)*u)*u)/
+                (q4[0]+(q4[1]+(q4[2]+(q4[3]+q4[4]*u)*u)*u)*u);
    } else if(v < 50) {
-       u   = 1/v;
-       den = u*u*(p5[0]+(p5[1]+(p5[2]+(p5[3]+p5[4]*u)*u)*u)*u)/
-                 (q5[0]+(q5[1]+(q5[2]+(q5[3]+q5[4]*u)*u)*u)*u);
+      u   = 1/v;
+      den = u*u*(p5[0]+(p5[1]+(p5[2]+(p5[3]+p5[4]*u)*u)*u)*u)/
+                (q5[0]+(q5[1]+(q5[2]+(q5[3]+q5[4]*u)*u)*u)*u);
    } else if(v < 300) {
-       u   = 1/v;
-       den = u*u*(p6[0]+(p6[1]+(p6[2]+(p6[3]+p6[4]*u)*u)*u)*u)/
-                 (q6[0]+(q6[1]+(q6[2]+(q6[3]+q6[4]*u)*u)*u)*u);
+      u   = 1/v;
+      den = u*u*(p6[0]+(p6[1]+(p6[2]+(p6[3]+p6[4]*u)*u)*u)*u)/
+                (q6[0]+(q6[1]+(q6[2]+(q6[3]+q6[4]*u)*u)*u)*u);
    } else {
-       u   = 1/(v-v*TMath::Log(v)/(v+1));
-       den = u*u*(1+(a2[0]+a2[1]*u)*u);
+      u   = 1/(v-v*TMath::Log(v)/(v+1));
+      den = u*u*(1+(a2[0]+a2[1]*u)*u);
    }
    if (!norm) return den;
    return den/sigma;
@@ -810,12 +810,12 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 //End_Html
 
    if (x<0)
-     return 0;
+      return 0;
    else if (x == 0.0)
-     return 1./Exp(par);
+      return 1./Exp(par);
    else {
-     Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
-     return Exp(lnpoisson);
+      Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
+      return Exp(lnpoisson);
    }
    // An alternative strategy is to transition to a Gaussian approximation for
    // large values of par ...
@@ -1447,8 +1447,8 @@ Long64_t TMath::LocMin(Long64_t n, const Short_t *a)
    Long64_t loc = 0;
    for  (Long64_t i = 1; i < n; i++) {
       if (xmin > a[i])  {
-          xmin = a[i];
-          loc = i;
+         xmin = a[i];
+         loc = i;
       }
    }
    return loc;
@@ -1662,22 +1662,22 @@ Double_t TMath::Mean(Long64_t n, const Short_t *a, const Double_t *w)
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1693,22 +1693,22 @@ Double_t TMath::Mean(Long64_t n, const Int_t *a, const Double_t *w)
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1724,22 +1724,22 @@ Double_t TMath::Mean(Long64_t n, const Float_t *a, const Double_t *w)
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1749,28 +1749,28 @@ Double_t TMath::Mean(Long64_t n, const Float_t *a, const Double_t *w)
 Double_t TMath::Mean(Long64_t n, const Double_t *a, const Double_t *w)
 {
    // Return the weighted mean of an array a with length n.
-
+   
    if (n <= 0 || !a) return 0;
 
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1786,22 +1786,22 @@ Double_t TMath::Mean(Long64_t n, const Long_t *a, const Double_t *w)
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1817,22 +1817,22 @@ Double_t TMath::Mean(Long64_t n, const Long64_t *a, const Double_t *w)
    Double_t sum = 0;
    Double_t sumw = 0;
    if (w) {
-     for (Long64_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+      for (Long64_t i = 0; i < n; i++) {
+         if (w[i] < 0) {
+            ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+            return 0;
+         }
+         sum  += w[i]*a[i];
+         sumw += w[i];
+      }
+      if (sumw <= 0) {
+         ::Error("TMath::Mean","sum of weights == 0 ?!");
          return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("TMath::Mean","sum of weights == 0 ?!");
-       return 0;
-     }
+      }
    } else {
-     sumw = n;
-     for (Long64_t i = 0; i < n; i++)
-       sum += a[i];
+      sumw = n;
+      for (Long64_t i = 0; i < n; i++)
+         sum += a[i];
    }
 
    return sum/sumw;
@@ -1845,12 +1845,12 @@ Double_t TMath::GeomMean(Long64_t n, const Short_t *a)
    // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
 
    if (n <= 0 || !a) return 0;
-
+   
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1866,9 +1866,9 @@ Double_t TMath::GeomMean(Long64_t n, const Int_t *a)
 
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1884,9 +1884,9 @@ Double_t TMath::GeomMean(Long64_t n, const Float_t *a)
 
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1902,9 +1902,9 @@ Double_t TMath::GeomMean(Long64_t n, const Double_t *a)
 
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1920,9 +1920,9 @@ Double_t TMath::GeomMean(Long64_t n, const Long64_t *a)
 
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1938,9 +1938,9 @@ Double_t TMath::GeomMean(Long64_t n, const Long_t *a)
 
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
+      if (a[i] == 0) return 0.;
+      Double_t absa = (Double_t) TMath::Abs(a[i]);
+      logsum += TMath::Log(absa);
    }
 
    return TMath::Exp(logsum/n);
@@ -1983,7 +1983,7 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
    Index workLocal[kWorkMax];
 
    if (work) {
-     ind = work;
+      ind = work;
    } else {
       ind = workLocal;
       if (n > kWorkMax) {
@@ -2022,18 +2022,18 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
 
       median = 0.5*(a[ind[jl]]+a[ind[jh]]);
 
-    } else {
-
-       if (n%2 == 1)
-          median = KOrdStatImp(n, a,n/2, ind);
-       else {
-          median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2, ind));
-       }
-    }
-
-    if (isAllocated)
-       delete [] ind;
-    return median;
+   } else {
+      
+      if (n%2 == 1)
+         median = KOrdStatImp(n, a,n/2, ind);
+      else {
+         median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2, ind));
+      }
+   }
+   
+   if (isAllocated)
+      delete [] ind;
+   return median;
 }
 
 //______________________________________________________________________________
@@ -2850,8 +2850,8 @@ void TMath::SortImp(Size n1, const Element *a,
          if (i2-n < 0) {
             i222 = index[i2];
             if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
+               i2++;
+               i22 = i222;
             }
          }
          if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
@@ -4256,8 +4256,8 @@ Double_t TMath::NormQuantile(Double_t p)
    // ALGORITHM AS241  APPL. STATIST. (1988) VOL. 37, NO. 3, 477-484.
 
    if ((p<=0)||(p>=1)) {
-       Error("TMath::NormQuantile", "probability outside (0, 1)");
-       return 0;
+      Error("TMath::NormQuantile", "probability outside (0, 1)");
+      return 0;
    }
 
    Double_t  a0 = 3.3871328727963666080e0;
@@ -4994,5 +4994,5 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
    else if (itype == 4) {
       v = AC[13]*TMath::Landau(rlam);
    }
-  return v;
+   return v;
 }

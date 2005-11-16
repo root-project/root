@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.143 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.144 2005/09/25 22:48:28 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -385,6 +385,7 @@ zombie:
 //______________________________________________________________________________
 TFile::TFile(const TFile &file) : TDirectory(), fInfoCache(0)
 {
+   // Copy constructor.
    ((TFile&)file).Copy(*this);
 }
 
@@ -617,7 +618,7 @@ void TFile::Init(Bool_t create)
       TIter next(fKeys);
       TKey *key;
       while ((key = (TKey*)next())) {
-          if (!strcmp(key->GetClassName(),"TProcessID")) fNProcessIDs++;
+         if (!strcmp(key->GetClassName(),"TProcessID")) fNProcessIDs++;
       }
       fProcessIDs = new TObjArray(fNProcessIDs+1);
       return;
@@ -1931,7 +1932,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       *h = 0;
       fprintf(fp,"#pragma link C++ class %s+;\n",path);
       fprintf(fpMAKE,"%s ",afile);
-  }
+   }
    fprintf(fp,"#endif\n");
    fclose(fp);
    fprintf(fpMAKE,"LinkDef.h \n");

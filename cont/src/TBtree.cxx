@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.7 2003/09/03 06:08:33 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.8 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -334,8 +334,8 @@ Int_t TBtree::IdxAdd(const TObject &obj)
          else
             r = idx + loc->fParent->FindRankUp(loc);
       } else {
-          TBtInnerNode *iloc = (TBtInnerNode*) loc;
-          r = iloc->FindRankUp(iloc->GetTree(idx));
+         TBtInnerNode *iloc = (TBtInnerNode*) loc;
+         r = iloc->FindRankUp(iloc->GetTree(idx));
       }
       loc->Add(&obj, idx);
    }
@@ -697,6 +697,8 @@ TBtInnerNode::TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot)
 //______________________________________________________________________________
 TBtInnerNode::~TBtInnerNode()
 {
+   // Constructor.
+
    if (fLast > 0)
       delete fItem[0].fTree;
    for (Int_t i = 1; i <= fLast; i++)
@@ -718,6 +720,8 @@ void TBtInnerNode::Add(const TObject *obj, Int_t index)
 //______________________________________________________________________________
 void TBtInnerNode::AddElt(TBtItem &itm, Int_t at)
 {
+   // Add one element.
+
    Assert(0 <= at && at <= fLast+1);
    Assert(fLast < MaxIndex());
    for (Int_t i = fLast+1; i > at ; i--)
@@ -729,6 +733,8 @@ void TBtInnerNode::AddElt(TBtItem &itm, Int_t at)
 //______________________________________________________________________________
 void TBtInnerNode::AddElt(Int_t at, TObject *k, TBtNode *t)
 {
+   // Add one element.
+
    TBtItem newitem(k, t);
    AddElt(newitem, at);
 }
@@ -736,6 +742,8 @@ void TBtInnerNode::AddElt(Int_t at, TObject *k, TBtNode *t)
 //______________________________________________________________________________
 void TBtInnerNode::Add(TBtItem &itm, Int_t at)
 {
+   // Add one element.
+
    AddElt(itm, at);
    if (IsFull())
       InformParent();
@@ -744,6 +752,8 @@ void TBtInnerNode::Add(TBtItem &itm, Int_t at)
 //______________________________________________________________________________
 void TBtInnerNode::Add(Int_t at, TObject *k, TBtNode *t)
 {
+   // Add one element.
+
    TBtItem newitem(k, t);
    Add(newitem, at);
 }
@@ -776,6 +786,8 @@ void TBtInnerNode::Append(TObject *d, TBtNode *n)
 //______________________________________________________________________________
 void TBtInnerNode::Append(TBtItem &itm)
 {
+   // Append itm to this tree.
+
    Assert(fLast < MaxIndex());
    SetItem(++fLast, itm);
 }
@@ -875,6 +887,8 @@ Int_t TBtInnerNode::FindRankUp(const TBtNode *that) const
 //______________________________________________________________________________
 TBtLeafNode *TBtInnerNode::FirstLeafNode()
 {
+   // Return the first leaf node.
+
    return GetTree(0)->FirstLeafNode();
 }
 
@@ -929,6 +943,8 @@ Int_t TBtInnerNode::IndexOf(const TBtNode *that) const
 //______________________________________________________________________________
 void TBtInnerNode::InformParent()
 {
+   // Tell the parent that we are full.
+
    if (fParent == 0) {
       // then this is the root of the tree and needs to be split
       // inform the btree.
@@ -1082,12 +1098,16 @@ void TBtInnerNode::IsLow(TBtNode *that)
 //______________________________________________________________________________
 TBtLeafNode *TBtInnerNode::LastLeafNode()
 {
-    return GetTree(fLast)->LastLeafNode();
+   // Return the last leaf node.
+
+   return GetTree(fLast)->LastLeafNode();
 }
 
 //______________________________________________________________________________
 void TBtInnerNode::MergeWithRight(TBtInnerNode *rightsib, Int_t pidx)
 {
+   // Merge the 2 part of the tree.
+
    Assert(Psize() + rightsib->Vsize() < MaxIndex());
    if (rightsib->Psize() > 0)
       rightsib->PushLeft(rightsib->Psize(), this, pidx);
@@ -1101,6 +1121,8 @@ void TBtInnerNode::MergeWithRight(TBtInnerNode *rightsib, Int_t pidx)
 //______________________________________________________________________________
 Int_t TBtInnerNode::NofKeys() const
 {
+   // Number of key.
+
    Int_t sum = 0;
    for (Int_t i = 0; i <= fLast; i++)
       sum += GetNofKeys(i);
@@ -1110,6 +1132,8 @@ Int_t TBtInnerNode::NofKeys() const
 //______________________________________________________________________________
 TObject *TBtInnerNode::operator[](Int_t idx) const
 {
+   // return an element.
+
    for (Int_t j = 0; j <= fLast; j++) {
       Int_t r;
       if (idx < (r = GetNofKeys(j)))
@@ -1118,7 +1142,7 @@ TObject *TBtInnerNode::operator[](Int_t idx) const
          if (j == fLast) {
             ::Error("TBtInnerNode::operator[]", "should not happen, 0 returned");
             return 0;
-          } else
+         } else
             return GetKey(j+1);
       }
       idx -= r+1; // +1 because of the key in the node
@@ -1147,14 +1171,17 @@ void TBtInnerNode::PushLeft(Int_t noFromThis, TBtInnerNode *leftsib, Int_t pidx)
 //______________________________________________________________________________
 void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pidx)
 {
-   Assert(noFromThis > 0 && noFromThis <= Psize());
-   Assert(noFromThis + rightsib->Psize() < rightsib->MaxPsize());
-   Assert(fParent->GetTree(pidx) == rightsib);
+   
    //
    // The operation is three steps:
    //  Step I.   Make room for the incoming keys in RIGHTSIB.
    //  Step II.  Move the items from THIS into RIGHTSIB.
    //  Step III. Update the length of THIS.
+
+   Assert(noFromThis > 0 && noFromThis <= Psize());
+   Assert(noFromThis + rightsib->Psize() < rightsib->MaxPsize());
+   Assert(fParent->GetTree(pidx) == rightsib);
+
    //
    // Step I. Make space for noFromThis items
    //
@@ -1192,6 +1219,8 @@ void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pid
 //______________________________________________________________________________
 void TBtInnerNode::Remove(Int_t index)
 {
+   // Remove an element.
+
    Assert(index >= 1 && index <= fLast);
    TBtLeafNode *lf = GetTree(index)->FirstLeafNode();
    SetKey(index, lf->fItem[0]);
@@ -1201,6 +1230,8 @@ void TBtInnerNode::Remove(Int_t index)
 //______________________________________________________________________________
 void TBtInnerNode::RemoveItem(Int_t index)
 {
+   // Remove an item.
+
    Assert(index >= 1 && index <= fLast);
    for (Int_t to = index; to < fLast; to++)
       fItem[to] = fItem[to+1];
@@ -1218,6 +1249,8 @@ void TBtInnerNode::RemoveItem(Int_t index)
 //______________________________________________________________________________
 void TBtInnerNode::ShiftLeft(Int_t cnt)
 {
+   // Shift to the left.
+
    if (cnt <= 0)
       return;
    for (Int_t i = cnt; i <= fLast; i++)
@@ -1320,6 +1353,8 @@ void TBtInnerNode::SplitWith(TBtInnerNode *rightsib, Int_t keyidx)
 //______________________________________________________________________________
 TBtLeafNode::TBtLeafNode(TBtInnerNode *p, const TObject *obj, TBtree *t): TBtNode(1, p, t)
 {
+   // Constructor.
+
    fItem = new TObject *[MaxIndex()+1];
    memset(fItem, 0, (MaxIndex()+1)*sizeof(TObject*));
 
@@ -1331,6 +1366,8 @@ TBtLeafNode::TBtLeafNode(TBtInnerNode *p, const TObject *obj, TBtree *t): TBtNod
 //______________________________________________________________________________
 TBtLeafNode::~TBtLeafNode()
 {
+   // Destructor.
+
    delete [] fItem;
 }
 
@@ -1454,6 +1491,8 @@ Int_t TBtLeafNode::FindRank(const TObject *what) const
 //______________________________________________________________________________
 TBtLeafNode *TBtLeafNode::FirstLeafNode()
 {
+   // Return the first node.
+
    return this;
 }
 
@@ -1497,12 +1536,15 @@ Int_t TBtLeafNode::IndexOf(const TObject *that) const
 //______________________________________________________________________________
 TBtLeafNode *TBtLeafNode::LastLeafNode()
 {
+   // return the last node.
    return this;
 }
 
 //______________________________________________________________________________
 void TBtLeafNode::MergeWithRight(TBtLeafNode *rightsib, Int_t pidx)
 {
+   // Merge.
+
    Assert(Psize() + rightsib->Vsize() < MaxPsize());
    rightsib->PushLeft(rightsib->Psize(), this, pidx);
    Append(fParent->GetKey(pidx));
@@ -1514,12 +1556,14 @@ void TBtLeafNode::MergeWithRight(TBtLeafNode *rightsib, Int_t pidx)
 //______________________________________________________________________________
 Int_t TBtLeafNode::NofKeys(Int_t ) const
 {
+   // Return the number of keys.
    return 1;
 }
 
 //______________________________________________________________________________
 Int_t TBtLeafNode::NofKeys() const
 {
+   // Return the number of keys.
    return Psize();
 }
 
@@ -1599,6 +1643,8 @@ void TBtLeafNode::PushRight(Int_t noFromThis, TBtLeafNode *rightsib, Int_t pidx)
 //______________________________________________________________________________
 void TBtLeafNode::Remove(Int_t index)
 {
+   // Remove an element.
+
    Assert(index >= 0 && index <= fLast);
    for (Int_t to = index; to < fLast; to++)
       fItem[to] = fItem[to+1];
@@ -1620,6 +1666,8 @@ void TBtLeafNode::Remove(Int_t index)
 //______________________________________________________________________________
 void TBtLeafNode::ShiftLeft(Int_t cnt)
 {
+   // Shift.
+
    if (cnt <= 0)
       return;
    for (Int_t i = cnt; i <= fLast; i++)
@@ -1645,6 +1693,8 @@ void TBtLeafNode::Split()
 //______________________________________________________________________________
 void TBtLeafNode::SplitWith(TBtLeafNode *rightsib, Int_t keyidx)
 {
+   // Split.
+
    Assert(fParent == rightsib->fParent);
    Assert(keyidx > 0 && keyidx <= fParent->fLast);
    Int_t nofKeys      = Psize() + rightsib->Vsize();

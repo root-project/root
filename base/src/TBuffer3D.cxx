@@ -409,10 +409,10 @@ Bool_t TBuffer3DSphere::IsSolidUncut() const
        fThetaMax      != 180.0 ||
        fPhiMin        != 0.0   || 
        fPhiMax        != 360.0 ) {
-          return kFALSE;
-       } else {
-          return kTRUE;
-       }
+      return kFALSE;
+   } else {
+      return kTRUE;
+   }
 }
 
 //______________________________________________________________________________

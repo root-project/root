@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.4 2005/05/23 17:02:45 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.5 2005/08/30 02:45:05 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -13,8 +13,8 @@
 //                                                                      //
 // TGenCollectionProxy
 //
-// Proxy around an arbitrary container, which implements basic 
-// functionality and iteration. The purpose of this implementation 
+// Proxy around an arbitrary container, which implements basic
+// functionality and iteration. The purpose of this implementation
 // is to shield any generated dictionary implementation from the
 // underlying streamer/proxy implementation and only expose
 // the creation fucntions.
@@ -38,6 +38,7 @@
 // Do not clutter global namespace with shit....
 namespace {
    static TClassEdit::ESTLType stl_type(const std::string& class_name)  {
+      // return the STL type.
       int nested = 0;
       std::vector<std::string> inside;
       int num = TClassEdit::GetSplit(class_name.c_str(),inside,nested);
@@ -48,6 +49,8 @@ namespace {
    }
 
    static TEmulatedCollectionProxy* GenEmulation(const char* class_name)  {
+      // Generate an emulated collection proxy.
+
       if ( class_name )  {
          std::string cl = class_name;
          if ( cl.find("stdext::hash_") != std::string::npos )
@@ -56,45 +59,47 @@ namespace {
             cl.replace(0,16,"std::");
          switch ( stl_type(cl) )  {
             case TClassEdit::kNotSTL:
-              return 0;
-           case TClassEdit::kMap:
-           case TClassEdit::kMultiMap:
-             return new TEmulatedMapProxy(class_name);
-           default:
-             return new TEmulatedCollectionProxy(class_name);
+               return 0;
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap:
+               return new TEmulatedMapProxy(class_name);
+            default:
+               return new TEmulatedCollectionProxy(class_name);
          }
       }
-    return 0;
-  }
+      return 0;
+   }
 }
 
-/// Generate emulated collection proxy for a given class
-TVirtualCollectionProxy* 
-TCollectionProxy::GenEmulatedProxy(const char* class_name)  
+TVirtualCollectionProxy*
+TCollectionProxy::GenEmulatedProxy(const char* class_name)
 {
-  return GenEmulation(class_name);
+   // Generate emulated collection proxy for a given class.
+
+   return GenEmulation(class_name);
 }
 
-/// Generate emulated class streamer for a given collection class
-TClassStreamer* 
+TClassStreamer*
 TCollectionProxy::GenEmulatedClassStreamer(const char* class_name)
 {
-  TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptStreamer(GenEmulation(class_name));
-  return s;
+   // Generate emulated class streamer for a given collection class.
+
+   TCollectionClassStreamer* s = new TCollectionClassStreamer();
+   s->AdoptStreamer(GenEmulation(class_name));
+   return s;
 }
 
-/// Generate emulated member streamer for a given collection class
-TMemberStreamer* 
+TMemberStreamer*
 TCollectionProxy::GenEmulatedMemberStreamer(const char* class_name)
 {
-  TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptStreamer(GenEmulation(class_name));
-  return s;
+   // Generate emulated member streamer for a given collection class.
+
+   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
+   s->AdoptStreamer(GenEmulation(class_name));
+   return s;
 }
 
-/// Generate proxy from static functions
-TCollectionProxy::Proxy_t* 
+TCollectionProxy::Proxy_t*
 TCollectionProxy::GenExplicitProxy( Info_t info,
                                     size_t iter_size,
                                     size_t value_diff,
@@ -110,24 +115,24 @@ TCollectionProxy::GenExplicitProxy( Info_t info,
                                     void*  (*collect_func)(void*)
                                     )
 {
-  TGenCollectionProxy* ptr = new TGenCollectionProxy(info, iter_size);
-  ptr->fValDiff        = value_diff;
-  ptr->fValOffset      = value_offset;
-  ptr->fSize.call      = size_func;
-  ptr->fResize.call    = resize_func;
-  ptr->fNext.call      = next_func;
-  ptr->fFirst.call     = first_func;
-  ptr->fClear.call     = clear_func;
-  ptr->fConstruct.call = construct_func;
-  ptr->fDestruct.call  = destruct_func;
-  ptr->fFeed.call      = feed_func;
-  ptr->fCollect.call   = collect_func;
-  ptr->CheckFunctions();
-  return ptr;
+   // Generate proxy from static functions.
+   TGenCollectionProxy* ptr = new TGenCollectionProxy(info, iter_size);
+   ptr->fValDiff        = value_diff;
+   ptr->fValOffset      = value_offset;
+   ptr->fSize.call      = size_func;
+   ptr->fResize.call    = resize_func;
+   ptr->fNext.call      = next_func;
+   ptr->fFirst.call     = first_func;
+   ptr->fClear.call     = clear_func;
+   ptr->fConstruct.call = construct_func;
+   ptr->fDestruct.call  = destruct_func;
+   ptr->fFeed.call      = feed_func;
+   ptr->fCollect.call   = collect_func;
+   ptr->CheckFunctions();
+   return ptr;
 }
 
-/// Generate streamer from static functions
-TGenCollectionStreamer* 
+TGenCollectionStreamer*
 TCollectionProxy::GenExplicitStreamer(  Info_t  info,
                                         size_t  iter_size,
                                         size_t  value_diff,
@@ -143,24 +148,24 @@ TCollectionProxy::GenExplicitStreamer(  Info_t  info,
                                         void*  (*collect_func)(void*)
                                         )
 {
-  TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info, iter_size);
-  ptr->fValDiff        = value_diff;
-  ptr->fValOffset      = value_offset;
-  ptr->fSize.call      = size_func;
-  ptr->fResize.call    = resize_func;
-  ptr->fNext.call      = next_func;
-  ptr->fFirst.call     = first_func;
-  ptr->fClear.call     = clear_func;
-  ptr->fConstruct.call = construct_func;
-  ptr->fDestruct.call  = destruct_func;
-  ptr->fFeed.call      = feed_func;
-  ptr->fCollect.call   = collect_func;
-  ptr->CheckFunctions();
-  return ptr;
+   // Generate streamer from static functions.
+   TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info, iter_size);
+   ptr->fValDiff        = value_diff;
+   ptr->fValOffset      = value_offset;
+   ptr->fSize.call      = size_func;
+   ptr->fResize.call    = resize_func;
+   ptr->fNext.call      = next_func;
+   ptr->fFirst.call     = first_func;
+   ptr->fClear.call     = clear_func;
+   ptr->fConstruct.call = construct_func;
+   ptr->fDestruct.call  = destruct_func;
+   ptr->fFeed.call      = feed_func;
+   ptr->fCollect.call   = collect_func;
+   ptr->CheckFunctions();
+   return ptr;
 }
 
-/// Generate class streamer from static functions
-TClassStreamer* 
+TClassStreamer*
 TCollectionProxy::GenExplicitClassStreamer( Info_t info,
                                             size_t iter_size,
                                             size_t value_diff,
@@ -176,25 +181,25 @@ TCollectionProxy::GenExplicitClassStreamer( Info_t info,
                                             void*  (*collect_func)(void*)
                                             )
 {
-  TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptStreamer(GenExplicitStreamer(info, 
-                                    iter_size,
-                                    value_diff,
-                                    value_offset,
-                                    size_func,
-                                    resize_func,
-                                    clear_func,
-                                    first_func,
-                                    next_func,
-                                    construct_func,
-                                    destruct_func,
-                                    feed_func,
-                                    collect_func));
-  return s;
+   // Generate class streamer from static functions.
+   TCollectionClassStreamer* s = new TCollectionClassStreamer();
+   s->AdoptStreamer(GenExplicitStreamer(info,
+                                        iter_size,
+                                        value_diff,
+                                        value_offset,
+                                        size_func,
+                                        resize_func,
+                                        clear_func,
+                                        first_func,
+                                        next_func,
+                                        construct_func,
+                                        destruct_func,
+                                        feed_func,
+                                        collect_func));
+   return s;
 }
 
-/// Generate member streamer from static functions
-TMemberStreamer* 
+TMemberStreamer*
 TCollectionProxy::GenExplicitMemberStreamer(Info_t info,
                                             size_t iter_size,
                                             size_t value_diff,
@@ -210,63 +215,69 @@ TCollectionProxy::GenExplicitMemberStreamer(Info_t info,
                                             void*  (*collect_func)(void*)
                                             )
 {
-  TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptStreamer(GenExplicitStreamer(info, 
-                                    iter_size,
-                                    value_diff,
-                                    value_offset,
-                                    size_func,
-                                    resize_func,
-                                    clear_func,
-                                    first_func,
-                                    next_func,
-                                    construct_func,
-                                    destruct_func,
-                                    feed_func,
-                                    collect_func));
-  return s;
+   // Generate member streamer from static functions.
+   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
+   s->AdoptStreamer(GenExplicitStreamer(info,
+                                        iter_size,
+                                        value_diff,
+                                        value_offset,
+                                        size_func,
+                                        resize_func,
+                                        clear_func,
+                                        first_func,
+                                        next_func,
+                                        construct_func,
+                                        destruct_func,
+                                        feed_func,
+                                        collect_func));
+   return s;
 }
 
-/// Issue Error about invalid proxy
 void TCollectionStreamer::InvalidProxyError()   {
-  Fatal("TCollectionStreamer>","No proxy available. Data streaming impossible.");
+   // Issue Error about invalid proxy.
+   Fatal("TCollectionStreamer>","No proxy available. Data streaming impossible.");
 }
 
-/// Initializing constructor
-TCollectionStreamer::TCollectionStreamer() : fStreamer(0) {       
+TCollectionStreamer::TCollectionStreamer() : fStreamer(0) 
+{
+   // Initializing constructor.
 }
 
-/// Copy constructor
-TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)  {
-  if ( c.fStreamer )  {
-    fStreamer = dynamic_cast<TGenCollectionProxy*>(c.fStreamer->Generate());
-    Assert(fStreamer != 0);
-    return;
-  }
-  InvalidProxyError();
+TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)
+{
+   // Copy constructor.
+   if ( c.fStreamer )  {
+      fStreamer = dynamic_cast<TGenCollectionProxy*>(c.fStreamer->Generate());
+      Assert(fStreamer != 0);
+      return;
+   }
+   InvalidProxyError();
 }
 
-/// Standard destructor
-TCollectionStreamer::~TCollectionStreamer()    {       
-  if ( fStreamer )  {
-    delete fStreamer;
-  }
+TCollectionStreamer::~TCollectionStreamer()
+{
+   // Standard destructor.
+   if ( fStreamer )  {
+      delete fStreamer;
+   }
 }
 
-/// Attach worker proxy
-void TCollectionStreamer::AdoptStreamer(TGenCollectionProxy* streamer)  {
-  if ( fStreamer )  {
-    delete fStreamer;
-  }
-  fStreamer = streamer;
+void TCollectionStreamer::AdoptStreamer(TGenCollectionProxy* streamer)
+{
+   // Attach worker proxy.
+   if ( fStreamer )  {
+      delete fStreamer;
+   }
+   fStreamer = streamer;
 }
 
-/// Streamer for I/O handling
-void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */ ) {
-  if ( fStreamer )  {
-    TVirtualCollectionProxy::TPushPop env(fStreamer, pObj);
-    fStreamer->Streamer(buff);
-    return;
-  }
-  InvalidProxyError();
+void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */ )
+{
+   // Streamer for I/O handling.
+   if ( fStreamer )  {
+      TVirtualCollectionProxy::TPushPop env(fStreamer, pObj);
+      fStreamer->Streamer(buff);
+      return;
+   }
+   InvalidProxyError();
 }

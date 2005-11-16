@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.68 2005/08/29 08:24:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.69 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
 //______________________________________________________________________________
 Bool_t TIdleTimer::Notify()
 {
+   // Notify handler.
    gApplication->HandleIdleTimer();
    Reset();
    return kFALSE;
@@ -664,10 +665,10 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       else {
          char cmd = line[1];
          if (sync)
-           retval = gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+            retval = gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
                                                    (TInterpreter::EErrorCode*)err);
          else {
-           retval = gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+            retval = gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
                                               (TInterpreter::EErrorCode*)err);
          }
       }

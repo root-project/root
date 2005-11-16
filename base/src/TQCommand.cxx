@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.4 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.5 2005/09/18 13:00:04 rdm Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -298,22 +298,22 @@ TQCommand::TQCommand(TObject *obj, const char *redo, const char *undo) :
 TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
 {
    // Copy constructor.
-
+   
    fRedo = new TQConnection(*(com.fRedo));
    fUndo = new TQConnection(*(com.fUndo));
-
+   
    fRedoArgs = 0;
    fUndoArgs = 0;
    fNRargs = com.fNRargs;
    fNUargs = com.fNUargs;
-
+   
    if (fNRargs > 0) {
       fRedoArgs = new Long_t[fNRargs];
       for (int i = 0; i< fNRargs; i++) {
          fRedoArgs[i] = com.fRedoArgs[i];
       }
    }
-  if (fNUargs > 0) {
+   if (fNUargs > 0) {
       fUndoArgs = new Long_t[fNUargs];
       for (int i = 0; i < fNUargs; i++) {
          fUndoArgs[i] = com.fUndoArgs[i];
@@ -325,7 +325,7 @@ TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
    fTitle = com.fTitle;
    fObject = com.fObject;
    fState = com.fState;
-
+   
    // copy merged commands
    TIter next(&com);
    TQCommand *obj;

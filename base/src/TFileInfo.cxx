@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.2 2005/10/16 04:10:37 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.3 2005/10/16 20:27:01 pcanal Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -30,6 +30,7 @@ TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
    fMD5(new TMD5((const UChar_t*) md5)),
    fEntries(entries), fFirst(first), fLast(last), fMetaDataObject(meta)
 {
+   // Constructor.
    if (uuid) {
       fUUID = new TUUID(uuid);
    } else {
@@ -52,6 +53,7 @@ TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
 //______________________________________________________________________________
 TFileInfo::~TFileInfo()
 {
+   // Destructor.
    SafeDelete(fMetaDataObject);
    SafeDelete(fUUID);
    SafeDelete(fMD5);
@@ -79,6 +81,7 @@ TUrl *TFileInfo::NextUrl()
 //______________________________________________________________________________
 TUrl *TFileInfo::FindByUrl(const char *url)
 {
+   // Find an element from a URL.
    TIter nextUrl(fUrlList);
    TUrl* urlelement;
 
@@ -111,6 +114,7 @@ Bool_t TFileInfo::AddUrl(const char *url)
 //______________________________________________________________________________
 Bool_t TFileInfo::RemoveUrl(const char* url)
 {
+   // Remove an URL.
    TUrl* lurl;
    if ((lurl=(TUrl*)FindByUrl(url))) {
       fUrlList->Remove((TObject*) lurl);
@@ -134,6 +138,8 @@ void TFileInfo::AddMetaDataObject(TObject* obj)
 //______________________________________________________________________________
 void TFileInfo::RemoveMetaDataObject()
 {
+   // Remove all the metadata obejects.
+
    if (fMetaDataObject) {
       delete fMetaDataObject;
       fMetaDataObject = 0;
@@ -143,6 +149,7 @@ void TFileInfo::RemoveMetaDataObject()
 //______________________________________________________________________________
 void TFileInfo::Print(Option_t * /* option */) const
 {
+   // Print information about this object.
    cout << "UUID: " << GetUUID()->AsString() << " Size: " << GetSize() << " MD5: " << GetMD5()->AsString() << endl;
    TIter next(fUrlList);
    TObject* obj;

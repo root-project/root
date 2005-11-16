@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.42 2005/08/15 21:21:46 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.43 2005/09/18 13:00:04 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1429,6 +1429,7 @@ void TSubString::ToUpper()
 //______________________________________________________________________________
 void TSubString::SubStringError(Ssiz_t sr, Ssiz_t start, Ssiz_t n) const
 {
+   // Output error message.
    Error("TSubString::SubStringError",
          "out of bounds: start = %d, n = %d, sr = %d", start, n, sr);
 }

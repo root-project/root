@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.16 2005/08/03 21:19:15 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.17 2005/08/30 02:45:05 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -31,13 +31,13 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-// 
+//
 // Utility function to allow the creation of a TClass for a std::pair without
 // a dictionary (See end of file for implementation
 //
 
-static TStreamerElement* R__CreateEmulatedElement(const char *dmFull, const char *dmName);   
-static TStreamerInfo *R__GenerateTClassForPair(const string &f, const string &s); 
+static TStreamerElement* R__CreateEmulatedElement(const char *dmFull, const char *dmName);
+static TStreamerInfo *R__GenerateTClassForPair(const string &f, const string &s);
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
    : TGenCollectionProxy(copy)
@@ -46,7 +46,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProx
 }
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
-: TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
+   : TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 
@@ -68,7 +68,7 @@ TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
 }
 
 
-TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() 
+TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
 {
    // Proxy initializer
 
@@ -132,7 +132,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
    return 0;
 }
 
-UInt_t TEmulatedCollectionProxy::Size() const   
+UInt_t TEmulatedCollectionProxy::Size() const
 {
    // Return the current size of the container
 
@@ -143,13 +143,13 @@ UInt_t TEmulatedCollectionProxy::Size() const
    return 0;
 }
 
-void TEmulatedCollectionProxy::Clear(const char* opt)  
+void TEmulatedCollectionProxy::Clear(const char* opt)
 {
    // Clear the emulated collection.
    Resize(0, opt && *opt=='f');
 }
 
-void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )  
+void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )
 {
    // Shrink the container
 
@@ -161,86 +161,86 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
    switch ( fSTL_type )  {
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-        addr = ((char*)fEnv->start) + fValDiff*left;
-        switch(fKey->fCase)  {
-           case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-           case G__BIT_ISENUM:
-              break;
-           case G__BIT_ISCLASS:
-              for( i= fKey->fType ? left : nCurr; i<nCurr; ++i, addr += fValDiff ) {
-                 // Call emulation in case non-compiled content
-                 fKey->fType->Destructor(addr, kTRUE);
-              }
-              break;
-           case R__BIT_ISSTRING:
-              for( i=left; i<nCurr; ++i, addr += fValDiff ) {
-                 ((std::string*)addr)->~String_t();
-              }
-              break;
-           case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-              for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-                 StreamHelper* h = (StreamHelper*)addr;
-                 void* ptr = h->ptr();
-                 fKey->fType->Destructor(ptr);
-                 h->set(0);
-              }
-           case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-              for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-                 StreamHelper* h = (StreamHelper*)addr;
-                 delete (std::string*)h->ptr();
-                 h->set(0);
-              }
-              break;
-           case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-              for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-                 StreamHelper* h = (StreamHelper*)addr;
-                 delete (TString*)h->ptr();
-                 h->set(0);
-              }
-              break;
-        }
-        addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
-        // DO NOT break; just continue
-
-        // General case for all values
+         addr = ((char*)fEnv->start) + fValDiff*left;
+         switch(fKey->fCase)  {
+            case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+            case G__BIT_ISENUM:
+               break;
+            case G__BIT_ISCLASS:
+               for( i= fKey->fType ? left : nCurr; i<nCurr; ++i, addr += fValDiff ) {
+                  // Call emulation in case non-compiled content
+                  fKey->fType->Destructor(addr, kTRUE);
+               }
+               break;
+            case R__BIT_ISSTRING:
+               for( i=left; i<nCurr; ++i, addr += fValDiff ) {
+                  ((std::string*)addr)->~String_t();
+               }
+               break;
+            case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+               for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  void* ptr = h->ptr();
+                  fKey->fType->Destructor(ptr);
+                  h->set(0);
+               }
+            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  delete (std::string*)h->ptr();
+                  h->set(0);
+               }
+               break;
+            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  delete (TString*)h->ptr();
+                  h->set(0);
+               }
+               break;
+         }
+         addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
+         // DO NOT break; just continue
+         
+         // General case for all values
       default:
          switch( fVal->fCase )  {
-      case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-      case G__BIT_ISENUM:
-         break;
-      case G__BIT_ISCLASS:
-         for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            // Call emulation in case non-compiled content
-            fVal->fType->Destructor(addr,kTRUE);
-         }
-         break;
-      case R__BIT_ISSTRING:
-         for( i=left; i<nCurr; ++i, addr += fValDiff )
-            ((std::string*)addr)->~String_t();
-         break;
-      case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-         for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* h = (StreamHelper*)addr;
-            void* p = h->ptr();
-            if ( p )  {
-               fVal->fType->Destructor(p);
-            }
-            h->set(0);
-         }
-      case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-         for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* h = (StreamHelper*)addr;
-            delete (std::string*)h->ptr();
-            h->set(0);
-         }
-         break;
-      case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
-         for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* h = (StreamHelper*)addr;
-            delete (TString*)h->ptr();
-            h->set(0);
-         }
-         break;
+            case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+            case G__BIT_ISENUM:
+               break;
+            case G__BIT_ISCLASS:
+               for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+                  // Call emulation in case non-compiled content
+                  fVal->fType->Destructor(addr,kTRUE);
+               }
+               break;
+            case R__BIT_ISSTRING:
+               for( i=left; i<nCurr; ++i, addr += fValDiff )
+                  ((std::string*)addr)->~String_t();
+               break;
+            case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+               for( i=left; i<nCurr; ++i, addr += fValDiff )  {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  void* p = h->ptr();
+                  if ( p )  {
+                     fVal->fType->Destructor(p);
+                  }
+                  h->set(0);
+               }
+            case G__BIT_ISPOINTER|R__BIT_ISSTRING:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  delete (std::string*)h->ptr();
+                  h->set(0);
+               }
+               break;
+            case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
+               for( i=nCurr; i<left; ++i, addr += fValDiff )   {
+                  StreamHelper* h = (StreamHelper*)addr;
+                  delete (TString*)h->ptr();
+                  h->set(0);
+               }
+               break;
          }
    }
    c->resize(left*fValDiff,0);
@@ -343,8 +343,10 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
    return 0;
 }
 
-void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)  
+void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
 {
+   // Allocate the necessary space.
+
    Resize(n, forceDelete);
    return fEnv;
 }
@@ -391,7 +393,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
       case R__BIT_ISSTRING:
          DOLOOP( i->read_std_string(b) );
       case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( i->read_any_object(fVal,b) );
+         DOLOOP( i->read_any_object(fVal,b) );
       case G__BIT_ISPOINTER|R__BIT_ISSTRING:
          DOLOOP( i->read_std_string_pointer(b) );
       case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
@@ -407,47 +409,47 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
    // Object output streamer
    StreamHelper* itm = (StreamHelper*)At(0);
    switch (fVal->fCase) {
-     case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-     case G__BIT_ISENUM:
-       itm = (StreamHelper*)At(0);
-       switch( int(fVal->fKind) )   {
-          case kBool_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
-          case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
-          case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
-          case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
-          case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
-          case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
-          case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
-          case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
-          case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
-          case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
-          case kUShort_t:  b.WriteFastArray(&itm->u_short   , nElements); break;
-          case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
-          case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
-          case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
-          case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
-          case kchar:
-          case kNoType_t:
-          case kOther_t:
-             Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
-        }
-        break;
+      case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+      case G__BIT_ISENUM:
+         itm = (StreamHelper*)At(0);
+            switch( int(fVal->fKind) )   {
+            case kBool_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
+            case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
+            case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
+            case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
+            case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
+            case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
+            case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
+            case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
+            case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
+            case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
+            case kUShort_t:  b.WriteFastArray(&itm->u_short   , nElements); break;
+            case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
+            case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
+            case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
+            case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
+            case kchar:
+            case kNoType_t:
+            case kOther_t:
+               Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
+         }
+         break;
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-    case G__BIT_ISCLASS:
-       DOLOOP( b.StreamObject(i,fVal->fType) );
-     case R__BIT_ISSTRING:
-       DOLOOP( TString(i->c_str()).Streamer(b) );
-     case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-       DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
-     case R__BIT_ISSTRING|G__BIT_ISPOINTER:
-       DOLOOP( i->write_std_string_pointer(b) );
-     case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
-       DOLOOP( i->write_tstring_pointer(b) );
+      case G__BIT_ISCLASS:
+         DOLOOP( b.StreamObject(i,fVal->fType) );
+      case R__BIT_ISSTRING:
+         DOLOOP( TString(i->c_str()).Streamer(b) );
+      case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+         DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
+      case R__BIT_ISSTRING|G__BIT_ISPOINTER:
+         DOLOOP( i->write_std_string_pointer(b) );
+      case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+         DOLOOP( i->write_tstring_pointer(b) );
    }
 #undef DOLOOP
 }
 
-void TEmulatedCollectionProxy::Streamer(TBuffer &b) 
+void TEmulatedCollectionProxy::Streamer(TBuffer &b)
 {
    // TClassStreamer IO overload
    if ( b.IsReading() ) {  //Read mode
@@ -471,11 +473,11 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
 
 //
 // Utility functions
-// 
-static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull) 
+//
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull)
 {
    // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
-   
+
    TString s1( TClassEdit::ShortType(dmFull,0) );
    TString dmType( TClassEdit::ShortType(dmFull,1) );
    bool dmIsPtr = (s1 != dmType);
@@ -489,7 +491,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       dsize = dt->Size();
       if (dmIsPtr && dtype != kCharStar) {
          Error("Pair Emulation Building","%s is not yet supported in pair emulation",
-            dmFull);
+               dmFull);
          return 0;
       } else {
          return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
@@ -505,8 +507,8 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       }
       TClass *clm = gROOT->GetClass(dmType);
       if (!clm) {
-          // either we have an Emulated enum or a really unknown class!
-          // let's just claim its an enum :(
+         // either we have an Emulated enum or a really unknown class!
+         // let's just claim its an enum :(
          Int_t dtype = kInt_t;
          return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
       }
@@ -530,7 +532,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
 }
 
 
-static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string &sname) 
+static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string &sname)
 {
    // Generate a TStreamerInfo for a pair<fname,sname>
    // This TStreamerInfo is then used as if it was read from a file to generate

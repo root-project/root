@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TKeyMapFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   23/07/97
 
 /*************************************************************************
@@ -35,12 +35,12 @@ private:
    TMapFile      *fMapFile;       //pointer to map file
 
 public:
-    TKeyMapFile();
-    TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile);
-    virtual ~TKeyMapFile() {;}
-    virtual void      Browse(TBrowser *b);
-
-    ClassDef(TKeyMapFile,0)  //Utility class for browsing TMapFile objects.
+   TKeyMapFile();
+   TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile);
+   virtual ~TKeyMapFile() {;}
+   virtual void      Browse(TBrowser *b);
+   
+   ClassDef(TKeyMapFile,0);  //Utility class for browsing TMapFile objects.
 };
 
 #endif

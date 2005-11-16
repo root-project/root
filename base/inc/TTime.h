@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.2 2001/10/01 09:45:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.3 2005/04/07 14:43:35 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -64,40 +64,40 @@ public:
 };
 
 inline TTime TTime::operator= (const TTime &t)
-        { fMilliSec = t.fMilliSec; return *this; }
+   { fMilliSec = t.fMilliSec; return *this; }
 inline TTime TTime::operator+=(const TTime &t)
-        { fMilliSec += t.fMilliSec; return *this; }
+   { fMilliSec += t.fMilliSec; return *this; }
 inline TTime TTime::operator-=(const TTime &t)
-        { fMilliSec -= t.fMilliSec; return *this; }
+   { fMilliSec -= t.fMilliSec; return *this; }
 inline TTime TTime::operator*=(const TTime &t)
-        { fMilliSec *= t.fMilliSec; return *this; }
+   { fMilliSec *= t.fMilliSec; return *this; }
 inline TTime TTime::operator/=(const TTime &t)
-        { fMilliSec /= t.fMilliSec; return *this; }
+   { fMilliSec /= t.fMilliSec; return *this; }
 inline TTime::operator long() const
-        { return fMilliSec; }
+   { return fMilliSec; }
 inline TTime::operator unsigned long() const
-        { return (ULong_t) fMilliSec; }
+   { return (ULong_t) fMilliSec; }
 
 inline TTime operator+(const TTime &t1, const TTime &t2)
-        { return TTime(t1.fMilliSec + t2.fMilliSec); }
+   { return TTime(t1.fMilliSec + t2.fMilliSec); }
 inline TTime operator-(const TTime &t1, const TTime &t2)
-        { return TTime(t1.fMilliSec - t2.fMilliSec); }
+   { return TTime(t1.fMilliSec - t2.fMilliSec); }
 inline TTime operator*(const TTime &t1, const TTime &t2)
-        { return TTime(t1.fMilliSec * t2.fMilliSec); }
+   { return TTime(t1.fMilliSec * t2.fMilliSec); }
 inline TTime operator/(const TTime &t1, const TTime &t2)
-        { return TTime(t1.fMilliSec / t2.fMilliSec); }
+   { return TTime(t1.fMilliSec / t2.fMilliSec); }
 
 inline Bool_t operator== (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec == t2.fMilliSec; }
+   { return t1.fMilliSec == t2.fMilliSec; }
 inline Bool_t operator!= (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec != t2.fMilliSec; }
+   { return t1.fMilliSec != t2.fMilliSec; }
 inline Bool_t operator< (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec < t2.fMilliSec; }
+   { return t1.fMilliSec < t2.fMilliSec; }
 inline Bool_t operator<= (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec <= t2.fMilliSec; }
+   { return t1.fMilliSec <= t2.fMilliSec; }
 inline Bool_t operator> (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec > t2.fMilliSec; }
+   { return t1.fMilliSec > t2.fMilliSec; }
 inline Bool_t operator>= (const TTime &t1, const TTime &t2)
-        { return t1.fMilliSec >= t2.fMilliSec; }
+   { return t1.fMilliSec >= t2.fMilliSec; }
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.9 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.10 2004/10/04 08:23:22 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -23,17 +23,17 @@
 #include "TString.h"
 
 #if defined(R__UNIX)
-#   include <sys/times.h>
-#   include <unistd.h>
+#  include <sys/times.h>
+#  include <unistd.h>
 static Double_t gTicks = 0;
 #elif defined(R__VMS)
-#   include <time.h>
-#   include <unistd.h>
+#  include <time.h>
+#  include <unistd.h>
 static Double_t gTicks = 1000;
 #elif defined(WIN32)
-#   include "TError.h"
-    const Double_t gTicks = 1.0e-7;
-#   include "Windows4Root.h"
+#  include "TError.h"
+const Double_t gTicks = 1.0e-7;
+#  include "Windows4Root.h"
 #endif
 
 

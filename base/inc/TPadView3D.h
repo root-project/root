@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TPadView3D.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************
@@ -42,9 +42,8 @@ class TNode;
 class TRotMatrix;
 
 //class TPadView3D : public TObjectView
-class TPadView3D
-{
- protected:
+class TPadView3D {
+protected:
    TVirtualPad  *fParent;            // Pointer to the original TPad object
 
    Double_t      fViewBoxMin[3];     // Minimum of clip box
@@ -56,7 +55,7 @@ class TPadView3D
    Double_t      fAnglFactor[3];     // Latitude, Longitude, Psi
    Float_t       fScale;             // The scale factor to control the border of the clip box
 
- public:
+public:
    TPadView3D() { fParent = 0;}  //default ctor
    TPadView3D(TVirtualPad *pad) { SetPad(pad); }
    virtual ~TPadView3D();
@@ -97,7 +96,7 @@ class TPadView3D
    virtual void    SetScale(Float_t scale);
 
 
-//   ClassDef(TPadView3D,0)   //Generic 3D viewer
+//   ClassDef(TPadView3D,0);   //Generic 3D viewer
 };
 
 inline void TPadView3D::ExecuteEvent(Int_t, Int_t, Int_t) { }

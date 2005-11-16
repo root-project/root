@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.cxx,v 1.1 2002/09/14 16:19:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -23,6 +23,7 @@ ClassImp(TVirtualUtil3D)
 //______________________________________________________________________________
 TVirtualUtil3D::TVirtualUtil3D()
 {
+   // Constructor.
    SetName("R__TVirtualUtil3D");
    TVirtualUtil3D *u = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
    if (!u) gROOT->GetListOfSpecials()->Add(this);
@@ -30,4 +31,5 @@ TVirtualUtil3D::TVirtualUtil3D()
 //______________________________________________________________________________
 TVirtualUtil3D::~TVirtualUtil3D()
 {
+   // Destructor.
 }
