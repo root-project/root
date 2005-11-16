@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.118 2005/10/14 10:50:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.119 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TVirtualIndex.h"
 #include "TFileInfo.h"
 #include "TUrl.h"
+#include "TTreeCloner.h"
 
 #include <queue>
 #include <map>
@@ -1137,7 +1138,7 @@ void TChain::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Long64_t TChain::Merge(const char *name)
+Long64_t TChain::Merge(const char *name, Option_t *option)
 {
    // Merge all files in this chain into a new file.
    // See important note in the following function Merge().
@@ -1155,12 +1156,12 @@ Long64_t TChain::Merge(const char *name)
    //
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
-   return Merge(file,0,"");
+   return Merge(file,0,option);
 }
 
 
 //______________________________________________________________________________
-Long64_t TChain::Merge(TCollection * /* list */ )
+Long64_t TChain::Merge(TCollection * /* list */, Option_t * /* option */ )
 {
    // Merge all TChains in the list
 
@@ -1219,8 +1220,15 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    // The function returns the total number of files produced.
 
    if (!file) return 0;
+
+   // Options
+   Bool_t fastClone = kFALSE;
+
    TString opt = option;
    opt.ToLower();
+   if (opt.Contains("fast")) {
+      fastClone = kTRUE;
+   }
 
    TObjArray *lbranches = GetListOfBranches();
    if (!lbranches) return 0;
@@ -1257,9 +1265,25 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    strcpy(firstname,gFile->GetName());
 
    Long64_t nentries = GetEntriesFast();
-   for (Long64_t i=0;i<nentries;i++) {
-      if (GetEntry(i) <= 0) break;
-      hnew->Fill();
+   if (fastClone) {
+      
+      // for each tree in the chain 
+      for (Long64_t i=0;
+           i<nentries;
+           i += this->GetTree()->GetEntries()
+           ) 
+      {
+         if (LoadTree(i) < 0) break;
+         TTreeCloner t(GetTree(),hnew,"");
+         hnew->SetEntries( hnew->GetEntries() + GetTree()->GetEntries() );
+         t.Exec();
+      }
+  
+   } else {
+      for (Long64_t i=0;i<nentries;i++) {
+         if (GetEntry(i) <= 0) break;
+         hnew->Fill();
+      }
    }
 
 // Write new tree header
