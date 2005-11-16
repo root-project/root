@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.19 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.20 2005/03/26 07:02:14 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -354,6 +354,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       R__b >> pidf;
+      pidf += R__b.GetPidOffset();
       fPID = TProcessID::ReadProcessID(pidf,file);
       if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {

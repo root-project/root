@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.48 2005/04/18 10:54:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.49 2005/08/15 21:20:41 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -61,6 +61,7 @@ protected:
    TObject        *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
    TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfos;         //Stack of pointers to the TStreamerInfos
+   UShort_t        fPidOffset;     //Offset to be added to the pid index in this key/buffer.
 
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
@@ -159,10 +160,15 @@ public:
 
    virtual Int_t    WriteObjectAny(const void *obj, const TClass *ptrClass);
 
+   UShort_t GetPidOffset() const {
+      // See comment in TBuffer::SetPidOffset
+      return fPidOffset;
+   }
+   void     SetPidOffset(UShort_t offset);
+   Int_t    GetBufferDisplacement() const { return fDisplacement; }
+   void     SetBufferDisplacement() { fDisplacement = 0; }
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
-   void     SetBufferDisplacement() { fDisplacement = 0; }
-   Int_t    GetBufferDisplacement() const { return fDisplacement; }
 
    virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
    virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);

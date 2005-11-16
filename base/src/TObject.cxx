@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.70 2005/04/12 16:58:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.71 2005/05/19 17:28:15 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -787,6 +787,7 @@ void TObject::Streamer(TBuffer &R__b)
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
       R__b >> pidf;
+      pidf += R__b.GetPidOffset();
       TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
       if (pid) {
          UInt_t gpid = pid->GetUniqueID();

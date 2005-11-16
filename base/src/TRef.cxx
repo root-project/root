@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.29 2005/08/26 12:17:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.30 2005/09/16 08:49:26 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -459,6 +459,7 @@ void TRef::Streamer(TBuffer &R__b)
          }
       } else {
          R__b >> pidf;
+         pidf += R__b.GetPidOffset();
          fPID = TProcessID::ReadProcessID(pidf,file);
          //The execid has been saved in the unique id of the TStreamerElement
          //being read by TStreamerElement::Streamer
