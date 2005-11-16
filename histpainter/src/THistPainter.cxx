@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.229 2005/11/14 16:34:17 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.230 2005/11/15 10:39:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1657,16 +1657,27 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       strcat(chopt, "W");
    }
 
-   // Option LogX
+   // Define X-Axis limits
+   // In case of CONT4 the axis limits must be taken from Hparam
    if (Hoption.Logx) {
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivx);
-      umin = TMath::Power(10,Hparam.xmin);
-      umax = TMath::Power(10,Hparam.xmax);
+      if (Hoption.Contour == 14) {
+         umin = TMath::Power(10,Hparam.xmin);
+         umax = TMath::Power(10,Hparam.xmax);
+      } else {
+         umin = TMath::Power(10,axmin);
+         umax = TMath::Power(10,axmax);
+      }
    } else {
       ndiv = TMath::Abs(ndivx);
-      umin = Hparam.xmin;
-      umax = Hparam.xmax;
+      if (Hoption.Contour == 14) {
+         umin = Hparam.xmin;
+         umax = Hparam.xmax;
+      } else {
+         umin = axmin;
+         umax = axmax;
+      }
    }
 
    // Display axis as time
@@ -1709,16 +1720,27 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       strcat(chopt, "W");
    }
 
-   // Option LogY
+   // Define Y-Axis limits
+   // In case of CONT4 the axis limits must be taken from Hparam
    if (Hoption.Logy) {
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivy);
-      umin = TMath::Power(10,Hparam.ymin);
-      umax = TMath::Power(10,Hparam.ymax);
+      if (Hoption.Contour == 14) {
+         umin = TMath::Power(10,Hparam.ymin);
+         umax = TMath::Power(10,Hparam.ymax);
+      } else {
+         umin = TMath::Power(10,aymin);
+         umax = TMath::Power(10,aymax);
+      }
    } else {
       ndiv = TMath::Abs(ndivy);
-      umin = Hparam.ymin;
-      umax = Hparam.ymax;
+      if (Hoption.Contour == 14) {
+         umin = Hparam.ymin;
+         umax = Hparam.ymax;
+      } else {
+         umin = aymin; 	   
+         umax = aymax;
+      }
    }
 
    // Display axis as time
