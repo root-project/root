@@ -1349,8 +1349,13 @@ int G__loadfile(const char *filenamein)
   /**********************************************
   * Get actual open file name.
   **********************************************/
-  G__preprocessor(prepname,filename,G__cpp,G__macros,G__undeflist
-                  ,G__ppopt,G__allincludepath);
+  int pres= G__preprocessor(prepname,filename,G__cpp,G__macros,G__undeflist
+                            ,G__ppopt,G__allincludepath);
+  if (pres!=0) {
+     G__fprinterr(G__serr,"Error: external preprocessing failed.");
+     G__genericerror((char*)NULL);
+     return(G__LOADFILE_FAILURE);
+  }
 
   /**********************************************
   * open file
@@ -2269,9 +2274,10 @@ int G__preprocessor(char *outname,char *inname,int cppflag
 #endif
     if(G__debugtrace||G__steptrace||G__step||G__asm_dbg)
       G__fprinterr(G__serr," %s\n",temp);
-    system(temp);
+    int pres = system(temp);
 
     if(tmplen) remove(tmpfile);
+    return pres;
   }
 
   else {
