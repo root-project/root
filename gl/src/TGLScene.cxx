@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.21 2005/10/11 10:25:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.22 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -591,70 +591,159 @@ Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const T
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawAxes() const
+void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TGLVertex3 * reference) const
 {
    if (fLock != kDrawLock && fLock != kSelectLock) {
-      Error("TGLScene::DrawAxes", "expected Draw or Select Lock");
+      Error("TGLScene::DrawMarkers", "expected Draw or Select Lock");
    }
-   // Draw out the scene axes
-   // Taken directly from TGLRender by Timur Pocheptsov
+
+   // Reference and origin based axes are not depth clipped
+   glDisable(GL_DEPTH_TEST);
+
+   // Draw any passed reference marker
+   if (reference) {
+      const Float_t referenceColor[4] = { 0.98, 0.45, 0.0, 1.0 }; // Orange
+      TGLVector3 referenceSize = camera.ViewportDeltaToWorld(*reference, 3, 3);
+      TGLUtil::DrawSphere(*reference, referenceSize.Mag(), referenceColor);
+   }
+
+   if (axesType != kAxesOrigin) {
+      glEnable(GL_DEPTH_TEST);
+   }
+   if (axesType == kAxesNone) {
+      return;
+   }
+
+   const Float_t axesColors[][4] = {{0.5, 0.0, 0.0, 1.0},  // -ive X axis light red 
+                                    {1.0, 0.0, 0.0, 1.0},  // +ive X axis deep red
+                                    {0.0, 0.5, 0.0, 1.0},  // -ive Y axis light green 
+                                    {0.0, 1.0, 0.0, 1.0},  // +ive Y axis deep green
+                                    {0.0, 0.0, 0.5, 1.0},  // -ive Z axis light blue 
+                                    {0.0, 0.0, 1.0, 1.0}}; // +ive Z axis deep blue
+   
+
+   // Axes draw at fixed screen size - back project to world
+   TGLVector3 pixelVector = camera.ViewportDeltaToWorld(BoundingBox().Center(), 1, 1);
+   Double_t pixelSize = pixelVector.Mag();
+   
+   // Find x/y/z min/max values
+   Double_t min[3] = { BoundingBox().XMin(), BoundingBox().YMin(), BoundingBox().ZMin() };
+   Double_t max[3] = { BoundingBox().XMax(), BoundingBox().YMax(), BoundingBox().ZMax() };
+
+   for (UInt_t i = 0; i < 3; i++) {
+      TGLVertex3 start;
+      TGLVector3 vector;
+   
+      if (axesType == kAxesOrigin) {
+         // Through origin axes
+         start[(i+1)%3] = 0.0;
+         start[(i+2)%3] = 0.0;
+      } else {
+         // Side axes
+         start[(i+1)%3] = min[(i+1)%3];
+         start[(i+2)%3] = min[(i+2)%3];
+      }
+      vector[(i+1)%3] = 0.0;
+      vector[(i+2)%3] = 0.0;
+
+      // -ive axis?
+      if (min[i] < 0.0) {
+         // Runs from origin?
+         if (max[i] > 0.0) {
+            start[i] = 0.0;
+            vector[i] = min[i];
+         } else {
+            start[i] = max[i];
+            vector[i] = min[i] - max[i];
+         }
+         TGLUtil::DrawLine(start, vector, TGLUtil::kLineHeadNone, pixelSize*2.5, axesColors[i*2]);
+      }
+      // +ive axis?
+      if (max[i] > 0.0) {
+         // Runs from origin?
+         if (min[i] < 0.0) {
+            start[i] = 0.0;
+            vector[i] = max[i];
+         } else {
+            start[i] = min[i];
+            vector[i] = max[i] - min[i];
+         }
+         TGLUtil::DrawLine(start, vector, TGLUtil::kLineHeadNone, pixelSize*2.5, axesColors[i*2 + 1]);
+      }
+   }
+
+   // Draw origin sphere(s)
+   if (axesType == kAxesOrigin) {
+      // Single white origin sphere at 0, 0, 0
+      Float_t white[4] = { 1.0, 1.0, 1.0, 1.0 };
+      TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), pixelSize*2.0, white);  
+   } else {
+      for (UInt_t j = 0; j < 3; j++) {
+         if (min[j] <= 0.0 && max[j] >= 0.0) {
+            TGLVertex3 zero;
+            zero[j] = 0.0; 
+            zero[(j+1)%3] = min[(j+1)%3];
+            zero[(j+2)%3] = min[(j+2)%3];
+            TGLUtil::DrawSphere(zero, pixelSize*2.0, axesColors[j*2 + 1]);
+         }
+      }
+   }
+
    static const UChar_t xyz[][8] = {{0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
-                                     {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
-                                     {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}};
+                                    {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
+                                    {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}};
 
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-   glPushAttrib(GL_DEPTH_BUFFER_BIT);
-   glDisable(GL_DEPTH_TEST);
+
+   // Labels
+   Double_t padPixels = 25.0;
+
    glDisable(GL_LIGHTING);
+   for (UInt_t k = 0; k < 3; k++) {
+      TGLUtil::SetDrawColors(axesColors[k*2+1]);
+      TGLVertex3 minPos, maxPos;
+      if (axesType == kAxesOrigin) {
+         minPos[(k+1)%3] = 0.0;
+         minPos[(k+2)%3] = 0.0;
+      } else {
+         minPos[(k+1)%3] = min[(k+1)%3];
+         minPos[(k+2)%3] = min[(k+2)%3];
+      }
+      maxPos = minPos;
+      minPos[k] = min[k];
+      maxPos[k] = max[k];
 
-   const Double_t axisColors[][3] = {{1., 0., 0.}, // X axis red
-                                     {0., 1., 0.}, // Y axis green
-                                     {0., 0., 1.}};// Z axis blue
-   const TGLBoundingBox & box = BoundingBox();
-   Double_t xmin = box.XMin(), xmax = box.XMax();
-   Double_t ymin = box.YMin(), ymax = box.YMax();
-   Double_t zmin = box.ZMin(), zmax = box.ZMax();
+      TGLVector3 axis = maxPos - minPos;
+      TGLVector3 axisViewport = camera.WorldDeltaToViewport(minPos, axis);
 
-   glBegin(GL_LINES);
-   glColor3dv(axisColors[0]);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmax, ymin, zmin);
-   glColor3dv(axisColors[1]);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymax, zmin);
-   glColor3dv(axisColors[2]);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymin, zmax);
-   glEnd();
+      // Skip drawning if viewport projection of axis very small - labels will overlap
+      // Occurs with orthographic cameras
+      if (axisViewport.Mag() < 1) { 
+         continue;
+      }
 
-   // X label
-   glColor3dv(axisColors[0]);
-   glRasterPos3d(xmax, ymin + 12, zmin);
-   glBitmap(8, 8, 0., 0., 0., 0., xyz[0]);
-   DrawNumber(xmax, xmax, ymin, zmin, 9.);
-   DrawNumber(xmin, xmin, ymin, zmin, 0.);
+      minPos -= camera.ViewportDeltaToWorld(minPos, padPixels*axisViewport.X()/axisViewport.Mag(), 
+                                                    padPixels*axisViewport.Y()/axisViewport.Mag());
+      axisViewport = camera.WorldDeltaToViewport(maxPos, -axis);
+      maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
+                                                    padPixels*axisViewport.Y()/axisViewport.Mag());
 
-   // Y label
-   glColor3dv(axisColors[1]);
-   glRasterPos3d(xmin, ymax + 12, zmin);
-   glBitmap(8, 8, 0, 0, 12., 0, xyz[1]);
-   DrawNumber(ymax, xmin, ymax, zmin, 9.);
-   DrawNumber(ymin, xmin, ymin, zmin, 9.);
-
-   // Z label
-   glColor3dv(axisColors[2]);
-   glRasterPos3d(xmin, ymin, zmax);
-   glBitmap(8, 8, 0, 0, 0., 0, xyz[2]);
-   DrawNumber(zmax, xmin, ymin, zmax, 9.);
-   DrawNumber(zmin, xmin, ymin, zmin, -9.);
-
+      DrawNumber(min[k], minPos);        // Min value
+      DrawNumber(max[k], maxPos);        // Max value
+   
+      // Axis name beside max value
+      TGLVertex3 namePos = maxPos - 
+         camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
+                                     padPixels*axisViewport.Y()/axisViewport.Mag());
+      glRasterPos3dv(namePos.CArr());
+      glBitmap(8, 8, 0.0, 4.0, 0.0, 0.0, xyz[k]); // Axis Name
+   }
    glEnable(GL_LIGHTING);
    glEnable(GL_DEPTH_TEST);
-   glPopAttrib();
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const
+void TGLScene::DrawNumber(Double_t num, const TGLVertex3 & center) const
 {
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::DrawNumber", "expected Draw or Select Lock");
@@ -675,18 +764,16 @@ void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Doub
 
    TString str;
    str+=Long_t(num);
-
-   glRasterPos3i(Int_t(x), Int_t(y), Int_t(z));
+   Double_t xOffset = 3.5 * str.Length();
+   Double_t yOffset = 4.0;
+   glRasterPos3dv(center.CArr());
    for (Ssiz_t i = 0, e = str.Length(); i < e; ++i) {
       if (str[i] == '.') {
-         glBitmap(8, 8, 0., yorig, 7., 0., digits[10]);
-         if (i + 1 < e)
-            glBitmap(8, 8, 0., yorig, 7., 0., digits[str[i + 1] - '0']);
-         break;
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[10]);
       } else if (str[i] == '-') {
-         glBitmap(8, 8, 0., yorig, 7., 0., digits[11]);
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[11]);
       } else {
-         glBitmap(8, 8, 0., yorig, 7., 0., digits[str[i] - '0']);
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[str[i] - '0']);
       }
    }
 }

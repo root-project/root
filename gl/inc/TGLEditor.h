@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.12 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.13 2005/10/04 20:33:11 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -48,7 +48,8 @@ enum EApplyButtonIds {
    kTBBottom,
    kTBLeft,
    kTBFront,            
-   kTBa1
+   kTBa1,
+   kTBGuide
 };
 
 class TGLColorEditor : public TGCompositeFrame {
@@ -146,9 +147,7 @@ private:
    ClassDef(TGLGeometryEditor, 0)
 };
 
-class TGLSceneEditor : public TGCompositeFrame {
-public:
-
+class TGLClipEditor : public TGCompositeFrame {
 private:
 
    TGLSAViewer   *fViewer;
@@ -162,34 +161,31 @@ private:
    TGNumberEntry    * fBoxProp[6];
 
    TGCheckButton  *fEdit;
-   TGCheckButton  *fAxes;
    EClipType       fCurrentClip;
 
 public:
-   TGLSceneEditor(const TGWindow *parent, TGLSAViewer *viewer);   
+   TGLClipEditor(const TGWindow *parent, TGLSAViewer *viewer);   
 
    // Internal GUI event callbacks
    void ClipValueChanged(Long_t);
    void ClipTypeChanged(Int_t);
    void UpdateViewer();
-   void GetDefaults();
 
    // External viewer interface
-   void GetClipState(EClipType type, std::vector<Double_t> & data) const;
-   void SetClipState(EClipType type, const std::vector<Double_t> & data);
-   void GetCurrentClip(EClipType & type, Bool_t & edit) const;
-   void SetCurrentClip(EClipType type);
-   Bool_t GetAxes() const;
+   void GetState(EClipType type, std::vector<Double_t> & data) const;
+   void SetState(EClipType type, const std::vector<Double_t> & data);
+   void GetCurrent(EClipType & type, Bool_t & edit) const;
+   void SetCurrent(EClipType type);
 
-	void HideParts();
+   void HideParts();
 
 private:
    void CreateControls();
 
-   TGLSceneEditor(const TGLSceneEditor &);
-   TGLSceneEditor &operator = (const TGLSceneEditor &);
+   TGLClipEditor(const TGLClipEditor &);
+   TGLClipEditor &operator = (const TGLClipEditor &);
 
-   ClassDef(TGLSceneEditor, 0);
+   ClassDef(TGLClipEditor, 0);
 };
 
 class TGLLightEditor : public TGCompositeFrame {
@@ -207,12 +203,42 @@ private:
    TGLSAViewer    *fViewer;
    TList           fTrash;
    
+   TGLLightEditor(const TGLLightEditor &);
+   TGLLightEditor &operator = (const TGLLightEditor &);
+
 public:
    TGLLightEditor(const TGWindow *parent, TGLSAViewer *viewer);
    
    void DoButton();
    
    ClassDef(TGLLightEditor, 0);
+};
+
+class TGLGuideEditor : public TGCompositeFrame {
+private:
+   TGLSAViewer    * fViewer;
+   TGButtonGroup  * fAxesContainer;
+   TGGroupFrame   * fReferenceContainer;
+   TGCheckButton  * fReferenceOn;
+   TGNumberEntry  * fReferencePos[3];
+
+   TGLayoutHints  * fL1;
+   TGLayoutHints  * fL2;
+   TList            fTrash;
+
+   void UpdateReferencePos();
+
+   TGLGuideEditor(const TGLGuideEditor &);
+   TGLGuideEditor &operator = (const TGLGuideEditor &);
+
+public:
+   TGLGuideEditor(const TGWindow *parent, TGLSAViewer *viewer);
+
+   void Update();
+   void GetState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const;
+   void SetState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos);
+
+   ClassDef(TGLGuideEditor, 0);
 };
 
 #endif

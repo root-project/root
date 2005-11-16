@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.14 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.15 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -124,7 +124,9 @@ private:
    TGLScene       fScene;          //! the GL scene - owned by viewer at present
    TGLRect        fViewport;       //! viewport - drawn area
    UInt_t         fLightState;     //! light states (on/off) mask
-   Bool_t         fDrawAxes;       //! draw scene axes
+   EAxesType      fAxesType;       //! axes type
+   Bool_t         fReferenceOn;    //! reference marker on?
+   TGLVertex3     fReferencePos;   //! reference position
    Bool_t         fInitGL;         //! has GL been initialised?
 
    // Clipping
@@ -172,6 +174,7 @@ private:
    void        SetupLights();
 
    // Clipping
+   void SetupClips();
    void ClearClips();
 
    // Non-copyable class
@@ -198,11 +201,11 @@ public:
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 
-   // Manipulation interface - e.g. external GUI component bindings
+   // External GUI component interface
    void  SetCurrentCamera(ECameraType camera);
    void  ToggleLight(ELight light);
-   void  SetAxes(Bool_t on);
-   virtual void  SetupClips();
+   void  GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const;
+   void  SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos);
    void  GetClipState(EClipType type, std::vector<Double_t> & data) const;
    void  SetClipState(EClipType type, const std::vector<Double_t> & data);
    EClipType GetCurrentClip() const;
@@ -212,12 +215,14 @@ public:
    void  SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
    const TGLPhysicalShape * GetSelected() const { return fScene.GetSelected(); }
    
+   // Overloadable 
+   virtual void Setup();
    virtual void SelectionChanged(); // *SIGNAL*
    virtual void ClipChanged();      // *SIGNAL*
 
    // Draw and selection - unpleasant as we need to send via cross thread
-   // gVirtualGL objects to ensure GL context is correct. To be replaced with
-   // TGLManager
+   // gVirtualGL objects to ensure GL context is correct. To be removed when
+   // TGLManager is
    void RequestDraw(UInt_t redrawLOD = kMed); // Cross thread draw request
    void DoDraw();
    void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request

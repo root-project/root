@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.5 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.6 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -26,8 +26,9 @@ class TGLSelection;
 class TGVSplitter;
 class TGPopupMenu;
 class TGLColorEditor;
-class TGLSceneEditor;
+class TGLClipEditor;
 class TGLLightEditor;
+class TGLGuideEditor;
 class TGMenuBar;
 class TGCanvas;
 class TGLRenderArea; // Remove - replace with TGLManager
@@ -47,11 +48,7 @@ private:
    TGVerticalFrame   *fV1;
    TGVerticalFrame   *fV2;
 
-   TGTab             *fEditorTab;
-   TGTab             *fObjectTab;
-   TGTab             *fSceneTab;
-
-   TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
+   TGLayoutHints     *fL1, *fL2, *fL3;
    TGLayoutHints     *fCanvasLayout;
    TGMenuBar         *fMenuBar;
    TGPopupMenu       *fFileMenu, *fViewMenu, *fHelpMenu;
@@ -61,11 +58,17 @@ private:
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fGLArea;
 
-   // Editors
-   TGLColorEditor    *fColorEditor;
-   TGLGeometryEditor *fGeomEditor;
-   TGLSceneEditor    *fSceneEditor;
-   TGLLightEditor    *fLightEditor;
+   // Tabs
+   TGTab             *fEditorTab;
+   TGTab             *fShapesTab;
+   TGTab             *fSceneTab;
+
+   // Sub tabs
+   TGLColorEditor    *fColorEditor; // Under shapes
+   TGLGeometryEditor *fGeomEditor;  // Under shapes
+   TGLClipEditor     *fClipEditor;  // Under scene
+   TGLLightEditor    *fLightEditor; // Under scene
+   TGLGuideEditor    *fGuideEditor; // Under scene
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -75,7 +78,6 @@ private:
 
    static const char * fgHelpText;
 
-   // Setup
    void CreateViewer();
 
    // non-copyable class
@@ -93,10 +95,11 @@ public:
    void   ProcessGUIEvent(Int_t id);
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
 
-   void SelectionChanged();
-   void ClipChanged();
+   // TGLViewer overloads
+   virtual void Setup();
+   virtual void SelectionChanged();
+   virtual void ClipChanged();
    
-   void SetupClips();
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

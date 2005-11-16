@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.13 2005/11/04 20:13:08 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.14 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -13,8 +13,10 @@
 // TODO: Class def - same as header!!!
 
 #include "TGLUtil.h"
-#include "TGLIncludes.h"
+#include "TGLBoundingBox.h"
 #include "TGLQuadric.h"
+#include "TGLIncludes.h"
+
 #include "TError.h"
 #include "TMath.h"
 #include "Riostream.h"
@@ -453,9 +455,9 @@ void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
 void TGLMatrix::Transpose3x3()
 {
    // Transpose the top left 3x3 matrix component along major diagonal
-
+   //
    // TODO: Move this fix to the TBuffer3D filling side and remove
-
+   //
    // 0  4  8 12
    // 1  5  9 13
    // 2  6 10 14
@@ -497,6 +499,8 @@ void TGLMatrix::Dump() const
 
 ClassImp(TGLUtil)
 
+UInt_t TGLUtil::fgDrawQuality = 60;
+
 //______________________________________________________________________________
 void TGLUtil::CheckError()
 {
@@ -510,17 +514,129 @@ void TGLUtil::CheckError()
 }
 
 //______________________________________________________________________________
-void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4])
+void TGLUtil::SetDrawColors(const Float_t rgba[4])
 {
+   // Util function to setup GL color for both unlit and lit material
+   static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
+   static Float_t specular[4] = {0.8, 0.8, 0.8, 1.0};
+   Float_t emission[4] = {rgba[0]/3.0, rgba[1]/3.0, rgba[2]/3.0, rgba[3]};
+
+   glColor3d(rgba[0], rgba[1], rgba[2]);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+   glMaterialfv(GL_FRONT, GL_EMISSION, emission);
+   glMaterialf(GL_FRONT, GL_SHININESS, 60.0);
+}
+
+//______________________________________________________________________________
+void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius, 
+                         const Float_t rgba[4])
+{
+   // Util function to draw a fixed quality sphere
    static TGLQuadric quad;
+   SetDrawColors(rgba);
    glPushMatrix();
    glTranslated(position.X(), position.Y(), position.Z());
-
-   // Set diffuse material and default color - cover cases lighting on/off
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
-   glColor3d(rgba[0], rgba[1], rgba[2]);
-   gluSphere(quad.Get(), radius, 40, 40);
+   gluSphere(quad.Get(), radius, fgDrawQuality, fgDrawQuality);
    glPopMatrix();
 }
 
+//______________________________________________________________________________
+void TGLUtil::DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, 
+                       const Float_t rgba[4])
+{
+   // Draw 3D line (tube) with optional head shape
+   DrawLine(line.Start(), line.Vector(), head, size, rgba);
+}
 
+//______________________________________________________________________________
+void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, 
+                       ELineHeadShape head, Double_t size, const Float_t rgba[4])
+{   
+   static TGLQuadric quad;
+
+   // Draw 3D line (tube) with optional head shape
+   SetDrawColors(rgba);
+   glPushMatrix();
+   TGLMatrix local(start, vector);
+   glMultMatrixd(local.CArr());
+
+   Double_t headHeight=0;
+   if (head == kLineHeadNone) {
+      headHeight = 0.0;
+   } else if (head == kLineHeadArrow) {
+      headHeight = size*2.0;
+   } else if (head == kLineHeadBox) {
+      headHeight = size*1.4;
+   }
+
+   // Line (tube) component
+   gluCylinder(quad.Get(), size/4.0, size/4.0, vector.Mag() - headHeight, fgDrawQuality, fgDrawQuality);
+   gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
+   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality); 
+
+   glTranslated(0.0, 0.0, vector.Mag() - headHeight); // Shift down local Z to end of line
+
+   if (head == kLineHeadNone) { 
+      // Cap end of line
+      gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
+      gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality); 
+   }
+   else if (head == kLineHeadArrow) {
+      // Arrow base / end line cap
+      gluDisk(quad.Get(), 0.0, size, fgDrawQuality, fgDrawQuality); 
+      // Arrow cone
+      gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
+      gluCylinder(quad.Get(), size, 0.0, headHeight, fgDrawQuality, fgDrawQuality);
+   } else if (head == kLineHeadBox) {
+      // Box
+      // TODO: Drawing box should be simplier - maybe make 
+      // a static helper which BB + others use.
+      // Single face tesselation - ugly lighting 
+      gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
+      TGLBoundingBox box(TGLVertex3(-size*.7, -size*.7, 0.0), 
+                         TGLVertex3(size*.7, size*.7, headHeight));
+      box.Draw(kTRUE);
+   }
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal, 
+                       Double_t radius, const Float_t rgba[4])
+{    
+   static TGLQuadric quad;
+
+   // Draw a ring, round vertex 'center', lying on plane defined by 'normal' vector 
+   // Radius defines the outer radius
+   TGLUtil::SetDrawColors(rgba);
+
+   Double_t outer = radius;
+   Double_t width = radius*0.05;
+   Double_t inner = outer - width;
+
+   // Shift into local system, looking down 'normal' vector, origin at center
+   glPushMatrix();
+   TGLMatrix local(center, normal);
+   glMultMatrixd(local.CArr());
+
+   glDisable(GL_CULL_FACE);
+
+   // Shift half width so rings centered over center vertex 
+   glTranslated(0.0, 0.0, -width/2.0);
+
+   // Inner and outer faces
+   gluCylinder(quad.Get(), inner, inner, width, fgDrawQuality, fgDrawQuality);
+   gluCylinder(quad.Get(), outer, outer, width, fgDrawQuality, fgDrawQuality);
+   
+   // Top/bottom
+   gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
+   glTranslated(0.0, 0.0, width);
+   gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
+
+   glEnable(GL_CULL_FACE);
+   glPopMatrix();
+}

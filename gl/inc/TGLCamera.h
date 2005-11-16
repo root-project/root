@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.13 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.14 2005/11/09 10:13:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -111,11 +111,12 @@ public:
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
    TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
+   TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
    TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex) const;
-   TGLLine3   ViewportToWorld(Int_t viewportX, Int_t viewportY) const;
+   TGLLine3   ViewportToWorld(Double_t viewportX, Double_t viewportY) const;
    TGLLine3   ViewportToWorld(const TPoint & viewport) const;
-   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Int_t viewportXDelta, Int_t viewportYDelta) const;
-   std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(Int_t viewportX, Int_t viewportY, const TGLPlane & worldPlane) const;
+   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, Double_t viewportYDelta) const;
+   std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY, const TGLPlane & worldPlane) const;
    std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(const TPoint & viewport, const TGLPlane & worldPlane) const;
 
    // Window to GL viewport conversion - invert Y

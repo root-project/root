@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.22 2005/11/09 10:13:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.23 2005/11/10 12:04:21 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -68,7 +68,9 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fRedrawTimer(0),
    fNextSceneLOD(kHigh),
    fLightState(kLightMask), // All on
-   fDrawAxes(kFALSE),
+   fAxesType(kAxesNone),
+   fReferenceOn(kFALSE),
+   fReferencePos(0.0, 0.0, 0.0),
    fInitGL(kFALSE),
    fClipPlane(0), fClipBox(0), fCurrentClip(0), fClipEdit(kFALSE),
    fDebugMode(kFALSE),
@@ -175,9 +177,7 @@ void TGLViewer::EndScene()
    fScene.ReleaseLock(TGLScene::kModifyLock);
 
    if (fSetupRequired) {
-      SetupCameras();
-      SetupClips();
-      fSetupRequired = kFALSE;
+      Setup();
    }
 
    // Externally triggered scene rebuild (frist part) completed
@@ -691,6 +691,17 @@ void TGLViewer::InitGL()
 }
 
 //______________________________________________________________________________
+void TGLViewer::Setup()
+{
+   SetupCameras();
+   SetupClips();
+
+   // Set default reference to scene center
+   fReferencePos.Set(fScene.BoundingBox().Center());
+   fSetupRequired = kFALSE;
+}
+
+//______________________________________________________________________________
 void TGLViewer::SetupCameras()
 {
    if (fScene.IsLocked()) {
@@ -802,6 +813,30 @@ void TGLViewer::SetupLights()
 }
 
 //______________________________________________________________________________
+void TGLViewer::SetupClips() 
+{
+   // Clear out any previous clips
+   ClearClips();
+
+   const TGLBoundingBox & sceneBox = fScene.BoundingBox();
+   fClipPlane = new TGLClipPlane(TGLPlane(1.0, 0.0, 0.0, 0.0), 
+                                 sceneBox.Center(), 
+                                 sceneBox.Extents().Mag()*5.0);
+
+   TGLVector3 halfLengths = sceneBox.Extents() * 0.2501;
+   TGLVertex3 center = sceneBox.Center() - halfLengths;
+   fClipBox = new TGLClipBox(halfLengths, center);
+}
+
+//______________________________________________________________________________
+void TGLViewer::ClearClips()
+{
+   delete fClipPlane;
+   delete fClipBox;
+   fCurrentClip = 0;
+}
+
+//______________________________________________________________________________
 void TGLViewer::RequestDraw(UInt_t LOD)
 {
    fNextSceneLOD = LOD;
@@ -868,10 +903,8 @@ void TGLViewer::DoDraw()
       // Draw the scene with clip object
       fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime, fCurrentClip);
 
-      // Draw optional axes (unclipped)
-      if (fDrawAxes) {
-         fScene.DrawAxes();
-      }
+      // Draw guides (unclipped)
+      fScene.DrawGuides(*fCurrentCamera, fAxesType, fReferenceOn ? &fReferencePos:0);
 
       // Draw edited clip object - TODO remove - the clip object should become 
       // the select object and will get drawn that way.
@@ -1115,29 +1148,24 @@ void TGLViewer::ToggleLight(ELight light)
    }
 
    fLightState ^= light;
-
    RequestDraw();
 }
+
 //______________________________________________________________________________
-void TGLViewer::SetAxes(Bool_t on)
+void TGLViewer::GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const
 {
-   fDrawAxes = on;
+   axesType = fAxesType;
+   referenceOn = fReferenceOn;
+   referencePos = fReferencePos;
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetupClips() 
+void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos)
 {
-   // Clear out any previous clips
-   ClearClips();
-
-   const TGLBoundingBox & sceneBox = fScene.BoundingBox();
-   fClipPlane = new TGLClipPlane(TGLPlane(1.0, 0.0, 0.0, 0.0), 
-                                 sceneBox.Center(), 
-                                 sceneBox.Extents().Mag()*5.0);
-
-   TGLVector3 halfLengths = sceneBox.Extents() * 0.2501;
-   TGLVertex3 center = sceneBox.Center() - halfLengths;
-   fClipBox = new TGLClipBox(halfLengths, center);
+   fAxesType = axesType;
+   fReferenceOn = referenceOn;
+   fReferencePos = referencePos;
+   RequestDraw();
 }
 
 //______________________________________________________________________________
@@ -1244,14 +1272,6 @@ void TGLViewer::SetCurrentClip(EClipType type, Bool_t edit)
    }
 
    RequestDraw();
-}
-
-//______________________________________________________________________________
-void TGLViewer::ClearClips()
-{
-   delete fClipPlane;
-   delete fClipBox;
-   fCurrentClip = 0;
 }
 
 //______________________________________________________________________________

@@ -12,9 +12,6 @@
 #ifndef ROOT_TGLManip
 #define ROOT_TGLManip
 
-#ifndef ROOT_TGLQuadric
-#include "TGLQuadric.h"
-#endif
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
@@ -35,8 +32,6 @@ class TGLViewer;
 class TGLManip
 {
 protected:
-   enum EHeadShape { kArrow, kBox };
-
    // Nasty - this only needs to be here to make a external cross-thread select call 
    // on us - gVirutalGL issues
    TGLViewer        & fViewer; 
@@ -48,10 +43,6 @@ protected:
    TPoint             fFirstMouse;
    TPoint             fLastMouse;
 
-   //void TestHit() {}; // Draw out with gl names hit stack - process hit in overload
-   static TGLQuadric  fgQuad;
-   static UInt_t      fgQuality;
-
    static Float_t     fgRed[4];
    static Float_t     fgGreen[4];
    static Float_t     fgBlue[4];
@@ -59,11 +50,7 @@ protected:
    static Float_t     fgWhite[4];
    static Float_t     fgGrey[4];
 
-   Double_t DrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const;
-   void DrawAxisWidget(EHeadShape head, Double_t scale, const TGLVertex3 & origin, 
-                       const TGLVector3 & vector, Float_t rgba[4]) const;
-   void DrawOrigin(const TGLVertex3 & origin, Double_t scale, Float_t rgba[4]) const;
-   void SetDrawColors(Float_t rgba[4]) const;
+   Double_t CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const;
 
 public:
    TGLManip(TGLViewer & viewer);

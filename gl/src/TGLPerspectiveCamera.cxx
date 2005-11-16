@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.8 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.9 2005/11/09 10:13:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -66,7 +66,7 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
    fDollyDefault = longest/(2.0*tan(fFOV*PI/360.0));
    fDollyDefault += nextLongest/2.0;
    fDollyMin = -fDollyDefault;
-   fDollyDefault *= 1.1;
+   fDollyDefault *= 1.2;
    fDollyMax = fDollyDefault * 7.0;
 
    Reset();

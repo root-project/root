@@ -16,15 +16,10 @@
 #include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
 
-TGLQuadric TGLManip::fgQuad;
-
-//TODO: Should really use LOD adjustment on top?
-UInt_t TGLManip::fgQuality = 60;
-
-Float_t TGLManip::fgRed[4]    = {1.0, 0.0, 0.0, 1.0 };
-Float_t TGLManip::fgGreen[4]  = {0.0, 1.0, 0.0, 1.0 };
-Float_t TGLManip::fgBlue[4]   = {0.0, 0.0, 1.0, 1.0 };
-Float_t TGLManip::fgYellow[4] = {1.0, 1.0, 0.0, 1.0 };
+Float_t TGLManip::fgRed[4]    = {0.8, 0.0, 0.0, 1.0 };
+Float_t TGLManip::fgGreen[4]  = {0.0, 0.8, 0.0, 1.0 };
+Float_t TGLManip::fgBlue[4]   = {0.0, 0.0, 0.8, 1.0 };
+Float_t TGLManip::fgYellow[4] = {0.8, 0.8, 0.0, 1.0 };
 Float_t TGLManip::fgWhite[4]  = {1.0, 1.0, 1.0, 1.0 };
 Float_t TGLManip::fgGrey[4]   = {0.5, 0.5, 0.5, 0.4 };
 
@@ -121,65 +116,15 @@ Bool_t TGLManip::HandleMotion(const Event_t * event, const TGLCamera & /*camera*
 }
 
 //______________________________________________________________________________
-Double_t TGLManip::DrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const
+Double_t TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const
 {
    TGLVector3 pixelInWorld = camera.ViewportDeltaToWorld(box.Center(), 1, 1);
    Double_t pixelScale = pixelInWorld.Mag();
    Double_t scale = box.Extents().Mag() / 100.0;
-   if (scale < pixelScale * 2.0) {
-      scale = pixelScale * 2.0;
+   if (scale < pixelScale * 3.0) {
+      scale = pixelScale * 3.0;
    } else if (scale > pixelScale * 5.0) {
       scale = pixelScale * 5.0;
    }
    return scale;
-}
-
-//______________________________________________________________________________
-void TGLManip::DrawAxisWidget(EHeadShape head, Double_t scale, const TGLVertex3 & origin, const TGLVector3 & vector, Float_t rgba[4]) const
-{    
-   // Draw an axis widget with head type of arrow or box
-   SetDrawColors(rgba);
-   glPushMatrix();
-   TGLMatrix local(origin, vector);
-   glMultMatrixd(local.CArr());
-   gluCylinder(fgQuad.Get(), scale/4.0, scale/4.0, vector.Mag(), fgQuality, fgQuality); // Line
-   gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(fgQuad.Get(), 0.0, scale/4.0, fgQuality, fgQuality); 
-
-   // TODO: axis is longer than vector by head object - this is attached at end
-   // doesn't really matter...?
-   glTranslated(0.0, 0.0, vector.Mag()); // Shift down local Z to end of vector
-
-   if (head == kArrow) {
-      gluDisk(fgQuad.Get(), 0.0, scale, fgQuality, fgQuality); 
-      gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_OUTSIDE);
-      gluCylinder(fgQuad.Get(), scale, 0.0, scale*2.0, fgQuality, fgQuality); // Arrow head
-   } else if (head == kBox) {
-      gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_OUTSIDE);
-      // TODO: Drawing box should be simplier - maybe make a static helper which BB + others use.
-      // This doesn't tesselate properly - ugly lighting 
-      TGLBoundingBox box(TGLVertex3(-scale*.7, -scale*.7, 0.0), TGLVertex3(scale*.7, scale*.7, scale*1.4));
-      box.Draw(kTRUE);
-   }
-   glPopMatrix();
-}
-
-//______________________________________________________________________________
-void TGLManip::DrawOrigin(const TGLVertex3 & origin, Double_t scale, Float_t rgba[4]) const
-{
-   TGLUtil::DrawSphere(origin, scale*2.0, rgba);
-}
-
-//______________________________________________________________________________
-void TGLManip::SetDrawColors(Float_t rgba[4]) const 
-{
-   static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
-   static Float_t specular[4] = {0.8, 0.8, 0.8, 1.0};
-   static Float_t emission[4] = {0.1, 0.1, 0.1, 1.0};
-
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-   glMaterialfv(GL_FRONT, GL_EMISSION, emission);
-   glMaterialf(GL_FRONT, GL_SHININESS, 60.0);
 }

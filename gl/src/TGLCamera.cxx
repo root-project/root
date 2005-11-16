@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.19 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.20 2005/11/09 10:13:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -296,6 +296,19 @@ TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex) const
 }
 
 //______________________________________________________________________________
+TGLVector3 TGLCamera::WorldDeltaToViewport(const TGLVertex3 & worldRef, 
+                                           const TGLVector3 & worldDelta) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::WorldToViewport()", "cache dirty");
+   }
+   TGLVertex3 other = worldRef + worldDelta;
+   TGLVertex3 v1 = WorldToViewport(worldRef);
+   TGLVertex3 v2 = WorldToViewport(other);
+   return v2 - v1;
+}
+
+//______________________________________________________________________________
 TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
 {
    if (fCacheDirty) {
@@ -310,7 +323,7 @@ TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
 }
 
 //______________________________________________________________________________
-TGLLine3 TGLCamera::ViewportToWorld(Int_t viewportX, Int_t viewportY) const
+TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
 {
    if (fCacheDirty) {
       Error("TGLCamera::Viewport2DToWorldLine()", "cache dirty");
@@ -328,7 +341,7 @@ TGLLine3 TGLCamera::ViewportToWorld(const TPoint & viewport) const
 }
 
 //______________________________________________________________________________
-std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Int_t viewportX, Int_t viewportY, 
+std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY, 
                                                                    const TGLPlane & worldPlane) const
 {
    // Find 3D projection line of viewport point
@@ -346,8 +359,8 @@ std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(const TPoint 
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Int_t viewportXDelta, 
-                                           Int_t viewportYDelta) const
+TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, 
+                                           Double_t viewportYDelta) const
 {
    if (fCacheDirty) {
       Error("TGLCamera::ViewportDeltaToWorld()", "cache dirty");

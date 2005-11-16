@@ -49,8 +49,9 @@
 
 #pragma link C++ class TGLColorEditor;
 #pragma link C++ class TGLGeometryEditor;
-#pragma link C++ class TGLSceneEditor;
+#pragma link C++ class TGLClipEditor;
 #pragma link C++ class TGLLightEditor;
+#pragma link C++ class TGLGuideEditor;
 
 #pragma link C++ class TArcBall;
 

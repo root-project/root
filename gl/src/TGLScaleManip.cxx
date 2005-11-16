@@ -40,7 +40,7 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    }
 
    const TGLBoundingBox & box = fShape->BoundingBox();
-   Double_t widgetScale = DrawScale(box, camera);
+   Double_t widgetScale = CalcDrawScale(box, camera);
 
    // Get permitted manipulations on shape
    TGLPhysicalShape::EManip manip = fShape->GetManip();
@@ -63,27 +63,33 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kScaleX) {
       glPushName(1);
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[0], fSelectedWidget == 1 ? fgYellow : fgRed);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[0], TGLUtil::kLineHeadBox, 
+                        widgetScale, fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[0], fgGrey);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[0], TGLUtil::kLineHeadBox, 
+                        widgetScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleY) {
       glPushName(2);
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[1], fSelectedWidget == 2 ? fgYellow : fgGreen);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[1], TGLUtil::kLineHeadBox, 
+                        widgetScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[1], fgGrey);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[1], TGLUtil::kLineHeadBox, 
+                        widgetScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleZ) {
       glPushName(3);
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[2], fSelectedWidget == 3 ? fgYellow : fgBlue);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[2], TGLUtil::kLineHeadBox, 
+                        widgetScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      DrawAxisWidget(kBox, widgetScale, box.Center(), scaleAxes[2], fgGrey);
+      TGLUtil::DrawLine(box.Center(), scaleAxes[2], TGLUtil::kLineHeadBox, 
+                        widgetScale, fgGrey);
    }
-   // Draw central origin sphere
-   DrawOrigin(box.Center(), widgetScale/2.0, fgWhite);
+   // Draw white center sphere
+   TGLUtil::DrawSphere(box.Center(), widgetScale/2.0, fgWhite);
 
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);

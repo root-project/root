@@ -47,7 +47,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    }
 
    const TGLBoundingBox & box = fShape->BoundingBox();
-   Double_t widgetScale = DrawScale(box, camera);
+   Double_t widgetScale = CalcDrawScale(box, camera);
 
    // Get permitted manipulations on shape
    TGLPhysicalShape::EManip manip = fShape->GetManip();
@@ -61,62 +61,33 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kRotateX) {
       glPushName(1);
-      DrawAxisRing(box.Center(), box.Axis(0, kTRUE), widgetScale*10.04, 
-                   fSelectedWidget == 1 ? fgYellow : fgRed);
+      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), widgetScale*10.04, 
+                        fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      DrawAxisRing(box.Center(), box.Axis(0, kTRUE), widgetScale*10.04, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), widgetScale*10.04, fgGrey);
    }
    if (manip & TGLPhysicalShape::kRotateY) {
       glPushName(2);
-      DrawAxisRing(box.Center(), box.Axis(1, kTRUE), widgetScale*10.02, 
-                   fSelectedWidget == 2 ? fgYellow : fgGreen);
+      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), widgetScale*10.02, 
+                        fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      DrawAxisRing(box.Center(), box.Axis(1, kTRUE), widgetScale*10.02, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), widgetScale*10.02, fgGrey);
    }
    if (manip & TGLPhysicalShape::kRotateZ) {
       glPushName(3);
-      DrawAxisRing(box.Center(), box.Axis(2, kTRUE), widgetScale*10.00, 
-                   fSelectedWidget == 3 ? fgYellow : fgBlue);
+      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), widgetScale*10.00, 
+                        fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      DrawAxisRing(box.Center(), box.Axis(2, kTRUE), widgetScale*10.00, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), widgetScale*10.00, fgGrey);
    }
-   // Draw central origin sphere
-   DrawOrigin(box.Center(), widgetScale/2.0, fgWhite);
+   // Draw white center sphere
+   TGLUtil::DrawSphere(box.Center(), widgetScale/2.0, fgWhite);
 
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);
-}
-
-//______________________________________________________________________________
-void TGLRotateManip::DrawAxisRing(const TGLVertex3 & origin, const TGLVector3 & axis, 
-                                  Double_t radius, Float_t rgba[4]) const
-{    
-   SetDrawColors(rgba);
-
-   Double_t inner = radius;
-   Double_t width = radius*0.05;
-   Double_t outer = inner+width;
-
-   glPushMatrix();
-   TGLMatrix local(origin, axis);
-   glMultMatrixd(local.CArr());
-
-   glTranslated(0.0, 0.0, -width/2.0);
-
-   glDisable(GL_CULL_FACE);
-   gluCylinder(fgQuad.Get(), inner, inner, width, fgQuality, fgQuality);
-   gluCylinder(fgQuad.Get(), outer, outer, width, fgQuality, fgQuality);
-   gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(fgQuad.Get(), inner, outer, fgQuality, fgQuality); 
-   glTranslated(0.0, 0.0, width);
-   gluQuadricOrientation(fgQuad.Get(), (GLenum)GLU_OUTSIDE);
-   gluDisk(fgQuad.Get(), inner, outer, fgQuality, fgQuality); 
-   glEnable(GL_CULL_FACE);
-
-   glPopMatrix();
 }
 
 //______________________________________________________________________________

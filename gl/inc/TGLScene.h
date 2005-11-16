@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.15 2005/10/11 10:25:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.16 2005/11/04 20:13:08 pcanal Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -94,7 +94,7 @@ private:
                   Double_t timeout, const std::vector<TGLPlane> * clipPlanes = 0);
    
    // Misc
-   void   DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const;
+   void   DrawNumber(Double_t num, const TGLVertex3 & center) const;
    UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape,
                           const TGLCamera & camera,
                           UInt_t sceneLOD) const;
@@ -113,11 +113,11 @@ public:
    virtual ~TGLScene(); // ClassDef introduces virtual fns
 
    // Drawing/Selection
-   const TGLBoundingBox & BoundingBox() const;
- 
+   const TGLBoundingBox & BoundingBox() const; 
    void                   Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
                                Double_t timeout, const TGLClip * clip);
-   void                   DrawAxes() const;
+   void                   DrawGuides(const TGLCamera & camera, EAxesType axesType, 
+                                     const TGLVertex3 * reference) const;
    Bool_t                 Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip);
 
    // Logical Shape Management

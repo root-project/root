@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.13 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.14 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -70,6 +70,8 @@ enum EDrawStyle
    kWireFrame
 };
 
+// TODO: These need to be seen by TGLSAViewer, TGLScene, TGLClipEditor, TGLAxesEditor
+// Need to to find a better place really....
 enum EClipType 
 { 
    kClipNone = 0, 
@@ -77,6 +79,12 @@ enum EClipType
    kClipBox
 };
 
+enum EAxesType 
+{ 
+   kAxesNone = 0, 
+   kAxesEdge, 
+   kAxesOrigin
+};
 
 // TODO: Namespace
 // TODO: Mark all headers as INTERNAL
@@ -103,6 +111,7 @@ public:
    TGLVertex3(const TGLVertex3 & other);
    virtual ~TGLVertex3();
 
+         Bool_t       operator == (const TGLVertex3 & rhs) const;
          TGLVertex3 & operator =  (const TGLVertex3 & rhs);
    const TGLVertex3 & operator -= (const TGLVector3 & val);
    const TGLVertex3 & operator += (const TGLVector3 & val);
@@ -132,6 +141,12 @@ public:
 
    ClassDef(TGLVertex3,0) // GL 3 component vertex helper/wrapper class
 };
+
+//______________________________________________________________________________
+inline Bool_t TGLVertex3::operator == (const TGLVertex3 & rhs) const
+{
+   return (fVals[0] == rhs.fVals[0] && fVals[1] == rhs.fVals[1] && fVals[2] == rhs.fVals[2]);
+}
 
 //______________________________________________________________________________
 inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs) 
@@ -746,6 +761,9 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
  *************************************************************************/
 class TGLUtil
 {
+private:
+      static UInt_t fgDrawQuality;
+
 public:
    virtual ~TGLUtil() { }
 
@@ -753,7 +771,15 @@ public:
    static void   CheckError();
 
    // Some simple shape drawing utils
-   static void   DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
+   enum        ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
+
+   static void SetDrawColors(const Float_t rgba[4]);
+   static void DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
+   static void DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, const Float_t rgba[4]);
+   static void DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, ELineHeadShape head, 
+                        Double_t size, const Float_t rgba[4]);
+   static void DrawRing(const TGLVertex3 & center, const TGLVector3 & normal, 
+                        Double_t radius, const Float_t rgba[4]);
 
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
