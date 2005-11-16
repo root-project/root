@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.51 2005/09/02 10:22:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.52 2005/09/05 07:25:22 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -27,9 +27,9 @@
 ClassImp(TGraphAsymmErrors)
 
 namespace {
-  unsigned long GLOBAL_k;   // used to pass k[i] into equations
-  unsigned long GLOBAL_N;   // used to pass N[i] into equations
-  double        CONFLEVEL;  // confidence level for the interval
+   unsigned long GLOBAL_k;   // used to pass k[i] into equations
+   unsigned long GLOBAL_N;   // used to pass N[i] into equations
+   double        CONFLEVEL;  // confidence level for the interval
 }
 
 //______________________________________________________________________________
@@ -74,8 +74,8 @@ namespace {
 //______________________________________________________________________________
 TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
 {
-//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
+   // TGraphAsymmErrors default constructor.
+
    fEXlow       = 0;
    fEYlow       = 0;
    fEXhigh      = 0;
@@ -87,7 +87,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
 TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
        : TGraph(gr)
 {
-// TGraphAsymmErrors copy constructor 
+   // TGraphAsymmErrors copy constructor 
    
    if (!CtorAllocate()) return;
    Int_t n = fNpoints*sizeof(Double_t);
@@ -101,10 +101,9 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
 TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)
        : TGraph(n)
 {
-//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-//
-//  the arrays are preset to zero
+   // TGraphAsymmErrors normal constructor.
+   //
+   // the arrays are preset to zero
 
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
@@ -115,10 +114,9 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)
 TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl, const Float_t *exh, const Float_t *eyl, const Float_t *eyh)
        : TGraph(n,x,y)
 {
-//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-//
-//  if exl,h or eyl,h are null, the corresponding arrays are preset to zero
+   // TGraphAsymmErrors normal constructor.
+   //
+   // if exl,h or eyl,h are null, the corresponding arrays are preset to zero
 
    if (!CtorAllocate()) return;
 
@@ -138,10 +136,9 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y
 TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl, const Double_t *exh, const Double_t *eyl, const Double_t *eyh)
        : TGraph(n,x,y)
 {
-//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-//
-//  if exl,h or eyl,h are null, the corresponding arrays are preset to zero
+   // TGraphAsymmErrors normal constructor.
+   //
+   // if exl,h or eyl,h are null, the corresponding arrays are preset to zero
 
    if (!CtorAllocate()) return;
 
@@ -161,11 +158,11 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh)
                   :TGraph()
 {
-// constructor with six vectors of floats in input
-// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
-// and the errors from vectors vexl/h and veyl/h.
-// The number of points in the graph is the minimum of number of points
-// in vx and vy.
+   // Constructor with six vectors of floats in input
+   // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+   // and the errors from vectors vexl/h and veyl/h.
+   // The number of points in the graph is the minimum of number of points
+   // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -185,11 +182,11 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, con
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh)
                   :TGraph()
 {
-// constructor with six vectors of doubles in input
-// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
-// and the errors from vectors vexl/h and veyl/h.
-// The number of points in the graph is the minimum of number of points
-// in vx and vy.
+   // Constructor with six vectors of doubles in input
+   // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+   // and the errors from vectors vexl/h and veyl/h.
+   // The number of points in the graph is the minimum of number of points
+   // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -208,8 +205,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, con
 TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
        : TGraph(h)
 {
-// TGraphAsymmErrors constructor importing its parameters from the TH1 object passed as argument
-// the low and high errors are set to the bin error of the histogram.
+   // TGraphAsymmErrors constructor importing its parameters from the TH1 object passed as argument
+   // the low and high errors are set to the bin error of the histogram.
    
    if (!CtorAllocate()) return;
 
@@ -225,8 +222,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
 TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option)
        : TGraph()
 {
-// Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
-// pass/total. (see TGraphAsymmErrors::BayesDivide)
+   // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
+   // pass/total. (see TGraphAsymmErrors::BayesDivide)
    
    CtorAllocate();
    BayesDivide(pass, total, option);
@@ -235,8 +232,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t
 //______________________________________________________________________________
 TGraphAsymmErrors::~TGraphAsymmErrors()
 {
-//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+   // TGraphAsymmErrors default destructor.
 
    delete [] fEXlow;
    delete [] fEXhigh;
@@ -247,93 +243,93 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 //______________________________________________________________________________
 void TGraphAsymmErrors::Apply(TF1 *f)
 {
-  // apply a function to all data points
-  // y = f(x,y)
-  //
-  // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
-  // eyl = f(x,y)-f(x,y-eyl)
-  //
-  // Special treatment has to be applied for the functions where the
-  // role of "up" and "down" is reversed.
-  // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+   // apply a function to all data points
+   // y = f(x,y)
+   //
+   // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
+   // eyl = f(x,y)-f(x,y-eyl)
+   //
+   // Special treatment has to be applied for the functions where the
+   // role of "up" and "down" is reversed.
+   // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
 
-  Double_t x,y,exl,exh,eyl,eyh,eyl_new,eyh_new,fxy;
+   Double_t x,y,exl,exh,eyl,eyh,eyl_new,eyh_new,fxy;
 
-  for (Int_t i=0;i<GetN();i++) {
-     GetPoint(i,x,y);
-     exl=GetErrorXlow(i);
-     exh=GetErrorXhigh(i);
-     eyl=GetErrorYlow(i);
-     eyh=GetErrorYhigh(i);
-
-     fxy = f->Eval(x,y);
-     SetPoint(i,x,fxy);
-
-     // in the case of the functions like y-> -1*y the roles of the
-     // upper and lower error bars is reversed
-     if (f->Eval(x,y-eyl)<f->Eval(x,y+eyh)) {
-        eyl_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
-        eyh_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
-     }
-     else {
-        eyh_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
-        eyl_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
-     }
-
-     //error on x doesn't change
-     SetPointError(i,exl,exh,eyl_new,eyh_new);
+   for (Int_t i=0;i<GetN();i++) {
+      GetPoint(i,x,y);
+      exl=GetErrorXlow(i);
+      exh=GetErrorXhigh(i);
+      eyl=GetErrorYlow(i);
+      eyh=GetErrorYhigh(i);
+ 
+      fxy = f->Eval(x,y);
+      SetPoint(i,x,fxy);
+ 
+      // in the case of the functions like y-> -1*y the roles of the
+      // upper and lower error bars is reversed
+      if (f->Eval(x,y-eyl)<f->Eval(x,y+eyh)) {
+         eyl_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
+         eyh_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
+      }
+      else {
+         eyh_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
+         eyl_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
+      }
+ 
+      //error on x doesn't change
+      SetPointError(i,exl,exh,eyl_new,eyh_new);
    }
 }
 
 //______________________________________________________________________________
 void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option)
 {
-// Fills this TGraphAsymmErrors by dividing two input TH1 histograms pass/total. 
-//
-// Andy Haas (haas@fnal.gov)
-// University of Washington
-//
-// Method and code directly taken from:
-// Marc Paterno (paterno@fnal.gov)
-// FNAL/CD
-//
-// The input histograms must be filled with weights of 1.
-// By default the function does not check this assertion.
-// if option "w" is specified, the function will fail if the histograms
-// have been filled with weights not equal to 1.
-//
-// The assumption is that the entries in "pass" are a 
-// subset of those in "total". That is, we create an "efficiency" 
-// graph, where each entry is between 0 and 1, inclusive. 
-// The resulting graph can be fit to functions, using standard methods:
-// graph->Fit("erf")... for instance. (You have to define the erf
-// function for yourself for now, sorry.)
-//
-// The points are assigned an x value at the center of each histogram bin.
-// The y values are #pass/#total, between 0 and 1.
-// The x errors span each histogram bin (lowedge->lowedge+width)
-// The y errors are the fun part. :)
-//
-// The y errors are assigned based on applying Bayes theorem.
-// The model is the Binomial distribution, and the "prior" is 
-// the flat distribution from 0 to 1.
-// If there is no data in a bin of the total histogram, no information
-// can be obtained for that bin, so no point is made on the graph.
-//
-// The complete method and a beautiful discussion can be found here:
-// http://home.fnal.gov/~paterno/images/effic.pdf
-// And more information is on these pages:
-// http://home.fnal.gov/~paterno/probability/localresources.html
-// A backup of the main document is here:
-// http://www-clued0.fnal.gov/~haas/documents/paterno_effic.pdf
-//
-// A 68.3% Confidence Level is used to assign the errors. 
-// Warning! You should understand, the errors reported are the shortest
-// ranges containing 68.3% of the probability distrubution. The errors are
-// not exactly Gaussian! The Minuit fitting routines will assume that
-// the errors are Gaussian. But this is a reasonable approximation.
-// A fit using the full shape of the error distribution for each point
-// would be far more difficult to perform.
+   // Fills this TGraphAsymmErrors by dividing two input TH1 histograms pass/total. 
+   //
+   // Andy Haas (haas@fnal.gov)
+   // University of Washington
+   //
+   // Method and code directly taken from:
+   // Marc Paterno (paterno@fnal.gov)
+   // FNAL/CD
+   //
+   // The input histograms must be filled with weights of 1.
+   // By default the function does not check this assertion.
+   // if option "w" is specified, the function will fail if the histograms
+   // have been filled with weights not equal to 1.
+   //
+   // The assumption is that the entries in "pass" are a 
+   // subset of those in "total". That is, we create an "efficiency" 
+   // graph, where each entry is between 0 and 1, inclusive. 
+   // The resulting graph can be fit to functions, using standard methods:
+   // graph->Fit("erf")... for instance. (You have to define the erf
+   // function for yourself for now, sorry.)
+   //
+   // The points are assigned an x value at the center of each histogram bin.
+   // The y values are #pass/#total, between 0 and 1.
+   // The x errors span each histogram bin (lowedge->lowedge+width)
+   // The y errors are the fun part. :)
+   //
+   // The y errors are assigned based on applying Bayes theorem.
+   // The model is the Binomial distribution, and the "prior" is 
+   // the flat distribution from 0 to 1.
+   // If there is no data in a bin of the total histogram, no information
+   // can be obtained for that bin, so no point is made on the graph.
+   //
+   // The complete method and a beautiful discussion can be found here:
+   // http://home.fnal.gov/~paterno/images/effic.pdf
+   // And more information is on these pages:
+   // http://home.fnal.gov/~paterno/probability/localresources.html
+   // A backup of the main document is here:
+   // http://www-clued0.fnal.gov/~haas/documents/paterno_effic.pdf
+   //
+   // A 68.3% Confidence Level is used to assign the errors. 
+   // Warning! You should understand, the errors reported are the shortest
+   // ranges containing 68.3% of the probability distrubution. The errors are
+   // not exactly Gaussian! The Minuit fitting routines will assume that
+   // the errors are Gaussian. But this is a reasonable approximation.
+   // A fit using the full shape of the error distribution for each point
+   // would be far more difficult to perform.
 
    TString opt = option; opt.ToLower();
 
@@ -345,7 +341,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 
    if (opt.Contains("w")) {
       //compare sum of weights with sum of squares of weights
-           Double_t stats[10];
+      Double_t stats[10];
       pass->GetStats(stats);
       if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
       Error("BayesDivide","Pass histogram has not been filled with weights = 1");
@@ -427,20 +423,20 @@ double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
    // Calculates the incomplete beta function  I_x(a,b); this is
    // the incomplete beta function divided by the complete beta function
    
-  double bt;
-  if (x < 0.0 || x > 1.0) {
-     Error("Ibetai","Illegal x in routine Ibetai: x = %g",x);
-     return 0;
-  }
-  if (x == 0.0 || x == 1.0)
-     bt=0.0;
-  else
-     bt=TMath::Exp(TMath::LnGamma(a+b)-TMath::LnGamma(a)-TMath::LnGamma(b)+a*log(x)+b*log(1.0-x));
+   double bt;
+   if (x < 0.0 || x > 1.0) {
+      Error("Ibetai","Illegal x in routine Ibetai: x = %g",x);
+      return 0;
+   }
+   if (x == 0.0 || x == 1.0)
+      bt=0.0;
+   else
+      bt=TMath::Exp(TMath::LnGamma(a+b)-TMath::LnGamma(a)-TMath::LnGamma(b)+a*log(x)+b*log(1.0-x));
 
-  if (x < (a+1.0)/(a+b+2.0))
-     return bt*TMath::BetaCf(x,a,b)/a;
-  else
-     return 1.0-bt*TMath::BetaCf(1-x,b,a)/b;
+   if (x < (a+1.0)/(a+b+2.0))
+      return bt*TMath::BetaCf(x,a,b)/a;
+   else
+      return 1.0-bt*TMath::BetaCf(1-x,b,a)/b;
 }
 
 //______________________________________________________________________________
@@ -457,10 +453,10 @@ double TGraphAsymmErrors::Betai(double a, double b, double x) const
 //______________________________________________________________________________
 double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, double *xmin) const 
 {
-// Implementation file for the numerical equation solver library.
-// This includes root finding and minimum finding algorithms.
-// Adapted from Numerical Recipes in C, 2nd edition.
-// Translated to C++ by Marc Paterno
+   // Implementation file for the numerical equation solver library.
+   // This includes root finding and minimum finding algorithms.
+   // Adapted from Numerical Recipes in C, 2nd edition.
+   // Translated to C++ by Marc Paterno
    
    const int    kITMAX = 100;
    const double kCGOLD = 0.3819660;
@@ -491,37 +487,36 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
          etemp=e;
          e=d;
          if (TMath::Abs(p) >= TMath::Abs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x)) d=kCGOLD*(e=(x >= xm ? a-x : b-x));
-       else {
-         d=p/q;
-         u=x+d;
-         if (u-a < tol2 || b-u < tol2)
-            d=TMath::Sign(tol1,xm-x);
-       }
-     } else {
-        d=kCGOLD*(e=(x >= xm ? a-x : b-x));
-     }
-     u=(TMath::Abs(d) >= tol1 ? x+d : x+TMath::Sign(tol1,d));
-     fu=Interval(u);
-     if (fu <= fx) {
-        if (u >= x) a=x; else b=x;
-        v  = w;
-        w  = x;
-        x  = u;
-        fv = fw;
-        fw = fx;
-        fx = fu;
-     } else {
-        if (u < x) a=u; else b=u;
-        if (fu <= fw || w == x) {
-           v=w;
-           w=u;
-           fv=fw;
-           fw=fu;
-        } else if (fu <= fv || v == x || v == w) {
-           v=u;
-           fv=fu;
-        }
-     }
+         else {
+            d=p/q;
+            u=x+d;
+            if (u-a < tol2 || b-u < tol2) d=TMath::Sign(tol1,xm-x);
+         }
+      } else {
+         d=kCGOLD*(e=(x >= xm ? a-x : b-x));
+      }
+      u=(TMath::Abs(d) >= tol1 ? x+d : x+TMath::Sign(tol1,d));
+      fu=Interval(u);
+      if (fu <= fx) {
+         if (u >= x) a=x; else b=x;
+         v  = w;
+         w  = x;
+         x  = u;
+         fv = fw;
+         fw = fx;
+         fx = fu;
+      } else {
+         if (u < x) a=u; else b=u;
+         if (fu <= fw || w == x) {
+            v=w;
+            w=u;
+            fv=fw;
+            fw=fu;
+         } else if (fu <= fv || v == x || v == w) {
+            v=u;
+            fv=fu;
+         }
+      }
    }
    Error("Brent","Too many interations");
    *xmin=x;
@@ -532,32 +527,36 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
 //______________________________________________________________________________
 void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
-  for (Int_t i=0;i<fNpoints;i++) {
-     if (fX[i] -fEXlow[i] < xmin) {
-        if (gPad && gPad->GetLogx()) {
-           if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
-           else                   xmin = TMath::Min(xmin,fX[i]/3);
-        } else {
-           xmin = fX[i]-fEXlow[i];
-        }
-     }
-     if (fX[i] +fEXhigh[i] > xmax) xmax = fX[i]+fEXhigh[i];
-     if (fY[i] -fEYlow[i] < ymin) {
-        if (gPad && gPad->GetLogy()) {
-           if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
-           else                   ymin = TMath::Min(ymin,fY[i]/3);
-        } else {
-           ymin = fY[i]-fEYlow[i];
-        }
-     }
-     if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
-  }
+   // Compute Range
+
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (fX[i] -fEXlow[i] < xmin) {
+         if (gPad && gPad->GetLogx()) {
+            if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
+            else                   xmin = TMath::Min(xmin,fX[i]/3);
+         } else {
+            xmin = fX[i]-fEXlow[i];
+         }
+      }
+      if (fX[i] +fEXhigh[i] > xmax) xmax = fX[i]+fEXhigh[i];
+      if (fY[i] -fEYlow[i] < ymin) {
+         if (gPad && gPad->GetLogy()) {
+            if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
+            else                   ymin = TMath::Min(ymin,fY[i]/3);
+         } else {
+            ymin = fY[i]-fEYlow[i];
+         }
+      }
+      if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
+   }
 }
 
 //______________________________________________________________________________
 void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
                                        Int_t ibegin, Int_t iend, Int_t obegin)
 {
+   // Copy and release.
+
    CopyPoints(newarrays, ibegin, iend, obegin);
    if (newarrays) {
       delete[] fEXlow;
@@ -580,8 +579,9 @@ void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
                                      Int_t ibegin, Int_t iend, Int_t obegin)
 {
-// Copy errors from fE*** to arrays[***]
-// or to f*** Copy points.
+   // Copy errors from fE*** to arrays[***]
+   // or to f*** Copy points.
+
    if (TGraph::CopyPoints(arrays ? arrays+4 : 0, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
@@ -604,7 +604,8 @@ Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
 //______________________________________________________________________________
 Bool_t TGraphAsymmErrors::CtorAllocate(void)
 {
-// Should be called from ctors after fNpoints has been set
+   // Should be called from ctors after fNpoints has been set
+
    if (!fNpoints) {
       fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
       return kFALSE;
@@ -653,7 +654,7 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
       CONFLEVEL = conflevel;
       Brent(0.0, 0.5, 1.0, 1.0e-9, &low_edge);
       high_edge = low_edge + Interval(low_edge);
-    }
+   }
 
    // return output
    mode = efficiency;
@@ -665,7 +666,8 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
 void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
                                  Bool_t from_ctor)
 {
-// Set zero values for point arrays in the range [begin, end)
+   // Set zero values for point arrays in the range [begin, end)
+
    if (!from_ctor) {
       TGraph::FillZero(begin, end, from_ctor);
    }
@@ -679,8 +681,8 @@ void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 {
-//    This function is called by GraphFitChisquare.
-//    It returns the error along X at point i.
+   // This function is called by GraphFitChisquare.
+   // It returns the error along X at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
@@ -693,8 +695,8 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 {
-//    This function is called by GraphFitChisquare.
-//    It returns the error along Y at point i.
+   // This function is called by GraphFitChisquare.
+   // It returns the error along Y at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;
@@ -707,6 +709,8 @@ Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorXhigh(Int_t i) const
 {
+   // Get high error on X.
+
    if (i<0 || i>fNpoints) return -1;
    if (fEXhigh) return fEXhigh[i];
    return -1;
@@ -715,6 +719,8 @@ Double_t TGraphAsymmErrors::GetErrorXhigh(Int_t i) const
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorXlow(Int_t i) const
 {
+   // Get low error on X.
+
    if (i<0 || i>fNpoints) return -1;
    if (fEXlow) return fEXlow[i];
    return -1;
@@ -722,6 +728,8 @@ Double_t TGraphAsymmErrors::GetErrorXlow(Int_t i) const
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorYhigh(Int_t i) const
 {
+   // Get high error on Y.
+
    if (i<0 || i>fNpoints) return -1;
    if (fEYhigh) return fEYhigh[i];
    return -1;
@@ -730,6 +738,8 @@ Double_t TGraphAsymmErrors::GetErrorYhigh(Int_t i) const
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorYlow(Int_t i) const
 {
+   // Get low error on Y.
+
    if (i<0 || i>fNpoints) return -1;
    if (fEYlow) return fEYlow[i];
    return -1;
@@ -946,9 +956,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 //______________________________________________________________________________
 void TGraphAsymmErrors::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Print graph and errors values*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-//
+   // Print graph and errors values.
 
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g, exl[%d]=%g, exh[%d]=%g, eyl[%d]=%g, eyh[%d]=%g\n"
@@ -964,9 +972,9 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TGraphAsymmErrors *";
+      out<<"   TGraphAsymmErrors *";
    }
    out<<"grae = new TGraphAsymmErrors("<<fNpoints<<");"<<endl;
    out<<"   grae->SetName("<<quote<<GetName()<<quote<<");"<<endl;
@@ -1076,8 +1084,7 @@ double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {
-//*-*-*-*-*-*-*Set ex and ey values for point pointed by the mouse*-*-*-*
-//*-*          ===================================================
+   // Set ex and ey values for point pointed by the mouse.
 
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
@@ -1103,8 +1110,7 @@ void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, 
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set ex and ey values for point number i*-*-*-*-*-*-*-*
-//*-*                  =======================================
+   // Set ex and ey values for point number i.
 
    if (i < 0) return;
    if (i >= fNpoints) {
@@ -1120,7 +1126,7 @@ void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Doubl
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 {
-// Set EXlow for point i
+   // Set EXlow for point i
 
    if (i < 0) return;
    if (i >= fNpoints) {
@@ -1133,7 +1139,7 @@ void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 {
-// Set EXhigh for point i
+   // Set EXhigh for point i
 
    if (i < 0) return;
    if (i >= fNpoints) {
@@ -1146,7 +1152,7 @@ void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointEYlow(Int_t i, Double_t eyl)
 {
-// Set EYlow for point i
+   // Set EYlow for point i
 
    if (i < 0) return;
    if (i >= fNpoints) {
@@ -1159,7 +1165,7 @@ void TGraphAsymmErrors::SetPointEYlow(Int_t i, Double_t eyl)
 //______________________________________________________________________________
 void TGraphAsymmErrors::SetPointEYhigh(Int_t i, Double_t eyh)
 {
-// Set EYhigh for point i
+   // Set EYhigh for point i
 
    if (i < 0) return;
    if (i >= fNpoints) {
@@ -1221,10 +1227,13 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::SwapPoints(Int_t pos1, Int_t pos2) {
-    SwapValues(fEXlow,  pos1, pos2);
-    SwapValues(fEXhigh, pos1, pos2);
-    SwapValues(fEYlow,  pos1, pos2);
-    SwapValues(fEYhigh, pos1, pos2);
-    TGraph::SwapPoints(pos1, pos2);
+void TGraphAsymmErrors::SwapPoints(Int_t pos1, Int_t pos2)
+{
+   // Swap points.
+
+   SwapValues(fEXlow,  pos1, pos2);
+   SwapValues(fEXhigh, pos1, pos2);
+   SwapValues(fEYlow,  pos1, pos2);
+   SwapValues(fEYhigh, pos1, pos2);
+   TGraph::SwapPoints(pos1, pos2);
 }
