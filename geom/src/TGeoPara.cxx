@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.26 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -136,6 +136,14 @@ TGeoPara::~TGeoPara()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoPara::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = 8.*fX*fY*fZ;
+   return capacity;
+}      
 
 //_____________________________________________________________________________   
 void TGeoPara::ComputeBBox()

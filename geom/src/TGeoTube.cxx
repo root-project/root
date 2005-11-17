@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.63 2005/05/25 14:25:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.64 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -164,6 +164,21 @@ TGeoTube::~TGeoTube()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoTube::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   return TGeoTube::Capacity(fRmin,fRmax, fDz);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoTube::Capacity(Double_t rmin, Double_t rmax, Double_t dz)
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = 2.*TMath::Pi()*(rmax*rmax-rmin*rmin)*dz;
+   return capacity;
+}   
 
 //_____________________________________________________________________________
 void TGeoTube::ComputeBBox()
@@ -1094,6 +1109,21 @@ TGeoTubeSeg::~TGeoTubeSeg()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoTubeSeg::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   return TGeoTubeSeg::Capacity(fRmin,fRmax,fDz,fPhi1,fPhi2);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2)
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = TMath::Abs(phi2-phi1)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
+   return capacity;
+}   
 
 //_____________________________________________________________________________
 void TGeoTubeSeg::ComputeBBox()
@@ -2131,6 +2161,14 @@ TGeoCtub::~TGeoCtub()
 {
 // dtor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoCtub::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = TGeoTubeSeg::Capacity();
+   return capacity;
+}   
 
 //_____________________________________________________________________________
 void TGeoCtub::ComputeBBox()

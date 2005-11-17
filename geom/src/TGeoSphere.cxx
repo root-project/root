@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.45 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.46 2005/10/14 14:55:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -95,6 +95,20 @@ TGeoSphere::~TGeoSphere()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoSphere::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t th1 = fTheta1*TMath::DegToRad();
+   Double_t th2 = fTheta2*TMath::DegToRad();
+   Double_t ph1 = fPhi1*TMath::DegToRad();
+   Double_t ph2 = fPhi2*TMath::DegToRad();
+   Double_t capacity = (1./3.)*(fRmax*fRmax*fRmax-fRmin*fRmin*fRmin)*
+                       TMath::Abs(TMath::Cos(th1)-TMath::Cos(th2))*
+                       TMath::Abs(ph2-ph1);
+   return capacity;
+}                       
 
 //_____________________________________________________________________________   
 void TGeoSphere::ComputeBBox()

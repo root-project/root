@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.23 2005/02/03 11:40:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.24 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -44,6 +44,8 @@ public:
    virtual ~TGeoTube();
    // methods
 
+   virtual Double_t      Capacity() const;
+   static  Double_t      Capacity(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
@@ -113,6 +115,8 @@ public:
    // destructor
    virtual ~TGeoTubeSeg();
    // methods
+   virtual Double_t      Capacity() const;
+   static  Double_t      Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
@@ -182,6 +186,7 @@ public:
    // destructor
    virtual ~TGeoCtub();
    // methods
+   virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

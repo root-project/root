@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.52 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.53 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -129,6 +129,22 @@ TGeoCone::TGeoCone(Double_t *param)
       SetShapeBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
+
+//_____________________________________________________________________________
+Double_t TGeoCone::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   return TGeoCone::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoCone::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = (2.*dz*TMath::Pi()/3.)*(rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
+                                               rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
+   return capacity;                                            
+}   
 
 //_____________________________________________________________________________
 TGeoCone::~TGeoCone()
@@ -1091,6 +1107,23 @@ TGeoConeSeg::~TGeoConeSeg()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoConeSeg::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   return TGeoConeSeg::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2, fPhi1, fPhi2);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoConeSeg::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = (TMath::Abs(phi2-phi1)*TMath::DegToRad()*dz/3.)*
+                       (rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
+                        rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
+   return capacity;                                            
+}   
 
 //_____________________________________________________________________________
 void TGeoConeSeg::ComputeBBox()

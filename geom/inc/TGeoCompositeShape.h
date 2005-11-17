@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.19 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.20 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -41,6 +41,7 @@ public:
    // destructor
    virtual ~TGeoCompositeShape();
    // methods
+   virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

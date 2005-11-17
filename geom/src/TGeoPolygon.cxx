@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.3 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.4 2005/05/17 12:00:23 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -93,6 +93,28 @@ TGeoPolygon::~TGeoPolygon()
       delete fDaughters;
    }   
 }
+//_____________________________________________________________________________
+Double_t TGeoPolygon::Area() const
+{
+// Computes area of the polygon.
+   Int_t ic,i,j;
+   Double_t area = 0;
+   // Compute area of the convex part
+   for (ic=0; ic<fNconvex; ic++) {
+      i = fIndc[ic];
+      j = fIndc[(ic+1)%fNconvex];
+      area += 0.5*TMath::Abs(fX[i]*fY[j]-fX[j]*fY[i]);
+   }
+   // Compute area of the daughters
+   if (!fDaughters) return area;
+   Int_t nd = fDaughters->GetEntriesFast();
+   TGeoPolygon *poly;
+   for (i=0; i<nd; i++) {
+      poly = (TGeoPolygon*)fDaughters->UncheckedAt(i);
+      area -= poly->Area();
+   }
+   return area;   
+}      
 
 //_____________________________________________________________________________
 Bool_t TGeoPolygon::Contains(Double_t *point) const

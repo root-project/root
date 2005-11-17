@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.16 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.17 2005/08/30 09:58:41 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -91,6 +91,14 @@ TGeoParaboloid::TGeoParaboloid(Double_t *param)
 TGeoParaboloid::~TGeoParaboloid()
 {
 // destructor
+}
+
+//_____________________________________________________________________________
+Double_t TGeoParaboloid::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = TMath::Pi()*fDz*(fRlo*fRlo+fRhi*fRhi);
+   return capacity;
 }
 
 //_____________________________________________________________________________   

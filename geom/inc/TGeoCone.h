@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.22 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.23 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -49,6 +49,8 @@ public:
    virtual ~TGeoCone();
    // methods
 
+   virtual Double_t      Capacity() const;
+   static  Double_t      Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
@@ -125,6 +127,8 @@ public:
    // destructor
    virtual ~TGeoConeSeg();
    // methods
+   virtual Double_t      Capacity() const;
+   static  Double_t      Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,

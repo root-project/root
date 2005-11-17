@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.53 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.54 2005/09/26 12:14:07 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -95,6 +95,28 @@ TGeoPgon::TGeoPgon(Double_t *param)
 TGeoPgon::~TGeoPgon()
 {
 // destructor
+}
+
+//_____________________________________________________________________________
+Double_t TGeoPgon::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Int_t ipl;
+   Double_t rmin1, rmax1, rmin2, rmax2, dphi, dz;
+   Double_t capacity = 0.;
+   dphi = fDphi/fNedges; // [deg]
+   Double_t tphi2 = TMath::Tan(0.5*dphi*TMath::DegToRad());
+   for (ipl=0; ipl<fNz-1; ipl++) {
+      dz    = fZ[ipl+1]-fZ[ipl];
+      if (dz == 0) continue;
+      rmin1 = fRmin[ipl];
+      rmax1 = fRmax[ipl];
+      rmin2 = fRmin[ipl+1];
+      rmax2 = fRmax[ipl+1];
+      capacity += fNedges*(tphi2/3.)*dz*(rmax1*rmax1+rmax1*rmax2+rmax2*rmax2 -
+                                 rmin1*rmin1-rmin1*rmin2-rmin2*rmin2);
+   }
+   return capacity;   
 }
 
 //_____________________________________________________________________________

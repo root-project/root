@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.26 2005/08/30 09:58:41 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -77,6 +77,14 @@ TGeoEltu::~TGeoEltu()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoEltu::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = 2.*TMath::Pi()*fDz*fRmin*fRmax;
+   return capacity;
+}   
 
 //_____________________________________________________________________________   
 void TGeoEltu::ComputeBBox()

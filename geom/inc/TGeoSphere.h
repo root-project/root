@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.20 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.21 2005/10/14 14:55:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
    // destructor
    virtual ~TGeoSphere();
    // methods
+   virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

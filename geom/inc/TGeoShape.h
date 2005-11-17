@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.34 2005/03/11 11:05:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.35 2005/05/13 16:20:37 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
 
    static Double_t       Big() {return 1.E30;}
    static Double_t       Tolerance() {return 1.E-10;}
+   virtual Double_t      Capacity() const                        = 0;
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t        Contains(Double_t *point) const         = 0;

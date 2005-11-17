@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.26 2005/05/17 12:00:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -153,6 +153,26 @@ TGeoXtru::~TGeoXtru()
    if (fX0)  {delete[] fX0; fX0 = 0;}
    if (fY0)  {delete[] fY0; fY0 = 0;}
 }
+
+//_____________________________________________________________________________   
+Double_t TGeoXtru::Capacity() const
+{
+// Compute capacity [cm^3] of this shape.
+   Int_t iz;
+   Double_t capacity = 0;
+   Double_t area, dz, sc1, sc2;
+   TGeoXtru *xtru = (TGeoXtru*)this;
+   xtru->SetCurrentVertices(0.,0.,1.);  
+   area = fPoly->Area();
+   for (iz=0; iz<fNz-1; iz++) {
+      dz = fZ[iz+1]-fZ[iz];
+      if (dz==0) continue;
+      sc1 = fScale[iz];
+      sc2 = fScale[iz+1];
+      capacity += (area*dz/3.)*(sc1*sc1+sc1*sc2+sc2*sc2);
+   }
+   return capacity;
+}      
 
 //_____________________________________________________________________________   
 void TGeoXtru::ComputeBBox()

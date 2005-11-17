@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.24 2005/06/13 12:17:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.25 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1991,6 +1991,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
 void TGeoVoxelFinder::Print(Option_t *) const
 {
    Int_t id, i;
+   Int_t nd = fVolume->GetNdaughters();
    printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
    printf("priority : x=%i y=%i z=%i\n", fPriority[0], fPriority[1], fPriority[2]);
 //   return;
@@ -2019,6 +2020,11 @@ void TGeoVoxelFinder::Print(Option_t *) const
          GetExtraX(id,kFALSE,nextra);
          printf("   extra_about_right = %i\n", nextra); 
       }
+   } else if (fPriority[0]==1) {
+      printf("%15.10f\n",fXb[0]);
+      for (id=0; id<nd; id++) printf(" %i ",id);
+      printf("\n");
+      printf("%15.10f\n",fXb[1]);
    }
    printf("YYY\n"); 
    if (fPriority[1]==2) { 
@@ -2040,8 +2046,13 @@ void TGeoVoxelFinder::Print(Option_t *) const
          GetExtraY(id,kFALSE,nextra);
          printf("   extra_about_right = %i\n", nextra); 
       }
+   } else if (fPriority[1]==1) {
+      printf("%15.10f\n",fYb[0]);
+      for (id=0; id<nd; id++) printf(" %i ",id);
+      printf("\n");
+      printf("%15.10f\n",fYb[1]);
    }
-   
+
    printf("ZZZ\n"); 
    if (fPriority[2]==2) { 
       for (id=0; id<fIbz; id++) {
@@ -2063,6 +2074,11 @@ void TGeoVoxelFinder::Print(Option_t *) const
          GetExtraZ(id,kFALSE,nextra);
          printf("   extra_about_right = %i\n", nextra); 
       }
+   } else if (fPriority[2]==1) {
+      printf("%15.10f\n",fZb[0]);
+      for (id=0; id<nd; id++) printf(" %i ",id);
+      printf("\n");
+      printf("%15.10f\n",fZb[1]);
    }
 }
 

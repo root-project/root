@@ -1,4 +1,4 @@
-// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.4 2005/02/03 11:40:38 brun Exp $
+// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.5 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -39,6 +39,7 @@ public:
    // destructor
    virtual ~TGeoHalfSpace();
    // methods
+   virtual Double_t      Capacity() const {return 0.;}
    virtual void          ComputeBBox() {;}
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

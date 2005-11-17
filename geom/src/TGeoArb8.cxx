@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.43 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.44 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -166,6 +166,22 @@ TGeoArb8::~TGeoArb8()
 // destructor
    if (fTwist) delete [] fTwist;
 }
+
+//_____________________________________________________________________________
+Double_t TGeoArb8::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Int_t i,j;
+   Double_t capacity = 0;
+   for (i=0; i<4; i++) {
+      j = (i+1)%4;
+      capacity += 0.25*fDz*((fXY[i][0]+fXY[i+4][0])*(fXY[j][1]+fXY[j+4][1]) -
+                            (fXY[j][0]+fXY[j+4][0])*(fXY[i][1]+fXY[i+4][1]) +
+                    (1./3)*((fXY[i+4][0]-fXY[i][0])*(fXY[j+4][1]-fXY[j][1]) -
+                            (fXY[j][0]-fXY[j+4][0])*(fXY[i][1]-fXY[i+4][1])));
+   }
+   return TMath::Abs(capacity);
+}                                
 
 //_____________________________________________________________________________
 void TGeoArb8::ComputeBBox()

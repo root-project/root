@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.130 2005/10/21 13:01:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.131 2005/11/10 09:54:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -671,11 +671,11 @@ TGeoManager::~TGeoManager()
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
    if (fElementTable) delete fElementTable;
    if (fMedia) {fMedia->Delete(); delete fMedia;}
-   if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fHashVolumes) delete fHashVolumes;
    if (fHashGVolumes) delete fHashGVolumes;
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}
    fVolumes = 0;
+   if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fPhysicalNodes) {fPhysicalNodes->Delete(); delete fPhysicalNodes;}
    if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fTracks) {fTracks->Delete(); delete fTracks;}
@@ -2914,6 +2914,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
 // propagate with fStep=SNEXT (distance to boundary) and locate/return the next 
 // node.
    Int_t iact = 3;
+   Int_t nextindex;
    fIsStepEntering = kFALSE;
    fStep = stepmax;
    Double_t snext = TGeoShape::Big();
@@ -2942,6 +2943,13 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
          }   
          fIsStepEntering = kTRUE;
          fNextNode = fTopNode;
+         nextindex = fNextNode->GetVolume()->GetNextNodeIndex();
+         while (nextindex>=0) {
+            CdDown(nextindex);
+            fNextNode = fCurrentNode;
+            nextindex = fNextNode->GetVolume()->GetNextNodeIndex();
+            if (nextindex<0) *fCurrentMatrix = GetCurrentMatrix();
+         }   
          // Update global point
          fPoint[0] += snext*fDirection[0];
          fPoint[1] += snext*fDirection[1];
@@ -3141,7 +3149,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
          return 0;
       }   
       CdUp();
-      while (fCurrentNode->GetVolume()->IsAssembly()) {
+      while (fLevel && fCurrentNode->GetVolume()->IsAssembly()) {
          CdUp();
          skip = fCurrentNode;
       }   
@@ -3149,7 +3157,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
    }   
       
    CdDown(icrossed);
-   Int_t nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+   nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    while (nextindex>=0) {
       CdDown(nextindex);
       nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
@@ -3243,13 +3251,18 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // if point is outside, just check the top node
    if (fIsOutside) {
       snext = fTopVolume->GetShape()->DistFromOutside(fPoint, fDirection, iact, fStep, &safe);
+      fNextNode = fTopNode;
       if (snext < fStep) {
          fIsStepEntering = kTRUE;
          fStep = snext;
-         fNextNode = fTopNode;
-         return fTopNode;
+         Int_t indnext = fNextNode->GetVolume()->GetNextNodeIndex();;
+         while (indnext>=0) {
+            fNextNode = fNextNode->GetDaughter(indnext);
+            if (computeGlobal) fCurrentMatrix->Multiply(fNextNode->GetMatrix());
+            indnext = fNextNode->GetVolume()->GetNextNodeIndex();
+         }
+         return fNextNode;
       }
-      fNextNode = fTopNode;
       return 0;
    }
    fCache->MasterToLocal(fPoint, &point[0]);
@@ -4650,21 +4663,31 @@ void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
+Double_t TGeoManager::Weight(TGeoVolume *vol, Double_t precision, Option_t *option)
 {
 // Estimate weight of volume VOL with a precision SIGMA(W)/W better than PRECISION.
 // Option can be "v" - verbose (default)
    GetGeomPainter();
-   if (!fPainter) return 0;
    TString opt(option);
    opt.ToLower();
+   Double_t weight;
+   TGeoVolume *top = fTopVolume;
+   TGeoVolume *volume = vol;
+   if (!volume) volume = top;
    if (opt.Contains("v")) {
+      if (opt.Contains("a")) {
+         Info("Weight", "Computing analytically weight of %s", volume->GetName());
+         weight = volume->WeightA();
+         Info("Weight", "Computed weight: %f [kg]\n", weight);
+         return weight;
+      }            
       Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
       printf("    event         weight         err\n");
       printf("========================================\n");
    }
-   Double_t weight = fPainter->Weight(precision, option);
-   RestoreMasterVolume();
+   if (volume != top) SetTopVolume(volume);
+   weight = fPainter->Weight(precision, option);
+   if (volume != top) SetTopVolume(top);
    return weight;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.10 2005/02/03 11:40:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.11 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -39,6 +39,7 @@ protected :
 // methods
 
 public:
+   virtual Double_t      Capacity() const;
    Double_t              Daxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              DDaxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              DDDaxis(Double_t *pt, Double_t *dir, Double_t t) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.39 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.40 2005/06/13 12:17:31 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -92,6 +92,7 @@ public:
    // methods
    virtual void    cd(Int_t inode) const;
    void            Browse(TBrowser *b);
+   Double_t        Capacity() const;
    void            CheckShapes();
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
@@ -192,7 +193,8 @@ public:
    void            VisibleDaughters(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisibleDaughters
    void            InvisibleAll(Bool_t flag=kTRUE) {SetVisibility(!flag); VisibleDaughters(!flag);} // *TOGGLE* *GETTER=IsAllInvisible
    void            Voxelize(Option_t *option);
-   Double_t        Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
+   Double_t        Weight(Double_t precision=0.01, Option_t *option="va"); // *MENU*
+   Double_t        WeightA() const;
 
   ClassDef(TGeoVolume, 5)              // geometry volume descriptor
 };
@@ -256,7 +258,7 @@ private:
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);
-   virtual ~TGeoVolumeAssembly() {;}
+   virtual ~TGeoVolumeAssembly();
 
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option=""); 
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);

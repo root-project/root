@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.9 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.10 2005/08/30 09:58:41 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -113,6 +113,15 @@ TGeoHype::~TGeoHype()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+Double_t TGeoHype::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = 2.*TMath::Pi()*fDz*(fRmax*fRmax-fRmin*fRmin) +
+                       (2.*TMath::Pi()/3.)*fDz*fDz*fDz*(fToutsq-fTinsq);
+   return capacity;                    
+}   
 
 //_____________________________________________________________________________   
 void TGeoHype::ComputeBBox()

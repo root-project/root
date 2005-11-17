@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.35 2005/09/04 19:24:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.36 2005/09/26 12:14:07 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -296,6 +296,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    if (vol->GetFinder()) return;
    UInt_t nd = vol->GetNdaughters();
    if (!nd) return;
+   Bool_t is_assembly = vol->IsAssembly();
    // first, test if daughters extrude their container
    TGeoShape *shapem = vol->GetShape();
    TGeoShape *shaped;
@@ -305,85 +306,88 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TBuffer3D *buff, *buffm;
    buff = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
    buffm = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
-   Int_t numPoints;
+   Int_t numPoints = 0;
    Bool_t extrude, isextrusion, isoverlapping;
    TGeoOverlap *nodeovlp = 0;
    Bool_t ismany;
-   Double_t *points, *pointsm;
+   Double_t *points=0, *pointsm=0;
    Double_t local[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
    UInt_t id, ip;
    // first, test if any of container vertices is inside some daughter
    // first, test if daughters extrude their container
-   numPoints = shapem->GetNmeshVertices();
-   buffm->SetRawSizes(numPoints, 3*numPoints, 0, 0, 0, 0);
-   pointsm = buffm->fPnts;
-   shapem->SetPoints(pointsm);
+   if (!is_assembly) {
+      numPoints = shapem->GetNmeshVertices();
+      buffm->SetRawSizes(numPoints, 3*numPoints, 0, 0, 0, 0);
+      pointsm = buffm->fPnts;
+      shapem->SetPoints(pointsm);
    
-   for (id=0; id<nd; id++) {
-      node = vol->GetNode(id);
-      shaped = node->GetVolume()->GetShape();
-      numPoints = shaped->GetNmeshVertices();
-      buff->SetRawSizes(numPoints, 3*numPoints, 0, 0, 0, 0);
-      points = buff->fPnts;
-      shaped->SetPoints(points);
-      matrix = node->GetMatrix();
-      ismany = node->IsOverlapping();
-      isextrusion=kFALSE;
-      // loop all points of the daughter
-      for (ip=0; ip<buff->NbPnts(); ip++) {
-         memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-              matrix->LocalToMaster(local, point);
-              extrude = !shapem->Contains(point);
-              if (extrude) {
-                 safety = shapem->Safety(point, kFALSE);
-                 if (safety<ovlp) extrude=kFALSE;
-              }    
-              if (extrude) {
-            if (!isextrusion) {
-               isextrusion = kTRUE;
-               char *name = new char[20];
-               sprintf(name,"%s_x_%i", vol->GetName(),id); 
-               nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-            }   
-              }
-      }             
-      // loop all points of the mother
-      for (ip=0; ip<buffm->NbPnts(); ip++) {
-         memcpy(point, &pointsm[3*ip], 3*sizeof(Double_t));
-              matrix->MasterToLocal(point, local);
-         extrude = shaped->Contains(local);
-         if (extrude) {
-            // skip points on mother mesh that have no neghbourhood ouside mother
-            safety = shapem->Safety(point,kTRUE);
-            if (safety>1E-6) {
-               extrude = kFALSE;
-            } else {   
-               safety = shaped->Safety(local,kTRUE);
+      for (id=0; id<nd; id++) {
+         node = vol->GetNode(id);
+         if (node->GetVolume()->IsAssembly()) continue;
+         shaped = node->GetVolume()->GetShape();
+         numPoints = shaped->GetNmeshVertices();
+         buff->SetRawSizes(numPoints, 3*numPoints, 0, 0, 0, 0);
+         points = buff->fPnts;
+         shaped->SetPoints(points);
+         matrix = node->GetMatrix();
+         ismany = node->IsOverlapping();
+         isextrusion=kFALSE;
+         // loop all points of the daughter
+         for (ip=0; ip<buff->NbPnts(); ip++) {
+            memcpy(local, &points[3*ip], 3*sizeof(Double_t));
+                 matrix->LocalToMaster(local, point);
+                 extrude = !shapem->Contains(point);
+                 if (extrude) {
+                    safety = shapem->Safety(point, kFALSE);
                     if (safety<ovlp) extrude=kFALSE;
+                 }    
+                 if (extrude) {
+               if (!isextrusion) {
+                  isextrusion = kTRUE;
+                  char *name = new char[20];
+                  sprintf(name,"%s_x_%i", vol->GetName(),id); 
+                  nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+                  fGeoManager->AddOverlap(nodeovlp);
+               } else {
+                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               }   
+            }
+         }             
+         // loop all points of the mother
+         for (ip=0; ip<buffm->NbPnts(); ip++) {
+            memcpy(point, &pointsm[3*ip], 3*sizeof(Double_t));
+            matrix->MasterToLocal(point, local);
+            extrude = shaped->Contains(local);
+            if (extrude) {
+               // skip points on mother mesh that have no neghbourhood ouside mother
+               safety = shapem->Safety(point,kTRUE);
+               if (safety>1E-6) {
+                  extrude = kFALSE;
+               } else {   
+                  safety = shaped->Safety(local,kTRUE);
+                  if (safety<ovlp) extrude=kFALSE;
+               }   
             }   
-         }   
-         if (extrude) {
-            if (!isextrusion) {
-               isextrusion = kTRUE;
-               char *name = new char[20];
-               sprintf(name,"%s_mo_%i", vol->GetName(),id); 
-               nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-            }   
+            if (extrude) {
+               if (!isextrusion) {
+                  isextrusion = kTRUE;
+                  char *name = new char[20];
+                  sprintf(name,"%s_mo_%i", vol->GetName(),id); 
+                  nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+                  fGeoManager->AddOverlap(nodeovlp);
+               } else {
+                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               }   
+            }
          }
       }
-   }
+   }   
    // now check if the daughters overlap with each other
    if (nd<2) {
       delete buff;
@@ -400,6 +404,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    UInt_t io;
    for (id=0; id<nd; id++) {  // loop all nodes (node, shapem, matrix, pointsm, buffm)
       node = vol->GetNode(id);
+      if (node->GetVolume()->IsAssembly()) continue;
       ismany = node->IsOverlapping();
       if (ismany) continue;
       shapem = node->GetVolume()->GetShape();
@@ -416,6 +421,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          io = ovlps[ko];           // (node1, shaped, matrix1, points, buff)
          if (io<id) continue;
          node1 = vol->GetNode(io);
+         if (node1->GetVolume()->IsAssembly()) continue;
          ismany1 = node1->IsOverlapping();
          if (ismany1) continue;
          matrix1 = node1->GetMatrix();

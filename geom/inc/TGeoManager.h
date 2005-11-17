@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.66 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.67 2005/09/06 16:45:48 rdm Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -232,7 +232,7 @@ public:
                                        const char *g3path="");
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
-   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
+   Double_t               Weight(TGeoVolume *vol=0, Double_t precision=0.01, Option_t *option="va"); // *MENU*
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 

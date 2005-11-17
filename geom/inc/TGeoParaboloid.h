@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.5 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.6 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
    // destructor
    virtual ~TGeoParaboloid();
    // methods
+   virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

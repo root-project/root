@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.49 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.50 2005/09/26 12:14:07 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -133,6 +133,27 @@ TGeoPcon::~TGeoPcon()
    if (fRmin) {delete[] fRmin; fRmin = 0;}
    if (fRmax) {delete[] fRmax; fRmax = 0;}
    if (fZ)    {delete[] fZ; fZ = 0;}
+}
+
+//_____________________________________________________________________________
+Double_t TGeoPcon::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Int_t ipl;
+   Double_t rmin1, rmax1, rmin2, rmax2, phi1, phi2, dz;
+   Double_t capacity = 0.;
+   phi1 = fPhi1;
+   phi2 = fPhi1 + fDphi;
+   for (ipl=0; ipl<fNz-1; ipl++) {
+      dz    = 0.5*(fZ[ipl+1]-fZ[ipl]);
+      if (dz == 0) continue;
+      rmin1 = fRmin[ipl];
+      rmax1 = fRmax[ipl];
+      rmin2 = fRmin[ipl+1];
+      rmax2 = fRmax[ipl+1];
+      capacity += TGeoConeSeg::Capacity(dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);
+   }
+   return capacity;   
 }
 
 //_____________________________________________________________________________   

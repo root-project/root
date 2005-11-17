@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.31 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.32 2005/05/25 14:25:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -144,6 +144,7 @@
 // divided. Visualization of such volumes is currently not implemented.
 
 #include "Riostream.h"
+#include "TRandom3.h"
 
 #include "TGeoManager.h"
 #include "TGeoBoolNode.h"
@@ -219,6 +220,26 @@ TGeoCompositeShape::~TGeoCompositeShape()
 // destructor
    if (fNode) delete fNode;
 }
+
+//_____________________________________________________________________________
+Double_t TGeoCompositeShape::Capacity() const
+{
+// Computes capacity of this shape [cm^3] by sampling with 1% error.
+   Double_t pt[3];
+   if (!gRandom) gRandom = new TRandom3();
+   Double_t vbox = 8*fDX*fDY*fDZ; // cm3
+   Int_t igen=0;
+   Int_t iin = 0;
+   while (iin<10000) {
+      pt[0] = fOrigin[0]-fDX+2*fDX*gRandom->Rndm();
+      pt[1] = fOrigin[1]-fDY+2*fDY*gRandom->Rndm();
+      pt[2] = fOrigin[2]-fDZ+2*fDZ*gRandom->Rndm();
+      igen++;
+      if (Contains(pt)) iin++;
+   }      
+   Double_t capacity = iin*vbox/igen;
+   return capacity;
+}   
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::ComputeBBox()

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.4 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.5 2005/09/06 12:34:57 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -143,6 +143,8 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    vm->FindOverlaps(); 
    // Eventually check for overlaps
    if (check) vm->CheckOverlaps();
+   // clean current matrices from cache
+   gGeoManager->CdTop();
    SetAligned(kTRUE);
 }   
 

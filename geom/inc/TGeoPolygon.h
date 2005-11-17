@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.2 2004/01/29 11:59:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.3 2005/05/17 12:00:23 brun Exp $
 // Author: Mihaela Gheata   05/01/04
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    // destructor
    virtual ~TGeoPolygon();
    // methods
+   Double_t            Area() const;
    Bool_t              Contains(Double_t *point) const;
    void                FinishPolygon();
    Int_t               GetNvert() const {return fNvert;}

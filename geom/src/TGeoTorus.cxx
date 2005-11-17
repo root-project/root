@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.28 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -91,6 +91,14 @@ TGeoTorus::TGeoTorus(Double_t *param)
    ComputeBBox();
 }
 
+//_____________________________________________________________________________
+Double_t TGeoTorus::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   Double_t capacity = (fDphi/180.)*TMath::Pi()*TMath::Pi()*fR*(fRmax*fRmax-fRmin*fRmin);
+   return capacity;
+}
+   
 //_____________________________________________________________________________
 void TGeoTorus::ComputeBBox()
 {

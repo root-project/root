@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.45 2005/06/13 12:17:32 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.46 2005/09/04 15:12:08 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -128,6 +128,13 @@ TGeoBBox::TGeoBBox(Double_t *param)
 TGeoBBox::~TGeoBBox()
 {
 // Destructor
+}
+
+//_____________________________________________________________________________
+Double_t TGeoBBox::Capacity() const
+{
+// Computes capacity of the shape in [cm^3]
+   return (8.*fDX*fDY*fDZ);
 }
 
 //_____________________________________________________________________________

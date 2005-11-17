@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.66 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.67 2005/09/06 16:45:48 rdm Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -429,6 +429,19 @@ void TGeoVolume::Browse(TBrowser *b)
          b->AddCheckBox(GetNode(i)->GetVolume(), kFALSE);
    }
 }
+
+//_____________________________________________________________________________
+Double_t TGeoVolume::Capacity() const
+{
+// Computes the capacity of this [cm^3] as the capacity of its shape.
+// In case of assemblies, the capacity is computed as the sum of daughter's capacities.
+   if (!IsAssembly()) return fShape->Capacity();
+   Double_t capacity = 0.0;
+   Int_t nd = GetNdaughters();
+   Int_t i;
+   for (i=0; i<nd; i++) capacity += GetNode(i)->GetVolume()->Capacity();
+   return capacity;
+}   
 
 //_____________________________________________________________________________
 void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
@@ -1618,10 +1631,32 @@ void TGeoVolume::Voxelize(Option_t *option)
 //_____________________________________________________________________________
 Double_t TGeoVolume::Weight(Double_t precision, Option_t *option)
 {
-// Estimate the weight of a volume with SIGMA(M)/M better than PRECISION.
-// Option can be : v - verbose (default)
-   fGeoManager->SetTopVolume((TGeoVolume*)this);
-   return fGeoManager->Weight(precision, option);
+// Estimate the weight of a volume (in kg) with SIGMA(M)/M better than PRECISION.
+// Option can contain : v - verbose, a - analytical  (default)
+   return  fGeoManager->Weight(this, precision, option);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoVolume::WeightA() const
+{
+// Analytical computation of the weight.
+   Double_t capacity = Capacity();
+   Double_t weight = 0.0;
+   Int_t i;
+   Int_t nd = GetNdaughters();
+   TGeoVolume *daughter;
+   for (i=0; i<nd; i++) {
+      daughter = GetNode(i)->GetVolume();
+      weight += daughter->WeightA();
+      capacity -= daughter->Capacity();
+   }
+   Double_t density = 0.0;
+   if (!IsAssembly()) {
+      if (fMedium) density = fMedium->GetMaterial()->GetDensity();
+      if (density<0.01) density = 0.0; // do not weight gases
+   }   
+   weight += 0.001*capacity * density; //[kg]
+   return weight;
 }
 
 ClassImp(TGeoVolumeMulti)
@@ -1916,6 +1951,14 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
    fShape = new TGeoShapeAssembly(this);
    if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
 }
+
+//_____________________________________________________________________________
+TGeoVolumeAssembly::~TGeoVolumeAssembly()
+{
+// Destructor
+   if (fShape) delete fShape;
+}   
+
 //_____________________________________________________________________________
 void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
