@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.23 2005/11/10 12:04:21 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.24 2005/11/16 16:41:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -738,7 +738,8 @@ void TGLViewer::SetupLights()
       if (orthoCamera) {
          // Find distance from near clip plane to furstum center - i.e. vector of half
          // clip depth. Ortho lights placed this distance from eye point
-         sideLightsZ = fCurrentCamera->FrustumPlane(TGLCamera::kNear).DistanceTo(fCurrentCamera->FrustumCenter());
+         sideLightsZ =
+			fCurrentCamera->FrustumPlane(TGLCamera::kNear).DistanceTo(fCurrentCamera->FrustumCenter())*0.7;
          frontLightZ = sideLightsZ;
       } else {
          // Perspective camera
@@ -762,11 +763,12 @@ void TGLViewer::SetupLights()
       // 2: Bottom
       // 3: Left
       // 4: Right
-      Float_t pos0[] = {     0.0,              0.0, frontLightZ, 1.0};
-      Float_t pos1[] = {     0.0,      lightRadius, sideLightsZ, 1.0};
-      Float_t pos2[] = {     0.0,     -lightRadius, sideLightsZ, 1.0};
-      Float_t pos3[] = {-lightRadius,          0.0, sideLightsZ, 1.0};
-      Float_t pos4[] = { lightRadius,          0.0, sideLightsZ, 1.0};
+		TGLVertex3 center = box.Center();
+      Float_t pos0[] = { center.X() 				 , center.Y()					, frontLightZ, 1.0};
+      Float_t pos1[] = { center.X() 				 , center.Y() + lightRadius, sideLightsZ, 1.0};
+      Float_t pos2[] = { center.X() 				 , center.Y() - lightRadius, sideLightsZ, 1.0};
+      Float_t pos3[] = { center.X() - lightRadius, center.Y()					, sideLightsZ, 1.0};
+      Float_t pos4[] = { center.X() + lightRadius, center.Y()					, sideLightsZ, 1.0};
 
       Float_t frontLightColor[] = {0.35, 0.35, 0.35, 1.0};
       Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};

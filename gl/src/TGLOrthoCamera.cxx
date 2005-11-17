@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.7 2005/11/09 10:13:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.8 2005/11/16 16:41:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -176,7 +176,7 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickR
 
    // For near/far clipping half depth give extra slack so clip objects/manips 
    // are visible 
-   Double_t halfDepth = extents.Z();
+   Double_t halfDepth = extents.Mag();
    const TGLVertex3 & center = fVolume.Center();
 
    glOrtho(center.X() - halfRange, 
