@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Cintex.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -73,6 +73,7 @@ namespace ROOT {
     fCallback = new Callback();
     fRootcreator = 0;
     fDbglevel = 0;
+    fEnabled = false;
   }
 
   Cintex::~Cintex() {
@@ -81,6 +82,7 @@ namespace ROOT {
   }
 
   void Cintex::Enable() {
+    if ( Instance().fEnabled ) return;
     //---Install the callback to fothcoming classes ----//
     InstallClassCallback( Instance().fCallback );        
     //---Convert to CINT all existing classes ---//
@@ -88,13 +90,16 @@ namespace ROOT {
 
       ( * Instance().fCallback)( Type::TypeAt(i) );
     }
-    //--- Convert to CINT all existing free functions and variables ---//
-    Scope gbl = Scope::ByName("");
-    if (gbl) {
-      for ( size_t j = 0; j < gbl.MemberSize(); ++j) {
-	( * Instance().fCallback ) ( gbl.MemberAt(j) );
+    //---Convert to CINT all existing free functions
+    for ( size_t n = 0; n < Scope::ScopeSize(); n++ ) {
+      Scope ns = Scope::ScopeAt(n);
+      if ( ns.IsNamespace() ) {
+        for( size_t m = 0; m < ns.FunctionMemberSize(); m++ ) {
+          ( * Instance().fCallback)( ns.FunctionMemberAt(m) );
+        }
       }
     }
+    Instance().fEnabled = true;
   } 
 
   void Cintex::SetROOTCreator(ROOTCreator c) {
@@ -115,8 +120,10 @@ namespace ROOT {
   
   void Callback::operator () ( const Type& t ) {
     if ( t.IsClass() || t.IsStruct() ) {
-      ROOTClassEnhancer(t).Setup();
+      ROOTClassEnhancer enhancer(t);
+      enhancer.Setup();
       CINTClassBuilder::Get(t).Setup();
+      enhancer.CreateInfo();
     }
     else if ( t.IsTypedef() ) {
       CINTTypedefBuilder::Setup(t);

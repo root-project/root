@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTdefs.h,v 1.3 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -162,6 +162,12 @@
       case 'L':  return T(G__int(p));
       case 'k':  return T(G__int(p));    
       case 'K':  return T(G__int(p));
+      case 'n':  return T(G__Longlong(p));
+      case 'N':  return T(G__int(p));
+      case 'm':  return T(G__ULonglong(p));
+      case 'M':  return T(G__int(p));
+      case 'q':  return T(G__ULongdouble(p));
+      case 'Q':  return T(G__int(p));
       case 'u':  return T(G__int(p));
       case 'U':  return T(G__int(p));
       case 'Y':  return T(G__int(p));
@@ -172,10 +178,10 @@
   /// Give data back to CINT
   template <class T> inline int Converter<T>::toCint(G__value* res, void* p)   {
     switch( res->type )  {
-      case 'y': G__setnull(res);                             break;
-      case 'f': G__letdouble(res,res->type,double(*(T*)p));  break;
+      case 'y': G__setnull(res);                            break;
+      case 'f': G__letdouble(res,res->type,double(*(T*)p)); break;
       case 'F': G__letint   (res,res->type,long( (T*)p));    break;   
-      case 'd': G__letdouble(res,res->type,double(*(T*)p));  break;
+      case 'd': G__letdouble(res,res->type,double(*(T*)p)); break;
       case 'D': G__letint   (res,res->type,long( (T*)p));    break;   
       case 'g': G__letint   (res,res->type,long(*(T*)p));    break;
       case 'G': G__letint   (res,res->type,long( (T*)p));    break;   
@@ -194,7 +200,13 @@
       case 'l': G__letint   (res,res->type,long(*(T*)p));    break;
       case 'L': G__letint   (res,res->type,long( (T*)p));    break;  
       case 'k': G__letint   (res,res->type,long(*(T*)p));    break;
-      case 'K': G__letint   (res,res->type,long( (T*)p));    break;  
+      case 'K': G__letint   (res,res->type,long( (T*)p));    break;
+      case 'n': G__letLonglong(res,res->type, (long long)(*(T*)p)); break;
+      case 'N': G__letint   (res,res->type,long( (T*)p));    break;
+      case 'm': G__letULonglong(res,res->type,(unsigned long long)(*(T*)p)); break;
+      case 'M': G__letint   (res,res->type,long( (T*)p));    break;
+      case 'q': G__letLongdouble(res,res->type,(long double)(*(T*)p)); break;
+      case 'Q': G__letint   (res,res->type,long( (T*)p));    break;
       case 'u': G__letint   (res,res->type,long(p));         break;
       case 'U': G__letint   (res,res->type,long(p));         break;
       case 'Y': G__letint   (res,res->type,long(p));         break;

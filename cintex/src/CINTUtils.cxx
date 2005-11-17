@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTUtils.cxx,v 1.3 2005/11/08 07:16:37 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -130,7 +130,7 @@ namespace ROOT { namespace Cintex {
     else if ( nam == "unsigned long long int" )
       return CintTypeDesc('m', "-");
     else if ( nam == "long double" )
-      return CintTypeDesc('m', "-");
+      return CintTypeDesc('q', "-");
     else if ( nam == "double" )
       return CintTypeDesc('d', "-");
     else if ( nam == "double32" )
@@ -139,6 +139,8 @@ namespace ROOT { namespace Cintex {
       return CintTypeDesc('f', "-");
     else if ( t.IsEnum() )
       return CintTypeDesc('l', "-");
+    else if ( t.IsFunction() )
+      return CintTypeDesc('y', "-");
     else if ( !t.IsFundamental() ) 
       return CintTypeDesc('u', CintName(t));
     else 
@@ -218,7 +220,6 @@ namespace ROOT { namespace Cintex {
     ,{"long unsigned",          "unsigned long" }
     ,{"short unsigned",         "unsigned short" }
     ,{"short int",              "short" }
-    ,{"long double",            "double" }
     ,{"long int",               "long" }
     ,{"basic_string<char> ",    "string"}
     ,{"basic_string<char>",     "string"}
@@ -298,7 +299,7 @@ namespace ROOT { namespace Cintex {
         if ( tagnum != -1 ) arg_sig += "'" + string(G__fulltagname(tagnum, 1)) + "'";
         else                arg_sig += "'" + ctype.second + "'";  // Object TypeNth Name
       }
-      if ( pt.IsTypedef() ) arg_sig += " '" + pt.Name(SCOPED) + "' ";
+      if ( pt.IsTypedef() ) arg_sig += " '" + CintName(pt.Name(SCOPED)) + "' ";
       else                  arg_sig += " - ";                    
       // Assign indirection. First indirection already taken into account by uppercasing TypeNth
       if( indir.first == 0 || indir.first == 1 ) {
@@ -350,10 +351,16 @@ namespace ROOT { namespace Cintex {
       case 'L': Converter<int>::toCint           (result, obj); break;
       case 'k': Converter<unsigned long>::toCint (result, obj); break;
       case 'K': Converter<int>::toCint           (result, obj); break;
+      case 'n': Converter<long long>::toCint     (result, obj); break;
+      case 'N': Converter<int>::toCint           (result, obj); break;
+      case 'm': Converter<unsigned long long>::toCint (result, obj); break;
+      case 'M': Converter<int>::toCint           (result, obj); break;
       case 'f': Converter<float>::toCint         (result, obj); break;
       case 'F': Converter<int>::toCint           (result, obj); break;
       case 'd': Converter<double>::toCint        (result, obj); break;
       case 'D': Converter<int>::toCint           (result, obj); break;
+      case 'q': Converter<long double>::toCint   (result, obj); break;
+      case 'Q': Converter<int>::toCint           (result, obj); break;
       default:  
         result->obj.i = (long)obj;
         if( ! TypeNth.IsPointer()) result->ref = (long)obj;

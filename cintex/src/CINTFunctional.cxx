@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTFunctional.cxx,v 1.3 2005/11/11 07:18:52 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -40,7 +40,7 @@ class StubContexts : public vector<StubContext*>  {
   };
 
 StubContext::StubContext(const Member& mem, const Type& cl )
-  :  fMethodCode(0), fMember(mem), fClass(cl), fInitialized(false)
+  :  fMethodCode(0), fMember(mem), fClass(cl), fNewdelfuncs(0), fInitialized(false)
 {
   StubContexts::Instance().push_back(this);
 }
@@ -62,9 +62,12 @@ void StubContext::Initialize() {
     Type pt = fFunction.FunctionParameterAt(i);
     while ( pt.IsTypedef() ) pt = pt.ToType();
     if ( pt.IsFundamental() || pt.IsEnum() )
-      if      ( pt.TypeInfo() == typeid(float) )  fTreat[i] = 'f';
-      else if ( pt.TypeInfo() == typeid(double) ) fTreat[i] = 'd';
-      else                                        fTreat[i] = 'i';
+      if      ( pt.TypeInfo() == typeid(float) )       fTreat[i] = 'f';
+      else if ( pt.TypeInfo() == typeid(double) )      fTreat[i] = 'd';
+      else if ( pt.TypeInfo() == typeid(long double) ) fTreat[i] = 'q';
+      else if ( pt.TypeInfo() == typeid(long long) )   fTreat[i] = 'n';
+      else if ( pt.TypeInfo() == typeid(unsigned long long) ) fTreat[i] = 'm';
+      else                                             fTreat[i] = 'i';
     else if ( pt.IsReference() )
       if( pt.IsPointer() ) fTreat[i] = '*';
       else                 fTreat[i] = '&';
@@ -74,16 +77,24 @@ void StubContext::Initialize() {
 
   // pre-process result block
   Type rt = fFunction.ReturnType();
+  fRet_byref   = rt.IsReference();
   while ( rt.IsTypedef() ) rt = rt.ToType();
   fRet_desc = CintType( rt );
   fRet_tag  = CintTag( fRet_desc.second );
-  fRet_byvalue = !rt.IsFundamental() && !rt.IsPointer() &&
-                  !rt.IsArray() && !rt.IsEnum() && !rt.IsReference(); 
+  fRet_byvalue = !fRet_byref && !rt.IsFundamental() && !rt.IsPointer() &&
+                  !rt.IsArray() && !rt.IsEnum(); 
   if ( rt.IsPointer() ) fRet_desc.first = (fRet_desc.first - ('a'-'A'));
 
   // for constructor the result block is the class itself
   if( fClass) fClass_tag = CintTag( CintType(fClass).second );
   else         fClass_tag = 0;
+  // for constructor or destructor locate newdelfunctions pointers
+  if ( fMember.IsConstructor() || fMember.IsDestructor() ) {
+    Member getnewdelfuncs = fClass.MemberByName("__getNewDelFunctions");
+    if( getnewdelfuncs ) {
+      fNewdelfuncs = (NewDelFunctions*)( getnewdelfuncs.Invoke().Address() );
+    }
+  }
   // Set initialized flag
   fInitialized = true;
 }
@@ -94,8 +105,11 @@ void StubContext::ProcessParam(G__param* libp) {
     switch(fTreat[i]) {
       case 'd': fParcnv[i].obj.d  = G__double(libp->para[i]);fParam[i] = &fParcnv[i].obj.d; break;
       case 'f': fParcnv[i].obj.fl = (float)G__double(libp->para[i]);fParam[i] = &fParcnv[i].obj.fl; break;
+      case 'n': fParcnv[i].obj.ll = G__Longlong(libp->para[i]);fParam[i] = &fParcnv[i].obj.ll; break;
+      case 'm': fParcnv[i].obj.ull= G__ULonglong(libp->para[i]);fParam[i] = &fParcnv[i].obj.ull; break;
+      case 'q': fParcnv[i].obj.ld = G__Longdouble(libp->para[i]);fParam[i] = &fParcnv[i].obj.ld; break;
       case 'i': fParcnv[i].obj.i  = G__int(libp->para[i]);   fParam[i] = &fParcnv[i].obj.i; break;
-      case '*': fParam[i] = &libp->para[i].obj.i; break;
+      case '*': fParam[i] = libp->para[i].ref ? (void*)libp->para[i].ref : &libp->para[i].obj.i; break;
       case '&': fParam[i] = (void*)libp->para[i].ref; break;
       case 'u': fParam[i] = (void*)libp->para[i].obj.i; break;
     }
@@ -125,44 +139,34 @@ void StubContext::ProcessResult(G__value* result, void* obj) {
     case 'L': Converter<int>::toCint           (result, obj); break;
     case 'k': Converter<unsigned long>::toCint (result, obj); break;
     case 'K': Converter<int>::toCint           (result, obj); break;
+    case 'n': Converter<long long>::toCint     (result, obj); break;
+    case 'N': Converter<int>::toCint           (result, obj); break;
+    case 'm': Converter<unsigned long long>::toCint (result, obj); break;
+    case 'M': Converter<int>::toCint           (result, obj); break;
     case 'f': Converter<float>::toCint         (result, obj); break;
     case 'F': Converter<int>::toCint           (result, obj); break;
     case 'd': Converter<double>::toCint        (result, obj); break;
     case 'D': Converter<int>::toCint           (result, obj); break;
+    case 'q': Converter<long double>::toCint   (result, obj); break;
+    case 'Q': Converter<int>::toCint           (result, obj); break;
     case 'u': Converter<long>::toCint          (result, obj);
               result->ref = (long)obj;
               result->tagnum = fRet_tag;
               break;
-    case 'U': Converter<long>::toCint          (result, obj);
-              result->ref = 0;
-              result->tagnum = fRet_tag;
-              break;
+    case 'U': 
+      if ( fRet_byref) {
+        Converter<long>::toCint(result, *(void**)obj);
+        result->ref = (long)obj;
+      }
+      else {
+        Converter<long>::toCint(result, obj);
+        result->ref = 0;
+      }
+      result->tagnum = fRet_tag;
+      break;
   }
 }
 
-//------------------Stub adpater functions--------------------------------------------------------
-int Method_stub(G__value* result,
-                G__CONST char* /*funcname*/,
-                G__param *libp,
-                int hash ) 
-{
-  StubContext*    context;
-  G__ifunc_table* ifunc = 0;
-  int             indx  = hash;
-
-  G__CurrentCall(G__RECMEMFUNCENV, &ifunc, indx);
-
-  if ( ifunc ) context = (StubContext*)ifunc->userparam[indx];
-  else throw RuntimeError("Unable to obtain the function context");
-
-  if ( !context->fInitialized ) context->Initialize();
-
-  context->ProcessParam(libp);
-  void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
-  context->ProcessResult(result, r);
-  if ( context->fRet_byvalue )  G__store_tempobject(*result);
-  return(1);
-}
 //------------------Stub adpater functions--------------------------------------------------------
 int Method_stub_with_context(StubContext* context,
                              G__value* result,
@@ -178,39 +182,6 @@ int Method_stub_with_context(StubContext* context,
   return(1);
 }
 
-//------------------------------------------------------------------------------------------------
-int Constructor_stub(G__value* result,
-                     G__CONST char *funcname,
-                     G__param *libp,
-                     int indx ) 
-{
-  StubContext* context;
-  int tagnum;
-  if ( funcname == NULL ) {
-    G__ifunc_table* table = 0;
-    int idx;
-    G__CurrentCall(G__RECMEMFUNCENV, &table, idx);
-    context = (StubContext*)G__get_linked_user_param(idx);
-    tagnum = idx;
-  } else {
-    G__ifunc_table* ifunc = (G__ifunc_table*)funcname;
-    context = (StubContext*)ifunc->userparam[indx];
-    tagnum = ifunc->tagnum;
-  }
-  if ( !context->fInitialized ) context->Initialize();
-  
-  context->ProcessParam(libp);
-
-  void* p = context->fClass.Allocate();
-  (*context->fStub)(p, context->fParam, 0);
-  
-  result->obj.i = (long)p;
-  result->ref = (long)p;
-  result->type = 'u';
-  result->tagnum = tagnum;
-
-  return(1);
-}
 //-------------------------------------------------------------------------------------
 int Constructor_stub_with_context(StubContext* context, 
                                   G__value* result,
@@ -218,15 +189,30 @@ int Constructor_stub_with_context(StubContext* context,
                                   G__param *libp,
                                   int /*indx*/ ) 
 {
- if ( !context->fInitialized ) context->Initialize();
+  if ( !context->fInitialized ) context->Initialize();
   
   context->ProcessParam(libp);
-
-  void* p = context->fClass.Allocate();
-  (*context->fStub)(p, context->fParam, 0);
+  long nary = G__getaryconstruct();
+  size_t size = context->fClass.SizeOf();
+  void* obj;
+  if ( nary ) {
+    if( context->fNewdelfuncs ) {
+      obj = context->fNewdelfuncs->NewArray(nary);
+    }
+    else {
+      obj = ::operator new( nary * size);
+      long p = (long)obj; 
+      for( long i = 0; i < nary; ++i, p += size )
+        (*context->fStub)((void*)p, context->fParam, 0);
+    }
+  }
+  else {
+    obj = ::operator new( size );
+    (*context->fStub)(obj, context->fParam, 0);
+  }
   
-  result->obj.i = (long)p;
-  result->ref = (long)p;
+  result->obj.i = (long)obj;
+  result->ref = (long)obj;
   result->type = 'u';
   result->tagnum = context->fClass_tag;
 
@@ -234,45 +220,6 @@ int Constructor_stub_with_context(StubContext* context,
 }
 
 //-------------------------------------------------------------------------------------------------
-int Destructor_stub(G__value* result,
-                    G__CONST char *funcname,
-                    G__param* /*libp*/,
-                    int indx ) 
-{
-  void* obj = (void*)G__getstructoffset();
-  if( 0 == obj ) return 1;
-
-  StubContext* context;
-  G__ifunc_table* ifunc;
-  if ( funcname == NULL ) {
-    int idx;
-    G__CurrentCall(G__RECMEMFUNCENV, &ifunc, idx);
-  } else {
-    ifunc = (G__ifunc_table*)funcname;
-  }
-  context = (StubContext*)ifunc->userparam[indx];
-  if ( !context->fInitialized ) context->Initialize();
-
-  if( G__getaryconstruct() ) {
-    if( G__PVOID == G__getgvp() )
-      operator delete[](obj); //delete[] (A::B::C::Calling *)(G__getstructoffset());
-    else {
-      size_t size = context->fClass.SizeOf();
-      for(int i = G__getaryconstruct()-1; i>=0 ; i--)
-        (*context->fStub)((char*)obj + size*i, context->fParam, 0);
-      operator delete (obj);
-    }
-  }
-  else {
-    long G__Xtmp = G__getgvp();
-    G__setgvp(G__PVOID);
-    (*context->fStub)(obj, context->fParam, 0);
-    G__setgvp(G__Xtmp);
-    operator delete (obj); //G__operator_delete(obj);
-  }
-  G__setnull(result);
-  return 1;
-}//-------------------------------------------------------------------------------------------------
 int Destructor_stub_with_context( StubContext* context,
                                   G__value* result,
                                   G__CONST char* /*funcname*/,
@@ -284,13 +231,14 @@ int Destructor_stub_with_context( StubContext* context,
   if ( !context->fInitialized ) context->Initialize();
 
   if( G__getaryconstruct() ) {
-    if( G__PVOID == G__getgvp() )
-      operator delete[](obj); //delete[] (A::B::C::Calling *)(G__getstructoffset());
+    if( G__PVOID == G__getgvp() ) { //  delete[] (TYPE*)(G__getstructoffset());
+      if( context->fNewdelfuncs ) context->fNewdelfuncs->DeleteArray(obj);
+    }
     else {
       size_t size = context->fClass.SizeOf();
       for(int i = G__getaryconstruct()-1; i>=0 ; i--)
         (*context->fStub)((char*)obj + size*i, context->fParam, 0);
-      operator delete (obj);
+      ::operator delete (obj);
     }
   }
   else {
@@ -298,7 +246,9 @@ int Destructor_stub_with_context( StubContext* context,
     G__setgvp(G__PVOID);
     (*context->fStub)(obj, context->fParam, 0);
     G__setgvp(G__Xtmp);
-    operator delete (obj); //G__operator_delete(obj);
+    if( !(long(obj) == G__getgvp() && G__PVOID != G__getgvp()) )  {
+      ::operator delete (obj); //G__operator_delete(obj);
+    }
   }
   G__setnull(result);
   return 1;

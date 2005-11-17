@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,7 +42,7 @@ namespace ROOT { namespace Cintex {
     CommentBuffer() {}
     ~CommentBuffer()  {
       for(VecC::iterator i=fC.begin(); i != fC.end(); ++i)
-        delete *i;
+        delete [] *i;
       fC.clear();
     }
   public:
@@ -223,13 +223,18 @@ namespace ROOT { namespace Cintex {
           }
           //throw std::runtime_error("Member: "+fName+"::"+dm.Name()+" [No valid reflection class]");
         }
-        if ( IsSTL(fName) || IsTypeOf(fClass,ref_t) || IsTypeOf(fClass,tok_t) )  {
+        //--- Add the necessary artificial comments ------ 
+        if ( dm.IsTransient() ||
+             IsSTL(fName) || 
+             IsTypeOf(fClass, ref_t) || 
+             IsTypeOf(fClass, tok_t) )  {
           char* com = new char[cm.length()+4];
           ::sprintf(com,"! %s",cm.c_str());
           comment = com;
           CommentBuffer::Instance().add(comment);
         }
-        else if ( (t.IsClass()||t.IsStruct()) && (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
+        else if ( (t.IsClass() || t.IsStruct()) && 
+                  (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
           char* com = new char[cm.length()+4];
           ::sprintf(com,"|| %s",cm.c_str());
           comment = com;
@@ -243,9 +248,11 @@ namespace ROOT { namespace Cintex {
         }
         Indirection  indir = IndirectionGet(dm.TypeOf());
         CintTypeDesc TypeNth = CintType(indir.second);
+        string dname = dm.Properties().HasKey("ioname") ? 
+                       dm.Properties().PropertyAsString("ioname") : dm.Name();
         ostringstream ost;
-        if ( t.IsArray() ) ost << dm.Name() << "[" << t.ArrayLength() << "]=";
-        else               ost << dm.Name() << "=";
+        if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
+        else               ost << dname << "=";
         string expr = ost.str();
         int member_type     = TypeNth.first;
         int member_indir    = 0;
@@ -291,7 +298,7 @@ namespace ROOT { namespace Cintex {
           << (dm.TypeOf().IsConst() ? "const " : "")
           << std::left << std::setw(7)
           << (G__AUTO==member_isstatic ? "auto " : "static ")
-          << std::left << std::setw(24) << dm.Name()
+          << std::left << std::setw(24) << dname
           << " \"" << (char*)(comment ? comment : "(None)") << "\""
           << std::endl
           << std::setw(16) << std::left << "declareField>"
@@ -319,7 +326,7 @@ namespace ROOT { namespace Cintex {
 
   CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
     if ( fBases ) return fBases;
-    Member getbases = fClass.MemberByName("getBasesTable");
+    Member getbases = fClass.MemberByName("__getBasesTable");
     if( getbases ) {
       fBases = (Bases*)( getbases.Invoke().Address() );
     }
@@ -347,17 +354,29 @@ namespace ROOT { namespace Cintex {
           if ( ctor )  {
             Object obj = fClass.Construct();
             Setup_inheritance_simple(obj);
-            //for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
-            //  Member dm = fClass.DataMemberAt(i);
-            //  Type t = dm.TypeOf();
-            //  while ( t.IsTypedef() ) t = t.ToType();
-            //  if ( t && !t.IsPointer() && (t.IsClass() || t.IsStruct()) )  {
-            //    Object dobj(t,(char*)obj.Address()+dm.Offset());
-            //    CINTClassBuilder::Get(t).Setup_inheritance_simple(dobj);
-            //  }
-            //}
             if ( dtor ) fClass.Destruct(obj.Address());
           }
+          // There is no default constructor. So, it is not a I/O class
+          else {  
+            Object obj(fClass, 0);
+            Setup_inheritance_simple(obj);
+          }
+        }
+        // Special case of "pure abstract". The offsets will be Set to 0.
+        // All that is necessary because ROOT does not handle virtual inheritance correctly.
+        // ROOT always wants to Get a real Offset between BaseNth classes ans this is not 
+        // possible without having an Instance of the object. In case of pure abstract classes
+        // we can not do it. So, in case the abstract class has no data members then we assume
+        // offsets to BaseNth class to be 0.
+        else if ( fClass.IsAbstract() && fClass.DataMemberSize() == 0) {
+          Object obj(fClass, 0);
+          Setup_inheritance_simple(obj);
+        }
+        // The above fails for Gaudi Algorithms (virutal inheritance, abstract and with
+        // data members. Do not know What to do.
+        else {  
+          Object obj(fClass, 0);
+          Setup_inheritance_simple(obj);
         }
       }
       else {
@@ -380,8 +399,13 @@ namespace ROOT { namespace Cintex {
           size_t Offset;
           long  TypeNth = (level == 0) ?  G__ISDIRECTINHERIT : 0;
           if ( BaseNth.IsVirtual() ) {
-            Offset = ( * BaseNth.OffsetFP())(obj.Address());
-            // TypeNth = TypeNth | G__ISVIRTUALBASE;
+            if (obj.Address())  {
+              Offset = ( * BaseNth.OffsetFP())(obj.Address());
+            }
+            else {
+              Offset = (size_t)BaseNth.OffsetFP();
+              TypeNth = TypeNth | G__ISVIRTUALBASE;
+            }
           }
           else {
             Offset = BaseNth.Offset((void*)0x100);
@@ -399,7 +423,7 @@ namespace ROOT { namespace Cintex {
   }
   
   void CINTClassBuilder::Setup_inheritance() {
-    Member GetBases = fClass.MemberByName("getBasesTable");
+    Member GetBases = fClass.MemberByName("__getBasesTable");
     if( GetBases ) {
       typedef vector<pair<Base,int> > Bases;
       Bases* bases = (Bases*)(GetBases.Invoke().Address());

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -31,6 +31,7 @@ namespace ROOT {
     private:
       ROOT::Reflex::Type  fClass;
       std::string         fName;
+      void*               fEnhancerinfo;
     };
     
   }

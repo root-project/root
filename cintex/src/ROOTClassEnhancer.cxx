@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.4 2005/11/08 07:14:31 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -125,7 +125,15 @@ namespace ROOT { namespace Cintex {
 
   void ROOTClassEnhancer::Setup() {
     ROOTClassEnhancerInfo* p = new ROOTClassEnhancerInfo(fClass);
+    fEnhancerinfo = p;
     p->Setup();
+  }
+
+  void ROOTClassEnhancer::CreateInfo() {
+    if ( fEnhancerinfo ) {
+     ROOTClassEnhancerInfo* p = (ROOTClassEnhancerInfo*)fEnhancerinfo;
+     p->CreateInfo();
+    }
   }
 
 
@@ -150,11 +158,11 @@ namespace ROOT { namespace Cintex {
   ROOTClassEnhancerInfo::~ROOTClassEnhancerInfo() {
     fSub_types.clear();
     if ( fClassInfo ) delete fClassInfo;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
-    // fIsa_func is deleted by ROOT
-#else
-    if ( fIsa_func ) Free_function((void*)fIsa_func);
-#endif
+    #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
+      // fIsa_func is deleted by ROOT
+    #else
+      if ( fIsa_func ) Free_function((void*)fIsa_func);
+    #endif
     if ( fDictionary_func ) Free_function((void*)fDictionary_func);
   }
 
@@ -165,7 +173,7 @@ namespace ROOT { namespace Cintex {
     }
     if ( ! IsSTLext(nam) && (IsSTL(nam) || IsSTLinternal(nam)) )  {
       //--- create TGenericClassInfo Instance
-      CreateInfo();
+      //createInfo();
       return;
     }
     else    {
@@ -188,7 +196,7 @@ namespace ROOT { namespace Cintex {
       addFunction("StreamerNVirtual", signature, stub_StreamerNVirtual, ctxt, 0);
     }
     //--- create TGenericClassInfo Instance
-    CreateInfo();
+    //createInfo();
   }
 
   void ROOTClassEnhancerInfo::CreateInfo() {
@@ -217,6 +225,18 @@ namespace ROOT { namespace Cintex {
               TypeGet().SizeOf()                     // sizeof
            );
     info->SetImplFile("yyy", 1);
+    //----Fill the New and Deletete functions
+    Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
+    if( getfuncs ) {
+      NewDelFunctions* newdelfunc = (NewDelFunctions*)( getfuncs.Invoke().Address() );
+      if ( newdelfunc ) {
+        info->SetNew(newdelfunc->New);
+        info->SetNewArray(newdelfunc->NewArray);
+        info->SetDelete(newdelfunc->Delete);
+        info->SetDeleteArray(newdelfunc->DeleteArray);
+        info->SetDestructor(newdelfunc->Destructor);
+      }
+    }
     fClassInfo = info;
   }
 
@@ -327,6 +347,7 @@ namespace ROOT { namespace Cintex {
     if ( 0 != root_class )   {
       root_class->Size();
       if ( ! typ.IsVirtual() ) root_class->SetGlobalIsA(accessType);
+      std::auto_ptr<TClassStreamer> str;
       switch(kind)  {
         case TClassEdit::kVector:
         case TClassEdit::kList:
@@ -465,7 +486,8 @@ namespace ROOT { namespace Cintex {
       Member mem = cl.DataMemberAt(m);
       if ( ! mem.IsTransient() ) {
         Type typ = mem.TypeOf();
-        string nam = mem.Name();
+        string nam = mem.Properties().HasKey("ioname") ? 
+                     mem.Properties().PropertyAsString("ioname") : mem.Name();
         if( typ.IsPointer() ) nam = "*" + nam;
         char*  add = (char*)obj + mem.Offset();
         if ( Cintex::Debug() > 2 )  {

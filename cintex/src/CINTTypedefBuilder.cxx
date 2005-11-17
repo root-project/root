@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.2 2005/11/03 15:29:47 roiser Exp $
+// @(#)root/cintex:$Name:$:$Id:$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
