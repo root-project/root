@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.32 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.33 2005/10/14 10:59:43 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -232,6 +232,8 @@ public:
 //______________________________________________________________________________
 Bool_t TBlinkTimer::Notify()
 {
+   // Notify when timer times out and reset the timer.
+   
    fTextEntry->HandleTimer(0);
    Reset();
    return kFALSE;
@@ -450,8 +452,8 @@ TString TGTextEntry::GetDisplayText() const
    case kPassword:
          res.Prepend('*', fText->GetTextLength());  // fill with '*'
          break;
-    }
-    return res;
+   }
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1053,7 +1055,7 @@ void TGTextEntry::DoRedraw()
       }
    }
 
-  if (fSelectionOn) {
+   if (fSelectionOn) {
       int xs, ws, ixs, iws;
 
       xs  = TMath::Min(fStartX, fEndX);
@@ -1665,6 +1667,8 @@ void TGTextEntry::SetTextColor(TColor *color, Bool_t global)
 //______________________________________________________________________________
 FontStruct_t TGTextEntry::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1673,6 +1677,8 @@ FontStruct_t TGTextEntry::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGTextEntry::GetDefaultGC()
 {
+   // Return default graphics context.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -1681,6 +1687,8 @@ const TGGC &TGTextEntry::GetDefaultGC()
 //______________________________________________________________________________
 const TGGC &TGTextEntry::GetDefaultSelectedGC()
 {
+   // Return selection graphics context.
+
    if (!fgDefaultSelectedGC)
       fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
    return *fgDefaultSelectedGC;
@@ -1689,6 +1697,8 @@ const TGGC &TGTextEntry::GetDefaultSelectedGC()
 //______________________________________________________________________________
 const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
 {
+   // Return graphics context for highlighted frame background.
+
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
@@ -1728,28 +1738,28 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
        << ", new TGTextBuffer(" << GetBuffer()->GetBufferLength() << ")";
 
    if (fBackground == GetWhitePixel()) {
-       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-           if (fFontStruct == GetDefaultFontStruct()) {
-               if (fNormGC() == GetDefaultGC()()) {
-                    if (fWidgetId == -1) {
-                       out <<");" << endl;
-                   } else {
-                     out << "," << fWidgetId << ");" << endl;
-                   }
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
+         if (fFontStruct == GetDefaultFontStruct()) {
+            if (fNormGC() == GetDefaultGC()()) {
+               if (fWidgetId == -1) {
+                  out <<");" << endl;
                } else {
-                 out << "," << fWidgetId << "," << parGC << ");" << endl;
+                  out << "," << fWidgetId << ");" << endl;
                }
-           } else {
-             out << "," << fWidgetId << "," << parGC << "," << parFont
-                 <<");" << endl;
-           }
-       } else {
+            } else {
+               out << "," << fWidgetId << "," << parGC << ");" << endl;
+            }
+         } else {
+            out << "," << fWidgetId << "," << parGC << "," << parFont
+                <<");" << endl;
+         }
+      } else {
          out << "," << fWidgetId << "," << parGC << "," << parFont
              << "," << GetOptionString() << ");" << endl;
-       }
+      }
    } else {
-     out << "," << fWidgetId << "," << parGC << "," << parFont
-         << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont
+          << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    out << "   " << GetName() << "->SetMaxLength(" << GetMaxLength() << ");" << endl;

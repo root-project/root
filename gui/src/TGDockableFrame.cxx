@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.9 2005/06/09 17:44:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.10 2005/10/13 13:43:23 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -176,10 +176,10 @@ TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
    SetWindowName("");
    fDockable = dockable;
 
-   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
-               kMWMFuncAll | kMWMFuncResize | kMWMFuncMaximize |
-                             kMWMFuncMinimize,
+               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
+                              kMWMFuncMinimize,
                kMWMInputModeless);
    SetWindowName();
 }

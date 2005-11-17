@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.26 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.27 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
 class TGFileIcon : public TGIcon {
 
 protected:
-   const TGPicture *fLpic;
+   const TGPicture *fLpic;   // icon picture
 
    virtual void DoRedraw();
 
@@ -71,7 +71,7 @@ public:
 //______________________________________________________________________________
 class TGFSFrameElement : public TGFrameElement {
 public:
-   TGFileContainer  *fContainer;
+   TGFileContainer  *fContainer;   // file container
 
    Bool_t IsSortable() const { return kTRUE; }
    Int_t  Compare(const TObject *obj) const;
@@ -82,53 +82,55 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 {
    // Sort frame elements in file selection list view container.
 
-  Int_t type1, type2;
+   Int_t type1, type2;
 
-  TGFileItem *f1 = (TGFileItem *) fFrame;
-  TGFileItem *f2 = (TGFileItem *) ((TGFrameElement *) obj)->fFrame;
+   TGFileItem *f1 = (TGFileItem *) fFrame;
+   TGFileItem *f2 = (TGFileItem *) ((TGFrameElement *) obj)->fFrame;
 
-  switch (fContainer->fSortType) {
-     default:
-     case kSortByName:
-        return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+   switch (fContainer->fSortType) {
+      default:
+      case kSortByName:
+         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
 
-     case kSortByType:
-        //--- this is not exactly what I want...
+      case kSortByType:
+         //--- this is not exactly what I want...
 
-        type1 = f1->GetType();
-        type2 = f2->GetType();
+         type1 = f1->GetType();
+         type2 = f2->GetType();
 
-        //--- use posix macros
+         //--- use posix macros
 
-        if (R_ISDIR(type1))         type1 = 1;
-        else if (R_ISLNK(type1))    type1 = 2;
-        else if (R_ISSOCK(type1))   type1 = 3;
-        else if (R_ISFIFO(type1))   type1 = 4;
-        else if (R_ISREG(type1) && (type1 & kS_IXUSR)) type1 = 5;
-        else                        type1 = 6;
+         if (R_ISDIR(type1))         type1 = 1;
+         else if (R_ISLNK(type1))    type1 = 2;
+         else if (R_ISSOCK(type1))   type1 = 3;
+         else if (R_ISFIFO(type1))   type1 = 4;
+         else if (R_ISREG(type1) && (type1 & kS_IXUSR)) type1 = 5;
+         else                        type1 = 6;
 
-        if (R_ISDIR(type2))         type2 = 1;
-        else if (R_ISLNK(type2))    type2 = 2;
-        else if (R_ISSOCK(type2))   type2 = 3;
-        else if (R_ISFIFO(type2))   type2 = 4;
-        else if (R_ISREG(type2) && (type2 & kS_IXUSR)) type2 = 5;
-        else                        type2 = 6;
+         if (R_ISDIR(type2))         type2 = 1;
+         else if (R_ISLNK(type2))    type2 = 2;
+         else if (R_ISSOCK(type2))   type2 = 3;
+         else if (R_ISFIFO(type2))   type2 = 4;
+         else if (R_ISREG(type2) && (type2 & kS_IXUSR)) type2 = 5;
+         else                        type2 = 6;
 
-        if (type1 < type2) return -1;
-        if (type1 > type2) return 1;
-        return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+         if (type1 < type2) return -1;
+         if (type1 > type2) return 1;
+         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
 
-     case kSortBySize:
-        if (f1->GetSize() < f2->GetSize()) return -1;
-        if (f1->GetSize() > f2->GetSize()) return 1;
-        return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
-  }
+      case kSortBySize:
+         if (f1->GetSize() < f2->GetSize()) return -1;
+         if (f1->GetSize() > f2->GetSize()) return 1;
+         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
+   }
 }
 
 
 //______________________________________________________________________________
 Bool_t TViewUpdateTimer::Notify()
 {
+   // Reset the timer.
+
    fContainer->HandleTimer(0);
    Reset();
    return kFALSE;

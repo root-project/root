@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.34 2005/10/27 06:48:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.35 2005/10/27 13:28:51 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 
    SetWindowAttributes_t wattr;
 
-   wattr.fMask = kWAOverrideRedirect | kWASaveUnder |
+   wattr.fMask = kWAOverrideRedirect | kWASaveUnder | 
                  kWABorderPixel      | kWABorderWidth;
    wattr.fOverrideRedirect = kTRUE;
    wattr.fSaveUnder = kTRUE;
@@ -116,8 +116,8 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Layout();
    MapRaised();
 
-   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                          kPointerMotionMask, kNone,
+   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
+                          kPointerMotionMask, kNone, 
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
@@ -149,7 +149,7 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
                        UInt_t options, ULong_t back) :
             TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
-   //
+   // Create an editable combo box widget.
 
    fWidgetId  = id;
    fMsgWindow = p;
@@ -159,8 +159,8 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
    fTextEntry->SetFrameDrawn(kFALSE);
    fTextEntry->Connect("ReturnPressed()", "TGComboBox", this, "ReturnPressed()");
 
-   AddFrame(fTextEntry, fLhs = new TGLayoutHints(kLHintsLeft |
-                                                kLHintsExpandY | kLHintsExpandX));
+   AddFrame(fTextEntry, fLhs = new TGLayoutHints(kLHintsLeft | 
+                                                 kLHintsExpandY | kLHintsExpandX));
    Init();
 }
 
@@ -190,7 +190,7 @@ TGComboBox::~TGComboBox()
 //______________________________________________________________________________
 void TGComboBox::Init()
 {
-   // init
+   // Initiate the internal classes of a combo box.
 
    fBpic = fClient->GetPicture("arrow_down.xpm");
 
@@ -200,7 +200,7 @@ void TGComboBox::Init()
    fDDButton = new TGScrollBarElement(this, fBpic, kDefaultScrollBarWidth,
                                       kDefaultScrollBarWidth, kRaisedFrame);
 
-   AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight |
+   AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight | 
                                                 kLHintsExpandY));
 
    fComboFrame = new TGComboBoxPopup(fClient->GetDefaultRoot(), 100, 100, kVerticalFrame);
@@ -216,7 +216,7 @@ void TGComboBox::Init()
    fComboFrame->Resize(fComboFrame->GetDefaultSize());
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
-                        kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different
@@ -291,7 +291,9 @@ void TGComboBox::Select(Int_t id)
 Bool_t TGComboBox::HandleButton(Event_t *event)
 {
    // Handle mouse button events in the combo box.
+
    if (!fDDButton) return kTRUE;
+
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
 
@@ -319,7 +321,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
 {
-   // handle double click in text entry
+   // Handle double click in text entry.
 
    return fTextEntry ? fTextEntry->HandleDoubleClick(event) : kTRUE;
 }
@@ -327,7 +329,7 @@ Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleMotion(Event_t *event)
 {
-   // handle pointer motion in text entry
+   // Handle pointer motion in text entry.
 
    return fTextEntry ? fTextEntry->HandleMotion(event) : kTRUE;
 }
@@ -335,7 +337,7 @@ Bool_t TGComboBox::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleSelection(Event_t *event)
 {
-   // handle selection  in text entry
+   // Handle selection in text entry.
 
    return fTextEntry ? fTextEntry->HandleSelection(event) : kTRUE;
 }
@@ -343,7 +345,7 @@ Bool_t TGComboBox::HandleSelection(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 {
-   // handle selection request in text entry
+   // Handle selection request in text entry.
 
    return fTextEntry ? fTextEntry->HandleSelectionRequest(event) : kTRUE;
 }
@@ -446,7 +448,7 @@ void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
       out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
    } else {
       out << GetName() << " = new TGComboBox(" << fParent->GetName() << ",";
-       out << '\"' <<  fTextEntry->GetText() << '\"' << "," <<fWidgetId;
+      out << '\"' <<  fTextEntry->GetText() << '\"' << "," <<fWidgetId;
    }
 
    if (fBackground == GetWhitePixel()) {

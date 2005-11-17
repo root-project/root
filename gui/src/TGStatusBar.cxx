@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.11 2004/08/12 10:58:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.12 2004/10/21 14:25:30 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -309,6 +309,8 @@ void TGStatusBar::SetParts(Int_t npart)
 //______________________________________________________________________________
 FontStruct_t TGStatusBar::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetStatusFont();
    return fgDefaultFont->GetFontStruct();
@@ -317,6 +319,8 @@ FontStruct_t TGStatusBar::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGStatusBar::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -362,12 +366,12 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (GetOptions() == (kSunkenFrame | kHorizontalFrame)) {
-           out <<");" << endl;
+         out <<");" << endl;
       } else {
-        out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << endl;
       }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    int i; char quote = '"';
@@ -376,7 +380,7 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
       out << "   Int_t parts" << GetName()+5 << "[] = {" << fParts[0];
 
       for (i=1; i<fNpart; i++) {
-           out  << "," << fParts[i];
+         out  << "," << fParts[i];
       }
       out << "};" << endl;
 
@@ -385,9 +389,9 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
    }
    for (i=0; i<fNpart; i++) {
       if (fStatusPart[i]->GetText()) {
-          out << "   " << GetName() << "->SetText(" << quote
-              << fStatusPart[i]->GetText()->GetString()
-              << quote << "," << i << ");" << endl;
+         out << "   " << GetName() << "->SetText(" << quote
+             << fStatusPart[i]->GetText()->GetString()
+             << quote << "," << i << ");" << endl;
       } else {
          if (!fStatusPart[i]->GetList()) continue;
          out << "   TGCompositeFrame *" << fStatusPart[i]->GetName()

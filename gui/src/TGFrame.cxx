@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.115 2005/10/27 09:57:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.116 2005/10/27 11:08:02 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -245,6 +245,8 @@ void TGFrame::ChangeBackground(Pixel_t back)
 //______________________________________________________________________________
 Pixel_t TGFrame::GetForeground() const
 {
+   // Return frame foreground color.
+
    return fgBlackPixel;
 }
 
@@ -296,6 +298,8 @@ void TGFrame::RemoveInput(UInt_t emask)
 void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
                               UInt_t w, UInt_t h)
 {
+   // Draw 3D rectangle on the frame border.
+
    switch (type) {
       case kSunkenFrame:
          gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x+w-2, y);
@@ -632,7 +636,7 @@ ULong_t TGFrame::GetBlackPixel()
       fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
       init = kTRUE;
    }
-    return fgBlackPixel;
+   return fgBlackPixel;
 }
 
 //______________________________________________________________________________
@@ -917,7 +921,7 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 //______________________________________________________________________________
 void TGCompositeFrame::SetEditDisabled(Bool_t on)
 {
-   //  disable/enable edit this frame and all subframes
+   //  Disable/enable edit this frame and all subframes.
 
    fEditDisabled = on;
 
@@ -936,12 +940,12 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
 {
    // Change composite frame options. Options is an OR of the EFrameTypes.
 
-  TGFrame::ChangeOptions(options);
+   TGFrame::ChangeOptions(options);
 
-  if (options & kHorizontalFrame)
-     SetLayoutManager(new TGHorizontalLayout(this));
-  else
-     SetLayoutManager(new TGVerticalLayout(this));
+   if (options & kHorizontalFrame)
+      SetLayoutManager(new TGHorizontalLayout(this));
+   else
+      SetLayoutManager(new TGVerticalLayout(this));
 }
 
 //______________________________________________________________________________
@@ -1952,6 +1956,8 @@ void TGGroupFrame::SetTitle(const char *title)
 //______________________________________________________________________________
 FontStruct_t TGGroupFrame::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont && gClient)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1960,6 +1966,8 @@ FontStruct_t TGGroupFrame::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGGroupFrame::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC && gClient)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -2152,7 +2160,7 @@ TString TGMainFrame::GetMWMinpString() const
 //______________________________________________________________________________
 void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 {
-   // auxilary protected method  used to save subframes
+   // Auxilary protected method  used to save subframes.
 
    if (fLayoutBroken)
       out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << endl;
@@ -2184,7 +2192,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a composite frame widget as a C++ statement(s) on output stream out
+   // Save a composite frame widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
@@ -2226,7 +2234,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    // Save the GUI main frame widget in a C++ macro file.
 
    // iteration over all active classes to exclude the base ones
-
    TString opt = option;
    TBits *bc = new TBits();
    TClass *c1, *c2, *c3;
@@ -2270,23 +2277,23 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          if (strlen(iname) != 0 && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
-               char *tname = new char[strlen(iname)];
-               Int_t i=0;
-               while (*iname != '.') {
-                  tname[i] = *iname;
-                  i++; iname++;
-               }
-               tname[i] = 0;    //tname = include file name without '.h'
-
-               TObjString *iel = (TObjString *)ilist->FindObject(tname);
-               if (!iel) {
-                  ilist->Add(new TObjString(tname));
-               }
-               delete [] tname;
+            char *tname = new char[strlen(iname)];
+            Int_t i=0;
+            while (*iname != '.') {
+               tname[i] = *iname;
+               i++; iname++;
             }
-            k++;  continue;
-        }
-        k++;
+            tname[i] = 0;    //tname = include file name without '.h'
+
+            TObjString *iel = (TObjString *)ilist->FindObject(tname);
+            if (!iel) {
+               ilist->Add(new TObjString(tname));
+            }
+            delete [] tname;
+         }
+         k++;  continue;
+      }
+      k++;
    }
 
    char quote = '"';
@@ -2310,8 +2317,8 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    out.open(ff.Data(), ios::out);
    if (!out.good()) {
-       Error("SaveSource", "cannot open file: %s", ff.Data());
-       return;
+      Error("SaveSource", "cannot open file: %s", ff.Data());
+      return;
    }
 
    // writes include files in C++ macro
@@ -2549,7 +2556,7 @@ void TGFrame::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a group frame widget as a C++ statement(s) on output stream out
+   // Save a group frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
@@ -2620,7 +2627,7 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 {
-   // Save the GUI tranzient frame widget in a C++ macro file
+   // Save the GUI tranzient frame widget in a C++ macro file.
 
    // iterate over all active classes to exclude the base ones
 
@@ -2666,23 +2673,23 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          if (strlen(iname) != 0 && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
-               char *tname = new char[strlen(iname)];
-               Int_t i=0;
-               while (*iname != '.') {
-                  tname[i] = *iname;
-                  i++; iname++;
-               }
-               tname[i] = 0;    //tname = include file name without '.h'
-
-               TObjString *iel = (TObjString *)ilist->FindObject(tname);
-               if (!iel) {
-                  ilist->Add(new TObjString(tname));
-               }
-               delete [] tname;
+            char *tname = new char[strlen(iname)];
+            Int_t i=0;
+            while (*iname != '.') {
+               tname[i] = *iname;
+               i++; iname++;
             }
-            k++;  continue;
-        }
-        k++;
+            tname[i] = 0;    //tname = include file name without '.h'
+
+            TObjString *iel = (TObjString *)ilist->FindObject(tname);
+            if (!iel) {
+               ilist->Add(new TObjString(tname));
+            }
+            delete [] tname;
+         }
+         k++;  continue;
+      }
+      k++;
    }
 
    char quote = '"';
@@ -2706,8 +2713,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    out.open(ff.Data(), ios::out);
    if (!out.good()) {
-       Error("SaveSource", "cannot open file: %s", ff.Data());
-       return;
+      Error("SaveSource", "cannot open file: %s", ff.Data());
+      return;
    }
 
    // writes include files in C++ macro

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.1 2000/09/29 08:51:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.2 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -39,13 +39,13 @@ void TGHorizontal3DLine::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out << ");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
          out << "," << GetOptionString() << ");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 }
 
@@ -61,12 +61,12 @@ void TGVertical3DLine::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out << ");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
          out << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 }

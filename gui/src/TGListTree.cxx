@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.42 2005/10/03 08:09:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.43 2005/11/15 18:14:17 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -153,6 +153,8 @@ void TGListTreeItem::Rename(const char *new_name)
 //______________________________________________________________________________
 void TGListTreeItem::SetCheckBox(Bool_t on)
 {
+   // Set a check box on the tree node.
+   
    fCheckBox = on;
    if (fCheckBox)
       fPicWidth  = TMath::Max(fCheckedPic->GetWidth() + fOpenPic->GetWidth(),
@@ -1209,7 +1211,7 @@ void TGListTree::DrawNode(TGListTreeItem *item, Int_t x, Int_t y)
       gVirtualX->DrawLine(fId, fHighlightGC, x-4, yp+4, x+4, yp+4);
       gVirtualX->DrawLine(fId, fHighlightGC, x-4, yp-4, x-4, yp+4);
       gVirtualX->SetForeground(fHighlightGC, fgWhitePixel);
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -1685,7 +1687,7 @@ Int_t TGListTree::SortChildren(TGListTreeItem *item)
       if (fFirst) {
          first = fFirst->fFirstchild;
          if (first)
-           SortSiblings(first);
+            SortSiblings(first);
       }
    }
    return 1;
@@ -1873,6 +1875,8 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
 //______________________________________________________________________________
 Pixel_t TGListTree::GetGrayPixel()
 {
+   // Return gray draw color in use.
+   
    static Bool_t init = kFALSE;
    if (!init) {
       if (!gClient->GetColorByName("#808080", fgGrayPixel))
@@ -1885,6 +1889,8 @@ Pixel_t TGListTree::GetGrayPixel()
 //______________________________________________________________________________
 FontStruct_t TGListTree::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
@@ -1893,6 +1899,8 @@ FontStruct_t TGListTree::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGListTree::GetDrawGC()
 {
+   // Return default graphics context in use.  
+
    if (!fgDrawGC) {
       GCValues_t gcv;
 
@@ -1913,6 +1921,8 @@ const TGGC &TGListTree::GetDrawGC()
 //______________________________________________________________________________
 const TGGC &TGListTree::GetLineGC()
 {
+   // Return graphics context in use for line drawing.
+   
    if (!fgLineGC) {
       GCValues_t gcv;
 
@@ -1935,6 +1945,8 @@ const TGGC &TGListTree::GetLineGC()
 //______________________________________________________________________________
 const TGGC &TGListTree::GetHighlightGC()
 {
+   // Return graphics context for highlighted frame background.
+
    if (!fgHighlightGC) {
       GCValues_t gcv;
 
@@ -1955,7 +1967,7 @@ const TGGC &TGListTree::GetHighlightGC()
 //______________________________________________________________________________
 void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a list tree widget as a C++ statement(s) on output stream out
+   // Save a list tree widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
@@ -1988,24 +2000,32 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGListTree::CheckItem(TGListTreeItem *item, Bool_t check)
 {
+   // Set check button state for the node 'item'.
+   
    item->CheckItem(check);
 }
 
 //______________________________________________________________________________
 void TGListTree::SetCheckBox(TGListTreeItem *item, Bool_t on)
 {
+   // Set check button state for the node 'item'.
+
    item->SetCheckBox(on);
 }
 
 //______________________________________________________________________________
 void TGListTree::ToggleItem(TGListTreeItem *item)
 {
+   // Toggle check button state of the node 'item'.
+
    item->Toggle();
 }
 
 //______________________________________________________________________________
 void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 {
+   // Update the state of the node 'item' according to the children states.
+
    Bool_t diff = kFALSE;
    TGListTreeItem *current = item;
 

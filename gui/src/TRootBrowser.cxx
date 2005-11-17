@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.82 2005/09/05 14:26:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.84 2005/09/13 15:24:40 pcanal Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1172,7 +1172,7 @@ void TRootBrowser::Add(TObject *obj, const char *name, Int_t check)
 
    // Don't show current dir and up dir links in the tree
    if (name[0] == '.' && (name[1] == '.' || name[1] == '\0'))
-     return;
+      return;
 
    if (obj->IsFolder())
       AddToTree(obj, name, check);
@@ -2125,7 +2125,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
          } else if (obj->InheritsFrom(TDirectory::Class()))
             Chdir(item->GetParent());
 
-        if (!fListLevel || !fListLevel->IsActive()) {
+         if (!fListLevel || !fListLevel->IsActive()) {
             fListLevel = item;
             BrowseObj(obj);
             fLt->HighlightItem(fListLevel);

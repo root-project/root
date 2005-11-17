@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.56 2005/08/25 12:48:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.57 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -59,7 +59,7 @@ ClassImpQ(TGPopupMenu)
 //______________________________________________________________________________
 class TPopupDelayTimer : public TTimer {
 private:
-   TGPopupMenu   *fPopup;
+   TGPopupMenu   *fPopup;   // popup menu
 public:
    TPopupDelayTimer(TGPopupMenu *p, Long_t ms) : TTimer(ms, kTRUE) { fPopup = p; }
    Bool_t Notify();
@@ -68,6 +68,8 @@ public:
 //______________________________________________________________________________
 Bool_t TPopupDelayTimer::Notify()
 {
+   // Notify when timer times out and reset the timer.
+
    fPopup->HandleTimer(0);
    Reset();
    return kFALSE;
@@ -406,7 +408,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
             fCurrent = target;
             target->SetState(kTRUE);
 
-            gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+            gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
                                    kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
@@ -1581,6 +1583,8 @@ void TGPopupMenu::DeleteEntry(TGMenuEntry *entry)
 //______________________________________________________________________________
 const TGGC &TGPopupMenu::GetDefaultGC()
 {
+   // Return default graphics context.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -1589,6 +1593,8 @@ const TGGC &TGPopupMenu::GetDefaultGC()
 //______________________________________________________________________________
 const TGGC &TGPopupMenu::GetDefaultSelectedGC()
 {
+   // Return the selection graphics context in use.
+
    if (!fgDefaultSelectedGC)
       fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
    return *fgDefaultSelectedGC;
@@ -1597,6 +1603,8 @@ const TGGC &TGPopupMenu::GetDefaultSelectedGC()
 //______________________________________________________________________________
 const TGGC &TGPopupMenu::GetDefaultSelectedBackgroundGC()
 {
+   // Return the selection background graphics context in use.
+   
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
@@ -1605,6 +1613,8 @@ const TGGC &TGPopupMenu::GetDefaultSelectedBackgroundGC()
 //______________________________________________________________________________
 FontStruct_t TGPopupMenu::GetDefaultFontStruct()
 {
+   // Return the default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetMenuFont();
    return fgDefaultFont->GetFontStruct();
@@ -1613,6 +1623,8 @@ FontStruct_t TGPopupMenu::GetDefaultFontStruct()
 //______________________________________________________________________________
 FontStruct_t TGPopupMenu::GetHilightFontStruct()
 {
+   // Return the font structure in use for highlighted menu entries.
+
    if (!fgHilightFont)
       fgHilightFont = gClient->GetResourcePool()->GetMenuHiliteFont();
    return fgHilightFont->GetFontStruct();
@@ -1728,6 +1740,8 @@ void TGMenuTitle::DoSendMessage()
 //______________________________________________________________________________
 FontStruct_t TGMenuTitle::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetMenuFont();
    return fgDefaultFont->GetFontStruct();
@@ -1736,6 +1750,8 @@ FontStruct_t TGMenuTitle::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGMenuTitle::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -1744,6 +1760,8 @@ const TGGC &TGMenuTitle::GetDefaultGC()
 //______________________________________________________________________________
 const TGGC &TGMenuTitle::GetDefaultSelectedGC()
 {
+   // Return default selection graphics context in use.
+
    if (!fgDefaultSelectedGC)
       fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
    return *fgDefaultSelectedGC;
@@ -1843,20 +1861,20 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
       }
 
       if (!(mentry->GetStatus() & kMenuEnableMask)) {
-          out << "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
-              << ");" << endl;
+         out<< "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
+            << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuHideMask) {
-          out << "   " << GetName() << "->HideEntry(" << mentry->GetEntryId()
-              << ");" << endl;
+         out<< "   " << GetName() << "->HideEntry(" << mentry->GetEntryId()
+            << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuCheckedMask) {
-          out << "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId()
-              << ");" << endl;
+         out<< "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId()
+            << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuDefaultMask) {
-          out << "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
-              << ");" << endl;
+         out<< "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
+            << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuRadioEntryMask) {
          switch (hasradio) {
@@ -1898,8 +1916,8 @@ void TGMenuTitle::SavePrimitive(ofstream &out, Option_t *option)
    Int_t i=0;
    while (lentext) {
       if (i == hotpos-1) {
-          outext[i] = '&';
-          i++;
+         outext[i] = '&';
+         i++;
       }
       outext[i] = *text;
       i++; text++; lentext--;

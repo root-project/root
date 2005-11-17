@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.44 2004/10/30 07:30:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.45 2005/08/23 17:00:40 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -64,7 +64,7 @@ static TGClientInit gclient_init;
 //______________________________________________________________________________
 class TGInputHandler : public TFileHandler {
 private:
-   TGClient  *fClient;
+   TGClient  *fClient;   // connection to display server
 public:
    TGInputHandler(TGClient *c, Int_t fd) : TFileHandler(fd, 1) { fClient = c; }
    Bool_t Notify();
@@ -74,6 +74,8 @@ public:
 //______________________________________________________________________________
 Bool_t TGInputHandler::Notify()
 {
+   // Notify input from the display server.
+   
    return fClient->HandleInput();
 }
 
@@ -430,7 +432,7 @@ Pixel_t TGClient::GetShadow(Pixel_t base_color) const
    if (!gVirtualX->AllocColor(attributes.fColormap, color))
       Error("GetShadow", "couldn't allocate shadow color");
 
-  return color.fPixel;
+   return color.fPixel;
 }
 
 //______________________________________________________________________________

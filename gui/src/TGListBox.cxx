@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.47 2005/11/08 17:06:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.48 2005/11/08 19:30:54 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -61,7 +61,7 @@ ClassImp(TGListBox)
 TGLBEntry::TGLBEntry(const TGWindow *p, Int_t id, UInt_t options, Pixel_t back) :
              TGFrame(p, 10, 10, options | kOwnBackground, back)
 {
-   // ctor
+   // Base class entry constructor.
 
    fActive = kFALSE;
    fEntryId = id;
@@ -182,6 +182,8 @@ void TGTextLBEntry::SetText(TGString *new_text)
 //______________________________________________________________________________
 FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
 {
+   // Return default font structure in use for a text listbox entry.
+   
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -190,6 +192,8 @@ FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGTextLBEntry::GetDefaultGC()
 {
+   // Return default graphics context in use for a text listbox entry.
+
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
@@ -209,7 +213,7 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
-   // Create the line style listbox entry
+   // Create the line style listbox entry.
 
    GCValues_t gcv;
 
@@ -258,7 +262,7 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
 //______________________________________________________________________________
 void TGLineLBEntry::SetLineStyle(Style_t linestyle)
 {
-   // The linstyle corresponds to TPad line style
+   // Set the line style corresponding to the TPad line styles.
 
    static const char* dashed = "\x3\x3";
    static const char* dotted= "\x1\x2";
@@ -320,7 +324,7 @@ void TGLineLBEntry::SetLineWidth(Int_t width)
 //______________________________________________________________________________
 void TGLineLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // draw copy on window/pixmap
+   // Draw copy on window/pixmap.
 
    TGTextLBEntry::DrawCopy(id, x, y);
 
@@ -358,7 +362,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
-   // Create the Icon & text listbox entry
+   // Create the icon & text listbox entry.
 
    int max_ascent, max_descent;
 
@@ -383,6 +387,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
 TGIconLBEntry::~TGIconLBEntry()
 {
    // Delete icon & text listbox entry.
+   
    fClient->FreePicture(fPicture);
 
 }
@@ -399,7 +404,8 @@ void  TGIconLBEntry::Update(TGLBEntry *e)
 //______________________________________________________________________________
 void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // draw copy on window/pixmap
+   // Draw copy on window/pixmap.
+   
    Int_t off_x = 0;
    if (fPicture) {
       fPicture->Draw(id, fNormGC, x + 2, y);
@@ -412,14 +418,14 @@ void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGIconLBEntry::DoRedraw()
 {
-   // Redraw line style listbox entry.
+   // Redraw icon & text listbox entry.
 
    DrawCopy(fId, 0, 0);
 }
 //___________________________________________________________________________
 void TGIconLBEntry::SetPicture(const TGPicture *pic)
 {
-   // Change list tree item icons.
+   // Change the icon of listbox entry containing icon & text.
 
    fClient->FreePicture(fPicture);
 
@@ -680,7 +686,7 @@ void TGLBContainer::GetSelectedEntries(TList *selected)
 //______________________________________________________________________________
 void TGLBContainer::SetMultipleSelections(Bool_t multi)
 {
-   // enables and disables multible selections of entries
+   // Enables and disables multible selections of entries.
 
    TGFrameElement *el;
 
@@ -700,7 +706,7 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
 //______________________________________________________________________________
 TGVScrollBar *TGLBContainer::GetVScrollbar() const
 {
-   // return a pointer to vertical scroll bar
+   // Return a pointer to vertical scroll bar.
 
    return fListBox ? fListBox->GetVScrollbar() : 0;
 }
@@ -708,7 +714,7 @@ TGVScrollBar *TGLBContainer::GetVScrollbar() const
 //______________________________________________________________________________
 void TGLBContainer::SetVsbPosition(Int_t newPos)
 {
-   // set new hor. position
+   // Set new vertical scroll bar position.
 
    TGVScrollBar *vb = GetVScrollbar();
 
@@ -909,7 +915,7 @@ Int_t TGLBContainer::GetPos(Int_t id)
       pos++;
    }
 
-  return -1;
+   return -1;
 }
 
 
@@ -957,7 +963,7 @@ TGListBox::~TGListBox()
 //______________________________________________________________________________
 void TGListBox::InitListBox()
 {
-   // initiate the internal classes of a list box
+   // Initiate the internal classes of a list box.
 
    fVport = new TGViewPort(this, 6, 6, kChildFrame | kOwnBackground, fgWhitePixel);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
@@ -973,7 +979,7 @@ void TGListBox::InitListBox()
 
    fVScrollbar->Associate(this);
 
-   fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask |
+   fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask | 
                          kPointerMotionMask);
    fLbc->AddInput(kButtonPressMask | kButtonReleaseMask );
 }
@@ -1114,7 +1120,7 @@ void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
 //______________________________________________________________________________
 TGLBEntry *TGListBox::GetEntry(Int_t id) const
 {
-   // returns list box entry with specified id
+   // Returns list box entry with specified id.
 
    TIter next(fLbc->GetList());
    TGFrameElement *el;
@@ -1319,7 +1325,7 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
 //______________________________________________________________________________
 TGLBEntry *TGListBox::FindEntry(const char *name) const
 {
-   // find entry by name
+   // Find entry by name.
 
    TGFrameElement *el = (TGFrameElement *)fLbc->FindItem(name);
    return (TGLBEntry *)(el ? el->fFrame : 0);
@@ -1338,17 +1344,17 @@ void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGListBox(" << fParent->GetName();
 
    if (fBackground == GetWhitePixel()) {
-       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-          if (fWidgetId == -1) {
-               out <<");" << endl;
-           } else {
-             out << "," << fWidgetId << ");" << endl;
-           }
-       } else {
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
+         if (fWidgetId == -1) {
+            out <<");" << endl;
+         } else {
+            out << "," << fWidgetId << ");" << endl;
+         }
+      } else {
          out << "," << fWidgetId << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    if (!fLbc->GetList()) return;
@@ -1368,8 +1374,8 @@ void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGTextLBEntry::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save a list box entry widget as a C++ statement(s) on output stream out
+   // Save a list box entry widget as a C++ statement(s) on output stream out.
 
-    char quote = '"';
-    out << quote << GetText()->GetString() << quote << "," << EntryId();
+   char quote = '"';
+   out << quote << GetText()->GetString() << quote << "," << EntryId();
 }

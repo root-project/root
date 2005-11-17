@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.35 2005/08/25 16:51:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.36 2005/09/05 14:26:43 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -134,16 +134,17 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
 void TGViewPort::SetContainer(TGFrame *f)
 {
    // Add container frame to the viewport. We must make sure that the added
-   // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends
+   // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends 
    // on it).
 
    if (!fContainer) {
       fContainer = f;
       AddFrame(f, 0);
 
-     if (fContainer->InheritsFrom(TGContainer::Class())) {
+      if (fContainer->InheritsFrom(TGContainer::Class())) {
          ((TGContainer*)fContainer)->fViewPort = this;
-         if (fParent->InheritsFrom(TGCanvas::Class())) ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)fParent;
+         if (fParent->InheritsFrom(TGCanvas::Class())) 
+            ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)fParent;
       }
    }
 }
@@ -201,7 +202,7 @@ void TGViewPort::SetHPos(Int_t xpos)
 //______________________________________________________________________________
 void TGViewPort::SetVPos(Int_t ypos)
 {
-   //  moves content of container frame in vertical direction
+   // Moves content of container frame in vertical direction.
 
    Int_t diff;
 
@@ -212,7 +213,7 @@ void TGViewPort::SetVPos(Int_t ypos)
       fContainer->Move(fX0, fY0 = ypos);
       return;
    } else {
-     if (((TGContainer*)fContainer)->fMapSubwindows) {
+      if (((TGContainer*)fContainer)->fMapSubwindows) {
          fContainer->Move(fX0, fY0 = ypos);
          return;
       }
@@ -300,8 +301,8 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fCanvas = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                        kButtonPressMask | kButtonReleaseMask |
-                        kPointerMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
@@ -676,7 +677,7 @@ void TGContainer::SetPagePosition(Int_t x, Int_t y)
 {
    // Set page position.
 
-  fViewPort->SetPos(x, y);
+   fViewPort->SetPos(x, y);
 }
 
 //______________________________________________________________________________
@@ -1092,7 +1093,7 @@ Bool_t TGContainer::HandleKey(Event_t *event)
          }
       }
       if (n && keysym >= 32 && keysym < 127 &&     // printable keys
-          !(event->fState & kKeyControlMask) &&
+         !(event->fState & kKeyControlMask) &&
           (EKeySym)keysym != kKey_Delete &&
           (EKeySym)keysym != kKey_Backspace) {
 
@@ -1483,7 +1484,7 @@ void TGContainer::SetVsbPosition(Int_t newPos)
       vb->SetRange((Int_t)GetHeight(), (Int_t)fViewPort->GetHeight());
       vb->SetPosition(newPos);
    } else {
-     fViewPort->SetVPos(0);
+      fViewPort->SetVPos(0);
    }
 }
 
@@ -1498,7 +1499,7 @@ void TGContainer::SetHsbPosition(Int_t newPos)
       hb->SetRange((Int_t)GetWidth(), (Int_t)fViewPort->GetWidth());
       hb->SetPosition(newPos);
    } else {
-     fViewPort->SetHPos(0);
+      fViewPort->SetHPos(0);
    }
 }
 
@@ -1760,7 +1761,7 @@ void TGContainer::PageDown(Bool_t select)
       y +=  dim.fHeight;
    } else {
       if (hb && hb->IsMapped()) {
-          x += dim.fWidth;
+         x += dim.fWidth;
       } else {
          End();
          return;
@@ -1814,7 +1815,7 @@ void TGContainer::End(Bool_t select)
 //______________________________________________________________________________
 const TGGC &TGContainer::GetLineGC()
 {
-   //
+   // Get graphics context for line drawing.
 
    if (!fgLineGC) {
       GCValues_t gval;
@@ -2068,7 +2069,7 @@ Int_t TGCanvas::GetHsbPosition() const
    // Get position of horizontal scrollbar.
 
    if (fHScrollbar && fHScrollbar->IsMapped())
-     return fHScrollbar->GetPosition();
+      return fHScrollbar->GetPosition();
    return 0;
 }
 
@@ -2078,7 +2079,7 @@ Int_t TGCanvas::GetVsbPosition() const
    // Get position of vertical scrollbar.
 
    if (fVScrollbar && fVScrollbar->IsMapped())
-     return fVScrollbar->GetPosition();
+      return fVScrollbar->GetPosition();
    return 0;
 }
 
@@ -2092,7 +2093,7 @@ void TGCanvas::SetHsbPosition(Int_t newPos)
       fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
       fHScrollbar->SetPosition(newPos);
    } else {
-     fVport->SetHPos(0);
+      fVport->SetHPos(0);
    }
 }
 

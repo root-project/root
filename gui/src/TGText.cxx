@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.14 2004/05/24 11:45:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.15 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -191,7 +191,7 @@ void TGTextLine::InsChar(ULong_t pos, char character)
    newstring = new char[fLength+2];
    newstring[fLength+1] = '\0';
    if (fLength > 0)
-     strncpy (newstring, fString, (UInt_t)pos);
+      strncpy (newstring, fString, (UInt_t)pos);
    newstring[pos] = character;
    if (fLength - pos > 0)
       strncpy(newstring+pos+1, fString+pos, UInt_t(fLength-pos));
@@ -407,7 +407,7 @@ next:
    } else {
       if ((Int_t)strlen(tbuf) >= kMaxLen) {
          strncpy(buf, tbuf, kMaxLen-1);
-          buf[kMaxLen-1] = 0;
+         buf[kMaxLen-1] = 0;
       } else
          strcpy(buf, tbuf);
       finished = kTRUE;

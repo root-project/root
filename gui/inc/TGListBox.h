@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.24 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.25 2005/11/08 17:06:52 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -121,8 +121,8 @@ public:
    virtual void  SetTitle(const char *text) { *fText = text; }
 
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
-   virtual void Update(TGLBEntry *e)
-       { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+   virtual void  Update(TGLBEntry *e)
+                  { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
@@ -156,7 +156,7 @@ public:
    virtual ~TGLineLBEntry();
 
    virtual TGDimension GetDefaultSize() const
-      { return TGDimension(fTWidth, fTHeight+1); }
+                  { return TGDimension(fTWidth, fTHeight+1); }
    virtual Int_t GetLineWidth() const { return fLineWidth; }
    virtual void  SetLineWidth(Int_t width);
    Style_t       GetLineStyle() const { return fLineStyle; }
@@ -192,7 +192,7 @@ public:
    virtual ~TGIconLBEntry();
 
    virtual TGDimension GetDefaultSize() const
-      { return TGDimension(fTWidth, fTHeight+1); }
+                  { return TGDimension(fTWidth, fTHeight+1); }
    const TGPicture *GetPicture() const { return fPicture; }
    virtual void  SetPicture(const TGPicture *pic = 0);
 
@@ -294,14 +294,14 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void RemoveEntry(Int_t id) { fLbc->RemoveEntry(id); }
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
-                                  { fLbc->RemoveEntries(from_ID, to_ID); }
+                  { fLbc->RemoveEntries(from_ID, to_ID); }
    virtual void SetTopEntry(Int_t id);
    virtual void SetMultipleSelections(Bool_t multi)
-                                  { fLbc->SetMultipleSelections(multi); }
+                  { fLbc->SetMultipleSelections(multi); }
    virtual Bool_t GetMultipleSelections() const
-                                  { return fLbc->GetMultipleSelections(); }
-   virtual Int_t GetNumberOfEntries() const
-                                  { return fLbc->GetList()->GetSize(); }
+                  { return fLbc->GetMultipleSelections(); }
+   virtual Int_t  GetNumberOfEntries() const
+                  { return fLbc->GetList()->GetSize(); }
    virtual TGLBEntry   *GetEntry(Int_t id) const;
    virtual TGLBEntry   *FindEntry(const char *s) const;
    virtual TGFrame     *GetContainer() const { return fVport->GetContainer(); }

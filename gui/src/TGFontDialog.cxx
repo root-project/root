@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.10 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.11 2005/09/05 14:26:43 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -212,7 +212,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fTextAligns = new TGComboBox(vf, kFDLG_FONTALIGNS);
    fTextAligns->Associate(this);
    vf->AddFrame(fTextAligns, new TGLayoutHints(kLHintsCenterX | kLHintsTop |
-                kLHintsExpandX, 5, 5, 0, 5));
+                                               kLHintsExpandX, 5, 5, 0, 5));
 
    fTextAligns->Resize(110,20);
 
@@ -310,7 +310,8 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fSample = new TGLabel(cf, fSampleText, (*fSampleTextGC)(), (*fLabelFont)());
    fSample->SetTextJustify(gAlignValues[fTextAligns->GetSelected()]);
    cf->AddFrame(fSample, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY |
-                kLHintsExpandX | kLHintsExpandY, 1, 1, 1, 1));
+                                           kLHintsExpandX | kLHintsExpandY, 
+                                           1, 1, 1, 1));
    cf->Layout();
 
    gf->Resize(w, 80);

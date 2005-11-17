@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.18 2005/08/18 11:54:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -1002,8 +1002,8 @@ void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
    if (pad) {
       out << "," << GetPadLeft() << "," << GetPadRight()
           << "," << GetPadTop()  << "," << GetPadBottom();
-    }
-    out<< ")";
+   }
+   out<< ")";
 }
 
 // __________________________________________________________________________

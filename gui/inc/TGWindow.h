@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.21 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.22 2005/10/13 13:43:23 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -78,12 +78,12 @@ public:
    virtual void RequestFocus() { gVirtualX->SetInputFocus(fId); }
 
    virtual void SetBackgroundColor(Pixel_t color)
-        { gVirtualX->SetWindowBackground(fId, color); }
+                  { gVirtualX->SetWindowBackground(fId, color); }
    virtual void SetBackgroundPixmap(Pixmap_t pixmap)
-        { gVirtualX->SetWindowBackgroundPixmap(fId, pixmap); }
+                  { gVirtualX->SetWindowBackgroundPixmap(fId, pixmap); }
 
    virtual Bool_t HandleExpose(Event_t *event)
-        { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
+                  { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
    virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
    virtual Bool_t HandleIdleEvent(TGIdleHandler *) { return kFALSE; }

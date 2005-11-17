@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.35 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.36 2005/09/27 16:09:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -160,8 +160,8 @@ public:
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGTextButton();
 
-   virtual TGDimension GetDefaultSize() const
-                { return TGDimension(fTWidth+8, fTHeight+7); }
+   virtual TGDimension GetDefaultSize() const 
+                        { return TGDimension(fTWidth+8, fTHeight+7); }
 
    virtual Bool_t     HandleKey(Event_t *event);
    const TGHotString *GetText() const { return fLabel; }

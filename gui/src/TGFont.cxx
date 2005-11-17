@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.3 2004/04/06 21:12:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.4 2004/09/07 08:13:56 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -235,7 +235,7 @@ void TGFont::SavePrimitive(ofstream &out, Option_t *)
    char quote = '"';
 
    if (gROOT->ClassSaved(TGFont::Class())) {
-       out << endl;
+      out << endl;
    } else {
       //  declare a font object to reflect required user changes
       out << endl;

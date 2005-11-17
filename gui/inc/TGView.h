@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.11 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.12 2005/08/18 14:13:27 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -145,23 +145,23 @@ public:
                Pixel_t back = GetWhitePixel());
 
    Bool_t HandleSelectionRequest(Event_t *event)
-        { return fView->HandleSelectionRequest(event); }
+            { return fView->HandleSelectionRequest(event); }
    Bool_t HandleSelectionClear(Event_t *event)
-        { return fView->HandleSelectionClear(event); }
+            { return fView->HandleSelectionClear(event); }
    Bool_t HandleSelection(Event_t *event)
-        { return fView->HandleSelection(event); }
+            { return fView->HandleSelection(event); }
    Bool_t HandleButton(Event_t *event)
-        { return fView->HandleButton(event); }
+            { return fView->HandleButton(event); }
    Bool_t HandleExpose(Event_t *event)
-        { return fView->HandleExpose(event); }
+            { return fView->HandleExpose(event); }
    Bool_t HandleCrossing(Event_t *event)
-        { return fView->HandleCrossing(event); }
+            { return fView->HandleCrossing(event); }
    Bool_t HandleMotion(Event_t *event)
-        { return fView->HandleMotion(event); }
+            { return fView->HandleMotion(event); }
    Bool_t HandleKey(Event_t *event)
-        { return fView->HandleKey(event); }
+            { return fView->HandleKey(event); }
    Bool_t HandleDoubleClick(Event_t *event)
-        { return fView->HandleDoubleClick(event); }
+            { return fView->HandleDoubleClick(event); }
 
    ClassDef(TGViewFrame,0)  // Frame containing the actual text
 };

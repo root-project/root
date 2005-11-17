@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.22 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.23 2005/01/13 20:03:31 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -107,7 +107,8 @@ TGWindow::~TGWindow()
    // Window destructor. Unregisters the window.
 
    if (fClient) {
-      if (fParent == fClient->GetDefaultRoot()) DestroyWindow();
+      if (fParent == fClient->GetDefaultRoot()) 
+         DestroyWindow();
       fClient->UnregisterWindow(this);
    }
 }

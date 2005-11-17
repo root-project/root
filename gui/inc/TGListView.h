@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.25 2005/07/24 09:55:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.26 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -195,7 +195,7 @@ public:
    TGListView  *GetListView() const { return fListView; }
 
    virtual void AddItem(TGLVEntry *item)
-              { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); fTotal++; }
+                  { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); fTotal++; }
 
    virtual void  SetListView(TGListView *lv) { fListView = lv; }
    virtual void  RemoveItemWithData(void *userData);

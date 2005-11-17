@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.11 2003/12/15 18:04:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.12 2005/01/12 18:39:29 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -84,8 +84,8 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    fMarkEnds = mark_ends;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask |
-                    kPointerMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
    SetWindowName();
 }
 
@@ -117,18 +117,24 @@ TString TGDoubleSlider::GetSString() const
    TString stype;
 
    if (fScaleType) {
-       if (fScaleType & kDoubleScaleNo)  {
-           if (stype.Length() == 0) stype  = "kDoubleScaleNo";
-           else                     stype += " | kDoubleScaleNo";
-       }
-       if (fScaleType & kDoubleScaleDownRight) {
-           if (stype.Length() == 0) stype  = "kDoubleScaleDownRight";
-           else                     stype += " | kDoubleScaleDownRight";
-       }
-       if (fScaleType & kDoubleScaleBoth) {
-           if (stype.Length() == 0) stype  = "kDoubleScaleBoth";
-           else                     stype += " | kDoubleScaleBoth";
-       }
+      if (fScaleType & kDoubleScaleNo)  {
+         if (stype.Length() == 0) 
+            stype  = "kDoubleScaleNo";
+         else
+            stype += " | kDoubleScaleNo";
+      }
+      if (fScaleType & kDoubleScaleDownRight) {
+         if (stype.Length() == 0)
+            stype  = "kDoubleScaleDownRight";
+         else
+            stype += " | kDoubleScaleDownRight";
+      }
+      if (fScaleType & kDoubleScaleBoth) {
+         if (stype.Length() == 0) 
+            stype  = "kDoubleScaleBoth";
+         else
+            stype += " | kDoubleScaleBoth";
+      }
    }
    return stype;
 }
@@ -410,7 +416,7 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone,
+                             kPointerMotionMask, kNone, kNone, 
                              kTRUE, kFALSE);
    } else if (event->fType == kButtonRelease && event->fCode == kButton1) {
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);

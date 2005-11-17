@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.20 2004/12/10 10:57:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.21 2005/10/14 10:59:43 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -121,11 +121,11 @@ public:
    virtual  void        DrawBorder();
             void        End(Bool_t mark = kFALSE);
    ETextJustification   GetAlignment() const       { return fAlignment; }
-       TGTextBuffer    *GetBuffer() const { return fText; }
+   TGTextBuffer        *GetBuffer() const { return fText; }
             Int_t       GetCursorPosition() const  { return fCursorIX; }
             TString     GetDisplayText() const;
-       EEchoMode        GetEchoMode() const        { return fEchoMode; }
-       EInsertMode      GetInsertMode() const      { return fInsertMode; }
+   EEchoMode            GetEchoMode() const        { return fEchoMode; }
+   EInsertMode          GetInsertMode() const      { return fInsertMode; }
             TString     GetMarkedText() const;
             Int_t       GetMaxLength() const    { return fMaxLen; }
    const    char       *GetText() const { return fText->GetString(); }

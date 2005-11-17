@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.15 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.16 2005/09/05 07:33:37 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -47,25 +47,25 @@ TGGC         *TGTreeLBEntry::fgDefaultGC = 0;
 //--- this is temp here...
 
 struct Lbc_t {
-  const char *fName;
-  const char *fPath;
-  const char *fPixmap;
-  Int_t       fId;
-  Int_t       fIndent;
-  Int_t       fFlags;
+   const char *fName;   // root prefix name
+   const char *fPath;   // path
+   const char *fPixmap; // picture file
+   Int_t       fId;     // widget id
+   Int_t       fIndent; // identification level
+   Int_t       fFlags;  // flag
 };
 
 static struct Lbc_t gLbc[] = {
-  { "Root",        "/",                     "hdisk_t.xpm",         1000, 0, 0 },
-  { "Floppy",      "/floppy",               "fdisk_t.xpm",         2000, 1, 0 },
-  { "CD-ROM",      "/cdrom",                "cdrom_t.xpm",         3000, 1, 0 },
-  { "Home",        "$HOME",                 "home_t.xpm",          4000, 1, 0 },
+   { "Root",        "/",                     "hdisk_t.xpm",         1000, 0, 0 },
+   { "Floppy",      "/floppy",               "fdisk_t.xpm",         2000, 1, 0 },
+   { "CD-ROM",      "/cdrom",                "cdrom_t.xpm",         3000, 1, 0 },
+   { "Home",        "$HOME",                 "home_t.xpm",          4000, 1, 0 },
 #ifndef ROOTPREFIX
-  { "RootSys",     "$ROOTSYS",              "root_t.xpm",          5000, 1, 0 },
+   { "RootSys",     "$ROOTSYS",              "root_t.xpm",          5000, 1, 0 },
 #else
-  { ROOTPREFIX,    ROOTPREFIX,              "root_t.xpm",          5000, 1, 0 },
+   { ROOTPREFIX,    ROOTPREFIX,              "root_t.xpm",          5000, 1, 0 },
 #endif
-  { 0,             0,                       0,                     6000, 0, 0 }
+   { 0,             0,                       0,                     6000, 0, 0 }
 };
 
 
@@ -198,6 +198,8 @@ void TGTreeLBEntry::Update(TGLBEntry *e)
 //______________________________________________________________________________
 FontStruct_t TGTreeLBEntry::GetDefaultFontStruct()
 {
+   // Return default font structure.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -206,6 +208,8 @@ FontStruct_t TGTreeLBEntry::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGTreeLBEntry::GetDefaultGC()
 {
+   // Return default graphics context.
+
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
@@ -228,7 +232,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
                                  kLHintsExpandY, 4, 0, 0, 0));
 
-   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
+   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask | 
                                       kPointerMotionMask);
 
    //--- first check for the existence of some directories...
@@ -342,10 +346,10 @@ void TGFSComboBox::Update(const char *path)
                         new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                           indent, 0, 0, 0),
                         afterID);
-             sel = ++afterID;
-             ++indent_lvl;
-             if (semi == 0) break;
-             tailpath = ++semi;
+            sel = ++afterID;
+            ++indent_lvl;
+            if (semi == 0) break;
+            tailpath = ++semi;
          }
    }
    if (sel > 0) Select(sel);

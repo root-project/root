@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.8 2003/12/05 01:17:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.9 2004/09/07 09:31:08 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -82,9 +82,9 @@ public:
    TGLayoutHints(ULong_t hints = kLHintsNormal,
                  Int_t padleft = 0, Int_t padright = 0,
                  Int_t padtop = 0, Int_t padbottom = 0)
-       { fPadleft = padleft; fPadright = padright;
-         fPadtop  = padtop;  fPadbottom = padbottom;
-         fLayoutHints = hints; SetRefCount(0); fFE = 0; fPrev = 0; }
+      { fPadleft = padleft; fPadright = padright;
+        fPadtop  = padtop;  fPadbottom = padbottom;
+        fLayoutHints = hints; SetRefCount(0); fFE = 0; fPrev = 0; }
 
    TGLayoutHints(const TGLayoutHints &lh);
 
@@ -126,7 +126,7 @@ public:
    void Print(Option_t* option = "") const;
    void ls(Option_t* option = "") const { Print(option); }
 
-   ClassDef(TGFrameElement, 0);
+   ClassDef(TGFrameElement, 0); // Base class used in GUI containers
 };
 
 

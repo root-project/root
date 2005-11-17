@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.7 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.8 2005/09/05 07:33:37 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -674,8 +674,8 @@ void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
    if (pad) {
       out << "," << GetPadLeft() << "," << GetPadRight()
           << "," << GetPadTop()  << "," << GetPadBottom();
-    }
-    out << ")";
+   }
+   out << ")";
 }
 
 // __________________________________________________________________________

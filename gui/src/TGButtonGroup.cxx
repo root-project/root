@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.23 2005/08/18 11:54:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.24 2005/09/05 13:33:08 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -513,7 +513,7 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
          out << "," << GetOptionString() << "," << parGC << "," << parFont <<");" << endl;
       }
    } else {
-     out << "," << GetOptionString() << "," << parGC << "," << parFont << ",ucolor);" << endl;
+      out << "," << GetOptionString() << "," << parGC << "," << parFont << ",ucolor);" << endl;
    }
    
    // setting layout manager

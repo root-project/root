@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.4 2005/05/15 07:30:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.5 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -287,19 +287,19 @@ void TGMimeTypes::AddType(const char *type, const char *pattern, const char *ico
 {
    // Add a mime type to the list of mime types.
 
-  TGMime *mime = new TGMime;
+   TGMime *mime = new TGMime;
 
-  mime->fType    = type;
-  mime->fPattern = pattern;
-  mime->fIcon    = icon;
-  mime->fSIcon   = sicon;
-  mime->fAction  = action;
+   mime->fType    = type;
+   mime->fPattern = pattern;
+   mime->fIcon    = icon;
+   mime->fSIcon   = sicon;
+   mime->fAction  = action;
 
-  mime->fReg = new TRegexp(pattern, kTRUE);
+   mime->fReg = new TRegexp(pattern, kTRUE);
 
-  fList->AddFirst(mime);
+   fList->AddFirst(mime);
 
-  fChanged = kTRUE;
+   fChanged = kTRUE;
 }
 
 //______________________________________________________________________________

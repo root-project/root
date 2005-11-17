@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.23 2005/06/24 12:27:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.24 2005/06/26 23:37:27 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -402,6 +402,8 @@ TGSelectedPicture::~TGSelectedPicture()
 //______________________________________________________________________________
 TGGC &TGSelectedPicture::GetSelectedGC()
 {
+   // Return selection graphics context in use.
+   
    if (!fgSelectedGC) {
       fgSelectedGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgSelectedGC->SetForeground(gClient->GetResourcePool()->GetSelectedBgndColor());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.32 2005/07/24 09:55:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.33 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -420,6 +420,8 @@ TGDimension TGLVEntry::GetDefaultSize() const
 //______________________________________________________________________________
 FontStruct_t TGLVEntry::GetDefaultFontStruct()
 {
+   // Return the default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
@@ -428,6 +430,8 @@ FontStruct_t TGLVEntry::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGLVEntry::GetDefaultGC()
 {
+   // Return the default graphics context in use.
+
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -876,7 +880,7 @@ void TGListView::Layout()
 
    } else {
       for (i = 0; i < fNColumns; ++i)
-        fColHeader[i]->UnmapWindow();
+         fColHeader[i]->UnmapWindow();
    }
 
    TGLayoutManager *lm = container->GetLayoutManager();
@@ -987,6 +991,8 @@ void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
 //______________________________________________________________________________
 FontStruct_t TGListView::GetDefaultFontStruct()
 {
+   // Return the default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
@@ -995,6 +1001,8 @@ FontStruct_t TGListView::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGListView::GetDefaultGC()
 {
+   // Return the default graphics context in use.
+
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());

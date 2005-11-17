@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.15 2004/10/26 09:39:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.16 2005/08/10 14:00:34 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -43,21 +43,21 @@ public:
    TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t id, const TGWindow *parent);
 
    Bool_t  HandleButton(Event_t *ev)
-                { return fCanvas->HandleContainerButton(ev); }
+               { return fCanvas->HandleContainerButton(ev); }
    Bool_t  HandleDoubleClick(Event_t *ev)
-                { return fCanvas->HandleContainerDoubleClick(ev); }
+               { return fCanvas->HandleContainerDoubleClick(ev); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
-                { TGFrame::HandleConfigureNotify(ev);
+               { TGFrame::HandleConfigureNotify(ev);
                   return fCanvas->HandleContainerConfigure(ev); }
    Bool_t  HandleKey(Event_t *ev)
-                { return fCanvas->HandleContainerKey(ev); }
+               { return fCanvas->HandleContainerKey(ev); }
    Bool_t  HandleMotion(Event_t *ev)
-                { return fCanvas->HandleContainerMotion(ev); }
+               { return fCanvas->HandleContainerMotion(ev); }
    Bool_t  HandleExpose(Event_t *ev)
-                { return fCanvas->HandleContainerExpose(ev); }
+               { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
-                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SetEditable(Bool_t) {}
+               { return fCanvas->HandleContainerCrossing(ev); }
+   void    SetEditable(Bool_t) { }
 };
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.8 2004/09/22 09:28:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -111,7 +111,7 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, fSplitCursor,
+                             kPointerMotionMask, kNone, fSplitCursor, 
                              kTRUE, kFALSE);
    } else {
       fDragging = kFALSE;
@@ -244,7 +244,7 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, fSplitCursor,
+                             kPointerMotionMask, kNone, fSplitCursor, 
                              kTRUE, kFALSE);
    } else {
       fDragging = kFALSE;
@@ -316,18 +316,18 @@ void TGVSplitter::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
          out << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetLeft())        out << ",kTRUE);" << endl;
-   else                  out << ",kFALSE);"<< endl;
+   if (GetLeft()) out << ",kTRUE);" << endl;
+   else           out << ",kFALSE);"<< endl;
 }
 
 //______________________________________________________________________________
@@ -342,16 +342,16 @@ void TGHSplitter::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
          out << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetAbove())       out << ",kTRUE);" << endl;
-   else                  out << ",kFALSE);"<< endl;
+   if (GetAbove()) out << ",kTRUE);" << endl;
+   else            out << ",kFALSE);"<< endl;
 }

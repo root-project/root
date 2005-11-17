@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.10 2004/02/16 12:45:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.11 2005/04/05 13:12:15 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -165,6 +165,8 @@ void TGProgressBar::SetBarColor(const char *color)
 //______________________________________________________________________________
 FontStruct_t TGProgressBar::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -173,6 +175,8 @@ FontStruct_t TGProgressBar::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGProgressBar::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
@@ -418,13 +422,13 @@ void TGHProgressBar::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
 
    if (GetShowPos()) {
-       out << "   " << GetName() <<"->ShowPosition(kTRUE,";
-       if (UsePercent()) {
-           out << "kTRUE,";
-       } else {
+      out << "   " << GetName() <<"->ShowPosition(kTRUE,";
+      if (UsePercent()) {
+         out << "kTRUE,";
+      } else {
          out << "kFALSE,";
-       }
-       out << quote << GetFormat() << quote << ");"<< endl;
+      }
+      out << quote << GetFormat() << quote << ");"<< endl;
 
    } else if (UsePercent() && !GetFillType()) {
       out << "   " << GetName() <<"->ShowPosition();" << endl;

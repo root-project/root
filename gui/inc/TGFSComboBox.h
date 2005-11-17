@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.7 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.8 2004/12/08 11:41:51 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -78,7 +78,7 @@ class TGFSComboBox : public TGComboBox {
 
 public:
    TGFSComboBox(const TGWindow *p = 0, Int_t id = -1,
-                UInt_t options = kHorizontalFrame | kSunkenFrame |
+                UInt_t options = kHorizontalFrame | kSunkenFrame | 
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.60 2005/09/27 16:09:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.61 2005/11/03 23:30:39 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -226,7 +226,7 @@ Bool_t TGButton::HandleButton(Event_t *event)
 //______________________________________________________________________________
 void TGButton::EmitSignals(Bool_t was)
 {
-   //
+   // Emit button signals.
 
    Bool_t now = !IsDown();       // kTRUE if button now is off
 
@@ -288,6 +288,8 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 //______________________________________________________________________________
 const TGGC &TGButton::GetDefaultGC()
 {
+   // Return default graphics context.
+   
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -296,9 +298,11 @@ const TGGC &TGButton::GetDefaultGC()
 //______________________________________________________________________________
 const TGGC &TGButton::GetHibckgndGC()
 {
+   // Return graphics context for highlighted frame background.
+   
    if (!fgHibckgndGC) {
       GCValues_t gval;
-      gval.fMask = kGCForeground | kGCBackground | kGCTile |
+      gval.fMask = kGCForeground | kGCBackground | kGCTile | 
                    kGCFillStyle  | kGCGraphicsExposures;
       gval.fForeground = gClient->GetResourcePool()->GetFrameHiliteColor();
       gval.fBackground = gClient->GetResourcePool()->GetFrameBgndColor();
@@ -525,6 +529,8 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 //______________________________________________________________________________
 FontStruct_t TGTextButton::GetDefaultFontStruct()
 {
+   // Return default font structure.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1030,16 +1036,18 @@ void TGCheckButton::DoRedraw()
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (fState == kButtonDisabled) {
-     fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
-     fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
+      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    } else {
-     fLabel->Draw(fId, fNormGC, x, y + max_ascent);
+      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
 }
 
 //______________________________________________________________________________
 FontStruct_t TGCheckButton::GetDefaultFontStruct()
 {
+   // Return default font structure.
+   
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1048,6 +1056,8 @@ FontStruct_t TGCheckButton::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGCheckButton::GetDefaultGC()
 {
+   // Return default graphics context.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -1243,7 +1253,8 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
    else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
 
-  if (fTip && event->fType == kGKeyPress) fTip->Hide();
+   if (fTip && event->fType == kGKeyPress) 
+      fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
@@ -1302,6 +1313,8 @@ void TGRadioButton::DoRedraw()
 //______________________________________________________________________________
 FontStruct_t TGRadioButton::GetDefaultFontStruct()
 {
+   // Return default font structure.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -1310,6 +1323,8 @@ FontStruct_t TGRadioButton::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGRadioButton::GetDefaultGC()
 {
+   // Return default graphics context.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;

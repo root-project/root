@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.61 2005/10/07 13:00:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.62 2005/10/10 10:52:06 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -215,9 +215,9 @@ public:
    virtual Bool_t HandleDragLeave(TGFrame *) { return kFALSE; }
    virtual Bool_t HandleDragMotion(TGFrame *) { return kFALSE; }
    virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*)
-                 { return kFALSE; }
+                     { return kFALSE; }
    virtual void   ProcessedEvent(Event_t *event)
-                 { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
+                     { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
 
    virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
@@ -240,7 +240,7 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0)
-                            { TGWindow::ReparentWindow(p, x, y); Move(x, y); }
+                     { TGWindow::ReparentWindow(p, x, y); Move(x, y); }
    virtual void    MapWindow() { TGWindow::MapWindow(); if (fFE) fFE->fState |= kIsVisible; }
    virtual void    MapRaised() { TGWindow::MapRaised(); if (fFE) fFE->fState |= kIsVisible; }
    virtual void    UnmapWindow() { TGWindow::UnmapWindow(); if (fFE) fFE->fState &= ~kIsVisible; }
@@ -335,11 +335,11 @@ public:
    virtual TList *GetList() const { return fList; }
 
    virtual UInt_t GetDefaultWidth() const
-                 { return GetDefaultSize().fWidth; }
+                     { return GetDefaultSize().fWidth; }
    virtual UInt_t GetDefaultHeight() const
-                 { return GetDefaultSize().fHeight; }
+                     { return GetDefaultSize().fHeight; }
    virtual TGDimension GetDefaultSize() const
-                 { return fLayoutManager->GetDefaultSize(); }
+                     { return fLayoutManager->GetDefaultSize(); }
    virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y);
    virtual Bool_t TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
                                        Int_t &fx, Int_t &fy);

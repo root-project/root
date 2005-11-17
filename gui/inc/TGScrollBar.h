@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.9 2004/09/08 09:03:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.10 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -134,7 +134,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(fWidth, GetScrollBarWidth()); }
+                        { return TGDimension(fWidth, GetScrollBarWidth()); }
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);
@@ -156,7 +156,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
-                      { return TGDimension(GetScrollBarWidth(), fHeight); }
+                        { return TGDimension(GetScrollBarWidth(), fHeight); }
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);

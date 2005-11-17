@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.15 2005/05/31 18:52:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.16 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -92,23 +92,23 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void AddEntry(TGString *s, Int_t id)
-           { fListBox->AddEntry(s, id); }
+                        { fListBox->AddEntry(s, id); }
    virtual void AddEntry(const char *s, Int_t id)
-           { fListBox->AddEntry(s, id); }
+                        { fListBox->AddEntry(s, id); }
    virtual void AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
-           { fListBox->AddEntry(lbe, lhints); }
+                        { fListBox->AddEntry(lbe, lhints); }
    virtual void InsertEntry(TGString *s, Int_t id, Int_t afterID)
-           { fListBox->InsertEntry(s, id, afterID); }
+                        { fListBox->InsertEntry(s, id, afterID); }
    virtual void InsertEntry(const char *s, Int_t id, Int_t afterID)
-           { fListBox->InsertEntry(s, id, afterID); }
+                        { fListBox->InsertEntry(s, id, afterID); }
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
-           { fListBox->InsertEntry(lbe, lhints, afterID); }
+                        { fListBox->InsertEntry(lbe, lhints, afterID); }
    virtual void RemoveEntry(Int_t id)
-           { fListBox->RemoveEntry(id); }
+                        { fListBox->RemoveEntry(id); }
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
-           { fListBox->RemoveEntries(from_ID, to_ID); }
+                        { fListBox->RemoveEntries(from_ID, to_ID); }
    virtual Int_t GetNumberOfEntries() const
-           { return fListBox->GetNumberOfEntries(); }
+                        { return fListBox->GetNumberOfEntries(); }
 
    virtual TGListBox    *GetListBox() const { return fListBox; }
    virtual TGTextEntry  *GetTextEntry() const { return fTextEntry; }
@@ -116,7 +116,7 @@ public:
    virtual void  Select(Int_t id);
    virtual Int_t GetSelected() const { return fListBox->GetSelected(); }
    virtual TGLBEntry *GetSelectedEntry() const
-           { return fListBox->GetSelectedEntry(); }
+                        { return fListBox->GetSelectedEntry(); }
 
    virtual void SetTopEntry(TGLBEntry *e, TGLayoutHints *lh);
 

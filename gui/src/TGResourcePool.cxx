@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.4 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.5 2005/06/18 09:58:57 brun Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -147,7 +147,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
    if (gSystem->AccessPathName(mime_file, kReadPermission))
-       sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
+      sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
 #endif // GDK_WIN32
 
    // Setup colors...
@@ -209,8 +209,8 @@ TGResourcePool::TGResourcePool(TGClient *client)
    fGCPool = new TGGCPool(fClient);
 
    GCValues_t gval;
-   gval.fMask = kGCForeground | kGCBackground | kGCFont |
-                kGCFillStyle | kGCGraphicsExposures;
+   gval.fMask = kGCForeground | kGCBackground | kGCFont | 
+                kGCFillStyle  | kGCGraphicsExposures;
    gval.fGraphicsExposures = kFALSE;
    gval.fFillStyle  = kFillSolid;
    gval.fFont       = fDefaultFont->GetFontHandle();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.10 2004/09/06 10:26:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.11 2004/09/06 14:12:51 brun Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -623,7 +623,7 @@ void TGGC::SavePrimitive(ofstream &out, Option_t *option)
    // Save graphics context info as a C++ statement(s) on output stream out
 
    if (gROOT->ClassSaved(TGGC::Class())) {
-       out << endl;
+      out << endl;
    } else {
       //  declare graphics context object to reflect required user changes
       out << endl;
@@ -767,7 +767,7 @@ void TGGC::SavePrimitive(ofstream &out, Option_t *option)
                   out << "kJoinBevel";
                   break;
             }
-             out << ";" << endl;
+            out << ";" << endl;
             break;
          case kGCFillStyle:
             out << "   " << valname << ".fFillStyle = ";
@@ -1135,8 +1135,8 @@ Int_t TGGCPool::MatchGC(const TGGC *gc, GCValues_t *values)
                match = (strncmp(values->fDashes, gcv->fDashes, gcv->fDashLen) == 0);
             break;
          case kGCArcMode:
-           match = (values->fArcMode == gcv->fArcMode);
-           break;
+            match = (values->fArcMode == gcv->fArcMode);
+            break;
       }
       if (!match)
          return -1;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.86 2005/10/11 09:09:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.87 2005/11/17 14:43:17 couet Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -169,39 +169,39 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       0,              0 };
 
 static ToolBarData_t gToolBarData[] = {
-  // { filename,      tooltip,            staydown,  id,              button}
-  { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  NULL },
-  { "open.xpm",       "Open",             kFALSE,    kFileOpen,       NULL },
-  { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     NULL },
-  { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      NULL },
-  { "",               "",                 kFALSE,    -1,              NULL },
-  { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,NULL },
-  { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  NULL },
-  { "",               "",                 kFALSE,    -1,              NULL },
-  { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    NULL },
-  { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, NULL },
-  { 0,                0,                  kFALSE,    0,               NULL }
+   // { filename,      tooltip,            staydown,  id,              button}
+   { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  NULL },
+   { "open.xpm",       "Open",             kFALSE,    kFileOpen,       NULL },
+   { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     NULL },
+   { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      NULL },
+   { "",               "",                 kFALSE,    -1,              NULL },
+   { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,NULL },
+   { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  NULL },
+   { "",               "",                 kFALSE,    -1,              NULL },
+   { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    NULL },
+   { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, NULL },
+   { 0,                0,                  kFALSE,    0,               NULL }
 };
 
 static ToolBarData_t gToolBarData1[] = {
-  { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,     NULL },
-  { "arc.xpm",        "Arc",              kFALSE,    kToolArc,        NULL },
-  { "line.xpm",       "Line",             kFALSE,    kToolLine,       NULL },
-  { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,      NULL },
-  { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,    NULL },
-  { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,    NULL },
-  { "pad.xpm",        "Pad",              kFALSE,    kToolPad,        NULL },
-  { "pave.xpm",       "Pave",             kFALSE,    kToolPave,       NULL },
-  { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,     NULL },
-  { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,      NULL },
-  { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,     NULL },
-  { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,      NULL },
-  { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,  NULL },
-  { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc,   NULL },
-  { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,      NULL },
-  { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,     NULL },
-  { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       NULL },
-  { 0,                0,                  kFALSE,    0,               NULL }
+   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,     NULL },
+   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,        NULL },
+   { "line.xpm",       "Line",             kFALSE,    kToolLine,       NULL },
+   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,      NULL },
+   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,    NULL },
+   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,    NULL },
+   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,        NULL },
+   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,       NULL },
+   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,     NULL },
+   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,      NULL },
+   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,     NULL },
+   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,      NULL },
+   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,  NULL },
+   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc,   NULL },
+   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,      NULL },
+   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,     NULL },
+   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       NULL },
+   { 0,                0,                  kFALSE,    0,               NULL }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -223,20 +223,20 @@ public:
 
    Bool_t  HandleButton(Event_t *ev);
    Bool_t  HandleDoubleClick(Event_t *ev)
-                { return fCanvas->HandleContainerDoubleClick(ev); }
+               { return fCanvas->HandleContainerDoubleClick(ev); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
-                { TGFrame::HandleConfigureNotify(ev);
+               { TGFrame::HandleConfigureNotify(ev);
                   return fCanvas->HandleContainerConfigure(ev); }
    Bool_t  HandleKey(Event_t *ev)
-                { return fCanvas->HandleContainerKey(ev); }
+               { return fCanvas->HandleContainerKey(ev); }
    Bool_t  HandleMotion(Event_t *ev)
-                { return fCanvas->HandleContainerMotion(ev); }
+               { return fCanvas->HandleContainerMotion(ev); }
    Bool_t  HandleExpose(Event_t *ev)
-                { return fCanvas->HandleContainerExpose(ev); }
+               { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
-                { return fCanvas->HandleContainerCrossing(ev); }
+               { return fCanvas->HandleContainerCrossing(ev); }
    void    SavePrimitive(ofstream &out, Option_t *);
-   void    SetEditable(Bool_t) {}
+   void    SetEditable(Bool_t) { }
 };
 
 //______________________________________________________________________________
@@ -518,10 +518,8 @@ void TRootCanvas::CreateCanvas(const char *name)
 
          if (ph && ph->LoadPlugin() != -1) {
             if (!ph->ExecPlugin(0))
-               Warning(
-                       "CreateCanvas",
-                       "Can not load GL, will use default canvas imp instead\n"
-                      );
+               Warning("CreateCanvas",
+                       "Can not load GL, will use default canvas imp instead\n");
          }
       }
 
@@ -1564,7 +1562,7 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
 {
    // Handle keyboard events in the canvas container.
 
-  if (event->fType == kGKeyPress) {
+   if (event->fType == kGKeyPress) {
       fButton = event->fCode;
       UInt_t keysym;
       char str[2];

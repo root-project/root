@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.21 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.22 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -329,8 +329,8 @@ void TGTab::RemoveTab(Int_t tabIndex)
          fRemoved->Add(elCont->fFrame);   // delete only in dtor
          RemoveFrame(elCont->fFrame);
          if (tabIndex == fCurrent) {
-           // select another tab only if the current is the one we delete
-           SetTab(0);
+            // select another tab only if the current is the one we delete
+            SetTab(0);
          } else
             fCurrent--;
          break;
@@ -573,6 +573,8 @@ Int_t TGTab::GetNumberOfTabs() const
 //______________________________________________________________________________
 FontStruct_t TGTab::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -581,6 +583,8 @@ FontStruct_t TGTab::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGTab::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
@@ -622,21 +626,21 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (GetOptions() == kChildFrame) {
-          if (fFontStruct == GetDefaultFontStruct()) {
-             if (fNormGC == GetDefaultGC()()) {
-                out <<");" << endl;
-               } else {
-                 out << "," << parGC <<");" << endl;
-               }
-           } else {
-             out << "," << parGC << "," << parFont <<");" << endl;
-           }
-       } else {
+      if (GetOptions() == kChildFrame) {
+         if (fFontStruct == GetDefaultFontStruct()) {
+            if (fNormGC == GetDefaultGC()()) {
+               out <<");" << endl;
+            } else {
+               out << "," << parGC <<");" << endl;
+            }
+         } else {
+            out << "," << parGC << "," << parFont <<");" << endl;
+         }
+      } else {
          out << "," << parGC << "," << parFont << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << parGC << "," << parFont << "," << GetOptionString()  << ",ucolor);" << endl;
+      out << "," << parGC << "," << parFont << "," << GetOptionString()  << ",ucolor);" << endl;
    }
 
    TGCompositeFrame *cf;

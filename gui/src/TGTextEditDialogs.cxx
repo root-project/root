@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.11 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.12 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -407,7 +407,7 @@ void TGPrintDialog::CloseWindow()
    // Close the dialog. On close the dialog will be deleted and cannot be
    // re-used.
 
-  DeleteWindow();
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -559,6 +559,8 @@ void TGGotoDialog::CloseWindow()
 //______________________________________________________________________________
 Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
+   // Process goto dialog widget messages.
+
    const char *string;
 
    switch (GET_MSG(msg)) {

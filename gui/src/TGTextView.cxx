@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.19 2004/09/01 12:56:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.20 2004/09/01 14:35:33 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -761,6 +761,8 @@ void TGTextView::AdjustWidth()
 //______________________________________________________________________________
 FontStruct_t TGTextView::GetDefaultFontStruct()
 {
+   // Return default font structure in use.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDocumentFixedFont();
    return fgDefaultFont->GetFontStruct();
@@ -769,6 +771,8 @@ FontStruct_t TGTextView::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGTextView::GetDefaultGC()
 {
+   // Return default graphics context in use.
+
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -779,6 +783,8 @@ const TGGC &TGTextView::GetDefaultGC()
 //______________________________________________________________________________
 const TGGC &TGTextView::GetDefaultSelectedGC()
 {
+   // Return selection graphics context in use.
+
    if (!fgDefaultSelectedGC) {
       fgDefaultSelectedGC = new TGGC(*gClient->GetResourcePool()->GetSelectedGC());
       fgDefaultSelectedGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -789,6 +795,8 @@ const TGGC &TGTextView::GetDefaultSelectedGC()
 //______________________________________________________________________________
 const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
 {
+   // Return graphics context for highlighted frame background.
+
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;

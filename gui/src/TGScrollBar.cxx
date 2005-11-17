@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.11 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.12 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ ClassImp(TGVScrollBar)
 //______________________________________________________________________________
 class TSBRepeatTimer : public TTimer {
 private:
-   TGScrollBar   *fScrollBar;
+   TGScrollBar   *fScrollBar;   // scroll bar
 public:
    TSBRepeatTimer(TGScrollBar *s, Long_t ms) : TTimer(ms, kTRUE) { fScrollBar = s; }
    Bool_t Notify();
@@ -67,6 +67,8 @@ public:
 //______________________________________________________________________________
 Bool_t TSBRepeatTimer::Notify()
 {
+   // Notify when timer times out and reset the timer.
+
    fScrollBar->HandleTimer(this);
    Reset();
    return kFALSE;
@@ -221,7 +223,7 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                                     kRaisedFrame);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
-                    kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    fDragging = kFALSE;
    fX0 = fY0 = (fgScrollBarWidth = TMath::Max(fgScrollBarWidth, 5));
@@ -325,7 +327,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       // last argument kFALSE forces all specified events to this window
       if (fGrabPointer)
          gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                                kPointerMotionMask, kNone, kNone,
+                                kPointerMotionMask, kNone, kNone, 
                                 kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
@@ -439,7 +441,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                                     kRaisedFrame);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
-                    kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    fDragging = kFALSE;
    fX0 = fY0 = (fgScrollBarWidth = TMath::Max(fgScrollBarWidth, 5));

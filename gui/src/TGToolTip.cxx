@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.10 2004/09/20 19:07:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.11 2004/09/20 19:11:54 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -44,7 +44,7 @@ ClassImp(TGToolTip)
 //______________________________________________________________________________
 class TTipDelayTimer : public TTimer {
 private:
-   TGToolTip   *fTip;
+   TGToolTip   *fTip;  // tooltip
 public:
    TTipDelayTimer(TGToolTip *tip, Long_t ms) : TTimer(ms, kTRUE) { fTip = tip; }
    Bool_t Notify();
@@ -53,6 +53,8 @@ public:
 //______________________________________________________________________________
 Bool_t TTipDelayTimer::Notify()
 {
+   // Notify when timer times out and reset the timer.
+
    fTip->HandleTimer(0);
    Reset();
    return kFALSE;

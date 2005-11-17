@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.10 2004/05/05 12:19:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.11 2004/09/16 09:44:11 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -87,8 +87,8 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
       Error("TGVSlider", "slider?h.xpm not found");
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask |
-                    kPointerMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
 
    // set initial values
    fPos = h/2; fVmin = 0; fVmax = h;
@@ -146,7 +146,7 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    if (event->fType == kButtonPress) {
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone,
+                             kPointerMotionMask, kNone, kNone, 
                              kTRUE, kFALSE);
 
       if (event->fY >= fRelPos - 7 && event->fY <= fRelPos + 7) {
@@ -232,8 +232,8 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
       Error("TGHSlider", "slider?v.xpm not found");
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask |
-                    kPointerMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
 
    // set initial values
    fPos = w/2; fVmin = 0; fVmax = w;
@@ -244,7 +244,7 @@ TGHSlider::~TGHSlider()
 {
    // Delete a horizontal slider widget.
 
-  if (fSliderPic) fClient->FreePicture(fSliderPic);
+   if (fSliderPic) fClient->FreePicture(fSliderPic);
 }
 
 //______________________________________________________________________________
@@ -316,9 +316,8 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
       fClient->NeedRedraw(this);
 
       // last argument kFALSE forces all specified events to this window
-      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone,
-                             kTRUE, kFALSE);
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                             kNone, kNone, kTRUE, kFALSE);
    } else {
       // ButtonRelease
       fDragging = kFALSE;
@@ -363,26 +362,26 @@ TString TGSlider::GetTypeString() const
    TString stype;
 
    if (fType) {
-       if (fType & kSlider1)  {
-           if (stype.Length() == 0) stype  = "kSlider1";
-           else                     stype += " | kSlider1";
-       }
-       if (fType & kSlider2)  {
-           if (stype.Length() == 0) stype  = "kSlider2";
-           else                     stype += " | kSlider2";
-       }
-       if (fType & kScaleNo)  {
-           if (stype.Length() == 0) stype  = "kScaleNo";
-           else                     stype += " | kScaleNo";
-       }
-       if (fType & kScaleDownRight) {
-           if (stype.Length() == 0) stype  = "kScaleDownRight";
-           else                     stype += " | kScaleDownRight";
-       }
-       if (fType & kScaleBoth) {
-           if (stype.Length() == 0) stype  = "kScaleBoth";
-           else                     stype += " | kScaleBoth";
-       }
+      if (fType & kSlider1)  {
+         if (stype.Length() == 0) stype  = "kSlider1";
+         else                     stype += " | kSlider1";
+      }
+      if (fType & kSlider2)  {
+         if (stype.Length() == 0) stype  = "kSlider2";
+         else                     stype += " | kSlider2";
+      }
+      if (fType & kScaleNo)  {
+         if (stype.Length() == 0) stype  = "kScaleNo";
+         else                     stype += " | kScaleNo";
+      }
+      if (fType & kScaleDownRight) {
+         if (stype.Length() == 0) stype  = "kScaleDownRight";
+         else                     stype += " | kScaleDownRight";
+      }
+      if (fType & kScaleBoth) {
+         if (stype.Length() == 0) stype  = "kScaleBoth";
+         else                     stype += " | kScaleBoth";
+      }
    }
    return stype;
 }
@@ -394,29 +393,29 @@ void TGHSlider::SavePrimitive(ofstream &out, Option_t *option)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out<<"   TGHSlider *";
+   out <<"   TGHSlider *";
    out << GetName() << " = new TGHSlider(" << fParent->GetName()
        << "," << GetWidth() << ",";
    out << GetTypeString() << "," << WidgetId();
 
    if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
          out << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
-       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
 
    if (fPos != (Int_t)fWidth/2)
-       out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
 
    if (fScale != 10)
-       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
 }
 
 //______________________________________________________________________________
@@ -433,21 +432,21 @@ void TGVSlider::SavePrimitive(ofstream &out, Option_t *option)
 
    if (fBackground == GetDefaultFrameBackground()) {
 
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
          out << "," << GetOptionString() <<");" << endl;
-       }
+      }
    } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
-       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
 
    if (fPos != (Int_t)fHeight/2)
-       out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
 
    if (fScale != 10)
-       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
 }

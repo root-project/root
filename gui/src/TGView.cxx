@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.13 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.14 2005/08/18 14:13:27 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -54,6 +54,8 @@
 //______________________________________________________________________________
 Bool_t TViewTimer::Notify()
 {
+   // Notify when timer times out and reset the timer.
+
    fView->HandleTimer(this);
    Reset();
    return kFALSE;
@@ -559,9 +561,9 @@ void TGView::SetHsbPosition(Long_t newPos)
    // Set position of horizontal scrollbar.
 
    if (fHsb && fHsb->IsMapped())
-     fHsb->SetPosition(Int_t(newPos));
+      fHsb->SetPosition(Int_t(newPos));
    else
-     SetVisibleStart(Int_t(newPos * fScrollVal.fX), kHorizontal);
+      SetVisibleStart(Int_t(newPos * fScrollVal.fX), kHorizontal);
 }
 
 //______________________________________________________________________________

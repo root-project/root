@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.30 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.31 2005/09/05 14:26:43 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1728,6 +1728,8 @@ void TGTextEdit::End()
 //______________________________________________________________________________
 const TGGC &TGTextEdit::GetCursor0GC()
 {
+   // Return selection graphics context for text cursor.
+   
    if (!fgCursor0GC) {
       fgCursor0GC = new TGGC(GetDefaultSelectedGC());
       fgCursor0GC->SetFunction(kGXxor);
@@ -1738,6 +1740,8 @@ const TGGC &TGTextEdit::GetCursor0GC()
 //______________________________________________________________________________
 const TGGC &TGTextEdit::GetCursor1GC()
 {
+   // Return default graphics context for text cursor.
+   
    if (!fgCursor1GC) {
       fgCursor1GC = new TGGC(GetDefaultGC());
       fgCursor1GC->SetFunction(kGXand);
