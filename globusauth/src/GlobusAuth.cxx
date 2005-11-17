@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.19 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.20 2005/07/19 12:40:37 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -511,7 +511,7 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
 
    *LocalEnv = 0;
    if (lApp != 0) {
-      if (lApp->Argc() > 9 && gROOT->IsProofServ()) {
+      if (gROOT->IsProofServ()) {
          // This is PROOF ... either Master or Slave ...
          if (gDebug > 3) {
             Info("GlobusGetLocalEnv",
