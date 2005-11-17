@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.172 2005/11/14 16:34:17 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.173 2005/11/16 17:38:38 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2698,10 +2698,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
       rwmin  = rwymin;
       rwmax  = rwymax;
       if (ndivy < 0) {
-        nx2   = ndivy/100;
-        nx1   = TMath::Max(1, ndivy%100);
-        ndivy = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsHNDC());
-        strcat(choptaxis, "N");
+         nx2   = ndivy/100;
+         nx1   = TMath::Max(1, ndivy%100);
+         ndivy = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsHNDC());
+         strcat(choptaxis, "N");
       }
       ndiv  =TMath::Abs(ndivy);
       if (gPad->GetGridy()) {
