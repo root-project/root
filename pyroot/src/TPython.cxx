@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.11 2005/06/25 04:25:46 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.12 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -6,6 +6,7 @@
 #include "TPython.h"
 #include "ObjectProxy.h"
 #include "RootWrapper.h"
+#include "TPyClassGenerator.h"
 
 // ROOT
 #include "TROOT.h"
@@ -89,6 +90,10 @@ Bool_t TPython::Initialize()
 // Private initialization method: setup the python interpreter and load the
 // ROOT module.
 
+   static Bool_t isInitialized = kFALSE;
+   if ( isInitialized )
+      return kTRUE;
+
    if ( ! Py_IsInitialized() ) {
    // this happens if CINT comes in first
       PyEval_InitThreads();
@@ -121,7 +126,11 @@ Bool_t TPython::Initialize()
       Py_INCREF( gMainDict );
    }
 
+// python side class construction, managed by ROOT
+   gROOT->AddClassGenerator( new TPyClassGenerator );
+
 // declare success ...
+   isInitialized = kTRUE;
    return kTRUE;
 }
 

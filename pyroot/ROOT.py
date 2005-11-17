@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.30 2005/10/25 05:13:15 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.31 2005/10/26 05:12:24 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 10/25/05
+# Last: 11/16/05
 
 """PyROOT user module.
 
@@ -60,6 +60,10 @@ except:
  # module readline typically doesn't exist on non-Unix platforms
    pass
 
+## remove DISPLAY variable in batch mode as not confuse early ROOT calls
+if '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
+    del os.environ[ 'DISPLAY' ]       
+
 ## load PyROOT C++ extension module, special case for linux and Sun
 needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
                ( 0 <= pystring.find( sys.platform, 'sunos' ) )
@@ -74,6 +78,9 @@ from libPyROOT import *
 if needsGlobal:
    sys.setdlopenflags( dlflags )
 del needsGlobal
+
+## normally, you'll want a ROOT application; fine if one pre-exists from C++
+InitRootApplication()
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
 sys.setcheckinterval( 100 )
@@ -128,29 +135,12 @@ sys.modules[ 'libPyROOT' ].Template = Template
 
 
 ### scope place holder for STL classes ------------------------------------------
-class _STD: 
-   def __getattr__( self, name ):
-      pos = name.find( "<" )
-      if 0 < pos:
-         name = name[:pos] 
+class std:
+   stlclasses = ( 'complex', 'exception', 'pair', \
+      'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
 
-      if name in [ 'complex', 'exception', 'pair',\
-            'deque', 'list', 'queue', 'stack', 'vector',\
-            'map', 'multimap', 'set', 'multiset' ]:
-
-         rmod = sys.modules[ __name__ ]
-         if rmod.__dict__.has_key( name ):
-            attr = rmod.__dict__[ name ]
-            self.__dict__[ name ] = attr
-         else:
-            attr = getattr( rmod, 'std::'+name )
-            setattr( rmod, name, attr )
-         return attr
-
-      raise AttributeError( name )
-   
-std = _STD()
-del _STD
+   for name in stlclasses:
+      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
@@ -259,6 +249,9 @@ class ModuleFacade( object ):
     # store already available ROOT objects to prevent spurious lookups
       for name in _thismodule.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
           self.__dict__[ name ] = getattr( _thismodule, name )
+
+      for name in std.stlclasses:
+          exec 'self.%(name)s = std.%(name)s' % { 'name' : name }
 
       self.__dict__[ '__doc__'  ] = _thismodule.__doc__
       self.__dict__[ '__name__' ] = _thismodule.__name__

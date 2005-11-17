@@ -18,7 +18,7 @@ PyObject* PyROOT::TFunctionHolder::operator()( ObjectProxy* self, PyObject* args
 // setup as necessary
    if ( ! Initialize() )
       return 0;                              // important: 0, not Py_None
-   
+
 // fetch self, verify, and put the arguments in usable order
    if ( ! ( args = FilterArgs( self, args, kwds ) ) )
       return 0;

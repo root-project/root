@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.7 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.8 2005/08/31 21:30:34 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -56,6 +56,18 @@ namespace {
       pyobj->ob_type->tp_free( (PyObject*)pyobj );
    }
 
+//____________________________________________________________________________
+   PyObject* op_repr( ObjectProxy* pyobj )
+   {
+      TClass* klass = pyobj->ObjectIsA();
+      std::string clName = klass ? klass->GetName() : "<unknown>";
+      if ( pyobj->fFlags & ObjectProxy::kIsReference )
+         clName.append( "*" );
+
+      return PyString_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
+         clName.c_str(), pyobj->fObject );
+   }
+
 } // unnamed namespace
 
 
@@ -71,7 +83,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_getattr
    0,                         // tp_setattr
    0,                         // tp_compare
-   0,                         // tp_repr
+   (reprfunc)op_repr,         // tp_repr
    0,                         // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping

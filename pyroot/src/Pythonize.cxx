@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.27 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.28 2005/10/26 05:12:24 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -20,7 +20,10 @@
 #include "TSeqCollection.h"
 #include "TObject.h"
 #include "TFunction.h"
+
 #include "TTree.h"
+#include "TBranch.h"
+#include "TLeaf.h"
 
 // CINT
 #include "Api.h"
@@ -776,64 +779,50 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 //____________________________________________________________________________
    PyObject* TTreeGetAttr( PyObject*, PyObject* args )
    {
-      PyObject* self = 0, *name = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__getattr__" ), &self, &name ) )
+      ObjectProxy* self = 0; const char* name = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!s:__getattr__" ),
+                &ObjectProxy_Type, &self, &name ) )
          return 0;
 
+   // get hold of actual tree
+      TTree* tree =
+         (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+
    // setup notification as needed
-      PyObject* notify = CallPyObjMethod( self, "GetNotify" );
-      if ( PyObject_Not( notify ) ) {
-         TObject* te = new TreeEraser( self );
-         PyObject* result = CallPyObjMethod( self, "SetNotify", BindRootObject( te, te->IsA() ) );
-         Py_XDECREF( result );
-      }
-      Py_DECREF( notify );
+      if ( ! tree->GetNotify() )
+         tree->SetNotify( new TreeEraser( (PyObject*)self ) );
 
    // allow access to leaves as if they are data members
-      PyObject* leaf = CallPyObjMethod( self, "GetLeaf", name );
+      TLeaf* leaf = tree->GetLeaf( name );
       if ( ! leaf )
          return 0;
 
-      if ( leaf != Py_None ) {
-         PyObject* value = 0;
-
+      if ( leaf->IsOnTerminalBranch() ) {
       // found a leaf, extract value if just one, or wrap buffer if more
-         PyObject* lcount = CallPyObjMethod( leaf, "GetLeafCount" );
-         PyObject* length = CallPyObjMethod( leaf, "GetLenStatic" );
-
-         if ( lcount == Py_None && PyInt_AS_LONG( length ) <= 1 ) {
-            value = CallPyObjMethod( leaf, "GetValue" );
+         if ( ! leaf->GetLeafCount() && leaf->GetLenStatic() <= 1 ) {
+            return PyFloat_FromDouble( leaf->GetValue() );
          } else {
-            PyObject* ptr = CallPyObjMethod( leaf, "GetValuePointer" );
-            void* arr = PyLong_AsVoidPtr( ptr );
-            Py_DECREF( ptr );
-
-            PyObject* tname = CallPyObjMethod( leaf, "GetTypeName" );
-            PyObject* scb = PyObject_GetAttrString( leaf, const_cast< char* >( "GetNdata" ) );
-
-            TConverter* pcnv = CreateConverter( PyString_AS_STRING( tname ), PyInt_AS_LONG( scb ) );
-            value = pcnv->FromMemory( arr );
+            TConverter* pcnv = CreateConverter( leaf->GetTypeName(), leaf->GetNdata() );
+            PyObject* value = pcnv->FromMemory( leaf->GetValuePointer() );
             delete pcnv;
 
-            Py_DECREF( scb );
-            Py_DECREF( tname );
+            if ( ! PyString_Check( value ) )    // if not, ordinary array: cache result
+               PyObject_SetAttrString( (PyObject*)self, const_cast< char* >( name ), value );
 
-            if ( ! PyString_Check( value ) )      // if not, ordinary array: cache result
-               PyObject_SetAttr( self, name, value );
+            return value;
          }
-
-         Py_DECREF( length );
-         Py_DECREF( lcount );
-         Py_DECREF( leaf );
-
-         return value;
+      } else {
+      // probably found a branch, extract object if possible
+         TBranch* branch = tree->GetBranch( name );
+         if ( branch ) {
+            TClass* klass = gROOT->GetClass( branch->GetClassName() );
+            if ( klass && branch->GetAddress() )
+               return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
+         }
       }
 
    // confused
-      Py_DECREF( leaf );
-      char txt[ 256 ];
-      sprintf( txt, "no such attribute \'%s\'", PyString_AsString( name ) );
-      PyErr_SetString( PyExc_AttributeError, txt );
+      PyErr_Format( PyExc_AttributeError, "no such attribute \'%s\'", name );
       return 0;
    }
 
@@ -867,7 +856,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          int argc = PyTuple_GET_SIZE( args );
 
          if ( 2 <= argc ) {
-            TTree* tree = (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+            TTree* tree =
+               (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
 
             if ( ! tree ) {
                PyErr_SetString( PyExc_TypeError,
@@ -912,7 +902,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                     &name, &clName, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
                bIsMatch = kTRUE;
             } else {
-               PyErr_Clear();
+               PyErr_Clear(); clName = 0;    // clName no longer used
                if ( PyArg_ParseTuple( args, const_cast< char* >( "SO|O!O!" ),
                        &name, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) )
                   bIsMatch = kTRUE;
@@ -929,7 +919,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                      buf = (void*)((ObjectProxy*)address)->fObject;
                   else
                      buf = (void*)&((ObjectProxy*)address)->fObject;
-                  
+
                   if ( ! clName ) {
                      klName = ((ObjectProxy*)address)->ObjectIsA()->GetName();
                      argc += 1;

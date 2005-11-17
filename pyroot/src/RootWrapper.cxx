@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.37 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.38 2005/10/27 20:02:00 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -14,21 +14,16 @@
 #include "ClassMethodHolder.h"
 #include "TSetItemHolder.h"
 #include "MemoryRegulator.h"
-#include "TPyClassGenerator.h"
 #include "Utility.h"
 
 // ROOT
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TBenchmark.h"
-#include "TApplication.h"
-#include "TStyle.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TBaseClass.h"
 #include "TInterpreter.h"
 #include "TGlobal.h"
-#include "TSeqCollection.h"
 #include "DllImport.h"
 
 // CINT
@@ -49,41 +44,6 @@ R__EXTERN PyObject* gRootModule;
 
 //- helpers --------------------------------------------------------------------
 namespace {
-
-   //______________________________________________________________________________
-   class TPyROOTApplication : public TApplication {
-   public:
-      TPyROOTApplication( const char* acn, int* argc, char** argv ) :
-            TApplication( acn, argc, argv )
-      {
-      // follow TRint to minimize differences with CINT
-         ProcessLine( "#include <iostream>", kTRUE );
-         ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
-         ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
-         ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able
-                                                      //  to properly unload these files
-
-      // allow the usage of ClassDef and ClassImp in interpreted macros
-         ProcessLine( "#include <RtypesCint.h>", kTRUE );
-
-      // disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-         ProcessLine( "#define ROOT_Rtypes 0", kTRUE );
-         ProcessLine( "#define ROOT_TError 0", kTRUE );
-         ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
-
-      // the following libs are also useful to have, make sure they are loaded...
-         gROOT->LoadClass("TMinuit",     "Minuit");
-         gROOT->LoadClass("TPostScript", "Postscript");
-         gROOT->LoadClass("THtml",       "Html");
-
-      // save current interpreter context
-         gInterpreter->SaveContext();
-         gInterpreter->SaveGlobalsContext();
-
-      // prevent ROOT from exiting python
-         SetReturnFromRun( kTRUE );
-      }
-   };
 
    inline void AddToScope( const char* label, TObject* obj, TClass* klass )
    {
@@ -140,38 +100,13 @@ void PyROOT::InitRoot()
 // setup interpreter locks to allow for threading in ROOT
    PyEval_InitThreads();
 
-// setup ROOT globals (bind later)
-   if ( !gBenchmark ) gBenchmark = new TBenchmark();
-   if ( !gStyle ) gStyle = new TStyle();
-   if ( !gApplication ) {
-   // retrieve arg list from python, translate to raw C, pass on
-      PyObject* argl = PySys_GetObject( const_cast< char* >( "argv" ) );
-
-      int argc = argl ? PyList_Size( argl ) : 1;
-      char** argv = new char*[ argc ];
-      for ( int i = 1; i < argc; ++i )
-         argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
-      argv[ 0 ] = Py_GetProgramName();
-
-      gApplication = new TPyROOTApplication( "PyROOT", &argc, argv );
-
-   // CINT message callback (only if loaded from python, i.e. !gApplication)
-      G__set_errmsgcallback( (void*)&PyROOT::Utility::ErrMsgCallback );
-   }
-
-   if ( !gProgName )               // should be set by TApplication
-      gSystem->SetProgname( Py_GetProgramName() );
-
-// bind ROOT globals
+// bind ROOT globals that are needed in ROOT.py
    AddToScope( "gROOT", gROOT, gROOT->IsA() );
    AddToScope( "gSystem", gSystem, gSystem->IsA() );
    AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
 // memory management
    gROOT->GetListOfCleanups()->Add( new TMemoryRegulator );
-
-// python side class construction, managed by ROOT
-   gROOT->AddClassGenerator( new TPyClassGenerator );
 }
 
 //____________________________________________________________________________

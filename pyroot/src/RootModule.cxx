@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.19 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.20 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -10,6 +10,17 @@
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
+
+// ROOT
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TInterpreter.h"
+#include "TApplication.h"
+#include "TBenchmark.h"
+#include "TStyle.h"
+
+// CINT
+#include "Api.h"
 
 // Standard
 #include <string>
@@ -23,6 +34,41 @@ PyObject* gRootModule = 0;
 namespace {
 
    using namespace PyROOT;
+
+//______________________________________________________________________________
+   class TPyROOTApplication : public TApplication {
+   public:
+      TPyROOTApplication( const char* acn, int* argc, char** argv ) :
+            TApplication( acn, argc, argv )
+      {
+      // follow TRint to minimize differences with CINT
+         ProcessLine( "#include <iostream>", kTRUE );
+         ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
+         ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
+         ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able
+                                                      //  to properly unload these files
+
+      // allow the usage of ClassDef and ClassImp in interpreted macros
+         ProcessLine( "#include <RtypesCint.h>", kTRUE );
+
+      // disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+         ProcessLine( "#define ROOT_Rtypes 0", kTRUE );
+         ProcessLine( "#define ROOT_TError 0", kTRUE );
+         ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
+
+      // the following libs are also useful to have, make sure they are loaded...
+         gROOT->LoadClass("TMinuit",     "Minuit");
+         gROOT->LoadClass("TPostScript", "Postscript");
+         gROOT->LoadClass("THtml",       "Html");
+
+      // save current interpreter context
+         gInterpreter->SaveContext();
+         gInterpreter->SaveGlobalsContext();
+
+      // prevent ROOT from exiting python
+         SetReturnFromRun( kTRUE );
+      }
+   };
 
 //____________________________________________________________________________
    PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, Long_t hash )
@@ -94,6 +140,36 @@ namespace {
       gDictLookupActive = kFALSE;
 
       return ep;
+   }
+
+//____________________________________________________________________________
+   PyObject* InitRootApplication()
+   {
+      if ( ! gApplication ) {
+      // retrieve arg list from python, translate to raw C, pass on
+         PyObject* argl = PySys_GetObject( const_cast< char* >( "argv" ) );
+
+         int argc = argl ? PyList_Size( argl ) : 1;
+         char** argv = new char*[ argc ];
+         for ( int i = 1; i < argc; ++i )
+            argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
+         argv[ 0 ] = Py_GetProgramName();
+
+         gApplication = new TPyROOTApplication( "PyROOT", &argc, argv );
+
+      // CINT message callback (only if loaded from python, i.e. !gApplication)
+         G__set_errmsgcallback( (void*)&PyROOT::Utility::ErrMsgCallback );
+      }
+
+   // setup some more handy ROOT globals
+      if ( ! gBenchmark ) gBenchmark = new TBenchmark();
+      if ( ! gStyle ) gStyle = new TStyle();
+
+      if ( ! gProgName )              // should be set by TApplication
+         gSystem->SetProgname( Py_GetProgramName() );
+
+      Py_INCREF( Py_None );
+      return Py_None;
    }
 
 //____________________________________________________________________________
@@ -301,11 +377,13 @@ namespace {
 
 //- data -----------------------------------------------------------------------
 static PyMethodDef gPyROOTMethods[] = {
-   { (char*) "makeRootClass", (PyCFunction) PyROOT::MakeRootClass,
+   { (char*) "makeRootClass", (PyCFunction)PyROOT::MakeRootClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "getRootGlobal", (PyCFunction) PyROOT::GetRootGlobal,
+   { (char*) "getRootGlobal", (PyCFunction)PyROOT::GetRootGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "setRootLazyLookup", (PyCFunction) SetRootLazyLookup,
+   { (char*) "InitRootApplication", (PyCFunction)InitRootApplication,
+     METH_NOARGS,  (char*) "PyROOT internal function" },
+   { (char*) "setRootLazyLookup", (PyCFunction)SetRootLazyLookup,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
