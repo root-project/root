@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.39 2005/10/11 12:48:38 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.40 2005/10/11 13:15:22 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -85,6 +85,8 @@ protected:
 
    Int_t         fPixmapID;        //! Off-screen pixmap identifier
    Int_t         fGLDevice;        //! OpenGL off-screen pixmap identifier
+   Bool_t        fCopyGLDevice;
+   Bool_t        fEmbeddedGL;
    Int_t         fNumber;          //  pad number identifier
    Int_t         fTickx;           //  Set to 1 if tick marks along X
    Int_t         fTicky;           //  Set to 1 if tick marks along Y
@@ -227,7 +229,7 @@ public:
    virtual TObject  *GetPadPointer() const {return fPadPointer;}
    TVirtualPad      *GetPadSave() const;
    TVirtualPad      *GetSelectedPad() const;
-   Int_t             GetGLDevice()const {return fGLDevice;}
+   Int_t             GetGLDevice();
    TView            *GetView() const {return fView;}
    TPadView3D       *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
    Int_t             GetLogx() const {return fLogx;}
@@ -331,6 +333,10 @@ public:
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
+   
+   virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
+
+   
    virtual void      Update();
 ///   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
 ///   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);

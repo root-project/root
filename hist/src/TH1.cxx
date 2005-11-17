@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.259 2005/10/30 14:11:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.260 2005/11/07 20:27:55 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2695,8 +2695,18 @@ TVirtualHistPainter *TH1::GetPainter()
 {
 // return pointer to painter
 // if painter does not exist, it is created
+   if (!fPainter) {
+      if (gStyle->GetCanvasPreferGL()) {
+      //try to create TGLHistPainter
+         TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TGLHistPainter");
+         
+         if (handler && handler->LoadPlugin() != -1)
+            fPainter = reinterpret_cast<TVirtualHistPainter *>(handler->ExecPlugin(1, this));
+      }
+   }
 
    if (!fPainter) fPainter = TVirtualHistPainter::HistPainter(this);
+
    return fPainter;
 }
 

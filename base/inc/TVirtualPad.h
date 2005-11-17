@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.16 2004/08/03 16:01:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.17 2005/03/09 18:19:25 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -240,6 +240,9 @@ public:
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "") = 0;
    virtual void              ReleaseViewer3D(Option_t * type = "")  = 0;
+
+   virtual Int_t    GetGLDevice() = 0;
+   virtual void     SetCopyGLDevice(Bool_t copy) = 0;
 
    static TVirtualPad *&Pad();
 

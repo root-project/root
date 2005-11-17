@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.34 2005/08/10 14:00:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.35 2005/08/18 11:12:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -215,6 +215,7 @@ public:
    virtual void      ToggleEditor();
    virtual void      Update();
    virtual Bool_t    UseGL() const {return fUseGL;}
+   virtual void      SetSupportGL(Bool_t support) {fUseGL = support;}
    
    static void       MakeDefCanvas();
 

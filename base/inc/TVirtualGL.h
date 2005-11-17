@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.21 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.22 2005/10/03 15:19:35 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -176,6 +176,15 @@ R__EXTERN TVirtualGL *(*gPtr2VirtualGL)();
 //This class (and its descendants) in future will replace (?) 
 //TVirtualGL/TGLKernel/TGWin32GL/TGX11GL
 
+
+class TVirtualGLPainter {
+public:
+   virtual ~TVirtualGLPainter(){}
+   virtual void Paint() = 0;
+   
+   ClassDef(TVirtualGLPainter, 0)
+};
+
 class TGLManager : public TNamed {
 public:
    TGLManager();
@@ -212,6 +221,7 @@ public:
    //used by viewer
    virtual void     DrawViewer(TVirtualViewer3D *vv) = 0;
    virtual TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y) = 0;
+   virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
 
    static TGLManager *&Instance();
 

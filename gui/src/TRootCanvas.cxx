@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.85 2005/09/08 14:22:16 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.86 2005/10/11 09:09:18 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -511,7 +511,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    fCanvasID = -1;
 
-   if (fCanvas && fCanvas->UseGL()) {
+   if (gStyle->GetCanvasPreferGL()) {
       //first, initialize GL (if not yet)
       if (!gGLManager) {
          TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
@@ -528,12 +528,13 @@ void TRootCanvas::CreateCanvas(const char *name)
       if (gGLManager) {
          fCanvasID = gGLManager->InitGLWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId(), kTRUE);
          if (fCanvasID != -1)
-            Info("CreateCanvas", "InitGLWindow OK\n");
+            //Info("CreateCanvas", "InitGLWindow OK\n");
+            fCanvas->SetSupportGL(kTRUE);
          else
             Warning("CreateCanvas", "Cannot init gl window, will use default instead\n");
       }
    }
-
+   
    if (fCanvasID == -1)
       fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
 

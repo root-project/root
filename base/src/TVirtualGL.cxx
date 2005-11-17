@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.4 2005/08/17 09:10:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.cxx,v 1.5 2005/11/16 20:04:12 pcanal Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -76,3 +76,5 @@ TGLManager *&TGLManager::Instance()
 
    return instance;
 }
+
+ClassImp(TVirtualGLPainter)

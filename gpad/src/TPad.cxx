@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.208 2005/11/04 20:13:08 pcanal Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.209 2005/11/14 16:34:17 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -135,6 +135,8 @@ TPad::TPad()
    fPadPaint   = 0;
    fPixmapID   = -1;
    fGLDevice   = -1;
+   fCopyGLDevice = kFALSE;
+   fEmbeddedGL = kFALSE;
    fTheta      = 30;
    fPhi        = 30;
    fNumber     = 0;
@@ -228,6 +230,8 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fPadView3D  = 0;
    fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
    fGLDevice   = -1;
+   fCopyGLDevice = kFALSE;
+   fEmbeddedGL = kFALSE;
    fNumber     = 0;
    fAbsCoord   = kFALSE;
    fEditable   = kTRUE;
@@ -864,7 +868,8 @@ void TPad::CopyPixmap()
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
 
-   if (fViewer3D && fGLDevice != -1) {
+//   if (fViewer3D && fGLDevice != -1) {
+   if (fCopyGLDevice) {
       Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
       Int_t realInd = gGLManager->GetVirtualXInd(fGLDevice);
       gVirtualX->CopyPixmap(realInd, px + borderSize, py + borderSize);
@@ -3535,7 +3540,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
       //If canvas prefers GL, all 3d objects must be drawn/selected by
       //gl viewer
-      if (fCanvas->UseGL() && obj->InheritsFrom(TAtt3D::Class()) && fGLDevice != -1) {
+      if (obj->InheritsFrom(TAtt3D::Class()) && fEmbeddedGL) {
          lnk = lnk->Prev();
          continue;
       }
@@ -3573,7 +3578,8 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       Double_t dx = 0.05*(fUxmax-fUxmin);
       if ((x > fUxmin + dx) && (x < fUxmax-dx)) {
 
-         if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
+         //if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
+         if (fEmbeddedGL) {
             //No 2d stuff was selected, but we have gl-viewer. Let it select an object in
             //scene (or select itself). In any case it'll internally call
             //gPad->SetSelected(ptr) as, for example, hist painter does.
@@ -4321,7 +4327,8 @@ void TPad::ResizePad(Option_t *option)
          if (fPixmapID == -1) {      // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
          } else {
-            if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
+//            if (fViewer3D && fCanvas->UseGL() && fGLDevice != -1) {
+            if (fGLDevice != -1) {
                Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
                Int_t ww = w - 2 * borderSize;
                Int_t hh = h - 2 * borderSize;
@@ -4330,7 +4337,9 @@ void TPad::ResizePad(Option_t *option)
                if (ww < 0) ww = 1;//not to get HUGE pixmap :)
                if (hh < 0) hh = 1;//not to get HUGE pixmap :)
                gGLManager->ResizeGLPixmap(fGLDevice, px + borderSize, py + borderSize, ww, hh);
-               gGLManager->DrawViewer(fViewer3D);
+               //after gl-pixmap was resized, we need to repaint not to get something interesting
+               if (fEmbeddedGL) gGLManager->DrawViewer(fViewer3D);
+               else Modified(kTRUE);
             }
 
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
@@ -5384,6 +5393,8 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          gGLManager->DeletePaintDevice(fGLDevice);
          fCanvas->SetSelected(this);
          fGLDevice = -1;
+         fCopyGLDevice = kFALSE;
+         fEmbeddedGL = kFALSE;
       }
 
    } else {
@@ -5405,7 +5416,8 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
                newViewer = (TVirtualViewer3D *)ph->ExecPlugin(6, this, fGLDevice, px, py, w, h);
 
             if (newViewer) {
-               Info("GetViewer3D", "pixmap gl render created sucsessfully\n");
+               fCopyGLDevice = kTRUE;
+               fEmbeddedGL = kTRUE;
             } else
                Error("GetViewer3D", "Error with plugin manager for pixmap gl render\n");
          } else {
@@ -5452,4 +5464,22 @@ void TPad::ReleaseViewer3D(Option_t * /*type*/ )
    // So the pad would have to be redraw twice over.
    // Currenltly we just have to live with the pad staying blank
    // any click in pad will refresh.
+}
+
+//______________________________________________________________________________
+Int_t TPad::GetGLDevice()
+{
+   if (fGLDevice == -1 && gGLManager && fCanvas->UseGL()) {
+      Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
+      UInt_t w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1)) - 2 * borderSize;
+      UInt_t h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1)) - 2 * borderSize;
+      Int_t px = 0, py = 0;
+      XYtoAbsPixel(fX1, fY2, px, py);
+      px += borderSize, py += borderSize;
+
+      fGLDevice = gGLManager->OpenGLPixmap(fCanvas->GetCanvasID(), px, py, w, h);
+      fCopyGLDevice = kTRUE;
+   }
+
+   return fGLDevice;
 }

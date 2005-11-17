@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.7 2005/08/23 11:29:06 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.8 2005/10/03 17:31:20 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -516,7 +516,11 @@ void TGWin32GLManager::ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, 
 //______________________________________________________________________________
 void TGWin32GLManager::SelectGLPixmap(Int_t pixInd)
 {
-   gVirtualX->SelectWindow(fPimpl->fPaintDevices[pixInd].fPixmapIndex);
+   PaintDevice &currDev = fPimpl->fPaintDevices[pixInd];
+
+   if (currDev.fOldBitmap == currDev.fHBitmap) {
+      currDev.fOldBitmap = (HBITMAP)SelectObject(currDev.fDC, currDev.fOldBitmap);
+   }   
 }
 
 //______________________________________________________________________________
@@ -633,4 +637,10 @@ void TGWin32GLManager::DrawViewer(TVirtualViewer3D *vv)
 TObject *TGWin32GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
 {
    return vv->SelectObject(x, y);
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::PaintSingleObject(TVirtualGLPainter *p)
+{
+   p->Paint();
 }

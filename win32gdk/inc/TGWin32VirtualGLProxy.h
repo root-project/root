@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.11 2005/08/17 09:10:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.12 2005/10/03 15:19:35 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -147,6 +147,8 @@ public:
    virtual void     ExtractViewport(Int_t pixId, Int_t *vp);
    virtual void     DrawViewer(TVirtualViewer3D *vv);
    virtual TObject *Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   
+   virtual void     PaintSingleObject(TVirtualGLPainter *obj);
 
    static TGLManager *ProxyObject();
    static TGLManager *RealObject();

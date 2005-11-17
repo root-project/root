@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.4 2005/08/17 09:10:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.5 2005/08/18 11:12:59 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -65,6 +65,8 @@ public:
 	void ExtractViewport(Int_t deviceInd, Int_t *viewport);
    void DrawViewer(TVirtualViewer3D *v);
    TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
+   
+   void PaintSingleObject(TVirtualGLPainter *obj);
 private:
 	Bool_t CreateGLPixmap(Int_t wid, Int_t x, Int_t y, UInt_t w, 
                          UInt_t h, Int_t prevInd = -1);

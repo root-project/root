@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.4 2005/08/18 11:12:58 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.5 2005/08/23 11:29:06 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
 
    void     DrawViewer(TVirtualViewer3D *v);
    TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
+   void     PaintSingleObject(TVirtualGLPainter *painter);
    
 private:
    //Used internally by OpenPixmap and ResizePixmap

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.98 2005/09/02 10:33:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.99 2005/09/08 14:22:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TCanvas::Constructor()
    fCanvasImp = 0;
    fBatch     = kTRUE;
    fUpdating  = kFALSE;
-   fUseGL     = gStyle->GetCanvasPreferGL();
+   fUseGL     = kFALSE;
    
    fContextMenu = 0;
    fSelected    = 0;
@@ -174,7 +174,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCh           = wh +28;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
-   fUseGL        = gStyle->GetCanvasPreferGL();
+   fUseGL        = kFALSE;
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
@@ -208,7 +208,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
 
-   fUseGL     = gStyle->GetCanvasPreferGL();
+   fUseGL     = kFALSE;
    
    if (gThreadXAR) {
       void *arr[6];
@@ -283,7 +283,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
 
-   fUseGL     = gStyle->GetCanvasPreferGL();
+   fUseGL     = kFALSE;
 
    if (gThreadXAR) {
        void *arr[6];
@@ -349,7 +349,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
 
-   fUseGL     = gStyle->GetCanvasPreferGL();
+   fUseGL     = kFALSE;
 
    if (gThreadXAR) {
       void *arr[8];

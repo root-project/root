@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.8 2005/08/23 11:29:06 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.9 2005/10/04 07:51:29 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -494,11 +494,11 @@ void TX11GLManager::ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UIn
 }
 
 //______________________________________________________________________________
-void TX11GLManager::SelectGLPixmap(Int_t pixInd)
+void TX11GLManager::SelectGLPixmap(Int_t /*pixInd*/)
 {
    //selects off-screen device to make it
    //accessible by gVirtualX
-   gVirtualX->SelectWindow(fPimpl->fPaintDevices[pixInd].fPixmapIndex);
+   //gVirtualX->SelectWindow(fPimpl->fPaintDevices[pixInd].fPixmapIndex);
 }
 
 //______________________________________________________________________________
@@ -558,3 +558,8 @@ TObject *TX11GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
    return vv->SelectObject(x, y);
 }
 
+//______________________________________________________________________________
+void TX11GLManager::PaintSingleObject(TVirtualGLPainter *p)
+{
+   p->Paint();
+}
