@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.4 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.5 2005/08/30 10:29:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -20,14 +20,27 @@
 
 class TGLDrawable;
 
-/*************************************************************************
- * TGLDisplayListCache - TODO
- *
- *
- *
- *************************************************************************/
-class TGLDisplayListCache {
-private:
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLDisplayListCache                                                  //
+//                                                                      //
+// Singleton cache of GL display lists. Provides lazy automatic GL      //
+// display list capture of draws by a TGLDrawable at a certain 'LOD'    //
+// which can be disable on a global, per drawable or LOD basis.         //
+//                                                                      //
+// Internally the cache creates a block of GL display lists of fSize,   // 
+// and maintains a stl::map, mapping CacheID_t ids (created from        //
+// TGLDrawable and LOD draw flag) to 'name' entries in the GL display   //
+// list block.                                                          //
+//                                                                      //
+// See TGLDrawable::Draw() for use.                                     //
+// NOTE: Purging of individual TGLDrawables not currently implemented:  //
+//       Purge(const TGLDrawable & drawable)                            //    
+//       Purge(const TGLDrawable & drawable, UInt_t LOD)                // //////////////////////////////////////////////////////////////////////////
+
+class TGLDisplayListCache 
+{
+   private:
    typedef std::pair<const TGLDrawable *, const UInt_t> CacheID_t;
    typedef std::map<CacheID_t,UInt_t>                   CacheDLMap_t;
 
@@ -72,8 +85,8 @@ public:
    Bool_t OpenCapture(const TGLDrawable & drawable, UInt_t LOD);
    Bool_t CloseCapture();
    Bool_t CaptureIsOpen() { return fCaptureOpen; }
-   void   Purge(const TGLDrawable & drawable);
-   void   Purge(const TGLDrawable & drawable, UInt_t LOD);
+   void   Purge(const TGLDrawable & drawable);             // NOT IMPLEMENTED
+   void   Purge(const TGLDrawable & drawable, UInt_t LOD); // NOT IMPLEMENTED
 
    ClassDef(TGLDisplayListCache,0) // a cache of GL display lists (singleton)
 };

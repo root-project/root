@@ -16,6 +16,16 @@
 #include "TGLPhysicalShape.h"
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClip                                                              //
+//                                                                      //
+// Abstract clipping shape - derives from TGLPhysicalShape              //
+// Adds clip mode (inside/outside) and pure virtual method to           //
+// approximate shape as set of planes. This plane set is used to perform//
+// interactive clipping using OpenGL clip planes.                       //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLClip : public TGLPhysicalShape
 {
 public:
@@ -35,6 +45,16 @@ public:
    ClassDef(TGLClip,0); // abstract clipping object   
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClipPlane                                                         //
+//                                                                      //
+// Concrete clip plane object. This can be translated in all directions //
+// rotated about the Y/Z local axes (the in-plane axes). It cannot be   //
+// scaled.                                                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLClipPlane : public TGLClip
 {
 private:
@@ -50,6 +70,15 @@ public:
 
    ClassDef(TGLClipPlane,0); // clipping plane
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClipBox                                                           //
+//                                                                      //
+// Concrete clip box object. Can be translated, rotated and scaled in   //
+// all (xyz) axes.                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLClipBox : public TGLClip 
 {

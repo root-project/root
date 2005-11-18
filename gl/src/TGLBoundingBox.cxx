@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.14 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.15 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,14 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TODO: Function descriptions
-// TODO: Class def - same as header
-
 #include "TGLBoundingBox.h"
 #include "TGLIncludes.h"
 #include "Riostream.h"
 
 #include <math.h>
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLBoundingBox                                                       //
+//                                                                      //
+// Concrete class describing an orientated (free) or axis aligned box   //
+// of 8 verticies. Supports methods for setting aligned or orientated   //
+// boxes, find volume, axes, extents, centers, face planes etc.         //
+// Also tests for overlap testing of planes and other bounding boxes,   //
+// with fast sphere approximation.                                      //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLBoundingBox)
 
@@ -51,8 +59,8 @@ TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & 
 //______________________________________________________________________________
 TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other)
 {
-  // Construct a bounding box as copy of existing one
-  Set(other);
+   // Construct a bounding box as copy of existing one
+   Set(other);
 }
 
 //______________________________________________________________________________
@@ -64,7 +72,8 @@ TGLBoundingBox::~TGLBoundingBox()
 //______________________________________________________________________________
 void TGLBoundingBox::UpdateCache()
 {
-   // Update the internal cached volume and axes vectors
+   // Update the internally cached volume and axes vectors - these are retained
+   // for efficiency - many more reads than modifications
 
    //    y
    //    |
@@ -116,7 +125,7 @@ void TGLBoundingBox::UpdateCache()
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 {
-  // Set a bounding box from provided 8 vertices
+   // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = vertex[v];
    }
@@ -127,7 +136,7 @@ void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const Double_t vertex[8][3])
 {
-  // Set a bounding box from provided 8 vertices
+   // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       for (UInt_t a = 0; a < 3; a++) {
          fVertex[v][a] = vertex[v][a];
@@ -140,7 +149,7 @@ void TGLBoundingBox::Set(const Double_t vertex[8][3])
 //______________________________________________________________________________
 void TGLBoundingBox::Set(const TGLBoundingBox & other)
 {
-  // Set a bounding box from vertices of other
+   // Set a bounding box from vertices of other
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Set(other.fVertex[v]);
    }
@@ -151,7 +160,7 @@ void TGLBoundingBox::Set(const TGLBoundingBox & other)
 //______________________________________________________________________________
 void TGLBoundingBox::SetEmpty()
 {
-  // Set bounding box empty - all vertices at (0,0,0)
+   // Set bounding box empty - all vertices at (0,0,0)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Fill(0.0);
    }

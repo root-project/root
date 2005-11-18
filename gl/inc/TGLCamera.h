@@ -1,6 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.14 2005/11/09 10:13:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.15 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
-// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -26,12 +25,26 @@
 #include <assert.h>
 #include <math.h>
 
-/*************************************************************************
- * TGLCamera - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLCamera                                                            //
+//                                                                      //
+// Abstract base camera class - concrete classes for orthographic and   //
+// persepctive cameras derive from it. This class maintains values for  //
+// the current:                                                         //
+// i)   Viewport                                                        //
+// ii)  Projection, modelview and clip matricies - extracted from GL    //
+// iii) The 6 frustum planes                                            //
+// iv)  Expanded frustum interest box                                   //
+//                                                                      //
+// It provides methods for various projection, overlap and intersection //
+// tests for viewport and world locations, against the true frustum and //
+// expanded interest box, and for extracting eye position and direction.//
+//                                                                      //
+// It also defines the pure virtual manipulation interface methods the  //
+// concrete ortho and prespective classes must implement.               //    
+//////////////////////////////////////////////////////////////////////////
+
 class TGLCamera
 {
 public:
@@ -74,7 +87,8 @@ protected:
    Bool_t    fCacheDirty;  //! cached items dirty?
 
    TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
-   mutable Double_t fLargestInterest;      //! largest box diagonal - used when bootstrapping interest box
+   mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when 
+                                           // bootstrapping interest box
 
    // Methods
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
@@ -109,7 +123,7 @@ public:
    // Viewport is GL coorinate system - origin bottom/left
    EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
-   TGLRect    ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
+   TGLRect    ViewportRect   (const TGLBoundingBox & box) const; // projected rect of box on viewport
    TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
    TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
    TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex) const;

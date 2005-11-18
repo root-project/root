@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.4 2005/05/28 12:21:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.5 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,14 +18,19 @@
 
 class TContextMenu;
 
-/*************************************************************************
- * TGLLogicalShape - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLLogicalShape                                                      //
+//                                                                      //
+// Abstract logical shape - a GL drawables - base for all shapes faceset//
+// sphere etc. Logical shapes are a unique piece of geometry, described //
+// in it's local frame. Object is reference counted by physical shapes  //
+// which are using it - see TGLPhysicalShape description for fuller     //
+// description of how logical/physical shapes are used.                 //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLLogicalShape : public TGLDrawable { // Rename TGLLogicalObject?
-private:
+   private:
    // Fields
    mutable UInt_t fRef;       //! physical instance ref counting
 
@@ -37,8 +42,6 @@ protected:
 public:
    TGLLogicalShape(ULong_t ID);
    virtual ~TGLLogicalShape();
-
-   virtual void Purge();
 
    virtual void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const = 0;
 

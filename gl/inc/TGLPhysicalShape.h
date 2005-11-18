@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.9 2005/10/11 10:25:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.10 2005/10/24 14:49:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -25,12 +25,33 @@
 
 class TContextMenu;
 
-/*************************************************************************
- * TGLPhysicalShape - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLPhysicalShape                                                     //
+//                                                                      //
+// Concrete physical shape - a GL drawable. Physical shapes are the     //
+// objects the user can actually see, select, move in the viewer. It is //
+// a placement of the associated local frame TGLLogicaShape into the    //
+// world frame. The draw process is:                                    //
+//                                                                      // 
+// Load attributes - material colors etc                                // 
+// Load translation matrix - placement                                  //
+// Load gl name (for selection)                                         //
+// Call our associated logical shape Draw() to draw placed shape        //
+//                                                                      //
+// The physical shape supports translation, scaling and rotation,       //
+// selection, color changes, and permitted modification flags etc.      //
+// A physical shape cannot modify or be bound to another (or no)        //
+// logical shape - hence const & handle. It can perform mutable         //
+// reference counting on the logical to enable purging.                 //
+//                                                                      //
+// Display list caching can occur at either the physical or logical     //
+// level (with or without translation). Currently we cache only certain //
+// derived logical shapes as not all logicals can respect the LOD draw  //
+// flag which is used in caching.                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLPhysicalShape : public TGLDrawable
 {
 public:
@@ -89,11 +110,11 @@ public:
    // Selected treated as temporary modification
    EManip          GetManip() const         { return fManip; }
    void            SetManip(EManip manip)   { fManip = manip; }
-   Bool_t          IsModified() const                 { return fModified || IsSelected(); }
+   Bool_t          IsModified() const       { return fModified || IsSelected(); }
 
    // Selection
-   Bool_t          IsSelected() const                 { return fSelected; }
-   void            Select(Bool_t select)              { fSelected = select; }
+   Bool_t          IsSelected() const       { return fSelected; }
+   void            Select(Bool_t select)    { fSelected = select; }
 
    // Color
    const Float_t * Color() const                      { return fColor; }

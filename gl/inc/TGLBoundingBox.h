@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.8 2005/07/14 19:13:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.9 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,12 +16,16 @@
 #include "TGLUtil.h"
 #endif
 
-/*************************************************************************
- * TGLBoundingBox - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLBoundingBox                                                       //
+//                                                                      //
+// Concrete class describing an orientated (free) or axis aligned box   //
+// of 8 verticies. Supports methods for setting aligned or orientated   //
+// boxes, find volume, axes, extents, centers, face planes etc.         //
+// Also tests for overlap testing of planes and other bounding boxes,   //
+// with fast sphere approximation.                                      //
+//////////////////////////////////////////////////////////////////////////
 
 // TODO: Create more compact version + axis aligned version, both with lazy
 // sphere testing.
@@ -45,9 +49,12 @@ private:
    // 0123 'far' face
    // 4567 'near' face
    //
-   // This could be more compact: 3 vertices which form plane cutting
-   // box diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix it in space - rest
-   // could be calculated on demand - but not worth effort.....
+   // This could be more compact: 
+   // For orientated box 3 vertices which form plane cutting box
+   // diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix in space.
+   // For axis aligned 2 verticies would suffice.
+   // Rest could be calculated on demand - however speed more important
+   // than memory considerations
    TGLVertex3 fVertex[8];  //! the 8 bounding box vertices
    Double_t   fVolume;     //! box volume - cached for speed
    TGLVector3 fAxes[3];    //! box axes in global frame - cached for speed
@@ -95,12 +102,12 @@ public:
    Double_t ZMax() const { return Max(2); }
 
    // Other properties
-          TGLVertex3   Center() const;
-          TGLVector3   Extents() const;
+   TGLVertex3   Center() const;
+   TGLVector3   Extents() const;
    const  TGLVector3 & Axis(UInt_t i, Bool_t normalised = kTRUE) const;
-          Bool_t       IsEmpty() const;
-          Double_t     Volume() const { return fVolume; }
-          void         PlaneSet(TGLPlaneSet_t & planeSet) const;
+   Bool_t       IsEmpty() const;
+   Double_t     Volume() const { return fVolume; }
+   void         PlaneSet(TGLPlaneSet_t & planeSet) const;
 
    // Overlap testing
    EOverlap Overlap(const TGLPlane & plane) const;

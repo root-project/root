@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.22 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.23 2005/11/16 16:41:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -783,7 +783,7 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
                                  UInt_t sceneLOD) const
 {
    // Find diagonal pixel size of projected drawable BB, using camera
-   Double_t diagonal = static_cast<Double_t>(camera.ViewportSize(shape.BoundingBox()).Diagonal());
+   Double_t diagonal = static_cast<Double_t>(camera.ViewportRect(shape.BoundingBox()).Diagonal());
 
    // TODO: Get real screen size - assuming 2000 pixel screen at present
    // Calculate a non-linear sizing hint for this shape. Needs more experimenting with...

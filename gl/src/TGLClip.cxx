@@ -18,7 +18,9 @@
 
 TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
 {
-
+   // Helper function to construct a TGLLogicalShape box based on
+   // supplied half lengths
+   
    //    y
    //    |
    //    |
@@ -76,6 +78,9 @@ TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
 
 TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
 {
+   // Helper function to construct a TGLLogicalShape face (retangle) 
+   // based on supplied width/depth
+   
    TBuffer3D buff(TBuffer3DTypes::kGeneric, 4, 3*4, 4, 3*4, 1, 6);
 
    buff.fPnts[ 0] = -width; buff.fPnts[ 1] = -depth; buff.fPnts[ 2] = 0.0; // 0
@@ -95,6 +100,16 @@ TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
    return new TGLFaceSet(buff, 0);
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClip                                                              //
+//                                                                      //
+// Abstract clipping shape - derives from TGLPhysicalShape              //
+// Adds clip mode (inside/outside) and pure virtual method to           //
+// approximate shape as set of planes. This plane set is used to perform//
+// interactive clipping using OpenGL clip planes.                       //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLClip)
 
 //______________________________________________________________________________
@@ -102,17 +117,27 @@ TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, c
    TGLPhysicalShape(0, logical, transform, kTRUE, color),
    fMode(kInside)
 {
+   // Construct a physical clipping object, taking the 'logical' shape, a
+   // 'transform' matrix for placing this, and 'color'.
+   //
+   // Takes 'ownership' of logical and it will be destroyed when this is.
+
+   // Take strong reference - destroy logical when ref released in 
+   // TGLPhysical::~TGLPhysical()
    logical.StrongRef(kTRUE);
 }
 
 //______________________________________________________________________________
 TGLClip::~TGLClip()
 {
+   // Destroy clip object
 }
 
 //______________________________________________________________________________
 void TGLClip::Draw(UInt_t LOD) const
 {
+   // Draw out clipping object with blending and back + front filling.
+   // Some clip objects are single face which we want to see both sides of.
    glDepthMask(GL_FALSE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -125,6 +150,16 @@ void TGLClip::Draw(UInt_t LOD) const
    glDepthMask(GL_TRUE);
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClipPlane                                                         //
+//                                                                      //
+// Concrete clip plane object. This can be translated in all directions //
+// rotated about the Y/Z local axes (the in-plane axes). It cannot be   //
+// scaled.                                                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLClipPlane)
 
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
@@ -133,8 +168,16 @@ const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 TGLClipPlane::TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, Double_t extents) : 
    TGLClip(*CreateLogicalFace(extents, extents), TGLMatrix(center), fgColor)
 {
+   // Construct a clip plane object, based on supplied 'plane', with initial manipulation
+   // pivot at 'center', with drawn extents (in local x/y axes) of 'extents' 
+   //
    // Plane can have center pivot translated in all directions, and rotated round
-   // Y/Z, the in-plane axes. It cannot be scaled
+   // center in X/Y axes , the in-plane axes. It cannot be scaled
+   //
+   // Note theorectically a plane is of course infinite - however we want to draw
+   // the object in viewer - so we fake it with a single GL face (polygon) - extents
+   // defines the width/depth of this - should be several times scene extents.
+   //
    SetManip(EManip(kTranslateAll | kRotateX | kRotateY));
    Set(plane);
 }
@@ -142,11 +185,14 @@ TGLClipPlane::TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, D
 //______________________________________________________________________________
 TGLClipPlane::~TGLClipPlane()
 {
+   // Destroy clip plane object
 }
 
 //______________________________________________________________________________
 void TGLClipPlane::Set(const TGLPlane & plane)
 {
+   // Update clip plane object to follow passed 'plane' equation. Center pivot
+   // is shifted to nearest point on new plane.
    TGLVertex3 oldCenter = BoundingBox().Center();
    TGLVertex3 newCenter = plane.NearestOn(oldCenter); 
    SetTransform(TGLMatrix(newCenter, plane.Norm()));
@@ -155,12 +201,21 @@ void TGLClipPlane::Set(const TGLPlane & plane)
 //______________________________________________________________________________
 void TGLClipPlane::PlaneSet(TGLPlaneSet_t & set) const
 {
-   // Return current clip plane
+   // Return set of planes (actually a single) describing this clip plane
 
-   // Get complete set from bounding box and discard all except first
+   // Get complete set from bounding box and discard all except first (top)
    BoundingBox().PlaneSet(set);
    set.resize(1);
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClipBox                                                           //
+//                                                                      //
+// Concrete clip box object. Can be translated, rotated and scaled in   //
+// all (xyz) axes.                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLClipBox)
 
@@ -170,15 +225,19 @@ const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 TGLClipBox::TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center) :
    TGLClip(*CreateLogicalBox(halfLengths), TGLMatrix(center), fgColor)
 {
+   // Construct an (initially) axis aligned clip pbox object, extents 'halfLengths', 
+   // centered on 'center' vertex.
+   // Box can be translated, rotated and scaled in all (xyz) local axes.
 }
-
 //______________________________________________________________________________
 TGLClipBox::~TGLClipBox()
 {
+   // Destroy clip box object
 }
 
 //______________________________________________________________________________
 void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const 
 { 
+   // Return set of 6 planes describing faces of the box
    BoundingBox().PlaneSet(set); 
 }

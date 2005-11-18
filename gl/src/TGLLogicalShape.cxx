@@ -1,16 +1,16 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.4 2005/05/28 12:21:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.5 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
-// TODO: Function descriptions
-// TODO: Class def - same as header
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLLogicalShape                                                      //
+//                                                                      //
+// Abstract logical shape - a GL drawables - base for all shapes faceset//
+// sphere etc. Logical shapes are a unique piece of geometry, described //
+// in it's local frame. Object is reference counted by physical shapes  //
+// which are using it - see TGLPhysicalShape description for fuller     //
+// description of how logical/physical shapes are used.                 //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TGLLogicalShape.h"
 #include "TGLDisplayListCache.h"
@@ -22,22 +22,17 @@ TGLLogicalShape::TGLLogicalShape(ULong_t ID) :
    TGLDrawable(ID, kFALSE), // Logical shapes not DL cached by default at present
    fRef(0), fRefStrong(kFALSE)
 {
+   // Construct a logical shape with unique id 'ID'.
+   // Logical shapes are not display list cached by default.
 }
 
 //______________________________________________________________________________
 TGLLogicalShape::~TGLLogicalShape()
 {
+   // Destroy logical shape
+   
    // Physical refs should have been cleared
    if (fRef > 0) {
       assert(kFALSE);
    }
-}
-
-//______________________________________________________________________________
-void TGLLogicalShape::Purge()
-{
-   // Overload and clear out any costly geometry cache
-
-   // Base work - purge the DL cache
-   TGLDrawable::Purge();
 }

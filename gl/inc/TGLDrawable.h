@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.5 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.6 2005/06/01 14:07:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,12 +16,17 @@
 #include "TGLBoundingBox.h"
 #endif
 
-/*************************************************************************
- * TGLDrawable - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLDrawable                                                          //      
+//                                                                      //
+// Abstract base class for all GL drawable objects. Provides hooks for  //
+// using the display list cache in TGLDrawable::Draw() - the external   //
+// draw method any owning object calls.                                 //
+// Defines pure virtual TGLDrawable::DirectDraw() which derived classes //
+// must implement with actual GL drawing.                               //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLDrawable
 {
 private:
@@ -48,7 +53,7 @@ public:
    TGLDrawable(ULong_t ID, bool DLCache);
    virtual ~TGLDrawable();
 
-         ULong_t          ID()          const { return fID; }
+   ULong_t          ID()          const { return fID; }
    const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
 
    virtual void Draw(UInt_t LOD) const;
@@ -64,7 +69,7 @@ public:
 
 
    // Caching
-           bool SetDLCache(bool DLCache);
+   bool SetDLCache(bool DLCache);
    virtual bool UseDLCache(UInt_t LOD) const;
    virtual void Purge();
 
