@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.209 2005/11/14 16:34:17 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.210 2005/11/17 14:43:17 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3802,16 +3802,24 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-
+         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
+         gPad->GetCanvas()->SetHighLightColor(-1);
+         gPad->Modified();
+         gPad->Update();
          gVirtualX->SelectWindow(wid);
          if (gVirtualX->WriteGIF((char*)psname.Data())) {
             if (!gSystem->AccessPathName(psname.Data())) {
                Info("Print", "GIF file %s has been created", psname.Data());
             }
          }
+         gPad->GetCanvas()->SetHighLightColor(hc);
          return;
       }
       if (gtype != TImage::kUnknown) {
+         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
+         gPad->GetCanvas()->SetHighLightColor(-1);
+         gPad->Modified();
+         gPad->Update();
          if (gVirtualX->InheritsFrom("TGQt")) {
             wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
             gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
@@ -3828,6 +3836,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
+         gPad->GetCanvas()->SetHighLightColor(hc);
       } else {
          Warning("Print", "Unsupported image format %s", psname.Data());
       }
