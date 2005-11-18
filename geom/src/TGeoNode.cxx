@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.24 2005/04/01 13:53:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.25 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -118,6 +118,7 @@ TGeoNode::~TGeoNode()
 //_____________________________________________________________________________
 void TGeoNode::Browse(TBrowser *b)
 {
+// How-to-browse for a node.
    if (!b) return;
 //   if (!GetNdaughters()) b->Add(this);
    for (Int_t i=0; i<GetNdaughters(); i++)
@@ -136,18 +137,19 @@ Bool_t TGeoNode::IsOnScreen() const
 //_____________________________________________________________________________
 void TGeoNode::InspectNode() const
 {
-   printf("Inspecting node %s\n", GetName());
-   if (IsOverlapping()) printf("### node is MANY\n");
+// Inspect this node.
+   Info("InspectNode","Inspecting node %s", GetName());
+   if (IsOverlapping()) Info("InspectNode","node is MANY");
    if (fOverlaps && fMother) {
-      printf("### possibly overlaping with :\n");
+      Info("InspectNode","possibly overlaping with :");
       for (Int_t i=0; i<fNovlp; i++)
-         printf("###   node %s\n", fMother->GetNode(fOverlaps[i])->GetName());
+         Info("InspectNode","   node %s", fMother->GetNode(fOverlaps[i])->GetName());
    }
-   printf("### transformation wrt mother\n");
+   Info("InspectNode","Transformation matrix:\n");
    TGeoMatrix *matrix = GetMatrix();
    if (matrix) matrix->Print();
    if (fMother)
-      printf("### mother volume %s\n", fMother->GetName());
+      Info("InspectNode","Mother volume %s\n", fMother->GetName());
    fVolume->InspectShape();
 }
 
@@ -183,6 +185,7 @@ void TGeoNode::Draw(Option_t *option)
 //_____________________________________________________________________________
 void TGeoNode::DrawOverlaps()
 {
+// Method drawing the overlap candidates with this node.
    if (!fNovlp) {printf("node %s is ONLY\n", GetName()); return;}
    if (!fOverlaps) {printf("node %s no overlaps\n", GetName()); return;}
    TGeoNode *node;
@@ -222,6 +225,7 @@ void TGeoNode::FillIdArray(Int_t &ifree, Int_t &nodeid, Int_t *array) const
 //_____________________________________________________________________________
 Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
 {
+// Search for a node within the branch of this one.
    Int_t nd = GetNdaughters();
    if (!nd) return -1;
    TIter next(fVolume->GetNodes());
@@ -420,6 +424,7 @@ void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
 //_____________________________________________________________________________
 void TGeoNode::SetVisibility(Bool_t vis)
 {
+// Set visibility of the node (obsolete).
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    TGeoAtt::SetVisibility(vis);
    gGeoManager->ModifiedPad();
@@ -428,6 +433,7 @@ void TGeoNode::SetVisibility(Bool_t vis)
 //_____________________________________________________________________________
 void TGeoNode::VisibleDaughters(Bool_t vis)
 {
+// Set visibility of the daughters (obsolete).
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    SetVisDaughters(vis);
    gGeoManager->ModifiedPad();
@@ -559,6 +565,7 @@ TGeoNodeOffset::~TGeoNodeOffset()
 //_____________________________________________________________________________
 Int_t TGeoNodeOffset::GetIndex() const
 {
+// Get the index of this offset.
    return (fIndex+fFinder->GetDivIndex());
 }
 

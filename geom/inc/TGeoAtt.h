@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.5 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.6 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
 //   EGeoActivityAtt     GetActivityAtt();
 //   EGeoOptimizationAtt GetOptimizationAtt();
 
-  ClassDef(TGeoAtt, 1)         // class for visibility, activity and optimization attributes for volumes/nodes
+   ClassDef(TGeoAtt, 1)         // class for visibility, activity and optimization attributes for volumes/nodes
 };
 
 #endif

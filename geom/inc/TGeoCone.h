@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.23 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.24 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoCone, 1)         // conical tube class
+   ClassDef(TGeoCone, 1)         // conical tube class
 
 };
 
@@ -171,7 +171,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoConeSeg, 1)         // conical tube segment class 
+   ClassDef(TGeoConeSeg, 1)         // conical tube segment class 
 };
 
 #endif

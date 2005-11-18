@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.32 2005/10/21 13:01:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.33 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -117,7 +117,7 @@ TGeoTrd1::~TGeoTrd1()
 //_____________________________________________________________________________
 Double_t TGeoTrd1::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = 4.*(fDx1+fDx2)*fDy*fDz;
    return capacity;
 }   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.50 2005/09/26 12:14:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.51 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -138,7 +138,7 @@ TGeoPcon::~TGeoPcon()
 //_____________________________________________________________________________
 Double_t TGeoPcon::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Int_t ipl;
    Double_t rmin1, rmax1, rmin2, rmax2, phi1, phi2, dz;
    Double_t capacity = 0.;
@@ -524,6 +524,7 @@ void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
 //_____________________________________________________________________________
 Int_t TGeoPcon::GetNsegments() const
 {
+// Returns number of segments on each mesh circle segment.
    return gGeoManager->GetNsegments();
 }
 
@@ -678,6 +679,7 @@ void TGeoPcon::GetBoundingCylinder(Double_t *param) const
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetRmin(Int_t ipl) const
 {
+// Returns Rmin for Z segment IPL.
    if (ipl<0 || ipl>(fNz-1)) {
       Error("GetRmin","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
@@ -688,6 +690,7 @@ Double_t TGeoPcon::GetRmin(Int_t ipl) const
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetRmax(Int_t ipl) const
 {
+// Returns Rmax for Z segment IPL.
    if (ipl<0 || ipl>(fNz-1)) {
       Error("GetRmax","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
@@ -698,6 +701,7 @@ Double_t TGeoPcon::GetRmax(Int_t ipl) const
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetZ(Int_t ipl) const
 {
+// Returns Z for segment IPL.
    if (ipl<0 || ipl>(fNz-1)) {
       Error("GetZ","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
@@ -869,16 +873,16 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
          buff.fPols[indx++] = (2*k+2)*m+j;
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
-     }
-     for (j = 0; j < n-1; j++) {
+      }
+      for (j = 0; j < n-1; j++) {
          buff.fPols[indx++] = c+1;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = (2*k+1)*m+j;
          buff.fPols[indx++] = nz*2*m+(2*k+3)*n+j;
          buff.fPols[indx++] = (2*k+3)*m+j;
          buff.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
-     }
-     if (specialCase) {
+      }
+      if (specialCase) {
          buff.fPols[indx++] = c;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = 2*k*m+j;
@@ -1063,6 +1067,7 @@ void TGeoPcon::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoPcon::SetDimensions(Double_t *param)
 {
+// Set polycone dimensions starting from an array.
    fPhi1    = param[0];
    fDphi    = param[1];
    fNz      = (Int_t)param[2];
@@ -1080,62 +1085,56 @@ void TGeoPcon::SetDimensions(Double_t *param)
 void TGeoPcon::SetPoints(Double_t *points) const
 {
 // create polycone mesh points
-    Double_t phi, dphi;
-    Int_t n = gGeoManager->GetNsegments() + 1;
-    dphi = fDphi/(n-1);
-    Int_t i, j;
-    Int_t indx = 0;
+   Double_t phi, dphi;
+   Int_t n = gGeoManager->GetNsegments() + 1;
+   dphi = fDphi/(n-1);
+   Int_t i, j;
+   Int_t indx = 0;
 
-    if (points) {
-        for (i = 0; i < fNz; i++)
-        {
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = fRmin[i] * TMath::Cos(phi);
-                points[indx++] = fRmin[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = fRmax[i] * TMath::Cos(phi);
-                points[indx++] = fRmax[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-        }
-    }
+   if (points) {
+      for (i = 0; i < fNz; i++) {
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = fRmin[i] * TMath::Cos(phi);
+            points[indx++] = fRmin[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = fRmax[i] * TMath::Cos(phi);
+            points[indx++] = fRmax[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoPcon::SetPoints(Float_t *points) const
 {
 // create polycone mesh points
-    Double_t phi, dphi;
-    Int_t n = gGeoManager->GetNsegments() + 1;
-    dphi = fDphi/(n-1);
-    Int_t i, j;
-    Int_t indx = 0;
+   Double_t phi, dphi;
+   Int_t n = gGeoManager->GetNsegments() + 1;
+   dphi = fDphi/(n-1);
+   Int_t i, j;
+   Int_t indx = 0;
 
-    if (points) {
-        for (i = 0; i < fNz; i++)
-        {
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = fRmin[i] * TMath::Cos(phi);
-                points[indx++] = fRmin[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = fRmax[i] * TMath::Cos(phi);
-                points[indx++] = fRmax[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-        }
-    }
+   if (points) {
+      for (i = 0; i < fNz; i++) {
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = fRmin[i] * TMath::Cos(phi);
+            points[indx++] = fRmin[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = fRmax[i] * TMath::Cos(phi);
+            points[indx++] = fRmax[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+      }
+   }
 }
 //_____________________________________________________________________________
 Int_t TGeoPcon::GetNmeshVertices() const
@@ -1165,6 +1164,7 @@ void TGeoPcon::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoPcon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.54 2005/09/26 12:14:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.55 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -100,7 +100,7 @@ TGeoPgon::~TGeoPgon()
 //_____________________________________________________________________________
 Double_t TGeoPgon::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Int_t ipl;
    Double_t rmin1, rmax1, rmin2, rmax2, dphi, dz;
    Double_t capacity = 0.;
@@ -344,7 +344,7 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       if ((point[0]*dir[1]-point[1]*dir[0])>0) {
          // phi1 next crossing
          if ((point[0]*TMath::Cos(phi1)+point[1]*TMath::Sin(phi1)) <
-             (point[0]*TMath::Cos(phi2)+point[1]*TMath::Sin(phi2))) {
+            (point[0]*TMath::Cos(phi2)+point[1]*TMath::Sin(phi2))) {
             // close to phimax 
             return 0.0;
          } else { 
@@ -354,7 +354,7 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       } else {
          // phimax next crossing
          if ((point[0]*TMath::Cos(phi1)+point[1]*TMath::Sin(phi1)) >
-             (point[0]*TMath::Cos(phi2)+point[1]*TMath::Sin(phi2))) {
+            (point[0]*TMath::Cos(phi2)+point[1]*TMath::Sin(phi2))) {
             // close to phi1 
             return 0.0;
          } else {
@@ -407,6 +407,7 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 //_____________________________________________________________________________
 void TGeoPgon::LocatePhi(Double_t *point, Int_t &ipsec) const
 {
+// Locates index IPSEC of the phi sector containing POINT.
    Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    while (phi<fPhi1) phi+=360.;
    ipsec = Int_t(fNedges*(phi-fPhi1)/fDphi); // [0, fNedges-1]
@@ -416,7 +417,7 @@ void TGeoPgon::LocatePhi(Double_t *point, Int_t &ipsec) const
 //_____________________________________________________________________________
 Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax) const
 {
-   //printf("   PHI crossing list:\n");
+// Returns lists of PGON phi crossings for a ray starting from POINT.
    Double_t rxy, phi, cph, sph;
    Int_t icrossed = 0;
    if ((1.-TMath::Abs(dir[2]))<1E-8) {
@@ -491,6 +492,7 @@ Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Do
 //_____________________________________________________________________________
 Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
+// Performs ray propagation between Z segments.
    snext = 0.;
    if (!nphi) return kFALSE;
    Int_t i;
@@ -561,6 +563,7 @@ Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, In
 //_____________________________________________________________________________
 Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
+// Performs ray propagation between Z segments.
    if (!nphi) return kFALSE;
    Int_t i;
    Double_t rmin, rmax;
@@ -948,7 +951,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
 //_____________________________________________________________________________
 Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the polygone
+// Compute distance from outside point to surface of the polygone
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();               // just safety computed
@@ -1253,6 +1256,7 @@ void TGeoPgon::GetBoundingCylinder(Double_t *param) const
 //_____________________________________________________________________________
 void TGeoPgon::InspectShape() const
 {
+// Inspect the PGON parameters.
    printf("*** Shape %s: TGeoPgon ***\n", GetName());
    printf("    Nedges = %i\n", fNedges);
    TGeoPcon::InspectShape();
@@ -1670,6 +1674,7 @@ void TGeoPgon::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoPgon::SetDimensions(Double_t *param)
 {
+// Set PGON dimensions starting from an array.
    fPhi1    = param[0];
    fDphi    = param[1];
    fNedges  = (Int_t)param[2];
@@ -1685,64 +1690,58 @@ void TGeoPgon::SetDimensions(Double_t *param)
 void TGeoPgon::SetPoints(Double_t *points) const
 {
 // create polygone mesh points
-    Double_t phi, dphi;
-    Int_t n = fNedges + 1;
-    dphi = fDphi/(n-1);
-    Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
-    Int_t i, j;
-    Int_t indx = 0;
+   Double_t phi, dphi;
+   Int_t n = fNedges + 1;
+   dphi = fDphi/(n-1);
+   Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
+   Int_t i, j;
+   Int_t indx = 0;
 
-    if (points) {
-        for (i = 0; i < fNz; i++)
-        {
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = factor * fRmin[i] * TMath::Cos(phi);
-                points[indx++] = factor * fRmin[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = factor * fRmax[i] * TMath::Cos(phi);
-                points[indx++] = factor * fRmax[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-        }
-    }
+   if (points) {
+      for (i = 0; i < fNz; i++) {
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = factor * fRmin[i] * TMath::Cos(phi);
+            points[indx++] = factor * fRmin[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = factor * fRmax[i] * TMath::Cos(phi);
+            points[indx++] = factor * fRmax[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoPgon::SetPoints(Float_t *points) const
 {
 // create polygone mesh points
-    Double_t phi, dphi;
-    Int_t n = fNedges + 1;
-    dphi = fDphi/(n-1);
-    Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
-    Int_t i, j;
-    Int_t indx = 0;
+   Double_t phi, dphi;
+   Int_t n = fNedges + 1;
+   dphi = fDphi/(n-1);
+   Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
+   Int_t i, j;
+   Int_t indx = 0;
 
-    if (points) {
-        for (i = 0; i < fNz; i++)
-        {
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = factor * fRmin[i] * TMath::Cos(phi);
-                points[indx++] = factor * fRmin[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-            for (j = 0; j < n; j++)
-            {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                points[indx++] = factor * fRmax[i] * TMath::Cos(phi);
-                points[indx++] = factor * fRmax[i] * TMath::Sin(phi);
-                points[indx++] = fZ[i];
-            }
-        }
-    }
+   if (points) {
+      for (i = 0; i < fNz; i++) {
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = factor * fRmin[i] * TMath::Cos(phi);
+            points[indx++] = factor * fRmin[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+         for (j = 0; j < n; j++) {
+            phi = (fPhi1+j*dphi)*TMath::DegToRad();
+            points[indx++] = factor * fRmax[i] * TMath::Cos(phi);
+            points[indx++] = factor * fRmax[i] * TMath::Sin(phi);
+            points[indx++] = fZ[i];
+         }
+      }
+   }
 }
 //_____________________________________________________________________________
 Int_t TGeoPgon::GetNmeshVertices() const
@@ -1772,6 +1771,7 @@ void TGeoPgon::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

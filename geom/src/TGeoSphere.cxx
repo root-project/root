@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.46 2005/10/14 14:55:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.47 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -99,7 +99,7 @@ TGeoSphere::~TGeoSphere()
 //_____________________________________________________________________________
 Double_t TGeoSphere::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t th1 = fTheta1*TMath::DegToRad();
    Double_t th2 = fTheta2*TMath::DegToRad();
    Double_t ph1 = fPhi1*TMath::DegToRad();
@@ -294,6 +294,7 @@ Int_t TGeoSphere::IsOnBoundary(Double_t *point) const
 //_____________________________________________________________________________
 Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh, Bool_t checkPh) const
 {
+// Check if a point is inside radius/theta/phi ranges for the spherical sector.
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
    if (checkR) {
       if (TestShapeBit(kGeoRSeg) && (r2<fRmin*fRmin)) return kFALSE;
@@ -383,7 +384,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
       if (TestShapeBit(kGeoThetaSeg)) {
          if (th < fTheta1) {
             saf[2] = r*TMath::Sin((fTheta1-th)*TMath::DegToRad());
-          }    
+         }    
          if (th > fTheta2) {
             saf[3] = r*TMath::Sin((th-fTheta2)*TMath::DegToRad());
          }
@@ -456,47 +457,47 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
          if (fTheta1==90) {
          // surface is a plane
             if (point[2]*dir[2]<0) {
-             snxt = -point[2]/dir[2];
-             ptnew[0] = point[0]+snxt*dir[0];
-             ptnew[1] = point[1]+snxt*dir[1];
-             ptnew[2] = 0;
-             // check range
-             if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
-          }       
-       } else {
-          Double_t r1,r2,z1,z2,dz;
-          Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
-          Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
-          if (ci>0) {
-             r1 = fRmin*si;
-             z1 = fRmin*ci;
-             r2 = fRmax*si;
-             z2 = fRmax*ci;
-          } else {   
-             r1 = fRmax*si;
-             z1 = fRmax*ci;
-             r2 = fRmin*si;
-             z2 = fRmin*ci;
-          }
-          dz = 0.5*(z2-z1);
-          ptnew[0] = point[0];
-          ptnew[1] = point[1];
-          ptnew[2] = point[2]-0.5*(z1+z2);
-          if (TestShapeBit(kGeoPhiSeg)) {
-             st1 = TGeoConeSeg::DistToCons(point, dir, r1, z1, r2, z2, fPhi1, fPhi2); 
-          } else {
-             TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
-             if (delta>0) {
-                st1 = -b-delta;
-                znew = ptnew[2]+st1*dir[2];
-                if (st1<0 || TMath::Abs(znew)>0) {
-                   st1 = -b+delta; 
-                   znew = ptnew[2]+st1*dir[2];
-                   if (st1<0 || TMath::Abs(znew)>0) st1=TGeoShape::Big();
-                } 
-             }     
-          }
-       }       
+               snxt = -point[2]/dir[2];
+               ptnew[0] = point[0]+snxt*dir[0];
+               ptnew[1] = point[1]+snxt*dir[1];
+               ptnew[2] = 0;
+               // check range
+               if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
+            }       
+         } else {
+            Double_t r1,r2,z1,z2,dz;
+            Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
+            Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
+            if (ci>0) {
+               r1 = fRmin*si;
+               z1 = fRmin*ci;
+               r2 = fRmax*si;
+               z2 = fRmax*ci;
+            } else {   
+               r1 = fRmax*si;
+               z1 = fRmax*ci;
+               r2 = fRmin*si;
+               z2 = fRmin*ci;
+            }
+            dz = 0.5*(z2-z1);
+            ptnew[0] = point[0];
+            ptnew[1] = point[1];
+            ptnew[2] = point[2]-0.5*(z1+z2);
+            if (TestShapeBit(kGeoPhiSeg)) {
+               st1 = TGeoConeSeg::DistToCons(point, dir, r1, z1, r2, z2, fPhi1, fPhi2); 
+            } else {
+               TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
+               if (delta>0) {
+                  st1 = -b-delta;
+                  znew = ptnew[2]+st1*dir[2];
+                  if (st1<0 || TMath::Abs(znew)>0) {
+                     st1 = -b+delta; 
+                     znew = ptnew[2]+st1*dir[2];
+                     if (st1<0 || TMath::Abs(znew)>0) st1=TGeoShape::Big();
+                  } 
+               }     
+            }
+         }       
       }
       
       if (fTheta2<180) {
@@ -543,8 +544,8 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                   }   
                }    
             }
-       }
-    }
+         }
+      }
    }
    snxt = TMath::Min(st1, st2);
    snxt = TMath::Min(snxt,snext);
@@ -674,27 +675,27 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
          if (point[2]*dir[2]<0)  sn1 = -point[2]/dir[2];
       } else {
          if (fTheta1>0) {
-          Double_t r1,r2,z1,z2,dz,ptnew[3];
-          Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
-          Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
-          if (ci>0) {
-             r1 = fRmin*si;
-             z1 = fRmin*ci;
-             r2 = fRmax*si;
-             z2 = fRmax*ci;
-          } else {   
-             r1 = fRmax*si;
-             z1 = fRmax*ci;
-             r2 = fRmin*si;
-             z2 = fRmin*ci;
-          }
-             dz = 0.5*(z2-z1);
-             ptnew[0] = point[0];
-             ptnew[1] = point[1];
-             ptnew[2] = point[2]-0.5*(z1+z2);             
-          if (TestShapeBit(kGeoPhiSeg)) {
+            Double_t r1,r2,z1,z2,dz,ptnew[3];
+            Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
+            Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
+            if (ci>0) {
+               r1 = fRmin*si;
+               z1 = fRmin*ci;
+               r2 = fRmax*si;
+               z2 = fRmax*ci;
+            } else {   
+               r1 = fRmax*si;
+               z1 = fRmax*ci;
+               r2 = fRmin*si;
+               z2 = fRmin*ci;
+            }
+            dz = 0.5*(z2-z1);
+            ptnew[0] = point[0];
+            ptnew[1] = point[1];
+            ptnew[2] = point[2]-0.5*(z1+z2);             
+            if (TestShapeBit(kGeoPhiSeg)) {
                sn1 = TGeoConeSeg::DistToCons(point, dir, r1, z1, r2, z2, fPhi1, fPhi2); 
-          } else {
+            } else {
                TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
                if (delta>0) {
                   sn1 = -b-delta;
@@ -705,35 +706,35 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
                      if (sn1<0 || TMath::Abs(znew)>0) sn1=TGeoShape::Big();
                   } 
                }     
-          }
-       }        
+            }
+         }        
       }
       if (fTheta2==90) {
-      // surface is a plane
+         // surface is a plane
          if (point[2]*dir[2]<0)  sn1 = -point[2]/dir[2];
       } else {
          if (fTheta2<180) {
-          Double_t r1,r2,z1,z2,dz,ptnew[3];
-          Double_t si = TMath::Sin(fTheta2*TMath::DegToRad());
-          Double_t ci = TMath::Cos(fTheta2*TMath::DegToRad());
-          if (ci>0) {
-             r1 = fRmin*si;
-             z1 = fRmin*ci;
-             r2 = fRmax*si;
-             z2 = fRmax*ci;
-          } else {   
-             r1 = fRmax*si;
-             z1 = fRmax*ci;
-             r2 = fRmin*si;
-             z2 = fRmin*ci;
-          }
-          dz = 0.5*(z2-z1);
-          ptnew[0] = point[0];
-          ptnew[1] = point[1];
-          ptnew[2] = point[2]-0.5*(z1+z2);             
-          if (TestShapeBit(kGeoPhiSeg)) {
+            Double_t r1,r2,z1,z2,dz,ptnew[3];
+            Double_t si = TMath::Sin(fTheta2*TMath::DegToRad());
+            Double_t ci = TMath::Cos(fTheta2*TMath::DegToRad());
+            if (ci>0) {
+               r1 = fRmin*si;
+               z1 = fRmin*ci;
+               r2 = fRmax*si;
+               z2 = fRmax*ci;
+            } else {   
+               r1 = fRmax*si;
+               z1 = fRmax*ci;
+               r2 = fRmin*si;
+               z2 = fRmin*ci;
+            }
+            dz = 0.5*(z2-z1);
+            ptnew[0] = point[0];
+            ptnew[1] = point[1];
+            ptnew[2] = point[2]-0.5*(z1+z2);             
+            if (TestShapeBit(kGeoPhiSeg)) {
                sn2 = TGeoConeSeg::DistToCons(point, dir, r1, z1, r2, z2, fPhi1, fPhi2); 
-          } else {
+            } else {
                TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
                if (delta>0) {
                   sn2 = -b-delta;
@@ -744,8 +745,8 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
                      if (sn2<0 || TMath::Abs(znew)>0) sn2=TGeoShape::Big();
                   } 
                }     
-          }
-       }        
+            }
+         }        
       }
    }
    Double_t st = TMath::Min(sn1,sn2);       
@@ -1378,6 +1379,7 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
 //_____________________________________________________________________________
 void TGeoSphere::SetDimensions(Double_t *param)
 {
+// Set dimensions of the spherical segment starting from a list of parameters.
    Double_t rmin = param[0];
    Double_t rmax = param[1];
    Double_t theta1 = 0;
@@ -1642,6 +1644,7 @@ void TGeoSphere::Sizeof3D() const
 
 const TBuffer3D & TGeoSphere::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3DSphere buffer;
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

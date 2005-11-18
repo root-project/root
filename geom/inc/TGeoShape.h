@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.35 2005/05/13 16:20:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.36 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -146,7 +146,7 @@ public:
    Int_t    TestShapeBits(UInt_t f) const { return (Int_t) (fShapeBits & f); }
    void     InvertShapeBit(UInt_t f) { fShapeBits ^= f & kBitMask32; }
    
-  ClassDef(TGeoShape, 2)           // base class for shapes
+   ClassDef(TGeoShape, 2)           // base class for shapes
 };
 
 #endif

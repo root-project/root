@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.9 2003/07/31 20:19:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.10 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
-  ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
+   ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
 };
 
 
@@ -92,7 +92,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternX, 1)              // X division pattern
+   ClassDef(TGeoPatternX, 1)              // X division pattern
 };
 
 /*************************************************************************
@@ -111,12 +111,11 @@ public:
    // destructor
    virtual ~TGeoPatternY();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; 
-                          ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+fStep/2);}
+   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternY, 1)              // Y division pattern
+   ClassDef(TGeoPatternY, 1)              // Y division pattern
 };
 
 /*************************************************************************
@@ -135,12 +134,11 @@ public:
    // destructor
    virtual ~TGeoPatternZ();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; 
-                          ((TGeoTranslation*)fMatrix)->SetDz(fStart+idiv*fStep+fStep/2);}
+   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDz(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternZ, 1)              // Z division pattern
+   ClassDef(TGeoPatternZ, 1)              // Z division pattern
 };
 
 /*************************************************************************
@@ -165,7 +163,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
+   ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
 };
 
 /*************************************************************************
@@ -192,7 +190,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
+   ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
 };
 
 /*************************************************************************
@@ -220,7 +218,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
+   ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
 };
 
 /*************************************************************************
@@ -250,7 +248,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternTrapZ, 1)              // Trap od Gtra Z division pattern
+   ClassDef(TGeoPatternTrapZ, 1)              // Trap od Gtra Z division pattern
 };
 
 
@@ -274,7 +272,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
+   ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
 };
 
 /*************************************************************************
@@ -300,7 +298,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
+   ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
 };
 
 /*************************************************************************
@@ -323,7 +321,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
+   ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
 };
 
 /*************************************************************************
@@ -349,7 +347,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
+   ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
 
 //***** Need to add class and globals to LinkDef.h *****
 };
@@ -374,7 +372,7 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
+   ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
 };
 
 /*************************************************************************
@@ -401,7 +399,7 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
 
-  ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions
+   ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.26 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.27 2005/11/17 13:17:55 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -81,7 +81,7 @@ TGeoEltu::~TGeoEltu()
 //_____________________________________________________________________________
 Double_t TGeoEltu::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*fRmin*fRmax;
    return capacity;
 }   
@@ -287,6 +287,7 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
+// Divide the shape along one axis.
    Error("Divide", "Elliptical tubes divisions not implemenetd");
    return 0;
 }   
@@ -396,6 +397,7 @@ void TGeoEltu::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 {
+// Set dimensions of the eliptical tube.
    if ((a<=0) || (b<0) || (dz<0)) {
       SetShapeBit(kGeoRunTimeShape);
    }
@@ -407,6 +409,7 @@ void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 //_____________________________________________________________________________
 void TGeoEltu::SetDimensions(Double_t *param)
 {
+// Set shape dimensions starting from an array.
    Double_t a    = param[0];
    Double_t b    = param[1];
    Double_t dz   = param[2];
@@ -416,104 +419,104 @@ void TGeoEltu::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoEltu::SetPoints(Double_t *points) const
 {
-// create tube mesh points
-    Double_t dz;
-    Int_t j, n;
+// Create eliptical tube mesh points
+   Double_t dz;
+   Int_t j, n;
 
-    n = gGeoManager->GetNsegments();
-    Double_t dphi = 360./n;
-    Double_t phi = 0;
-    Double_t cph,sph;
-    dz = fDz;
+   n = gGeoManager->GetNsegments();
+   Double_t dphi = 360./n;
+   Double_t phi = 0;
+   Double_t cph,sph;
+   dz = fDz;
 
-    Int_t indx = 0;
-    Double_t r2,r;
-    Double_t a2=fRmin*fRmin;
-    Double_t b2=fRmax*fRmax;
+   Int_t indx = 0;
+   Double_t r2,r;
+   Double_t a2=fRmin*fRmin;
+   Double_t b2=fRmax*fRmax;
 
-    if (points) {
-
-        for (j = 0; j < n; j++) {
-            points[indx+6*n] = points[indx] = 0;
-            indx++;
-            points[indx+6*n] = points[indx] = 0;
-            indx++;
-            points[indx+6*n] = dz;
-            points[indx]     =-dz;
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            sph=TMath::Sin(phi);
-            cph=TMath::Cos(phi);
-            r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
-            r=TMath::Sqrt(r2);
-            points[indx+6*n] = points[indx] = r*cph;
-            indx++;
-            points[indx+6*n] = points[indx] = r*sph;
-            indx++;
-            points[indx+6*n]= dz;
-            points[indx]    =-dz;
-            indx++;
-        }
-    }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         points[indx+6*n] = points[indx] = 0;
+         indx++;
+         points[indx+6*n] = points[indx] = 0;
+         indx++;
+         points[indx+6*n] = dz;
+         points[indx]     =-dz;
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         sph=TMath::Sin(phi);
+         cph=TMath::Cos(phi);
+         r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
+         r=TMath::Sqrt(r2);
+         points[indx+6*n] = points[indx] = r*cph;
+         indx++;
+         points[indx+6*n] = points[indx] = r*sph;
+         indx++;
+         points[indx+6*n]= dz;
+         points[indx]    =-dz;
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 Int_t TGeoEltu::GetNmeshVertices() const
 {
+// Returns the number of vertices on the mesh.
    return TGeoTube::GetNmeshVertices();
 }   
    
 //_____________________________________________________________________________
 void TGeoEltu::SetPoints(Float_t *points) const
 {
-// create tube mesh points
-    Double_t dz;
-    Int_t j, n;
+// Create eliptical tube mesh points
+   Double_t dz;
+   Int_t j, n;
 
-    n = gGeoManager->GetNsegments();
-    Double_t dphi = 360./n;
-    Double_t phi = 0;
-    Double_t cph,sph;
-    dz = fDz;
+   n = gGeoManager->GetNsegments();
+   Double_t dphi = 360./n;
+   Double_t phi = 0;
+   Double_t cph,sph;
+   dz = fDz;
 
-    Int_t indx = 0;
-    Double_t r2,r;
-    Double_t a2=fRmin*fRmin;
-    Double_t b2=fRmax*fRmax;
+   Int_t indx = 0;
+   Double_t r2,r;
+   Double_t a2=fRmin*fRmin;
+   Double_t b2=fRmax*fRmax;
 
-    if (points) {
-
-        for (j = 0; j < n; j++) {
-            points[indx+6*n] = points[indx] = 0;
-            indx++;
-            points[indx+6*n] = points[indx] = 0;
-            indx++;
-            points[indx+6*n] = dz;
-            points[indx]     =-dz;
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            sph=TMath::Sin(phi);
-            cph=TMath::Cos(phi);
-            r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
-            r=TMath::Sqrt(r2);
-            points[indx+6*n] = points[indx] = r*cph;
-            indx++;
-            points[indx+6*n] = points[indx] = r*sph;
-            indx++;
-            points[indx+6*n]= dz;
-            points[indx]    =-dz;
-            indx++;
-        }
-    }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         points[indx+6*n] = points[indx] = 0;
+         indx++;
+         points[indx+6*n] = points[indx] = 0;
+         indx++;
+         points[indx+6*n] = dz;
+         points[indx]     =-dz;
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         sph=TMath::Sin(phi);
+         cph=TMath::Cos(phi);
+         r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
+         r=TMath::Sqrt(r2);
+         points[indx+6*n] = points[indx] = r*cph;
+         indx++;
+         points[indx+6*n] = points[indx] = r*sph;
+         indx++;
+         points[indx+6*n]= dz;
+         points[indx]    =-dz;
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.6 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.7 2005/07/27 10:32:28 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TGeoAtt::TGeoAtt()
 //-----------------------------------------------------------------------------
 TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t * /*optimization_opt*/)
 {
-// constructor
+// Constructor
    fGeoAtt = 0;
    SetActivity(kTRUE);
    SetActiveDaughters(kTRUE);
@@ -54,7 +54,7 @@ TGeoAtt::~TGeoAtt()
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisibility(Bool_t vis)
 {
-// set visibility for this object
+// Set visibility for this object
    if (vis)  SetAttBit(kVisThis);
    else      ResetAttBit(kVisThis);
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
@@ -62,7 +62,7 @@ void TGeoAtt::SetVisibility(Bool_t vis)
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisDaughters(Bool_t vis)
 {
-// set visibility for this object
+// Set visibility for the daughters.
    if (vis)  SetAttBit(kVisDaughters);
    else      ResetAttBit(kVisDaughters);
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
@@ -70,20 +70,20 @@ void TGeoAtt::SetVisDaughters(Bool_t vis)
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisStreamed(Bool_t vis)
 {
-// set visibility for this object
+// Mark attributes as "streamed to file".
    if (vis)  SetAttBit(kVisStreamed);
    else      ResetAttBit(kVisStreamed);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisTouched(Bool_t vis)
 {
-// set visibility for this object
+// Mark visualization attributes as "modified".
    if (vis)  SetAttBit(kVisTouched);
    else      ResetAttBit(kVisTouched);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetOptimization(Option_t * /*option*/)
 {
-// set optimization flags 
+// Set optimization flags. 
 }
 

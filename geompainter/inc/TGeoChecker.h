@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.12 2003/06/17 19:48:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.13 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
    Double_t         Weight(Double_t precision=0.01, Option_t *option="v");
    
-  ClassDef(TGeoChecker, 1)               // a simple geometry checker
+   ClassDef(TGeoChecker, 1)               // a simple geometry checker
 };
 
 #endif

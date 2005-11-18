@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.21 2005/10/14 14:55:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.22 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoSphere, 1)         // sphere class
+   ClassDef(TGeoSphere, 1)         // sphere class
 };
 
 #endif

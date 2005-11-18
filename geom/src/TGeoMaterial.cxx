@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.25 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.26 2005/10/20 09:28:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -208,6 +208,7 @@ void TGeoMaterial::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //-----------------------------------------------------------------------------
 Int_t TGeoMaterial::GetDefaultColor() const
 {
+// Get some default color related to this material.
    Int_t id = 1+ gGeoManager->GetListOfMaterials()->IndexOf(this);
    return (2+id%6);
 }
@@ -215,6 +216,7 @@ Int_t TGeoMaterial::GetDefaultColor() const
 //-----------------------------------------------------------------------------
 TGeoElement *TGeoMaterial::GetElement(Int_t) const
 {
+// Get a pointer to the element this material is made of.
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
@@ -311,6 +313,7 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
 //-----------------------------------------------------------------------------
 void TGeoMixture:: DefineElement(Int_t i, TGeoElement *elem, Double_t weight)
 {
+// Define one component as being a given element with a specified proportion by weight.
    DefineElement(i, elem->A(), elem->Z(), weight);
 }   
 
@@ -343,6 +346,7 @@ void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
 //-----------------------------------------------------------------------------
 TGeoElement *TGeoMixture::GetElement(Int_t i) const
 {
+// Retreive the pointer to the element corresponding to component I.
    if (i<0 || i>=fNelements) {
       Error("GetElement", "Mixture %s has only %d elements", GetName(), fNelements);
       return 0;
@@ -354,7 +358,7 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
 //-----------------------------------------------------------------------------
 Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 {
-// return true if the other material has the same physical properties
+// Return true if the other material has the same physical properties
    if (other->IsEqual(this)) return kTRUE;
    if (!other->IsMixture()) return kFALSE;
    TGeoMixture *mix = (TGeoMixture*)other;

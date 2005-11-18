@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.24 2005/03/09 18:19:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.25 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoTube, 1)         // cylindrical tube class
+   ClassDef(TGeoTube, 1)         // cylindrical tube class
 
 };
 
@@ -156,7 +156,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoTubeSeg, 1)         // cylindrical tube segment class 
+   ClassDef(TGeoTubeSeg, 1)         // cylindrical tube segment class 
 };
 /*************************************************************************
  * TGeoCtub - a tube segment cut with 2 planes. Has 11 parameters :
@@ -214,7 +214,7 @@ public:
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
 
-  ClassDef(TGeoCtub, 1)         // cut tube segment class 
+   ClassDef(TGeoCtub, 1)         // cut tube segment class 
 };
 
 

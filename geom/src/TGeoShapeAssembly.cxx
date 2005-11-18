@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.2 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.3 2005/11/09 09:57:09 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -98,8 +98,8 @@ void TGeoShapeAssembly::ComputeNormal(Double_t *point, Double_t *dir, Double_t *
       DistFromOutside(point,dir,3);
       inext = fVolume->GetNextNodeIndex();
       if (inext<0) {
-          Error("ComputeNormal","Invalid inext=%i (Ncomponents=%i)",inext,fVolume->GetNdaughters());
-          return;
+         Error("ComputeNormal","Invalid inext=%i (Ncomponents=%i)",inext,fVolume->GetNdaughters());
+         return;
       }   
    }   
    TGeoNode *node = fVolume->GetNode(inext);

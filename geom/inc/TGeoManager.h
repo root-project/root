@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.67 2005/09/06 16:45:48 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.68 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -454,18 +454,12 @@ public:
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    
    //--- point/vector reference frame conversion   
-   void                   LocalToMaster(const Double_t *local, Double_t *master) const
-                            {fCache->LocalToMaster(local, master);}
-   void                   LocalToMasterVect(const Double_t *local, Double_t *master) const
-                            {fCache->LocalToMasterVect(local, master);}
-   void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const
-                            {fCache->LocalToMasterBomb(local, master);}
-   void                   MasterToLocal(const Double_t *master, Double_t *local) const
-                            {fCache->MasterToLocal(master, local);}
-   void                   MasterToLocalVect(const Double_t *master, Double_t *local) const
-                            {fCache->MasterToLocalVect(master, local);}
-   void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const
-                            {fCache->MasterToLocalBomb(master, local);}
+   void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCache->LocalToMaster(local, master);}
+   void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {fCache->LocalToMasterVect(local, master);}
+   void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const {fCache->LocalToMasterBomb(local, master);}
+   void                   MasterToLocal(const Double_t *master, Double_t *local) const {fCache->MasterToLocal(master, local);}
+   void                   MasterToLocalVect(const Double_t *master, Double_t *local) const {fCache->MasterToLocalVect(master, local);}
+   void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const {fCache->MasterToLocalBomb(master, local);}
    void                   MasterToTop(const Double_t *master, Double_t *top) const;
    void                   TopToMaster(const Double_t *top, Double_t *master) const;
 
@@ -490,18 +484,14 @@ public:
 
    //--- stack manipulation
    Int_t                  PushPath(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel, fNmany);}
-   Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(fNmany); fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel();return fCurrentOverlapping;}
-   Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index);
-                                     fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
+   Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(fNmany); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
+   Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
    Int_t                  PushPoint(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel,fNmany,fPoint);}
-   Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fNmany,fPoint); fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
-   Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
+   Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fNmany,fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
+   Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 10)          // geometry manager
+   ClassDef(TGeoManager, 10)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

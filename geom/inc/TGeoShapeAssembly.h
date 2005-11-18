@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.h,v 1.1 2005/06/13 12:17:31 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
 
-  ClassDef(TGeoShapeAssembly, 1)         // assembly shape
+   ClassDef(TGeoShapeAssembly, 1)         // assembly shape
 };
 
 #endif

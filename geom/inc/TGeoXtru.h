@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.11 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.12 2005/11/17 13:17:54 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoXtru, 2)         // extruded polygon class 
+   ClassDef(TGeoXtru, 2)         // extruded polygon class 
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.3 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.4 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    virtual void      Paint(Option_t *option = "");
 
 
-  ClassDef(TGeoPhysicalNode, 1)               // base class for physical nodes
+   ClassDef(TGeoPhysicalNode, 1)               // base class for physical nodes
 };
 
 #endif

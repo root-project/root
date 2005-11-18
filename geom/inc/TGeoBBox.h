@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.18 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.19 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoBBox, 1)         // box primitive
+   ClassDef(TGeoBBox, 1)         // box primitive
 };
 
 #endif

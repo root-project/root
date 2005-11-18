@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.5 2004/06/30 10:31:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.6 2005/08/30 09:58:41 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
 //______________________________________________________________________________
 TGeoTrack::~TGeoTrack()
 {
+// Destructor.
    if (fPoints) delete [] fPoints;
    if (gPad) gPad->GetListOfPrimitives()->Remove(this);
 }
@@ -73,6 +74,7 @@ TGeoTrack::~TGeoTrack()
 //______________________________________________________________________________
 TVirtualGeoTrack *TGeoTrack::AddDaughter(Int_t id, Int_t pdgcode, TObject *particle)
 {
+// Add a daughter track to this.
    if (!fTracks) fTracks = new TObjArray(1);
    Int_t index = fTracks->GetEntriesFast();
    TGeoTrack *daughter = new TGeoTrack(id,pdgcode,this,particle);
@@ -172,6 +174,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
 //______________________________________________________________________________
 void TGeoTrack::AddPoint(Double_t x, Double_t y, Double_t z, Double_t t)
 {
+// Add a point on the track.
    if (!fPoints) {
       fPointsSize = 16;
       fPoints = new Double_t[fPointsSize];
@@ -193,6 +196,7 @@ void TGeoTrack::AddPoint(Double_t x, Double_t y, Double_t z, Double_t t)
 //______________________________________________________________________________
 void TGeoTrack::Browse(TBrowser *b)
 {
+// How-to-browse for a track.
    if (!b) return;
    Int_t nd = GetNdaughters();
    if (!nd) {
@@ -207,6 +211,7 @@ void TGeoTrack::Browse(TBrowser *b)
 //______________________________________________________________________________
 Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
 {
+// Returns distance to track primitive for picking.
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
    Int_t dist = 9999;
@@ -316,6 +321,7 @@ void TGeoTrack::Draw(Option_t *option)
  //______________________________________________________________________________
 void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)     
 {
+// Event treatment.
    if (!gPad) return;
    gPad->SetCursor(kHand);
 }
@@ -323,6 +329,7 @@ void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 //______________________________________________________________________________
 char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
+// Get some info about the track.
    static char info[128];
    Double_t x=0,y=0,z=0,t=0;
    GetPoint(0,x,y,z,t);
@@ -333,6 +340,7 @@ char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 //______________________________________________________________________________
 Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double_t &t) const
 {
+// Get coordinates for point I on the track.
    Int_t np = fNpoints>>2;
    if (i<0 || i>=np) {
       Error("GetPoint", "no point %i, indmax=%d", i, np-1);
@@ -349,6 +357,7 @@ Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double
 //______________________________________________________________________________
 const Double_t *TGeoTrack::GetPoint(Int_t i) const
 {
+// Return the pointer to the array of points starting with index I.
    if (!fNpoints) return 0;
    return (&fPoints[i<<2]);
 }   
@@ -405,6 +414,7 @@ void TGeoTrack::Paint(Option_t *option)
 //______________________________________________________________________________
 void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
 {
+// Paint track and daughters.
    Bool_t is_default  = TObject::TestBit(kGeoPDefault);
    Bool_t is_onelevel = TObject::TestBit(kGeoPOnelevel);
    Bool_t is_all      = TObject::TestBit(kGeoPAllDaughters);
@@ -430,6 +440,7 @@ void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
 //______________________________________________________________________________
 void TGeoTrack::PaintCollectTrack(Double_t time, Double_t *box)
 {
+// Paint just this track.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    Int_t np = fNpoints>>2;
@@ -589,6 +600,7 @@ void TGeoTrack::PaintTrack(Option_t *option)
 //______________________________________________________________________________
 void TGeoTrack::Print(Option_t * /*option*/) const
 {
+// Print some info about the track.
    Int_t np = fNpoints>>2;
    printf(" TGeoTrack%6i : %s  ===============================\n", fId,GetName());
    printf("   parent =%6i    nd =%3i\n", (fParent)?fParent->GetId():-1, GetNdaughters());
@@ -648,11 +660,13 @@ void TGeoTrack::SetBits(Bool_t is_default, Bool_t is_onelevel,
 //______________________________________________________________________________
 void TGeoTrack::Sizeof3D() const
 {
+// Returns 3D size for the track.
 }   
 
 //______________________________________________________________________________
 void TGeoTrack::ResetTrack()
 {
+// Reset data for this track.
    fNpoints    = 0;   
    fPointsSize = 0;
    if (fTracks) {fTracks->Delete(); delete fTracks;}

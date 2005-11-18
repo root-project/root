@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.5 2005/07/20 13:18:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.6 2005/10/03 06:54:51 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
    TIter next (gGeoManager->GetListOfMaterials());
    TGeoMaterial *mat;
    while ((mat = (TGeoMaterial*)next())) {
-     if (mat->GetUniqueID() == (UInt_t)imat) break;
+      if (mat->GetUniqueID() == (UInt_t)imat) break;
    }
    if (!mat || (mat->GetUniqueID() != (UInt_t)imat)) {
       fMaterial = 0;

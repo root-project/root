@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.64 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.65 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -168,14 +168,14 @@ TGeoTube::~TGeoTube()
 //_____________________________________________________________________________
 Double_t TGeoTube::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    return TGeoTube::Capacity(fRmin,fRmax, fDz);
 }   
 
 //_____________________________________________________________________________
 Double_t TGeoTube::Capacity(Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
 }   
@@ -856,6 +856,7 @@ void TGeoTube::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
 {
+// Set tube dimensions.
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
@@ -866,6 +867,7 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
 //_____________________________________________________________________________
 void TGeoTube::SetDimensions(Double_t *param)
 {
+// Set tube dimensions starting from a list.
    Double_t rmin = param[0];
    Double_t rmax = param[1];
    Double_t dz   = param[2];
@@ -1022,6 +1024,7 @@ void TGeoTube::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3DTube buffer;
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -1113,14 +1116,14 @@ TGeoTubeSeg::~TGeoTubeSeg()
 //_____________________________________________________________________________
 Double_t TGeoTubeSeg::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    return TGeoTubeSeg::Capacity(fRmin,fRmax,fDz,fPhi1,fPhi2);
 }   
 
 //_____________________________________________________________________________
 Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2)
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = TMath::Abs(phi2-phi1)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
 }   
@@ -1941,6 +1944,7 @@ void TGeoTubeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
 void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phi1, Double_t phi2)
 {
+// Set dimensions of the tube segment.
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
@@ -1954,6 +1958,7 @@ void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
 //_____________________________________________________________________________
 void TGeoTubeSeg::SetDimensions(Double_t *param)
 {
+// Set dimensions of the tube segment starting from a list.
    Double_t rmin = param[0];
    Double_t rmax = param[1];
    Double_t dz   = param[2];
@@ -1965,83 +1970,83 @@ void TGeoTubeSeg::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoTubeSeg::SetPoints(Double_t *points) const
 {
-// create sphere mesh points
-    Double_t dz;
-    Int_t j, n;
-    Double_t phi, phi1, phi2, dphi;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
-    if (phi2<phi1) phi2+=360.;
-    n = gGeoManager->GetNsegments()+1;
+// Create tube segment mesh points.
+   Double_t dz;
+   Int_t j, n;
+   Double_t phi, phi1, phi2, dphi;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
+   if (phi2<phi1) phi2+=360.;
+   n = gGeoManager->GetNsegments()+1;
 
-    dphi = (phi2-phi1)/(n-1);
-    dz   = fDz;
+   dphi = (phi2-phi1)/(n-1);
+   dz   = fDz;
 
-    if (points) {
-        Int_t indx = 0;
+   if (points) {
+      Int_t indx = 0;
 
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n] = dz;
-            points[indx]     =-dz;
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n]= dz;
-            points[indx]    =-dz;
-            indx++;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n] = dz;
+         points[indx]     =-dz;
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n]= dz;
+         points[indx]    =-dz;
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoTubeSeg::SetPoints(Float_t *points) const
 {
-// create sphere mesh points
-    Double_t dz;
-    Int_t j, n;
-    Double_t phi, phi1, phi2, dphi;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
-    if (phi2<phi1) phi2+=360.;
-    n = gGeoManager->GetNsegments()+1;
+// Create tube segment mesh points.
+   Double_t dz;
+   Int_t j, n;
+   Double_t phi, phi1, phi2, dphi;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
+   if (phi2<phi1) phi2+=360.;
+   n = gGeoManager->GetNsegments()+1;
 
-    dphi = (phi2-phi1)/(n-1);
-    dz   = fDz;
+   dphi = (phi2-phi1)/(n-1);
+   dz   = fDz;
 
-    if (points) {
-        Int_t indx = 0;
+   if (points) {
+      Int_t indx = 0;
 
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n] = dz;
-            points[indx]     =-dz;
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n]= dz;
-            points[indx]    =-dz;
-            indx++;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n] = dz;
+         points[indx]     =-dz;
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n]= dz;
+         points[indx]    =-dz;
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
@@ -2071,6 +2076,7 @@ void TGeoTubeSeg::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3DTubeSeg buffer;
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -2165,7 +2171,7 @@ TGeoCtub::~TGeoCtub()
 //_____________________________________________________________________________
 Double_t TGeoCtub::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = TGeoTubeSeg::Capacity();
    return capacity;
 }   
@@ -2612,6 +2618,7 @@ Double_t TGeoCtub::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
+// Divide the tube along one axis.
    Warning("Divide", "In shape %s division of a cut tube not implemented", GetName());
    return 0;
 }
@@ -2721,6 +2728,7 @@ void TGeoCtub::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoCtub::SetDimensions(Double_t *param)
 {
+// Set dimensions of the cut tube starting from a list.
    SetCtubDimensions(param[0], param[1], param[2], param[3], param[4], param[5],
                      param[6], param[7], param[8], param[9], param[10]);
    ComputeBBox();
@@ -2729,83 +2737,83 @@ void TGeoCtub::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoCtub::SetPoints(Double_t *points) const
 {
-// create sphere mesh points
-    Double_t dz;
-    Int_t j, n;
-    Double_t phi, phi1, phi2, dphi;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
-    if (phi2<phi1) phi2+=360.;
-    n = gGeoManager->GetNsegments()+1;
+// Create mesh points for the cut tube.
+   Double_t dz;
+   Int_t j, n;
+   Double_t phi, phi1, phi2, dphi;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
+   if (phi2<phi1) phi2+=360.;
+   n = gGeoManager->GetNsegments()+1;
 
-    dphi = (phi2-phi1)/(n-1);
-    dz   = fDz;
+   dphi = (phi2-phi1)/(n-1);
+   dz   = fDz;
 
-    if (points) {
-        Int_t indx = 0;
+   if (points) {
+      Int_t indx = 0;
 
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n] = GetZcoord(points[indx-2], points[indx-1], dz);
-            points[indx]     = GetZcoord(points[indx-2], points[indx-1], -dz);
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n]= GetZcoord(points[indx-2], points[indx-1], dz);
-            points[indx]    = GetZcoord(points[indx-2], points[indx-1], -dz);
-            indx++;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n] = GetZcoord(points[indx-2], points[indx-1], dz);
+         points[indx]     = GetZcoord(points[indx-2], points[indx-1], -dz);
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n]= GetZcoord(points[indx-2], points[indx-1], dz);
+         points[indx]    = GetZcoord(points[indx-2], points[indx-1], -dz);
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoCtub::SetPoints(Float_t *points) const
 {
-// create sphere mesh points
-    Double_t dz;
-    Int_t j, n;
-    Double_t phi, phi1, phi2, dphi;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
-    if (phi2<phi1) phi2+=360.;
-    n = gGeoManager->GetNsegments()+1;
+// Create mesh points for the cut tube.
+   Double_t dz;
+   Int_t j, n;
+   Double_t phi, phi1, phi2, dphi;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
+   if (phi2<phi1) phi2+=360.;
+   n = gGeoManager->GetNsegments()+1;
 
-    dphi = (phi2-phi1)/(n-1);
-    dz   = fDz;
+   dphi = (phi2-phi1)/(n-1);
+   dz   = fDz;
 
-    if (points) {
-        Int_t indx = 0;
+   if (points) {
+      Int_t indx = 0;
 
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n] = GetZcoord(points[indx-2], points[indx-1], dz);
-            points[indx]     = GetZcoord(points[indx-2], points[indx-1], -dz);
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
-            points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
-            indx++;
-            points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
-            indx++;
-            points[indx+6*n]= GetZcoord(points[indx-2], points[indx-1], dz);
-            points[indx]    = GetZcoord(points[indx-2], points[indx-1], -dz);
-            indx++;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmin * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n] = GetZcoord(points[indx-2], points[indx-1], dz);
+         points[indx]     = GetZcoord(points[indx-2], points[indx-1], -dz);
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (phi1+j*dphi)*TMath::DegToRad();
+         points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
+         indx++;
+         points[indx+6*n] = points[indx] = fRmax * TMath::Sin(phi);
+         indx++;
+         points[indx+6*n]= GetZcoord(points[indx-2], points[indx-1], dz);
+         points[indx]    = GetZcoord(points[indx-2], points[indx-1], -dz);
+         indx++;
+      }
+   }
 }
 
 //_____________________________________________________________________________
@@ -2820,6 +2828,7 @@ Int_t TGeoCtub::GetNmeshVertices() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3DCutTube buffer;
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

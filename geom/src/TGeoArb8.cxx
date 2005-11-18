@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.44 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.45 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -102,7 +102,7 @@ ClassImp(TGeoArb8)
 //_____________________________________________________________________________
 TGeoArb8::TGeoArb8()
 {
-   // dummy ctor
+// Default ctor.
    fDz = 0;
    fTwist = 0;
    for (Int_t i=0; i<8; i++) {
@@ -116,7 +116,7 @@ TGeoArb8::TGeoArb8()
 TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
          :TGeoBBox(0,0,0)
 {
-// constructor. If the array of vertices is not null, this should be
+// Constructor. If the array of vertices is not null, this should be
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
@@ -140,7 +140,7 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
 TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
          :TGeoBBox(name, 0,0,0)
 {
-// constructor. If the array of vertices is not null, this should be
+// Named constructor. If the array of vertices is not null, this should be
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
@@ -163,14 +163,14 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 //_____________________________________________________________________________
 TGeoArb8::~TGeoArb8()
 {
-// destructor
+// Destructor.
    if (fTwist) delete [] fTwist;
 }
 
 //_____________________________________________________________________________
 Double_t TGeoArb8::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3].
    Int_t i,j;
    Double_t capacity = 0;
    for (i=0; i<4; i++) {
@@ -186,7 +186,7 @@ Double_t TGeoArb8::Capacity() const
 //_____________________________________________________________________________
 void TGeoArb8::ComputeBBox()
 {
-// compute bounding box for a Arb8
+// Computes bounding box for an Arb8 shape.
    Double_t xmin, xmax, ymin, ymax;
    xmin = xmax = fXY[0][0];
    ymin = ymax = fXY[0][1];
@@ -209,7 +209,7 @@ void TGeoArb8::ComputeBBox()
 //_____________________________________________________________________________
 void TGeoArb8::ComputeTwist()
 {
-// compute tangents of twist angles (angles between projections on XY plane
+// Computes tangents of twist angles (angles between projections on XY plane
 // of corresponding -dz +dz edges). Called after last point [7] was set.
    Double_t twist[4];
    Bool_t twisted = kFALSE;
@@ -310,7 +310,7 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 //_____________________________________________________________________________
 Bool_t TGeoArb8::Contains(Double_t *point) const
 {
-// test if point is inside this sphere
+// Test if point is inside this shape.
    // first check Z range
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
    // compute intersection between Z plane containing point and the arb8
@@ -329,7 +329,7 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
 //_____________________________________________________________________________
 Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const 
 {
-// compute distance to plane ipl :
+// Computes distance to plane ipl :
 // ipl=0 : points 0,4,1,5
 // ipl=1 : points 1,5,2,6
 // ipl=2 : points 2,6,3,7
@@ -426,7 +426,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 //_____________________________________________________________________________
 Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
-// compute distance from outside point to surface of the arb8
+// Computes distance from outside point to surface of the shape.
    Double_t snxt=TGeoShape::Big();
    if (!TGeoBBox::Contains(point)) {
       snxt=TGeoBBox::DistFromOutside(point,dir,3);
@@ -466,7 +466,7 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
 //_____________________________________________________________________________
 Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
-// compute distance from inside point to surface of the arb8
+// Compute distance from inside point to surface of the shape.
 #ifdef OLDALGORITHM
    Int_t i;
    Double_t dist[6];
@@ -556,6 +556,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
 TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
+// Divide this shape along one axis.
    Error("Divide", "Division of an arbitrary trapezoid not implemented");
    return voldiv;
 }      
@@ -563,6 +564,7 @@ TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t
 //_____________________________________________________________________________
 Double_t TGeoArb8::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
+// Get shape range on a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -653,7 +655,7 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 //_____________________________________________________________________________
 void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t *norm)
 {
-// Compute normal to plane defined by P1, P2 and P3
+// Computes normal to plane defined by P1, P2 and P3
    Double_t cross = 0.;
    Double_t v1[3], v2[3];
    Int_t i;
@@ -675,7 +677,7 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
 //_____________________________________________________________________________
 Bool_t TGeoArb8::InsidePolygon(Double_t x, Double_t y, Double_t *pts)
 {
-// Find if a point in XY plane is inside the polygon defines by PTS.
+// Finds if a point in XY plane is inside the polygon defines by PTS.
    Int_t i,j;
    Double_t x1,y1,x2,y2;
    Double_t cross;
@@ -694,7 +696,7 @@ Bool_t TGeoArb8::InsidePolygon(Double_t x, Double_t y, Double_t *pts)
 //_____________________________________________________________________________
 void TGeoArb8::InspectShape() const
 {
-// print shape parameters
+// Prints shape parameters
    printf("*** Shape %s: TGeoArb8 ***\n", GetName());
    if (IsTwisted()) printf("  = TWISTED\n");
    for (Int_t ip=0; ip<8; ip++) {
@@ -708,8 +710,7 @@ void TGeoArb8::InspectShape() const
 //_____________________________________________________________________________
 Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
+// Computes the closest distance from given point to this shape.
    Double_t safz = fDz-TMath::Abs(point[2]);
    if (!in) safz = -safz;
    Int_t iseg;
@@ -794,7 +795,7 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
 Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
 {
 // Estimate safety to lateral plane defined by segment iseg in range [0,3]
-// might be negative: plane seen only from inside
+// Might be negative: plane seen only from inside.
    Double_t vertices[12];
    Int_t ipln = (iseg+1)%4;
    // point 1
@@ -864,7 +865,7 @@ void TGeoArb8::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 {
- // compute intersection points between plane at zpl and non-horizontal edges
+ // Computes intersection points between plane at zpl and non-horizontal edges.
    Double_t cf = 0.5*(fDz-zpl)/fDz;
    for (Int_t i=0; i<4; i++) {
       vertices[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
@@ -875,7 +876,7 @@ void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 //_____________________________________________________________________________
 void TGeoArb8::SetDimensions(Double_t *param)
 {
-// set arb8 params in one step :
+// Set all arb8 params in one step.
    fDz      = param[0];
    for (Int_t i=0; i<8; i++) {
       fXY[i][0] = param[2*i];
@@ -888,7 +889,7 @@ void TGeoArb8::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoArb8::SetPoints(Double_t *points) const
 {
-// create arb8 mesh points
+// Creates arb8 mesh points
    for (Int_t i=0; i<8; i++) {
       points[3*i] = fXY[i][0];
       points[3*i+1] = fXY[i][1];
@@ -899,7 +900,7 @@ void TGeoArb8::SetPoints(Double_t *points) const
 //_____________________________________________________________________________
 void TGeoArb8::SetPoints(Float_t *points) const
 {
-// create arb8 mesh points
+// Creates arb8 mesh points
    for (Int_t i=0; i<8; i++) {
       points[3*i] = fXY[i][0];
       points[3*i+1] = fXY[i][1];
@@ -910,7 +911,7 @@ void TGeoArb8::SetPoints(Float_t *points) const
 //_____________________________________________________________________________
 void TGeoArb8::SetVertex(Int_t vnum, Double_t x, Double_t y)
 {
-//  set values for a given vertex
+//  Set values for a given vertex.
    if (vnum<0 || vnum >7) {
       Error("SetVertex", "Invalid vertex number");
       return;
@@ -926,7 +927,7 @@ void TGeoArb8::SetVertex(Int_t vnum, Double_t x, Double_t y)
 //_____________________________________________________________________________
 void TGeoArb8::Sizeof3D() const
 {
-// fill size of this 3-D object
+// Fill size of this 3-D object
    TGeoBBox::Sizeof3D();
 }
 
@@ -935,7 +936,7 @@ ClassImp(TGeoTrap)
 //_____________________________________________________________________________
 TGeoTrap::TGeoTrap()
 {
-   // dummy ctor
+// Default ctor
    fDz = 0;
    fTheta = 0;
    fPhi = 0;
@@ -946,6 +947,7 @@ TGeoTrap::TGeoTrap()
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi)
          :TGeoArb8("", 0, 0)
 {
+// Constructor providing just a range in Z, theta and phi.
    fDz = dz;
    fTheta = theta;
    fPhi = phi;
@@ -958,7 +960,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
               Double_t tl2, Double_t alpha2)
          :TGeoArb8("", 0, 0)
 {
-// constructor.
+// Normal constructor.
    fDz = dz;
    fTheta = theta;
    fPhi = phi;
@@ -996,7 +998,7 @@ TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, 
               Double_t tl2, Double_t alpha2)
          :TGeoArb8(name, 0, 0)
 {
-// constructor with name
+// Constructor with name.
    SetName(name);
    fDz = dz;
    fTheta = theta;
@@ -1042,7 +1044,7 @@ TGeoTrap::~TGeoTrap()
 //_____________________________________________________________________________
 Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the arb8
+// Compute distance from inside point to surface of the trapezoid
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
@@ -1094,7 +1096,7 @@ Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 //_____________________________________________________________________________
 Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the arb8
+// Compute distance from outside point to surface of the trapezoid
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kFALSE);
@@ -1252,8 +1254,8 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 //_____________________________________________________________________________
 TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
+// In case shape has some negative parameters, these have to be computed
+// in order to fit the mother.
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
@@ -1262,38 +1264,32 @@ TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    Double_t dz, h1, bl1, tl1, h2, bl2, tl2;
    if (fDz<0) dz=((TGeoTrap*)mother)->GetDz();
    else dz=fDz;
-   if (fH1<0) 
-      h1 = ((TGeoTrap*)mother)->GetH1();
-    else 
-      h1 = fH1;
-   if (fH2<0) 
-      h2 = ((TGeoTrap*)mother)->GetH2();
-    else 
-      h2 = fH2;
-   if (fBl1<0) 
-      bl1 = ((TGeoTrap*)mother)->GetBl1();
-    else 
-      bl1 = fBl1;
-   if (fBl2<0) 
-      bl2 = ((TGeoTrap*)mother)->GetBl2();
-    else 
-      bl2 = fBl2;
-   if (fTl1<0) 
-      tl1 = ((TGeoTrap*)mother)->GetTl1();
-    else 
-      tl1 = fTl1;
-   if (fTl2<0) 
-      tl2 = ((TGeoTrap*)mother)->GetTl2();
-    else 
-      tl2 = fTl2;
+
+   if (fH1<0)  h1 = ((TGeoTrap*)mother)->GetH1();
+   else        h1 = fH1;
+
+   if (fH2<0)  h2 = ((TGeoTrap*)mother)->GetH2();
+   else        h2 = fH2;
+
+   if (fBl1<0) bl1 = ((TGeoTrap*)mother)->GetBl1();
+   else        bl1 = fBl1;
+
+   if (fBl2<0) bl2 = ((TGeoTrap*)mother)->GetBl2();
+   else        bl2 = fBl2;
+
+   if (fTl1<0) tl1 = ((TGeoTrap*)mother)->GetTl1();
+   else        tl1 = fTl1;
+
+   if (fTl2<0) tl2 = ((TGeoTrap*)mother)->GetTl2();
+   else        tl2 = fTl2;
+
    return (new TGeoTrap(dz, fTheta, fPhi, h1, bl1, tl1, fAlpha1, h2, bl2, tl2, fAlpha2));
 }
 
 //_____________________________________________________________________________
 Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
 {
-// Computes the closest distance from given point to this shape, according
-// to option. 
+// Computes the closest distance from given point to this shape.
    Double_t safe = TGeoShape::Big();
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
@@ -1372,7 +1368,7 @@ ClassImp(TGeoGtra)
 //_____________________________________________________________________________
 TGeoGtra::TGeoGtra()
 {
-   // dummy ctor
+// Default ctor
    fTwistAngle = 0;
 }
 
@@ -1382,7 +1378,7 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
               Double_t tl2, Double_t alpha2)
          :TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
-// constructor. 
+// Constructor. 
    fTheta = theta;
    fPhi = phi;
    fH1 = h1;
@@ -1438,7 +1434,7 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
               Double_t tl2, Double_t alpha2)
          :TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
-// constructor. 
+// Constructor providing the name of the shape. 
    SetName(name);
    fTheta = theta;
    fPhi = phi;
@@ -1492,13 +1488,13 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
 //_____________________________________________________________________________
 TGeoGtra::~TGeoGtra()
 {
-// destructor
+// Destructor.
 }
 
 //_____________________________________________________________________________
 Double_t TGeoGtra::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the arb8
+// Compute distance from inside point to surface of the shape.
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
@@ -1512,7 +1508,7 @@ Double_t TGeoGtra::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 //_____________________________________________________________________________
 Double_t TGeoGtra::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the arb8
+// Compute distance from inside point to surface of the shape.
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
@@ -1526,7 +1522,7 @@ Double_t TGeoGtra::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 //_____________________________________________________________________________
 TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
+// In case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (mother->IsRunTimeShape()) {

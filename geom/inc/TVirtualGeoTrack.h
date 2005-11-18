@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.6 2004/03/05 07:47:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.7 2004/03/05 11:53:36 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    void                SetId(Int_t id)       {fId = id;}
    virtual void        SetPDG(Int_t pdgcode) {fPDG = pdgcode;}
    
-  ClassDef(TVirtualGeoTrack, 1)              // virtual geometry tracks
+   ClassDef(TVirtualGeoTrack, 1)              // virtual geometry tracks
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.33 2005/06/27 14:11:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.34 2005/09/04 15:12:08 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -192,6 +192,7 @@ TGeoShape::~TGeoShape()
 //_____________________________________________________________________________
 const char *TGeoShape::GetName() const
 {
+// Get the shape name.
    if (!strlen(fName)) {
       return ((TObject *)this)->ClassName();
    }
@@ -201,6 +202,7 @@ const char *TGeoShape::GetName() const
 //_____________________________________________________________________________
 Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const
 {
+// Returns distance to shape primitive mesh.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return 9999;
    return painter->ShapeDistancetoPrimitive(this, numpoints, px, py);
@@ -349,6 +351,7 @@ Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_
 //_____________________________________________________________________________
 void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 {
+// Equivalent of TObject::SetBit.
    if (set) {
       SetShapeBit(f);
    } else {
@@ -456,6 +459,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
 //_____________________________________________________________________________
 Int_t TGeoShape::GetBasicColor() const
 {
+// Get the basic color (0-7).
    Int_t basicColor = 0; // TODO: Check on sensible fallback
    if (gGeoManager) {
       const TGeoVolume * volume = gGeoManager->GetPaintVolume();

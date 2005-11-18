@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.2 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.3 2005/04/20 15:22:53 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    TGeoElementTable        *GetElementTable() const;
    
 
-  ClassDef(TGeoElement, 1)              // base element class
+   ClassDef(TGeoElement, 1)              // base element class
 };
 
 /*************************************************************************
@@ -86,9 +86,7 @@ public:
    TGeoElement             *GetElement(Int_t z) {return (TGeoElement*)fList->At(z);}
    Int_t                    GetNelements() const {return fNelements;}
 
-  ClassDef(TGeoElementTable, 2)              // table of elements
-
-//***** Need to add classes and globals to LinkDef.h *****
+   ClassDef(TGeoElementTable, 2)              // table of elements
 };
 
 #endif

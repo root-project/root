@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.71 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.72 2005/10/03 15:26:50 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -79,7 +79,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fCheckedNode = fGeoManager->GetTopNode();
    fChecker = new TGeoChecker(fGeoManager);
    DefineColors();
- }
+}
 //______________________________________________________________________________
 TGeoPainter::~TGeoPainter()
 {
@@ -162,6 +162,7 @@ void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
 //______________________________________________________________________________
 void TGeoPainter::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
 {
+// Geometry checking method (see TGeoChecker).
    fChecker->CheckGeometry(nrays, startx, starty, startz);
 }   
 
@@ -405,7 +406,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
                dist = fGeoManager->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
                if (dist<maxdist) {
                   gPad->SetSelected(fGeoManager->GetCurrentVolume());
-                    fCheckedNode = current;
+                  fCheckedNode = current;
                   box = (TGeoBBox*)fGeoManager->GetCurrentVolume()->GetShape();
                   fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
                   fCheckedBox[3] = box->GetDX();
@@ -496,6 +497,7 @@ Int_t TGeoPainter::CountVisibleNodes()
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
+// Draw method.
    fLastVolume = 0;
    CountVisibleNodes();         
    TString opt = option;
@@ -541,6 +543,7 @@ void TGeoPainter::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
 {
+// Draw an overlap.
    TString opt = option;
    TGeoOverlap *overlap = (TGeoOverlap*)ovlp;
    if (!overlap) return;
@@ -586,6 +589,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
 //______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
 {
+// Draw only one volume.
    TString opt = option;
    opt.ToLower();
    if (fVisLock) {
@@ -714,6 +718,7 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px
 //______________________________________________________________________________
 char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
 {
+// Get some info about the current selected volume.
    const char *snull = "";
    if (!gPad) return (char*)snull;
    static char info[128];
@@ -750,6 +755,7 @@ TGeoChecker *TGeoPainter::GetChecker()
 //______________________________________________________________________________
 void TGeoPainter::GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi) 
 {
+// Get the current view angles.
    if (!gPad) return;
    TView *view = gPad->GetView();
    if (!view) return;
@@ -1140,6 +1146,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 //______________________________________________________________________________
 void TGeoPainter::PrintOverlaps() const
 {
+// Print overlaps (see TGeoChecker::PrintOverlaps())
    fChecker->PrintOverlaps();
 }
    
@@ -1438,6 +1445,7 @@ void TGeoPainter::SetVisLevel(Int_t level) {
 //______________________________________________________________________________
 void TGeoPainter::SetTopVisible(Bool_t vis)
 {
+// Set top geometry volume as visible.
    if (fTopVisible==vis) return;
    fTopVisible = vis;
    if (!gPad) return;
@@ -1474,7 +1482,7 @@ void TGeoPainter::SetVisOption(Int_t option) {
 Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const   
 {   
 //  Returns distance between point px,py on the pad an a shape.
-  Int_t dist = 9999;
+   Int_t dist = 9999;
    TView *view = gPad->GetView();
    if (!(numpoints && view)) return dist;
    Float_t *points = new Float_t[3*numpoints];
@@ -1511,7 +1519,7 @@ void TGeoPainter::Test(Int_t npoints, Option_t *option)
 void TGeoPainter::TestOverlaps(const char* path)
 {
 //--- Geometry overlap checker based on sampling. 
-  fChecker->TestOverlaps(path);
+   fChecker->TestOverlaps(path);
 }   
 
 //______________________________________________________________________________
@@ -1552,6 +1560,7 @@ void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 //______________________________________________________________________________
 Double_t TGeoPainter::Weight(Double_t precision, Option_t *option)
 {
+// Compute weight [kg] of the current volume.
    return fChecker->Weight(precision, option);
 }
    

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:  Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.1 2004/05/26 15:11:13 brun Exp $
 // Author: Andrei Gheata   28/04/04
 
 /*************************************************************************
@@ -104,6 +104,7 @@ void TGeoHelix::InitPoint(Double_t x0, Double_t y0, Double_t z0)
 //_____________________________________________________________________________
 void TGeoHelix::InitPoint (Double_t *point)
 {
+// Set initial point on the helix.
    InitPoint(point[0], point[1], point[2]);
 }
 
@@ -123,6 +124,7 @@ void TGeoHelix::InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_
 //_____________________________________________________________________________
 void TGeoHelix::InitDirection(Double_t *dir, Bool_t is_normalized)
 {
+// Initialize particle direction (tangent on the helix in initial point)   
    InitDirection(dir[0], dir[1], dir[2], is_normalized);
 }     
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.1 2005/10/03 06:54:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.2 2005/10/03 07:02:51 brun Exp $
 // Author: Andrei Gheata   26/09/05
 
 /*************************************************************************
@@ -67,6 +67,16 @@ TGeoScaledShape::~TGeoScaledShape()
 // destructor
 }
 
+//_____________________________________________________________________________
+Double_t TGeoScaledShape::Capacity() const
+{
+// Computes capacity of this shape [length^3]
+   Double_t capacity = fShape->Capacity();
+   const Double_t *scale = fScale->GetScale();
+   capacity *= scale[0]*scale[1]*scale[2];
+   return capacity;
+}   
+   
 //_____________________________________________________________________________   
 void TGeoScaledShape::ComputeBBox()
 {
@@ -169,6 +179,7 @@ TGeoVolume *TGeoScaledShape::Divide(TGeoVolume * /*voldiv*/, const char *divname
 //_____________________________________________________________________________
 const TBuffer3D & TGeoScaledShape::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    TBuffer3D &buffer = (TBuffer3D &)fShape->GetBuffer3D(reqSections, localFrame);
 
 //   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

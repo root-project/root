@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.20 2005/04/01 13:53:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.21 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoCompositeShape, 1)         // boolean composite shape
+   ClassDef(TGeoCompositeShape, 1)         // boolean composite shape
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.5 2005/09/06 12:34:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.6 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -157,7 +157,7 @@ void TGeoPhysicalNode::cd() const
 //_____________________________________________________________________________
 void TGeoPhysicalNode::Draw(Option_t * /*option*/)
 {
-
+// Draw this node.
 }
 
 //_____________________________________________________________________________

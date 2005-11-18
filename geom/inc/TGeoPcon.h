@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.20 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.21 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoPcon, 1)         // polycone class 
+   ClassDef(TGeoPcon, 1)         // polycone class 
 };
 
 #endif

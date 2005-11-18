@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.28 2005/11/17 13:17:55 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -157,7 +157,7 @@ TGeoXtru::~TGeoXtru()
 //_____________________________________________________________________________   
 Double_t TGeoXtru::Capacity() const
 {
-// Compute capacity [cm^3] of this shape.
+// Compute capacity [length^3] of this shape.
    Int_t iz;
    Double_t capacity = 0;
    Double_t area, dz, sc1, sc2;
@@ -563,9 +563,9 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
    fScale[snum] = scale;
    if (snum) {
       if (fZ[snum]<fZ[snum-1]) {
-          Warning("DefineSection", "In shape: %s, Z position of section "
-                  "%i, z=%e, not in increasing order, %i, z=%e",
-                  GetName(),snum,fZ[snum],snum-1,fZ[snum-1]);
+         Warning("DefineSection", "In shape: %s, Z position of section "
+                 "%i, z=%e, not in increasing order, %i, z=%e",
+                 GetName(),snum,fZ[snum],snum-1,fZ[snum-1]);
          return;
       }   
    }
@@ -575,6 +575,7 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
 //_____________________________________________________________________________
 Double_t TGeoXtru::GetZ(Int_t ipl) const
 {
+// Return the Z coordinate for segment ipl.
    if (ipl<0 || ipl>(fNz-1)) {
       Error("GetZ","In shape %s, ipl=%i out of range (0,%i)",GetName(),ipl,0,fNz-1);
       return 0.;
@@ -1020,6 +1021,7 @@ void TGeoXtru::Streamer(TBuffer &R__b)
 //_____________________________________________________________________________
 const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

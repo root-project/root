@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.9 2004/01/20 15:44:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.10 2005/06/13 12:17:31 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -121,7 +121,7 @@ public :
                              Int_t n3, UChar_t *array3);
    virtual void        Voxelize(Option_t *option="");
 
-  ClassDef(TGeoVoxelFinder, 2)                // voxel finder class
+   ClassDef(TGeoVoxelFinder, 2)                // voxel finder class
 };
 
 /*************************************************************************
@@ -149,7 +149,7 @@ public:
    virtual void        SortAll(Option_t *option="");
    virtual void        Voxelize(Option_t *option);
 
-  ClassDef(TGeoCylVoxels, 2)                // cylindrical voxel class
+   ClassDef(TGeoCylVoxels, 2)                // cylindrical voxel class
 };
 
 /*************************************************************************
@@ -182,7 +182,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual void        Voxelize(Option_t *option);
 
-  ClassDef(TGeoFullVoxels, 1)                // full voxels class
+   ClassDef(TGeoFullVoxels, 1)                // full voxels class
 };
 
 #endif

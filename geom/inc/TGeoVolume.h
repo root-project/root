@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.40 2005/06/13 12:17:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.41 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -196,7 +196,7 @@ public:
    Double_t        Weight(Double_t precision=0.01, Option_t *option="va"); // *MENU*
    Double_t        WeightA() const;
 
-  ClassDef(TGeoVolume, 5)              // geometry volume descriptor
+   ClassDef(TGeoVolume, 5)              // geometry volume descriptor
 };
 
 /*************************************************************************
@@ -241,7 +241,7 @@ public:
    virtual void    SetVisibility(Bool_t vis=kTRUE);
 
 
- ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
+   ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
 };
 
 /*************************************************************************
@@ -271,11 +271,10 @@ public:
    void            SetCurrentNodeIndex(Int_t index) {fCurrent = index;}
    void            SetNextNodeIndex(Int_t index) {fNext = index;}
 
-ClassDef(TGeoVolumeAssembly, 2)   // an assembly of volumes
+   ClassDef(TGeoVolumeAssembly, 2)   // an assembly of volumes
 };
 
-inline Int_t TGeoVolume::GetNdaughters() const {
-             if (!fNodes) return 0; return (fNodes->GetEntriesFast());}
+inline Int_t TGeoVolume::GetNdaughters() const {if (!fNodes) return 0; return (fNodes->GetEntriesFast());}
 
 #endif
 

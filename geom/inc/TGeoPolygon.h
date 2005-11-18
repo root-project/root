@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.3 2005/05/17 12:00:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.4 2005/11/17 13:17:54 brun Exp $
 // Author: Mihaela Gheata   05/01/04
 
 /*************************************************************************
@@ -68,7 +68,7 @@ public:
    void                SetXY(Double_t *x, Double_t *y);   
    void                SetNextIndex(Int_t index=-1);
 
-  ClassDef(TGeoPolygon, 2)         // class for handling arbitrary polygons
+   ClassDef(TGeoPolygon, 2)         // class for handling arbitrary polygons
 };
 
 #endif

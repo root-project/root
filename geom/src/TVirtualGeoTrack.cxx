@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TVirtualGeoTrack::TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *pa
 //______________________________________________________________________________
 TVirtualGeoTrack::~TVirtualGeoTrack()
 {
+// Destructor.
    if (fTracks) {
       fTracks->Delete();
       delete fTracks;
@@ -60,6 +61,7 @@ TVirtualGeoTrack::~TVirtualGeoTrack()
 //______________________________________________________________________________
 const char *TVirtualGeoTrack::GetName() const
 {
+// Get the PDG name.
    return gGeoManager->GetPdgName(fPDG);
 }
 
@@ -81,6 +83,7 @@ Bool_t TVirtualGeoTrack::IsInTimeRange() const
 //______________________________________________________________________________
 void TVirtualGeoTrack::SetName(const char *name)
 {
+// Set a default name for this track.
    gGeoManager->SetPdgName(fPDG, name);
    if (!strcmp(name, "gamma")) {
       SetLineColor(kGreen);
@@ -134,7 +137,6 @@ void TVirtualGeoTrack::SetName(const char *name)
       SetLineStyle(kDotted);
       return;
    }     
-   
 }
 
    

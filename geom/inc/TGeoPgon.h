@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.21 2005/09/26 12:14:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.22 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoPgon, 1)         // polygone class 
+   ClassDef(TGeoPgon, 1)         // polygone class 
 };
 
 #endif

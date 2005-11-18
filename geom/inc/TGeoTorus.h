@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.11 2005/03/09 18:19:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.12 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoTorus, 1)         // torus class
+   ClassDef(TGeoTorus, 1)         // torus class
 
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.131 2005/11/10 09:54:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.132 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -539,7 +539,7 @@ TGeoManager::TGeoManager()
       fHashVolumes = 0;
       fHashGVolumes = 0;
       //gGeoManager = this;
-    } else {
+   } else {
       Init();
       gGeoIdentity = 0;
    }
@@ -712,6 +712,7 @@ Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
 //_____________________________________________________________________________
 Int_t TGeoManager::AddOverlap(const TNamed *ovlp)
 {
+// Add an illegal overlap/extrusion to the list.
    Int_t size = fOverlaps->GetEntriesFast();
    fOverlaps->Add((TObject*)ovlp);
    return size;
@@ -823,6 +824,7 @@ void TGeoManager::Browse(TBrowser *b)
 //_____________________________________________________________________________
 void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
 {
+// Set visibility for a volume.
    if(obj->IsA() != TGeoVolume::Class()) return;
    TGeoVolume *vol = (TGeoVolume *) obj;
    vol->SetVisibility(vis);
@@ -953,13 +955,13 @@ TGeoMaterial *TGeoManager::Mixture(const char *name, Float_t *a, Float_t *z, Dou
 {
 // Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
 // materials defined by arrays A,Z and WMAT, having an unique id.
-  TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
-  mix->SetUniqueID(uid);
-  Int_t i;
-  for (i=0;i<nelem;i++) {
-     mix->DefineElement(i,a[i],z[i],wmat[i]);
-  }
-  return (TGeoMaterial*)mix;
+   TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
+   mix->SetUniqueID(uid);
+   Int_t i;
+   for (i=0;i<nelem;i++) {
+      mix->DefineElement(i,a[i],z[i],wmat[i]);
+   }
+   return (TGeoMaterial*)mix;
 }
 
 //_____________________________________________________________________________
@@ -968,13 +970,13 @@ TGeoMaterial *TGeoManager::Mixture(const char *name, Double_t *a, Double_t *z, D
 {
 // Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
 // materials defined by arrays A,Z and WMAT, having an unique id.
-  TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
-  mix->SetUniqueID(uid);
-  Int_t i;
-  for (i=0;i<nelem;i++) {
-     mix->DefineElement(i,a[i],z[i],wmat[i]);
-  }
-  return (TGeoMaterial*)mix;
+   TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
+   mix->SetUniqueID(uid);
+   Int_t i;
+   for (i=0;i<nelem;i++) {
+      mix->DefineElement(i,a[i],z[i],wmat[i]);
+   }
+   return (TGeoMaterial*)mix;
 }
 
 //_____________________________________________________________________________
@@ -1617,6 +1619,7 @@ void TGeoManager::CdNode(Int_t nodeid)
 //_____________________________________________________________________________
 Int_t TGeoManager::GetCurrentNodeId() const
 {
+// Get the unique ID of the current node.
    return fCache->GetCurrentNodeId();
 }
 
@@ -1873,6 +1876,7 @@ const char *TGeoManager::GetPdgName(Int_t pdg) const
 //_____________________________________________________________________________
 void TGeoManager::SetPdgName(Int_t pdg, const char *name)
 {
+// Set a name for a particle having a given pdg.
    if (!fPdgNames) {
       fPdgNames = new TObjArray(256);
    }
@@ -1908,6 +1912,7 @@ void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bom
 //_____________________________________________________________________________
 TGeoHMatrix *TGeoManager::GetHMatrix()
 {
+// Return stored current matrix (global matrix of the next touched node).
    if (!fCurrentMatrix) {
       fCurrentMatrix = new TGeoHMatrix();
       fCurrentMatrix->RegisterYourself();
@@ -2215,11 +2220,11 @@ void TGeoManager::DefaultColors()
    TGeoVolume *vol;
    TIter next(fVolumes);
    while ((vol=(TGeoVolume*)next())) {
-       TGeoMedium *med = vol->GetMedium();
-       if (!med) continue;
-       TGeoMaterial *mat = med->GetMaterial();
-       Int_t matA = (Int_t)mat->GetA();
-       vol->SetLineColor(col[matA]);
+      TGeoMedium *med = vol->GetMedium();
+      if (!med) continue;
+      TGeoMaterial *mat = med->GetMaterial();
+      Int_t matA = (Int_t)mat->GetA();
+      vol->SetLineColor(col[matA]);
    }
 }
 
@@ -3431,8 +3436,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
       if (snext<fStep) {
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
-             fCurrentMatrix->Multiply(current->GetMatrix());
-          }
+            fCurrentMatrix->Multiply(current->GetMatrix());
+         }
          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
@@ -3449,7 +3454,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
       if (snext<fStep) {
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
-             fCurrentMatrix->Multiply(current->GetMatrix());
+            fCurrentMatrix->Multiply(current->GetMatrix());
          }
          fIsStepEntering = kTRUE;
          fStep=snext;
@@ -3476,7 +3481,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             indnext = current->GetVolume()->GetNextNodeIndex();
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
-                fCurrentMatrix->Multiply(current->GetMatrix());
+               fCurrentMatrix->Multiply(current->GetMatrix());
             }    
             fIsStepEntering = kTRUE;
             fStep=snext;
@@ -3510,14 +3515,14 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             indnext = current->GetVolume()->GetNextNodeIndex();
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
-                fCurrentMatrix->Multiply(current->GetMatrix());
-             }
-             fIsStepEntering = kTRUE;
-             fStep=snext;
-             fNextNode = current;
-             nodefound = fNextNode;
-             idaughter = vlist[i];
-             while (indnext>=0) {
+               fCurrentMatrix->Multiply(current->GetMatrix());
+            }
+            fIsStepEntering = kTRUE;
+            fStep=snext;
+            fNextNode = current;
+            nodefound = fNextNode;
+            idaughter = vlist[i];
+            while (indnext>=0) {
                current = current->GetDaughter(indnext);
                if (compmatrix) fCurrentMatrix->Multiply(current->GetMatrix());
                fNextNode = current;
@@ -3826,6 +3831,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 //_____________________________________________________________________________
 Bool_t TGeoManager::IsSamePoint(Double_t x, Double_t y, Double_t z) const
 {
+// Check if a new point with given coordinates is the same as the last located one.
    if (x==fLastPoint[0]) {
       if (y==fLastPoint[1]) {
          if (z==fLastPoint[2]) return kTRUE;
@@ -3898,7 +3904,7 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
 // Make a default painter if none present. Returns pointer to it.
-    if (!fPainter) {
+   if (!fPainter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
          if (h->LoadPlugin() == -1)
@@ -3909,8 +3915,8 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
             return 0;
          }
       }
-    }
-    return fPainter;
+   }
+   return fPainter;
 }
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::GetVolume(const char *name) const

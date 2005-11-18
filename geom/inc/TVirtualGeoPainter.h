@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.29 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.30 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -126,7 +126,7 @@ public:
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual Double_t   Weight(Double_t precision, Option_t *option="v") = 0;
       
-  ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
+   ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.2 2003/02/12 17:20:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.3 2003/02/13 11:04:18 brun Exp $
 // Author: Andrei Gheata   09/02/03
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
    void              SetVolume(TGeoVolume *vol) {fVolume=vol;}
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
    
- ClassDef(TGeoOverlap, 1)         // base class for geometical overlaps
+   ClassDef(TGeoOverlap, 1)         // base class for geometical overlaps
 };
  
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual void      PrintInfo() const;         // *MENU*
    virtual void      Sizeof3D() const;
    
- ClassDef(TGeoExtrusion, 1)      // class representing an extruding node 
+   ClassDef(TGeoExtrusion, 1)      // class representing an extruding node 
 };
  
 /*************************************************************************
@@ -122,7 +122,7 @@ public:
    virtual void      PrintInfo() const;         // *MENU*
    virtual void      Sizeof3D() const;
    
- ClassDef(TGeoNodeOverlap, 1)     // class representing 2 overlapping nodes
+   ClassDef(TGeoNodeOverlap, 1)     // class representing 2 overlapping nodes
 };
      
 #endif

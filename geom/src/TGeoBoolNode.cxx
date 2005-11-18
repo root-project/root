@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.22 2005/05/25 14:25:16 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.23 2005/10/21 13:01:57 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -41,7 +41,7 @@ TGeoBoolNode::TGeoBoolNode()
 //-----------------------------------------------------------------------------
 TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 {
-// constructor
+// Constructor called by TGeoCompositeShape providing 2 subexpressions for the 2 branches.
    fLeft     = 0;
    fRight    = 0;
    fLeftMat  = 0;
@@ -58,6 +58,7 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 //-----------------------------------------------------------------------------
 TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
 {
+// Constructor providing left and right shapes and matrices (in the Boolean operation).
    fSelected = 0;
    fLeft = left;
    fRight = right;
@@ -80,7 +81,7 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
 //-----------------------------------------------------------------------------
 TGeoBoolNode::~TGeoBoolNode()
 {
-// Destructor
+// Destructor.
 // --- deletion of components handled by TGeoManager class.
 }
 //-----------------------------------------------------------------------------
@@ -155,6 +156,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
 //-----------------------------------------------------------------------------
 void TGeoBoolNode::Paint(Option_t * option)
 {
+// Special schema for feeding the 3D buffers to the painter client.
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
    if (!viewer) return;
 
@@ -219,7 +221,7 @@ void TGeoBoolNode::SavePrimitive(ofstream &out, Option_t *option)
 //-----------------------------------------------------------------------------
 void TGeoBoolNode::Sizeof3D() const
 {
-// register size of this 3D object
+// Register size of this 3D object
    fLeft->Sizeof3D();
    fRight->Sizeof3D();
 }
@@ -228,6 +230,7 @@ ClassImp(TGeoUnion)
 //-----------------------------------------------------------------------------
 void TGeoUnion::Paint(Option_t *option)
 {
+// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -328,6 +331,7 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
 //_____________________________________________________________________________
 void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
+// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
    Double_t local[3];
@@ -377,15 +381,14 @@ void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 //-----------------------------------------------------------------------------
 Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// Compute minimum distance to shape vertices
+// Compute minimum distance to shape vertices.
    return 9999;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to outside.
-//   printf("Point is : %g, %g, %g\n", point[0], point[1], point[2]);
+// Computes distance from a given point inside the shape to its boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -460,7 +463,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
 Double_t TGeoUnion::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to inside.
+// Compute distance from a given outside point to the shape.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
@@ -546,6 +549,7 @@ ClassImp(TGeoSubtraction)
 //-----------------------------------------------------------------------------
 void TGeoSubtraction::Paint(Option_t *option)
 {
+// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -621,6 +625,7 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
 //_____________________________________________________________________________
 void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
+// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
    Double_t local[3], ldir[3], lnorm[3];
@@ -690,7 +695,7 @@ Int_t TGeoSubtraction::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to outside.
+// Compute distance from a given point inside to the shape boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -719,7 +724,7 @@ Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t i
 Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to inside.
+// Compute distance from a given point outside to the shape.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
@@ -829,6 +834,7 @@ ClassImp(TGeoIntersection)
 //-----------------------------------------------------------------------------
 void TGeoIntersection::Paint(Option_t *option)
 {
+// Paint method.
    TVirtualViewer3D *viewer = gPad->GetViewer3D();
 
    if (!viewer) {
@@ -974,6 +980,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
 //_____________________________________________________________________________
 void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
+// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    Double_t local[3], ldir[3], lnorm[3];
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
@@ -1040,7 +1047,7 @@ Int_t TGeoIntersection::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to outside.
+// Compute distance from a given point inside to the shape boundary.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
@@ -1069,7 +1076,7 @@ Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t 
 Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
-// Compute distance from a given point to inside.
+// Compute distance from a given point outside to the shape.
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);

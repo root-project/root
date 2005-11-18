@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.36 2005/09/26 12:14:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.37 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -251,7 +251,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                // extra boundary found on way back   
                   fGeoManager->SetCurrentPoint(&array2[3*ist2]);
                   fGeoManager->FindNode();
-                       pm = (TPolyMarker3D*)pma->At(2);
+                  pm = (TPolyMarker3D*)pma->At(2);
                   pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
                   printf("### EXTRA BOUNDARY %i :  %s found at DCLOSE=%f\n", ist2, fGeoManager->GetPath(), dw);
                   ist2++;
@@ -337,13 +337,13 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          // loop all points of the daughter
          for (ip=0; ip<buff->NbPnts(); ip++) {
             memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-                 matrix->LocalToMaster(local, point);
-                 extrude = !shapem->Contains(point);
-                 if (extrude) {
-                    safety = shapem->Safety(point, kFALSE);
-                    if (safety<ovlp) extrude=kFALSE;
-                 }    
-                 if (extrude) {
+            matrix->LocalToMaster(local, point);
+            extrude = !shapem->Contains(point);
+            if (extrude) {
+               safety = shapem->Safety(point, kFALSE);
+               if (safety<ovlp) extrude=kFALSE;
+            }    
+            if (extrude) {
                if (!isextrusion) {
                   isextrusion = kTRUE;
                   char *name = new char[20];
@@ -387,7 +387,8 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             }
          }
       }
-   }   
+   }
+ 
    // now check if the daughters overlap with each other
    if (nd<2) {
       delete buff;
@@ -435,14 +436,14 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          isoverlapping = kFALSE;
          for (ip=0; ip<buff->NbPnts(); ip++) {
             memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-                 matrix1->LocalToMaster(local, point);
+            matrix1->LocalToMaster(local, point);
             matrix->MasterToLocal(point, local); // now point in local reference of node
-                 overlap = shapem->Contains(local);
-                 if (overlap) {
-                    safety = shapem->Safety(local, kTRUE);
-                    if (safety<ovlp) overlap=kFALSE;
-                 }    
-                 if (overlap) {
+            overlap = shapem->Contains(local);
+            if (overlap) {
+               safety = shapem->Safety(local, kTRUE);
+               if (safety<ovlp) overlap=kFALSE;
+            }    
+            if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
                   char *name = new char[20];
@@ -454,19 +455,19 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                   if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
                }     
-                 }
+            }
          }             
          // loop all points of node
          for (ip=0; ip<buffm->NbPnts(); ip++) {
             memcpy(local, &pointsm[3*ip], 3*sizeof(Double_t));
-                 matrix->LocalToMaster(local, point);
+            matrix->LocalToMaster(local, point);
             matrix1->MasterToLocal(point, local); // now point in local reference of node
-                 overlap = shaped->Contains(local);
-                 if (overlap) {
-                    safety = shaped->Safety(local, kTRUE);
-                    if (safety<ovlp) overlap=kFALSE;
-                 }    
-                 if (overlap) {
+            overlap = shaped->Contains(local);
+            if (overlap) {
+               safety = shaped->Safety(local, kTRUE);
+               if (safety<ovlp) overlap=kFALSE;
+            }    
+            if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
                   char *name = new char[20];
@@ -478,7 +479,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                   if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
                }     
-                 }
+            }
          }
       }                
       node->SetOverlaps(0,0);

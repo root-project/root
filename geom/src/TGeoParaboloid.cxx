@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.17 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.18 2005/11/17 13:17:55 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TGeoParaboloid::~TGeoParaboloid()
 //_____________________________________________________________________________
 Double_t TGeoParaboloid::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = TMath::Pi()*fDz*(fRlo*fRlo+fRhi*fRhi);
    return capacity;
 }
@@ -250,6 +250,7 @@ Double_t TGeoParaboloid::DistFromOutside(Double_t *point, Double_t *dir, Int_t i
 TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
+// Divide the paraboloid along one axis.
    Error("Divide", "Paraboloid divisions not implemented");
    return 0;
 }   
@@ -392,6 +393,7 @@ Double_t TGeoParaboloid::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 //_____________________________________________________________________________
 void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz)
 {
+// Set paraboloid dimensions.
    if ((rlo<0) || (rlo<0) || (dz<=0) || (rlo==rhi)) {
       SetShapeBit(kGeoRunTimeShape);
       Error("SetParaboloidDimensions", "Dimensions of %s invalid: check (rlo>=0) (rhi>=0) (rlo!=rhi) dz>0",GetName());
@@ -408,6 +410,7 @@ void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_
 //_____________________________________________________________________________
 void TGeoParaboloid::SetDimensions(Double_t *param)
 {
+// Set paraboloid dimensions starting from an array.
    Double_t rlo    = param[0];
    Double_t rhi    = param[1];
    Double_t dz     = param[2];
@@ -478,6 +481,7 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
 //_____________________________________________________________________________
 Int_t TGeoParaboloid::GetNmeshVertices() const
 {
+// Returns number of vertices on the paraboloid mesh.
    Int_t n = gGeoManager->GetNsegments();
    return (n*(n+1)+2);
 }   
@@ -498,6 +502,7 @@ void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoParaboloid::SetPoints(Float_t *points) const
 {
+// Create paraboloid mesh points.
    if (!points) return;
    Double_t ttmin, ttmax;
    ttmin = TMath::ATan2(-fDz, fRlo);
@@ -552,6 +557,7 @@ void TGeoParaboloid::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.6 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.7 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol, Double_t ovlp)
 //______________________________________________________________________________
 TGeoOverlap::~TGeoOverlap()
 {
+// Destructor.
    if (fMarker) delete fMarker;
 }
 
@@ -92,18 +93,21 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
 //______________________________________________________________________________
 Int_t TGeoOverlap::DistancetoPrimitive(Int_t px, Int_t py)
 {
+// Distance to primitive for an overlap.
    return fVolume->GetGeoManager()->GetGeomPainter()->DistanceToPrimitiveVol(fVolume, px, py);
 }
 
 //______________________________________________________________________________
 void TGeoOverlap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+// Event interception.
    fVolume->GetGeoManager()->GetGeomPainter()->ExecuteVolumeEvent(fVolume, event, px, py);
 }
 
 //______________________________________________________________________________
 void TGeoOverlap::Paint(Option_t *option)
 {
+// Paint the overlap.
    fVolume->GetGeoManager()->GetGeomPainter()->PaintOverlap(this, option);
 }
 
@@ -142,7 +146,7 @@ TGeoExtrusion::TGeoExtrusion(const char *name, TGeoVolume *vol, Int_t inode, Dou
 //______________________________________________________________________________
 TGeoNode *TGeoExtrusion::GetNode(Int_t /*iovlp*/) const
 {
-// Get extruding node
+// Get extruding node.
    return fNode;
 }
    
@@ -158,6 +162,7 @@ void TGeoExtrusion::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGeoExtrusion::PrintInfo() const
 {
+// Print some info.
    printf("* extrusion %s/%s: vol=%s node=%s extr=%g\n", GetName(), GetTitle(), 
           fVolume->GetName(), fNode->GetName(), fOverlap);
 }
@@ -165,6 +170,7 @@ void TGeoExtrusion::PrintInfo() const
 //______________________________________________________________________________
 void TGeoExtrusion::Sizeof3D() const
 {
+// Returns 3D size of this.
    fVolume->GetShape()->Sizeof3D();
    fNode->GetVolume()->GetShape()->Sizeof3D();
 }
@@ -226,6 +232,7 @@ void TGeoNodeOverlap::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGeoNodeOverlap::PrintInfo() const
 {
+// Print some info.
    printf("* overlap %s/%s: vol=%s <%s<->%s> ovlp=%g\n", GetName(), GetTitle(), 
           fVolume->GetName(), fNode1->GetName(), fNode2->GetName(), fOverlap);
 }
@@ -233,6 +240,7 @@ void TGeoNodeOverlap::PrintInfo() const
 //______________________________________________________________________________
 void TGeoNodeOverlap::Sizeof3D() const
 {
+// Get 3D size of this.
    fNode1->GetVolume()->GetShape()->Sizeof3D();
    fNode2->GetVolume()->GetShape()->Sizeof3D();
 }

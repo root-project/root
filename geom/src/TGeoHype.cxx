@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.10 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.11 2005/11/17 13:17:55 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -117,7 +117,7 @@ TGeoHype::~TGeoHype()
 //_____________________________________________________________________________
 Double_t TGeoHype::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*(fRmax*fRmax-fRmin*fRmin) +
                        (2.*TMath::Pi()/3.)*fDz*fDz*fDz*(fToutsq-fTinsq);
    return capacity;                    
@@ -227,15 +227,15 @@ Double_t TGeoHype::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t srin = TGeoShape::Big();
    Double_t srout = TGeoShape::Big();
    Double_t sr;
-  // inner and outer surfaces
-  Double_t s[2];
-  Int_t npos;
-  npos = DistToHype(point, dir, s, kTRUE);
-  if (npos) srin = s[0];
-  npos = DistToHype(point, dir, s, kFALSE);
-  if (npos) srout = s[0];
-  sr = TMath::Min(srin, srout);
-  return TMath::Min(sz,sr);
+   // inner and outer surfaces
+   Double_t s[2];
+   Int_t npos;
+   npos = DistToHype(point, dir, s, kTRUE);
+   if (npos) srin = s[0];
+   npos = DistToHype(point, dir, s, kFALSE);
+   if (npos) srout = s[0];
+   sr = TMath::Min(srin, srout);
+   return TMath::Min(sz,sr);
 }
 
 
@@ -746,6 +746,7 @@ void TGeoHype::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
+// Set dimensions of the hyperboloid.
    fRmin = rin;
    fRmax = rout;
    fDz   = dz;
@@ -762,6 +763,7 @@ void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Dou
 //_____________________________________________________________________________
 void TGeoHype::SetDimensions(Double_t *param)
 {
+// Set dimensions of the hyperboloid starting from an array.
 // param[0] = dz
 // param[1] = rin
 // param[2] = stin
@@ -894,6 +896,7 @@ void TGeoHype::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

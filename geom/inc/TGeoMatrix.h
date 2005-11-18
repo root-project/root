@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.21 2005/09/21 12:12:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.22 2005/10/03 06:54:51 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -98,7 +98,7 @@ public :
    virtual void         RegisterYourself();
    void                 SetDefaultName();
    
-  ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
+   ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };
 
 
@@ -148,7 +148,7 @@ public :
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
 
-  ClassDef(TGeoTranslation, 1)                 // translation class
+   ClassDef(TGeoTranslation, 1)                 // translation class
 };
 
 /*************************************************************************
@@ -186,15 +186,11 @@ public :
                                   Double_t &theta3, Double_t &phi3) const;
    Double_t             GetPhiRotation(Bool_t fixX=kFALSE) const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
-                          {TGeoRotation::LocalToMaster(local, master);}
+   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoRotation::LocalToMaster(local, master);}
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const
-                          {TGeoRotation::MasterToLocal(master, local);}
-   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const
-                          {TGeoRotation::LocalToMaster(local, master);}
-   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const
-                          {TGeoRotation::MasterToLocal(master, local);}
+   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
+   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoRotation::LocalToMaster(local, master);}
+   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
    void                 MultiplyBy(TGeoRotation *rot, Bool_t after=kTRUE);
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
@@ -203,8 +199,7 @@ public :
    void                 SetAngles(Double_t alpha, Double_t beta, Double_t gamma);
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
-   void                 SetMatrix(const Double_t *rot) 
-                           {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));CheckMatrix();}
+   void                 SetMatrix(const Double_t *rot) {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));CheckMatrix();}
    void                 SetRotation(const TGeoMatrix &other);
    void                 GetInverse(Double_t *invmat) const;
    
@@ -212,7 +207,7 @@ public :
    virtual const Double_t    *GetRotationMatrix() const {return &fRotationMatrix[0];}
    virtual const Double_t    *GetScale()          const {return &kUnitScale[0];}
 
-  ClassDef(TGeoRotation, 1)               // rotation class
+   ClassDef(TGeoRotation, 1)               // rotation class
 };
 
 /*************************************************************************
@@ -236,18 +231,16 @@ public :
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    Double_t             LocalToMaster(Double_t dist, const Double_t *dir=0) const;
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
-                          {TGeoScale::LocalToMaster(local, master);}
+   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoScale::LocalToMaster(local, master);}
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
    Double_t             MasterToLocal(Double_t dist, const Double_t *dir=0) const;
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const
-                          {TGeoScale::MasterToLocal(master, local);}
+   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoScale::MasterToLocal(master, local);}
    
    virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()          const {return &fScale[0];}
 
-  ClassDef(TGeoScale, 1)                 // scaling class
+   ClassDef(TGeoScale, 1)                 // scaling class
 };
 
 /*************************************************************************
@@ -294,7 +287,7 @@ public :
    virtual const Double_t    *GetRotationMatrix() const;
    virtual const Double_t    *GetScale()          const {return &kUnitScale[0];}
 
-  ClassDef(TGeoCombiTrans, 1)            // rotation + translation
+   ClassDef(TGeoCombiTrans, 1)            // rotation + translation
 };
 
 /*************************************************************************
@@ -319,13 +312,12 @@ public :
    void                 Clear(Option_t *option ="");
    virtual TGeoMatrix&  Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
-   void                 SetScale(Double_t *scale)
-                           {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
+   void                 SetScale(Double_t *scale) {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
    Bool_t               Normalize();
 
    virtual const Double_t    *GetScale()     const {return &fScale[0];}
 
-  ClassDef(TGeoGenTrans, 1)            // rotation + translation + scale
+   ClassDef(TGeoGenTrans, 1)            // rotation + translation + scale
 };
 
 /*************************************************************************
@@ -345,25 +337,19 @@ public :
    virtual ~TGeoIdentity() {}
    
    virtual TGeoMatrix&  Inverse() const;
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const 
-                           {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
-                           {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const
-                           {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const
-                           {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const
-                           {TGeoIdentity::LocalToMaster(local, master);}
-   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const
-                           {TGeoIdentity::MasterToLocal(master, local);}
+   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
+   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
+   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
+   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
+   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoIdentity::LocalToMaster(local, master);}
+   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoIdentity::MasterToLocal(master, local);}
 
    virtual const Double_t    *GetTranslation() const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
    virtual void         SavePrimitive(ofstream &, Option_t *) {;}
 
-  ClassDef(TGeoIdentity, 1)                 // identity transformation class
+   ClassDef(TGeoIdentity, 1)                 // identity transformation class
 };
 
 
@@ -403,22 +389,19 @@ public :
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
    virtual void         SavePrimitive(ofstream &out, Option_t *option);
-   void                 SetTranslation(const Double_t *vect) 
-                             {SetBit(kGeoTranslation); memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
-   void                 SetRotation(const Double_t *matrix)
-                             {SetBit(kGeoRotation); memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
-   void                 SetScale(const Double_t *scale) 
-                             {SetBit(kGeoScale); memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
+   void                 SetTranslation(const Double_t *vect) {SetBit(kGeoTranslation); memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
+   void                 SetRotation(const Double_t *matrix) {SetBit(kGeoRotation); memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
+   void                 SetScale(const Double_t *scale) {SetBit(kGeoScale); memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
 
 
    virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &fRotationMatrix[0];}
-   virtual const Double_t    *GetScale() const       {return &fScale[0];}
+   virtual const Double_t    *GetScale() const {return &fScale[0];}
 
    virtual Double_t    *GetTranslation() {return &fTranslation[0];}
    virtual Double_t    *GetRotationMatrix() {return &fRotationMatrix[0];}
-   virtual Double_t    *GetScale()       {return &fScale[0];}
-  ClassDef(TGeoHMatrix, 1)                 // global matrix class
+   virtual Double_t    *GetScale() {return &fScale[0];}
+   ClassDef(TGeoHMatrix, 1)                 // global matrix class
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.h,v 1.1 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.h,v 1.2 2004/03/05 11:53:37 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -81,7 +81,7 @@ public:
    Int_t               Size(Int_t &imin, Int_t &imax);
    virtual void        Sizeof3D() const;
    
-  ClassDef(TGeoTrack, 1)              // geometry tracks class
+   ClassDef(TGeoTrack, 1)              // geometry tracks class
 };
 
 #endif

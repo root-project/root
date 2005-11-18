@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.13 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.14 2005/11/17 13:17:54 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
 
-  ClassDef(TGeoEltu, 1)         // elliptical tube class
+   ClassDef(TGeoEltu, 1)         // elliptical tube class
 
 };
 

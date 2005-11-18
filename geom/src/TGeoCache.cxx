@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.36 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.37 2005/09/02 13:54:38 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -741,34 +741,34 @@ void TGeoCacheDummy::LocalToMasterBomb(const Double_t *local, Double_t *master) 
 void TGeoCacheDummy::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    //fMatrix->MasterToLocal(master, local);
-  if (fMatrix->IsIdentity()) {
-     memcpy(local, master, kN3);
-     return;
-  }
-  const Double_t *tr  = fMatrix->GetTranslation();
-  const Double_t *rot = fMatrix->GetRotationMatrix();
-  Double_t mt0  = master[0]-tr[0];
-  Double_t mt1  = master[1]-tr[1];
-  Double_t mt2  = master[2]-tr[2];
-  local[0] = mt0*rot[0] + mt1*rot[3] + mt2*rot[6];
-  local[1] = mt0*rot[1] + mt1*rot[4] + mt2*rot[7];
-  local[2] = mt0*rot[2] + mt1*rot[5] + mt2*rot[8];
+   if (fMatrix->IsIdentity()) {
+      memcpy(local, master, kN3);
+      return;
+   }
+   const Double_t *tr  = fMatrix->GetTranslation();
+   const Double_t *rot = fMatrix->GetRotationMatrix();
+   Double_t mt0  = master[0]-tr[0];
+   Double_t mt1  = master[1]-tr[1];
+   Double_t mt2  = master[2]-tr[2];
+   local[0] = mt0*rot[0] + mt1*rot[3] + mt2*rot[6];
+   local[1] = mt0*rot[1] + mt1*rot[4] + mt2*rot[7];
+   local[2] = mt0*rot[2] + mt1*rot[5] + mt2*rot[8];
 }
 
 //_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
    //fMatrix->MasterToLocalVect(master, local);
-  if (fMatrix->IsIdentity()) {
-     memcpy(local, master, kN3);
-     return;
-  }
-  const Double_t *rot = fMatrix->GetRotationMatrix();
-  for (Int_t i=0; i<3; i++) {
-     local[i] =  master[0]*rot[i]
-               + master[1]*rot[i+3]
-               + master[2]*rot[i+6];
-  }
+   if (fMatrix->IsIdentity()) {
+      memcpy(local, master, kN3);
+      return;
+   }
+   const Double_t *rot = fMatrix->GetRotationMatrix();
+   for (Int_t i=0; i<3; i++) {
+      local[i] =  master[0]*rot[i]
+                + master[1]*rot[i+3]
+                + master[2]*rot[i+6];
+   }
 }
 
 //_____________________________________________________________________________
@@ -1540,6 +1540,7 @@ TGeoCacheState::~TGeoCacheState()
 //_____________________________________________________________________________
 void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point)
 {
+// Fill current modeller state.
    fLevel = level;
    fStart = startlevel;
    fNmany = nmany;
@@ -1560,6 +1561,7 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t
 //_____________________________________________________________________________
 Bool_t TGeoCacheState::GetState(Int_t &level, Int_t &nmany, Double_t *point) const
 {
+// Restore a modeller state.
    level = fLevel;
    nmany = fNmany;
    if (fLevel<0) {
@@ -1625,6 +1627,7 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
 //_____________________________________________________________________________
 void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point)
 {
+// Fill current modeller state.
    fLevel = level;
    fStart = startlevel;
    fNmany = nmany;
@@ -1650,7 +1653,8 @@ void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Int_t nmany, B
 //_____________________________________________________________________________
 Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Int_t &nmany, Double_t *point) const
 {
-   level = fLevel;
+ // Restore a modeller state.
+  level = fLevel;
    nmany = fNmany;
    TGeoNodeCache *cache = gGeoManager->GetCache();
    if (cache->HasIdArray()) cache->FillIdBranch(fIdBranch, fStart);
@@ -1678,6 +1682,7 @@ ClassImp(TGeoMatHandlerId)
 //_____________________________________________________________________________
 TGeoMatHandler::TGeoMatHandler()
 {
+// Default ctor.
    fLocation = 0;
 }
 
@@ -1686,6 +1691,7 @@ ClassImp(TGeoMatHandlerX)
 //_____________________________________________________________________________
 void TGeoMatHandlerX::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[0] = *from;
@@ -1695,6 +1701,7 @@ void TGeoMatHandlerX::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerX::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    *to = (matrix->GetTranslation())[0];
 }
@@ -1702,6 +1709,7 @@ void TGeoMatHandlerX::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerX::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
 }
@@ -1709,6 +1717,7 @@ void TGeoMatHandlerX::LocalToMaster(const Double_t *local, Double_t *master) con
 //_____________________________________________________________________________
 void TGeoMatHandlerX::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
 }
@@ -1716,6 +1725,7 @@ void TGeoMatHandlerX::MasterToLocal(const Double_t *master, Double_t *local) con
 //_____________________________________________________________________________
 void TGeoMatHandlerX::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -1727,6 +1737,7 @@ void TGeoMatHandlerX::LocalToMasterBomb(const Double_t *local, Double_t *master)
 //_____________________________________________________________________________
 void TGeoMatHandlerX::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -1740,6 +1751,7 @@ ClassImp(TGeoMatHandlerY)
 //_____________________________________________________________________________
 void TGeoMatHandlerY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[1] = *from;
@@ -1749,6 +1761,7 @@ void TGeoMatHandlerY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    *to = (matrix->GetTranslation())[1];
 }
@@ -1756,6 +1769,7 @@ void TGeoMatHandlerY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerY::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += fLocation[0];
 }
@@ -1763,6 +1777,7 @@ void TGeoMatHandlerY::LocalToMaster(const Double_t *local, Double_t *master) con
 //_____________________________________________________________________________
 void TGeoMatHandlerY::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
 }
@@ -1770,6 +1785,7 @@ void TGeoMatHandlerY::MasterToLocal(const Double_t *master, Double_t *local) con
 //_____________________________________________________________________________
 void TGeoMatHandlerY::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[1] = fLocation[0];
@@ -1781,6 +1797,7 @@ void TGeoMatHandlerY::LocalToMasterBomb(const Double_t *local, Double_t *master)
 //_____________________________________________________________________________
 void TGeoMatHandlerY::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[1] = fLocation[0];
@@ -1794,6 +1811,7 @@ ClassImp(TGeoMatHandlerZ)
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[2] = *from;
@@ -1803,13 +1821,15 @@ void TGeoMatHandlerZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
-   fLocation = to;
+// Add translation to cache.
+  fLocation = to;
    *to = (matrix->GetTranslation())[2];
 }
 
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[2] += fLocation[0];
 }
@@ -1817,6 +1837,7 @@ void TGeoMatHandlerZ::LocalToMaster(const Double_t *local, Double_t *master) con
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[2] -= fLocation[0];
 }
@@ -1824,6 +1845,7 @@ void TGeoMatHandlerZ::MasterToLocal(const Double_t *master, Double_t *local) con
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[2] = fLocation[0];
@@ -1835,6 +1857,7 @@ void TGeoMatHandlerZ::LocalToMasterBomb(const Double_t *local, Double_t *master)
 //_____________________________________________________________________________
 void TGeoMatHandlerZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[2] = fLocation[0];
@@ -1848,6 +1871,7 @@ ClassImp(TGeoMatHandlerXY)
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[0] = from[0];
@@ -1858,6 +1882,7 @@ void TGeoMatHandlerXY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    to[0] = (matrix->GetTranslation())[0];
    to[1] = (matrix->GetTranslation())[1];
@@ -1866,6 +1891,7 @@ void TGeoMatHandlerXY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
    master[1] += fLocation[1];
@@ -1874,6 +1900,7 @@ void TGeoMatHandlerXY::LocalToMaster(const Double_t *local, Double_t *master) co
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
    local[1] -= fLocation[1];
@@ -1882,6 +1909,7 @@ void TGeoMatHandlerXY::MasterToLocal(const Double_t *master, Double_t *local) co
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -1895,6 +1923,7 @@ void TGeoMatHandlerXY::LocalToMasterBomb(const Double_t *local, Double_t *master
 //_____________________________________________________________________________
 void TGeoMatHandlerXY::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -1910,6 +1939,7 @@ ClassImp(TGeoMatHandlerXZ)
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[0] = from[0];
@@ -1920,6 +1950,7 @@ void TGeoMatHandlerXZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    to[0] = (matrix->GetTranslation())[0];
    to[1] = (matrix->GetTranslation())[2];
@@ -1928,6 +1959,7 @@ void TGeoMatHandlerXZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
    master[2] += fLocation[1];
@@ -1936,6 +1968,7 @@ void TGeoMatHandlerXZ::LocalToMaster(const Double_t *local, Double_t *master) co
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
    local[2] -= fLocation[1];
@@ -1944,6 +1977,7 @@ void TGeoMatHandlerXZ::MasterToLocal(const Double_t *master, Double_t *local) co
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -1957,7 +1991,8 @@ void TGeoMatHandlerXZ::LocalToMasterBomb(const Double_t *local, Double_t *master
 //_____________________________________________________________________________
 void TGeoMatHandlerXZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
-   Double_t tr[3], bombtr[3];
+// Master to local conversion within exploded view.
+  Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
    tr[2] = fLocation[1];
@@ -1972,6 +2007,7 @@ ClassImp(TGeoMatHandlerYZ)
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[1] = from[0];
@@ -1982,6 +2018,7 @@ void TGeoMatHandlerYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    to[0] = (matrix->GetTranslation())[1];
    to[1] = (matrix->GetTranslation())[2];
@@ -1990,6 +2027,7 @@ void TGeoMatHandlerYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += fLocation[0];
    master[2] += fLocation[1];
@@ -1999,6 +2037,7 @@ void TGeoMatHandlerYZ::LocalToMaster(const Double_t *local, Double_t *master) co
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
    local[2] -= fLocation[1];
@@ -2007,6 +2046,7 @@ void TGeoMatHandlerYZ::MasterToLocal(const Double_t *master, Double_t *local) co
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[1] = fLocation[0];
@@ -2020,6 +2060,7 @@ void TGeoMatHandlerYZ::LocalToMasterBomb(const Double_t *local, Double_t *master
 //_____________________________________________________________________________
 void TGeoMatHandlerYZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[1] = fLocation[0];
@@ -2035,6 +2076,7 @@ ClassImp(TGeoMatHandlerXYZ)
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation from cache.
    fLocation = from;
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
    matrix->SetBit(TGeoMatrix::kGeoTranslation);
@@ -2043,6 +2085,7 @@ void TGeoMatHandlerXYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation to cache.
    fLocation = to;
    memcpy(to, matrix->GetTranslation(), 3*sizeof(Double_t));
 }
@@ -2050,6 +2093,7 @@ void TGeoMatHandlerXYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
    master[1] += fLocation[1];
@@ -2059,6 +2103,7 @@ void TGeoMatHandlerXYZ::LocalToMaster(const Double_t *local, Double_t *master) c
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
    local[1] -= fLocation[1];
@@ -2068,6 +2113,7 @@ void TGeoMatHandlerXYZ::MasterToLocal(const Double_t *master, Double_t *local) c
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -2083,6 +2129,7 @@ void TGeoMatHandlerXYZ::LocalToMasterBomb(const Double_t *local, Double_t *maste
 //_____________________________________________________________________________
 void TGeoMatHandlerXYZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
    tr[0] = fLocation[0];
@@ -2100,6 +2147,7 @@ ClassImp(TGeoMatHandlerRot)
 //_____________________________________________________________________________
 void TGeoMatHandlerRot::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore rotation from cache.
    fLocation = from;
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    matrix->SetBit(TGeoMatrix::kGeoRotation);
@@ -2108,13 +2156,15 @@ void TGeoMatHandlerRot::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerRot::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
-   fLocation = to;
+// Add rotation to cache.
+  fLocation = to;
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
 }
 
 //_____________________________________________________________________________
 void TGeoMatHandlerRot::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
    master[2] = local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
@@ -2123,7 +2173,8 @@ void TGeoMatHandlerRot::LocalToMaster(const Double_t *local, Double_t *master) c
 //_____________________________________________________________________________
 void TGeoMatHandlerRot::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-   local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
+ // Master to local conversion.
+  local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
    local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];
 }
@@ -2133,6 +2184,7 @@ ClassImp(TGeoMatHandlerRotTr)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation/rotation from cache.
    fLocation = from;
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetTranslation(), from+9, 3*sizeof(Double_t));
@@ -2143,6 +2195,7 @@ void TGeoMatHandlerRotTr::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation/rotation to cache.
    fLocation = to;
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
    memcpy(to+9, matrix->GetTranslation(), 3*sizeof(Double_t));
@@ -2151,6 +2204,7 @@ void TGeoMatHandlerRotTr::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMaster(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion.
    master[0] = fLocation[9] +
                local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = fLocation[10]+
@@ -2162,6 +2216,7 @@ void TGeoMatHandlerRotTr::LocalToMaster(const Double_t *local, Double_t *master)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion for a vector.
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
    master[2] = local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
@@ -2170,6 +2225,7 @@ void TGeoMatHandlerRotTr::LocalToMasterVect(const Double_t *local, Double_t *mas
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocal(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion.
    local[0] = (master[0]-fLocation[9]) *fLocation[0]+
               (master[1]-fLocation[10])*fLocation[3]+
               (master[2]-fLocation[11])*fLocation[6];
@@ -2184,6 +2240,7 @@ void TGeoMatHandlerRotTr::MasterToLocal(const Double_t *master, Double_t *local)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion for a vector.
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
    local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];
@@ -2192,6 +2249,7 @@ void TGeoMatHandlerRotTr::MasterToLocalVect(const Double_t *master, Double_t *lo
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
+// Local to master conversion within exploded view.
    Double_t bombtr[3];
    gGeoManager->BombTranslation(&fLocation[9], &bombtr[0]);
    master[0] = bombtr[0] +
@@ -2205,6 +2263,7 @@ void TGeoMatHandlerRotTr::LocalToMasterBomb(const Double_t *local, Double_t *mas
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
+// Master to local conversion within exploded view.
    Double_t bombtr[3];
    gGeoManager->UnbombTranslation(&fLocation[9], &bombtr[0]);
    local[0] = (master[0]-bombtr[0]) *fLocation[0]+
@@ -2223,6 +2282,7 @@ ClassImp(TGeoMatHandlerScl)
 //_____________________________________________________________________________
 void TGeoMatHandlerScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore scale from cache.
    memcpy(matrix->GetScale(), from, 3*sizeof(Double_t));
    matrix->SetBit(TGeoMatrix::kGeoScale);
 }
@@ -2230,6 +2290,7 @@ void TGeoMatHandlerScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add scale to cache.
    memcpy(to, matrix->GetScale(), 3*sizeof(Double_t));
 }
 
@@ -2238,6 +2299,7 @@ ClassImp(TGeoMatHandlerTrScl)
 //_____________________________________________________________________________
 void TGeoMatHandlerTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation/scale from cache.
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+3, 3*sizeof(Double_t));
    matrix->SetBit(TGeoMatrix::kGeoTranslation);
@@ -2247,6 +2309,7 @@ void TGeoMatHandlerTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerTrScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation/scale to cache.
    memcpy(to, matrix->GetTranslation(), 3*sizeof(Double_t));
    memcpy(to+3, matrix->GetScale(), 3*sizeof(Double_t));
 }
@@ -2256,6 +2319,7 @@ ClassImp(TGeoMatHandlerRotScl)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore rotation/scale from cache.
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+9, 3*sizeof(Double_t));
    matrix->SetBit(TGeoMatrix::kGeoRotation);
@@ -2265,6 +2329,7 @@ void TGeoMatHandlerRotScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add rotation/scale to cache.
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
    memcpy(to+9, matrix->GetScale(), 3*sizeof(Double_t));
 }
@@ -2274,6 +2339,7 @@ ClassImp(TGeoMatHandlerRotTrScl)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
+// Restore translation/rotation/scale from cache.
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetTranslation(), from+9, 3*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+12, 3*sizeof(Double_t));
@@ -2285,6 +2351,7 @@ void TGeoMatHandlerRotTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 //_____________________________________________________________________________
 void TGeoMatHandlerRotTrScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
+// Add translation/rotation/scale to cache.
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
    memcpy(to+9, matrix->GetTranslation(), 3*sizeof(Double_t));
    memcpy(to+12, matrix->GetScale(), 3*sizeof(Double_t));

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.1 2005/10/03 06:54:51 brun Exp $
 // Author: Andrei Gheata   26/09/05
    
 /*************************************************************************
@@ -36,6 +36,7 @@ public:
    // destructor
    virtual ~TGeoScaledShape();
    // methods
+   virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
@@ -58,7 +59,7 @@ public:
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
 
-  ClassDef(TGeoScaledShape, 1)         // a scaled shape
+   ClassDef(TGeoScaledShape, 1)         // a scaled shape
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.4 2004/07/05 08:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.5 2005/04/20 15:22:54 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -49,6 +49,7 @@ ClassImp(TGeoElementTable)
 //______________________________________________________________________________
 TGeoElementTable *TGeoElement::GetElementTable() const
 {
+// Returns pointer to the table.
    return gGeoManager->GetElementTable();
 }
 

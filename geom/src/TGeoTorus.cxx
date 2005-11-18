@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.28 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.29 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -94,7 +94,7 @@ TGeoTorus::TGeoTorus(Double_t *param)
 //_____________________________________________________________________________
 Double_t TGeoTorus::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = (fDphi/180.)*TMath::Pi()*TMath::Pi()*fR*(fRmax*fRmax-fRmin*fRmin);
    return capacity;
 }
@@ -483,6 +483,7 @@ void TGeoTorus::GetBoundingCylinder(Double_t *param) const
 //_____________________________________________________________________________
 TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
+// Create a shape fitting the mother.
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Error("GetMakeRuntimeShape", "parametrized toruses not supported");
    return 0;
@@ -740,6 +741,7 @@ void TGeoTorus::SavePrimitive(ofstream &out, Option_t * /*option*/)
 void TGeoTorus::SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax,
                           Double_t phi1, Double_t dphi)
 {
+// Set torus dimensions.
    fR = r;
    fRmin = rmin;
    fRmax = rmax;
@@ -751,6 +753,7 @@ void TGeoTorus::SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax,
 //_____________________________________________________________________________
 void TGeoTorus::SetDimensions(Double_t *param)
 {
+// Set torus dimensions starting from a list.
    SetTorusDimensions(param[0], param[1], param[2], param[3], param[4]);
 }
 
@@ -1064,6 +1067,7 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

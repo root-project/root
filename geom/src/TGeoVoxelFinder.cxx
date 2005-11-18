@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.25 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.26 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1856,7 +1856,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    for (id=0; id<2*nd; id++) {
       if (!ib) {temp[ib++] = boundaries[4*nd+index[id]]; continue;}
       if ((TMath::Abs(temp[ib-1]-boundaries[4*nd+index[id]]))>1E-10) 
-          temp[ib++]=boundaries[4*nd+index[id]];
+         temp[ib++]=boundaries[4*nd+index[id]];
    }      
    // now find priority on Z
    if (ib < 2) {
@@ -1990,6 +1990,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
 //-----------------------------------------------------------------------------
 void TGeoVoxelFinder::Print(Option_t *) const
 {
+// Print the voxels.
    Int_t id, i;
    Int_t nd = fVolume->GetNdaughters();
    printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
@@ -2438,8 +2439,7 @@ void TGeoCylVoxels::FindOverlaps(Int_t inode) const
          if ((ddx1<1E-6)||(ddx2<1E-6)) continue;
 //         if ((xmin1==xmin)||(xmax1==xmax)) in = kTRUE;
          if (((xmin1>xmin)&&(xmin1<xmax))||((xmax1>xmin)&&(xmax1<xmax)) ||
-             ((xmin>xmin1)&&(xmin<xmax1))||((xmax>xmin1)&&(xmax<xmax1)))
-                in = kTRUE;
+            ((xmin>xmin1)&&(xmin<xmax1))||((xmax>xmin1)&&(xmax<xmax1))) in = kTRUE;
       if (!in) continue;
 //      printf("x overlap...\n");
       in = kFALSE;
@@ -2463,8 +2463,7 @@ void TGeoCylVoxels::FindOverlaps(Int_t inode) const
          if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
 //         if ((zmin1==zmin)||(zmax1==zmax)) in = kTRUE;
          if (((zmin1>zmin)&&(zmin1<zmax))||((zmax1>zmin)&&(zmax1<zmax)) ||
-             ((zmin>zmin1)&&(zmin<zmax1))||((zmax>zmin1)&&(zmax<zmax1)))
-                in = kTRUE;
+            ((zmin>zmin1)&&(zmin<zmax1))||((zmax>zmin1)&&(zmax<zmax1))) in = kTRUE;
       if (!in) continue;
 //      printf("Overlapping %i\n", ib);
       otmp[novlp++] = ib;
@@ -2816,7 +2815,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
    // compact common boundaries
    for (id=1; id<2*nd; id++) {
       if ((TMath::Abs(temp[ib-1]-boundaries[4*nd+index[id]]))>1E-10) 
-          temp[ib++]=boundaries[4*nd+index[id]];
+         temp[ib++]=boundaries[4*nd+index[id]];
    }      
    // now find priority on Z
    if (ib < 2) {

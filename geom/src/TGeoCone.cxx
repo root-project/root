@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.53 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.54 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -133,14 +133,14 @@ TGeoCone::TGeoCone(Double_t *param)
 //_____________________________________________________________________________
 Double_t TGeoCone::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    return TGeoCone::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }   
 
 //_____________________________________________________________________________
 Double_t TGeoCone::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = (2.*dz*TMath::Pi()/3.)*(rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
                                                rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
    return capacity;                                            
@@ -819,17 +819,17 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
    Double_t rin = tg1*point[2]+ro1;
    Double_t rout = tg2*point[2]+ro2;
    switch (skipz) {
-     case 1: // skip lower Z plane
-        saf[0] = dz - point[2];
-        break;
-     case 2: // skip upper Z plane
-        saf[0] = dz + point[2];
-        break;
-     case 3: // skip both
-        saf[0] = TGeoShape::Big();
-        break;
-     default:
-        saf[0] = dz-TMath::Abs(point[2]);
+      case 1: // skip lower Z plane
+         saf[0] = dz - point[2];
+         break;
+      case 2: // skip upper Z plane
+         saf[0] = dz + point[2];
+         break;
+      case 3: // skip both
+         saf[0] = TGeoShape::Big();
+         break;
+      default:
+         saf[0] = dz-TMath::Abs(point[2]);
    }
    saf[1] = (ro1>0)?((r-rin)*cr1):TGeoShape::Big();
    saf[2] = (rout-r)*cr2;
@@ -857,6 +857,7 @@ void TGeoCone::SavePrimitive(ofstream &out, Option_t * /*option*/)
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                              Double_t rmin2, Double_t rmax2)
 {
+// Set cone dimensions.
    if (rmin1>=0) {
       if (rmax1>0) {
          if (rmin1<=rmax1) {
@@ -908,6 +909,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
 //_____________________________________________________________________________
 void TGeoCone::SetDimensions(Double_t *param)
 {
+// Set cone dimensions from an array.
    Double_t dz    = param[0];
    Double_t rmin1 = param[1];
    Double_t rmax1 = param[2];
@@ -919,94 +921,96 @@ void TGeoCone::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoCone::SetPoints(Double_t *points) const
 {
-// create cone mesh points
-    Double_t dz, phi, dphi;
-    Int_t j, n;
+// Create cone mesh points.
+   Double_t dz, phi, dphi;
+   Int_t j, n;
 
-    n = gGeoManager->GetNsegments();
-    dphi = 360./n;
-    dz    = fDz;
-    Int_t indx = 0;
+   n = gGeoManager->GetNsegments();
+   dphi = 360./n;
+   dz    = fDz;
+   Int_t indx = 0;
 
-    if (points) {
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmin1 * TMath::Cos(phi);
-            points[indx++] = fRmin1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmax1 * TMath::Cos(phi);
-            points[indx++] = fRmax1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmin1 * TMath::Cos(phi);
+         points[indx++] = fRmin1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmax1 * TMath::Cos(phi);
+         points[indx++] = fRmax1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
 
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmin2 * TMath::Cos(phi);
-            points[indx++] = fRmin2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmin2 * TMath::Cos(phi);
+         points[indx++] = fRmin2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
 
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmax2 * TMath::Cos(phi);
-            points[indx++] = fRmax2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmax2 * TMath::Cos(phi);
+         points[indx++] = fRmax2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoCone::SetPoints(Float_t *points) const
 {
-// create cone mesh points
-    Double_t dz, phi, dphi;
-    Int_t j, n;
+// Create cone mesh points.
+   Double_t dz, phi, dphi;
+   Int_t j, n;
 
-    n = gGeoManager->GetNsegments();
-    dphi = 360./n;
-    dz    = fDz;
-    Int_t indx = 0;
+   n = gGeoManager->GetNsegments();
+   dphi = 360./n;
+   dz    = fDz;
+   Int_t indx = 0;
 
-    if (points) {
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmin1 * TMath::Cos(phi);
-            points[indx++] = fRmin1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmax1 * TMath::Cos(phi);
-            points[indx++] = fRmax1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmin1 * TMath::Cos(phi);
+         points[indx++] = fRmin1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmax1 * TMath::Cos(phi);
+         points[indx++] = fRmax1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
 
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmin2 * TMath::Cos(phi);
-            points[indx++] = fRmin2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmin2 * TMath::Cos(phi);
+         points[indx++] = fRmin2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
 
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            points[indx++] = fRmax2 * TMath::Cos(phi);
-            points[indx++] = fRmax2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         phi = j*dphi*TMath::DegToRad();
+         points[indx++] = fRmax2 * TMath::Cos(phi);
+         points[indx++] = fRmax2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 Int_t TGeoCone::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
-    Int_t n = gGeoManager->GetNsegments();
-    Int_t numPoints = n*4;
-    return numPoints;
+   Int_t n = gGeoManager->GetNsegments();
+   Int_t numPoints = n*4;
+   return numPoints;
 }
 
 //_____________________________________________________________________________
@@ -1025,6 +1029,7 @@ void TGeoCone::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoCone::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
@@ -1111,14 +1116,14 @@ TGeoConeSeg::~TGeoConeSeg()
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    return TGeoConeSeg::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2, fPhi1, fPhi2);
 }   
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = (TMath::Abs(phi2-phi1)*TMath::DegToRad()*dz/3.)*
                        (rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
                         rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
@@ -1793,8 +1798,8 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
             opt = "Z";
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-          }
-          return vmulti;
+         }
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return 0;
@@ -2050,7 +2055,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
          saf[0] = dz + point[2];
          break;
       case 3: // skip both
-        saf[0] = TGeoShape::Big();
+         saf[0] = TGeoShape::Big();
       default:
          saf[0] = dz-TMath::Abs(point[2]);
    }
@@ -2087,6 +2092,7 @@ void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
 void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                    Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
+// Set dimensions of the cone segment.
    fDz   = dz;
    fRmin1 = rmin1;
    fRmax1 = rmax1;
@@ -2101,6 +2107,7 @@ void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
 //_____________________________________________________________________________
 void TGeoConeSeg::SetDimensions(Double_t *param)
 {
+// Set dimensions of the cone segment from an array.
    Double_t dz    = param[0];
    Double_t rmin1 = param[1];
    Double_t rmax1 = param[2];
@@ -2114,97 +2121,97 @@ void TGeoConeSeg::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoConeSeg::SetPoints(Double_t *points) const
 {
-// create cone segment mesh points
-    Int_t j, n;
-    Float_t dphi,phi,phi1, phi2,dz;
+// Create cone segment mesh points.
+   Int_t j, n;
+   Float_t dphi,phi,phi1, phi2,dz;
 
-    n = gGeoManager->GetNsegments()+1;
-    dz    = fDz;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
+   n = gGeoManager->GetNsegments()+1;
+   dz    = fDz;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
 
-    dphi = (phi2-phi1)/(n-1);
+   dphi = (phi2-phi1)/(n-1);
 
-    Int_t indx = 0;
+   Int_t indx = 0;
 
-    if (points) {
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin1 * TMath::Cos(phi);
-            points[indx++] = fRmin1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmax1 * TMath::Cos(phi);
-            points[indx++] = fRmax1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin2 * TMath::Cos(phi);
-            points[indx++] = fRmin2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmax2 * TMath::Cos(phi);
-            points[indx++] = fRmax2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-    }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmin1 * TMath::Cos(phi);
+         points[indx++] = fRmin1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmax1 * TMath::Cos(phi);
+         points[indx++] = fRmax1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmin2 * TMath::Cos(phi);
+         points[indx++] = fRmin2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmax2 * TMath::Cos(phi);
+         points[indx++] = fRmax2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoConeSeg::SetPoints(Float_t *points) const
 {
-// create cone segment mesh points
-    Int_t j, n;
-    Float_t dphi,phi,phi1, phi2,dz;
+// Create cone segment mesh points.
+   Int_t j, n;
+   Float_t dphi,phi,phi1, phi2,dz;
 
-    n = gGeoManager->GetNsegments()+1;
-    dz    = fDz;
-    phi1 = fPhi1;
-    phi2 = fPhi2;
+   n = gGeoManager->GetNsegments()+1;
+   dz    = fDz;
+   phi1 = fPhi1;
+   phi2 = fPhi2;
 
-    dphi = (phi2-phi1)/(n-1);
+   dphi = (phi2-phi1)/(n-1);
 
-    Int_t indx = 0;
+   Int_t indx = 0;
 
-    if (points) {
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin1 * TMath::Cos(phi);
-            points[indx++] = fRmin1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmax1 * TMath::Cos(phi);
-            points[indx++] = fRmax1 * TMath::Sin(phi);
-            points[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin2 * TMath::Cos(phi);
-            points[indx++] = fRmin2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-        for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmax2 * TMath::Cos(phi);
-            points[indx++] = fRmax2 * TMath::Sin(phi);
-            points[indx++] = dz;
-        }
-    }
+   if (points) {
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmin1 * TMath::Cos(phi);
+         points[indx++] = fRmin1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmax1 * TMath::Cos(phi);
+         points[indx++] = fRmax1 * TMath::Sin(phi);
+         points[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmin2 * TMath::Cos(phi);
+         points[indx++] = fRmin2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+      for (j = 0; j < n; j++) {
+         phi = (fPhi1+j*dphi)*TMath::DegToRad();
+         points[indx++] = fRmax2 * TMath::Cos(phi);
+         points[indx++] = fRmax2 * TMath::Sin(phi);
+         points[indx++] = dz;
+      }
+   }
 }
 //_____________________________________________________________________________
 Int_t TGeoConeSeg::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
-    Int_t n = gGeoManager->GetNsegments()+1;
-    Int_t numPoints = n*4;
-    return numPoints;
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t numPoints = n*4;
+   return numPoints;
 }
 
 //_____________________________________________________________________________
@@ -2225,6 +2232,7 @@ void TGeoConeSeg::Sizeof3D() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
+// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);

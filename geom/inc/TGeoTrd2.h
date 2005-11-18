@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.13 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.14 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    void                  SetVertex(Double_t *vertex) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoTrd2, 1)         // TRD2 shape class
+   ClassDef(TGeoTrd2, 1)         // TRD2 shape class
 };
 
 #endif

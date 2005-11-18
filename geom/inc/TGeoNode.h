@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.16 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.17 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -128,7 +128,7 @@ public:
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
 
-  ClassDef(TGeoNode, 2)               // base class for all geometry nodes
+   ClassDef(TGeoNode, 2)               // base class for all geometry nodes
 };
 
 /*************************************************************************
@@ -155,7 +155,7 @@ public:
    virtual TGeoNode *MakeCopyNode() const;
    void              SetMatrix(const TGeoMatrix *matrix) {fMatrix = (TGeoMatrix*)matrix;}
 
-  ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
+   ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
 };
 
 /*************************************************************************
@@ -184,7 +184,7 @@ public:
    virtual TGeoNode *MakeCopyNode() const;
    void              SetFinder(const TGeoPatternFinder *finder) {fFinder = (TGeoPatternFinder*)finder;}
 
-  ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset
+   ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset
 };
 
 #endif

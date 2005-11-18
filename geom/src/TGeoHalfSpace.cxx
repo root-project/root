@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.7 2005/02/28 20:52:43 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.8 2005/05/13 16:20:38 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -143,6 +143,7 @@ Double_t TGeoHalfSpace::DistFromOutside(Double_t *point, Double_t *dir, Int_t ia
 TGeoVolume *TGeoHalfSpace::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
+// Divide the shape along one axis.
    Error("Divide", "Half-spaces cannot be divided");
    return 0;
 }   
@@ -188,6 +189,7 @@ void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoHalfSpace::SetDimensions(Double_t *param)
 {
+// Set half-space parameters as stored in an array.
    memcpy(fP, param, 3*sizeof(Double_t));
    memcpy(fN, &param[3], 3*sizeof(Double_t));
    Double_t nsq = TMath::Sqrt(fN[0]*fN[0]+fN[1]*fN[1]+fN[2]*fN[2]);

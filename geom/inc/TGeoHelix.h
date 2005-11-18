@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHelix.h,v 1.1 2004/05/26 15:11:13 brun Exp $
 // Author: Andrei Gheata   28/04/04
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
    
    void            UpdateHelix();
 
-  ClassDef(TGeoHelix, 1)              // helix class
+   ClassDef(TGeoHelix, 1)              // helix class
 };
 
 #endif

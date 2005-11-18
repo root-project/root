@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.4 2005/05/17 12:00:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.5 2005/11/17 13:17:55 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TGeoPolygon::~TGeoPolygon()
 //_____________________________________________________________________________
 Double_t TGeoPolygon::Area() const
 {
-// Computes area of the polygon.
+// Computes area of the polygon in [length^2].
    Int_t ic,i,j;
    Double_t area = 0;
    // Compute area of the convex part
@@ -156,6 +156,8 @@ void TGeoPolygon::ConvexCheck()
 //_____________________________________________________________________________
 void TGeoPolygon::FinishPolygon()
 {
+// Decompose polygon in a convex outscribed part and a list of daughter
+// polygons that have to be substracted to get the actual one.
    TObject::SetBit(kGeoFinishPolygon);
    // check convexity
    ConvexCheck();

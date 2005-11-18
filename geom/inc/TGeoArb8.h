@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.17 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.18 2005/11/17 13:17:54 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
    virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoArb8, 1)         // arbitrary trapezoid with 8 vertices
+   ClassDef(TGeoArb8, 1)         // arbitrary trapezoid with 8 vertices
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
 
-  ClassDef(TGeoTrap, 1)         // G3 TRAP shape
+   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -207,7 +207,8 @@ public:
    virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
-  ClassDef(TGeoGtra, 1)         // G3 GTRA shape
+ 
+   ClassDef(TGeoGtra, 1)         // G3 GTRA shape
 };
 
 #endif

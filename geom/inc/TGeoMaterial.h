@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.17 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.18 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
 
    
 
-  ClassDef(TGeoMaterial, 3)              // base material class
+   ClassDef(TGeoMaterial, 3)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };
@@ -142,7 +142,7 @@ public:
    void                     SetA(Double_t a) {fA = a;}
    void                     SetZ(Double_t z) {fZ = z;}
 
-  ClassDef(TGeoMixture, 1)              // material mixtures
+   ClassDef(TGeoMixture, 1)              // material mixtures
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

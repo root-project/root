@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.27 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.28 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -140,7 +140,7 @@ TGeoPara::~TGeoPara()
 //_____________________________________________________________________________
 Double_t TGeoPara::Capacity() const
 {
-// Computes capacity of the shape in [cm^3]
+// Computes capacity of the shape in [length^3]
    Double_t capacity = 8.*fX*fY*fZ;
    return capacity;
 }      
@@ -350,7 +350,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
    Double_t end=start+ndiv*step;
-    switch (iaxis) {
+   switch (iaxis) {
       case 1:                  //--- divide on X
          shape = new TGeoPara(step/2, fY, fZ,fAlpha,fTheta, fPhi);
          finder = new TGeoPatternParaX(voldiv, ndiv, start, end);
@@ -569,6 +569,7 @@ void TGeoPara::SavePrimitive(ofstream &out, Option_t * /*option*/)
 //_____________________________________________________________________________
 void TGeoPara::SetDimensions(Double_t *param)
 {
+// Set dimensions starting from an array.
    fX     = param[0];
    fY     = param[1];
    fZ     = param[2];
@@ -585,7 +586,7 @@ void TGeoPara::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoPara::SetPoints(Double_t *points) const
 {
-// create sphere mesh points
+// Create PARA mesh points
    if (!points) return;
    Double_t txy = fTxy;
    Double_t txz = fTxz;

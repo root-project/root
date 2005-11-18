@@ -1,4 +1,4 @@
-// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.5 2005/03/09 18:19:26 brun Exp $
+// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.6 2005/11/17 13:17:54 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
    virtual void          SetPoints(Float_t * /*points*/) const {;}
    virtual void          Sizeof3D() const {;}
 
-  ClassDef(TGeoHalfSpace, 1)         // half-space class
+   ClassDef(TGeoHalfSpace, 1)         // half-space class
 };
 
 

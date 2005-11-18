@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.11 2005/04/05 10:17:00 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.12 2005/05/13 16:20:37 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    void              SetSelected(Int_t sel) {fSelected = sel;}
    virtual void      Sizeof3D() const;
 
-  ClassDef(TGeoBoolNode, 1)              // a boolean node
+   ClassDef(TGeoBoolNode, 1)              // a boolean node
 };
 
 /*************************************************************************
@@ -118,7 +118,7 @@ public:
    virtual void      Paint(Option_t *option);
    ///////////////////////////////////////////
 
-  ClassDef(TGeoUnion, 1)              // union node
+   ClassDef(TGeoUnion, 1)              // union node
 };
 
 /*************************************************************************
@@ -159,7 +159,7 @@ public:
    ///////////////////////////////////////////
 
 
-  ClassDef(TGeoIntersection, 1)              // intersection node
+   ClassDef(TGeoIntersection, 1)              // intersection node
 };
 
 /*************************************************************************
@@ -200,7 +200,7 @@ public:
    ///////////////////////////////////////////
 
 
-  ClassDef(TGeoSubtraction, 1)              // subtraction node
+   ClassDef(TGeoSubtraction, 1)              // subtraction node
 };
 #endif
 

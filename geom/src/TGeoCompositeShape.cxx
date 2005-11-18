@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.32 2005/05/25 14:25:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.33 2005/11/17 13:17:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -224,7 +224,7 @@ TGeoCompositeShape::~TGeoCompositeShape()
 //_____________________________________________________________________________
 Double_t TGeoCompositeShape::Capacity() const
 {
-// Computes capacity of this shape [cm^3] by sampling with 1% error.
+// Computes capacity of this shape [length^3] by sampling with 1% error.
    Double_t pt[3];
    if (!gRandom) gRandom = new TRandom3();
    Double_t vbox = 8*fDX*fDY*fDZ; // cm3
@@ -251,13 +251,14 @@ void TGeoCompositeShape::ComputeBBox()
 //_____________________________________________________________________________
 void TGeoCompositeShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
+// Computes normal vector in POINT to the composite shape.
    if (fNode) fNode->ComputeNormal(point,dir,norm);
 }
 
 //_____________________________________________________________________________
 Bool_t TGeoCompositeShape::Contains(Double_t *point) const
 {
-// test if point is inside this sphere
+// Tests if point is inside the shape.
    if (fNode) return fNode->Contains(point);
    return kFALSE;
 }
