@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.3 2002/10/31 07:27:34 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -41,27 +41,27 @@
 class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {
 public:
-  TLegendEntry();
-  TLegendEntry(TObject *obj, const char *label = 0, Option_t *option="lpf" );
-  TLegendEntry( const TLegendEntry &entry );
-  virtual ~TLegendEntry();
-  virtual void          Copy( TObject &obj ) const;
-  virtual const char   *GetLabel() const { return fLabel.Data(); }
-  virtual TObject      *GetObject() const { return fObject; }
-  virtual Option_t     *GetOption() const { return fOption.Data(); }
-  virtual void          Print( Option_t *option = "" ) const;
-  virtual void          SaveEntry( ofstream &out, const char *name );
-  virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
-  virtual void          SetObject(TObject* obj );
-  virtual void          SetObject( const char *objectName );  // *MENU*
-  virtual void          SetOption( Option_t *option="lpf" ) { fOption = option; } // *MENU*
+   TLegendEntry();
+   TLegendEntry(TObject *obj, const char *label = 0, Option_t *option="lpf" );
+   TLegendEntry( const TLegendEntry &entry );
+   virtual ~TLegendEntry();
+   virtual void          Copy( TObject &obj ) const;
+   virtual const char   *GetLabel() const { return fLabel.Data(); }
+   virtual TObject      *GetObject() const { return fObject; }
+   virtual Option_t     *GetOption() const { return fOption.Data(); }
+   virtual void          Print( Option_t *option = "" ) const;
+   virtual void          SaveEntry( ofstream &out, const char *name );
+   virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
+   virtual void          SetObject(TObject* obj );
+   virtual void          SetObject( const char *objectName );  // *MENU*
+   virtual void          SetOption( Option_t *option="lpf" ) { fOption = option; } // *MENU*
 
 protected:
-  TObject      *fObject;   // pointer to object being represented by this entry
-  TString       fLabel;    // Text associated with the entry, will become latex
-  TString       fOption;   // Options associated with this entry
+   TObject      *fObject;   // pointer to object being represented by this entry
+   TString       fLabel;    // Text associated with the entry, will become latex
+   TString       fOption;   // Options associated with this entry
 
-  ClassDef(TLegendEntry,1) // Storage class for one entry of a TLegend
+   ClassDef(TLegendEntry,1) // Storage class for one entry of a TLegend
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.8 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.9 2005/09/05 07:25:22 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -320,7 +320,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
                alpha = (x[j]-x[last])/denom;
                ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
             }
-    }
+      }
 
       // last poInt_t actually estimated
          last = i;
@@ -683,7 +683,7 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
          d1 = TMath::Max(sml,(resmin/sc[j + n*6]));
          d2 = 10. - alpha;
          sc[j + n*7] += (spans[2] - sc[j + n*7]) * TMath::Power(d1, d2);
-       }
+      }
    }
 
    BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq,
@@ -938,7 +938,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
             break;
          case 3:
             y[k++] = vMax;
-             break;
+            break;
          default:
             y[k++] = vMean/ndup;
             break;
@@ -960,13 +960,13 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
       case 1:
          ylow  = 0;   // = nan("NAN") ??
          yhigh = 0;   // = nan("NAN") ??
-    break;
+         break;
       case 2:
          ylow  = fGin->GetY()[0];
          yhigh = fGin->GetY()[fNin-1];
-    break;
+         break;
       default:
-    break;
+         break;
    }
 
 // cleanup
