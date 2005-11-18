@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.5 2004/10/12 07:45:54 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.6 2005/09/04 09:25:01 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -8,10 +8,21 @@
 //______________________________________________________________________________
 
 #include "TError.h"   
+#include "TArrayD.h"
 
 #include "TGeoMCGeometry.h"
 #include "TGeoManager.h" 
 #include "TGeoVolume.h" 
+#include "TGeoArb8.h"
+#include "TGeoTrd1.h"
+#include "TGeoTrd2.h"
+#include "TGeoTube.h"
+#include "TGeoCone.h"
+#include "TGeoPgon.h"
+#include "TGeoSphere.h"
+#include "TGeoPara.h"
+#include "TGeoEltu.h"
+#include "TGeoHype.h"
 
 ClassImp(TGeoMCGeometry)
 
@@ -642,3 +653,383 @@ Int_t TGeoMCGeometry::VolId2Mate(Int_t id) const
   return med->GetId();
 }
 
+//______________________________________________________________________
+Bool_t TGeoMCGeometry::GetTransformation(const TString &volumePath,TGeoHMatrix &mat)
+{
+    // Returns the Transformation matrix between the volume specified
+    // by the path volumePath and the Top or mater volume. The format
+    // of the path volumePath is as follows (assuming ALIC is the Top volume)
+    // "/ALIC_1/DDIP_1/S05I_2/S05H_1/S05G_3". Here ALIC is the top most
+    // or master volume which has only 1 instance of. Of all of the daughter
+    // volumes of ALICE, DDIP volume copy #1 is indicated. Similarly for
+    // the daughter volume of DDIP is S05I copy #2 and so on.
+    // Inputs:
+    //   TString& volumePath  The volume path to the specific volume
+    //                        for which you want the matrix. Volume name
+    //                        hierarchy is separated by "/" while the
+    //                        copy number is appended using a "_".
+    // Outputs:
+    //  TGeoHMatrix &mat      A matrix with its values set to those
+    //                        appropriate to the Local to Master transformation
+    // Return:
+    //   A logical value if kFALSE then an error occurred and no change to
+    //   mat was made.
+
+   // We have to preserve the modeler state
+   gGeoManager->PushPath();
+   if (!gGeoManager->cd(volumePath.Data())) {
+      gGeoManager->PopPath();
+      return kFALSE;
+   }   
+   mat = *gGeoManager->GetCurrentMatrix();
+   gGeoManager->PopPath();
+   return kTRUE;
+}
+//______________________________________________________________________
+Bool_t TGeoMCGeometry::GetShape(const TString &volumePath,TString &shapeType,
+                         TArrayD &par)
+{
+    // Returns the shape and its parameters for the volume specified
+    // by volumeName.
+    // Inputs:
+    //   TString& volumeName  The volume name
+    // Outputs:
+    //   TString &shapeType   Shape type
+    //   TArrayD &par         A TArrayD of parameters with all of the
+    //                        parameters of the specified shape.
+    // Return:
+    //   A logical indicating whether there was an error in getting this
+    //   information
+   Int_t npar;
+   gGeoManager->PushPath();
+   if (!gGeoManager->cd(volumePath.Data())) {
+      gGeoManager->PopPath();
+      return kFALSE;
+   }   
+   TGeoVolume * vol = gGeoManager->GetCurrentVolume();
+   gGeoManager->PopPath();
+   if (!vol) return kFALSE;
+   TGeoShape *shape = vol->GetShape();
+   TClass *class_type = shape->IsA();
+   if (class_type==TGeoBBox::Class()) {
+      shapeType = "BOX";
+      npar = 3;
+      par.Set(npar);
+      TGeoBBox *box = (TGeoBBox*)shape;
+      par.AddAt(box->GetDX(),0);
+      par.AddAt(box->GetDY(),1);
+      par.AddAt(box->GetDZ(),2);
+      return kTRUE;
+   }   
+   if (class_type==TGeoTrd1::Class()) {
+      shapeType = "TRD1";
+      npar = 4;
+      par.Set(npar);
+      TGeoTrd1 *trd1 = (TGeoTrd1*)shape;
+      par.AddAt(trd1->GetDx1(),0);
+      par.AddAt(trd1->GetDx2(),1);
+      par.AddAt(trd1->GetDy(), 2);
+      par.AddAt(trd1->GetDz(), 3);
+      return kTRUE;
+   }   
+   if (class_type==TGeoTrd2::Class()) {
+      shapeType = "TRD2";
+      npar = 5;
+      par.Set(npar);
+      TGeoTrd2 *trd2 = (TGeoTrd2*)shape;
+      par.AddAt(trd2->GetDx1(),0);
+      par.AddAt(trd2->GetDx2(),1);
+      par.AddAt(trd2->GetDy1(),2);
+      par.AddAt(trd2->GetDy2(),3);
+      par.AddAt(trd2->GetDz(), 4);
+      return kTRUE;
+   }   
+   if (class_type==TGeoTrap::Class()) {
+      shapeType = "TRAP";
+      npar = 11;
+      par.Set(npar);
+      TGeoTrap *trap = (TGeoTrap*)shape;
+      Double_t tth = TMath::Tan(trap->GetTheta()*TMath::DegToRad());
+      par.AddAt(trap->GetDz(),0);
+      par.AddAt(tth*TMath::Cos(trap->GetPhi()*TMath::DegToRad()),1);
+      par.AddAt(tth*TMath::Sin(trap->GetPhi()*TMath::DegToRad()),2);
+      par.AddAt(trap->GetH1(),3);
+      par.AddAt(trap->GetBl1(),4);
+      par.AddAt(trap->GetTl1(),5);
+      par.AddAt(TMath::Tan(trap->GetAlpha1()*TMath::DegToRad()),6);
+      par.AddAt(trap->GetH2(),7);
+      par.AddAt(trap->GetBl2(),8);
+      par.AddAt(trap->GetTl2(),9);
+      par.AddAt(TMath::Tan(trap->GetAlpha2()*TMath::DegToRad()),10);
+      return kTRUE;
+   }   
+   if (class_type==TGeoTube::Class()) {
+      shapeType = "TUBE";
+      npar = 3;
+      par.Set(npar);
+      TGeoTube *tube = (TGeoTube*)shape;
+      par.AddAt(tube->GetRmin(),0);
+      par.AddAt(tube->GetRmax(),1);
+      par.AddAt(tube->GetDz(),2);
+      return kTRUE;
+   }         
+   if (class_type==TGeoTubeSeg::Class()) {
+      shapeType = "TUBS";
+      npar = 5;
+      par.Set(npar);
+      TGeoTubeSeg *tubs = (TGeoTubeSeg*)shape;
+      par.AddAt(tubs->GetRmin(),0);
+      par.AddAt(tubs->GetRmax(),1);
+      par.AddAt(tubs->GetDz(),2);
+      par.AddAt(tubs->GetPhi1(),3);
+      par.AddAt(tubs->GetPhi2(),4);
+      return kTRUE;
+   }   
+   if (class_type==TGeoCone::Class()) {
+      shapeType = "CONE";
+      npar = 5;
+      par.Set(npar);
+      TGeoCone *cone = (TGeoCone*)shape;
+      par.AddAt(cone->GetDz(),0);
+      par.AddAt(cone->GetRmin1(),1);
+      par.AddAt(cone->GetRmax1(),2);
+      par.AddAt(cone->GetRmin2(),3);
+      par.AddAt(cone->GetRmax2(),4);
+      return kTRUE;
+   }   
+   if (class_type==TGeoConeSeg::Class()) {
+      shapeType = "CONS";
+      npar = 7;
+      par.Set(npar);
+      TGeoConeSeg *cons = (TGeoConeSeg*)shape;
+      par.AddAt(cons->GetDz(),0);
+      par.AddAt(cons->GetRmin1(),1);
+      par.AddAt(cons->GetRmax1(),2);
+      par.AddAt(cons->GetRmin2(),3);
+      par.AddAt(cons->GetRmax2(),4);
+      par.AddAt(cons->GetPhi1(),5);
+      par.AddAt(cons->GetPhi2(),6);
+      return kTRUE;
+   }   
+   if (class_type==TGeoSphere::Class()) {
+      shapeType = "SPHE";
+      npar = 6;
+      par.Set(npar);
+      TGeoSphere *sphe = (TGeoSphere*)shape;
+      par.AddAt(sphe->GetRmin(),0);
+      par.AddAt(sphe->GetRmax(),1);
+      par.AddAt(sphe->GetTheta1(),2);
+      par.AddAt(sphe->GetTheta2(),3);
+      par.AddAt(sphe->GetPhi1(),4);
+      par.AddAt(sphe->GetPhi2(),5);
+      return kTRUE;
+   }   
+   if (class_type==TGeoPara::Class()) {
+      shapeType = "PARA";
+      npar = 6;
+      par.Set(npar);
+      TGeoPara *para = (TGeoPara*)shape;
+      par.AddAt(para->GetX(),0);
+      par.AddAt(para->GetY(),1);
+      par.AddAt(para->GetZ(),2);
+      par.AddAt(para->GetTxy(),3);
+      par.AddAt(para->GetTxz(),4);
+      par.AddAt(para->GetTyz(),5);
+      return kTRUE;
+   }   
+   if (class_type==TGeoPgon::Class()) {
+      shapeType = "PGON";
+      TGeoPgon *pgon = (TGeoPgon*)shape;
+      Int_t nz = pgon->GetNz();
+      const Double_t *rmin = pgon->GetRmin();
+      const Double_t *rmax = pgon->GetRmax();
+      const Double_t *z = pgon->GetZ();
+      npar = 4 + 3*nz;
+      par.Set(npar);
+      par.AddAt(pgon->GetPhi1(),0);
+      par.AddAt(pgon->GetDphi(),1);
+      par.AddAt(pgon->GetNedges(),2);
+      par.AddAt(pgon->GetNz(),3);
+      for (Int_t i=0; i<nz; i++) {
+         par.AddAt(z[i], 4+3*i);
+         par.AddAt(rmin[i], 4+3*i+1);
+         par.AddAt(rmax[i], 4+3*i+2);
+      }   
+      return kTRUE; 
+   }   
+   if (class_type==TGeoPcon::Class()) {
+      shapeType = "PCON";
+      TGeoPcon *pcon = (TGeoPcon*)shape;
+      Int_t nz = pcon->GetNz();
+      const Double_t *rmin = pcon->GetRmin();
+      const Double_t *rmax = pcon->GetRmax();
+      const Double_t *z = pcon->GetZ();
+      npar = 3 + 3*nz;
+      par.Set(npar);
+      par.AddAt(pcon->GetPhi1(),0);
+      par.AddAt(pcon->GetDphi(),1);
+      par.AddAt(pcon->GetNz(),2);
+      for (Int_t i=0; i<nz; i++) {
+         par.AddAt(z[i], 3+3*i);
+         par.AddAt(rmin[i], 3+3*i+1);
+         par.AddAt(rmax[i], 3+3*i+2);
+      }   
+      return kTRUE; 
+   }   
+   if (class_type==TGeoEltu::Class()) {
+      shapeType = "ELTU";
+      npar = 3;
+      par.Set(npar);
+      TGeoEltu *eltu = (TGeoEltu*)shape;
+      par.AddAt(eltu->GetA(),0);
+      par.AddAt(eltu->GetB(),1);
+      par.AddAt(eltu->GetDz(),2);
+      return kTRUE;
+   }   
+   if (class_type==TGeoHype::Class()) {
+      shapeType = "HYPE";
+      npar = 5;
+      par.Set(npar);
+      TGeoHype *hype = (TGeoHype*)shape;
+      par.AddAt(TMath::Sqrt(hype->RadiusHypeSq(0.,kTRUE)),0);
+      par.AddAt(TMath::Sqrt(hype->RadiusHypeSq(0.,kFALSE)),1);
+      par.AddAt(hype->GetDZ(),2);
+      par.AddAt(hype->GetStIn(),3);
+      par.AddAt(hype->GetStOut(),4);
+      return kTRUE;
+   }   
+   if (class_type==TGeoGtra::Class()) {
+      shapeType = "GTRA";
+      npar = 12;
+      par.Set(npar);
+      TGeoGtra *trap = (TGeoGtra*)shape;
+      Double_t tth = TMath::Tan(trap->GetTheta()*TMath::DegToRad());
+      par.AddAt(trap->GetDz(),0);
+      par.AddAt(tth*TMath::Cos(trap->GetPhi()*TMath::DegToRad()),1);
+      par.AddAt(tth*TMath::Sin(trap->GetPhi()*TMath::DegToRad()),2);
+      par.AddAt(trap->GetH1(),3);
+      par.AddAt(trap->GetBl1(),4);
+      par.AddAt(trap->GetTl1(),5);
+      par.AddAt(TMath::Tan(trap->GetAlpha1()*TMath::DegToRad()),6);
+      par.AddAt(trap->GetH2(),7);
+      par.AddAt(trap->GetBl2(),8);
+      par.AddAt(trap->GetTl2(),9);
+      par.AddAt(TMath::Tan(trap->GetAlpha2()*TMath::DegToRad()),10);
+      par.AddAt(trap->GetTwistAngle(),11);
+      return kTRUE;
+   }   
+   if (class_type==TGeoCtub::Class()) {
+      shapeType = "CTUB";
+      npar = 11;
+      par.Set(npar);
+      TGeoCtub *ctub = (TGeoCtub*)shape;
+      const Double_t *lx = ctub->GetNlow();
+      const Double_t *tx = ctub->GetNhigh();
+      par.AddAt(ctub->GetRmin(),0);
+      par.AddAt(ctub->GetRmax(),1);
+      par.AddAt(ctub->GetDz(),2);
+      par.AddAt(ctub->GetPhi1(),3);
+      par.AddAt(ctub->GetPhi2(),4);
+      par.AddAt(lx[0],5);
+      par.AddAt(lx[1],6);
+      par.AddAt(lx[2],7);
+      par.AddAt(tx[0],8);
+      par.AddAt(tx[1],9);
+      par.AddAt(tx[2],10);
+      return kTRUE;
+      
+   }   
+   Error("GetShape","Getting shape parameters for shape %s not implemented", shape->ClassName());
+   return kFALSE;
+}
+
+//______________________________________________________________________
+Bool_t TGeoMCGeometry::GetMaterial(const TString &volumeName,
+                            TString &name,Int_t &imat,
+                            Double_t &a,Double_t &z,Double_t &dens,
+                            Double_t &radl,Double_t &inter,TArrayD &par)
+{
+    // Returns the Material and its parameters for the volume specified
+    // by volumeName.
+    // Note, Geant3 stores and uses mixtures as an element with an effective
+    // Z and A. Consequently, if the parameter Z is not integer, then
+    // this material represents some sort of mixture.
+    // Inputs:
+    //   TString& volumeName  The volume name
+    // Outputs:
+    //   TSrting   &name       Material name
+    //   Int_t     &imat       Material index number
+    //   Double_t  &a          Average Atomic mass of material
+    //   Double_t  &z          Average Atomic number of material
+    //   Double_t  &dens       Density of material [g/cm^3]
+    //   Double_t  &radl       Average radiation length of material [cm]
+    //   Double_t  &inter      Average interaction length of material [cm]
+    //   TArrayD   &par        A TArrayD of user defined parameters.
+    // Return:
+    //   kTRUE if no errors
+   TGeoVolume *vol = gGeoManager->GetVolume(volumeName.Data());
+   if (!vol) return kFALSE;
+   TGeoMedium *med = vol->GetMedium();
+   if (!med) return kFALSE;
+   TGeoMaterial *mat = med->GetMaterial();
+   imat = mat->GetUniqueID();   
+   name = mat->GetName();
+   name = name.Strip(TString::kTrailing, '$');
+   a      = mat->GetA();
+   z      = mat->GetZ();
+   dens   = mat->GetDensity();
+   radl   = mat->GetRadLen();
+   inter  = mat->GetIntLen(); // WARNING: THIS IS NOT COMPUTED NATIVELY BY TGEO
+   par.Set(0); // NO USER PARAMETERS STORED IN TGEO
+   return kTRUE;
+}
+
+//______________________________________________________________________
+Bool_t TGeoMCGeometry::GetMedium(const TString &volumeName,TString &name,
+                          Int_t &imed,Int_t &nmat,Int_t &isvol,Int_t &ifield,
+                          Double_t &fieldm,Double_t &tmaxfd,Double_t &stemax,
+                          Double_t &deemax,Double_t &epsil, Double_t &stmin,
+                          TArrayD &par)
+{
+    // Returns the Medium and its parameters for the volume specified
+    // by volumeName.
+    // Inputs:
+    //   TString& volumeName  The volume name.
+    // Outputs:
+    //   TString  &name       Medium name
+    //   Int_t    &nmat       Material number defined for this medium
+    //   Int_t    &imed       The medium index number
+    //   Int_t    &isvol      volume number defined for this medium
+    //   Int_t    &iflield    Magnetic field flag
+    //   Double_t &fieldm     Magnetic field strength
+    //   Double_t &tmaxfd     Maximum angle of deflection per step
+    //   Double_t &stemax     Maximum step size
+    //   Double_t &deemax     Maximum fraction of energy allowed to be lost
+    //                        to continuous process.
+    //   Double_t &epsil      Boundary crossing precision
+    //   Double_t &stmin      Minimum step size allowed
+    //   TArrayD  &par        A TArrayD of user parameters with all of the
+    //                        parameters of the specified medium.
+    // Return:
+    //   kTRUE if there where no errors
+   TGeoVolume *vol = gGeoManager->GetVolume(volumeName.Data());
+   if (!vol) return kFALSE;
+   TGeoMedium *med = vol->GetMedium();
+   if (!med) return kFALSE;
+   TGeoMaterial *mat = med->GetMaterial();
+   nmat = mat->GetUniqueID();
+   imed = med->GetId();
+   name = med->GetName();
+   name = name.Strip(TString::kTrailing, '$');
+   par.Set(0); // NO USER PARAMETERS IN TGEO
+   isvol  = (Int_t)med->GetParam(0);
+   ifield = (Int_t)med->GetParam(1);
+   fieldm = med->GetParam(2);
+   tmaxfd = med->GetParam(3);
+   stemax = med->GetParam(4);
+   deemax = med->GetParam(5);
+   epsil  = med->GetParam(6);
+   stmin  = med->GetParam(7);
+   return kTRUE;
+}         
+   

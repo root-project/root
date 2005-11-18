@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.6 2004/10/12 07:45:53 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.7 2005/09/04 09:25:00 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.6 2004/10/12 07:45:53 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.7 2005/09/04 09:25:00 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -17,6 +17,10 @@
 //  
 
 #include "TVirtualMCGeometry.h" 
+
+class TGeoHMatrix;
+class TArrayD;
+class TString;
 
 class TGeoMCGeometry : public TVirtualMCGeometry {
 
@@ -75,7 +79,34 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     virtual void  Gsbool(const char* /*onlyVolName*/, const char* /*manyVolName*/) {}
   
     
-    // functions for drawing
+    // functions for access to geometry
+    //
+    // Return the Transformation matrix between the volume specified by
+    // the path volumePath and the top or master volume.
+    virtual Bool_t GetTransformation(const TString& volumePath, 
+                         TGeoHMatrix& matrix);
+   
+    // Return the name of the shape and its parameters for the volume
+    // specified by the volume name.
+    virtual Bool_t GetShape(const TString& volumePath, 
+                         TString& shapeType, TArrayD& par);
+
+    // Returns the material parameters for the volume specified by
+    // the volume name.
+    virtual Bool_t GetMaterial(const TString& volumeName,
+	 	         TString& name, Int_t& imat,
+		         Double_t& a, Double_t& z, Double_t& density,
+		         Double_t& radl, Double_t& inter, TArrayD& par);
+		     
+    // Returns the medium parameters for the volume specified by the
+    // volume name.
+    virtual Bool_t GetMedium(const TString& volumeName,
+                         TString& name, Int_t& imed,
+		         Int_t& nmat, Int_t& isvol, Int_t& ifield,
+		         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
+		         Double_t& deemax, Double_t& epsil, Double_t& stmin,
+		         TArrayD& par);
+     // functions for drawing
     //virtual void  DrawOneSpec(const char* name);
     //virtual void  Gsatt(const char* name, const char* att, Int_t val);
     //virtual void  Gdraw(const char*,Double_t theta, Double_t phi,

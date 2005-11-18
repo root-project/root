@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.13 2005/05/19 09:03:48 brun Exp $
+// @(#)root/vmc:$Name: v5-04-00 $:$Id: TVirtualMC.h,v 1.14 2005/09/04 09:25:01 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -23,7 +23,9 @@
 #include "TError.h"
 
 class TLorentzVector;
+class TGeoHMatrix;
 class TArrayI;
+class TArrayD;
 
 class TVirtualMC : public TNamed {
 
@@ -132,6 +134,34 @@ class TVirtualMC : public TNamed {
     virtual void  SetMaterialProperty(
                          const char* surfaceName, const char* propertyName, 
                          Int_t np, Double_t* pp, Double_t* values);
+			 
+    // functions for access to geometry
+    //
+    // Return the Transformation matrix between the volume specified by
+    // the path volumePath and the top or master volume.
+    virtual Bool_t GetTransformation(const TString& volumePath, 
+                         TGeoHMatrix& matrix);
+   
+    // Return the name of the shape and its parameters for the volume
+    // specified by the volume name.
+    virtual Bool_t GetShape(const TString& volumePath, 
+                         TString& shapeType, TArrayD& par);
+
+    // Returns the material parameters for the volume specified by
+    // the volume name.
+    virtual Bool_t GetMaterial(const TString& volumeName,
+	 	         TString& name, Int_t& imat,
+		         Double_t& a, Double_t& z, Double_t& density,
+		         Double_t& radl, Double_t& inter, TArrayD& par);
+		     
+    // Returns the medium parameters for the volume specified by the
+    // volume name.
+    virtual Bool_t GetMedium(const TString& volumeName,
+                         TString& name, Int_t& imed,
+		         Int_t& nmat, Int_t& isvol, Int_t& ifield,
+		         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
+		         Double_t& deemax, Double_t& epsil, Double_t& stmin,
+		         TArrayD& par);
     
     // functions for drawing
     // to be removed with complete move to TGeo
@@ -207,6 +237,8 @@ class TVirtualMC : public TNamed {
     virtual const char* CurrentVolPath() = 0;
     virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z, 
                        Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
+    virtual Int_t    CurrentMedium() const;
+                         // new function (to replace GetMedium() const)
     virtual Int_t    CurrentEvent() const =0; 
     virtual void     Gmtod(Float_t* xm, Float_t* xd, Int_t iflag) = 0;
     virtual void     Gmtod(Double_t* xm, Double_t* xd, Int_t iflag) = 0;
@@ -214,7 +246,8 @@ class TVirtualMC : public TNamed {
     virtual void     Gdtom(Double_t* xd, Double_t* xm, Int_t iflag)= 0 ;
     virtual Double_t MaxStep() const =0;
     virtual Int_t    GetMaxNStep() const = 0;
-    virtual Int_t    GetMedium() const =0;
+    virtual Int_t    GetMedium() const = 0;
+                         // Replaced with CurrentMedium(), to be removed
 
         // tracking particle 
         // dynamic properties
@@ -343,6 +376,42 @@ inline void  TVirtualMC::SetMaterialProperty(
    Warning("SetMaterialProperty", "New function - not yet implemented.");
 }   
 
+inline Bool_t TVirtualMC::GetTransformation(const TString& /*volumePath*/, 
+                 TGeoHMatrix& /*matrix*/) {
+   Warning("GetTransformation", "New function - not yet implemented.");
+   return kFALSE;
+}   
+			 
+inline Bool_t TVirtualMC::GetShape(const TString& /*volumeName*/, 
+                 TString& /*shapeType*/, TArrayD& /*par*/) {
+   Warning("GetShape", "New function - not yet implemented.");
+   return kFALSE;
+}   
+
+inline Bool_t TVirtualMC::GetMaterial(const TString& /*volumeName*/,
+	 	 TString& /*name*/, Int_t& /*imat*/,
+		 Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
+		 Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
+   Warning("GetMaterial", "New function - not yet implemented.");
+   return kFALSE;
+}   
+		     
+inline Bool_t TVirtualMC::GetMedium(const TString& /*volumeName*/,
+                 TString& /*name*/, Int_t& /*imed*/,
+		 Int_t& /*nmat*/, Int_t& /*isvol*/, Int_t& /*ifield*/,
+		 Double_t& /*fieldm*/, Double_t& /*tmaxfd*/, Double_t& /*stemax*/,
+		 Double_t& /*deemax*/, Double_t& /*epsil*/, Double_t& /*stmin*/,
+		 TArrayD& /*par*/) {
+   Warning("GetMedium", "New function - not yet implemented.");
+   return kFALSE;
+}   
+		 
+inline Int_t TVirtualMC::CurrentMedium() const {
+   Warning("CurrentMedium", "New function - not yet implemented.");
+   return 0;
+}   
+		 
+    
 R__EXTERN TVirtualMC *gMC;
 
 #endif //ROOT_TVirtualMC

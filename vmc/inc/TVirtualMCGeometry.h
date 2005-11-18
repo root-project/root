@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.4 2004/10/12 07:45:53 brun Exp $
+// @(#)root/vmc:$Name: v5-06-00 $:$Id: TVirtualMCGeometry.h,v 1.5 2005/09/04 09:25:01 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry
@@ -11,6 +11,10 @@
 // (separated from VirtualMC)
 
 #include "TNamed.h"
+
+class TGeoHMatrix;
+class TArrayD;
+class TString;
 
 class TVirtualMCGeometry : public TNamed {
 
@@ -70,6 +74,36 @@ class TVirtualMCGeometry : public TNamed {
                          const char *konly, Double_t *upar, Int_t np) = 0;
     virtual void  Gsbool(const char* onlyVolName, const char* manyVolName) = 0;
     
+ 
+    
+    // functions for access to geometry
+    //
+    // Return the Transformation matrix between the volume specified by
+    // the path volumePath and the top or master volume.
+    virtual Bool_t GetTransformation(const TString& volumePath, 
+                         TGeoHMatrix& matrix) = 0;
+   
+    // Return the name of the shape and its parameters for the volume
+    // specified by the volume name.
+    virtual Bool_t GetShape(const TString& volumePath, 
+                         TString& shapeType, TArrayD& par) = 0;
+
+    // Returns the material parameters for the volume specified by
+    // the volume name.
+    virtual Bool_t GetMaterial(const TString& volumeName,
+	 	         TString& name, Int_t& imat,
+		         Double_t& a, Double_t& z, Double_t& density,
+		         Double_t& radl, Double_t& inter, TArrayD& par) = 0;
+		     
+    // Returns the medium parameters for the volume specified by the
+    // volume name.
+    virtual Bool_t GetMedium(const TString& volumeName,
+                         TString& name, Int_t& imed,
+		         Int_t& nmat, Int_t& isvol, Int_t& ifield,
+		         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
+		         Double_t& deemax, Double_t& epsil, Double_t& stmin,
+		         TArrayD& par) = 0;
+
     // functions for drawing
     //virtual void  DrawOneSpec(const char* name) = 0;
     //virtual void  Gsatt(const char* name, const char* att, Int_t val) = 0;
