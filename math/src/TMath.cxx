@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.107 2005/09/03 07:09:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.108 2005/11/16 20:04:11 pcanal Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2287,6 +2287,22 @@ Double_t TMath::KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *wo
 }
 
 //______________________________________________________________________________
+Double_t TMath::KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Int_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
+   return KOrdStatImp(n, a, k, work);
+}
+
+//______________________________________________________________________________
 Float_t TMath::KOrdStat(Long64_t n, const Float_t *a, Long64_t k, Long64_t *work)
 {
    // Returns k_th order statistic of the array a of size n
@@ -2366,6 +2382,128 @@ Long64_t TMath::KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *wo
    return KOrdStatImp(n, a, k, work);
 }
 
+//______________________________________________________________________________
+void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, Bool_t isSorted, Int_t *index, Int_t type)
+{
+   //Computes sample quantiles, corresponding to the given probabilities
+   //Parameters:
+   //  x -the data sample
+   //  n - its size
+   //  quantiles - computed quantiles are returned in there
+   //  prob - probabilities where to compute quantiles
+   //  nprob - size of prob array
+   //  isSorted - is the input array x sorted?
+   //  NOTE, that when the input is not sorted, an array of integers of size n needs
+   //        to be allocated. It can be passed by the user in parameter index,
+   //        or, if not passed, it will be allocated inside the function
+   //
+   //  type - method to compute (from 1 to 9). Following types are provided:
+   //  Discontinuous:
+   //    type=1 - inverse of the empirical distribution function
+   //    type=2 - like type 1, but with averaging at discontinuities
+   //    type=3 - SAS definition: nearest even order statistic
+   //  Piecwise linear continuous:
+   //    In this case, sample quantiles can be obtained by linear interpolation
+   //    between the k-th order statistic and p(k).
+   //    type=4 - linear interpolation of empirical cdf, p(k)=k/n;
+   //    type=5 - a very popular definition, p(k) = (k-0.5)/n;
+   //    type=6 - used by Minitab and SPSS, p(k) = k/(n+1);
+   //    type=7 - used by S-Plus and R, p(k) = (k-1)/(n-1);
+   //    type=8 - resulting sample quantiles are approximately median unbiased
+   //             regardless of the distribution of x. p(k) = (k-1/3)/(n+1/3);
+   //    type=9 - resulting sample quantiles are approximately unbiased, when 
+   //             the sample comes from Normal distribution. p(k)=(k-3/8)/(n+1/4);
+   // 
+   //    default type = 7
+   //
+   // References:
+   // 1) Hyndman, R.J and Fan, Y, (1996) "Sample quantiles in statistical packages"
+   //                                     American Statistician, 50, 361-365
+   // 2) R Project documentation for the function quantile of package {stats}
+
+   if (type<1 || type>9){
+      printf("illegal value of type\n");
+      return;
+   }
+   Double_t g, npm, np, xj, xjj;
+   Int_t j, intnpm;
+   Int_t *ind = 0;
+   Bool_t isAllocated = kFALSE;
+   if (!isSorted){
+      if (index) ind = index;
+      else {
+         ind = new Int_t[n];
+         isAllocated = kTRUE;
+      }
+   }
+   npm=0;
+   //Discontinuous functions
+   if (type<4){
+      for (Int_t i=0; i<nprob; i++){
+         npm = n*prob[i];
+         if (npm < 1){
+            if(isSorted)
+               quantiles[i] = x[0];
+            else
+               quantiles[i] = TMath::KOrdStat(n, x, 0, ind);
+         } else {
+            j=TMath::Max(TMath::FloorNint(npm)-1, 0);
+            if (npm - j -1 > 1e-14){
+               if (isSorted)
+                  quantiles[i] = x[j+1];
+               else
+                  quantiles[i] = TMath::KOrdStat(n, x, j+1, ind);
+            } else {
+               if (isSorted) xj = x[j];
+               else xj = TMath::KOrdStat(n, x, j, ind);
+               if (type==1) quantiles[i] = xj;
+               if (type==2) {
+                  if (isSorted) xjj = x[j+1];
+                  else xjj = TMath::KOrdStat(n, x, j+1, ind);
+                  quantiles[i] = 0.5*(xj + xjj);
+               }
+               if (type==3) {
+                  if (!TMath::Even(j-1)){
+                     if (isSorted) xjj = x[j+1];
+                     else xjj = TMath::KOrdStat(n, x, j+1, ind);
+                     quantiles[i] = xjj;
+                  } else 
+                     quantiles[i] = xj;
+               }
+            }
+         }
+      }
+   } 
+   if (type>3){
+      for (Int_t i=0; i<nprob; i++){
+         np=n*prob[i];
+         if (np<1 && type!=7 && type!=4)
+            quantiles[i] = TMath::KOrdStat(n, x, 0, ind);
+         else {
+            if (type==4) npm = np;
+            if (type==5) npm = np + 0.5;
+            if (type==6) npm = np + prob[i];
+            if (type==7) npm = np - prob[i] +1;
+            if (type==8) npm = np+(1./3.)*(1+prob[i]);
+            if (type==9) npm = np + 0.25*prob[i] + 0.375;
+            intnpm = TMath::FloorNint(npm);
+            j = TMath::Max(intnpm - 1, 0);
+            g = npm - intnpm;
+            if (isSorted){
+               xj = x[j];
+               xjj = x[j+1];
+            } else {
+               xj = TMath::KOrdStat(n, x, j, ind);
+               xjj = TMath::KOrdStat(n, x, j+1, ind);
+            }
+            quantiles[i] = (1-g)*xj + g*xjj;
+         }
+      }
+   }
+
+   if (isAllocated)
+      delete [] ind;
+}
 
 //______________________________________________________________________________
 Double_t TMath::RMS(Long64_t n, const Short_t *a)
@@ -2391,7 +2529,6 @@ Double_t TMath::RMS(Long64_t n, const Int_t *a)
    // Return the RMS of an array a with length n.
 
    if (n <= 0 || !a) return 0;
-
    Double_t tot = 0, tot2 =0, adouble;
    for (Long64_t i=0;i<n;i++) {
       adouble=Double_t(a[i]); 

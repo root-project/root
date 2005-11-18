@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.63 2005/06/13 13:21:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.64 2005/08/15 08:42:46 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -253,8 +253,13 @@ namespace TMath {
    Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
    Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
    Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work=0);
+   Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Int_t *work);
    Long64_t  KOrdStat(Long64_t n, const Long_t *a,   Long64_t k, Long64_t *work=0);
    Long64_t  KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work=0);
+
+   //Sample quantiles
+   void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
+
 
    // Range
    inline Short_t   Range(Short_t lb, Short_t ub, Short_t x);
