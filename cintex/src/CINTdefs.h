@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTdefs.h,v 1.5 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -166,7 +166,7 @@
       case 'N':  return T(G__int(p));
       case 'm':  return T(G__ULonglong(p));
       case 'M':  return T(G__int(p));
-      case 'q':  return T(G__ULongdouble(p));
+      case 'q':  return T(G__Longdouble(p));
       case 'Q':  return T(G__int(p));
       case 'u':  return T(G__int(p));
       case 'U':  return T(G__int(p));
