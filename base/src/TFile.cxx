@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.144 2005/09/25 22:48:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.145 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -976,7 +976,7 @@ TList *TFile::GetStreamerInfoList()
       gFile = this; // used in ReadObj
       list = (TList*)key->ReadObj();
       gFile = filesave;
-      list->SetOwner();
+      if (list) list->SetOwner();
       delete [] buffer;
       delete key;
    } else {
@@ -1983,29 +1983,14 @@ void TFile::ReadStreamerInfo()
 // The key with name holding the list of TStreamerInfo objects is read.
 // The corresponding TClass objects are updated.
 
-   TList *list = 0;
-   if (fSeekInfo > 0 && fSeekInfo < fEND) {
-      TKey *key = new TKey();
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
-      TFile *filesave = gFile;
-      gFile = this; // used in ReadObj
-      list = (TList*)key->ReadObj();
-      if (!list) {
-         gDirectory->GetListOfKeys()->Remove(key);
-         MakeZombie();
-      }
-      gFile = filesave;
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   TList *list = GetStreamerInfoList();
+   if (!list) {
+      MakeZombie();
+      return;
    }
-
-   if (list == 0) return;
+   
+   list->SetOwner(kFALSE);
+   
    if (gDebug > 0) Info("ReadStreamerInfo", "called for file %s",GetName());
 
    // loop on all TStreamerInfo classes
