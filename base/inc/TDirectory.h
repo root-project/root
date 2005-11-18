@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.29 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.30 2005/09/30 08:52:23 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -61,6 +61,9 @@ protected:
 
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
+   
+   virtual TKey* CreateKey(const TObject* obj, const char* name, Int_t bufsize);
+   virtual TKey* CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
 
 private:
    TDirectory(const TDirectory &directory);  //Directories cannot be copied

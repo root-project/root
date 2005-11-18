@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.75 2005/11/13 21:05:24 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.76 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -288,6 +288,20 @@ void TDirectory::Build()
    fMother     = gDirectory;
    fFile       = gFile;
    SetBit(kCanDelete);
+}
+
+//____________________________________________________________________________________
+TKey* TDirectory::CreateKey(const TObject* obj, const char* name, Int_t bufsize)
+{
+   // Creates key for object and converts data to buffer.
+   return new TKey(obj, name, bufsize);
+}
+
+//____________________________________________________________________________________
+TKey* TDirectory::CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize)
+{
+   // Creates key for object and converts data to buffer.
+   return new TKey(obj, cl, name, bufsize);
 }
 
 //______________________________________________________________________________
@@ -1586,7 +1600,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    if (opt.Contains("writedelete")) {
       oldkey = (TKey*)gDirectory->GetKey(oname);
    }
-   key = new TKey(obj, oname, bsize);
+   key = CreateKey(obj, oname, bsize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
@@ -1695,7 +1709,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    if (opt.Contains("writedelete")) {
       oldkey = (TKey*)gDirectory->GetKey(oname);
    }
-   key = new TKey(obj, cl, oname, bsize);
+   key = CreateKey(obj, cl, oname, bsize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
