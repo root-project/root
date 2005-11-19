@@ -83,8 +83,9 @@ SPLOTLIBEXTRA       = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                       lib/libTreePlayer.lib lib/libGraf3d.lib lib/libGraf.lib
 QUADPLIBDEP         = $(MATRIXLIB)
 QUADPLIBEXTRA       = lib/libMatrix.lib
-GLLIBDEP            = $(G3DLIB) $(GUILIB)
-GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
+GLLIBDEP            = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB)
+GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib lib/libGraf.lib \
+                      lib/libHist.lib
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
@@ -173,8 +174,8 @@ X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
 X11TTFLIBEXTRA      = -Llib -lGX11 -lGraf
 TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist
-GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
-GLLIBEXTRA         := -Llib -lGpad -lGraf3d -lGui $(GLLIBEXTRA)
+GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB)
+GLLIBEXTRA         := -Llib -lGpad -lGraf3d -lGui -lGraf -lHist $(GLLIBEXTRA)
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
