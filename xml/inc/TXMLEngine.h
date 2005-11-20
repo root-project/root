@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.7 2004/12/22 16:50:08 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.8 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -72,7 +72,7 @@ class TXMLEngine : public TObject {
       void              SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t layout, Int_t level);
       XMLNodePointer_t  ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue);
   
-   ClassDef(TXMLEngine,1);
+   ClassDef(TXMLEngine,1);   // XML parser, user by TXMLFile to read/write xml files
 };
 
 #endif

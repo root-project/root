@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.12 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.13 2005/10/28 17:56:21 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -65,12 +65,9 @@
 //
 // documentation
 // =============
-// The "xml" package is currently under development. A more complete
-// documentation will be provided shortly in the classes reference guide.
-// See classes TXMLFile, TKeyXML, TBufferXML, TXMLEngine, TXMLSetup
-// and TXMLPlayer.
+// See also classes TBufferXML, TKeyXML, TXMLEngine, TXMLSetup and TXMLPlayer.
 // An example of XML file corresponding to the small example below
-//can be found at http://root.cern.ch/root/Example.xml
+// can be found at http://root.cern.ch/root/Example.xml
 //
 //______________________________________________________________________________
 
@@ -90,28 +87,26 @@
 #include "TProcessID.h"
 #include "TError.h"
 
-#include "Riostream.h"
-
 ClassImp(TXMLFile);
 
 //______________________________________________________________________________
 TXMLFile::TXMLFile() :
-    TFile(),
-    TXMLSetup(),
-    fDoc(0),
-    fStreamerInfoNode(0),
-    fXML(0)
+   TFile(),
+   TXMLSetup(),
+   fDoc(0),
+   fStreamerInfoNode(0),
+   fXML(0)
 {
-  // default TXMLFile constructor   
+   // default TXMLFile constructor   
 }
 
 
 //______________________________________________________________________________
 TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, Int_t compression) :
-    TFile(),
-    TXMLSetup(),
-    fDoc(0),
-    fStreamerInfoNode(0)
+   TFile(),
+   TXMLSetup(),
+   fDoc(0),
+   fStreamerInfoNode(0)
 {
    // Open or creates local XML file with name filename. 
    // It is recommended to specify filename as "<file>.xml". The suffix ".xml" 
@@ -284,7 +279,7 @@ void TXMLFile::InitXmlFile(Bool_t create)
     
    if (create) {
       fDoc = fXML->NewDoc(0);
-      XMLNodePointer_t fRootNode = fXML->NewChild(0, 0, xmlNames_Root, 0);
+      XMLNodePointer_t fRootNode = fXML->NewChild(0, 0, xmlio::Root, 0);
       fXML->DocSetRootElement(fDoc, fRootNode);
    } else {
       ReadFromFile();
@@ -372,26 +367,26 @@ void TXMLFile::Close(Option_t *option)
 //______________________________________________________________________________
 TXMLFile::~TXMLFile() 
 {
-// destructor of TXMLFile object
+   // destructor of TXMLFile object
 
-  Close();
+   Close();
   
-  if (fXML!=0) {
-     delete fXML;
-     fXML = 0;
-  }
+   if (fXML!=0) {
+      delete fXML;
+      fXML = 0;
+   }
 }
 
 //______________________________________________________________________________
 void TXMLFile::operator=(const TXMLFile &) 
 {
-// make private to exclude copy operator
+   // make private to exclude copy operator
 }
 
 //______________________________________________________________________________
 Bool_t TXMLFile::IsOpen() const 
 {
-// return kTRUE if file is opened and can be accessed  
+   // return kTRUE if file is opened and can be accessed  
     
    return fDoc != 0;
 }
@@ -434,108 +429,20 @@ Int_t TXMLFile::ReOpen(Option_t* mode)
 }
 
 //______________________________________________________________________________
-Int_t TXMLFile::WriteTObject(const TObject* obj, const char* name, Option_t* option) 
+TKey* TXMLFile::CreateKey(const TObject* obj, const char* name, Int_t)
 {
-  // write object, derived from TObject class, to file  
+   // create XML key, which will store object in xml structures
     
-   if ((name==0) || (*name==0))
-     if (obj!=0) name = obj->GetName();
-    
-   return WriteObjectAny(obj, obj ? obj->IsA() : 0, name, option);
+   return new TKeyXML(this, obj, name);
 }
-
+      
 //______________________________________________________________________________
-Int_t TXMLFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
+TKey* TXMLFile::CreateKey(const void* obj, const TClass* cl, const char* name, Int_t)
 {
-   // Write object of class classname in this directory
-   // obj may not derive from TObject
-   // see TDirectory::WriteObject for comments
+   // create XML key, which will store object in xml structures
    
-   TClass *cl = gROOT->GetClass(classname);
-   if (!cl) {
-      Error("WriteObjectAny","Unknown class: %s",classname);
-      return 0;
-   }
-   return WriteObjectAny(obj,cl,name,option);
-}   
-
-//______________________________________________________________________________
-Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t* option) 
-{
-  // write object of any class with disctionary to xml file  
-  // object is tranformed to xml structure, which then kept in TKeyXML
-  // Data will be stored to file only when Close() or ReOpen() or destructor is called
-  // For more details see TDirectory::WriteObjectAny() function
-    
-   if (!IsWritable()) {
-      if (!TestBit(TFile::kWriteError)) {
-         // Do not print the error if the file already had a SysError.
-         Error("WriteObject","file %s is not writable", GetName());
-      }
-      return 0;
-   }
-
-   if (!obj || !cl) return 0;
-   
-   if (cl->InheritsFrom("TTree")) {
-      Warning("WriteObject","TTree class not (yet) fully supported"); 
-   }
-    
-   TKey *key = 0, *oldkey=0;
-
-   TString opt = option;
-   opt.ToLower();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = cl->GetName();
-
-   // Remove trailing blanks in object name
-   Int_t nch = strlen(oname);
-   char *newName = 0;
-   if (oname[nch-1] == ' ') {
-      newName = new char[nch+1];
-      strcpy(newName,oname);
-      for (Int_t i=0;i<nch;i++) {
-         if (newName[nch-i-1] != ' ') break;
-         newName[nch-i-1] = 0;
-      }
-      oname = newName;
-   }
-
-   if (opt.Contains("overwrite")) {
-      //One must use GetKey. FindObject would return the lowest cycle of the key!
-      //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)GetKey(oname);
-      if (key) {
-         key->Delete();
-         delete key;
-      }
-   }
-   if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)GetKey(oname);
-   }
-   
-   key = new TKeyXML(this, obj, cl, oname);
-   
-   if (newName) delete [] newName;
-
-   if (!key->GetSeekKey()) {
-      fKeys->Remove(key);
-      delete key;
-      return 0;
-   }
-   
-   if (oldkey) {
-      oldkey->Delete();
-      delete oldkey;
-   }
-
-   return 0;
+   return new TKeyXML(this, obj, cl, name);
 }
-
 
 //______________________________________________________________________________
 void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& dtdname) 
@@ -575,15 +482,15 @@ void TXMLFile::SaveToFile()
    if (fDoc==0) return;
 
    if (gDebug>1)
-     cout << "TXMLFile::SaveToFile() " << fRealName << endl;
+      Info("SaveToFile","File: %s",fRealName.Data());
 
    XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
    
-   fXML->FreeAttr(fRootNode, xmlNames_Setup);
-   fXML->NewAttr(fRootNode, 0, xmlNames_Setup, GetSetupAsString());
+   fXML->FreeAttr(fRootNode, xmlio::Setup);
+   fXML->NewAttr(fRootNode, 0, xmlio::Setup, GetSetupAsString());
    
-   fXML->FreeAttr(fRootNode, xmlNames_Ref);
-   fXML->NewAttr(fRootNode, 0, xmlNames_Ref, xmlNames_Null);
+   fXML->FreeAttr(fRootNode, xmlio::Ref);
+   fXML->NewAttr(fRootNode, 0, xmlio::Ref, xmlio::Null);
 
    TString fname, dtdname;
    ProduceFileNames(fRealName, fname, dtdname);
@@ -599,15 +506,9 @@ void TXMLFile::SaveToFile()
    if (fStreamerInfoNode)
      fXML->AddChild(fRootNode, fStreamerInfoNode);
 
-//   if (fDtdGener && IsUseDtd())
-//     fXML->AssignDtd(fDoc, dtdname, xmlNames_Root);
-
    Int_t layout = GetCompressionLevel()>5 ? 0 : 1;
 
    fXML->SaveDoc(fDoc, fname, layout);
-
-//   if (fDtdGener && IsUseDtd()) 
-//       fDtdGener->Produce(dtdname);
 
    iter.Reset();
    while ((key=(TKeyXML*)iter()) !=0)
@@ -636,12 +537,12 @@ Bool_t TXMLFile::ReadFromFile()
       return kFALSE;
    }
 
-   ReadSetupFromStr(fXML->GetAttr(fRootNode, xmlNames_Setup));
+   ReadSetupFromStr(fXML->GetAttr(fRootNode, xmlio::Setup));
    
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);
    while (fStreamerInfoNode!=0) {
-      if (strcmp(xmlNames_SInfos, fXML->GetNodeName(fStreamerInfoNode))==0) break;
+      if (strcmp(xmlio::SInfos, fXML->GetNodeName(fStreamerInfoNode))==0) break;
       fXML->ShiftToNext(fStreamerInfoNode);
    }
    fXML->UnlinkNode(fStreamerInfoNode);
@@ -660,14 +561,14 @@ Bool_t TXMLFile::ReadFromFile()
    while (keynode!=0) {
       XMLNodePointer_t next = fXML->GetNext(keynode);
       
-      if (strcmp(xmlNames_Xmlkey, fXML->GetNodeName(keynode))==0) {
+      if (strcmp(xmlio::Xmlkey, fXML->GetNodeName(keynode))==0) {
          fXML->UnlinkNode(keynode);
 
          TKeyXML* key = new TKeyXML(this, keynode);
          AppendKey(key);
          
          if (gDebug>2)
-           cout << "Adding key " << fXML->GetNodeName(keynode) << "   name = " << key->GetName() << endl;
+            Info("ReadFromFile","Add key %s from node %s",key->GetName(), fXML->GetNodeName(keynode));
       }
 
       keynode = next;
@@ -682,8 +583,7 @@ Bool_t TXMLFile::ReadFromFile()
 //______________________________________________________________________________
 void TXMLFile::WriteStreamerInfo() 
 {
-// convert all TStreamerInfo, used in file, to xml format
-
+   // convert all TStreamerInfo, used in file, to xml format
 
    if (fStreamerInfoNode) {
      fXML->FreeNode(fStreamerInfoNode);
@@ -706,7 +606,7 @@ void TXMLFile::WriteStreamerInfo()
 
    if (list.GetSize()==0) return;
 
-   fStreamerInfoNode = fXML->NewChild(0, 0, xmlNames_SInfos);
+   fStreamerInfoNode = fXML->NewChild(0, 0, xmlio::SInfos);
    for (int n=0;n<=list.GetLast();n++) {
       TStreamerInfo* info  = (TStreamerInfo*) list.At(n);
 
@@ -717,7 +617,7 @@ void TXMLFile::WriteStreamerInfo()
 
       fXML->NewIntAttr(infonode, "v", info->IsA()->GetClassVersion());
       fXML->NewIntAttr(infonode, "classversion", info->GetClassVersion());
-      fXML->NewAttr(infonode, 0, "canoptimize", (info->TestBit(TStreamerInfo::kCannotOptimize) ? xmlNames_false : xmlNames_true));
+      fXML->NewAttr(infonode, 0, "canoptimize", (info->TestBit(TStreamerInfo::kCannotOptimize) ? xmlio::False : xmlio::True));
       fXML->NewIntAttr(infonode, "checksum", info->GetCheckSum());
 
       TIter iter(info->GetElements());
@@ -731,8 +631,8 @@ void TXMLFile::WriteStreamerInfo()
 //______________________________________________________________________________
 TList* TXMLFile::GetStreamerInfoList() 
 {
-// Read streamerinfo structures from xml format and provide them in the list
-// It is user responsibility to destroy this list
+   // Read streamerinfo structures from xml format and provide them in the list
+   // It is user responsibility to destroy this list
     
    if (fStreamerInfoNode==0) return 0;
     
@@ -756,7 +656,7 @@ TList* TXMLFile::GetStreamerInfoList()
         info->SetCheckSum(checksum);
 
         const char* canoptimize = fXML->GetAttr(sinfonode,"canoptimize");
-        if ((canoptimize==0) || (strcmp(canoptimize,xmlNames_false)==0))
+        if ((canoptimize==0) || (strcmp(canoptimize,xmlio::False)==0))
           info->SetBit(TStreamerInfo::kCannotOptimize);
         else
           info->ResetBit(TStreamerInfo::kCannotOptimize);
@@ -777,49 +677,9 @@ TList* TXMLFile::GetStreamerInfoList()
 }
 
 //______________________________________________________________________________
-void TXMLFile::ReadStreamerInfo() 
-{
-// Read the list of StreamerInfo from this file
-// The corresponding TClass objects are updated.
-
-   TList* list = GetStreamerInfoList();
-   if (list==0) return;
-   
-   list->SetOwner(kFALSE);
-   
-   if (gDebug>1)
-     cout << "Loop over TStreamerInfo classes num = " << list->GetSize() << endl;
-
-   // loop on all TStreamerInfo classes
-   TStreamerInfo *info;
-   TIter next(list);
-   while ((info = (TStreamerInfo*)next())) {
-      if (info->IsA() != TStreamerInfo::Class()) {
-         Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
-         continue;
-      }
-      info->BuildCheck();
-      Int_t uid = info->GetNumber();
-      Int_t asize = fClassIndex->GetSize();
-      if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);
-      if (uid >= 0 && uid < fClassIndex->GetSize()) fClassIndex->fArray[uid] = 1;
-      else {
-         printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
-      }
-      if (gDebug > 0)
-         printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
-   }
-   fClassIndex->fArray[0] = 0;
-
-   list->Clear(); //this will delete all TStreamerInfo objects with kCanDelete bit set
-   delete list;
-}
-
-
-//______________________________________________________________________________
 void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement* elem) 
 {
-// store data of single TStreamerElement in streamer node    
+   // store data of single TStreamerElement in streamer node    
     
    TClass* cl = elem->IsA();
 
@@ -882,8 +742,6 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
    TClass* cl = gROOT->GetClass(fXML->GetNodeName(node));
    if ((cl==0) || !cl->InheritsFrom(TStreamerElement::Class())) return;
 
-//   Int_t elemversion = fXML->GetAttr(node,"v");
-
    TStreamerElement* elem = (TStreamerElement*) cl->New();
    
    int elem_type = fXML->GetIntAttr(node,"type");
@@ -944,29 +802,29 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
 //______________________________________________________________________________
 void TXMLFile::SetXmlLayout(EXMLLayout layout) 
 {
-// Change layout of objects in xml file
-// Can be changed only for newly created file.
-//
-// Currently there are two supported layouts:
-//
-// TXMLSetup::kSpecialized = 2 
-//    This is default layout of the file, when xml nodes names class names and data member 
-//    names are used. For instance: 
-//          <TAttLine version="1">
-//            <fLineColor v="1"/>
-//            <fLineStyle v="1"/>
-//            <fLineWidth v="1"/>
-//          </TAttLine>
-//
-// TXMLSetup::kGeneralized = 3
-//    For this layout all nodes name does not depend from class definitions. 
-//    The same class looks like
-//          <Class name="TAttLine" version="1">
-//            <Member name="fLineColor" v="1"/>
-//            <Member name="fLineStyle" v="1"/>
-//            <Member name="fLineWidth" v="1"/>
-//          </Member>
-//
+   // Change layout of objects in xml file
+   // Can be changed only for newly created file.
+   //
+   // Currently there are two supported layouts:
+   //
+   // TXMLSetup::kSpecialized = 2 
+   //    This is default layout of the file, when xml nodes names class names and data member 
+   //    names are used. For instance: 
+   //          <TAttLine version="1">
+   //            <fLineColor v="1"/>
+   //            <fLineStyle v="1"/>
+   //            <fLineWidth v="1"/>
+   //          </TAttLine>
+   //
+   // TXMLSetup::kGeneralized = 3
+   //    For this layout all nodes name does not depend from class definitions. 
+   //    The same class looks like
+   //          <Class name="TAttLine" version="1">
+   //            <Member name="fLineColor" v="1"/>
+   //            <Member name="fLineStyle" v="1"/>
+   //            <Member name="fLineWidth" v="1"/>
+   //          </Member>
+   //
       
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
      TXMLSetup::SetXmlLayout(layout);
@@ -975,10 +833,10 @@ void TXMLFile::SetXmlLayout(EXMLLayout layout)
 //______________________________________________________________________________
 void TXMLFile::SetStoreStreamerInfos(Bool_t iConvert) 
 {
-// If true, all correspondent to file TStreamerInfo objects will be stored in file
-// this allows to apply schema avolution later for this file
-// may be usefull, when file used outside ROOT and TStreamerInfo objects does not required
-// Can be changed only for newly created file.
+   // If true, all correspondent to file TStreamerInfo objects will be stored in file
+   // this allows to apply schema avolution later for this file
+   // may be usefull, when file used outside ROOT and TStreamerInfo objects does not required
+   // Can be changed only for newly created file.
     
    if (IsWritable() &&  (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetStoreStreamerInfos(iConvert);
@@ -987,9 +845,9 @@ void TXMLFile::SetStoreStreamerInfos(Bool_t iConvert)
 //______________________________________________________________________________
 void TXMLFile::SetUsedDtd(Bool_t use) 
 {
-// Specify usage of DTD for this file.
-// Currently this option not avaliable (always false).
-// Can be changed only for newly created file.
+   // Specify usage of DTD for this file.
+   // Currently this option not avaliable (always false).
+   // Can be changed only for newly created file.
     
    if (IsWritable() &&  (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetUsedDtd(use);
@@ -998,20 +856,19 @@ void TXMLFile::SetUsedDtd(Bool_t use)
 //______________________________________________________________________________
 void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces) 
 {
-// Specifiy usage of namespaces in xml file
-// In current implementation every instrumented class in file gets its unique namespace,
-// which is equal to name of class and refer to root documentation page like
-// <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
-// And xml node for class member gets its name as combination of class name and member name
-//            <TAttPad:fLeftMargin v="0.100000"/>
-//            <TAttPad:fRightMargin v="0.100000"/>
-//            <TAttPad:fBottomMargin v="0.100000"/>
-//            and so on
-// Usage of namespace increase size of xml file, but makes file more readable 
-// and allows to produce DTD in the case, when in several classes data member has same name
-// Can be changed only for newly created file.
+   // Specifiy usage of namespaces in xml file
+   // In current implementation every instrumented class in file gets its unique namespace,
+   // which is equal to name of class and refer to root documentation page like
+   // <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
+   // And xml node for class member gets its name as combination of class name and member name
+   //            <TAttPad:fLeftMargin v="0.100000"/>
+   //            <TAttPad:fRightMargin v="0.100000"/>
+   //            <TAttPad:fBottomMargin v="0.100000"/>
+   //            and so on
+   // Usage of namespace increase size of xml file, but makes file more readable 
+   // and allows to produce DTD in the case, when in several classes data member has same name
+   // Can be changed only for newly created file.
 
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
        TXMLSetup::SetUseNamespaces(iUseNamespaces);
 }
-

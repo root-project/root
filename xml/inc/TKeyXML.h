@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.1 2005/05/06 14:25:34 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.2 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -18,7 +18,6 @@
 #ifndef ROOT_TKey
 #include "TKey.h"
 #endif
-
 
 class TXMLFile;
 
@@ -74,8 +73,5 @@ class TKeyXML : public TKey {
 
    ClassDef(TKeyXML,1) // a special TKey for XML files      
 };
-
-
-
 
 #endif

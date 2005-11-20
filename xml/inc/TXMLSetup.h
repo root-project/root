@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.6 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.7 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -19,50 +19,52 @@
 #include "TString.h"
 #endif
 
-extern const char* xmlNames_Root;
-extern const char* xmlNames_Setup;
-extern const char* xmlNames_ClassVersion;
-extern const char* xmlNames_OnlyVersion;
-extern const char* xmlNames_Ptr;
-extern const char* xmlNames_Ref;
-extern const char* xmlNames_Null;
-extern const char* xmlNames_IdBase;
-extern const char* xmlNames_Size;
-extern const char* xmlNames_Xmlobject;
-extern const char* xmlNames_Xmlkey;
-extern const char* xmlNames_Cycle;
-extern const char* xmlNames_XmlBlock;
-extern const char* xmlNames_Zip;
-extern const char* xmlNames_Object;
-extern const char* xmlNames_ObjClass;
-extern const char* xmlNames_Class;
-extern const char* xmlNames_Member;
-extern const char* xmlNames_Item;
-extern const char* xmlNames_Name;
-extern const char* xmlNames_Type;
-extern const char* xmlNames_Value;
-extern const char* xmlNames_v;
-extern const char* xmlNames_cnt;
-extern const char* xmlNames_true;
-extern const char* xmlNames_false;
-extern const char* xmlNames_SInfos;
-
-extern const char* xmlNames_Array;
-extern const char* xmlNames_Bool;
-extern const char* xmlNames_Char;
-extern const char* xmlNames_Short;
-extern const char* xmlNames_Int;
-extern const char* xmlNames_Long;
-extern const char* xmlNames_Long64;
-extern const char* xmlNames_Float;
-extern const char* xmlNames_Double;
-extern const char* xmlNames_UChar;
-extern const char* xmlNames_UShort;
-extern const char* xmlNames_UInt;
-extern const char* xmlNames_ULong;
-extern const char* xmlNames_ULong64;
-extern const char* xmlNames_String;
-extern const char* xmlNames_CharStar;
+namespace xmlio {
+   extern const char* Root;
+   extern const char* Setup;
+   extern const char* ClassVersion;
+   extern const char* OnlyVersion;
+   extern const char* Ptr;
+   extern const char* Ref;
+   extern const char* Null;
+   extern const char* IdBase;
+   extern const char* Size;
+   extern const char* Xmlobject;
+   extern const char* Xmlkey;
+   extern const char* Cycle;
+   extern const char* XmlBlock;
+   extern const char* Zip;
+   extern const char* Object;
+   extern const char* ObjClass;
+   extern const char* Class;
+   extern const char* Member;
+   extern const char* Item;
+   extern const char* Name;
+   extern const char* Type;
+   extern const char* Value;
+   extern const char* v;
+   extern const char* cnt;
+   extern const char* True;
+   extern const char* False;
+   extern const char* SInfos;
+    
+   extern const char* Array;
+   extern const char* Bool;
+   extern const char* Char;
+   extern const char* Short;
+   extern const char* Int;
+   extern const char* Long;
+   extern const char* Long64;
+   extern const char* Float;
+   extern const char* Double;
+   extern const char* UChar;
+   extern const char* UShort;
+   extern const char* UInt;
+   extern const char* ULong;
+   extern const char* ULong64;
+   extern const char* String;
+   extern const char* CharStar;
+};
 
 class TStreamerElement;
 

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.8 2005/05/06 14:25:34 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.9 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -77,7 +77,6 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      Print(Option_t* ="") const {}
       virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
       virtual void      ReadFree() {}
-      virtual void      ReadStreamerInfo();
       virtual Int_t     Recover() { return 0; }
       virtual Int_t     ReOpen(Option_t *mode);
       virtual void      Seek(Long64_t, ERelativeTo=kBeg) {}
@@ -91,9 +90,6 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) const { return 0; }
       virtual void      WriteFree() {}
       virtual void      WriteHeader() {}
-      virtual Int_t     WriteTObject(const TObject* obj, const char* name = 0, Option_t *option="");
-      virtual Int_t     WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
-      virtual Int_t     WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t *option="");
       virtual void      WriteStreamerInfo();
 
       // XML specific functions
@@ -107,6 +103,9 @@ class TXMLFile : public TFile, public TXMLSetup {
 
    protected:
       // functions to store streamer infos
+      
+      virtual TKey*     CreateKey(const TObject* obj, const char* name, Int_t bufsize);
+      virtual TKey*     CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
       
       void              StoreStreamerElement(XMLNodePointer_t node, TStreamerElement* elem);
       void              ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info);
