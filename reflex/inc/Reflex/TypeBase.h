@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -59,6 +59,13 @@ namespace ROOT {
 
       /** destructor */
       virtual ~TypeBase();
+
+
+      /**
+       * operator Scope will return the corresponding scope of this type if
+       * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
+       */                                       
+      operator Scope() const;
 
 
       /**

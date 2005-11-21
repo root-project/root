@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.4 2005/11/08 07:54:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.5 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -92,6 +92,13 @@ namespace ROOT {
        * lesser than operator
        */
       bool operator < ( const Type & rh) const; 
+
+
+      /**
+       * operator Scope will return the corresponding scope of this type if
+       * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
+       */                                       
+      operator Scope() const;
 
 
       /**

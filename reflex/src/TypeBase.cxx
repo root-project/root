@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -76,6 +76,21 @@ ROOT::Reflex::TypeBase::~TypeBase( ) {
 //-------------------------------------------------------------------------------
   if( fTypeName->fTypeBase == this ) fTypeName->fTypeBase = 0;
   fPropertyList.ClearProperties();
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::TypeBase::operator ROOT::Reflex::Scope() const {
+//-------------------------------------------------------------------------------
+  switch ( fTypeType ) {
+  case CLASS:
+  case TYPETEMPLATEINSTANCE:
+  case UNION:
+  case ENUM:
+    return *(dynamic_cast<const ScopeBase*>(this));
+  default:
+    return Scope();
+  }
 }
 
 

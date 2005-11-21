@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.3 2005/11/07 09:22:20 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.4 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -106,10 +106,17 @@ namespace ROOT {
 
 
       /**
-       * baseType will return the type of the base class
+       * ToType will return this base classes type
        * @return type of base class
        */
       Type ToType() const;
+
+      
+      /** 
+       * ToScope will return this base classes scope
+       * @return this base class as scope
+       */
+      Scope ToScope() const;
 
     private:
 
@@ -169,13 +176,6 @@ inline ROOT::Reflex::Base::operator bool () const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Base::ToType() const {
-//-------------------------------------------------------------------------------
-  return fBaseType;
-}
-
-
-//-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Base::IsPrivate() const {
 //-------------------------------------------------------------------------------
   return 0 != (fModifiers & PRIVATE);
@@ -214,6 +214,20 @@ inline size_t ROOT::Reflex::Base::Offset(void * mem) const {
 inline ROOT::Reflex::OffsetFunction ROOT::Reflex::Base::OffsetFP() const {
 //-------------------------------------------------------------------------------
   return fOffsetFP;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type ROOT::Reflex::Base::ToType() const {
+//-------------------------------------------------------------------------------
+  return fBaseType;
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Scope ROOT::Reflex::Base::ToScope() const {
+//-------------------------------------------------------------------------------
+  return (Scope)fBaseType;
 }
 
 #endif // ROOT_Reflex_Base
