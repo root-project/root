@@ -722,8 +722,10 @@ void TH2Editor::ConnectSignals2Slots()
 void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
-   
-   if (obj == 0 || !obj->InheritsFrom("TH2") || ((TH2*)obj)->GetEntries() == 0) {
+
+   if (obj == 0 || !obj->InheritsFrom("TH2") || 
+       !strcmp(((TH2 *)obj)->GetName(),"htemp")) {  // htemp is empty histogram
+
       SetActive(kFALSE);
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
