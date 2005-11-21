@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.45 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.46 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -1534,27 +1534,27 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    else dz=fDz;
    if (fH1<0) 
       h1 = ((TGeoTrap*)mother)->GetH1();
-    else 
+   else 
       h1 = fH1;
    if (fH2<0) 
       h2 = ((TGeoTrap*)mother)->GetH2();
-    else 
+   else 
       h2 = fH2;
    if (fBl1<0) 
       bl1 = ((TGeoTrap*)mother)->GetBl1();
-    else 
+   else 
       bl1 = fBl1;
    if (fBl2<0) 
       bl2 = ((TGeoTrap*)mother)->GetBl2();
-    else 
+   else 
       bl2 = fBl2;
    if (fTl1<0) 
       tl1 = ((TGeoTrap*)mother)->GetTl1();
-    else 
+   else 
       tl1 = fTl1;
    if (fTl2<0) 
       tl2 = ((TGeoTrap*)mother)->GetTl2();
-    else 
+   else 
       tl2 = fTl2;
    return (new TGeoGtra(dz, fTheta, fPhi, fTwistAngle ,h1, bl1, tl1, fAlpha1, h2, bl2, tl2, fAlpha2));
 }

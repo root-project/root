@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.47 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.48 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -1355,6 +1355,7 @@ void TGeoSphere::SavePrimitive(ofstream &out, Option_t * /*option*/)
 void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                Double_t theta2, Double_t phi1, Double_t phi2)
 {
+// Set spherical segment dimensions.
    if (rmin >= rmax) {
       Error("SetDimensions", "invalid parameters rmin/rmax");
       return;
@@ -1396,6 +1397,7 @@ void TGeoSphere::SetDimensions(Double_t *param)
 //_____________________________________________________________________________
 void TGeoSphere::SetNumberOfDivisions(Int_t p)
 {
+// Set the number of divisions of mesh circles keeping aspect ratio.
    fNseg = p;
    Double_t dphi = fPhi2 - fPhi1;
    if (dphi<0) dphi+=360;

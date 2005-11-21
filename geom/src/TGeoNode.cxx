@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.25 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.26 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -503,12 +503,9 @@ Int_t TGeoNodeMatrix::GetOptimalVoxels() const
 //_____________________________________________________________________________
 TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
-// make a copy of this node
-//   printf("      Making a copy of node %s\n", GetName());
+// Make a copy of this node.
    TGeoNodeMatrix *node = new TGeoNodeMatrix(fVolume, fMatrix);
-   char *name = new char[strlen(GetName())+1];
-   sprintf(name, "%s", GetName());
-   node->SetName(name);
+   node->SetName(GetName());
    // set the mother
    node->SetMotherVolume(fMother);
    // set the copy number

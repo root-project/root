@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.45 2005/10/14 14:55:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.46 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1442,6 +1442,7 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
 //_____________________________________________________________________________
 void TGeoCombiTrans::RegisterYourself()
 {
+// Register the matrix in the current manager, which will become the owner. 
    TGeoMatrix::RegisterYourself();
    if (fRotation && fRotation->IsRotation()) fRotation->RegisterYourself();
 }

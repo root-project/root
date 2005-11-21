@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.68 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.69 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1852,16 +1852,16 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
 //       Error("MakeCopyVolume", "volume %s divided", GetName());
 //       vol->SetFinder(fFinder);
 //    }
-  if (fDivision) {
-     TGeoVolume *cell;
-     TGeoVolumeMulti *div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
+   if (fDivision) {
+      TGeoVolume *cell;
+      TGeoVolumeMulti *div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
 //      div->MakeCopyNodes(fDivision);
-     for (Int_t i=0; i<div->GetNvolumes(); i++) {
-        cell = div->GetVolume(i);
-        fDivision->AddVolume(cell);
+      for (Int_t i=0; i<div->GetNvolumes(); i++) {
+         cell = div->GetVolume(i);
+         fDivision->AddVolume(cell);
 //         cell->MakeCopyNodes(fDivision);
-     }
-  }      
+      }
+   }      
                  
    if (!fNodes) return vol;
    TGeoNode *node;
