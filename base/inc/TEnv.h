@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.7 2004/04/27 13:13:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.8 2005/06/10 22:28:51 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -133,7 +133,7 @@ public:
 
    THashList          *GetTable() const { return fTable; }
    Bool_t              Defined(const char *name)
-                                  { return Getvalue(name) != 0; }
+                                    { return Getvalue(name) != 0; }
 
    virtual Int_t       GetValue(const char *name, Int_t dflt);
    virtual Double_t    GetValue(const char *name, Double_t dflt);

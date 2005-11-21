@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.43 2005/09/18 13:00:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.44 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ TVirtualMutex *gStringMutex = 0;
 
 // Amount to shift hash values to avoid clustering
 
-const unsigned kHashShift = 5;
+const UInt_t kHashShift = 5;
 
 // This is the global null string representation, shared among all
 // empty strings.  The space for it is in "gNullRef" which the
@@ -141,34 +141,34 @@ Ssiz_t TStringRef::First(const char *cs) const
 }
 
 //______________________________________________________________________________
-inline static void Mash(unsigned& hash, unsigned chars)
+inline static void Mash(UInt_t& hash, UInt_t chars)
 {
    // Utility used by Hash().
 
    hash = (chars ^
          ((hash << kHashShift) |
-          (hash >> (kBitsPerByte*sizeof(unsigned) - kHashShift))));
+          (hash >> (kBitsPerByte*sizeof(UInt_t) - kHashShift))));
 }
 
 //______________________________________________________________________________
-unsigned Hash(const char *str)
+UInt_t Hash(const char *str)
 {
    // Return a case-sensitive hash value.
 
-   unsigned len = str ? strlen(str) : 0;
-   unsigned hv  = len; // Mix in the string length.
-   unsigned i   = hv*sizeof(char)/sizeof(unsigned);
+   UInt_t len = str ? strlen(str) : 0;
+   UInt_t hv  = len; // Mix in the string length.
+   UInt_t i   = hv*sizeof(char)/sizeof(UInt_t);
 
-   if (((unsigned long)str)%sizeof(unsigned) == 0) {
+   if (((ULong_t)str)%sizeof(UInt_t) == 0) {
       // str is word aligned
-      const unsigned *p = (const unsigned*)str;
+      const UInt_t *p = (const UInt_t*)str;
 
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
 
       // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-         unsigned h = 0;
+      if ((i = len*sizeof(char)%sizeof(UInt_t)) != 0) {
+         UInt_t h = 0;
          const char* c = (const char*)p;
          while (i--)
             h = ((h << kBitsPerByte*sizeof(char)) | *c++);
@@ -176,17 +176,17 @@ unsigned Hash(const char *str)
       }
    } else {
       // str is not word aligned
-      unsigned h;
+      UInt_t h;
       const unsigned char *p = (const unsigned char*)str;
 
       while (i--) {
-         memcpy(&h, p, sizeof(unsigned));
+         memcpy(&h, p, sizeof(UInt_t));
          Mash(hv, h);
-         p += sizeof(unsigned);
+         p += sizeof(UInt_t);
       }
 
       // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
+      if ((i = len*sizeof(char)%sizeof(UInt_t)) != 0) {
          h = 0;
          const char* c = (const char*)p;
          while (i--)
@@ -198,20 +198,20 @@ unsigned Hash(const char *str)
 }
 
 //______________________________________________________________________________
-unsigned TStringRef::Hash() const
+UInt_t TStringRef::Hash() const
 {
    // Return a case-sensitive hash value.
 
-   unsigned hv       = (unsigned)Length(); // Mix in the string length.
-   unsigned i        = hv*sizeof(char)/sizeof(unsigned);
-   const unsigned *p = (const unsigned*)Data();
+   UInt_t hv       = (UInt_t)Length(); // Mix in the string length.
+   UInt_t i        = hv*sizeof(char)/sizeof(UInt_t);
+   const UInt_t *p = (const UInt_t*)Data();
    {
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
    }
    // XOR in any remaining characters:
-   if ((i = Length()*sizeof(char)%sizeof(unsigned)) != 0) {
-      unsigned h = 0;
+   if ((i = Length()*sizeof(char)%sizeof(UInt_t)) != 0) {
+      UInt_t h = 0;
       const char* c = (const char*)p;
       while (i--)
          h = ((h << kBitsPerByte*sizeof(char)) | *c++);
@@ -221,12 +221,12 @@ unsigned TStringRef::Hash() const
 }
 
 //______________________________________________________________________________
-unsigned TStringRef::HashFoldCase() const
+UInt_t TStringRef::HashFoldCase() const
 {
    // Return a case-insensitive hash value.
 
-   unsigned hv = (unsigned)Length();    // Mix in the string length.
-   unsigned i  = hv;
+   UInt_t hv = (UInt_t)Length();    // Mix in the string length.
+   UInt_t i  = hv;
    const unsigned char *p = (const unsigned char*)Data();
    while (i--) {
       Mash(hv, toupper(*p));
@@ -512,7 +512,7 @@ TString TString::Copy() const
 }
 
 //______________________________________________________________________________
-unsigned TString::Hash(ECaseCompare cmp) const
+UInt_t TString::Hash(ECaseCompare cmp) const
 {
    // Return hash value.
 

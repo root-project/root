@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.9 2005/10/10 11:31:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.10 2005/11/16 20:04:11 pcanal Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -170,7 +170,7 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
                gROOT->ProcessLine(cmd);
                //Execute( object, method, (TObjArray *)NULL );
 #endif
-             } else {
+            } else {
 #ifndef WIN32
                Execute(object, method, Form("(TObject*)0x%lx",(Long_t)fSelectedObject));
 #else
@@ -189,8 +189,8 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
    } else {
       // Calling a standalone global function
       TFunction* function = gROOT->GetGlobalFunctionWithPrototype(
-                               menuitem->GetFunctionName());
-                               //menuitem->GetArgs());
+                                 menuitem->GetFunctionName());
+                                 //menuitem->GetArgs());
       if (function) {
          SetMethod(function);
          SetCalledObject(0);
@@ -307,7 +307,7 @@ char *TContextMenu::CreatePopupTitle(TObject *object)
          if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
             sprintf(popupTitle, "  %s::%s  ", object->ClassName(), object->GetName());
          else
-            sprintf(popupTitle, "  %s::%s  ", object->IsA()->GetContextMenuTitle(), 
+            sprintf(popupTitle, "  %s::%s  ", object->IsA()->GetContextMenuTitle(),
                     object->GetName());
       }
    } else

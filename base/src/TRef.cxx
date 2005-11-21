@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.30 2005/09/16 08:49:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.31 2005/11/16 20:03:31 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -303,9 +303,9 @@ Int_t TRef::AddExec(const char *name)
 
    TExec *exec = (TExec*)fgExecs->FindObject(name);
    if (!exec) {
-       //we register this Exec to the list of Execs.
-       exec = new TExec(name,"");
-       fgExecs->Add(exec);
+      // we register this Exec to the list of Execs.
+      exec = new TExec(name,"");
+      fgExecs->Add(exec);
    }
    return fgExecs->IndexOf(exec);
 }

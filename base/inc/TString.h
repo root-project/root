@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.39 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.40 2005/08/15 21:21:46 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -104,8 +104,8 @@ private:
 
    Ssiz_t       First(char c) const;
    Ssiz_t       First(const char *s) const;
-   unsigned     Hash() const;
-   unsigned     HashFoldCase() const;
+   UInt_t       Hash() const;
+   UInt_t       HashFoldCase() const;
    Ssiz_t       Last(char) const;
 
    static TStringRef *GetRep(Ssiz_t capac, Ssiz_t nchar);
@@ -307,7 +307,7 @@ public:
    Ssiz_t       First(char c) const          { return Pref()->First(c); }
    Ssiz_t       First(const char *cs) const  { return Pref()->First(cs); }
    void         Form(const char *fmt, ...);
-   unsigned     Hash(ECaseCompare cmp = kExact) const;
+   UInt_t       Hash(ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const char *pat, Ssiz_t i = 0,
                       ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const TString &s, Ssiz_t i = 0,
@@ -385,9 +385,10 @@ TBuffer  &operator>>(TBuffer &buf,       TString *&sp);
 
 TString ToLower(const TString &s);    // Return lower-case version of argument
 TString ToUpper(const TString &s);    // Return upper-case version of argument
-inline  unsigned Hash(const TString &s) { return s.Hash(); }
-inline  unsigned Hash(const TString *s) { return s->Hash(); }
-        unsigned Hash(const char *s);
+
+inline UInt_t Hash(const TString &s) { return s.Hash(); }
+inline UInt_t Hash(const TString *s) { return s->Hash(); }
+       UInt_t Hash(const char *s);
 
 extern char *Form(const char *fmt, ...);     // format in circular buffer
 extern void  Printf(const char *fmt, ...);   // format and print
@@ -397,7 +398,7 @@ extern char *Compress(const char *str);      // remove blanks from string, free 
 extern int   EscChar(const char *src, char *dst, int dstlen, char *specchars,
                      char escchar);          // copy from src to dst escaping specchars by escchar
 extern int   UnEscChar(const char *src, char *dst, int dstlen, char *specchars,
-                     char escchar);          // copy from src to dst removing escchar from specchars
+                       char escchar);        // copy from src to dst removing escchar from specchars
 
 #ifdef NEED_STRCASECMP
 extern int strcasecmp(const char *str1, const char *str2);

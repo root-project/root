@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.43 2005/03/14 00:11:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.44 2005/06/22 20:18:10 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -369,7 +369,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    if (!receiver_class) {
       // case of slot_method is compiled/intrepreted function
       slotMethod = (TFunction*)gROOT->GetListOfGlobalFunctions(kTRUE)->
-                                           FindObject(slot_method);
+                                             FindObject(slot_method);
    } else {
       slotMethod  = !slot_params ?
                           GetMethodWithPrototype(receiver_class,

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.16 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.17 2005/11/16 20:02:34 pcanal Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -178,8 +178,7 @@ public:
 
    void         Print(const Option_t *option="") const;
 
-                operator double() const
-                   { return fSec + 1e-9 * fNanoSec; }
+   operator double() const { return fSec + 1e-9 * fNanoSec; }
 
    // Utility functions
    static Int_t   GetZoneOffset();

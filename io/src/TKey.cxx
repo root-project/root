@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.48 2005/05/15 05:53:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.49 2005/11/16 20:01:55 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -77,8 +77,8 @@ ClassImp(TKey)
 //______________________________________________________________________________
 TKey::TKey() : TNamed(), fDatime((UInt_t)0), fPidOffset(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*TKey default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // TKey default constructor.
+
    fVersion    = TKey::Class_Version();
    fSeekKey    = 0;
    fNbytes     = 0;
@@ -94,11 +94,10 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0), fPidOffset(0)
 //______________________________________________________________________________
 TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed(), fPidOffset(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a TKey object to read keys*-*-*-*-*-*-*-*
-//*-*                      =================================
-//  Constructor called by TDirectory::ReadKeys and by TFile::TFile
-//  A TKey object is created to read the keys structure itself
-//
+   // Create a TKey object to read keys.
+   // Constructor called by TDirectory::ReadKeys and by TFile::TFile.
+   // A TKey object is created to read the keys structure itself.
+
    fVersion    = TKey::Class_Version();
    if (pointer > TFile::kStartBigFile) fVersion += 1000;
    fSeekKey    = pointer;
@@ -116,6 +115,8 @@ TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed(), fPidOffset(0)
 TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
       : TNamed(name,title), fPidOffset(0)
 {
+   // Create a TKey object with the specified name, title for the given class.
+
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
@@ -133,6 +134,8 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
 TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes)
       : TNamed(name,title), fPidOffset(0)
 {
+   // Create a TKey object with the specified name, title for the given class.
+
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
@@ -227,7 +230,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
 TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
      : TNamed(name, "object title"), fPidOffset(0)
 {
-   // Create a TKey object for any object obj of class cl  and fill output buffer
+   // Create a TKey object for any object obj of class cl d and fill
+   // output buffer.
 
    Assert(obj && cl);
 
@@ -350,8 +354,7 @@ void TKey::Browse(TBrowser *b)
 //______________________________________________________________________________
 void TKey::Create(Int_t nbytes)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a TKey object *-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ====================
+   // Create a TKey object.
 
 //*-*-------------------find free segment
 //*-*                    =================
@@ -402,11 +405,10 @@ void TKey::Create(Int_t nbytes)
 //______________________________________________________________________________
 TKey::~TKey()
 {
-//*-*-*-*-*-*-*-*-*-*-*TKey default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // TKey default destructor.
 
-//   delete [] fBuffer; fBuffer = 0;
-//   delete fBufferRef; fBufferRef = 0;
+   //   delete [] fBuffer; fBuffer = 0;
+   //   delete fBufferRef; fBufferRef = 0;
 
    DeleteBuffer();
 }
@@ -414,11 +416,9 @@ TKey::~TKey()
 //______________________________________________________________________________
 void TKey::Delete(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Delete an object from the file*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
-// Note: the key is not deleted. You still have to call "delete key".
-// This is different from the behaviour of TObject::Delete()!
-
+   // Delete an object from the file.
+   // Note: the key is not deleted. You still have to call "delete key".
+   // This is different from the behaviour of TObject::Delete()!
 
    if (option && option[0] == 'v') printf("Deleting key: %s at address %lld, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
    Long64_t first = fSeekKey;
@@ -430,39 +430,38 @@ void TKey::Delete(Option_t *option)
 //______________________________________________________________________________
 void TKey::DeleteBuffer()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Delete key buffer(s)*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ====================
-  if (fBufferRef) {
-     delete fBufferRef;
-     fBufferRef = 0;
-  } else {
-     if (fBuffer) delete [] fBuffer;
-  }
-  fBuffer = 0;
+   // Delete key buffer(s).
+
+   if (fBufferRef) {
+      delete fBufferRef;
+      fBufferRef = 0;
+   } else {
+      if (fBuffer) delete [] fBuffer;
+   }
+   fBuffer = 0;
 }
 
 //______________________________________________________________________________
 Short_t TKey::GetCycle() const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Return cycle number associated to this key*-*-*-*
-//*-*                      ==========================================
-  return ((fCycle >0) ? fCycle : -fCycle);
+   // Return cycle number associated to this key.
+
+   return ((fCycle >0) ? fCycle : -fCycle);
 }
 
 //______________________________________________________________________________
 Short_t TKey::GetKeep() const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Returns the "KEEP" status*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =========================
-  return ((fCycle >0) ? 0 : 1);
+   // Returns the "KEEP" status.
+
+   return ((fCycle >0) ? 0 : 1);
 }
 
 //______________________________________________________________________________
 void TKey::FillBuffer(char *&buffer)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Encode key header into output buffer-*-*-*-*-*-*-*
-//*-*                    ====================================
-   
+   // Encode key header into output buffer.
+
    tobuf(buffer, fNbytes);
    Version_t version = fVersion;
    tobuf(buffer, version);
@@ -495,7 +494,8 @@ void TKey::FillBuffer(char *&buffer)
 //______________________________________________________________________________
 ULong_t TKey::Hash() const
 {
-   // This Hash function should redefine the default from TNamed
+   // This Hash function should redefine the default from TNamed.
+
    return TNamed::Hash();
 }
 
@@ -503,11 +503,11 @@ ULong_t TKey::Hash() const
 void TKey::IncrementPidOffset(UShort_t offset)
 {
    // Increment fPidOffset by 'offset'.
-   // This offset is used when a key (or basket) is transfered from one file to 
-   // the other.  In this case the TRef and TObject might have stored a pid 
-   // index (to retrieve TProcessIDs) which refered to their order on the 
+   // This offset is used when a key (or basket) is transfered from one file to
+   // the other.  In this case the TRef and TObject might have stored a pid
+   // index (to retrieve TProcessIDs) which refered to their order on the
    // original file, the fPidOffset is to be added to those values to correctly
-   // find the TProcessID.  This fPidOffset needs to be increment if the 
+   // find the TProcessID.  This fPidOffset needs to be increment if the
    // key/basket is copied and need to be zero for new key/basket.
 
    fPidOffset += offset;
@@ -541,18 +541,17 @@ Bool_t TKey::IsFolder() const
 //______________________________________________________________________________
 void TKey::Keep()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Set the "KEEP" status*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =====================
-// When the KEEP flag is set to 1 the object cannot be purged
-//
-  if (fCycle >0)  fCycle = -fCycle;
+   // Set the "KEEP" status.
+   // When the KEEP flag is set to 1 the object cannot be purged.
+
+   if (fCycle >0)  fCycle = -fCycle;
 }
 
 //______________________________________________________________________________
 void TKey::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*List Key contents-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =================
+   // List Key contents.
+
    TROOT::IndentLevel();
    cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle()<<endl;
 }
@@ -560,8 +559,7 @@ void TKey::ls(Option_t *) const
 //______________________________________________________________________________
 void TKey::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Print key contents*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==================
+   // Print key contents.
 
    printf("TKey Name = %s, Title = %s, Cycle = %d\n",GetName(),GetTitle(),GetCycle());
 }
@@ -569,33 +567,33 @@ void TKey::Print(Option_t *) const
 //______________________________________________________________________________
 TObject *TKey::ReadObj()
 {
-// To read a TObject* from the file
-//
-//  The object associated to this key is read from the file into memory
-//  Once the key structure is read (via Streamer) the class identifier
-//  of the object is known.
-//  Using the class identifier we find the TClass object for this class.
-//  A TClass object contains a full description (i.e. dictionary) of the
-//  associated class. In particular the TClass object can create a new
-//  object of the class type it describes. This new object now calls its
-//  Streamer function to rebuilt itself.
-//
-//  see TKey::ReadObjectAny to read any object non-derived from TObject
-//
-//  NOTE:
-//  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must cast the return value twice.
-//  Example1: Normal case:
-//      class MyClass : public TObject, public AnotherClass
-//   then on return, one can do:
-//    MyClass *obj = (MyClass*)key->ReadObj();
-//
-//  Example2: Special case:
-//      class MyClass : public AnotherClass, public TObject
-//   then on return, one must do:
-//    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
-//
-//  Of course, dynamic_cast<> can also be used in the example 1.
+   // To read a TObject* from the file.
+   //
+   //  The object associated to this key is read from the file into memory
+   //  Once the key structure is read (via Streamer) the class identifier
+   //  of the object is known.
+   //  Using the class identifier we find the TClass object for this class.
+   //  A TClass object contains a full description (i.e. dictionary) of the
+   //  associated class. In particular the TClass object can create a new
+   //  object of the class type it describes. This new object now calls its
+   //  Streamer function to rebuilt itself.
+   //
+   //  see TKey::ReadObjectAny to read any object non-derived from TObject
+   //
+   //  NOTE:
+   //  In case the class of this object derives from TObject but not
+   //  as a first inheritance, one must cast the return value twice.
+   //  Example1: Normal case:
+   //      class MyClass : public TObject, public AnotherClass
+   //   then on return, one can do:
+   //    MyClass *obj = (MyClass*)key->ReadObj();
+   //
+   //  Example2: Special case:
+   //      class MyClass : public AnotherClass, public TObject
+   //   then on return, one must do:
+   //    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+   //
+   //  Of course, dynamic_cast<> can also be used in the example 1.
 
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!cl) {
@@ -700,29 +698,29 @@ CLEAR:
 //______________________________________________________________________________
 void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
-//  To read an object (non deriving from TObject)  from the file
-// 
-//  If expectedClass is not null, we checked that that actual class of
-//  the object stored is suitable to be stored in a pointer pointing
-//  to an object of class 'expectedClass'.  We also adjust the value
-//  of the returned address so that it is suitable to be cast (C-Style)
-//  a  a pointer pointing to an object of class 'expectedClass'.
-//
-//  So for example if the class Bottom inherits from Top and the object
-//  stored is of type Bottom you can safely do:
-//
-//     TClass *TopClass = TClass::GetClass("Top");
-//     Top *ptr = (Top*) key->ReadObjectAny( TopClass );
-//     if (ptr==0) printError("the object stored in the key is not of the expected type\n");
-//    
-//  The object associated to this key is read from the file into memory
-//  Once the key structure is read (via Streamer) the class identifier
-//  of the object is known.
-//  Using the class identifier we find the TClass object for this class.
-//  A TClass object contains a full description (i.e. dictionary) of the
-//  associated class. In particular the TClass object can create a new
-//  object of the class type it describes. This new object now calls its
-//  Streamer function to rebuilt itself.
+   //  To read an object (non deriving from TObject) from the file.
+   //
+   //  If expectedClass is not null, we checked that that actual class of
+   //  the object stored is suitable to be stored in a pointer pointing
+   //  to an object of class 'expectedClass'.  We also adjust the value
+   //  of the returned address so that it is suitable to be cast (C-Style)
+   //  a  a pointer pointing to an object of class 'expectedClass'.
+   //
+   //  So for example if the class Bottom inherits from Top and the object
+   //  stored is of type Bottom you can safely do:
+   //
+   //     TClass *TopClass = TClass::GetClass("Top");
+   //     Top *ptr = (Top*) key->ReadObjectAny( TopClass );
+   //     if (ptr==0) printError("the object stored in the key is not of the expected type\n");
+   //
+   //  The object associated to this key is read from the file into memory
+   //  Once the key structure is read (via Streamer) the class identifier
+   //  of the object is known.
+   //  Using the class identifier we find the TClass object for this class.
+   //  A TClass object contains a full description (i.e. dictionary) of the
+   //  associated class. In particular the TClass object can create a new
+   //  object of the class type it describes. This new object now calls its
+   //  Streamer function to rebuilt itself.
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
@@ -818,12 +816,10 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 //______________________________________________________________________________
 Int_t TKey::Read(TObject *obj)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*To read an object from the file*-*-*-*-*-*-*-*-*
-//*-*                      ===============================
-//  The object associated to this key is read from the file into memory
-//  Before invoking this function, obj has been created via the
-//  default constructor.
-//
+   // To read an object from the file.
+   // The object associated to this key is read from the file into memory.
+   // Before invoking this function, obj has been created via the
+   // default constructor.
 
    if (!obj) return 0;
 
@@ -874,8 +870,8 @@ Int_t TKey::Read(TObject *obj)
 //______________________________________________________________________________
 void TKey::ReadBuffer(char *&buffer)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Decode input buffer-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ===================
+   // Decode input buffer.
+
    frombuf(buffer, &fNbytes);
    Version_t version;
    frombuf(buffer,&version);
@@ -914,28 +910,28 @@ void TKey::ReadBuffer(char *&buffer)
 //______________________________________________________________________________
 void TKey::ReadFile()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Read the key structure from the file-*-*-*-*-*-*
-//*-*                      ====================================
-  Int_t nsize = fNbytes;
-  gFile->Seek(fSeekKey);
+   // Read the key structure from the file
+
+   Int_t nsize = fNbytes;
+   gFile->Seek(fSeekKey);
 #if 0
-  for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
-     int nb = kMAXFILEBUFFER;
-     if (i+nb > nsize) nb = nsize - i;
-     gFile->ReadBuffer(fBuffer+i,nb);
-  }
+   for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
+      int nb = kMAXFILEBUFFER;
+      if (i+nb > nsize) nb = nsize - i;
+      gFile->ReadBuffer(fBuffer+i,nb);
+   }
 #else
-  gFile->ReadBuffer(fBuffer,nsize);
+   gFile->ReadBuffer(fBuffer,nsize);
 #endif
-  if (gDebug) {
-     cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
-  }
+   if (gDebug) {
+      cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
+   }
 }
 
 //______________________________________________________________________________
 void TKey::SetParent(const TObject *parent)
 {
-//  Set parent in key buffer
+   // Set parent in key buffer.
 
    if (fBufferRef) fBufferRef->SetParent((TObject*)parent);
 }
@@ -943,16 +939,16 @@ void TKey::SetParent(const TObject *parent)
 //______________________________________________________________________________
 Int_t TKey::Sizeof() const
 {
-//*-*-*-*-*-*-*-*Return the size in bytes of the key header structure*-*-*-*
-//*-*-*-*-*-*-*-*====================================================
-   //Int_t nbytes = sizeof fNbytes;      4
-   //            += sizeof(Version_t);   2
-   //            += sizeof fObjlen;      4
-   //            += sizeof fKeylen;      2
-   //            += sizeof fCycle;       2
-   //            += sizeof fSeekKey;     4 or 8
-   //            += sizeof fSeekPdir;    4 or 8
-   //             =                     22
+   // Return the size in bytes of the key header structure.
+   // Int_t nbytes = sizeof fNbytes;      4
+   //             += sizeof(Version_t);   2
+   //             += sizeof fObjlen;      4
+   //             += sizeof fKeylen;      2
+   //             += sizeof fCycle;       2
+   //             += sizeof fSeekKey;     4 or 8
+   //             += sizeof fSeekPdir;    4 or 8
+   //              =                     22
+
    Int_t nbytes = 22; if (fVersion > 1000) nbytes += 8;
    nbytes      += fDatime.Sizeof();
    nbytes      += fClassName.Sizeof();
@@ -965,8 +961,8 @@ Int_t TKey::Sizeof() const
 //_______________________________________________________________________
 void TKey::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object.
+
    Version_t version;
    if (b.IsReading()) {
       b >> fNbytes;
@@ -1031,48 +1027,45 @@ void TKey::Streamer(TBuffer &b)
 //______________________________________________________________________________
 Int_t TKey::WriteFile(Int_t cycle)
 {
-//*-*-*-*-*-*-*-*-*-*-*Write the encoded object supported by this key*-*-*-*
-//*-*                  ==============================================
-//
-// The function returns the number of bytes committed to the file.
-// If a write error occurs, the number of bytes returned is -1.
-//
+   // Write the encoded object supported by this key.
+   // The function returns the number of bytes committed to the file.
+   // If a write error occurs, the number of bytes returned is -1.
 
-  Int_t nsize  = fNbytes;
-  char *buffer = fBuffer;
-  if (cycle) {
-     fCycle = cycle;
-     FillBuffer(buffer);
-     buffer = fBuffer;
-  }
+   Int_t nsize  = fNbytes;
+   char *buffer = fBuffer;
+   if (cycle) {
+      fCycle = cycle;
+      FillBuffer(buffer);
+      buffer = fBuffer;
+   }
 
-  if (fLeft > 0) nsize += sizeof(Int_t);
-  gFile->Seek(fSeekKey);
+   if (fLeft > 0) nsize += sizeof(Int_t);
+   gFile->Seek(fSeekKey);
 #if 0
-  for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-     Int_t nb = kMAXFILEBUFFER;
-     if (i+nb > nsize) nb = nsize - i;
-     gFile->WriteBuffer(buffer,nb);
-     buffer += nb;
-  }
+   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
+      Int_t nb = kMAXFILEBUFFER;
+      if (i+nb > nsize) nb = nsize - i;
+      gFile->WriteBuffer(buffer,nb);
+      buffer += nb;
+   }
 #else
    Bool_t result = gFile->WriteBuffer(buffer,nsize);
 #endif
-//  gFile->Flush(); Flushing takes too much time.
-//                  Let user flush the file when he wants.
-  if (gDebug) {
-     cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
-          <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;
-  }
+   //gFile->Flush(); Flushing takes too much time.
+   //                Let user flush the file when he wants.
+   if (gDebug) {
+      cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
+           <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;
+   }
 
-  DeleteBuffer();
-  return result==kTRUE ? -1 : nsize;
+   DeleteBuffer();
+   return result==kTRUE ? -1 : nsize;
 }
 
 //______________________________________________________________________________
 const char *TKey::GetIconName() const
 {
-   // title can keep 32x32 xpm thumbnail/icon of the parent object.
+   // Title can keep 32x32 xpm thumbnail/icon of the parent object.
 
    return (!fTitle.IsNull() && fTitle.BeginsWith("/* ") ?  fTitle.Data() : 0);
 }
@@ -1080,7 +1073,7 @@ const char *TKey::GetIconName() const
 //______________________________________________________________________________
 const char *TKey::GetTitle() const
 {
-   // returns title (title can contain 32x32 xpm thumbnail/icon)
+   // Returns title (title can contain 32x32 xpm thumbnail/icon).
 
    if (!fTitle.IsNull() && fTitle.BeginsWith("/* ")) { // title contains xpm thumbnail
       static TString ret;
@@ -1091,6 +1084,3 @@ const char *TKey::GetTitle() const
    }
    return fTitle.Data();
 }
-
-
-

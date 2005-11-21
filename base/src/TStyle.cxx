@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.60 2005/11/04 20:13:08 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.61 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -362,7 +362,7 @@ void TStyle::Copy(TObject &obj) const
 Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 // Function used by the TStyle manager when drawing a canvas showing the current style
-   
+
    gPad->SetSelected(this);
    return 0;
 }
@@ -854,7 +854,7 @@ void TStyle::SetIsReading(Bool_t reading)
 // fIsReading (used via gStyle->IsReading()) can be used in
 // the functions myclass::UseCurrentStyle to read from the current style
 // or write to the current style
-   
+
    fIsReading = reading;
 }
 
@@ -937,8 +937,8 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 //______________________________________________________________________________
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-// Set line style string using the PostScript convention. 
-// A line is a suite of segments, each segment is described by the number of 
+// Set line style string using the PostScript convention.
+// A line is a suite of segments, each segment is described by the number of
 // pixels. The initial and alternating elements (second, fourth, and so on)
 // are the dashes, and the others spaces between dashes.
 //
@@ -963,11 +963,11 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
 */
 //End_Html
 //
-// Note: 
+// Note:
 //  - Up to 30 different styles may be defined.
 //  - The opening and closing brackets may be omitted
 //  - It is recommended to use 4 as the smallest segment length and multiple of
-//    4 for other lengths. 
+//    4 for other lengths.
 //  - The line style 1 to 10 are predefined. 1 to 4 cannot be changed.
 
    char *l;
@@ -975,8 +975,8 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
    char *st = new char[nch+10];
    sprintf(st," ");
    strcat(st,text);
-   l = strstr(st,"["); if (l) l[0] = ' '; 
-   l = strstr(st,"]"); if (l) l[0] = ' '; 
+   l = strstr(st,"["); if (l) l[0] = ' ';
+   l = strstr(st,"]"); if (l) l[0] = ' ';
    if (i >= 1 && i <= 29) fLineStyle[i] = st;
    delete [] st;
 }
@@ -1326,7 +1326,7 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
    UInt_t nColorsGradient;
    TColor *color;
    Int_t highestIndex = 0;
-   
+
    // Check if all RGB values are between 0.0 and 1.0 and
    // Length goes from 0.0 to 1.0 in increasing order.
    for (c = 0; c < Number; c++) {
@@ -1363,9 +1363,9 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
       }
    }
    highestIndex++;
-   
+
    // Now create the colors and add them to the default palette:
-   
+
    // For each defined gradient...
    for (g = 1; g < Number; g++) {
       // create the colors...
@@ -1381,10 +1381,10 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
          highestIndex++;
       }
    }
-   
+
    gStyle->SetPalette(nPalette, palette);
    delete [] palette;
-   
+
    return highestIndex - NColors;
 }
 
@@ -1451,7 +1451,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 
    // set DeepSea palette
    if (colors == 0 && ncolors > 50) {
-      if (ncolors == fPalette.fN && paletteType == 3) return; 
+      if (ncolors == fPalette.fN && paletteType == 3) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
@@ -1520,8 +1520,8 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    out.open(ff.Data(), ios::out);
    if (!out.good()) {
-       Error("SaveSource", "cannot open file: %s", ff.Data());
-       return;
+      Error("SaveSource", "cannot open file: %s", ff.Data());
+      return;
    }
 
    // Writes macro header, date/time stamp as string, and the used Root version
@@ -1613,7 +1613,7 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<"tmpStyle->SetOptStat("        <<GetOptStat()        <<");"<<endl;
 
    if (GetOptTitle()) out << "   tmpStyle->SetOptTitle(kTRUE);"  << endl;
-                 else out << "   tmpStyle->SetOptTitle(kFALSE);" << endl;
+   else               out << "   tmpStyle->SetOptTitle(kFALSE);" << endl;
    out<<"   "<<"tmpStyle->SetOptFit("         <<GetOptFit()         <<");"<<endl;
    out<<"   "<<"tmpStyle->SetNumberContours(" <<GetNumberContours() <<");"<<endl;
 
@@ -1650,9 +1650,9 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<"tmpStyle->SetHistLineStyle("   <<GetHistLineStyle()   <<");"<<endl;
    out<<"   "<<"tmpStyle->SetHistLineWidth("   <<GetHistLineWidth()   <<");"<<endl;
    if (GetHistMinimumZero()) out<<"   tmpStyle->SetHistMinimumZero(kTRUE);" <<endl;
-                        else out<<"   tmpStyle->SetHistMinimumZero(kFALSE);"<<endl;
+   else                      out<<"   tmpStyle->SetHistMinimumZero(kFALSE);"<<endl;
    if (GetCanvasPreferGL()) out<<"   tmpStyle->SetCanvasPreferGL(kTRUE);" <<endl;
-                       else out<<"   tmpStyle->SetCanvasPreferGL(kFALSE);"<<endl;
+   else                     out<<"   tmpStyle->SetCanvasPreferGL(kFALSE);"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasColor("     <<GetCanvasColor()     <<");"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasBorderSize("<<GetCanvasBorderSize()<<");"<<endl;
    out<<"   "<<"tmpStyle->SetCanvasBorderMode("<<GetCanvasBorderMode()<<");"<<endl;
@@ -1668,9 +1668,9 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<"tmpStyle->SetPadLeftMargin("   <<GetPadLeftMargin()   <<");"<<endl;
    out<<"   "<<"tmpStyle->SetPadRightMargin("  <<GetPadRightMargin()  <<");"<<endl;
    if (GetPadGridX()) out<<"   tmpStyle->SetPadGridX(kTRUE);" <<endl;
-                 else out<<"   tmpStyle->SetPadGridX(kFALSE);"<<endl;
+   else               out<<"   tmpStyle->SetPadGridX(kFALSE);"<<endl;
    if (GetPadGridY()) out<<"   tmpStyle->SetPadGridY(kTRUE);" <<endl;
-                 else out<<"   tmpStyle->SetPadGridY(kFALSE);"<<endl;
+   else               out<<"   tmpStyle->SetPadGridY(kFALSE);"<<endl;
    out<<"   "<<"tmpStyle->SetPadTickX("        <<GetPadTickX()         <<");"<<endl;
    out<<"   "<<"tmpStyle->SetPadTickY("        <<GetPadTickY()         <<");"<<endl;
 
@@ -1692,7 +1692,7 @@ void TStyle::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<"tmpStyle->SetStatW("          <<GetStatW()          <<");"<<endl;
    out<<"   "<<"tmpStyle->SetStatH("          <<GetStatH()          <<");"<<endl;
    if (GetStripDecimals()) out<<"   tmpStyle->SetStripDecimals(kTRUE);" <<endl;
-                      else out<<"   tmpStyle->SetStripDecimals(kFALSE);"<<endl;
+   else                    out<<"   tmpStyle->SetStripDecimals(kFALSE);"<<endl;
    out<<"   "<<"tmpStyle->SetTitleAlign("     <<GetTitleAlign()     <<");"<<endl;
    out<<"   "<<"tmpStyle->SetTitleFillColor(" <<GetTitleFillColor() <<");"<<endl;
    out<<"   "<<"tmpStyle->SetTitleTextColor(" <<GetTitleTextColor() <<");"<<endl;

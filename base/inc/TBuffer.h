@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.49 2005/08/15 21:20:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.50 2005/11/16 20:00:16 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -83,9 +83,9 @@ protected:
 
    Int_t Read(const char *name) { return TObject::Read(name); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
-                                { return TObject::Write(name, opt, bufs); }
+                              { return TObject::Write(name, opt, bufs); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs) const
-                                { return TObject::Write(name, opt, bufs); }
+                              { return TObject::Write(name, opt, bufs); }
 
    virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);
 

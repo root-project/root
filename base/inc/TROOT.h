@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.49 2005/08/16 15:58:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.50 2005/09/16 08:48:39 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -125,12 +125,12 @@ protected:
 
    static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
 
-                   TROOT();               //Only used by Dictionary
-   void            InitSystem();          //Operating System interface
-   void            InitThreads();         //Initialize threads library
-   TClass         *FindSTLClass(const char *name, Bool_t load) const;
-   TClass         *LoadClass(const char *name) const;
-   void           *operator new(size_t l) { return TObject::operator new(l); }
+                  TROOT();                //Only used by Dictionary
+   void           InitSystem();           //Operating System interface
+   void           InitThreads();          //Initialize threads library
+   TClass        *FindSTLClass(const char *name, Bool_t load) const;
+   TClass        *LoadClass(const char *name) const;
+   void          *operator new(size_t l) { return TObject::operator new(l); }
 
 public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);

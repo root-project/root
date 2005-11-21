@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.3 2004/04/22 14:29:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.4 2004/04/23 08:53:11 brun Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -44,8 +44,8 @@ public:
    Double_t Rho2() const {return fRe*fRe+fIm*fIm;}
    Double_t Theta() const {return (fIm||fRe)?TMath::ATan2(fIm,fRe):0;}
    TComplex operator()(Double_t x, Double_t y, Bool_t polar=kFALSE)
-     {if(polar) {fRe=x*TMath::Cos(y);fIm=x*TMath::Sin(y);}
-     else fRe=x; fIm=y; return *this;}
+      { if (polar) { fRe = x*TMath::Cos(y); fIm = x*TMath::Sin(y); }
+        else { fRe = x; fIm = y; } return *this; }
 
    // Simple operators complex - complex
    TComplex operator *(const TComplex & c) const

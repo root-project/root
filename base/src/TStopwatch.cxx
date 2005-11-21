@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.10 2004/10/04 08:23:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.11 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -212,7 +212,7 @@ Double_t TStopwatch::GetCPUTime()
       // Convert sum of high 32-bit quantities to 64-bit int
 
       return (Double_t) (ftKernel.ftInt64 + ftUser.ftInt64) * gTicks;
-  } else
+   } else
       return GetRealTime();
 #endif
 }

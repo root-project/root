@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.6 2002/03/25 20:21:05 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.7 2005/08/26 12:17:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
 
    static TObjArray  *fgExecs;  //List of execs
    static TObject    *fgObject; //In: this, Out: pointer to object (used by Action on Demand)
-      
+
 public:
    //status bits
    enum { kNotComputed = BIT(12)};
@@ -46,20 +46,22 @@ public:
    TRef() {fPID = 0;}
    TRef(TObject *obj);
    TRef(const TRef &ref);
-   void operator=(TObject *obj);
+   void  operator=(TObject *obj);
    TRef& operator=(const TRef &ref);
-   virtual ~TRef() {;}
-   static Int_t       AddExec(const char *name);
-          TObject    *GetObject() const;
-   static TObjArray  *GetListOfExecs();
+   virtual ~TRef() { }
+
+   TObject           *GetObject() const;
    TProcessID        *GetPID() const {return fPID;}
    Bool_t             IsValid() const {return GetUniqueID()!=0 ? kTRUE : kFALSE;}
    virtual void       SetAction(const char *name);
    virtual void       SetAction(TObject *parent);
-   static  void       SetObject(TObject *obj);
-   static  void       SetStaticObject(TObject *obj);
-   static  TObject   *GetStaticObject();
-   
+
+   static void        SetObject(TObject *obj);
+   static void        SetStaticObject(TObject *obj);
+   static Int_t       AddExec(const char *name);
+   static TObjArray  *GetListOfExecs();
+   static TObject    *GetStaticObject();
+
    friend Bool_t operator==(const TRef &r1, const TRef &r2);
    friend Bool_t operator!=(const TRef &r1, const TRef &r2);
 

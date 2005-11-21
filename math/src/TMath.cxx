@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.108 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.109 2005/11/18 20:30:04 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -240,9 +240,9 @@ Double_t TMath::DiLog(Double_t x)
       0.00000000008612098,-0.00000000001244332, 0.00000000000182256,
      -0.00000000000027007, 0.00000000000004042,-0.00000000000000610,
       0.00000000000000093,-0.00000000000000014, 0.00000000000000002};
-   
+
    Double_t t,h,y,s,a,alfa,b1,b2,b0;
-   
+
    if (x == 1) {
       h = pi6;
    } else if (x == -1) {
@@ -951,41 +951,41 @@ Double_t TMath::KolmogorovProb(Double_t z)
 //______________________________________________________________________________
 Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Double_t *b, Option_t *option)
 {
-//  Statistical test whether two one-dimensional sets of points are compatible 
-//  with coming from the same parent distribution, using the Kolmogorov test. 
+//  Statistical test whether two one-dimensional sets of points are compatible
+//  with coming from the same parent distribution, using the Kolmogorov test.
 //  That is, it is used to compare two experimental distributions of unbinned data.
 //
 //  Input:
-//  a,b: One-dimensional arrays of length na, nb, respectively. 
+//  a,b: One-dimensional arrays of length na, nb, respectively.
 //       The elements of a and b must be given in ascending order.
 //  option is a character string to specify options
 //         "D" Put out a line of "Debug" printout
 //         "M" Return the Maximum Kolmogorov distance instead of prob
 //
 //  Output:
-// The returned value prob is a calculated confidence level which gives a 
-// statistical test for compatibility of a and b. 
-// Values of prob close to zero are taken as indicating a small probability 
-// of compatibility. For two point sets drawn randomly from the same parent 
-// distribution, the value of prob should be uniformly distributed between 
+// The returned value prob is a calculated confidence level which gives a
+// statistical test for compatibility of a and b.
+// Values of prob close to zero are taken as indicating a small probability
+// of compatibility. For two point sets drawn randomly from the same parent
+// distribution, the value of prob should be uniformly distributed between
 // zero and one.
 //   in case of error the function return -1
-//   If the 2 sets have a different number of points, the minimum of 
+//   If the 2 sets have a different number of points, the minimum of
 //   the two sets is used.
 //
 // Method:
-// The Kolmogorov test is used. The test statistic is the maximum deviation 
-// between the two integrated distribution functions, multiplied by the 
+// The Kolmogorov test is used. The test statistic is the maximum deviation
+// between the two integrated distribution functions, multiplied by the
 // normalizing factor (rdmax*sqrt(na*nb/(na+nb)).
 //
 //  Code adapted by Rene Brun from CERNLIB routine TKOLMO (Fred James)
-//   (W.T. Eadie, D. Drijard, F.E. James, M. Roos and B. Sadoulet, 
-//      Statistical Methods in Experimental Physics, (North-Holland, 
-//      Amsterdam 1971) 269-271) 
+//   (W.T. Eadie, D. Drijard, F.E. James, M. Roos and B. Sadoulet,
+//      Statistical Methods in Experimental Physics, (North-Holland,
+//      Amsterdam 1971) 269-271)
 //
 //  NOTE1
 //  A good description of the Kolmogorov test can be seen at:
-//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm 
+//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
 
    TString opt = option;
    opt.ToUpper();
@@ -1749,7 +1749,7 @@ Double_t TMath::Mean(Long64_t n, const Float_t *a, const Double_t *w)
 Double_t TMath::Mean(Long64_t n, const Double_t *a, const Double_t *w)
 {
    // Return the weighted mean of an array a with length n.
-   
+
    if (n <= 0 || !a) return 0;
 
    Double_t sum = 0;
@@ -1845,7 +1845,7 @@ Double_t TMath::GeomMean(Long64_t n, const Short_t *a)
    // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
 
    if (n <= 0 || !a) return 0;
-   
+
    Double_t logsum = 0.;
    for (Long64_t i = 0; i < n; i++) {
       if (a[i] == 0) return 0.;
@@ -2023,14 +2023,14 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
       median = 0.5*(a[ind[jl]]+a[ind[jh]]);
 
    } else {
-      
+
       if (n%2 == 1)
          median = KOrdStatImp(n, a,n/2, ind);
       else {
          median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2, ind));
       }
    }
-   
+
    if (isAllocated)
       delete [] ind;
    return median;
@@ -2411,9 +2411,9 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
    //    type=7 - used by S-Plus and R, p(k) = (k-1)/(n-1);
    //    type=8 - resulting sample quantiles are approximately median unbiased
    //             regardless of the distribution of x. p(k) = (k-1/3)/(n+1/3);
-   //    type=9 - resulting sample quantiles are approximately unbiased, when 
+   //    type=9 - resulting sample quantiles are approximately unbiased, when
    //             the sample comes from Normal distribution. p(k)=(k-3/8)/(n+1/4);
-   // 
+   //
    //    default type = 7
    //
    // References:
@@ -2467,13 +2467,13 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
                      if (isSorted) xjj = x[j+1];
                      else xjj = TMath::KOrdStat(n, x, j+1, ind);
                      quantiles[i] = xjj;
-                  } else 
+                  } else
                      quantiles[i] = xj;
                }
             }
          }
       }
-   } 
+   }
    if (type>3){
       for (Int_t i=0; i<nprob; i++){
          np=n*prob[i];
@@ -2514,8 +2514,8 @@ Double_t TMath::RMS(Long64_t n, const Short_t *a)
 
    Double_t tot = 0, tot2 =0, adouble;
    for (Long64_t i=0;i<n;i++) {
-      adouble=Double_t(a[i]); 
-      tot += adouble; tot2 += adouble*adouble; 
+      adouble=Double_t(a[i]);
+      tot += adouble; tot2 += adouble*adouble;
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
@@ -2531,8 +2531,8 @@ Double_t TMath::RMS(Long64_t n, const Int_t *a)
    if (n <= 0 || !a) return 0;
    Double_t tot = 0, tot2 =0, adouble;
    for (Long64_t i=0;i<n;i++) {
-      adouble=Double_t(a[i]); 
-      tot += adouble; tot2 += adouble*adouble; 
+      adouble=Double_t(a[i]);
+      tot += adouble; tot2 += adouble*adouble;
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
@@ -2550,8 +2550,8 @@ Double_t TMath::RMS(Long64_t n, const Float_t *a)
    Double_t tot = 0, tot2 =0, adouble;
 
    for (Long64_t i=0;i<n;i++) {
-      adouble=Double_t(a[i]); 
-      tot += adouble; tot2 += adouble*adouble; 
+      adouble=Double_t(a[i]);
+      tot += adouble; tot2 += adouble*adouble;
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
@@ -2583,8 +2583,8 @@ Double_t TMath::RMS(Long64_t n, const Long_t *a)
 
    Double_t tot = 0, tot2 =0, adouble;
    for (Long64_t i=0;i<n;i++) {
-      adouble=Double_t(a[i]); 
-      tot += adouble; tot2 += adouble*adouble; 
+      adouble=Double_t(a[i]);
+      tot += adouble; tot2 += adouble*adouble;
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
@@ -2601,8 +2601,8 @@ Double_t TMath::RMS(Long64_t n, const Long64_t *a)
 
    Double_t tot = 0, tot2 =0, adouble;
    for (Long64_t i=0;i<n;i++) {
-      adouble=Double_t(a[i]); 
-      tot += adouble; tot2 += adouble*adouble; 
+      adouble=Double_t(a[i]);
+      tot += adouble; tot2 += adouble*adouble;
    }
    Double_t n1 = 1./n;
    Double_t mean = tot*n1;
@@ -3346,38 +3346,38 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
    //              V.Perev
 
    static const ULong_t utab[] = {
-       0xdd367647,0x9caf993f,0x3f3cc5ff,0xfde25082,0x4c764b21,0x89affca7,0x5431965c,0xce22eeec
-      ,0xc61ab4dc,0x59cc93bd,0xed3107e3,0x0b0a287a,0x4712475a,0xce4a4c71,0x352c8403,0x94cb3cee
-      ,0xc3ac509b,0x09f827a2,0xce02e37e,0x7b20bbba,0x76adcedc,0x18c52663,0x19f74103,0x6f30e47b
-      ,0x132ea5a1,0xfdd279e0,0xa3d57d00,0xcff9cb40,0x9617f384,0x6411acfa,0xff908678,0x5c796b2c
-      ,0x4471b62d,0xd38e3275,0xdb57912d,0x26bf953f,0xfc41b2a5,0xe64bcebd,0x190b7839,0x7e8e6a56
-      ,0x9ca22311,0xef28aa60,0xe6b9208e,0xd257fb65,0x45781c2c,0x9a558ac3,0x2743e74d,0x839417a8
-      ,0x06b54d5d,0x1a82bcb4,0x06e97a66,0x70abdd03,0xd163f30d,0x222ed322,0x777bfeda,0xab7a2e83
-      ,0x8494e0cf,0x2dca2d4f,0x78f94278,0x33f04a09,0x402b6452,0x0cd8b709,0xdb72a39e,0x170e00a2
-      ,0x26354faa,0x80e57453,0xcfe8d4e1,0x19e45254,0x04c291c3,0xeb503738,0x425af3bc,0x67836f2a
-      ,0xfac22add,0xfafc2b8c,0x59b8c2a0,0x03e806f9,0xcb4938b9,0xccc942af,0xcee3ae2e,0xfbe748fa
-      ,0xb223a075,0x85c49b5d,0xe4576ac9,0x0fbd46e2,0xb49f9cf5,0xf3e1e86a,0x7d7927fb,0x711afe12
-      ,0xbf61c346,0x157c9956,0x86b6b046,0x2e402146,0xb2a57d8a,0x0d064bb1,0x30ce390c,0x3a3e1eb1
-      ,0xbe7f6f8f,0xd8e30f87,0x5be2813c,0x73a3a901,0xa3aaf967,0x59ff092c,0x1705c798,0xf610dd66
-      ,0xb17da91e,0x8e59534e,0x2211ea5b,0xa804ba03,0xd890efbb,0xb8b48110,0xff390068,0xc8c325b4
-      ,0xf7289c07,0x787e104f,0x3d0df3d0,0x3526796d,0x10548055,0x1d59a42b,0xed1cc5a3,0xdd45372a
-      ,0x31c50d57,0x65757cb7,0x3cfb85be,0xa329910d,0x6ad8ce39,0xa2de44de,0x0dd32432,0xd4a5b617
-      ,0x8f3107fc,0x96485175,0x7f94d4f3,0x35097634,0xdb3ca782,0x2c0290b8,0x2045300b,0xe0f5d15a
-      ,0x0e8cbffa,0xaa1cc38a,0x84008d6f,0xe9a9e794,0x5c602c25,0xfa3658fa,0x98d9d82b,0x3f1497e7
-      ,0x84b6f031,0xe381eff9,0xfc7ae252,0xb239e05d,0xe3723d1f,0xcc3bda82,0xe21b1ad3,0x9104f7c8
-      ,0x4bb2dfcd,0x4d14a8bc,0x6ba7f28c,0x8f89886c,0xad44c97e,0xb30fd975,0x633cdab1,0xf6c2d514
-      ,0x067a49d2,0xdc461ad9,0xebaf9f3f,0x8dc6cac3,0x7a060f16,0xbab063ad,0xf42e25e6,0x60724ca6
-      ,0xc7245c2e,0x4e48ea3c,0x9f89a609,0xa1c49890,0x4bb7f116,0xd722865c,0xa8ee3995,0x0ee070b1
-      ,0xd9bffcc2,0xe55b64f9,0x25507a5a,0xc7a3e2b5,0x5f395f7e,0xe7957652,0x7381ba6a,0xde3d21f1
-      ,0xdf1708dd,0xad0c9d0c,0x00cbc9e5,0x1160e833,0x6779582c,0x29d5d393,0x3f11d7d7,0x826a6b9b
-      ,0xe73ff12f,0x8bad3d86,0xee41d3e5,0x7f0c8917,0x8089ef24,0x90c5cb28,0x2f7f8e6b,0x6966418a
-      ,0x345453fb,0x7a2f8a68,0xf198593d,0xc079a532,0xc1971e81,0x1ab74e26,0x329ef347,0x7423d3d0
-      ,0x942c510b,0x7f6c6382,0x14ae6acc,0x64b59da7,0x2356fa47,0xb6749d9c,0x499de1bb,0x92ffd191
-      ,0xe8f2fb75,0x848dc913,0x3e8727d3,0x1dcffe61,0xb6e45245,0x49055738,0x827a6b55,0xb4788887
-      ,0x7e680125,0xd19ce7ed,0x6b4b8e30,0xa8cadea2,0x216035d8,0x1c63bc3c,0xe1299056,0x1ad3dff4
-      ,0x0aefd13c,0x0e7b921c,0xca0173c6,0x9995782d,0xcccfd494,0xd4b0ac88,0x53d552b1,0x630dae8b
-      ,0xa8332dad,0x7139d9a2,0x5d76f2c4,0x7a4f8f1e,0x8d1aef97,0xd1cf285d,0xc8239153,0xce2608a9
-      ,0x7b562475,0xe4b4bc83,0xf3db0c3a,0x70a65e48,0x6016b302,0xdebd5046,0x707e786a,0x6f10200c
+      0xdd367647,0x9caf993f,0x3f3cc5ff,0xfde25082,0x4c764b21,0x89affca7,0x5431965c,0xce22eeec,
+      0xc61ab4dc,0x59cc93bd,0xed3107e3,0x0b0a287a,0x4712475a,0xce4a4c71,0x352c8403,0x94cb3cee,
+      0xc3ac509b,0x09f827a2,0xce02e37e,0x7b20bbba,0x76adcedc,0x18c52663,0x19f74103,0x6f30e47b,
+      0x132ea5a1,0xfdd279e0,0xa3d57d00,0xcff9cb40,0x9617f384,0x6411acfa,0xff908678,0x5c796b2c,
+      0x4471b62d,0xd38e3275,0xdb57912d,0x26bf953f,0xfc41b2a5,0xe64bcebd,0x190b7839,0x7e8e6a56,
+      0x9ca22311,0xef28aa60,0xe6b9208e,0xd257fb65,0x45781c2c,0x9a558ac3,0x2743e74d,0x839417a8,
+      0x06b54d5d,0x1a82bcb4,0x06e97a66,0x70abdd03,0xd163f30d,0x222ed322,0x777bfeda,0xab7a2e83,
+      0x8494e0cf,0x2dca2d4f,0x78f94278,0x33f04a09,0x402b6452,0x0cd8b709,0xdb72a39e,0x170e00a2,
+      0x26354faa,0x80e57453,0xcfe8d4e1,0x19e45254,0x04c291c3,0xeb503738,0x425af3bc,0x67836f2a,
+      0xfac22add,0xfafc2b8c,0x59b8c2a0,0x03e806f9,0xcb4938b9,0xccc942af,0xcee3ae2e,0xfbe748fa,
+      0xb223a075,0x85c49b5d,0xe4576ac9,0x0fbd46e2,0xb49f9cf5,0xf3e1e86a,0x7d7927fb,0x711afe12,
+      0xbf61c346,0x157c9956,0x86b6b046,0x2e402146,0xb2a57d8a,0x0d064bb1,0x30ce390c,0x3a3e1eb1,
+      0xbe7f6f8f,0xd8e30f87,0x5be2813c,0x73a3a901,0xa3aaf967,0x59ff092c,0x1705c798,0xf610dd66,
+      0xb17da91e,0x8e59534e,0x2211ea5b,0xa804ba03,0xd890efbb,0xb8b48110,0xff390068,0xc8c325b4,
+      0xf7289c07,0x787e104f,0x3d0df3d0,0x3526796d,0x10548055,0x1d59a42b,0xed1cc5a3,0xdd45372a,
+      0x31c50d57,0x65757cb7,0x3cfb85be,0xa329910d,0x6ad8ce39,0xa2de44de,0x0dd32432,0xd4a5b617,
+      0x8f3107fc,0x96485175,0x7f94d4f3,0x35097634,0xdb3ca782,0x2c0290b8,0x2045300b,0xe0f5d15a,
+      0x0e8cbffa,0xaa1cc38a,0x84008d6f,0xe9a9e794,0x5c602c25,0xfa3658fa,0x98d9d82b,0x3f1497e7,
+      0x84b6f031,0xe381eff9,0xfc7ae252,0xb239e05d,0xe3723d1f,0xcc3bda82,0xe21b1ad3,0x9104f7c8,
+      0x4bb2dfcd,0x4d14a8bc,0x6ba7f28c,0x8f89886c,0xad44c97e,0xb30fd975,0x633cdab1,0xf6c2d514,
+      0x067a49d2,0xdc461ad9,0xebaf9f3f,0x8dc6cac3,0x7a060f16,0xbab063ad,0xf42e25e6,0x60724ca6,
+      0xc7245c2e,0x4e48ea3c,0x9f89a609,0xa1c49890,0x4bb7f116,0xd722865c,0xa8ee3995,0x0ee070b1,
+      0xd9bffcc2,0xe55b64f9,0x25507a5a,0xc7a3e2b5,0x5f395f7e,0xe7957652,0x7381ba6a,0xde3d21f1,
+      0xdf1708dd,0xad0c9d0c,0x00cbc9e5,0x1160e833,0x6779582c,0x29d5d393,0x3f11d7d7,0x826a6b9b,
+      0xe73ff12f,0x8bad3d86,0xee41d3e5,0x7f0c8917,0x8089ef24,0x90c5cb28,0x2f7f8e6b,0x6966418a,
+      0x345453fb,0x7a2f8a68,0xf198593d,0xc079a532,0xc1971e81,0x1ab74e26,0x329ef347,0x7423d3d0,
+      0x942c510b,0x7f6c6382,0x14ae6acc,0x64b59da7,0x2356fa47,0xb6749d9c,0x499de1bb,0x92ffd191,
+      0xe8f2fb75,0x848dc913,0x3e8727d3,0x1dcffe61,0xb6e45245,0x49055738,0x827a6b55,0xb4788887,
+      0x7e680125,0xd19ce7ed,0x6b4b8e30,0xa8cadea2,0x216035d8,0x1c63bc3c,0xe1299056,0x1ad3dff4,
+      0x0aefd13c,0x0e7b921c,0xca0173c6,0x9995782d,0xcccfd494,0xd4b0ac88,0x53d552b1,0x630dae8b,
+      0xa8332dad,0x7139d9a2,0x5d76f2c4,0x7a4f8f1e,0x8d1aef97,0xd1cf285d,0xc8239153,0xce2608a9,
+      0x7b562475,0xe4b4bc83,0xf3db0c3a,0x70a65e48,0x6016b302,0xdebd5046,0x707e786a,0x6f10200c
    };
 
    static const ULong_t msk[] = { 0x11111111, 0x33333333, 0x77777777, 0xffffffff };
@@ -4181,11 +4181,11 @@ Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
    // Evaluate the quantiles of the chi-squared probability distribution function.
    // Algorithm AS 91   Appl. Statist. (1975) Vol.24, P.35
    // implemented by Anna Kreshuk.
-   // Incorporates the suggested changes in AS R85 (vol.40(1), pp.233-5, 1991) 
+   // Incorporates the suggested changes in AS R85 (vol.40(1), pp.233-5, 1991)
    // Parameters:
    //   p   - the probability value, at which the quantile is computed
    //   ndf - number of degrees of freedom
-      
+
    Double_t c[]={0, 0.01, 0.222222, 0.32, 0.4, 1.24, 2.2,
                  4.67, 6.66, 6.73, 13.32, 60.0, 70.0,
                  84.0, 105.0, 120.0, 127.0, 140.0, 175.0,
@@ -4692,7 +4692,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
    //Returns the value of the Vavilov distribution function
    //Parameters: 1st - the point were the density function is evaluated
    //            2nd - value of kappa (distribution parameter)
-   //            3rd - value of beta2 (distribution parameter) 
+   //            3rd - value of beta2 (distribution parameter)
    //The algorithm was taken from the CernLib function vavden(G115)
    //Reference: A.Rotondi and P.Montagna, Fast Calculation of Vavilov distribution
    //Nucl.Instr. and Meth. B47(1990), 215-224
@@ -4724,7 +4724,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 }
 
 //______________________________________________________________________________
-Double_t TMath::LandauI(Double_t x) 
+Double_t TMath::LandauI(Double_t x)
 {
    //Returns the value of the Landau distribution function at point x.
    //The algorithm was taken from the Cernlib function dislan(G110)
@@ -4767,7 +4767,7 @@ Double_t TMath::LandauI(Double_t x)
    }
    else if (v < 1)
       lan = (p2[0]+(p2[1]+(p2[2]+p2[3]*v)*v)*v)/(q2[0]+(q2[1]+(q2[2]+q2[3]*v)*v)*v);
-   else if (v < 4) 
+   else if (v < 4)
       lan = (p3[0]+(p3[1]+(p3[2]+p3[3]*v)*v)*v)/(q3[0]+(q3[1]+(q3[2]+q3[3]*v)*v)*v);
    else if (v < 12) {
       u = 1./v;
@@ -4786,9 +4786,9 @@ Double_t TMath::LandauI(Double_t x)
       lan = 1-(a2[1]+(a2[2]+a2[3]*u)*u)*u;
    }
    return lan;
-} 
+}
 
- 
+
 //______________________________________________________________________________
 void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *WCM, Double_t *AC, Double_t *HC, Int_t &itype, Int_t &npt)
 {
@@ -4935,7 +4935,7 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       itype = 1;
       npt = 100;
       Double_t wk = 1./TMath::Sqrt(rkappa);
-      
+
       AC[0] = (-0.032227*beta2-0.074275)*rkappa + (0.24533*beta2+0.070152)*wk + (-0.55610*beta2-3.1579);
       AC[8] = (-0.013483*beta2-0.048801)*rkappa + (-1.6921*beta2+8.3656)*wk + (-0.73275*beta2-3.5226);
       DRK[1] = wk*wk;
@@ -4956,7 +4956,7 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       for (j=2; j<=7; j++)
          HC[j]*=EDGEC[j];
       HC[8]=0.39894228*HC[1];
-   } 
+   }
    else if (rkappa >=0.22) {
       itype = 2;
       npt = 150;
@@ -5005,21 +5005,21 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       q2 = y2*x;
       q3 = y3*x;
       pq = x2*y2;
-      AC[1] = V1[1] + V1[2]*x + V1[3]*x2 + V1[5]*y + V1[6]*y2 + V1[7]*y3 + 
+      AC[1] = V1[1] + V1[2]*x + V1[3]*x2 + V1[5]*y + V1[6]*y2 + V1[7]*y3 +
          V1[9]*p2 + V1[10]*p3 + V1[11]*q2 + V1[12]*q3;
-      AC[2] = V2[1] + V2[2]*x + V2[3]*x2 + V2[5]*y + V2[6]*y2 + V2[7]*y3 + 
+      AC[2] = V2[1] + V2[2]*x + V2[3]*x2 + V2[5]*y + V2[6]*y2 + V2[7]*y3 +
          V2[8]*xy + V2[9]*p2 + V2[11]*q2 + V2[12]*q3;
-      AC[3] = V3[1] + V3[2]*x + V3[3]*x2 + V3[4]*x3 + V3[5]*y + V3[6]*y2 + V3[7]*y3 + 
+      AC[3] = V3[1] + V3[2]*x + V3[3]*x2 + V3[4]*x3 + V3[5]*y + V3[6]*y2 + V3[7]*y3 +
          V3[8]*xy + V3[9]*p2 + V3[10]*p3 + V3[11]*q2 + V3[12]*q3 + V3[13]*pq;
-      AC[4] = V4[1] + V4[2]*x + V4[3]*x2 + V4[4]*x3 + V4[5]*y + V4[6]*y2 + V4[7]*y3 + 
+      AC[4] = V4[1] + V4[2]*x + V4[3]*x2 + V4[4]*x3 + V4[5]*y + V4[6]*y2 + V4[7]*y3 +
          V4[8]*xy + V4[9]*p2 + V4[10]*p3 + V4[11]*q2 + V4[12]*q3;
-      AC[5] = V5[1] + V5[2]*x + V5[3]*x2 + V5[4]*x3 + V5[5]*y + V5[6]*y2 + V5[7]*y3 + 
+      AC[5] = V5[1] + V5[2]*x + V5[3]*x2 + V5[4]*x3 + V5[5]*y + V5[6]*y2 + V5[7]*y3 +
          V5[8]*xy + V5[11]*q2 + V5[12]*q3 + V5[13]*pq;
-      AC[6] = V6[1] + V6[2]*x + V6[3]*x2 + V6[4]*x3 + V6[5]*y + V6[6]*y2 + V6[7]*y3 + 
+      AC[6] = V6[1] + V6[2]*x + V6[3]*x2 + V6[4]*x3 + V6[5]*y + V6[6]*y2 + V6[7]*y3 +
          V6[8]*xy + V6[9]*p2 + V6[10]*p3 + V6[11]*q2 + V6[12]*q3 + V6[13]*pq;
-      AC[7] = V7[1] + V7[2]*x + V7[3]*x2 + V7[5]*y + V7[6]*y2 + V7[7]*y3 + 
+      AC[7] = V7[1] + V7[2]*x + V7[3]*x2 + V7[5]*y + V7[6]*y2 + V7[7]*y3 +
          V7[8]*xy + V7[11]*q2;
-      AC[8] = V8[1] + V8[2]*x + V8[3]*x2 + V8[5]*y + V8[6]*y2 + V8[7]*y3 + 
+      AC[8] = V8[1] + V8[2]*x + V8[3]*x2 + V8[5]*y + V8[6]*y2 + V8[7]*y3 +
          V8[8]*xy + V8[11]*q2;
       AC[0] = -3.04;
    } else {
@@ -5041,25 +5041,25 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       q3 = y3*x;
       pq = x2*y2;
       if (itype==3){
-         AC[1] = U1[1] + U1[2]*x + U1[3]*x2 + U1[5]*y + U1[6]*y2 + U1[7]*y3 + 
+         AC[1] = U1[1] + U1[2]*x + U1[3]*x2 + U1[5]*y + U1[6]*y2 + U1[7]*y3 +
             U1[8]*xy + U1[10]*p3 + U1[12]*q3 + U1[13]*pq;
-         AC[2] = U2[1] + U2[2]*x + U2[3]*x2 + U2[5]*y + U2[6]*y2 + U2[7]*y3 + 
+         AC[2] = U2[1] + U2[2]*x + U2[3]*x2 + U2[5]*y + U2[6]*y2 + U2[7]*y3 +
             U2[8]*xy + U2[9]*p2 + U2[10]*p3 + U2[12]*q3 + U2[13]*pq;
-         AC[3] = U3[1] + U3[2]*x + U3[3]*x2 + U3[5]*y + U3[6]*y2 + U3[7]*y3 + 
+         AC[3] = U3[1] + U3[2]*x + U3[3]*x2 + U3[5]*y + U3[6]*y2 + U3[7]*y3 +
             U3[8]*xy + U3[9]*p2 + U3[10]*p3 + U3[11]*q2 + U3[12]*q3 + U3[13]*pq;
-         AC[4] = U4[1] + U4[2]*x + U4[3]*x2 + U4[4]*x3 + U4[5]*y + U4[6]*y2 + U4[7]*y3 + 
+         AC[4] = U4[1] + U4[2]*x + U4[3]*x2 + U4[4]*x3 + U4[5]*y + U4[6]*y2 + U4[7]*y3 +
             U4[8]*xy + U4[9]*p2 + U4[10]*p3 + U4[11]*q2 + U4[12]*q3;
-         AC[5] = U5[1] + U5[2]*x + U5[3]*x2 + U5[4]*x3 + U5[5]*y + U5[6]*y2 + U5[7]*y3 + 
+         AC[5] = U5[1] + U5[2]*x + U5[3]*x2 + U5[4]*x3 + U5[5]*y + U5[6]*y2 + U5[7]*y3 +
             U5[8]*xy + U5[10]*p3 + U5[11]*q2 + U5[12]*q3 + U5[13]*pq;
-         AC[6] = U6[1] + U6[2]*x + U6[3]*x2 + U6[4]*x3 + U6[5]*y + U6[7]*y3 + 
+         AC[6] = U6[1] + U6[2]*x + U6[3]*x2 + U6[4]*x3 + U6[5]*y + U6[7]*y3 +
             U6[8]*xy + U6[9]*p2 + U6[10]*p3 + U6[12]*q3 + U6[13]*pq;
          AC[7] = U7[1] + U7[2]*x + U7[3]*x2 + U7[4]*x3 + U7[5]*y + U7[6]*y2 + U7[8]*xy;
       }
-      AC[8] = U8[1] + U8[2]*x + U8[3]*x2 + U8[4]*x3 + U8[5]*y + U8[6]*y2 + U8[7]*y3 + 
+      AC[8] = U8[1] + U8[2]*x + U8[3]*x2 + U8[4]*x3 + U8[5]*y + U8[6]*y2 + U8[7]*y3 +
          U8[8]*xy + U8[9]*p2 + U8[10]*p3 + U8[11]*q2 + U8[13]*pq;
       AC[0] = -3.03;
    }
-   
+
    AC[9] = (AC[8] - AC[0])/npt;
    AC[10] = 1./AC[9];
    if (itype == 3) {
@@ -5071,7 +5071,7 @@ void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *W
       AC[12] = (0.045+x*AC[11])*y;
    }
    if (itype == 4) AC[13] = 0.995/LandauI(AC[8]);
-   
+
    if (mode==0) return;
    //
    x = AC[0];
@@ -5111,13 +5111,13 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
          h[k+1] = x*h[k]-fn*h[k-1];
       }
       s = 1 + HC[7]*h[9];
-      for (k=2; k<=6; k++) 
+      for (k=2; k<=6; k++)
          s+=HC[k]*h[k+1];
       v = HC[8]*TMath::Exp(-0.5*x*x)*TMath::Max(s, 0.);
-   } 
+   }
    else if (itype == 2) {
       x = rlam*rlam;
-      v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x) - AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x))); 
+      v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x) - AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x)));
    }
    else if (itype == 3) {
       if (rlam < AC[7]) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.15 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.16 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -61,7 +61,7 @@ protected:
    Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
    Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
    Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
-   
+
    void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
 
 
@@ -70,11 +70,13 @@ public:
    enum {
       kPerspective  = BIT(6)
    };
-                TView();
-                TView(Int_t system);
-                TView(const Float_t *rmin, const Float_t *rmax, Int_t system = 1);
-                TView(const Double_t *rmin, const Double_t *rmax, Int_t system = 1);
-   virtual     ~TView();
+
+   TView();
+   TView(Int_t system);
+   TView(const Float_t *rmin, const Float_t *rmax, Int_t system = 1);
+   TView(const Double_t *rmin, const Double_t *rmax, Int_t system = 1);
+   virtual ~TView();
+
    virtual void AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2);
    virtual void DefinePerspectiveView();
    virtual void DefineViewDirection(const Double_t *s, const Double_t *c,
@@ -149,18 +151,18 @@ public:
    virtual void Centered();                       // *MENU*
    virtual void FrontView(TVirtualPad *pad=0);
    virtual void Front();                          // *MENU*
-   
+
    virtual void ZoomIn(); // *MENU*
    virtual void ZoomOut(); // *MENU*
    virtual void ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
    virtual void UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
-   
+
    virtual void RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0);
    virtual void SideView(TVirtualPad *pad=0);
    virtual void Side();                          // *MENU*
    virtual void TopView(TVirtualPad *pad=0);
    virtual void Top();                           // *MENU*
-   
+
    virtual void ToggleRulers(TVirtualPad *pad=0);
    virtual void ShowAxis();                      // *MENU*
    virtual void ToggleZoom(TVirtualPad *pad=0);

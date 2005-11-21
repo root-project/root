@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.131 2005/11/14 09:46:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.132 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2128,11 +2128,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
 #endif
 
-      if ( (gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0)
-           ||
-           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0
-            && ( lib_time < file_time ) )
-           ) {
+      if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
+          (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0 &&
+          (lib_time < file_time))) {
+
          // the library does not exist and is older than the script.
          recompile = kTRUE;
          modified  = kTRUE;
