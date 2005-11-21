@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.15 2005/05/20 10:04:33 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.16 2005/07/18 16:20:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,10 +9,6 @@
  *************************************************************************/
 
 #ifdef __CINT__
-
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
 
 #pragma link C++ enum EMessageTypes;
 #pragma link C++ enum ESockOptions;
@@ -47,5 +43,13 @@
 #pragma link C++ class TGridCollection+;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
+
+#pragma link C++ class TSQLFile;
+#pragma link C++ class TBufferSQL2;
+#pragma link C++ class TKeySQL;
+#pragma link C++ class TSQLClassInfo;
+#pragma link C++ class TSQLObjectData;
+#pragma link C++ class TSQLStructure;
+#pragma link C++ class TSQLColumnData;
 
 #endif
