@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.8 2002/08/13 13:05:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.9 2005/08/02 16:40:53 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include <string.h>
 
 ClassImp(TButton)
+
 
 //______________________________________________________________________________
 //  A TButton object is a user interface object.
@@ -85,26 +86,25 @@ ClassImp(TButton)
 */
 //End_Html
 
+
 //______________________________________________________________________________
 TButton::TButton(): TPad()
 {
-//*-*-*-*-*-*-*-*-*-*-*Button default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Button default constructor.
 
    fFraming=0;
    fMethod = "";
    SetEditable(kFALSE);
 }
 
+
 //______________________________________________________________________________
 TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TPad("button",title,x1,y1,x2,y2,18,2,1), TAttText(22,0,1,61,0.65)
 {
-//*-*-*-*-*-*-*-*-*-*-*Button normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//
-//   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
-//
+   // Button normal constructor.
+   //
+   //   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
 
    fFraming=0;
    SetBit(kCanDelete);
@@ -117,31 +117,31 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
    SetEditable(kFALSE);
 }
 
+
 //______________________________________________________________________________
 TButton::~TButton()
 {
-//*-*-*-*-*-*-*-*-*-*-*Button default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
+   // Button default destructor.
 
    if (fPrimitives) fPrimitives->Delete();
 }
 
+
 //______________________________________________________________________________
 void TButton::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this button with its current attributes*-*-*-*-*
-//*-*                  ============================================
+   // Draw this button with its current attributes.
 
    if (fCanvas) AppendPad(option);
 }
 
+
 //______________________________________________________________________________
 void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a Button object is clicked.
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a Button object is clicked.
 
    //check case where pressing a button deletes itself
    if (!TestBit(kNotDeleted)) return;
@@ -164,7 +164,6 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       SetBorderMode(-1);
       fFocused=1;
       Modified();
-//      GetCanvas()->Modified();
       Update();
       break;
 
@@ -198,11 +197,10 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gROOT->ProcessLine(GetMethod());
       }
       //check case where pressing a button deletes itself
-     if (!TestBit(kNotDeleted)) return;
+      if (!TestBit(kNotDeleted)) return;
 #ifndef WIN32
       SetBorderMode(1);
       Modified();
-//      GetCanvas()->Modified();
       Update();
 #else
 #ifndef GDK_WIN32
@@ -223,11 +221,11 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TButton::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this button with its current attributes*-*-*-*
-//*-*                  =============================================
+   // Paint this button with its current attributes.
 
    TPad::Paint(option);  //only called for Postscript print
 }
@@ -236,6 +234,8 @@ void TButton::Paint(Option_t *option)
 //______________________________________________________________________________
 void TButton::PaintModified()
 {
+   // Paint is modified.
+
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
@@ -251,26 +251,27 @@ void TButton::PaintModified()
    TPad::PaintModified();
 }
 
+
 //______________________________________________________________________________
 void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
-//*-*                  =======================================
+   // Set world coordinate system for the pad.
 
    TPad::Range(x1,y1,x2,y2);
 }
 
+
 //______________________________________________________________________________
 void TButton::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    TPad *padsav = (TPad*)gPad;
    char quote = '"';
    if (gROOT->ClassSaved(TButton::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TButton *";
+      out<<"   TButton *";
    }
    char *cm = (char*)GetMethod();
    Int_t nch = strlen(cm);
@@ -316,19 +317,20 @@ void TButton::SavePrimitive(ofstream &out, Option_t *)
 
    Int_t nprim = 0;
    while ((obj = next())) {
-       if (!nprim) out<<"   button->cd();"<<endl;
-       nprim++;
-       obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (!nprim) out<<"   button->cd();"<<endl;
+      nprim++;
+      obj->SavePrimitive(out, (Option_t *)next.GetOption());
    }
 
    if (nprim) out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
    padsav->cd();
 }
 
+
 //______________________________________________________________________________
 void TButton::SetFraming(Bool_t f)
 {
-// if framing is set, button will be highlighted
+   // if framing is set, button will be highlighted
 
    fFraming=f;
    if (f) SetBit(kFraming);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.cxx,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.cxx,v 1.3 2002/10/30 20:40:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -22,18 +22,22 @@ ClassImp(TAttCanvas)
 //______________________________________________________________________________
 TAttCanvas::TAttCanvas()
 {
+   // Default constructor.
+
    ResetAttCanvas();
 }
 
 //______________________________________________________________________________
 TAttCanvas::~TAttCanvas()
 {
-
+   // Destructor.
 }
 
 //______________________________________________________________________________
 void TAttCanvas::Copy(TAttCanvas &attcanvas) const
 {
+   // Copy constructor.
+
    attcanvas.fXBetween     = fXBetween;
    attcanvas.fYBetween     = fYBetween;
    attcanvas.fTitleFromTop = fTitleFromTop;
@@ -45,12 +49,14 @@ void TAttCanvas::Copy(TAttCanvas &attcanvas) const
 //______________________________________________________________________________
 void TAttCanvas::Print(Option_t *) const
 {
-
+   // Print canvas attributes.
 }
 
 //______________________________________________________________________________
 void TAttCanvas::ResetAttCanvas(Option_t *)
 {
+   // Print canvas attributes.
+
    fXBetween     = 2;
    fYBetween     = 2;
    fTitleFromTop = 1.2;
