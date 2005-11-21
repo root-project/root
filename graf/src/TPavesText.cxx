@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.6 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.7 2002/08/05 21:12:12 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 ClassImp(TPavesText)
 
+
 //______________________________________________________________________________
 //  A PavesText is a PaveText (see TPaveText) with several stacked paves.
 //Begin_Html
@@ -26,40 +27,41 @@ ClassImp(TPavesText)
 //End_Html
 //
 
+
 //______________________________________________________________________________
 TPavesText::TPavesText(): TPaveText()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavestext default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
+   // Pavestext default constructor.
 
    fNpaves = 5;
 }
+
 
 //______________________________________________________________________________
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-//*-*-*-*-*-*-*-*-*-*-*pavestext normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-//
-// The PavesText is by default defined bith bordersize=1 and option ="br".
-//
+   // Pavestext normal constructor.
+   //
+   // The PavesText is by default defined bith bordersize=1 and option ="br".
 
    fNpaves = npaves;
    SetBorderSize(1);
 }
 
+
 //______________________________________________________________________________
 TPavesText::~TPavesText()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavestext default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-
+   // Pavestext default destructor.
 }
+
 
 //______________________________________________________________________________
 TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 {
+   // Pavestext copy constructor.
+
    TBuffer b(TBuffer::kWrite);
    TPavesText *p = (TPavesText*)(&pavestext);
    p->Streamer(b);
@@ -68,25 +70,23 @@ TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
    Streamer(b);
 }
 
+
 //______________________________________________________________________________
 void TPavesText::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this pavestext with its current attributes*-*-*-*-*
-//*-*                  ===============================================
+   // Draw this pavestext with its current attributes.
 
    AppendPad(option);
-
 }
+
 
 //______________________________________________________________________________
 void TPavesText::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this pavestext with its current attributes*-*-*-*
-//*-*                  ================================================
+   // Paint this pavestext with its current attributes.
 
-
-//*-* Draw the fNpaves-1 stacked paves
-//*-* The spacing between paves is set to 3 times the bordersize
+   // Draw the fNpaves-1 stacked paves
+   // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();
    const char *opt = GetOption();
    Double_t signx, signy;
@@ -107,23 +107,24 @@ void TPavesText::Paint(Option_t *option)
       TPave::PaintPave(x1,y1,x2,y2,bordersize,option);
    }
 
-//*-*- Draw the top pavetext
+   // Draw the top pavetext
    TPaveText::Paint(option);
 }
+
 
 //______________________________________________________________________________
 void TPavesText::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPavesText::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TPavesText *";
+      out<<"   TPavesText *";
    }
    out<<"pst = new TPavesText("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<endl;

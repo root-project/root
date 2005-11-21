@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -32,26 +32,27 @@
 class TPaveLabel : public TPave, public TAttText {
 
 protected:
-        TString      fLabel;         //Label written at the center of Pave
+   TString      fLabel;         //Label written at the center of Pave
 
 public:
-        TPaveLabel();
-        TPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, Option_t *option="br");
-        TPaveLabel(const TPaveLabel &pavelabel);
-        virtual ~TPaveLabel();
-                void  Copy(TObject &pavelabel) const;
-        virtual void  Draw(Option_t *option="");
-        virtual void  DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                      const char *label, Option_t *option="");
-        const  char  *GetLabel() const {return fLabel.Data();}
-        const  char  *GetTitle() const {return fLabel.Data();}
-        virtual void  Paint(Option_t *option="");
-        virtual void  PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                      const char *label, Option_t *option="");
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  SetLabel(const char *label) {fLabel = label;} // *MENU*
+   TPaveLabel();
+   TPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, Option_t *option="br");
+   TPaveLabel(const TPaveLabel &pavelabel);
+   virtual ~TPaveLabel();
 
-        ClassDef(TPaveLabel,1)  //PaveLabel. A Pave with a label
+   void          Copy(TObject &pavelabel) const;
+   virtual void  Draw(Option_t *option="");
+   virtual void  DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                      const char *label, Option_t *option="");
+   const char   *GetLabel() const {return fLabel.Data();}
+   const char   *GetTitle() const {return fLabel.Data();}
+   virtual void  Paint(Option_t *option="");
+   virtual void  PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                      const char *label, Option_t *option="");
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SetLabel(const char *label) {fLabel = label;} // *MENU*
+
+   ClassDef(TPaveLabel,1)  //PaveLabel. A Pave with a label
 };
 
 #endif

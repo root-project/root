@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.48 2005/11/01 16:42:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.49 2005/11/16 17:38:38 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    virtual Int_t     Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
    virtual Int_t     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
    virtual void      FitPanel(); // *MENU*
-           Bool_t    GetEditable() const;
+   Bool_t            GetEditable() const;
    TF1              *GetFunction(const char *name) const;
    TH1F             *GetHistogram() const;
    TList            *GetListOfFunctions() const { return fFunctions; }
@@ -154,7 +154,7 @@ public:
    virtual void      Set(Int_t n);
    virtual void      SetPoint(Int_t i, Double_t x, Double_t y);
    virtual void      SetTitle(const char *title="");    // *MENU*
-           void      Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
+   void              Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
    virtual void      Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                           Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
    virtual void      UseCurrentStyle();

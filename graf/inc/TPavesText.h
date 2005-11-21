@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.h,v 1.2 2000/06/13 11:14:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.h,v 1.3 2002/08/05 21:12:12 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -28,20 +28,21 @@
 class TPavesText : public TPaveText {
 
 protected:
-        Int_t      fNpaves;        //Number of stacked paves
+   Int_t      fNpaves;        //Number of stacked paves
 
 public:
-        TPavesText();
-        TPavesText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Int_t npaves=5, Option_t *option="br");
-        TPavesText(const TPavesText &pavestext);
-        virtual ~TPavesText();
-        virtual void  Draw(Option_t *option="");
-        virtual Int_t GetNpaves() {return fNpaves;}
-        virtual void  Paint(Option_t *option="");
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  SetNpaves(Int_t npaves=5) {fNpaves=npaves;} // *MENU*
+   TPavesText();
+   TPavesText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Int_t npaves=5, Option_t *option="br");
+   TPavesText(const TPavesText &pavestext);
+   virtual ~TPavesText();
 
-        ClassDef(TPavesText,1)  //Stacked Paves with text strings
+   virtual void  Draw(Option_t *option="");
+   virtual Int_t GetNpaves() {return fNpaves;}
+   virtual void  Paint(Option_t *option="");
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SetNpaves(Int_t npaves=5) {fNpaves=npaves;} // *MENU*
+
+   ClassDef(TPavesText,1)  //Stacked Paves with text strings
 };
 
 #endif

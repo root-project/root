@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.23 2005/09/16 17:19:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.24 2005/09/19 14:31:31 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TLatex.h"
 
 ClassImp(TPaveStats)
+
 
 //______________________________________________________________________________
 //  A PaveStats is a PaveText to draw histogram statistics
@@ -60,6 +61,7 @@ ClassImp(TPaveStats)
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
+
 //______________________________________________________________________________
 TPaveStats::TPaveStats(): TPaveText()
 {
@@ -67,6 +69,7 @@ TPaveStats::TPaveStats(): TPaveText()
    
    fParent = 0;
 }
+
 
 //______________________________________________________________________________
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
@@ -81,28 +84,35 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
    SetStatFormat(gStyle->GetStatFormat());
 }
 
+
 //______________________________________________________________________________
 TPaveStats::~TPaveStats()
 {
    // TPaveStats default destructor
+
    if ( fParent && !fParent->TestBit(kInvalidObject)) fParent->RecursiveRemove(this);
 }
+
 
 //______________________________________________________________________________
 Int_t TPaveStats::GetOptFit() const 
 {
    // return the fit option
+
    if (TestBit(kTakeStyle)) return gStyle->GetOptFit();
    return fOptFit;
 }
+
 
 //______________________________________________________________________________
 Int_t TPaveStats::GetOptStat() const 
 {
    // return the stat option
+
    if (TestBit(kTakeStyle)) return gStyle->GetOptStat();
    return fOptStat;
 }
+
 
 //______________________________________________________________________________
 void TPaveStats::SaveStyle()
@@ -115,6 +125,7 @@ void TPaveStats::SaveStyle()
    gStyle->SetStatFormat(fStatFormat.Data());
 }
 
+
 //______________________________________________________________________________
 void TPaveStats::SetFitFormat(const char *form)
 {
@@ -122,6 +133,7 @@ void TPaveStats::SetFitFormat(const char *form)
 
    fFitFormat = form;
 }
+
 
 //______________________________________________________________________________
 void TPaveStats::SetOptFit(Int_t fit)
@@ -132,6 +144,7 @@ void TPaveStats::SetOptFit(Int_t fit)
    ResetBit(kTakeStyle);
 }
 
+
 //______________________________________________________________________________
 void TPaveStats::SetOptStat(Int_t stat)
 {
@@ -141,6 +154,7 @@ void TPaveStats::SetOptStat(Int_t stat)
    ResetBit(kTakeStyle);
 }
 
+
 //______________________________________________________________________________
 void TPaveStats::SetStatFormat(const char *form)
 {
@@ -149,9 +163,12 @@ void TPaveStats::SetStatFormat(const char *form)
    fStatFormat = form;
 }
 
+
 //______________________________________________________________________________
 void TPaveStats::Paint(Option_t *option)
 {
+   // Paint the pave stat.
+
    TPave::ConvertNDCtoPad();
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
 
@@ -237,58 +254,58 @@ void TPaveStats::Paint(Option_t *option)
          strcpy(sl, latex->GetTitle());
          // Draw all the histogram stats except the 2D under/overflow
          if (strpbrk(sl, "=") !=0 && print_name == 0) {
-           st = strtok(sl, "=");
-           Int_t halign = 12;
-           while ( st !=0 ) {
-              latex->SetTextAlign(halign);
-              if (halign == 12) xtext = fX1 + margin;
-              if (halign == 32) {
-                 xtext = fX2 - margin;
-                 // Clean trailing blanks in case of right alignment.
-                 char *stc;
-                 stc=st+strlen(st)-1;
-                 while (*stc == ' ') {
-                    *stc = '\0';
-                    --stc;
-                 }
-              }
-              latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                            latex->GetTextSize(),
-                                            st);
-              st = strtok(0, "=");
-              halign = 32;
-           }
+            st = strtok(sl, "=");
+            Int_t halign = 12;
+            while ( st !=0 ) {
+               latex->SetTextAlign(halign);
+               if (halign == 12) xtext = fX1 + margin;
+               if (halign == 32) {
+                  xtext = fX2 - margin;
+                  // Clean trailing blanks in case of right alignment.
+                  char *stc;
+                  stc=st+strlen(st)-1;
+                  while (*stc == ' ') {
+                     *stc = '\0';
+                     --stc;
+                  }
+               }
+               latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                             latex->GetTextSize(),
+                                             st);
+               st = strtok(0, "=");
+               halign = 32;
+            }
          // Draw the 2D under/overflow
          } else if (strpbrk(sl, "|") !=0) {
-           Double_t yline1 = ytext+yspace/2.;
-           Double_t yline2 = ytext-yspace/2.;
-           Double_t xline1 = (fX2-fX1)/3+fX1;
-           Double_t xline2 = 2*(fX2-fX1)/3+fX1;
-           gPad->PaintLine(fX1,yline1,fX2,yline1);
-           gPad->PaintLine(xline1,yline1,xline1,yline2);
-           gPad->PaintLine(xline2,yline1,xline2,yline2);
-           st = strtok(sl, "|");
-           Int_t theIndex = 0;
-           while ( st !=0 ) {
-              latex->SetTextAlign(22);
-              if (theIndex == 0) xtext = 0.5*(fX1+xline1);
-              if (theIndex == 1) xtext = 0.5*(fX1+fX2);
-              if (theIndex == 2) xtext = 0.5*(xline2+fX2);
-              latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                            latex->GetTextSize(),
-                                            st);
-              theIndex++;
-              st = strtok(0, "|");
-           }
+            Double_t yline1 = ytext+yspace/2.;
+            Double_t yline2 = ytext-yspace/2.;
+            Double_t xline1 = (fX2-fX1)/3+fX1;
+            Double_t xline2 = 2*(fX2-fX1)/3+fX1;
+            gPad->PaintLine(fX1,yline1,fX2,yline1);
+            gPad->PaintLine(xline1,yline1,xline1,yline2);
+            gPad->PaintLine(xline2,yline1,xline2,yline2);
+            st = strtok(sl, "|");
+            Int_t theIndex = 0;
+            while ( st !=0 ) {
+               latex->SetTextAlign(22);
+               if (theIndex == 0) xtext = 0.5*(fX1+xline1);
+               if (theIndex == 1) xtext = 0.5*(fX1+fX2);
+               if (theIndex == 2) xtext = 0.5*(xline2+fX2);
+               latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                             latex->GetTextSize(),
+                                             st);
+               theIndex++;
+               st = strtok(0, "|");
+            }
          // Draw the histogram identifier
          } else {
-           print_name = 0;
-           latex->SetTextAlign(22);
-           xtext = 0.5*(fX1+fX2);
-           latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                         titlesize,
-                                         sl);
-           gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
+            print_name = 0;
+            latex->SetTextAlign(22);
+            xtext = 0.5*(fX1+fX2);
+            latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                          titlesize,
+                                          sl);
+            gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
          }
          delete [] sl;
 
@@ -319,17 +336,18 @@ void TPaveStats::Paint(Option_t *option)
    }
 }
 
+
 //______________________________________________________________________________
 void TPaveStats::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPaveStats::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   "<<ClassName()<<" *";
+      out<<"   "<<ClassName()<<" *";
    }
    if (fOption.Contains("NDC")) {
       out<<"ptstats = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
@@ -385,6 +403,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       TPaveStats::Class()->WriteBuffer(R__b,this);
    }
 }
+
 
 //______________________________________________________________________________
 void TPaveStats::UseCurrentStyle()

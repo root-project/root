@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.15 2003/11/02 10:39:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.16 2003/12/13 22:56:17 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 ClassImp(TPaveLabel)
 
+
 //______________________________________________________________________________
 //*  A PaveLabel is a Pave (see TPave) with a text centered in the Pave.
 //Begin_Html
@@ -26,91 +27,94 @@ ClassImp(TPaveLabel)
 //End_Html
 //
 
+
 //______________________________________________________________________________
 TPaveLabel::TPaveLabel(): TPave(), TAttText()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavelabel default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
+   // Pavelabel default constructor.
 }
+
 
 //______________________________________________________________________________
 TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
            :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,62,0.99)
 {
-//*-*-*-*-*-*-*-*-*-*-*pavelabel normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-// a PaveLabel is a Pave with a label centered in the Pave
-// The Pave is by default defined bith bordersize=5 and option ="br".
-// The text size is automatically computed as a function of the pave size.
-//
-//  IMPORTANT NOTE:
-//  Because TPave objects (and objects deriving from TPave) have their
-//  master coordinate system in NDC, one cannot use the TBox functions
-//  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
-//  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
+   // Pavelabel normal constructor.
+   //
+   // a PaveLabel is a Pave with a label centered in the Pave
+   // The Pave is by default defined bith bordersize=5 and option ="br".
+   // The text size is automatically computed as a function of the pave size.
+   //
+   //  IMPORTANT NOTE:
+   //  Because TPave objects (and objects deriving from TPave) have their
+   //  master coordinate system in NDC, one cannot use the TBox functions
+   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLabel  = label;
 }
 
+
 //______________________________________________________________________________
 TPaveLabel::~TPaveLabel()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavelabel default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Pavelabel default destructor.
 }
+
 
 //______________________________________________________________________________
 TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText(pavelabel)
 {
+   // Pavelabel copy constructor.
+
    ((TPaveLabel&)pavelabel).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TPaveLabel::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this pavelabel to pavelabel*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
+   // Copy this pavelabel to pavelabel.
 
    TPave::Copy(obj);
    TAttText::Copy(((TPaveLabel&)obj));
    ((TPaveLabel&)obj).fLabel      = fLabel;
 }
 
+
 //______________________________________________________________________________
 void TPaveLabel::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with its current attributes*-*-*-*-*
-//*-*                  ===============================================
+   // Draw this pavelabel with its current attributes.
 
    Option_t *opt;
    if (strlen(option)) opt = option;
    else                opt = GetOption();
 
    AppendPad(opt);
-
 }
+
 
 //______________________________________________________________________________
 void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new Doubleinates*-*-*-*-*-*-*-*
-//*-*                  ========================================
+   // Draw this pavelabel with new coordinates.
+
    TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label,option);
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
 }
 
+
 //______________________________________________________________________________
 void TPaveLabel::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this pavelabel with its current attributes*-*-*-*
-//*-*                  ================================================
+   // Paint this pavelabel with its current attributes.
 
-//*-* Convert from NDC to pad coordinates
+   // Convert from NDC to pad coordinates
    TPave::ConvertNDCtoPad();
 
    PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), strlen(option)?option:GetOption());
-
 }
 
 
@@ -118,12 +122,11 @@ void TPaveLabel::Paint(Option_t *option)
 void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new coordinates*-*-*-*-*-*-*-*
-//*-*                  ========================================
+   // Draw this pavelabel with new coordinates.
 
    Int_t nch = strlen(label);
 
-//*-*- Draw the pave
+   // Draw the pave
    TPave::PaintPave(x1,y1,x2,y2,GetBorderSize(),option);
 
    Float_t nspecials = 0;
@@ -140,7 +143,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    nch -= Int_t(nspecials + 0.5);
    if (nch <= 0) return;
 
-//*-*- Draw label
+   // Draw label
    Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t labelsize, textsize = GetTextSize();
@@ -182,17 +185,18 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    latex.PaintLatex(x, y, GetTextAngle(),labelsize,GetLabel());
 }
 
+
 //______________________________________________________________________________
 void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPaveLabel::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TPaveLabel *";
+      out<<"   TPaveLabel *";
    }
    TString s = fLabel.Data();
    s.ReplaceAll("\"","\\\"");

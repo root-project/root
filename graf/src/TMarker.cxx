@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.11 2003/01/30 08:37:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.12 2003/10/23 09:36:25 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 
 ClassImp(TMarker)
 
+
 //______________________________________________________________________________
 //
 // Manages Markers. Marker attributes are managed by TAttMarker.
@@ -33,43 +34,49 @@ ClassImp(TMarker)
 //End_Html
 //
 
+
 //______________________________________________________________________________
 TMarker::TMarker(): TObject(), TAttMarker()
 {
-//*-*-*-*-*-*-*-*-*-*-*Marker default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Marker default constructor.
+
    fX = 0;
    fY = 0;
 }
+
+
 //______________________________________________________________________________
 TMarker::TMarker(Double_t x, Double_t y, Int_t marker)
       :TObject(), TAttMarker()
 {
-//*-*-*-*-*-*-*-*-*-*-*Marker normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
+   // Marker normal constructor.
+
    fX = x;
    fY = y;
    fMarkerStyle = marker;
 }
 
+
 //______________________________________________________________________________
 TMarker::~TMarker()
 {
-//*-*-*-*-*-*-*-*-*-*-*Marker default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
+   // Marker default destructor.
 }
+
 
 //______________________________________________________________________________
 TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker)
 {
+   // Marker copy constructor.
+
    ((TMarker&)marker).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TMarker::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this marker to marker*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Copy this marker to marker.
 
    TObject::Copy(obj);
    TAttMarker::Copy(((TMarker&)obj));
@@ -77,44 +84,44 @@ void TMarker::Copy(TObject &obj) const
    ((TMarker&)obj).fY = fY;
 }
 
+
 //______________________________________________________________________________
 void TMarker::DisplayMarkerTypes()
 {
-//*-*-*-*-*-*-*-*-*-*-*Display the table of markers with their numbers*-*-*-*
-//*-*                  ===============================================
+   // Display the table of markers with their numbers.
 
-  TMarker *marker = new TMarker();
-  marker->SetMarkerSize(3);
-  TText *text = new TText();
-  text->SetTextFont(62);
-  text->SetTextAlign(22);
-  text->SetTextSize(0.1);
-  char atext[] = "       ";
-  Double_t x = 0;
-  Double_t dx = 1/12.0;
-  for (Int_t i=1;i<12;i++) {
-     x += dx;
-     sprintf(atext,"%d",i);
-     marker->SetMarkerStyle(i);
-     marker->DrawMarker(x,.35);
-     text->DrawText(x,.17,atext);
-     sprintf(atext,"%d",i+19);
-     marker->SetMarkerStyle(i+19);
-     marker->DrawMarker(x,.8);
-     text->DrawText(x,.62,atext);
-  }
-  delete marker;
-  delete text;
+   TMarker *marker = new TMarker();
+   marker->SetMarkerSize(3);
+   TText *text = new TText();
+   text->SetTextFont(62);
+   text->SetTextAlign(22);
+   text->SetTextSize(0.1);
+   char atext[] = "       ";
+   Double_t x = 0;
+   Double_t dx = 1/12.0;
+   for (Int_t i=1;i<12;i++) {
+      x += dx;
+      sprintf(atext,"%d",i);
+      marker->SetMarkerStyle(i);
+      marker->DrawMarker(x,.35);
+      text->DrawText(x,.17,atext);
+      sprintf(atext,"%d",i+19);
+      marker->SetMarkerStyle(i+19);
+      marker->DrawMarker(x,.8);
+      text->DrawText(x,.62,atext);
+   }
+   delete marker;
+   delete text;
 }
+
 
 //______________________________________________________________________________
 Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a marker*-*-*-*-*-*
-//*-*                  ===========================================
-//  Compute the closest distance of approach from point px,py to this marker.
-//  The distance is computed in pixels units.
-//
+   // Compute distance from point px,py to a marker.
+   //
+   //  Compute the closest distance of approach from point px,py to this marker.
+   //  The distance is computed in pixels units.
 
    const Int_t kMaxDiff = 10;
    Int_t pxm, pym;
@@ -131,37 +138,38 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+
 //______________________________________________________________________________
 void TMarker::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this marker with its current attributes*-*-*-*-*-*-*
-//*-*                  ============================================
+   // Draw this marker with its current attributes.
 
    AppendPad(option);
 
 }
 
+
 //______________________________________________________________________________
 void TMarker::DrawMarker(Double_t x, Double_t y)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this marker with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
+   // Draw this marker with new coordinates.
+
    TMarker *newmarker = new TMarker(x, y, 1);
    TAttMarker::Copy(*newmarker);
    newmarker->SetBit(kCanDelete);
    newmarker->AppendPad();
 }
 
+
 //______________________________________________________________________________
 void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a marker is clicked with the locator
-//
-//  If Left button is clicked on a marker, the marker is moved to
-//     a new position when the mouse button is released.
-//
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a marker is clicked with the locator
+   //
+   //  If Left button is clicked on a marker, the marker is moved to
+   //  a new position when the mouse button is released.
 
    TPoint p;
    static Int_t pxold, pyold;
@@ -209,20 +217,22 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TMarker::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List this marker with its attributes*-*-*-*-*-*-*-*-*
-//*-*                    ====================================
+   // List this marker with its attributes.
+
    TROOT::IndentLevel();
    printf("Marker  X=%f Y=%f marker type=%d\n",fX,fY,fMarkerStyle);
 }
 
+
 //______________________________________________________________________________
 void TMarker::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this marker with its current attributes*-*-*-*-*-*-*
-//*-*                  =============================================
+   // Paint this marker with its current attributes.
+
    if (TestBit(kMarkerNDC)) {
       Double_t u = gPad->GetX1() + fX*(gPad->GetX2()-gPad->GetX1());
       Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
@@ -232,29 +242,28 @@ void TMarker::Paint(Option_t *)
    }
 }
 
+
 //______________________________________________________________________________
 void TMarker::PaintMarker(Double_t x, Double_t y)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this marker with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
+   // Draw this marker with new coordinates.
 
    TAttMarker::Modify();  //Change line attributes only if necessary
    gPad->PaintPolyMarker(-1,&x,&y,"");
 }
 
+
 //______________________________________________________________________________
 void TMarker::PaintMarkerNDC(Double_t, Double_t)
 {
-//*-*-*-*-*-*-*-*Draw this marker with new coordinates in NDC*-*-*-*-*-*-*-*-*-*
-//*-*            ============================================
-
+   // Draw this marker with new coordinates in NDC.
 }
+
 
 //______________________________________________________________________________
 void TMarker::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this marker with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
+   // Dump this marker with its attributes.
 
    printf("Marker  X=%f Y=%f",fX,fY);
    if (GetMarkerColor() != 1) printf(" Color=%d",GetMarkerColor());
@@ -263,15 +272,16 @@ void TMarker::Print(Option_t *) const
    printf("\n");
 }
 
+
 //______________________________________________________________________________
 void TMarker::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    if (gROOT->ClassSaved(TMarker::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TMarker *";
+      out<<"   TMarker *";
    }
    out<<"marker = new TMarker("<<fX<<","<<fY<<","<<fMarkerStyle<<");"<<endl;
 
@@ -280,13 +290,16 @@ void TMarker::SavePrimitive(ofstream &out, Option_t *)
    out<<"   marker->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 void TMarker::SetNDC(Bool_t isNDC)
 {
-    // Set NDC mode on if isNDC = kTRUE, off otherwise
+   // Set NDC mode on if isNDC = kTRUE, off otherwise
+
    ResetBit(kMarkerNDC);
    if (isNDC) SetBit(kMarkerNDC);
 }
+
 
 //______________________________________________________________________________
 void TMarker::Streamer(TBuffer &R__b)
