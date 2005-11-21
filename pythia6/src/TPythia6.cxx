@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.18 2005/09/04 16:37:43 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.19 2005/09/04 19:08:11 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +84,15 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pystat pystat_
 # define pytest pytest_
 # define pyupda pyupda_
-# define tpythia6_open_fortran_file tpythia6_open_fortran_file_
-# define tpythia6_close_fortran_file tpythia6_close_fortran_file_
+# ifdef PYTHIA6_DOUBLE_UNDERSCORE
+#  define tpythia6_open_fortran_file tpythia6_open_fortran_file__
+#  define tpythia6_close_fortran_file tpythia6_close_fortran_file__
+#  define pythia6_common_address pythia6_common_block_address__
+# elif PYTHIA6_SINGLE_UNDERSCORE
+#  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
+#  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
+#  define pythia6_common_address pythia6_common_block_address_
+# endif
 # define type_of_call
 #else
 # define pyevnt PYEVNT

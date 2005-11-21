@@ -1,5 +1,6 @@
 Package: root-proofd
 Architecture: any
+Pre-Depends: netbase
 Depends: ${shlibs:Depends}
 Recommends: root-bin, libroot-dev, root-file-server | root-rootd
 Description: Parallel ROOt Facility - distributed, parallel computing

@@ -1,3 +1,15 @@
+root (5.06.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@cholm>  Wed, 16 Nov 2005 10:46:04 +0100
+
+root (5.05.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@cholm>  Wed, 12 Oct 2005 00:41:44 +0200
+
 root (5.04.00-2) unstable; urgency=low
 
   * Some new stuff to handle the libraries and plugins installed by the

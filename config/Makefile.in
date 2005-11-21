@@ -124,9 +124,10 @@ BUILDFPYTHIA   := @buildpythia@
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
 
-BUILDFPYTHIA6  := @buildpythia6@
-FPYTHIA6LIBDIR := @pythia6libdir@
-FPYTHIA6LIB    := @pythia6lib@
+BUILDFPYTHIA6    := @buildpythia6@
+FPYTHIA6LIBDIR   := @pythia6libdir@
+FPYTHIA6LIB      := @pythia6lib@
+FPYTHIA6CPPFLAGS := @pythia6cppflags@
 
 BUILDFVENUS    := @buildvenus@
 FVENUSLIBDIR   := @venuslibdir@

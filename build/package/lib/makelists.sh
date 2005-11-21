@@ -39,7 +39,7 @@ for d in * ; do
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	matrix|meta*|net|newdelete|physics|postscript|rint|table|thread|tree*) 
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx|xml) 	
+	unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx|splot|xml) 	
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	globusauth) lib=root-plugin-globus  ; dev=$lib       ; bin=$lib ;;  
 	qtroot)     lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;

@@ -1,4 +1,3 @@
-@prefix@/lib/root/cint
 @prefix@/lib/root/@version@/cint
 @prefix@/bin/cint
 @prefix@/bin/makecint

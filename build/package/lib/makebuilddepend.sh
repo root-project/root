@@ -27,6 +27,7 @@ if test "x$1" = "xrpm" ; then
 	    *krb5)	echo -n ", krb5-devel"				;;
 	    *ldap)	echo -n ", openldap-devel"			;;
 	    *minuit)							;;
+	    *minuit2)							;;
 	    *mlp)							;;
 	    *mysql)	echo -n ", mysql-devel"				;;
 	    *netx)							;;
@@ -84,6 +85,7 @@ for i in $* ; do
 	*ldap)		echo -n ", libldap-dev"				;;
 	*oracle)    	echo -n ", oracle-instantclient-devel"		;;
 	*minuit)							;;
+	*minuit2)							;;
 	*mlp)								;;
 	*mysql)		echo -n ", libmysqlclient-dev | libmysqlclient12-dev | libmysqlclient14-dev" ;;
 	*netx)								;;

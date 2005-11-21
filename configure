@@ -1611,6 +1611,27 @@ if test ! "x$enable_pythia6" = "xno" ; then
 
     if test "x$pythia6lib" = "x" ; then
         enable_pythia6=no
+    else
+	check_symbol pythia6_common_block_address__ \
+	    "$found_lib" "$found_dir"
+	if test $found_symbol -eq 1 ; then
+	    pythia6cppflags=-DPYTHIA6_DOUBLE_UNDERSCORE
+	else
+	    check_symbol pythia6_common_block_address_ \
+		"$found_lib" "$found_dir"
+	    if test $found_symbol -eq 1  ; then
+		pythia6cppflags=-DPYTHIA6_SINGLE_UNDERSCORE
+	    else
+		check_symbol pythia6_common_address \
+		    "$found_lib" "$found_dir"
+		if test $found_symbol -eq 1  ; then
+		    pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
+		else
+		    echo " didn't find pythia6_common_block_address[_]* in $found_lib"
+		    enable_pythia6=no
+		fi
+	    fi
+	fi
     fi
 fi
 
@@ -3000,6 +3021,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
     test "x$enable_ldap"    = "xyes" && pkglist="$pkglist root-plugin-ldap"
+    test "x$enable_minuit2" = "xyes" && pkglist="$pkglist root-plugin-minuit2"
     test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
     test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
     test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
@@ -3306,6 +3328,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@proofdir@|$proofdir|"                \
     -e "s|@pythia6lib@|$pythia6lib|"            \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
+    -e "s|@pythia6cppflags@|$pythia6cppflags|"  \
     -e "s|@pythialib@|$pythialib|"              \
     -e "s|@pythialibdir@|$pythialibdir|"        \
     -e "s|@pythonlib@|$pythonlib|"              \

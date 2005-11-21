@@ -21,11 +21,13 @@ DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 PREFIX		= /usr
 SYSCONFDIR	= /etc
-PKGDOCDIR	= /usr/share/doc/root
+PKGDOCDIR	= $(PREFIX)/share/doc/root
+CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
 CONFOPTIONS	:=--enable-table				\
 		  --enable-roofit				\
 		  --enable-ruby					\
 		  --enable-qt					\
+		  --enable-minuit2				\
 		  --enable-pythia				\
 		  --enable-xrootd				\
 		  --enable-shared				\
@@ -84,13 +86,13 @@ configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=$(PREFIX) 				\
-		    --mandir=$(PREFIX)/share/man/man1		\
-		    --docdir=$(PKGDOCDIR)			\
-		    --cintincdir=$(PREFIX)/lib/root/cint	\
-		    --etcdir=$(SYSCONFDIR)/root			\
-		    --with-sys-iconpath=$(PREFIX)/share/pixmaps	\
-		    --libdir=$(PREFIX)/lib/root/$(SOVERS)	\
+	./configure --prefix=$(PREFIX) 					\
+		    --mandir=$(PREFIX)/share/man/man1			\
+		    --docdir=$(PKGDOCDIR)				\
+		    --cintincdir=$(CINTDIR)				\
+		    --etcdir=$(SYSCONFDIR)/root				\
+		    --with-sys-iconpath=$(PREFIX)/share/pixmaps		\
+		    --libdir=$(PREFIX)/lib/root/$(SOVERS)		\
 		    $(CONFOPTIONS)
 	touch configure-stamp
 
@@ -199,12 +201,12 @@ install-arch:
 		-Xusr/lib/root/$(SOVERS)/lib*.so.$(MAJOR)
 
 	# Fix some permissions 
-	find debian/root-bin/usr/share/root/icons \
+	-find debian/root-bin/usr/share/root/icons \
 		-perm 0755 -and -not -type d | xargs chmod a-x 
-	find debian/root-cint/usr/lib/root/cint \
+	-find debian/root-cint/$(CINTDIR) \
 		-perm 755 -and -not -type d | xargs chmod a-x 
-	chmod a+x debian/root-cint/usr/lib/root/cint/lib/pthread/setup
-	chmod a+x debian/root-cint/usr/lib/root/cint/include/makehpib
+	-chmod a+x debian/root-cint/$(CINTDIR)/lib/pthread/setup
+	-chmod a+x debian/root-cint/$(CINTDIR)/include/makehpib
 	-chmod a-x debian/root-plugin-python/usr/lib/root/$(SOVERS)/ROOT.py
 	# Install desktop entry and icon 
 	mkdir -p debian/root-bin/usr/share/applications
@@ -252,7 +254,8 @@ binary-common:
 	dh_makeshlibs -n -V
 	dh_installdeb
 #	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
-	dh_shlibdeps $(SPKGLIST:%=-L%) -l$(shell echo $(SPKGLIST:%=debian/%/usr/lib/root) | tr ' ' ':')
+	dh_shlibdeps $(SPKGLIST:%=-L%) \
+	  -l$(shell echo $(SPKGLIST:%=debian/%/usr/lib/root) | tr ' ' ':')
 	dh_gencontrol
 	dh_md5sums
 # Build architecture independant packages using the common target.

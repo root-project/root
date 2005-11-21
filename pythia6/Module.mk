@@ -66,3 +66,7 @@ distclean-pythia6: clean-pythia6
 		@rm -f $(PYTHIA6DEP) $(PYTHIA6DS) $(PYTHIA6DH) $(PYTHIA6LIB)
 
 distclean::     distclean-pythia6
+
+##### extra rules ######
+$(PYTHIA6O):    %.o: %.cxx
+		$(CXX) $(OPT) $(CXXFLAGS) $(FPYTHIA6CPPFLAGS) -I. -o $@ -c $<
