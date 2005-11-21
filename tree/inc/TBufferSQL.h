@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.2 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Philippe Canal 2005
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TBUFFERSQL
-#define ROOT_TBUFFERSQL
+#ifndef ROOT_TBufferSQL
+#define ROOT_TBufferSQL
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -20,8 +20,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TBuffer
 #include "TBuffer.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+
 
 class TSQLResult;
 class TSQLRow;
@@ -34,7 +39,7 @@ private:
    std::vector<Int_t>  *fColumnVec;   //!
    TString             *fInsertQuery; //!
    TSQLRow            **fRowPtr;      //!
-   
+
    // TBuffer objects cannot be copied or assigned
    TBufferSQL(const TBufferSQL &);        // not implemented
    void operator=(const TBufferSQL &);    // not implemented
@@ -45,7 +50,7 @@ public:
    TBufferSQL(EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
    TBufferSQL(EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
    ~TBufferSQL();
-   
+
    void ResetOffset();
 
    virtual TBuffer    &operator>>(Bool_t    &);
@@ -62,7 +67,7 @@ public:
    virtual TBuffer    &operator>>(ULong64_t &);
    virtual TBuffer    &operator>>(Double_t  &);
    virtual TBuffer    &operator>>(Char_t    *);
-  
+
 
    virtual   TBuffer  &operator<<(Bool_t    b);
    virtual   TBuffer  &operator<<(Char_t    c);
@@ -113,7 +118,7 @@ public:
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
    virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0);
    virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
-   
+
    ClassDef(TBufferSQL, 1); // Implementation of TBuffer to load and write to a SQL database
 
 };
