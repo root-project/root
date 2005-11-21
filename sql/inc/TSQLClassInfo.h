@@ -1,0 +1,47 @@
+#ifndef ROOT_TSQLClassInfo
+#define ROOT_TSQLClassInfo
+
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
+class TObjArray;
+
+class TSQLClassInfo : public TObject {
+   public:
+      TSQLClassInfo();
+      TSQLClassInfo(const char* classname, Int_t version);
+      virtual ~TSQLClassInfo();
+   
+      virtual const char* GetName() const { return fClassName.Data(); }
+      Int_t GetClassVarsion() const { return fClassVersion; }
+
+      const char* GetClassTableName() const { return fClassTable.Data(); }
+      const char* GetRawTableName() const { return fRawTable.Data(); }
+
+      void SetTableStatus(TObjArray* columns = 0, Bool_t israwtable = kFALSE);
+      void SetColumns(TObjArray* columns);
+      void SetRawExist(Bool_t on) { fRawtableExist = on; }
+      
+      Bool_t IsClassTableExist() const { return GetColumns()!=0; }
+      Bool_t IsRawTableExist() const { return fRawtableExist; }
+      
+      TObjArray* GetColumns() const { return fColumns; }
+
+   protected:
+   
+      TString    fClassName;            //! class name 
+      Int_t      fClassVersion;         //! class version 
+      TString    fClassTable;           //! name of table with class data
+      TString    fRawTable;             //! name of table with raw data
+      TObjArray* fColumns;              //! name and type of columns - array of TNamed
+      Bool_t     fRawtableExist;        //! indicate that raw table is exist
+      
+   ClassDef(TSQLClassInfo, 1);
+};
+
+#endif
