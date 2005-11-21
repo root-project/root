@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.7 2005/04/11 12:25:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.8 2005/11/18 16:55:06 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
    virtual void    SetEntryLabel( const char* label ); // *MENU*
    virtual void    SetEntryOption( Option_t* option ); // *MENU*
    void            SetEntrySeparation( Float_t entryseparation )
-                   { fEntrySeparation = entryseparation; } // *MENU*
+                     { fEntrySeparation = entryseparation; } // *MENU*
    virtual void    SetHeader( const char *header = "" );  // *MENU*
    void            SetMargin( Float_t margin ) { fMargin = margin; } // *MENU*
 

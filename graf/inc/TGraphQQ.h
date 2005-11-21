@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.h,v 1.49 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.h,v 1.1 2005/11/18 20:40:52 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #endif
 
 class TGraphQQ : public TGraph{
- protected:
+protected:
    Int_t     fNy0;    //size of the fY0 dataset
    Double_t  fXq1;    //x1 coordinate of the interquartile line
    Double_t  fXq2;    //x2 coordinate of the interquartile line
@@ -39,7 +39,7 @@ class TGraphQQ : public TGraph{
    void      MakeQuantiles();
    void      MakeFunctionQuantiles();
 
- public:
+public:
    TGraphQQ(){;}
    TGraphQQ(Int_t n, Double_t *x);
    TGraphQQ(Int_t n, Double_t *x, TF1 *f);

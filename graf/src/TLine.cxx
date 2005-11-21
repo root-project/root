@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.11 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.12 2005/08/29 14:43:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -22,46 +22,50 @@
 
 ClassImp(TLine)
 
+
 //______________________________________________________________________________
 //
 // A Graphical line
 //
 
+
 //______________________________________________________________________________
 TLine::TLine(): TObject(), TAttLine()
 {
-//*-*-*-*-*-*-*-*-*-*-*Line default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
-
+   // Line default constructor.
 }
+
+
 //______________________________________________________________________________
 TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       :TObject(), TAttLine()
 {
-//*-*-*-*-*-*-*-*-*-*-*Line normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
+   // Line normal constructor.
+
    fX1=x1; fY1=y1; fX2=x2; fY2=y2;
 }
+
 
 //______________________________________________________________________________
 TLine::~TLine()
 {
-//*-*-*-*-*-*-*-*-*-*-*Line default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
-
+   // Line default destructor.
 }
+
 
 //______________________________________________________________________________
 TLine::TLine(const TLine &line) : TObject(line), TAttLine(line)
 {
+   // Line copy constructor.
+
    ((TLine&)line).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TLine::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this line to line*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // Copy this line to line.
 
    TObject::Copy(obj);
    TAttLine::Copy(((TLine&)obj));
@@ -71,11 +75,11 @@ void TLine::Copy(TObject &obj) const
    ((TLine&)obj).fY2 = fY2;
 }
 
+
 //______________________________________________________________________________
 Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
-//*-*                  ===========================================
+   // Compute distance from point px,py to a line.
 
    if (!TestBit(kLineNDC)) return DistancetoLine(px,py,gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
    Double_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
@@ -85,11 +89,12 @@ Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
    return DistancetoLine(px,py,x1,y1,x2,y2);
 }
 
+
 //______________________________________________________________________________
 TLine *TLine::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================================
+   // Draw this line with new coordinates.
+
    TLine *newline = new TLine(x1, y1, x2, y2);
    TAttLine::Copy(*newline);
    newline->SetBit(kCanDelete);
@@ -97,29 +102,29 @@ TLine *TLine::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    return newline;
 }
 
+
 //______________________________________________________________________________
 TLine *TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates in NDC*-*-*-*-*-*-*
-//*-*                  ==========================================
+   // Draw this line with new coordinates in NDC.
+
    TLine *newline = DrawLine(x1, y1, x2, y2);
    newline->SetBit(kLineNDC);
    return newline;
 }
 
+
 //______________________________________________________________________________
 void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//  This member function is called when a line is clicked with the locator
-//
-//  If Left button clicked on one of the line end points, this point
-//     follows the cursor until button is released.
-//
-//  if Middle button clicked, the line is moved parallel to itself
-//     until the button is released.
-//
+   // Execute action corresponding to one event.
+   //  This member function is called when a line is clicked with the locator
+   //
+   //  If Left button clicked on one of the line end points, this point
+   //     follows the cursor until button is released.
+   //
+   //  if Middle button clicked, the line is moved parallel to itself
+   //     until the button is released.
 
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
@@ -127,7 +132,6 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Bool_t p1, p2, pL;
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
-
 
    if (!gPad->IsEditable()) return;
    switch (event) {
@@ -256,48 +260,51 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TLine::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List this line with its attributes*-*-*-*-*-*-*-*-*
-//*-*                    ==================================
+   // List this line with its attributes.
+
    TROOT::IndentLevel();
    printf("%s  X1=%f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
+
 //______________________________________________________________________________
 void TLine::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this line with its current attributes*-*-*-*-*-*-*
-//*-*                  ===========================================
+   // Paint this line with its current attributes.
+
    if (TestBit(kLineNDC)) PaintLineNDC(fX1,fY1,fX2,fY2);
    else                   PaintLine(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
 
+
 //______________________________________________________________________________
 void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================================
+   // Draw this line with new coordinates.
 
    TAttLine::Modify();  //Change line attributes only if necessary
    gPad->PaintLine(x1,y1,x2,y2);
 }
 
+
 //______________________________________________________________________________
 void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-//*-*-*-*-*-*-*-*Draw this line with new coordinates in NDC*-*-*-*-*-*-*-*-*-*
-//*-*            ==========================================
+   // Draw this line with new coordinates in NDC.
+
    TAttLine::Modify();  //Change line attributes only if necessary
    gPad->PaintLineNDC(u1,v1,u2,v2);
 }
 
+
 //______________________________________________________________________________
 void TLine::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this line with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
+   // Dump this line with its attributes.
 
    printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
@@ -306,15 +313,16 @@ void TLine::Print(Option_t *) const
    printf("\n");
 }
 
+
 //______________________________________________________________________________
 void TLine::SavePrimitive(ofstream &out, Option_t *)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
    if (gROOT->ClassSaved(TLine::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TLine *";
+      out<<"   TLine *";
    }
    out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<");"<<endl;
@@ -323,6 +331,7 @@ void TLine::SavePrimitive(ofstream &out, Option_t *)
 
    out<<"   line->Draw();"<<endl;
 }
+
 
 //______________________________________________________________________________
 void TLine::Streamer(TBuffer &R__b)
