@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.26 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.27 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -127,6 +127,9 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
    if (fOBx) delete [] fOBx;
    if (fOBy) delete [] fOBy;
    if (fOBz) delete [] fOBz;
+   if (fOEx) delete [] fOEx;
+   if (fOEy) delete [] fOEy;
+   if (fOEz) delete [] fOEz;
 //   printf("OBx OBy OBz...\n");
    if (fBoxes) delete [] fBoxes;
 //   printf("boxes...\n");
@@ -323,6 +326,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    }
    if (!novlp) {
 //      printf("---no overlaps for MANY node %s\n", node->GetName());
+      delete [] otmp;
       node->SetOverlaps(ovlps, 0);
       return;
    }

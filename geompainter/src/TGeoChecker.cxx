@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.37 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.38 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -311,6 +311,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TGeoOverlap *nodeovlp = 0;
    Bool_t ismany;
    Double_t *points=0, *pointsm=0;
+   char name[20];
    Double_t local[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
@@ -346,7 +347,6 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             if (extrude) {
                if (!isextrusion) {
                   isextrusion = kTRUE;
-                  char *name = new char[20];
                   sprintf(name,"%s_x_%i", vol->GetName(),id); 
                   nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
@@ -375,7 +375,6 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             if (extrude) {
                if (!isextrusion) {
                   isextrusion = kTRUE;
-                  char *name = new char[20];
                   sprintf(name,"%s_mo_%i", vol->GetName(),id); 
                   nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
@@ -446,7 +445,6 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
-                  char *name = new char[20];
                   sprintf(name,"%s_o_%i_%i", vol->GetName(),id,io); 
                   nodeovlp = new TGeoNodeOverlap(name, (TGeoVolume*)vol,id,io,safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);
@@ -470,7 +468,6 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             if (overlap) {
                if (!isoverlapping) {
                   isoverlapping = kTRUE;
-                  char *name = new char[20];
                   sprintf(name,"%s_o_%i_%i", vol->GetName(),id,io); 
                   nodeovlp = new TGeoNodeOverlap(name, (TGeoVolume*)vol,id,io,safety);
                   nodeovlp->SetNextPoint(point[0],point[1],point[2]);

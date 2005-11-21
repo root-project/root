@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.132 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.133 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -4647,6 +4647,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
       sprintf(num,"%i", i);
       memcpy(name+2+ndigits-strlen(num), num, strlen(num));
       obj->SetName(name);
+      delete [] name;
    }
    fSearchOverlaps = kFALSE;
    Info("CheckOverlaps","number of illegal overlaps/extrusions : %d", novlps);
