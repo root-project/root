@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.18 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -182,17 +182,21 @@ TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t 
 //________________________________________________________________________________
 TGColorPalette::~TGColorPalette()
 {
+   // Destructor.
+
    delete [] fPixels;
 }
 
 //________________________________________________________________________________
 Bool_t TGColorPalette::HandleButton(Event_t *event)
 {
+   // Handle button events in color palette
+
    if (event->fCode != kButton1)
       return kFALSE;
 
    if ((event->fType == kButtonPress) && HasFocus())
-       WantFocus();
+      WantFocus();
 
    Int_t cx = event->fX / (fCw + 5);
    Int_t cy = event->fY / (fCh + 5);
@@ -216,6 +220,8 @@ Bool_t TGColorPalette::HandleButton(Event_t *event)
 //________________________________________________________________________________
 Bool_t TGColorPalette::HandleMotion(Event_t *event)
 {
+   // Handle mouse motion events in color palette.
+
    if (!IsEnabled())
       return kTRUE;
 
@@ -241,6 +247,8 @@ Bool_t TGColorPalette::HandleMotion(Event_t *event)
 //________________________________________________________________________________
 Bool_t TGColorPalette::HandleKey(Event_t *event)
 {
+   // Handle keyboard events in color palette.
+
    Char_t input[10];
    UInt_t keysym;
 
@@ -301,6 +309,8 @@ Bool_t TGColorPalette::HandleKey(Event_t *event)
 //________________________________________________________________________________
 void TGColorPalette::SetColors(ULong_t colors[])
 {
+   // Set color entries in color samples.
+
    for (Int_t i = 0; i < fRows * fCols; ++i)
       SetColor(i, colors[i]);
    gClient->NeedRedraw(this);
@@ -309,6 +319,8 @@ void TGColorPalette::SetColors(ULong_t colors[])
 //________________________________________________________________________________
 void TGColorPalette::SetColor(Int_t ix, ULong_t color)
 {
+   // Set color at index ix of color entries.
+
    fPixels[ix] = color;
    gClient->NeedRedraw(this);
 }
@@ -316,12 +328,16 @@ void TGColorPalette::SetColor(Int_t ix, ULong_t color)
 //________________________________________________________________________________
 void TGColorPalette::SetCurrentCellColor(ULong_t color)
 {
+   // Set current cell color.
+
    SetColor(fCy * fCols + fCx, color);
 }
 
 //________________________________________________________________________________
 void TGColorPalette::SetCellSize(Int_t w, Int_t h)
 {
+   // Set color cell size.
+
    fCw = w;
    fCh = h;
    gClient->NeedRedraw(this);
@@ -330,6 +346,8 @@ void TGColorPalette::SetCellSize(Int_t w, Int_t h)
 //________________________________________________________________________________
 ULong_t TGColorPalette::GetCurrentColor() const
 {
+   // Return currently selected color value.
+
    if (fCx >= 0 && fCy >= 0)
       return GetColorByIndex(fCy * fCols + fCx);
    else
@@ -339,6 +357,8 @@ ULong_t TGColorPalette::GetCurrentColor() const
 //________________________________________________________________________________
 void TGColorPalette::DoRedraw()
 {
+   // Redraw color palette.
+
    Int_t i, j, k, x, y;
 
    k = 0;
@@ -360,12 +380,16 @@ void TGColorPalette::DoRedraw()
 //________________________________________________________________________________
 void TGColorPalette::GotFocus()
 {
+   // Add keyboard input.
+
    AddInput(kKeyPressMask | kKeyReleaseMask);
 }
 
 //________________________________________________________________________________
 void TGColorPalette::LostFocus()
 {
+   // Remove keyboard input.
+
    RemoveInput(kKeyPressMask | kKeyReleaseMask);
    gClient->NeedRedraw(this);
 }
@@ -373,6 +397,8 @@ void TGColorPalette::LostFocus()
 //________________________________________________________________________________
 void TGColorPalette::DrawFocusHilite(Int_t onoff)
 {
+   // Draw a highlight rectangle around cell obtaining focus.
+
    if (fCx >= 0 && fCy >= 0) {
       GContext_t gc = onoff ? GetShadowGC()() : GetBckgndGC()();
       gVirtualX->DrawRectangle(fId, gc, fCx * (fCw + 5) + 0, fCy * (fCh + 5) + 0,
@@ -385,6 +411,12 @@ void TGColorPalette::DrawFocusHilite(Int_t onoff)
 TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
    TGFrame(p, w, h, kChildFrame), fCursorGC(GetBlackGC())
 {
+   // TGColorPick constructor.
+   // TGColorPick is a widget which allows a color to be picked from HLS space. 
+   // It consists of two elements: a color map window from where the user can 
+   // select the hue and saturation level of a color, and a slider to select 
+   // color's lightness.
+
    UInt_t iw, ih;
 
    fWidgetId    = id;
@@ -429,6 +461,8 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
 //________________________________________________________________________________
 TGColorPick::~TGColorPick()
 {
+   // TGColorPick destructor.
+
    if (IsZombie()) return;
    gVirtualX->DeleteImage(fHSimage);
    gVirtualX->DeleteImage(fLimage);
@@ -438,6 +472,8 @@ TGColorPick::~TGColorPick()
 //________________________________________________________________________________
 Bool_t TGColorPick::HandleButton(Event_t *event)
 {
+   // Handle mouse button events in color pick widget.
+
    if (event->fCode != kButton1) return kFALSE;
 
    if (event->fType == kButtonPress) {
@@ -471,6 +507,8 @@ Bool_t TGColorPick::HandleButton(Event_t *event)
 //________________________________________________________________________________
 Bool_t TGColorPick::HandleMotion(Event_t *event)
 {
+   // Handle mouse motion events in color pick widget.
+
    if (!IsEnabled())
       return kTRUE;
 
@@ -500,6 +538,8 @@ Bool_t TGColorPick::HandleMotion(Event_t *event)
 //________________________________________________________________________________
 void TGColorPick::CreateImages()
 {
+   // Create colormap and color slider images.
+
    UInt_t width, height;
 
    width = fColormapRect.fWidth;
@@ -526,7 +566,7 @@ void TGColorPick::AllocColors()
       color.fGreen = cc[(i >> 2) & 0x3];
       color.fBlue  = cc[(i >> 4) & 0x3];
       if (gVirtualX->AllocColor(gVirtualX->GetColormap(), color) == 0)
-          break;
+         break;
       fColormap[i][0] = color.fRed / 256;
       fColormap[i][1] = color.fGreen / 256;
       fColormap[i][2] = color.fBlue / 256;
@@ -602,6 +642,7 @@ void TGColorPick::AllocColors()
 //________________________________________________________________________________
 void TGColorPick::FreeColors()
 {
+   // Free allocated colors.
 
    for (Int_t i = 0; i < fNColors; i++)
       gVirtualX->FreeColor(gVirtualX->GetColormap(), fPixel[i]);
@@ -763,6 +804,8 @@ void TGColorPick::CreateDitheredImage(Pixmap_t image, Int_t which)
 //________________________________________________________________________________
 void TGColorPick::InitImages()
 {
+   // Initialize color palette and slider images.
+
    Int_t width, height;
    Int_t h, l, s;
    Int_t r, g, b;
@@ -800,6 +843,8 @@ void TGColorPick::InitImages()
 //________________________________________________________________________________
 void TGColorPick::SetSliderColor()
 {
+   // Set slider colors.
+
    Int_t width, height;
    Int_t h, l, s;
    Int_t r, g, b;
@@ -822,7 +867,7 @@ void TGColorPick::SetSliderColor()
          ULong_t pixel = TColor::RGB2Pixel(r, g, b);
 
          for (Int_t x = 0; x < width; ++x) {
-             gVirtualX->PutPixel(fLimage, x, y, pixel);
+            gVirtualX->PutPixel(fLimage, x, y, pixel);
          }
       }
    } else {
@@ -835,6 +880,8 @@ void TGColorPick::SetSliderColor()
 //________________________________________________________________________________
 void TGColorPick::SetColor(ULong_t color)
 {
+   // Position the slider cursor on right color position.
+
    UInt_t width, height;
    Int_t h, l, s;
    Int_t r, g, b;
@@ -858,6 +905,8 @@ void TGColorPick::SetColor(ULong_t color)
 //________________________________________________________________________________
 void TGColorPick::UpdateCurrentColor()
 {
+   // Assign the current cursor position as currently selected color.
+
    UInt_t lwidth, lheight;
    UInt_t swidth, sheight;
    Int_t r, g, b;
@@ -877,6 +926,8 @@ void TGColorPick::UpdateCurrentColor()
 //________________________________________________________________________________
 void TGColorPick::DoRedraw()
 {
+   // Redraw the color pick widget.
+
    UInt_t lwidth, lheight;
    UInt_t swidth, sheight;
 
@@ -902,6 +953,8 @@ void TGColorPick::DoRedraw()
 //________________________________________________________________________________
 void TGColorPick::SetHScursor(Int_t x, Int_t y)
 {
+   // Set hue / saturation cursor position.
+
    UInt_t width, height;
 
    gVirtualX->GetImageSize(fHSimage, width, height);
@@ -927,6 +980,8 @@ void TGColorPick::SetHScursor(Int_t x, Int_t y)
 //________________________________________________________________________________
 void TGColorPick::SetLcursor(Int_t z)
 {
+   // Set lightness slider cursor position.
+
    UInt_t width, height;
 
    gVirtualX->GetImageSize(fLimage, width, height);
@@ -946,6 +1001,8 @@ void TGColorPick::SetLcursor(Int_t z)
 //________________________________________________________________________________
 void TGColorPick::DrawHScursor(Int_t onoff)
 {
+   // Draw hue / saturation cursor
+
    UInt_t width, height;
 
    gVirtualX->GetImageSize(fHSimage, width, height);
@@ -989,6 +1046,8 @@ void TGColorPick::DrawHScursor(Int_t onoff)
 //________________________________________________________________________________
 void TGColorPick::DrawLcursor(Int_t onoff)
 {
+   // Draw lightness slider cursor
+
    Int_t l = fSliderRect.fX + fSliderRect.fWidth + 3;
    Int_t r = l + 5;
    Int_t t = fCz - 5 + fSliderRect.fY;
@@ -1016,6 +1075,10 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                              Int_t *retc, ULong_t *color) :
    TGTransientFrame(p, m, 200, 150, kHorizontalFrame)
 {
+   // Color selection dialog constructor.
+   // The TGColorDialog presents a full featured color selection dialog.
+   // It uses 2 TGColorPalette's and the TGColorPick widgets.
+
    const Int_t kC_X = 175;  // Win95: 177
    const Int_t kC_Y = 180;  // Win95: 189
 
@@ -1200,6 +1263,8 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 //________________________________________________________________________________
 TGColorDialog::~TGColorDialog()
 {
+   // TGColorDialog destructor.
+
    Cleanup();
 }
 
@@ -1220,6 +1285,8 @@ void TGColorDialog::CloseWindow()
 //________________________________________________________________________________
 void TGColorDialog::UpdateRGBentries(ULong_t *c)
 {
+   // Update RGB text entries with RGB values of color c.
+
    Char_t tmp[20];
 
    Int_t r, g, b;
@@ -1244,6 +1311,8 @@ void TGColorDialog::UpdateRGBentries(ULong_t *c)
 //________________________________________________________________________________
 void TGColorDialog::UpdateHLSentries(ULong_t *c)
 {
+   // Update HLS text entries with HLS values of color c.
+
    Char_t tmp[20];
 
    Int_t h, l, s;
@@ -1271,6 +1340,8 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
 //________________________________________________________________________________
 Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
+   // Process messages for the color selection dialog.
+
    ULong_t color;
    Int_t h, l, s;
    Int_t r, g, b;

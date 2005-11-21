@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.5 2004/10/19 17:13:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.6 2005/01/12 18:39:29 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -52,6 +52,8 @@ TGMdiFrame::TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h, UInt_t options,
    TGCompositeFrame(main->GetContainer(), w, h,
                     options | kOwnBackground | kMdiFrame, back)
 {
+   // TGMdiFrame constructor.
+
    fMain = main;
    fMain->AddMdiFrame(this);  // this reparents the window
    fMdiHints = kMdiDefaultHints;
@@ -60,12 +62,16 @@ TGMdiFrame::TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h, UInt_t options,
 //______________________________________________________________________________
 TGMdiFrame::~TGMdiFrame()
 {
+   // TGMdiFrame destructor.
+
    fMain->RemoveMdiFrame(this);
 }
 
 //______________________________________________________________________________
 Bool_t TGMdiFrame::CloseWindow()
 {
+   // Close MDI frame window.
+
    DeleteWindow();
    return kTRUE;
 }
@@ -83,6 +89,8 @@ void TGMdiFrame::DontCallClose()
 //______________________________________________________________________________
 void TGMdiFrame::SetMdiHints(ULong_t mdihints)
 {
+   // Set MDI hints, also used to identify titlebar buttons.
+
    fMdiHints = mdihints;
    ((TGMdiDecorFrame *)fParent)->SetMdiButtons(mdihints);
 }
@@ -90,6 +98,8 @@ void TGMdiFrame::SetMdiHints(ULong_t mdihints)
 //______________________________________________________________________________
 void TGMdiFrame::SetWindowName(const char *name)
 {
+   // Set MDI window name (set titlebar title).
+
    ((TGMdiDecorFrame *)fParent)->SetWindowName(name);
    fMain->UpdateWinListMenu();
 }
@@ -97,6 +107,8 @@ void TGMdiFrame::SetWindowName(const char *name)
 //______________________________________________________________________________
 void TGMdiFrame::SetWindowIcon(const TGPicture *pic)
 {
+   // Set MDI window icon (titlebar icon).
+
    ((TGMdiDecorFrame *)fParent)->SetWindowIcon(pic);
    fMain->UpdateWinListMenu();
 }
@@ -104,18 +116,24 @@ void TGMdiFrame::SetWindowIcon(const TGPicture *pic)
 //______________________________________________________________________________
 const char *TGMdiFrame::GetWindowName()
 {
+   // Return MDI window name.
+
    return ((TGMdiDecorFrame *)fParent)->GetWindowName();
 }
 
 //______________________________________________________________________________
 const TGPicture *TGMdiFrame::GetWindowIcon()
 {
+   // Return pointer to picture used as MDI window icon (on titlebar).
+
    return ((TGMdiDecorFrame *)fParent)->GetWindowIcon();
 }
 
 //______________________________________________________________________________
 void TGMdiFrame::Move(Int_t x, Int_t y)
 {
+   // Move MDI window at position x, y.
+
    ((TGMdiDecorFrame *)fParent)->Move(x, y);
    fX = x; fY = y;
 }

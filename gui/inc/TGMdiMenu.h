@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.2 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.3 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -59,10 +59,10 @@ class TGMdiMenuBar : public TGCompositeFrame {
 friend class TGMdiMainFrame;
 
 protected:
-   TGCompositeFrame   *fLeft, *fRight;
-   TGMenuBar          *fBar;
-   TGLayoutHints      *fLHint, *fLeftHint;
-   TGLayoutHints      *fRightHint, *fBarHint;
+   TGCompositeFrame   *fLeft, *fRight;          // left and right parts of MDI menu bar
+   TGMenuBar          *fBar;                    // standard menu bar
+   TGLayoutHints      *fLHint, *fLeftHint;      // left layout hints
+   TGLayoutHints      *fRightHint, *fBarHint;   // right layout hints
 
    void AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
@@ -75,7 +75,7 @@ public:
    TGMenuBar *GetMenuBar() const { return fBar;}
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
-   ClassDef(TGMdiMenuBar, 0)
+   ClassDef(TGMdiMenuBar, 0) // MDI menu bar
 };
 
 #endif

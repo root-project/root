@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.3 2004/09/09 00:24:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.4 2004/09/14 09:22:57 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -50,32 +50,32 @@ class TGFontDialog : public TGTransientFrame {
 
 public:
    struct FontProp_t {
-      TString     fName;
-      Int_t       fSize;
-      UInt_t      fAlign;
-      Pixel_t     fColor;
-      Bool_t      fBold;
-      Bool_t      fItalic;
+      TString     fName;               // font name
+      Int_t       fSize;               // font size
+      UInt_t      fAlign;              // text alignment
+      Pixel_t     fColor;              // text color
+      Bool_t      fBold;               // bold flag
+      Bool_t      fItalic;             // italic flag
    };
 
 protected:
-   TGListBox           *fFontNames;
-   TGListBox           *fFontSizes;
-   TGListBox           *fFontStyles;
-   TGComboBox          *fTextAligns;
-   TGLabel             *fSample;
-   TString              fName;
-   TString              fLName;
-   FontProp_t          *fFontProp;
-   Bool_t               fItalic;
-   Bool_t               fBold;
-   Int_t                fSize;
-   UInt_t               fTextAlign;
-   Pixel_t              fTextColor;
-   TString              fSampleText;
-   TGGC                *fSampleTextGC;
-   TGFont              *fLabelFont;
-   Bool_t               fHitOK;
+   TGListBox           *fFontNames;    // list of font names
+   TGListBox           *fFontSizes;    // list of font sizes
+   TGListBox           *fFontStyles;   // list of font styles
+   TGComboBox          *fTextAligns;   // font alignment selection
+   TGLabel             *fSample;       // sample of selected font
+   TString              fName;         // font name
+   TString              fLName;        // logical font name
+   FontProp_t          *fFontProp;     // font info structure
+   Bool_t               fItalic;       // italic flag
+   Bool_t               fBold;         // bold flag
+   Int_t                fSize;         // font size
+   UInt_t               fTextAlign;    // text aligment
+   Pixel_t              fTextColor;    // text color
+   TString              fSampleText;   // string used for sample
+   TGGC                *fSampleTextGC; // GC used for sample text
+   TGFont              *fLabelFont;    // TGFont used for sample text
+   Bool_t               fHitOK;        // flag = kTRUE if user press the Ok button
 
    Bool_t               GetFontProperties(const char *fontFamily = 0);
    void                 GetFontName();

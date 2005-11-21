@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.4 2004/06/11 14:39:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.5 2004/09/08 08:13:11 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 // TGColorFrame, TG16ColorSelector, TGColorPopup and TGColorSelect.     //
 //                                                                      //
-// The TGColorFrame is a small framw with border showing a specific     //
+// The TGColorFrame is a small frame with border showing a specific     //
 // color.                                                               //
 //                                                                      //
 // The TG16ColorSelector is a composite frame with 16 TGColorFrames.    //
@@ -49,11 +49,11 @@
 class TGColorFrame : public TGFrame {
 
 protected:
-   const TGWindow *fMsgWindow;
-   Pixel_t         fPixel;
-   Bool_t          fActive;
-   GContext_t      fGrayGC;
-   Pixel_t         fColor;
+   const TGWindow *fMsgWindow;   // window handling container messages
+   Pixel_t         fPixel;       // color value of this cell
+   Bool_t          fActive;      // kTRUE if this color cell is active
+   GContext_t      fGrayGC;      // Shadow GC
+   Pixel_t         fColor;       // returned color value
 
 public:
    TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
@@ -73,9 +73,9 @@ public:
 class TG16ColorSelector : public TGCompositeFrame {
 
 protected:
-   Int_t            fActive;
-   const TGWindow  *fMsgWindow;
-   TGColorFrame    *fCe[16];
+   Int_t            fActive;     // index of active color cell
+   const TGWindow  *fMsgWindow;  // window handling container messages
+   TGColorFrame    *fCe[16];     // matrix of color cells
 
 public:
    TG16ColorSelector(const TGWindow *p = 0);
@@ -94,10 +94,10 @@ public:
 class TGColorPopup : public TGCompositeFrame {
 
 protected:
-   Int_t            fActive;
-   Int_t            fLaunchDialog;
-   const TGWindow  *fMsgWindow;
-   Pixel_t          fCurrentColor;
+   Int_t            fActive;        // active color index
+   Int_t            fLaunchDialog;  // flag used for launching color dialog
+   const TGWindow  *fMsgWindow;     // window handling container messages
+   Pixel_t          fCurrentColor;  // currently selected color value
 
 public:
    TGColorPopup(const TGWindow *p = 0, const TGWindow *m = 0, Pixel_t color = 0);
@@ -117,9 +117,9 @@ public:
 class TGColorSelect : public TGCheckButton {
 
 protected:
-   Pixel_t       fColor;
-   TGGC          fDrawGC;
-   TGColorPopup *fColorPopup;
+   Pixel_t       fColor;         // color value of the button
+   TGGC          fDrawGC;        // drawing GC
+   TGColorPopup *fColorPopup;    // color popup associated
 
    virtual void DoRedraw();
 
@@ -141,7 +141,7 @@ public:
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    virtual void ColorSelected(Pixel_t color = 0) 
-           { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
+            { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
 
    ClassDef(TGColorSelect,0)  // Color selection checkbutton
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.4 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.5 2005/09/05 13:33:08 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -49,6 +49,8 @@ ClassImp(TGMdiMenuBar)
 TGMdiMenuBar::TGMdiMenuBar(const TGWindow *p, int w, int h) :
    TGCompositeFrame(p, w, h, kHorizontalFrame)
 {
+   // TGMdiMenuBar constructor.
+
    fLHint = new TGLayoutHints(kLHintsNormal);
    fLeftHint = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1);
    fBarHint = new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 1, 1, 1, 1);
@@ -66,7 +68,7 @@ TGMdiMenuBar::TGMdiMenuBar(const TGWindow *p, int w, int h) :
 //______________________________________________________________________________
 TGMdiMenuBar::~TGMdiMenuBar()
 {
-   //
+   // TGMdiMenuBar destructor.
 
    if (!MustCleanup()) {
       delete fLHint;
@@ -79,6 +81,8 @@ TGMdiMenuBar::~TGMdiMenuBar()
 //______________________________________________________________________________
 void TGMdiMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l)
 {
+   // Add popup menu to the MDI menu bar with layout hints l.
+
    fBar->AddPopup(s, menu, l);
    // Layout();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.11 2005/09/05 14:26:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -40,15 +40,15 @@
 #include "TString.h"
 
 enum EFontDialog {
-    kFDLG_OK           = 1,
-    kFDLG_CANCEL,
+   kFDLG_OK          = 1,
+   kFDLG_CANCEL,
 
-    kFDLG_FONTNAMES    = 21,
-    kFDLG_FONTSIZES,
-    kFDLG_FONTSTYLES,
-    kFDLG_FONTALIGNS,
+   kFDLG_FONTNAMES   = 21,
+   kFDLG_FONTSIZES,
+   kFDLG_FONTSTYLES,
+   kFDLG_FONTALIGNS,
 
-    kFDLG_COLORSEL     = 31
+   kFDLG_COLORSEL    = 31
 };
 
 static const char *gFDLG_DEFAULTSAMPLE = "AaBbCcYyZz 1234567890";
@@ -61,7 +61,7 @@ static const char *gFontSizes[] = {
 };
 
 static const char *gFontStyles[] = {
-    "Normal", "Bold", "Italic", "Bold Italic", 0
+   "Normal", "Bold", "Italic", "Bold Italic", 0
 };
 
 static const char *gAlignTypes[] = {
@@ -527,6 +527,8 @@ Bool_t TGFontDialog::GetFontProperties(const char *fontFamily)
 //________________________________________________________________________________
 void TGFontDialog::GetFontName()
 {
+   // Sets fLName and other data members.
+
    TGTextLBEntry *e;
    const char *size, *name;
    char st1[12];

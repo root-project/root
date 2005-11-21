@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.18 2005/07/14 14:13:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.19 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -122,6 +122,7 @@ protected:
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
+   Bool_t           fDisableOpen;    // disable branch opening on double-clicks
 
    static Pixel_t        fgGrayPixel;
    static const TGFont  *fgDefaultFont;
@@ -235,6 +236,7 @@ public:
    void  SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms);
    void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
+   void  DisableOpen(Bool_t disable = kTRUE) { fDisableOpen = disable;}
 
    TGListTreeItem *GetFirstItem() const { return fFirst; }
    TGListTreeItem *GetSelected() const { return fSelected; }

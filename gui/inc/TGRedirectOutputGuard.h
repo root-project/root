@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.3 2004/08/02 11:43:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGRedirectOutputGuard.h,v 1.1 2005/10/11 12:39:36 rdm Exp $
 // Author: G. Ganis   10/10/2005
 
 /*************************************************************************
@@ -45,13 +45,13 @@ class TGTextView;
 
 class TGRedirectOutputGuard {
 
- private:
+private:
    TString      fLogFile;
    Bool_t       fTmpFile;
    TGTextView  *fTextView;
    FILE        *fLogFileRead;
 
- public:
+public:
    TGRedirectOutputGuard(TGTextView *tv,
                          const char *flog = 0, const char *mode = "a");
    virtual ~TGRedirectOutputGuard();

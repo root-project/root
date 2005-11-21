@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.4 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.5 2004/09/14 09:23:32 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
    Pixel_t GetCurrentColor() const;
 
    virtual void ColorSelected(Pixel_t col = 0)
-           { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
+            { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPalette,0)  // Color palette widget
 };
@@ -101,17 +101,17 @@ private:
    Pixel_t  fPixel[64];          // pixel values
 
 protected:
-   Pixmap_t     fHSimage;
-   Pixmap_t     fLimage;
-   Int_t        fNColors;
-   Int_t        fClick;
-   Int_t        fCx;
-   Int_t        fCy;
-   Int_t        fCz;
-   Pixel_t      fCurrentColor;
-   Rectangle_t  fColormapRect;
-   Rectangle_t  fSliderRect;
-   TGGC         fCursorGC;
+   Pixmap_t     fHSimage;        // hue / saturation colormap pixmap
+   Pixmap_t     fLimage;         // color lightness slider pixmap
+   Int_t        fNColors;        // number of color samples
+   Int_t        fClick;          // mouse click location (kCLICK_NONE, kCLICK_HS, kCLICK_L)
+   Int_t        fCx;             // x position in hs colormap
+   Int_t        fCy;             // y position in hs colormap
+   Int_t        fCz;             // position in lightness slider 
+   Pixel_t      fCurrentColor;   // currently selected color value
+   Rectangle_t  fColormapRect;   // hue / saturation colormap rectangle
+   Rectangle_t  fSliderRect;     // color lightness slider rectangle
+   TGGC         fCursorGC;       // color lightness slider cursor GC
 
    virtual void DoRedraw();
 
@@ -150,16 +150,16 @@ public:
 class TGColorDialog : public TGTransientFrame {
 
 protected:
-   Pixel_t         fCurrentColor;
-   Int_t          *fRetc;
-   Pixel_t        *fRetColor;
+   Pixel_t         fCurrentColor;   // currently selected color
+   Int_t          *fRetc;           // return code (kMBOk, kMBCancel)
+   Pixel_t        *fRetColor;       // return color
 
-   TGColorPalette *fPalette;
-   TGColorPalette *fCpalette;
-   TGColorPick    *fColors;
-   TGFrame        *fSample;
-   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte;
-   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb;
+   TGColorPalette *fPalette;        // color palette
+   TGColorPalette *fCpalette;       // color palette
+   TGColorPick    *fColors;         // color pick widget
+   TGFrame        *fSample;         // color sample frame
+   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte; // RGB/HLS text entries
+   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb; // RGB/HLS associated buffers
 
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);

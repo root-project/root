@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.43 2005/11/15 18:14:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.44 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -224,6 +224,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fTip       = 0;
    fTipItem   = 0;
    fAutoTips  = kFALSE;
+   fDisableOpen = kFALSE;
 
    fGrayPixel = GetGrayPixel();
    fFont      = GetDefaultFontStruct();
@@ -259,6 +260,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fTip       = 0;
    fTipItem   = 0;
    fAutoTips  = kFALSE;
+   fDisableOpen = kFALSE;
 
    fGrayPixel = GetGrayPixel();
    fFont      = GetDefaultFontStruct();
@@ -430,6 +432,16 @@ Bool_t TGListTree::HandleDoubleClick(Event_t *event)
 
    TGListTreeItem *item;
 
+   // If fDisableOpen is set, only send message and emit signals.
+   // It allows user to customize handling of double click events.
+   if (fDisableOpen && event->fCode == kButton1 && (item = FindItem(event->fY)) != 0) {
+      SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_ITEMDBLCLICK),
+                  event->fCode, (event->fYRoot << 16) | event->fXRoot);
+      DoubleClicked(item, event->fCode);
+      DoubleClicked(item, event->fCode, event->fXRoot, event->fYRoot);
+      return kTRUE;
+   }
+   // Otherwise, just use default behaviour (open item).
    if (event->fCode == kButton1 && (item = FindItem(event->fY)) != 0) {
       ClearViewPort();
       item->fOpen = !item->fOpen;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.4 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.5 2004/10/25 12:06:50 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -58,8 +58,8 @@ friend class TGMdiDecorFrame;
 protected:
    enum { kDontCallClose = BIT(14) };
 
-   TGMdiMainFrame  *fMain;
-   ULong_t          fMdiHints;
+   TGMdiMainFrame  *fMain;       // pointer to the MDI main frame
+   ULong_t          fMdiHints;   // MDI hints, also used to identify titlebar buttons
 
    TString GetMdiHintsString() const;
 
@@ -84,7 +84,7 @@ public:
 
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
-   ClassDef(TGMdiFrame, 0)
+   ClassDef(TGMdiFrame, 0) // MDI Frame
 };
 
 #endif

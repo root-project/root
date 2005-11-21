@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.7 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.8 2005/07/05 12:36:06 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -101,10 +101,10 @@ class TGMdiFrameList {
 friend class TGMdiMainFrame;
 
 protected:
-   UInt_t            fFrameId;
-   TGMdiDecorFrame  *fDecor;
-   TGMdiFrameList   *fPrev, *fNext;
-   TGMdiFrameList   *fCyclePrev, *fCycleNext;
+   UInt_t            fFrameId;                  // TGMdiFrameList Id
+   TGMdiDecorFrame  *fDecor;                    // MDI decor frame
+   TGMdiFrameList   *fPrev, *fNext;             // pointers on previous and next TGMdiFrameList
+   TGMdiFrameList   *fCyclePrev, *fCycleNext;   // pointers on previous and next TGMdiFrameList
 
 public:
    virtual ~TGMdiFrameList() { }
@@ -123,19 +123,19 @@ public:
    void              SetCyclePrev(TGMdiFrameList *prev) { fCyclePrev = prev; }
    void              SetCycleNext(TGMdiFrameList *next) { fCycleNext = next; }
 
-   ClassDef(TGMdiFrameList, 0)
+   ClassDef(TGMdiFrameList, 0) // MDI Frame list
 };
 
 
 class TGMdiGeometry {
 
 public:
-   Int_t            fValueMask;
-   TGRectangle      fClient, fDecoration, fIcon;
+   Int_t            fValueMask;                    // MDI hints mask
+   TGRectangle      fClient, fDecoration, fIcon;   // client, decoration and icon rectangles
 
    virtual ~TGMdiGeometry() { }
 
-   ClassDef(TGMdiGeometry, 0)
+   ClassDef(TGMdiGeometry, 0) // MDI Geometry
 };
 
 
@@ -151,20 +151,20 @@ protected:
       kMinimizedWidth = 5
    };
 
-   Int_t            fCurrentX, fCurrentY, fResizeMode;
-   Int_t            fArrangementMode;
-   TGFont          *fFontCurrent, *fFontNotCurrent;
-   Pixel_t          fBackCurrent, fForeCurrent;
-   Pixel_t          fBackNotCurrent, fForeNotCurrent;
+   Int_t            fCurrentX, fCurrentY, fResizeMode;   // current MDI child XY position and resize mode
+   Int_t            fArrangementMode;                    // MDI childs arrangement mode
+   TGFont          *fFontCurrent, *fFontNotCurrent;      // fonts for active and inactive MDI childs
+   Pixel_t          fBackCurrent, fForeCurrent;          // back and fore colors for active MDI childs
+   Pixel_t          fBackNotCurrent, fForeNotCurrent;    // back and fore colors for inactive MDI childs
 
-   TGGC            *fBoxGC;
+   TGGC            *fBoxGC;                              // GC used to draw resizing box (rectangle)
 
-   Long_t           fNumberOfFrames;
-   TGMdiMenuBar    *fMenuBar;
-   TGFrame         *fContainer;
-   TGPopupMenu     *fWinListMenu;
-   TGMdiFrameList  *fChildren;
-   TGMdiFrameList  *fCurrent;
+   Long_t           fNumberOfFrames;                     // number of MDI child windows
+   TGMdiMenuBar    *fMenuBar;                            // menu bar
+   TGFrame         *fContainer;                          // MDI container
+   TGPopupMenu     *fWinListMenu;                        // popup menu with list of MDI child windows
+   TGMdiFrameList  *fChildren;                           // list of MDI child windows
+   TGMdiFrameList  *fCurrent;                            // current list of MDI child windows
 
    void             AddMdiFrame(TGMdiFrame *f);
    Bool_t           RemoveMdiFrame(TGMdiFrame *f);
@@ -215,7 +215,7 @@ public:
    TGMdiMenuBar    *GetMenu() const { return fMenuBar; }
 
    TGMdiFrameList  *GetWindowList(Int_t current = kFALSE) const
-                       { return current ? fCurrent : fChildren; }
+                     { return current ? fCurrent : fChildren; }
    Long_t           GetNumberOfFrames() const { return fNumberOfFrames; }
 
    void             SetResizeMode(Int_t mode = kMdiDefaultResizeMode);
@@ -238,7 +238,7 @@ public:
 
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
-   ClassDef(TGMdiMainFrame, 0)
+   ClassDef(TGMdiMainFrame, 0) // MDI main frame
 };
 
 
@@ -247,7 +247,7 @@ public:
 class TGMdiContainer : public TGFrame {
 
 protected:
-   const TGMdiMainFrame *fMain;
+   const TGMdiMainFrame *fMain;     // pointer to MDI main frame
 
 public:
    TGMdiContainer(const TGMdiMainFrame *p, Int_t w, Int_t h,
@@ -257,7 +257,7 @@ public:
    virtual Bool_t HandleConfigureNotify(Event_t *event);
    virtual TGDimension GetDefaultSize() const;
 
-   ClassDef(TGMdiContainer, 0)
+   ClassDef(TGMdiContainer, 0) // MDI container
 };
 
 #endif

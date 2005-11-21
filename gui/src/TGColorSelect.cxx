@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.8 2004/06/21 12:42:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.9 2004/10/18 12:32:12 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -73,6 +73,9 @@ ClassImp(TGColorSelect)
 TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
    TGFrame(p, 20, 20, kOwnBackground, color)
 {
+   // TGColorFrame constructor.
+   // The TGColorFrame is a small frame with border showing a specific color.
+
    SetBackgroundColor(color);
 
    fColor = color;
@@ -87,6 +90,8 @@ TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
 //________________________________________________________________________________
 Bool_t TGColorFrame::HandleButton(Event_t *event)
 {
+   // Handle button events in TGColorFrame.
+
    if (event->fType == kButtonPress) {
       SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_CLICK), event->fCode, fColor);
    } else {    // kButtonRelease
@@ -99,6 +104,8 @@ Bool_t TGColorFrame::HandleButton(Event_t *event)
 //________________________________________________________________________________
 void TGColorFrame::DrawBorder()
 {
+   // Draw TGColorFrame border.
+
    gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth - 1, fHeight - 1);
    Draw3dRectangle(kDoubleBorder | kSunkenFrame, 1, 1, fWidth - 2, fHeight - 2);
 }
@@ -107,6 +114,9 @@ void TGColorFrame::DrawBorder()
 TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
    TGCompositeFrame(p, 10, 10)
 {
+   // TG16ColorSelector constructor.
+   // The TG16ColorSelector is a composite frame with 16 TGColorFrames.
+
    SetLayoutManager(new TGMatrixLayout(this, 4, 4, 1, 1));
 
    fCe[0]  = new TGColorFrame(this, TColor::Number2Pixel(0), 0);
@@ -137,12 +147,16 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
 //________________________________________________________________________________
 TG16ColorSelector::~TG16ColorSelector()
 {
+   // TG16ColorSelector destructor.
+
    Cleanup();
 }
 
 //________________________________________________________________________________
 void TG16ColorSelector::SetActive(Int_t newat)
 {
+   // Set active color frame.
+
    if (fActive != newat) {
       if ((fActive >= 0) && (fActive < 16)) {
          fCe[fActive]->SetActive(kFALSE);
@@ -157,6 +171,8 @@ void TG16ColorSelector::SetActive(Int_t newat)
 //________________________________________________________________________________
 Bool_t TG16ColorSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process messages for TG16ColorSelector.
+
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -188,6 +204,10 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
    TGCompositeFrame(p, 10, 10, kDoubleBorder | kRaisedFrame | kOwnBackground,
                     GetDefaultFrameBackground())
 {
+   // TGColorPopup constructor.
+   // The TGColorPopup is a popup containing a TG16ColorSelector and a "More..." 
+   // button which popups up a TGColorDialog allowing custom color selection.
+
    fMsgWindow = m;
    fCurrentColor = color;
 
@@ -221,12 +241,16 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
 //________________________________________________________________________________
 TGColorPopup::~TGColorPopup()
 {
+   // TGColorPopup destructor.
+
    Cleanup();
 }
 
 //________________________________________________________________________________
 void TGColorPopup::EndPopup()
 {
+   // Ungrab pointer and unmap window.
+
    gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    UnmapWindow();
 }
@@ -234,6 +258,8 @@ void TGColorPopup::EndPopup()
 //________________________________________________________________________________
 void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
+   // Popup TGColorPopup at x,y position
+
    Int_t rx, ry;
    UInt_t rw, rh;
 
@@ -275,6 +301,8 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //________________________________________________________________________________
 Bool_t TGColorPopup::HandleButton(Event_t *event)
 {
+   // Handle mouse button events for TGColorPopup.
+
    if (event->fX < 0 || event->fX >= (Int_t) fWidth ||
        event->fY < 0 || event->fY >= (Int_t) fHeight) {
       if (event->fType == kButtonRelease)
@@ -292,6 +320,8 @@ Bool_t TGColorPopup::HandleButton(Event_t *event)
 //________________________________________________________________________________
 Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process messages for TGColorPopup.
+
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -324,6 +354,11 @@ Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
+   // TGColorSelect constructor.
+   // The TGColorSelect widget is like a checkbutton but instead of the check 
+   // mark there is color area with a little down arrow. 
+   // When clicked on the arrow the TGColorPopup pops up.
+
    fColor = color;
    fColorPopup = 0;
    fDrawGC = *fClient->GetResourcePool()->GetFrameGC();
@@ -337,12 +372,16 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
 //________________________________________________________________________________
 TGColorSelect::~TGColorSelect()
 {
+   // TGColorSelect destructor.
+
    delete fColorPopup;
 }
 
 //________________________________________________________________________________
 Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process messages for TGColorSelect.
+
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -365,6 +404,8 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 //________________________________________________________________________________
 Bool_t TGColorSelect::HandleButton(Event_t *event)
 {
+   // Handle button events for TGColorSelect.
+
    TGFrame::HandleButton(event);
    if (!IsEnabled()) return kTRUE;
 
@@ -377,7 +418,7 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
       if (fState != kButtonDown) {
          fPrevState = fState;
          SetState(kButtonDown);
-       }
+      }
    } else {
       if (fState != kButtonUp) {
          SetState(kButtonUp);
@@ -401,7 +442,7 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
 //______________________________________________________________________________
 void TGColorSelect::Enable()
 {
-   // Set state of widget. If kTRUE=enabled, kFALSE=disabled.
+   // Set state of widget as enabled.
 
    SetFlags(kWidgetIsEnabled);
    fClient->NeedRedraw(this);
@@ -410,7 +451,7 @@ void TGColorSelect::Enable()
 //______________________________________________________________________________
 void TGColorSelect::Disable()
 {
-   // Set state of widget. If kTRUE=enabled, kFALSE=disabled.
+   // Set state of widget as disabled.
 
    ClearFlags(kWidgetIsEnabled);
    fClient->NeedRedraw(this);
@@ -419,6 +460,8 @@ void TGColorSelect::Disable()
 //________________________________________________________________________________
 void TGColorSelect::DoRedraw()
 {
+   // Redraw TGColorSelect widget.
+
    Int_t  x, y;
    UInt_t w, h;
 
@@ -493,6 +536,8 @@ void TGColorSelect::DoRedraw()
 //________________________________________________________________________________
 void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 {
+   // Draw triangle (arrow) on which user can click to open TGColorPopup.
+
    Point_t points[3];
 
    points[0].fX = x;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.12 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.13 2005/07/05 12:36:06 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -68,6 +68,11 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
   TGCompositeFrame(main->GetContainer(), w, h,
                    options | kOwnBackground | kVerticalFrame | kFixedSize, back)
 {
+   // TGMdiDecorFrame constructor.
+   // The TGMdiDecorFrame is the frame containing MDI decorations like
+   // title bar, minimize, maximize, restore and close buttons, and resizers.
+
+
    fMdiMainFrame = main;
    fEditDisabled = kTRUE;
    fFrame = frame;
@@ -138,7 +143,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
 //______________________________________________________________________________
 TGMdiDecorFrame::~TGMdiDecorFrame()
 {
-   // dtor
+   // TGMdiDecorFrame destructor.
 
    if (!MustCleanup()) {
       delete fUpperHR;
@@ -156,12 +161,16 @@ TGMdiDecorFrame::~TGMdiDecorFrame()
 //______________________________________________________________________________
 void TGMdiDecorFrame::SetDecorBorderWidth(Int_t bw)
 {
+   // Set border width of the decor.
+
    fBorderWidth = bw;
 }
 
 //______________________________________________________________________________
 void TGMdiDecorFrame::SetMdiButtons(ULong_t buttons)
 {
+   // Set-up MDI buttons.
+
    fButtonMask = buttons;
    fTitlebar->LayoutButtons(fButtonMask, fIsMinimized, fIsMaximized);
    if (fButtonMask & kMdiSize) {
@@ -188,6 +197,8 @@ void TGMdiDecorFrame::SetMdiButtons(ULong_t buttons)
 //______________________________________________________________________________
 void TGMdiDecorFrame::SetResizeMode(Int_t mode)
 {
+   // Set resize mode (opaque or transparent)
+
    fUpperHR->SetResizeMode(mode);
    fLowerHR->SetResizeMode(mode);
    fLeftVR->SetResizeMode(mode);
@@ -201,6 +212,8 @@ void TGMdiDecorFrame::SetResizeMode(Int_t mode)
 //______________________________________________________________________________
 void TGMdiDecorFrame::Layout()
 {
+   // Recalculates the postion and the size of all decor frame components.
+
    RemoveInput(kStructureNotifyMask);
    TGCompositeFrame::Layout();
    AddInput(kStructureNotifyMask);
@@ -232,6 +245,8 @@ void TGMdiDecorFrame::Layout()
 //______________________________________________________________________________
 void TGMdiDecorFrame::SetWindowName(const char *name)
 {
+   // Set MDI Window name (appearing in the title bar)
+
    fTitlebar->GetWinName()->SetText(new TGString(name));
    fTitlebar->Layout();
 }
@@ -239,6 +254,8 @@ void TGMdiDecorFrame::SetWindowName(const char *name)
 //______________________________________________________________________________
 void TGMdiDecorFrame::SetWindowIcon(const TGPicture *icon)
 {
+   // Set Window icon (appearing in the title bar)
+
    fTitlebar->GetWinIcon()->SetPicture(icon);
    fClient->NeedRedraw(fTitlebar->GetWinIcon());
 }
@@ -246,7 +263,7 @@ void TGMdiDecorFrame::SetWindowIcon(const TGPicture *icon)
 //______________________________________________________________________________
 void TGMdiDecorFrame::Move(Int_t x, Int_t y)
 {
-   //
+   // Move the MDI window at position x, y.
 
    if (x < 0) {
       fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
@@ -262,7 +279,7 @@ void TGMdiDecorFrame::Move(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   //
+   // Move the MDI window at position x, y and set size to w, h.
 
    if (x < 0) {
       fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
@@ -279,7 +296,7 @@ void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 Bool_t TGMdiDecorFrame::HandleConfigureNotify(Event_t *event)
 {
-   // resize event
+   // Handle configure notify event.
 
    if ((event->fX < 0) || (event->fY < 0) ||
        (event->fX + event->fWidth > fMdiMainFrame->GetViewPort()->GetWidth()) ||
@@ -303,6 +320,7 @@ Bool_t TGMdiDecorFrame::HandleConfigureNotify(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMdiDecorFrame::HandleButton(Event_t *event)
 {
+   // Handle mouse button events.
 
    if (event->fType == kButtonPress) {
       void *ud;
@@ -318,6 +336,10 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
                              const char *name) :
    TGCompositeFrame(p, 10, 10, kOwnBackground | kHorizontalFrame)
 {
+   // TGMdiTitleBar constructor.
+   // the TGMdiTitleBar is the frame containing a title (window name)
+   // an icon and MDI picture buttons as minimize, maximize, restore, 
+   // close and help.
 
    fMdiWin = mdiwin;
    fEditDisabled = kTRUE;
@@ -360,7 +382,7 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
 //______________________________________________________________________________
 TGMdiTitleBar::~TGMdiTitleBar()
 {
-   //
+   // TGMdiTitleBar destructor.
 
    if (!MustCleanup()) {
       delete fLHint;
@@ -374,6 +396,8 @@ TGMdiTitleBar::~TGMdiTitleBar()
 void TGMdiTitleBar::LayoutButtons(UInt_t buttonmask,Bool_t isMinimized,
                                   Bool_t isMaximized)
 {
+   // Recalculates the position of every enabled (displayed) buttons.
+
    fWinIcon->GetPopup()->EnableEntry(kMdiMove);
 
    if (buttonmask & kMdiSize) {
@@ -434,6 +458,8 @@ void TGMdiTitleBar::LayoutButtons(UInt_t buttonmask,Bool_t isMinimized,
 //______________________________________________________________________________
 void TGMdiTitleBar::SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *font)
 {
+   // Set title bar color (blue or grey, depends on active state).
+
    SetBackgroundColor(back);
 
    fClient->GetFont(font->GetName());
@@ -455,6 +481,8 @@ void TGMdiTitleBar::SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *font)
 //______________________________________________________________________________
 Bool_t TGMdiTitleBar::HandleDoubleClick(Event_t *event)
 {
+   // Handle double click in title bar (maximize window)
+
    if ((event->fType == kButtonPress) && (event->fCode == kButton1)) {
       SendMessage(fMdiWin, MK_MSG(kC_MDI, kMDI_MAXIMIZE), fParent->GetId(), 0);
    }
@@ -464,6 +492,8 @@ Bool_t TGMdiTitleBar::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMdiTitleBar::HandleButton(Event_t *event)
 {
+   // Handle mouse click on title bar.
+
    if (event->fType == kButtonPress) {
       void *ud;
       GetWinIcon()->GetPopup()->EndMenu(ud);
@@ -516,6 +546,8 @@ Bool_t TGMdiTitleBar::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMdiTitleBar::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process messages for title bar.
+
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -533,6 +565,7 @@ Bool_t TGMdiTitleBar::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 //______________________________________________________________________________
 Bool_t TGMdiTitleBar::HandleMotion(Event_t *event)
 {
+   // Handle mouse motion events in title bar (used to move MDI window).
 
    if (event->fWindow != fId) return kTRUE;
    if (!fLeftButPressed) return kTRUE;
@@ -571,6 +604,10 @@ void TGMdiTitleBar::RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
    TGCompositeFrame(p, 10, 10, kHorizontalFrame)
 {
+   // TGMdiButtons constructor.
+   // the TGMdiButtons is the frame containing MDI picture buttons like
+   // minimize, maximize, restore, close and help.
+
    fDefaultHint = new TGLayoutHints(kLHintsNormal, 0, 0, 1, 0);
    fCloseHint = new TGLayoutHints(kLHintsNormal, 2, 0, 1, 0);
    fEditDisabled = kTRUE;
@@ -630,7 +667,7 @@ TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
 //______________________________________________________________________________
 TGMdiButtons::~TGMdiButtons()
 {
-   //
+   // TGMdiButtons destructor.
 
    if (!MustCleanup()) {
       delete fDefaultHint;
@@ -643,6 +680,10 @@ TGMdiTitleIcon::TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
                                const TGPicture *pic, Int_t w, Int_t h) :
    TGIcon(p, pic, w, h)
 {
+   // TGMdiTitleIcon constructor.
+   // the TGMdiTitleIcon is the left icon used also for the MDI 
+   // popup menu allowing access to MDI commands as : restore,
+   // move, size, minimize and close.
 
    fMsgWindow = titlebar;
    fEditDisabled = kTRUE;
@@ -667,12 +708,16 @@ TGMdiTitleIcon::TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
 //______________________________________________________________________________
 TGMdiTitleIcon::~TGMdiTitleIcon()
 {
+   // TGMdiTitleIcon destructor.
+
    delete fPopup;
 }
 
 //______________________________________________________________________________
 void TGMdiTitleIcon::DoRedraw()
 {
+   // Redraw icon.
+
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
    TGIcon::DoRedraw();
 }
@@ -680,6 +725,8 @@ void TGMdiTitleIcon::DoRedraw()
 //______________________________________________________________________________
 Bool_t TGMdiTitleIcon::HandleDoubleClick(Event_t *event)
 {
+   // Handle double click event on MDI icon (close the window)
+
    if (event->fCode == kButton1) {
       void *ud;
       fPopup->EndMenu(ud);
@@ -692,6 +739,8 @@ Bool_t TGMdiTitleIcon::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMdiTitleIcon::HandleButton(Event_t *event)
 {
+   // Handle button event on MDI icon (popup menu)
+
    SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), kMDI_CURRENT, 0);
 
    if (event->fType == kButtonPress) {
@@ -709,6 +758,12 @@ TGMdiWinResizer::TGMdiWinResizer(const TGWindow *p, const TGWindow *mdiwin,
                    Int_t mdioptions, Int_t w, Int_t h, UInt_t options) :
    TGFrame(p, w, h, options)
 {
+   // TGMdiWinResizer constructor.
+   // The TGMdiWinResizer is a frame allowing to resize MDI window.
+   // Could be horizontal, vertical or corner resizer (see derived classes
+   // TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, and 
+   // TGMdiCornerWinResizer).
+
    fWidgetFlags = kWidgetIsEnabled;
 
    fMdiWin = mdiwin;
@@ -732,6 +787,8 @@ TGMdiWinResizer::TGMdiWinResizer(const TGWindow *p, const TGWindow *mdiwin,
 //______________________________________________________________________________
 Bool_t TGMdiWinResizer::HandleButton(Event_t *event)
 {
+   // Handle button events in resizer (grab button and resize).
+
    if (!IsEnabled()) return kTRUE;
 
    if (event->fType == kButtonPress) {
@@ -791,6 +848,8 @@ Bool_t TGMdiWinResizer::HandleButton(Event_t *event)
 //______________________________________________________________________________
 void TGMdiWinResizer::DrawBox(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   // Draw resize box (rectangle).
+
    TGMdiMainFrame *m = (TGMdiMainFrame *) fMdiWin;
 
    gVirtualX->DrawRectangle(m->GetContainer()->GetId(), fBoxGC->GetGC(),
@@ -800,6 +859,8 @@ void TGMdiWinResizer::DrawBox(Int_t x, Int_t y, UInt_t width, UInt_t height)
 //______________________________________________________________________________
 void TGMdiWinResizer::MoveResizeIt()
 {
+   // Move (resize) parent MDI window.
+
    if (fMdiOptions == kMdiOpaque) {
       ((TGFrame *)fParent)->MoveResize(fNewX, fNewY, fNewW, fNewH);
    } else {
@@ -816,12 +877,16 @@ TGMdiVerticalWinResizer::TGMdiVerticalWinResizer(const TGWindow *p,
    TGMdiWinResizer(p, mdiwin, pos, boxGC, linew, mdioptions,
                    w, h, kFixedHeight | kOwnBackground)
 {
+   // TGMdiVerticalWinResizer constructor.
+
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kArrowVer));
 }
 
 //______________________________________________________________________________
 Bool_t TGMdiVerticalWinResizer::HandleMotion(Event_t *event)
 {
+   // Handle motion events in resizer (resize associated MDI window).
+
    if (((TGMdiDecorFrame *)fParent)->IsMinimized()) return kTRUE;
 
    fOldX = fNewX;
@@ -855,6 +920,8 @@ Bool_t TGMdiVerticalWinResizer::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 void TGMdiVerticalWinResizer::DrawBorder()
 {
+   // Draw vertical resizer frame border.
+
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
    if (fPos == kMdiResizerTop) {
       gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 1, fWidth - 1, 1);
@@ -874,6 +941,8 @@ TGMdiCornerWinResizer::TGMdiCornerWinResizer(const TGWindow *p,
    TGMdiWinResizer(p, mdiwin, pos, boxGC, linew, mdioptions,
                    w, h, kFixedSize | kOwnBackground)
 {
+   // TGMdiCornerWinResizer constructor.
+
    Cursor_t defaultCursor = kNone;
    fEditDisabled = kTRUE;
 
@@ -900,6 +969,8 @@ TGMdiCornerWinResizer::TGMdiCornerWinResizer(const TGWindow *p,
 //______________________________________________________________________________
 Bool_t TGMdiCornerWinResizer::HandleMotion(Event_t *event)
 {
+   // Handle motion events in resizer (resize associated MDI window).
+
    if (((TGMdiDecorFrame *)fParent)->IsMinimized()) return kTRUE;
 
    fOldX = fNewX;
@@ -958,6 +1029,8 @@ Bool_t TGMdiCornerWinResizer::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 void TGMdiCornerWinResizer::DrawBorder()
 {
+   // Draw corner resizer frame border.
+
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
 
    switch (fPos) {
@@ -1003,6 +1076,7 @@ TGMdiHorizontalWinResizer::TGMdiHorizontalWinResizer(const TGWindow *p,
    TGMdiWinResizer(p, mdiwin, pos, boxGC, linew, mdioptions,
                    w, h, kFixedWidth | kOwnBackground)
 {
+   // TGMdiHorizontalWinResizer constructor.
 
    fEditDisabled = kTRUE;
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kArrowHor));
@@ -1012,6 +1086,8 @@ TGMdiHorizontalWinResizer::TGMdiHorizontalWinResizer(const TGWindow *p,
 //______________________________________________________________________________
 Bool_t TGMdiHorizontalWinResizer::HandleMotion(Event_t *event)
 {
+   // Handle motion events in resizer (resize associated MDI window).
+
    if (((TGMdiDecorFrame *)fParent)->IsMinimized()) return kTRUE;
 
    fOldX = fNewX;
@@ -1045,6 +1121,8 @@ Bool_t TGMdiHorizontalWinResizer::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 void TGMdiHorizontalWinResizer::DrawBorder()
 {
+   // Draw horizontal resizer frame border.
+
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
    if (fPos == kMdiResizerLeft) {
       gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 0, 1, fHeight - 1);
