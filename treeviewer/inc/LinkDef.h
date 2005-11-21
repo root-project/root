@@ -1,4 +1,4 @@
-/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.7 2005/10/18 17:15:34 rdm Exp $ */
+/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.8 2005/10/28 15:32:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,6 +26,7 @@
 #pragma link C++ class TSessionLogView+;
 #pragma link C++ class TSessionServerFrame+;
 #pragma link C++ class TSessionFrame+;
+#pragma link C++ class TEditQueryFrame+;
 #pragma link C++ class TSessionQueryFrame+;
 #pragma link C++ class TSessionOutputFrame+;
 #pragma link C++ class TSessionInputFrame+;

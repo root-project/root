@@ -95,6 +95,13 @@ const char *pkgtypes[] = {
     0,               0
 };
 
+const char *macrotypes[] = {
+   "C files",       "*.C",
+   "All files",     "*",
+   0,               0
+};
+
+
 const char *kFeedbackHistos[] = {
    "PROOF_PacketsHist",
    "PROOF_EventsHist",
@@ -438,6 +445,17 @@ void TSessionServerFrame::OnBtnConnectClicked()
       msg.Form("PROOF Cluster %s ready", fViewer->GetActDesc()->fName.Data());
       fViewer->GetStatusBar()->SetText(msg.Data(), 1);
       fViewer->GetSessionFrame()->ProofInfos();
+      // Enable previously uploaded packages if in auto-enable mode
+      if (fViewer->GetActDesc()->fAutoEnable) {
+         TPackageDescription *package;
+         TIter next(fViewer->GetActDesc()->fPackages);
+         while ((package = (TPackageDescription *)next())) {
+            if (package->fEnabled) {
+               if (fViewer->GetActDesc()->fProof->EnablePackage(package->fName) != 0)
+                  Error("Submit", "Enable package failed");
+            }
+         }
+      }
    }
    // hide connection progress bar from status bar
    fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
@@ -514,6 +532,7 @@ void TSessionServerFrame::OnBtnAddClicked()
    desc->fLogLevel = fLogLevel->GetIntNumber();
    desc->fUserName = fTxtUsrName->GetText();
    desc->fSync = (fSync->GetState() == kButtonDown);
+   desc->fAutoEnable = kFALSE;
    desc->fProof = 0;
    // add newly created session config to our session list
    fViewer->GetSessions()->Add((TObject *)desc);
@@ -820,7 +839,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fChkEnable->SetToolTipText("Enable packages on the server at startup time");
    fFB->AddFrame(fChkEnable, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
    // Disable it for now (until implemented)
-   fChkEnable->SetEnabled(kFALSE);
+//   fChkEnable->SetEnabled(kFALSE);
 
    // add "Options" tab element
    tf = fTab->AddTab("Options");
@@ -868,6 +887,8 @@ void TSessionFrame::Build(TSessionViewer *gui)
    fBtnGetQueries->Connect("Clicked()", "TSessionFrame", this,
          "OnBtnGetQueriesClicked()");
 
+   fChkEnable->Connect("Toggled(Bool_t)", "TSessionFrame", this,
+         "OnStartupEnable(Bool_t)");
    fChkMulti->Connect("Toggled(Bool_t)", "TSessionFrame", this,
          "OnMultipleSelection(Bool_t)");
    fBtnAdd->Connect("Clicked()", "TSessionFrame", this,
@@ -1029,6 +1050,15 @@ void TSessionFrame::OnMultipleSelection(Bool_t on)
    // Handle multiple selection check button.
 
    fLBPackages->SetMultipleSelections(on);
+}
+
+//______________________________________________________________________________
+void TSessionFrame::OnStartupEnable(Bool_t on)
+{
+   // Handle multiple selection check button.
+
+   if (fViewer->GetActDesc())
+      fViewer->GetActDesc()->fAutoEnable = on;
 }
 
 //______________________________________________________________________________
@@ -1512,6 +1542,272 @@ void TSessionFrame::OnCommandLine()
    fInfoTextView->ShowBottom();
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+// Edit Query Frame
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TEditQueryFrame::TEditQueryFrame(TGWindow* p, Int_t w, Int_t h) :
+   TGCompositeFrame(p, w, h, kVerticalFrame)
+{
+   // Create a new Query dialog, used by the Session Viewer, to Edit a Query if
+   // the editmode flag is set, or to create a new one if not set.
+
+}
+
+//______________________________________________________________________________
+TEditQueryFrame::~TEditQueryFrame()
+{
+   // Delete query dialog.
+
+   Cleanup();
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::Build(TSessionViewer *gui)
+{
+   // Build the "new query" dialog.
+
+   TGButton *btnTmp;
+   fViewer = gui;
+   SetCleanup(kDeepCleanup);
+   SetLayoutManager(new TGTableLayout(this, 6, 5));
+
+   // add "Query Name" label and text entry
+   AddFrame(new TGLabel(this, "Query Name :"),
+         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 4, 0));
+   AddFrame(fTxtQueryName = new TGTextEntry(this,
+         (const char *)0, 1), new TGTableLayoutHints(1, 2, 0, 1,
+         kLHintsCenterY, 5, 5, 4, 0));
+
+   // add "TChain" label and text entry
+   AddFrame(new TGLabel(this, "TChain :"),
+         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 5, 5, 4, 0));
+   AddFrame(fTxtChain = new TGTextEntry(this,
+         (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
+         kLHintsCenterY, 5, 5, 4, 0));
+   fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
+   // add "Browse" button
+   AddFrame(btnTmp = new TGTextButton(this, "Browse..."),
+         new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
+   btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseChain()");
+
+   // add "Selector" label and text entry
+   AddFrame(new TGLabel(this, "Selector :"),
+         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 5, 5, 0, 0));
+   AddFrame(fTxtSelector = new TGTextEntry(this,
+         (const char *)0, 3), new TGTableLayoutHints(1, 2, 2, 3,
+         kLHintsCenterY, 5, 5, 0, 0));
+   // add "Browse" button
+   AddFrame(btnTmp = new TGTextButton(this, "Browse..."),
+         new TGTableLayoutHints(2, 3, 2, 3, kLHintsCenterY, 5, 0, 0, 8));
+   btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseSelector()");
+
+   // add "Options" label and text entry
+   AddFrame(new TGLabel(this, "Options :"),
+         new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
+   AddFrame(fTxtOptions = new TGTextEntry(this,
+         (const char *)0, 4), new TGTableLayoutHints(1, 2, 3, 4,
+         kLHintsCenterY, 5, 0, 0, 8));
+   fTxtOptions->SetText("\"ASYN\"");
+
+   // add "Less <<" ("More >>") button
+   AddFrame(fBtnMore = new TGTextButton(this, " Less << "),
+         new TGTableLayoutHints(2, 3, 4, 5, kLHintsCenterY, 5, 5, 4, 0));
+   fBtnMore->Connect("Clicked()", "TEditQueryFrame", this, "OnNewQueryMore()");
+
+   // add (initially hidden) options frame
+   fFrmMore = new TGCompositeFrame(this, 200, 200);
+   fFrmMore->SetCleanup(kDeepCleanup);
+
+   AddFrame(fFrmMore, new TGTableLayoutHints(0, 3, 5, 6,
+         kLHintsExpandX | kLHintsExpandY));
+   fFrmMore->SetLayoutManager(new TGTableLayout(fFrmMore, 4, 3));
+
+   // add "Nb Entries" label and number entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
+         new TGTableLayoutHints(0, 1, 0, 1, kLHintsCenterY, 5, 5, 0, 0));
+   fFrmMore->AddFrame(fNumEntries = new TGNumberEntry(fFrmMore, 0, 5, -1,
+         TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber,
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 0, 1,
+         0, 37, 0, 0, 8));
+   fNumEntries->SetIntNumber(-1);
+   // add "First Entry" label and number entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
+         new TGTableLayoutHints(0, 1, 1, 2, kLHintsCenterY, 5, 5, 0, 0));
+   fFrmMore->AddFrame(fNumFirstEntry = new TGNumberEntry(fFrmMore, 0, 5, -1,
+         TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
+         TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
+         37, 0, 0, 8));
+
+   // add "Par file" label and text entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Par file :"),
+         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 5, 5, 0, 0));
+   fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore,
+         (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37,
+         5, 0, 0));
+   // add "Browse" button
+   fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
+         new TGTableLayoutHints(2, 3, 2, 3, 0, 6, 0, 0, 8));
+   btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseParFile()");
+
+   // add "Event list" label and text entry
+   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
+         new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
+   fFrmMore->AddFrame(fTxtEventList = new TGTextEntry(fFrmMore,
+         (const char *)0, 6), new TGTableLayoutHints(1, 2, 3, 4, 0, 37,
+         5, 0, 0));
+   // add "Browse" button
+   fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
+         new TGTableLayoutHints(2, 3, 3, 4, 0, 6, 0, 0, 8));
+   btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseEventList()");
+
+   fTxtQueryName->Associate(this);
+   fTxtChain->Associate(this);
+   fTxtSelector->Associate(this);
+   fTxtOptions->Associate(this);
+   fNumEntries->Associate(this);
+   fNumFirstEntry->Associate(this);
+   fTxtParFile->Associate(this);
+   fTxtEventList->Associate(this);
+
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnNewQueryMore()
+{
+   // Show/hide options frame and update button text accordingly.
+
+   if (IsVisible(fFrmMore)) {
+      HideFrame(fFrmMore);
+      fBtnMore->SetText(" More >> ");
+   }
+   else {
+      ShowFrame(fFrmMore);
+      fBtnMore->SetText(" Less << ");
+   }
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnBrowseChain()
+{
+   // Call new chain dialog.
+
+   TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
+   dlg->Connect("OnElementSelected(TObject *)", "TEditQueryFrame",
+         this, "OnElementSelected(TObject *)");
+}
+
+//____________________________________________________________________________
+void TEditQueryFrame::OnElementSelected(TObject *obj)
+{
+   // Handle OnElementSelected signal coming from new chain dialog.
+
+   if (obj) {
+      fChain = obj;
+      if (obj->IsA() == TChain::Class())
+         fTxtChain->SetText(((TChain *)fChain)->GetName());
+      else if (obj->IsA() == TDSet::Class())
+         fTxtChain->SetText(((TDSet *)fChain)->GetObjName());
+   }
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnBrowseSelector()
+{
+   // Open file browser to choose selector macro.
+
+   TGFileInfo fi;
+   fi.fFileTypes = macrotypes;
+   new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+   if (!fi.fFilename) return;
+   fTxtSelector->SetText(gSystem->BaseName(fi.fFilename));
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnBrowseParFile()
+{
+   // Open file browser to choose parameter file.
+
+   TGFileInfo fi;
+   fi.fFileTypes = pkgtypes;
+   new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+   if (!fi.fFilename) return;
+   fTxtParFile->SetText(gSystem->BaseName(fi.fFilename));
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnBrowseEventList()
+{
+   //
+
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::OnBtnSave()
+{
+   // Save current settings in main session viewer.
+
+   // if we are in edition mode and query description is valid,
+   // use it, otherwise create a new one
+   TQueryDescription *newquery;
+   if (fQuery)
+      newquery = fQuery;
+   else
+      newquery = new TQueryDescription();
+
+   // update query description fields
+   newquery->fSelectorString  = fTxtSelector->GetText();
+   if (fChain) {
+      newquery->fTDSetString  = fChain->GetName();
+      newquery->fChain        = fChain;
+   }
+   else {
+      newquery->fTDSetString = "";
+      newquery->fChain       = 0;
+   }
+   newquery->fQueryName      = fTxtQueryName->GetText();
+   newquery->fOptions        = fTxtOptions->GetText();
+   newquery->fParFile        = fTxtParFile->GetText();
+   newquery->fNoEntries      = fNumEntries->GetIntNumber();
+   newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
+   newquery->fNbFiles        = 0;
+   newquery->fResult         = 0;
+
+   if (newquery->fChain) {
+      if (newquery->fChain->IsA() == TChain::Class())
+         newquery->fNbFiles = ((TChain *)newquery->fChain)->GetListOfFiles()->GetEntriesFast();
+      else if (newquery->fChain->IsA() == TDSet::Class())
+         newquery->fNbFiles = ((TDSet *)newquery->fChain)->GetListOfElements()->GetSize();
+   }
+   // update user data with modified query description
+   TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
+   fViewer->GetSessionHierarchy()->RenameItem(item, newquery->fQueryName);
+   item->SetUserData(newquery);
+   // update list tree
+   fClient->NeedRedraw(fViewer->GetSessionHierarchy());
+   fTxtQueryName->SelectAll();
+   fTxtQueryName->SetFocus();
+   fViewer->WriteConfiguration();
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
+{
+   // Update entry fields with query description values.
+
+   fQuery = desc;
+   fTxtQueryName->SetText(desc->fQueryName);
+   fTxtChain->SetText(desc->fTDSetString);
+   fTxtSelector->SetText(desc->fSelectorString);
+   fTxtOptions->SetText(desc->fOptions);
+   fNumEntries->SetIntNumber(desc->fNoEntries);
+   fNumFirstEntry->SetIntNumber(desc->fFirstEntry);
+   fTxtParFile->SetText(desc->fParFile);
+   fTxtEventList->SetText(desc->fEventList);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Query Frame
 
@@ -1629,7 +1925,17 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
          kLHintsExpandX, 5, 5, 10, 10));
    fFC->AddFrame(frmBut3, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX));
 
+   // add "Results" tab element
+   tf = fTab->AddTab("Edit Query");
+   fFD = new TEditQueryFrame(tf, 100, 100);
+   fFD->Build(fViewer);
+   tf->AddFrame(fFD, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 10, 0));
+   tf->AddFrame(fBtnSave = new TGTextButton(tf, "     Apply Changes     "),
+                new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 5, 5, 5));
+
    // connect button actions to functions
+   fBtnSave->Connect("Clicked()", "TEditQueryFrame", fFD,
+         "OnBtnSave()");
    fBtnSubmit->Connect("Clicked()", "TSessionQueryFrame", this,
          "OnBtnSubmit()");
    fBtnFinalize->Connect("Clicked()", "TSessionQueryFrame", this,
@@ -2183,6 +2489,8 @@ void TSessionQueryFrame::UpdateInfos()
    const char *qst[] = {"aborted  ", "submitted", "running  ",
                         "stopped  ", "completed"};
 
+   if (fViewer->GetActDesc()->fActQuery)
+      fFD->UpdateFields(fViewer->GetActDesc()->fActQuery);
    fInfoTextView->Clear();
    if (!fViewer->GetActDesc()->fActQuery ||
        !fViewer->GetActDesc()->fActQuery->fResult) {
@@ -2525,6 +2833,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    localdesc->fProof = 0;
    localdesc->fLocal = kTRUE;
    localdesc->fSync = kTRUE;
+   localdesc->fAutoEnable = kFALSE;
    localdesc->fNbHistos = 0;
    item->SetUserData(localdesc);
    fSessions->Add((TObject *)localdesc);
@@ -2553,6 +2862,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TString user = strtok(0, ";");
                if (user.IsNull()) break;
                TString sync = strtok(0, ";");
+               TString autoen = strtok(0, ";");
 
                // build session description
                proofDesc = new TSessionDescription();
@@ -2568,6 +2878,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                proofDesc->fActQuery = 0;
                proofDesc->fProof = 0;
                proofDesc->fSync = (Bool_t)(atoi(sync));
+               proofDesc->fAutoEnable = (Bool_t)(atoi(autoen));
                proofDesc->fUserName = user;
                fSessions->Add((TObject *)proofDesc);
                item = fSessionHierarchy->AddItem(
@@ -2713,6 +3024,7 @@ void TSessionViewer::UpdateListOfProofs()
          newdesc->fConnected = kTRUE;
          newdesc->fLocal = kFALSE;
          newdesc->fSync = kFALSE;
+         newdesc->fAutoEnable = kFALSE;
          newdesc->fNbHistos = 0;
 
          // get list of queries and fill list tree
@@ -2799,6 +3111,8 @@ void TSessionViewer::WriteConfiguration(const char *filename)
       sessionstring += session->fUserName;
       sessionstring += ";";
       sessionstring += Form("%d", session->fSync);
+      sessionstring += ";";
+      sessionstring += Form("%d", session->fAutoEnable);
       if (scnt > 0) // skip local session
          fViewerEnv->SetValue(Form("SessionDescription.%d",scnt), sessionstring);
       scnt++;
@@ -2864,7 +3178,7 @@ void TSessionViewer::Build()
    fAutoSave = kTRUE;
    SetCleanup(kDeepCleanup);
    // set minimun size
-   SetWMSizeHints(400 + 200, 350+50, 2000, 1000, 1, 1);
+   SetWMSizeHints(400 + 200, 370+50, 2000, 1000, 1, 1);
 
    // collect icons
    fLocal = fClient->GetPicture("local_session.xpm");
@@ -3040,9 +3354,13 @@ void TSessionViewer::Build()
    fV1->AddFrame(fTreeView, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
          2, 0, 0, 0));
    fSessionHierarchy = new TGListTree(fTreeView, kHorizontalFrame);
+   fSessionHierarchy->DisableOpen();
    fSessionHierarchy->Connect("Clicked(TGListTreeItem*,Int_t,Int_t,Int_t)",
          "TSessionViewer", this,
          "OnListTreeClicked(TGListTreeItem*, Int_t, Int_t, Int_t)");
+   fSessionHierarchy->Connect("DoubleClicked(TGListTreeItem*,Int_t)",
+         "TSessionViewer", this,
+         "OnListTreeDoubleClicked(TGListTreeItem*, Int_t)");
    fV1->Resize(fTreeView->GetDefaultWidth()+100, fV1->GetDefaultHeight());
 
    //--- fV2 -------------------------------------------------------------------
@@ -3148,6 +3466,7 @@ void TSessionViewer::Build()
    fV2->HideFrame(fQueryFrame);
    fV2->HideFrame(fOutputFrame);
    fV2->HideFrame(fInputFrame);
+   fQueryFrame->GetQueryEditFrame()->OnNewQueryMore();
    fActFrame = fServerFrame;
    Resize(GetDefaultSize());
 }
@@ -3247,6 +3566,12 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          fSessionFrame->GetTab()->ShowFrame(
                fSessionFrame->GetTab()->GetTabTab("Options"));
       }
+      fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
+      fServerFrame->SetLogLevel(fActDesc->fLogLevel);
+      if (fActDesc->fAutoEnable)
+         fSessionFrame->CheckAutoEnPack(kTRUE);
+      else 
+         fSessionFrame->CheckAutoEnPack(kFALSE);
       // update session information frame
       fSessionFrame->ProofInfos();
       fSessionFrame->UpdatePackages();
@@ -3379,6 +3704,25 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
       fQueryMenu->EnableEntry(kQuerySubmit);
       fPopupQry->EnableEntry(kQuerySubmit);
+   }
+}
+
+//______________________________________________________________________________
+void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t btn)
+{
+   // Handle mouse double clicks in list tree (connect to server).
+
+   if (entry->GetParent()->GetParent() == 0) { // Server
+      if (entry->GetUserData()) {
+         TObject *obj = (TObject *)entry->GetUserData();
+         if (obj->IsA() != TSessionDescription::Class())
+            return;
+         fActDesc = (TSessionDescription*)obj;
+         // if Proof valid, update connection infos
+      }
+      if ((!fActDesc->fLocal) && (!fActDesc->fConnected)) {
+         fServerFrame->OnBtnConnectClicked();
+      }
    }
 }
 

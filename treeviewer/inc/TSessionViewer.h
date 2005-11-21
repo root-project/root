@@ -155,6 +155,7 @@ public:
    Bool_t             fConnected;   // kTRUE if connected
    Bool_t             fLocal;       // kTRUE if session is local
    Bool_t             fSync;        // kTRUE if in sync mode
+   Bool_t             fAutoEnable;  // enable packages at session startup time
    TList             *fQueries;     // list of queries in this session
    TList             *fPackages;    // list of packages
    TQueryDescription *fActQuery;    // current (actual) query
@@ -296,6 +297,10 @@ public:
    virtual ~TSessionFrame();
 
    void     Build(TSessionViewer *gui);
+   void     CheckAutoEnPack(Bool_t checked = kTRUE) { 
+            fChkEnable->SetState(checked ? kButtonDown : kButtonUp); }
+   Int_t    GetLogLevel() const { return fLogLevel->GetIntNumber(); }
+   void     SetLogLevel(Int_t log) { fLogLevel->SetIntNumber(log); }
    TGTab   *GetTab() const { return fTab; }
 
    //Function that handle input from user:
@@ -315,10 +320,49 @@ public:
    void     OnDisablePackages();
    void     OnClearPackages();
    void     OnMultipleSelection(Bool_t on);
+   void     OnStartupEnable(Bool_t on);
    void     ProofInfos();
    void     UpdatePackages();
 
    ClassDef(TSessionFrame, 0) // Session frame
+};
+
+//////////////////////////////////////////////////////////////////////////
+// New Query Dialog
+//////////////////////////////////////////////////////////////////////////
+
+class TEditQueryFrame : public TGCompositeFrame {
+
+private:
+   TGCompositeFrame  *fFrmMore;        // options frame
+   TGTextButton      *fBtnMore;        // "more >>" / "less <<" button
+
+   TGTextEntry       *fTxtQueryName;   // query name text entry
+   TGTextEntry       *fTxtChain;       // chain name text entry
+   TGTextEntry       *fTxtSelector;    // selector name text entry
+   TGTextEntry       *fTxtOptions;     // options text entry
+   TGNumberEntry     *fNumEntries;     // number of entries selector
+   TGNumberEntry     *fNumFirstEntry;  // first entry selector
+   TGTextEntry       *fTxtParFile;     // parameter file name text entry
+   TGTextEntry       *fTxtEventList;   // event list text entry
+   TSessionViewer    *fViewer;         // pointer on main viewer
+   TQueryDescription *fQuery;          // query description class
+   TObject           *fChain;          // actual TChain
+
+public:
+   TEditQueryFrame(TGWindow* p, Int_t w, Int_t h);
+   virtual ~TEditQueryFrame();
+   void     Build(TSessionViewer *gui);
+   void     OnNewQueryMore();
+   void     OnBrowseChain();
+   void     OnBrowseSelector();
+   void     OnBrowseParFile();
+   void     OnBrowseEventList();
+   void     OnBtnSave();
+   void     OnElementSelected(TObject *obj);
+   void     UpdateFields(TQueryDescription *desc);
+
+   ClassDef(TEditQueryFrame, 0) // Edit query frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -341,6 +385,7 @@ private:
    TGTextButton         *fBtnAbort;          // abort process button
    TGTextButton         *fBtnShowLog;        // show log button
    TGTextButton         *fBtnRetrieve;       // retrieve query button
+   TGTextButton         *fBtnSave;           // save query button
    TGTextView           *fInfoTextView;      // summary on current query
 
    Int_t                 fFiles;             // number of files processed
@@ -357,6 +402,7 @@ private:
    EQueryStatus          fStatus;            // status of actual query
    TGTab                *fTab;               // main tab frame
    TGCompositeFrame     *fFA, *fFB, *fFC;    // three tabs element
+   TEditQueryFrame      *fFD;                // fourth tab element (edit query frame)
    TGHProgressBar       *frmProg;            // current process progress bar
    TRootEmbeddedCanvas  *fECanvas;           // node statistics embeded canvas
    TCanvas              *fStatsCanvas;       // node statistics canvas
@@ -369,9 +415,10 @@ public:
 
    void     Build(TSessionViewer *gui);
 
-   TCanvas *GetStatsCanvas() const { return fStatsCanvas;}
+   TCanvas *GetStatsCanvas() const { return fStatsCanvas; }
    TTime    GetStartTime() const { return fStartTime; }
    TTime    GetEndTime() const   { return fEndTime; }
+   TEditQueryFrame *GetQueryEditFrame() const { return fFD; }
 
    void     SetStartTime(TTime time) { fStartTime = time; }
    void     SetEndTime(TTime time) { fEndTime = time; }
@@ -554,6 +601,7 @@ public:
    void     MyHandleMenu(Int_t);
    void     OnCascadeMenu();
    void     OnListTreeClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);
+   void     OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t btn);
    void     QueryResultReady(char *query);
    void     DeleteQuery();
    void     ReadConfiguration(const char *filename = 0);
