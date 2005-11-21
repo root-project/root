@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.32 2005/09/04 10:27:14 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.33 2005/11/01 19:48:09 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,7 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "TF3.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
@@ -22,6 +23,8 @@ extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void MultiGraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+extern void F2Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+extern void F3Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 ClassImp(TFitter)
 
@@ -297,7 +300,9 @@ void TFitter::SetFitMethod(const char *name)
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquare);
    if (!strcmp(name,"Graph2DFitChisquare")) SetFCN(Graph2DFitChisquare);
-   if (!strcmp(name, "MultiGraphFitChisquare")) SetFCN(MultiGraphFitChisquare);
+   if (!strcmp(name,"MultiGraphFitChisquare")) SetFCN(MultiGraphFitChisquare);
+   if (!strcmp(name,"F2Minimizer")) SetFCN(F2Fit);
+   if (!strcmp(name,"F3Minimizer")) SetFCN(F3Fit);
 }
       
 //______________________________________________________________________________
@@ -736,3 +741,18 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    f1->SetNumberFitPoints(npfits);
 }
 
+//______________________________________________________________________________
+void F2Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /*flag*/)
+{
+   TVirtualFitter *fitter = TVirtualFitter::GetFitter();
+   TF2 *f2 = (TF2*)fitter->GetObjectFit();
+   f = f2->EvalPar(u);
+}
+
+//______________________________________________________________________________
+void F3Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /*flag*/)
+{
+   TVirtualFitter *fitter = TVirtualFitter::GetFitter();
+   TF3 *f3 = (TF3*)fitter->GetObjectFit();
+   f = f3->EvalPar(u);
+}

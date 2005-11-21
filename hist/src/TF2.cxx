@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.28 2004/09/13 16:39:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.29 2005/08/03 17:40:34 pcanal Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TStyle.h"
 #include "Riostream.h"
 #include "TColor.h"
+#include "TVirtualFitter.h"
 
 
 ClassImp(TF2)
@@ -316,6 +317,85 @@ Double_t TF2::GetContourLevel(Int_t level) const
   if (fContour.fArray[0] != -9999) return fContour.fArray[level];
   if (fHistogram == 0) return 0;
   return fHistogram->GetContourLevel(level);
+}
+
+//______________________________________________________________________________
+void TF2::GetMinimumXY(Double_t &x, Double_t &y)
+{
+// return the X and Y values corresponding to the minimum value of the function
+// To find the minimum on a range, first set this range via the SetRange function
+// Method:
+//   First, a grid search is performed to find the initial estimate of the 
+//   minimum location. The range of the function is divided into fNpx and fNpy
+//   sub-ranges. If the function is "good"(or "bad"), these values can be changed
+//   by SetNpx and SetNpy functions
+//   Then, Minuit minimization is used with starting values found by the grid search
+
+   //First do a grid search with step size fNpx and fNpy
+   Double_t xx, yy, zz;
+   Double_t dx = (fXmax - fXmin)/fNpx;
+   Double_t dy = (fYmax - fYmin)/fNpy;
+   Double_t xxmin = fXmin;
+   Double_t yymin = fYmin;
+   Double_t zzmin = Eval(xxmin, yymin+dy);
+   for (Int_t i=0; i<fNpx; i++){
+      xx=fXmin + (i+0.5)*dx;
+      for (Int_t j=0; j<fNpy; j++){
+         yy=fYmin+(j+0.5)*dy;
+         zz = Eval(xx, yy);
+         if (zz<zzmin) {xxmin = xx, yymin = yy; zzmin = zz;}
+      }
+   }
+
+   x = TMath::Min(fXmax, xxmin);
+   y = TMath::Min(fYmax, yymin);
+
+   //go to minuit for the final minimization
+   char f[]="TFitter";
+
+   Int_t strdiff = 0;
+   if (TVirtualFitter::GetFitter()){
+      //If the fitter is already set and it's not minuit, delete it and 
+      //create a minuit fitter
+      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), f);
+      if (strdiff!=0) 
+         delete TVirtualFitter::GetFitter();
+   }
+
+   TVirtualFitter *minuit = TVirtualFitter::Fitter(this, 2);
+   minuit->Clear();
+   minuit->SetFitMethod("F2Minimizer");
+   Double_t arglist[10];
+   arglist[0]=-1;
+   minuit->ExecuteCommand("SET PRINT", arglist, 1);
+
+   minuit->SetParameter(0, "x", x, 0.1, 0, 0);
+   minuit->SetParameter(1, "y", y, 0.1, 0, 0);
+   arglist[0] = 5;
+   arglist[1] = 1e-5;
+   // minuit->ExecuteCommand("CALL FCN", arglist, 1);
+
+   Int_t fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
+   if (fitResult!=0){
+      //migrad might have not converged
+      Warning("GetMinimumXY", "Abnormal termination of minimization");
+   }
+   Double_t xtemp=minuit->GetParameter(0);
+   Double_t ytemp=minuit->GetParameter(1);
+   if (xtemp>fXmax || xtemp<fXmin || ytemp>fYmax || ytemp<fYmin){
+      //converged to something outside limits, redo with bounds 
+
+      minuit->SetParameter(0, "x", x, 0.1, fXmin, fXmax);
+      minuit->SetParameter(1, "y", y, 0.1, fYmin, fYmax);
+      fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
+      if (fitResult!=0){
+         //migrad might have not converged
+         Warning("GetMinimumXY", "Abnormal termination of minimization");
+      }
+   }
+   x = minuit->GetParameter(0);
+   y = minuit->GetParameter(1);
+
 }
 
 //______________________________________________________________________________

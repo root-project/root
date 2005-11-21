@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.18 2005/07/05 22:23:17 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.19 2005/08/03 17:40:34 pcanal Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetSave(const Double_t *x);
+   virtual void     GetMinimumXY(Double_t &x, Double_t &y);
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsil=0.000001) {return TF1::Integral(a,b,params,epsil);}
