@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.21 2005/11/16 20:03:58 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.1 2005/11/18 20:40:52 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -50,7 +50,7 @@ ClassImp(TGraphQQ)
 <img src="gif/qqplots.gif">
 */
 //End_Html
-
+//
 // 1 dataset: 
 //   Quantile-quantile plots are used to determine if the dataset comes from the 
 //   specified theoretical distribution, such as normal.
