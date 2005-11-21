@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -31,8 +31,8 @@ namespace ROOT { namespace Cintex {
   struct PendingBase {
     Type   basetype;
     int    tagnum;
-    size_t Offset;
-    PendingBase( const Type& t, int n, size_t o) : basetype(t), tagnum(n), Offset(o) {}
+    size_t offset;
+    PendingBase( const Type& t, int n, size_t o) : basetype(t), tagnum(n), offset(o) {}
   };
 
   class CommentBuffer  {
@@ -247,14 +247,14 @@ namespace ROOT { namespace Cintex {
           CommentBuffer::Instance().add(comment);
         }
         Indirection  indir = IndirectionGet(dm.TypeOf());
-        CintTypeDesc TypeNth = CintType(indir.second);
+        CintTypeDesc type = CintType(indir.second);
         string dname = dm.Properties().HasKey("ioname") ? 
                        dm.Properties().PropertyAsString("ioname") : dm.Name();
         ostringstream ost;
         if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
         else               ost << dname << "=";
         string expr = ost.str();
-        int member_type     = TypeNth.first;
+        int member_type     = type.first;
         int member_indir    = 0;
         int member_tagnum   = -1;
         int member_typnum   = -1;
@@ -271,9 +271,9 @@ namespace ROOT { namespace Cintex {
           break;
         }
 
-        if ( TypeNth.first == 'u' )  {
+        if ( type.first == 'u' )  {
           //dependencies.push_back(indir.second);
-          member_tagnum = CintTag(TypeNth.second);
+          member_tagnum = CintTag(type.second);
           if ( typeid(longlong) == indir.second.TypeInfo() )
             ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
           else if ( typeid(ulonglong) == indir.second.TypeInfo() )
@@ -308,7 +308,7 @@ namespace ROOT { namespace Cintex {
           << std::endl;
         }
         ::G__memvar_setup((void*)dm.Offset(),                         // p
-                          member_type,                                // TypeNth
+                          member_type,                                // type
                           member_indir,                               // indirection
                           dm.TypeOf().IsConst(),                        // const
                           member_tagnum,                              // tagnum
@@ -364,10 +364,10 @@ namespace ROOT { namespace Cintex {
         }
         // Special case of "pure abstract". The offsets will be Set to 0.
         // All that is necessary because ROOT does not handle virtual inheritance correctly.
-        // ROOT always wants to Get a real Offset between BaseNth classes ans this is not 
+        // ROOT always wants to Get a real offset between base classes ans this is not 
         // possible without having an Instance of the object. In case of pure abstract classes
         // we can not do it. So, in case the abstract class has no data members then we assume
-        // offsets to BaseNth class to be 0.
+        // offsets to base class to be 0.
         else if ( fClass.IsAbstract() && fClass.DataMemberSize() == 0) {
           Object obj(fClass, 0);
           Setup_inheritance_simple(obj);
@@ -389,33 +389,33 @@ namespace ROOT { namespace Cintex {
     if ( ! IsSTL(fClass.Name(SCOPED)) )    {
       if ( 0 == ::G__getnumbaseclass(fTaginfo->tagnum) )  {
         for ( Bases::iterator it = GetBases()->begin(); it != GetBases()->end(); it++ ) {
-          Base BaseNth  = it->first;
+          Base base  = it->first;
           int  level = it->second;
-          Type btype = BaseNth.ToType();
+          Type btype = base.ToType();
           CINTScopeBuilder::Setup(btype);
           std::string b_nam = CintName(btype);
           int b_tagnum = CintTag(b_nam);
           // Get the Offset. Treat differently virtual and non-virtual inheritance
-          size_t Offset;
-          long  TypeNth = (level == 0) ?  G__ISDIRECTINHERIT : 0;
-          if ( BaseNth.IsVirtual() ) {
+          size_t offset;
+          long  type = (level == 0) ?  G__ISDIRECTINHERIT : 0;
+          if ( base.IsVirtual() ) {
             if (obj.Address())  {
-              Offset = ( * BaseNth.OffsetFP())(obj.Address());
+              offset = ( * base.OffsetFP())(obj.Address());
             }
             else {
-              Offset = (size_t)BaseNth.OffsetFP();
-              TypeNth = TypeNth | G__ISVIRTUALBASE;
+              offset = (size_t)base.OffsetFP();
+              type = type | G__ISVIRTUALBASE;
             }
           }
           else {
-            Offset = BaseNth.Offset((void*)0x100);
+            offset = base.Offset((void*)0x100);
           }
           if( Cintex::Debug() > 1 )  {
-            std::cout << fClass.Name(SCOPED) << " Base:" << btype.Name(SCOPED) << " Offset:" << Offset << std::endl;
+            std::cout << fClass.Name(SCOPED) << " Base:" << btype.Name(SCOPED) << " Offset:" << offset << std::endl;
           }
-          int mod = BaseNth.IsPublic() ? G__PUBLIC : ( BaseNth.IsPrivate() ? G__PRIVATE : G__PROTECTED );
-          ::G__inheritance_setup(fTaginfo->tagnum, b_tagnum, Offset, mod, TypeNth );
-          Object bobj(btype,(char*)obj.Address() + Offset);
+          int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
+          ::G__inheritance_setup(fTaginfo->tagnum, b_tagnum, offset, mod, type );
+          Object bobj(btype,(char*)obj.Address() + offset);
           //CINTClassBuilder::Get(btype).Setup_inheritance_simple(bobj);
         }
       }
@@ -428,21 +428,21 @@ namespace ROOT { namespace Cintex {
       typedef vector<pair<Base,int> > Bases;
       Bases* bases = (Bases*)(GetBases.Invoke().Address());
       for ( Bases::iterator it = bases->begin(); it != bases->end(); it++ ) {
-        Base BaseNth  = it->first;
+        Base base  = it->first;
         int  level = it->second;
-        int b_tagnum = CintTag(BaseNth.ToType().Name(SCOPED));
-        // Get the Offset. Treat differently virtual and non-virtual inheritance
-        size_t Offset;
-        long  TypeNth = level == 0 ?  G__ISDIRECTINHERIT : 0;
-        if ( BaseNth.IsVirtual() ) {
-          Offset = (size_t) BaseNth.OffsetFP();
-          TypeNth = TypeNth | G__ISVIRTUALBASE;
+        int b_tagnum = CintTag(base.ToType().Name(SCOPED));
+        // Get the offset. Treat differently virtual and non-virtual inheritance
+        size_t offset;
+        long  type = level == 0 ?  G__ISDIRECTINHERIT : 0;
+        if ( base.IsVirtual() ) {
+          offset = (size_t) base.OffsetFP();
+          type = type | G__ISVIRTUALBASE;
         }
         else {
-          Offset = BaseNth.Offset((void*)0x100);
+          offset = base.Offset((void*)0x100);
         }
-        int mod = BaseNth.IsPublic() ? G__PUBLIC : ( BaseNth.IsPrivate() ? G__PRIVATE : G__PROTECTED );
-        G__inheritance_setup(fTaginfo->tagnum, b_tagnum, Offset, mod, TypeNth );
+        int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
+        G__inheritance_setup(fTaginfo->tagnum, b_tagnum, offset, mod, type );
       }    
     }
     else {
@@ -451,7 +451,7 @@ namespace ROOT { namespace Cintex {
       for ( list<PendingBase>::iterator it = pendingBases().begin(); it != pendingBases().end();) {
         if ( (*it).basetype == fClass ) {
           list<PendingBase>::iterator curr = it++;
-          Setup_inheritance((*curr).tagnum, (*curr).Offset, (*curr).basetype, 0);
+          Setup_inheritance((*curr).tagnum, (*curr).offset, (*curr).basetype, 0);
           pendingBases().erase(curr);
         }
         else {
@@ -463,24 +463,24 @@ namespace ROOT { namespace Cintex {
   
   void CINTClassBuilder::Setup_inheritance(int tagnum, size_t /* off */, const Type& cl, int ind) {
     for ( size_t i = 0; i < cl.BaseSize(); i++ ) {
-      Base BaseNth = cl.BaseAt(i);
-      int b_tagnum = CintTag(BaseNth.ToType().Name(SCOPED));
-      // Get the Offset. Treat differently virtual and non-virtual inheritance
-      size_t Offset;
-      long  TypeNth = ind;
-      if ( BaseNth.IsVirtual() ) {
-        Offset = (size_t) BaseNth.OffsetFP();
-        TypeNth = TypeNth | G__ISVIRTUALBASE;
+      Base base = cl.BaseAt(i);
+      int b_tagnum = CintTag(base.ToType().Name(SCOPED));
+      // Get the offset. Treat differently virtual and non-virtual inheritance
+      size_t offset;
+      long  type = ind;
+      if ( base.IsVirtual() ) {
+        offset = (size_t) base.OffsetFP();
+        type = type | G__ISVIRTUALBASE;
       }
       else {
-        Offset = BaseNth.Offset((void*)0x100);
+        offset = base.Offset((void*)0x100);
       }
-      int mod = BaseNth.IsPublic() ? G__PUBLIC : ( BaseNth.IsPrivate() ? G__PRIVATE : G__PROTECTED );
-      G__inheritance_setup(tagnum, b_tagnum, Offset, mod, TypeNth );
-      // scan next level of BaseNth classes recursively if already loaded otherwise add into 
+      int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
+      G__inheritance_setup(tagnum, b_tagnum, offset, mod, type );
+      // scan next level of base classes recursively if already loaded otherwise add into 
       // the pending list
-      if( BaseNth.ToType() ) Setup_inheritance(tagnum, Offset, BaseNth.ToType(), 0);
-      else                pendingBases().push_back(PendingBase(BaseNth.ToType(),tagnum, Offset));
+      if( base.ToType() ) Setup_inheritance(tagnum, offset, base.ToType(), 0);
+      else                pendingBases().push_back(PendingBase(base.ToType(),tagnum, offset));
     }
   }
 
