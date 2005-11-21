@@ -360,6 +360,21 @@ class genDictionary(object) :
          if self.isConstructorPrivate(b) : return True
     return False
 #----------------------------------------------------------------------------------
+  def isDestructorNonPublic(self, id ) :
+    attrs = self.xref[id]['attrs']
+    if 'members' in attrs : 
+       for m in attrs['members'].split() :
+         elem = self.xref[m]['elem']
+         attr = self.xref[m]['attrs']
+         if elem == 'Destructor' :
+           if 'access' in attr and attr['access'] in ('private','protected') : return True
+    if 'bases' in attrs :
+       for b in attrs['bases'].split() :
+         if b[:10] == 'protected:' : b = b[10:]
+         if b[:8]  == 'private:'   : b = b[8:]
+         if self.isDestructorNonPublic(b) : return True
+    return False
+#----------------------------------------------------------------------------------
   def isClassVirtual(self, attrs ) :
     if 'members' in attrs : 
        for m in attrs['members'].split() :
@@ -1053,6 +1068,13 @@ class genDictionary(object) :
           new_attrs['artificial'] = 'true'
           self.xref[id] = {'elem':'Constructor', 'attrs':new_attrs,'subelems':[] }
           attrs['members'] += u' ' + id
+        elif len(args) == 0 and 'abstract' not in attrs and \
+             'access' not in self.xref[m]['attrs'] and not self.isDestructorNonPublic(attrs['id']):
+          # NewDel functions extra function
+          id = u'_x%d' % self.x_id.next()
+          new_attrs = { 'id':id, 'context':attrs['id'] }
+          self.xref[id] = {'elem':'GetNewDelFunctions', 'attrs':new_attrs,'subelems':[] }
+          attrs['members'] += u' ' + id    
     # Bases extra function
     if 'bases' in attrs and attrs['bases'] != '':
       id = u'_x%d' % self.x_id.next()
@@ -1089,19 +1111,39 @@ class genDictionary(object) :
     return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetBasesTableBuild( self, attrs, args ) :
     mod = self.genModifier(attrs, None)
-    return '  .AddFunctionMember<void*(void)>("getBasesTable", method%s, 0, 0, %s)' % (attrs['id'], mod)
+    return '  .AddFunctionMember<void*(void)>("__getBasesTable", method%s, 0, 0, %s)' % (attrs['id'], mod)
   def genGetBasesTableDef( self, attrs, args ) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
     s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
     s += '  static std::vector<std::pair<ROOT::Reflex::Base, int> > s_bases;\n'
+    s += '  if ( !s_bases.size() ) {\n'
     bases = []
     self.getAllBases( cid, bases ) 
     for b in bases :
       bname = self.genTypeName(b[0],colon=True)
-      s += '  s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::GetType< %s >(), ROOT::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname, cl, bname, b[1], b[2])
-    s += '  return &s_bases;\n' 
+      s += '    s_bases.push_back(std::make_pair(seal::reflex::Base( seal::reflex::getType< %s >(), seal::reflex::baseOffset< %s,%s >::get(),%s), %d));\n' % (bname, cl, bname, b[1], b[2])
+    s += '  }\n  return &s_bases;\n' 
+    s += '}\n'
+    return s
+#----Constructor/Destructor stuff--------------------------------------------------------
+  def genGetNewDelFunctionsDecl( self, attrs, args ) :
+    return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
+  def genGetNewDelFunctionsBuild( self, attrs, args ) :
+    return '  .addFunctionMember<void*(void)>("__getNewDelFunctions", method%s)' % (attrs['id'])
+  def genGetNewDelFunctionsDef( self, attrs, args ) :
+    cid      = attrs['context']
+    cl       = self.genTypeName(cid, colon=True)
+    clt      = string.translate(str(cl), self.transtable)
+    s  = 'void* %s_dict::method%s( void*, const std::vector<void*>&, void*)\n{\n' %( clt, attrs['id'] )
+    s += '  static NewDelFunctions s_funcs;\n'
+    s += '  s_funcs.fNew         = new_T< %s >;\n' % cl
+    s += '  s_funcs.fNewArray    = newArray_T< %s >;\n' % cl
+    s += '  s_funcs.fDelete      = delete_T< %s >;\n' % cl
+    s += '  s_funcs.fDeleteArray = deleteArray_T< %s >;\n' % cl
+    s += '  s_funcs.fDestructor  = destruct_T< %s >;\n' % cl
+    s += '  return &s_funcs;\n;'
     s += '}\n'
     return s
 #----------------------------------------------------------------------------------

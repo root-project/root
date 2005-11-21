@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -153,15 +153,8 @@ namespace ROOT {
       static void* Destruct(void* env)  {
         PEnv_t   e = PEnv_t(env);
         PValue_t m = PValue_t(e->start);
-#if _MSC_VER > 1300
         for (size_t i=0; i < e->Size; ++i, ++m )
           m->~Value_t();
-#else
-        PCont_t  c = PCont_t(e->object);
-        RFLX_TYPENAME T::allocator_type a = c->get_allocator();
-        for (size_t i=0; i < e->Size; ++i, ++m )
-          a.destroy(m);
-#endif
         return 0;
       }
     };
