@@ -3708,7 +3708,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
 }
 
 //______________________________________________________________________________
-void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t btn)
+void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t /*btn*/)
 {
    // Handle mouse double clicks in list tree (connect to server).
 
