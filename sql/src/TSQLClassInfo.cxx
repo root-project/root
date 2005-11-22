@@ -1,3 +1,6 @@
+// @(#)root/net:$Name:  $:$Id: TSQLClassInfo.cxx,v 1.2 2005/11/22 11:30:00 brun Exp $
+// Author: Sergey Linev  20/11/2005
+
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -8,8 +11,8 @@
 
 //________________________________________________________________________
 // 
-// TSQLClassInfo class keep info about tables specific, to one class and
-// version. It keep names of table for that class. For each version of 
+// TSQLClassInfo class containes info about tables specific to one class and
+// version. It provides names of table for that class. For each version of 
 // class not more than two tables can exists. Normal table has typically
 // name like TH1_ver4 and additional table has name like TH1_streamer_ver4
 // List of this objects are kept by TSQLFile class

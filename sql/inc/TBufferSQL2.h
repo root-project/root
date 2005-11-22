@@ -1,13 +1,26 @@
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.2 2005/11/22 11:30:00 brun Exp $
+// Author: Sergey Linev  20/11/2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
 #ifndef ROOT_TBufferSQL2
 #define ROOT_TBufferSQL2
+
+
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+// TBufferSQL2 class used in TSQLFile to convert binary object data    //
+// to SQL statements, supplied to DB server                            //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+
 
 #ifndef ROOT_TBuffer
 #include "TBuffer.h"
@@ -37,9 +50,78 @@ class TSQLObjectData;
 
 class TBufferSQL2 : public TBuffer {
    protected:
+
+      TSQLFile*        fSQL;                  //!   instance of TSQLFile
+      TSQLStructure*   fStructure;            //!   structures, created by object storing
+      TSQLStructure*   fStk;                  //!   pointer on current active structure (stack head)
+      TExMap*          fObjMap;               //!   Map between stored objects and object id
+      TObjArray*       fIdArray;              //!   List of used objects ids
+      TString          fReadBuffer;           //!   Buffer for read value
+      Int_t            fErrorFlag;            //!   Error id value 
+      Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
+      Int_t            fCompressLevel;        //!   compress level used to minimize size of data in database
+      Int_t            fReadVersionBuffer;    //!   buffer, used to by ReadVersion method
+      Int_t            fObjIdCounter;         //!   counter of objects id
+      Bool_t           fIgnoreVerification;   //!   ignore verification of names 
+      TSQLObjectData*  fCurrentData;          //!   
+
       // TBufferSQL2 objects cannot be copied or assigned
       TBufferSQL2(const TBufferSQL2 &);       // not implemented
       void operator=(const TBufferSQL2 &);    // not implemented
+
+      TBufferSQL2();
+
+      // redefined protected virtual functions
+
+      virtual void     WriteObject(const void *actualObjStart, const TClass *actualClass);
+
+      // end redefined protected virtual functions
+
+      TSQLStructure*   PushStack();
+      TSQLStructure*   PopStack();
+      TSQLStructure*   Stack(Int_t depth = 0);
+
+      Bool_t           ProcessPointer(const void* ptr, Int_t& objid);
+      void             RegisterPointer(const void* ptr, Int_t objid);
+      
+      void             WorkWithElement(TStreamerElement* elem, Int_t number);
+
+      Int_t            SqlReadArraySize();
+
+      Bool_t           SqlWriteBasic(Char_t value);
+      Bool_t           SqlWriteBasic(Short_t value);
+      Bool_t           SqlWriteBasic(Int_t value);
+      Bool_t           SqlWriteBasic(Long_t value);
+      Bool_t           SqlWriteBasic(Long64_t value);
+      Bool_t           SqlWriteBasic(Float_t value);
+      Bool_t           SqlWriteBasic(Double_t value);
+      Bool_t           SqlWriteBasic(Bool_t value);
+      Bool_t           SqlWriteBasic(UChar_t value);
+      Bool_t           SqlWriteBasic(UShort_t value);
+      Bool_t           SqlWriteBasic(UInt_t value);
+      Bool_t           SqlWriteBasic(ULong_t value);
+      Bool_t           SqlWriteBasic(ULong64_t value);
+      Bool_t           SqlWriteValue(const char* value, const char* tname);
+
+      void             SqlReadBasic(Char_t& value);
+      void             SqlReadBasic(Short_t& value);
+      void             SqlReadBasic(Int_t& value);
+      void             SqlReadBasic(Long_t& value);
+      void             SqlReadBasic(Long64_t& value);
+      void             SqlReadBasic(Float_t& value);
+      void             SqlReadBasic(Double_t& value);
+      void             SqlReadBasic(Bool_t& value);
+      void             SqlReadBasic(UChar_t& value);
+      void             SqlReadBasic(UShort_t& value);
+      void             SqlReadBasic(UInt_t& value);
+      void             SqlReadBasic(ULong_t& value);
+      void             SqlReadBasic(ULong64_t& value);
+      const char*      SqlReadValue(const char* tname);
+      const char*      SqlReadCharStarValue();
+
+      Int_t            SqlWriteObject(const void* obj, const TClass* objClass);
+      void*            SqlReadObject(void* obj, TClass** cl = 0);
+      void*            SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid);
     
    public:
    
@@ -200,84 +282,6 @@ class TBufferSQL2 : public TBuffer {
 
       // end of redefined virtual functions
 
-   protected:
-      TBufferSQL2();
-
-      // redefined protected virtual functions
-
-      virtual void     WriteObject(const void *actualObjStart, const TClass *actualClass);
-
-      // end redefined protected virtual functions
-
-      TSQLStructure*   PushStack();
-      TSQLStructure*   PopStack();
-      TSQLStructure*   Stack(Int_t depth = 0);
-
-      Bool_t           ProcessPointer(const void* ptr, Int_t& objid);
-      void             RegisterPointer(const void* ptr, Int_t objid);
-      
-      void             WorkWithElement(TStreamerElement* elem, Int_t number);
-
-      Int_t            SqlReadArraySize();
-
-      Bool_t           SqlWriteBasic(Char_t value);
-      Bool_t           SqlWriteBasic(Short_t value);
-      Bool_t           SqlWriteBasic(Int_t value);
-      Bool_t           SqlWriteBasic(Long_t value);
-      Bool_t           SqlWriteBasic(Long64_t value);
-      Bool_t           SqlWriteBasic(Float_t value);
-      Bool_t           SqlWriteBasic(Double_t value);
-      Bool_t           SqlWriteBasic(Bool_t value);
-      Bool_t           SqlWriteBasic(UChar_t value);
-      Bool_t           SqlWriteBasic(UShort_t value);
-      Bool_t           SqlWriteBasic(UInt_t value);
-      Bool_t           SqlWriteBasic(ULong_t value);
-      Bool_t           SqlWriteBasic(ULong64_t value);
-      Bool_t           SqlWriteValue(const char* value, const char* tname);
-
-      void             SqlReadBasic(Char_t& value);
-      void             SqlReadBasic(Short_t& value);
-      void             SqlReadBasic(Int_t& value);
-      void             SqlReadBasic(Long_t& value);
-      void             SqlReadBasic(Long64_t& value);
-      void             SqlReadBasic(Float_t& value);
-      void             SqlReadBasic(Double_t& value);
-      void             SqlReadBasic(Bool_t& value);
-      void             SqlReadBasic(UChar_t& value);
-      void             SqlReadBasic(UShort_t& value);
-      void             SqlReadBasic(UInt_t& value);
-      void             SqlReadBasic(ULong_t& value);
-      void             SqlReadBasic(ULong64_t& value);
-      const char*      SqlReadValue(const char* tname);
-      const char*      SqlReadCharStarValue();
-
-      Int_t            SqlWriteObject(const void* obj, const TClass* objClass);
-      void*            SqlReadObject(void* obj, TClass** cl = 0);
-      void*            SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid);
-      
-      TSQLFile*        fSQL;                  //!   instance of TSQLFile   
-      
-      TSQLStructure*   fStructure;            //!   structures, created by object storing
-      TSQLStructure*   fStk;                  //!   pointer on current active structure (stack head)
-
-      TExMap*          fObjMap;               //!
-      TObjArray*       fIdArray;              //!
-
-      TString          fReadBuffer;           //!
-
-      Int_t            fErrorFlag;            //!
-      
-      Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
-      Int_t            fCompressLevel;        //!   compress level used to minimize size of data in database
-      
-      Int_t            fReadVersionBuffer;    //!   buffer, used to by ReadVersion method
-      
-      Int_t            fObjIdCounter;         //!   counter of objects id
-      
-      Bool_t           fIgnoreVerification;   //!   ignore verification of names 
-      
-      TSQLObjectData*  fCurrentData;          //!
-      
    ClassDef(TBufferSQL2,1);    //a specialized TBuffer to convert data to SQL statements or read data from SQL tables
 };
 

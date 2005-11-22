@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.2 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.3 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 //________________________________________________________________________
 //
 // TKeyXML is represents one block of data in TXMLFile
-// Normally this block corresponds to data of single object like histogram, 
+// Normally this block corresponds to data of single object like histogram,
 // TObjArray and so on.
 //________________________________________________________________________
 
@@ -28,54 +28,59 @@ ClassImp(TKeyXML);
 
 //______________________________________________________________________________
 TKeyXML::TKeyXML() :
-   TKey(), 
-   fFile(0), 
+   TKey(),
+   fFile(0),
    fXML(0),
    fKeyNode(0)
 {
-   // default constructor  
+   // default constructor
 }
 
 //______________________________________________________________________________
 TKeyXML::TKeyXML(TXMLFile* file, const TObject* obj, const char* name) :
-    TKey(), 
-    fFile(file), 
-    fXML(file->XML()), 
+    TKey(),
+    fFile(file),
+    fXML(file->XML()),
     fKeyNode(0)
 {
    // Creates TKeyXML and convert obj data to xml structures
-    
-   if (name) SetName(name); else
-     if (obj!=0) {SetName(obj->GetName());  fClassName=obj->ClassName();}
-       else SetName("Noname");
+
+   if (name)
+      SetName(name);
+   else
+      if (obj!=0) {
+         SetName(obj->GetName());
+         fClassName=obj->ClassName();
+      } else
+         SetName("Noname");
 
    StoreObject((void*)obj, obj ? obj->IsA() : 0);
 }
 
 //______________________________________________________________________________
 TKeyXML::TKeyXML(TXMLFile* file, const void* obj, const TClass* cl, const char* name) :
-   TKey(), 
-   fFile(file), 
-   fXML(file->XML()), 
+   TKey(),
+   fFile(file),
+   fXML(file->XML()),
    fKeyNode(0)
 {
    // Creates TKeyXML and convert obj data to xml structures
-    
+
    if (name && *name) SetName(name);
-                 else SetName(cl ? cl->GetName() : "Noname");
+   else SetName(cl ? cl->GetName() : "Noname");
 
    StoreObject(obj, cl);
 }
 
 //______________________________________________________________________________
 TKeyXML::TKeyXML(TXMLFile* file, XMLNodePointer_t keynode) :
-   TKey(), 
-   fFile(file), 
-   fXML(file->XML()), 
+   TKey(),
+   fFile(file),
+   fXML(file->XML()),
    fKeyNode(keynode)
 {
    // Creates TKeyXML and takes ownership over xml node, from which object can be restored
-    
+
    SetName(fXML->GetAttr(keynode, xmlio::Name));
    fCycle = fXML->GetIntAttr(keynode, xmlio::Cycle);
 
@@ -88,7 +93,7 @@ TKeyXML::TKeyXML(TXMLFile* file, XMLNodePointer_t keynode) :
 //______________________________________________________________________________
 TKeyXML::~TKeyXML()
 {
-   // TKeyXML destructor    
+   // TKeyXML destructor
    if (fKeyNode)
       fXML->FreeNode(fKeyNode);
 }
@@ -105,9 +110,9 @@ void TKeyXML::Browse(TBrowser *b)
       delete obj;
       obj = 0;
    }
-   
+
    if (!obj)
-     obj = ReadObj();
+      obj = ReadObj();
 
    if (b && obj) {
       obj->Browse(b);
@@ -118,17 +123,17 @@ void TKeyXML::Browse(TBrowser *b)
 //______________________________________________________________________________
 void TKeyXML::Delete(Option_t * /*option*/)
 {
-   // Delete key from current directory 
+   // Delete key from current directory
    // Note: TKeyXML object is not deleted. You still have to call "delete key"
-    
-   gDirectory->GetListOfKeys()->Remove(this);  
+
+   gDirectory->GetListOfKeys()->Remove(this);
 }
 
 //______________________________________________________________________________
 void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 {
    //  convert object to xml structure and keep this structure in key
-    
+
    fCycle  = fFile->AppendKey(this);
 
    fKeyNode = fXML->NewChild(0, 0, xmlio::Xmlkey, 0);
@@ -141,8 +146,8 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 
    if (node!=0)
       fXML->AddChild(fKeyNode, node);
-      
-   buffer.XmlWriteBlock(fKeyNode);   
+
+   buffer.XmlWriteBlock(fKeyNode);
 
    if (cl) fClassName = cl->GetName();
 }
@@ -151,7 +156,7 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 XMLNodePointer_t TKeyXML::ObjNode()
 {
    // return starting node, where object was stored
-    
+
    if (fKeyNode==0) return 0;
    XMLNodePointer_t node = fXML->GetChild(fKeyNode);
    fXML->SkipEmpty(node);
@@ -159,15 +164,15 @@ XMLNodePointer_t TKeyXML::ObjNode()
 }
 
 //______________________________________________________________________________
-XMLNodePointer_t TKeyXML::BlockNode() 
+XMLNodePointer_t TKeyXML::BlockNode()
 {
-   // return node, where key binary data is stored    
-   if (fKeyNode==0) return 0;    
+   // return node, where key binary data is stored
+   if (fKeyNode==0) return 0;
    XMLNodePointer_t node = fXML->GetChild(fKeyNode);
    fXML->SkipEmpty(node);
    while (node!=0) {
-     if (strcmp(fXML->GetNodeName(node), xmlio::XmlBlock)==0) return node;
-     fXML->ShiftToNext(node);   
+      if (strcmp(fXML->GetNodeName(node), xmlio::XmlBlock)==0) return node;
+      fXML->ShiftToNext(node);
    }
    return 0;
 }
@@ -175,9 +180,9 @@ XMLNodePointer_t TKeyXML::BlockNode()
 //______________________________________________________________________________
 TObject* TKeyXML::ReadObj()
 {
-   // read object derived from TObject class, from key 
+   // read object derived from TObject class, from key
    // if it is not TObject or in case of error, return 0
-    
+
    if (fKeyNode==0) return 0;
    TBufferXML buffer(TBuffer::kRead, fFile);
    buffer.XmlReadBlock(BlockNode());
@@ -188,8 +193,8 @@ TObject* TKeyXML::ReadObj()
 //______________________________________________________________________________
 void* TKeyXML::ReadObjectAny(const TClass* /*cl*/)
 {
-   // read object of any type    
-    
+   // read object of any type
+
    if (fKeyNode==0) return 0;
    TBufferXML buffer(TBuffer::kRead, fFile);
    buffer.XmlReadBlock(BlockNode());
