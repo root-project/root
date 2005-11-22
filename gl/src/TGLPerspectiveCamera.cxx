@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.9 2005/11/09 10:13:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.10 2005/11/16 16:41:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TODO: Function descriptions
-// TODO: Class def - same as header
-
 #include "TGLPerspectiveCamera.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
@@ -21,6 +18,19 @@
 
 // TODO: Find somewhere else
 #define PI 3.141592654
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLPerspectiveCamera                                                 //
+//                                                                      //
+// Perspective projection camera - with characteristic foreshortening.  //
+//                                                                      //
+// TODO: Currently constrains YOZ plane to be floor - this is never     //
+// 'tipped'. While useful we really need to extend so can:              //
+// i) Pick any one of the three natural planes of the world to be floor.//
+// ii) Can use a free arcball style camera with no contraint - integrate//
+// TArcBall.                                                            //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLPerspectiveCamera)
 
@@ -38,18 +48,21 @@ TGLPerspectiveCamera::TGLPerspectiveCamera() :
    fVRotate(0.0), fHRotate(0.0), 
    fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0)
 {
+   // Construct perspective camera
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
 
 //______________________________________________________________________________
 TGLPerspectiveCamera::~TGLPerspectiveCamera()
 {
+   // Destroy perspective camera
 }
 
 //______________________________________________________________________________
 void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
 {
-   // Setup camera limits based on supplied bounding box.
+   // Setup camera limits suitible to view the world volume defined by 'box'
+   // and call Reset() to initialise camera.
 
    fCenter = box.Center();
 
@@ -75,6 +88,8 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
 //______________________________________________________________________________
 void TGLPerspectiveCamera::Reset()
 {
+   // Reset the camera to defaults - reframe the world volume established in Setup()
+   // in default state. Note: limits defined in Setup() are not adjusted.
    fFOV = fgFOVDefault;
    fHRotate = 0.0;
    fVRotate = -90.0;
@@ -84,9 +99,16 @@ void TGLPerspectiveCamera::Reset()
 }
 
 //______________________________________________________________________________
-Bool_t TGLPerspectiveCamera::Zoom(Int_t shift, Bool_t mod1, Bool_t mod2)
+Bool_t TGLPerspectiveCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   if (AdjustAndClampVal(fFOV, fgFOVMin, fgFOVMax, shift, fgFOVDeltaSens, mod1, mod2)) {
+  // Dolly the camera - 'move camera along eye line, retaining lens focal length'.
+   // Arguments are:
+   //
+   // 'delta' - mouse viewport delta (pixels) - +ive dolly in, -ive dolly out
+   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   if (AdjustAndClampVal(fDolly, fDollyMin, fDollyMax, delta, fgDollyDeltaSens, mod1, mod2)) {
       fCacheDirty = kTRUE;
       return kTRUE;
    } else {
@@ -95,9 +117,19 @@ Bool_t TGLPerspectiveCamera::Zoom(Int_t shift, Bool_t mod1, Bool_t mod2)
 }
 
 //______________________________________________________________________________
-Bool_t TGLPerspectiveCamera::Dolly(Int_t shift, Bool_t mod1, Bool_t mod2)
+Bool_t TGLPerspectiveCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   if (AdjustAndClampVal(fDolly, fDollyMin, fDollyMax, shift, fgDollyDeltaSens, mod1, mod2)) {
+   // Zoom the camera - 'adjust lens focal length, retaining camera position'.
+   // Arguments are:
+   //
+   // 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
+   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   
+   // TODO: Bring all mouse handling into camera classes - would simplify interface and
+   // remove these non-generic cases.
+   if (AdjustAndClampVal(fFOV, fgFOVMin, fgFOVMax, delta, fgFOVDeltaSens, mod1, mod2)) {
       fCacheDirty = kTRUE;
       return kTRUE;
    } else {
@@ -108,6 +140,17 @@ Bool_t TGLPerspectiveCamera::Dolly(Int_t shift, Bool_t mod1, Bool_t mod2)
 //______________________________________________________________________________
 Bool_t TGLPerspectiveCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 {
+   // Truck the camera - 'move camera parallel to film plane'. The film 
+   // plane is defined by the EyePoint() / EyeDirection() pair. Define motion 
+   // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion. 
+   // For an orthographic projection this means all objects (regardless of 
+   // camera distance) track the mouse motion. 
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   //
+   // Note: Trucking is often mistakenly refered to as 'pan' or 'panning'. 
+   // Panning is swivelling the camera on it's own axis - the eye point.
+   
    //TODO: Convert TGLRect so this not required
    GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
    TGLVertex3 start, end;
@@ -121,10 +164,19 @@ Bool_t TGLPerspectiveCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 }
 
 //______________________________________________________________________________
-Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
+Bool_t TGLPerspectiveCamera::Rotate(Int_t xDelta, Int_t yDelta)
 {
-   fHRotate += static_cast<float>(xShift)/fViewport.Width() * 360.0;
-   fVRotate -= static_cast<float>(yShift)/fViewport.Height() * 180.0;
+   // Rotate the camera round view volume center established in Setup().
+   // Arguments are:
+   //
+   // xDelta - horizontal delta (pixels)
+   // YDelta - vertical delta (pixels)
+   //
+   // Deltas are divided by equivalent viewport dimension and scaled
+   // by full rotation - i.e. translates fraction of viewport to
+   // fractional rotation.   
+   fHRotate += static_cast<float>(xDelta)/fViewport.Width() * 360.0;
+   fVRotate -= static_cast<float>(yDelta)/fViewport.Height() * 180.0;
    if ( fVRotate > 0.0 ) {
       fVRotate = 0.0;
    }
@@ -139,6 +191,17 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
 //______________________________________________________________________________
 void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect)
 {
+   // Apply the camera to the current GL context, setting the viewport, projection
+   // and modelview matricies. After this verticies etc can be directly entered
+   // in the world frame. This also updates the cached frustum values, enabling
+   // all the projection, overlap tests etc defined in TGLCamera to be used.
+   // 
+   // Arguments are:
+   // 'box' - view volume box - used to adjust near/far clipping
+   // 'pickRect' - optional picking rect. If non-null, restrict drawing to this
+   // viewport rect.
+   
+   // TODO: If we retained the box from Setup first argument could be dropped?
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    glMatrixMode(GL_PROJECTION);

@@ -1,6 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.21 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.22 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
-// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -61,6 +60,7 @@ TGLCamera::~TGLCamera()
 //______________________________________________________________________________
 void TGLCamera::SetViewport(const TGLRect & viewport)
 {
+   // Set viewport extents from passed 'viewport' rect
    fViewport = viewport;
    fCacheDirty = true;
 }

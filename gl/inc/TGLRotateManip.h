@@ -19,6 +19,17 @@
 #include "TGLUtil.h"
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLRotateManip                                                       //
+//                                                                      //
+// Rotate manipulator - attaches to physical shape and draws local axes //
+// widgets - rings drawn from attached physical center, in plane defined// 
+// by axis. User can mouse over (turns yellow) and L click/drag to      //
+// rotate attached physical round the ring center.                      // 
+// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
+//////////////////////////////////////////////////////////////////////////
+
 class TGLRotateManip : public TGLManip
 {
 private:

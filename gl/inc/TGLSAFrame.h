@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.h,v 1.2 2005/08/11 15:28:53 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.h,v 1.3 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -20,6 +20,14 @@
 #endif
 
 class TGLSAViewer;
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLSAFrame                                                           //
+//                                                                      //
+// Standalone GL Viewer GUI main frame. Is aggregated in TGLSAViewer -  //
+// top level standalone viewer object.                                  //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLSAFrame : public TGMainFrame
 {

@@ -1,6 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.5 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
-// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -17,14 +16,21 @@
 #include "TGLCamera.h"
 #endif
 
-/*************************************************************************
- * TGLPerspectiveCamera - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLPerspectiveCamera                                                 //
+//                                                                      //
+// Perspective projection camera - with characteristic foreshortening.  //
+//                                                                      //
+// TODO: Currently constrains YOZ plane to be floor - this is never     //
+// 'tipped'. While useful we really need to extend so can:              //
+// i) Pick any one of the three natural planes of the world to be floor.//
+// ii) Can use a free arcball style camera with no contraint - integrate//
+// TArcBall.                                                            //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLPerspectiveCamera : public TGLCamera {
-private:
+   private:
    // Fields
 
    // Set in Setup()

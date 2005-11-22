@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.3 2005/09/06 09:26:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.4 2005/10/20 08:22:32 couet Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLOutput                                                            //
-//                                                                      //
-// A collection of output helpers - only PS/EPS at present              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGLOutput.h"
 #include "TGLViewer.h"
 #include "TSystem.h" // For gSystem
@@ -25,9 +17,28 @@
 #include "Riostream.h"
 #include <assert.h>
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOutput                                                            //
+//                                                                      //
+// Wrapper class for GL capture & output routines                       //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TGLOutput)
+
 //______________________________________________________________________________
 Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * filePath)
 {
+   // Capture viewer to file. Arguments are:
+   // 'viewer' - viewer object to capture from
+   // 'format' - output format - only postscript types presently.
+   //            One of kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE or kPDF_BSP
+   //             See TGLOutput::CapturePostscript() for meanings
+   // 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
+   // depending on format requested
+   // 
+   // Note : Output files can be large and take considerable time (up to mins)
+   // to generate
    switch(format) {
       case(kEPS_SIMPLE):
       case(kEPS_BSP):
@@ -44,9 +55,15 @@ Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * fileP
 //______________________________________________________________________________
 Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const char * filePath)
 {
-   // Generates a PostScript or PDF output of the OpenGL scene. They are vector
-   // graphics files and can be huge and long to generate.
-
+   // Capture viewer to postscript file. Arguments are:
+   // 'viewer' - viewer object to capture from
+   // 'format' - output format
+   //                kEPS_SIMPLE - lower quality EPS
+   //                kEPS_BSP    - higher quality EPS
+   //                kPDF_SIMPLE - lower quality PDF
+   //                kPDF_BSP    - higher quality PDF
+   // 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
+   // depending on format requested
    if (!filePath || strlen(filePath) == 0) {
       if (format == kEPS_SIMPLE || format == kEPS_BSP) {
          filePath = "viewer.eps";
@@ -65,19 +82,19 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
       switch(format) {
          case kEPS_SIMPLE:
             gl2psFormat = GL2PS_EPS;
-	         gl2psSort = GL2PS_SIMPLE_SORT;
+            gl2psSort = GL2PS_SIMPLE_SORT;
             break;
          case kEPS_BSP:
             gl2psFormat = GL2PS_EPS;
-	         gl2psSort = GL2PS_BSP_SORT;
+            gl2psSort = GL2PS_BSP_SORT;
             break;
          case kPDF_SIMPLE:
             gl2psFormat = GL2PS_PDF;
-	         gl2psSort = GL2PS_SIMPLE_SORT;
+            gl2psSort = GL2PS_SIMPLE_SORT;
             break;
          case kPDF_BSP:
             gl2psFormat = GL2PS_PDF;
-	         gl2psSort = GL2PS_BSP_SORT;
+            gl2psSort = GL2PS_BSP_SORT;
             break;
          default:
             assert(kFALSE);

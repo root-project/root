@@ -53,6 +53,8 @@
 #pragma link C++ class TGLLightEditor;
 #pragma link C++ class TGLGuideEditor;
 
+#pragma link C++ class TGLOutput;
+
 #pragma link C++ class TArcBall;
 
 #pragma link C++ class TGLRenderArea;

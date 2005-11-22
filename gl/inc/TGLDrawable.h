@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.6 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.7 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -20,11 +20,18 @@
 //                                                                      //
 // TGLDrawable                                                          //      
 //                                                                      //
-// Abstract base class for all GL drawable objects. Provides hooks for  //
-// using the display list cache in TGLDrawable::Draw() - the external   //
-// draw method any owning object calls.                                 //
+// Abstract base class for all GL drawable objects - TGLPhysicalShape & //
+// TGLLogicalShape hierarchy. Provides hooks for using the display list //
+// cache in TGLDrawable::Draw() - the external draw method for all      //
+// shapes.                                                              //
+//                                                                      //
 // Defines pure virtual TGLDrawable::DirectDraw() which derived classes //
 // must implement with actual GL drawing.                               //
+//                                                                      //
+// Display list caching can occur at either the physical or logical     //
+// level (with or without translation). Currently we cache only certain //
+// derived logical shapes as not all logicals can respect the LOD draw  //
+// flag which is used in caching.                                       //
 //////////////////////////////////////////////////////////////////////////
 
 class TGLDrawable

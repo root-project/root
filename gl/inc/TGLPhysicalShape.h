@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.10 2005/10/24 14:49:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.11 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -45,11 +45,8 @@ class TContextMenu;
 // logical shape - hence const & handle. It can perform mutable         //
 // reference counting on the logical to enable purging.                 //
 //                                                                      //
-// Display list caching can occur at either the physical or logical     //
-// level (with or without translation). Currently we cache only certain //
-// derived logical shapes as not all logicals can respect the LOD draw  //
-// flag which is used in caching.                                       //
-//                                                                      //
+// See base/src/TVirtualViewer3D for description of common external 3D  //
+// viewer architecture and how external viewer clients use it.          //
 //////////////////////////////////////////////////////////////////////////
 
 class TGLPhysicalShape : public TGLDrawable

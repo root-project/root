@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.14 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.15 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -24,19 +24,6 @@
 
 #include <vector>
 #include <assert.h>
-
-/*************************************************************************
- * TGLUtil - A collection of utility classes for GL. Vertex, vector, rect
- * matrix etc. These provide const and non-const accessors Arr() / CArr() to
- * a GL compatible internal field. This means they can be used directly
- * with OpenGL C API calls.
- *
- * They are not intended to be fully featured - just provide minimum
- * required.
- *
- * Also other various common types, error checking etc.
- *
- *************************************************************************/
 
 // TODO: Split these into own h/cxx files
 
@@ -86,15 +73,18 @@ enum EAxesType
    kAxesOrigin
 };
 
-// TODO: Namespace
-// TODO: Mark all headers as INTERNAL
-
-/*************************************************************************
- * TGLVertex3 - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLVertex3                                                           //
+//                                                                      //
+// 3 component (x/y/z) vertex class                                     //
+//                                                                      //
+// This is part of collection of utility classes for GL in TGLUtil.h/cxx//
+// These provide const and non-const accessors Arr() / CArr() to a GL   //
+// compatible internal field - so can be used directly with OpenGL C API//
+// calls. They are not intended to be fully featured just provide       //
+// minimum required.                                                    //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLVector3; // Forward declare for Shift()
 
@@ -210,12 +200,19 @@ inline void TGLVertex3::Set(const TGLVertex3 & other)
    fVals[2]=other.fVals[2]; 
 }
 
-/*************************************************************************
- * TGLVector3 - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLVector3                                                           //
+//                                                                      //
+// 3 component (x/y/z) vector class                                     //
+//                                                                      //
+// This is part of collection of utility classes for GL in TGLUtil.h/cxx//
+// These provide const and non-const accessors Arr() / CArr() to a GL   //
+// compatible internal field - so can be used directly with OpenGL C API//
+// calls. They are not intended to be fully featured just provide       //
+// minimum required.                                                    //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLVector3 : public TGLVertex3
 {
 public:
@@ -296,7 +293,7 @@ inline void TGLVector3::Normalise()
 //______________________________________________________________________________
 inline Double_t Dot(const TGLVector3 & v1, const TGLVector3 & v2)
 {
-  return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+   return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 }
 
 //______________________________________________________________________________
@@ -368,11 +365,15 @@ inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vec
    return TGLVector3(vector1[0] - vector2[0], vector1[1] - vector2[1], vector1[2] - vector2[2]);
 }
 
-/*************************************************************************
- * TGLLine3 - A fixed length line in 3D space, with direction / length 'vector', 
- * passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 pair.
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLLine3                                                             //
+//                                                                      //
+// 3D space, fixed length, line class, with direction / length 'vector',//
+// passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 //
+// pair.                                                                //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLLine3
 {
 private:
@@ -381,12 +382,12 @@ private:
    TGLVector3 fVector; //! Vector of line from fVertex
 
 public:
-   TGLLine3(const TGLVertex3 & vert1, const TGLVertex3 & vert2);
-   TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vector);
+   TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end);
+   TGLLine3(const TGLVertex3 & start, const TGLVector3 & vector);
    virtual ~TGLLine3();
 
-   void Set(const TGLVertex3 & vert1, const TGLVertex3 & vert2);
-   void Set(const TGLVertex3 & vert, const TGLVector3 & vector);
+   void Set(const TGLVertex3 & start, const TGLVertex3 & end);
+   void Set(const TGLVertex3 & start, const TGLVector3 & vector);
 
    // Bitwise copy constructor and = operator are fine
 
@@ -401,12 +402,13 @@ public:
    ClassDef(TGLLine3,0) // GL line wrapper class
 };
 
-/*************************************************************************
- * TGLRect - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLRect                                                              //
+//                                                                      //
+// Viewport (pixel base) 2D rectangle class                             //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLRect
 {
 private:
@@ -475,12 +477,20 @@ inline void TGLRect::Offset(Int_t dX, Int_t dY)
    fY += dY;
 }
 
-/*************************************************************************
- * TGLPlane - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLPlane                                                             //
+//                                                                      //
+// 3D plane class - of format Ax + By + Cz + D = 0                      //
+//                                                                      //
+// This is part of collection of simple utility classes for GL only in  //
+// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
+// CArr() to a GL compatible internal field - so can be used directly   //
+// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
+// They are not intended to be fully featured just provide minimum      //
+// required.                                                            //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLPlane
 {
 private:
@@ -637,12 +647,22 @@ inline TGLVertex3 Intersection(const TGLPlane & p1, const TGLPlane & p2, const T
    return v / m;
 }
 
-/*************************************************************************
- * TGLMatrix - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLMatrix                                                            //
+//                                                                      //
+// 16 component (4x4) transform matrix - column MAJOR as per GL.        //
+// Provides limited support for adjusting the translation, scale and    //
+// rotation components.                                                 //
+//                                                                      //
+// This is part of collection of simple utility classes for GL only in  //
+// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
+// CArr() to a GL compatible internal field - so can be used directly   //
+// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
+// They are not intended to be fully featured just provide minimum      //
+// required.                                                            //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLMatrix
 {
 private:
@@ -678,7 +698,7 @@ public:
    void Scale(const TGLVector3 & scale);
    void Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
    void TransformVertex(TGLVertex3 & vertex) const;
-	void Transpose3x3();
+   void Transpose3x3();
 
    // Accesors
    TGLVertex3  GetTranslation() const;
@@ -753,12 +773,15 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
    return res;
 }
 
-/*************************************************************************
- * TGLUtil - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLUtil                                                              //
+//                                                                      //
+// Wrapper class for various misc static functions - error checking,    //
+// draw helpers etc.                                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLUtil
 {
 private:

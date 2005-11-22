@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.24 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.25 2005/11/17 10:38:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -8,9 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-// TODO: Function descriptions
-// TODO: Class def - same as header!!!
 
 #include "TGLViewer.h"
 #include "TGLIncludes.h"
@@ -45,8 +42,33 @@
 #include "KeySymbols.h"
 #include "TContextMenu.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLViewer                                                            //
+//                                                                      //
+// Base GL viewer object - used by both standalone and embedded (in pad)//
+// GL. Contains core viewer objects :                                   //
+//                                                                      //
+// GL scene (fScene) - collection of main drawn objects - see TGLScene  //
+// Cameras (fXXXXCamera) - ortho and perspective cameras - see TGLCamera//
+// Clipping (fClipXXXX) - collection of clip objects - see TGLClip      //
+// Manipulators (fXXXXManip) - collection of manipulators - see TGLManip//
+//                                                                      //
+// It maintains the current active draw styles, clipping object,        //
+// manipulator, camera etc.                                             //
+//                                                                      //
+// TGLViewer is 'GUI free' in that it does not derive from any ROOT GUI //
+// TGFrame etc - see TGLSAViewer for this. However it contains GUI      //
+// GUI style methods HandleButton() etc to which GUI events can be      //
+// directed from standalone frame or embedding pad to perform           //
+// interaction.                                                         //
+//                                                                      //
+// For embedded (pad) GL this viewer is created directly by plugin      //
+// manager. For standalone the derived TGLSAViewer is.                  //
+//////////////////////////////////////////////////////////////////////////
+    
 ClassImp(TGLViewer)
-
+    
 //______________________________________________________________________________
 TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, 
                      UInt_t width, UInt_t height) :
@@ -58,7 +80,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fOrthoZOYCamera(TGLOrthoCamera::kZOY),
    fCurrentCamera(&fPerspectiveCamera),
    fInternalRebuild(kFALSE), 
-   fSetupRequired(kTRUE),
+   fPostSceneBuildSetup(kTRUE),
    fAcceptedAllPhysicals(kTRUE),
    fInternalPIDs(kFALSE), 
    fNextInternalPID(1), // 0 reserved
@@ -79,6 +101,10 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fIsPrinting(kFALSE),
    fGLWindow(0)
 {
+   // Construct the viewer object, with following arguments:
+   //    'pad' - external pad viewer is bound to
+   //    'x', 'y' - initial top left position
+   //    'width', 'height' - initial width/height
    // Create timer
    fRedrawTimer = new TGLRedrawTimer(*this);
 
@@ -94,6 +120,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 //______________________________________________________________________________
 TGLViewer::~TGLViewer()
 {
+   // Destroy viewer object
    delete fContextMenu;
    delete fRedrawTimer;
    delete fTransManip;
@@ -109,12 +136,19 @@ TGLViewer::~TGLViewer()
 //______________________________________________________________________________
 Bool_t TGLViewer::PreferLocalFrame() const
 {
+   // Indicate if viewer prefers to receive logical shape descriptions
+   // in local (kTRUE) or world frame (kFALSE). For GL viewer is kTRUE always
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
    return kTRUE;
 }
 
 //______________________________________________________________________________
 void TGLViewer::BeginScene()
 {
+   // Start building of viewer scene
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
    if (!fScene.TakeLock(TGLScene::kModifyLock)) {
       return;
    }
@@ -137,8 +171,8 @@ void TGLViewer::BeginScene()
       // new scene range
       CurrentCamera().ResetInterest();
 
-      // Camera and clip setup required
-      fSetupRequired = kTRUE;
+      // Post build setup required
+      fPostSceneBuildSetup = kTRUE;
 
       // External rebuilds could potentially invalidate all logical and
       // physical shapes - including any modified physicals
@@ -174,21 +208,24 @@ void TGLViewer::BeginScene()
 //______________________________________________________________________________
 void TGLViewer::EndScene()
 {
+   // End building of viewer scene
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
    fScene.ReleaseLock(TGLScene::kModifyLock);
 
-   if (fSetupRequired) {
-      Setup();
+   if (fPostSceneBuildSetup) {
+      PostSceneBuildSetup();
    }
 
-   // Externally triggered scene rebuild (frist part) completed
+   // Externally triggered scene rebuild (first pass) completed
    if (!fInternalRebuild) {
       // Request intial draw
       RequestDraw();
 
       // After draw RebuildScene will be called to test if a second internal 
       // rebuild is to properly establish scene limits and camera interest (it will be).
-      // We want to (re)setup camera limits and clips again once this is done
-      fSetupRequired = kTRUE;
+      // We want to setup viewer again once this is done with proper scene extents
+      fPostSceneBuildSetup = kTRUE;
    } else {
       fInternalRebuild = kFALSE;
 
@@ -206,7 +243,7 @@ void TGLViewer::EndScene()
 Bool_t TGLViewer::RebuildScene()
 {
    // If we accepted all offered physicals into the scene no point in 
-   // rebuilding it
+   // rebuilding it.
    if (fAcceptedAllPhysicals) {
       // For debug mode always force even if not required
       if (fDebugMode) {
@@ -263,6 +300,8 @@ Bool_t TGLViewer::RebuildScene()
 Int_t TGLViewer::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
    // Add an object to the viewer, using internal physical IDs
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
 
    // If this is called we are generating internal physical IDs
    fInternalPIDs = kTRUE;
@@ -274,7 +313,9 @@ Int_t TGLViewer::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 // TODO: Cleanup addChildren to UInt_t flag for full termination - how returned?
 Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // Add an object to the viewer, using an external physical ID.
+   // Add an object to the viewer, using an external physical ID
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
 
    // TODO: Break this up and make easier to understand. This is pretty convoluted
    // due to the large number of cases it has to deal with:
@@ -399,8 +440,9 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
       }
 
       // Need any extra sections in buffer?
+      // If we have logical already we don't need to check raw sections
       Int_t extraSections = ValidateObjectBuffer(buffer, 
-                                                 logical == 0); // Need logical?
+                                                 logical == 0); // Check raw?
       if (extraSections != TBuffer3D::kNone) {         
          return extraSections;
       } else {
@@ -456,6 +498,9 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 //______________________________________________________________________________
 Bool_t TGLViewer::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
 {
+   // Open new composite container.
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture.
    if (fComposite) {
       Error("TGLViewer::OpenComposite", "composite already open");
       return kFALSE;
@@ -477,6 +522,10 @@ Bool_t TGLViewer::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
 //______________________________________________________________________________
 void TGLViewer::CloseComposite()
 {
+   // Close composite container
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
+   
    // If we have a partially complete composite build it now
    if (fComposite) {
       // TODO: Why is this member and here - only used in BuildComposite()
@@ -494,21 +543,30 @@ void TGLViewer::CloseComposite()
 //______________________________________________________________________________
 void TGLViewer::AddCompositeOp(UInt_t operation)
 {
+   // Add composite operation used to combine objects added via AddObject
+   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+   // for description of viewer architecture
+   
    fCSTokens.push_back(std::make_pair(operation, (RootCsg::BaseMesh *)0));
 }
 
 //______________________________________________________________________________
-Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const
+Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const
 {
+   // Validate if the passed 'buffer' contains all sections we require to add object. 
+   // Returns Int_t combination of TBuffer::ESection flags still required - or
+   // TBuffer3D::kNone if buffer is valid. 
+   // If 'includeRaw' is kTRUE check for kRaw/kRawSizes - skip otherwise.
+   // See base/src/TVirtualViewer3D.cxx for description of viewer architecture
+   
    // kCore: Should always be filled
    if (!buffer.SectionsValid(TBuffer3D::kCore)) {
       Error("TGLViewer::ValidateObjectBuffer", "kCore section of buffer should be filled always");
       return TBuffer3D::kNone;
    }
 
-   // Currently all physical parts (kBoundingBox / kShapeSpecific) of buffer are 
-   // filled automatically if producer can - no need to ask 
-   if (!logical) {
+   // Need to check raw (kRaw/kRawSizes)?
+   if (!includeRaw) {
       return TBuffer3D::kNone;
    }
 
@@ -562,6 +620,7 @@ Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) 
 //______________________________________________________________________________
 TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
 {
+   // Create and return a new TGLLogicalShape from the supplied buffer
    TGLLogicalShape * newLogical = 0;
 
    switch (buffer.Type()) {
@@ -622,6 +681,9 @@ TGLPhysicalShape * TGLViewer::CreateNewPhysical(UInt_t ID,
                                                     const TBuffer3D & buffer, 
                                                     const TGLLogicalShape & logical) const
 {
+   // Create and return a new TGLPhysicalShape with id 'ID', using 'buffer' placement
+   // information (translation etc), and bound to suppled 'logical'
+   
    // Extract indexed color from buffer
    // TODO: Still required? Better use proper color triplet in buffer?
    Int_t colorIndex = buffer.fColor;
@@ -644,6 +706,7 @@ TGLPhysicalShape * TGLViewer::CreateNewPhysical(UInt_t ID,
 //______________________________________________________________________________
 RootCsg::BaseMesh *TGLViewer::BuildComposite()
 {
+   // Build and return composite shape mesh
    const CSPart_t &currToken = fCSTokens[fCSLevel];
    UInt_t opCode = currToken.first;
 
@@ -669,6 +732,7 @@ RootCsg::BaseMesh *TGLViewer::BuildComposite()
 //______________________________________________________________________________
 void TGLViewer::InitGL()
 {
+   // Initialise GL state if not already done
    if (fInitGL) {
       Error("TGLViewer::InitGL", "GL already initialised");
    }
@@ -691,19 +755,21 @@ void TGLViewer::InitGL()
 }
 
 //______________________________________________________________________________
-void TGLViewer::Setup()
+void TGLViewer::PostSceneBuildSetup()
 {
+   // Perform post scene (re)build setup
    SetupCameras();
    SetupClips();
 
    // Set default reference to scene center
    fReferencePos.Set(fScene.BoundingBox().Center());
-   fSetupRequired = kFALSE;
+   fPostSceneBuildSetup = kFALSE;
 }
 
 //______________________________________________________________________________
 void TGLViewer::SetupCameras()
 {
+   // Setup cameras for current scene bounding box
    if (fScene.IsLocked()) {
       Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
@@ -722,7 +788,7 @@ void TGLViewer::SetupCameras()
 //______________________________________________________________________________
 void TGLViewer::SetupLights()
 {
-   // Setup lights
+   // Setup lights for current scene bounding box
 
    // Locate static light source positions
    const TGLBoundingBox & box = fScene.BoundingBox();
@@ -739,7 +805,7 @@ void TGLViewer::SetupLights()
          // Find distance from near clip plane to furstum center - i.e. vector of half
          // clip depth. Ortho lights placed this distance from eye point
          sideLightsZ =
-			fCurrentCamera->FrustumPlane(TGLCamera::kNear).DistanceTo(fCurrentCamera->FrustumCenter())*0.7;
+            fCurrentCamera->FrustumPlane(TGLCamera::kNear).DistanceTo(fCurrentCamera->FrustumCenter())*0.7;
          frontLightZ = sideLightsZ;
       } else {
          // Perspective camera
@@ -763,7 +829,7 @@ void TGLViewer::SetupLights()
       // 2: Bottom
       // 3: Left
       // 4: Right
-		TGLVertex3 center = box.Center();
+      TGLVertex3 center = box.Center();
       Float_t pos0[] = { center.X() 				 , center.Y()					, frontLightZ, 1.0};
       Float_t pos1[] = { center.X() 				 , center.Y() + lightRadius, sideLightsZ, 1.0};
       Float_t pos2[] = { center.X() 				 , center.Y() - lightRadius, sideLightsZ, 1.0};
@@ -817,6 +883,8 @@ void TGLViewer::SetupLights()
 //______________________________________________________________________________
 void TGLViewer::SetupClips() 
 {
+   // Setup clipping objects for current scene bounding box
+   
    // Clear out any previous clips
    ClearClips();
 
@@ -833,6 +901,7 @@ void TGLViewer::SetupClips()
 //______________________________________________________________________________
 void TGLViewer::ClearClips()
 {
+   // Clear out exising clipping objects
    delete fClipPlane;
    delete fClipBox;
    fCurrentClip = 0;
@@ -841,6 +910,8 @@ void TGLViewer::ClearClips()
 //______________________________________________________________________________
 void TGLViewer::RequestDraw(UInt_t LOD)
 {
+   // Post request for redraw of viewer at level of detail 'LOD'
+   // Request is directed via cross thread gVirtualGL object
    fNextSceneLOD = LOD;
    fRedrawTimer->Stop();
    
@@ -979,7 +1050,7 @@ void TGLViewer::DoDraw()
 //______________________________________________________________________________
 void TGLViewer::PreDraw()
 {
-   // GL work which must be done before each draw of scene
+   // Perform GL work which must be done before each draw of scene
    MakeCurrent();
 
    // Initialise GL if not done
@@ -995,7 +1066,7 @@ void TGLViewer::PreDraw()
 //______________________________________________________________________________
 void TGLViewer::PostDraw()
 {
-   // GL work which must be done after each draw of scene
+   // Perform GL work which must be done after each draw of scene
    SwapBuffers();
 
    // Flush everything in case picking starts
@@ -1007,6 +1078,7 @@ void TGLViewer::PostDraw()
 //______________________________________________________________________________
 void TGLViewer::MakeCurrent() const
 {
+   // Make GL context current
    fGLWindow->MakeCurrent();
    TGLUtil::CheckError();
 }
@@ -1014,6 +1086,7 @@ void TGLViewer::MakeCurrent() const
 //______________________________________________________________________________
 void TGLViewer::SwapBuffers() const
 {
+   // SWap GL buffers
    if (fScene.CurrentLock() != TGLScene::kDrawLock && 
       fScene.CurrentLock() != TGLScene::kSelectLock) {
       Error("TGLViewer::SwapBuffers", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
@@ -1024,6 +1097,10 @@ void TGLViewer::SwapBuffers() const
 //______________________________________________________________________________
 void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
 {
+   // Post request for select draw of viewer, picking objects round the WINDOW
+   // point (x,y).
+   // Request is directed via cross thread gVirtualGL object
+   
    // Take select lock on scene immediately we enter here - it is released
    // in the other (drawing) thread - see TGLViewer::Select()
    // Removed when gVirtualGL removed
@@ -1040,6 +1117,10 @@ void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
 //______________________________________________________________________________
 Bool_t TGLViewer::DoSelect(const TGLRect & rect)
 {
+   // Perform GL selection, picking objects overlapping WINDOW
+   // area described by 'rect'. Return kTRUE if selection 
+   // changed, kFALSE otherwise. Selection can be obtained
+   // via fScene.GetSelected()
    // Select lock should already been taken in other thread in 
    // TGLViewer::DoSelect()
    if (fScene.CurrentLock() != TGLScene::kSelectLock) {
@@ -1074,12 +1155,16 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
 //______________________________________________________________________________
 void TGLViewer::RequestSelectManip(const TGLRect & rect)
 {
+   // Post request for select draw of current manipulator , picking objects round 
+   // the WINDOW area described by 'rect'
    gVirtualGL->SelectViewerManip(this, &rect); 
 }
 
 //______________________________________________________________________________
 void TGLViewer::DoSelectManip(const TGLRect & rect)
 {
+   // Perform GL selection, picking objects overlapping WINDOW
+   // area described by 'rect'
    MakeCurrent();
    TGLRect glRect(rect);
    fCurrentCamera->WindowToViewport(glRect);
@@ -1090,6 +1175,8 @@ void TGLViewer::DoSelectManip(const TGLRect & rect)
 //______________________________________________________________________________
 void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   // Set viewer viewport (window area) with bottom/left at (x,y), with
+   // dimensions 'width'/'height' 
    if (fScene.IsLocked()) {
       Error("TGLViewer::SetViewport", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
@@ -1102,6 +1189,8 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 //______________________________________________________________________________
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
+   // Set current active camera - 'cameraType' one of kCameraPerspective,
+   // kCameraXOY, kCameraXOZ,  kCameraZOY 
    if (fScene.IsLocked()) {
       Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
@@ -1140,7 +1229,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 //______________________________________________________________________________
 void TGLViewer::ToggleLight(ELight light)
 {
-   // Toggle supplied light on/off
+   // Toggle light on/off - 'light' one of kFront, kTop, kBottom, kLeft, kRight
 
    // N.B. We can't directly call glEnable here as may not be in correct gl context
    // adjust mask and set when drawing
@@ -1156,6 +1245,7 @@ void TGLViewer::ToggleLight(ELight light)
 //______________________________________________________________________________
 void TGLViewer::GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const
 {
+   // Fetch the state of guides (axes & reference markers) into arguments
    axesType = fAxesType;
    referenceOn = fReferenceOn;
    referencePos = fReferencePos;
@@ -1164,6 +1254,7 @@ void TGLViewer::GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVer
 //______________________________________________________________________________
 void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos)
 {
+   // Set the state of guides (axes & reference markers) from arguments
    fAxesType = axesType;
    fReferenceOn = referenceOn;
    fReferencePos = referencePos;
@@ -1173,6 +1264,11 @@ void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLV
 //______________________________________________________________________________
 void TGLViewer::GetClipState(EClipType type, std::vector<Double_t> & data) const
 {
+   // Get state of clip object 'type' into data vector:
+   //
+   // 'type' requested        'data' contents returned
+   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
    data.clear();
    if (type == kClipPlane) {
       TGLPlaneSet_t planes;
@@ -1198,6 +1294,12 @@ void TGLViewer::GetClipState(EClipType type, std::vector<Double_t> & data) const
 //______________________________________________________________________________
 void TGLViewer::SetClipState(EClipType type, const std::vector<Double_t> & data)
 {
+   // Set state of clip object 'type' into data vector:
+   //
+   // 'type' specified        'data' contents interpretation
+   // kClipNone               ignored
+   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
    fCurrentManip->Attach(0);
 
    switch (type) {
@@ -1233,6 +1335,8 @@ void TGLViewer::SetClipState(EClipType type, const std::vector<Double_t> & data)
 //______________________________________________________________________________
 EClipType TGLViewer::GetCurrentClip() const
 {
+   // Get current type active in viewer - returns one of kClipNone
+   // kClipPlane or kClipBox
    if (fCurrentClip == 0) {
       return kClipNone;
    } else if (fCurrentClip == fClipPlane) {
@@ -1248,6 +1352,10 @@ EClipType TGLViewer::GetCurrentClip() const
 //______________________________________________________________________________
 void TGLViewer::SetCurrentClip(EClipType type, Bool_t edit)
 {
+   // Set current clip active in viewer - 'type' is one of kClipNone
+   // kClipPlane or kClipBox. 'edit' indicates if clip object should
+   // been shown/edited directly in viewer (current manipulator attached to it)
+   // kTRUE if so (ignored for kClipNone), kFALSE otherwise
    fCurrentManip->Attach(0);
    switch (type) {
       case(kClipNone): {
@@ -1279,6 +1387,15 @@ void TGLViewer::SetCurrentClip(EClipType type, Bool_t edit)
 //______________________________________________________________________________
 void TGLViewer::SetSelectedColor(const Float_t color[17])
 {
+   // Set full color attributes on current selected physical shape: 
+   //
+   // 0...3  - diffuse
+   // 4...7  - ambient
+   // 8...11 - specular
+   // 12..15 - emission
+   // 16     - shininess
+   //
+   // see OpenGL documentation for details of materials
    if (fScene.SetSelectedColor(color)) {
       RequestDraw();
    }
@@ -1287,6 +1404,16 @@ void TGLViewer::SetSelectedColor(const Float_t color[17])
 //______________________________________________________________________________
 void TGLViewer::SetColorOnSelectedFamily(const Float_t color[17])
 {
+   // Set full color attributes on all physical shapes sharing the same
+   // logical shape as the selected physical
+   //
+   // 0...3  - diffuse
+   // 4...7  - ambient
+   // 8...11 - specular
+   // 12..15 - emission
+   // 16     - shininess
+   //
+   // see OpenGL documentation for details of materials
    if (fScene.SetColorOnSelectedFamily(color)) {
       RequestDraw();
    }
@@ -1295,6 +1422,9 @@ void TGLViewer::SetColorOnSelectedFamily(const Float_t color[17])
 //______________________________________________________________________________
 void TGLViewer::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale)
 {
+   // Update geometry of the selected physical. 'trans' and 'scale' specify the
+   // translation and scaling components of the physical shapes translation matrix
+   // See TGLMatrix for more details
    if (fScene.SetSelectedGeom(trans, scale)) {
       RequestDraw();
    }
@@ -1303,18 +1433,24 @@ void TGLViewer::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & sca
 //______________________________________________________________________________
 void TGLViewer::SelectionChanged() 
 { 
+   // Emit signal indicating selection has changed
    Emit("SelectionChanged()"); 
 }
 
 //______________________________________________________________________________
 void TGLViewer::ClipChanged() 
 { 
+    // Emit signal indicating clip object has changed
    Emit("ClipChanged()"); 
 }
 
 //______________________________________________________________________________
 Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
+   // Calcaulate and return pxiel distance to nearest viewer object from
+   // window location px, py
+   // This is provided for use when embedding GL viewer into pad
+   
    // Can't track the indvidual objects in rollover. Just set the viewer as the
    // selected object, and return 0 (object identified) so we receive ExecuteEvent calls
    gPad->SetSelected(this);
@@ -1324,6 +1460,10 @@ Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 //______________________________________________________________________________
 void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+   // Process event of type 'event' - one of EEventType types,
+   // occuring at window location px, py
+   // This is provided for use when embedding GL viewer into pad
+   
    /*enum EEventType {
    kNoEvent       =  0,
    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
@@ -1400,6 +1540,8 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleEvent(Event_t *event)
 {
+   // Handle generic Event_t type 'event' - provided to catch focus changes
+   // and terminate any interaction in viewer
    if (event->fType == kFocusIn) {
       if (fAction != kNone) {
          Error("TGLViewer::HandleEvent", "active action at focus in");
@@ -1416,6 +1558,7 @@ Bool_t TGLViewer::HandleEvent(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleButton(Event_t *event)
 {
+   // Handle mouse button 'event'
    if (fScene.IsLocked()) {
       if (gDebug>2) {
          Info("TGLViewer::HandleButton", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1531,6 +1674,7 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
 {
+   // Handle mouse double click 'event'
    if (fScene.IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleDoubleClick", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1552,6 +1696,7 @@ Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 {
+   // Handle configure notify 'event' - a window resize/movement
    if (fScene.IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleConfigureNotify", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1568,6 +1713,7 @@ Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleKey(Event_t *event)
 {
+   // Handle keyboard 'event'
    if (fScene.IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleKey", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1671,6 +1817,7 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleMotion(Event_t *event)
 {
+   // Handle mouse motion 'event'
    if (fScene.IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleMotion", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1729,6 +1876,7 @@ Bool_t TGLViewer::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleExpose(Event_t *)
 {
+   // Handle window expose 'event' - show
    if (fScene.IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleExpose", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));

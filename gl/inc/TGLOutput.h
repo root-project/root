@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.3 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.4 2005/10/11 12:41:01 rdm Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -18,6 +18,13 @@
 
 class TGLViewer;
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOutput                                                            //
+//                                                                      //
+// Wrapper class for GL capture & output routines                       //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLOutput {
 public:
    enum EFormat { kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE, kPDF_BSP };
@@ -29,7 +36,7 @@ private:
    static Bool_t CapturePostscript(TGLViewer & viewer, EFormat format,
                                    const char * filePath);
 
-   ClassDef(TGLOutput,0) // Collection of GL capture & output routines
+   ClassDef(TGLOutput,0) // Wrapper class for GL capture & output routines
 };
 
 #endif

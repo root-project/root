@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.2 2005/08/11 15:28:53 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.3 2005/11/10 12:04:21 brun Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -12,6 +12,14 @@
 #include "TGLSAFrame.h"
 #include "TGLSAViewer.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLSAFrame                                                           //
+//                                                                      //
+// Standalone GL Viewer GUI main frame. Is aggregated in TGLSAViewer -  //
+// top level standalone viewer object.                                  //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLSAFrame)
 
 //______________________________________________________________________________
@@ -19,22 +27,27 @@ TGLSAFrame::TGLSAFrame(TGLSAViewer & viewer) :
    TGMainFrame(gClient->GetDefaultRoot()),
    fViewer(viewer)
 {
+   // Construct GUI frame, bound to passed 'viewer'
 }
 
 //______________________________________________________________________________
 TGLSAFrame::~TGLSAFrame()
 {
+   // Destroy the GUI frame
 }
 
 //______________________________________________________________________________
 Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
+   // Process GUI message - defered back up to TGLSAViewer::ProcessFrameMessage()
    return fViewer.ProcessFrameMessage(msg, parm1, parm2);
 }
 
 //______________________________________________________________________________
 void TGLSAFrame::CloseWindow()
 {
+   // Close the GUI frame
+   
    // Ask our owning viewer to close
    // Has to be defered so that our GUI event thread can process this event
    // and emit signals - otherwise deleted object is called to emit events

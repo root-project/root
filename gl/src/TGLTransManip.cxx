@@ -14,27 +14,45 @@
 #include "TGLCamera.h"
 #include "TGLIncludes.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLTransManip                                                        //
+//                                                                      //
+// Translation manipulator - attaches to physical shape and draws local //
+// axes widgets with arrow heads. User can mouse over (turns yellow) and//
+// L click/drag to translate along this axis.                           // 
+// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLTransManip)
 
 //______________________________________________________________________________
 TGLTransManip::TGLTransManip(TGLViewer & viewer) : TGLManip(viewer)
 {
+   // Construct translation manipulator, attached to supplied TGLViewer 
+   // 'viewer', not bound to any physical shape.
 }
 
 //______________________________________________________________________________
 TGLTransManip::TGLTransManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
    TGLManip(viewer, shape) 
 {
+   // Construct translation manipulator, attached to supplied TGLViewer 
+   // 'viewer', bound to TGLPhysicalShape 'shape'.
 }
 
 //______________________________________________________________________________
 TGLTransManip::~TGLTransManip() 
 {
+   // Destory the translation manipulator
 }
    
 //______________________________________________________________________________
 void TGLTransManip::Draw(const TGLCamera & camera) const
 {
+   // Draw translation manipulator - tubes with arrow heads, in local axes of 
+   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere. 
+   // If selected widget (mouse over) this is drawn in active colour (yellow).
    if (!fShape) {
       return;
    }
@@ -98,6 +116,9 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
 //______________________________________________________________________________
 Bool_t TGLTransManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
 {
+   // Handle mouse motion over manipulator - if active (selected widget) translate 
+   // physical along selected widget (axis) of the manipulator, so it tracks mouse 
+   // action. Returns kTRUE if redraw required kFALSE otherwise.
    if (fActive) {
       // Find mouse delta projected into world at attached object center
       TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 

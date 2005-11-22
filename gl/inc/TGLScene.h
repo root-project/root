@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.16 2005/11/04 20:13:08 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.17 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -30,12 +30,32 @@ class TGLLogicalShape;
 class TGLPhysicalShape;
 class TGLClip;
 
-/*************************************************************************
- * TGLScene - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLScene                                                             //
+//                                                                      //
+// A GL scene is the container for all the viewable objects (shapes)    //
+// loaded into the viewer. It consists of two main stl::maps containing //
+// the TGLLogicalShape and TGLPhysicalShape collections, and interface  //
+// functions enabling viewers to manage objects in these. The physical  //
+// shapes defined the placement of copies of the logical shapes - see   //
+// TGLLogicalShape/TGLPhysicalShape for more information on relationship//
+//                                                                      //
+// The scene can be drawn by owning viewer, passing camera, draw style  //
+// & quality (LOD), clipping etc - see Draw(). The scene can also be    //
+// drawn for selection in similar fashion - see Select(). The scene     //
+// keeps track of a single selected physical - which can be modified by //
+// viewers.                                                             //
+//                                                                      //
+// The scene maintains a lazy calculated bounding box for the total     //
+// scene extents, axis aligned round TGLPhysicalShape shapes.           //
+//                                                                      // 
+// Currently a scene is owned exclusively by one viewer - however it is //
+// intended that it could easily be shared by multiple viewers - for    //
+// efficiency and syncronisation reasons. Hence viewer variant objects  // 
+// camera, clips etc being owned by viewer and passed at draw/select    //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLScene
 {
 public:

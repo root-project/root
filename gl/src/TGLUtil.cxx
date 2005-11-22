@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.14 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.15 2005/11/16 16:41:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TODO: Function descriptions
-// TODO: Class def - same as header!!!
-
 #include "TGLUtil.h"
 #include "TGLBoundingBox.h"
 #include "TGLQuadric.h"
@@ -21,34 +18,53 @@
 #include "TMath.h"
 #include "Riostream.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLVertex3                                                           //
+//                                                                      //
+// 3 component (x/y/z) vertex class                                     //
+//                                                                      //
+// This is part of collection of simple utility classes for GL only in  //
+// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
+// CArr() to a GL compatible internal field - so can be used directly   //
+// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
+// They are not intended to be fully featured just provide minimum      //
+// required.                                                            //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLVertex3)
 
 //______________________________________________________________________________
 TGLVertex3::TGLVertex3()
 {
+   // Construct a default (0.0, 0.0, 0.0) vertex
    Fill(0.0);
 }
 
 //______________________________________________________________________________
 TGLVertex3::TGLVertex3(Double_t x, Double_t y, Double_t z)
 {
+   // Construct a vertex with components (x,y,z)
    Set(x,y,z);
 }
 
 //______________________________________________________________________________
 TGLVertex3::TGLVertex3(const TGLVertex3 & other)
 {
+   // Construct a vertex from 'other'
    Set(other);
 }
 
 //______________________________________________________________________________
 TGLVertex3::~TGLVertex3()
 {
+   // Destroy vertex object
 }
 
 //______________________________________________________________________________
 void TGLVertex3::Shift(TGLVector3 & shift)
 {
+   // Offset a vertex by vector 'shift'
    fVals[0] += shift[0];
    fVals[1] += shift[1];
    fVals[2] += shift[2];
@@ -57,6 +73,7 @@ void TGLVertex3::Shift(TGLVector3 & shift)
 //______________________________________________________________________________
 void TGLVertex3::Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta)
 {
+   // Offset a vertex by components (xDelta, yDelta, zDelta)
    fVals[0] += xDelta;
    fVals[1] += yDelta;
    fVals[2] += zDelta;
@@ -65,8 +82,22 @@ void TGLVertex3::Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta)
 //______________________________________________________________________________
 void TGLVertex3::Dump() const
 {
+   // Output vertex component values to std::cout
    std::cout << "(" << fVals[0] << "," << fVals[1] << "," << fVals[2] << ")" << std::endl;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLVector3                                                           //
+//                                                                      //
+// 3 component (x/y/z) vector class                                     //
+//                                                                      //
+// This is part of collection of utility classes for GL in TGLUtil.h/cxx//
+// These provide const and non-const accessors Arr() / CArr() to a GL   //
+// compatible internal field - so can be used directly with OpenGL C API//
+// calls. They are not intended to be fully featured just provide       //
+// minimum required.                                                    //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLVector3)
 
@@ -74,66 +105,93 @@ ClassImp(TGLVector3)
 TGLVector3::TGLVector3() :
    TGLVertex3()
 {
+   // Construct a default (0.0, 0.0, 0.0) vector
 }
 
 //______________________________________________________________________________
 TGLVector3::TGLVector3(Double_t x, Double_t y, Double_t z) :
    TGLVertex3(x, y, z)
 {
+   // Construct a vector with components (x,y,z)
 }
 
 //______________________________________________________________________________
 TGLVector3::TGLVector3(const TGLVector3 & other) :
    TGLVertex3(other.fVals[0], other.fVals[1], other.fVals[2])
 {
+   // Construct a vector from components of 'other'
 }
 
 //______________________________________________________________________________
 TGLVector3::~TGLVector3()
 {
+   // Destroy vector object
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLLine3                                                             //
+//                                                                      //
+// 3D space, fixed length, line class, with direction / length 'vector',//
+// passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 //
+// pair.                                                                //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLLine3)
 
 //______________________________________________________________________________
-TGLLine3::TGLLine3(const TGLVertex3 & vert1, const TGLVertex3 & vert2) :
-   fVertex(vert1), fVector(vert2 - vert1)
+TGLLine3::TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end) :
+   fVertex(start), fVector(end - start)
 {
+   // Construct 3D line running from 'start' to 'end'
 }
 
 //______________________________________________________________________________
-TGLLine3::TGLLine3(const TGLVertex3 & vert, const TGLVector3 & vect) :
-   fVertex(vert), fVector(vect)
+TGLLine3::TGLLine3(const TGLVertex3 & start, const TGLVector3 & vect) :
+   fVertex(start), fVector(vect)
 {
+   // Construct 3D line running from 'start', magnitude 'vect'
 }
 
 //______________________________________________________________________________
 TGLLine3::~TGLLine3()
 {
+   // Destroy 3D line object
 }
 
 //______________________________________________________________________________
-void TGLLine3::Set(const TGLVertex3 & vert, const TGLVertex3 & end)
+void TGLLine3::Set(const TGLVertex3 & start, const TGLVertex3 & end)
 {
-   fVertex = vert;
-   fVector = end - fVertex;
+   // Set 3D line running from 'start' to 'end'
+   fVertex = start;
+   fVector = end - start;
 }
 
 //______________________________________________________________________________
-void TGLLine3::Set(const TGLVertex3 & vert, const TGLVector3 & vect)
+void TGLLine3::Set(const TGLVertex3 & start, const TGLVector3 & vect)
 {
-   fVertex = vert;
+   // Set 3D line running from start, magnitude 'vect'
+   fVertex = start;
    fVector = vect;
 }
 
 //______________________________________________________________________________
 void TGLLine3::Draw() const
 {
+   // Draw line in current basic GL color. Assume we are in the correct reference
+   // frame
    glBegin(GL_LINE_LOOP);
    glVertex3dv(fVertex.CArr());
    glVertex3dv(End().CArr());
    glEnd();
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLRect                                                              //
+//                                                                      //
+// Viewport (pixel base) 2D rectangle class                             //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLRect)
 
@@ -141,22 +199,26 @@ ClassImp(TGLRect)
 TGLRect::TGLRect() :
       fX(0), fY(0), fWidth(0), fHeight(0)
 {
+   // Construct empty rect object, corner (0,0), width/height 0
 }
 
 //______________________________________________________________________________
 TGLRect::TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height) :
       fX(x), fY(y), fWidth(width), fHeight(height)
 {
+   // Construct rect object, corner (x,y), dimensions 'width', 'height'
 }
 
 //______________________________________________________________________________
 TGLRect::~TGLRect()
 {
+   // Destroy rect object
 }
 
 //______________________________________________________________________________
 void TGLRect::Expand(Int_t x, Int_t y)
 {
+   // Expand the rect to encompass point (x,y)
    Int_t delX = x - fX;
    Int_t delY = y - fY;
 
@@ -180,6 +242,7 @@ void TGLRect::Expand(Int_t x, Int_t y)
 //______________________________________________________________________________
 Double_t TGLRect::Aspect() const
 {
+   // Return aspect ratio (width/height)
    if (fHeight == 0) {
       return 0.0;
    } else {
@@ -190,6 +253,8 @@ Double_t TGLRect::Aspect() const
 //______________________________________________________________________________
 EOverlap TGLRect::Overlap(const TGLRect & other) const
 {
+   // Return overlap result (kInside, kOutside, kPartial) of this
+   // rect with 'other'
    if ((fX <= other.fX) && (fX + fWidth >= other.fX + other.fWidth) &&
         (fY <= other.fY) && (fY +fHeight >= other.fY + other.fHeight)) {
       return kInside;
@@ -204,6 +269,20 @@ EOverlap TGLRect::Overlap(const TGLRect & other) const
    }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLPlane                                                             //
+//                                                                      //
+// 3D plane class - of format Ax + By + Cz + D = 0                      //
+//                                                                      //
+// This is part of collection of simple utility classes for GL only in  //
+// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
+// CArr() to a GL compatible internal field - so can be used directly   //
+// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
+// They are not intended to be fully featured just provide minimum      //
+// required.                                                            //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLPlane)
 
 //______________________________________________________________________________
@@ -216,6 +295,7 @@ TGLPlane::TGLPlane()
 //______________________________________________________________________________
 TGLPlane::TGLPlane(const TGLPlane & other)
 {
+   // Construct plane from 'other'
    Set(other);
 }
 
@@ -255,27 +335,56 @@ TGLPlane::TGLPlane(const TGLVector3 & v, const TGLVertex3 & p)
 //______________________________________________________________________________
 TGLPlane::~TGLPlane()
 {
+   // Destroy plane object
 }
 
 //______________________________________________________________________________
 void TGLPlane::Dump() const
 {
+   // Output plane equation to std::out
    std::cout.precision(6);
- 	std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] <<
-	std::endl;
+   std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] << std::endl;
  }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLMatrix                                                            //
+//                                                                      //
+// 16 component (4x4) transform matrix - column MAJOR as per GL.        //
+// Provides limited support for adjusting the translation, scale and    //
+// rotation components.                                                 //
+//                                                                      //
+// This is part of collection of simple utility classes for GL only in  //
+// TGLUtil.h/cxx. These provide const and non-const accessors Arr() &   //
+// CArr() to a GL compatible internal field - so can be used directly   //
+// with OpenGL C API calls - which TVector3 etc cannot (easily).        //
+// They are not intended to be fully featured just provide minimum      //
+// required.                                                            //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLMatrix)
 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix()
 {
+   // Construct default identity matrix:
+   //
+   // 1 0 0 0
+   // 0 1 0 0
+   // 0 0 1 0
+   // 0 0 0 1
    SetIdentity();
 }
 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(Double_t x, Double_t y, Double_t z)
 {
+   // Construct matrix with translation components x,y,z:
+   //
+   // 1 0 0 x
+   // 0 1 0 y
+   // 0 0 1 z
+   // 0 0 0 1
    SetIdentity();
    SetTranslation(x, y, z);
 }
@@ -283,6 +392,12 @@ TGLMatrix::TGLMatrix(Double_t x, Double_t y, Double_t z)
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 {
+   // Construct matrix with translation components x,y,z:
+   //
+   // 1 0 0 translation.X()
+   // 0 1 0 translation.Y()
+   // 0 0 1 translation.Z()
+   // 0 0 0 1
    SetIdentity();
    SetTranslation(translation);
 }
@@ -290,6 +405,9 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis)
 {
+   // Construct matrix which when applied puts local origin at 
+   // 'origin' and the local Z axis in direction 'z'. Both
+   // 'origin' and 'zAxisVec' are expressed in the parent frame
    SetIdentity();
    Set(origin, zAxis);
 }
@@ -297,25 +415,30 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis)
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const Double_t vals[16])
 {
+   // Construct matrix using the 16 Double_t 'vals' passed, 
+   // ordering is maintained - i.e. should be column major 
+   // as we are
    Set(vals);
 }
 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const TGLMatrix & other)
 {
+   // Construct matrix from 'other'
    *this = other;
 }
 
 //______________________________________________________________________________
 TGLMatrix::~TGLMatrix()
 {
+   // Destroy matirx object
 }
 
 //______________________________________________________________________________
 void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
 {
-   // Establish matrix transformation which when applied puts local origin at 
-   // passed 'origin' and the local Z axis in direction 'z'. Both
+   // Set matrix which when applied puts local origin at 
+   // 'origin' and the local Z axis in direction 'z'. Both
    // 'origin' and 'zAxisVec' are expressed in the parent frame
    TGLVector3 zAxis(z);
    zAxis.Normalise();
@@ -341,6 +464,9 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
 //______________________________________________________________________________
 void TGLMatrix::Set(const Double_t vals[16])
 {
+   // Set matrix using the 16 Double_t 'vals' passed, 
+   // ordering is maintained - i.e. should be column major 
+   // as we are
    for (UInt_t i=0; i < 16; i++) {
       fVals[i] = vals[i];
    }
@@ -349,6 +475,12 @@ void TGLMatrix::Set(const Double_t vals[16])
 //______________________________________________________________________________
 void TGLMatrix::SetIdentity()
 {
+   // Set matrix to identity:
+   //
+   // 1 0 0 0
+   // 0 1 0 0
+   // 0 0 1 0
+   // 0 0 0 1
    fVals[0] = 1.0; fVals[4] = 0.0; fVals[8 ] = 0.0; fVals[12] = 0.0;
    fVals[1] = 0.0; fVals[5] = 1.0; fVals[9 ] = 0.0; fVals[13] = 0.0;
    fVals[2] = 0.0; fVals[6] = 0.0; fVals[10] = 1.0; fVals[14] = 0.0;
@@ -358,13 +490,28 @@ void TGLMatrix::SetIdentity()
 //______________________________________________________________________________
 void TGLMatrix::SetTranslation(Double_t x, Double_t y, Double_t z)
 {
+   // Set matrix translation components x,y,z:
+   //
+   // . . . x
+   // . . . y
+   // . . . z
+   // . . . . 
+   //
+   // The other components are NOT modified
    SetTranslation(TGLVertex3(x,y,z));
 }
 
 //______________________________________________________________________________
 void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
 {
-   // Set the translation component of matrix
+   // Set matrix translation components x,y,z:
+   //
+   // . . . translation.X()
+   // . . . translation.Y()
+   // . . . translation.Z()
+   // . . . . 
+   //
+   // . = Exisiting component value - NOT modified
    fVals[12] = translation[0];
    fVals[13] = translation[1];
    fVals[14] = translation[2];
@@ -373,12 +520,27 @@ void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
 //______________________________________________________________________________
 TGLVertex3 TGLMatrix::GetTranslation() const
 {
+   // Return the translation component of matrix
+   //
+   // . . . X()
+   // . . . Y()
+   // . . . Z()
+   // . . . . 
+      
    return TGLVertex3(fVals[12], fVals[13], fVals[14]);
 }
 
 //______________________________________________________________________________
 void TGLMatrix::Translate(const TGLVector3 & vect)
 {
+   // Offset (shift) matrix translation components by 'vect'
+   //
+   // . . . . + vect.X()
+   // . . . . + vect.Y()
+   // . . . . + vect.Z()
+   // . . . . 
+   //
+   // . = Exisiting component value - NOT modified
    fVals[12] += vect[0];
    fVals[13] += vect[1];
    fVals[14] += vect[2];
@@ -387,8 +549,9 @@ void TGLMatrix::Translate(const TGLVector3 & vect)
 //______________________________________________________________________________
 void TGLMatrix::Scale(const TGLVector3 & scale)
 {
-
-   // Set local axis scaling factors
+   // Set matrix axis scales to 'scale'. Note - this really sets
+   // the overall (total) scaling for each axis - it does NOT
+   // apply compounded scale on top of existing one
    TGLVector3 currentScale = GetScale();
    
    // x
@@ -420,6 +583,10 @@ void TGLMatrix::Scale(const TGLVector3 & scale)
 //______________________________________________________________________________
 void TGLMatrix::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle)
 {
+   // Update martix so resulting transform has been rotated about 'pivot'
+   // (in parent frame), round vector 'axis', through 'angle' (radians)
+   // Equivalent to glRotate function, but with addition of translation
+   // and compounded on top of existing.
    TGLVector3 nAxis = axis;
    nAxis.Normalise();
    Double_t x = nAxis.X();
@@ -444,6 +611,7 @@ void TGLMatrix::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double
 //______________________________________________________________________________
 void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
 {
+   // Transform passed 'vertex' by this matrix - converts local frame to parent
    TGLVertex3 orig = vertex;
    for (UInt_t i = 0; i < 3; i++) {
       vertex[i] = orig[0] * fVals[0+i] + orig[1] * fVals[4+i] +
@@ -455,7 +623,9 @@ void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
 void TGLMatrix::Transpose3x3()
 {
    // Transpose the top left 3x3 matrix component along major diagonal
-   //
+   // Supported as currently incompatability between TGeo and GL matrix
+   // layouts for this 3x3 only. To be resolved.
+   
    // TODO: Move this fix to the TBuffer3D filling side and remove
    //
    // 0  4  8 12
@@ -464,14 +634,14 @@ void TGLMatrix::Transpose3x3()
    // 3  7 11 15
 
    Double_t temp = fVals[4];
-	fVals[4] = fVals[1];
-	fVals[1] = temp;
-	temp = fVals[8];
-	fVals[8] = fVals[2];
-	fVals[2] = temp;
-	temp = fVals[9];
-	fVals[9] = fVals[6];
-	fVals[6] = temp;
+   fVals[4] = fVals[1];
+   fVals[1] = temp;
+   temp = fVals[8];
+   fVals[8] = fVals[2];
+   fVals[2] = temp;
+   temp = fVals[9];
+   fVals[9] = fVals[6];
+   fVals[6] = temp;
 }
 
 //______________________________________________________________________________
@@ -487,6 +657,13 @@ TGLVector3 TGLMatrix::GetScale() const
 //______________________________________________________________________________
 void TGLMatrix::Dump() const
 {
+   // Output 16 matrix components to std::cout
+   //
+   // 0  4   8  12
+   // 1  5   9  13
+   // 2  6  10  14
+   // 3  7  11  15
+   //
    std::cout.precision(6);
    for (Int_t x = 0; x < 4; x++) {
       std::cout << "[ ";
@@ -497,6 +674,15 @@ void TGLMatrix::Dump() const
    }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLUtil                                                              //
+//                                                                      //
+// Wrapper class for various misc static functions - error checking,    //
+// draw helpers etc.                                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLUtil)
 
 UInt_t TGLUtil::fgDrawQuality = 60;
@@ -504,6 +690,8 @@ UInt_t TGLUtil::fgDrawQuality = 60;
 //______________________________________________________________________________
 void TGLUtil::CheckError()
 {
+   // Check current GL error state, outputing details via ROOT
+   // Error method if one
    GLenum errCode;
    const GLubyte *errString;
 
@@ -516,6 +704,22 @@ void TGLUtil::CheckError()
 //______________________________________________________________________________
 void TGLUtil::SetDrawColors(const Float_t rgba[4])
 {
+   // Set basic draw colors from 4 component 'rgba'
+   // Used by other TGLUtil drawing routines
+   //
+   // Sets basic (unlit) color - glColor
+   // and also GL materials (see OpenGL docs) thus:
+   //  
+   // diffuse  : rgba
+   // ambient  : 0.0 0.0 0.0 1.0
+   // specular : 0.8 0.8 0.8 1.0
+   // emission : rgba/3.0
+   // shininess: 60.0
+   //
+   // emission is set so objects with no lighting, but lighting still enabled
+   // as still visible
+   
+   
    // Util function to setup GL color for both unlit and lit material
    static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
    static Float_t specular[4] = {0.8, 0.8, 0.8, 1.0};
@@ -533,7 +737,8 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
 void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius, 
                          const Float_t rgba[4])
 {
-   // Util function to draw a fixed quality sphere
+   // Draw sphere, centered on vertex 'position', with radius 'radius',
+   // color 'rgba'
    static TGLQuadric quad;
    SetDrawColors(rgba);
    glPushMatrix();
@@ -546,7 +751,8 @@ void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius,
 void TGLUtil::DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, 
                        const Float_t rgba[4])
 {
-   // Draw 3D line (tube) with optional head shape
+   // Draw thick line (tube) defined by 'line', with head at end shape 
+   // 'head' - box/arrow/none, (head) size 'size', color 'rgba'
    DrawLine(line.Start(), line.Vector(), head, size, rgba);
 }
 
@@ -554,6 +760,9 @@ void TGLUtil::DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size
 void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, 
                        ELineHeadShape head, Double_t size, const Float_t rgba[4])
 {   
+   // Draw thick line (tube) running from 'start', length 'vector', 
+   // with head at end of shape 'head' - box/arrow/none, 
+   // (head) size 'size', color 'rgba'
    static TGLQuadric quad;
 
    // Draw 3D line (tube) with optional head shape
@@ -606,6 +815,8 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
 void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal, 
                        Double_t radius, const Float_t rgba[4])
 {    
+   // Draw ring, centered on 'center', lying on plane defined by 'center' & 'normal'
+   // of outer radius 'radius', color 'rgba'
    static TGLQuadric quad;
 
    // Draw a ring, round vertex 'center', lying on plane defined by 'normal' vector 

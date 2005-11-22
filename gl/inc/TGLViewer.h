@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.15 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.16 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -53,12 +53,31 @@ class TGLTransManip;
 class TGLScaleManip;
 class TGLRotateManip;
 
-/*************************************************************************
- * TGLViewer - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLViewer                                                            //
+//                                                                      //
+// Base GL viewer object - used by both standalone and embedded (in pad)//
+// GL. Contains core viewer objects :                                   //
+//                                                                      //
+// GL scene (fScene) - collection of main drawn objects - see TGLScene  //
+// Cameras (fXXXXCamera) - ortho and perspective cameras - see TGLCamera//
+// Clipping (fClipXXXX) - collection of clip objects - see TGLClip      //
+// Manipulators (fXXXXManip) - collection of manipulators - see TGLManip//
+//                                                                      //
+// It maintains the current active draw styles, clipping object,        //
+// manipulator, camera etc.                                             //
+//                                                                      //
+// TGLViewer is 'GUI free' in that it does not derive from any ROOT GUI //
+// TGFrame etc - see TGLSAViewer for this. However it contains GUI      //
+// GUI style methods HandleButton() etc to which GUI events can be      //
+// directed from standalone frame or embedding pad to perform           //
+// interaction.                                                         //
+//                                                                      //
+// For embedded (pad) GL this viewer is created directly by plugin      //
+// manager. For standalone the derived TGLSAViewer is.                  //
+//////////////////////////////////////////////////////////////////////////
+    
 class TGLViewer : public TVirtualViewer3D
 {
    RQ_OBJECT("TGLViewer")
@@ -96,7 +115,7 @@ private:
 
    // Scene management - to TGLScene or helper object?
    Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?
-   Bool_t            fSetupRequired;         //! setup of camera and clip required
+   Bool_t            fPostSceneBuildSetup;   //! setup viewer after (re)build complete?
    Bool_t            fAcceptedAllPhysicals;  //! did we take all physicals offered in AddObject()
    Bool_t            fInternalPIDs;          //! using internal physical IDs
    UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
@@ -159,7 +178,7 @@ private:
 
    // Scene management - to TGLScene or helper object?
    Bool_t             RebuildScene();
-   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const;
+   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const;
    TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
    TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
                                         const TGLLogicalShape & logical) const;
@@ -216,7 +235,7 @@ public:
    const TGLPhysicalShape * GetSelected() const { return fScene.GetSelected(); }
    
    // Overloadable 
-   virtual void Setup();
+   virtual void PostSceneBuildSetup();
    virtual void SelectionChanged(); // *SIGNAL*
    virtual void ClipChanged();      // *SIGNAL*
 

@@ -16,11 +16,13 @@
 #include "Rtypes.h"
 #endif
 
-/*************************************************************************
- * TGLQuadric - Wrapper for C GLUquadric to provide delayed creation and
- * autodeletion - can be used as static member of other objects
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOutput                                                            //
+//                                                                      //
+// Wrapper class for GLU quadric shape drawing object. Lazy creation of //
+// internal GLU raw quadric on first call to TGLQuadric::Get()          //
+//////////////////////////////////////////////////////////////////////////
 
 class GLUquadric;
 

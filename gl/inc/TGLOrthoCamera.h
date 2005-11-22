@@ -1,6 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.6 2005/07/08 15:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.7 2005/11/08 19:18:18 brun Exp $
 // Author:  Richard Maunder  25/05/2005
-// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -17,14 +16,23 @@
 #include "TGLCamera.h"
 #endif
 
-/*************************************************************************
- * TGLOrthoCamera - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOrthoCamera                                                       //
+//                                                                      //
+// Orthographic projection camera. Currently limited to three types     //
+// defined at construction time - kXOY, kXOZ, kZOY - where this refers  //
+// to the viewport plane axis - e.g. kXOY has X axis horizontal, Y      //
+// vertical - i.e. looking down Z axis with Y vertical.                 //
+//
+// The plane types restriction could easily be removed to supported     //
+// arbitary ortho projections along any axis/orientation with free      //
+// rotations about them.                                                //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLOrthoCamera : public TGLCamera {
-public:
+   public:
    enum EType { kXOY, kXOZ, kZOY  };
 private:
    // Fields

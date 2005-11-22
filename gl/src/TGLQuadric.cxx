@@ -12,17 +12,27 @@
 #include "TGLIncludes.h"
 #include "TError.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOutput                                                            //
+//                                                                      //
+// Wrapper class for GLU quadric shape drawing object. Lazy creation of //
+// internal GLU raw quadric on first call to TGLQuadric::Get()          //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLQuadric)
 
 //______________________________________________________________________________
 TGLQuadric::TGLQuadric() :
    fQuad(0)
 {
+   // Construct quadric
 }
 
 //______________________________________________________________________________
 TGLQuadric::~TGLQuadric() 
 { 
+   // Destroy quadric
    if (fQuad) {
       gluDeleteQuadric(fQuad); 
    }
@@ -31,6 +41,7 @@ TGLQuadric::~TGLQuadric()
 //______________________________________________________________________________
 GLUquadric * TGLQuadric::Get()
 {
+   // Get the internal raw GLU qaudric object. Created on first call.
    if (!fQuad) {
       fQuad = gluNewQuadric();
       if (!fQuad) {

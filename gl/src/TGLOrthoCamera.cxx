@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.8 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.9 2005/11/17 10:38:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,17 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TODO: Function descriptions
-// TODO: Class def - same as header
-
 #include "TGLOrthoCamera.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
-#include "TGLQuadric.h" // REmove
-
 #include "TMath.h"
 #include "Riostream.h"
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLOrthoCamera                                                       //
+//                                                                      //
+// Orthographic projection camera. Currently limited to three types     //
+// defined at construction time - kXOY, kXOZ, kZOY - where this refers  //
+// to the viewport plane axis - e.g. kXOY has X axis horizontal, Y      //
+// vertical - i.e. looking down Z axis with Y vertical.                 //
+//
+// The plane types restriction could easily be removed to supported     //
+// arbitary ortho projections along any axis/orientation with free      //
+// rotations about them.                                                //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLOrthoCamera)
 
@@ -28,20 +38,30 @@ UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 //______________________________________________________________________________
 TGLOrthoCamera::TGLOrthoCamera(EType type) :
    fType(type), fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0), 
-	fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
-	fZoom(1.0), fTruck(0.0, 0.0, 0.0), fMatrix()
+   fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
+   fZoom(1.0), fTruck(0.0, 0.0, 0.0), fMatrix()
 {
+   // Construct orthographic camera with 'type' defining fixed view direction
+   // & orientation (in world frame):
+   //
+   // kXOY : X Horz. / Y Vert (looking towards +Z, Y up)
+   // kXOZ : X Horz. / Z Vert (looking towards +Y, Z up)
+   // kZOY : Z Horz. / Y Vert (looking towards +X, Y up)
+   // 
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
 
 //______________________________________________________________________________
 TGLOrthoCamera::~TGLOrthoCamera()
 {
+   // Destroy orthographic camera
 }
 
 //______________________________________________________________________________
 void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
 {
+   // Setup camera limits suitible to view the world volume defined by 'box'
+   // and call Reset() to initialise camera.
    static const Double_t rotMatrixXOY[] = { 1.,  0.,  0.,  0.,
                                             0.,  1.,  0.,  0.,
                                             0.,  0.,  1.,  0.,
@@ -94,6 +114,8 @@ void TGLOrthoCamera::Setup(const TGLBoundingBox & box)
 //______________________________________________________________________________
 void TGLOrthoCamera::Reset()
 {
+   // Reset the camera to defaults - trucking, zooming to reframe the world volume
+   // established in Setup(). Note: limits defined in Setup() are not adjusted.
    fTruck.Set(0.0, 0.0, 0.0);
    fZoom   = fZoomDefault;
    fCacheDirty = kTRUE;
@@ -102,12 +124,40 @@ void TGLOrthoCamera::Reset()
 //______________________________________________________________________________
 Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
+   // Dolly the camera - 'move camera along eye line, retaining lens focal length'.
+   // Arguments are:
+   //
+   // 'delta' - mouse viewport delta (pixels) - +ive dolly in, -ive dolly out
+   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+   //
+   // For an orthographic camera dollying and zooming are identical and both equate 
+   // logically to a rescaling of the viewport limits - without center shift. 
+   // There is no perspective foreshortening or lens 'focal length'.
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   
+   // TODO: Bring all mouse handling into camera classes - would simplify interface and
+   // remove these non-generic cases.
    return Zoom(delta, mod1, mod2);
 }
 
 //______________________________________________________________________________
 Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
 {
+   // Zoom the camera - 'adjust lens focal length, retaining camera position'.
+   // Arguments are:
+   //
+   // 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
+   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+   //
+   // For an orthographic camera dollying and zooming are identical and both equate 
+   // logically to a rescaling of the viewport limits - without center shift. 
+   // There is no perspective foreshortening or lens 'focal length'.
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   
+   // TODO: Bring all mouse handling into camera classes - would simplify interface and
+   // remove these non-generic cases.
    if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta*2, fgZoomDeltaSens, mod1, mod2))
    {
       fCacheDirty = kTRUE;
@@ -122,9 +172,22 @@ Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
 //______________________________________________________________________________
 Bool_t TGLOrthoCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 {
+   // Truck the camera - 'move camera parallel to film plane'. The film 
+   // plane is defined by the EyePoint() / EyeDirection() pair. Define motion 
+   // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion. 
+   // For an perspecive camera the trucking can only track the mouse at
+   // a fixed Z depth - in this case we choose the minimum - the near 
+   // clipping plane. Objects on this plane track the mouse movement.
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   //
+   // Note: Trucking is often mistakenly refered to as 'pan' or 'panning'. 
+   // Panning is swivelling the camera on it's own axis - the eye point.
+   
    //TODO: Convert TGLRect so this not required
    GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
    TGLVertex3 start, end;
+   // Trucking done at near clipping plane
    gluUnProject(x, y, 0.0, fModVM.CArr(), fProjM.CArr(), viewport, &start.X(), &start.Y(), &start.Z());
    gluUnProject(x + xDelta, y + yDelta, 0.0, fModVM.CArr(), fProjM.CArr(), viewport, &end.X(), &end.Y(), &end.Z());
    fTruck = fTruck + (end - start);
@@ -135,14 +198,28 @@ Bool_t TGLOrthoCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 //______________________________________________________________________________
 Bool_t TGLOrthoCamera::Rotate(Int_t /*xDelta*/, Int_t /*yDelta*/)
 {
-   // Not allowed at present - could let the user or external code create non-axis
-   // ortho projects by adjusting H/V rotations
+   // Rotate the camera - 'swivel round the view volume center'.
+   // Ignored at present. Could let the user or external code create non-axis
+   // ortho projects by adjusting H/V rotations in future.
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+   
    return kFALSE;
 }
 
 //______________________________________________________________________________
 void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickRect)
 {
+   // Apply the camera to the current GL context, setting the viewport, projection
+   // and modelview matricies. After this verticies etc can be directly entered
+   // in the world frame. This also updates the cached frustum values, enabling
+   // all the projection, overlap tests etc defined in TGLCamera to be used.
+   // 
+   // Arguments are:
+   // 'box' - view volume box - ignored for ortho camera. Assumed to be same
+   // as one passed to Setup().
+   // 'pickRect' - optional picking rect. If non-null, restrict drawing to this
+   // viewport rect.
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    glMatrixMode(GL_PROJECTION);
@@ -190,7 +267,7 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickR
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
-	glScaled(1.0 / fViewport.Aspect(), 1.0, 1.0); 	
+   glScaled(1.0 / fViewport.Aspect(), 1.0, 1.0); 	
 
    // Debug aid - show current volume
    /*glDisable(GL_LIGHTING);

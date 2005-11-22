@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.6 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.7 2005/11/16 16:41:58 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -33,6 +33,17 @@ class TGMenuBar;
 class TGCanvas;
 class TGLRenderArea; // Remove - replace with TGLManager
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLSAViewer                                                          //
+//                                                                      //
+// The top level standalone viewer object - created via plugin manager. //
+// TGLSAViewer
+//////////////////////////////////////////////////////////////////////////
+
+// TODO: This really needs to be re-examined along with GUI parts in TGLViewer. 
+// It still contiains lots of legacy parts for binding to external GUI (TGLEditors) 
+// which could be neater.
 class TGLSAViewer : public TGLViewer
 {
 public:
@@ -96,7 +107,7 @@ public:
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
 
    // TGLViewer overloads
-   virtual void Setup();
+   virtual void PostSceneBuildSetup();
    virtual void SelectionChanged();
    virtual void ClipChanged();
    

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.5 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.6 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -22,11 +22,30 @@ class TContextMenu;
 //                                                                      //
 // TGLLogicalShape                                                      //
 //                                                                      //
-// Abstract logical shape - a GL drawables - base for all shapes faceset//
-// sphere etc. Logical shapes are a unique piece of geometry, described //
-// in it's local frame. Object is reference counted by physical shapes  //
-// which are using it - see TGLPhysicalShape description for fuller     //
-// description of how logical/physical shapes are used.                 //
+// Abstract logical shape - a GL 'drawable' - base for all shapes -     //
+// faceset sphere etc. Logical shapes are a unique piece of geometry,   //
+// described in it's local frame - e.g if we have three spheres in :    //
+// Sphere A - Radius r1, center v1                                      //
+// Sphere B - Radius r2, center v2                                      //
+// Sphere C - Radius r1, center v3                                      //
+//                                                                      //
+// Spheres A and C can share a common logical sphere of radius r1 - and //
+// place them with two physicals with translations of v1 & v2.  Sphere B//
+// requires a different logical (radius r2), placed with physical with  //
+// translation v2.                                                      //
+//                                                                      //
+// Physical shapes know about and can share logicals. Logicals do not   //
+// about (aside from reference counting) physicals or share them.       //
+//                                                                      //
+// This sharing of logical shapes greatly reduces memory consumption and//
+// scene (re)build times in typical detector geometries which have many //
+// repeated objects placements.                                         //
+//                                                                      //
+// TGLLogicalShapes have reference counting, performed by the client    //
+// physical shapes which are using it.                                  //
+//                                                                      //
+// See base/src/TVirtualViewer3D for description of common external 3D  //
+// viewer architecture and how external viewer clients use it.          //
 //////////////////////////////////////////////////////////////////////////
 
 class TGLLogicalShape : public TGLDrawable { // Rename TGLLogicalObject?

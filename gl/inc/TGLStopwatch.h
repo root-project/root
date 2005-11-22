@@ -1,5 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -17,12 +16,15 @@
 #include "Rtypes.h"
 #endif
 
-/*************************************************************************
- * TGLStopwatch - TODO
- *
- *
- *
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLStopwatch                                                         //
+//                                                                      //
+// Stopwatch object for timing GL work. We do not use the TStopwatch as //
+// we need to perform GL flushing to get accurate times + we record     //
+// timing overheads here.                                               //
+//////////////////////////////////////////////////////////////////////////
+
 class TGLStopwatch
 {
 private:

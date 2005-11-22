@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.4 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.5 2005/10/03 15:19:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TODO: Function descriptions
-// TODO: Class def - same as header!!!
-
 #include "TGLStopwatch.h"
 #include "TGLIncludes.h"
 
@@ -21,6 +18,15 @@
 #include <sys/time.h> // For gettimeofday()
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLStopwatch                                                         //
+//                                                                      //
+// Stopwatch object for timing GL work. We do not use the TStopwatch as //
+// we need to perform GL flushing to get accurate times + we record     //
+// timing overheads here.                                               //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLStopwatch)
 
 Bool_t   TGLStopwatch::fgInitOverhead = kFALSE;
@@ -29,6 +35,7 @@ Double_t TGLStopwatch::fgOverhead = 0.0;
 //______________________________________________________________________________
 TGLStopwatch::TGLStopwatch()
 {
+   // Construct stopwatch object, initialising timing overheads if not done
    if (!fgInitOverhead)
    {
       InitOverhead();
@@ -38,11 +45,13 @@ TGLStopwatch::TGLStopwatch()
 //______________________________________________________________________________
 TGLStopwatch::~TGLStopwatch()
 {
+   // Destroy stopwatch object
 }
 
 //______________________________________________________________________________
 void TGLStopwatch::Start()
 {
+   // Start timing
    FinishDrawing();
    fStart = WaitForTick();
 }
@@ -51,6 +60,7 @@ void TGLStopwatch::Start()
 //______________________________________________________________________________
 Double_t TGLStopwatch::Lap() const
 {
+   // Return lap time since Start(), in milliseconds
    Double_t elapsed = GetClock() - fStart - fgOverhead;
    return elapsed > 0.0 ? elapsed : 0.0;
 }
@@ -59,6 +69,7 @@ Double_t TGLStopwatch::Lap() const
 //______________________________________________________________________________
 Double_t TGLStopwatch::End()
 {
+   // End timing, return total time since Start(), in milliseconds
    FinishDrawing();
    return Lap();
 }
@@ -67,6 +78,7 @@ Double_t TGLStopwatch::End()
 //______________________________________________________________________________
 Double_t TGLStopwatch::GetClock(void) const
 {
+   // Get internal clock time, in milliseconds
 #ifdef R__WIN32
    // Use performance counter (system dependent support) if possible
    static LARGE_INTEGER perfFreq;
@@ -100,12 +112,14 @@ Double_t TGLStopwatch::GetClock(void) const
 //______________________________________________________________________________
 void TGLStopwatch::FinishDrawing(void) const
 {
+   // Force completion of GL drawing
    glFinish();
 }
 
 //______________________________________________________________________________
 Double_t TGLStopwatch::WaitForTick(void)  const
 {
+   // Wait for next clock increment - return it in milliseconds
    Double_t start;
    Double_t current;
 
@@ -120,6 +134,7 @@ Double_t TGLStopwatch::WaitForTick(void)  const
 //______________________________________________________________________________
 void TGLStopwatch::InitOverhead(void) const
 {
+   // Calcualte timing overhead
    Double_t runTime;
    Long_t   reps;
    Double_t start;

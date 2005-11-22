@@ -19,6 +19,16 @@
 #include "TGLUtil.h"
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLScaleManip                                                        //
+//                                                                      //
+// Scale manipulator - attaches to physical shape and draws local axes  //
+// widgets with box heads. User can mouse over (turns yellow) and L     //
+// click/drag to scale along this axis.                                 // 
+// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
+//////////////////////////////////////////////////////////////////////////
+
 class TGLScaleManip : public TGLManip
 {
 private:

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.23 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.24 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -9,9 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-// TODO: Function descriptions
-// TODO: Class def - same as header
 
 #include "TGLScene.h"
 #include "TGLCamera.h"
@@ -28,6 +25,32 @@
 
 #include <algorithm>
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLScene                                                             //
+//                                                                      //
+// A GL scene is the container for all the viewable objects (shapes)    //
+// loaded into the viewer. It consists of two main stl::maps containing //
+// the TGLLogicalShape and TGLPhysicalShape collections, and interface  //
+// functions enabling viewers to manage objects in these. The physical  //
+// shapes defined the placement of copies of the logical shapes - see   //
+// TGLLogicalShape/TGLPhysicalShape for more information on relationship//
+//                                                                      //
+// The scene can be drawn by owning viewer, passing camera, draw style  //
+// & quality (LOD), clipping etc - see Draw(). The scene can also be    //
+// drawn for selection in similar fashion - see Select(). The scene     //
+// keeps track of a single selected physical - which can be modified by //
+// viewers.                                                             //
+//                                                                      //
+// The scene maintains a lazy calculated bounding box for the total     //
+// scene extents, axis aligned round TGLPhysicalShape shapes.           //
+//                                                                      // 
+// Currently a scene is owned exclusively by one viewer - however it is //
+// intended that it could easily be shared by multiple viewers - for    //
+// efficiency and syncronisation reasons. Hence viewer variant objects  // 
+// camera, clips etc being owned by viewer and passed at draw/select    //
+//////////////////////////////////////////////////////////////////////////
+
 ClassImp(TGLScene)
 
 //______________________________________________________________________________
@@ -36,11 +59,13 @@ TGLScene::TGLScene() :
    fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
    fLastDrawLOD(kHigh), fSelectedPhysical(0)
 {
+   // Construct scene object
 }
 
 //______________________________________________________________________________
 TGLScene::~TGLScene()
 {
+   // Destroy scene object
    TakeLock(kModifyLock);
    DestroyPhysicals(kTRUE); // including modified
    DestroyLogicals();
@@ -54,6 +79,8 @@ TGLScene::~TGLScene()
 //______________________________________________________________________________
 void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 {
+   // Adopt dynamically created logical 'shape' - add to internal map and take 
+   // responsibility for deleting  
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptLogical", "expected ModifyLock");
       return;
@@ -67,6 +94,8 @@ void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 //______________________________________________________________________________
 Bool_t TGLScene::DestroyLogical(ULong_t ID)
 {
+   // Destroy logical shape defined by unique 'ID'
+   // Returns kTRUE if found/destroyed - kFALSE otherwise
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyLogical", "expected ModifyLock");
       return kFALSE;
@@ -90,6 +119,8 @@ Bool_t TGLScene::DestroyLogical(ULong_t ID)
 //______________________________________________________________________________
 UInt_t TGLScene::DestroyLogicals()
 {
+   // Destroy all logical shapes in scene
+   // Return count of number destroyed
    UInt_t count = 0;
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyLogicals", "expected ModifyLock");
@@ -122,6 +153,8 @@ UInt_t TGLScene::DestroyLogicals()
 //______________________________________________________________________________
 TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 {
+   // Find and return logical shape identified by unqiue 'ID' 
+   // Returns 0 if not found
    LogicalShapeMapCIt_t it = fLogicalShapes.find(ID);
    if (it != fLogicalShapes.end()) {
       return it->second;
@@ -134,6 +167,8 @@ TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 //______________________________________________________________________________
 void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 {
+   // Adopt dynamically created physical 'shape' - add to internal map and take 
+   // responsibility for deleting  
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptPhysical", "expected ModifyLock");
       return;
@@ -152,6 +187,8 @@ void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 //______________________________________________________________________________
 Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 {
+   // Destroy physical shape defined by unique 'ID'
+   // Returns kTRUE if found/destroyed - kFALSE otherwise
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysical", "expected ModifyLock");
       return kFALSE;
@@ -183,6 +220,8 @@ Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 //______________________________________________________________________________
 UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
 {
+   // Destroy all logical shapes in scene
+   // Return count of number destroyed
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysicals", "expected ModifyLock");
       return kFALSE;
@@ -239,6 +278,8 @@ UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
 //______________________________________________________________________________
 TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 {
+   // Find and return physical shape identified by unqiue 'ID' 
+   // Returns 0 if not found
    PhysicalShapeMapCIt_t it = fPhysicalShapes.find(ID);
    if (it != fPhysicalShapes.end()) {
       return it->second;
@@ -248,10 +289,27 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-//TODO: Merge axes flag and LOD into general draw flag
+//TODO: Merge style and LOD into general draw style flag
 void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
                     Double_t timeout, const TGLClip * clip)
 {
+   // Draw out scene into current GL context, using passed arguments:
+   // 
+   // 'camera' - used for for object culling
+   // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
+   //            kWireFrame
+   // 'LOD'    - base scene level of detail (quality), value 0 (low) to 100 (high)
+   //            combined with projection size LOD to produce overall draw LOD
+   //            for each physical shape
+   // 'timeout'- timeout for scene draw (in milliseconds) - if 0.0 unlimited
+   // 'clip'   - optional clip object - if non-null used to clip away draw shapes
+   //
+   
+   // NOTE: We are passed const camera for visability culling etc - we DO NOT take
+   // responsibility for calling non-const camera.Apply() to setup up suitible
+   // projection / modelview matricies - assume the calling viewer has already
+   // done this. We also assume the current GL context has been setup, buffer 
+   // swapping will be done after etc.
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::Draw", "expected Draw or Select Lock");
    }
@@ -376,14 +434,29 @@ void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
 
    // Dump debug draw stats
    DumpDrawStats();
-
-   return;
 }
 
 //______________________________________________________________________________
 void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
                         Double_t timeout, const std::vector<TGLPlane> * clipPlanes)
 {
+   // Perform a internal draw pass - multiple passes are required for some
+   // clip shapes
+   
+   // 'camera' - used for for object culling
+   // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
+   //            kWireFrame
+   // 'LOD'    - base scene level of detail (quality), value 0 (low) to 100 (high)
+   //            combined with projection size LOD to produce overall draw LOD
+   //            for each physical shape
+   // 'timeout'- timeout for pass (in milliseconds) - if 0.0 unlimited
+   // 'clipPlanes' - collection of active clip planes - used for further culling
+   //
+   
+   // NOTE: We do not apply clip planes (at GL level) in this function - this is
+   // already done in Draw(). The clipPlanes is passed only for shape culling
+   // before the camera cull is done
+   
    // Set stopwatch running
    TGLStopwatch stopwatch;
    stopwatch.Start();
@@ -394,7 +467,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
       drawPtr = &TGLPhysicalShape::DrawWireFrame;
    } else if (style == kOutline) {
       drawPtr = &TGLPhysicalShape::DrawOutline;
-   }
+  }
 
    // Step 1: Loop through the main sorted draw list 
    Bool_t                   run = kTRUE;
@@ -550,13 +623,16 @@ void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
       }
       glEnable(GL_DEPTH_TEST);
    }
-
-   return;
 }
 
 //______________________________________________________________________________
 void TGLScene::SortDrawList()
 {
+   // Sort the TGLPhysical draw list by shape bounding box volume, from 
+   // large to small. This makes dropout of shapes with time limited
+   // Draw() calls must less noticable. As this does not use projected 
+   // size it only needs to be done after a scene content change - not 
+   // everytime scene drawn (potential camera/projection change).
    assert(!fDrawListValid);
 
    TGLStopwatch stopwatch;
@@ -587,12 +663,21 @@ void TGLScene::SortDrawList()
 //______________________________________________________________________________
 Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2)
 {
+   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if 
+   // 'shape1' bigger than 'shape2'
+   
+   // TODO: Move this to TGLBoundingBox > operator?
    return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
 
 //______________________________________________________________________________
 void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TGLVertex3 * reference) const
 {
+   // Draw out scene guides - axes and reference marker
+   //
+   // 'camera'    - current active camera - required for calculating projection size
+   // 'axesType'  - kAxesNone, kAxesOrigin (run through origin), kAxesEdge (at scene box edge)
+   // 'reference' - if not null, draw orange reference sphere at vertex
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::DrawMarkers", "expected Draw or Select Lock");
    }
@@ -745,6 +830,7 @@ void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TG
 //______________________________________________________________________________
 void TGLScene::DrawNumber(Double_t num, const TGLVertex3 & center) const
 {
+   // Draw out number (as string) 'num', centered on vertex 'center'
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::DrawNumber", "expected Draw or Select Lock");
    }
@@ -782,6 +868,10 @@ void TGLScene::DrawNumber(Double_t num, const TGLVertex3 & center) const
 UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera,
                                  UInt_t sceneLOD) const
 {
+   // Calculate a quality (level of detail) for passed 'shape', suitible for use
+   // under projection defined by 'camera'. Factor in global 'sceneLOD', returning 
+   // UInt 0..100
+   
    // Find diagonal pixel size of projected drawable BB, using camera
    Double_t diagonal = static_cast<Double_t>(camera.ViewportRect(shape.BoundingBox()).Diagonal());
 
@@ -810,6 +900,16 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
 //______________________________________________________________________________
 Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip)
 {
+   // Perform select draw using arguments:
+   //
+   // 'camera' - used for for object culling
+   // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
+   //            kWireFrame
+   // 'clip'   - optional clip object - if non-null used to clip away draw shapes
+   //
+   // Arguments are passed on to Draw(), with unlimted time
+   //
+   // Returns kTRUE if selection changed, kFALSE if not 
    Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
       Error("TGLScene::Select", "expected SelectLock");
@@ -895,6 +995,15 @@ Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style, const TGLCli
 //______________________________________________________________________________
 Bool_t TGLScene::SetSelectedColor(const Float_t color[17])
 {
+   // Set full color attributes on current selected physical shape: 
+   //
+   // 0...3  - diffuse
+   // 4...7  - ambient
+   // 8...11 - specular
+   // 12..15 - emission
+   // 16     - shininess
+   //
+   // see OpenGL documentation for details of materials
    if (fSelectedPhysical) {
       fSelectedPhysical->SetColor(color);
       return kTRUE;
@@ -907,6 +1016,16 @@ Bool_t TGLScene::SetSelectedColor(const Float_t color[17])
 //______________________________________________________________________________
 Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
 {
+   // Set full color attributes on all physical shapes sharing the same
+   // logical shape as the selected physical
+   //
+   // 0...3  - diffuse
+   // 4...7  - ambient
+   // 8...11 - specular
+   // 12..15 - emission
+   // 16     - shininess
+   //
+   // see OpenGL documentation for details of materials
    if (fSelectedPhysical) {
       TGLPhysicalShape * physical;
       PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
@@ -931,6 +1050,7 @@ Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
 //______________________________________________________________________________
 Bool_t TGLScene::ShiftSelected(const TGLVector3 & shift)
 {
+   // Shift selected physical shape by vector 'shift'
    if (fSelectedPhysical) {
       fSelectedPhysical->Translate(shift);
       fBoundingBoxValid = kFALSE;
@@ -945,6 +1065,9 @@ Bool_t TGLScene::ShiftSelected(const TGLVector3 & shift)
 //______________________________________________________________________________
 Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale)
 {
+   // Update geometry of the selected physical. 'trans' and 'scale' specify the
+   // translation and scaling components of the physical shapes translation matrix
+   // See TGLMatrix for more details
    if (fSelectedPhysical) {
       fSelectedPhysical->SetTranslation(trans);
       fSelectedPhysical->Scale(scale);
@@ -959,6 +1082,8 @@ Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & sc
 //______________________________________________________________________________
 const TGLBoundingBox & TGLScene::BoundingBox() const
 {
+   // Update (if required) and return the scene bounding box
+   // Encapsulates all physical shapes bounding box with axes aligned box
    if (!fBoundingBoxValid) {
       Double_t xMin, xMax, yMin, yMax, zMin, zMax;
       xMin = xMax = yMin = yMax = zMin = zMax = 0.0;
@@ -996,12 +1121,16 @@ const TGLBoundingBox & TGLScene::BoundingBox() const
 //______________________________________________________________________________
 void TGLScene::Dump() const
 {
+   // Output simple scene stats to std::cout
    std::cout << "Scene: " << fLogicalShapes.size() << " Logicals / " << fPhysicalShapes.size() << " Physicals " << std::endl;
 }
 
 //______________________________________________________________________________
 UInt_t TGLScene::SizeOf() const
 {
+   // Return memory cost of scene
+   // Warning: NOT CORRECT at present - doesn't correctly calculate size
+   // of logical shapes with dynamic internal contents
    UInt_t size = sizeof(this);
 
    std::cout << "Size: Scene Only " << size << std::endl;
@@ -1032,6 +1161,7 @@ UInt_t TGLScene::SizeOf() const
 //______________________________________________________________________________
 void TGLScene::ResetDrawStats()
 {
+   // Reset internal draw stats
    fDrawStats.fOpaque = 0;
    fDrawStats.fTrans = 0;
    fDrawStats.fByShape.clear();
@@ -1040,6 +1170,8 @@ void TGLScene::ResetDrawStats()
 //______________________________________________________________________________
 void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape)
 {
+   // Update draw stats, for newly drawn 'shape'
+   
    // Update opaque/transparent draw count
    if (shape.IsTransparent()) {
       ++fDrawStats.fTrans;
@@ -1066,7 +1198,7 @@ void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape)
 //______________________________________________________________________________
 void TGLScene::DumpDrawStats()
 {
-   // Dump some current draw stats for debuggin
+   // Output draw stats to std::cout
 
    // Draw counts
    if (gDebug>2) {

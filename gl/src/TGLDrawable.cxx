@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.7 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.8 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -24,11 +24,18 @@
 //                                                                      //
 // TGLDrawable                                                          //      
 //                                                                      //
-// Abstract base class for all GL drawable objects. Provides hooks for  //
-// using the display list cache in TGLDrawable::Draw() - the external   //
-// draw method any owning object calls.                                 //
+// Abstract base class for all GL drawable objects - TGLPhysicalShape & //
+// TGLLogicalShape hierarchy. Provides hooks for using the display list //
+// cache in TGLDrawable::Draw() - the external draw method for all      //
+// shapes.                                                              //
+//                                                                      //
 // Defines pure virtual TGLDrawable::DirectDraw() which derived classes //
 // must implement with actual GL drawing.                               //
+//                                                                      //
+// Display list caching can occur at either the physical or logical     //
+// level (with or without translation). Currently we cache only certain //
+// derived logical shapes as not all logicals can respect the LOD draw  //
+// flag which is used in caching.                                       //
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLDrawable)
@@ -52,6 +59,8 @@ TGLDrawable::~TGLDrawable()
 //______________________________________________________________________________
 Bool_t TGLDrawable::UseDLCache(UInt_t /*LOD*/) const
 {
+   // Returns kTRUE if draw should used display list cache
+   // KFALSE otherwise
    return fDLCache;
 }
 
