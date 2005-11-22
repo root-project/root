@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.82 2005/11/03 09:02:13 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.83 2005/11/15 15:13:59 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1715,10 +1715,22 @@ L160:
                      }
                   }
                   Rotate (xone,ylabel,cosphi,sinphi,x0,y0,xx,yy);
+                  if ((x0 == x1) && !optionPara) {
+                     if (lside < 0) {
+                        if (mside < 0) {
+                           if (labelnumber == 0) nch=1;
+                           else                  nch=2;
+                           xx    += nch*charheight;
+                        } else {
+                           if (labelnumber >= 0) xx    += 0.25*charheight;
+                           else                  xx    += 0.50*charheight;
+                        }
+                     }
+                     xx += 0.25*charheight;
+                  }
                   if ((y0 == y1) && !optionDown && !optionUp) {
                      if (noExponent) yy += 0.33*charheight;
                   }
-                  if ((x0 == x1)) xx += 0.25*charheight;
                   if (optionVert) {
                      if ((x0 != x1) && (y0 != y1)) {
                         Rotate(xone,ylabel,cosphi,sinphi,x0,y0,xx,yy);
