@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.1 2005/09/18 17:33:47 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.1 2005/09/20 13:52:26 brun Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -35,6 +35,7 @@ math_HEADERS =           	        \
          RotationY.h                    \
          RotationZ.h                    \
          SpecFuncMathCore.h             \
+         Transform3D.h                  \
          Vector3D.h                     \
          Vector3Dfwd.h                  \
          Vector4D.h                     \
