@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.13 2005/10/04 20:33:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.14 2005/11/16 16:41:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -51,6 +51,13 @@ enum EApplyButtonIds {
    kTBa1,
    kTBGuide
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLColorEditor                                                       //
+//                                                                      //
+// GL Viewer shape color editor GUI component                           //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLColorEditor : public TGCompositeFrame {
    friend class TGLMatView;
@@ -105,8 +112,15 @@ private:
    TGLColorEditor(const TGLColorEditor &);
    TGLColorEditor & operator = (const TGLColorEditor &);
 
-   ClassDef(TGLColorEditor, 0)
+   ClassDef(TGLColorEditor, 0); // GL Viewer shape color editor GUI component
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLGeometryEditor                                                    //
+//                                                                      //
+// GL Viewer shape geometry editor GUI component                        //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLGeometryEditor : public TGCompositeFrame {
 private:
@@ -144,8 +158,15 @@ private:
    TGLGeometryEditor(const TGLGeometryEditor &);
    TGLGeometryEditor &operator = (const TGLGeometryEditor &);
 
-   ClassDef(TGLGeometryEditor, 0)
+   ClassDef(TGLGeometryEditor, 0); // GL Viewer shape geometry editor GUI component
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLClipEditor                                                        //
+//                                                                      //
+// GL Viewer clipping shape editor GUI component                        //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLClipEditor : public TGCompositeFrame {
 private:
@@ -185,8 +206,15 @@ private:
    TGLClipEditor(const TGLClipEditor &);
    TGLClipEditor &operator = (const TGLClipEditor &);
 
-   ClassDef(TGLClipEditor, 0);
+   ClassDef(TGLClipEditor, 0); //GL Viewer clipping shape editor GUI component
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLLightEditor                                                       //
+//                                                                      //
+// GL Viewer lighting editor GUI component                              //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLLightEditor : public TGCompositeFrame {
 private:
@@ -211,8 +239,15 @@ public:
    
    void DoButton();
    
-   ClassDef(TGLLightEditor, 0);
+   ClassDef(TGLLightEditor, 0); // GL Viewer lighting editor GUI component
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLGuideEditor                                                       //
+//                                                                      //
+// GL Viewer guides editor GUI component                                //
+//////////////////////////////////////////////////////////////////////////
 
 class TGLGuideEditor : public TGCompositeFrame {
 private:
@@ -238,7 +273,7 @@ public:
    void GetState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const;
    void SetState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos);
 
-   ClassDef(TGLGuideEditor, 0);
+   ClassDef(TGLGuideEditor, 0); // GL Viewer guides editor GUI component
 };
 
 #endif
