@@ -5,7 +5,7 @@
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O -foptimize-sibling-calls -finline-functions
+OPTFLAGS      = -O2 -msse -mfpmath=sse -mtune=pentium4
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
