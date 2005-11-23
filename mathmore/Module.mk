@@ -117,7 +117,7 @@ else
 		fi; \
 		cd $(GSLVERS); \
 		ACC=$(CC); \
-		ACFLAGS=$(OPT); \
+		ACOPT=$(OPT); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
@@ -128,12 +128,15 @@ else
 			ACC="cc +DD64 -Ae"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACC="gcc"; \
+			ACFLAGS="-m64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACC="gcc"; \
+			ACFLAGS="-m64"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure CC=$$ACC CFLAGS=$$ACFLAGS $(GSLDBG); \
+		GNUMAKE=$(MAKE) ./configure CC=$$ACC \
+		CFLAGS="$$ACFLAGS $$ACOPT" $(GSLDBG); \
 		$(MAKE))
 endif
 
