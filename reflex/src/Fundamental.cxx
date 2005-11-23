@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Fundamental.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,5 +17,5 @@ ROOT::Reflex::Fundamental::Fundamental( const char * typ,
                                         size_t size,
                                         const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
-  : TypeBase( typ, size, FUNDAMENTAL, ti ) {}
+   : TypeBase( typ, size, FUNDAMENTAL, ti ) {}
 

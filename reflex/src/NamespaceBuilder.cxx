@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -20,13 +20,13 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
 //-------------------------------------------------------------------------------
-  Scope sc = Scope::ByName( nam );
-  if ( sc && sc.IsNamespace() ) {
-    fNamespace       = sc;
-  }
-  else {
-    fNamespace       = (new Namespace( nam ))->ThisScope();
-  }
+   Scope sc = Scope::ByName( nam );
+   if ( sc && sc.IsNamespace() ) {
+      fNamespace       = sc;
+   }
+   else {
+      fNamespace       = (new Namespace( nam ))->ThisScope();
+   }
 }
 
 
@@ -35,8 +35,8 @@ ROOT::Reflex::NamespaceBuilder &
 ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key, 
                                              const char * value ) {
 //-------------------------------------------------------------------------------
-  fNamespace.Properties().AddProperty( key , value );
-  return * this;
+   fNamespace.Properties().AddProperty( key , value );
+   return * this;
 }
 
 
@@ -45,7 +45,7 @@ ROOT::Reflex::NamespaceBuilder &
 ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key, 
                                              Any value ) {
 //-------------------------------------------------------------------------------
-  fNamespace.Properties().AddProperty( key , value );
-  return * this;
+   fNamespace.Properties().AddProperty( key , value );
+   return * this;
 }
     

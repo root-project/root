@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -15,14 +15,14 @@
 ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
                                                 const std::type_info & ti ) 
 //------------------------------------------------------------------------------- 
-  : TypeBase( BuildTypeName( pointerToMemberType ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
-    fPointerToMemberType( pointerToMemberType ) {}
+   : TypeBase( BuildTypeName( pointerToMemberType ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
+     fPointerToMemberType( pointerToMemberType ) {}
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::PointerToMember::Name( unsigned int mod ) const { 
 //-------------------------------------------------------------------------------
-  return BuildTypeName( fPointerToMemberType, mod );
+   return BuildTypeName( fPointerToMemberType, mod );
 }
 
 
@@ -30,6 +30,6 @@ std::string ROOT::Reflex::PointerToMember::Name( unsigned int mod ) const {
 std::string ROOT::Reflex::PointerToMember::BuildTypeName( const Type & pointerToMemberType,
                                                           unsigned int mod ) {
 //-------------------------------------------------------------------------------
-  return pointerToMemberType.Name( mod ) + " ::*";
+   return pointerToMemberType.Name( mod ) + " ::*";
 }
                                                           

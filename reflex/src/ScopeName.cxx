@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -21,38 +21,38 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::ScopeName * > Name2Scope;
-typedef std::vector< ROOT::Reflex::Scope > ScopeVec;
+typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::ScopeName * > Name2Scope_t;
+typedef std::vector< ROOT::Reflex::Scope > ScopeVec_t;
 
 //-------------------------------------------------------------------------------
-Name2Scope & sScopes() {
+Name2Scope_t & sScopes() {
 //-------------------------------------------------------------------------------
-  static Name2Scope m;
-  return m;
+   static Name2Scope_t m;
+   return m;
 }
 
 
 //-------------------------------------------------------------------------------
-ScopeVec & sScopeVec() {
+ScopeVec_t & sScopeVec() {
 //-------------------------------------------------------------------------------
-  static ScopeVec m;
-  return m;
+   static ScopeVec_t m;
+   return m;
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ScopeName::ScopeName( const char * name,
                                     ScopeBase * scopeBase ) 
+   : fName(name),
+     fScopeBase(scopeBase) {
 //-------------------------------------------------------------------------------
-  : fName(name),
-    fScopeBase(scopeBase) {
-      sScopes() [ fName.c_str() ] = this;
-      sScopeVec().push_back(Scope(this));
-      //---Build recursively the declaring scopeNames
-      if( fName != "" ) {
-        std::string decl_name = Tools::GetScopeName(fName);
-        if ( ! Scope::ByName( decl_name ).Id() )  new ScopeName( decl_name.c_str(), 0 );
-      }
+   sScopes() [ fName.c_str() ] = this;
+   sScopeVec().push_back(Scope(this));
+   //---Build recursively the declaring scopeNames
+   if( fName != "" ) {
+      std::string decl_name = Tools::GetScopeName(fName);
+      if ( ! Scope::ByName( decl_name ).Id() )  new ScopeName( decl_name.c_str(), 0 );
+   }
 }
 
 
@@ -65,59 +65,59 @@ ROOT::Reflex::ScopeName::~ScopeName() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
-  Name2Scope::iterator it = sScopes().find(name.c_str());
-  if (it != sScopes().end() ) return Scope( it->second );
-  else                        return Scope();
+   Name2Scope_t::iterator it = sScopes().find(name.c_str());
+   if (it != sScopes().end() ) return Scope( it->second );
+   else                        return Scope();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ThisScope() const {
 //-------------------------------------------------------------------------------
-  return Scope( this );
+   return Scope( this );
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
-  if ( nth < sScopeVec().size()) return sScopeVec()[nth];
-  return Scope();
+   if ( nth < sScopeVec().size()) return sScopeVec()[nth];
+   return Scope();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::ScopeName::ScopeSize() {
 //-------------------------------------------------------------------------------
-  return sScopeVec().size();
+   return sScopeVec().size();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_Begin() {
 //-------------------------------------------------------------------------------
-  return sScopeVec().begin();
+   return sScopeVec().begin();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_End() {
 //-------------------------------------------------------------------------------
-  return sScopeVec().end();
+   return sScopeVec().end();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_RBegin() {
 //-------------------------------------------------------------------------------
-  return sScopeVec().rbegin();
+   return sScopeVec().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_REnd() {
 //-------------------------------------------------------------------------------
-  return sScopeVec().rend();
+   return sScopeVec().rend();
 }
 
 

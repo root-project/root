@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Namespace.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,42 +16,42 @@
 #include "Reflex/Scope.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class Member;
-    class Scope;
-
-    /**
-     * @class Namespace Namespace.h Reflex/Namespace.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class Namespace : public ScopeBase {
-
-    public:
-
-      /** default constructor */
-      Namespace( const char * scop );
-
-
-      /** destructor */
-      virtual ~Namespace() {}
-
+      // forward declarations
+      class Member;
+      class Scope;
 
       /**
-       * function for initialisation of the global namespace
+       * @class Namespace Namespace.h Reflex/Namespace.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
        */
-      static void InitGlobalNamespace();
+      class Namespace : public ScopeBase {
 
-    private:
+      public:
 
-      /** constructor for initialisation of the global namespace */
-      Namespace();
+         /** default constructor */
+         Namespace( const char * scop );
 
-    }; // class Namespace
-  } //namespace Reflex
+
+         /** destructor */
+         virtual ~Namespace() {}
+
+
+         /**
+          * function for initialisation of the global namespace
+          */
+         static void InitGlobalNamespace();
+
+      private:
+
+         /** constructor for initialisation of the global namespace */
+         Namespace();
+
+      }; // class Namespace
+   } //namespace Reflex
 } //namespace ROOT
 
 #endif // ROOT_Reflex_Namespace

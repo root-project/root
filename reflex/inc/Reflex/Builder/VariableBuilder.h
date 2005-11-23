@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,125 +17,125 @@
 #include "Reflex/Builder/TypeBuilder.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
+      // forward declarations
     
-    /** @class VariableBuilder VariableBuilder.h Reflex/Builder/VariableBuilder.h
-     *  @author Stefan Roiser
-     *  @date 6/4/2005
-     *  @ingroup RefBld
-     */
-    class VariableBuilder {
+      /** @class VariableBuilder VariableBuilder.h Reflex/Builder/VariableBuilder.h
+       *  @author Stefan Roiser
+       *  @date 6/4/2005
+       *  @ingroup RefBld
+       */
+      class VariableBuilder {
 
-    public:
+      public:
 
-      /** constructor */
-      VariableBuilder( const char * nam,
-                       const Type & typ,
-                       size_t offs,
-                       unsigned int modifiers = 0 );
+         /** constructor */
+         VariableBuilder( const char * nam,
+                          const Type & typ,
+                          size_t offs,
+                          unsigned int modifiers = 0 );
 
 
-      /** destructor */
-      virtual ~VariableBuilder();
+         /** destructor */
+         virtual ~VariableBuilder();
+
+
+         /** 
+          * AddProperty will add a PropertyNth 
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         VariableBuilder & AddProperty( const char * key, 
+                                        Any value );
+         VariableBuilder & AddProperty( const char * key,
+                                        const char * value );
+
+      private:
+
+         /** function MemberAt */
+         Member fDataMember;
+
+      }; // class VariableBuilder
 
 
       /** 
-       * AddProperty will add a PropertyNth 
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
+       * @class VariableBuilderImpl VariableBuilder.h Reflex/Builder/VariableBuilder.h
+       * @author Stefan Roiser
+       * @date 6/4/2005
+       * @ingroup RefBld
        */
-      VariableBuilder & AddProperty( const char * key, 
-                                     Any value );
-      VariableBuilder & AddProperty( const char * key,
-                                     const char * value );
+      class VariableBuilderImpl {
 
-    private:
+      public:
 
-      /** function MemberAt */
-      Member fDataMember;
-
-    }; // class VariableBuilder
+         /** constructor */
+         VariableBuilderImpl( const char * nam,
+                              const Type & typ,
+                              size_t offs,
+                              unsigned int modifiers = 0 );
 
 
-    /** 
-     * @class VariableBuilderImpl VariableBuilder.h Reflex/Builder/VariableBuilder.h
-     * @author Stefan Roiser
-     * @date 6/4/2005
-     * @ingroup RefBld
-     */
-    class VariableBuilderImpl {
+         /** destructor */
+         ~VariableBuilderImpl();
 
-    public:
 
-      /** constructor */
-      VariableBuilderImpl( const char * nam,
-                           const Type & typ,
+         /** AddProperty will add a PropertyNth 
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         void AddProperty( const char * key, 
+                           Any value );
+         void AddProperty( const char * key, 
+                           const char * value );
+
+
+         /** string containing the union information */
+         Member fDataMember;
+
+      }; // class VariableBuilderImpl
+
+
+      /** 
+       * @class VariableBuilderT VariableBuilder.h Reflex/Builder/VariableBuilder.h
+       * @author Stefan Roiser
+       * @date 6/4/2005
+       * @ingroup RefBld
+       */
+      template < typename D > class VariableBuilderT {
+
+      public:
+
+         /** constructor */
+         VariableBuilderT( const char * nam,
                            size_t offs,
                            unsigned int modifiers = 0 );
 
 
-      /** destructor */
-      ~VariableBuilderImpl();
-
-
-      /** AddProperty will add a PropertyNth 
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
-       */
-      void AddProperty( const char * key, 
-                        Any value );
-      void AddProperty( const char * key, 
-                        const char * value );
-
-
-      /** string containing the union information */
-      Member fDataMember;
-
-    }; // class VariableBuilderImpl
-
-
-    /** 
-     * @class VariableBuilderT VariableBuilder.h Reflex/Builder/VariableBuilder.h
-     * @author Stefan Roiser
-     * @date 6/4/2005
-     * @ingroup RefBld
-     */
-    template < typename D > class VariableBuilderT {
-
-    public:
-
-      /** constructor */
-      VariableBuilderT( const char * nam,
-                        size_t offs,
-                        unsigned int modifiers = 0 );
-
-
-      /** destructor */
-      virtual ~VariableBuilderT() {}
+         /** destructor */
+         virtual ~VariableBuilderT() {}
       
 
-      /** 
-       * AddProperty will add a PropertyNth 
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
-       */
-      template < typename P >
-        VariableBuilderT & AddProperty( const char * key, P value );
+         /** 
+          * AddProperty will add a PropertyNth 
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         template < typename P >
+            VariableBuilderT & AddProperty( const char * key, P value );
 
-    private:
+      private:
 
-      /** data MemberAt builder implementation */
-      VariableBuilderImpl fDataMemberBuilderImpl;
+         /** data MemberAt builder implementation */
+         VariableBuilderImpl fDataMemberBuilderImpl;
     
-    }; // class VariableBuilderT
+      }; // class VariableBuilderT
 
 
-  } // namespace Reflex
+   } // namespace Reflex
 } // namespace ROOT
 
 
@@ -145,10 +145,10 @@ inline ROOT::Reflex::VariableBuilderT<D>::VariableBuilderT( const char * nam,
                                                             size_t offs,
                                                             unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
-  : fDataMemberBuilderImpl( nam,
-                            TypeDistiller<D>::Get(),
-                            offs,
-                            modifiers ) {}
+   : fDataMemberBuilderImpl( nam,
+                             TypeDistiller<D>::Get(),
+                             offs,
+                             modifiers ) {}
 
 
 //-------------------------------------------------------------------------------
@@ -156,9 +156,9 @@ template < typename D > template < typename P >
 inline ROOT::Reflex::VariableBuilderT<D> &
 ROOT::Reflex::VariableBuilderT<D>::AddProperty( const char * key, 
                                                 P value ) {
-  //-------------------------------------------------------------------------------
-  fDataMemberBuilderImpl.AddProperty(key, value);
-  return * this;
+//-------------------------------------------------------------------------------
+   fDataMemberBuilderImpl.AddProperty(key, value);
+   return * this;
 }
 
 #endif // ROOT_Reflex_VariableBuilder

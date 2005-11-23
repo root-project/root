@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,15 +19,14 @@
 #include "Reflex/Base.h"
 
 #include "Reflex/Tools.h"
-#include "Reflex/Tools.h"
 #include "Class.h"
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return *(fScopeName->fScopeBase);
-  return Type();
+   if ( * this ) return *(fScopeName->fScopeBase);
+   return Type();
 }
 
 
@@ -35,80 +34,80 @@ ROOT::Reflex::Scope::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Base ROOT::Reflex::Scope::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->BaseAt( nth );
-  return Base();
+   if ( * this ) return fScopeName->fScopeBase->BaseAt( nth );
+   return Base();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::BaseSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->BaseSize();
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->BaseSize();
+   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
-  return ScopeName::ByName( name );
+   return ScopeName::ByName( name );
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberAt( nth ); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->DataMemberAt( nth ); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberByName( name ); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->DataMemberByName( name ); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::DataMemberSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->DataMemberSize(); 
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->DataMemberSize(); 
+   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberAt( size_t nth ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberAt(nth); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMemberAt(nth); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, Type() ); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, Type() ); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name,
-                                                             const Type & signature ) const {
+                                                                const Type & signature ) const {
 //------------------------------------------------------------------------------- 
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, signature ); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, signature ); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->FunctionMemberSize(); 
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->FunctionMemberSize(); 
+   return 0;
 }
 
 
@@ -116,125 +115,125 @@ size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 ROOT::Reflex::Member 
 ROOT::Reflex::Scope::MemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberByName(name, Type()); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->MemberByName(name, Type()); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member 
 ROOT::Reflex::Scope::MemberByName( const std::string & name,
-                                const Type & signature ) const {
+                                   const Type & signature ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberByName(name, signature); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->MemberByName(name, signature); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::Scope::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberAt(nth); 
-  return Member();
+   if ( * this ) return fScopeName->fScopeBase->MemberAt(nth); 
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberTemplateAt( nth );
-  return MemberTemplate();
+   if ( * this ) return fScopeName->fScopeBase->MemberTemplateAt( nth );
+   return MemberTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->MemberTemplateSize();
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->MemberTemplateSize();
+   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Scope::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->Name( mod );
-  else if ( fScopeName ) {
-    if ( 0 != ( mod & ( SCOPED | S ))) return fScopeName->Name();
-    else                               return Tools::GetBaseName( fScopeName->Name());
-  }
-  else {
-    return "";
-  }
+   if ( * this ) return fScopeName->fScopeBase->Name( mod );
+   else if ( fScopeName ) {
+      if ( 0 != ( mod & ( SCOPED | S ))) return fScopeName->Name();
+      else                               return Tools::GetBaseName( fScopeName->Name());
+   }
+   else {
+      return "";
+   }
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::Scope::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
-  return ScopeName::ScopeAt( nth );
+   return ScopeName::ScopeAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::ScopeSize() {
 //-------------------------------------------------------------------------------
-  return ScopeName::ScopeSize();
+   return ScopeName::ScopeSize();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeAt( nth ); 
-  return Type();
+   if ( * this ) return fScopeName->fScopeBase->SubTypeAt( nth ); 
+   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::SubTypeSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeSize(); 
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->SubTypeSize(); 
+   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->TemplateArgumentAt( nth );
-  return Type();
+   if ( * this ) return fScopeName->fScopeBase->TemplateArgumentAt( nth );
+   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::TemplateFamily() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->TemplateFamily();
-  return TypeTemplate();
+   if ( * this ) return fScopeName->fScopeBase->TemplateFamily();
+   return TypeTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateAt( nth ); 
-  return TypeTemplate();
+   if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateAt( nth ); 
+   return TypeTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::Scope::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateSize();
-  return 0;
+   if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateSize();
+   return 0;
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->AddDataMember( dm );
+   if ( * this) fScopeName->fScopeBase->AddDataMember( dm );
 }
 
 
@@ -244,24 +243,24 @@ void ROOT::Reflex::Scope::AddDataMember( const char * name,
                                          size_t offset,
                                          unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
-                                                       type, 
-                                                       offset, 
-                                                       modifiers );
+   if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
+                                                        type, 
+                                                        offset, 
+                                                        modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::RemoveDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->RemoveDataMember( dm );
+   if ( * this) fScopeName->fScopeBase->RemoveDataMember( dm );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::AddFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->AddFunctionMember( fm );
+   if ( * this) fScopeName->fScopeBase->AddFunctionMember( fm );
 }
 
 
@@ -273,26 +272,26 @@ void ROOT::Reflex::Scope::AddFunctionMember( const char * nam,
                                              const char * params,
                                              unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddFunctionMember( nam, 
-                                                           typ, 
-                                                           stubFP, 
-                                                           stubCtx, 
-                                                           params, 
-                                                           modifiers );
+   if ( * this ) fScopeName->fScopeBase->AddFunctionMember( nam, 
+                                                            typ, 
+                                                            stubFP, 
+                                                            stubCtx, 
+                                                            params, 
+                                                            modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::RemoveFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->RemoveFunctionMember( fm );
+   if ( * this) fScopeName->fScopeBase->RemoveFunctionMember( fm );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::AddSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->AddSubType( ty );
+   if ( * this) fScopeName->fScopeBase->AddSubType( ty );
 }
 
 
@@ -303,44 +302,44 @@ void ROOT::Reflex::Scope::AddSubType( const char * type,
                                       const std::type_info & typeInfo,
                                       unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddSubType( type, 
-                                                    size, 
-                                                    typeType, 
-                                                    typeInfo, 
-                                                    modifiers );
+   if ( * this ) fScopeName->fScopeBase->AddSubType( type, 
+                                                     size, 
+                                                     typeType, 
+                                                     typeInfo, 
+                                                     modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::RemoveSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
-  if ( * this) fScopeName->fScopeBase->RemoveSubType( ty );
+   if ( * this) fScopeName->fScopeBase->RemoveSubType( ty );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::AddMemberTemplate( const MemberTemplate & mt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddMemberTemplate( mt );
+   if ( * this ) fScopeName->fScopeBase->AddMemberTemplate( mt );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::RemoveMemberTemplate( const MemberTemplate & mt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->RemoveMemberTemplate( mt );
+   if ( * this ) fScopeName->fScopeBase->RemoveMemberTemplate( mt );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::AddSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->AddSubTypeTemplate( tt );
+   if ( * this ) fScopeName->fScopeBase->AddSubTypeTemplate( tt );
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Scope::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
-  if ( * this ) fScopeName->fScopeBase->RemoveSubTypeTemplate( tt );
+   if ( * this ) fScopeName->fScopeBase->RemoveSubTypeTemplate( tt );
 }

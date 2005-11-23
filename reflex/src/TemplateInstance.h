@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,119 +17,119 @@
 #include "Reflex/Type.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-
-    /**
-     * @class TemplateInstance TemplateInstance.h Reflex/TemplateInstance.h
-     * @author Stefan Roiser
-     * @date   2004-01-28
-     * @ingroup Ref
-     */
-    class TemplateInstance {
-
-    public:
-
-      /** default constructor */
-      TemplateInstance();
-
-
-      /** constructor */
-      TemplateInstance( const std::string & templateArguments );
-
-
-      /** destructor */
-      virtual ~TemplateInstance() {}
-
+      // forward declarations
 
       /**
-       * Name returns the full Name of the templated collection
-       * @param  typedefexp expand typedefs or not
-       * @return full Name of template collection
+       * @class TemplateInstance TemplateInstance.h Reflex/TemplateInstance.h
+       * @author Stefan Roiser
+       * @date   2004-01-28
+       * @ingroup Ref
        */
-      std::string Name( unsigned int mod = 0 ) const;
+      class TemplateInstance {
+
+      public:
+
+         /** default constructor */
+         TemplateInstance();
 
 
-      /**
-       * TemplateArgumentAt will return a pointer to the nth template argument
-       * @param  nth nth template argument
-       * @return pointer to nth template argument
-       */
-      Type TemplateArgumentAt( size_t nth ) const;
+         /** constructor */
+         TemplateInstance( const std::string & templateArguments );
 
 
-      /**
-       * templateArgSize will return the number of template arguments
-       * @return number of template arguments
-       */
-      size_t TemplateArgumentSize() const;
+         /** destructor */
+         virtual ~TemplateInstance() {}
 
 
-      Type_Iterator TemplateArgument_Begin() const;
-      Type_Iterator TemplateArgument_End() const;
-      Reverse_Type_Iterator TemplateArgument_RBegin() const;
-      Reverse_Type_Iterator TemplateArgument_REnd() const;
+         /**
+          * Name returns the full Name of the templated collection
+          * @param  typedefexp expand typedefs or not
+          * @return full Name of template collection
+          */
+         std::string Name( unsigned int mod = 0 ) const;
 
-    private:
 
-      /** vector of template arguments */
-      mutable
-      std::vector < Type > fTemplateArguments;
+         /**
+          * TemplateArgumentAt will return a pointer to the nth template argument
+          * @param  nth nth template argument
+          * @return pointer to nth template argument
+          */
+         Type TemplateArgumentAt( size_t nth ) const;
 
-    }; // class TemplateInstance
 
-  } // namespace Reflex
+         /**
+          * templateArgSize will return the number of template arguments
+          * @return number of template arguments
+          */
+         size_t TemplateArgumentSize() const;
+
+
+         Type_Iterator TemplateArgument_Begin() const;
+         Type_Iterator TemplateArgument_End() const;
+         Reverse_Type_Iterator TemplateArgument_RBegin() const;
+         Reverse_Type_Iterator TemplateArgument_REnd() const;
+
+      private:
+
+         /** vector of template arguments */
+         mutable
+            std::vector < Type > fTemplateArguments;
+
+      }; // class TemplateInstance
+
+   } // namespace Reflex
 } // namespace ROOT
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TemplateInstance::TemplateInstance() 
 //-------------------------------------------------------------------------------
-  : fTemplateArguments( std::vector<Type>()) {}
+   : fTemplateArguments( std::vector<Type>()) {}
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type
 ROOT::Reflex::TemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( nth < fTemplateArguments.size() ) { return fTemplateArguments[ nth ]; }
-  return Type();
+   if ( nth < fTemplateArguments.size() ) { return fTemplateArguments[ nth ]; }
+   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::TemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
-  return fTemplateArguments.size();
+   return fTemplateArguments.size();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-  return fTemplateArguments.begin();
+   return fTemplateArguments.begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-  return fTemplateArguments.end();
+   return fTemplateArguments.end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-  return fTemplateArguments.rbegin();
+   return fTemplateArguments.rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-  return fTemplateArguments.rend();
+   return fTemplateArguments.rend();
 }
 
 

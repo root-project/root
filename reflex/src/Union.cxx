@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Union.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Union.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,15 +18,18 @@ ROOT::Reflex::Union::Union( const char * unionType,
                             size_t size,
                             const std::type_info & ti ) 
 //-------------------------------------------------------------------------------
-  : TypeBase( unionType, size, UNION, ti ),
-    ScopeBase( unionType, UNION) {}
+   : TypeBase( unionType, size, UNION, ti ),
+     ScopeBase( unionType, UNION) {}
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Union::~Union() {
 //-------------------------------------------------------------------------------
 }
+
+
+//-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return ScopeBase::MemberAt( nth );
+   return ScopeBase::MemberAt( nth );
 }

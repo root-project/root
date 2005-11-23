@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.4 2005/11/04 15:32:56 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.5 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -42,24 +42,25 @@
 
 // Large integer definition depends of the platform
 #ifdef _WIN32
-  typedef __int64 longlong;
-  typedef unsigned __int64 ulonglong;
+typedef __int64 longlong;
+typedef unsigned __int64 ulonglong;
 #elif defined(__linux) || defined(sun) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux)) || defined(__sgi)
-  typedef long long int longlong;
-  typedef unsigned long long int ulonglong;
+typedef long long int longlong; /* */
+typedef unsigned long long int /**/ ulonglong;
 #endif
 #ifndef LONGLONG_MAX
-  #define LONGLONG_MAX 0x7FFFFFFFFFFFFFFFLL
+#define LONGLONG_MAX 0x7FFFFFFFFFFFFFFFLL
 #endif
 #ifndef LONGLONG_MIN
-  #define LONGLONG_MIN 0x8000000000000000LL
+#define LONGLONG_MIN 0x8000000000000000LL
 #endif
 #ifndef ULONGLONG_MAX
-  #define ULONGLONG_MAX 0xFFFFFFFFFFFFFFFFLL
+#define ULONGLONG_MAX 0xFFFFFFFFFFFFFFFFLL
 #endif
 #ifndef ULONGLONG_MIN
-  #define ULONGLONG_MIN 0x0000000000000000LL
+#define ULONGLONG_MIN 0x0000000000000000LL
 #endif
+
 
 // Include files
 #include <string>
@@ -68,185 +69,186 @@
 #include <exception>
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class Type;
-    class Base;
-    class Scope;
-    class Object;
-    class Member;
-    class PropertyList;
-    class TypeTemplate;
-    class MemberTemplate;
+      // forward declarations
+      class Type;
+      class Base;
+      class Scope;
+      class Object;
+      class Member;
+      class PropertyList;
+      class TypeTemplate;
+      class MemberTemplate;
 
-    typedef std::vector< Type > Type_Cont_Type;
-    typedef Type_Cont_Type::iterator Type_Iterator;
-    typedef Type_Cont_Type::reverse_iterator Reverse_Type_Iterator;
+      typedef std::vector<std::string> StdString_Cont_Type_t;
+      typedef StdString_Cont_Type_t::iterator StdString_Iterator;
+      typedef StdString_Cont_Type_t::reverse_iterator Reverse_StdString_Iterator;
 
-    typedef std::vector< Base > Base_Cont_Type;
-    typedef Base_Cont_Type::iterator Base_Iterator;
-    typedef Base_Cont_Type::reverse_iterator Reverse_Base_Iterator;
+      typedef std::vector< Type > Type_Cont_Type_t;
+      typedef Type_Cont_Type_t::iterator Type_Iterator;
+      typedef Type_Cont_Type_t::reverse_iterator Reverse_Type_Iterator;
 
-    typedef std::vector< Scope > Scope_Cont_Type;
-    typedef Scope_Cont_Type::iterator Scope_Iterator;
-    typedef Scope_Cont_Type::reverse_iterator Reverse_Scope_Iterator;
+      typedef std::vector< Base > Base_Cont_Type_t;
+      typedef Base_Cont_Type_t::iterator Base_Iterator;
+      typedef Base_Cont_Type_t::reverse_iterator Reverse_Base_Iterator;
 
-    typedef std::vector< Object > Object_Cont_Type;
-    typedef Object_Cont_Type::iterator Object_Iterator;
-    typedef Object_Cont_Type::reverse_iterator Reverse_Object_Iterator;
+      typedef std::vector< Scope > Scope_Cont_Type_t;
+      typedef Scope_Cont_Type_t::iterator Scope_Iterator;
+      typedef Scope_Cont_Type_t::reverse_iterator Reverse_Scope_Iterator;
 
-    typedef std::vector< Member > Member_Cont_Type;
-    typedef Member_Cont_Type::iterator Member_Iterator;
-    typedef Member_Cont_Type::reverse_iterator Reverse_Member_Iterator;
+      typedef std::vector< Object > Object_Cont_Type_t;
+      typedef Object_Cont_Type_t::iterator Object_Iterator;
+      typedef Object_Cont_Type_t::reverse_iterator Reverse_Object_Iterator;
 
-    typedef std::vector< TypeTemplate > TypeTemplate_Cont_Type;
-    typedef TypeTemplate_Cont_Type::iterator TypeTemplate_Iterator;
-    typedef TypeTemplate_Cont_Type::reverse_iterator Reverse_TypeTemplate_Iterator;
+      typedef std::vector< Member > Member_Cont_Type_t;
+      typedef Member_Cont_Type_t::iterator Member_Iterator;
+      typedef Member_Cont_Type_t::reverse_iterator Reverse_Member_Iterator;
 
-    typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type;
-    typedef MemberTemplate_Cont_Type::iterator MemberTemplate_Iterator;
-    typedef MemberTemplate_Cont_Type::reverse_iterator Reverse_MemberTemplate_Iterator;
+      typedef std::vector< TypeTemplate > TypeTemplate_Cont_Type_t;
+      typedef TypeTemplate_Cont_Type_t::iterator TypeTemplate_Iterator;
+      typedef TypeTemplate_Cont_Type_t::reverse_iterator Reverse_TypeTemplate_Iterator;
 
-    typedef std::vector<std::string> StdString_Cont_Type;
-    typedef StdString_Cont_Type::iterator StdString_Iterator;
-    typedef StdString_Cont_Type::reverse_iterator Reverse_StdString_Iterator;
+      typedef std::vector< MemberTemplate > MemberTemplate_Cont_Type_t;
+      typedef MemberTemplate_Cont_Type_t::iterator MemberTemplate_Iterator;
+      typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
 
-    /** some general information about the Reflex package */
-    struct Reflex {
-    public:
+      /** some general information about the Reflex package */
+      class Reflex {
+         public:
       
-      /** default constructor */
-      Reflex();
+         /** default constructor */
+         Reflex();
       
-      /** the Name of the package - used for messages */
-      static const std::string & Argv0(); // returns "Seal Reflex";
+         /** the Name of the package - used for messages */
+         static const std::string & Argv0(); // returns "Seal Reflex";
 
-    }; // struct Reflex
+      }; // struct Reflex
 
     
-    // these defines are used for the modifiers they are used in the following 
-    // classes
-    // BA = BASE
-    // CL = CLASS
-    // FU = FUNCTION
-    // DM = DATAMEMBER
-    // FM = FUNCTIONMEMBER 
-    // TY = TYPE
-    // ME = MEMBER
-    //                              BA  CL  DM  FM  TY  ME 
-    enum {
-      PUBLIC          = (1<<0),  //  X       X   X       X
-      PROTECTED       = (1<<1),  //  X       X   X       X
-      PRIVATE         = (1<<2),  //  X       X   X       X
-      REGISTER        = (1<<3),  //          X   X       X
-      STATIC          = (1<<4),  //          X   X       X
-      CONSTRUCTOR     = (1<<5),  //              X       X
-      DESTRUCTOR      = (1<<6) , //              X       X
-      EXPLICIT        = (1<<7),  //              X       X
-      EXTERN          = (1<<8) , //          X   X       X
-      COPYCONSTRUCTOR = (1<<9) , //              X       X
-      OPERATOR        = (1<<10), //              X       X
-      INLINE          = (1<<11), //              X       X
-      CONVERTER       = (1<<12), //              X       X
-      AUTO            = (1<<13), //          X           X
-      MUTABLE         = (1<<14), //          X           X
-      CONST           = (1<<15), //          X       X   X
-      VOLATILE        = (1<<16), //          X       X   X
-      REFERENCE       = (1<<17), //          X           X
-      ABSTRACT        = (1<<18), //      X           X
-      VIRTUAL         = (1<<19), //  X   X           X
-      TRANSIENT       = (1<<20), //          X           X
-      ARTIFICIAL      = (1<<21), //  X   X   X   X   X   X
-      // the bits 31 - 28 are reserved for template default arguments 
-      TEMPLATEDEFAULTS1  = (0<<31)&(0<<30)&(0<<29)&(1<<28),
-      TEMPLATEDEFAULTS2  = (0<<31)&(0<<30)&(1<<29)&(0<<28),
-      TEMPLATEDEFAULTS3  = (0<<31)&(0<<30)&(1<<29)&(1<<28),
-      TEMPLATEDEFAULTS4  = (0<<31)&(1<<30)&(0<<29)&(0<<28),
-      TEMPLATEDEFAULTS5  = (0<<31)&(1<<30)&(0<<29)&(1<<28),
-      TEMPLATEDEFAULTS6  = (0<<31)&(1<<30)&(1<<29)&(0<<28),
-      TEMPLATEDEFAULTS7  = (0<<31)&(1<<30)&(1<<29)&(1<<28),
-      TEMPLATEDEFAULTS8  = (1<<31)&(0<<30)&(0<<29)&(0<<28),
-      TEMPLATEDEFAULTS9  = (1<<31)&(0<<30)&(0<<29)&(1<<28),
-      TEMPLATEDEFAULTS10 = (1<<31)&(0<<30)&(1<<29)&(0<<28),
-      TEMPLATEDEFAULTS11 = (1<<31)&(0<<30)&(1<<29)&(1<<28),
-      TEMPLATEDEFAULTS12 = (1<<31)&(1<<30)&(0<<29)&(0<<28),
-      TEMPLATEDEFAULTS13 = (1<<31)&(1<<30)&(0<<29)&(1<<28),
-      TEMPLATEDEFAULTS14 = (1<<31)&(1<<30)&(1<<29)&(0<<28),
-      TEMPLATEDEFAULTS15 = (1<<31)&(1<<30)&(1<<29)&(1<<28)
-    };
+      // these defines are used for the modifiers they are used in the following 
+      // classes
+      // BA = BASE
+      // CL = CLASS
+      // FU = FUNCTION
+      // DM = DATAMEMBER
+      // FM = FUNCTIONMEMBER 
+      // TY = TYPE
+      // ME = MEMBER
+      //                              BA  CL  DM  FM  TY  ME 
+      enum {
+         PUBLIC          = (1<<0),  //  X       X   X       X
+         PROTECTED       = (1<<1),  //  X       X   X       X
+         PRIVATE         = (1<<2),  //  X       X   X       X
+         REGISTER        = (1<<3),  //          X   X       X
+         STATIC          = (1<<4),  //          X   X       X
+         CONSTRUCTOR     = (1<<5),  //              X       X
+         DESTRUCTOR      = (1<<6) , //              X       X
+         EXPLICIT        = (1<<7),  //              X       X
+         EXTERN          = (1<<8) , //          X   X       X
+         COPYCONSTRUCTOR = (1<<9) , //              X       X
+         OPERATOR        = (1<<10), //              X       X
+         INLINE          = (1<<11), //              X       X
+         CONVERTER       = (1<<12), //              X       X
+         AUTO            = (1<<13), //          X           X
+         MUTABLE         = (1<<14), //          X           X
+         CONST           = (1<<15), //          X       X   X
+         VOLATILE        = (1<<16), //          X       X   X
+         REFERENCE       = (1<<17), //          X           X
+         ABSTRACT        = (1<<18), //      X           X
+         VIRTUAL         = (1<<19), //  X   X           X
+         TRANSIENT       = (1<<20), //          X           X
+         ARTIFICIAL      = (1<<21), //  X   X   X   X   X   X
+         // the bits 31 - 28 are reserved for template default arguments 
+         TEMPLATEDEFAULTS1  = (0<<31)&(0<<30)&(0<<29)&(1<<28),
+         TEMPLATEDEFAULTS2  = (0<<31)&(0<<30)&(1<<29)&(0<<28),
+         TEMPLATEDEFAULTS3  = (0<<31)&(0<<30)&(1<<29)&(1<<28),
+         TEMPLATEDEFAULTS4  = (0<<31)&(1<<30)&(0<<29)&(0<<28),
+         TEMPLATEDEFAULTS5  = (0<<31)&(1<<30)&(0<<29)&(1<<28),
+         TEMPLATEDEFAULTS6  = (0<<31)&(1<<30)&(1<<29)&(0<<28),
+         TEMPLATEDEFAULTS7  = (0<<31)&(1<<30)&(1<<29)&(1<<28),
+         TEMPLATEDEFAULTS8  = (1<<31)&(0<<30)&(0<<29)&(0<<28),
+         TEMPLATEDEFAULTS9  = (1<<31)&(0<<30)&(0<<29)&(1<<28),
+         TEMPLATEDEFAULTS10 = (1<<31)&(0<<30)&(1<<29)&(0<<28),
+         TEMPLATEDEFAULTS11 = (1<<31)&(0<<30)&(1<<29)&(1<<28),
+         TEMPLATEDEFAULTS12 = (1<<31)&(1<<30)&(0<<29)&(0<<28),
+         TEMPLATEDEFAULTS13 = (1<<31)&(1<<30)&(0<<29)&(1<<28),
+         TEMPLATEDEFAULTS14 = (1<<31)&(1<<30)&(1<<29)&(0<<28),
+         TEMPLATEDEFAULTS15 = (1<<31)&(1<<30)&(1<<29)&(1<<28)
+      };
 
 
-    /** enum for printing names */
-    enum {
-      FINAL     = (1<<0),
-      QUALIFIED = (1<<1),
-      SCOPED    = (1<<2),
-      F         = (1<<4),
-      Q         = (1<<5),
-      S         = (1<<6)
-    };
+      /** enum for printing names */
+      enum {
+         FINAL     = (1<<0),
+         QUALIFIED = (1<<1),
+         SCOPED    = (1<<2),
+         F         = (1<<4),
+         Q         = (1<<5),
+         S         = (1<<6)
+      };
       
 
-    /** enum containing all possible types and scopes */
-    enum TYPE { CLASS = 0,
-                STRUCT,
-                ENUM, 
-                FUNCTION, 
-                ARRAY, 
-                FUNDAMENTAL, 
-                POINTER, 
-                POINTERTOMEMBER, 
-                TYPEDEF, 
-                UNION, 
-                TYPETEMPLATEINSTANCE, 
-                MEMBERTEMPLATEINSTANCE, 
-                NAMESPACE, 
-                DATAMEMBER, 
-                FUNCTIONMEMBER,
-                UNRESOLVED
-    };
+      /** enum containing all possible types and scopes */
+      enum TYPE { CLASS = 0,
+                  STRUCT,
+                  ENUM, 
+                  FUNCTION, 
+                  ARRAY, 
+                  FUNDAMENTAL, 
+                  POINTER, 
+                  POINTERTOMEMBER, 
+                  TYPEDEF, 
+                  UNION, 
+                  TYPETEMPLATEINSTANCE, 
+                  MEMBERTEMPLATEINSTANCE, 
+                  NAMESPACE, 
+                  DATAMEMBER, 
+                  FUNCTIONMEMBER,
+                  UNRESOLVED
+      };
 
 
-    /** all possible status codes of the package */
-    enum STATUS { SUCCESS = 0,
-                  FAILURE
-    };
+      /** all possible status codes of the package */
+      enum STATUS { SUCCESS = 0,
+                    FAILURE
+      };
     
-    /** the Name of the status code -- don't use this to check */
-    #define SRSTATUSNAME rstat
-    /** the Name of the status code to check for */
-    #define SRSTATUS Reflex::SRSTATUSNAME
+      /** the Name of the status code -- don't use this to check */
+#define SRSTATUSNAME rstat
+      /** the Name of the status code to check for */
+#define SRSTATUS Reflex::SRSTATUSNAME
         
 
-    /**
-      * typedef for function MemberAt At (necessary for return value of
-      * getter function)
-      */
-    typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);
+      /**
+       * typedef for function MemberAt At (necessary for return value of
+       * getter function)
+       */
+      typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);
 
-    /** typedef for function for Offset calculation */
-    typedef size_t( * OffsetFunction ) ( void * );
+      /** typedef for function for Offset calculation */
+      typedef size_t( * OffsetFunction ) ( void * );
 
-    /** dummy types for type_info purposes */
-    struct NullType {};
-    struct UnknownType {};
-    /** place holders for unnamed types (also typeinfo purposes) */
-    struct UnnamedClass {};
-    struct UnnamedEnum {};
-    struct UnnamedNamespace {};
-    struct UnnamedStruct {};
-    struct UnnamedUnion {};
+      /** dummy types for type_info purposes */
+      class NullType {};
+      class UnknownType {};
+      /** place holders for unnamed types (also typeinfo purposes) */
+      class UnnamedClass {};
+      class UnnamedEnum {};
+      class UnnamedNamespace {};
+      class UnnamedStruct {};
+      class UnnamedUnion {};
     
-    /** exception classes */
-    struct RuntimeError : public std::exception {
-      RuntimeError(const std::string& msg) : fMsg(Reflex::Argv0() + ": " + msg) { }
-      ~RuntimeError() throw() {}
-      virtual const char * What() const throw( ) { return fMsg.c_str();}
-      std::string fMsg;
-    };
+      /** exception classes */
+      class RuntimeError : public std::exception {
+      public:
+	 RuntimeError(const std::string& msg) : fMsg(Reflex::Argv0() + ": " + msg) { }
+         ~RuntimeError() throw() {}
+         virtual const char * What() const throw( ) { return fMsg.c_str();}
+         std::string fMsg;
+      };
 
-  } // namespace Reflex
+   } // namespace Reflex
 } // namespace ROOT
 
 #endif // ROOT_Reflex_Kernel

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,41 +16,41 @@
 #include "Reflex/Scope.h"
 
 namespace ROOT{
-  namespace Reflex{
+   namespace Reflex{
 
-    /** 
-     * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
-     * @author Stefan Roiser
-     * @ingroup RefBld
-     * @date 30/3/2004
-     */
-    class NamespaceBuilder  {
-
-    public:            
-
-      /** constructor */
-      NamespaceBuilder( const char * nam );
-
-
-      /** destructor */
-      virtual ~NamespaceBuilder() {}
-
-      /** AddProperty will add a PropertyNth 
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
+      /** 
+       * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
+       * @author Stefan Roiser
+       * @ingroup RefBld
+       * @date 30/3/2004
        */
-      NamespaceBuilder & AddProperty( const char * key, Any value );
-      NamespaceBuilder & AddProperty( const char * key, const char * value );
+      class NamespaceBuilder  {
 
-    private:
+      public:            
 
-      /** the namespace */
-      Scope fNamespace;
+         /** constructor */
+         NamespaceBuilder( const char * nam );
 
-    }; // class NamespaceBuilder
 
-  } // namespace Reflex
+         /** destructor */
+         virtual ~NamespaceBuilder() {}
+
+         /** AddProperty will add a PropertyNth 
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         NamespaceBuilder & AddProperty( const char * key, Any value );
+         NamespaceBuilder & AddProperty( const char * key, const char * value );
+
+      private:
+
+         /** the namespace */
+         Scope fNamespace;
+
+      }; // class NamespaceBuilder
+
+   } // namespace Reflex
 } // namespace ROOT
 
 

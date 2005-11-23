@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Fundamental.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,28 +16,28 @@
 #include "Reflex/TypeBase.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
 
-    /**
-     * @class Fundamental Fundamental.h Reflex/Fundamental.h
-     *  @author Stefan Roiser
-     *  @date 24/11/2003
-     */
-    class Fundamental : public TypeBase {
-    public:
+      /**
+       * @class Fundamental Fundamental.h Reflex/Fundamental.h
+       *  @author Stefan Roiser
+       *  @date 24/11/2003
+       */
+      class Fundamental : public TypeBase {
+      public:
 
-      /** default constructor */
-      Fundamental( const char * typ,
-                   size_t size,
-                   const std::type_info & ti ) ;
+         /** default constructor */
+         Fundamental( const char * typ,
+                      size_t size,
+                      const std::type_info & ti ) ;
 
 
-      /** destructor */
-      virtual ~Fundamental() {}
+         /** destructor */
+         virtual ~Fundamental() {}
 
-    }; // class Fundamental
-  } //namespace Reflex
+      }; // class Fundamental
+   } //namespace Reflex
 } //namespace ROOT
 
 #endif // ROOT_Reflex_Fundamental

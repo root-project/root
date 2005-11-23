@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Pointer.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -15,14 +15,14 @@
 ROOT::Reflex::Pointer::Pointer( const Type &           pointerType,
                                 const std::type_info & ti )
 //-------------------------------------------------------------------------------
-  : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
-    fPointerType( pointerType ) { }
+   : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
+     fPointerType( pointerType ) { }
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  return BuildTypeName( fPointerType, mod );
+   return BuildTypeName( fPointerType, mod );
 }
 
 
@@ -30,5 +30,5 @@ std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
 std::string ROOT::Reflex::Pointer::BuildTypeName( const Type & pointerType,
                                                   unsigned int mod ) {
 //-------------------------------------------------------------------------------
-  return pointerType.Name( mod ) + "*";
+   return pointerType.Name( mod ) + "*";
 }

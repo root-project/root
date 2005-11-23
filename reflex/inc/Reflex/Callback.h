@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Callback.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -15,40 +15,40 @@
 // Include files
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class Type;
-    class Member;
+      // forward declarations
+      class Type;
+      class Member;
 
-    /** 
-     * @class Callback Callback.h Reflex/Callback.h
-     * @author Pere Mato
-     * @date 12/11/2004
-     * @ingroup Ref
-     */
-    class ICallback {
-      
-    public:
-
-      /** destructor */
-      virtual ~ICallback() {}
-
-      /**
-       * operator call (virtual)
+      /** 
+       * @class Callback Callback.h Reflex/Callback.h
+       * @author Pere Mato
+       * @date 12/11/2004
+       * @ingroup Ref
        */
-       virtual void operator () ( const Type & ) = 0;
-       virtual void operator () ( const Member & ) = 0;
+      class ICallback {
+      
+      public:
 
-    }; // class ICallback
+         /** destructor */
+         virtual ~ICallback() {}
+
+         /**
+          * operator call (virtual)
+          */
+         virtual void operator () ( const Type & ) = 0;
+         virtual void operator () ( const Member & ) = 0;
+
+      }; // class ICallback
     
     
-    void InstallClassCallback( ICallback * cb );
-    void UninstallClassCallback( ICallback * cb );
-    void FireClassCallback( const Type & );
-    void FireFunctionCallback( const Member & );
+      void InstallClassCallback( ICallback * cb );
+      void UninstallClassCallback( ICallback * cb );
+      void FireClassCallback( const Type & );
+      void FireFunctionCallback( const Member & );
     
-  } // namespace Reflex
+   } // namespace Reflex
 } // namespace ROOT
 
 

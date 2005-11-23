@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,110 +16,110 @@
 #include "Reflex/MemberBase.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class Type;
-    class Object;
+      // forward declarations
+      class Type;
+      class Object;
 
-    /**
-     * @class FunctionMember FunctionMember.h Reflex/FunctionMember.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class FunctionMember : public MemberBase {
+      /**
+       * @class FunctionMember FunctionMember.h Reflex/FunctionMember.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
+       */
+      class FunctionMember : public MemberBase {
 
-    public:
+      public:
 
-      /** default constructor */
-      FunctionMember( const char *   nam,
-                      const Type &   typ,
-                      StubFunction   stubFP,
-                      void *         stubCtx = 0,
-                      const char *   params = 0,
-                      unsigned int   modifiers = 0,
-                      TYPE           memType = FUNCTIONMEMBER );
-
-
-      /** destructor */
-      virtual ~FunctionMember() {}
+         /** default constructor */
+         FunctionMember( const char *   nam,
+                         const Type &   typ,
+                         StubFunction   stubFP,
+                         void *         stubCtx = 0,
+                         const char *   params = 0,
+                         unsigned int   modifiers = 0,
+                         TYPE           memType = FUNCTIONMEMBER );
 
 
-      /** return full Name of function MemberAt */
-      std::string Name( unsigned int mod = 0 ) const;
+         /** destructor */
+         virtual ~FunctionMember() {}
 
 
-      /** Invoke the function (if return At as void*) */
-      /*Object Invoke( const Object & obj, 
-        const std::vector < Object > & paramList ) const;*/
-      Object Invoke( const Object & obj, 
-                     const std::vector < void * > & paramList = 
-                     std::vector<void*>()) const;
+         /** return full Name of function MemberAt */
+         std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** Invoke the function (for static functions) */
-      //Object Invoke( const std::vector < Object > & paramList ) const;
-      Object Invoke( const std::vector < void * > & paramList = 
-                     std::vector<void*>()) const;
+         /** Invoke the function (if return At as void*) */
+         /*Object Invoke( const Object & obj, 
+           const std::vector < Object > & paramList ) const;*/
+         Object Invoke( const Object & obj, 
+                        const std::vector < void * > & paramList = 
+                        std::vector<void*>()) const;
 
 
-      /** number of parameters */
-      size_t FunctionParameterSize( bool required = false ) const;
+         /** Invoke the function (for static functions) */
+         //Object Invoke( const std::vector < Object > & paramList ) const;
+         Object Invoke( const std::vector < void * > & paramList = 
+                        std::vector<void*>()) const;
 
 
-      /** FunctionParameterAt nth default value if declared*/
-      std::string FunctionParameterDefaultAt( size_t nth ) const;
+         /** number of parameters */
+         size_t FunctionParameterSize( bool required = false ) const;
 
 
-      virtual StdString_Iterator FunctionParameterDefault_Begin() const;
-      virtual StdString_Iterator FunctionParameterDefault_End() const;
-      virtual Reverse_StdString_Iterator FunctionParameterDefault_RBegin() const;
-      virtual Reverse_StdString_Iterator FunctionParameterDefault_REnd() const;
+         /** FunctionParameterAt nth default value if declared*/
+         std::string FunctionParameterDefaultAt( size_t nth ) const;
 
 
-      /** FunctionParameterAt nth Name if declared*/
-      std::string FunctionParameterNameAt( size_t nth ) const;
+         virtual StdString_Iterator FunctionParameterDefault_Begin() const;
+         virtual StdString_Iterator FunctionParameterDefault_End() const;
+         virtual Reverse_StdString_Iterator FunctionParameterDefault_RBegin() const;
+         virtual Reverse_StdString_Iterator FunctionParameterDefault_REnd() const;
 
 
-      virtual StdString_Iterator FunctionParameterName_Begin() const;
-      virtual StdString_Iterator FunctionParameterName_End() const;
-      virtual Reverse_StdString_Iterator FunctionParameterName_RBegin() const;
-      virtual Reverse_StdString_Iterator FunctionParameterName_REnd() const;
+         /** FunctionParameterAt nth Name if declared*/
+         std::string FunctionParameterNameAt( size_t nth ) const;
 
 
-      /** return a pointer to the context */
-      void * Stubcontext() const;
+         virtual StdString_Iterator FunctionParameterName_Begin() const;
+         virtual StdString_Iterator FunctionParameterName_End() const;
+         virtual Reverse_StdString_Iterator FunctionParameterName_RBegin() const;
+         virtual Reverse_StdString_Iterator FunctionParameterName_REnd() const;
 
 
-      /** return the pointer to the stub function */
-      StubFunction Stubfunction() const;
-
-    private:
-
-      /** pointer to the stub function */
-      StubFunction fStubFP;
+         /** return a pointer to the context */
+         void * Stubcontext() const;
 
 
-      /** user data for the stub function */
-      void*  fStubCtx;
+         /** return the pointer to the stub function */
+         StubFunction Stubfunction() const;
+
+      private:
+
+         /** pointer to the stub function */
+         StubFunction fStubFP;
 
 
-      /** FunctionParameterAt names */
-      mutable
-      std::vector < std::string > fParameterNames;
+         /** user data for the stub function */
+         void*  fStubCtx;
 
 
-      /** FunctionParameterAt names */
-      mutable
-      std::vector < std::string > fParameterDefaults;
+         /** FunctionParameterAt names */
+         mutable
+            std::vector < std::string > fParameterNames;
 
 
-      /** number of required parameters */
-      size_t fReqParameters;
+         /** FunctionParameterAt names */
+         mutable
+            std::vector < std::string > fParameterDefaults;
+
+
+         /** number of required parameters */
+         size_t fReqParameters;
      
-    }; // class FunctionMember
-  } //namespace Reflex
+      }; // class FunctionMember
+   } //namespace Reflex
 } //namespace ROOT
 
 
@@ -128,63 +128,63 @@ namespace ROOT {
 inline std::string 
 ROOT::Reflex::FunctionMember::FunctionParameterDefaultAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return fParameterDefaults[nth];
+   return fParameterDefaults[nth];
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_Begin() const {
 //-------------------------------------------------------------------------------
-  return fParameterDefaults.begin();
+   return fParameterDefaults.begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_End() const {
 //-------------------------------------------------------------------------------
-  return fParameterDefaults.end();
+   return fParameterDefaults.end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_RBegin() const {
 //-------------------------------------------------------------------------------
-  return fParameterDefaults.rbegin();
+   return fParameterDefaults.rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterDefault_REnd() const {
 //-------------------------------------------------------------------------------
-  return fParameterDefaults.rend();
+   return fParameterDefaults.rend();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_Begin() const {
 //-------------------------------------------------------------------------------
-  return fParameterNames.begin();
+   return fParameterNames.begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_End() const {
 //-------------------------------------------------------------------------------
-  return fParameterNames.end();
+   return fParameterNames.end();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_RBegin() const {
 //-------------------------------------------------------------------------------
-  return fParameterNames.rbegin();
+   return fParameterNames.rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::FunctionParameterName_REnd() const {
 //-------------------------------------------------------------------------------
-  return fParameterNames.rend();
+   return fParameterNames.rend();
 }
 
 
@@ -192,14 +192,14 @@ inline ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::FunctionMember::Fu
 inline std::string 
 ROOT::Reflex::FunctionMember::FunctionParameterNameAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return fParameterNames[nth];
+   return fParameterNames[nth];
 }
 
 
 //-------------------------------------------------------------------------------
 inline void * ROOT::Reflex::FunctionMember::Stubcontext() const {
 //-------------------------------------------------------------------------------
-  return fStubCtx;
+   return fStubCtx;
 }
 
 
@@ -207,7 +207,7 @@ inline void * ROOT::Reflex::FunctionMember::Stubcontext() const {
 inline ROOT::Reflex::StubFunction 
 ROOT::Reflex::FunctionMember::Stubfunction() const {
 //-------------------------------------------------------------------------------
-  return fStubFP;
+   return fStubFP;
 }
 
 #endif // ROOT_Reflex_FunctionMember

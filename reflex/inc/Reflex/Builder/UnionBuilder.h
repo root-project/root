@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,136 +17,136 @@
 #include "Reflex/Member.h"
 
 namespace ROOT{
-  namespace Reflex{
+   namespace Reflex{
 
-    // forward declarations
-    class Union;
-    class Type;
+      // forward declarations
+      class Union;
+      class Type;
     
-    /** 
-     * @class UnionBuilderImpl UnionBuilder.h Reflex/Builder/UnionBuilder.h
-     * @author Stefan Roiser
-     * @date 14/3/2005
-     * @ingroup RefBld
-     */
-    class UnionBuilderImpl {
-
-    public:
-
-      /** constructor */
-      UnionBuilderImpl( const char * nam,
-                        size_t size,
-                        const std::type_info & ti );
-
-      /** destructor */
-      virtual ~UnionBuilderImpl() {}
-
-
-      /**
-       * AddItem will add one union item
-       * @param Name the Name of the union item
-       * @param At the At of the union item
+      /** 
+       * @class UnionBuilderImpl UnionBuilder.h Reflex/Builder/UnionBuilder.h
+       * @author Stefan Roiser
+       * @date 14/3/2005
+       * @ingroup RefBld
        */
-      void AddItem( const char * nam,
-                    const Type & typ );
+      class UnionBuilderImpl {
+
+      public:
+
+         /** constructor */
+         UnionBuilderImpl( const char * nam,
+                           size_t size,
+                           const std::type_info & ti );
+
+         /** destructor */
+         virtual ~UnionBuilderImpl() {}
+
+
+         /**
+          * AddItem will add one union item
+          * @param Name the Name of the union item
+          * @param At the At of the union item
+          */
+         void AddItem( const char * nam,
+                       const Type & typ );
+
+
+         /** 
+          * AddProperty will add a PropertyNth to the PropertyNth stack
+          * which will be emtpied with the next build of a union 
+          * or union item
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         void AddProperty( const char * key,
+                           Any value );
+
+
+         /** 
+          * AddProperty will add a PropertyNth to the PropertyNth stack
+          * which will be emtpied with the next build of a union 
+          * or union item
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         void AddProperty( const char * key,
+                           const char * value );
+
+      private:
+
+         /** the union currently being built */
+         Union * fUnion;
+
+         /** the last union item built */
+         Member fLastMember;
+
+      }; // class UnionBuilderImpl
 
 
       /** 
-       * AddProperty will add a PropertyNth to the PropertyNth stack
-       * which will be emtpied with the next build of a union 
-       * or union item
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
+       * @class UnionBuilder UnionBuilder.h Reflex/Builder/UnionBuilder.h
+       * @author Stefan Roiser
+       * @date 30/3/2004
+       * @ingroup RefBld
        */
-      void AddProperty( const char * key,
-                        Any value );
+      template < typename T >
+         class UnionBuilder {
+
+         public:    
+
+         /** constructor */
+         UnionBuilder();
 
 
-      /** 
-       * AddProperty will add a PropertyNth to the PropertyNth stack
-       * which will be emtpied with the next build of a union 
-       * or union item
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
-       */
-      void AddProperty( const char * key,
-                        const char * value );
-
-    private:
-
-      /** the union currently being built */
-      Union * fUnion;
-
-      /** the last union item built */
-      Member fLastMember;
-
-    }; // class UnionBuilderImpl
-
-
-    /** 
-     * @class UnionBuilder UnionBuilder.h Reflex/Builder/UnionBuilder.h
-     * @author Stefan Roiser
-     * @date 30/3/2004
-     * @ingroup RefBld
-     */
-    template < typename T >
-    class UnionBuilder {
-
-    public:    
-
-      /** constructor */
-      UnionBuilder();
-
-
-      /** constructor */
-      UnionBuilder(const char * nam );
+         /** constructor */
+         UnionBuilder(const char * nam );
 
       
-      /** destructor */
-      virtual ~UnionBuilder();
+         /** destructor */
+         virtual ~UnionBuilder();
 
       
-      /**
-       * AddItem will add one union item
-       * @param Name the Name of the union item
-       * @param At the At of the union item
-       * @return a reference to the UnionBuilder
-       */
-      template < typename U > 
-        UnionBuilder & AddItem( const char * nam );
+         /**
+          * AddItem will add one union item
+          * @param Name the Name of the union item
+          * @param At the At of the union item
+          * @return a reference to the UnionBuilder
+          */
+         template < typename U > 
+            UnionBuilder & AddItem( const char * nam );
  
 
-      /**
-       * AddItem will add one union item
-       * @param Name the Name of the union item
-       * @param At the At of the union item
-       * @return a reference to the UnionBuilder
-       */
-      UnionBuilder & AddItem( const char * nam,
-                              const char * typ );
+         /**
+          * AddItem will add one union item
+          * @param Name the Name of the union item
+          * @param At the At of the union item
+          * @return a reference to the UnionBuilder
+          */
+         UnionBuilder & AddItem( const char * nam,
+                                 const char * typ );
 
       
-      /** 
-       * AddProperty will add a PropertyNth to the PropertyNth stack
-       * which will be emtpied with the next build of a union 
-       * or union item
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
-       */
-      template < typename P >
-      UnionBuilder & AddProperty( const char * key, 
-                                  P value );
+         /** 
+          * AddProperty will add a PropertyNth to the PropertyNth stack
+          * which will be emtpied with the next build of a union 
+          * or union item
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         template < typename P >
+            UnionBuilder & AddProperty( const char * key, 
+                                        P value );
 
-    private:
+         private:
 
-      /** the union information */
-      UnionBuilderImpl fUnionBuilderImpl;
+         /** the union information */
+         UnionBuilderImpl fUnionBuilderImpl;
 
-    }; //class UnionBuilder
-  } // namespace Reflex
+      }; //class UnionBuilder
+   } // namespace Reflex
 } // namespace ROOT
 
 
@@ -154,7 +154,7 @@ namespace ROOT{
 template < typename T > 
 inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder() 
 //-------------------------------------------------------------------------------
-  : fUnionBuilderImpl( Tools::Demangle( typeid(T) ).c_str(),
+   : fUnionBuilderImpl( Tools::Demangle( typeid(T) ).c_str(),
                         sizeof(T),
                         typeid(T)) {}
 
@@ -163,9 +163,9 @@ inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder()
 template < typename T > 
 inline ROOT::Reflex::UnionBuilder<T>::UnionBuilder( const char * nam )
 //-------------------------------------------------------------------------------
-  : fUnionBuilderImpl( nam,
-                       sizeof(T),
-                       typeid(T)) {}
+   : fUnionBuilderImpl( nam,
+                        sizeof(T),
+                        typeid(T)) {}
 
 
 //-------------------------------------------------------------------------------
@@ -173,8 +173,8 @@ template < typename T > template < typename U >
 inline ROOT::Reflex::UnionBuilder<T> &
 ROOT::Reflex::UnionBuilder<T>::AddItem( const char * nam ) {
 //-------------------------------------------------------------------------------
-  fUnionBuilderImpl.AddItem( nam, TypeDistiller<U>::Get() );
-  return * this;
+   fUnionBuilderImpl.AddItem( nam, TypeDistiller<U>::Get() );
+   return * this;
 }
                                  
 
@@ -184,8 +184,8 @@ inline ROOT::Reflex::UnionBuilder<T> &
 ROOT::Reflex::UnionBuilder<T>::AddItem( const char * nam,
                                         const char * typ ) {
 //-------------------------------------------------------------------------------
-  fUnionBuilderImpl.AddItem( nam, TypeBuilder( typ ));
-  return * this;
+   fUnionBuilderImpl.AddItem( nam, TypeBuilder( typ ));
+   return * this;
 }
 
 
@@ -195,8 +195,8 @@ inline ROOT::Reflex::UnionBuilder<T> &
 ROOT::Reflex::UnionBuilder<T>::AddProperty( const char * key, 
                                             P value ) {
 //-------------------------------------------------------------------------------
-  fUnionBuilderImpl.AddProperty( key, value );
-  return * this;
+   fUnionBuilderImpl.AddProperty( key, value );
+   return * this;
 }
 
 

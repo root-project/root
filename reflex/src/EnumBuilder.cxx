@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -20,7 +20,7 @@
 ROOT::Reflex::EnumBuilderImpl::EnumBuilderImpl( const char * nam,
                                                 const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
-  fEnum = new Enum( nam, ti );
+   fEnum = new Enum( nam, ti );
 }
 
 
@@ -28,10 +28,10 @@ ROOT::Reflex::EnumBuilderImpl::EnumBuilderImpl( const char * nam,
 void ROOT::Reflex::EnumBuilderImpl::AddItem( const char * nam,
                                              long value ) {  
 //-------------------------------------------------------------------------------
-  fEnum->AddDataMember( Member(new DataMember( nam, 
-                                               Type::ByName("int"), 
-                                               value, 
-                                               0 )));
+   fEnum->AddDataMember( Member(new DataMember( nam, 
+                                                Type::ByName("int"), 
+                                                value, 
+                                                0 )));
 }
 
 
@@ -39,8 +39,8 @@ void ROOT::Reflex::EnumBuilderImpl::AddItem( const char * nam,
 void ROOT::Reflex::EnumBuilderImpl::AddProperty( const char * key,
                                                  Any value ) {
 //-------------------------------------------------------------------------------
-  if ( fLastMember ) fLastMember.Properties().AddProperty( key , value );
-  else                fEnum->Properties().AddProperty( key, value );
+   if ( fLastMember ) fLastMember.Properties().AddProperty( key , value );
+   else                fEnum->Properties().AddProperty( key, value );
 }
 
 
@@ -48,6 +48,6 @@ void ROOT::Reflex::EnumBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::EnumBuilderImpl::AddProperty( const char * key,
                                                  const char * value ) {
 //-------------------------------------------------------------------------------
-  AddProperty( key, Any(value));
+   AddProperty( key, Any(value));
 }
 

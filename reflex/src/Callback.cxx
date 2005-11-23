@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Callback.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -20,49 +20,50 @@
 class  CbList : public std::list<ROOT::Reflex::ICallback*> 
 {
 public:
-  CbList() : fAlive(true) {}
-  ~CbList() { fAlive = false; }
-  bool isAlive() { return fAlive; }
+   CbList() : fAlive(true) {}
+   ~CbList() { fAlive = false; }
+   bool IsAlive() { return fAlive; }
 private:
-  bool fAlive;
+   typedef bool Bool_t;
+   Bool_t fAlive;
 };
 
 //------------------------------------------------------------------------------
 static CbList & sClassCallbacks() {
 //------------------------------------------------------------------------------
-  static CbList m;
-  return m;
+   static CbList m;
+   return m;
 }
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::InstallClassCallback( ROOT::Reflex::ICallback * cb ) {
 //-------------------------------------------------------------------------------
-  sClassCallbacks().push_back( cb );
+   sClassCallbacks().push_back( cb );
 }
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::UninstallClassCallback( ROOT::Reflex::ICallback * cb ) {
 //-------------------------------------------------------------------------------
-  if( sClassCallbacks().isAlive() ) {
-    sClassCallbacks().remove( cb );
-  }
+   if( sClassCallbacks().IsAlive() ) {
+      sClassCallbacks().remove( cb );
+   }
 }
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::FireClassCallback( const ROOT::Reflex::Type & ty ) {
 //-------------------------------------------------------------------------------
-  for ( CbList::const_iterator i = sClassCallbacks().begin(); 
-        i != sClassCallbacks().end(); i++ ) {
-    (**i)(ty);
-  }
+   for ( CbList::const_iterator i = sClassCallbacks().begin(); 
+         i != sClassCallbacks().end(); i++ ) {
+      (**i)(ty);
+   }
 }
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::FireFunctionCallback( const ROOT::Reflex::Member & mem ) {
 //-------------------------------------------------------------------------------
-  for ( CbList::const_iterator i = sClassCallbacks().begin(); 
-        i != sClassCallbacks().end(); i++ ) {
-    (**i)(mem);
-  }
+   for ( CbList::const_iterator i = sClassCallbacks().begin(); 
+         i != sClassCallbacks().end(); i++ ) {
+      (**i)(mem);
+   }
 }
 

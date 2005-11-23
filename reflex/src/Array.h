@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Array.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,88 +17,88 @@
 #include "Reflex/Type.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-
-    /**
-     * @class Array Array.h Reflex/Array.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class Array : public TypeBase {
-
-    public:
-
-      /** default constructor */
-      Array( const Type & arrayType,
-             size_t len,
-             const std::type_info & typeinfo );
-
-
-      /** destructor */
-      virtual ~Array() {}
-
+      // forward declarations
 
       /**
-       * Name will return the string representation of the array At
-       * @param  typedefexp expand typedefs or not
-       * @return string representation of At
+       * @class Array Array.h Reflex/Array.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
        */
-      std::string Name( unsigned int mod = 0 ) const;
+      class Array : public TypeBase {
+
+      public:
+
+         /** default constructor */
+         Array( const Type & arrayType,
+                size_t len,
+                const std::type_info & typeinfo );
 
 
-      /**
-       * size returns the size of the array
-       * @return size of array
-       */
-      size_t ArrayLength() const;
+         /** destructor */
+         virtual ~Array() {}
 
 
-      /**
-       * arrayType will return a pointer to the At of the array.
-       * @return pointer to Type of MemberAt et. al.
-       */
-      Type ToType() const;
+         /**
+          * Name will return the string representation of the array At
+          * @param  typedefexp expand typedefs or not
+          * @return string representation of At
+          */
+         std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** static funtion that composes the At Name */
-      static std::string BuildTypeName( const Type & typ, 
-                                        size_t len,
-                                        unsigned int mod = SCOPED | QUALIFIED );
-
-    private:
-
-      /**
-       * Type of the array
-       * @label array At
-       * @link aggregationByValue
-       * @supplierCardinality 1
-       * @clientCardinality 1
-       */
-      Type fArrayType;
+         /**
+          * size returns the size of the array
+          * @return size of array
+          */
+         size_t ArrayLength() const;
 
 
-      /** the Length of the array */
-      size_t fLength;
+         /**
+          * arrayType will return a pointer to the At of the array.
+          * @return pointer to Type of MemberAt et. al.
+          */
+         Type ToType() const;
 
-    }; // class Array
-  } //namespace Reflex
+
+         /** static funtion that composes the At Name */
+         static std::string BuildTypeName( const Type & typ, 
+                                           size_t len,
+                                           unsigned int mod = SCOPED | QUALIFIED );
+
+      private:
+
+         /**
+          * Type of the array
+          * @label array At
+          * @link aggregationByValue
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         Type fArrayType;
+
+
+         /** the Length of the array */
+         size_t fLength;
+
+      }; // class Array
+   } //namespace Reflex
 } //namespace ROOT
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::Array::ArrayLength() const { 
 //-------------------------------------------------------------------------------
-  return fLength; 
+   return fLength; 
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType() const {
 //-------------------------------------------------------------------------------
-  return fArrayType;
+   return fArrayType;
 }
 
 #endif // ROOT_Reflex_Array

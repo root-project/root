@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DataMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DataMember.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,65 +16,65 @@
 #include "Reflex/MemberBase.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class TypeBase;
-    class Type;
+      // forward declarations
+      class TypeBase;
+      class Type;
 
-    /**
-     * @class DataMember DataMember.h Reflex/DataMember.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class DataMember : public MemberBase {
+      /**
+       * @class DataMember DataMember.h Reflex/DataMember.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
+       */
+      class DataMember : public MemberBase {
 
-    public:
+      public:
 
-      /** default constructor */
-      DataMember( const char *   nam,
-                  const Type &   typ, 
-                  size_t         offs,
-                  unsigned int   modifiers = 0 );
-
-
-      /** destructor */
-      virtual ~DataMember();
+         /** default constructor */
+         DataMember( const char *   nam,
+                     const Type &   typ, 
+                     size_t         offs,
+                     unsigned int   modifiers = 0 );
 
 
-      /** return Name of data MemberAt */
-      std::string Name( unsigned int mod = 0 ) const;
+         /** destructor */
+         virtual ~DataMember();
 
 
-      /** Get the MemberAt value (as void*) */
-      Object Get( const Object & obj ) const;
+         /** return Name of data MemberAt */
+         std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** return the Offset of the MemberAt */
-      size_t Offset() const;
+         /** Get the MemberAt value (as void*) */
+         Object Get( const Object & obj ) const;
 
 
-      /** Set the MemberAt value */
-      /*void Set( const Object & instance,
-        const Object & value ) const;*/
-      void Set( const Object & instance,
-                const void * value ) const;
+         /** return the Offset of the MemberAt */
+         size_t Offset() const;
 
-    private:
 
-      /** Offset of the MemberAt */
-      size_t fOffset;
+         /** Set the MemberAt value */
+         /*void Set( const Object & instance,
+           const Object & value ) const;*/
+         void Set( const Object & instance,
+                   const void * value ) const;
 
-    }; // class DataMember
-  } //namespace Reflex
+      private:
+
+         /** Offset of the MemberAt */
+         size_t fOffset;
+
+      }; // class DataMember
+   } //namespace Reflex
 } //namespace ROOT
 
 
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::DataMember::Offset() const {
 //-------------------------------------------------------------------------------
-  return fOffset;
+   return fOffset;
 }
 
 #endif // ROOT_Reflex_DataMember

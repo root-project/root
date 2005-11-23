@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Function.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,16 +19,16 @@ ROOT::Reflex::Function::Function( const Type & retType,
                                   const std::type_info & ti,
                                   TYPE functionType) 
 //-------------------------------------------------------------------------------
-  : TypeBase( BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti ),
-    fParameters(parameters),
-    fReturnType(retType),
-    fModifiers(0) { }
+   : TypeBase( BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti ),
+     fParameters(parameters),
+     fReturnType(retType),
+     fModifiers(0) { }
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::Function::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  return BuildTypeName( fReturnType, fParameters, mod );
+   return BuildTypeName( fReturnType, fParameters, mod );
 }
 
 
@@ -37,17 +37,17 @@ std::string ROOT::Reflex::Function::BuildTypeName( const Type & ret,
                                                    const std::vector< Type > & pars,
                                                    unsigned int mod ) {
 //-------------------------------------------------------------------------------
-  std::string tyname = ret.Name( mod )+ " (";
-  if ( pars.size() > 0 ) {
-    std::vector< Type >::const_iterator it;
-    for ( it = pars.begin(); it != pars.end(); ) {
-      tyname += it->Name( mod );
-      if ( ++it != pars.end() ) tyname += ", ";
-    }
-  }
-  else {
-    tyname += "void";
-  }
-  tyname += ")";
-  return tyname;
+   std::string tyname = ret.Name( mod )+ " (";
+   if ( pars.size() > 0 ) {
+      std::vector< Type >::const_iterator it;
+      for ( it = pars.begin(); it != pars.end(); ) {
+         tyname += it->Name( mod );
+         if ( ++it != pars.end() ) tyname += ", ";
+      }
+   }
+   else {
+      tyname += "void";
+   }
+   tyname += ")";
+   return tyname;
 }

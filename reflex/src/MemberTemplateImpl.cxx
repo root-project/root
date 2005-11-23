@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.5 2005/11/11 15:58:03 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.6 2005/11/11 16:06:53 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,12 +18,12 @@ ROOT::Reflex::MemberTemplateImpl::MemberTemplateImpl( const std::string & templa
                                                       std::vector < std::string > parameterNames,
                                                       std::vector < std::string > parameterDefaults )
 //------------------------------------------------------------------------------- 
-  : fTemplateName( templateName ),
-    fScope( scope ),
-    fTemplateInstances( std::vector < Member >() ),
-    fParameterNames( parameterNames ),
-    fParameterDefaults( parameterDefaults ),
-    fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
+   : fTemplateName( templateName ),
+     fScope( scope ),
+     fTemplateInstances( std::vector < Member >() ),
+     fParameterNames( parameterNames ),
+     fParameterDefaults( parameterDefaults ),
+     fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
 
 
 //-------------------------------------------------------------------------------
@@ -34,29 +34,29 @@ ROOT::Reflex::MemberTemplateImpl::~MemberTemplateImpl() {}
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::MemberTemplateImpl::operator == ( const MemberTemplateImpl & mt ) const {
 //-------------------------------------------------------------------------------
-  return ( ( fTemplateName == mt.fTemplateName ) && 
-           ( fParameterNames.size() == mt.fParameterNames.size() ) );
+   return ( ( fTemplateName == mt.fTemplateName ) && 
+            ( fParameterNames.size() == mt.fParameterNames.size() ) );
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
-  return Member();
+   if ( nth < fTemplateInstances.size() ) return Member(fTemplateInstances[ nth ]);
+   return Member();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::MemberTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
-  return fTemplateInstances.size();
+   return fTemplateInstances.size();
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::MemberTemplateImpl::AddTemplateInstance( const Member & templateInstance ) const {
 //-------------------------------------------------------------------------------
-  fTemplateInstances.push_back( templateInstance );
+   fTemplateInstances.push_back( templateInstance );
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PointerToMember.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,66 +17,66 @@
 #include "Reflex/Type.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
+      // forward declarations
 
-    /** 
-     * @class PointerToMember PointerToMember.h Reflex/PointerToMember.h
-     * @author Stefan Roiser
-     * @date   2004-01-28
-     * @ingroup Ref
-     */
-    class PointerToMember : public TypeBase {
-
-    public:
-
-      /** default constructor */
-      PointerToMember( const Type &           pointerToMemberType,
-                       const std::type_info & ti );
-
-
-      /** destructor */
-      virtual ~PointerToMember() {}
-
-
-      /**
-       * Name will return the fully qualified Name of the pointer At
-       * @param  typedefexp expand typedefs or not
-       * @return fully qualified Name of pointer At
+      /** 
+       * @class PointerToMember PointerToMember.h Reflex/PointerToMember.h
+       * @author Stefan Roiser
+       * @date   2004-01-28
+       * @ingroup Ref
        */
-      std::string Name( unsigned int mod = 0 ) const;
+      class PointerToMember : public TypeBase {
+
+      public:
+
+         /** default constructor */
+         PointerToMember( const Type &           pointerToMemberType,
+                          const std::type_info & ti );
 
 
-      /** pointerToMemberType will return a pointer to the Type the pointer to
-       * MemberAt points to
-       * @return pointer to Type of pointer to MemberAt
-       */
-      Type ToType() const;
+         /** destructor */
+         virtual ~PointerToMember() {}
 
 
-      /** static funtion that composes the At Name */
-      static std::string BuildTypeName( const Type & pointerToMemberType,
-                                        unsigned int mod = SCOPED | QUALIFIED );
+         /**
+          * Name will return the fully qualified Name of the pointer At
+          * @param  typedefexp expand typedefs or not
+          * @return fully qualified Name of pointer At
+          */
+         std::string Name( unsigned int mod = 0 ) const;
 
-    private:
 
-      /**
-       * @link aggregationByValue
-       * @label pointer to MemberAt At
-       * @supplierCardinality 1
-       * @clientCardinality 1
-       */
-      Type fPointerToMemberType;
+         /** pointerToMemberType will return a pointer to the Type the pointer to
+          * MemberAt points to
+          * @return pointer to Type of pointer to MemberAt
+          */
+         Type ToType() const;
 
-    }; // class PointerToMember
-  } // namespace Reflex
+
+         /** static funtion that composes the At Name */
+         static std::string BuildTypeName( const Type & pointerToMemberType,
+                                           unsigned int mod = SCOPED | QUALIFIED );
+
+      private:
+
+         /**
+          * @link aggregationByValue
+          * @label pointer to MemberAt At
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         Type fPointerToMemberType;
+
+      }; // class PointerToMember
+   } // namespace Reflex
 } // namespace ROOT
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::PointerToMember::ToType() const {
 //-------------------------------------------------------------------------------
-  return fPointerToMemberType;
+   return fPointerToMemberType;
 }
 
 

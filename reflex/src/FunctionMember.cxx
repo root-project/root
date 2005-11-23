@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMember.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMember.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,78 +27,78 @@ ROOT::Reflex::FunctionMember::FunctionMember( const char *  nam,
                                               unsigned int  modifiers,
                                               TYPE          memType )
 //-------------------------------------------------------------------------------
-  : MemberBase( nam, typ, memType, modifiers ),
-    fStubFP( stubFP ), 
-    fStubCtx( stubCtx ),
-    fParameterNames( std::vector<std::string>()),
-    fParameterDefaults( std::vector<std::string>()),
-    fReqParameters( 0 )
+   : MemberBase( nam, typ, memType, modifiers ),
+     fStubFP( stubFP ), 
+     fStubCtx( stubCtx ),
+     fParameterNames( std::vector<std::string>()),
+     fParameterDefaults( std::vector<std::string>()),
+     fReqParameters( 0 )
 {
-  // Obtain the names and default values of the function parameters
-  // The "real" number of parameters is obtained from the function At
-  size_t numDefaultParams = 0;
-  size_t type_npar = typ.FunctionParameterSize();
-  std::vector<std::string> params;
-  if ( parameters ) Tools::StringSplit(params, parameters, ";");
-  size_t npar = std::min(type_npar,params.size());
-  for ( size_t i = 0; i < npar ; ++i ) {
-    size_t pos = params[i].find( "=" );
-    fParameterNames.push_back(params[i].substr(0,pos));
-    if ( pos != std::string::npos ) {
-      fParameterDefaults.push_back(params[i].substr(pos+1));
-      ++numDefaultParams;
-    }
-    else {
+   // Obtain the names and default values of the function parameters
+   // The "real" number of parameters is obtained from the function At
+   size_t numDefaultParams = 0;
+   size_t type_npar = typ.FunctionParameterSize();
+   std::vector<std::string> params;
+   if ( parameters ) Tools::StringSplit(params, parameters, ";");
+   size_t npar = std::min(type_npar,params.size());
+   for ( size_t i = 0; i < npar ; ++i ) {
+      size_t pos = params[i].find( "=" );
+      fParameterNames.push_back(params[i].substr(0,pos));
+      if ( pos != std::string::npos ) {
+         fParameterDefaults.push_back(params[i].substr(pos+1));
+         ++numDefaultParams;
+      }
+      else {
+         fParameterDefaults.push_back("");
+      }
+   }
+   // padding with blanks
+   for ( size_t i = npar; i < type_npar; ++i ) {
+      fParameterNames.push_back("");
       fParameterDefaults.push_back("");
-    }
-  }
-  // padding with blanks
-  for ( size_t i = npar; i < type_npar; ++i ) {
-    fParameterNames.push_back("");
-    fParameterDefaults.push_back("");
-  }
-  fReqParameters = type_npar - numDefaultParams;
+   }
+   fReqParameters = type_npar - numDefaultParams;
 }
 
 
 //-------------------------------------------------------------------------------
 std::string ROOT::Reflex::FunctionMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  std::string s = "";
+   std::string s = "";
 
-  if ( 0 != ( mod & ( QUALIFIED | Q ))) {
-    if ( IsPublic())          { s += "public ";    }
-    if ( IsProtected())       { s += "protected "; }
-    if ( IsPrivate())         { s += "private ";   }  
-    if ( IsExtern())          { s += "extern ";    }
-    if ( IsStatic())          { s += "static ";    }
-    if ( IsInline())          { s += "inline ";    }
-    if ( IsVirtual())         { s += "virtual ";   }
-    if ( IsExplicit())        { s += "explicit ";  }
-  }
+   if ( 0 != ( mod & ( QUALIFIED | Q ))) {
+      if ( IsPublic())          { s += "public ";    }
+      if ( IsProtected())       { s += "protected "; }
+      if ( IsPrivate())         { s += "private ";   }  
+      if ( IsExtern())          { s += "extern ";    }
+      if ( IsStatic())          { s += "static ";    }
+      if ( IsInline())          { s += "inline ";    }
+      if ( IsVirtual())         { s += "virtual ";   }
+      if ( IsExplicit())        { s += "explicit ";  }
+   }
 
-  s += MemberBase::Name( mod ); 
+   s += MemberBase::Name( mod ); 
 
-  return s;
+   return s;
 }
 
 
 /*/-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
-                                      const std::vector < Object > & paramList ) const {
+  ROOT::Reflex::Object
+  ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
+  const std::vector < Object > & paramList ) const {
 //-----------------------------------------------------------------------------
   if ( paramList.size() < FunctionParameterSize(true)) {
-    throw RuntimeError("Not enough parameters given to function ");
-    return Object();
+  throw RuntimeError("Not enough parameters given to function ");
+  return Object();
   }
   void * mem = CalculateBaseObject( obj );
   std::vector < void * > paramValues;
   // needs more checking FIXME
   for (std::vector<Object>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(it->Address());
+  it != paramList.end(); ++it ) paramValues.push_back(it->Address());
   return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
-}
+  }
 */
 
 
@@ -107,29 +107,29 @@ ROOT::Reflex::Object
 ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
                                       const std::vector < void * > & paramList ) const {
 //-----------------------------------------------------------------------------
-  if ( paramList.size() < FunctionParameterSize(true)) {
-    throw RuntimeError("Not enough parameters given to function ");
-    return Object();
-  }
-  void * mem = CalculateBaseObject( obj );
-  std::vector < void * > paramValues;
-  // needs more checking FIXME
-  for (std::vector<void*>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(*it);
-  return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
+   if ( paramList.size() < FunctionParameterSize(true)) {
+      throw RuntimeError("Not enough parameters given to function ");
+      return Object();
+   }
+   void * mem = CalculateBaseObject( obj );
+   std::vector < void * > paramValues;
+   // needs more checking FIXME
+   for (std::vector<void*>::const_iterator it = paramList.begin();
+        it != paramList.end(); ++it ) paramValues.push_back(*it);
+   return Object(TypeOf().ReturnType(), fStubFP( mem, paramValues, fStubCtx ));
 }
 
 
 /*/-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList ) const {
+  ROOT::Reflex::Object
+  ROOT::Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList ) const {
 //-------------------------------------------------------------------------------
   std::vector < void * > paramValues;
   // needs more checking FIXME
   for (std::vector<Object>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(it->Address());
+  it != paramList.end(); ++it ) paramValues.push_back(it->Address());
   return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
-}
+  }
 */
 
 
@@ -137,17 +137,17 @@ ROOT::Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList )
 ROOT::Reflex::Object
 ROOT::Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
-  std::vector < void * > paramValues;
-  // needs more checking FIXME
-  for (std::vector<void*>::const_iterator it = paramList.begin();
-       it != paramList.end(); ++it ) paramValues.push_back(*it);
-  return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
+   std::vector < void * > paramValues;
+   // needs more checking FIXME
+   for (std::vector<void*>::const_iterator it = paramList.begin();
+        it != paramList.end(); ++it ) paramValues.push_back(*it);
+   return Object(TypeOf().ReturnType(), fStubFP( 0, paramValues, fStubCtx ));
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::FunctionMember::FunctionParameterSize( bool required ) const {
 //-------------------------------------------------------------------------------
-  if ( required ) return fReqParameters;
-  else            return TypeOf().FunctionParameterSize();
+   if ( required ) return fReqParameters;
+   else            return TypeOf().FunctionParameterSize();
 }

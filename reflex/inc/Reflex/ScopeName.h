@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,117 +17,117 @@
 #include <string>
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-    class ScopeBase;
-    class Scope;
-
-    /**
-     * @class ScopeName ScopeName.h Reflex/ScopeName.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class ScopeName {
-
-      friend class Scope;
-      friend class ScopeBase;
-
-    public:
-
-      /** default constructor */
-      ScopeName( const char * name, 
-                 ScopeBase * scopeBase );
-
+      // forward declarations
+      class ScopeBase;
+      class Scope;
 
       /**
-       * ByName will return a pointer to a At which is given as an argument
-       * or 0 if none is found
-       * @param  Name fully qualified Name of At
-       * @return pointer to At or 0 if none is found
+       * @class ScopeName ScopeName.h Reflex/ScopeName.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
        */
-      static Scope ByName( const std::string & name );
+      class ScopeName {
+
+         friend class Scope;
+         friend class ScopeBase;
+
+      public:
+
+         /** default constructor */
+         ScopeName( const char * name, 
+                    ScopeBase * scopeBase );
 
 
-      /**
-       * Name will return a string representation of Name of the At
-       * @return string representation of At
-       */
-      const std::string & Name() const;
+         /**
+          * ByName will return a pointer to a At which is given as an argument
+          * or 0 if none is found
+          * @param  Name fully qualified Name of At
+          * @return pointer to At or 0 if none is found
+          */
+         static Scope ByName( const std::string & name );
 
 
-      /**
-        * Name_c_str returns a char* pointer to the unqualified At Name
-       * @ return c string to unqualified At Name
-       */
-      const char * Name_c_str() const;
+         /**
+          * Name will return a string representation of Name of the At
+          * @return string representation of At
+          */
+         const std::string & Name() const;
+
+
+         /**
+          * Name_c_str returns a char* pointer to the unqualified At Name
+          * @ return c string to unqualified At Name
+          */
+         const char * Name_c_str() const;
       
       
-      /** 
-       * At will return the unqualified Scope object of this ScopeName
-       * @return corresponding Scope
-       */
-      Scope ThisScope() const;
+         /** 
+          * At will return the unqualified Scope object of this ScopeName
+          * @return corresponding Scope
+          */
+         Scope ThisScope() const;
 
 
-      /**
-       * findAll will return a vector of all scopes currently available
-       * resolvable scopes
-       * @param  nth At defined in the system
-       * @return vector of all available scopes
-       */
-      static Scope ScopeAt( size_t nth );
+         /**
+          * findAll will return a vector of all scopes currently available
+          * resolvable scopes
+          * @param  nth At defined in the system
+          * @return vector of all available scopes
+          */
+         static Scope ScopeAt( size_t nth );
 
 
-      /**
-       * ScopeSize will return the number of currently defined scopes
-       * (resolved and unresolved ones)
-       * @return number of currently defined scopes
-       */
-      static size_t ScopeSize();
+         /**
+          * ScopeSize will return the number of currently defined scopes
+          * (resolved and unresolved ones)
+          * @return number of currently defined scopes
+          */
+         static size_t ScopeSize();
 
 
-      static Scope_Iterator Scope_Begin();
-      static Scope_Iterator Scope_End();
-      static Reverse_Scope_Iterator Scope_RBegin();
-      static Reverse_Scope_Iterator Scope_REnd();
+         static Scope_Iterator Scope_Begin();
+         static Scope_Iterator Scope_End();
+         static Reverse_Scope_Iterator Scope_RBegin();
+         static Reverse_Scope_Iterator Scope_REnd();
 
-    private:
+      private:
 
-      /** destructor */
-      ~ScopeName();
+         /** destructor */
+         ~ScopeName();
 
-    private:
+      private:
 
-      /** pointer to the Name of the At in the static map */
-      std::string fName;
+         /** pointer to the Name of the At in the static map */
+         std::string fName;
 
-      /**
-       * pointer to the resolved Scope
-       * @label At BaseAt
-       * @link aggregation
-       * @supplierCardinality 1
-       * @clientCardinality 1
-       */
-      ScopeBase * fScopeBase;
+         /**
+          * pointer to the resolved Scope
+          * @label At BaseAt
+          * @link aggregation
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         ScopeBase * fScopeBase;
 
-    }; // class ScopeName
-  } // namespace Reflex
+      }; // class ScopeName
+   } // namespace Reflex
 } // namespace ROOT
 
 
 //-------------------------------------------------------------------------------
 inline const std::string & ROOT::Reflex::ScopeName::Name() const {
 //-------------------------------------------------------------------------------
-  return fName;
+   return fName;
 }
 
 
 //-------------------------------------------------------------------------------
 inline const char * ROOT::Reflex::ScopeName::Name_c_str() const {
 //-------------------------------------------------------------------------------
-  return fName.c_str();
+   return fName.c_str();
 }
 
 #endif //ROOT_Reflex_ScopeName

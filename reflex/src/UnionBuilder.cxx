@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -22,7 +22,7 @@ ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
                                                   size_t size,
                                                   const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
-  fUnion = new Union( nam, size, ti );
+   fUnion = new Union( nam, size, ti );
 }
 
 
@@ -30,11 +30,11 @@ ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
 void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
                                               const Type & typ ) {
 //-------------------------------------------------------------------------------
-  fLastMember = Member(new DataMember( nam,
-                                       typ,
-                                       0,
-                                       0 ));
-  fUnion->AddDataMember( fLastMember );
+   fLastMember = Member(new DataMember( nam,
+                                        typ,
+                                        0,
+                                        0 ));
+   fUnion->AddDataMember( fLastMember );
 }
 
 
@@ -42,8 +42,8 @@ void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
 void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   Any value ) {
 //-------------------------------------------------------------------------------
-  if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
-  else                fUnion->Properties().AddProperty(key, value );
+   if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
+   else                fUnion->Properties().AddProperty(key, value );
 }
 
 
@@ -51,5 +51,5 @@ void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   const char * value ) {
 //-------------------------------------------------------------------------------
-  AddProperty( key, Any(value));
+   AddProperty( key, Any(value));
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,66 +17,66 @@
 #include "Reflex/Type.h"
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
-    // forward declarations
-
-    /**
-     * @class Pointer Pointer.h Reflex/Pointer.h
-     * @author Stefan Roiser
-     * @date 24/11/2003
-     * @ingroup Ref
-     */
-    class Pointer : public TypeBase {
-    public:
-
-      /** default constructor */
-      Pointer( const Type & pointerType, 
-               const std::type_info & ti );
-
-      /** destructor */
-      virtual ~Pointer() {}
-
+      // forward declarations
 
       /**
-       * Name will return the fully qualified Name of the pointer At
-       * @param  typedefexp expand typedefs or not
-       * @return fully qualified Name of pointer At
+       * @class Pointer Pointer.h Reflex/Pointer.h
+       * @author Stefan Roiser
+       * @date 24/11/2003
+       * @ingroup Ref
        */
-      std::string Name( unsigned int mod = 0 ) const;
+      class Pointer : public TypeBase {
+      public:
+
+         /** default constructor */
+         Pointer( const Type & pointerType, 
+                  const std::type_info & ti );
+
+         /** destructor */
+         virtual ~Pointer() {}
 
 
-      /**
-       * At will return a pointer to the At the pointer points to.
-       * @return pointer to Type of MemberAt et. al.
-       */
-      Type ToType() const;
+         /**
+          * Name will return the fully qualified Name of the pointer At
+          * @param  typedefexp expand typedefs or not
+          * @return fully qualified Name of pointer At
+          */
+         std::string Name( unsigned int mod = 0 ) const;
 
 
-      /** static funtion that composes the typename */
-      static std::string BuildTypeName( const Type & pointerType,
-                                        unsigned int mod = SCOPED | QUALIFIED );
+         /**
+          * At will return a pointer to the At the pointer points to.
+          * @return pointer to Type of MemberAt et. al.
+          */
+         Type ToType() const;
 
-    private:
 
-      /**
-       * pointer to the Type the Pointer points to
-       * @label pointer At
-       * @link aggregationByValue
-       * @supplierCardinality 1
-       * @clientCardinality 1
-       */
-      Type fPointerType;
+         /** static funtion that composes the typename */
+         static std::string BuildTypeName( const Type & pointerType,
+                                           unsigned int mod = SCOPED | QUALIFIED );
 
-    }; // class Pointer
-  } //namespace Reflex
+      private:
+
+         /**
+          * pointer to the Type the Pointer points to
+          * @label pointer At
+          * @link aggregationByValue
+          * @supplierCardinality 1
+          * @clientCardinality 1
+          */
+         Type fPointerType;
+
+      }; // class Pointer
+   } //namespace Reflex
 } //namespace ROOT
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type ROOT::Reflex::Pointer::ToType() const {
 //-------------------------------------------------------------------------------
-  return fPointerType;
+   return fPointerType;
 }
 
 #endif // ROOT_Reflex_Pointer

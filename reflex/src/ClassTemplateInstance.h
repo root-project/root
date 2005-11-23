@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,78 +19,78 @@
 
 
 namespace ROOT {
-  namespace Reflex {
+   namespace Reflex {
 
 
-    /**
-     * @class ClassTemplateInstance ClassTemplateInstance.h Reflex/ClassTemplateInstance.h
-     * @author Stefan Roiser
-     * @date 13/1/2004
-     * @ingroup Ref
-     */
-    class ClassTemplateInstance : public Class, public TemplateInstance {
+      /**
+       * @class ClassTemplateInstance ClassTemplateInstance.h Reflex/ClassTemplateInstance.h
+       * @author Stefan Roiser
+       * @date 13/1/2004
+       * @ingroup Ref
+       */
+      class ClassTemplateInstance : public Class, public TemplateInstance {
 
-    public:
+      public:
 
-      /** default constructor */
-      ClassTemplateInstance( const char * typ, 
-                             size_t size, 
-                             const std::type_info & ti, 
-                             unsigned int modifiers );
+         /** default constructor */
+         ClassTemplateInstance( const char * typ, 
+                                size_t size, 
+                                const std::type_info & ti, 
+                                unsigned int modifiers );
       
 
-      /** destructor */
-      virtual ~ClassTemplateInstance();
+         /** destructor */
+         virtual ~ClassTemplateInstance();
 
 
-      /**
-       * Name returns the fully qualified Name of the templated class
-       * @param  typedefexp expand typedefs or not
-       * @return fully qualified Name of templated class
-       */
-      std::string Name( unsigned int mod = 0 ) const;
+         /**
+          * Name returns the fully qualified Name of the templated class
+          * @param  typedefexp expand typedefs or not
+          * @return fully qualified Name of templated class
+          */
+         std::string Name( unsigned int mod = 0 ) const;
 
 
-      /**
-       * TemplateArgumentAt will return a pointer to the nth template argument
-       * @param  nth nth template argument
-       * @return pointer to nth template argument
-       */
-      Type TemplateArgumentAt( size_t nth ) const;
+         /**
+          * TemplateArgumentAt will return a pointer to the nth template argument
+          * @param  nth nth template argument
+          * @return pointer to nth template argument
+          */
+         Type TemplateArgumentAt( size_t nth ) const;
 
 
-      /**
-       * templateArgSize will return the number of template arguments
-       * @return number of template arguments
-       */
-      size_t TemplateArgumentSize() const;
+         /**
+          * templateArgSize will return the number of template arguments
+          * @return number of template arguments
+          */
+         size_t TemplateArgumentSize() const;
 
 
-      virtual Type_Iterator TemplateArgument_Begin() const;
-      virtual Type_Iterator TemplateArgument_End() const;
-      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
-      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
+         virtual Type_Iterator TemplateArgument_Begin() const;
+         virtual Type_Iterator TemplateArgument_End() const;
+         virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+         virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
 
-      /**
-       * TemplateFamily returns the corresponding TypeTemplate if any
-       * @return corresponding TypeTemplate
-       */
-      TypeTemplate TemplateFamily() const;
+         /**
+          * TemplateFamily returns the corresponding TypeTemplate if any
+          * @return corresponding TypeTemplate
+          */
+         TypeTemplate TemplateFamily() const;
 
-    private:
+      private:
 
-      /** 
-       * The template At (family)
-       * @label template family
-       * @link aggregationByValue
-       * @clientCardinality 1
-       * @supplierCardinality 0..1
-       */
-      TypeTemplate fTemplateFamily;      
+         /** 
+          * The template At (family)
+          * @label template family
+          * @link aggregationByValue
+          * @clientCardinality 1
+          * @supplierCardinality 0..1
+          */
+         TypeTemplate fTemplateFamily;      
 
-    }; // class ClassTemplateInstance
-  } // namespace Reflex
+      }; // class ClassTemplateInstance
+   } // namespace Reflex
 } // namespace ROOT
 
 
@@ -102,42 +102,42 @@ inline ROOT::Reflex::ClassTemplateInstance::~ClassTemplateInstance() {}
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::ClassTemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgumentSize();
+   return TemplateInstance::TemplateArgumentSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgument_Begin();
+   return TemplateInstance::TemplateArgument_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgument_End();
+   return TemplateInstance::TemplateArgument_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgument_RBegin();
+   return TemplateInstance::TemplateArgument_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgument_REnd();
+   return TemplateInstance::TemplateArgument_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::TypeTemplate ROOT::Reflex::ClassTemplateInstance::TemplateFamily() const {
 //-------------------------------------------------------------------------------
-  return fTemplateFamily;
+   return fTemplateFamily;
 }
 
 #endif // ROOT_Reflex_ClassTemplateInstance

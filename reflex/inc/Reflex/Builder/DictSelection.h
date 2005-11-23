@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.1 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.2 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #ifndef ROOT_Reflex_DictSelection
@@ -225,92 +225,92 @@
  * // as just `C<T>'.
  *
  @endcode
- */
+*/
 
 
 
 namespace ROOT {
 
-  namespace Reflex {
+   namespace Reflex {
 
-    namespace Selection {
+      namespace Selection {
     
-      /*
-       * @brief Mark a MemberAt as being transient.
-       *
-       * This should be used in a selection class.  This marks the corresponding
-       * MemberAt as being transient.  See the header comments for examples.
-       */
-      class TRANSIENT {};
+         /*
+          * @brief Mark a MemberAt as being transient.
+          *
+          * This should be used in a selection class.  This marks the corresponding
+          * MemberAt as being transient.  See the header comments for examples.
+          */
+         class TRANSIENT {};
       
       
-      /*
-       * @brief Mark the At of a (data)MemberAt as autoselected.
-       *
-       * This should be used in a selection class. The Name of the MemberAt shall be the same
-       * as the MemberAt in the original class and will be automatically
-       * selected to have dictionary information generated wherever it's
-       * needed.  See the header comments for examples.
-       */
-      class AUTOSELECT{};
+         /*
+          * @brief Mark the At of a (data)MemberAt as autoselected.
+          *
+          * This should be used in a selection class. The Name of the MemberAt shall be the same
+          * as the MemberAt in the original class and will be automatically
+          * selected to have dictionary information generated wherever it's
+          * needed.  See the header comments for examples.
+          */
+         class AUTOSELECT{};
       
       
-      /*
-       * @brief Placeholder for @c TEMPLATE_DEFAULTS.
-       *
-       * This is used in the @c TEMPLATE_DEFAULTS template argument list
-       * for positions where template arguments cannot be defaulted.
-       */
-      struct NODEFAULT {};
+         /*
+          * @brief Placeholder for @c TEMPLATE_DEFAULTS.
+          *
+          * This is used in the @c TEMPLATE_DEFAULTS template argument list
+          * for positions where template arguments cannot be defaulted.
+          */
+         struct NODEFAULT {};
       
       
-      /*
-       * @brief Declare template argument defaults.
-       *
-       * This should be used in a selection class.  The template arguments
-       * of this class give the template argument defaults for the class
-       * being described.  If the class is used with defaulted template
-       * arguments, then these arguments will be omitted from external
-       * representations.  See the header comments for examples.
-       */
-      template <class T1  = NODEFAULT,
-                class T2  = NODEFAULT,
-                class T3  = NODEFAULT,
-                class T4  = NODEFAULT,
-                class T5  = NODEFAULT,
-                class T6  = NODEFAULT,
-                class T7  = NODEFAULT,
-                class T8  = NODEFAULT,
-                class T9  = NODEFAULT,
-                class T10 = NODEFAULT,
-                class T11 = NODEFAULT,
-                class T12 = NODEFAULT,
-                class T13 = NODEFAULT,
-                class T14 = NODEFAULT,
-                class T15 = NODEFAULT>
-        struct TEMPLATE_DEFAULTS
-        {
-          typedef NODEFAULT nodefault;
-          typedef T1  t1;
-          typedef T2  t2;
-          typedef T3  t3;
-          typedef T4  t4;
-          typedef T5  t5;
-          typedef T6  t6;
-          typedef T7  t7;
-          typedef T8  t8;
-          typedef T9  t9;
-          typedef T10 t10;
-          typedef T11 t11;
-          typedef T12 t12;
-          typedef T13 t13;
-          typedef T14 t14;
-          typedef T15 t15;
-        };
+         /*
+          * @brief Declare template argument defaults.
+          *
+          * This should be used in a selection class.  The template arguments
+          * of this class give the template argument defaults for the class
+          * being described.  If the class is used with defaulted template
+          * arguments, then these arguments will be omitted from external
+          * representations.  See the header comments for examples.
+          */
+         template <class T1  = NODEFAULT,
+            class T2  = NODEFAULT,
+            class T3  = NODEFAULT,
+            class T4  = NODEFAULT,
+            class T5  = NODEFAULT,
+            class T6  = NODEFAULT,
+            class T7  = NODEFAULT,
+            class T8  = NODEFAULT,
+            class T9  = NODEFAULT,
+            class T10 = NODEFAULT,
+            class T11 = NODEFAULT,
+            class T12 = NODEFAULT,
+            class T13 = NODEFAULT,
+            class T14 = NODEFAULT,
+            class T15 = NODEFAULT>
+            struct TEMPLATE_DEFAULTS
+            {
+               typedef NODEFAULT nodefault;
+               typedef T1  t1;
+               typedef T2  t2;
+               typedef T3  t3;
+               typedef T4  t4;
+               typedef T5  t5;
+               typedef T6  t6;
+               typedef T7  t7;
+               typedef T8  t8;
+               typedef T9  t9;
+               typedef T10 t10;
+               typedef T11 t11;
+               typedef T12 t12;
+               typedef T13 t13;
+               typedef T14 t14;
+               typedef T15 t15;
+            };
 
-    } // namespace Selection
+      } // namespace Selection
 
-  } // namespace Reflex
+   } // namespace Reflex
       
 } // namespace ROOT
 

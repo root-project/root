@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -19,12 +19,12 @@ ROOT::Reflex::TypeTemplateImpl::TypeTemplateImpl( const std::string & templateNa
                                                   std::vector < std::string > parameterNames,
                                                   std::vector < std::string > parameterDefaults )
 //------------------------------------------------------------------------------- 
-  : fTemplateName( templateName ),
-    fScope( scop ),
-    fTemplateInstances( std::vector < Type >() ),
-    fParameterNames( parameterNames ),
-    fParameterDefaults( parameterDefaults ),
-    fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
+   : fTemplateName( templateName ),
+     fScope( scop ),
+     fTemplateInstances( std::vector < Type >() ),
+     fParameterNames( parameterNames ),
+     fParameterDefaults( parameterDefaults ),
+     fReqParameters( parameterNames.size() - parameterDefaults.size() ) {}
 
 
 //-------------------------------------------------------------------------------
@@ -35,20 +35,20 @@ ROOT::Reflex::TypeTemplateImpl::~TypeTemplateImpl() {}
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
-  return Type();
+   if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
+   return Type();
 }
 
 
 //-------------------------------------------------------------------------------
 size_t ROOT::Reflex::TypeTemplateImpl::TemplateInstanceSize() const {
 //-------------------------------------------------------------------------------
-  return fTemplateInstances.size();
+   return fTemplateInstances.size();
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::TypeTemplateImpl::AddTemplateInstance( const Type & templateInstance ) const {
 //-------------------------------------------------------------------------------
-  fTemplateInstances.push_back( templateInstance );
+   fTemplateInstances.push_back( templateInstance );
 }

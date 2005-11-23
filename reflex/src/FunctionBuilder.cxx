@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.3 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.4 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -29,51 +29,51 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
                                                         void * stubCtx,
                                                         const char * params, 
                                                         unsigned char modifiers) 
+   : fFunction( Member(0)) {
 //-------------------------------------------------------------------------------
-  : fFunction( Member(0)) {
 
-  std::string fullname( nam );
-  std::string declScope;
-  std::string funcName;
-  size_t pos = Tools::GetTemplateName(nam).rfind( "::" );
-  // Name contains declaring At
-  if ( pos != std::string::npos ) {   
-    funcName  = fullname.substr( pos + 2 );
-    declScope = fullname.substr( 0, pos ); 
-  }
-  else {
-    funcName  = nam;
-    declScope = "";
-  }
+   std::string fullname( nam );
+   std::string declScope;
+   std::string funcName;
+   size_t pos = Tools::GetTemplateName(nam).rfind( "::" );
+   // Name contains declaring At
+   if ( pos != std::string::npos ) {   
+      funcName  = fullname.substr( pos + 2 );
+      declScope = fullname.substr( 0, pos ); 
+   }
+   else {
+      funcName  = nam;
+      declScope = "";
+   }
 
-  Scope sc = Scope::ByName(declScope);
-  if ( ! sc ) {
-    // Let's create the namespace here
-    sc = (new Namespace(declScope.c_str()))->ThisScope();
-  }
+   Scope sc = Scope::ByName(declScope);
+   if ( ! sc ) {
+      // Let's create the namespace here
+      sc = (new Namespace(declScope.c_str()))->ThisScope();
+   }
 
-  if ( ! sc.IsNamespace() ) throw RuntimeError("Declaring scope is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
-                                                                                                      typ,
-                                                                                                      stubFP,
-                                                                                                      stubCtx,
-                                                                                                      params,
-                                                                                                      modifiers | STATIC,
-                                                                                                      sc ));
-  else                                        fFunction = Member(new FunctionMember(funcName.c_str(), 
-                                                                                    typ, 
-                                                                                    stubFP, 
-                                                                                    stubCtx, 
-                                                                                    params, 
-                                                                                    modifiers  | STATIC));
-  sc.AddFunctionMember(fFunction);
+   if ( ! sc.IsNamespace() ) throw RuntimeError("Declaring scope is not a namespace");
+   if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
+                                                                                                       typ,
+                                                                                                       stubFP,
+                                                                                                       stubCtx,
+                                                                                                       params,
+                                                                                                       modifiers | STATIC,
+                                                                                                       sc ));
+   else                                        fFunction = Member(new FunctionMember(funcName.c_str(), 
+                                                                                     typ, 
+                                                                                     stubFP, 
+                                                                                     stubCtx, 
+                                                                                     params, 
+                                                                                     modifiers  | STATIC));
+   sc.AddFunctionMember(fFunction);
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
 //-------------------------------------------------------------------------------
-  FireFunctionCallback( fFunction );
+   FireFunctionCallback( fFunction );
 }
  
 
@@ -89,7 +89,7 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
-  fFunction.Properties().AddProperty( key , value );
+   fFunction.Properties().AddProperty( key , value );
 }
 
 
@@ -100,41 +100,41 @@ ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
                                                 void * stubCtx,
                                                 const char * params, 
                                                 unsigned char modifiers) 
+   : fFunction(Member(0)) {
 //-------------------------------------------------------------------------------
-  : fFunction(Member(0)) {
 
-  std::string fullname( nam );
-  std::string declScope;
-  std::string funcName;
-  size_t pos = Tools::GetTemplateName( nam ).rfind( "::" );
-  // Name contains declaring scope
-  if ( pos != std::string::npos ) {   
-    funcName  = fullname.substr( pos + 2 );
-    declScope = fullname.substr( 0, pos ); 
-  }
-  else {
-    funcName  = nam;
-    declScope = "";
-  }
-  Scope sc = Scope::ByName(declScope);
-  if ( ! sc ) {
-    // Let's create the namespace here
-    sc = (new Namespace(declScope.c_str()))->ThisScope();
-  }
-  if ( ! sc.IsNamespace() ) throw RuntimeError("2Declaring At is not a namespace");
-  if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
-                                                                                                      typ,
-                                                                                                      stubFP,
-                                                                                                      stubCtx,
-                                                                                                      params,
-                                                                                                      modifiers | STATIC,
-                                                                                                      sc ));
-  else                                 fFunction = Member(new FunctionMember( funcName.c_str(), 
-                                                                              typ, 
-                                                                              stubFP, 
-                                                                              stubCtx, 
-                                                                              params, 
-                                                                              modifiers  | STATIC));
-  sc.AddFunctionMember(fFunction);
+   std::string fullname( nam );
+   std::string declScope;
+   std::string funcName;
+   size_t pos = Tools::GetTemplateName( nam ).rfind( "::" );
+   // Name contains declaring scope
+   if ( pos != std::string::npos ) {   
+      funcName  = fullname.substr( pos + 2 );
+      declScope = fullname.substr( 0, pos ); 
+   }
+   else {
+      funcName  = nam;
+      declScope = "";
+   }
+   Scope sc = Scope::ByName(declScope);
+   if ( ! sc ) {
+      // Let's create the namespace here
+      sc = (new Namespace(declScope.c_str()))->ThisScope();
+   }
+   if ( ! sc.IsNamespace() ) throw RuntimeError("2Declaring At is not a namespace");
+   if ( Tools::IsTemplated( funcName.c_str())) fFunction = Member( new FunctionMemberTemplateInstance( funcName.c_str(),
+                                                                                                       typ,
+                                                                                                       stubFP,
+                                                                                                       stubCtx,
+                                                                                                       params,
+                                                                                                       modifiers | STATIC,
+                                                                                                       sc ));
+   else                                 fFunction = Member(new FunctionMember( funcName.c_str(), 
+                                                                               typ, 
+                                                                               stubFP, 
+                                                                               stubCtx, 
+                                                                               params, 
+                                                                               modifiers  | STATIC));
+   sc.AddFunctionMember(fFunction);
 }
 

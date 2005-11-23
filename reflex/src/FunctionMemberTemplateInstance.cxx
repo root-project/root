@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -25,44 +25,44 @@ FunctionMemberTemplateInstance( const char * nam,
                                 const char * params,
                                 unsigned int modifiers,
                                 const Scope & scop )
+   : FunctionMember( nam,
+                     typ,
+                     stubFP,
+                     stubCtx,
+                     params,
+                     modifiers,
+                     MEMBERTEMPLATEINSTANCE ),
+     TemplateInstance( Tools::GetTemplateArguments( nam )),
+     fTemplateFamily( MemberTemplate()) {
 //-------------------------------------------------------------------------------
-  : FunctionMember( nam,
-                    typ,
-                    stubFP,
-                    stubCtx,
-                    params,
-                    modifiers,
-                    MEMBERTEMPLATEINSTANCE ),
-    TemplateInstance( Tools::GetTemplateArguments( nam )),
-    fTemplateFamily( MemberTemplate()) {
   
-  std::string templateName = Tools::GetTemplateName( nam );
-  std::string scopeName = scop.Name(SCOPED);
-  std::string scopedTemplateName = "";
-  if ( scopeName != "" ) scopedTemplateName = scopeName + "::" + templateName;
-  else                   scopedTemplateName = templateName;
+   std::string templateName = Tools::GetTemplateName( nam );
+   std::string scopeName = scop.Name(SCOPED);
+   std::string scopedTemplateName = "";
+   if ( scopeName != "" ) scopedTemplateName = scopeName + "::" + templateName;
+   else                   scopedTemplateName = templateName;
 
-  for ( size_t i = 0; i < scop.MemberTemplateSize(); ++i ) {
-    MemberTemplate mtl = scop.MemberTemplateAt( i );
-    if ( mtl.Name(SCOPED) == scopedTemplateName && 
-         mtl.TemplateParameterSize() == TemplateArgumentSize()) {
-      fTemplateFamily = mtl;
-      break;
-    }
-  }
+   for ( size_t i = 0; i < scop.MemberTemplateSize(); ++i ) {
+      MemberTemplate mtl = scop.MemberTemplateAt( i );
+      if ( mtl.Name(SCOPED) == scopedTemplateName && 
+           mtl.TemplateParameterSize() == TemplateArgumentSize()) {
+         fTemplateFamily = mtl;
+         break;
+      }
+   }
 
-  if ( ! fTemplateFamily ) {
-    std::vector < std::string > parameterNames = std::vector < std::string > ();
-    for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) 
-      parameterNames.push_back("typename " + std::string(new char(i)));
-    MemberTemplateImpl * mti = new MemberTemplateImpl( Tools::GetBaseName(templateName),
-                                                       scop,
-                                                       parameterNames );
-    fTemplateFamily = MemberTemplate( mti );
-    scop.AddMemberTemplate( fTemplateFamily );
-  }
+   if ( ! fTemplateFamily ) {
+      std::vector < std::string > parameterNames = std::vector < std::string > ();
+      for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) 
+         parameterNames.push_back("typename " + std::string(new char(i)));
+      MemberTemplateImpl * mti = new MemberTemplateImpl( Tools::GetBaseName(templateName),
+                                                         scop,
+                                                         parameterNames );
+      fTemplateFamily = MemberTemplate( mti );
+      scop.AddMemberTemplate( fTemplateFamily );
+   }
   
-  fTemplateFamily.AddTemplateInstance((Member)(*this));
+   fTemplateFamily.AddTemplateInstance((Member)(*this));
 }
 
 
@@ -70,7 +70,7 @@ FunctionMemberTemplateInstance( const char * nam,
 std::string 
 ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-  return FunctionMember::Name( mod );
+   return FunctionMember::Name( mod );
 }
 
 
@@ -78,5 +78,5 @@ ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
-  return TemplateInstance::TemplateArgumentAt( nth );
+   return TemplateInstance::TemplateArgumentAt( nth );
 }

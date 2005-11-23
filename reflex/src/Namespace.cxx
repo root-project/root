@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Namespace.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -14,18 +14,18 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Namespace::Namespace( const char * scop ) 
 //-------------------------------------------------------------------------------
-  : ScopeBase( scop, NAMESPACE ) {}
+   : ScopeBase( scop, NAMESPACE ) {}
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Namespace::Namespace() 
 //-------------------------------------------------------------------------------
-  : ScopeBase() {}
+   : ScopeBase() {}
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::Namespace::InitGlobalNamespace() {
 //-------------------------------------------------------------------------------
-  Scope s = Scope::ByName("");
-  if ( ! s ) new Namespace();
+   Scope s = Scope::ByName("");
+   if ( ! s ) new Namespace();
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,99 +16,99 @@
 #include "Reflex/Builder/TypeBuilder.h"
 
 namespace ROOT{
-  namespace Reflex{
+   namespace Reflex{
 
-    // forward declarations
-    class Typedef;
+      // forward declarations
+      class Typedef;
 
-    /**
-     * @class TypedefBuilderImpl TypedefBuilder.h Reflex/Builder/TypedefBuilderImpl.h
-     * @author Stefan Roiser
-     * @date 14/3/2005
-     * @ingroup RefBld
-     */
-    class TypedefBuilderImpl {
-      
-    public:
-      
-      /** constructor */
-      TypedefBuilderImpl( const char * typ,
-                          const Type & typedefType );
-
-
-      /** destructor */
-      virtual ~TypedefBuilderImpl() {}
-
-      
-      /** 
-       * AddProperty will add a PropertyNth to the typedef currently being built
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
+      /**
+       * @class TypedefBuilderImpl TypedefBuilder.h Reflex/Builder/TypedefBuilderImpl.h
+       * @author Stefan Roiser
+       * @date 14/3/2005
+       * @ingroup RefBld
        */
-      void AddProperty( const char * key,
-                        Any value );
+      class TypedefBuilderImpl {
+      
+      public:
+      
+         /** constructor */
+         TypedefBuilderImpl( const char * typ,
+                             const Type & typedefType );
 
 
-      /** 
-       * AddProperty will add a PropertyNth to the typedef currently being built
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       */
-      void AddProperty( const char * key,
-                        const char * value );
+         /** destructor */
+         virtual ~TypedefBuilderImpl() {}
 
-    private:
-
-      /** the typedef currently being built */
-      Typedef * fTypedef;
-
-    }; // class TypdefBuilderImpl
+      
+         /** 
+          * AddProperty will add a PropertyNth to the typedef currently being built
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          */
+         void AddProperty( const char * key,
+                           Any value );
 
 
-    /** 
-     * @class TypedefBuilder TypedefBuilder.h Reflex/Builder/TypedefBuilder.h
-     * @author Stefan Roiser
-     * @date 30/3/2004
-     * @ingroup RefBld
-     */
-    template < typename T >
-    class TypedefBuilder  {
+         /** 
+          * AddProperty will add a PropertyNth to the typedef currently being built
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          */
+         void AddProperty( const char * key,
+                           const char * value );
 
-    public:            
+      private:
 
-      /** constructor */
-      TypedefBuilder(const char * nam);
+         /** the typedef currently being built */
+         Typedef * fTypedef;
 
-
-      /** destructor */
-      virtual ~TypedefBuilder() {}
+      }; // class TypdefBuilderImpl
 
 
       /** 
-       * AddProperty will add a PropertyNth to the typedef currently being built
-       * @param  key the PropertyNth key
-       * @param  value the value of the PropertyNth
-       * @return a reference to the building class
+       * @class TypedefBuilder TypedefBuilder.h Reflex/Builder/TypedefBuilder.h
+       * @author Stefan Roiser
+       * @date 30/3/2004
+       * @ingroup RefBld
        */
-      template < typename P >
-      TypedefBuilder & AddProperty( const char * key, 
-                                    P value );
+      template < typename T >
+         class TypedefBuilder  {
 
-    private:
+         public:            
 
-      /** the At of the typedef */
-      TypedefBuilderImpl fTypedefBuilderImpl;
+         /** constructor */
+         TypedefBuilder(const char * nam);
 
-    }; // class TypedefBuilder
 
-  } // namespace Reflex
+         /** destructor */
+         virtual ~TypedefBuilder() {}
+
+
+         /** 
+          * AddProperty will add a PropertyNth to the typedef currently being built
+          * @param  key the PropertyNth key
+          * @param  value the value of the PropertyNth
+          * @return a reference to the building class
+          */
+         template < typename P >
+            TypedefBuilder & AddProperty( const char * key, 
+                                          P value );
+
+         private:
+
+         /** the At of the typedef */
+         TypedefBuilderImpl fTypedefBuilderImpl;
+
+      }; // class TypedefBuilder
+
+   } // namespace Reflex
 } // namespace ROOT
 
 //-------------------------------------------------------------------------------
 template < typename T >
 inline ROOT::Reflex::TypedefBuilder<T>::TypedefBuilder( const char * nam ) 
 //-------------------------------------------------------------------------------
-  : fTypedefBuilderImpl( nam, TypeDistiller<T>::Get()) {}
+   : fTypedefBuilderImpl( nam, TypeDistiller<T>::Get()) {}
 
 
 //-------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ inline ROOT::Reflex::TypedefBuilder<T> &
 ROOT::Reflex::TypedefBuilder<T>::AddProperty( const char * key, 
                                               P value ) {
 //-------------------------------------------------------------------------------
-  fTypedefBuilderImpl.AddProperty( key, value );
-  return * this;
+   fTypedefBuilderImpl.AddProperty( key, value );
+   return * this;
 }
 
 #endif // ROOT_Reflex_TypedefBuilder

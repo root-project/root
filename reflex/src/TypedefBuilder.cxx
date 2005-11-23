@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,7 +18,7 @@
 ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
                                                       const Type & typedefType ) {
 //-------------------------------------------------------------------------------
-  fTypedef = new Typedef( typ, typedefType );
+   fTypedef = new Typedef( typ, typedefType );
 }
 
 
@@ -26,7 +26,7 @@ ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
 void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
                                                     Any value ) {
 //-------------------------------------------------------------------------------
-  fTypedef->Properties().AddProperty( key, value );
+   fTypedef->Properties().AddProperty( key, value );
 }
 
 
@@ -34,6 +34,6 @@ void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
 void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
                                                     const char * value ) {
 //-------------------------------------------------------------------------------
-  AddProperty( key, Any(value));
+   AddProperty( key, Any(value));
 }
 
