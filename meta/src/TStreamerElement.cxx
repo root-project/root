@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.82 2005/08/25 08:25:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.83 2005/11/16 20:10:45 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -401,6 +401,13 @@ void TStreamerElement::Streamer(TBuffer &R__b)
          SetUniqueID(0);
          //check if element is a TRef or TRefArray
          GetExecID();
+      }
+      if (R__v < 2 && this->IsA()==TStreamerBasicType::Class()) {
+         // In TStreamerElement v2, fSize was holding the size of
+         // the underlying data type.  In later version it contains 
+         // the full length of the data member.
+         TDataType *type = gROOT->GetType(GetTypeName());
+         if (type && fArrayLength) fSize = fArrayLength * type->Size();
       }
       if (R__v == 3) {
          R__b >> fXmin;
