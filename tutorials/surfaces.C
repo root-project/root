@@ -33,5 +33,15 @@
    pad2->SetPhi(-110);
    pad2->SetLogz();
    f2->Draw("surf1");
-
+   
+   //add axis titles. The titles are set on the intermediate
+   //histogram used for visualisation. We must force this histogram
+   //to be created, then force the redrawing of the two pads
+   pad2->Update();
+   f2->GetHistogram()->GetXaxis()->SetTitle("x title");
+   f2->GetHistogram()->GetYaxis()->SetTitle("y title");
+   f2->GetHistogram()->GetXaxis()->SetTitleOffset(1.4);
+   f2->GetHistogram()->GetYaxis()->SetTitleOffset(1.4);
+   pad1->Modified();
+   pad2->Modified();
 }
