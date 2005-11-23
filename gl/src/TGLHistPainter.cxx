@@ -256,8 +256,6 @@ void TGLHistPainter::Paint(Option_t *o)
    option.ToLower();
 
    if ((fLastOption = GetPaintOption(option)) == kUnsupported) {
-      if (fGLDevice != -1)
-         gGLManager->GetVirtualXInd(fGLDevice);
       gPad->SetCopyGLDevice(kFALSE);
       fDefaultPainter->Paint(o);
    } else {
@@ -271,7 +269,7 @@ void TGLHistPainter::Paint(Option_t *o)
          gGLManager->MakeCurrent(fGLDevice);
          gGLManager->PaintSingleObject(this);
          //to deselect pixmap from Win32 DC
-         gGLManager->GetVirtualXInd(fGLDevice);
+         //gGLManager->GetVirtualXInd(fGLDevice);
          gVirtualX->SelectWindow(gPad->GetPixmapID());
       }
       else
@@ -449,6 +447,7 @@ Bool_t TGLHistPainter::SetAxisRange(const TAxis *axis, Bool_t log, Int_t &first,
       if (min <= 0. || max <= 0.)
          return kFALSE;
       Int_t bin = axis->FindFixBin(min);
+      if (axis->GetBinLowEdge(bin) <= 0.) ++bin;//crashes under win32
       if (first < bin) first = bin;
       bin = axis->FindFixBin(max);
       if (last > bin) last = bin;

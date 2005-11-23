@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.6 2005/09/07 11:43:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.7 2005/11/04 20:13:08 pcanal Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -833,13 +833,12 @@ void TGLRender::DrawScene()
 
 ////////////////////////////////////////////////////////////
 //______________________________________________________________________________
-TGLPixmap::TGLPixmap(TPad * pad, Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h) :
-                   fCamera(), fViewVolume(), fZoom(),
-                   fActiveViewport(), fBuildingScene(kFALSE),
-                   fPad(pad), fFirstScene(kTRUE)
+TGLPixmap::TGLPixmap(TVirtualPad *pad)
+               : fCamera(), fViewVolume(), fZoom(),
+                 fActiveViewport(), fArcBall(100, 100), fBuildingScene(kFALSE),
+                 fPad(pad), fFirstScene(kTRUE)
 {
-   x_ = x, y_ = y, w_ = w, h_ = h;
-   devInd_ = devInd;
+   fGLDevice = pad->GetGLDevice();
 
    fLightMask = 0x1b;
    fXc = fYc = fZc = fRad = 0.;
@@ -849,8 +848,8 @@ TGLPixmap::TGLPixmap(TPad * pad, Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_
    fAction = kNoAction;
 
    CreateViewer();
-   fArcBall = new TArcBall(w, h);
    CalculateViewports();
+   fArcBall.SetBounds(fActiveViewport[2], fActiveViewport[3]);
 }
 
 //______________________________________________________________________________
@@ -863,14 +862,13 @@ void TGLPixmap::CreateViewer()
 //______________________________________________________________________________
 TGLPixmap::~TGLPixmap()
 {
-   delete fArcBall;
    delete fRender;
 }
 
 //______________________________________________________________________________
 void TGLPixmap::MakeCurrent()const
 {
-   gGLManager->MakeCurrent(devInd_);
+   gGLManager->MakeCurrent(fGLDevice);
 }
 
 //______________________________________________________________________________
@@ -914,7 +912,7 @@ void TGLPixmap::DrawObjects()const
    fRender->Traverse();
 
    glFlush();
-   gGLManager->Flush(devInd_);
+   gGLManager->Flush(fGLDevice);
 }
 
 //______________________________________________________________________________
@@ -976,7 +974,7 @@ Int_t TGLPixmap::DistancetoPrimitive(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewports()
 {
-   gGLManager->ExtractViewport(devInd_, fActiveViewport);
+   gGLManager->ExtractViewport(fGLDevice, fActiveViewport);
 }
 
 //______________________________________________________________________________
@@ -1011,7 +1009,7 @@ void TGLPixmap::CreateCameras()
    if (!fRender->GetSize())
       return;
 
-   GLSimpleTransform trPersp(fArcBall->GetRotMatrix(), fRad, &fXc, &fYc, &fZc);
+   GLSimpleTransform trPersp(fArcBall.GetRotMatrix(), fRad, &fXc, &fYc, &fZc);
 
    fCamera = new GLPerspectiveCamera(fViewVolume, fActiveViewport, trPersp);
 
@@ -1105,15 +1103,15 @@ void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Down:
       //fix arc ball first
       CalculateViewports();
-      fArcBall->SetBounds(fActiveViewport[2], fActiveViewport[3]);
-      fArcBall->Click(TPoint(px, py));
-      gGLManager->MarkForDirectCopy(devInd_, kTRUE);
+      fArcBall.SetBounds(fActiveViewport[2], fActiveViewport[3]);
+      fArcBall.Click(TPoint(px, py));
+      gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
       break;
    case kButton1Up:
-      gGLManager->MarkForDirectCopy(devInd_, kFALSE);
+      gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
       break;
    case kButton1Motion:
-      fArcBall->Drag(TPoint(px, py));
+      fArcBall.Drag(TPoint(px, py));
       gGLManager->DrawViewer(this);
       break;
    case kMouseMotion:
@@ -1121,17 +1119,17 @@ void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
    case kKeyPress:
       if (py == kKey_J || py == kKey_j) {
-         gGLManager->MarkForDirectCopy(devInd_, kTRUE);
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
          fZoom[0] /= 1.2;
          fCamera->Zoom(fZoom[0]);
          gGLManager->DrawViewer(this);
-         gGLManager->MarkForDirectCopy(devInd_, kFALSE);
+         gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
       } else if (py == kKey_K || py == kKey_k) {
-         gGLManager->MarkForDirectCopy(devInd_, kTRUE);
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
          fZoom[0] *= 1.2;
          fCamera->Zoom(fZoom[0]);
          gGLManager->DrawViewer(this);
-         gGLManager->MarkForDirectCopy(devInd_, kFALSE);
+         gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
       }
 
    }
@@ -1139,7 +1137,7 @@ void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TGLPixmap::DrawViewer()
 {
-   gGLManager->MakeCurrent(devInd_);
+   gGLManager->MakeCurrent(fGLDevice);
    fRender->Init();
 
    Color_t backColor = fPad->GetFillColor();

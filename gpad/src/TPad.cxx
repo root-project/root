@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.211 2005/11/18 13:59:31 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.212 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5517,16 +5517,6 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad")) {
-      newViewer = TVirtualViewer3D::Viewer3D(this,type);
-
-      if (!newViewer) {
-         Warning("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
-
-         // Return the existing viewer
-         return fViewer3D;
-      }
-      createdExternal = kTRUE;
-
       if (fGLDevice != -1) {
          gGLManager->DeletePaintDevice(fGLDevice);
          fCanvas->SetSelected(this);
@@ -5535,40 +5525,23 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          fEmbeddedGL = kFALSE;
       }
 
-   } else {
-      if (fCanvas->UseGL() && gGLManager) {
-         Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
-         UInt_t w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1)) - 2 * borderSize;
-         UInt_t h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1)) - 2 * borderSize;
-         Int_t px = 0, py = 0;
-         XYtoAbsPixel(fX1, fY2, px, py);
-         px += borderSize, py += borderSize;
+      newViewer = TVirtualViewer3D::Viewer3D(this,type);
 
-         fGLDevice = gGLManager->OpenGLPixmap(fCanvas->GetCanvasID(), px, py, w, h);
+      if (!newViewer) {
+         Warning("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
 
-         if (fGLDevice != -1) {
-            //TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLViewer");
-            TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLPixmap");
-
-            if (ph && ph->LoadPlugin() != -1)
-               newViewer = (TVirtualViewer3D *)ph->ExecPlugin(6, this, fGLDevice, px, py, w, h);
-
-            if (newViewer) {
-               fCopyGLDevice = kTRUE;
-               fEmbeddedGL = kTRUE;
-            } else
-               Error("GetViewer3D", "Error with plugin manager for pixmap gl render\n");
-         } else {
-            Error(
-                  "GetViewer3D",
-                  "Cannot create off-screen gl device, will use default instead\n"
-                 );
-         }
+         // Return the existing viewer
+         return fViewer3D;
       }
+      
+      if (strstr(type, "ogle"))
+         fEmbeddedGL = kTRUE;
+      else
+         createdExternal = kTRUE;
 
-      if (!newViewer)
+   } else 
          newViewer = new TViewer3DPad(*this);
-   }
+
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
    // c.f. ReleaseViewer3D

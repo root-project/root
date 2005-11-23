@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.51 2005/09/05 12:24:28 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.52 2005/11/11 15:29:46 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3288,9 +3288,8 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
       gCws->fHeight = h;
    } else {
    //change sizes
-      gCws = fWindows + prevind; //do I really need this ???
-      gCws->fWidth = w;
-      gCws->fHeight = h;
+      fWindows[prevind].fWidth = w;
+      fWindows[prevind].fHeight = h;
    }
    
    return prevind;

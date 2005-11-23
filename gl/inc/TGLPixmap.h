@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGFrame.h,v 1.59 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.2 2005/08/18 12:06:36 rdm Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 #ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
 #endif
-#ifndef ROOT_TAttFill
-#include "TAttFill.h"
+#ifndef ROOT_TArcBall
+#include "TArcBall.h"
 #endif
 #ifndef ROOT_TPoint
 #include "TPoint.h"
@@ -28,8 +28,7 @@ class GLSelection;
 class GLSceneObject;
 class GLCamera;
 class TBuffer3D;
-class TArcBall;
-class TPad;
+class TVirtualPad;
 class TGLRender;
 
 class TGLPixmap : public TVirtualViewer3D {
@@ -47,24 +46,22 @@ private:
    Double_t          fRad;
 
    Bool_t            fPressed;
-   TArcBall          *fArcBall;
+   TArcBall          fArcBall;
 
    UInt_t            fNbShapes;
    TPoint            fLastPos;
 
-   Int_t x_, y_;
-   UInt_t w_, h_;
-   Int_t devInd_;
+   Int_t             fGLDevice;
 
    GLSceneObject    *fSelectedObj;
    enum EAction{kNoAction, kRotating, kPicking, kZooming};
    EAction fAction;
    Bool_t            fBuildingScene;
-   TPad             *fPad;
+   TVirtualPad      *fPad;
    Bool_t            fFirstScene;
 
 public:
-   TGLPixmap(TPad * pad, Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   TGLPixmap(TVirtualPad * pad);
    ~TGLPixmap();
 
    // TVirtualViewer3D interface

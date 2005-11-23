@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.100 2005/10/10 16:10:42 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.101 2005/11/01 10:11:24 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -7034,9 +7034,8 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h, Int_t prevInd)
       return wid;
    } else if (!pix) {
       //just set new sizes
-      gCws = fWindows + prevInd; //do I need this ?
-      gCws->width = w;
-      gCws->height = h;
+      fWindows[prevInd].width = w;
+      fWindows[prevInd].height = h;
 
       return prevInd;
    } else {
