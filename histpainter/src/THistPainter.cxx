@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.230 2005/11/15 10:39:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.231 2005/11/16 11:02:16 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2907,6 +2907,7 @@ void THistPainter::PaintErrors(Option_t *)
 
       drawmarker = kTRUE;
       if (!option0 && !option3) {
+         if (Hoption.Logy && yp < logymin) goto L30; 
          if (yi1 < ymin || yi1 > ymax) goto L30;
          if (Hoption.Error != 0 && yp == 0 && ey1 <= 0) drawmarker = kFALSE;
       }
