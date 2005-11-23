@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.173 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.174 2005/11/17 09:38:55 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2591,7 +2591,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    //  chopt='][' : "Cutoff" style. When this option is selected together with
    //               H option, the first and last vertical lines of the histogram
    //               are not drawn.
-   
+
    const char *where = "PaintGraphHist";
 
    Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
@@ -3180,7 +3180,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                }
                gywork[npt-1] = y[i-1];
                gywork[npt]   = y[i-1]; //new
-               if ((gywork[npt-1] < rwymin) || (gywork[npt-1] > rwymax)) {
+               if ((gywork[npt-1] < rwymin) || (gywork[npt-1] > rwymax) && !optionFill2) {
                   if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
                   if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
                   if (npt > 2) {
