@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.55 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.56 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -199,7 +199,7 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl==(fNz-1) || ipl<0) {
       // point outside Z range
-      norm[2] = TMath::Sign(1., norm[2]);
+      norm[2] = TMath::Sign(1., dir[2]);
       return;
    }
    Int_t iplclose = ipl;
@@ -217,18 +217,18 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    r = TMath::Abs(point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0));
    if (dz<1E-5) {
       if (iplclose==0 || iplclose==(fNz-1)) {
-         norm[2] = TMath::Sign(1., norm[2]);
+         norm[2] = TMath::Sign(1., dir[2]);
          return;
       }
       if (iplclose==ipl && fZ[ipl]==fZ[ipl-1]) {
          if (r<TMath::Max(fRmin[ipl],fRmin[ipl-1]) || r>TMath::Min(fRmax[ipl],fRmax[ipl-1])) {
-            norm[2] = TMath::Sign(1., norm[2]);
+            norm[2] = TMath::Sign(1., dir[2]);
             return;
          }
       } else {
          if (fZ[iplclose]==fZ[iplclose+1]) {
             if (r<TMath::Max(fRmin[iplclose],fRmin[iplclose+1]) || r>TMath::Min(fRmax[iplclose],fRmax[iplclose+1])) {
-               norm[2] = TMath::Sign(1., norm[2]);
+               norm[2] = TMath::Sign(1., dir[2]);
                return;
             }
          }
